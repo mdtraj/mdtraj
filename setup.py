@@ -1,4 +1,3 @@
-import glob
 from setuptools import setup, Extension
 
 xtc = Extension('mdtraj._xtc',
