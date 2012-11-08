@@ -1,8 +1,7 @@
 import glob
 from setuptools import setup
 
-setup(name='OpenMMPDB',
-      packages=['OpenMMPDB'],
+setup(name='MDTraj',
+      packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.xtc', 'mdtraj.dcd'],
       include_package_data=True,
-      package_data = {'OpenMMPDB': ['data/*']})
-      #data_files=[('data', glob.glob('OpenMMPDB/data/*'))])
+      package_data = {'mdtraj.pdb': ['data/*']})
