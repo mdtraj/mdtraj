@@ -148,7 +148,7 @@ class Topology(object):
         if len(Topology._standardBonds) == 0:
             # Load the standard bond defitions.
 
-            tree = etree.parse(os.path.join(os.path.dirname(__file__), 'data', 'residues.xml'))
+            tree = etree.parse(os.path.join(os.path.dirname(__file__), 'pdb', 'data', 'residues.xml'))
             for residue in tree.getroot().findall('Residue'):
                 bonds = []
                 Topology._standardBonds[residue.attrib['name']] = bonds

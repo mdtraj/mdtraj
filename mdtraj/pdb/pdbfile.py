@@ -38,7 +38,7 @@ import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy
 from pdbstructure import PdbStructure
-from topology import Topology
+from mdtraj.topology import Topology
 import element as elem
 
 
