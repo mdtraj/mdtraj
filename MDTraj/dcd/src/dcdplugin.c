@@ -958,7 +958,7 @@ void close_file_read(dcdhandle *v) {
 }
 
 
-static void *open_dcd_write(const char *path, const char *filetype, int natoms) {
+dcdhandle* open_dcd_write(const char *path, const char *filetype, const int natoms) {
   dcdhandle *dcd;
   fio_fd fd;
   int rc;
@@ -1015,7 +1015,7 @@ static void *open_dcd_write(const char *path, const char *filetype, int natoms) 
 }
 
 
-static int write_timestep(void *v, const molfile_timestep_t *ts) { 
+int write_timestep(dcdhandle *v, const molfile_timestep_t *ts) { 
   dcdhandle *dcd = (dcdhandle *)v;
   int i, rc, curstep;
   float *pos = ts->coords;
