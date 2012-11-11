@@ -47,3 +47,7 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+#cythoned files
+*/xtc.c
+*/dcd.c
