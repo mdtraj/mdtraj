@@ -16,6 +16,7 @@ dcd = Extension('mdtraj.dcd',
 
 setup(name='MDTraj',
       packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.xtc', 'mdtraj.dcd'],
+      package_dir={'mdtraj':'MDTraj'},
       ext_modules=[xtc, dcd],
       cmdclass = {'build_ext': build_ext},
       include_package_data=True,
