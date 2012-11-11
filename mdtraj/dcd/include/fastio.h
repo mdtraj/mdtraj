@@ -10,7 +10,7 @@
  *
  *      $RCSfile: fastio.h,v $
  *      $Author: johns $       $Locker:  $             $State: Exp $
- *      $Revision: 1.20 $       $Date: 2009/04/29 15:45:29 $
+ *      $Revision: 1.25 $       $Date: 2011/10/14 03:52:46 $
  *
  ***************************************************************************
  * DESCRIPTION:
@@ -21,7 +21,12 @@
  * work with multi-gigabyte data sets, reading only binary data.
  *
  ***************************************************************************/
-
+#ifndef FASTIO_H
+#define FASTIO_H
+#define FIO_READ    0x01
+#define FIO_WRITE   0x02
+#define FIO_DIRECT  0x04 /* emulate Unix O_DIRECT flag */
+ 
 /* Compiling on windows */
 #if defined(_MSC_VER)
 
@@ -30,6 +35,7 @@
 #define FASTIO_NATIVEWIN32 1
 
 #include <stdio.h>
+#include <string.h>
 #include <windows.h>
 
 typedef HANDLE fio_fd;
@@ -41,8 +47,6 @@ typedef struct {
   int iov_len;
 } fio_iovec;
 
-#define FIO_READ  0x01
-#define FIO_WRITE 0x02
 
 #define FIO_SEEK_CUR  FILE_CURRENT
 #define FIO_SEEK_SET  FILE_BEGIN
@@ -86,6 +90,15 @@ static int fio_open(const char *filename, int mode, fio_fd *fd) {
 #if 0
   access = FILE_ALL_ACCESS; /* XXX hack if above modes fail */
 #endif
+#if 1
+  if (mode & FIO_DIRECT)
+    flags = FILE_FLAG_NO_BUFFERING;
+  else
+    flags = FILE_ATTRIBUTE_NORMAL;
+#else
+  if (mode & FIO_DIRECT)
+    return -1; /* not supported yet */
+#endif
 
   sharing = 0;       /* disallow sharing with other processes  */
   security = NULL;   /* child processes don't inherit anything */
@@ -95,8 +108,6 @@ static int fio_open(const char *filename, int mode, fio_fd *fd) {
     createmode = CREATE_ALWAYS;
   else 
     createmode = OPEN_EXISTING;
-
-  flags = FILE_ATTRIBUTE_NORMAL;
 
   fp = CreateFile(winfilename, access, sharing, security, 
                   createmode, flags, NULL);
@@ -238,6 +249,7 @@ static fio_size_t fio_ftell(fio_fd fd) {
 /* Version for machines with plain old ANSI C  */
 
 #include <stdio.h>
+#include <string.h>
 
 typedef FILE * fio_fd;
 typedef size_t fio_size_t;  /* MSVC doesn't uinversally support ssize_t */
@@ -248,9 +260,6 @@ typedef struct {
   int iov_len;
 } fio_iovec;
 
-#define FIO_READ  0x01
-#define FIO_WRITE 0x02
-
 #define FIO_SEEK_CUR SEEK_CUR
 #define FIO_SEEK_SET SEEK_SET
 #define FIO_SEEK_END SEEK_END
@@ -258,13 +267,16 @@ typedef struct {
 static int fio_open(const char *filename, int mode, fio_fd *fd) {
   char * modestr;
   FILE *fp;
- 
-  if (mode == FIO_READ) 
+
+  if (mode & FIO_READ) 
     modestr = "rb";
 
-  if (mode == FIO_WRITE) 
+  if (mode & FIO_WRITE) 
     modestr = "wb";
 
+  if (mode & FIO_DIRECT)
+    return -1; /* not supported yet */
+ 
   fp = fopen(filename, modestr);
   if (fp == NULL) {
     return -1;
@@ -314,10 +326,16 @@ static fio_size_t fio_ftell(fio_fd fd) {
 #else 
 
 /* Version for UNIX machines */
+#if defined(__linux)
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE            /* required for O_DIRECT */
+#endif
+#endif
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
 
 typedef int fio_fd;
 typedef off_t fio_size_t;      /* off_t is 64-bits with LFS builds */
@@ -340,10 +358,6 @@ typedef struct {
 } fio_iovec;
 #endif
 
-
-#define FIO_READ  0x01
-#define FIO_WRITE 0x02
-
 #define FIO_SEEK_CUR SEEK_CUR
 #define FIO_SEEK_SET SEEK_SET
 #define FIO_SEEK_END SEEK_END
@@ -351,12 +365,21 @@ typedef struct {
 static int fio_open(const char *filename, int mode, fio_fd *fd) {
   int nfd;
   int oflag = 0;
-
-  if (mode == FIO_READ) 
+  
+  if (mode & FIO_READ) 
     oflag = O_RDONLY;
 
-  if (mode == FIO_WRITE) 
+  if (mode & FIO_WRITE) 
     oflag = O_WRONLY | O_CREAT | O_TRUNC;
+
+#if defined(__linux)
+  /* enable direct I/O, requires block-aligned buffers and I/O sizes */
+  if (mode & FIO_DIRECT)
+    oflag |= O_DIRECT;
+#else
+  if (mode & FIO_DIRECT)
+    return -1; /* not supported yet */
+#endif
 
   nfd = open(filename, oflag, 0666);
   if (nfd < 0) {
@@ -452,3 +475,4 @@ static int fio_write_str(fio_fd fd, const char *str) {
   return (fio_fwrite((void *) str, len, 1, fd) != 1);
 }
 
+#endif

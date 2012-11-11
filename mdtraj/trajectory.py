@@ -241,10 +241,3 @@ class Trajectory(object):
     def join(self, other_trajectory):
         "Join two trajectories together"
         pass
-
-if __name__ == '__main__':
-    #load('/home/robert/msmbuilder/Tutorial/native.pdbd')
-    traj = load('/home/robert/msmbuilder/Tutorial/native.pdb')
-    print load('/home/robert/msmbuilder/Tutorial/XTC/RUN00/frame0.xtc', top=traj).top
-
-    traj.save('file.h5')
