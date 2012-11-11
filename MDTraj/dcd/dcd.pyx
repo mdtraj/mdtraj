@@ -46,6 +46,8 @@ cdef class DCDReader:
     def __cinit__(self, char* filename):
         #open the file
         self.fh = open_dcd_read(filename, "dcd", &self.n_atoms, &self.n_frames)
+        if self.fh is NULL:
+            raise IOError('There was an error opening the dcd file: %s' % filename)
         
         # alloc the molfile_timestep, which is the struct that the library is
         # going to deposit its data into each timestep
@@ -56,11 +58,11 @@ cdef class DCDReader:
         "Shut this whole thing down"
         
         # free whatever we malloced
-        #free(self.timestep.coords)
         free(self.timestep)
         
         # close the file
-        close_file_read(self.fh)
+        if self.fh is not NULL:
+            close_file_read(self.fh)
         
 
     def read(self):

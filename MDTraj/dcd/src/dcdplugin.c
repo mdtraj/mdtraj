@@ -791,8 +791,6 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, in
     return NULL;
   }
   
-  //printf("just for fun, dcd->nsets = %d", dcd->nsets);
-
   /*
    * Check that the file is big enough to really hold the number of sets
    * it claims to have.  Then we'll use nsets to keep track of where EOF

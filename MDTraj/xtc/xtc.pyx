@@ -62,11 +62,14 @@ cdef class XTCReader:
 
         # open file descriptor
         self._xd = xdrlib.xdrfile_open(filename, 'r')
-            
+        if self._xd is NULL:
+            raise IOError("File not found: %s" % filename)
+
         self.chunk = chunk
 
     def __dealloc__(self):
-        xdrlib.xdrfile_close(self._xd)
+        if self._xd is not NULL:
+            xdrlib.xdrfile_close(self._xd)
 
     def __iter__(self):
         return self
