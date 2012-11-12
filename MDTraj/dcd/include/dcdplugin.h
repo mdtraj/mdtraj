@@ -69,5 +69,6 @@ int read_next_timestep(dcdhandle *v, int natoms, molfile_timestep_t *ts);
 
 dcdhandle* open_dcd_write(const char *path, const char *filetype, const int natoms);
 int write_timestep(dcdhandle *v, const molfile_timestep_t *ts);
+void close_file_write(dcdhandle *v);
   
 #endif

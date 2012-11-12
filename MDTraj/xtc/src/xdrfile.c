@@ -777,11 +777,15 @@ xdrfile_decompress_coord_float(float     *ptr,
     bitsizeint[1] = 0;
     bitsizeint[2] = 0;
 
-	if(xfp==NULL || ptr==NULL)
+	if(xfp==NULL || ptr==NULL) {
+        fprintf(stderr, "Null pointer issue\n");
 		return -1;
+	}
 	tmp=xdrfile_read_int(&lsize,1,xfp);
-	if(tmp==0)
+	if(tmp==0) {
+        fprintf(stderr, "Size could not be read\n");
 		return -1; /* return if we could not read size */
+	}
 	if (*size < lsize) 
     {
 		fprintf(stderr, "Requested to decompress %d coords, file contains %d\n",
@@ -839,8 +843,10 @@ xdrfile_decompress_coord_float(float     *ptr,
 		bitsize = sizeofints(3, sizeint);
 	}
 	
-	if (xdrfile_read_int(&smallidx,1,xfp) == 0)	
+	if (xdrfile_read_int(&smallidx,1,xfp) == 0)	{
+	    fprintf(stderr,"Undocumented error 1");
 		return 0; /* not sure what has happened here or why we return... */
+	}
 	tmp=smallidx+8;
 	maxidx = (LASTIDX<tmp) ? LASTIDX : tmp;
 	minidx = maxidx - 8; /* often this equal smallidx */
@@ -853,10 +859,14 @@ xdrfile_decompress_coord_float(float     *ptr,
 
 	/* buf2[0] holds the length in bytes */
   
-	if (xdrfile_read_int(buf2,1,xfp) == 0)
+	if (xdrfile_read_int(buf2,1,xfp) == 0) {
+	    fprintf(stderr,"Undocumented error 2");
 		return 0;
-	if (xdrfile_read_opaque((char *)&(buf2[3]),(unsigned int)buf2[0],xfp) == 0)
-		return 0;
+	}
+	if (xdrfile_read_opaque((char *)&(buf2[3]),(unsigned int)buf2[0],xfp) == 0) {
+	    fprintf(stderr,"Undocumented error 3");
+        return 0;
+	}
 	buf2[0] = buf2[1] = buf2[2] = 0;
   
 	lfp = ptr;

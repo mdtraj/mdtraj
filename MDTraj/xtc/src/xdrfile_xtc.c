@@ -11,6 +11,7 @@
  * of the License, or (at your option) any later version.
  */
  
+#include <stdio.h>
 #include <stdlib.h>
 #include "xdrfile.h"
 #include "xdrfile_xtc.h"

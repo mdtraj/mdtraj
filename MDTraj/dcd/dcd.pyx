@@ -1,4 +1,5 @@
 import cython
+import os, warnings
 import numpy as np
 cimport numpy as np
 np.import_array()
@@ -6,6 +7,8 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy
 from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
+from dcdlib cimport open_dcd_write, close_file_write, write_timestep
+
 
 # codes that indicate status on return from library
 cdef int _DCD_SUCCESS    = 0   # No problems
@@ -25,7 +28,7 @@ def read_xyz(filename):
     Parameters
     ----------
     filename : str
-        The filename of the xtc file to read from
+        The filename of the dcd file to read from
     chunk : int
         Size of the chunks to read
     
@@ -36,6 +39,33 @@ def read_xyz(filename):
     """
     return DCDReader(filename).read()
 
+def write_xyz(filename, xyz, force_overwrite=False):
+    """Write xyz coordinates to a NAMD/CHARMM DCD File
+    
+    Note that the box size entries in the DCD file will be left blank (zeros)
+    
+    Parameters
+    ----------
+    filename : str
+        The filename of the dcd file to write to
+    xyz : np.ndarray, ndim=3, dtype=np.float32
+        The xyz coordinates
+    """
+    
+    if not force_overwrite and os.path.exists(filename):
+        raise IOError('The file already exists: %s' % filename)
+
+    if not isinstance(xyz, np.ndarray):
+        raise TypeError("Must be numpy array")
+    if xyz.dtype != np.float32:
+        warnings.warn('Casting to float32')
+        xyz = np.array(xyz, dtype=np.float32)
+    if not xyz.flags.c_contiguous:
+        warnings.warn('Casting to contiguous')
+        xyz = np.ascontiguousarray(xyz, dtype=np.float32)
+
+    writer = DCDWriter(filename, xyz)
+    writer.write()
 
 cdef class DCDReader:
     cdef int n_atoms, n_frames
@@ -52,6 +82,8 @@ cdef class DCDReader:
         # alloc the molfile_timestep, which is the struct that the library is
         # going to deposit its data into each timestep
         self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
+        if self.fh is  NULL:
+            raise MemoryError
         
     
     def __dealloc__(self):
@@ -86,3 +118,52 @@ cdef class DCDReader:
             raise IOError("Error: %s", status)
         
         return xyz
+
+
+cdef class DCDWriter:
+    cdef char* filename
+    cdef dcdhandle* fh
+    cdef np.ndarray xyz
+    cdef int n_atoms
+    cdef molfile_timestep_t* timestep
+    
+    def __cinit__(self, char* filename, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz):
+        self.filename = filename
+        self.xyz = xyz
+        self.n_atoms = self.xyz.shape[1]
+        
+        self.fh = open_dcd_write(filename, "dcd", self.n_atoms)
+        if self.fh is NULL:
+            raise IOError('There was an error opening the file: %s' % filename)
+            
+        self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
+        if self.timestep is NULL:
+            raise MemoryError
+        
+    def __dealloc__(self):
+        close_file_write(self.fh)
+        if self.timestep is not NULL:
+            free(self.timestep)
+    
+    def write(self):
+        cdef int i, status
+        cdef n_frames = len(self.xyz)
+        
+        self.timestep.A = 0
+        self.timestep.B = 0
+        self.timestep.C = 0
+        self.timestep.alpha = 0
+        self.timestep.beta = 0 
+        self.timestep.gamma = 0
+
+        self.timestep.coords = <float*> self.xyz.data
+        
+        for i in range(n_frames):
+            status = write_timestep(self.fh, self.timestep)
+            self.timestep.coords += self.n_atoms * 3
+            if status != _DCD_SUCCESS:
+                raise RuntimeError("DCD Error: %s" % status)
+        
+        
+        
+        

@@ -1049,7 +1049,7 @@ int write_timestep(dcdhandle *v, const molfile_timestep_t *ts) {
   return MOLFILE_SUCCESS;
 }
 
-static void close_file_write(void *v) {
+void close_file_write(dcdhandle *v) {
   dcdhandle *dcd = (dcdhandle *)v;
   fio_fclose(dcd->fd);
   free(dcd->x);
