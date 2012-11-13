@@ -99,7 +99,7 @@ int read_xtc(XDRFILE *xd,
 	  
 	if ((result = xtc_coord(xd,&natoms,box,x,prec,1)) != exdrOK)
 		return result;
-  
+
 	return exdrOK;
 }
 
@@ -109,6 +109,9 @@ int write_xtc(XDRFILE *xd,
 /* Write a frame to xtc file */
 {
 	int result;
+	
+	//robert hack
+    printf("write_xtc: step %d, time %f, prec %f\n\n", step, time, prec);
   
 	if ((result = xtc_header(xd,&natoms,&step,&time,FALSE)) != exdrOK)
 		return result;
