@@ -109,9 +109,6 @@ int write_xtc(XDRFILE *xd,
 /* Write a frame to xtc file */
 {
 	int result;
-	
-	//robert hack
-    printf("write_xtc: step %d, time %f, prec %f\n\n", step, time, prec);
   
 	if ((result = xtc_header(xd,&natoms,&step,&time,FALSE)) != exdrOK)
 		return result;

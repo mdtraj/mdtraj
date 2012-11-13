@@ -206,18 +206,13 @@ cdef class XTCWriter:
         cdef int n_frames = len(xyz)
         cdef int n_atoms = xyz.shape[1]
         cdef int status, i
-        cdef float prec_i, time_i
         
         # all same shape
         assert n_frames == len(box) == len(step) == len(time) == len(prec)
         
-        time = 12345*np.ones(n_frames, dtype=np.float32)
 
         for i in range(n_frames):
-            prec_i = prec[i]
-            time_i = time[i]
-            print 'cython: step', step[i], 'time', time_i, 'prec', prec_i
-            status = xdrlib.write_xtc(self.fh, n_atoms, step[i], time_i, &box[i, 0, 0], &xyz[i, 0, 0], prec_i)
+            status = xdrlib.write_xtc(self.fh, n_atoms, step[i], time[i], &box[i, 0, 0], &xyz[i, 0, 0], prec[i])
             if status != _EXDROK:
                     raise RuntimeError('XTC write error: %s' % status)
 
