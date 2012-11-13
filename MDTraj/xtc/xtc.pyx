@@ -36,60 +36,64 @@ def read(filename, chunk=1):
     return xyz, time, step, box, prec
 
 
-def write(filename, xyz, time=None, step=None, box=None, prec=None, force_overwrite=False):
-    """Write a Gromacs XTC file
-    
-    """
-    if force_overwrite and os.path.exists(filename):
-        os.unlink(filename)
-        
-    # only overwrite if you really want to
-    if not force_overwrite and os.path.exists(filename):
-        raise IOError('The file already exists: %s' % filename)
-
-    def ensure_type(val, dtype, ndim, length=None, can_be_none=False, shape=None):
-        "Ensure dtype and shape of an ndarray"
-        if can_be_none and val is None:
-            return None
-        if not isinstance(val, np.ndarray):
-            raise TypeError("Must be numpy array")
-        val = np.ascontiguousarray(val, dtype=dtype)
-        if not val.ndim == ndim:
-            raise ValueError('ndim is wrong')
-        if length is not None and len(val) != length:
-            raise ValueError('Length is not right. Got %s, should be %s' % (len(val), length))
-        if shape is not None and val.shape != shape:
-            raise ValueError('Wrong shape. Got %s, should be %s' % (val.shape, shape))
-            
-        return val
-    
-    # make sure all the arrays are the right shape
-    xyz = ensure_type(xyz, dtype=np.float32, ndim=3, can_be_none=False)
-    n_frames = len(xyz)
-    
-    step = ensure_type(step, dtype=np.int32, ndim=1, can_be_none=True,
-        length=n_frames)
-    if step is None:
-        step = np.arange(n_frames, dtype=np.int32)
-        
-    time = ensure_type(time, dtype=np.float32, ndim=1, can_be_none=True,
-        length=n_frames)
-    if time is None:
-        time = np.arange(n_frames, dtype=np.float32)
-        
-    box = ensure_type(box, dtype=np.float32, ndim=3, can_be_none=True,
-        length=n_frames, shape=(n_frames, 3, 3))
-    if box is None:
-        box = np.zeros((n_frames, 3, 3), dtype=np.float32)
-        
-    prec = ensure_type(prec, dtype=np.float32, ndim=1, can_be_none=True,
-        length=n_frames)
-    if prec is None:
-        prec = np.zeros(n_frames, dtype=np.float32)
-                    
-                
-    writer = XTCWriter(filename, xyz, step, time, box, prec)
-    writer.write()
+# def write(filename, xyz, time=None, step=None, box=None, prec=None, force_overwrite=False):
+#     """Write a Gromacs XTC file
+#     
+#     """
+#     if force_overwrite and os.path.exists(filename):
+#         os.unlink(filename)
+#         
+#     # only overwrite if you really want to
+#     if not force_overwrite and os.path.exists(filename):
+#         raise IOError('The file already exists: %s' % filename)
+# 
+#     def ensure_type(val, dtype, ndim, length=None, can_be_none=False, shape=None):
+#         "Ensure dtype and shape of an ndarray"
+#         if can_be_none and val is None:
+#             return None
+#         if not isinstance(val, np.ndarray):
+#             raise TypeError("Must be numpy array")
+#         val = np.ascontiguousarray(val, dtype=dtype)
+#         if not val.ndim == ndim:
+#             raise ValueError('ndim is wrong')
+#         if length is not None and len(val) != length:
+#             raise ValueError('Length is not right. Got %s, should be %s' % (len(val), length))
+#         if shape is not None and val.shape != shape:
+#             raise ValueError('Wrong shape. Got %s, should be %s' % (val.shape, shape))
+#             
+#         return val
+#     
+#     # make sure all the arrays are the right shape
+#     xyz = ensure_type(xyz, dtype=np.float32, ndim=3, can_be_none=False)
+#     n_frames = len(xyz)
+#     
+#     step = ensure_type(step, dtype=np.int32, ndim=1, can_be_none=True,
+#         length=n_frames)
+#     if step is None:
+#         step = np.ones(n_frames, dtype=np.int32)
+#         
+#     time = ensure_type(time, dtype=np.float32, ndim=1, can_be_none=True,
+#         length=n_frames)
+#     if time is None:
+#         time = np.arange(n_frames, dtype=np.float32)
+#         
+#     box = ensure_type(box, dtype=np.float32, ndim=3, can_be_none=True,
+#         length=n_frames, shape=(n_frames, 3, 3))
+#     if box is None:
+#         # make each box[i] be the identity matrix
+#         box = np.zeros((n_frames, 3, 3), dtype=np.float32)
+#         box[:,0,0] = np.ones(n_frames, dtype=np.float32)
+#         box[:,1,1] = np.ones(n_frames, dtype=np.float32)
+#         box[:,2,2] = np.ones(n_frames, dtype=np.float32)
+#         
+#     prec = ensure_type(prec, dtype=np.float32, ndim=1, can_be_none=True,
+#         length=n_frames)
+#     if prec is None:
+#         prec = np.zeros(n_frames, dtype=np.float32)
+#                     
+#                 
+#     writer = XTCWriter(filename, xyz, step, time, box, prec)
+#     writer.write()
 
 
 # code that indicates a sucessful return from the library
@@ -151,8 +155,8 @@ cdef class XTCReader:
             status = xdrlib.read_xtc(self._xd, self.n_atoms, step_p,
                 time_p, box_p, xyz_p, prec_p)
 
-            if status == _EXDR3DX:
-                raise RuntimeError("Decompression error in xrd lib")
+            if status != _EXDRENDOFFILE and status != _EXDROK:
+                raise RuntimeError("XTC Read error: %s." % status)
             #print 'pos', position, 'status', status
             
             position += 1                
@@ -180,46 +184,63 @@ cdef class XTCReader:
         return xyz, box, time, prec, step
 
 
-cdef class XTCWriter:
-    cdef xdrlib.XDRFILE* fh
-    cdef np.ndarray xyz
-    cdef np.ndarray step
-    cdef np.ndarray time
-    cdef np.ndarray box
-    cdef np.ndarray prec
-    
-    def __cinit__(self, char* filename, np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz,
-                    np.ndarray[ndim=1, dtype=np.int32_t] step,
-                    np.ndarray[ndim=1, dtype=np.float32_t] time,
-                    np.ndarray[ndim=3, dtype=np.float32_t] box,
-                    np.ndarray[ndim=1, dtype=np.float32_t] prec):
-        self.fh = xdrlib.xdrfile_open(filename, 'w')
-
-        self.xyz = xyz
-        self.step = step
-        self.time = time
-        self.box = box
-        self.prec = prec
-
-
-    def __dealloc(self):
-        xdrlib.xdrfile_close(self.fh)
-
-
-    def write(self):
-        cdef int n_frames = len(self.xyz)
-        cdef int status
-        cdef int n_atoms = self.xyz.shape[1]
-        cdef float* xyz_p = <float*> self.xyz.data
-        cdef float* box_p = <float*> self.box.data
-
-        cdef int i
-        for i in range(n_frames):
-            status = xdrlib.write_xtc(self.fh, n_atoms, self.step[i],
-                self.time[i], box_p, xyz_p, self.prec[i])
-            if status != _EXDROK:
-                raise RuntimeError('XTC error: %s' % status)
-
-            box_p += 9
-            xyz_p += n_atoms * 3
-        
+# cdef class XTCWriter:
+#     cdef xdrlib.XDRFILE* fh
+#     cdef np.ndarray xyz
+#     cdef np.ndarray step
+#     cdef np.ndarray time
+#     cdef np.ndarray box
+#     cdef np.ndarray prec
+#     cdef int n_atoms, n_frames
+#     
+#     def __cinit__(self, char* filename, np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz,
+#                     np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step,
+#                     np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time,
+#                     np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box,
+#                     np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] prec):
+#         self.fh = xdrlib.xdrfile_open(filename, 'w')
+# 
+#         self.xyz = xyz
+#         self.step = step
+#         self.time = time
+#         self.box = box
+#         self.prec = prec
+#         self.n_atoms = xyz.shape[1]
+#         self.n_frames = len(self.xyz)
+#         
+#         assert len(box) == self.n_frames
+#         assert box.shape[1] == 3
+#         assert box.shape[2] == 3
+# 
+#     def __dealloc(self):
+#         if xdrlib.xdrfile_close(self.fh) != 0:
+#             raise RuntimeError('Unable to close file.')
+# 
+# 
+#     def write(self):
+#         cdef int status
+#         cdef float* xyz_p = <float*> self.xyz.data
+#         #cdef float* box_p = <float*> self.box.data
+#         cdef int step = 1
+#         cdef float time = 1.0
+#         cdef float prec = 1000.0
+#         
+#         cdef np.ndarray box_array = np.eye(3,3, dtype=np.float32)
+#         cdef np.ndarray xyz_array = 0.1*np.ones((self.n_atoms, 3), dtype=np.float32)
+#         #print 'box\n', self.box
+#         #print 'time\n', self.time
+#         #print 'step', self.step
+# 
+#         cdef int i
+#         for i in range(self.n_frames):
+#             #step = self.step[i]
+#             #time = self.time[i]
+#             #prec = self.prec[i]
+#             status = xdrlib.write_xtc(self.fh, self.n_atoms, step, time,
+#                 <float**> cython.address(box_array.data), <float**> xyz_array.data, prec)
+#             if status != _EXDROK:
+#                 raise RuntimeError('XTC write error: %s' % status)
+# 
+#             #box_p += 9
+#             xyz_p +=  self.n_atoms * 3
+#         
