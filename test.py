@@ -4,9 +4,10 @@ from mdtraj import xtc, dcd
 import numpy.testing as npt
 from msmbuilder import Trajectory
 import warnings
-pdb = '/Users/rmcgibbo/local/msmbuilder/Tutorial/native.pdb'
-fnx = '/Users/rmcgibbo/local/msmbuilder/Tutorial/XTC/RUN00/frame0.xtc'
-fnd = '/Users/rmcgibbo/local/msmbuilder/Tutorial/DCD/RUN00/frame0.dcd'
+
+pdb = './test_data/native.pdb'
+fnx = './test_data/frame0.xtc'
+fnd = './test_data/frame0.dcd'
 
 tx = 'test.xtc'
 td = 'test.dcd'
