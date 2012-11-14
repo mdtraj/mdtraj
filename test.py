@@ -1,21 +1,24 @@
 import os
 import numpy as np
-from mdtraj import xtc, dcd
+from mdtraj import xtc, dcd, binpos
 import numpy.testing as npt
 from msmbuilder import Trajectory
+import tempfile
 import warnings
 
 pdb = './test_data/native.pdb'
 fnx = './test_data/frame0.xtc'
 fnd = './test_data/frame0.dcd'
+fnb = './test_data/frame0.binpos'
 
 tx = 'test.xtc'
 td = 'test.dcd'
+
+
 if os.path.exists(tx):
     os.unlink(tx)
 if os.path.exists(td):
     os.unlink(td)
-
 
 # xtc read
 
@@ -105,3 +108,20 @@ def test_dwrite1():
         warnings.simplefilter("ignore")
         t = Trajectory.load_trajectory_file(td, Conf=Trajectory.load_trajectory_file(pdb))
     npt.assert_array_almost_equal(0.1*xyz, t['XYZList'])
+
+
+# def test_binpos_read0():
+#     xyz = binpos.read_xyz(fnb)
+#     xyz2 = dcd.read_xyz(fnd)
+#     npt.assert_array_almost_equal(xyz[1:], xyz2)
+# 
+# def test_binpos_read1():
+#     xyz = binpos.read_xyz(fnb, chunk=11)
+#     xyz2 = dcd.read_xyz(fnd)
+#     npt.assert_array_almost_equal(xyz[1:], xyz2)
+    
+def test_binpos_read2():
+    xyz = binpos.read_xyz(fnb, chunk=1000)
+    xyz2 = dcd.read_xyz(fnd)
+    npt.assert_array_almost_equal(xyz[1:], xyz2)
+        
