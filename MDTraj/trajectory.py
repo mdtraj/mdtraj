@@ -351,7 +351,7 @@ class Trajectory(object):
         extension = os.path.splitext(filename)[1]
 
         savers = {#'.xtc': self.save_xtc,
-                  #'.pdb': self.save_pdb,
+                  '.pdb': self.save_pdb,
                   #'.dcd': self.save_dcd,
                   '.h5': self.save_hdf}
 
@@ -370,6 +370,23 @@ class Trajectory(object):
             xyz=_convert_to_lossy_integers(self.xyz),
             time=self.time,
             topology=self.topology.to_bytearray())
+            
+    def save_pdb(self, filename):
+        """ should save contiguous PDBs """
+        f = open(filename, 'w')
+        pdbfile.PDBFile.writeHeader(self.topology, file=f)
+        
+        for i in range(self._xyz.shape[0]):
+            positions = [ list(self._xyz[i,j,:].flatten()) for j in range(self._xyz.shape[1]) ]
+            pdbfile.PDBFile.writeModel(self.topology, 
+                                      positions,
+                                      file=f, 
+                                      modelIndex=i)
+                                      
+        pdbfile.PDBFile.writeFooter(self.topology, file=f)
+        f.close()
+        
+        return
 
     def join(self, other_trajectory):
         "Join two trajectories together"

@@ -1,6 +1,7 @@
 import os
 import numpy as np
-from mdtraj import xtc, dcd, binpos
+from mdtraj import xtc, dcd#, binpos
+from mdtraj import trajectory
 import numpy.testing as npt
 from msmbuilder import Trajectory
 import tempfile
@@ -19,6 +20,20 @@ if os.path.exists(tx):
     os.unlink(tx)
 if os.path.exists(td):
     os.unlink(td)
+
+# pdb read
+
+def test_pdbread():
+    p = trajectory.load(pdb)
+    
+# pdb write
+def test_pdbwrite():
+    p = trajectory.load(pdb)
+    p.save('test.pdb')
+    r = trajectory.load('test.pdb')
+    npt.assert_array_almost_equal(p.xyz, r.xyz)
+    os.remove('test.pdb')
+    
 
 # xtc read
 
