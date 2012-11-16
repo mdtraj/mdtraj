@@ -13,13 +13,13 @@ dcd = Extension('mdtraj.dcd',
     libraries=['m'],
     include_dirs = ["MDTraj/dcd/include/", 'MDTraj/dcd/', numpy.get_include()])
 
-#binpos = Extension('mdtraj.binpos',
-#    sources = ['MDTraj/binpos/src/binposplugin.c', 'MDTraj/binpos/binpos.pyx'],
-#    include_dirs = ["MDTraj/binpos/include/", 'MDTraj/binpos/', numpy.get_include()])
+binpos = Extension('mdtraj.binpos',
+    sources = ['MDTraj/binpos/src/binposplugin.c', 'MDTraj/binpos/binpos.pyx'],
+    include_dirs = ["MDTraj/binpos/include/", 'MDTraj/binpos/', numpy.get_include()])
 
 setup(name='MDTraj',
       packages=['mdtraj', 'mdtraj.pdb'],
       package_dir={'mdtraj':'MDTraj'},
-      ext_modules=[xtc, dcd], #[xtc, dcd, binpos],
+      ext_modules=[xtc, dcd, binpos],
       cmdclass = {'build_ext': build_ext},
       package_data = {'mdtraj.pdb': ['data/*']})

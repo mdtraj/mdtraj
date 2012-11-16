@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from mdtraj import xtc, dcd#, binpos
+from mdtraj import xtc, dcd, binpos
 from mdtraj import trajectory
 import numpy.testing as npt
 from msmbuilder import Trajectory
@@ -125,15 +125,15 @@ def test_dwrite1():
     npt.assert_array_almost_equal(0.1*xyz, t['XYZList'])
 
 
-# def test_binpos_read0():
-#     xyz = binpos.read_xyz(fnb)
-#     xyz2 = dcd.read_xyz(fnd)
-#     npt.assert_array_almost_equal(xyz[1:], xyz2)
-# 
-# def test_binpos_read1():
-#     xyz = binpos.read_xyz(fnb, chunk=11)
-#     xyz2 = dcd.read_xyz(fnd)
-#     npt.assert_array_almost_equal(xyz[1:], xyz2)
+def test_binpos_read0():
+    xyz = binpos.read_xyz(fnb)
+    xyz2 = dcd.read_xyz(fnd)
+    npt.assert_array_almost_equal(xyz[1:], xyz2)
+
+def test_binpos_read1():
+    xyz = binpos.read_xyz(fnb, chunk=11)
+    xyz2 = dcd.read_xyz(fnd)
+    npt.assert_array_almost_equal(xyz[1:], xyz2)
     
 def test_binpos_read2():
     xyz = binpos.read_xyz(fnb, chunk=1000)
