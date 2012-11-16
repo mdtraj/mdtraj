@@ -10,7 +10,7 @@ cdef extern from "include/binposplugin.h":
     
     
 cdef extern from "include/molfile_plugin.h":
-    ctypedef struct molfile_timestep_t:
+    ctypedef struct molfimle_timestep_t:
       float *coords  # coordinates of all atoms, arranged xyzxyzxyz
       float *velocities  # space for velocities of all atoms; same layout
       float A, B, C, alpha, beta, gamma

@@ -1,0 +1,14 @@
+language: python
+python:
+  - 2.5
+  - 2.6
+  - 2.7
+  - 3.1
+  - 3.2
+before_install:
+  - pip install numpy
+  - pip install nose
+install:
+  - python setup.py install
+script:
+  - nosetests
