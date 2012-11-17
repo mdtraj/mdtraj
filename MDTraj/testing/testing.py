@@ -1,6 +1,7 @@
 import os
 import functools
 import numpy as np
+from numpy.linalg import norm
 from numpy.testing import (assert_allclose, assert_almost_equal,
   assert_approx_equal, assert_array_almost_equal, assert_array_almost_equal_nulp,
   assert_array_equal, assert_array_less, assert_array_max_ulp, assert_equal,
@@ -9,6 +10,15 @@ from nose.tools import ok_, eq_, raises
 from nose import SkipTest
 from pkg_resources import resource_filename
 
+
+# if the system doesn't have scipy, we'd like
+# this package to still work:
+# we'll just redefine isspmatrix as a function that always returns
+# false
+try:
+    from scipy.sparse import isspmatrix
+except ImportError:
+    isspmatrix = lambda x: False
 
 def get_fn(name):
     fn = resource_filename('mdtraj', os.path.join('testing/reference', name))
@@ -21,8 +31,6 @@ def get_fn(name):
 
 
 def eq(o1, o2, decimal=6):
-    from scipy.sparse import isspmatrix
-
     assert (type(o1) is type(o2)), 'o1 and o2 not the same type: %s %s' % (type(o1), type(o2))
 
     if isinstance(o1, dict):
@@ -67,11 +75,6 @@ def assert_dict_equal(t1, t2, decimal=6):
 
 def assert_spase_matrix_equal(m1, m2, decimal=6):
     """Assert two scipy.sparse matrices are equal."""
-
-    # delay the import to speed up stuff if this method is unused
-    from scipy.sparse import isspmatrix
-    from numpy.linalg import norm
-
     # both are sparse matricies
     assert isspmatrix(m1)
     assert isspmatrix(m1)
