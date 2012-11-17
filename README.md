@@ -1,5 +1,7 @@
 ## Molecular Dynamics Trajectory: File IO and manipulation
 
+[![Build Status](https://travis-ci.org/rmcgibbo/mdtraj.png)](https://travis-ci.org/rmcgibbo/mdtraj)
+
 Reads from and writes  PDB, DCD, XTC, PyTables hdf5. This repository is a working sketch of a replacement for MSMBuilder.Trajectory, and may be directly used in https://github.com/tjlane/odin
 
 The Trajectory data structure contains a numpy array (n_frames x n_atoms x 3), an OpenMM style object oriented topology
