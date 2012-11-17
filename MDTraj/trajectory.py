@@ -1,10 +1,12 @@
 import os
 import numpy as np
-import xtc
-import dcd
-from pdb import pdbfile
+from mdtraj import dcd
+from mdtraj import xtc
+from mdtraj import binpos
+from mdtraj.pdb import pdbfile
+from mdtraj import io
 from topology import Topology
-import io
+
 import logging
 logger = logging.getLogger(__name__)
 
