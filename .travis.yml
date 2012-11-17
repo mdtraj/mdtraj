@@ -8,6 +8,7 @@ python:
 before_install:
   - pip install numpy
   - pip install nose
+  - pip install cython
 install:
   - python setup.py install
 script:

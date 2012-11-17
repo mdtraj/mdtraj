@@ -9,7 +9,6 @@ there are not discovered by nose
 import os, tempfile
 import numpy as np
 from mdtraj import xtc
-from msmbuilder import Trajectory
 from mdtraj.testing import get_fn, eq
 
 fn_xtc = get_fn('frame0.xtc')
@@ -23,12 +22,14 @@ def teardown_module(module):
 
 
 def test_xread0():
+    from msmbuilder import Trajectory
     #"Reads the same as msmbuilder.Traj with chunk1"
     xyz, time, step, box, prec = xtc.read(fn_xtc, chunk=1)
     t = Trajectory.load_trajectory_file(fn_xtc, Conf=Trajectory.load_trajectory_file(pdb))
     eq(xyz, t['XYZList'])
 
 def test_xread1():
+    from msmbuilder import Trajectory
     #"Reads the same with chunk 100"
     xyz, time, step, box, prec = xtc.read(fn_xtc, chunk=100)
     t = Trajectory.load_trajectory_file(fn_xtc, Conf=Trajectory.load_trajectory_file(pdb))
@@ -36,6 +37,7 @@ def test_xread1():
         
 
 def test_xread2():
+    from msmbuilder import Trajectory
     #"Reads the same with chunk 1000"
     xyz, time, step, box, prec = xtc.read(fn_xtc, chunk=1000)
     t = Trajectory.load_trajectory_file(fn_xtc, Conf=Trajectory.load_trajectory_file(pdb))
@@ -73,6 +75,7 @@ def test_xwrite2():
     eq(time, time2)
    
 def test_xwrite3():
+    from msmbuilder import Trajectory
     t = Trajectory.load_trajectory_file(fn_xtc, Conf=Trajectory.load_trajectory_file(pdb))
     if os.path.exists(temp):
         os.unlink(temp)

@@ -11,8 +11,6 @@ from mdtraj import dcd
 from mdtraj.testing import get_fn, eq
 import warnings
 
-from msmbuilder import Trajectory
-
 fn_dcd = get_fn('frame0.dcd')
 pdb = get_fn('native.pdb')
 
@@ -24,6 +22,8 @@ def teardown_module(module):
 
 def test_dread():
     #"ReadDCD"
+    from msmbuilder import Trajectory
+    
     xyz = 0.1*dcd.read_xyz(fn_dcd)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -41,6 +41,8 @@ def test_dwrite0():
     
 def test_dwrite1():
     #"Read, write, read(cytpes)"
+    from msmbuilder import Trajectory
+    
     xyz = dcd.read_xyz(fn_dcd)
     dcd.write_xyz(temp, xyz, force_overwrite=True)
     with warnings.catch_warnings():
