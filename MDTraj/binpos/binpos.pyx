@@ -32,34 +32,34 @@ def read_xyz(filename, chunk=1):
     return np.concatenate(tuple(BINPOSReader(filename, chunk)))
 
 
-# 
-# def write_xyz(filename, xyz, force_overwrite=False):
-#     """Write xyz coordinates to a AMBER binpos file
-# 
-#     Note that the box size entries in the DCD file will be left blank (zeros)
-# 
-#     Parameters
-#     ----------
-#     filename : str
-#         The filename of the dcd file to write to
-#     xyz : np.ndarray, ndim=3, dtype=np.float32
-#         The xyz coordinates
-#     """
-# 
-#     if not force_overwrite and os.path.exists(filename):
-#         raise IOError('The file already exists: %s' % filename)
-# 
-#     if not isinstance(xyz, np.ndarray):
-#         raise TypeError("Must be numpy array")
-#     if xyz.dtype != np.float32:
-#         warnings.warn('Casting to float32')
-#         xyz = np.array(xyz, dtype=np.float32)
-#     if not xyz.flags.c_contiguous:
-#         warnings.warn('Casting to contiguous')
-#         xyz = np.ascontiguousarray(xyz, dtype=np.float32)
-# 
-#     writer = BINPOSWriter(filename, xyz)
-#     writer.write()
+
+def write_xyz(filename, xyz, force_overwrite=False):
+    """Write xyz coordinates to a AMBER binpos file
+
+    Note that the box size entries in the DCD file will be left blank (zeros)
+
+    Parameters
+    ----------
+    filename : str
+        The filename of the dcd file to write to
+    xyz : np.ndarray, ndim=3, dtype=np.float32
+        The xyz coordinates
+    """
+
+    if not force_overwrite and os.path.exists(filename):
+        raise IOError('The file already exists: %s' % filename)
+
+    if not isinstance(xyz, np.ndarray):
+        raise TypeError("Must be numpy array")
+    if xyz.dtype != np.float32:
+        warnings.warn('Casting to float32')
+        xyz = np.array(xyz, dtype=np.float32)
+    if not xyz.flags.c_contiguous:
+        warnings.warn('Casting to contiguous')
+        xyz = np.ascontiguousarray(xyz, dtype=np.float32)
+
+    writer = BINPOSWriter(filename, xyz)
+    writer.write()
 
 cdef class BINPOSReader:
     cdef int n_atoms
@@ -115,51 +115,47 @@ cdef class BINPOSReader:
 
         return xyz
 
-#
-# cdef class DCDWriter:
-#     cdef char* filename
-#     cdef dcdhandle* fh
-#     cdef np.ndarray xyz
-#     cdef int n_atoms
-#     cdef molfile_timestep_t* timestep
-#
-#     def __cinit__(self, char* filename, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz):
-#         self.filename = filename
-#         self.xyz = xyz
-#         self.n_atoms = self.xyz.shape[1]
-#
-#         self.fh = open_dcd_write(filename, "dcd", self.n_atoms)
-#         if self.fh is NULL:
-#             raise IOError('There was an error opening the file: %s' % filename)
-#
-#         self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
-#         if self.timestep is NULL:
-#             raise MemoryError
-#
-#     def __dealloc__(self):
-#         close_file_write(self.fh)
-#         if self.timestep is not NULL:
-#             free(self.timestep)
-#
-#     def write(self):
-#         cdef int i, status
-#         cdef n_frames = len(self.xyz)
-#
-#         self.timestep.A = 0
-#         self.timestep.B = 0
-#         self.timestep.C = 0
-#         self.timestep.alpha = 0
-#         self.timestep.beta = 0
-#         self.timestep.gamma = 0
-#
-#         self.timestep.coords = <float*> self.xyz.data
-#
-#         for i in range(n_frames):
-#             status = write_timestep(self.fh, self.timestep)
-#             self.timestep.coords += self.n_atoms * 3
-#             if status != _DCD_SUCCESS:
-#                 raise RuntimeError("DCD Error: %s" % status)
-#
-#
-#
-#
+
+cdef class BINPOSWriter:
+    cdef char* filename
+    cdef void* fh
+    cdef np.ndarray xyz
+    cdef int n_atoms
+    cdef molfile_timestep_t* timestep
+
+    def __cinit__(self, char* filename, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz):
+        self.filename = filename
+        self.xyz = xyz
+        self.n_atoms = self.xyz.shape[1]
+
+        self.fh = open_binpos_write(filename, "binpos", self.n_atoms)
+        if self.fh is NULL:
+            raise IOError('There was an error opening the file: %s' % filename)
+
+        self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
+        if self.timestep is NULL:
+            raise MemoryError
+
+    def __dealloc__(self):
+        close_file_write(self.fh)
+        if self.timestep is not NULL:
+            free(self.timestep)
+
+    def write(self):
+        cdef int i, status
+        cdef n_frames = len(self.xyz)
+
+        self.timestep.A = 0
+        self.timestep.B = 0
+        self.timestep.C = 0
+        self.timestep.alpha = 0
+        self.timestep.beta = 0
+        self.timestep.gamma = 0
+
+        self.timestep.coords = <float*> self.xyz.data
+
+        for i in range(n_frames):
+            status = write_timestep(self.fh, self.timestep)
+            self.timestep.coords += self.n_atoms * 3
+            if status != _BINPOS_SUCESS:
+                raise RuntimeError("BINPOS Error: %s" % status)

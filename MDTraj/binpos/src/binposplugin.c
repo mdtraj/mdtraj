@@ -166,7 +166,9 @@ void *open_binpos_write(const char *path, const char *filetype, int natoms) {
     fprintf(stderr, "Could not open file %s for writing\n", path);
     return NULL;
   }
+  #ifdef DEBUG
   fprintf(stderr,"Writing file in current machine endian-ism\n");
+  #endif
   binpos = (binposhandle *)malloc(sizeof(binposhandle));
   binpos->fd = fd;
   binpos->numatoms = natoms;
