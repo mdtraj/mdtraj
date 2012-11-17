@@ -15,7 +15,7 @@ cdef int _BINPOS_SUCESS = 0  # regular exit code
 cdef int _BINPOS_EOF = -1  # end of file (or error)
 
 def read_xyz(filename, chunk=1):
-    """Read the xyz coordinates from a NAMD/CHARMM DCD File
+    """Read the xyz coordinates from a AMBED binpos file
 
     Parameters
     ----------
@@ -32,12 +32,12 @@ def read_xyz(filename, chunk=1):
     return np.concatenate(tuple(BINPOSReader(filename, chunk)))
 
 
-#
+# 
 # def write_xyz(filename, xyz, force_overwrite=False):
-#     """Write xyz coordinates to a NAMD/CHARMM DCD File
-#
+#     """Write xyz coordinates to a AMBER binpos file
+# 
 #     Note that the box size entries in the DCD file will be left blank (zeros)
-#
+# 
 #     Parameters
 #     ----------
 #     filename : str
@@ -45,10 +45,10 @@ def read_xyz(filename, chunk=1):
 #     xyz : np.ndarray, ndim=3, dtype=np.float32
 #         The xyz coordinates
 #     """
-#
+# 
 #     if not force_overwrite and os.path.exists(filename):
 #         raise IOError('The file already exists: %s' % filename)
-#
+# 
 #     if not isinstance(xyz, np.ndarray):
 #         raise TypeError("Must be numpy array")
 #     if xyz.dtype != np.float32:
@@ -57,7 +57,7 @@ def read_xyz(filename, chunk=1):
 #     if not xyz.flags.c_contiguous:
 #         warnings.warn('Casting to contiguous')
 #         xyz = np.ascontiguousarray(xyz, dtype=np.float32)
-#
+# 
 #     writer = BINPOSWriter(filename, xyz)
 #     writer.write()
 
@@ -105,7 +105,6 @@ cdef class BINPOSReader:
         for i in range(self.chunk):
             self.timestep.coords = &xyz[i,0,0]
             status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
-            print i, status
             if status != _BINPOS_SUCESS:
                 if i == 0:
                     raise StopIteration

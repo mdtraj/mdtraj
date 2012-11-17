@@ -7,7 +7,8 @@ there are not discovered by nose
 """
 
 import tempfile, os
-from mdtraj import dcd
+import numpy as np
+from mdtraj import dcd, io
 from mdtraj.testing import get_fn, eq
 import warnings
 
@@ -20,33 +21,22 @@ def teardown_module(module):
     this gets automatically called by nose"""
     os.unlink(temp)
 
-def test_dread():
-    #"ReadDCD"
-    from msmbuilder import Trajectory
-    
-    xyz = 0.1*dcd.read_xyz(fn_dcd)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        t = Trajectory.load_trajectory_file(fn_dcd, Conf=Trajectory.load_trajectory_file(pdb))
+def test_read():
+    xyz = dcd.read_xyz(fn_dcd)
+    xyz2 = io.loadh(get_fn('frame0.dcd.h5'), 'xyz')
 
-    eq(xyz, t['XYZList'])
+    eq(xyz, xyz2)
     
-def test_dwrite0():
-    #"Read write read"
+def test_write_0():
     xyz = dcd.read_xyz(fn_dcd)
     dcd.write_xyz(temp, xyz, force_overwrite=True)
     xyz2 = dcd.read_xyz(temp)
 
     eq(xyz, xyz2)
     
-def test_dwrite1():
-    #"Read, write, read(cytpes)"
-    from msmbuilder import Trajectory
-    
-    xyz = dcd.read_xyz(fn_dcd)
+def test_write_1():
+    xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
     dcd.write_xyz(temp, xyz, force_overwrite=True)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        t = Trajectory.load_trajectory_file(temp, Conf=Trajectory.load_trajectory_file(pdb))
+    xyz2 = dcd.read_xyz(temp)
 
-    eq(0.1*xyz, t['XYZList'])
+    eq(xyz, xyz2)

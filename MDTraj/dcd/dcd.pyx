@@ -23,7 +23,7 @@ cdef int _DCD_BADMALLOC  = -8  # malloc failed
 cdef int _DCD_BADWRITE   = -9  # write call on DCD file failed
 
 def read_xyz(filename):
-    """Read the xyz coordinates from a NAMD/CHARMM DCD File
+    """Read the xyz coordinates from a NAMD/CHARMM DCD file
 
     Parameters
     ----------
@@ -40,7 +40,7 @@ def read_xyz(filename):
     return DCDReader(filename).read()
 
 def write_xyz(filename, xyz, force_overwrite=False):
-    """Write xyz coordinates to a NAMD/CHARMM DCD File
+    """Write xyz coordinates to a NAMD/CHARMM DCD file
     
     Note that the box size entries in the DCD file will be left blank (zeros)
     
