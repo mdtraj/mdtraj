@@ -373,17 +373,21 @@ class Trajectory(object):
             time=self.time,
             topology=self.topology.to_bytearray())
             
-    def save_pdb(self, filename):
+    def save_pdb(self, filename, no_models=False):
         """ should save contiguous PDBs """
         f = open(filename, 'w')
         pdbfile.PDBFile.writeHeader(self.topology, file=f)
         
         for i in range(self._xyz.shape[0]):
+            if no_models:
+                mind = None
+            else:
+                mind = i
             positions = [ list(self._xyz[i,j,:].flatten()) for j in range(self._xyz.shape[1]) ]
             pdbfile.PDBFile.writeModel(self.topology, 
                                       positions,
                                       file=f, 
-                                      modelIndex=i)
+                                      modelIndex=mind)
                                       
         pdbfile.PDBFile.writeFooter(self.topology, file=f)
         f.close()
