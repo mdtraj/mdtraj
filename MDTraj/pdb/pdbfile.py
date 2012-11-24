@@ -110,9 +110,13 @@ class PDBFile(object):
                         element = elem.calcium
                     else:
                         try:
-                            element = elem.get_by_symbol(atomName[0])
+                            symbol = atomName[0:2].strip().rstrip("AB0123456789")
+                            element = elem.get_by_symbol(symbol)
                         except KeyError:
-                            pass
+                            try:
+                                element = elem.get_by_symbol(atomName[0])
+                            except KeyError: pass
+                                
                     newAtom = top.addAtom(atomName, element, r)
                     atomByNumber[atom.serial_number] = newAtom
                     pos = atom.get_position()

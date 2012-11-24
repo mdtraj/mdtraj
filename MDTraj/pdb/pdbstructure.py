@@ -470,16 +470,19 @@ class Residue(object):
             self.locations[alt_loc] = Residue.Location(alt_loc, atom.residue_name_with_spaces)
         assert atom.residue_number == self.number
         assert atom.insertion_code == self.insertion_code
+        
         # Check whether this is an existing atom with another position
         if (atom.name_with_spaces in self.atoms_by_name):
             old_atom = self.atoms_by_name[atom.name_with_spaces]
             # Unless this is a duplicated atom (warn about file error)
             if atom.alternate_location_indicator in old_atom.locations:
-                warnings.warn("WARNING: duplicate atom (%s, %s)" % (atom, old_atom._pdb_string(old_atom.serial_number, atom.alternate_location_indicator)))
+                pass # TJL COMMENTED OUT
+                #warnings.warn("WARNING: duplicate atom (%s, %s)" % (atom, old_atom._pdb_string(old_atom.serial_number, atom.alternate_location_indicator)))
             else:
                 for alt_loc, position in atom.locations.items():
                     old_atom.locations[alt_loc] = position
                 return # no new atom added
+                
         # actually use new atom
         self.atoms_by_name[atom.name] = atom
         self.atoms_by_name[atom.name_with_spaces] = atom
