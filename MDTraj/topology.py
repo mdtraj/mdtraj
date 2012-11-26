@@ -1,5 +1,4 @@
-# Copyright 2012 mdtraj developers
-#
+# Copyright 2012 the authors
 # This file is part of mdtraj
 #
 # mdtraj is free software: you can redistribute it and/or modify it under the
@@ -24,7 +23,7 @@ Medical Research, grant U54 GM072970. See https://simtk.org.
 
 Portions copyright (c) 2012 Stanford University and the Authors.
 Authors: Peter Eastman
-Contributors:
+Contributors: Robert McGibbon
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
