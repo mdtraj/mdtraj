@@ -109,7 +109,7 @@ def DocStringFormatTester(module, error_on_none=False):
                 try:
                     f(*range(1000))
                 except TypeError as e:
-                    m = re.search('takes at most (\d+) positional arguments', e.message)
+                    m = re.search('takes at most (\d+) positional arguments', str(e))
                     if not m:
                         return
                     n_args = int(m.group(1))
