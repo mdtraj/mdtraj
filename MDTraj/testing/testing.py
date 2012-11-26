@@ -99,7 +99,7 @@ def expected_failure(test):
     return inner
 
 # decorator to skip tests
-def skip(rason):
+def skip(reason):
     def wrap(test):
         @functools.wraps(test)
         def inner(*args, **kwargs):

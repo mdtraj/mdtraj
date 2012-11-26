@@ -20,7 +20,8 @@ if sizeof(float) != sizeof(np.float32_t):
 
 
 def read(filename, chunk=1):
-    """Read the xyz coordinates from a Gromacs XTC file
+    """
+    Read the xyz coordinates from a Gromacs XTC file
 
     Parameters
     ----------
@@ -49,8 +50,18 @@ def read(filename, chunk=1):
 
 
 def write(filename, xyz, time=None, step=None, box=None, prec=None, force_overwrite=False):
-    """Write a Gromacs XTC file
-
+    """
+    Write a Gromacs XTC file
+    
+    Parameters
+    ----------
+    filename : str
+    xyz : np.ndarray
+    time : np.ndarray, optional
+    step : np.ndarray, optional
+    box : np.ndarray, optional
+    prec : np.ndarray, optional
+    force_overwrite : bool
     """
     if force_overwrite and os.path.exists(filename):
         os.unlink(filename)

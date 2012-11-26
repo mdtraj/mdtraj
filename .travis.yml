@@ -3,12 +3,12 @@ python:
   - 2.6
   - 2.7
 before_install:
-  - pip install numpy > /dev/null
-  - pip install nose > /dev/null
+  - pip install numpy --use-mirrors -qq
+  - pip install nose --use-mirrors  -qq
   - sudo apt-get install -qq libhdf5-serial-dev
-  - pip install numexpr
-  - pip install cython
-  - pip install tables
+  - pip install numexpr --use-mirrors -qq
+  - pip install cython --use-mirrors -qq
+  - pip install tables --use-mirrors -qq
 install:
   - python setup.py install
 script:

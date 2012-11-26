@@ -7,8 +7,11 @@ there are not discovered by nose
 """
 import tempfile, os
 from mdtraj import binpos, dcd, io
-from mdtraj.testing import get_fn, eq
+from mdtraj.testing import get_fn, eq, DocStringFormatTester
 import numpy as np
+
+TestDocstrings = DocStringFormatTester(binpos, error_on_none=True)
+
 
 # frame0.binpos was generated from frame0.dcd using
 # VMD. The binpos file has one more frame than the dcd file

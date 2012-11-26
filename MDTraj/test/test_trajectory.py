@@ -1,9 +1,11 @@
 import tempfile, os
 from mdtraj import binpos, dcd, io
-from mdtraj.testing import get_fn, eq
+from mdtraj.testing import get_fn, eq, DocStringFormatTester
 import numpy as np
 from mdtraj.trajectory import load_hdf
-import docutils.parsers.rst
+import mdtraj.trajectory
+
+TestDocstrings = DocStringFormatTester(mdtraj.trajectory, error_on_none=True)
 
 fn = get_fn('frame0.xtc.h5')
 
@@ -25,4 +27,4 @@ def test_hdf2():
     eq(t0.xyz, t1.xyz)
     eq(t0.xyz, t2.xyz)
     eq(t0.xyz, t3.xyz[::10])
-    
+

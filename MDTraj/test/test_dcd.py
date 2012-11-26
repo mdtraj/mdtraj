@@ -9,8 +9,10 @@ there are not discovered by nose
 import tempfile, os
 import numpy as np
 from mdtraj import dcd, io
-from mdtraj.testing import get_fn, eq
+from mdtraj.testing import get_fn, eq, DocStringFormatTester
 import warnings
+
+TestDocstrings = DocStringFormatTester(dcd, error_on_none=True)
 
 fn_dcd = get_fn('frame0.dcd')
 pdb = get_fn('native.pdb')

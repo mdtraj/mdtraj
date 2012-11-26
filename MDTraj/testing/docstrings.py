@@ -1,32 +1,68 @@
 from inspect import (isclass, ismodule, isfunction, ismethod, \
     getmembers, getdoc, getmodule, getargs, isbuiltin)
 import docscrape
+import types
 import sys
 
 __all__ = ['DocStringFormatTester']
 
 def DocStringFormatTester(module, error_on_none=False):
     """
-    Short Descr
+    Create a class that tests the docstrings of a python module for adherance
+    to the numpy docstring format, for use with Nose.
 
     Parameters
     ----------
     module : module
-        Descr
+        The module to test
     error_on_none : bool
         Throw an error if no docstring is defined
+        
+    Notes
+    -----
+    For example, test_trajectory.py in mdtraj contains the line:
 
+    TestDocstrings = DocStringFormatTester(mdtraj.trajectory)
+    
+    TestDocstrings is now a class with one method defined per class/function in
+    mdtraj.trajectory. Each method, when called, validates a single docstring.
+    When nosetests runs that file (in verbose mode), you see:
+
+    NumpyDoc: mdtraj.trajectory.load_xtc ... ok
+    NumpyDoc: mdtraj.trajectory.load_pdb ... ok
+    NumpyDoc: mdtraj.trajectory.Trajectory.save_binpos ... ok
+    NumpyDoc: mdtraj.trajectory.Trajectory.save ... ok
+    NumpyDoc: mdtraj.trajectory.load ... ok
+    NumpyDoc: mdtraj.trajectory.load_hdf ... ok
+    NumpyDoc: mdtraj.trajectory.load_dcd ... ok
+    NumpyDoc: mdtraj.trajectory.load_binpos ... ok
+    NumpyDoc: mdtraj.trajectory.load ... ok
+    NumpyDoc: mdtraj.trajectory.Trajectory.save_xtc ... ok
+    NumpyDoc: mdtraj.trajectory.Trajectory.save_pdb ... ok
+    NumpyDoc: mdtraj.trajectory.Trajectory.save_hdf ... ok
+    NumpyDoc: mdtraj.trajectory.Trajectory.save_dcd ... ok
     """
-    import types
 
-    # these are the functions whose docstrings we make methods to check
-    def accept(f):
-        # the builtin one is specifically for cython functions, which get
-        # called builtins even though they're not
-        return isfunction(f) or ismethod(f) or isbuiltin(f)
-    functions = filter(accept, walk(module))
+    # These are the types that we want to check
+    # currently, the docstring on classes are not being checked, since
+    # isclass() is not in the list
+    acceptors = [isfunction, ismethod, isbuiltin]
+    accept = lambda f: any([acc(f) for acc in acceptors])
+    functions = [f for f in walk(module) if accept(f)]
 
     def format(f):
+        """
+        Format a method/function/class as a string
+        
+        Parameters
+        ----------
+        f : function, method, class
+        
+        Returns
+        -------
+        repr : string
+            A string represntation
+        """
         if ismethod(f):
             return '.'.join([getmodule(f).__name__, f.im_class.__name__, f.__name__])
         if isfunction(f) or isbuiltin(f):
@@ -36,6 +72,21 @@ def DocStringFormatTester(module, error_on_none=False):
         return 'Error'
 
     def check_docstring(self, f):
+        """
+        Ensure the docstring of `f` is in accordance with the numpy standard
+        
+        Currently, only the Parameters section of the docstring is checked.
+        
+        Parameters
+        ----------
+        f : function, method, class
+        
+        Returns
+        -------
+        repr : string
+            A string represntation
+        """
+        
         doc = getdoc(f)
         if doc is None:
             if error_on_none:
@@ -75,27 +126,37 @@ def DocStringFormatTester(module, error_on_none=False):
                     "match Parameters list %s" % (format(f),
                         list(args), list(param_names)))
 
-
+    
     funcdict = {}
+    # populate the func dict before calling type()
     for i, f in enumerate(functions):
-        name = 'test_%s' % i
-        func = types.FunctionType(check_docstring.func_code, globals(), name,
+        name = 'test_%s' % i  #  this is the name we give the method
+        
+        # create the method. this is a little complicated, but the basic
+        # idea is that NoseTests checks the func_name, so we need to create
+        # the method correctly. Just giving it a pointer to a closure we define
+        # won't set func_name correctly. Instead, we make a function where
+        # func_code is set to the func_code of check_docstring, but we add
+        # set second argument of that function (after self) to be a default
+        # arg -- the f that we're iterating over.
+        method = types.FunctionType(check_docstring.func_code, globals(), name,
             (f,), check_docstring.func_closure)
 
-        func.func_doc = 'NumpyDoc: ' + format(f)
-        funcdict[name] = func
+        # give the method a short docstring
+        method.func_doc = 'NumpyDoc: ' + format(f)
+        funcdict[name] = method
 
     return type('TestDoc', (), funcdict)
 
 
 def ispackage(obj):
     """
-    Short Descr
+    Check if obj is a package. Simply look for whether its a module whose
+    filename is __init__.py(c)
 
     Parameters
     ----------
     obj : module
-        Descr
     """
     if ismodule(obj):
         return obj.__file__.endswith("__init__.pyc") or \
@@ -105,16 +166,21 @@ def ispackage(obj):
 
 def walk(module):
     """
-    Short Descr
+    Get all of the functions, classes and their methods defined within
+    a python module
 
     Parameters
     ----------
     module : module
-        Descr
+
+    Returns
+    -------
+    funcs : list
+        List of functions, classes and methods
     """
     assert ismodule(module)
     if ispackage(module):
-        raise ValueError('No packages')
+        raise ValueError('Sorry, you need to supply me a module, not a package')
 
     def is_valid(obj):
         if getmodule(obj) == module:

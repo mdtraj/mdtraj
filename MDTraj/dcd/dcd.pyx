@@ -50,6 +50,8 @@ def write_xyz(filename, xyz, force_overwrite=False):
         The filename of the dcd file to write to
     xyz : np.ndarray, ndim=3, dtype=np.float32
         The xyz coordinates
+    force_overwrite : bool
+        Overwrite anything that exists at filename, if its already there
     """
     
     if not force_overwrite and os.path.exists(filename):

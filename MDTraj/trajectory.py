@@ -1,18 +1,21 @@
 import os
 import numpy as np
+import tables
+from tables import NoSuchNodeError
 from mdtraj import dcd
 from mdtraj import xtc
 from mdtraj import binpos
 from mdtraj.pdb import pdbfile
 from mdtraj import io
 from topology import Topology
-
+from itertools import izip
 import logging
 logger = logging.getLogger(__name__)
 
 MAXINT16 = np.iinfo(np.int16).max
 MAXINT32 = np.iinfo(np.int32).max
 DEFAULT_PRECISION = 1000
+
 
 def _convert_to_lossy_integers(X, precision=DEFAULT_PRECISION):
     """Implementation of the lossy compression used in Gromacs XTC using
@@ -40,6 +43,7 @@ def _convert_from_lossy_integers(X, precision=DEFAULT_PRECISION):
     X2 /= float(precision)
     return(X2)
 
+
 def _assert_files_exist(filenames):
     """Throw an IO error if files don't exist
 
@@ -55,15 +59,33 @@ def _assert_files_exist(filenames):
             raise IOError("I'm sorry, the file you requested does not seem to "
             "exist: %s" % fn)
 
+
+def _parse_topology(top):
+    """Get the topology from a argument of indeterminate type
+    If top is a string, we try loading a pdb, if its a trajectory
+    we extract its topology.
+    """
+    if isinstance(top, basestring):
+        topology = pdbfile.PDBFile(top).topology
+    elif isinstance(top, Trajectory):
+        topology = top.topology
+    elif isinstance(top, Topology):
+        topology = top
+    else:
+        raise TypeError('Could not interpreted top=%s' % top)
+
+    return topology
+
+
 def load(filename, **kwargs):
     """Load a trajectory from a file or list of files
 
     Parameters
-    ---------
+    ----------
     filename : {str, list of strings}
-       The file or list of files to load from
+        filesystem path from which to load the trajectory
 
-    Optional Keyword Aruments
+    Other Parameters
     -------------------------
     DEPENDS ON THE LOADER. NOT FILLED IN YET. NEED TO ADD STRIDING AND SUCH
 
@@ -77,10 +99,12 @@ def load(filename, **kwargs):
     # grab the extension of the filename
     extension = os.path.splitext(filename)[1]
 
-    loaders = {'.xtc': load_xtc,
-               '.pdb': load_pdb,
-               '.dcd': load_dcd,
-               '.h5': load_hdf}
+    loaders = {'.xtc':    load_xtc,
+               '.pdb':    load_pdb,
+               '.dcd':    load_dcd,
+               '.h5':     load_hdf,
+               '.lh5':    load_hdf,
+               '.binpos': load_binpos}
 
     try:
         loader = loaders[extension]
@@ -98,10 +122,10 @@ def load_pdb(filename):
     Parameters
     ----------
     filename : str
-        Path to the pdb file on disk
+        filesystem path from which to load the trajectory
 
-    Optional Arguments
-    ------------------
+    Other Parameters
+    ----------------
     None
 
     Returns
@@ -118,7 +142,7 @@ def load_pdb(filename):
     return Trajectory(xyz=f.positions, topology=f.topology)
 
 
-def load_xtc(filenames, top, **kwargs):
+def load_xtc(filenames, top, discard_overlapping_frames=False, chunk=500):
     """Load an xtc file. Since the xtc doesn't contain information
     to specify the topolgy, you need to supply a pdb_filename
 
@@ -129,9 +153,6 @@ def load_xtc(filenames, top, **kwargs):
     top : {str, Trajectory, Topology}
         The XTC format does not contain topology information. Pass in either the path to a pdb file,
         a trajectory, or a topology to supply this information.
-
-    Optional Arguments
-    ------------------
     discard_overlapping_frames : bool, default=False
         Look for overlapping frames between the last frame of one filename and
         the first frame of a subsequent filename and discard them
@@ -145,19 +166,7 @@ def load_xtc(filenames, top, **kwargs):
     trajectory : Trajectory
         A trajectory file!
     """
-
-    discard_overlapping_frames = kwargs.pop('discard_overlapping_frames', False)
-    chunk = kwargs.pop('chunk', 500)
-
-    if isinstance(top, basestring):
-        topology = pdbfile.PDBFile(top).topology
-    elif isinstance(top, Trajectory):
-        topology = top.topology
-    elif isinstance(top, Topology):
-        topology = top
-    else:
-        raise TypeError('Could not interpreted top=%s' % top)
-
+    topology = _parse_topology(top)
     if isinstance(filenames, basestring):
         filenames = [filenames]
 
@@ -178,7 +187,7 @@ def load_xtc(filenames, top, **kwargs):
     return Trajectory(xyz=coords, topology=topology, time=times)
 
 
-def load_dcd(filenames, top, **kwargs):
+def load_dcd(filenames, top, discard_overlapping_frames=False):
     """Load an xtc file. Since the dcd format doesn't contain information
     to specify the topolgy, you need to supply a pdb_filename
 
@@ -186,14 +195,11 @@ def load_dcd(filenames, top, **kwargs):
     ----------
     filenames : {str, [str]}
         String or list of strings giving one or multiple filenames that together
-        form an xtx
-    top : {str, Trajectory, Topology}
+        form an dcd
+    top : {str, Trajectoray, Topology}
         DCD XTC format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
         information.
-
-    Optional Arguments
-    ------------------
     discard_overlapping_frames : bool, default=False
         Look for overlapping frames between the last frame of one filename and
         the first frame of a subsequent filename and discard them
@@ -204,17 +210,7 @@ def load_dcd(filenames, top, **kwargs):
         A trajectory file!
     """
 
-    discard_overlapping_frames = kwargs.pop('discard_overlapping_frames', False)
-
-    if isinstance(top, basestring):
-        topology = pdbfile.PDBFile(top).topology
-    elif isinstance(top, Trajectory):
-        topology = top.topology
-    elif isinstance(top, Topology):
-        topology = top
-    else:
-        raise TypeError('Could not interpreted top=%s' % top)
-
+    topology = _parse_topology(top)
     if isinstance(filenames, basestring):
         filenames = [filenames]
 
@@ -231,46 +227,142 @@ def load_dcd(filenames, top, **kwargs):
     return Trajectory(xyz=coords, topology=topology)
 
 
-def load_hdf(filename, top=None):
-    """Load an hdf file.
+def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True):
+    """
+    Load an hdf file.
 
     Parameters
     ----------
     filename : str
-        Path to the file
+        filesystem path from which to load the trajectory
+    top : topology
+        Replace the topology in the file with this topology
+    stride : int, default=None
+        Only read every stride-th frame
+    chunk : int, default=50000
+       Size of the chunk to use for loading the file.
+    upconvert_int16 : bool, default=True
+        If the data is encoded in the file as int16, an automatic upconversion
+        to float32 based on the gromacs lossy encoding scheme is done.
 
     Returns
     -------
     trajectory : Trajectory
         A trajectory file!
     """
-    container = io.loadh(filename, deferred=False)
-    if 'xyz' in container:
-        xyz = container['xyz']
-    elif 'XYZList' in container:
-        xyz = container['XYZList']
-    else:
-        raise IOError('xyz data not found in %s' % filename)
 
-    if 'topology' in container:
-        topology = Topology.from_bytearray(container['topology'])
-    else:
+    F = tables.File(filename, 'r')
+    try:
+        # get the topology from the file, or input argument list
         if top is None:
-            raise ValueError("I can't read the topology from your old HDF "
-                "file, so how about you give me a new topology with the top "
-                "optional argument")
-        topology = top
+            if hasattr(F.root, 'topology'):
+                topology = Topology.from_bytearray(F.root.topology)
+            else:
+                raise ValueError("I can't read the topology from your old HDF "
+                    "file, so how about you give me a new topology with the top "
+                    "optional argument")
+        else:
+            topology = _parse_topology(top)
+
+        # find the xyz coordinates in the file
+        if hasattr(F.root, 'xyz'):
+            xyz_node = F.root.xyz
+        elif hasattr(F.root, 'XYZList'):
+            xyz_node = F.root.XYZList
+        else:
+            raise ValueError('XYZ data not found in %s' % filename)
+
+        # find the time in the file
+        if hasattr(F.root, 'time'):
+            time_node = F.root.time
+        else:
+            time_node = None
+
+        if chunk < stride:
+            raise ValueError('Chunk must be greater than or equal to the stride')
+
+        # adjust the stride/chunk
+        if stride is not None:
+            # Need to do this in order to make sure we stride correctly.
+            # since we read in chunks, and then we need the strides
+            # to line up
+            while chunk % stride != 0:
+                chunk -= 1
+        else:
+            stride = 1
 
 
-    if 'time' in container:
-        time = container['time']
-    else:
-        time = None
+        shape = xyz_node.shape
+        begin_range_list = np.arange(0, shape[0], chunk)
+        end_range_list = np.concatenate((begin_range_list[1:], [shape[0]]))
+        def enum_chunks():
+            for r0, r1 in zip(begin_range_list, end_range_list):
+                xyz = np.array(xyz_node[r0: r1: stride])
+                if time_node is not None:
+                    time = np.array(time_node[r0: r1: stride])
+                else:
+                    time = None
 
-    if xyz.dtype == np.int16:
-        xyz = _convert_from_lossy_integers(xyz)
+                yield xyz, time
+
+        zipper = tuple(izip(*enum_chunks()))
+        xyz = np.concatenate(zipper[0])
+        if time_node is not None:
+            time = np.concatenate(zipper[1])
+        else:
+            time = None
+
+        if upconvert_int16 and xyz.dtype == np.int16:
+            xyz = _convert_from_lossy_integers(xyz)
+    except:
+        raise
+    finally:
+        F.close()
 
     return Trajectory(xyz=xyz, topology=topology, time=time)
+
+
+def load_binpos(filenames, top, chunk=500, discard_overlapping_frames=False):
+    """Load an AMBER binpos file. Since the dcd format doesn't contain
+    information to specify the topolgy, you need to supply a pdb_filename
+
+    Parameters
+    ----------
+    filenames : {str, [str]}
+        String or list of strings giving one or multiple filenames that together
+        form a binpos
+    top : {str, Trajectory, Topology}
+        DCD XTC format does not contain topology information. Pass in either
+        the path to a pdb file, a trajectory, or a topology to supply this
+        information.
+    chunk : int, default=500
+        Size of the chunk to use for loading the xtc file. Memory is allocated
+        in units of the chunk size, so larger chunk can be more time-efficient.
+    discard_overlapping_frames : bool, default=False
+        Look for overlapping frames between the last frame of one filename and
+        the first frame of a subsequent filename and discard them
+
+    Returns
+    -------
+    trajectory : Trajectory
+        A trajectory file!
+    """
+
+    topology = _parse_topology(top)
+    if isinstance(filenames, basestring):
+        filenames = [filenames]
+
+    coords = []
+    for i, filename in enumerate(filenames):
+        xyz = binpos.read_xyz(filename)
+        if i > 0 and discard_overlapping_frames:
+            if np.sum(np.square(xyz[0] - coords[-1][-1])) < 1e-8:
+                xyz = xyz[0:-1]
+        coords.append(xyz)
+
+    coords = np.vstack(coords)
+
+    return Trajectory(xyz=coords, topology=topology)
 
 
 class Trajectory(object):
@@ -312,9 +404,7 @@ class Trajectory(object):
 
     @xyz.setter
     def xyz(self, value):
-
         #TODO control the precision of xyz
-
         if value.ndim == 2:
             n_frames = 1
             n_atoms, n_dims = value.shape
@@ -327,6 +417,21 @@ class Trajectory(object):
 
         else:
             raise ValueError('xyz is wrong shape')
+
+    def __len__(self):
+        return len(self.xyz)
+
+    def __add__(self, other):
+        "Concatenate two trajectories"
+        raise NotImplementedError
+
+    def __iadd__(self, other):
+        "Concatenate two trajectories, override the += operator"
+        raise NotImplementedError
+
+    def __getitem__(self, key):
+        "Get a slice of this trajectory"
+        raise NotImplementedError
 
     def __init__(self, xyz, topology, time=None):
         self.xyz = xyz
@@ -344,56 +449,130 @@ class Trajectory(object):
     @staticmethod
     # im not really sure if the load function should be just a function or a method on the class
     # so effectively, lets make it both?
-    def load(filename, **kwargs):
-        return load(filename, **kwargs)
+    def load(filenames, **kwargs):
+        """
+        Load a trajectory
 
-    def save(self, filename):
-        "Save trajectory to a file"
+        Parameters
+        ----------
+        filenames : {str, [str]}
+            Either a string or list of strings
+
+        Other Parameters
+        ----------------
+        As requested by the various load functions -- it depends on the extension
+        """
+        return load(filenames, **kwargs)
+
+    def save(self, filename, **kwargs):
+        """
+        Save trajectory to a file
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory. The extension will be parsed and will
+            control the format.
+        """
         # grab the extension of the filename
         extension = os.path.splitext(filename)[1]
 
-        savers = {#'.xtc': self.save_xtc,
+        savers = {'.xtc': self.save_xtc,
                   '.pdb': self.save_pdb,
-                  #'.dcd': self.save_dcd,
-                  '.h5': self.save_hdf}
+                  '.dcd': self.save_dcd,
+                  '.h5': self.save_hdf,
+                  '.binpos': self.save_binpos}
 
         try:
             saver = savers[extension]
         except KeyError:
-            raise IOError('Sorry, no loader for filename=%s (extension=%s) '
+            raise IOError('Sorry, no saver for filename=%s (extension=%s) '
                           'was found. I can only load files '
                           'with extensions in %s' % (filename, extension, savers.keys()))
 
         # run the saver, and return whatever output it gives
         return saver(filename)
 
-    def save_hdf(self, filename):
+    def save_hdf(self, filename, lossy=True):
+        """
+        Save trajectory to an hdf5
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        lossy : bool
+            Use gromacs style compression
+        """
+        if lossy:
+            xyz=_convert_to_lossy_integers(self.xyz)
+
         return io.saveh(filename,
-            xyz=_convert_to_lossy_integers(self.xyz),
+            xyz=xyz,
             time=self.time,
             topology=self.topology.to_bytearray())
-            
+
     def save_pdb(self, filename, no_models=False):
-        """ should save contiguous PDBs """
+        """
+        Save a trajectory to pdb
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        no_models : bool
+            TODO: Document this feature. What does it do?
+        """
+
         f = open(filename, 'w')
         pdbfile.PDBFile.writeHeader(self.topology, file=f)
-        
+
         for i in range(self._xyz.shape[0]):
             if no_models:
                 mind = None
             else:
                 mind = i
             positions = [ list(self._xyz[i,j,:].flatten()) for j in range(self._xyz.shape[1]) ]
-            pdbfile.PDBFile.writeModel(self.topology, 
+            pdbfile.PDBFile.writeModel(self.topology,
                                       positions,
-                                      file=f, 
+                                      file=f,
                                       modelIndex=mind)
-                                      
+
         pdbfile.PDBFile.writeFooter(self.topology, file=f)
         f.close()
-        
+
         return
 
-    def join(self, other_trajectory):
-        "Join two trajectories together"
-        pass
+    def save_xtc(self, filename):
+        """
+        Save a trajectory to gromacs XTC format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        """
+        raise NotImplementedError
+
+    def save_dcd(self, filename):
+        """
+        Save a trajectory to CHARMM dcd format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        """
+        raise NotImplementedError
+
+    def save_binpos(self, filename):
+        """
+        Save a trajectory to amber BINPOS format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        """
+
+        raise NotImplementedError

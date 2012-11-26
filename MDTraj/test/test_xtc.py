@@ -9,7 +9,9 @@ there are not discovered by nose
 import os, tempfile
 import numpy as np
 from mdtraj import xtc, io
-from mdtraj.testing import get_fn, eq
+from mdtraj.testing import get_fn, eq, DocStringFormatTester
+
+TestDocstrings = DocStringFormatTester(xtc, error_on_none=True)
 
 fn_xtc = get_fn('frame0.xtc')
 pdb = get_fn('native.pdb')

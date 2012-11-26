@@ -15,12 +15,12 @@ cdef int _BINPOS_SUCESS = 0  # regular exit code
 cdef int _BINPOS_EOF = -1  # end of file (or error)
 
 def read_xyz(filename, chunk=1):
-    """Read the xyz coordinates from a AMBED binpos file
+    """Read the xyz coordinates from a AMBER binpos file
 
     Parameters
     ----------
     filename : str
-        The filename of the dcd file to read from
+        The filename of the binpos file to read from
     chunk : int
         Size of the chunks to read
 
@@ -36,14 +36,16 @@ def read_xyz(filename, chunk=1):
 def write_xyz(filename, xyz, force_overwrite=False):
     """Write xyz coordinates to a AMBER binpos file
 
-    Note that the box size entries in the DCD file will be left blank (zeros)
+    Note that the box size entries in the BINPOS file will be left blank (zeros)
 
     Parameters
     ----------
     filename : str
-        The filename of the dcd file to write to
+        The path to the binpos file to write to
     xyz : np.ndarray, ndim=3, dtype=np.float32
         The xyz coordinates
+    force_overwrite : bool
+        Overwrite anything that exists at filename, if its already there
     """
 
     if not force_overwrite and os.path.exists(filename):
