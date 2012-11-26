@@ -25,6 +25,14 @@ from mdtraj.pdb import pdbfile
 from mdtraj import io
 from topology import Topology
 from itertools import izip
+from copy import deepcopy
+try:
+    from simtk.openmm import Vec3
+    from simtk.unit import nanometer
+    HAVE_OPENMM = True
+except ImportError:
+    HAVE_OPENMM = False
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -155,10 +163,14 @@ def load_pdb(filename):
             'you supplied %s' % type(filename))
     filename = str(filename)
     f = pdbfile.PDBFile(filename)
-    return Trajectory(xyz=f.positions, topology=f.topology)
+
+    # convert from angstroms to nm
+    coords = f.positions / 10
+
+    return Trajectory(xyz=coords, topology=f.topology)
 
 
-def load_xtc(filenames, top, discard_overlapping_frames=False, chunk=500):
+def load_xtc(filenames, top=None, discard_overlapping_frames=False, chunk=500):
     """Load an xtc file. Since the xtc doesn't contain information
     to specify the topolgy, you need to supply a pdb_filename
 
@@ -182,6 +194,13 @@ def load_xtc(filenames, top, discard_overlapping_frames=False, chunk=500):
     trajectory : Trajectory
         A trajectory file!
     """
+    # we make it not required in the signature, but required here. although this
+    # is a little wierd, its good because this function is usually called by a
+    # dispatch from load(), where top comes from **kwargs. So if its not supplied
+    # we want to give the user an informative error message
+    if top is None:
+        raise ValueError('"top" argument is required for load_xtc')
+    
     topology = _parse_topology(top)
     if isinstance(filenames, basestring):
         filenames = [filenames]
@@ -197,13 +216,13 @@ def load_xtc(filenames, top, discard_overlapping_frames=False, chunk=500):
         coords.append(xyz)
         times.append(time)
 
-    times = np.concatenate(time)
+    times = np.concatenate(times)
     coords = np.vstack(coords)
 
     return Trajectory(xyz=coords, topology=topology, time=times)
 
 
-def load_dcd(filenames, top, discard_overlapping_frames=False):
+def load_dcd(filenames, top=None, discard_overlapping_frames=False):
     """Load an xtc file. Since the dcd format doesn't contain information
     to specify the topolgy, you need to supply a pdb_filename
 
@@ -225,6 +244,13 @@ def load_dcd(filenames, top, discard_overlapping_frames=False):
     trajectory : Trajectory
         A trajectory file!
     """
+    # we make it not required in the signature, but required here. although this
+    # is a little wierd, its good because this function is usually called by a
+    # dispatch from load(), where top comes from **kwargs. So if its not supplied
+    # we want to give the user an informative error message
+    if top is None:
+        raise ValueError('"top" argument is required for load_dcd')
+    
 
     topology = _parse_topology(top)
     if isinstance(filenames, basestring):
@@ -239,6 +265,9 @@ def load_dcd(filenames, top, discard_overlapping_frames=False):
         coords.append(xyz)
 
     coords = np.vstack(coords)
+
+    # convert from anstroms to nanometer
+    coords /= 10.0
 
     return Trajectory(xyz=coords, topology=topology)
 
@@ -338,7 +367,7 @@ def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True)
     return Trajectory(xyz=xyz, topology=topology, time=time)
 
 
-def load_binpos(filenames, top, chunk=500, discard_overlapping_frames=False):
+def load_binpos(filenames, top=None, chunk=500, discard_overlapping_frames=False):
     """Load an AMBER binpos file. Since the dcd format doesn't contain
     information to specify the topolgy, you need to supply a pdb_filename
 
@@ -363,6 +392,12 @@ def load_binpos(filenames, top, chunk=500, discard_overlapping_frames=False):
     trajectory : Trajectory
         A trajectory file!
     """
+    # we make it not required in the signature, but required here. although this
+    # is a little wierd, its good because this function is usually called by a
+    # dispatch from load(), where top comes from **kwargs. So if its not supplied
+    # we want to give the user an informative error message
+    if top is None:
+        raise ValueError('"top" argument is required for load_binpos')
 
     topology = _parse_topology(top)
     if isinstance(filenames, basestring):
@@ -377,6 +412,9 @@ def load_binpos(filenames, top, chunk=500, discard_overlapping_frames=False):
         coords.append(xyz)
 
     coords = np.vstack(coords)
+
+    # convert from anstroms to nanometer
+    coords /= 10.0
 
     return Trajectory(xyz=coords, topology=topology)
 
@@ -415,6 +453,36 @@ class Trajectory(object):
         return self._time
 
     @property
+    def box(self):
+        return self._box
+
+    @box.setter
+    def box(self, value):
+        if isinstance(value, list):
+            value = np.array(value)
+            
+        if value.shape == (3, ):
+            box = np.zeros((self.n_frames, 3, 3))
+            for i in xrange(3):
+                box[:, i, i] = value[i] * np.ones(self.n_frames)
+
+
+        else:
+            if not value.shape == (self.n_frames, 3, 3):
+                raise ValueError("Wrong shape. Got %s, should be %s" % (value.shape,
+                    (self.n_frames, 3, 3)))
+            box = value
+        
+        
+        for i, j in [(0,1), (0,2), (1,2)]:
+            if not (np.all(box[:, i, j] == 0) and np.all(box[:, j, i] == 0)):
+                raise NotImplementedError('Only rectangular boxes are currently supported')
+
+        celldims = tuple([box[0,0,0], box[0,1,1], box[0,2,2]])
+        self.topology.setUnitCellDimensions(celldims)
+        self._box = box
+
+    @property
     def xyz(self):
         return self._xyz
 
@@ -426,32 +494,102 @@ class Trajectory(object):
             n_atoms, n_dims = value.shape
             assert n_dims == 3
 
-            self._xyz = value.reshape((n_frames, n_atoms, n_dims))
-
+            xyz = value.reshape((n_frames, n_atoms, n_dims))
         elif value.ndim == 3:
-            self._xyz = value
-
+            xyz = value
         else:
             raise ValueError('xyz is wrong shape')
 
+        if hasattr(self, 'topology') and self.topology._numAtoms != xyz.shape[1]:
+            raise ValueError("Number of atoms in xyz (%s) and "
+                "in topology (%s) don't match" % (xyz.shape[1], self.topology._numAtoms))
+
+        self._xyz = xyz
+
     def __len__(self):
-        return len(self.xyz)
+        return self.n_frames
 
     def __add__(self, other):
         "Concatenate two trajectories"
-        raise NotImplementedError
+        return self.join(other)
 
-    def __iadd__(self, other):
-        "Concatenate two trajectories, override the += operator"
-        raise NotImplementedError
+    def join(self, other, check_topology=True):
+        """
+        Join two trajectories together
+
+        This method can also be called by using `self + other`
+
+        Parameters
+        ----------
+        other : Trajectory
+            The other trajectory to join
+        check_topology : bool
+            Ensure that the topology of `self` and `other` are identical before
+            joining them. If false, the resulting trajectory will have the
+            topology of `self`.
+        """
+        if not isinstance(other, Trajectory):
+            raise TypeError('You can only add two Trajectory instances')
+
+        if self.n_atoms != other.n_atoms:
+            raise ValueError('Number of atoms in self (%d) is not equal '
+                'to number of atoms in other (%d)' % (self.n_atoms, other.n_atoms))
+
+        if check_topology:
+            if not np.all(self.topology.to_bytearray() == \
+                other.topology.to_bytearray()):
+                raise ValueError('The topologies are not the same')
+
+        xyz = np.concatenate((self.xyz, other.xyz))
+        time = np.concatenate((self.time, other.time))
+        box = np.concatenate((self.box, other.box))
+
+        # use this syntax so that if you subclass Trajectory,
+        # the subclass's join() will return an instance of the subclass
+        return self.__class__(xyz, deepcopy(self.topology), time, box)
 
     def __getitem__(self, key):
         "Get a slice of this trajectory"
-        raise NotImplementedError
+        return self.slice(key)
 
-    def __init__(self, xyz, topology, time=None):
+    def slice(self, key, copy=True):
+        """
+        Slice a trajectory, by extracting one or more frames a separate traj
+
+        This method can also be called using index bracket notation, i.e
+        `traj[1] == traj.slice(1)`
+
+        Parameters
+        ----------
+        key : {int, np.ndarray, slice}
+            The slice to take. Can be either an int, a list of ints, or a slice
+            object.
+        copy : bool, default=True
+            Copy the arrays after slicing. If you set this to false, then if
+            you modify a slice, you'll modify the original array since they
+            point to the same data.
+        """
+        xyz = self.xyz[key]
+        time = self.time[key]
+        box = self.box[key]
+
+        if copy:
+            xyz = xyz.copy()
+            time = time.copy()
+            topology = deepcopy(self.topology)
+            box = box.copy()
+
+        newtraj = self.__class__(xyz, topology, time, box)
+        return newtraj
+
+
+    def __init__(self, xyz, topology, time=None, box=None):
         self.xyz = xyz
         self.topology = topology
+        if box is not None:
+            self.box = box
+        else:
+            self.box = [1,1,1]
 
         if time is None:
             time = np.arange(len(xyz))
@@ -460,6 +598,43 @@ class Trajectory(object):
         if not topology._numAtoms == self.n_atoms:
             raise ValueError("Number of atoms in xyz (%s) and "
                 "in topology (%s) don't match" % (self.n_atoms, topology._numAtoms))
+
+
+    def openmm_positions(self):
+        """
+        Return OpenMM compatable positions
+
+        Returns the Cartesian coordinates in the Molecule object in
+        a list of OpenMM-compatible positions, so it is possible to type
+        simulation.context.setPositions(Mol.openmm_positions()[0])
+        or something like that.
+        """
+        # copied from Lee-Ping Wang's Molecule.py
+        if not HAVE_OPENMM:
+            raise ImportError('OpenMM was not imported')
+
+        Positions = []
+        for xyz in self.xyz:
+            Pos = []
+            for xyzi in xyz:
+                Pos.append(Vec3(xyzi[0], xyzi[1], xyzi[2]))
+            Positions.append(Pos*nanometer)
+        return Positions
+
+
+    def openmm_boxes(self):
+        """ Returns the periodic box vectors in the Molecule object in
+        a list of OpenMM-compatible boxes, so it is possible to type
+        simulation.context.setPeriodicBoxVectors(Mol.openmm_boxes()[0])
+        or something like that.
+        """
+        # copied from Lee-Ping Wang's Molecule.py
+        if not HAVE_OPENMM:
+            raise ImportError('OpenMM was not imported')
+
+        return [(Vec3(box[0], 0.0, 0.0),
+                Vec3(0.0, box[1], 0.0),
+                Vec3(0.0, 0.0, box[2])) * nanometer for box in self.box]
 
 
     @staticmethod
@@ -541,20 +716,29 @@ class Trajectory(object):
         """
 
         f = open(filename, 'w')
-        pdbfile.PDBFile.writeHeader(self.topology, file=f)
 
-        for i in range(self._xyz.shape[0]):
+        topology = self.topology
+
+        # convert to angstroms
+        if self.topology.getUnitCellDimensions() is not None:
+            topology.setUnitCellDimensions(tuple([10*i for i in self.topology.getUnitCellDimensions()]))
+
+        pdbfile.PDBFile.writeHeader(topology, file=f)
+
+        for i in xrange(self.n_frames):
             if no_models:
                 mind = None
             else:
                 mind = i
-            positions = [ list(self._xyz[i,j,:].flatten()) for j in range(self._xyz.shape[1]) ]
-            pdbfile.PDBFile.writeModel(self.topology,
+
+            # need to convert internal nm to angstroms for output
+            positions = [ list(self._xyz[i,j,:].flatten()*10) for j in xrange(self.n_atoms) ]
+            pdbfile.PDBFile.writeModel(topology,
                                       positions,
                                       file=f,
                                       modelIndex=mind)
 
-        pdbfile.PDBFile.writeFooter(self.topology, file=f)
+        pdbfile.PDBFile.writeFooter(topology, file=f)
         f.close()
 
         return

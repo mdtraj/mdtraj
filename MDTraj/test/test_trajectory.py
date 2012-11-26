@@ -29,18 +29,33 @@ def test_hdf1():
     t0 = load_hdf(fn, top=get_fn('native.pdb'), chunk=1)
     t1 = load_hdf(fn, top=get_fn('native.pdb'), chunk=10)
     t2 = load_hdf(fn, top=get_fn('native.pdb'), chunk=100)
-    
+
     eq(t0.xyz, t1.xyz)
     eq(t0.xyz, t2.xyz)
-    
-    
+
+
 def test_hdf2():
     t0 = load_hdf(fn, top=get_fn('native.pdb'), chunk=10, stride=10)
     t1 = load_hdf(fn, top=get_fn('native.pdb'), chunk=20, stride=10)
     t2 = load_hdf(fn, top=get_fn('native.pdb'), chunk=50, stride=10)
     t3 = load_hdf(fn, top=get_fn('native.pdb'), chunk=1, stride=1)
-    
+
     eq(t0.xyz, t1.xyz)
     eq(t0.xyz, t2.xyz)
     eq(t0.xyz, t3.xyz[::10])
 
+def test_slice():
+    t = load_hdf(fn, top=get_fn('native.pdb'))
+    eq((t[0:5] + t[5:10]).xyz, t[0:10].xyz)
+    eq((t[0:5] + t[5:10]).time, t[0:10].time)
+    eq((t[0:5] + t[5:10]).box, t[0:10].box)
+
+
+def test_xtc_1():
+    t = mdtraj.trajectory.load(get_fn('frame0.xtc'), top=get_fn('native.pdb'))
+
+def test_dcd_1():
+    t = mdtraj.trajectory.load(get_fn('frame0.dcd'), top=get_fn('native.pdb'))
+
+def test_binpos_1():
+    t = mdtraj.trajectory.load(get_fn('frame0.binpos'), top=get_fn('native.pdb'))
