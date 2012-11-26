@@ -10,6 +10,6 @@ before_install:
   - pip install cython --use-mirrors -qq
   - pip install tables --use-mirrors -qq
 install:
-  - python setup.py install
+  - python setup.py -q install
 script:
   - nosetests
