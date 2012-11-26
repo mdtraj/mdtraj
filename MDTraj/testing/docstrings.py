@@ -3,6 +3,7 @@ from inspect import (isclass, ismodule, isfunction, ismethod, \
 import docscrape
 import types
 import sys
+import warnings
 
 __all__ = ['DocStringFormatTester']
 
@@ -17,13 +18,13 @@ def DocStringFormatTester(module, error_on_none=False):
         The module to test
     error_on_none : bool
         Throw an error if no docstring is defined
-        
+
     Notes
     -----
     For example, test_trajectory.py in mdtraj contains the line:
 
     TestDocstrings = DocStringFormatTester(mdtraj.trajectory)
-    
+
     TestDocstrings is now a class with one method defined per class/function in
     mdtraj.trajectory. Each method, when called, validates a single docstring.
     When nosetests runs that file (in verbose mode), you see:
@@ -53,11 +54,11 @@ def DocStringFormatTester(module, error_on_none=False):
     def format(f):
         """
         Format a method/function/class as a string
-        
+
         Parameters
         ----------
         f : function, method, class
-        
+
         Returns
         -------
         repr : string
@@ -74,31 +75,34 @@ def DocStringFormatTester(module, error_on_none=False):
     def check_docstring(self, f):
         """
         Ensure the docstring of `f` is in accordance with the numpy standard
-        
+
         Currently, only the Parameters section of the docstring is checked.
-        
+
         Parameters
         ----------
         f : function, method, class
-        
+
         Returns
         -------
         repr : string
             A string represntation
         """
-        
+
         doc = getdoc(f)
         if doc is None:
             if error_on_none:
                 raise ValueError('no docstring for %s' % format(f))
         else:
-            parsed = docscrape.NumpyDocString(doc)
+            with warnings.catch_warnings():
+                warnings.simplefilter('error')
+                parsed = docscrape.NumpyDocString(doc)
+
             param_names = set([e[0] for e in parsed['Parameters']])
-            
+
             if isbuiltin(f):
                 # You can't get the arglist from a builtin, which
                 # is how cython functions turn up
-                
+
                 # but you can, hackily, get the number of arguments it wants
                 # by parseing the error hen you supply too many
                 import re
@@ -109,13 +113,13 @@ def DocStringFormatTester(module, error_on_none=False):
                     if not m:
                         return
                     n_args = int(m.group(1))
-                
+
                 if len(param_names) != n_args:
                     raise ValueError("In %s, number of arguments, %d, doesn't "
                         " match the length of the Parameters in the "
                         "docstring, %d" % (format(f), n_args, len(param_names)))
                 return
-                
+
 
             args = set(getargs(f.func_code).args)
             if ismethod(f):
@@ -126,12 +130,12 @@ def DocStringFormatTester(module, error_on_none=False):
                     "match Parameters list %s" % (format(f),
                         list(args), list(param_names)))
 
-    
+
     funcdict = {}
     # populate the func dict before calling type()
     for i, f in enumerate(functions):
         name = 'test_%s' % i  #  this is the name we give the method
-        
+
         # create the method. this is a little complicated, but the basic
         # idea is that NoseTests checks the func_name, so we need to create
         # the method correctly. Just giving it a pointer to a closure we define
