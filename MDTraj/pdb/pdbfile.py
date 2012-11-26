@@ -87,6 +87,10 @@ class PDBFile(object):
         PDBFile._loadNameReplacementTables()
 
         # Build the topology
+        
+        # TJL QUESTION:
+        # Isn't the following parsing supported in pdbstructure.py, which we just
+        # called??
 
         atomByNumber = {}
         for chain in pdb.iter_chains():
@@ -124,9 +128,28 @@ class PDBFile(object):
                         element = elem.potassium
                     elif( len( residue ) == 1 and upper.startswith('CA') ):
                         element = elem.calcium
+                        
+                    # TJL has edited this. There are a few issues here. First,
+                    # parsing for the element is non-trivial, so I do my best
+                    # below. Second, there is additional parsing code in
+                    # pdbstructure.py, and I am unsure why it doesn't get used
+                    # here...
+                    
+                    elif ( len( residue ) > 1 and upper.startswith('CE') ):
+                        element = elem.carbon # (probably) not Celenium...
+                    elif ( len( residue ) > 1 and upper.startswith('CD') ):
+                        element = elem.carbon # (probably) not Cadmium...
+                    elif ( residue.name in ['TRP', 'ARG', 'GLN', 'HIS'] and upper.startswith('NE') ):
+                        element = elem.nitrogen # (probably) not Neon...
+                    elif ( residue.name in ['ASN'] and upper.startswith('ND') ):
+                        element = elem.nitrogen # (probably) not ND...
+                    elif ( residue.name == 'CYS' and upper.startswith('SG') ):
+                        element = elem.sulfur # (probably) not SG...
+
+                        
                     else:
                         try:
-                            symbol = atomName[0:2].strip().rstrip("AB0123456789")
+                            symbol = atomName[0:2].strip().rstrip("AB0123456789").lstrip("0123456789")
                             element = elem.get_by_symbol(symbol)
                         except KeyError:
                             try:
