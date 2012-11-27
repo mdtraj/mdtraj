@@ -65,7 +65,8 @@ def read(filename, chunk=1):
     return xyz, time, step, box, prec
 
 
-def write(filename, xyz, time=None, step=None, box=None, prec=None, force_overwrite=False):
+def write(filename, xyz, time=None, step=None, box=None, prec=None,
+    force_overwrite=True):
     """
     Write a Gromacs XTC file
     

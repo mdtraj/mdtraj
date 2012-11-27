@@ -26,21 +26,21 @@
 # Redistributions of source code must retain the above copyright notice, this
 # list of conditions and the following disclaimer.
 # Redistributions in binary form must reproduce the above copyright notice,
-# this list of conditions and the following disclaimer in the documentation 
+# this list of conditions and the following disclaimer in the documentation
 # and/or other materials provided with the distribution.
-# Neither the name of the NumPy Developers nor the names of any contributors 
-# may be used to endorse or promote products derived from this software without 
+# Neither the name of the NumPy Developers nor the names of any contributors
+# may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 """
@@ -84,23 +84,28 @@ def saveh(file, *args, **kwargs):
         Arrays to save to the file. Arrays will be saved in the file with the
         keyword names.
 
+    Notes
+    -----
+    `saveh` will overwrite files by default. If you have an hdf5 that contains the
+    arrays `arr_0` and `arr_1` and you attempt to save a new array `x`, it will
+    go in side by side. But if you save a new `arr_0`, it will overwrite your
+    previous array.
+
     Returns
     -------
     None
-    
+
     Raises
     ------
-    IOError
-        On attempted overwriting
     TypeError
         When arrays are of an unsupported type
-    
+
     See Also
     --------
     numpy.savez : Saves files in uncompressed .npy format
     """
 
-    
+
     if isinstance(file, basestring):
         handle = tables.openFile(file, 'a')
         own_fid = True
@@ -110,24 +115,29 @@ def saveh(file, *args, **kwargs):
                 'or an open tables.File: %s' % file)
         handle = file
         own_fid = False
-    
+
     # name all the arrays
     namedict = kwargs
     for i, val in enumerate(args):
         key = 'arr_%d' % i
         if key in namedict.keys():
+            if own_fid:
+                handle.close()
             raise ValueError('Cannot use un-named variables '
                 ' and keyword %s' % key)
         namedict[key] = val
-    
+
     # ensure that they don't already exist
     current_nodes = [e.name for e in handle.listNodes(where='/')]
     for key in namedict.keys():
         if key in current_nodes:
-            raise IOError('Array already exists in file: %s' % key)
-    
+            handle.removeNode('/', name=key)
+            # per discussion on github, https://github.com/rmcgibbo/mdtraj/issues/5
+            # silent overwriting appears to be the desired functionality
+            # raise IOError('Array already exists in file: %s' % key)
+
     # save all the arrays
-    try: 
+    try:
         for key, val in namedict.iteritems():
             if not isinstance(val, np.ndarray):
                 raise TypeError('Only numpy arrays can '
@@ -141,22 +151,22 @@ def saveh(file, *args, **kwargs):
             node = handle.createCArray(where='/', name=key,
                 atom=atom, shape=val.shape, filters=COMPRESSION)
             node[:] = val
-    
+
     except Exception:
         handle.close()
         if own_fid:
             os.unlink(file)
-        raise  
-        
+        raise
+
     handle.flush()
     if own_fid:
         handle.close()
 
-    
+
 def loadh(file, name=Ellipsis, deferred=True):
     """
     Load an array(s) from .hdf format files
-    
+
     Parameters
     ----------
     file : string or tables.File
@@ -168,14 +178,14 @@ def loadh(file, name=Ellipsis, deferred=True):
     deferred : bool, optional
         If true, and you did not request just a single name, the result will
         be lazyily loaded.
-    
+
     Returns
     -------
     result : array or dict-like
         If name is a single string, a single array will be returned. Otherwise,
         the return value is a dict-like mapping the name(s) to the array(s) of
         data.
-    
+
     Raises
     ------
     IOError
@@ -183,7 +193,7 @@ def loadh(file, name=Ellipsis, deferred=True):
     KeyError
         If the request name does not exist
     """
-    
+
     if isinstance(file, basestring):
         handle = tables.openFile(file, mode='r')
         own_fid = True
@@ -193,7 +203,7 @@ def loadh(file, name=Ellipsis, deferred=True):
                 'or an open tables.File: %s' % file)
         handle = file
         own_fid = False
-    
+
     # if name is a single string, deferred loading is not used
     if isinstance(name, basestring):
         try:
@@ -201,12 +211,12 @@ def loadh(file, name=Ellipsis, deferred=True):
         except tables.NoSuchNodeError:
             raise KeyError('Node "%s" does not exist '
                 'in file %s' % (name, file))
-        
+
         return_value = np.array(node[:])
         if own_fid:
             handle.close()
         return return_value
-    
+
     if not deferred:
         result = {}
         for node in handle.iterNodes(where='/'):
@@ -214,7 +224,7 @@ def loadh(file, name=Ellipsis, deferred=True):
         if own_fid:
             handle.close()
         return result
-        
+
     return DeferredTable(handle, own_fid)
 
 
@@ -224,40 +234,40 @@ class DeferredTable(object):
         self._node_names = [e.name for e in handle.iterNodes(where='/')]
         self._loaded = {}
         self._own_fid = own_fid
-        
+
         repr_strings = []
         for name in self._node_names:
             repr_strings.append('  %s: [shape=%s, dtype=%s]' % \
                 (name, handle.getNode(where='/', name=name).shape,
                 handle.getNode(where='/', name=name).dtype))
         self._repr_string = '{\n%s\n}' % ',\n'.join(repr_strings)
-    
+
     def __repr__(self):
         return self._repr_string
-        
+
     def __del__(self):
         self.close()
-    
+
     def close(self):
         if self._own_fid:
             self._handle.close()
-        
+
     def __getitem__(self, key):
         if key not in self._node_names:
             raise KeyError('%s not in %s' % (key, self._node_names))
         if key not in self._loaded:
             self._loaded[key] = self._handle.getNode(where='/', name=key)[:]
         return self._loaded[key]
-    
+
     def iteritems(self):
         for name in self._node_names:
             yield (name, getattr(self, name))
-            
+
     def keys(self):
         return self._node_names
-        
+
     def iterkeys(self):
         return iter(self._node_names)
-        
+
     def __contains__(self, key):
         return self._node_names.__contains__(key)

@@ -51,7 +51,7 @@ def read(filename, chunk=1):
     return xyz
 
 
-def write(filename, xyz, force_overwrite=False):
+def write(filename, xyz, force_overwrite=True):
     """Write xyz coordinates to a AMBER binpos file
 
     Note that the box size entries in the BINPOS file will be left blank (zeros)

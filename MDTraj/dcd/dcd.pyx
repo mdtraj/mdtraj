@@ -59,7 +59,7 @@ def read(filename):
 
     return xyz, box_lengths, box_angles
 
-def write(filename, xyz, box_lengths=None, box_angles=None, force_overwrite=False):
+def write(filename, xyz, box_lengths=None, box_angles=None, force_overwrite=True):
     """Write data to a NAMD/CHARMM DCD file
 
     Note that the box size entries in the DCD file will be left blank (zeros)
