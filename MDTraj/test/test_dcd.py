@@ -35,26 +35,42 @@ pdb = get_fn('native.pdb')
 
 temp = tempfile.mkstemp(suffix='.dcd')[1]
 def teardown_module(module):
-    """remove the temporary file created by tests in this file 
+    """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
     os.unlink(temp)
 
 def test_read():
-    xyz = dcd.read_xyz(fn_dcd)
+    xyz, box_lengths, box_angles = dcd.read(fn_dcd)
     xyz2 = io.loadh(get_fn('frame0.dcd.h5'), 'xyz')
 
+    #eq(box_lengths, np.zeros_like(box_lengths))
+    #eq(box_angles, np.zeros_like(box_angles))
     eq(xyz, xyz2)
-    
+
+
 def test_write_0():
-    xyz = dcd.read_xyz(fn_dcd)
-    dcd.write_xyz(temp, xyz, force_overwrite=True)
-    xyz2 = dcd.read_xyz(temp)
+    xyz = dcd.read(fn_dcd)[0]
+    dcd.write(temp, xyz, force_overwrite=True)
+    xyz2 = dcd.read(temp)[0]
 
     eq(xyz, xyz2)
-    
+
 def test_write_1():
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
-    dcd.write_xyz(temp, xyz, force_overwrite=True)
-    xyz2 = dcd.read_xyz(temp)
+    dcd.write(temp, xyz, force_overwrite=True)
+    xyz2 = dcd.read(temp)[0]
 
     eq(xyz, xyz2)
+
+def test_write_2():
+    xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
+    box_lengths = 25 * np.ones((500, 3), dtype=np.float32)
+    box_angles = 90 * np.ones((500, 3), dtype=np.float32)
+    box_lengths[0,0] = 10.0
+
+    dcd.write(temp, xyz, box_lengths, box_angles, force_overwrite=True)
+    xyz2, box_lengths2, box_angles2 = dcd.read(temp)
+
+    eq(xyz, xyz2)
+    eq(box_lengths, box_lengths2)
+    eq(box_angles, box_angles2)

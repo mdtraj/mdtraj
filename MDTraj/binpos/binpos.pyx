@@ -15,6 +15,7 @@
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
 import cython
+cimport cython
 import os, warnings
 import numpy as np
 cimport numpy as np
@@ -30,8 +31,8 @@ from binposlib cimport open_binpos_write, close_file_write, write_timestep
 cdef int _BINPOS_SUCESS = 0  # regular exit code
 cdef int _BINPOS_EOF = -1  # end of file (or error)
 
-def read_xyz(filename, chunk=1):
-    """Read the xyz coordinates from a AMBER binpos file
+def read(filename, chunk=1):
+    """Read the data from a AMBER binpos file
 
     Parameters
     ----------
@@ -42,14 +43,15 @@ def read_xyz(filename, chunk=1):
 
     Returns
     -------
-    xyz : np.ndarray, dtype=float32, shape=(n_frames, n_atoms, 3)
-        The xyz coordinates
+    xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
+        The xyz coordinates of each atom in each frame
     """
-    return np.concatenate(tuple(BINPOSReader(filename, chunk)))
+    xyz = np.vstack(tuple(BINPOSReader(filename, chunk)))
+
+    return xyz
 
 
-
-def write_xyz(filename, xyz, force_overwrite=False):
+def write(filename, xyz, force_overwrite=False):
     """Write xyz coordinates to a AMBER binpos file
 
     Note that the box size entries in the BINPOS file will be left blank (zeros)
@@ -58,26 +60,42 @@ def write_xyz(filename, xyz, force_overwrite=False):
     ----------
     filename : str
         The path to the binpos file to write to
-    xyz : np.ndarray, ndim=3, dtype=np.float32
-        The xyz coordinates
-    force_overwrite : bool
+    xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
+        The xyz coordinates of each atom in each frame
+    force_overwrite : bool, default=False
         Overwrite anything that exists at filename, if its already there
     """
+
+    if force_overwrite and os.path.exists(filename):
+        os.unlink(filename)
 
     if not force_overwrite and os.path.exists(filename):
         raise IOError('The file already exists: %s' % filename)
 
-    if not isinstance(xyz, np.ndarray):
-        raise TypeError("Must be numpy array")
-    if xyz.dtype != np.float32:
-        warnings.warn('Casting to float32')
-        xyz = np.array(xyz, dtype=np.float32)
-    if not xyz.flags.c_contiguous:
-        warnings.warn('Casting to contiguous')
-        xyz = np.ascontiguousarray(xyz, dtype=np.float32)
+    #make sure all the arrays are the right shape
+    xyz = _ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False)
 
     writer = BINPOSWriter(filename, xyz)
     writer.write()
+
+
+def _ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=None):
+    "Ensure dtype and shape of an ndarray"
+    if can_be_none and val is None:
+        return None
+    if not isinstance(val, np.ndarray):
+        raise TypeError("%s must be numpy array. You supplied type %s" % (name, type(val)))
+    val = np.ascontiguousarray(val, dtype=dtype)
+    if not val.ndim == ndim:
+        raise ValueError('%s must be ndim %s. You supplied %s' % (name, ndim, val.ndim))
+    if length is not None and len(val) != length:
+        raise ValueError('%s must be length %s. You supplied %s' % (name, length, len(val)))
+    if shape is not None and val.shape != shape:
+        raise ValueError('%s must be shape %s. You supplied %s' % (name, shape, val.shape))
+
+    return val
+
+
 
 cdef class BINPOSReader:
     cdef int n_atoms
@@ -114,11 +132,10 @@ cdef class BINPOSReader:
     def __iter__(self):
         return self
 
-
+    @cython.boundscheck(False)
     def __next__(self):
         cdef int i
-        cdef np.ndarray[dtype=np.float32_t, ndim=3, mode='c'] xyz = np.zeros((self.chunk, self.n_atoms, 3), dtype=np.float32)
-        self.timestep.coords = <float*> xyz.data
+        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((self.chunk, self.n_atoms, 3), dtype=np.float32)
 
         for i in range(self.chunk):
             self.timestep.coords = &xyz[i,0,0]
@@ -142,6 +159,16 @@ cdef class BINPOSWriter:
     cdef molfile_timestep_t* timestep
 
     def __cinit__(self, char* filename, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz):
+        """
+        Set up the BINPOS writer
+
+        Nothing will be written to disk until you call write()
+
+        Parameters
+        ----------
+        xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
+            The xyz coordinates of each atom in each frame
+        """
         self.filename = filename
         self.xyz = xyz
         self.n_atoms = self.xyz.shape[1]
@@ -159,21 +186,16 @@ cdef class BINPOSWriter:
         if self.timestep is not NULL:
             free(self.timestep)
 
+    @cython.boundscheck(False)
     def write(self):
+        "Write all the data"
         cdef int i, status
         cdef n_frames = len(self.xyz)
-
-        self.timestep.A = 0
-        self.timestep.B = 0
-        self.timestep.C = 0
-        self.timestep.alpha = 0
-        self.timestep.beta = 0
-        self.timestep.gamma = 0
-
-        self.timestep.coords = <float*> self.xyz.data
+        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = self.xyz
 
         for i in range(n_frames):
+            self.timestep.coords = &xyz[i, 0, 0]
             status = write_timestep(self.fh, self.timestep)
-            self.timestep.coords += self.n_atoms * 3
+
             if status != _BINPOS_SUCESS:
                 raise RuntimeError("BINPOS Error: %s" % status)

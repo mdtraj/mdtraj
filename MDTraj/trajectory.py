@@ -200,7 +200,7 @@ def load_xtc(filenames, top=None, discard_overlapping_frames=False, chunk=500):
     # we want to give the user an informative error message
     if top is None:
         raise ValueError('"top" argument is required for load_xtc')
-    
+
     topology = _parse_topology(top)
     if isinstance(filenames, basestring):
         filenames = [filenames]
@@ -208,7 +208,7 @@ def load_xtc(filenames, top=None, discard_overlapping_frames=False, chunk=500):
     coords = []
     times = []
     for i, filename in enumerate(filenames):
-        xyz, box, time, prec, step = xtc.read(filename, chunk)
+        xyz, time, step, box, prec = xtc.read(filename, chunk)
         if i > 0 and discard_overlapping_frames:
             if np.sum(np.square(xyz[0] - coords[-1][-1])) < 1e-8:
                 xyz = xyz[0:-1]
@@ -219,6 +219,7 @@ def load_xtc(filenames, top=None, discard_overlapping_frames=False, chunk=500):
     times = np.concatenate(times)
     coords = np.vstack(coords)
 
+    # note we're not doing anything with the box vectors
     return Trajectory(xyz=coords, topology=topology, time=times)
 
 
@@ -250,7 +251,7 @@ def load_dcd(filenames, top=None, discard_overlapping_frames=False):
     # we want to give the user an informative error message
     if top is None:
         raise ValueError('"top" argument is required for load_dcd')
-    
+
 
     topology = _parse_topology(top)
     if isinstance(filenames, basestring):
@@ -258,7 +259,7 @@ def load_dcd(filenames, top=None, discard_overlapping_frames=False):
 
     coords = []
     for i, filename in enumerate(filenames):
-        xyz = dcd.read_xyz(filename)
+        xyz, box_length, box_angle = dcd.read(filename)
         if i > 0 and discard_overlapping_frames:
             if np.sum(np.square(xyz[0] - coords[-1][-1])) < 1e-8:
                 xyz = xyz[0:-1]
@@ -269,6 +270,7 @@ def load_dcd(filenames, top=None, discard_overlapping_frames=False):
     # convert from anstroms to nanometer
     coords /= 10.0
 
+    # note, we're not loading the boxes from dcd
     return Trajectory(xyz=coords, topology=topology)
 
 
@@ -318,10 +320,14 @@ def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True)
             raise ValueError('XYZ data not found in %s' % filename)
 
         # find the time in the file
+        time_node = None
         if hasattr(F.root, 'time'):
             time_node = F.root.time
-        else:
-            time_node = None
+
+        # find box in the file
+        box_node = None
+        if hasattr(F.root, 'box'):
+            box_node = F.root.box
 
         if chunk < stride:
             raise ValueError('Chunk must be greater than or equal to the stride')
@@ -343,19 +349,27 @@ def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True)
         def enum_chunks():
             for r0, r1 in zip(begin_range_list, end_range_list):
                 xyz = np.array(xyz_node[r0: r1: stride])
+
+                time = None
                 if time_node is not None:
                     time = np.array(time_node[r0: r1: stride])
-                else:
-                    time = None
 
-                yield xyz, time
+                box = None
+                if box_node is not None:
+                    box = np.array(box_node[r0: r1: stride])
+
+                yield xyz, time, box
 
         zipper = tuple(izip(*enum_chunks()))
         xyz = np.concatenate(zipper[0])
+
+        time = None
         if time_node is not None:
             time = np.concatenate(zipper[1])
-        else:
-            time = None
+
+        box = None
+        if box_node is not None:
+            box = np.concatenate(zipper[2])
 
         if upconvert_int16 and xyz.dtype == np.int16:
             xyz = _convert_from_lossy_integers(xyz)
@@ -364,7 +378,7 @@ def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True)
     finally:
         F.close()
 
-    return Trajectory(xyz=xyz, topology=topology, time=time)
+    return Trajectory(xyz=xyz, topology=topology, time=time, box=box)
 
 
 def load_binpos(filenames, top=None, chunk=500, discard_overlapping_frames=False):
@@ -405,7 +419,7 @@ def load_binpos(filenames, top=None, chunk=500, discard_overlapping_frames=False
 
     coords = []
     for i, filename in enumerate(filenames):
-        xyz = binpos.read_xyz(filename)
+        xyz = binpos.read(filename)
         if i > 0 and discard_overlapping_frames:
             if np.sum(np.square(xyz[0] - coords[-1][-1])) < 1e-8:
                 xyz = xyz[0:-1]
@@ -460,7 +474,7 @@ class Trajectory(object):
     def box(self, value):
         if isinstance(value, list):
             value = np.array(value)
-            
+
         if value.shape == (3, ):
             box = np.zeros((self.n_frames, 3, 3))
             for i in xrange(3):
@@ -472,8 +486,8 @@ class Trajectory(object):
                 raise ValueError("Wrong shape. Got %s, should be %s" % (value.shape,
                     (self.n_frames, 3, 3)))
             box = value
-        
-        
+
+
         for i, j in [(0,1), (0,2), (1,2)]:
             if not (np.all(box[:, i, j] == 0) and np.all(box[:, j, i] == 0)):
                 raise NotImplementedError('Only rectangular boxes are currently supported')
@@ -542,7 +556,13 @@ class Trajectory(object):
 
         xyz = np.concatenate((self.xyz, other.xyz))
         time = np.concatenate((self.time, other.time))
-        box = np.concatenate((self.box, other.box))
+
+        if self.box is None and other.box is None:
+            box = None
+        elif self.box is not None and other.box is not None:
+            box = np.concatenate((self.box, other.box))
+        else:
+            raise ValueError("One trajectory has box size, other doesn't. I don't know what to do")
 
         # use this syntax so that if you subclass Trajectory,
         # the subclass's join() will return an instance of the subclass
@@ -571,13 +591,20 @@ class Trajectory(object):
         """
         xyz = self.xyz[key]
         time = self.time[key]
-        box = self.box[key]
+
+        if self.box is not None:
+            box = self.box[key]
 
         if copy:
             xyz = xyz.copy()
             time = time.copy()
             topology = deepcopy(self.topology)
-            box = box.copy()
+
+            if self.box is not None:
+                box = box.copy()
+
+        if self.box is None:
+            box = None
 
         newtraj = self.__class__(xyz, topology, time, box)
         return newtraj
@@ -586,11 +613,13 @@ class Trajectory(object):
     def __init__(self, xyz, topology, time=None, box=None):
         self.xyz = xyz
         self.topology = topology
+
+        # box has no default, it'll just be none normally
+        self._box = None
         if box is not None:
             self.box = box
-        else:
-            self.box = [1,1,1]
 
+        # time will take the default 1..N
         if time is None:
             time = np.arange(len(xyz))
         self._time = time
@@ -632,6 +661,9 @@ class Trajectory(object):
         if not HAVE_OPENMM:
             raise ImportError('OpenMM was not imported')
 
+        if self.box is None:
+            raise ValueError("this trajectory does not contain box size information")
+
         return [(Vec3(box[0], 0.0, 0.0),
                 Vec3(0.0, box[1], 0.0),
                 Vec3(0.0, 0.0, box[2])) * nanometer for box in self.box]
@@ -672,13 +704,14 @@ class Trajectory(object):
                   '.pdb': self.save_pdb,
                   '.dcd': self.save_dcd,
                   '.h5': self.save_hdf,
+                  '.lh5': self.save_hdf,
                   '.binpos': self.save_binpos}
 
         try:
             saver = savers[extension]
         except KeyError:
             raise IOError('Sorry, no saver for filename=%s (extension=%s) '
-                          'was found. I can only load files '
+                          'was found. I can only save files '
                           'with extensions in %s' % (filename, extension, savers.keys()))
 
         # run the saver, and return whatever output it gives
@@ -698,10 +731,12 @@ class Trajectory(object):
         if lossy:
             xyz=_convert_to_lossy_integers(self.xyz)
 
-        return io.saveh(filename,
-            xyz=xyz,
-            time=self.time,
-            topology=self.topology.to_bytearray())
+        kwargs = {'xyz': xyz, 'time': self.time,
+                  'topology': self.topology.to_bytearray()}
+        if self.box is not None:
+            kwargs['box'] = self.box
+
+        return io.saveh(filename, **kwargs)
 
     def save_pdb(self, filename, no_models=False):
         """

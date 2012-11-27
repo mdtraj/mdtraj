@@ -15,10 +15,12 @@
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
 import cython
+cimport cython
 import os, warnings
 import numpy as np
 cimport numpy as np
 np.import_array()
+from itertools import izip
 from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy
 from dcdlib cimport molfile_timestep_t, dcdhandle
@@ -38,8 +40,8 @@ cdef int _DCD_FILEEXISTS = -7  # output file already exists
 cdef int _DCD_BADMALLOC  = -8  # malloc failed
 cdef int _DCD_BADWRITE   = -9  # write call on DCD file failed
 
-def read_xyz(filename):
-    """Read the xyz coordinates from a NAMD/CHARMM DCD file
+def read(filename):
+    """Read the data from a NAMD/CHARMM DCD file
 
     Parameters
     ----------
@@ -47,141 +49,226 @@ def read_xyz(filename):
         The filename of the dcd file to read from
     chunk : int
         Size of the chunks to read
-    
+
     Returns
     -------
     xyz : np.ndarray, dtype=float32, shape=(n_frames, n_atoms, 3)
         The xyz coordinates
     """
-    return DCDReader(filename).read()
+    xyz, box_lengths, box_angles = DCDReader(filename).read()
 
-def write_xyz(filename, xyz, force_overwrite=False):
-    """Write xyz coordinates to a NAMD/CHARMM DCD file
-    
+    return xyz, box_lengths, box_angles
+
+def write(filename, xyz, box_lengths=None, box_angles=None, force_overwrite=False):
+    """Write data to a NAMD/CHARMM DCD file
+
     Note that the box size entries in the DCD file will be left blank (zeros)
-    
+
     Parameters
     ----------
     filename : str
         The filename of the dcd file to write to
-    xyz : np.ndarray, ndim=3, dtype=np.float32
-        The xyz coordinates
-    force_overwrite : bool
+    xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
+        The xyz coordinates of each atom in each frame
+    box_lengths : np.ndarray, shape=(n_frames, 3), dtype=float32, optional
+        The length of the box in each frame. `box_lengths[i,0]` is the length
+        of the A axis (in frame i), and `box_lengths[i,1]` and
+        `box_lengths[i,2]` are the B and C axis respectively. If unsupplied,
+        all of the box lengths will be set to 1
+    box_angles : np.ndarray, shape=(n_frames, 3), dtype=float32, optional
+        Organized analogously to box_lengths. Gives the alpha, beta and
+        gamma angles respectively in entries `box_angles[i,0]`,
+        `box_angles[i,1]`, `box_angles[i,2]`. If unsupplied, all of the box
+        angles will be set to 90.0.
+    force_overwrite : bool, default=False
         Overwrite anything that exists at filename, if its already there
     """
-    
+
     if not force_overwrite and os.path.exists(filename):
         raise IOError('The file already exists: %s' % filename)
 
-    if not isinstance(xyz, np.ndarray):
-        raise TypeError("Must be numpy array")
-    if xyz.dtype != np.float32:
-        warnings.warn('Casting to float32')
-        xyz = np.array(xyz, dtype=np.float32)
-    if not xyz.flags.c_contiguous:
-        warnings.warn('Casting to contiguous')
-        xyz = np.ascontiguousarray(xyz, dtype=np.float32)
+    # make sure all the arrays are the right shape
+    xyz = _ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False)
+    n_frames = len(xyz)
 
-    writer = DCDWriter(filename, xyz)
+    box_lengths = _ensure_type(box_lengths, dtype=np.float32, ndim=2, name='box_lengths',
+        can_be_none=True, shape=(n_frames, 3))
+    if box_lengths is None:
+        box_lengths = np.ones((n_frames, 3), dtype=np.float32)
+
+    box_angles = _ensure_type(box_angles, dtype=np.float32, ndim=2, name='box_angles',
+        can_be_none=True, shape=(n_frames, 3))
+    if box_angles is None:
+        box_angles = 90.0 * np.ones((n_frames, 3), dtype=np.float32)
+
+    writer = DCDWriter(filename, xyz, box_lengths, box_angles)
     writer.write()
+
+
+def _ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=None):
+    "Ensure dtype and shape of an ndarray"
+    if can_be_none and val is None:
+        return None
+    if not isinstance(val, np.ndarray):
+        raise TypeError("%s must be numpy array. You supplied type %s" % (name, type(val)))
+    val = np.ascontiguousarray(val, dtype=dtype)
+    if not val.ndim == ndim:
+        raise ValueError('%s must be ndim %s. You supplied %s' % (name, ndim, val.ndim))
+    if length is not None and len(val) != length:
+        raise ValueError('%s must be length %s. You supplied %s' % (name, length, len(val)))
+    if shape is not None and val.shape != shape:
+        raise ValueError('%s must be shape %s. You supplied %s' % (name, shape, val.shape))
+
+    return val
+
 
 cdef class DCDReader:
     cdef int n_atoms, n_frames
     cdef dcdhandle* fh
     cdef molfile_timestep_t* timestep
     cdef int status
-    
+
     def __cinit__(self, char* filename):
         #open the file
         self.fh = open_dcd_read(filename, "dcd", &self.n_atoms, &self.n_frames)
         if self.fh is NULL:
             raise IOError('There was an error opening the dcd file: %s' % filename)
-        
+
         # alloc the molfile_timestep, which is the struct that the library is
         # going to deposit its data into each timestep
         self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
         if self.fh is  NULL:
             raise MemoryError
-        
-    
+
+
     def __dealloc__(self):
         "Shut this whole thing down"
-        
+
         # free whatever we malloced
         free(self.timestep)
-        
+
         # close the file
         if self.fh is not NULL:
             close_file_read(self.fh)
-        
 
+    @cython.boundscheck(False)
     def read(self):
-        """Extract the XYZ coordinates from the file
-        
-        Note: if we wanted to, we could get the box dimensions out as well. But
-        they're kindof boring.
+        """Extract the coordinates from a DCD file
+
+        Returns
+        -------
+        xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
+            The xyz coordinates of each atom in each frame
+        box_lengths : np.ndarray, shape=(n_frames, 3), dtype=float32
+            The length of the box in each frame. `box_lengths[i,0]` is the length
+            of the A axis (in frame i), and `box_lengths[i,1]` and
+            `box_lengths[i,2]` are the B and C axis respectively.
+        box_angles : np.ndarray, shape=(n_frames, 3), dtype=float32
+            Organized analogously to box_lengths. Gives the alpha, beta and
+            gamma angles respectively in entries `box_angles[i,0]`,
+            `box_angles[i,1]`, `box_angles[i,2]`.
         """
 
         cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((self.n_frames, self.n_atoms, 3), dtype=np.float32)
-        self.timestep.coords = <float*> xyz.data
-        cdef int position = 0
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] box_lengths = np.zeros((self.n_frames, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] box_angles = np.zeros((self.n_frames, 3), dtype=np.float32)
+
+        cdef int i = 0
         cdef int status = _DCD_SUCCESS
-        
-        while (status == _DCD_SUCCESS and position < self.n_frames):
+
+        for i in range(self.n_frames):
+            self.timestep.coords = &xyz[i,0,0]
             status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
-            self.timestep.coords += 3*self.n_atoms
-            position += 1
-        
+            box_lengths[i, 0] = self.timestep.A
+            box_lengths[i, 1] = self.timestep.B
+            box_lengths[i, 2] = self.timestep.C
+            box_angles[i, 0] = self.timestep.alpha
+            box_angles[i, 1] = self.timestep.beta
+            box_angles[i, 2] = self.timestep.gamma
+
+            if status != _DCD_SUCCESS:
+                break
+
         if status != _DCD_SUCCESS:
             raise IOError("Error: %s", status)
-        
-        return xyz
+
+        return xyz, box_lengths, box_angles
 
 
 cdef class DCDWriter:
     cdef char* filename
     cdef dcdhandle* fh
     cdef np.ndarray xyz
+    cdef np.ndarray box_lengths
+    cdef np.ndarray box_angles
     cdef int n_atoms
     cdef molfile_timestep_t* timestep
-    
-    def __cinit__(self, char* filename, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz):
+
+    def __cinit__(self, char* filename,
+        np.ndarray[np.float32_t, ndim=3, mode="c"] xyz,
+        np.ndarray[np.float32_t, ndim=2, mode="c"] box_lengths,
+        np.ndarray[np.float32_t, ndim=2, mode="c"] box_angles):
+        """
+        Set up the DCD writer
+
+        Nothing will be written to disk until you call write()
+
+        Parameters
+        ----------
+        xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
+            The xyz coordinates of each atom in each frame
+        box_lengths : np.ndarray, shape=(n_frames, 3), dtype=float32
+            The length of the box in each frame. `box_lengths[i,0]` is the length
+            of the A axis (in frame i), and `box_lengths[i,1]` and
+            `box_lengths[i,2]` are the B and C axis respectively.
+        box_angles : np.ndarray, shape=(n_frames, 3), dtype=float32
+            Organized analogously to box_lengths. Gives the alpha, beta and
+            gamma angles respectively in entries `box_angles[i,0]`,
+            `box_angles[i,1]`, `box_angles[i,2]`.
+        """
         self.filename = filename
         self.xyz = xyz
+        self.box_lengths = box_lengths
+        self.box_angles = box_angles
         self.n_atoms = self.xyz.shape[1]
-        
+
+        assert self.box_lengths.shape[0] == len(self.xyz)
+        assert self.box_lengths.shape[1] == 3
+        assert self.box_angles.shape[0] == len(self.xyz)
+        assert self.box_angles.shape[1] == 3
+
         self.fh = open_dcd_write(filename, "dcd", self.n_atoms)
         if self.fh is NULL:
             raise IOError('There was an error opening the file: %s' % filename)
-            
+
         self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
         if self.timestep is NULL:
             raise MemoryError
-        
+
+
     def __dealloc__(self):
         close_file_write(self.fh)
         if self.timestep is not NULL:
             free(self.timestep)
-    
+
+    @cython.boundscheck(False)
     def write(self):
+        "Write all the data"
         cdef int i, status
         cdef n_frames = len(self.xyz)
-        
-        self.timestep.A = 0
-        self.timestep.B = 0
-        self.timestep.C = 0
-        self.timestep.alpha = 0
-        self.timestep.beta = 0 
-        self.timestep.gamma = 0
 
-        self.timestep.coords = <float*> self.xyz.data
-        
+        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = self.xyz
+
         for i in range(n_frames):
+            self.timestep.coords = &xyz[i, 0, 0]
+            self.timestep.A = self.box_lengths[i, 0]
+            self.timestep.B = self.box_lengths[i, 1]
+            self.timestep.C = self.box_lengths[i, 2]
+            self.timestep.alpha = self.box_angles[i, 0]
+            self.timestep.beta  = self.box_angles[i, 1]
+            self.timestep.gamma = self.box_angles[i, 2]
+
             status = write_timestep(self.fh, self.timestep)
-            self.timestep.coords += self.n_atoms * 3
+
             if status != _DCD_SUCCESS:
                 raise RuntimeError("DCD Error: %s" % status)
-        
-        
-        
-        
