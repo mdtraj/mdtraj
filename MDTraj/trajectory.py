@@ -812,6 +812,8 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
+        # convert from internal nm representation to angstroms for output
+        xyz = self.xyz * 10
         return dcd.write(filename, xyz, force_overwrite=force_overwrite)
 
     def save_binpos(self, filename, force_overwrite=True):
@@ -825,4 +827,6 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        return binpos.write(filename, self.xyz, force_overwrite=force_overwrite)
+        # convert from internal nm representation to angstroms for output
+        xyz = self.xyz * 10
+        return binpos.write(filename, xyz, force_overwrite=force_overwrite)

@@ -25,6 +25,10 @@ TestDocstrings = DocStringFormatTester(mdtraj.trajectory, error_on_none=True)
 
 fn = get_fn('frame0.lh5')
 nat = get_fn('native.pdb')
+temp1 = tempfile.mkstemp(suffix='.xtc')[1]
+temp2 = tempfile.mkstemp(suffix='.dcd')[1]
+temp3 = tempfile.mkstemp(suffix='.binpos')[1]
+
 
 def test_hdf1():
     t0 = load_hdf(fn, top=nat, chunk=1)
@@ -52,11 +56,46 @@ def test_slice():
     eq((t[0:5] + t[5:10]).box, t[0:10].box)
 
 
-def test_xtc_1():
+def test_xtc():
     t = mdtraj.trajectory.load(get_fn('frame0.xtc'), top=nat)
+    t.save(temp1)
+    t2 = mdtraj.trajectory.load(temp1, top=nat)
+    eq(t.xyz, t2.xyz)
+    eq(t.time, t2.time)
 
-def test_dcd_1():
+    t.save(temp2)
+    t2 = mdtraj.trajectory.load(temp2, top=nat)
+    eq(t.xyz, t2.xyz)
+
+    t.save(temp3)
+    t2 = mdtraj.trajectory.load(temp3, top=nat)
+    eq(t.xyz, t2.xyz)
+
+def test_dcd():
     t = mdtraj.trajectory.load(get_fn('frame0.dcd'), top=nat)
+    t.save(temp1)
+    t2 = mdtraj.trajectory.load(temp1, top=nat)
+    eq(t.xyz, t2.xyz)
+    eq(t.time, t2.time)
 
-def test_binpos_1():
+    t.save(temp2)
+    t2 = mdtraj.trajectory.load(temp2, top=nat)
+    eq(t.xyz, t2.xyz)
+
+    t.save(temp3)
+    t2 = mdtraj.trajectory.load(temp3, top=nat)
+    eq(t.xyz, t2.xyz)
+
+def test_binpos():
     t = mdtraj.trajectory.load(get_fn('frame0.binpos'), top=nat)
+    t.save(temp1)
+    t2 = mdtraj.trajectory.load(temp1, top=nat)
+    eq(t.xyz, t2.xyz)
+
+    t.save(temp2)
+    t2 = mdtraj.trajectory.load(temp2, top=nat)
+    eq(t.xyz, t2.xyz)
+
+    t.save(temp3)
+    t2 = mdtraj.trajectory.load(temp3, top=nat)
+    eq(t.xyz, t2.xyz)
