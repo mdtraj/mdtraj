@@ -43,8 +43,6 @@ def test_read():
     xyz, box_lengths, box_angles = dcd.read(fn_dcd)
     xyz2 = io.loadh(get_fn('frame0.dcd.h5'), 'xyz')
 
-    #eq(box_lengths, np.zeros_like(box_lengths))
-    #eq(box_angles, np.zeros_like(box_angles))
     eq(xyz, xyz2)
 
 
@@ -71,6 +69,6 @@ def test_write_2():
     dcd.write(temp, xyz, box_lengths, box_angles, force_overwrite=True)
     xyz2, box_lengths2, box_angles2 = dcd.read(temp)
 
-    eq(xyz, xyz2)
-    eq(box_lengths, box_lengths2)
-    eq(box_angles, box_angles2)
+    yield lambda: eq(xyz, xyz2)
+    yield lambda: eq(box_lengths, box_lengths2)
+    yield lambda: eq(box_angles, box_angles2)

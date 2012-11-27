@@ -18,9 +18,7 @@ import os
 import numpy as np
 import tables
 from tables import NoSuchNodeError
-from mdtraj import dcd
-from mdtraj import xtc
-from mdtraj import binpos
+from mdtraj import dcd, xtc, binpos, trr
 from mdtraj.pdb import pdbfile
 from mdtraj import io
 from topology import Topology
@@ -124,6 +122,7 @@ def load(filename, **kwargs):
     extension = os.path.splitext(filename)[1]
 
     loaders = {'.xtc':    load_xtc,
+               '.trr':    load_trr,
                '.pdb':    load_pdb,
                '.dcd':    load_dcd,
                '.h5':     load_hdf,
@@ -172,15 +171,16 @@ def load_pdb(filename):
 
 def load_xtc(filenames, top=None, discard_overlapping_frames=False, chunk=500):
     """Load an xtc file. Since the xtc doesn't contain information
-    to specify the topolgy, you need to supply a pdb_filename
+    to specify the topolgy, you need to supply the topology yourself
 
     Parameters
     ----------
     filenames : {str, [str]}
-        String or list of strings giving one or multiple filenames that together form an xtx
+        String or list of strings giving one or multiple filenames that together
+        form an xtc
     top : {str, Trajectory, Topology}
-        The XTC format does not contain topology information. Pass in either the path to a pdb file,
-        a trajectory, or a topology to supply this information.
+        The XTC format does not contain topology information. Pass in either the
+        path to a pdb file, a trajectory, or a topology to supply this information.
     discard_overlapping_frames : bool, default=False
         Look for overlapping frames between the last frame of one filename and
         the first frame of a subsequent filename and discard them
@@ -222,6 +222,58 @@ def load_xtc(filenames, top=None, discard_overlapping_frames=False, chunk=500):
     # note we're not doing anything with the box vectors
     return Trajectory(xyz=coords, topology=topology, time=times)
 
+
+def load_trr(filenames, top=None, discard_overlapping_frames=False, chunk=500):
+    """Load a trr file. Since the trr doesn't contain information
+    to specify the topolgy, you need to supply the topology yourself
+
+    Parameters
+    ----------
+    filenames : {str, [str]}
+        String or list of strings giving one or multiple filenames that together
+        form a TRR
+    top : {str, Trajectory, Topology}
+        The TRR format does not contain topology information. Pass in either the
+        path to a pdb file, a trajectory, or a topology to supply this information.
+    discard_overlapping_frames : bool, default=False
+        Look for overlapping frames between the last frame of one filename and
+        the first frame of a subsequent filename and discard them
+    chunk : int, default=500
+        Size of the chunk to use for loading the xtc file. Memory is allocated
+        in units of the chunk size, so larger chunk can be more time-efficient.
+
+    Returns
+    -------
+    trajectory : Trajectory
+        A trajectory file!
+    """
+    # we make it not required in the signature, but required here. although this
+    # is a little wierd, its good because this function is usually called by a
+    # dispatch from load(), where top comes from **kwargs. So if its not supplied
+    # we want to give the user an informative error message
+    if top is None:
+        raise ValueError('"top" argument is required for load_xtc')
+
+    topology = _parse_topology(top)
+    if isinstance(filenames, basestring):
+        filenames = [filenames]
+
+    coords = []
+    times = []
+    for i, filename in enumerate(filenames):
+        xyz, time, step, box, lambd = trr.read(filename, chunk)
+        if i > 0 and discard_overlapping_frames:
+            if np.sum(np.square(xyz[0] - coords[-1][-1])) < 1e-8:
+                xyz = xyz[0:-1]
+                time = time[0:-1]
+        coords.append(xyz)
+        times.append(time)
+
+    times = np.concatenate(times)
+    coords = np.vstack(coords)
+
+    # note we're not doing anything with the box vectors
+    return Trajectory(xyz=coords, topology=topology, time=times)
 
 def load_dcd(filenames, top=None, discard_overlapping_frames=False):
     """Load an xtc file. Since the dcd format doesn't contain information
@@ -710,6 +762,7 @@ class Trajectory(object):
         extension = os.path.splitext(filename)[1]
 
         savers = {'.xtc': self.save_xtc,
+                  '.trr': self.save_trr,
                   '.pdb': self.save_pdb,
                   '.dcd': self.save_dcd,
                   '.h5': self.save_hdf,
@@ -799,6 +852,25 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         return xtc.write(filename, self.xyz, time=self.time,
+            force_overwrite=force_overwrite)
+
+    def save_trr(self, filename, force_overwrite=True):
+        """
+        Save a trajectory to gromacs TRR format
+
+        Notes
+        -----
+        Only the xyz coordinates and the time are saved, the velocities
+        and forces in the trr will be zeros
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
+        """
+        return trr.write(filename, self.xyz, time=self.time,
             force_overwrite=force_overwrite)
 
     def save_dcd(self, filename, force_overwrite=True):

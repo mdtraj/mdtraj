@@ -74,6 +74,10 @@ def write(filename, xyz, time=None, step=None, box=None, lambd=None,
     """
     Write a Gromacs TRR file
 
+    Notes
+    -----
+    The velocities and the forces entries in the trr will be set to zeros
+
     Parameters
     ----------
     filename : str

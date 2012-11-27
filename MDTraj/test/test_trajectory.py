@@ -28,15 +28,20 @@ nat = get_fn('native.pdb')
 temp1 = tempfile.mkstemp(suffix='.xtc')[1]
 temp2 = tempfile.mkstemp(suffix='.dcd')[1]
 temp3 = tempfile.mkstemp(suffix='.binpos')[1]
-
+temp4 = tempfile.mkstemp(suffix='.trr')[1]
+def teardown_module(module):
+    """remove the temporary file created by tests in this file 
+    this gets automatically called by nose"""
+    for e in [temp1, temp2, temp3, temp4]:
+        os.unlink(e)
 
 def test_hdf1():
     t0 = load_hdf(fn, top=nat, chunk=1)
     t1 = load_hdf(fn, top=nat, chunk=10)
     t2 = load_hdf(fn, top=nat, chunk=100)
 
-    eq(t0.xyz, t1.xyz)
-    eq(t0.xyz, t2.xyz)
+    yield lambda: eq(t0.xyz, t1.xyz)
+    yield lambda: eq(t0.xyz, t2.xyz)
 
 
 def test_hdf2():
@@ -45,57 +50,47 @@ def test_hdf2():
     t2 = load_hdf(fn, top=nat, chunk=50, stride=10)
     t3 = load_hdf(fn, top=nat, chunk=1, stride=1)
 
-    eq(t0.xyz, t1.xyz)
-    eq(t0.xyz, t2.xyz)
-    eq(t0.xyz, t3.xyz[::10])
+    yield lambda: eq(t0.xyz, t1.xyz)
+    yield lambda: eq(t0.xyz, t2.xyz)
+    yield lambda: eq(t0.xyz, t3.xyz[::10])
 
 def test_slice():
     t = load_hdf(fn, top=nat)
-    eq((t[0:5] + t[5:10]).xyz, t[0:10].xyz)
-    eq((t[0:5] + t[5:10]).time, t[0:10].time)
-    eq((t[0:5] + t[5:10]).box, t[0:10].box)
+    yield lambda: eq((t[0:5] + t[5:10]).xyz, t[0:10].xyz)
+    yield lambda: eq((t[0:5] + t[5:10]).time, t[0:10].time)
+    yield lambda: eq((t[0:5] + t[5:10]).box, t[0:10].box)
 
 
 def test_xtc():
     t = mdtraj.trajectory.load(get_fn('frame0.xtc'), top=nat)
-    t.save(temp1)
-    t2 = mdtraj.trajectory.load(temp1, top=nat)
-    eq(t.xyz, t2.xyz)
-    eq(t.time, t2.time)
-
-    t.save(temp2)
-    t2 = mdtraj.trajectory.load(temp2, top=nat)
-    eq(t.xyz, t2.xyz)
-
-    t.save(temp3)
-    t2 = mdtraj.trajectory.load(temp3, top=nat)
-    eq(t.xyz, t2.xyz)
+    for e in [temp1, temp2, temp3, temp4]:
+        def f():
+            t.save(e)
+            t2 = mdtraj.trajectory.load(e, top=nat)
+            eq(t.xyz, t2.xyz, err_msg=e)
+            
+            # ony trr and xtc save the time that we read from the original
+            # xtc format
+            if e.endswith('.trr') or e.endswith('.xtc'):
+                eq(t.time, t2.time, err_msg=e)
+        yield f
 
 def test_dcd():
     t = mdtraj.trajectory.load(get_fn('frame0.dcd'), top=nat)
-    t.save(temp1)
-    t2 = mdtraj.trajectory.load(temp1, top=nat)
-    eq(t.xyz, t2.xyz)
-    eq(t.time, t2.time)
-
-    t.save(temp2)
-    t2 = mdtraj.trajectory.load(temp2, top=nat)
-    eq(t.xyz, t2.xyz)
-
-    t.save(temp3)
-    t2 = mdtraj.trajectory.load(temp3, top=nat)
-    eq(t.xyz, t2.xyz)
+    for e in [temp1, temp2, temp3, temp4]:
+        def f():
+            t.save(e)
+            t2 = mdtraj.trajectory.load(e, top=nat)
+            eq(t.xyz, t2.xyz, err_msg=e)
+            eq(t.time, t2.time, err_msg=e)
+        yield f
 
 def test_binpos():
     t = mdtraj.trajectory.load(get_fn('frame0.binpos'), top=nat)
-    t.save(temp1)
-    t2 = mdtraj.trajectory.load(temp1, top=nat)
-    eq(t.xyz, t2.xyz)
-
-    t.save(temp2)
-    t2 = mdtraj.trajectory.load(temp2, top=nat)
-    eq(t.xyz, t2.xyz)
-
-    t.save(temp3)
-    t2 = mdtraj.trajectory.load(temp3, top=nat)
-    eq(t.xyz, t2.xyz)
+    for e in [temp1, temp2, temp3, temp4]:
+        def f():
+            t.save(e)
+            t2 = mdtraj.trajectory.load(e, top=nat)
+            eq(t.xyz, t2.xyz, err_msg=e)
+            eq(t.time, t2.time, err_msg=e)
+        yield f

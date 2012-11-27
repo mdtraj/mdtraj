@@ -41,30 +41,30 @@ def teardown_module(module):
 
 def test_read_chunk1():
     xyz, time, step, box, prec = xtc.read(fn_xtc, chunk=1)
-    iofile = io.loadh(get_fn('frame0.xtc.h5'))
-    eq(xyz, iofile['xyz'])
-    eq(step, iofile['step'])
-    eq(box, iofile['box'])
-    eq(time, iofile['time'])
-    eq(prec, iofile['prec'])
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    yield lambda: eq(xyz, iofile['xyz'])
+    yield lambda: eq(step, iofile['step'])
+    yield lambda: eq(box, iofile['box'])
+    yield lambda: eq(time, iofile['time'])
+    yield lambda: eq(prec, iofile['prec'])
 
 def test_read_chunk10():
     xyz, time, step, box, prec = xtc.read(fn_xtc, chunk=10)
-    iofile = io.loadh(get_fn('frame0.xtc.h5'))
-    eq(xyz, iofile['xyz'])
-    eq(step, iofile['step'])
-    eq(box, iofile['box'])
-    eq(time, iofile['time'])
-    eq(prec, iofile['prec'])
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    yield lambda: eq(xyz, iofile['xyz'])
+    yield lambda: eq(step, iofile['step'])
+    yield lambda: eq(box, iofile['box'])
+    yield lambda: eq(time, iofile['time'])
+    yield lambda:eq(prec, iofile['prec'])
 
 def test_read_chunk1000():
     xyz, time, step, box, prec = xtc.read(fn_xtc, chunk=1000)
-    iofile = io.loadh(get_fn('frame0.xtc.h5'))
-    eq(xyz, iofile['xyz'])
-    eq(step, iofile['step'])
-    eq(box, iofile['box'])
-    eq(time, iofile['time'])
-    eq(prec, iofile['prec'])
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    yield lambda: eq(xyz, iofile['xyz'])
+    yield lambda: eq(step, iofile['step'])
+    yield lambda: eq(box, iofile['box'])
+    yield lambda: eq(time, iofile['time'])
+    yield lambda: eq(prec, iofile['prec'])
 
 
 def test_write_0():

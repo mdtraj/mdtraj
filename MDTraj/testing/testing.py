@@ -46,7 +46,7 @@ def get_fn(name):
     return fn
 
 
-def eq(o1, o2, decimal=6):
+def eq(o1, o2, decimal=6, err_msg=''):
     assert (type(o1) is type(o2)), 'o1 and o2 not the same type: %s %s' % (type(o1), type(o2))
 
     if isinstance(o1, dict):
@@ -56,10 +56,10 @@ def eq(o1, o2, decimal=6):
     elif isinstance(o1, np.ndarray):
         if o1.dtype.kind == 'f' or o2.dtype.kind == 'f':
             # compare floats for almost equality
-            assert_array_almost_equal(o1, o2, decimal)
+            assert_array_almost_equal(o1, o2, decimal, err_msg=err_msg)
         else:
             # compare everything else (ints, bools) for absolute equality
-            assert_array_equal(o1, o2)
+            assert_array_equal(o1, o2, err_msg=err_msg)
     # probably these are other specialized types
     # that need a special check?
     else:

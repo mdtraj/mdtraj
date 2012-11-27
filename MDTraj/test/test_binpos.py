@@ -46,24 +46,24 @@ def test_read_chunk1():
     xyz2 = dcd.read(fn_dcd)[0]
     xyz3 = io.loadh(get_fn('frame0.binpos.h5'), 'xyz')
 
-    eq(xyz[1:], xyz2)
-    eq(xyz, xyz3)
+    yield lambda: eq(xyz[1:], xyz2)
+    yield lambda: eq(xyz, xyz3)
 
 def test_read_chunk10():
     xyz = binpos.read(fn_binpos, chunk=10)
     xyz2 = dcd.read(fn_dcd)[0]
     xyz3 = io.loadh(get_fn('frame0.binpos.h5'), 'xyz')
 
-    eq(xyz[1:], xyz2)
-    eq(xyz, xyz3)
+    yield lambda: eq(xyz[1:], xyz2)
+    yield lambda: eq(xyz, xyz3)
 
 def test_read_chunk1000():
     xyz = binpos.read(fn_binpos, chunk=1000)
     xyz2 = dcd.read(fn_dcd)[0]
     xyz3 = io.loadh(get_fn('frame0.binpos.h5'), 'xyz')
 
-    eq(xyz[1:], xyz2)
-    eq(xyz, xyz3)
+    yield lambda: eq(xyz[1:], xyz2)
+    yield lambda: eq(xyz, xyz3)
 
 def test_write_1():
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
