@@ -78,9 +78,14 @@ static int do_trnheader(XDRFILE *xd,mybool bRead,t_trnheader *sh)
 	char *version = "GMX_trn_file";
 	char buf[BUFSIZE];
   
-	if (xdrfile_read_int(&magic,1,xd) != 1)
-		return exdrINT;
-  
+	if (xdrfile_read_int(&magic,1,xd) != 1) {
+	    /* modification by RTM to return the right EOF code
+	    this is what's happening in the XTC code */
+	    if (bRead)
+			return exdrENDOFFILE;
+        else
+		    return exdrINT;
+    }
 	if (bRead) 
     {
         if (xdrfile_read_int(&slen,1,xd) != 1)
@@ -427,6 +432,7 @@ static int do_trn(XDRFILE *xd,mybool bRead,int *step,float *t,float *lambda,
     }
     if ((result = do_trnheader(xd,bRead,sh)) != exdrOK)
         return result;
+
     if (bRead) {
         *natoms = sh->natoms;
         *step   = sh->step;
