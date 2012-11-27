@@ -696,6 +696,15 @@ class Trajectory(object):
         filename : str
             filesystem path in which to save the trajectory. The extension will be parsed and will
             control the format.
+        
+        Other Parameters
+        ----------------
+        lossy : bool
+            For .h5 or .lh5, whether or not to use compression.
+        no_models: bool
+            For .pdb. TODO: Document this?
+        force_overwrite : bool
+            For .binpos, .xtc, .dcd. If `filename` already exists, overwrite it.
         """
         # grab the extension of the filename
         extension = os.path.splitext(filename)[1]
@@ -778,7 +787,7 @@ class Trajectory(object):
 
         return
 
-    def save_xtc(self, filename):
+    def save_xtc(self, filename, force_overwrite=True):
         """
         Save a trajectory to gromacs XTC format
 
@@ -786,10 +795,13 @@ class Trajectory(object):
         ----------
         filename : str
             filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
         """
-        raise NotImplementedError
+        return xtc.write(filename, self.xyz, time=self.time,
+            force_overwrite=force_overwrite)
 
-    def save_dcd(self, filename):
+    def save_dcd(self, filename, force_overwrite=True):
         """
         Save a trajectory to CHARMM dcd format
 
@@ -797,10 +809,12 @@ class Trajectory(object):
         ----------
         filename : str
             filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
         """
-        raise NotImplementedError
+        return dcd.write(filename, xyz, force_overwrite=force_overwrite)
 
-    def save_binpos(self, filename):
+    def save_binpos(self, filename, force_overwrite=True):
         """
         Save a trajectory to amber BINPOS format
 
@@ -808,6 +822,7 @@ class Trajectory(object):
         ----------
         filename : str
             filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
         """
-
-        raise NotImplementedError
+        return binpos.write(filename, self.xyz, force_overwrite=force_overwrite)
