@@ -18,7 +18,7 @@ import tempfile, os
 from mdtraj import binpos, dcd, io
 from mdtraj.testing import get_fn, eq, DocStringFormatTester
 import numpy as np
-from mdtraj.trajectory import load_hdf
+from mdtraj.trajectory import load_hdf, load
 import mdtraj.trajectory
 
 TestDocstrings = DocStringFormatTester(mdtraj.trajectory, error_on_none=True)
@@ -34,6 +34,9 @@ def teardown_module(module):
     this gets automatically called by nose"""
     for e in [temp1, temp2, temp3, temp4]:
         os.unlink(e)
+
+def test_hdf0():
+    t0 = load(fn)
 
 def test_hdf1():
     t0 = load_hdf(fn, top=nat, chunk=1)

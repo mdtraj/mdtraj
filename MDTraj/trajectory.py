@@ -355,7 +355,7 @@ def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True)
         # get the topology from the file, or input argument list
         if top is None:
             if hasattr(F.root, 'topology'):
-                topology = Topology.from_bytearray(F.root.topology)
+                topology = Topology.from_bytearray(F.root.topology[:])
             else:
                 raise ValueError("I can't read the topology from your old HDF "
                     "file, so how about you give me a new topology with the top "
