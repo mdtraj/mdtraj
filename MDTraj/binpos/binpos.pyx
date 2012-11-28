@@ -16,16 +16,15 @@
 
 import cython
 cimport cython
-import os, warnings
+import os
 import numpy as np
 cimport numpy as np
 np.import_array()
+from mdtraj.utils.arrays import ensure_type
 from libc.stdlib cimport malloc, free
-from libc.string cimport memcpy
 from binposlib cimport molfile_timestep_t
 from binposlib cimport open_binpos_read, close_file_read, read_next_timestep
 from binposlib cimport open_binpos_write, close_file_write, write_timestep
-
 
 # codes that indicate status on return from library
 cdef int _BINPOS_SUCESS = 0  # regular exit code
@@ -73,28 +72,10 @@ def write(filename, xyz, force_overwrite=True):
         raise IOError('The file already exists: %s' % filename)
 
     #make sure all the arrays are the right shape
-    xyz = _ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False)
+    xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False)
 
     writer = BINPOSWriter(filename, xyz)
     writer.write()
-
-
-def _ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=None):
-    "Ensure dtype and shape of an ndarray"
-    if can_be_none and val is None:
-        return None
-    if not isinstance(val, np.ndarray):
-        raise TypeError("%s must be numpy array. You supplied type %s" % (name, type(val)))
-    val = np.ascontiguousarray(val, dtype=dtype)
-    if not val.ndim == ndim:
-        raise ValueError('%s must be ndim %s. You supplied %s' % (name, ndim, val.ndim))
-    if length is not None and len(val) != length:
-        raise ValueError('%s must be length %s. You supplied %s' % (name, length, len(val)))
-    if shape is not None and val.shape != shape:
-        raise ValueError('%s must be shape %s. You supplied %s' % (name, shape, val.shape))
-
-    return val
-
 
 
 cdef class BINPOSReader:

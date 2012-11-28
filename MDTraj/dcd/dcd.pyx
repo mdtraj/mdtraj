@@ -16,17 +16,17 @@
 
 import cython
 cimport cython
-import os, warnings
+import os
 import numpy as np
 cimport numpy as np
 np.import_array()
-from itertools import izip
+from mdtraj.utils.arrays import ensure_type
 from libc.stdlib cimport malloc, free
-from libc.string cimport memcpy
 from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
 from dcdlib cimport open_dcd_write, close_file_write, write_timestep
-
+from collections import namedtuple
+DCDFile = namedtuple('DCDFile', ['xyz', 'box_lengths', 'box_angles'])
 
 # codes that indicate status on return from library
 cdef int _DCD_SUCCESS    = 0   # No problems
@@ -57,7 +57,8 @@ def read(filename):
     """
     xyz, box_lengths, box_angles = DCDReader(filename).read()
 
-    return xyz, box_lengths, box_angles
+    return DCDFile(xyz, box_lengths, box_angles)
+
 
 def write(filename, xyz, box_lengths=None, box_angles=None, force_overwrite=True):
     """Write data to a NAMD/CHARMM DCD file
@@ -88,38 +89,21 @@ def write(filename, xyz, box_lengths=None, box_angles=None, force_overwrite=True
         raise IOError('The file already exists: %s' % filename)
 
     # make sure all the arrays are the right shape
-    xyz = _ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False)
+    xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False)
     n_frames = len(xyz)
 
-    box_lengths = _ensure_type(box_lengths, dtype=np.float32, ndim=2, name='box_lengths',
+    box_lengths = ensure_type(box_lengths, dtype=np.float32, ndim=2, name='box_lengths',
         can_be_none=True, shape=(n_frames, 3))
     if box_lengths is None:
         box_lengths = np.ones((n_frames, 3), dtype=np.float32)
 
-    box_angles = _ensure_type(box_angles, dtype=np.float32, ndim=2, name='box_angles',
+    box_angles = ensure_type(box_angles, dtype=np.float32, ndim=2, name='box_angles',
         can_be_none=True, shape=(n_frames, 3))
     if box_angles is None:
         box_angles = 90.0 * np.ones((n_frames, 3), dtype=np.float32)
 
     writer = DCDWriter(filename, xyz, box_lengths, box_angles)
     writer.write()
-
-
-def _ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=None):
-    "Ensure dtype and shape of an ndarray"
-    if can_be_none and val is None:
-        return None
-    if not isinstance(val, np.ndarray):
-        raise TypeError("%s must be numpy array. You supplied type %s" % (name, type(val)))
-    val = np.ascontiguousarray(val, dtype=dtype)
-    if not val.ndim == ndim:
-        raise ValueError('%s must be ndim %s. You supplied %s' % (name, ndim, val.ndim))
-    if length is not None and len(val) != length:
-        raise ValueError('%s must be length %s. You supplied %s' % (name, length, len(val)))
-    if shape is not None and val.shape != shape:
-        raise ValueError('%s must be shape %s. You supplied %s' % (name, shape, val.shape))
-
-    return val
 
 
 cdef class DCDReader:

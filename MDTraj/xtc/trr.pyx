@@ -14,17 +14,19 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
-#cython: boundscheck=False
-#cython: wraparound=False
-
 import os
+import cython
+cimport cython
 from itertools import izip
 import numpy as np
 cimport numpy as np
 import numpy as np
 np.import_array()
+from mdtraj.utils.arrays import ensure_type
 from trrlib cimport (XDRFILE, read_trr_natoms, xdrfile_open, \
     xdrfile_close, write_trr, read_trr)
+from collections import namedtuple
+TRRFile = namedtuple('TRRFile', ['xyz', 'time', 'step', 'box', 'lambd'])
 
 # numpy variable types include the specific numpy of bytes of each, but the c
 # variables in our interface file don't. this could get bad if we're on a wierd
@@ -35,7 +37,7 @@ if sizeof(float) != sizeof(np.float32_t):
     raise RuntimeError('Floats on your compiler are not 32 bits. This is not good')
 
 
-def read(filename, chunk=1):
+def read(filename, chunk=1000):
     """
     Read the data from a Gromacs TRR file
 
@@ -66,7 +68,7 @@ def read(filename, chunk=1):
     box = np.vstack(zipper[3])
     lambd = np.concatenate(zipper[4])
 
-    return xyz, time, step, box, lambd
+    return TRRFile(xyz, time, step, box, lambd)
 
 
 def write(filename, xyz, time=None, step=None, box=None, lambd=None,
@@ -97,20 +99,20 @@ def write(filename, xyz, time=None, step=None, box=None, lambd=None,
         raise IOError('The file already exists: %s' % filename)
 
     # make sure all the arrays are the right shape
-    xyz = _ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False)
+    xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False)
     n_frames = len(xyz)
 
-    step = _ensure_type(step, dtype=np.int32, ndim=1, name='step', can_be_none=True,
+    step = ensure_type(step, dtype=np.int32, ndim=1, name='step', can_be_none=True,
         length=n_frames)
     if step is None:
         step = np.ones(n_frames, dtype=np.int32)
 
-    time = _ensure_type(time, dtype=np.float32, ndim=1, name='time', can_be_none=True,
+    time = ensure_type(time, dtype=np.float32, ndim=1, name='time', can_be_none=True,
         length=n_frames)
     if time is None:
         time = np.arange(n_frames, dtype=np.float32)
 
-    box = _ensure_type(box, dtype=np.float32, ndim=3, name='box', can_be_none=True,
+    box = ensure_type(box, dtype=np.float32, ndim=3, name='box', can_be_none=True,
         length=n_frames, shape=(n_frames, 3, 3))
     if box is None:
         # make each box[i] be the identity matrix
@@ -119,7 +121,7 @@ def write(filename, xyz, time=None, step=None, box=None, lambd=None,
         box[:,1,1] = np.ones(n_frames, dtype=np.float32)
         box[:,2,2] = np.ones(n_frames, dtype=np.float32)
 
-    lambd = _ensure_type(lambd, dtype=np.float32, ndim=1, name='lambd', can_be_none=True,
+    lambd = ensure_type(lambd, dtype=np.float32, ndim=1, name='lambd', can_be_none=True,
         length=n_frames)
     if lambd is None:
         lambd = np.ones(n_frames, dtype=np.float32)
@@ -127,22 +129,6 @@ def write(filename, xyz, time=None, step=None, box=None, lambd=None,
     writer = TRRWriter(filename)
     writer.write(xyz, time, step, box, lambd)
 
-
-def _ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=None):
-    "Ensure dtype and shape of an ndarray"
-    if can_be_none and val is None:
-        return None
-    if not isinstance(val, np.ndarray):
-        raise TypeError("%s must be numpy array. You supplied type %s" % (name, type(val)))
-    val = np.ascontiguousarray(val, dtype=dtype)
-    if not val.ndim == ndim:
-        raise ValueError('%s must be ndim %s. You supplied %s' % (name, ndim, val.ndim))
-    if length is not None and len(val) != length:
-        raise ValueError('%s must be length %s. You supplied %s' % (name, length, len(val)))
-    if shape is not None and val.shape != shape:
-        raise ValueError('%s must be shape %s. You supplied %s' % (name, shape, val.shape))
-
-    return val
 
 # code that indicates a sucessful return from the library
 cdef int _EXDROK = 0             # OK
@@ -183,6 +169,7 @@ cdef class TRRReader:
     def __iter__(self):
         return self
 
+    @cython.boundscheck(False)
     def __next__(self):
         cdef int status = _EXDROK
         cdef int i = 0
@@ -234,6 +221,7 @@ cdef class TRRWriter:
         xdrfile_close(self.fh)
 
 
+    @cython.boundscheck(False)
     def write(self,     np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz not None,
                         np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time not None,
                         np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step not None,

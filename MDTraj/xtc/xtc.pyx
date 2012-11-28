@@ -14,17 +14,17 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
-#cython: boundscheck=False
-#cython: wraparound=False
-
 import os
+import cython
+cimport cython
 from itertools import izip
 import numpy as np
 cimport numpy as np
-import numpy as np
 np.import_array()
+from mdtraj.utils.arrays import ensure_type
 cimport xdrlib
-from cython.operator cimport dereference as deref
+from collections import namedtuple
+XTCFile = namedtuple('XTCFile', ['xyz', 'time', 'step', 'box', 'prec'])
 
 # numpy variable types include the specific numpy of bytes of each, but the c
 # variables in our interface file don't. this could get bad if we're on a wierd
@@ -35,7 +35,7 @@ if sizeof(float) != sizeof(np.float32_t):
     raise RuntimeError('Floats on your compiler are not 32 bits. This is not good')
 
 
-def read(filename, chunk=1):
+def read(filename, chunk=1000):
     """
     Read the xyz coordinates from a Gromacs XTC file
 
@@ -62,7 +62,7 @@ def read(filename, chunk=1):
     box = np.vstack(zipper[3])
     prec = np.concatenate(zipper[4])
 
-    return xyz, time, step, box, prec
+    return XTCFile(xyz, time, step, box, prec)
 
 
 def write(filename, xyz, time=None, step=None, box=None, prec=None,
@@ -86,22 +86,6 @@ def write(filename, xyz, time=None, step=None, box=None, prec=None,
     # only overwrite if you really want to
     if not force_overwrite and os.path.exists(filename):
         raise IOError('The file already exists: %s' % filename)
-
-    def ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=None):
-        "Ensure dtype and shape of an ndarray"
-        if can_be_none and val is None:
-            return None
-        if not isinstance(val, np.ndarray):
-            raise TypeError("%s must be numpy array. You supplied type %s" % (name, type(val)))
-        val = np.ascontiguousarray(val, dtype=dtype)
-        if not val.ndim == ndim:
-            raise ValueError('%s must be ndim %s. You supplied %s' % (name, ndim, val.ndim))
-        if length is not None and len(val) != length:
-            raise ValueError('%s must be length %s. You supplied %s' % (name, length, len(val)))
-        if shape is not None and val.shape != shape:
-            raise ValueError('%s must be shape %s. You supplied %s' % (name, shape, val.shape))
-
-        return val
 
     # make sure all the arrays are the right shape
     xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False)
@@ -175,6 +159,7 @@ cdef class XTCReader:
     def __iter__(self):
         return self
 
+    @cython.boundscheck(False)
     def __next__(self):
         cdef int status = _EXDROK
         cdef int i = 0
@@ -226,6 +211,7 @@ cdef class XTCWriter:
         xdrlib.xdrfile_close(self.fh)
 
 
+    @cython.boundscheck(False)
     def write(self,     np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz not None,
                         np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time not None,
                         np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step not None,
