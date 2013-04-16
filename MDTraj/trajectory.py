@@ -681,32 +681,73 @@ class Trajectory(object):
                 "in topology (%s) don't match" % (self.n_atoms, topology._numAtoms))
 
 
-    def openmm_positions(self):
+    def openmm_positions_all(self):
         """
-        Return OpenMM compatable positions
+        Return OpenMM compatable positions for all frames in the trajectory.
 
         Returns the Cartesian coordinates in the Molecule object in
-        a list of OpenMM-compatible positions, so it is possible to type
-        simulation.context.setPositions(Mol.openmm_positions()[0])
-        or something like that.
+        a list of OpenMM-compatible positions.        
+
         """
         # copied from Lee-Ping Wang's Molecule.py
         if not HAVE_OPENMM:
             raise ImportError('OpenMM was not imported')
 
         Positions = []
-        for xyz in self.xyz:
-            Pos = []
-            for xyzi in xyz:
-                Pos.append(Vec3(xyzi[0], xyzi[1], xyzi[2]))
-            Positions.append(Pos*nanometer)
+
+        for k in xrange(self.n_frames):
+            Positions.append(self.openmm_positions(k))
+
         return Positions
 
+    def openmm_positions(self, frame):
+        """
+        Return OpenMM compatable positions of a single frame.
 
-    def openmm_boxes(self):
-        """ Returns the periodic box vectors in the Molecule object in
+        Parameters
+        ----------
+        frame : int
+            Which trajectory frame to return.
+
+        Returns the Cartesian coordinates in the Molecule object in
+        a list of OpenMM-compatible positions, so it is possible to type
+        simulation.context.setPositions(Mol.openmm_positions(0))
+        or something like that.
+        
+        """
+        # copied from Lee-Ping Wang's Molecule.py
+        if not HAVE_OPENMM:
+            raise ImportError('OpenMM was not imported')
+
+        Pos = []
+        for xyzi in self.xyz[frame]:
+            Pos.append(Vec3(xyzi[0], xyzi[1], xyzi[2]))
+
+        return Pos * nanometer
+
+    def openmm_boxes_all(self):
+        """Return OpenMM-compatible periodic box vectors for all frames in trajectory.
+        """
+        # copied from Lee-Ping Wang's Molecule.py
+        if not HAVE_OPENMM:
+            raise ImportError('OpenMM was not imported')
+
+        if self.box is None:
+            raise ValueError("this trajectory does not contain box size information")
+
+        return [self.openmm_boxes(frame) for frame in xrange(self.n_frames)]
+
+    def openmm_boxes(self, frame):
+        """Return OpenMM compatable box vectors of a single frame.
+
+        Parameters
+        ----------
+        frame : int
+            Return box for this single frame.
+            
+        Returns the periodic box vectors in the Molecule object in
         a list of OpenMM-compatible boxes, so it is possible to type
-        simulation.context.setPeriodicBoxVectors(Mol.openmm_boxes()[0])
+        simulation.context.setPeriodicBoxVectors(Mol.openmm_boxes(0))
         or something like that.
         """
         # copied from Lee-Ping Wang's Molecule.py
@@ -716,9 +757,11 @@ class Trajectory(object):
         if self.box is None:
             raise ValueError("this trajectory does not contain box size information")
 
-        return [(Vec3(box[0], 0.0, 0.0),
+        box = self.box[frame]
+
+        return (Vec3(box[0], 0.0, 0.0),
                 Vec3(0.0, box[1], 0.0),
-                Vec3(0.0, 0.0, box[2])) * nanometer for box in self.box]
+                Vec3(0.0, 0.0, box[2])) * nanometer
 
 
     @staticmethod
