@@ -38,7 +38,8 @@ binpos = Extension('mdtraj.binpos',
     include_dirs = ["MDTraj/binpos/include/", 'MDTraj/binpos/', numpy.get_include()])
 
 setup(name='mdtraj',
-      packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.testing', 'mdtraj.utils'],
+      packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.testing', 'mdtraj.utils',
+                'mdtraj.reporters'],
       package_dir={'mdtraj':'MDTraj'},
       install_requires=['numpy', 'cython'],
       zip_safe=False,
