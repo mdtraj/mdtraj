@@ -1,3 +1,18 @@
+# Copyright 2013 mdtraj developers
+#
+# This file is part of mdtraj
+#
+# mdtraj is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# mdtraj. If not, see http://www.gnu.org/licenses/.
 """OpenMM Reporter for saving the positions of a molecular dynamics simulation
 in the HDF5 format.
 """
@@ -40,12 +55,12 @@ class HDF5Reporter(object):
 
     Example
     -------
-    >>> simulation = Simulation(topology, system, integrator)
-    >>> h5_reporter = HDF5Reporter('traj.lh5', 100)
-    >>> simulation.reporters.append(h5_reporter)
-    >>> simulation.step(10000)
+    >>> simulation = Simulation(topology, system, integrator) # doctest: +SKIP
+    >>> h5_reporter = HDF5Reporter('traj.lh5', 100)           # doctest: +SKIP
+    >>> simulation.reporters.append(h5_reporter)              # doctest: +SKIP
+    >>> simulation.step(10000)                                # doctest: +SKIP
 
-    >>> traj = mdtraj.load('traj.lh5')
+    >>> traj = mdtraj.trajectory.load('traj.lh5')             # doctest: +SKIP
     """
 
     def __init__(self, file, reportInterval, lossy=True, **kwargs):
