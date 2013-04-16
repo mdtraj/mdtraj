@@ -5,6 +5,7 @@ python:
 before_install:
   - pip install numpy --use-mirrors -qq
   - pip install nose --use-mirrors  -qq
+  - pip install nose-exclude --use-mirrors -qq
   - sudo apt-get install -qq libhdf5-serial-dev
   - pip install numexpr --use-mirrors -qq
   - pip install cython --use-mirrors -qq
@@ -12,4 +13,4 @@ before_install:
 install:
   - python setup.py -q install
 script:
-  - nosetests
+  - nosetests --exclude-dir=MDTraj/reporters/

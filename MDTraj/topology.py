@@ -51,6 +51,19 @@ import os
 import numpy as np
 import xml.etree.ElementTree as etree
 
+##############################################################################
+# Utilities
+##############################################################################
+
+def to_bytearray(topology):
+    "Serializer a compete topology (bonds, atoms, etc) to an array of bytes"
+    return np.fromstring(pickle.dumps(topology, protocol=-1), dtype='uint8') 
+
+def from_bytearray(arr):
+    "Reconstruct a complete topology (bonds, atoms, etc) from an array of bytes"
+    return pickle.loads(arr.tostring())
+
+
 class Topology(object):
     """Topology stores the topological information about a system.
 
@@ -73,12 +86,21 @@ class Topology(object):
         self._unitCellDimensions = None
 
     def to_bytearray(self):
-        "Serializer a compete topology (bonds, atoms, etc) to an array of bytes"
-        return np.fromstring(pickle.dumps(self), dtype='uint8')
+        """Serializer a compete topology (bonds, atoms, etc) to an array of
+        bytes
+
+        This is DEPRICATED. Use the module level function to_bytearray instead
+        """
+        return np.fromstring(pickle.dumps(self, protocol=-1), dtype='uint8')
 
     @staticmethod
     def from_bytearray(arr):
-        "Reconstruct a complete topology (bonds, atoms, etc) from an array of bytes"
+        """Reconstruct a complete topology (bonds, atoms, etc) from an array
+        of bytes
+
+        This is DEPRICATED. Use the module level function from_bytearray
+        instead"""
+
         return pickle.loads(arr.tostring())
 
     def addChain(self):

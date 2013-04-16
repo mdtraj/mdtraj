@@ -21,7 +21,7 @@ from tables import NoSuchNodeError
 from mdtraj import dcd, xtc, binpos, trr
 from mdtraj.pdb import pdbfile
 from mdtraj import io
-from topology import Topology
+import mdtraj.topology
 from itertools import izip
 from copy import deepcopy
 try:
@@ -355,7 +355,7 @@ def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True)
         # get the topology from the file, or input argument list
         if top is None:
             if hasattr(F.root, 'topology'):
-                topology = Topology.from_bytearray(F.root.topology[:])
+                topology = mdtraj.topology.from_bytearray(F.root.topology[:])
             else:
                 raise ValueError("I can't read the topology from your old HDF "
                     "file, so how about you give me a new topology with the top "
@@ -602,8 +602,8 @@ class Trajectory(object):
                 'to number of atoms in other (%d)' % (self.n_atoms, other.n_atoms))
 
         if check_topology:
-            if not np.all(self.topology.to_bytearray() == \
-                other.topology.to_bytearray()):
+            if not np.all(mdtraj.topology.to_bytearray(self.topology) == \
+                mdtraj.topology.to_bytearray(other.topology)):
                 raise ValueError('The topologies are not the same')
 
         xyz = np.concatenate((self.xyz, other.xyz))
@@ -793,8 +793,11 @@ class Trajectory(object):
         if lossy:
             xyz=_convert_to_lossy_integers(self.xyz)
 
-        kwargs = {'xyz': xyz, 'time': self.time,
-                  'topology': self.topology.to_bytearray()}
+        kwargs = {
+            'xyz': xyz,
+            'time': self.time,
+            'topology': mdtraj.topology.to_bytearray(self.topology)
+        }
         if self.box is not None:
             kwargs['box'] = self.box
 
