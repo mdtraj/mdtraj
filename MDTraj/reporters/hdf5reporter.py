@@ -10,7 +10,6 @@ import os
 import sys
 import atexit
 import warnings
-import cPickle as pickle
 
 # 3rd party
 import tables
@@ -19,6 +18,7 @@ import numpy as np
 # openmm
 import simtk.unit as units
 # local
+import mdtraj.topology
 import mdtraj.trajectory
 import mdtraj.io
 
@@ -148,8 +148,7 @@ class HDF5Reporter(object):
         # "/topology" node, to store the topology.
         # this one is stored only once -- its not extended during each report.
         ######################################################################
-        topology = np.fromstring(pickle.dumps(simulation.topology, protocol=-1),
-                dtype='uint8')
+        topology = mdtraj.topology.to_bytearray(simulation.topology)
         try:
             topology_node = self._handle.getNode(where='/', name='topology')
             # if the file does contain a topology, make sure its the same
