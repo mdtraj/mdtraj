@@ -15,8 +15,16 @@ import warnings
 import tables
 import numpy as np
 
-# openmm
-import simtk.unit as units
+try:
+    # openmm
+    import simtk.unit as units
+    OPENMM_IMPORTED = True
+except ImportError:
+    # if someone tries to import all of mdtraj but doesn't
+    # OpenMM installed, we don't want that to choke. It should
+    # only choke if they actually try to USE the HDF5Reporter
+    OPENMM_IMPORTED = False
+
 # local
 import mdtraj.topology
 import mdtraj.trajectory
@@ -106,6 +114,9 @@ class HDF5Reporter(object):
         if len(kwargs) > 0:
             raise KeyError('Unrecognized keyword arg %s' % kwargs.keys()[0])
 
+        if not OPENMM_IMPORTED:
+            raise ImportError('OpenMM not found.')
+
     def _initialize(self, simulation):
         """Deferred initialization of the reporter, which happens before
         processing the first report.
@@ -134,10 +145,10 @@ class HDF5Reporter(object):
                 raise ValueError('The number of atoms in the trajectory '
                     'doesn\'t match the number of atoms in your system. '
                     'Perhaps you should just save your trajectory to a '
-                    'unique filename?')
+                    'different filename?')
             if xyz_node.atom != xyz_atom:
                 raise ValueError('Atom mismatch. Perhaps you should just save '
-                    'your trajectory to a unique filename?')
+                    'your trajectory to a different filename?')
         except tables.NoSuchNodeError:
             # if it doesn't contain the xyz node, make it
             self._handle.createEArray(where='/', name='xyz', atom=xyz_atom,
@@ -232,32 +243,13 @@ class HDF5Reporter(object):
         time = state.getTime().value_in_unit(units.picosecond)
         self._handle.root.time.append([time])
 
+        # flush the file to disk. it might not be necessary to do this every
+        # report, but this is the most proactive solution. We don't want to
+        # accumulate a lot of data in memory only to find out, at the very
+        # end of the run, that there wasn't enough space on disk to hold the
+        # data.
+        self._handle.flush()
+
     def __del__(self):
         if hasattr(self, '_handle'):
             self._handle.close()
-
-
-##############################################################################
-# Misc
-##############################################################################
-
-
-def close_open_files(verbose):
-    """Supress the default pytables 'Closing remaining open files:' message
-
-    https://www.pytables.org/moin/UserDocuments/AtexitHooks"""
-    open_files = tables.file._open_files
-    are_open_files = len(open_files) > 0
-    if verbose and are_open_files:
-        print >> sys.stderr, "Closing remaining open files:",
-    for fileh in open_files.keys():
-        if verbose:
-            print >> sys.stderr, "%s..." % (open_files[fileh].filename,),
-        open_files[fileh].close()
-        if verbose:
-            print >> sys.stderr, "done",
-    if verbose and are_open_files:
-        print >> sys.stderr
-
-
-atexit.register(close_open_files, False)
