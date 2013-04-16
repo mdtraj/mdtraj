@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
+__version__ = "0.1"
+
 from setuptools import setup, Extension
 from Cython.Distutils import build_ext
 import numpy
@@ -38,6 +40,7 @@ binpos = Extension('mdtraj.binpos',
     include_dirs = ["MDTraj/binpos/include/", 'MDTraj/binpos/', numpy.get_include()])
 
 setup(name='mdtraj',
+      version=__version__,
       packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.testing', 'mdtraj.utils',
                 'mdtraj.reporters'],
       package_dir={'mdtraj':'MDTraj'},
