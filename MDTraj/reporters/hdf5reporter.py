@@ -7,8 +7,6 @@ in the HDF5 format.
 ##############################################################################
 # stdlib
 import os
-import sys
-import atexit
 import warnings
 
 # 3rd party
