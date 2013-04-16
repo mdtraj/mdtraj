@@ -680,26 +680,6 @@ class Trajectory(object):
             raise ValueError("Number of atoms in xyz (%s) and "
                 "in topology (%s) don't match" % (self.n_atoms, topology._numAtoms))
 
-
-    def openmm_positions_all(self):
-        """
-        Return OpenMM compatable positions for all frames in the trajectory.
-
-        Returns the Cartesian coordinates in the Molecule object in
-        a list of OpenMM-compatible positions.        
-
-        """
-        # copied from Lee-Ping Wang's Molecule.py
-        if not HAVE_OPENMM:
-            raise ImportError('OpenMM was not imported')
-
-        Positions = []
-
-        for k in xrange(self.n_frames):
-            Positions.append(self.openmm_positions(k))
-
-        return Positions
-
     def openmm_positions(self, frame):
         """
         Return OpenMM compatable positions of a single frame.
@@ -724,18 +704,6 @@ class Trajectory(object):
             Pos.append(Vec3(xyzi[0], xyzi[1], xyzi[2]))
 
         return Pos * nanometer
-
-    def openmm_boxes_all(self):
-        """Return OpenMM-compatible periodic box vectors for all frames in trajectory.
-        """
-        # copied from Lee-Ping Wang's Molecule.py
-        if not HAVE_OPENMM:
-            raise ImportError('OpenMM was not imported')
-
-        if self.box is None:
-            raise ValueError("this trajectory does not contain box size information")
-
-        return [self.openmm_boxes(frame) for frame in xrange(self.n_frames)]
 
     def openmm_boxes(self, frame):
         """Return OpenMM compatable box vectors of a single frame.
