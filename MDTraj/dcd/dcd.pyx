@@ -139,6 +139,11 @@ cdef class DCDReader:
     def read(self, n_frames=None):
         """Extract the coordinates from a DCD file
 
+        Parameters
+        ----------
+        n_frames : int, optional
+            If not None, then read only the next `n_frames` frames.
+
         Returns
         -------
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
