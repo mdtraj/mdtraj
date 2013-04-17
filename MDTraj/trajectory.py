@@ -21,11 +21,13 @@ from mdtraj import dcd, xtc, binpos, trr
 from mdtraj.pdb import pdbfile
 from mdtraj import io
 import mdtraj.topology
+import functools
 from itertools import izip
 from copy import deepcopy
 try:
     from simtk.openmm import Vec3
     from simtk.unit import nanometer
+    import simtk.openmm.app.topology
     HAVE_OPENMM = True
 except ImportError:
     HAVE_OPENMM = False
@@ -92,6 +94,8 @@ def _parse_topology(top):
         topology = top.topology
     elif isinstance(top, mdtraj.topology.Topology):
         topology = top
+    elif HAVE_OPENMM and isinstance(top, simtk.openmm.app.topology.Topology):
+        topology = top
     else:
         raise TypeError('Could not interpreted top=%s' % top)
 
@@ -137,48 +141,27 @@ def load(filename, **kwargs):
 
     return loader(filename, **kwargs)
     
-def load_merged_trajectories(filenames, discard_overlapping_frames=False):
-    """Load several trajectories and concatenate them into a single trajectory.
-
-    Parameters
-    ----------
-    filenames : list[str]
-        List of filenames to load and merge.
-    discard_overlapping_frames : bool, optional 
-        If True, compare coordinates at trajectory edges to discard overlapping
-        frames.  Default: False.
-
-    Returns
-    -------
-    traj : Trajectory
-        A trajectory containing the the concatenated coordinates.
-    """
-
-    traj_list = [load(filename) for filename in filenames]
-    join_lambda = lambda x,y: x.join(y, discard_overlapping_frames=discard_overlapping_frames)
-    traj = reduce(join_lambda, traj_list)
-    
-    return traj
-    
-
-
-def load_pdb(filename):
+def load_pdb(filenames, discard_overlapping_frames=False):
     """Load a pdb file.
 
     Parameters
     ----------
-    filename : str
-        filesystem path from which to load the trajectory
-
-    Other Parameters
-    ----------------
-    None
-
+    filenames : {str, [str]}
+        String or list of strings giving one or multiple filenames that together
+        form a PDB trajectory
+    discard_overlapping_frames : bool, default=False
+        Look for overlapping frames between the last frame of one filename and
+        the first frame of a subsequent filename and discard them
     Returns
     -------
     trajectory : Trajectory
         A trajectory file!
     """
+    if not isinstance(filenames, basestring):  # Load filenames separately and combine trajectories.
+        return functools.reduce(lambda a, b: a.join(b, discard_overlapping_frames=discard_overlapping_frames), (load_pdb(f) for f in filenames))
+    else:
+        filename = filenames  # Just have a single file, so load it.        
+
     if not isinstance(filename, basestring):
         raise TypeError('filename must be of type string for load_pdb. '
             'you supplied %s' % type(filename))
@@ -192,14 +175,15 @@ def load_pdb(filename):
     return Trajectory(xyz=coords, topology=f.topology)
 
 
-def load_xtc(filename, top=None, discard_overlapping_frames=False, chunk=500):
+def load_xtc(filenames, top=None, discard_overlapping_frames=False, chunk=500):
     """Load an xtc file. Since the xtc doesn't contain information
     to specify the topolgy, you need to supply the topology yourself
 
     Parameters
     ----------
-    filename : str
-        String filename of xtc
+    filenames : {str, [str]}
+        String or list of strings giving one or multiple filenames that together
+        form an xtc
     top : {str, Trajectory, Topology}
         The XTC format does not contain topology information. Pass in either the
         path to a pdb file, a trajectory, or a topology to supply this information.
@@ -223,6 +207,15 @@ def load_xtc(filename, top=None, discard_overlapping_frames=False, chunk=500):
     if top is None:
         raise ValueError('"top" argument is required for load_xtc')
 
+    if not isinstance(filenames, basestring):  # Load filenames separately and combine trajectories.
+        return functools.reduce(lambda a, b: a.join(b, discard_overlapping_frames=discard_overlapping_frames), (load_xtc(f,top=top,chunk=chunk) for f in filenames))
+    else:
+        filename = filenames  # Just have a single file, so load it.        
+    
+    if not isinstance(filename, basestring):
+        raise TypeError('filename must be of type string for load_xtc. '
+            'you supplied %s' % type(filename))    
+    
     topology = _parse_topology(top)
 
     xyz, time, step, box, prec = xtc.read(filename, chunk)
@@ -230,14 +223,15 @@ def load_xtc(filename, top=None, discard_overlapping_frames=False, chunk=500):
     return Trajectory(xyz=xyz, topology=topology, time=time)
 
 
-def load_trr(filename, top=None, discard_overlapping_frames=False, chunk=500):
+def load_trr(filenames, top=None, discard_overlapping_frames=False, chunk=500):
     """Load a trr file. Since the trr doesn't contain information
     to specify the topolgy, you need to supply the topology yourself
 
     Parameters
     ----------
-    filename : str
-        String filename of TRR
+    filenames : {str, [str]}
+        String or list of strings giving one or multiple filenames that together
+        form an TRR
     top : {str, Trajectory, Topology}
         The TRR format does not contain topology information. Pass in either the
         path to a pdb file, a trajectory, or a topology to supply this information.
@@ -258,7 +252,16 @@ def load_trr(filename, top=None, discard_overlapping_frames=False, chunk=500):
     # dispatch from load(), where top comes from **kwargs. So if its not supplied
     # we want to give the user an informative error message
     if top is None:
-        raise ValueError('"top" argument is required for load_xtc')
+        raise ValueError('"top" argument is required for load_trr')
+
+    if not isinstance(filenames, basestring):  # Load filenames separately and combine trajectories.
+        return functools.reduce(lambda a, b: a.join(b, discard_overlapping_frames=discard_overlapping_frames), (load_trr(f,top=top,chunk=chunk) for f in filenames))
+    else:
+        filename = filenames  # Just have a single file, so load it.        
+
+    if not isinstance(filename, basestring):
+        raise TypeError('filename must be of type string for load_trr. '
+            'you supplied %s' % type(filename))    
 
     topology = _parse_topology(top)
 
@@ -266,14 +269,15 @@ def load_trr(filename, top=None, discard_overlapping_frames=False, chunk=500):
     # note we're not doing anything with the box vectors
     return Trajectory(xyz=xyz, topology=topology, time=time)
 
-def load_dcd(filename, top=None, discard_overlapping_frames=False):
+def load_dcd(filenames, top=None, discard_overlapping_frames=False):
     """Load an xtc file. Since the dcd format doesn't contain information
     to specify the topolgy, you need to supply a pdb_filename
 
     Parameters
     ----------
-    filenames : str
-        String filename of dcd
+    filenames : {str, [str]}
+        String or list of strings giving one or multiple filenames that together
+        form an dcd
     top : {str, Trajectoray, Topology}
         DCD XTC format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
@@ -294,6 +298,14 @@ def load_dcd(filename, top=None, discard_overlapping_frames=False):
     if top is None:
         raise ValueError('"top" argument is required for load_dcd')
 
+    if not isinstance(filenames, basestring):  # Load filenames separately and combine trajectories.
+        return functools.reduce(lambda a, b: a.join(b, discard_overlapping_frames=discard_overlapping_frames), (load_dcd(f,top=top) for f in filenames))
+    else:
+        filename = filenames  # Just have a single file, so load it.
+
+    if not isinstance(filename, basestring):
+        raise TypeError('filename must be of type string for load_trr. '
+            'you supplied %s' % type(filename))    
 
     topology = _parse_topology(top)
     xyz, box_length, box_angle = dcd.read(filename)        
@@ -304,14 +316,15 @@ def load_dcd(filename, top=None, discard_overlapping_frames=False):
     return Trajectory(xyz=xyz, topology=topology)
 
 
-def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True):
+def load_hdf(filenames, top=None, stride=None, chunk=50000, upconvert_int16=True, discard_overlapping_frames=False):
     """
     Load an hdf file.
 
     Parameters
     ----------
-    filename : str
-        filesystem path from which to load the trajectory
+    filenames : {str, [str]}
+        String or list of strings giving one or multiple filenames that together
+        form an HDF trajectory
     top : topology
         Replace the topology in the file with this topology
     stride : int, default=None
@@ -321,12 +334,24 @@ def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True)
     upconvert_int16 : bool, default=True
         If the data is encoded in the file as int16, an automatic upconversion
         to float32 based on the gromacs lossy encoding scheme is done.
+    discard_overlapping_frames : bool, default=False
+        Look for overlapping frames between the last frame of one filename and
+        the first frame of a subsequent filename and discard them
 
     Returns
     -------
     trajectory : Trajectory
         A trajectory file!
     """
+
+    if not isinstance(filenames, basestring):  # Load filenames separately and combine trajectories.
+        return functools.reduce(lambda a, b: a.join(b, discard_overlapping_frames=discard_overlapping_frames), (load_hdf(f,top=top,chunk=chunk,upconvert_int16=upconvert_int16) for f in filenames))
+    else:
+        filename = filenames  # Just have a single file, so load it.
+        
+    if not isinstance(filename, basestring):
+        raise TypeError('filename must be of type string for load_hdf. '
+            'you supplied %s' % type(filename))            
 
     F = tables.File(filename, 'r')
     try:
@@ -411,14 +436,15 @@ def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True)
     return Trajectory(xyz=xyz, topology=topology, time=time, box=box)
 
 
-def load_binpos(filename, top=None, chunk=500, discard_overlapping_frames=False):
+def load_binpos(filenames, top=None, chunk=500, discard_overlapping_frames=False):
     """Load an AMBER binpos file. Since the dcd format doesn't contain
     information to specify the topolgy, you need to supply a pdb_filename
 
     Parameters
     ----------
-    filename : str
-        String filename of binpos
+    filenames : {str, [str]}
+        String or list of strings giving one or multiple filenames that together
+        form a binpos trajectory
     top : {str, Trajectory, Topology}
         DCD XTC format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
@@ -441,6 +467,16 @@ def load_binpos(filename, top=None, chunk=500, discard_overlapping_frames=False)
     # we want to give the user an informative error message
     if top is None:
         raise ValueError('"top" argument is required for load_binpos')
+
+    if not isinstance(filenames, basestring):  # Load filenames separately and combine trajectories.
+        return functools.reduce(lambda a, b: a.join(b, discard_overlapping_frames=discard_overlapping_frames), (load_binpos(f,top=top) for f in filenames))
+    else:
+        filename = filenames  # Just have a single file, so load it.
+
+    if not isinstance(filename, basestring):
+        raise TypeError('filename must be of type string for load_binpos. '
+            'you supplied %s' % type(filename))    
+
 
     topology = _parse_topology(top)
 
