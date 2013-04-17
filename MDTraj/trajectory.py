@@ -395,7 +395,7 @@ def load_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
 
             box = None
             if box_node is not None:
-                box = box_node[int(frame)].reshape(1,3,3)
+                box = box_node[int(frame)]
 
             xyz = xyz_node[int(frame)]
             if upconvert_int16 and xyz.dtype == np.int16:
@@ -541,6 +541,19 @@ class Trajectory(object):
     def time(self):
         return self._time
 
+    @time.setter
+    def time(self, value):
+        if isinstance(value, list):
+            value = np.array(value)
+
+        if np.isscalar(value) and self.n_frames == 1:
+            value = np.array([value])
+        elif not value.shape == (self.n_frames,):
+            raise ValueError('Wrong shape. Got %s, should be %s' % (value.shape,
+                (self.n_frames)))
+
+        self._time = value
+
     @property
     def box(self):
         return self._box
@@ -557,7 +570,9 @@ class Trajectory(object):
 
 
         else:
-            if not value.shape == (self.n_frames, 3, 3):
+            if value.ndim == 2 and self.n_frames == 1:
+                value = value.reshape(1, 3, 3)
+            elif not value.shape == (self.n_frames, 3, 3):
                 raise ValueError("Wrong shape. Got %s, should be %s" % (value.shape,
                     (self.n_frames, 3, 3)))
             box = value
@@ -695,8 +710,8 @@ class Trajectory(object):
 
         # time will take the default 1..N
         if time is None:
-            time = np.arange(len(xyz))
-        self._time = time
+            time = np.arange(len(self.xyz))
+        self.time = time
 
         if not topology._numAtoms == self.n_atoms:
             raise ValueError("Number of atoms in xyz (%s) and "
@@ -770,7 +785,7 @@ class Trajectory(object):
         filename : str
             filesystem path in which to save the trajectory. The extension will be parsed and will
             control the format.
-        
+
         Other Parameters
         ----------------
         lossy : bool
