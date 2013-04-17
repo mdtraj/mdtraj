@@ -294,7 +294,8 @@ def load_dcd(filename, top=None):
     return Trajectory(xyz=xyz, topology=topology)
 
 
-def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True):
+def load_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
+             upconvert_int16=True):
     """
     Load an hdf file.
 
@@ -306,6 +307,9 @@ def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True)
         Replace the topology in the file with this topology
     stride : int, default=None
         Only read every stride-th frame
+    frame : {None, int}, default=None
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
     chunk : int, default=50000
        Size of the chunk to use for loading the file.
     upconvert_int16 : bool, default=True
@@ -352,6 +356,25 @@ def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True)
         box_node = None
         if hasattr(F.root, 'box'):
             box_node = F.root.box
+
+
+        # if they want only a single frame, quit early without
+        # doing the chunking
+        if frame is not None:
+            time = None
+            if time_node is not None:
+                time = time_node[int(frame)]
+
+            box = None
+            if box_node is not None:
+                box = box_node[int(frame)]
+
+            xyz = xyz_node[int(frame)]
+            if upconvert_int16 and xyz.dtype == np.int16:
+                xyz = _convert_from_lossy_integers(xyz)
+
+            return Trajectory(xyz=xyz, topology=topology, time=time, box=box)
+
 
         if chunk < stride:
             raise ValueError('Chunk must be greater than or equal to the stride')
