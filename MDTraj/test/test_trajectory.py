@@ -46,14 +46,6 @@ def test_hdf1():
     yield lambda: eq(t0.xyz, t1.xyz)
     yield lambda: eq(t0.xyz, t2.xyz)
 
-def test_hdf_frame():
-    t0 = load_hdf(fn)
-    t1 = load_hdf(fn, frame=1)
-
-    yield lambda: eq(t0[1].xyz, t1.xyz)
-    yield lambda: eq(t0[1].box, t1.box)
-    yield lambda: eq(t0[1].time, t1.time)
-
 
 def test_hdf2():
     t0 = load_hdf(fn, top=nat, chunk=10, stride=10)
