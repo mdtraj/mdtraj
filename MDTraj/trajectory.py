@@ -138,6 +138,21 @@ def load(filename, **kwargs):
     return loader(filename, **kwargs)
     
 def load_merged_trajectories(filenames, discard_overlapping_frames=False):
+    """Load several trajectories and concatenate them into a single trajectory.
+
+    Parameters
+    ----------
+    filenames : list[str]
+        List of filenames to load and merge.
+    discard_overlapping_frames : bool, optional 
+        If True, compare coordinates at trajectory edges to discard overlapping
+        frames.  Default: False.
+
+    Returns
+    -------
+    traj : Trajectory
+        A trajectory containing the the concatenated coordinates.
+    """
 
     traj_list = [load(filename) for filename in filenames]
     join_lambda = lambda x,y: x.join(y, discard_overlapping_frames=discard_overlapping_frames)
@@ -543,6 +558,9 @@ class Trajectory(object):
             Ensure that the topology of `self` and `other` are identical before
             joining them. If false, the resulting trajectory will have the
             topology of `self`.
+        discard_overlapping_frames : bool, optional 
+            If True, compare coordinates at trajectory edges to discard overlapping
+            frames.  Default: False.
         """
         if not isinstance(other, Trajectory):
             raise TypeError('You can only add two Trajectory instances')
