@@ -86,7 +86,7 @@ def equal(topology1, topology2):
     if len(topology1._chains) != len(topology2._chains):
         return False
 
-    for c1, c2 in zip(top1.chains(), top2.chains()):
+    for c1, c2 in zip(topology1.chains(), topology2.chains()):
         if c1.index != c2.index:
             return False
         if len(c1._residues) != len(c2._residues):
