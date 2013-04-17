@@ -136,7 +136,7 @@ cdef class DCDReader:
             close_file_read(self.fh)
 
     @cython.boundscheck(False)
-    def read(self):
+    def read(self, n_frames=None):
         """Extract the coordinates from a DCD file
 
         Returns
@@ -152,15 +152,18 @@ cdef class DCDReader:
             gamma angles respectively in entries `box_angles[i,0]`,
             `box_angles[i,1]`, `box_angles[i,2]`.
         """
+        
+        if n_frames is None:
+            n_frames = self.n_frames
 
-        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((self.n_frames, self.n_atoms, 3), dtype=np.float32)
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] box_lengths = np.zeros((self.n_frames, 3), dtype=np.float32)
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] box_angles = np.zeros((self.n_frames, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((n_frames, self.n_atoms, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] box_lengths = np.zeros((n_frames, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] box_angles = np.zeros((n_frames, 3), dtype=np.float32)
 
         cdef int i = 0
         cdef int status = _DCD_SUCCESS
 
-        for i in range(self.n_frames):
+        for i in range(n_frames):
             self.timestep.coords = &xyz[i,0,0]
             status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
             box_lengths[i, 0] = self.timestep.A
