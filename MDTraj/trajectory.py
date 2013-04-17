@@ -602,8 +602,7 @@ class Trajectory(object):
                 'to number of atoms in other (%d)' % (self.n_atoms, other.n_atoms))
 
         if check_topology:
-            if not np.all(mdtraj.topology.to_bytearray(self.topology) == \
-                mdtraj.topology.to_bytearray(other.topology)):
+            if not mdtraj.topology.equal(self.topology, other.topology):
                 raise ValueError('The topologies are not the same')
 
         xyz = np.concatenate((self.xyz, other.xyz))
