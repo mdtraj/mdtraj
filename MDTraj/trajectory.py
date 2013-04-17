@@ -17,7 +17,6 @@
 import os
 import numpy as np
 import tables
-from tables import NoSuchNodeError
 from mdtraj import dcd, xtc, binpos, trr
 from mdtraj.pdb import pdbfile
 from mdtraj import io
@@ -91,7 +90,7 @@ def _parse_topology(top):
         topology = pdbfile.PDBFile(top).topology
     elif isinstance(top, Trajectory):
         topology = top.topology
-    elif isinstance(top, Topology):
+    elif isinstance(top, mdtraj.topology.Topology):
         topology = top
     else:
         raise TypeError('Could not interpreted top=%s' % top)
@@ -137,6 +136,15 @@ def load(filename, **kwargs):
                       'with extensions in %s' % (filename, extension, loaders.keys()))
 
     return loader(filename, **kwargs)
+    
+def load_merged_trajectories(filenames, discard_overlapping_frames=False):
+
+    traj_list = [load(filename) for filename in filenames]
+    join_lambda = lambda x,y: x.join(y, discard_overlapping_frames=discard_overlapping_frames)
+    traj = reduce(join_lambda, traj_list)
+    
+    return traj
+    
 
 
 def load_pdb(filename):
@@ -156,10 +164,10 @@ def load_pdb(filename):
     trajectory : Trajectory
         A trajectory file!
     """
-
     if not isinstance(filename, basestring):
         raise TypeError('filename must be of type string for load_pdb. '
             'you supplied %s' % type(filename))
+
     filename = str(filename)
     f = pdbfile.PDBFile(filename)
 
@@ -169,15 +177,14 @@ def load_pdb(filename):
     return Trajectory(xyz=coords, topology=f.topology)
 
 
-def load_xtc(filenames, top=None, discard_overlapping_frames=False, chunk=500):
+def load_xtc(filename, top=None, discard_overlapping_frames=False, chunk=500):
     """Load an xtc file. Since the xtc doesn't contain information
     to specify the topolgy, you need to supply the topology yourself
 
     Parameters
     ----------
-    filenames : {str, [str]}
-        String or list of strings giving one or multiple filenames that together
-        form an xtc
+    filename : str
+        String filename of xtc
     top : {str, Trajectory, Topology}
         The XTC format does not contain topology information. Pass in either the
         path to a pdb file, a trajectory, or a topology to supply this information.
@@ -202,36 +209,20 @@ def load_xtc(filenames, top=None, discard_overlapping_frames=False, chunk=500):
         raise ValueError('"top" argument is required for load_xtc')
 
     topology = _parse_topology(top)
-    if isinstance(filenames, basestring):
-        filenames = [filenames]
 
-    coords = []
-    times = []
-    for i, filename in enumerate(filenames):
-        xyz, time, step, box, prec = xtc.read(filename, chunk)
-        if i > 0 and discard_overlapping_frames:
-            if np.sum(np.square(xyz[0] - coords[-1][-1])) < 1e-8:
-                xyz = xyz[0:-1]
-                time = time[0:-1]
-        coords.append(xyz)
-        times.append(time)
-
-    times = np.concatenate(times)
-    coords = np.vstack(coords)
-
+    xyz, time, step, box, prec = xtc.read(filename, chunk)
     # note we're not doing anything with the box vectors
-    return Trajectory(xyz=coords, topology=topology, time=times)
+    return Trajectory(xyz=xyz, topology=topology, time=time)
 
 
-def load_trr(filenames, top=None, discard_overlapping_frames=False, chunk=500):
+def load_trr(filename, top=None, discard_overlapping_frames=False, chunk=500):
     """Load a trr file. Since the trr doesn't contain information
     to specify the topolgy, you need to supply the topology yourself
 
     Parameters
     ----------
-    filenames : {str, [str]}
-        String or list of strings giving one or multiple filenames that together
-        form a TRR
+    filename : str
+        String filename of TRR
     top : {str, Trajectory, Topology}
         The TRR format does not contain topology information. Pass in either the
         path to a pdb file, a trajectory, or a topology to supply this information.
@@ -255,35 +246,19 @@ def load_trr(filenames, top=None, discard_overlapping_frames=False, chunk=500):
         raise ValueError('"top" argument is required for load_xtc')
 
     topology = _parse_topology(top)
-    if isinstance(filenames, basestring):
-        filenames = [filenames]
 
-    coords = []
-    times = []
-    for i, filename in enumerate(filenames):
-        xyz, time, step, box, lambd = trr.read(filename, chunk)
-        if i > 0 and discard_overlapping_frames:
-            if np.sum(np.square(xyz[0] - coords[-1][-1])) < 1e-8:
-                xyz = xyz[0:-1]
-                time = time[0:-1]
-        coords.append(xyz)
-        times.append(time)
-
-    times = np.concatenate(times)
-    coords = np.vstack(coords)
-
+    xyz, time, step, box, lambd = trr.read(filename, chunk)
     # note we're not doing anything with the box vectors
-    return Trajectory(xyz=coords, topology=topology, time=times)
+    return Trajectory(xyz=xyz, topology=topology, time=time)
 
-def load_dcd(filenames, top=None, discard_overlapping_frames=False):
+def load_dcd(filename, top=None, discard_overlapping_frames=False):
     """Load an xtc file. Since the dcd format doesn't contain information
     to specify the topolgy, you need to supply a pdb_filename
 
     Parameters
     ----------
-    filenames : {str, [str]}
-        String or list of strings giving one or multiple filenames that together
-        form an dcd
+    filenames : str
+        String filename of dcd
     top : {str, Trajectoray, Topology}
         DCD XTC format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
@@ -306,24 +281,12 @@ def load_dcd(filenames, top=None, discard_overlapping_frames=False):
 
 
     topology = _parse_topology(top)
-    if isinstance(filenames, basestring):
-        filenames = [filenames]
-
-    coords = []
-    for i, filename in enumerate(filenames):
-        xyz, box_length, box_angle = dcd.read(filename)
-        if i > 0 and discard_overlapping_frames:
-            if np.sum(np.square(xyz[0] - coords[-1][-1])) < 1e-8:
-                xyz = xyz[0:-1]
-        coords.append(xyz)
-
-    coords = np.vstack(coords)
-
-    # convert from anstroms to nanometer
-    coords /= 10.0
+    xyz, box_length, box_angle = dcd.read(filename)        
+    
+    xyz /= 10.  # convert from anstroms to nanometer
 
     # note, we're not loading the boxes from dcd
-    return Trajectory(xyz=coords, topology=topology)
+    return Trajectory(xyz=xyz, topology=topology)
 
 
 def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True):
@@ -433,15 +396,14 @@ def load_hdf(filename, top=None, stride=None, chunk=50000, upconvert_int16=True)
     return Trajectory(xyz=xyz, topology=topology, time=time, box=box)
 
 
-def load_binpos(filenames, top=None, chunk=500, discard_overlapping_frames=False):
+def load_binpos(filename, top=None, chunk=500, discard_overlapping_frames=False):
     """Load an AMBER binpos file. Since the dcd format doesn't contain
     information to specify the topolgy, you need to supply a pdb_filename
 
     Parameters
     ----------
-    filenames : {str, [str]}
-        String or list of strings giving one or multiple filenames that together
-        form a binpos
+    filename : str
+        String filename of binpos
     top : {str, Trajectory, Topology}
         DCD XTC format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
@@ -466,23 +428,11 @@ def load_binpos(filenames, top=None, chunk=500, discard_overlapping_frames=False
         raise ValueError('"top" argument is required for load_binpos')
 
     topology = _parse_topology(top)
-    if isinstance(filenames, basestring):
-        filenames = [filenames]
 
-    coords = []
-    for i, filename in enumerate(filenames):
-        xyz = binpos.read(filename)
-        if i > 0 and discard_overlapping_frames:
-            if np.sum(np.square(xyz[0] - coords[-1][-1])) < 1e-8:
-                xyz = xyz[0:-1]
-        coords.append(xyz)
+    xyz = binpos.read(filename)    
+    xyz /= 10.0  # convert from anstroms to nanometer
 
-    coords = np.vstack(coords)
-
-    # convert from anstroms to nanometer
-    coords /= 10.0
-
-    return Trajectory(xyz=coords, topology=topology)
+    return Trajectory(xyz=xyz, topology=topology)
 
 
 class Trajectory(object):
@@ -579,7 +529,7 @@ class Trajectory(object):
         "Concatenate two trajectories"
         return self.join(other)
 
-    def join(self, other, check_topology=True):
+    def join(self, other, check_topology=True, discard_overlapping_frames=False):
         """
         Join two trajectories together
 
@@ -606,13 +556,27 @@ class Trajectory(object):
                 mdtraj.topology.to_bytearray(other.topology)):
                 raise ValueError('The topologies are not the same')
 
-        xyz = np.concatenate((self.xyz, other.xyz))
-        time = np.concatenate((self.time, other.time))
+        if discard_overlapping_frames:
+            x0 = self.xyz[-1]
+            x1 = other.xyz[-1]
+            if np.linalg.norm(x1 - x0) < 1e-8:
+                xyz = other.xyz[1:]
+                time = other.time[1:]
+                if other.box is not None:
+                    box2 = other.box[1:]
+        else:
+            xyz = other.xyz
+            time = other.time
+            if other.box is not None:
+                box2 = other.box
+
+        xyz = np.concatenate((self.xyz, xyz))
+        time = np.concatenate((self.time, time))
 
         if self.box is None and other.box is None:
             box = None
         elif self.box is not None and other.box is not None:
-            box = np.concatenate((self.box, other.box))
+            box = np.concatenate((self.box, box2))
         else:
             raise ValueError("One trajectory has box size, other doesn't. I don't know what to do")
 
