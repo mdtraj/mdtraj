@@ -57,12 +57,53 @@ import xml.etree.ElementTree as etree
 
 def to_bytearray(topology):
     "Serializer a compete topology (bonds, atoms, etc) to an array of bytes"
-    return np.fromstring(pickle.dumps(topology, protocol=-1), dtype='uint8') 
+    return np.fromstring(pickle.dumps(topology, protocol=-1), dtype='uint8')
 
 def from_bytearray(arr):
     "Reconstruct a complete topology (bonds, atoms, etc) from an array of bytes"
     return pickle.loads(arr.tostring())
 
+def equal(topology1, topology2):
+    """Are two topologies equal?
+
+    Note that this method should be able to sucessfully compare an topology
+    that's an instance of mdtraj.topolology.Topology with one thats an
+    instance of simtk.openmm.app.topology.Topology
+
+    Parameters
+    ----------
+    topology1 : simtk.openmm.app or mdtraj Topology
+        The first topology to compare
+    topology1 : simtk.openmm.app or mdtraj Topology
+        The second topology to compare
+
+    Returns
+    -------
+    equality : bool
+        Are the two topologies identical?
+    """
+    if len(topology1._chains) != len(topology2._chains):
+        return False
+
+    for c1, c2 in zip(topology1.chains(), topology2.chains()):
+        if c1.index != c2.index:
+            return False
+        if len(c1._residues) != len(c2._residues):
+            return False
+
+        for r1, r2 in zip(c1.residues(), c2.residues()):
+            if (r1.index != r1.index) or (r1.name != r2.name):
+                return False
+            if len(r1._atoms) != len(r2._atoms):
+                return False
+
+            for a1, a2 in zip(r1.atoms(), r2.atoms()):
+                if (a1.index != a2.index)  or (a1.name != a2.name):
+                    return False
+                for attr in ['atomic_number', 'name', 'symbol']:
+                    if getattr(a1.element, attr) != getattr(a2.element, attr):
+                        return False
+    return True
 
 class Topology(object):
     """Topology stores the topological information about a system.
