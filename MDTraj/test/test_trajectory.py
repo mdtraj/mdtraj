@@ -71,6 +71,9 @@ def test_slice():
     yield lambda: eq((t[0:5] + t[5:10]).time, t[0:10].time)
     yield lambda: eq((t[0:5] + t[5:10]).box, t[0:10].box)
 
+def test_slice2():
+    t = load_hdf(get_fn('frame1.lh5'))
+    yield lambda: t[0] == t[[0,1]][0]
 
 def test_xtc():
     t = mdtraj.trajectory.load(get_fn('frame0.xtc'), top=nat)

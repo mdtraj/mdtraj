@@ -395,7 +395,7 @@ def load_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
 
             box = None
             if box_node is not None:
-                box = box_node[int(frame)]
+                box = box_node[int(frame)].reshape(1,3,3)
 
             xyz = xyz_node[int(frame)]
             if upconvert_int16 and xyz.dtype == np.int16:
