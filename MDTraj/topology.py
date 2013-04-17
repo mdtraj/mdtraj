@@ -82,7 +82,6 @@ def equal(topology1, topology2):
     equality : bool
         Are the two topologies identical?
     """
-
     if len(topology1._chains) != len(topology2._chains):
         return False
 
@@ -104,9 +103,6 @@ def equal(topology1, topology2):
                 for attr in ['atomic_number', 'name', 'symbol']:
                     if getattr(a1.element, attr) != getattr(a2.element, attr):
                         return False
-                if (a1.element.mass._value != a2.element.mass._value) or \
-                   (a1.element.mass.unit.get_symbol() != a2.element.mass.unit.get_symbol()):
-                    return False
     return True
 
 class Topology(object):
