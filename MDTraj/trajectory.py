@@ -159,6 +159,7 @@ def load_pdb(filenames, discard_overlapping_frames=False):
     discard_overlapping_frames : bool, default=False
         Look for overlapping frames between the last frame of one filename and
         the first frame of a subsequent filename and discard them
+
     Returns
     -------
     trajectory : Trajectory
@@ -200,7 +201,6 @@ def load_xtc(filenames, top=None, discard_overlapping_frames=False, chunk=500):
     chunk : int, default=500
         Size of the chunk to use for loading the xtc file. Memory is allocated
         in units of the chunk size, so larger chunk can be more time-efficient.
-
 
     Returns
     -------
@@ -713,10 +713,10 @@ class Trajectory(object):
         frame : int
             Which trajectory frame to return.
 
-        Returns the Cartesian coordinates in the Molecule object in
-        a list of OpenMM-compatible positions, so it is possible to type
-        simulation.context.setPositions(Mol.openmm_positions(0))
-        or something like that.
+        Returns
+        -------
+        positions : list of XYZ coordinates of specific trajectory frame, formatted
+            for input to OpenMM
         
         """
         # copied from Lee-Ping Wang's Molecule.py
@@ -737,10 +737,10 @@ class Trajectory(object):
         frame : int
             Return box for this single frame.
             
-        Returns the periodic box vectors in the Molecule object in
-        a list of OpenMM-compatible boxes, so it is possible to type
-        simulation.context.setPeriodicBoxVectors(Mol.openmm_boxes(0))
-        or something like that.
+        Returns
+        -------
+        box : list of XYZ coordinates of periodic box vectors, formatted
+            for input to OpenMM
         """
         # copied from Lee-Ping Wang's Molecule.py
         if not HAVE_OPENMM:

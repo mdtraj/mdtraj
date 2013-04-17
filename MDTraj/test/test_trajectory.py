@@ -97,3 +97,15 @@ def test_binpos():
             eq(t.xyz, t2.xyz, err_msg=e)
             eq(t.time, t2.time, err_msg=e)
         yield f
+
+def test_load():
+    filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos", "frame0.lh5"]
+    num_block = 3
+    for filename in filenames:
+        t0 = mdtraj.trajectory.load(get_fn(filename), top=nat, discard_overlapping_frames=True)
+        t1 = mdtraj.trajectory.load(get_fn(filename), top=nat, discard_overlapping_frames=False)
+        t2 = mdtraj.trajectory.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=False)
+        t3 = mdtraj.trajectory.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=True)
+        eq(t0.n_frames, t1.n_frames)
+        eq(t0.n_frames * num_block, t2.n_frames)
+        eq(t3.n_frames , t0.n_frames * num_block - num_block + 1)
