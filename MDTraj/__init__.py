@@ -13,6 +13,34 @@
 #
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
+"""The mdtraj package contains tools for loading and saving molecular dynamics
+trajectories in a variety of formats, including Gromacs XTC & TRR, CHARMM/NAMD
+DCD, AMBER BINPOS, PDB, and HDF5.
+
+Examples
+--------
+>>> from mdtraj import trajectory
+>>> t = trajectory.load('traj.dcd', topology='structure.pdb') # doctest: +SKIP
+>>> t.save('traj.binpos')                                     # doctest: +SKIP
+
+Modules
+-------
+- trajectory
+    This is the core module, with high level interfaces to all of the loading
+    and saving, as well as the central Trajectory object.
+- topology
+    An object oriented molecular topology.
+- io
+    Convenience interface to the (pytables) HDF5 library
+- pdb
+    PDB interface
+- binpos
+    Low level BINPOS interface
+- dcd
+    Low level DCD interface
+- xtc
+    Low level XTC/TRR interface
+"""
 
 __all__ = ['binpos', 'dcd', 'io', 'pdb',
-            'testing', 'trajectory', 'topology']
+            'testing', 'trajectory', 'topology', 'reporters']
