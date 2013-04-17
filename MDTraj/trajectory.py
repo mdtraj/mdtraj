@@ -122,7 +122,14 @@ def load(filename, **kwargs):
 
     _assert_files_exist(filename)
     # grab the extension of the filename
-    extension = os.path.splitext(filename)[1]
+    if isinstance(filename, basestring):  # If a single filename
+        extension = os.path.splitext(filename)[1]
+    else:  # If multiple filenames, take the first one.
+        extensions = [os.path.splitext(filename_i)[1] for filename_i in filename]
+        if len(set(extensions)) != 1:
+            raise(TypeError("All filenames must have same extension!"))
+        else:
+            extension = extensions[0]
 
     loaders = {'.xtc':    load_xtc,
                '.trr':    load_trr,
