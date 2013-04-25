@@ -40,6 +40,19 @@ cdef int _DCD_FILEEXISTS = -7  # output file already exists
 cdef int _DCD_BADMALLOC  = -8  # malloc failed
 cdef int _DCD_BADWRITE   = -9  # write call on DCD file failed
 
+cdef ERROR_MESSAGES = {
+    -1: 'Normal EOF',
+    -2: 'DCD file does not exist',
+    -3: 'Open of DCD file failed',
+    -4: 'Read call on DCD file failed',
+    -5: 'Premature EOF found in DCD file',
+    -6: 'Format of DCD file is wrong',
+    -7: 'Output file already exists',
+    -8: 'Malloc failed',
+    -9: 'Write call on DCD file failed',
+}
+
+
 def read(filename):
     """Read the data from a NAMD/CHARMM DCD file
 
@@ -107,22 +120,32 @@ def write(filename, xyz, box_lengths=None, box_angles=None, force_overwrite=True
 
 
 cdef class DCDReader:
+    # these variables hold the number of atoms and number of frames in the
+    # file, as read off the header of the DCD file
     cdef int n_atoms, n_frames
+    # the number of frames we're currently read off the file.
+    cdef int frame_counter
+    # this is the filehandle
     cdef dcdhandle* fh
+    # C struct into which the library deposits all the data from the
+    # most recent timestep
     cdef molfile_timestep_t* timestep
-    cdef int status
 
     def __cinit__(self, char* filename):
-        #open the file
+        # open the file handle and read n_atoms and n_frames
         self.fh = open_dcd_read(filename, "dcd", &self.n_atoms, &self.n_frames)
         if self.fh is NULL:
             raise IOError('There was an error opening the dcd file: %s' % filename)
-
+        assert self.n_atoms > 0, 'DCD Corruption: n_atoms was not positive'
+        assert self.n_frames >= 0, 'DCD corruption: n_frames < 0'
         # alloc the molfile_timestep, which is the struct that the library is
         # going to deposit its data into each timestep
         self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
         if self.fh is  NULL:
-            raise MemoryError
+            raise MemoryError('Malloc failed.')
+
+        # we've currently read zero frames...
+        self.frame_counter = 0
 
 
     def __dealloc__(self):
@@ -159,8 +182,11 @@ cdef class DCDReader:
         """
         
         if n_frames is None:
-            n_frames = self.n_frames
+            # if the user specifies n_frames=None, they want to read to the
+            # end of the file
+            n_frames = self.n_frames - self.frame_counter
 
+        # malloc space to put the data that we're going to read off the disk
         cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((n_frames, self.n_atoms, 3), dtype=np.float32)
         cdef np.ndarray[dtype=np.float32_t, ndim=2] box_lengths = np.zeros((n_frames, 3), dtype=np.float32)
         cdef np.ndarray[dtype=np.float32_t, ndim=2] box_angles = np.zeros((n_frames, 3), dtype=np.float32)
@@ -171,6 +197,7 @@ cdef class DCDReader:
         for i in range(n_frames):
             self.timestep.coords = &xyz[i,0,0]
             status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+            self.frame_counter += 1
             box_lengths[i, 0] = self.timestep.A
             box_lengths[i, 1] = self.timestep.B
             box_lengths[i, 2] = self.timestep.C
@@ -179,12 +206,28 @@ cdef class DCDReader:
             box_angles[i, 2] = self.timestep.gamma
 
             if status != _DCD_SUCCESS:
+                # if the frame was not successfully read, then we're done
                 break
 
-        if status != _DCD_SUCCESS:
-            raise IOError("Error: %s", status)
+        if status == _DCD_SUCCESS:
+            # if we're done either because of we read all of the n_frames
+            # requested succcessfully, return
+            return xyz, box_lengths, box_angles
 
-        return xyz, box_lengths, box_angles
+        if status == _DCD_EOF:
+            # if we're doing because we reached a normal EOF (perhaps the)
+            # user asked to read more frames than were in the file, we need
+            # to trunkate the return arrays -- we don't want to return them
+            # a big stack of zeros.
+            xyz = xyz[0:i]
+            box_lengths = box_lengths[0:i]
+            box_angles = box_angles[0:i]
+            return xyz, box_lengths, box_angles
+    
+        # If we got some other status, thats a "real" error.
+        raise IOError("Error: %s", ERROR_MESSAGES(status))
+
+        
 
 
 cdef class DCDWriter:
@@ -263,4 +306,4 @@ cdef class DCDWriter:
             status = write_timestep(self.fh, self.timestep)
 
             if status != _DCD_SUCCESS:
-                raise RuntimeError("DCD Error: %s" % status)
+                raise IOError("DCD Error: %s" % ERROR_MESSAGES(status))
