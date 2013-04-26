@@ -14,7 +14,7 @@ install:
   - sudo apt-get install -qq python-numexpr
   - sudo apt-get install -qq python-tables
   - sudo apt-get install -qq netcdf-bin libnetcdf-dev
-  - sudo apt-get install -qq python-netcdf
+  - sudo apt-get install     python-netcdf
 
 script:
   - sudo python setup.py -q install
