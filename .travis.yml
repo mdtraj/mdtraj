@@ -18,4 +18,4 @@ install:
 
 script:
   - sudo python setup.py -q install
-  - nosetests
+  - nosetests -vv -s
