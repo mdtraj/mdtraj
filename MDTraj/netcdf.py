@@ -83,9 +83,9 @@ class NetCDFFile(object):
             In write mode, if a file named `filename` already exists, clobber
             it and overwrite it.
         """
-        netcdf = import_netcdf()
-        self._closed = False   # is the file currently closed?
+        self._closed = True   # is the file currently closed?
         self._mode = mode      # what mode were we opened in
+        netcdf = import_netcdf()
 
         if mode not in ['r', 'w', 'a', 'ws', 'as']:
             raise ValueError(("mode must be one of ['r', 'w', 'a', 'ws', 'as']"
@@ -96,6 +96,7 @@ class NetCDFFile(object):
         # AMBER uses the NetCDF3 format, with 64 bit encodings
         self._handle = netcdf.Dataset(filename, mode=mode, format='NETCDF3_64BIT',
                                       clobber=force_overwrite)
+        self._closed = False
 
         # self._frame_index is the current frame that we're at in the
         #     file
