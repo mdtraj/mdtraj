@@ -110,7 +110,7 @@ write_version_py()
 setup(name='mdtraj',
       version=__version__,
       packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.testing', 'mdtraj.utils',
-                'mdtraj.reporters', 'mdtraj.netcdf'],
+                'mdtraj.reporters'],
       package_dir={'mdtraj':'MDTraj'},
       install_requires=['numpy', 'cython', 'nose', 'nose-exclude'],
       zip_safe=False,

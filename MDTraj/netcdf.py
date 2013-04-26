@@ -24,29 +24,43 @@ The code is heavily based on amber_netcdf_trajectory_tools.py by John Chodera.
 # imports
 ##############################################################################
 
+import sys
 import warnings
+
 import numpy as np
 from mdtraj import version
 from mdtraj.utils.arrays import ensure_type
 
-try:
-    import netCDF4 as netcdf
-except ImportError:
-    print '#'*73
-    print 'ERROR'
-    print '#'*73
-    print 'MDTraj\'s AMBER NetCDF bindings require the python-netcdf'
-    print 'library. You can install the library using the python package'
-    print 'managers "pip" or "easy_install" with'
-    print ''
-    print 'pip install netcdf4'
-    print 'or'
-    print 'easy_install netcdf4'
-    print ''
-    print 'You can also download the library directly and find more documentation at'
-    print 'https://pypi.python.org/pypi/netCDF4'
-    print '#'*73
-    raise
+##############################################################################
+# functions
+##############################################################################
+
+def import_netcdf():
+    """Delayed import of the netCDF4 module
+    """
+
+    if 'netCDF4' in sys.modules:
+        return sys.modules['netCDF4']
+
+    try:
+        import netCDF4
+        return netCDF4
+    except ImportError:
+        print '#'*73
+        print 'ERROR'
+        print '#'*73
+        print 'MDTraj\'s AMBER NetCDF bindings require the python-netcdf'
+        print 'library. You can install the library using the python package'
+        print 'managers "pip" or "easy_install" with'
+        print ''
+        print 'pip install netcdf4'
+        print 'or'
+        print 'easy_install netcdf4'
+        print ''
+        print 'You can also download the library directly and find more documentation at'
+        print 'https://pypi.python.org/pypi/netCDF4'
+        print '#'*73
+        raise
 
 ##############################################################################
 # classes
@@ -59,7 +73,7 @@ class NetCDFFile(object):
 
         Parameters
         ----------
-        filename : str
+        xfilename : str
             The name of the file to open
         mode : {'r', 'w', 'a', 'ws', 'as'}, default='r'
             The mode in which to open the file. Valid options are 'r', 'w',
@@ -69,6 +83,10 @@ class NetCDFFile(object):
             In write mode, if a file named `filename` already exists, clobber
             it and overwrite it.
         """
+        netcdf = import_netcdf()
+        self._closed = False   # is the file currently closed?
+        self._mode = mode      # what mode were we opened in
+
         if mode not in ['r', 'w', 'a', 'ws', 'as']:
             raise ValueError(("mode must be one of ['r', 'w', 'a', 'ws', 'as']"
                 " 'r' indicates read, 'w' indicates write, and 'a' indicates"
@@ -85,31 +103,36 @@ class NetCDFFile(object):
         #     global properties of the file. This is required before the first
         #     write operation on a new file
         # self._n_atoms is the number of atoms in the file
-        
+
         if mode in ['a', 'as']:
             self._frame_index = len(self._handle.dimensions['frame'])
             self._n_atoms = len(self._handle.dimensions['atom'])
             self._needs_initialization = False
         elif mode in ['w', 'ws']:
             self._frame_index = 0
-            self._n_atoms = len(self._handle.dimensions['atom'])
-            self._needs_initialization = False
+            self._n_atoms = None
+            # self._n_atoms will be set during _initialize_headers call
+            self._needs_initialization = True
         elif mode == 'r':
             self._frame_index = 0
-            # self._n_atoms will be set during _initialize_headers call
-            self._n_atoms = None
-            self._needs_initialization = True
-
-        self._closed = False   # is the file currently closed?
-        self._mode = mode      # what mode were we opened in
+            self._n_atoms = len(self._handle.dimensions['atom'])
+            self._needs_initialization = False
+        else:
+            raise RuntimeError()
 
     @property
     def n_atoms(self):
+        self._validate_open()
         return len(self._handle.dimensions['atom'])
-    
+
     @property
     def n_frames(self):
-        self._frame_index = len(self._handle.dimensions['frame'])
+        self._validate_open()
+        return len(self._handle.dimensions['frame'])
+
+    def _validate_open(self):
+        if self._closed:
+            raise IOError('The file is closed.')
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read data from a molecular dynamics trajectory in the AMBER NetCDF
@@ -125,16 +148,29 @@ class NetCDFFile(object):
         atom_indices : np.ndarray, dtype=int, optional
             The specific indices of the atoms you'd like to retreive. If not
             supplied, all of the atoms will be retreived.
+
+        Returns
+        -------
+        coordinates : np.ndarray, shape=(n_frames, n_atoms, 3)
+            The cartesian coordinates of the atoms, in units of angstroms.
+        time : np.ndarray, None
+            The time corresponding to each frame, in units of picoseconds, or
+            None if no time information is present in the trajectory.
+        cell_lengths : np.ndarray, None
+            The lengths (a,b,c) of the unit cell for each frame, or None if
+            the information is not present in the file.
+        cell_angles : np.ndarray, None
+            The angles (\alpha, \beta, \gamma) defining the unit cell for
+            each frame, or None if  the information is not present in the file.
         """
+        self._validate_open()
         if self._mode != 'r':
             raise IOError('The file was opened in mode=%s. Reading is not allowed.' % self._mode)
 
         if n_frames is None:
             n_frames = np.inf
         total_n_frames = len(self._handle.dimensions['frame'])
-        frame_slice = slice(self._frame_index, total_n_frames,
-                            min(n_frames, total_n_frames),
-                            stride)
+        frame_slice = slice(self._frame_index, self._frame_index + min(n_frames, total_n_frames), stride)
 
         if atom_indices is None:
             # get all of the atoms
@@ -177,6 +213,8 @@ class NetCDFFile(object):
         if cell_lengths is not None and cell_angles is None:
             warnings.warn('cell_angles were found, but no cell_lengths')
 
+        self._frame_index = self._frame_index + min(n_frames, total_n_frames)
+
         return coordinates, time, cell_lengths, cell_angles
 
     def write(self, coordinates, time=None, cell_lengths=None, cell_angles=None):
@@ -202,6 +240,7 @@ class NetCDFFile(object):
         scalar or cell_lengths and cell_angles are a 1d array of length three,
         that is okay. You'll simply be saving a single frame.
         """
+        self._validate_open()
         if self._mode not in ['w', 'ws', 'a', 'as']:
             raise IOError('The file was opened in mode=%s. Writing is not allowed.' % self._mode)
 
@@ -229,6 +268,7 @@ class NetCDFFile(object):
 
         if self._needs_initialization:
             self._initialize_headers(n_atoms)
+            self._needs_initialization = False
 
         # this slice object says where we're going to put the data in the
         # arrays
@@ -249,6 +289,7 @@ class NetCDFFile(object):
 
     def flush(self):
         "Write all buffered data in the to the disk file."
+        self._validate_open()
         self._handle.sync()
 
     def _initialize_headers(self, n_atoms):
@@ -305,16 +346,19 @@ class NetCDFFile(object):
         setattr(frame_coordinates, 'units', 'angstrom')
 
     def close(self):
+        """Close the NetCDF file handle"""
         if not self._closed and hasattr(self, '_handle'):
             self._handle.close()
-            return True
-        return False
+
+        self._closed = True
+
+    def __enter__(self):
+        # supports the context manager protocol
+        return self
+
+    def __exit__(self, *exc_info):
+        # supports the context manager protocol
+        self.close()
 
     def __del__(self):
         self.close()
-
-
-if __name__ == '__main__':
-    f = NetCDFFile('file.nc', 'w', force_overwrite=True)
-    f.write(coordinates=np.random.randn(3,3), cell_angles=np.random.randn(3),
-        cell_lengths=np.random.randn(3), time=1)
