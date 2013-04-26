@@ -45,6 +45,44 @@ def test_read():
 
     eq(xyz, xyz2)
 
+def test_read_2():
+    "DCDReader: check nframes"
+    xyz1, box_lengths1, box_angles1 = dcd.DCDReader(fn_dcd).read()
+    xyz2, box_lengths2, box_angles2 = dcd.DCDReader(fn_dcd).read(10000)
+
+    yield lambda: eq(xyz1, xyz2)
+    yield lambda: eq(box_lengths1, box_lengths2)
+    yield lambda: eq(box_angles1, box_angles2)
+
+def test_read_3():
+    "DCDReader: check streaming read of frames 1 at a time"
+    xyz_ref, box_lengths_ref, box_angles_ref = dcd.DCDReader(fn_dcd).read()
+    
+    reader = dcd.DCDReader(fn_dcd)
+    for i in range(len(xyz_ref)):
+        xyz, box_lenths, box_angles = reader.read(1)
+        eq(xyz_ref[np.newaxis, i], xyz)
+        eq(box_lengths_ref[np.newaxis, i], box_lenths)
+        eq(box_angles_ref[np.newaxis, i], box_angles)
+
+
+def test_read_4():
+    "DCDReader: check streaming read followed by reading the 'rest'"
+    xyz_ref, box_lengths_ref, box_angles_ref = dcd.DCDReader(fn_dcd).read()
+    
+    reader = dcd.DCDReader(fn_dcd)
+    for i in range(int(len(xyz_ref)/2)):
+        xyz, box_lenths, box_angles = reader.read(1)
+        eq(xyz_ref[np.newaxis, i], xyz)
+        eq(box_lengths_ref[np.newaxis, i], box_lenths)
+        eq(box_angles_ref[np.newaxis, i], box_angles)
+
+    xyz_rest, box_rest, angles_rest = reader.read()
+    yield lambda: eq(xyz_ref[i+1:], xyz_rest)
+    yield lambda: eq(box_lengths_ref[i+1:], box_rest)
+    yield lambda: eq(box_angles_ref[i+1:], angles_rest)
+    
+    yield lambda: len(xyz_ref) == i + len(xyz_rest)
 
 def test_write_0():
     xyz = dcd.read(fn_dcd)[0]
