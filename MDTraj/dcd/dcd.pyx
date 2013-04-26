@@ -217,7 +217,7 @@ cdef class DCDReader:
         if status == _DCD_EOF:
             # if we're doing because we reached a normal EOF (perhaps the)
             # user asked to read more frames than were in the file, we need
-            # to trunkate the return arrays -- we don't want to return them
+            # to truncate the return arrays -- we don't want to return them
             # a big stack of zeros.
             xyz = xyz[0:i]
             box_lengths = box_lengths[0:i]
