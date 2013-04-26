@@ -50,3 +50,4 @@ setup(name='mdtraj',
       cmdclass = {'build_ext': build_ext},
       package_data = {'mdtraj.pdb': ['data/*'],
                       'mdtraj.testing': ["reference/*"]})
+
