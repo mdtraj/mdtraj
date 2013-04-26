@@ -1026,5 +1026,5 @@ class Trajectory(object):
         from mdtraj.netcdf import NetCDFFile
 
         xyz = self.xyz * 10
-        with NetCDFFile(filename, force_overwrite=force_overwrite) as f:
+        with NetCDFFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(coordinates=xyz, time=self.time)
