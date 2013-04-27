@@ -47,6 +47,7 @@ except ImportError:
                   'get access to automatic unit conversion and validation. It '
                   'is highly recommended.')
 
+
 def import_tables():
     """Delayed import of the tables (HDF5) module
     """
@@ -446,7 +447,7 @@ class HDF5Trajectory(object):
             # try to get the nodes for all of the fields that we have
             # which are not None
             for name in ['coordinates', 'time', 'cell_angles', 'cell_lengths',
-                'velocities', 'kineticEnergy', 'potentialEnergy', 'temperature']:
+                         'velocities', 'kineticEnergy', 'potentialEnergy', 'temperature']:
                 contents = locals([name])
                 if contents is not None:
                     self._handle.getNode(where='/', name=name).append(contents)
@@ -457,12 +458,13 @@ class HDF5Trajectory(object):
                 name = 'lambda'
                 self._handle.getNode(where='/', name=name).append(lambdaValues)
 
-        except tables.NoSuchNodeError as e:
+        except tables.NoSuchNodeError:
             raise ValueError("The file that you're trying to save to doesn't "
                 "contain the field %s. You can always save a new trajectory "
                 "and have it contain this information, but I don't allow 'ragged' "
                 "arrays. If one frame is going to have %s information, then I expect "
-                "all of them to. So I can't save it for just these frames. Sorry about that :)")
+                "all of them to. So I can't save it for just these frames. Sorry "
+                "about that :)" % (name, name))
         
         self._frame_index += n_frames
         self.flush()
