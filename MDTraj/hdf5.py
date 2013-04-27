@@ -374,7 +374,7 @@ class HDF5Trajectory(object):
             raise ValueError('cell_lengths were given, but no cell_angles')
         if cell_lengths is not None and cell_angles is None:
             raise ValueError('cell_angles were given, but no cell_lengths')
-        
+
         # if the input arrays are simtk.unit.Quantities, convert them
         # into md units. Note that this acts as a no-op if the user doesn't
         # have simtk.unit installed (e.g. they didn't install OpenMM)
@@ -408,10 +408,10 @@ class HDF5Trajectory(object):
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         cell_angles = ensure_type(cell_angles, dtype=np.float32, ndim=1,
             name='cell_angles', shape=(n_frames, 3), can_be_none=True,
-            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)        
+            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         velocoties = ensure_type(velocoties, dtype=np.float32, ndim=3,
             name='velocoties', shape=(n_frames, n_atoms, 3), can_be_none=True,
-            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)    
+            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         kineticEnergy = ensure_type(kineticEnergy, dtype=np.float32, ndim=1,
             name='kineticEnergy', shape=(n_frames,), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
@@ -465,7 +465,7 @@ class HDF5Trajectory(object):
                 "arrays. If one frame is going to have %s information, then I expect "
                 "all of them to. So I can't save it for just these frames. Sorry "
                 "about that :)" % (name, name))
-        
+
         self._frame_index += n_frames
         self.flush()
 
