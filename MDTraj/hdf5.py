@@ -102,7 +102,7 @@ def ensure_mode(*m):
         def wrapper(*args, **kwargs):
             # args[0] is self on the method
             if args[0]._mode in m:
-                return f(*args)
+                return f(*args, **kwargs)
             raise ValueError('This operation is only available when a file '
                              'is open in mode="%s".' % args[0]._mode)
         return wrapper
@@ -140,14 +140,18 @@ class HDF5Trajectory(object):
             # do we need to write the header information?
             self._needs_initialization = True
         elif mode == 'a':
-            self._frame_index = len(self._handle.root.coordinates)
-            self._needs_initialization = False
+            try:
+                self._frame_index = len(self._handle.root.coordinates)
+                self._needs_initialization = False
+            except tables.NoSuchNodeError:
+                self._frame_index = 0
+                self._needs_initialization = False
         elif mode == 'r':
             self._frame_index = 0
             self._needs_initialization = False
 
-    @ensure_mode('r')
     @property
+    @ensure_mode('r')
     def root(self):
         """Direct access to the root group of the underlying Tables HDF5 file.
 
@@ -204,11 +208,11 @@ class HDF5Trajectory(object):
         topology_dict = json.loads(self._handle.root._v_attrs.topology)
         topology = Topology()
 
-        for chain_dict in sorted(topology_dict['chains'], key=operator.attrgetter('index')):
+        for chain_dict in sorted(topology_dict['chains'], key=operator.itemgetter('index')):
             chain = topology.addChain()
-            for residue_dict in sorted(chain_dict['residues'], key=operator.attrgetter('index')):
+            for residue_dict in sorted(chain_dict['residues'], key=operator.itemgetter('index')):
                 residue = topology.addResidue(residue_dict['name'], chain)
-                for atom_dict in sorted(residue_dict['residue_dict'], key=operator.attrgetter('index')):
+                for atom_dict in sorted(residue_dict['atoms'], key=operator.itemgetter('index')):
                     try:
                         element =  elem.get_by_symbol(atom_dict['element'])
                     except KeyError:
@@ -216,7 +220,7 @@ class HDF5Trajectory(object):
                     topology.addAtom(atom_dict['name'], element, residue)
 
         atoms = list(topology.atoms())
-        for index1, index2 in topology_dict['atoms']:
+        for index1, index2 in topology_dict['bonds']:
             topology.addBond(atoms[index1], atoms[index2])
 
         return topology
@@ -382,7 +386,7 @@ class HDF5Trajectory(object):
         time = in_units_of(time, 'picoseconds')
         cell_lengths = in_units_of(cell_lengths, 'nanometers')
         cell_angles = in_units_of(cell_angles, 'degrees')
-        velocoties = in_units_of(velocoties, 'nanometers/picosecond')
+        velocities = in_units_of(velocities, 'nanometers/picosecond')
         kineticEnergy = in_units_of(kineticEnergy, 'kilojoules_per_mole')
         potentialEnergy = in_units_of(potentialEnergy, 'kilojoules_per_mole')
         temperature = in_units_of(temperature, 'kelvin')
@@ -409,7 +413,7 @@ class HDF5Trajectory(object):
         cell_angles = ensure_type(cell_angles, dtype=np.float32, ndim=1,
             name='cell_angles', shape=(n_frames, 3), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
-        velocoties = ensure_type(velocoties, dtype=np.float32, ndim=3,
+        velocities = ensure_type(velocities, dtype=np.float32, ndim=3,
             name='velocoties', shape=(n_frames, n_atoms, 3), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         kineticEnergy = ensure_type(kineticEnergy, dtype=np.float32, ndim=1,
@@ -428,7 +432,7 @@ class HDF5Trajectory(object):
         # if this is our first call to write(), we need to create the headers
         # and the arrays in the underlying HDF5 file
         if self._needs_initialization:
-            self.__initialize_headers(
+            self._initialize_headers(
                 n_atoms=n_atoms,
                 set_coordinates=True,
                 set_time=(time is not None),
@@ -448,15 +452,30 @@ class HDF5Trajectory(object):
             # which are not None
             for name in ['coordinates', 'time', 'cell_angles', 'cell_lengths',
                          'velocities', 'kineticEnergy', 'potentialEnergy', 'temperature']:
-                contents = locals([name])
+                contents = locals()[name]
                 if contents is not None:
                     self._handle.getNode(where='/', name=name).append(contents)
+                if contents is None:
+                    # for each attribute that they're not saving, we want
+                    # to make sure the file doesn't explect it
+                    try:
+                        self._handle.getNode(where='/', name=name)
+                        raise AssertionError()
+                    except tables.NoSuchNodeError:
+                        pass
+
 
             # lambda is different, since the name in the file is lambda
             # but the name in this python function is lambdaValues
+            name = 'lambda'
             if lambdaValues is not None:
-                name = 'lambda'
                 self._handle.getNode(where='/', name=name).append(lambdaValues)
+            else:
+                try:
+                    self._handle.getNode(where='/', name=name)
+                    raise AssertionError()
+                except tables.NoSuchNodeError:
+                    pass
 
         except tables.NoSuchNodeError:
             raise ValueError("The file that you're trying to save to doesn't "
@@ -465,12 +484,18 @@ class HDF5Trajectory(object):
                 "arrays. If one frame is going to have %s information, then I expect "
                 "all of them to. So I can't save it for just these frames. Sorry "
                 "about that :)" % (name, name))
+        except AssertionError:
+            raise ValueError("The file that you're saving to expects each frame "
+                            "to contain %s information, but you did not supply it."
+                            "I don't allow 'ragged' arrays. If one frame is going "
+                            "to have %s information, then I expect all of them to. " \
+                            % (name, name))
 
         self._frame_index += n_frames
         self.flush()
 
     def _initialize_headers(self, n_atoms, set_coordinates, set_time, set_cell,
-                            set_velocoties, set_kineticEnergy, set_potentialEnergy,
+                            set_velocities, set_kineticEnergy, set_potentialEnergy,
                             set_temperature, set_lambdaValues):
         tables = import_tables()
         self._n_atoms = n_atoms
@@ -478,7 +503,7 @@ class HDF5Trajectory(object):
         self._handle.root._v_attrs.conventions = 'Pande'
         self._handle.root._v_attrs.conventionVersion = '1.0'
         self._handle.root._v_attrs.program = 'MDTraj'
-        self._handle.root._v_atttrs.programVersion = version.short_version
+        self._handle.root._v_attrs.programVersion = version.short_version
         self._handle.root._v_attrs.title = 'title'
 
         # if the client has not the title attribute themselves, we'll
@@ -505,7 +530,7 @@ class HDF5Trajectory(object):
             self._handle.root.cell_lengths.attrs['units'] = 'nanometers'
             self._handle.root.cell_angles.attrs['units'] = 'nanometers'
 
-        if set_velocoties:
+        if set_velocities:
             self._handle.createEArray(where='/', name='velocities',
                 atom=tables.Float32Atom(), shape=(0, self._n_atoms, 3))
             self._handle.root.velocities.attrs['units'] = 'nanometers/picosecond'

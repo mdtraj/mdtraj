@@ -82,8 +82,9 @@ def in_units_of(quantity, units_out, units_in=None):
         A string description of the units you want out. This should look
         like "nanometers/picosecondsecond" or "nanometers**3" or whatever
     units_in : str
-        If you supply a quantity that's not a simtk.unit.Quantity, you
-        must supply a string giving the input units.
+        If you supply a quantity that's not a simtk.unit.Quantity, you should
+        tell me what units it is in. If you don't, i'm just going to echo you
+        back your quantity without doing any unit checking.
         
     Examples
     --------
@@ -94,9 +95,9 @@ def in_units_of(quantity, units_out, units_in=None):
         return quantity
 
     if isinstance(quantity, units.Quantity):
-        return quantity.in_units_of(_str_to_unit(units_out))
+        return quantity.value_in_unit(_str_to_unit(units_out))
     else:
-        if  units_in is None:
-            raise ValueError('Bare array -- you must provide the input units')
+        if units_in is None:
+            return quantity
         united_quantity = unit.Quantity(quantity, _str_to_units(units_in))
-        united_quantity.in_units_of(_str_to_unit(units_out))
+        united_quantity.value_in_unit(_str_to_unit(units_out))
