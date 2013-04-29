@@ -29,6 +29,8 @@ temp1 = tempfile.mkstemp(suffix='.xtc')[1]
 temp2 = tempfile.mkstemp(suffix='.dcd')[1]
 temp3 = tempfile.mkstemp(suffix='.binpos')[1]
 temp4 = tempfile.mkstemp(suffix='.trr')[1]
+temp5 = tempfile.mkstemp(suffix='.h5')[1]
+
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
@@ -57,6 +59,23 @@ def test_load_pdb_box():
     t = load(get_fn('native2.pdb'))
     yield lambda: eq(tuple(t.unitcell_parameters[0]), (0.1, 0.2, 0.3, 90.0, 90.0, 90.0))
     yield lambda: eq(t.unitcell_vectors[0], np.array([[0.1,0,0], [0,0.2,0], [0,0,0.3]]))
+
+
+def test_box_load_save():
+    t = load(get_fn('native2.pdb'))
+
+    # these three tempfile have extensions (dcd, xtc, trr) that
+    # should store the box information. lets make sure than through a load/save
+    # cycle, the box information is preserved:
+    for temp_fn in [temp1, temp2, temp4, temp5]:
+        t.save(temp_fn)
+        t2 = load(temp_fn, top=get_fn('native.pdb'))
+
+        assert t.unitcell_parameters != None
+        yield lambda: eq(t.xyz, t2.xyz)
+        yield lambda: eq(t.unitcell_vectors, t2.unitcell_vectors)
+        yield lambda: eq(t.unitcell_parameters, t2.unitcell_parameters)
+
 
 
 def test_hdf1():

@@ -15,6 +15,7 @@
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
 import os
+import warnings
 import numpy as np
 import tables
 from mdtraj import dcd, xtc, binpos, trr
@@ -939,8 +940,8 @@ class Trajectory(object):
             'time': self.time,
             'topology': mdtraj.topology.to_bytearray(self.topology)
         }
-        if self.box is not None:
-            kwargs['box'] = self.box
+        if self.unitcell_vectors is not None:
+            kwargs['box'] = self.unitcell_vectors
 
         return io.saveh(filename, **kwargs)
 
@@ -961,8 +962,17 @@ class Trajectory(object):
         topology = self.topology
 
         # convert to angstroms
-        if self.topology.getUnitCellDimensions() is not None:
-            topology.setUnitCellDimensions(tuple([10*i for i in self.topology.getUnitCellDimensions()]))
+        if self.unitcell_parameters is not None:
+            a = 10*self.unitcell_parameters['a'][0]
+            b = 10*self.unitcell_parameters['b'][0]
+            c = 10*self.unitcell_parameters['c'][0]
+
+            if (np.abs(self.unitcell_parameters['alpha'][0] - 90.0) > 1e-8 or
+                    np.abs(self.unitcell_parameters['beta'][0] - 90.0) > 1e-8 or
+                    np.abs(self.unitcell_parameters['gamma'][0] - 90.0) > 1e-8):
+                warnings.warn('Unit cell information not saved correctly to PDB')
+
+            topology.setUnitCellDimensions((a,b,c))
 
         pdbfile.PDBFile.writeHeader(topology, file=f)
 
@@ -996,7 +1006,7 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         return xtc.write(filename, self.xyz, time=self.time,
-            force_overwrite=force_overwrite)
+            box=self.unitcell_vectors, force_overwrite=force_overwrite)
 
     def save_trr(self, filename, force_overwrite=True):
         """
@@ -1015,7 +1025,7 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         return trr.write(filename, self.xyz, time=self.time,
-            force_overwrite=force_overwrite)
+            box=self.unitcell_vectors, force_overwrite=force_overwrite)
 
     def save_dcd(self, filename, force_overwrite=True):
         """
@@ -1030,7 +1040,21 @@ class Trajectory(object):
         """
         # convert from internal nm representation to angstroms for output
         xyz = self.xyz * 10
-        return dcd.write(filename, xyz, force_overwrite=force_overwrite)
+
+
+        if self.unitcell_parameters is not None:
+            # make sure the output is in angstroms
+            box_lengths = np.vstack((self.unitcell_parameters['a'],
+                       self.unitcell_parameters['a'],
+                       self.unitcell_parameters['a'])).T * 10
+            box_angles = np.vstack((self.unitcell_parameters['alpha'],
+                       self.unitcell_parameters['beta'],
+                       self.unitcell_parameters['gamma'])).T
+        else:
+            box_lengths, box_angles = None, None
+
+        return dcd.write(filename, xyz, force_overwrite=force_overwrite,
+            box_lengths=box_lengths, box_angles=box_angles)
 
     def save_binpos(self, filename, force_overwrite=True):
         """
