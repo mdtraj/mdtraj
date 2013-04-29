@@ -72,7 +72,7 @@ def test_box_load_save():
         t2 = load(temp_fn, top=get_fn('native.pdb'))
 
         assert t.unitcell_parameters != None
-        yield lambda: eq(t.xyz, t2.xyz)
+        yield lambda: eq(t.xyz, t2.xyz, decimal=3)
         yield lambda: eq(t.unitcell_vectors, t2.unitcell_vectors)
         yield lambda: eq(t.unitcell_parameters, t2.unitcell_parameters)
 

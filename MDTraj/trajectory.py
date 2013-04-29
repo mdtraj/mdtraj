@@ -1041,17 +1041,17 @@ class Trajectory(object):
         # convert from internal nm representation to angstroms for output
         xyz = self.xyz * 10
 
-
-        if self.unitcell_parameters is not None:
+        if self.unitcell_parameters is None:
+            box_lengths = None
+            box_angles = None
+        else:
             # make sure the output is in angstroms
             box_lengths = np.vstack((self.unitcell_parameters['a'],
-                       self.unitcell_parameters['a'],
-                       self.unitcell_parameters['a'])).T * 10
+                       self.unitcell_parameters['b'],
+                       self.unitcell_parameters['c'])).T * 10
             box_angles = np.vstack((self.unitcell_parameters['alpha'],
                        self.unitcell_parameters['beta'],
                        self.unitcell_parameters['gamma'])).T
-        else:
-            box_lengths, box_angles = None, None
 
         return dcd.write(filename, xyz, force_overwrite=force_overwrite,
             box_lengths=box_lengths, box_angles=box_angles)
