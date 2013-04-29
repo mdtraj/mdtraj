@@ -177,7 +177,7 @@ def load_pdb(filename):
     f = pdbfile.PDBFile(filename)
 
     # convert from angstroms to nm
-    coords = f.positions / 10
+    coords = f.positions / 10.0
 
     trajectory = Trajectory(xyz=coords, topology=f.topology)
 
@@ -186,7 +186,8 @@ def load_pdb(filename):
         unitcell_params = np.recarray((1,),
                 dtype=[('a', '<f8'), ('b', '<f8'), ('c', '<f8'),
                        ('alpha', '<f8'), ('beta', '<f8'), ('gamma', '<f8')])
-        unitcell_params[0] = (a, b, c, 90.0, 90.0, 90.0)
+        # we need to convert the distances from angstroms to nanometers
+        unitcell_params[0] = (a / 10.0, b / 10.0, c / 10.0, 90.0, 90.0, 90.0)
 
         trajectory.unitcell_parameters = unitcell_params
 

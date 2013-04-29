@@ -55,8 +55,8 @@ def test_box():
 
 def test_load_pdb_box():
     t = load(get_fn('native2.pdb'))
-    yield lambda: eq(tuple(t.unitcell_parameters[0]), (1.0, 2.0, 3.0, 90.0, 90.0, 90.0))
-    yield lambda: eq(t.unitcell_vectors[0], np.array([[1.0,0,0], [0,2.0,0], [0,0,3.0]]))
+    yield lambda: eq(tuple(t.unitcell_parameters[0]), (0.1, 0.2, 0.3, 90.0, 90.0, 90.0))
+    yield lambda: eq(t.unitcell_vectors[0], np.array([[0.1,0,0], [0,0.2,0], [0,0,0.3]]))
 
 
 def test_hdf1():
