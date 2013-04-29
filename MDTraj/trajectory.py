@@ -740,9 +740,7 @@ class Trajectory(object):
 
         box = self.box[frame]
 
-        return (Vec3(box[0], 0.0, 0.0),
-                Vec3(0.0, box[1], 0.0),
-                Vec3(0.0, 0.0, box[2])) * nanometer
+        return (Vec3(*box[0]), Vec3(*box[1]), Vec3(*box[2])) * nanometer
 
 
     @staticmethod
