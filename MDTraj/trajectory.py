@@ -857,7 +857,7 @@ class Trajectory(object):
             raise ValueError("this trajectory does not contain box size information")
 
         params = self.unitcell_parameters[frame]
-        v1, v2, v3 = lengths_and_angles_to_box_vectors(params['a'], params['b'], params['c'],
+        v1, v2, v3 = unitcell.lengths_and_angles_to_box_vectors(params['a'], params['b'], params['c'],
             params['alpha']*np.pi/180, params['beta']*np.pi/180, params['gamma']*np.pi/180)
 
         return (Vec3(*v1), Vec3(*v2), Vec3(*v3)) * nanometer
