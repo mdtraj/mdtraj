@@ -44,16 +44,18 @@ def test_hdf0():
 def test_box():
     t = load(get_fn('native.pdb'))
     yield lambda: eq(t.unitcell_vectors, None)
-    yield lambda: eq(t.unitcell_parameters, None)
+    yield lambda: eq(t.unitcell_lengths, None)
+    yield lambda: eq(t.unitcell_angles, None)
+
 
     t.unitcell_vectors = np.array([[1,0,0], [0,1,0], [0,0,1]]).reshape(1,3,3)
-    yield lambda: eq(np.array([1.0, 1.0, 1.0]), float(t.unitcell_lengths[0]))
-    yield lambda: eq(np.array([90.0, 90.0, 90.0]), float(t.unitcell_angles[0]))
+    yield lambda: eq(np.array([1.0, 1.0, 1.0]), t.unitcell_lengths[0])
+    yield lambda: eq(np.array([90.0, 90.0, 90.0]), t.unitcell_angles[0])
 
 def test_load_pdb_box():
     t = load(get_fn('native2.pdb'))
-    yield lambda: eq(tuple(t.unitcell_lengths[0]), (0.1, 0.2, 0.3))
-    yield lambda: eq(tuple(t.unitcell_angles[0]), (90.0, 90.0, 90.0))
+    yield lambda: eq(t.unitcell_lengths[0], np.array([0.1, 0.2, 0.3]))
+    yield lambda: eq(t.unitcell_angles[0], np.array([90.0, 90.0, 90.0]))
     yield lambda: eq(t.unitcell_vectors[0], np.array([[0.1,0,0], [0,0.2,0], [0,0,0.3]]))
 
 
@@ -67,10 +69,11 @@ def test_box_load_save():
         t.save(temp_fn)
         t2 = load(temp_fn, top=get_fn('native.pdb'))
 
-        assert t.unitcell_parameters != None
+        assert t.unitcell_vectors != None
         yield lambda: eq(t.xyz, t2.xyz, decimal=3)
         yield lambda: eq(t.unitcell_vectors, t2.unitcell_vectors)
-        yield lambda: eq(t.unitcell_parameters, t2.unitcell_parameters)
+        yield lambda: eq(t.unitcell_angles, t2.unitcell_angles)
+        yield lambda: eq(t.unitcell_lengths, t2.unitcell_lengths)
 
 
 
@@ -98,7 +101,8 @@ def test_hdf_frame():
 
     yield lambda: eq(t0[1].xyz, t1.xyz)
     yield lambda: eq(t0[1].unitcell_vectors, t1.unitcell_vectors)
-    yield lambda: eq(t0[1].unitcell_parameters, t1.unitcell_parameters)
+    yield lambda: eq(t0[1].unitcell_angles, t1.unitcell_angles)
+    yield lambda: eq(t0[1].unitcell_lengths, t1.unitcell_lengths)
     yield lambda: eq(t0[1].time, t1.time)
 
 def test_slice():
@@ -106,7 +110,8 @@ def test_slice():
     yield lambda: eq((t[0:5] + t[5:10]).xyz, t[0:10].xyz)
     yield lambda: eq((t[0:5] + t[5:10]).time, t[0:10].time)
     yield lambda: eq((t[0:5] + t[5:10]).unitcell_vectors, t[0:10].unitcell_vectors)
-    yield lambda: eq((t[0:5] + t[5:10]).unitcell_parameters, t[0:10].unitcell_parameters)
+    yield lambda: eq((t[0:5] + t[5:10]).unitcell_lengths, t[0:10].unitcell_lengths)
+    yield lambda: eq((t[0:5] + t[5:10]).unitcell_angles, t[0:10].unitcell_angles)
 
 
 def test_slice2():

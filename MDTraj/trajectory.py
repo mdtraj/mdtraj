@@ -635,9 +635,9 @@ class Trajectory(object):
             The distances a, b, and c that define the shape of the unit cell in
             each frame.
         """
-        self._unitcell_lengths = arrays.ensure_type(value, np.float32, 3,
+        self._unitcell_lengths = arrays.ensure_type(value, np.float32, 2,
             'unitcell_lengths', can_be_none=True, shape=(len(self), 3),
-            warn_on_cast=False)
+            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
 
     @unitcell_angles.setter
     def unitcell_angles(self, value):
@@ -649,9 +649,9 @@ class Trajectory(object):
             The angles alpha, beta and gamma that define the shape of the
             unit cell in each frame. The angles should be in **degrees*
         """
-        self._unitcell_angles = arrays.ensure_type(value, np.float32, 3,
+        self._unitcell_angles = arrays.ensure_type(value, np.float32, 2,
             'unitcell_angles', can_be_none=True, shape=(len(self), 3),
-            warn_on_cast=False)
+            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
 
 
     @property
