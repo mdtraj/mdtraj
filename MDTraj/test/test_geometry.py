@@ -16,14 +16,14 @@
 
 import  os
 from mdtraj.testing import get_fn, eq, DocStringFormatTester
-from mdtraj.geometry import rg, contact
+import mdtraj.geometry
 import numpy as np
 from mdtraj.trajectory import load_hdf, load
 import mdtraj.trajectory
 
 def test_rg():
     t0 = load(get_fn('frame0.lh5'))
-    Rg = rg.calculate_rg(t0)
+    Rg = mdtraj.geometry.rg.calculate_rg(t0)
     Rg0 = np.loadtxt(get_fn("Rg_frame0_ref.dat"))
     eq(Rg, Rg0)
 
@@ -41,7 +41,7 @@ np.savetxt("Rg_frame0_ref.dat", Rg)
 def test_atom_distances():
     t0 = load(get_fn('frame0.lh5'))
     atom_pairs = np.loadtxt(get_fn("atom_pairs.dat"),'int')
-    distances = contact.atom_distances(t0, atom_pairs)
+    distances = mdtraj.geometry.contact.atom_distances(t0, atom_pairs)
     distances0 = np.loadtxt(get_fn("atom_distances_frame0_ref.dat"))
     eq(distances, distances0)
 
@@ -57,3 +57,17 @@ np.savetxt("./atom_pairs.dat",atom_pairs, "%d")
 distances = msmbuilder.geometry.contact.atom_distances(x, atom_pairs)
 np.savetxt("atom_distances_frame0_ref.dat", distances)
 """
+
+def test_dihedral_indices():    
+    traj = load(get_fn('1bpi.pdb'))
+    # Manually compare generated indices to known answers.
+    phi0_ind = np.array([3, 12, 13, 14]) - 1  # Taken from PDB, so subtract 1
+    psi0_ind = np.array([1, 2,  3, 12]) - 1  # Taken from PDB, so subtract 1
+
+    rid, ind = mdtraj.geometry.dihedral._get_indices_phi(traj)
+    eq(ind[0], phi0_ind)
+    eq(int(rid[0]), 1)
+
+    rid, ind = mdtraj.geometry.dihedral._get_indices_psi(traj)
+    eq(ind[0], psi0_ind)
+    eq(int(rid[0]), 0)

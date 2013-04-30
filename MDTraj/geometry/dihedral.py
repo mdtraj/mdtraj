@@ -110,7 +110,7 @@ def atom_sequence_finder(traj, atom_names, rid_offsets):
     return found_rid, indices
 
 PHI_ATOMS = ["C","N","CA", "C"]
-PHI_OFFSETS = [0, 1, 1, 1]
+PHI_OFFSETS = [-1, 0, 0, 0]
 PSI_ATOMS = ["N","CA", "C", "N"]
 PSI_OFFSETS = [0, 0, 0, 1]
 OMEGA_ATOMS = ["CA","C","N","CA"]
@@ -125,17 +125,21 @@ _get_indices_psi = lambda traj: atom_sequence_finder(traj, PSI_ATOMS, PSI_OFFSET
 _get_indices_chi = lambda traj: atom_sequence_finder(traj, CHI_ATOMS, CHI_OFFSETS)
 
 def calculate_phi(traj):
+    """Calculate the phi torsions of a trajectory."""
     rid, indices = _get_indices_phi(traj)
     return rid, compute_dihedrals(traj, indices)
 
 def calculate_psi(traj):
+    """Calculate the psi torsions of a trajectory."""
     rid, indices = _get_indices_psi(traj)
     return rid, compute_dihedrals(traj, indices)
 
 def calculate_chi(traj):
+    """Calculate the chi torsions of a trajectory."""
     rid, indices = _get_indices_chi(traj)
     return rid, compute_dihedrals(traj, indices)
 
 def calculate_omega(traj):
+    """Calculate the omega torsions of a trajectory."""
     rid, indices = _get_indices_omega(traj)
     return rid, compute_dihedrals(traj, indices)
