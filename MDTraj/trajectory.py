@@ -179,6 +179,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     # We have only a single trajectory now.
     loaders = {'.xtc':    load_xtc,
+               '.xml':    load_xml,
                '.trr':    load_trr,
                '.pdb':    load_pdb,
                '.dcd':    load_dcd,
@@ -222,6 +223,51 @@ def load_pdb(filename):
     coords = f.positions / 10
 
     return Trajectory(xyz=coords, topology=f.topology)
+
+
+def load_xml(filename, top=None):
+    """Load a single conformation from an XML file, such as those
+    produced by OpenMM
+
+    Note: The OpenMM serialized state XML format contains information that
+    is not read by this method, including forces, energies, and velocities.
+    Here, we just read the positions and the box vectors.
+
+    Parameters
+    ----------
+    filename : string
+        The path on disk to the XML file
+    top : {str, Trajectory, Topology}
+        The XML format does not contain topology information. Pass in either the
+        path to a pdb file, a trajectory, or a topology to supply this information.
+
+    Returns
+    -------
+    trajectory : Trajectory
+        A trajectory object!
+    """
+    topology = _parse_topology(top)
+
+    import xml.etree.cElementTree as etree
+    tree = etree.parse(filename)
+
+    # get all of the positions from the XML into a list of tuples
+    # then convert to a numpy array
+    positions = []
+    for position in tree.getroot().find('Positions'):
+        positions.append((float(position.attrib['x']),
+                          float(position.attrib['y']),
+                          float(position.attrib['z'])))
+
+
+    box = []
+    vectors = tree.getroot().find('PeriodicBoxVectors')
+    for name in ['A', 'B', 'C']:
+        box.append((float(vectors.find(name).attrib['x']),
+                    float(vectors.find(name).attrib['y']),
+                    float(vectors.find(name).attrib['z'])))
+
+    return Trajectory(xyz=np.array(positions), topology=topology, box=np.array(box))
 
 
 def load_xtc(filename, top=None, chunk=500):
