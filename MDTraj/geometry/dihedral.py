@@ -2,16 +2,62 @@ import numpy as np
 #  http://stackoverflow.com/questions/12785836/how-to-calculate-cartesian-coordinates-from-dihedral-angle-in-python
  
 def get_angle(a, b):
-    """ASSUMES normalized a and b."""
+    """Compute the angles between arrays of vectors a and b.
+    
+    Parameters
+    ----------
+    a : np.ndarray        
+    b : np.ndarray        
+        
+    Returns
+    -------
+    angles : np.ndarray, shape=[n_frames, num_pairs], dtype=float
+
+    Notes
+    -----
+    The shapes of a and b must be identical.  Also, the (xyz) axis must
+    be the last axis.  
+    """
     return np.arccos((a * b).sum(-1))
 
 def normed_cross(a, b):
+    """Compute the normalized cross product between arrays of vectors a and b.
+    
+    Parameters
+    ----------
+    a : np.ndarray        
+    b : np.ndarray        
+        
+    Returns
+    -------
+    v : np.ndarray, shape=[n_frames, num_pairs], dtype=float
+        The normalized cross product of entries in a and b.
+
+    Notes
+    -----
+    The shapes of a and b must be identical.  Also, the (xyz) axis must
+    be the last axis.  
+    """
     v = np.cross(a, b)
     norms = (v ** 2.).sum(-1) ** 0.5
     v = (v.T / norms.T).T
     return v
 
 def compute_dihedrals(traj, indices):
+    """Compute the dihedral angles of traj for the atom indices in indices.
+    
+    Parameters
+    ----------
+    traj : Trajectory
+    indices : np.ndarray, shape=(num_dihedrals, 4), dtype=int
+        
+    Returns
+    -------
+    dih : np.ndarray, shape=(num_dihedrals), dtype=float
+        dih[i,j] gives the dihedral angle at traj[i] correponding to indices[j].
+
+    """
+    x = traj.xyz
     v1 = normed_cross(x[:, indices[:,0]],x[:, indices[:,1]])
     v2 = normed_cross(x[:, indices[:,1]],x[:, indices[:,2]])
     v3 = normed_cross(x[:, indices[:,2]],x[:, indices[:,3]])
@@ -20,7 +66,7 @@ def compute_dihedrals(traj, indices):
     v2v3 = normed_cross(v2, v3)
     return get_angle(v1v2, v2v3)
     
-def construct_atom_dict(traj):
+def _construct_atom_dict(traj):
     """Create dictionary to lookup indices by atom name and residue_id."""
     atom_dict = {}
     for residue in traj.top.residues():
@@ -31,8 +77,24 @@ def construct_atom_dict(traj):
     return atom_dict
     
 def atom_sequence_finder(traj, atom_names, rid_offsets):
-    atom_dict = construct_atom_dict(traj)
-    num_residues = len([x for x in r.top.residues()])
+    """Find sequences of atom indices correponding to desired atoms.
+
+    Parameters
+    ----------
+    traj : Trajectory
+        Trajectory for which you want dihedrals.
+    atom_names : np.ndarray, shape=(4), dtype='str'
+        Array of atoms to in each dihedral angle.
+    rid_offsets : np.ndarray, shape=(4), dtype='int'
+        Array of integer offsets for each atom.  
+
+    Notes
+    -----
+    In additional finding dihedral atoms, this function could be used to
+    match *general* sequences of atoms and residue_id offsets.
+    """
+    atom_dict = _construct_atom_dict(traj)
+    num_residues = len([x for x in traj.top.residues()])
     indices = []
     found_rid = []
     atoms_and_offsets = zip(atom_names, rid_offsets)
@@ -62,3 +124,18 @@ _get_indices_phi = lambda traj: atom_sequence_finder(traj, PHI_ATOMS, PHI_OFFSET
 _get_indices_psi = lambda traj: atom_sequence_finder(traj, PSI_ATOMS, PSI_OFFSETS)
 _get_indices_chi = lambda traj: atom_sequence_finder(traj, CHI_ATOMS, CHI_OFFSETS)
 
+def calculate_phi(traj):
+    rid, indices = _get_indices_phi(traj)
+    return rid, compute_dihedrals(traj, indices)
+
+def calculate_psi(traj):
+    rid, indices = _get_indices_psi(traj)
+    return rid, compute_dihedrals(traj, indices)
+
+def calculate_chi(traj):
+    rid, indices = _get_indices_chi(traj)
+    return rid, compute_dihedrals(traj, indices)
+
+def calculate_omega(traj):
+    rid, indices = _get_indices_omega(traj)
+    return rid, compute_dihedrals(traj, indices)
