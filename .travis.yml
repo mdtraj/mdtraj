@@ -13,6 +13,10 @@ install:
   - sudo apt-get install -qq cython
   - sudo apt-get install -qq python-numexpr
   - sudo apt-get install -qq python-tables
+  - sudo apt-get install -qq netcdf-bin libnetcdf-dev
+  - sudo apt-get install     python-netcdf
+  - sudo apt-get install -qq python-setuptools
+  - sudo easy_install netcdf4
 
 script:
   - sudo python setup.py -q install
