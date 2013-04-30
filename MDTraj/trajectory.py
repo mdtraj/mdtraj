@@ -19,15 +19,17 @@
 ##############################################################################
 
 import os
+import warnings
 import sys
 import logging
 import functools
 from itertools import izip
 from copy import deepcopy
-
 import numpy as np
-from mdtraj import dcd, xtc, binpos, trr
+from mdtraj import dcd, xtc, binpos, trr, io
 from mdtraj.pdb import pdbfile
+from mdtraj import io
+from mdtraj.utils import unitcell, arrays
 import mdtraj.topology
 
 try:
@@ -220,10 +222,20 @@ def load_pdb(filename):
     f = pdbfile.PDBFile(filename)
 
     # convert from angstroms to nm
-    coords = f.positions / 10
+    coords = f.positions / 10.0
 
-    return Trajectory(xyz=coords, topology=f.topology)
+    trajectory = Trajectory(xyz=coords, topology=f.topology)
 
+    if f.topology.getUnitCellDimensions() is not None:
+        a, b, c = f.topology.getUnitCellDimensions()
+        # we need to convert the distances from angstroms to nanometers
+        unitcell_lengths = np.array([[a / 10.0, b / 10.0, c / 10.0]])
+        unitcell_angles = np.array([[90.0, 90.0, 90.0]])
+
+        trajectory.unitcell_lengths = unitcell_lengths
+        trajectory.unitcell_angles = unitcell_angles
+
+    return trajectory
 
 def load_xml(filename, top=None):
     """Load a single conformation from an XML file, such as those
@@ -305,7 +317,10 @@ def load_xtc(filename, top=None, chunk=500):
 
     xyz, time, step, box, prec = xtc.read(filename, chunk)
     # note we're not doing anything with the box vectors
-    return Trajectory(xyz=xyz, topology=topology, time=time)
+    trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
+    trajectory.unitcell_vectors = box
+
+    return trajectory
 
 
 def load_trr(filename, top=None, chunk=500):
@@ -342,8 +357,10 @@ def load_trr(filename, top=None, chunk=500):
     topology = _parse_topology(top)
 
     xyz, time, step, box, lambd = trr.read(filename, chunk)
-    # note we're not doing anything with the box vectors
-    return Trajectory(xyz=xyz, topology=topology, time=time)
+
+    trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
+    trajectory.unitcell_vectors = box
+    return trajectory
 
 def load_dcd(filename, top=None):
     """Load an xtc file. Since the dcd format doesn't contain information
@@ -378,9 +395,13 @@ def load_dcd(filename, top=None):
     xyz, box_length, box_angle = dcd.read(filename)
 
     xyz /= 10.  # convert from anstroms to nanometer
+    box_length /= 10.  # convert from anstroms to nanometer
 
-    # note, we're not loading the boxes from dcd
-    return Trajectory(xyz=xyz, topology=topology)
+    trajectory = Trajectory(xyz=xyz, topology=topology)
+    trajectory.unitcell_lengths = box_length
+    trajectory.unitcell_angles = box_angle
+
+    return trajectory
 
 
 def load_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
@@ -465,7 +486,9 @@ def load_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
             if upconvert_int16 and xyz.dtype == np.int16:
                 xyz = _convert_from_lossy_integers(xyz)
 
-            return Trajectory(xyz=xyz, topology=topology, time=time, box=box)
+            trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
+            trajectory.unitcell_vectors = box
+            return trajectory
 
         # adjust the stride/chunk
         if stride is not None:
@@ -513,7 +536,9 @@ def load_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
     finally:
         F.close()
 
-    return Trajectory(xyz=xyz, topology=topology, time=time, box=box)
+    trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
+    trajectory.unitcell_vectors = box
+    return trajectory
 
 
 def load_binpos(filename, top=None, chunk=500):
@@ -551,7 +576,7 @@ def load_binpos(filename, top=None, chunk=500):
     topology = _parse_topology(top)
 
     xyz = binpos.read(filename)
-    xyz /= 10.0  # convert from angstroms to nanometer
+    xyz /= 10.0  # convert from anstroms to nanometer
 
     return Trajectory(xyz=xyz, topology=topology)
 
@@ -639,36 +664,120 @@ class Trajectory(object):
         self._time = value
 
     @property
-    def box(self):
-        return self._box
+    def unitcell_vectors(self):
+        """Get the vectors that define the shape of the unit cell
+        in each frame
 
-    @box.setter
-    def box(self, value):
-        if isinstance(value, list):
-            value = np.array(value)
+        Returns
+        -------
+        vectors : np.ndarray, shape(n_frames, 3, 3)
+            Vectors definiing the shape of the unit cell in each frame.
+            The semantics of this array are that the shape of the unit cell
+            in frame `i` are given by the three vectors, value[i, 0, :],
+            `value[i, 1, :]`, and `value[i, 2, :]`.
+        """
+        if self._unitcell_lengths is None or self._unitcell_angles is None:
+            return None
 
-        if value.shape == (3, ):
-            box = np.zeros((self.n_frames, 3, 3))
-            for i in xrange(3):
-                box[:, i, i] = value[i] * np.ones(self.n_frames)
+        v1, v2, v3 = unitcell.lengths_and_angles_to_box_vectors(
+            self._unitcell_lengths[:, 0],  # a
+            self._unitcell_lengths[:, 1],  # b
+            self._unitcell_lengths[:, 2],  # c
+            self._unitcell_angles[:, 0],   # alpha
+            self._unitcell_angles[:, 1],   # beta
+            self._unitcell_angles[:, 2],   # gamma
+        )
+        return np.swapaxes(np.dstack((v1, v2, v3)), 1, 2)
 
+    @unitcell_vectors.setter
+    def unitcell_vectors(self, vectors):
+        """Set the three vectors that define the shape of the unit cell
 
-        else:
-            if value.ndim == 2 and self.n_frames == 1:
-                value = value.reshape(1, 3, 3)
-            elif not value.shape == (self.n_frames, 3, 3):
-                raise ValueError("Wrong shape. Got %s, should be %s" % (value.shape,
-                    (self.n_frames, 3, 3)))
-            box = value
+        Parameters
+        ----------
+        vectors : tuple of three arrays, each of shape=(n_frames, 3)
 
+            The semantics of this array are that the shape of the unit cell
+            in frame `i` are given by the three vectors, value[i, 0, :],
+            `value[i, 1, :]`, and `value[i, 2, :]`.
+        """
+        if vectors is None:
+            self._unitcell_lengths = None
+            self._unitcell_angles = None
+            return
 
-        for i, j in [(0,1), (0,2), (1,2)]:
-            if not (np.all(box[:, i, j] == 0) and np.all(box[:, j, i] == 0)):
-                raise NotImplementedError('Only rectangular boxes are currently supported')
+        if not len(vectors) == len(self):
+            raise TypeError('unitcell_vectors must be the same length as '
+                            'the trajectory. you provided %s' % vectors)
 
-        celldims = tuple([box[0,0,0], box[0,1,1], box[0,2,2]])
-        self.topology.setUnitCellDimensions(celldims)
-        self._box = box
+        v1 = vectors[:, 0, :]
+        v2 = vectors[:, 1, :]
+        v3 = vectors[:, 2, :]
+        a, b, c, alpha, beta, gamma = unitcell.box_vectors_to_lengths_and_angles(v1, v2, v3)
+
+        self._unitcell_lengths = np.vstack((a, b, c)).T
+        self._unitcell_angles =  np.vstack((alpha, beta, gamma)).T
+
+    @property
+    def unitcell_lengths(self):
+        """Get the lengths that define the shape of the unit
+        cell in each frame.
+
+        Returns
+        -------
+        lengths : np.ndarray, shape=(n_frames, 3)
+            Parameters describing the shape of the unit cell in each frame. The
+            return value is a six field  record array. The records 'a', 'b', and 'c'
+            give the length of the three unit cell vectors, 'alpha' gives the
+            angle between vectors **b** and **c**, beta gives the angle between
+            vectors **c** and **a**, and gamma gives the angle between vectors
+            **a** and **b**. The angles are in degrees.
+        """
+        return self._unitcell_lengths
+
+    @property
+    def unitcell_angles(self):
+        """Get the angles that define the shape of the unit
+        cell in each frame.
+
+        Returns
+        -------
+        lengths : np.ndarray, shape=(n_frames, 3)
+            'alpha' gives the angle between vectors **b** and **c**, beta
+            gives the angle between vectors **c** and **a**, and gamma gives
+            the angle between vectors **a** and **b**. The angles are in
+            degrees.
+        """
+        return self._unitcell_angles
+
+    @unitcell_lengths.setter
+    def unitcell_lengths(self, value):
+        """Set the lengths that define the shape of the unit cell in each frame
+
+        Parameters
+        ----------
+        value : np.ndarray, shape=(n_frames, 3)
+            The distances a, b, and c that define the shape of the unit cell in
+            each frame.
+        """
+        self._unitcell_lengths = arrays.ensure_type(value, np.float32, 2,
+            'unitcell_lengths', can_be_none=True, shape=(len(self), 3),
+            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
+
+    @unitcell_angles.setter
+    def unitcell_angles(self, value):
+        """Set the lengths that define the shape of the unit cell in each frame
+
+        Parameters
+        ----------
+        value : np.ndarray, shape=(n_frames, 3)
+            The angles alpha, beta and gamma that define the shape of the
+            unit cell in each frame. The angles should be in **degrees*
+        """
+        self._unitcell_angles = arrays.ensure_type(value, np.float32, 2,
+            'unitcell_angles', can_be_none=True, shape=(len(self), 3),
+            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
+
 
     @property
     def xyz(self):
@@ -730,33 +839,42 @@ class Trajectory(object):
             if not mdtraj.topology.equal(self.topology, other.topology):
                 raise ValueError('The topologies are not the same')
 
+        lengths2 = None
+        angles2 = None
+        other_has_unitcell = (other.unitcell_lengths is not None and other.unitcell_angles is not None)
+
         if discard_overlapping_frames:
             x0 = self.xyz[-1]
             x1 = other.xyz[-1]
             if np.linalg.norm(x1 - x0) < 1e-8:
                 xyz = other.xyz[1:]
                 time = other.time[1:]
-                if other.box is not None:
-                    box2 = other.box[1:]
+                if other_has_unitcell:
+                    lengths2 = other.unitcell_lengths[1:]
+                    angles2 = other.unitcell_angles[1:]
         else:
             xyz = other.xyz
             time = other.time
-            if other.box is not None:
-                box2 = other.box
+            if other_has_unitcell:
+                lengths2 = other.unitcell_lengths[1:]
+                angles2 = other.unitcell_angles[1:]
 
         xyz = np.concatenate((self.xyz, xyz))
         time = np.concatenate((self.time, time))
 
-        if self.box is None and other.box is None:
-            box = None
-        elif self.box is not None and other.box is not None:
-            box = np.concatenate((self.box, box2))
+        if self.unitcell_lengths is None and self.unitcell_angles is None and not other_has_unitcell:
+            lengths, angles = None, None
+        elif self.unitcell_lengths is not None and self.unitcell_angles is not None and other_has_unitcell:
+            lengths = np.concatenate((self.unitcell_lengths, lengths2))
+            angles = np.concatenate((self.unitcell_angles, angles2))
         else:
-            raise ValueError("One trajectory has box size, other doesn't. I don't know what to do")
+            raise ValueError("One trajectory has box size, other doesn't. "
+                             "I don't know what to do")
 
         # use this syntax so that if you subclass Trajectory,
         # the subclass's join() will return an instance of the subclass
-        return self.__class__(xyz, deepcopy(self.topology), time, box)
+        return self.__class__(xyz, deepcopy(self.topology), time=time,
+            unitcell_lengths=lengths, unitcell_angles=angles)
 
     def __getitem__(self, key):
         "Get a slice of this trajectory"
@@ -781,33 +899,34 @@ class Trajectory(object):
         """
         xyz = self.xyz[key]
         time = self.time[key]
-
-        if self.box is not None:
-            box = self.box[key]
+        unitcell_lengths, unitcell_angles = None, None
+        if self.unitcell_angles is not None:
+            unitcell_angles = self.unitcell_angles[key]
+        if self.unitcell_lengths is not None:
+            unitcell_lengths = self.unitcell_lengths[key]
 
         if copy:
             xyz = xyz.copy()
             time = time.copy()
             topology = deepcopy(self.topology)
 
-            if self.box is not None:
-                box = box.copy()
+            if self.unitcell_angles is not None:
+                unitcell_angles = unitcell_angles.copy()
+            if self.unitcell_lengths is not None:
+                unitcell_lengths = unitcell_lengths.copy()
 
-        if self.box is None:
-            box = None
-
-        newtraj = self.__class__(xyz, topology, time, box)
+        newtraj = self.__class__(xyz, topology, time, unitcell_lengths=unitcell_lengths,
+                                 unitcell_angles=unitcell_angles)
         return newtraj
 
 
-    def __init__(self, xyz, topology, time=None, box=None):
+    def __init__(self, xyz, topology, time=None, unitcell_lengths=None, unitcell_angles=None):
         self.xyz = xyz
         self.topology = topology
 
         # box has no default, it'll just be none normally
-        self._box = None
-        if box is not None:
-            self.box = box
+        self._unitcell_lengths = unitcell_lengths
+        self._unitcell_angles = unitcell_angles
 
         # time will take the default 1..N
         if time is None:
@@ -860,13 +979,12 @@ class Trajectory(object):
         if not HAVE_OPENMM:
             raise ImportError('OpenMM was not imported')
 
-        if self.box is None:
+        vectors = self[frame].unitcell_vectors
+        if vectors is None:
             raise ValueError("this trajectory does not contain box size information")
 
-        box = self.box[frame]
-
-        return (Vec3(*box[0]), Vec3(*box[1]), Vec3(*box[2])) * nanometer
-
+        v1, v2, v3 = vectors
+        return (Vec3(*v1), Vec3(*v2), Vec3(*v3)) * nanometer
 
     @staticmethod
     # im not really sure if the load function should be just a function or a method on the class
@@ -949,8 +1067,8 @@ class Trajectory(object):
             'time': self.time,
             'topology': mdtraj.topology.to_bytearray(self.topology)
         }
-        if self.box is not None:
-            kwargs['box'] = self.box
+        if self.unitcell_vectors is not None:
+            kwargs['box'] = self.unitcell_vectors
 
         return io.saveh(filename, **kwargs)
 
@@ -971,8 +1089,15 @@ class Trajectory(object):
         topology = self.topology
 
         # convert to angstroms
-        if self.topology.getUnitCellDimensions() is not None:
-            topology.setUnitCellDimensions(tuple([10*i for i in self.topology.getUnitCellDimensions()]))
+        if self.unitcell_lengths is not None and self.unitcell_angles is not None:
+            a, b, c = 10*self.unitcell_lengths[0]
+
+            if (np.abs(self.unitcell_angles[0, 0] - 90.0) > 1e-8 or
+                    np.abs(self.unitcell_angles[0, 1] - 90.0) > 1e-8 or
+                    np.abs(self.unitcell_angles[0, 2] - 90.0) > 1e-8):
+                warnings.warn('Unit cell information not saved correctly to PDB')
+
+            topology.setUnitCellDimensions((a,b,c))
 
         pdbfile.PDBFile.writeHeader(topology, file=f)
 
@@ -1006,7 +1131,7 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         return xtc.write(filename, self.xyz, time=self.time,
-            force_overwrite=force_overwrite)
+            box=self.unitcell_vectors, force_overwrite=force_overwrite)
 
     def save_trr(self, filename, force_overwrite=True):
         """
@@ -1025,7 +1150,7 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         return trr.write(filename, self.xyz, time=self.time,
-            force_overwrite=force_overwrite)
+            box=self.unitcell_vectors, force_overwrite=force_overwrite)
 
     def save_dcd(self, filename, force_overwrite=True):
         """
@@ -1040,7 +1165,12 @@ class Trajectory(object):
         """
         # convert from internal nm representation to angstroms for output
         xyz = self.xyz * 10
-        return dcd.write(filename, xyz, force_overwrite=force_overwrite)
+        lengths = self.unitcell_lengths
+        if lengths is not None:
+            lengths = lengths * 10
+
+        return dcd.write(filename, xyz, force_overwrite=force_overwrite,
+            box_lengths=lengths, box_angles=self.unitcell_angles)
 
     def save_binpos(self, filename, force_overwrite=True):
         """

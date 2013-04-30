@@ -57,6 +57,11 @@ def eq(o1, o2, decimal=6, err_msg=''):
         if o1.dtype.kind == 'f' or o2.dtype.kind == 'f':
             # compare floats for almost equality
             assert_array_almost_equal(o1, o2, decimal, err_msg=err_msg)
+        elif o1.dtype.type == np.core.records.record:
+            # if its a record array, we need to comparse each term
+            assert o1.dtype.names == o2.dtype.names
+            for name in o1.dtype.names:
+                eq(o1[name], o2[name], decimal=decimal, err_msg=err_msg)
         else:
             # compare everything else (ints, bools) for absolute equality
             assert_array_equal(o1, o2, err_msg=err_msg)
