@@ -42,5 +42,5 @@ Modules
     Low level XTC/TRR interface
 """
 
-__all__ = ['binpos', 'dcd', 'io', 'pdb',
+__all__ = ['binpos', 'dcd', 'io', 'pdb', 'netcdf',
             'testing', 'trajectory', 'topology', 'reporters']

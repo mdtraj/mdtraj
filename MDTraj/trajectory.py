@@ -14,18 +14,24 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
+##############################################################################
+# Imports
+##############################################################################
+
 import os
 import warnings
+import sys
+import logging
+import functools
+from itertools import izip
+from copy import deepcopy
 import numpy as np
-import tables
-from mdtraj import dcd, xtc, binpos, trr
+from mdtraj import dcd, xtc, binpos, trr, io
 from mdtraj.pdb import pdbfile
 from mdtraj import io
 from mdtraj.utils import unitcell, arrays
 import mdtraj.topology
-import functools
-from itertools import izip
-from copy import deepcopy
+
 try:
     from simtk.openmm import Vec3
     from simtk.unit import nanometer
@@ -34,12 +40,46 @@ try:
 except ImportError:
     HAVE_OPENMM = False
 
-import logging
-logger = logging.getLogger(__name__)
+##############################################################################
+# Globals
+##############################################################################
 
+logger = logging.getLogger(__name__)
 MAXINT16 = np.iinfo(np.int16).max
 MAXINT32 = np.iinfo(np.int32).max
 DEFAULT_PRECISION = 1000
+
+##############################################################################
+# Utilities
+##############################################################################
+
+def import_tables_and_io():
+    """Delayed import of tables"""
+
+    if 'tables' in sys.modules and 'io' in sys.modules:
+        return sys.modules['tables'], sys.modules['io']
+
+    try:
+        from mdtraj import io
+        import tables
+        return tables, io
+    except ImportError:
+        print '#'*73
+        print 'ERROR'
+        print '#'*73
+        print 'MDTraj\'s HDF5 utilities require the tables'
+        print 'library. You can install the library using the python package'
+        print 'managers "pip" or "easy_install" with'
+        print ''
+        print 'pip install tables'
+        print 'or'
+        print 'easy_install tables'
+        print ''
+        print 'You can also download the library directly and find more documentation at'
+        print 'https://pypi.python.org/pypi/tables/ or http://www.pytables.org/'
+        print '#'*73
+        raise
+
 
 
 def _convert_to_lossy_integers(X, precision=DEFAULT_PRECISION):
@@ -146,7 +186,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                '.dcd':    load_dcd,
                '.h5':     load_hdf,
                '.lh5':    load_hdf,
-               '.binpos': load_binpos}
+               '.binpos': load_binpos,
+               '.ncdf':   load_netcdf,
+               '.nc':     load_netcdf}
 
     try:
         loader = loaders[extension]
@@ -156,6 +198,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                       'with extensions in %s' % (filename, extension, loaders.keys()))
 
     return loader(filename, **kwargs)
+
 
 def load_pdb(filename):
     """Load a pdb file.
@@ -342,6 +385,7 @@ def load_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
     trajectory : Trajectory
         A trajectory file!
     """
+    tables, _ = import_tables_and_io()
 
     if not isinstance(filename, basestring):
         raise TypeError('filename must be of type string for load_hdf. '
@@ -452,15 +496,14 @@ def load_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
 
 
 def load_binpos(filename, top=None, chunk=500):
-    """Load an AMBER binpos file. Since the dcd format doesn't contain
-    information to specify the topolgy, you need to supply a pdb_filename
+    """Load an AMBER BINPOS file.
 
     Parameters
     ----------
     filename : str
-        String filename of Amber binpos file.
+        String filename of AMBER binpos file.
     top : {str, Trajectory, Topology}
-        DCD XTC format does not contain topology information. Pass in either
+        The BINPOS format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
         information.
     chunk : int, default=500
@@ -490,6 +533,42 @@ def load_binpos(filename, top=None, chunk=500):
     xyz /= 10.0  # convert from anstroms to nanometer
 
     return Trajectory(xyz=xyz, topology=topology)
+
+
+def load_netcdf(filename, top=None, stride=None):
+    """Load an AMBER NetCDF file. Since the NetCDF format doesn't contain
+    information to specify the topolgy, you need to supply a topology
+
+    Parameters
+    ----------
+    filename : str
+        filename of AMBER NetCDF file.
+    top : {str, Trajectory, Topology}
+        The NetCDF format does not contain topology information. Pass in either
+        the path to a pdb file, a trajectory, or a topology to supply this
+        information.
+    stride : int, default=None
+        Only read every stride-th frame
+
+
+    Returns
+    -------
+    trajectory : Trajectory
+        A trajectory file!
+    """
+    from mdtraj.netcdf import NetCDFFile
+
+    topology = _parse_topology(top)
+    with NetCDFFile(filename) as f:
+        xyz, time, cell_lengths, cell_angles = f.read(stride=stride)
+        xyz /= 10.0  # convert from angstroms to nanometer
+
+    if isinstance(time, np.ma.masked_array) and np.all(time.mask):
+        # if time is a masked array and all the entries are masked
+        # then we just tread it as if we never found it
+        time = None
+
+    return Trajectory(xyz=xyz, topology=topology, time=time)
 
 
 class Trajectory(object):
@@ -858,9 +937,8 @@ class Trajectory(object):
         if vectors is None:
             raise ValueError("this trajectory does not contain box size information")
 
-        v1, v2, v3 = self[frame].unitcell_vectors
+        v1, v2, v3 = vectors
         return (Vec3(*v1), Vec3(*v2), Vec3(*v3)) * nanometer
-
 
     @staticmethod
     # im not really sure if the load function should be just a function or a method on the class
@@ -908,7 +986,9 @@ class Trajectory(object):
                   '.dcd': self.save_dcd,
                   '.h5': self.save_hdf,
                   '.lh5': self.save_hdf,
-                  '.binpos': self.save_binpos}
+                  '.binpos': self.save_binpos,
+                  '.nc': self.save_netcdf,
+                  '.ncdf': self.save_netcdf}
 
         try:
             saver = savers[extension]
@@ -931,6 +1011,8 @@ class Trajectory(object):
         lossy : bool
             Use gromacs style compression
         """
+        _, io = import_tables_and_io()
+
         if lossy:
             xyz=_convert_to_lossy_integers(self.xyz)
 
@@ -1046,7 +1128,7 @@ class Trajectory(object):
 
     def save_binpos(self, filename, force_overwrite=True):
         """
-        Save a trajectory to amber BINPOS format
+        Save a trajectory to AMBER BINPOS format
 
         Parameters
         ----------
@@ -1058,3 +1140,19 @@ class Trajectory(object):
         # convert from internal nm representation to angstroms for output
         xyz = self.xyz * 10
         return binpos.write(filename, xyz, force_overwrite=force_overwrite)
+
+    def save_netcdf(self, filename, force_overwrite=True):
+        """Save a trajectory in AMBER NetCDF format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
+        """
+        from mdtraj.netcdf import NetCDFFile
+
+        xyz = self.xyz * 10
+        with NetCDFFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(coordinates=xyz, time=self.time)
