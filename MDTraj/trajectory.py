@@ -53,6 +53,7 @@ DEFAULT_PRECISION = 1000
 # Utilities
 ##############################################################################
 
+
 def import_tables_and_io():
     """Delayed import of tables"""
 
@@ -237,6 +238,7 @@ def load_pdb(filename):
 
     return trajectory
 
+
 def load_xml(filename, top=None):
     """Load a single conformation from an XML file, such as those
     produced by OpenMM
@@ -361,6 +363,7 @@ def load_trr(filename, top=None, chunk=500):
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     trajectory.unitcell_vectors = box
     return trajectory
+
 
 def load_dcd(filename, top=None):
     """Load an xtc file. Since the dcd format doesn't contain information
@@ -1060,7 +1063,7 @@ class Trajectory(object):
         _, io = import_tables_and_io()
 
         if lossy:
-            xyz=_convert_to_lossy_integers(self.xyz)
+            xyz = _convert_to_lossy_integers(self.xyz)
 
         kwargs = {
             'xyz': xyz,
@@ -1097,7 +1100,7 @@ class Trajectory(object):
                     np.abs(self.unitcell_angles[0, 2] - 90.0) > 1e-8):
                 warnings.warn('Unit cell information not saved correctly to PDB')
 
-            topology.setUnitCellDimensions((a,b,c))
+            topology.setUnitCellDimensions((a, b, c))
 
         pdbfile.PDBFile.writeHeader(topology, file=f)
 
@@ -1108,11 +1111,8 @@ class Trajectory(object):
                 mind = i
 
             # need to convert internal nm to angstroms for output
-            positions = [ list(self._xyz[i,j,:].flatten()*10) for j in xrange(self.n_atoms) ]
-            pdbfile.PDBFile.writeModel(topology,
-                                      positions,
-                                      file=f,
-                                      modelIndex=mind)
+            positions = [list(self._xyz[i, j, :].flatten() * 10) for j in xrange(self.n_atoms)]
+            pdbfile.PDBFile.writeModel(topology, positions, file=f, modelIndex=mind)
 
         pdbfile.PDBFile.writeFooter(topology, file=f)
         f.close()
