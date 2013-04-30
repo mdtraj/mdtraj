@@ -29,8 +29,8 @@ def atom_distances(traj, atom_pairs):
     
     Parameters
     ----------
-    xyz : np.ndarray, shape=[n_frames, n_atoms, 3], dtype=float
-        The cartesian coordinates
+    tray : Trajectory
+        Trajectory to compute distances in
     atom_pairs : np.ndarray, shape[num_pairs, 2], dtype=int
         Each row gives the indices of two atoms.
         
