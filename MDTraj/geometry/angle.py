@@ -3,8 +3,6 @@ import numpy as np
 def bond_angles_xyz(xyz, angle_indices):
     """Compute the bond angles for each frame in xyz
     
-    This is a reference single threaded implementation in python/numpy
-    
     Parameters
     ----------
     xyz : np.ndarray, shape=[n_frames, n_atoms, 3], dtype=float
@@ -15,6 +13,10 @@ def bond_angles_xyz(xyz, angle_indices):
     Returns
     -------
     angles : np.ndarray, shape=[n_frames, n_angles], dtype=float
+
+    Notes
+    -----
+    This is a reference single threaded implementation in python/numpy.
     """
     
     n_frames = xyz.shape[0]

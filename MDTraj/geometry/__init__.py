@@ -1,3 +1,3 @@
-__all__ = ["rg", "angle"]
+__all__ = ["rg", "angle", "contact"]
 
-import rg, angle
+import rg, angle, contact
