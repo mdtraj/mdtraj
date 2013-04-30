@@ -47,17 +47,13 @@ def test_box():
     yield lambda: eq(t.unitcell_parameters, None)
 
     t.unitcell_vectors = np.array([[1,0,0], [0,1,0], [0,0,1]]).reshape(1,3,3)
-    yield lambda: eq(1.0, float(t.unitcell_parameters['a'][0]))
-    yield lambda: eq(1.0, float(t.unitcell_parameters['b'][0]))
-    yield lambda: eq(1.0, float(t.unitcell_parameters['c'][0]))
-    yield lambda: eq(90.0, float(t.unitcell_parameters['alpha'][0]))
-    yield lambda: eq(90.0, float(t.unitcell_parameters['beta'][0]))
-    yield lambda: eq(90.0, float(t.unitcell_parameters['gamma'][0]))
-
+    yield lambda: eq(np.array([1.0, 1.0, 1.0]), float(t.unitcell_lengths[0]))
+    yield lambda: eq(np.array([90.0, 90.0, 90.0]), float(t.unitcell_angles[0]))
 
 def test_load_pdb_box():
     t = load(get_fn('native2.pdb'))
-    yield lambda: eq(tuple(t.unitcell_parameters[0]), (0.1, 0.2, 0.3, 90.0, 90.0, 90.0))
+    yield lambda: eq(tuple(t.unitcell_lengths[0]), (0.1, 0.2, 0.3))
+    yield lambda: eq(tuple(t.unitcell_angles[0]), (90.0, 90.0, 90.0))
     yield lambda: eq(t.unitcell_vectors[0], np.array([[0.1,0,0], [0,0.2,0], [0,0,0.3]]))
 
 

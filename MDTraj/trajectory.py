@@ -21,7 +21,7 @@ import tables
 from mdtraj import dcd, xtc, binpos, trr
 from mdtraj.pdb import pdbfile
 from mdtraj import io
-from mdtraj.utils import unitcell
+from mdtraj.utils import unitcell, arrays
 import mdtraj.topology
 import functools
 from itertools import izip
@@ -184,13 +184,12 @@ def load_pdb(filename):
 
     if f.topology.getUnitCellDimensions() is not None:
         a, b, c = f.topology.getUnitCellDimensions()
-        unitcell_params = np.recarray((1,),
-                dtype=[('a', '<f8'), ('b', '<f8'), ('c', '<f8'),
-                       ('alpha', '<f8'), ('beta', '<f8'), ('gamma', '<f8')])
         # we need to convert the distances from angstroms to nanometers
-        unitcell_params[0] = (a / 10.0, b / 10.0, c / 10.0, 90.0, 90.0, 90.0)
+        unitcell_lengths = np.array([[a / 10.0, b / 10.0, c / 10.0]])
+        unitcell_angles = np.array([[90.0, 90.0, 90.0]])
 
-        trajectory.unitcell_parameters = unitcell_params
+        trajectory.unitcell_lengths = unitcell_lengths
+        trajectory.unitcell_angles = unitcell_angles
 
     return trajectory
 
@@ -310,15 +309,8 @@ def load_dcd(filename, top=None):
     box_length /= 10.  # convert from anstroms to nanometer
 
     trajectory = Trajectory(xyz=xyz, topology=topology)
-    unitcell = np.recarray((len(xyz),), dtype=[('a', '<f8'), ('b', '<f8'), ('c', '<f8'),
-                                               ('alpha', '<f8'), ('beta', '<f8'), ('gamma', '<f8')])
-    unitcell['a'] = box_length[:, 0]
-    unitcell['b'] = box_length[:, 1]
-    unitcell['c'] = box_length[:, 2]
-    unitcell['alpha'] = box_angle[:, 0]
-    unitcell['beta'] = box_angle[:, 1]
-    unitcell['gamma'] = box_angle[:, 2]
-    trajectory.unitcell_parameters = unitcell
+    trajectory.unitcell_lengths = box_length
+    trajectory.unitcell_angles = box_angle
 
     return trajectory
 
@@ -559,16 +551,16 @@ class Trajectory(object):
             in frame `i` are given by the three vectors, value[i, 0, :],
             `value[i, 1, :]`, and `value[i, 2, :]`.
         """
-        if self._unitcell_parameters is None:
+        if self._unitcell_lengths is None or self._unitcell_angles is None:
             return None
 
         v1, v2, v3 = unitcell.lengths_and_angles_to_box_vectors(
-            self._unitcell_parameters['a'],
-            self._unitcell_parameters['b'],
-            self._unitcell_parameters['c'],
-            self._unitcell_parameters['alpha'] * np.pi / 180,
-            self._unitcell_parameters['beta']  * np.pi / 180,
-            self._unitcell_parameters['gamma']  * np.pi / 180,
+            self._unitcell_lengths[:, 0],  # a
+            self._unitcell_lengths[:, 1],  # b
+            self._unitcell_lengths[:, 2],  # c
+            self._unitcell_angles[:, 0],   # alpha
+            self._unitcell_angles[:, 1],   # beta
+            self._unitcell_angles[:, 2],   # gamma
         )
         return np.swapaxes(np.dstack((v1, v2, v3)), 1, 2)
 
@@ -585,7 +577,8 @@ class Trajectory(object):
             `value[i, 1, :]`, and `value[i, 2, :]`.
         """
         if vectors is None:
-            self._unitcell_parameters = None
+            self._unitcell_lengths = None
+            self._unitcell_angles = None
             return
 
         if not len(vectors) == len(self):
@@ -597,25 +590,17 @@ class Trajectory(object):
         v3 = vectors[:, 2, :]
         a, b, c, alpha, beta, gamma = unitcell.box_vectors_to_lengths_and_angles(v1, v2, v3)
 
-        self._unitcell_parameters = np.recarray((len(self),),
-            dtype=[('a', '<f8'), ('b', '<f8'), ('c', '<f8'),
-                   ('alpha', '<f8'), ('beta', '<f8'), ('gamma', '<f8')])
-
-        self._unitcell_parameters['a'] = a
-        self._unitcell_parameters['b'] = b
-        self._unitcell_parameters['c'] = c
-        self._unitcell_parameters['alpha'] = alpha * 180 / np.pi
-        self._unitcell_parameters['beta'] = beta * 180 / np.pi
-        self._unitcell_parameters['gamma'] = gamma * 180 / np.pi
+        self._unitcell_lengths = np.vstack((a, b, c)).T
+        self._unitcell_angles =  np.vstack((alpha, beta, gamma)).T
 
     @property
-    def unitcell_parameters(self):
-        """Get the six parameters, (a, b, c, \alpha, \beta, \gamma) that define
-        the shape of the unit cell in each frame
+    def unitcell_lengths(self):
+        """Get the lengths that define the shape of the unit
+        cell in each frame.
 
         Returns
         -------
-        parameters : np.recarray, dype=[('a', float), ('b', float), ('c', float), ('alpha', float), ('beta', float), ('gamma', float)]
+        lengths : np.ndarray, shape=(n_frames, 3)
             Parameters describing the shape of the unit cell in each frame. The
             return value is a six field  record array. The records 'a', 'b', and 'c'
             give the length of the three unit cell vectors, 'alpha' gives the
@@ -623,43 +608,51 @@ class Trajectory(object):
             vectors **c** and **a**, and gamma gives the angle between vectors
             **a** and **b**. The angles are in degrees.
         """
-        return self._unitcell_parameters
+        return self._unitcell_lengths
 
-    @unitcell_parameters.setter
-    def unitcell_parameters(self, value):
-        """Set the six parameters, (a, b, c, \alpha, \beta, \gamma) that define
-        the shape of the unit cell in each frame
+    @property
+    def unitcell_angles(self):
+        """Get the angles that define the shape of the unit
+        cell in each frame.
+
+        Returns
+        -------
+        lengths : np.ndarray, shape=(n_frames, 3)
+            'alpha' gives the angle between vectors **b** and **c**, beta
+            gives the angle between vectors **c** and **a**, and gamma gives
+            the angle between vectors **a** and **b**. The angles are in
+            degrees.
+        """
+        return self._unitcell_angles
+
+    @unitcell_lengths.setter
+    def unitcell_lengths(self, value):
+        """Set the lengths that define the shape of the unit cell in each frame
 
         Parameters
         ----------
-        value : np.recarray, dype=[('a', float), ('b', float), ('c', float), ('alpha', float), ('beta', float), ('gamma', float)]
+        value : np.ndarray, shape=(n_frames, 3)
+            The distances a, b, and c that define the shape of the unit cell in
+            each frame.
         """
-        if value is None:
-            self._unitcell_parameters = None
-            return
+        self._unitcell_lengths = arrays.ensure_type(value, np.float32, 3,
+            'unitcell_lengths', can_be_none=True, shape=(len(self), 3),
+            warn_on_cast=False)
 
+    @unitcell_angles.setter
+    def unitcell_angles(self, value):
+        """Set the lengths that define the shape of the unit cell in each frame
 
-        correct_dtype = np.dtype([('a', '<f8'), ('b', '<f8'), ('c', '<f8'),
-                                  ('alpha', '<f8'), ('beta', '<f8'), ('gamma', '<f8')])
-        if not value.dtype == correct_dtype:
-            raise TypeError('unitcell_parameters must be a six field recarray '
-                'with dtype %s' % correct_dtype)
+        Parameters
+        ----------
+        value : np.ndarray, shape=(n_frames, 3)
+            The angles alpha, beta and gamma that define the shape of the
+            unit cell in each frame. The angles should be in **degrees*
+        """
+        self._unitcell_angles = arrays.ensure_type(value, np.float32, 3,
+            'unitcell_angles', can_be_none=True, shape=(len(self), 3),
+            warn_on_cast=False)
 
-        if isinstance(value, np.core.records.record) and len(self) == 1:
-            # if this is a length 1 array, then you can provide a single
-            # record instead of an array of records. this helps make slicing
-            # work sensibly
-            value = np.array([value], dtype=value.dtype)
-
-        if not len(value) == len(self):
-            raise TypeError('unitcell_parameters must be the same length as '
-                            'the trajectory. you provided %s' % value)
-
-        if np.all(value['alpha'] < 2*np.pi) and np.all(value['beta'] < 2*np.pi) and np.all(value['gamma'] < 2*np.pi):
-            warnings.warn('All of the angles you provided are less than 2*pi. '
-                'Did you give me radians? I want degrees.')
-
-        self._unitcell_parameters = value
 
     @property
     def xyz(self):
@@ -721,7 +714,9 @@ class Trajectory(object):
             if not mdtraj.topology.equal(self.topology, other.topology):
                 raise ValueError('The topologies are not the same')
 
-        unitcell_parameters2 = None
+        lengths2 = None
+        angles2 = None
+        other_has_unitcell = (other.unitcell_lengths is not None and other.unitcell_angles is not None)
 
         if discard_overlapping_frames:
             x0 = self.xyz[-1]
@@ -729,29 +724,32 @@ class Trajectory(object):
             if np.linalg.norm(x1 - x0) < 1e-8:
                 xyz = other.xyz[1:]
                 time = other.time[1:]
-                if other.unitcell_parameters is not None:
-                    unitcell_parameters2 = other.unitcell_parameters[1:]
+                if other_has_unitcell:
+                    lengths2 = other.unitcell_lengths[1:]
+                    angles2 = other.unitcell_angles[1:]
         else:
             xyz = other.xyz
             time = other.time
-            if other.unitcell_parameters is not None:
-                unitcell_parameters2 = other.unitcell_parameters
+            if other_has_unitcell:
+                lengths2 = other.unitcell_lengths[1:]
+                angles2 = other.unitcell_angles[1:]
 
         xyz = np.concatenate((self.xyz, xyz))
         time = np.concatenate((self.time, time))
 
-        if self.unitcell_parameters is None and unitcell_parameters2 is None:
-            unitcell_parameters = None
-        elif self.unitcell_parameters is not None and unitcell_parameters2 is not None:
-            unitcell_parameters = np.concatenate((self.unitcell_parameters,
-                                                  unitcell_parameters2))
+        if self.unitcell_lengths is None and self.unitcell_angles is None and not other_has_unitcell:
+            lengths, angles = None, None
+        elif self.unitcell_lengths is not None and self.unitcell_angles is not None and other_has_unitcell:
+            lengths = np.concatenate((self.unitcell_lengths, lengths2))
+            angles = np.concatenate((self.unitcell_angles, angles2))
         else:
             raise ValueError("One trajectory has box size, other doesn't. "
                              "I don't know what to do")
 
         # use this syntax so that if you subclass Trajectory,
         # the subclass's join() will return an instance of the subclass
-        return self.__class__(xyz, deepcopy(self.topology), time, unitcell_parameters)
+        return self.__class__(xyz, deepcopy(self.topology), time=time,
+            unitcell_lengths=lengths, unitcell_angles=angles)
 
     def __getitem__(self, key):
         "Get a slice of this trajectory"
@@ -776,31 +774,34 @@ class Trajectory(object):
         """
         xyz = self.xyz[key]
         time = self.time[key]
-        if self.unitcell_parameters is not None:
-            unitcell_parameters = self.unitcell_parameters[key]
-        else:
-            unitcell_parameters = None
+        unitcell_lengths, unitcell_angles = None, None
+        if self.unitcell_angles is not None:
+            unitcell_angles = self.unitcell_angles[key]
+        if self.unitcell_lengths is not None:
+            unitcell_lengths = self.unitcell_lengths[key]
 
         if copy:
             xyz = xyz.copy()
             time = time.copy()
             topology = deepcopy(self.topology)
 
-            if self.unitcell_parameters is not None:
-                unitcell_parameters = unitcell_parameters.copy()
+            if self.unitcell_angles is not None:
+                unitcell_angles = unitcell_angles.copy()
+            if self.unitcell_lengths is not None:
+                unitcell_lengths = unitcell_lengths.copy()
 
-        newtraj = self.__class__(xyz, topology, time, unitcell_parameters)
+        newtraj = self.__class__(xyz, topology, time, unitcell_lengths=unitcell_lengths,
+                                 unitcell_angles=unitcell_angles)
         return newtraj
 
 
-    def __init__(self, xyz, topology, time=None, unitcell_parameters=None):
+    def __init__(self, xyz, topology, time=None, unitcell_lengths=None, unitcell_angles=None):
         self.xyz = xyz
         self.topology = topology
 
         # box has no default, it'll just be none normally
-        self._unitcell_parameters = None
-        if unitcell_parameters is not None:
-            self.unitcell_parameters = unitcell_parameters
+        self._unitcell_lengths = unitcell_lengths
+        self._unitcell_angles = unitcell_angles
 
         # time will take the default 1..N
         if time is None:
@@ -853,13 +854,11 @@ class Trajectory(object):
         if not HAVE_OPENMM:
             raise ImportError('OpenMM was not imported')
 
-        if self.unitcell_parameters is None:
+        vectors = self[frame].unitcell_vectors
+        if vectors is None:
             raise ValueError("this trajectory does not contain box size information")
 
-        params = self.unitcell_parameters[frame]
-        v1, v2, v3 = unitcell.lengths_and_angles_to_box_vectors(params['a'], params['b'], params['c'],
-            params['alpha']*np.pi/180, params['beta']*np.pi/180, params['gamma']*np.pi/180)
-
+        v1, v2, v3 = self[frame].unitcell_vectors
         return (Vec3(*v1), Vec3(*v2), Vec3(*v3)) * nanometer
 
 
@@ -962,14 +961,12 @@ class Trajectory(object):
         topology = self.topology
 
         # convert to angstroms
-        if self.unitcell_parameters is not None:
-            a = 10*self.unitcell_parameters['a'][0]
-            b = 10*self.unitcell_parameters['b'][0]
-            c = 10*self.unitcell_parameters['c'][0]
+        if self.unitcell_lengths is not None and self.unitcell_angles is not None:
+            a, b, c = 10*self.unitcell_lengths[0]
 
-            if (np.abs(self.unitcell_parameters['alpha'][0] - 90.0) > 1e-8 or
-                    np.abs(self.unitcell_parameters['beta'][0] - 90.0) > 1e-8 or
-                    np.abs(self.unitcell_parameters['gamma'][0] - 90.0) > 1e-8):
+            if (np.abs(self.unitcell_angles[0, 0] - 90.0) > 1e-8 or
+                    np.abs(self.unitcell_angles[0, 1] - 90.0) > 1e-8 or
+                    np.abs(self.unitcell_angles[0, 2] - 90.0) > 1e-8):
                 warnings.warn('Unit cell information not saved correctly to PDB')
 
             topology.setUnitCellDimensions((a,b,c))
@@ -1040,21 +1037,12 @@ class Trajectory(object):
         """
         # convert from internal nm representation to angstroms for output
         xyz = self.xyz * 10
-
-        if self.unitcell_parameters is None:
-            box_lengths = None
-            box_angles = None
-        else:
-            # make sure the output is in angstroms
-            box_lengths = np.vstack((self.unitcell_parameters['a'],
-                       self.unitcell_parameters['b'],
-                       self.unitcell_parameters['c'])).T * 10
-            box_angles = np.vstack((self.unitcell_parameters['alpha'],
-                       self.unitcell_parameters['beta'],
-                       self.unitcell_parameters['gamma'])).T
+        lengths = self.unitcell_lengths
+        if lengths is not None:
+            lengths = lengths * 10
 
         return dcd.write(filename, xyz, force_overwrite=force_overwrite,
-            box_lengths=box_lengths, box_angles=box_angles)
+            box_lengths=lengths, box_angles=self.unitcell_angles)
 
     def save_binpos(self, filename, force_overwrite=True):
         """
