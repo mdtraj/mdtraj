@@ -71,3 +71,17 @@ def test_dihedral_indices():
     rid, ind = mdtraj.geometry.dihedral._get_indices_psi(traj)
     eq(ind[0], psi0_ind)
     eq(int(rid[0]), 0)
+
+
+def test_dihedral():
+    """We compared phi and psi angles from pymol to MDTraj output."""
+    traj = load(get_fn('1bpi.pdb'))
+    rid, phi = mdtraj.geometry.dihedral.calculate_phi(traj)
+    phi0 = np.array([-34.50956, -50.869690]) * np.pi / 180.  # Pymol
+    eq(phi[0,0:2], phi0, decimal=4)
+    eq(int(rid[0]), 1)
+
+    rid, psi = mdtraj.geometry.dihedral.calculate_psi(traj)
+    psi0 = np.array([134.52554, 144.880173]) * np.pi / 180.  # Pymol
+    eq(psi[0,0:2], psi0, decimal=4)
+    eq(int(rid[0]), 0)

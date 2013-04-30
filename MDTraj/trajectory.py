@@ -643,7 +643,7 @@ class Trajectory(object):
 
     @property
     def n_residues(self):
-        return len([r for r in self.top.residues()])
+        return sum([1 for r in self.top.residues()])
 
     @property
     def top(self):

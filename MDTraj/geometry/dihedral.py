@@ -18,7 +18,7 @@ def get_angle(a, b):
     The shapes of a and b must be identical.  Also, the (xyz) axis must
     be the last axis.  
     """
-    return np.arccos((a * b).sum(-1))
+    return -1. * np.arccos((a * b).sum(-1))
 
 def normed_cross(a, b):
     """Compute the normalized cross product between arrays of vectors a and b.
@@ -58,13 +58,18 @@ def compute_dihedrals(traj, indices):
 
     """
     x = traj.xyz
-    v1 = normed_cross(x[:, indices[:,0]],x[:, indices[:,1]])
-    v2 = normed_cross(x[:, indices[:,1]],x[:, indices[:,2]])
-    v3 = normed_cross(x[:, indices[:,2]],x[:, indices[:,3]])
+    x0 = x[:, indices[:,0]]
+    x1 = x[:, indices[:,1]]
+    x2 = x[:, indices[:,2]]
+    x3 = x[:, indices[:,3]]    
+            
+    v0 = x1 - x0
+    v1 = x2 - x1
+    v2 = x3 - x2
 
+    v0v1 = normed_cross(v0, v1)
     v1v2 = normed_cross(v1, v2)
-    v2v3 = normed_cross(v2, v3)
-    return get_angle(v1v2, v2v3)
+    return get_angle(v0v1, v1v2)
     
 def _construct_atom_dict(traj):
     """Create dictionary to lookup indices by atom name and residue_id."""
@@ -94,11 +99,10 @@ def atom_sequence_finder(traj, atom_names, rid_offsets):
     match *general* sequences of atoms and residue_id offsets.
     """
     atom_dict = _construct_atom_dict(traj)
-    num_residues = len([x for x in traj.top.residues()])
     indices = []
     found_rid = []
     atoms_and_offsets = zip(atom_names, rid_offsets)
-    for rid in xrange(num_residues):
+    for rid in xrange(traj.n_residues):
         if all([atom_dict.has_key(rid + offset) for offset in rid_offsets]):  # Check that desired residue_IDs are in dict
             if all([atom_dict[rid + offset].has_key(atom) for atom, offset in atoms_and_offsets]):  # Check that we find all atom names in dict
                 indices.append([atom_dict[rid + offset][atom] for atom, offset in atoms_and_offsets])  # Lookup desired atom indices and and add to list.

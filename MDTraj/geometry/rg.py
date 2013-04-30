@@ -1,6 +1,6 @@
 import numpy as np
 
-def calculate_rg_xyz(xyz, masses=None):
+def _calculate_rg_xyz(xyz, masses=None):
     """Compute the Rg for every frame.
 
     Parameters
@@ -55,4 +55,4 @@ def calculate_rg(traj, masses=None):
     -----
     If masses are none, assumes equal masses.
     """    
-    return calculate_rg_xyz(traj.xyz, masses=masses)
+    return _calculate_rg_xyz(traj.xyz, masses=masses)
