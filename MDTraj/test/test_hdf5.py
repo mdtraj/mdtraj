@@ -12,6 +12,7 @@ def test_write_coordinates():
         yield lambda: eq(f.root.coordinates[:], coordinates)
         yield lambda: eq(str(f.root.coordinates.attrs['units']), 'nanometers')
 
+
 def test_write_coordinates_reshape():
     coordinates = np.random.randn(10,3)
     with HDF5Trajectory('f.h5', 'w') as f:
@@ -85,3 +86,75 @@ def test_topology():
     
     with HDF5Trajectory('f.h5') as f:
         topology.equal(f.topology, top)
+
+
+def test_read_0():
+    coordinates = np.random.randn(4, 10,3)
+    with HDF5Trajectory('f.h5', 'w') as f:
+        f.write(coordinates, lambdaValue=np.array([1,2,3,4]))
+
+    with HDF5Trajectory('f.h5') as f:
+        got = f.read()
+        yield lambda: eq(got.coordinates, coordinates)
+        yield lambda: eq(got.velocities, None)
+        yield lambda: eq(got.lambdaValue, np.array([1,2,3,4]))
+
+
+def test_read_1():
+    import simtk.unit as units
+    coordinates = units.Quantity(np.random.randn(4, 10,3), units.angstroms)
+    velocities = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.years)
+
+
+    with HDF5Trajectory('f.h5', 'w') as f:
+        f.write(coordinates, velocities=velocities)
+
+    with HDF5Trajectory('f.h5') as f:
+        got = f.read()
+        yield lambda: eq(got.coordinates, coordinates.value_in_unit(units.nanometers))
+        yield lambda: eq(got.velocities, velocities.value_in_unit(units.nanometers/units.picoseconds))
+
+def test_read_slice_0():
+    coordinates = np.random.randn(4, 10,3)
+    with HDF5Trajectory('f.h5', 'w') as f:
+        f.write(coordinates, lambdaValue=np.array([1,2,3,4]))
+
+    with HDF5Trajectory('f.h5') as f:
+        got = f.read(n_frames=2)
+        yield lambda: eq(got.coordinates, coordinates[:2])
+        yield lambda: eq(got.velocities, None)
+        yield lambda: eq(got.lambdaValue, np.array([1,2]))
+        
+def test_read_slice_1():
+    coordinates = np.random.randn(4, 10,3)
+    with HDF5Trajectory('f.h5', 'w') as f:
+        f.write(coordinates)
+
+    with HDF5Trajectory('f.h5') as f:
+        got = f.read(n_frames=2)
+        yield lambda: eq(got.coordinates, coordinates[:2])
+        yield lambda: eq(got.velocities, None)
+
+        got = f.read(n_frames=2)
+        yield lambda: eq(got.coordinates, coordinates[2:])
+        yield lambda: eq(got.velocities, None)
+
+def test_read_slice_2():
+    coordinates = np.random.randn(4, 10,3)
+    with HDF5Trajectory('f.h5', 'w') as f:
+        f.write(coordinates, lambdaValue=np.arange(4))
+
+    with HDF5Trajectory('f.h5') as f:
+        got = f.read(atom_indices=np.array([0,1]))
+        yield lambda: eq(got.coordinates, coordinates[:, [0,1], :])
+        yield lambda: eq(got.lambdaValue, np.arange(4))
+
+def test_read_slice_3():
+    coordinates = np.random.randn(4, 10,3)
+    with HDF5Trajectory('f.h5', 'w') as f:
+        f.write(coordinates, lambdaValue=np.arange(4))
+
+    with HDF5Trajectory('f.h5') as f:
+        got = f.read(stride=2, atom_indices=np.array([0,1]))
+        yield lambda: eq(got.coordinates, coordinates[::2, [0,1], :])
+        yield lambda: eq(got.lambdaValue, np.arange(4)[::2])

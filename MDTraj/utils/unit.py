@@ -3,11 +3,17 @@
 ##############################################################################
 
 import ast
+import warnings
+
 try:
     import simtk.unit as units
     HAVE_UNIT = True
 except ImportError:
     HAVE_UNIT = False
+    warnings.warn('The package simtk.unit was not imported, which means that'
+                  'no unit processing will be done. Please install OpenMM to '
+                  'get access to automatic unit conversion and validation. It '
+                  'is highly recommended.')
 
 
 class _UnitContext(ast.NodeTransformer):
@@ -88,8 +94,8 @@ def in_units_of(quantity, units_out, units_in=None):
         
     Examples
     --------
-    >>> str(_in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond'))
-    '1000000.0 nm**2/ps'
+    >>> str(in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond'))
+    '1000000.0'
     """
     if quantity is None or not HAVE_UNIT:
         return quantity
@@ -99,5 +105,5 @@ def in_units_of(quantity, units_out, units_in=None):
     else:
         if units_in is None:
             return quantity
-        united_quantity = unit.Quantity(quantity, _str_to_units(units_in))
-        united_quantity.value_in_unit(_str_to_unit(units_out))
+        united_quantity = units.Quantity(quantity, _str_to_unit(units_in))
+        return united_quantity.value_in_unit(_str_to_unit(units_out))

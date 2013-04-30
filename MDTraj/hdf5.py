@@ -24,28 +24,20 @@ https://github.com/rmcgibbo/mdtraj/issues/36
 
 import sys
 import operator
+from collections import namedtuple
+
 try:
     import simplejson as json
 except ImportError:
     import json
-import numpy as np
 
+import numpy as np
 
 from mdtraj import version
 import mdtraj.pdb.element as elem
 from mdtraj.topology import Topology
 from mdtraj.utils.unit import in_units_of
 from mdtraj.utils.arrays import ensure_type
-
-try:
-    import simtk.unit as units
-    HAVE_UNIT = True
-except ImportError:
-    HAVE_UNIT = False
-    warnings.warn('The package simtk.unit was not imported, which means that'
-                  'no unit processing will be done. Please install OpenMM to '
-                  'get access to automatic unit conversion and validation. It '
-                  'is highly recommended.')
 
 
 def import_tables():
@@ -108,6 +100,10 @@ def ensure_mode(*m):
         return wrapper
     return inner
 
+
+Frames = namedtuple('Frames', ['coordinates', 'time', 'cell_lengths', 'cell_angles',
+                               'velocities', 'kineticEnergy', 'potentialEnergy',
+                               'temperature', 'lambdaValue'])
 
 ##############################################################################
 # Classes
@@ -214,7 +210,7 @@ class HDF5Trajectory(object):
                 residue = topology.addResidue(residue_dict['name'], chain)
                 for atom_dict in sorted(residue_dict['atoms'], key=operator.itemgetter('index')):
                     try:
-                        element =  elem.get_by_symbol(atom_dict['element'])
+                        element = elem.get_by_symbol(atom_dict['element'])
                     except KeyError:
                         raise ValueError('The symbol %s isn\'t a valid element' % atom_dict['element'])
                     topology.addAtom(atom_dict['name'], element, residue)
@@ -354,13 +350,96 @@ class HDF5Trajectory(object):
 
     @ensure_mode('r')
     def read(self, n_frames=None, stride=None, atom_indices=None):
-        raise NotImplementedError
+        """Read one or more frames of data from the file
+
+        Parameters
+        ----------
+        n_frames : {int, None}
+            The number of frames to read. If not supplied, all of the
+            remaining frames will be read.
+        stride : {int, None}
+            By default all of the frames will be read, but you can pass this
+            flag to read a subset of of the data by grabbing only every
+            `stride`-th frame from disk.
+        atom_indices : {int, None}
+            By default all of the atom  will be read, but you can pass this
+            flag to read only a subsets of the atoms for the `coordinates` and
+            `velocities` fields. Note that you will have to carefully manage
+            the indices and the offsets, since the `i`-th atom in the topology
+            will not necessarily correspond to the `i`-th atom in your subset.
+
+        Notes
+        -----
+        If you'd like more flexible access to the data, that is available by
+        using the pytables group directly, which is accessible via the
+        `root` property on this class.
+
+        Returns
+        -------
+        frames : namedtuple with fields "coordinates", "time", "cell_lengths",
+                "cell_angles", "velocities", "kineticEnergy", "potentialEnergy",
+                "temperature", "lambdaValue"
+            Each of the fields in the returned namedtuple will either be a
+            numpy array or None, dependening on if that data was saved in the
+            trajectory. All of the data shall be in natural MD units, of
+            "nanometers", "picoseconds", and "kilojoules_per_mole".
+        """
+        tables = import_tables()  # our delayed import
+
+        if n_frames is None:
+            n_frames = np.inf
+        if stride is not None:
+            stride = int(stride)
+
+        total_n_frames = len(self._handle.root.coordinates)
+        frame_slice = slice(self._frame_index, self._frame_index + min(n_frames, total_n_frames), stride)
+
+        if atom_indices is None:
+            # get all of the atoms
+            atom_slice = slice(None)
+        else:
+            atom_slice = ensure_type(atom_indices, dtype=np.int, ndim=1,
+                                     name='atom_indices', warn_on_cast=False)
+            if not np.all(atom_slice < self._handle.root.coordinates.shape[1]):
+                raise ValueError('As a zero-based index, the entries in '
+                    'atom_indices must all be less than the number of atoms '
+                    'in the trajectory, %d' % self._handle.root.coordinates.shape[1])
+            if not np.all(atom_slice >= 0):
+                raise ValueError('The entries in atom_indices must be greater '
+                    'than or equal to zero')
+
+        def get_field(name, slice, out_units, can_be_none=True):
+            try:
+                node = self._handle.getNode(where='/', name=name)
+                data = node.__getitem__(slice)
+                data =  in_units_of(data, out_units, str(node.attrs.units))
+                return data
+            except tables.NoSuchNodeError:
+                if can_be_none:
+                    return None
+                raise
+
+        frames = Frames(
+            coordinates = get_field('coordinates', (frame_slice, atom_slice, slice(None)),
+                                    out_units='nanometers', can_be_none=False),
+            time = get_field('time', frame_slice, out_units='picoseconds'),
+            cell_lengths = get_field('cell_lengths', (frame_slice, slice(None)), out_units='nanometers'),
+            cell_angles = get_field('cell_angles', (frame_slice, slice(None)), out_units='degrees'),
+            velocities = get_field('velocities', (frame_slice, atom_slice, slice(None)), out_units='nanometers/picosecond'),
+            kineticEnergy = get_field('kineticEnergy', frame_slice, out_units='kilojoules_per_mole'),
+            potentialEnergy = get_field('potentialEnergy', frame_slice, out_units='kilojoules_per_mole'),
+            temperature = get_field('temperature', frame_slice, out_units='kelvin'),
+            lambdaValue = get_field('lambda', frame_slice, out_units='dimensionless')
+        )
+
+        self._frame_index += min(n_frames, total_n_frames)
+        return frames
 
     @ensure_mode('w', 'a')
     def write(self, coordinates, time=None, cell_lengths=None, cell_angles=None,
                     velocities=None, kineticEnergy=None, potentialEnergy=None,
-                    temperature=None, lambdaValues=None):
-        """Write one or more frames of data to a HDF5 trajectory file
+                    temperature=None, lambdaValue=None):
+        """Write one or more frames of data to the file
 
         This method saves data that is associated with a single simulation
         frame. To save global attributes, use the methods
@@ -390,7 +469,7 @@ class HDF5Trajectory(object):
         kineticEnergy = in_units_of(kineticEnergy, 'kilojoules_per_mole')
         potentialEnergy = in_units_of(potentialEnergy, 'kilojoules_per_mole')
         temperature = in_units_of(temperature, 'kelvin')
-        lambdaValues = in_units_of(lambdaValues, 'dimensionless')
+        lambdaValue = in_units_of(lambdaValue, 'dimensionless')
 
         # do typechecking and shapechecking on the arrays
         # this ensure_type method has a lot of options, but basically it lets
@@ -425,8 +504,8 @@ class HDF5Trajectory(object):
         temperature = ensure_type(temperature, dtype=np.float32, ndim=1,
             name='temperature', shape=(n_frames,), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
-        lambdaValues = ensure_type(lambdaValues, dtype=np.float32, ndim=1,
-            name='lambdaValues', shape=(n_frames,), can_be_none=True,
+        lambdaValue = ensure_type(lambdaValue, dtype=np.float32, ndim=1,
+            name='lambdaValue', shape=(n_frames,), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
 
         # if this is our first call to write(), we need to create the headers
@@ -441,7 +520,7 @@ class HDF5Trajectory(object):
                 set_kineticEnergy=(kineticEnergy is not None),
                 set_potentialEnergy=(potentialEnergy is not None),
                 set_temperature=(temperature is not None),
-                set_lambdaValues=(lambdaValues is not None))
+                set_lambdaValue=(lambdaValue is not None))
             self._needs_initialization = False
 
             # we need to check that that the entries that the user is trying
@@ -466,10 +545,10 @@ class HDF5Trajectory(object):
 
 
             # lambda is different, since the name in the file is lambda
-            # but the name in this python function is lambdaValues
+            # but the name in this python function is lambdaValue
             name = 'lambda'
-            if lambdaValues is not None:
-                self._handle.getNode(where='/', name=name).append(lambdaValues)
+            if lambdaValue is not None:
+                self._handle.getNode(where='/', name=name).append(lambdaValue)
             else:
                 try:
                     self._handle.getNode(where='/', name=name)
@@ -488,7 +567,7 @@ class HDF5Trajectory(object):
             raise ValueError("The file that you're saving to expects each frame "
                             "to contain %s information, but you did not supply it."
                             "I don't allow 'ragged' arrays. If one frame is going "
-                            "to have %s information, then I expect all of them to. " \
+                            "to have %s information, then I expect all of them to. "
                             % (name, name))
 
         self._frame_index += n_frames
@@ -496,7 +575,7 @@ class HDF5Trajectory(object):
 
     def _initialize_headers(self, n_atoms, set_coordinates, set_time, set_cell,
                             set_velocities, set_kineticEnergy, set_potentialEnergy,
-                            set_temperature, set_lambdaValues):
+                            set_temperature, set_lambdaValue):
         tables = import_tables()
         self._n_atoms = n_atoms
 
@@ -550,10 +629,17 @@ class HDF5Trajectory(object):
                 atom=tables.Float32Atom(), shape=(0,))
             self._handle.root.temperature.attrs['units'] = 'Kelvin'
 
-        if set_lambdaValues:
+        if set_lambdaValue:
             self._handle.createEArray(where='/', name='lambda',
                 atom=tables.Float32Atom(), shape=(0,))
             self._handle.getNode('/', name='lambda').attrs['units'] = 'dimensionless'
+
+    def _validate(self):
+        raise NotImplemented
+
+        # check that all of the shapes are consistent
+        # check that everything has units
+
 
     def close(self):
         "Close the file handle"
