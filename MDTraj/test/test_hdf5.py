@@ -105,13 +105,13 @@ def test_topology():
 def test_read_0():
     coordinates = np.random.randn(4, 10,3)
     with HDF5Trajectory(temp, 'w') as f:
-        f.write(coordinates, lambdaValue=np.array([1,2,3,4]))
+        f.write(coordinates, alchemicalLambda=np.array([1,2,3,4]))
 
     with HDF5Trajectory(temp) as f:
         got = f.read()
         yield lambda: eq(got.coordinates, coordinates)
         yield lambda: eq(got.velocities, None)
-        yield lambda: eq(got.lambdaValue, np.array([1,2,3,4]))
+        yield lambda: eq(got.alchemicalLambda, np.array([1,2,3,4]))
 
 
 @np.testing.decorators.skipif(not HAVE_UNITS)
@@ -131,13 +131,13 @@ def test_read_1():
 def test_read_slice_0():
     coordinates = np.random.randn(4, 10,3)
     with HDF5Trajectory(temp, 'w') as f:
-        f.write(coordinates, lambdaValue=np.array([1,2,3,4]))
+        f.write(coordinates, alchemicalLambda=np.array([1,2,3,4]))
 
     with HDF5Trajectory(temp) as f:
         got = f.read(n_frames=2)
         yield lambda: eq(got.coordinates, coordinates[:2])
         yield lambda: eq(got.velocities, None)
-        yield lambda: eq(got.lambdaValue, np.array([1,2]))
+        yield lambda: eq(got.alchemicalLambda, np.array([1,2]))
         
 def test_read_slice_1():
     coordinates = np.random.randn(4, 10,3)
@@ -156,19 +156,19 @@ def test_read_slice_1():
 def test_read_slice_2():
     coordinates = np.random.randn(4, 10,3)
     with HDF5Trajectory(temp, 'w') as f:
-        f.write(coordinates, lambdaValue=np.arange(4))
+        f.write(coordinates, alchemicalLambda=np.arange(4))
 
     with HDF5Trajectory(temp) as f:
         got = f.read(atom_indices=np.array([0,1]))
         yield lambda: eq(got.coordinates, coordinates[:, [0,1], :])
-        yield lambda: eq(got.lambdaValue, np.arange(4))
+        yield lambda: eq(got.alchemicalLambda, np.arange(4))
 
 def test_read_slice_3():
     coordinates = np.random.randn(4, 10,3)
     with HDF5Trajectory(temp, 'w') as f:
-        f.write(coordinates, lambdaValue=np.arange(4))
+        f.write(coordinates, alchemicalLambda=np.arange(4))
 
     with HDF5Trajectory(temp) as f:
         got = f.read(stride=2, atom_indices=np.array([0,1]))
         yield lambda: eq(got.coordinates, coordinates[::2, [0,1], :])
-        yield lambda: eq(got.lambdaValue, np.arange(4)[::2])
+        yield lambda: eq(got.alchemicalLambda, np.arange(4)[::2])
