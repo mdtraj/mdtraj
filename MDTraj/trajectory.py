@@ -622,6 +622,10 @@ class Trajectory(object):
         return self._xyz.shape[1]
 
     @property
+    def n_residues(self):
+        return sum([1 for r in self.top.residues()])
+
+    @property
     def top(self):
         return self.topology
 
