@@ -16,11 +16,9 @@ install:
   - sudo apt-get install -qq netcdf-bin libnetcdf-dev
   - sudo apt-get install     python-netcdf
   - sudo apt-get install -qq python-setuptools
+  - sudo easy_install pip
   - sudo easy_install netcdf4
-  
-  - sudo apt-get install subversion
-  - svn checkout https://simtk.org/svn/python_units/trunk
-  - cd trunk; python setup.py install; cd -
+  - sudo pip install git+git://github.com/rmcgibbo/simtk.unit
 
 script:
   - sudo python setup.py -q install
