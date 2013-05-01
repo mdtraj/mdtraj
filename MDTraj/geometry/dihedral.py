@@ -65,7 +65,7 @@ def _construct_atom_dict(top, chain_id=0):
     atom_dict = {}
     for chain in top.chains():
         if chain.index == chain_id:
-            for residue in top.residues():
+            for residue in chain.residues():
                 local_dict = {}
                 for atom in residue.atoms():
                     local_dict[atom.name] = atom.index
@@ -74,7 +74,7 @@ def _construct_atom_dict(top, chain_id=0):
     return atom_dict
 
 
-def atom_sequence_finder(traj, atom_names, rid_offsets=None):
+def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
     """Find sequences of atom indices correponding to desired atoms.
 
     Parameters
@@ -106,15 +106,18 @@ def atom_sequence_finder(traj, atom_names, rid_offsets=None):
         rid_offsets = parse_offsets(atom_names)
     atom_names = strip_offsets(atom_names)
 
-    atom_dict = _construct_atom_dict(traj.top)
+    atom_dict = _construct_atom_dict(traj.top, chain_id=chain_id)
     atom_indices = []
     found_residue_ids = []
     atoms_and_offsets = zip(atom_names, rid_offsets)
-    for rid in xrange(traj.n_residues):
-        if all([rid + offset in atom_dict for offset in rid_offsets]):  # Check that desired residue_IDs are in dict
-            if all([atom in atom_dict[rid + offset] for atom, offset in atoms_and_offsets]):  # Check that we find all atom names in dict
-                atom_indices.append([atom_dict[rid + offset][atom] for atom, offset in atoms_and_offsets])  # Lookup desired atom indices and and add to list.
-                found_residue_ids.append(rid)
+    for chain in traj.top.chains():
+        if chain.index == chain_id:
+            for residue in chain.residues():
+                rid = residue.index
+                if all([rid + offset in atom_dict for offset in rid_offsets]):  # Check that desired residue_IDs are in dict
+                    if all([atom in atom_dict[rid + offset] for atom, offset in atoms_and_offsets]):  # Check that we find all atom names in dict
+                        atom_indices.append([atom_dict[rid + offset][atom] for atom, offset in atoms_and_offsets])  # Lookup desired atom indices and and add to list.
+                        found_residue_ids.append(rid)
 
     atom_indices = np.array(atom_indices)
     found_residue_ids = np.array(found_residue_ids)
