@@ -1,3 +1,4 @@
+import os
 import tempfile
 import numpy as np
 
@@ -15,7 +16,6 @@ from mdtraj import topology
 from mdtraj import trajectory
 from mdtraj.reporters import HDF5Reporter
 from mdtraj.hdf5 import HDF5Trajectory
-
 
 temp = tempfile.mkstemp(suffix='.h5')[1]
 def teardown_module(module):
