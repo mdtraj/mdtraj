@@ -172,25 +172,25 @@ _get_indices_psi = lambda traj: atom_sequence_finder(traj, PSI_ATOMS)
 _get_indices_chi = lambda traj: atom_sequence_finder(traj, CHI_ATOMS)
 
 
-def calculate_phi(traj):
+def compute_phi(traj):
     """Calculate the phi torsions of a trajectory."""
     rid, indices = _get_indices_phi(traj)
     return rid, compute_dihedrals(traj, indices)
 
 
-def calculate_psi(traj):
+def compute_psi(traj):
     """Calculate the psi torsions of a trajectory."""
     rid, indices = _get_indices_psi(traj)
     return rid, compute_dihedrals(traj, indices)
 
 
-def calculate_chi(traj):
+def compute_chi(traj):
     """Calculate the chi torsions of a trajectory."""
     rid, indices = _get_indices_chi(traj)
     return rid, compute_dihedrals(traj, indices)
 
 
-def calculate_omega(traj):
+def compute_omega(traj):
     """Calculate the omega torsions of a trajectory."""
     rid, indices = _get_indices_omega(traj)
     return rid, compute_dihedrals(traj, indices)

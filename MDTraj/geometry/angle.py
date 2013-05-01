@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def _bond_angles_xyz(xyz, angle_indices):
+def _compute_bond_angles_xyz(xyz, angle_indices):
     """Compute the bond angles for each frame in xyz
 
     Parameters
@@ -36,7 +36,7 @@ def _bond_angles_xyz(xyz, angle_indices):
     return angles
 
 
-def bond_angles(traj, angle_indices):
+def compute_bond_angles(traj, angle_indices):
     """Compute the bond angles for each frame in traj
 
     This is a reference single threaded implementation in python/numpy
@@ -52,4 +52,4 @@ def bond_angles(traj, angle_indices):
     -------
     angles : np.ndarray, shape=[n_frames, n_angles], dtype=float
     """
-    return _bond_angles_xyz(traj.xyz, angle_indices)
+    return _compute_bond_angles_xyz(traj.xyz, angle_indices)

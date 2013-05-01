@@ -23,7 +23,7 @@ import mdtraj.trajectory
 
 def test_rg():
     t0 = load(get_fn('frame0.lh5'))
-    Rg = mdtraj.geometry.rg.calculate_rg(t0)
+    Rg = mdtraj.geometry.rg.compute_rg(t0)
     Rg0 = np.loadtxt(get_fn("Rg_frame0_ref.dat"))
     eq(Rg, Rg0)
 
@@ -41,7 +41,7 @@ np.savetxt("Rg_frame0_ref.dat", Rg)
 def test_atom_distances():
     t0 = load(get_fn('frame0.lh5'))
     atom_pairs = np.loadtxt(get_fn("atom_pairs.dat"),'int')
-    distances = mdtraj.geometry.contact.atom_distances(t0, atom_pairs)
+    distances = mdtraj.geometry.contact.compute_atom_distances(t0, atom_pairs)
     distances0 = np.loadtxt(get_fn("atom_distances_frame0_ref.dat"))
     eq(distances, distances0)
 
@@ -93,17 +93,17 @@ def test_dihedral_index_offset_generation():
 def test_dihedral():
     """We compared phi and psi angles from pymol to MDTraj output."""
     traj = load(get_fn('1bpi.pdb'))
-    rid, phi = mdtraj.geometry.dihedral.calculate_phi(traj)
+    rid, phi = mdtraj.geometry.dihedral.compute_phi(traj)
     phi0 = np.array([-34.50956, -50.869690]) * np.pi / 180.  # Pymol
     eq(phi[0,0:2], phi0, decimal=4)
     eq(int(rid[0]), 1)
 
-    rid, psi = mdtraj.geometry.dihedral.calculate_psi(traj)
+    rid, psi = mdtraj.geometry.dihedral.compute_psi(traj)
     psi0 = np.array([134.52554, 144.880173]) * np.pi / 180.  # Pymol
     eq(psi[0,0:2], psi0, decimal=4)
     eq(int(rid[0]), 0)
 
-    rid, chi = mdtraj.geometry.dihedral.calculate_chi(traj)
+    rid, chi = mdtraj.geometry.dihedral.compute_chi(traj)
     chi0 = np.array([-43.37841, -18.14592]) * np.pi / 180.  # Pymol
     eq(chi[0,0:2], chi0, decimal=4)
     eq(int(rid[0]), 0)
