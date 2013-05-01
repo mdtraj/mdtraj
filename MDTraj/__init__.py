@@ -43,4 +43,4 @@ Modules
 """
 
 __all__ = ['binpos', 'dcd', 'io', 'pdb', 'netcdf',
-            'testing', 'trajectory', 'topology', 'reporters']
+            'testing', 'trajectory', 'topology', 'reporters', 'geometry']
