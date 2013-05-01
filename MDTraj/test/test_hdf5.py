@@ -3,6 +3,12 @@ from mdtraj.hdf5 import HDF5Trajectory
 from mdtraj.testing import get_fn, eq
 from nose.tools import assert_raises
 
+try:
+    import simtk.unit as units
+    HAVE_UNITS = True
+except ImportError:
+    HAVE_UNITS = False
+
 def test_write_coordinates():
     coordinates = np.random.randn(4, 10,3)
     with HDF5Trajectory('f.h5', 'w') as f:
@@ -49,26 +55,26 @@ def test_write_inconsistent_2():
             # we're saving a deficient set of data, since before we wrote
             # more information.
             f.write(coordinates)
-            
+
+@np.testing.decorators.skipif(not HAVE_UNITS)
 def test_write_units():
     "simtk.units are automatically converted into MD units for storage on disk"
-    from simtk.unit import angstroms, nanometers, year, picosecond, Quantity
-    coordinates = Quantity(np.random.randn(4, 10,3), angstroms)
-    velocities = Quantity(np.random.randn(4, 10,3), angstroms/year)
+    coordinates = units.Quantity(np.random.randn(4, 10,3), units.angstroms)
+    velocities = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.year)
     
     with HDF5Trajectory('f.h5', 'w') as f:
         f.write(coordinates, velocities=velocities)
 
     with HDF5Trajectory('f.h5') as f:
-        yield lambda: eq(f.root.coordinates[:], coordinates.value_in_unit(nanometers))
+        yield lambda: eq(f.root.coordinates[:], coordinates.value_in_unit(units.nanometers))
         yield lambda: eq(str(f.root.coordinates.attrs['units']), 'nanometers')
         
-        yield lambda: eq(f.root.velocities[:], velocities.value_in_unit(nanometers/picosecond))
+        yield lambda: eq(f.root.velocities[:], velocities.value_in_unit(units.nanometers/units.picosecond))
         yield lambda: eq(str(f.root.velocities.attrs['units']), 'nanometers/picosecond')
 
+@np.testing.decorators.skipif(not HAVE_UNITS)
 def test_write_units_mismatch():
-    from simtk.unit import angstroms, nanometers, picosecond, Quantity
-    velocoties = Quantity(np.random.randn(4, 10,3), angstroms/picosecond)
+    velocoties = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.picosecond)
     
     with HDF5Trajectory('f.h5', 'w') as f:
         with assert_raises(TypeError):
@@ -100,8 +106,8 @@ def test_read_0():
         yield lambda: eq(got.lambdaValue, np.array([1,2,3,4]))
 
 
+@np.testing.decorators.skipif(not HAVE_UNITS)
 def test_read_1():
-    import simtk.unit as units
     coordinates = units.Quantity(np.random.randn(4, 10,3), units.angstroms)
     velocities = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.years)
 

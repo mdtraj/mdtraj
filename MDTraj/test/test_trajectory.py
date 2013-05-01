@@ -67,7 +67,10 @@ def test_box_load_save():
     # cycle, the box information is preserved:
     for temp_fn in [temp1, temp2, temp4, temp5]:
         t.save(temp_fn)
-        t2 = load(temp_fn, top=get_fn('native.pdb'))
+        if temp_fn.endswith('.h5'):
+            t2 = load(temp_fn)
+        else:
+            t2 = load(temp_fn, top=get_fn('native.pdb'))
 
         assert t.unitcell_vectors != None
         yield lambda: eq(t.xyz, t2.xyz, decimal=3)
@@ -78,26 +81,26 @@ def test_box_load_save():
 
 
 def test_hdf1():
-    t0 = load_hdf(fn, top=nat, chunk=1)
-    t1 = load_hdf(fn, top=nat, chunk=10)
-    t2 = load_hdf(fn, top=nat, chunk=100)
+    t0 = load(fn, top=nat, chunk=1)
+    t1 = load(fn, top=nat, chunk=10)
+    t2 = load(fn, top=nat, chunk=100)
 
     yield lambda: eq(t0.xyz, t1.xyz)
     yield lambda: eq(t0.xyz, t2.xyz)
 
 def test_hdf2():
-    t0 = load_hdf(fn, top=nat, chunk=10, stride=10)
-    t1 = load_hdf(fn, top=nat, chunk=20, stride=10)
-    t2 = load_hdf(fn, top=nat, chunk=50, stride=10)
-    t3 = load_hdf(fn, top=nat, chunk=1, stride=1)
+    t0 = load(fn, top=nat, chunk=10, stride=10)
+    t1 = load(fn, top=nat, chunk=20, stride=10)
+    t2 = load(fn, top=nat, chunk=50, stride=10)
+    t3 = load(fn, top=nat, chunk=1, stride=1)
 
     yield lambda: eq(t0.xyz, t1.xyz)
     yield lambda: eq(t0.xyz, t2.xyz)
     yield lambda: eq(t0.xyz, t3.xyz[::10])
 
 def test_hdf_frame():
-    t0 = load_hdf(fn)
-    t1 = load_hdf(fn, frame=1)
+    t0 = load(fn)
+    t1 = load(fn, frame=1)
 
     yield lambda: eq(t0[1].xyz, t1.xyz)
     yield lambda: eq(t0[1].unitcell_vectors, t1.unitcell_vectors)
@@ -106,7 +109,7 @@ def test_hdf_frame():
     yield lambda: eq(t0[1].time, t1.time)
 
 def test_slice():
-    t = load_hdf(fn, top=nat)
+    t = load(fn, top=nat)
     yield lambda: eq((t[0:5] + t[5:10]).xyz, t[0:10].xyz)
     yield lambda: eq((t[0:5] + t[5:10]).time, t[0:10].time)
     yield lambda: eq((t[0:5] + t[5:10]).unitcell_vectors, t[0:10].unitcell_vectors)
@@ -115,7 +118,7 @@ def test_slice():
 
 
 def test_slice2():
-    t = load_hdf(get_fn('frame1.lh5'))
+    t = load(get_fn('frame1.lh5'))
     yield lambda: t[0] == t[[0,1]][0]
 
 def test_xtc():
