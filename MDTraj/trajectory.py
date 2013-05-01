@@ -1206,3 +1206,9 @@ class Trajectory(object):
         xyz = self.xyz * 10
         with NetCDFFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(coordinates=xyz, time=self.time)
+
+    def center_coordinates(self):
+        """Remove the center of mass from each frame in trajectory.  Acts inplace."""
+        for x in self.xyz:
+            x -= (x.astype('float64').mean(0))
+    
