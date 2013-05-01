@@ -23,7 +23,8 @@ in the HDF5 format.
 # stdlib
 import math
 
-# 3rd party
+# ours
+from mdtraj.hdf5 import HDF5Trajectory
 
 try:
     # openmm
@@ -55,15 +56,16 @@ class HDF5Reporter(object):
     >>> traj = mdtraj.trajectory.load('traj.lh5')             # doctest: +SKIP
     """
 
-    def __init__(self, traj_file, reportInterval, coordinates=True, time=True,
+    def __init__(self, file, reportInterval, coordinates=True, time=True,
                  cell=True, potentialEnergy=True, kineticEnergy=True, temperature=True,
                  velocities=False):
         """Create a HDF5Reporter.
 
         Parameters
         ----------
-        traj_file : HDF5Trajectory
-            An HDF5Trajectory object, opened in read mode.
+        file : str, or HDF5Trajectory
+            Either an open HDF5Trajecory object to write to, or a string
+            specifying the filename of a new HDF5 file
         reportInterval : int
             The interval (in time steps) at which to write frames.
         coordinates : bool
@@ -79,12 +81,19 @@ class HDF5Reporter(object):
         temperature : bool
             Whether to write the instantaneous temperature to the file.
         """
-        self._traj_file = traj_file
+        if isinstance(file, basestring):
+            self._traj_file = HDF5Trajectory(file, 'w')
+        elif isinstance(file, HDF5Trajectory):
+            self._traj_file = file
+            if not file.mode in ['w', 'a']:
+                raise ValueError('file must be open in "w" or "a" mode')
+        else:
+            raise TypeError("I don't know how to handle %s" % file)
+
         self._reportInterval = bool(reportInterval)
         self._is_intialized = False
         self._n_particles = None
-        if not traj_file.mode in ['w', 'a']:
-            raise ValueError('traj_file must be open in "w" or "a" mode')
+
 
         self._coordinates = bool(coordinates)
         self._time = bool(time)
@@ -176,14 +185,15 @@ class HDF5Reporter(object):
         if self._temperature:
             kwargs['temperature'] = 2*state.getKineticEnergy()/(self._dof*units.MOLAR_GAS_CONSTANT_R)
         if self._velocities:
-            kwargs['velocities'] = state.getVelocoties(asNumpy=True)
+            kwargs['velocities'] = state.getVelocities(asNumpy=True)
 
+        self._traj_file.write(**kwargs)
         # flush the file to disk. it might not be necessary to do this every
         # report, but this is the most proactive solution. We don't want to
         # accumulate a lot of data in memory only to find out, at the very
         # end of the run, that there wasn't enough space on disk to hold the
         # data.
-        self._handle.flush()
+        self._traj_file.flush()
 
     def _checkForErrors(self, simulation, state):
         """Check for errors in the current state of the simulation
@@ -200,5 +210,7 @@ class HDF5Reporter(object):
                 raise ValueError('Energy is infinite')
 
     def __del__(self):
-        if hasattr(self, '_handle'):
-            self._traj_file.close()
+        self.close()
+
+    def close(self):
+        self._traj_file.close()

@@ -22,17 +22,20 @@ https://github.com/rmcgibbo/mdtraj/issues/36
 # Imports
 ##############################################################################
 
+# stdlib
 import sys
+import warnings
 import operator
 from collections import namedtuple
-
 try:
     import simplejson as json
 except ImportError:
     import json
 
+# 3rd party
 import numpy as np
 
+# ours
 from mdtraj import version
 import mdtraj.pdb.element as elem
 from mdtraj.topology import Topology
@@ -135,6 +138,9 @@ class HDF5Trajectory(object):
             self._frame_index = 0
             # do we need to write the header information?
             self._needs_initialization = True
+            if not filename.endswith('.h5'):
+                warnings.warn('The .h5 extension is recommended.')
+
         elif mode == 'a':
             try:
                 self._frame_index = len(self._handle.root.coordinates)
@@ -598,7 +604,7 @@ class HDF5Trajectory(object):
 
         if set_time:
             self._handle.createEArray(where='/', name='time',
-                atom=tables.Float32Atom(), shape=(0))
+                atom=tables.Float32Atom(), shape=(0,))
             self._handle.root.time.attrs['units'] = 'picoseconds'
 
         if set_cell:
@@ -617,17 +623,17 @@ class HDF5Trajectory(object):
         if set_kineticEnergy:
             self._handle.createEArray(where='/', name='kineticEnergy',
                 atom=tables.Float32Atom(), shape=(0,))
-            self._handle.root.kineticEnergy.attrs['units'] = 'kJ/mol'
+            self._handle.root.kineticEnergy.attrs['units'] = 'kilojoules_per_mole'
 
         if set_potentialEnergy:
             self._handle.createEArray(where='/', name='potentialEnergy',
                 atom=tables.Float32Atom(), shape=(0,))
-            self._handle.root.potentialEnergy.attrs['units'] = 'kJ/mol'
+            self._handle.root.potentialEnergy.attrs['units'] = 'kilojoules_per_mole'
 
         if set_temperature:
             self._handle.createEArray(where='/', name='temperature',
                 atom=tables.Float32Atom(), shape=(0,))
-            self._handle.root.temperature.attrs['units'] = 'Kelvin'
+            self._handle.root.temperature.attrs['units'] = 'kelvin'
 
         if set_lambdaValue:
             self._handle.createEArray(where='/', name='lambda',
