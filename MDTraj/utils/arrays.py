@@ -92,7 +92,7 @@ def ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=No
                 " You supplied type %s" % (name, type(val))))
 
     if warn_on_cast and val.dtype != dtype:
-        warnings.warn("Casting dtype=%s to %s" % (val.dtype, dtype),
+        warnings.warn("Casting %s dtype=%s to %s " % (name, val.dtype, dtype),
             TypeCastPerformanceWarning)
 
     val = np.ascontiguousarray(val, dtype=dtype)

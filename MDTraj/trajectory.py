@@ -26,7 +26,7 @@ import functools
 from itertools import izip
 from copy import deepcopy
 import numpy as np
-from mdtraj import dcd, xtc, binpos, trr, io
+from mdtraj import dcd, xtc, binpos, trr, io, hdf5
 from mdtraj.pdb import pdbfile
 from mdtraj import io
 from mdtraj.utils import unitcell, arrays
@@ -45,69 +45,10 @@ except ImportError:
 ##############################################################################
 
 logger = logging.getLogger(__name__)
-MAXINT16 = np.iinfo(np.int16).max
-MAXINT32 = np.iinfo(np.int32).max
-DEFAULT_PRECISION = 1000
 
 ##############################################################################
 # Utilities
 ##############################################################################
-
-
-def import_tables_and_io():
-    """Delayed import of tables"""
-
-    if 'tables' in sys.modules and 'io' in sys.modules:
-        return sys.modules['tables'], sys.modules['io']
-
-    try:
-        from mdtraj import io
-        import tables
-        return tables, io
-    except ImportError:
-        print '#'*73
-        print 'ERROR'
-        print '#'*73
-        print 'MDTraj\'s HDF5 utilities require the tables'
-        print 'library. You can install the library using the python package'
-        print 'managers "pip" or "easy_install" with'
-        print ''
-        print 'pip install tables'
-        print 'or'
-        print 'easy_install tables'
-        print ''
-        print 'You can also download the library directly and find more documentation at'
-        print 'https://pypi.python.org/pypi/tables/ or http://www.pytables.org/'
-        print '#'*73
-        raise
-
-
-
-def _convert_to_lossy_integers(X, precision=DEFAULT_PRECISION):
-    """Implementation of the lossy compression used in Gromacs XTC using
-    the pytables library.  Convert 32 bit floats into 16 bit integers.
-    These conversion functions have been optimized for memory use.
-    Further memory reduction would require an in-place astype() operation,
-    which one could create using ctypes."""
-
-    if np.max(X) * float(precision) < MAXINT16 and np.min(X) * float(precision) > -MAXINT16:
-        X *= float(precision)
-        Rounded = X.astype("int16")
-        X /= float(precision)
-    else:
-        X *= float(precision)
-        Rounded = X.astype("int32")
-        X /= float(precision)
-        logger.error("Data range too large for int16: try removing center of mass motion, check for 'blowing up, or just use .h5 or .xtc format.'")
-    return(Rounded)
-
-
-def _convert_from_lossy_integers(X, precision=DEFAULT_PRECISION):
-    """Implementation of the lossy compression used in Gromacs XTC using
-    the pytables library.  Convert 16 bit integers into 32 bit floats."""
-    X2 = X.astype("float32")
-    X2 /= float(precision)
-    return(X2)
 
 
 def _assert_files_exist(filenames):
@@ -187,7 +128,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                '.pdb':    load_pdb,
                '.dcd':    load_dcd,
                '.h5':     load_hdf,
-               '.lh5':    load_hdf,
+               '.lh5':    _load_legacy_hdf,
                '.binpos': load_binpos,
                '.ncdf':   load_netcdf,
                '.nc':     load_netcdf}
@@ -407,10 +348,41 @@ def load_dcd(filename, top=None):
     return trajectory
 
 
-def load_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
-             upconvert_int16=True):
+def load_hdf(filename, stride=None, frame=None):
     """
     Load an hdf file.
+
+    Parameters
+    ----------
+    filename : str
+        String filename of HDF Trajectory file.
+    stride : int, default=None
+        Only read every stride-th frame
+    frame : {None, int}, default=None
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+
+    Returns
+    -------
+    trajectory : Trajectory
+        A trajectory file!
+    """
+    tf = hdf5.HDF5Trajectory(filename)
+    if frame is None:
+        data = tf.read(stride=stride)
+    else:
+        tf._frame_index += int(frame)
+        data = tf.read(n_frames=1)
+
+    trajectory = Trajectory(xyz=data.coordinates, topology=tf.topology, time=data.time)
+    trajectory.unitcell_lengths = data.cell_lengths
+    trajectory.unitcell_angles = data.cell_angles
+
+    return trajectory
+
+def _load_legacy_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
+                     upconvert_int16=True):
+    """Load an HDF5 file in the legacy MSMBuilder format
 
     Parameters
     ----------
@@ -434,7 +406,15 @@ def load_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
     trajectory : Trajectory
         A trajectory file!
     """
-    tables, _ = import_tables_and_io()
+
+    def _convert_from_lossy_integers(X, precision=1000):
+        """Implementation of the lossy compression used in Gromacs XTC using
+        the pytables library.  Convert 16 bit integers into 32 bit floats."""
+        X2 = X.astype("float32")
+        X2 /= float(precision)
+        return X2
+
+    import tables
 
     if not isinstance(filename, basestring):
         raise TypeError('filename must be of type string for load_hdf. '
@@ -859,8 +839,8 @@ class Trajectory(object):
             xyz = other.xyz
             time = other.time
             if other_has_unitcell:
-                lengths2 = other.unitcell_lengths[1:]
-                angles2 = other.unitcell_angles[1:]
+                lengths2 = other.unitcell_lengths
+                angles2 = other.unitcell_angles
 
         xyz = np.concatenate((self.xyz, xyz))
         time = np.concatenate((self.time, time))
@@ -928,8 +908,8 @@ class Trajectory(object):
         self.topology = topology
 
         # box has no default, it'll just be none normally
-        self._unitcell_lengths = unitcell_lengths
-        self._unitcell_angles = unitcell_angles
+        self.unitcell_lengths = unitcell_lengths
+        self.unitcell_angles = unitcell_angles
 
         # time will take the default 1..N
         if time is None:
@@ -1034,7 +1014,6 @@ class Trajectory(object):
                   '.pdb': self.save_pdb,
                   '.dcd': self.save_dcd,
                   '.h5': self.save_hdf,
-                  '.lh5': self.save_hdf,
                   '.binpos': self.save_binpos,
                   '.nc': self.save_netcdf,
                   '.ncdf': self.save_netcdf}
@@ -1049,7 +1028,7 @@ class Trajectory(object):
         # run the saver, and return whatever output it gives
         return saver(filename)
 
-    def save_hdf(self, filename, lossy=True):
+    def save_hdf(self, filename):
         """
         Save trajectory to an hdf5
 
@@ -1057,23 +1036,12 @@ class Trajectory(object):
         ----------
         filename : str
             filesystem path in which to save the trajectory
-        lossy : bool
-            Use gromacs style compression
         """
-        _, io = import_tables_and_io()
-
-        if lossy:
-            xyz = _convert_to_lossy_integers(self.xyz)
-
-        kwargs = {
-            'xyz': xyz,
-            'time': self.time,
-            'topology': mdtraj.topology.to_bytearray(self.topology)
-        }
-        if self.unitcell_vectors is not None:
-            kwargs['box'] = self.unitcell_vectors
-
-        return io.saveh(filename, **kwargs)
+        with hdf5.HDF5Trajectory(filename, 'w') as f:
+            f.write(coordinates=self.xyz, time=self.time,
+                    cell_angles=self.unitcell_angles,
+                    cell_lengths=self.unitcell_lengths)
+            f.topology = self.topology
 
     def save_pdb(self, filename, no_models=False):
         """
@@ -1161,7 +1129,7 @@ class Trajectory(object):
         filename : str
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
-            Overwrite anything that exists at filename, if its already there
+            Overwrite anything that exists at filenames, if its already there
         """
         # convert from internal nm representation to angstroms for output
         xyz = self.xyz * 10
