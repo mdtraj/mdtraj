@@ -15,11 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
 """Methods to calculate internal coordinates from the cartesian coordinates
 
 This code is new and should be considered __unstable__
 """
+
+##############################################################################
+# Imports
+##############################################################################
 
 import numpy as np
 import scipy.linalg
@@ -29,9 +32,9 @@ import logging
 from mdtraj.geometry.contact import compute_atom_distances
 from mdtraj.geometry.dihedral import compute_dihedrals
 from mdtraj.geometry.angle import compute_bond_angles
-from scipy.spatial.distance import squareform, pdist
-import networkx as nx
+from mdtraj.utils import import_
 
+from scipy.spatial.distance import squareform, pdist
 
 # these are covalent radii taken from the crystalographic data in nm
 # Dalton Trans., 2008, 2832-2838, DOI: 10.1039/B801115J
@@ -285,7 +288,7 @@ def get_angle_connectivity(ibonds):
         n_angles x 3 array of indices, where each row is the index of three
         atoms m,n,o such that n is bonded to both m and o.
     """
-
+    nx = import_('networkx')
     graph = nx.from_edgelist(ibonds)
     n_atoms = graph.number_of_nodes()
     iangles = []
@@ -314,6 +317,7 @@ def get_dihedral_connectivity(ibonds):
         All sets of 4 atoms A,B,C,D such that A is bonded to B, B is bonded
         to C, and C is bonded to D
     """
+    nx = import_('networkx')
     graph = nx.from_edgelist(ibonds)
     n_atoms = graph.number_of_nodes()
     idihedrals = []
