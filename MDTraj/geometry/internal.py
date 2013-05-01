@@ -1,4 +1,4 @@
-# This file is part of MSMBuilder.
+# This file is part of MDTraj.
 #
 # Copyright 2011 Stanford University
 #
@@ -26,9 +26,9 @@ import scipy.linalg
 from itertools import combinations, ifilter
 import logging
 
-from msmbuilder.geometry.contact import atom_distances
-from msmbuilder.geometry.dihedral import compute_dihedrals
-from msmbuilder.geometry.angle import bond_angles
+from mdtraj.geometry.contact import atom_distances
+from mdtraj.geometry.dihedral import compute_dihedrals
+from mdtraj.geometry.angle import bond_angles
 from scipy.spatial.distance import squareform, pdist
 import networkx as nx
 
@@ -60,7 +60,7 @@ def get_redundant_internal_coordinates(trajectory, **kwargs):
 
     Parameters
     ----------
-    trajectory : msmbuilder.Trajectory
+    trajectory : mdtraj.Trajectory
         Trajectory object containing the internal coordinates
 
     Additional Parameters
@@ -133,10 +133,10 @@ def get_nonredundant_internal_coordinates(trajectory, conformation, get_operator
 
     Parameters
     ----------
-    trajectory : msmbuilder.Trajectory
+    trajectory : mdtraj.Trajectory
         Trajectory object containing the cartesian coordinates of every
         frame in the dataset
-    conformation : msmbuilder.Trajectory
+    conformation : mdtraj.Trajectory
         Trajectort object containing a single frame (the first) to be used
         as the reference for defining the projection operator into the active
         space.
@@ -218,8 +218,8 @@ def get_bond_connectivity(conf):
 
     Parameters
     ----------
-    conf : msmbuilder.Trajectory
-        An msmbuilder trajectory, only the first frame will be used.
+    conf : MDTraj.Trajectory
+        An MDTraj trajectory, only the first frame will be used.
 
     Returns
     -------
@@ -243,7 +243,7 @@ def get_bond_connectivity(conf):
     n_atoms = xyz.shape[0]
 
     elements = np.zeros(n_atoms, dtype='S1')
-    atom_names = [a.name for a in r.top.atoms()]
+    atom_names = [a.name for a in conf.top.atoms()]
     for i in xrange(n_atoms):
         # name of the element that is atom[i]
         # take the first character of the AtomNames string,
@@ -352,7 +352,7 @@ def get_wilson_B(conformation, **kwargs):
 
     Parameters
     ----------
-    conformation : msmbuilder.Trajectory
+    conformation : mdtraj.Trajectory
         Only the first frame is used
 
     Additional Parameters
