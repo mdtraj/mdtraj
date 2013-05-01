@@ -93,10 +93,10 @@ def ensure_mode(*m):
     def inner(f):
         def wrapper(*args, **kwargs):
             # args[0] is self on the method
-            if args[0]._mode in m:
+            if args[0].mode in m:
                 return f(*args, **kwargs)
             raise ValueError('This operation is only available when a file '
-                             'is open in mode="%s".' % args[0]._mode)
+                             'is open in mode="%s".' % args[0].mode)
         return wrapper
     return inner
 
@@ -113,7 +113,7 @@ Frames = namedtuple('Frames', ['coordinates', 'time', 'cell_lengths', 'cell_angl
 class HDF5Trajectory(object):
     def __init__(self, filename, mode='r', force_overwrite=False, compression='zlib'):
         self._open = False  # is the file handle currently open?
-        self._mode = mode  # the mode in which the file was opened?
+        self.mode = mode  # the mode in which the file was opened?
 
         if not mode in ['r', 'w', 'a']:
             raise ValueError("mode must be one of ['r', 'w', 'a']")
@@ -381,8 +381,8 @@ class HDF5Trajectory(object):
                 "temperature", "lambdaValue"
             Each of the fields in the returned namedtuple will either be a
             numpy array or None, dependening on if that data was saved in the
-            trajectory. All of the data shall be in natural MD units, of
-            "nanometers", "picoseconds", and "kilojoules_per_mole".
+            trajectory. All of the data shall be in units of "nanometers",
+            "picoseconds", "kelvin", "degrees" and "kilojoules_per_mole".
         """
         tables = import_tables()  # our delayed import
 
