@@ -41,6 +41,8 @@ import mdtraj.pdb.element as elem
 from mdtraj.topology import Topology
 from mdtraj.utils import in_units_of, ensure_type, import_
 
+__all__ = ['HDF5Trajectory']
+
 ##############################################################################
 # Utilities
 ##############################################################################
