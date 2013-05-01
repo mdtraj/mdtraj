@@ -1209,6 +1209,6 @@ class Trajectory(object):
 
     def center_coordinates(self):
         """Remove the center of mass from each frame in trajectory.  Acts inplace."""
-        for x in self.xyz:
+        for x in self._xyz:
             x -= (x.astype('float64').mean(0))
-    
+

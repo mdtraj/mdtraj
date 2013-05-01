@@ -163,3 +163,10 @@ def test_load():
         eq(t0.n_frames, t1.n_frames)
         eq(t0.n_frames * num_block, t2.n_frames)
         eq(t3.n_frames , t0.n_frames * num_block - num_block + 1)
+
+def test_center():
+    traj = load(get_fn('frame0.lh5'))
+    traj.center_coordinates()
+    mu = traj.xyz.mean(1)
+    mu0 = np.zeros(mu.shape)
+    eq(mu0, mu)
