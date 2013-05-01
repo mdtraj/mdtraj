@@ -495,7 +495,7 @@ class HDF5Trajectory(object):
         cell_lengths = ensure_type(cell_lengths, dtype=np.float32, ndim=2,
             name='cell_lengths', shape=(n_frames, 3), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
-        cell_angles = ensure_type(cell_angles, dtype=np.float32, ndim=1,
+        cell_angles = ensure_type(cell_angles, dtype=np.float32, ndim=2,
             name='cell_angles', shape=(n_frames, 3), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         velocities = ensure_type(velocities, dtype=np.float32, ndim=3,
@@ -613,7 +613,7 @@ class HDF5Trajectory(object):
             self._handle.createEArray(where='/', name='cell_angles',
                 atom=tables.Float32Atom(), shape=(0, 3))
             self._handle.root.cell_lengths.attrs['units'] = 'nanometers'
-            self._handle.root.cell_angles.attrs['units'] = 'nanometers'
+            self._handle.root.cell_angles.attrs['units'] = 'degrees'
 
         if set_velocities:
             self._handle.createEArray(where='/', name='velocities',

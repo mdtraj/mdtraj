@@ -24,7 +24,10 @@ in the HDF5 format.
 import math
 
 # ours
+from mdtraj.utils import unitcell
 from mdtraj.hdf5 import HDF5Trajectory
+
+import numpy as np
 
 try:
     # openmm
@@ -177,7 +180,10 @@ class HDF5Reporter(object):
         if self._time:
             kwargs['time'] = state.getTime()
         if self._cell:
-            raise NotImplementedError('need to wait till the unitcell stuff is merged into this branch')
+            vectors = state.getPeriodicBoxVectors(asNumpy=True)
+            a, b, c, alpha, beta, gamma = unitcell.box_vectors_to_lengths_and_angles(*vectors)
+            kwargs['cell_lengths'] = np.array([a, b, c])
+            kwargs['cell_angles'] = np.array([alpha, beta, gamma])
         if self._potentialEnergy:
             kwargs['potentialEnergy'] = state.getPotentialEnergy()
         if self._kineticEnergy:

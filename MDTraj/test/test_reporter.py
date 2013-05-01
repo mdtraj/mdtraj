@@ -42,7 +42,7 @@ def test_reporter():
     simulation.context.setVelocitiesToTemperature(300*kelvin)
     
     reporter = HDF5Reporter(temp, 1, coordinates=True, time=True,
-        cell=False, potentialEnergy=True, kineticEnergy=True, temperature=True,
+        cell=True, potentialEnergy=True, kineticEnergy=True, temperature=True,
         velocities=True)
     simulation.reporters.append(reporter)
     simulation.step(100)
@@ -57,8 +57,8 @@ def test_reporter():
         yield lambda: eq(got.kineticEnergy.shape, (100,))
         yield lambda: eq(got.coordinates.shape, (100, 22, 3))
         yield lambda: eq(got.velocities.shape, (100, 22, 3))
-        yield lambda: eq(got.cell_lengths, None)
-        yield lambda: eq(got.cell_angles, None)
+        yield lambda: eq(got.cell_lengths, 2 * np.ones((100, 3)))
+        yield lambda: eq(got.cell_angles, 90*np.ones((100, 3)))
         yield lambda: eq(got.time, 0.002*(1+np.arange(100)))
     
         yield lambda: topology.equal(f.topology,
