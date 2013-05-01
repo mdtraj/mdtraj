@@ -21,13 +21,9 @@ in the HDF5 format.
 # Imports
 ##############################################################################
 # stdlib
-import os
 import math
-import warnings
 
 # 3rd party
-import tables
-import numpy as np
 
 try:
     # openmm
@@ -39,12 +35,6 @@ except ImportError:
     # OpenMM installed, we don't want that to choke. It should
     # only choke if they actually try to USE the HDF5Reporter
     OPENMM_IMPORTED = False
-
-# local
-import mdtraj.topology
-import mdtraj.trajectory
-import mdtraj.io
-
 
 ##############################################################################
 # Classes
@@ -103,7 +93,7 @@ class HDF5Reporter(object):
         self._kineticEnergy = bool(kineticEnergy)
         self._temperature = bool(temperature)
         self._velocities = bool(velocities)
-        self._needEnergy = potentialEnergy or kineticEnergy or totalEnergy or temperature
+        self._needEnergy = potentialEnergy or kineticEnergy or temperature
 
         if not OPENMM_IMPORTED:
             raise ImportError('OpenMM not found.')
@@ -134,7 +124,6 @@ class HDF5Reporter(object):
             if any(type(system.getForce(i)) == mm.CMMotionRemover for i in range(system.getNumForces())):
                 dof -= 3
             self._dof = dof
-
 
         self._traj_file.flush()
 
@@ -204,7 +193,7 @@ class HDF5Reporter(object):
          - state (State) The current state of the simulation
         """
         if self._needEnergy:
-            energy = (state.getKineticEnergy()+state.getPotentialEnergy()).value_in_unit(unit.kilojoules_per_mole)
+            energy = (state.getKineticEnergy()+state.getPotentialEnergy()).value_in_unit(units.kilojoules_per_mole)
             if math.isnan(energy):
                 raise ValueError('Energy is NaN')
             if math.isinf(energy):
