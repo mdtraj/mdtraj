@@ -9,6 +9,7 @@ try:
     import simtk.unit as units
     HAVE_UNIT = True
 except ImportError:
+    units = None
     HAVE_UNIT = False
     warnings.warn('The package simtk.unit was not imported, which means that'
                   'no unit processing will be done. Please install OpenMM to '
