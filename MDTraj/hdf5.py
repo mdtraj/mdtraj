@@ -78,7 +78,7 @@ def ensure_mode(*m):
 
 Frames = namedtuple('Frames', ['coordinates', 'time', 'cell_lengths', 'cell_angles',
                                'velocities', 'kineticEnergy', 'potentialEnergy',
-                               'temperature', 'lambdaValue'])
+                               'temperature', 'alchemicalLambda'])
 
 ##############################################################################
 # Classes
@@ -357,7 +357,7 @@ class HDF5Trajectory(object):
         -------
         frames : namedtuple with fields "coordinates", "time", "cell_lengths",
                 "cell_angles", "velocities", "kineticEnergy", "potentialEnergy",
-                "temperature", "lambdaValue"
+                "temperature", "alchemicalLambda"
             Each of the fields in the returned namedtuple will either be a
             numpy array or None, dependening on if that data was saved in the
             trajectory. All of the data shall be in units of "nanometers",
@@ -406,7 +406,7 @@ class HDF5Trajectory(object):
             kineticEnergy = get_field('kineticEnergy', frame_slice, out_units='kilojoules_per_mole'),
             potentialEnergy = get_field('potentialEnergy', frame_slice, out_units='kilojoules_per_mole'),
             temperature = get_field('temperature', frame_slice, out_units='kelvin'),
-            lambdaValue = get_field('lambda', frame_slice, out_units='dimensionless')
+            alchemicalLambda = get_field('lambda', frame_slice, out_units='dimensionless')
         )
 
         self._frame_index += min(n_frames, total_n_frames)
@@ -415,7 +415,7 @@ class HDF5Trajectory(object):
     @ensure_mode('w', 'a')
     def write(self, coordinates, time=None, cell_lengths=None, cell_angles=None,
                     velocities=None, kineticEnergy=None, potentialEnergy=None,
-                    temperature=None, lambdaValue=None):
+                    temperature=None, alchemicalLambda=None):
         """Write one or more frames of data to the file
 
         This method saves data that is associated with a single simulation
@@ -445,7 +445,7 @@ class HDF5Trajectory(object):
         kineticEnergy = in_units_of(kineticEnergy, 'kilojoules_per_mole')
         potentialEnergy = in_units_of(potentialEnergy, 'kilojoules_per_mole')
         temperature = in_units_of(temperature, 'kelvin')
-        lambdaValue = in_units_of(lambdaValue, 'dimensionless')
+        alchemicalLambda = in_units_of(alchemicalLambda, 'dimensionless')
 
         # do typechecking and shapechecking on the arrays
         # this ensure_type method has a lot of options, but basically it lets
@@ -480,8 +480,8 @@ class HDF5Trajectory(object):
         temperature = ensure_type(temperature, dtype=np.float32, ndim=1,
             name='temperature', shape=(n_frames,), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
-        lambdaValue = ensure_type(lambdaValue, dtype=np.float32, ndim=1,
-            name='lambdaValue', shape=(n_frames,), can_be_none=True,
+        alchemicalLambda = ensure_type(alchemicalLambda, dtype=np.float32, ndim=1,
+            name='alchemicalLambda', shape=(n_frames,), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
 
         # if this is our first call to write(), we need to create the headers
@@ -496,7 +496,7 @@ class HDF5Trajectory(object):
                 set_kineticEnergy=(kineticEnergy is not None),
                 set_potentialEnergy=(potentialEnergy is not None),
                 set_temperature=(temperature is not None),
-                set_lambdaValue=(lambdaValue is not None))
+                set_alchemicalLambda=(alchemicalLambda is not None))
             self._needs_initialization = False
 
             # we need to check that that the entries that the user is trying
@@ -521,10 +521,10 @@ class HDF5Trajectory(object):
 
 
             # lambda is different, since the name in the file is lambda
-            # but the name in this python function is lambdaValue
+            # but the name in this python function is alchemicalLambda
             name = 'lambda'
-            if lambdaValue is not None:
-                self._handle.getNode(where='/', name=name).append(lambdaValue)
+            if alchemicalLambda is not None:
+                self._handle.getNode(where='/', name=name).append(alchemicalLambda)
             else:
                 try:
                     self._handle.getNode(where='/', name=name)
@@ -551,7 +551,7 @@ class HDF5Trajectory(object):
 
     def _initialize_headers(self, n_atoms, set_coordinates, set_time, set_cell,
                             set_velocities, set_kineticEnergy, set_potentialEnergy,
-                            set_temperature, set_lambdaValue):
+                            set_temperature, set_alchemicalLambda):
         self._n_atoms = n_atoms
 
         self._handle.root._v_attrs.conventions = 'Pande'
@@ -604,7 +604,7 @@ class HDF5Trajectory(object):
                 atom=self.tables.Float32Atom(), shape=(0,))
             self._handle.root.temperature.attrs['units'] = 'kelvin'
 
-        if set_lambdaValue:
+        if set_alchemicalLambda:
             self._handle.createEArray(where='/', name='lambda',
                 atom=self.tables.Float32Atom(), shape=(0,))
             self._handle.getNode('/', name='lambda').attrs['units'] = 'dimensionless'
