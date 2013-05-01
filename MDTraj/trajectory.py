@@ -839,8 +839,8 @@ class Trajectory(object):
             xyz = other.xyz
             time = other.time
             if other_has_unitcell:
-                lengths2 = other.unitcell_lengths[1:]
-                angles2 = other.unitcell_angles[1:]
+                lengths2 = other.unitcell_lengths
+                angles2 = other.unitcell_angles
 
         xyz = np.concatenate((self.xyz, xyz))
         time = np.concatenate((self.time, time))
@@ -908,8 +908,8 @@ class Trajectory(object):
         self.topology = topology
 
         # box has no default, it'll just be none normally
-        self._unitcell_lengths = unitcell_lengths
-        self._unitcell_angles = unitcell_angles
+        self.unitcell_lengths = unitcell_lengths
+        self.unitcell_angles = unitcell_angles
 
         # time will take the default 1..N
         if time is None:

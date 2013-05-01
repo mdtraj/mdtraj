@@ -41,7 +41,7 @@ def test_reporter():
     
     simulation.context.setVelocitiesToTemperature(300*kelvin)
     
-    reporter = HDF5Reporter(temp, 1, coordinates=True, time=True,
+    reporter = HDF5Reporter('traj.h5', 1, coordinates=True, time=True,
         cell=True, potentialEnergy=True, kineticEnergy=True, temperature=True,
         velocities=True)
     simulation.reporters.append(reporter)
@@ -50,7 +50,7 @@ def test_reporter():
     reporter.close()
     
     
-    with HDF5Trajectory(temp) as f:
+    with HDF5Trajectory('traj.h5') as f:
         got = f.read()
         yield lambda: eq(got.temperature.shape, (100,))
         yield lambda: eq(got.potentialEnergy.shape, (100,))
