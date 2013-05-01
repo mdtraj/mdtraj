@@ -98,7 +98,7 @@ def in_units_of(quantity, units_out, units_in=None):
     >>> str(in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond'))
     '1000000.0'
     """
-    if quantity is None or not HAVE_UNIT:
+    if quantity is None or (not HAVE_UNIT):
         return quantity
 
     if isinstance(quantity, units.Quantity):

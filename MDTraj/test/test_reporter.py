@@ -1,3 +1,19 @@
+# Copyright 2012 mdtraj developers
+#
+# This file is part of mdtraj
+#
+# mdtraj is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# mdtraj. If not, see http://www.gnu.org/licenses/.
+
 import os
 import tempfile
 import numpy as np
@@ -41,7 +57,7 @@ def test_reporter():
     
     simulation.context.setVelocitiesToTemperature(300*kelvin)
     
-    reporter = HDF5Reporter('traj.h5', 1, coordinates=True, time=True,
+    reporter = HDF5Reporter(temp, 1, coordinates=True, time=True,
         cell=True, potentialEnergy=True, kineticEnergy=True, temperature=True,
         velocities=True)
     simulation.reporters.append(reporter)
@@ -50,7 +66,7 @@ def test_reporter():
     reporter.close()
     
     
-    with HDF5Trajectory('traj.h5') as f:
+    with HDF5Trajectory(temp) as f:
         got = f.read()
         yield lambda: eq(got.temperature.shape, (100,))
         yield lambda: eq(got.potentialEnergy.shape, (100,))

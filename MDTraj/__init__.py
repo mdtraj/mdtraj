@@ -19,7 +19,7 @@ DCD, AMBER BINPOS, PDB, and HDF5.
 
 Examples
 --------
->>> from mdtraj import trajectory
+>>> from mdtraj import trajectory                             # doctest: +SKIP
 >>> t = trajectory.load('traj.dcd', topology='structure.pdb') # doctest: +SKIP
 >>> t.save('traj.binpos')                                     # doctest: +SKIP
 
@@ -42,5 +42,5 @@ Modules
     Low level XTC/TRR interface
 """
 
-__all__ = ['binpos', 'dcd', 'io', 'pdb', 'netcdf',
+__all__ = ['binpos', 'dcd', 'io', 'pdb', 'netcdf', 'test',
             'testing', 'trajectory', 'topology', 'reporters']
