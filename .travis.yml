@@ -8,6 +8,7 @@ install:
   - sudo apt-get install -qq libhdf5-serial-dev
   - sudo apt-get install -qq python-dev
   - sudo apt-get install -qq python-numpy
+  - sudo apt-get install -qq python-scipy
   - sudo apt-get install -qq python-nose
   - sudo apt-get install -qq python-setuptools
   - sudo apt-get install -qq cython
