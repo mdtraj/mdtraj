@@ -85,3 +85,8 @@ def test_dihedral():
     psi0 = np.array([134.52554, 144.880173]) * np.pi / 180.  # Pymol
     eq(psi[0,0:2], psi0, decimal=4)
     eq(int(rid[0]), 0)
+
+    rid, chi = mdtraj.geometry.dihedral.calculate_chi(traj)
+    chi0 = np.array([-43.37841, -18.14592]) * np.pi / 180.  # Pymol
+    eq(chi[0,0:2], chi0, decimal=4)
+    eq(int(rid[0]), 0)

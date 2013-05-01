@@ -1,47 +1,5 @@
 import numpy as np
-#  http://stackoverflow.com/questions/12785836/how-to-calculate-cartesian-coordinates-from-dihedral-angle-in-python
- 
-def get_angle(a, b):
-    """Compute the angles between arrays of vectors a and b.
-    
-    Parameters
-    ----------
-    a : np.ndarray        
-    b : np.ndarray        
-        
-    Returns
-    -------
-    angles : np.ndarray, shape=[n_frames, num_pairs], dtype=float
-
-    Notes
-    -----
-    The shapes of a and b must be identical.  Also, the (xyz) axis must
-    be the last axis.  
-    """
-    return -1. * np.arccos((a * b).sum(-1))
-
-def normed_cross(a, b):
-    """Compute the normalized cross product between arrays of vectors a and b.
-    
-    Parameters
-    ----------
-    a : np.ndarray        
-    b : np.ndarray        
-        
-    Returns
-    -------
-    v : np.ndarray, shape=[n_frames, num_pairs], dtype=float
-        The normalized cross product of entries in a and b.
-
-    Notes
-    -----
-    The shapes of a and b must be identical.  Also, the (xyz) axis must
-    be the last axis.  
-    """
-    v = np.cross(a, b)
-    norms = (v ** 2.).sum(-1) ** 0.5
-    v = (v.T / norms.T).T
-    return v
+# Code taken from RMG MSMBuilder2 dihedral.c
 
 def compute_dihedrals(traj, indices):
     """Compute the dihedral angles of traj for the atom indices in indices.
@@ -63,13 +21,18 @@ def compute_dihedrals(traj, indices):
     x2 = x[:, indices[:,2]]
     x3 = x[:, indices[:,3]]    
             
-    v0 = x1 - x0
-    v1 = x2 - x1
-    v2 = x3 - x2
+    b1 = x1 - x0
+    b2 = x2 - x1
+    b3 = x3 - x2
 
-    v0v1 = normed_cross(v0, v1)
-    v1v2 = normed_cross(v1, v2)
-    return get_angle(v0v1, v1v2)
+    c1 = np.cross(b2, b3)
+    c2 = np.cross(b1, b2)
+
+    p1 = (b1 * c1).sum(-1)
+    p1 *= (b2 * b2).sum(-1) ** 0.5
+    p2 = (c1 * c2).sum(-1)
+    
+    return np.arctan2(p1, p2)
     
 def _construct_atom_dict(traj):
     """Create dictionary to lookup indices by atom name and residue_id."""
@@ -120,7 +83,7 @@ PSI_OFFSETS = [0, 0, 0, 1]
 OMEGA_ATOMS = ["CA","C","N","CA"]
 OMEGA_OFFSETS = [0, 0, 1, 1]
 CHI_ATOMS = ["N", "CA", "CB", "CG"]
-CHI_ATOMS_ALT = ["N", "CA", "CB", "CG1"]
+CHI_ATOMS_ALT = ["N", "CA", "CB", "CG1"]  # Need to incorporate this somehow!!!
 CHI_OFFSETS = [0, 0, 0, 0]
 
 _get_indices_omega = lambda traj: atom_sequence_finder(traj, OMEGA_ATOMS, OMEGA_OFFSETS)
