@@ -51,6 +51,8 @@ def eq(o1, o2, decimal=6, err_msg=''):
 
     if isinstance(o1, dict):
         assert_dict_equal(o1, o1, decimal)
+    elif isinstance(o1, float):
+        np.testing.assert_almost_equal(o1, o2, decimal)
     elif isspmatrix(o1):
         assert_spase_matrix_equal(o1, o1, decimal)
     elif isinstance(o1, np.ndarray):
