@@ -39,35 +39,7 @@ import numpy as np
 from mdtraj import version
 import mdtraj.pdb.element as elem
 from mdtraj.topology import Topology
-from mdtraj.utils.unit import in_units_of
-from mdtraj.utils.arrays import ensure_type
-
-
-def import_tables():
-    """Delayed import of the tables (HDF5) module
-    """
-
-    try:
-        if 'tables' not in sys.modules:
-            import tables
-        return sys.modules['tables']
-    except ImportError:
-        print '#'*73
-        print 'ERROR'
-        print '#'*73
-        print 'MDTraj\'s HDF5 bindings require the tables library. You can'
-        print 'install the library using the python package managers "pip" or '
-        print '"easy_install" with'
-        print ''
-        print 'pip install netcdf4'
-        print 'or'
-        print 'easy_install netcdf4'
-        print ''
-        print 'You can also download the library directly and find more '
-        print 'documentation at http://www.pytables.org'
-        print '#'*73
-        raise
-
+from mdtraj.utils import in_units_of, ensure_type, import_
 
 ##############################################################################
 # Utilities
@@ -121,16 +93,17 @@ class HDF5Trajectory(object):
         if not mode in ['r', 'w', 'a']:
             raise ValueError("mode must be one of ['r', 'w', 'a']")
 
-        tables = import_tables()
+        # import tables
+        self.tables = import_('tables')
 
         if compression == 'zlib':
-            compression = tables.Filters(complib='zlib', shuffle=True, complevel=1)
+            compression = self.tables.Filters(complib='zlib', shuffle=True, complevel=1)
         elif compression is None:
             compression = None
         else:
             raise ValueError('compression must be either "zlib" or None')
 
-        self._handle = tables.openFile(filename, mode=mode, filters=compression)
+        self._handle = self.tables.openFile(filename, mode=mode, filters=compression)
         self._open = True
 
         if mode == 'w':
@@ -390,8 +363,6 @@ class HDF5Trajectory(object):
             trajectory. All of the data shall be in units of "nanometers",
             "picoseconds", "kelvin", "degrees" and "kilojoules_per_mole".
         """
-        tables = import_tables()  # our delayed import
-
         if n_frames is None:
             n_frames = np.inf
         if stride is not None:
@@ -420,7 +391,7 @@ class HDF5Trajectory(object):
                 data = node.__getitem__(slice)
                 data =  in_units_of(data, out_units, str(node.attrs.units))
                 return data
-            except tables.NoSuchNodeError:
+            except self.tables.NoSuchNodeError:
                 if can_be_none:
                     return None
                 raise
@@ -454,7 +425,6 @@ class HDF5Trajectory(object):
         ----------
         coordinates : np.ndarray, shape=(n_frames, n_atoms, 3)
         """
-        tables = import_tables()  # our delayed import
 
         # these must be either both present or both absent. since
         # we're going to throw an error if one is present w/o the other,
@@ -546,7 +516,7 @@ class HDF5Trajectory(object):
                     try:
                         self._handle.getNode(where='/', name=name)
                         raise AssertionError()
-                    except tables.NoSuchNodeError:
+                    except self.tables.NoSuchNodeError:
                         pass
 
 
@@ -559,10 +529,10 @@ class HDF5Trajectory(object):
                 try:
                     self._handle.getNode(where='/', name=name)
                     raise AssertionError()
-                except tables.NoSuchNodeError:
+                except self.tables.NoSuchNodeError:
                     pass
 
-        except tables.NoSuchNodeError:
+        except self.tables.NoSuchNodeError:
             raise ValueError("The file that you're trying to save to doesn't "
                 "contain the field %s. You can always save a new trajectory "
                 "and have it contain this information, but I don't allow 'ragged' "
@@ -582,7 +552,6 @@ class HDF5Trajectory(object):
     def _initialize_headers(self, n_atoms, set_coordinates, set_time, set_cell,
                             set_velocities, set_kineticEnergy, set_potentialEnergy,
                             set_temperature, set_lambdaValue):
-        tables = import_tables()
         self._n_atoms = n_atoms
 
         self._handle.root._v_attrs.conventions = 'Pande'
@@ -599,45 +568,45 @@ class HDF5Trajectory(object):
         # create arrays that store frame level informat
         if set_coordinates:
             self._handle.createEArray(where='/', name='coordinates',
-                atom=tables.Float32Atom(), shape=(0, self._n_atoms, 3))
+                atom=self.tables.Float32Atom(), shape=(0, self._n_atoms, 3))
             self._handle.root.coordinates.attrs['units'] = 'nanometers'
 
         if set_time:
             self._handle.createEArray(where='/', name='time',
-                atom=tables.Float32Atom(), shape=(0,))
+                atom=self.tables.Float32Atom(), shape=(0,))
             self._handle.root.time.attrs['units'] = 'picoseconds'
 
         if set_cell:
             self._handle.createEArray(where='/', name='cell_lengths',
-                atom=tables.Float32Atom(), shape=(0, 3))
+                atom=self.tables.Float32Atom(), shape=(0, 3))
             self._handle.createEArray(where='/', name='cell_angles',
-                atom=tables.Float32Atom(), shape=(0, 3))
+                atom=self.tables.Float32Atom(), shape=(0, 3))
             self._handle.root.cell_lengths.attrs['units'] = 'nanometers'
             self._handle.root.cell_angles.attrs['units'] = 'degrees'
 
         if set_velocities:
             self._handle.createEArray(where='/', name='velocities',
-                atom=tables.Float32Atom(), shape=(0, self._n_atoms, 3))
+                atom=self.tables.Float32Atom(), shape=(0, self._n_atoms, 3))
             self._handle.root.velocities.attrs['units'] = 'nanometers/picosecond'
 
         if set_kineticEnergy:
             self._handle.createEArray(where='/', name='kineticEnergy',
-                atom=tables.Float32Atom(), shape=(0,))
+                atom=self.tables.Float32Atom(), shape=(0,))
             self._handle.root.kineticEnergy.attrs['units'] = 'kilojoules_per_mole'
 
         if set_potentialEnergy:
             self._handle.createEArray(where='/', name='potentialEnergy',
-                atom=tables.Float32Atom(), shape=(0,))
+                atom=self.tables.Float32Atom(), shape=(0,))
             self._handle.root.potentialEnergy.attrs['units'] = 'kilojoules_per_mole'
 
         if set_temperature:
             self._handle.createEArray(where='/', name='temperature',
-                atom=tables.Float32Atom(), shape=(0,))
+                atom=self.tables.Float32Atom(), shape=(0,))
             self._handle.root.temperature.attrs['units'] = 'kelvin'
 
         if set_lambdaValue:
             self._handle.createEArray(where='/', name='lambda',
-                atom=tables.Float32Atom(), shape=(0,))
+                atom=self.tables.Float32Atom(), shape=(0,))
             self._handle.getNode('/', name='lambda').attrs['units'] = 'dimensionless'
 
     def _validate(self):

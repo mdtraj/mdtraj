@@ -1,20 +1,18 @@
+"""Automatic unit conversion using simtk.units behind the scenes.
+"""
 ##############################################################################
 # imports
 ##############################################################################
 
 import ast
 import warnings
+from mdtraj.utils import import_
 
-try:
-    import simtk.unit as units
-    HAVE_UNIT = True
-except ImportError:
-    units = None
-    HAVE_UNIT = False
-    warnings.warn('The package simtk.unit was not imported, which means that'
-                  'no unit processing will be done. Please install OpenMM to '
-                  'get access to automatic unit conversion and validation. It '
-                  'is highly recommended.')
+__all__ = ['in_units_of']
+
+##############################################################################
+# classes and functions
+##############################################################################
 
 
 class _UnitContext(ast.NodeTransformer):
@@ -37,6 +35,7 @@ class _UnitContext(ast.NodeTransformer):
         # we want to prefix all names to look like unit.nanometers instead
         # of just "nanometers", because I don't want to import * from
         # units into this module.
+        units = import_('simtk.unit')
         if not hasattr(units, node.id):
             # also, let's take this opporunity to check that the node.id
             # (which supposed to be the name of the unit, like "nanometers")
@@ -66,10 +65,12 @@ def _str_to_unit(unit_string):
     'nanometer**2*gigajoule/meter'
     
     """
+    units = import_('simtk.unit')
     # parse the string with the ast, and then run out unit context
     # visitor on it, which will basically change bare names like
     # "nanometers" into "unit.nanometers" and simulataniously check that
     # there's no nefarious stuff in the expression.
+
     node = _unit_context.visit(ast.parse(unit_string, mode='eval'))
     fixed_node = ast.fix_missing_locations(node)
     output = eval(compile(fixed_node, '<string>', mode='eval'))
@@ -95,10 +96,13 @@ def in_units_of(quantity, units_out, units_in=None):
         
     Examples
     --------
+    >>> units = import_('simtk.unit')
     >>> str(in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond'))
     '1000000.0'
     """
-    if quantity is None or (not HAVE_UNIT):
+    units = import_('simtk.unit')
+
+    if quantity is None:
         return quantity
 
     if isinstance(quantity, units.Quantity):
