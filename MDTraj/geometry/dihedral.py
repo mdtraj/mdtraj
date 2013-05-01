@@ -74,7 +74,7 @@ def _construct_atom_dict(top, chain_id=0):
     return atom_dict
 
 
-def atom_sequence_finder(traj, atom_names, rid_offsets):
+def atom_sequence_finder(traj, atom_names, rid_offsets=None):
     """Find sequences of atom indices correponding to desired atoms.
 
     Parameters
@@ -83,7 +83,7 @@ def atom_sequence_finder(traj, atom_names, rid_offsets):
         Trajectory for which you want dihedrals.
     atom_names : np.ndarray, shape=(4), dtype='str'
         Array of atoms to in each dihedral angle.
-    rid_offsets : np.ndarray, shape=(4), dtype='int'
+    rid_offsets : np.ndarray, optional, shape=(4), dtype='int'
         Array of integer offsets for each atom.
 
     Notes
@@ -102,6 +102,10 @@ def atom_sequence_finder(traj, atom_names, rid_offsets):
     >>> rid_offsets = [-1, 0, 0, 0] # doctest: +SKIP
     >>> found_residue_ids, indices = atom_sequence_finder(traj, atom_names, rid_offsets) # doctest: +SKIP
     """
+    if rid_offsets is None:
+        rid_offsets = parse_offsets(atom_names)
+    atom_names = strip_offsets(atom_names)
+
     atom_dict = _construct_atom_dict(traj.top)
     atom_indices = []
     found_residue_ids = []
@@ -117,20 +121,52 @@ def atom_sequence_finder(traj, atom_names, rid_offsets):
 
     return found_residue_ids, atom_indices
 
-PHI_ATOMS = ["C", "N", "CA", "C"]
-PHI_OFFSETS = [-1, 0, 0, 0]
-PSI_ATOMS = ["N", "CA", "C", "N"]
-PSI_OFFSETS = [0, 0, 0, 1]
-OMEGA_ATOMS = ["CA", "C", "N", "CA"]
-OMEGA_OFFSETS = [0, 0, 1, 1]
-CHI_ATOMS = ["N", "CA", "CB", "CG"]
-CHI_ATOMS_ALT = ["N", "CA", "CB", "CG1"]  # Need to incorporate this somehow!!!
-CHI_OFFSETS = [0, 0, 0, 0]
+def parse_offsets(atom_names):
+    """Convert a list of atom+offset strings into lists offsets.
+    
+    Notes
+    -----
+    For example, ["-C", "N", "CA", "C"] will be parsed as
+    [-1, 0, 0, 0]
+    """
+    offsets = []
+    for atom in atom_names:
+        if atom[0] == "-":
+            offsets.append(-1)
+        elif atom[0] == "+":
+            offsets.append(+1)
+        else:
+            offsets.append(0)
+    return offsets
 
-_get_indices_omega = lambda traj: atom_sequence_finder(traj, OMEGA_ATOMS, OMEGA_OFFSETS)
-_get_indices_phi = lambda traj: atom_sequence_finder(traj, PHI_ATOMS, PHI_OFFSETS)
-_get_indices_psi = lambda traj: atom_sequence_finder(traj, PSI_ATOMS, PSI_OFFSETS)
-_get_indices_chi = lambda traj: atom_sequence_finder(traj, CHI_ATOMS, CHI_OFFSETS)
+def strip_offsets(atom_names):
+    """Convert a list of atom + offset strings into lists of atoms.
+    
+    Notes
+    -----
+    For example, ["-C", "N", "CA", "C"] will be parsed as
+    ["C","N","CA","C"]
+    """
+    atoms = []
+    for atom in atom_names:
+        if atom[0] == "-":
+            atoms.append(atom[1:])
+        elif atom[0] == "+":
+            atoms.append(atom[1:])
+        else:
+            atoms.append(atom)
+    return atoms
+    
+PHI_ATOMS = ["-C", "N", "CA", "C"]
+PSI_ATOMS = ["N", "CA", "C", "+N"]
+OMEGA_ATOMS = ["CA", "C", "+N", "+CA"]
+CHI_ATOMS = ["N", "CA", "CB", "CG"]
+#CHI_ATOMS_ALT = ["N", "CA", "CB", "CG1"]  # Need to incorporate this somehow!!!
+
+_get_indices_omega = lambda traj: atom_sequence_finder(traj, OMEGA_ATOMS)
+_get_indices_phi = lambda traj: atom_sequence_finder(traj, PHI_ATOMS)
+_get_indices_psi = lambda traj: atom_sequence_finder(traj, PSI_ATOMS)
+_get_indices_chi = lambda traj: atom_sequence_finder(traj, CHI_ATOMS)
 
 
 def calculate_phi(traj):

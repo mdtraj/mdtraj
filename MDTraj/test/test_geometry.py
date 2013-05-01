@@ -72,6 +72,23 @@ def test_dihedral_indices():
     eq(ind[0], psi0_ind)
     eq(int(rid[0]), 0)
 
+def test_dihedral_index_offset_generation():    
+    traj = load(get_fn('1bpi.pdb'))
+
+    result = np.array([2, 11, 12, 13])  # The atom indices of the first phi angle
+
+    rid1, ind1 = mdtraj.geometry.dihedral._get_indices_phi(traj)
+    rid2, ind2 = mdtraj.geometry.dihedral.atom_sequence_finder(traj, ["-C","N","CA","C"])
+    rid3, ind3 = mdtraj.geometry.dihedral.atom_sequence_finder(traj, ["-C","N","CA","C"], [-1, 0, 0, 0])
+    rid4, ind4 = mdtraj.geometry.dihedral.atom_sequence_finder(traj, ["C" ,"N","CA","C"], [-1, 0, 0, 0])
+    eq(rid1, rid2)
+    eq(rid1, rid3)
+    eq(rid1, rid4)
+
+    eq(ind1, ind2)
+    eq(ind1, ind3)
+    eq(ind1, ind4)
+    eq(ind1[0], result)
 
 def test_dihedral():
     """We compared phi and psi angles from pymol to MDTraj output."""
