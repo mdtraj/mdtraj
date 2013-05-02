@@ -222,7 +222,10 @@ def load_xml(filename, top=None):
                     float(vectors.find(name).attrib['y']),
                     float(vectors.find(name).attrib['z'])))
 
-    return Trajectory(xyz=np.array(positions), topology=topology, box=np.array(box))
+    traj = Trajectory(xyz=np.array(positions), topology=topology)
+    traj.unitcell_vectors = np.array(box).reshape(1,3,3)
+
+    return traj
 
 
 def load_xtc(filename, top=None, chunk=500):
