@@ -41,10 +41,12 @@ int frame
     cdef int n_frames, n_atoms_padded, true_stride
     cdef Py_ssize_t i
     
-    assert xyz1.shape[1] == 3
-    assert xyz2.shape[1] == 3
-    assert xyz1.shape[2] % 4 == 0
-    assert xyz2.shape[2] % 4 == 0
+    if not ((xyz1.shape[1] == 3) & (xyz2.shape[1] == 3)):
+        raise(ValueError("Input arrays must have second dimension of 3, found %d and %d." % (xyz1.shape[1], xyz2.shape[1])))
+    if not ((xyz1.shape[2] % 4 == 0) & (xyz2.shape[2] % 4 == 0)):
+        raise(ValueError("Input arrays must have third dimension of 4*n, found %d and %d." % (xyz1.shape[2], xyz2.shape[2])))
+    if not (xyz1.shape[2] == xyz2.shape[2]):
+        raise(ValueError("Input arrays must have same third dimension, found %d and %d." % (xyz1.shape[2], xyz2.shape[2])))
     
     n_frames = xyz1.shape[0]
     n_atoms_padded = xyz1.shape[2]
