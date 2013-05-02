@@ -194,3 +194,13 @@ def test_center():
     mu = traj.xyz.mean(1)
     mu0 = np.zeros(mu.shape)
     eq(mu0, mu)
+
+def test_select_atoms():
+    traj = load(get_fn('frame0.lh5'))
+    desired_atom_indices = [0,1,2,3]
+    traj.select_atoms(desired_atom_indices)
+    atom_indices = [a.index for a in traj.top.atoms()]
+    eq(desired_atom_indices, atom_indices)
+    eq(traj.xyz.shape[1], 4)
+    eq(traj.n_atoms, 4)
+    eq(traj.n_residues, 1)

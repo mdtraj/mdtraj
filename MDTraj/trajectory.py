@@ -1183,3 +1183,29 @@ class Trajectory(object):
         for x in self._xyz:
             x -= (x.astype('float64').mean(0))
 
+    def select_atoms(self, atom_indices):
+        """Delete atoms not in `atom_indices` and re-index those that remain.  (Inplace)
+
+        Parameters
+        ----------
+        atom_indices : list([int])
+            List of atom indices to keep.
+        """
+        
+        # Delete undesired atoms
+        for chain in self.top._chains:
+            for residue in chain._residues:
+                residue._atoms = [a for a in residue._atoms if a.index in atom_indices]
+        
+        # Delete empty residues
+        for chain in self.top._chains:
+            chain._residues = [r for r in chain._residues if len(r._atoms) > 0]
+        
+        # Delete empty chains
+        self.top._chains = [c for c in self.top._chains if len(c._residues) > 0]
+
+        # Re-index atom indices
+        for k, atom in enumerate(self.top.atoms()):
+            atom.index = k
+
+        self._xyz = self.xyz[:,atom_indices]
