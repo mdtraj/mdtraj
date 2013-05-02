@@ -20,6 +20,7 @@ from mdtraj.testing import get_fn, eq, DocStringFormatTester
 import numpy as np
 from mdtraj.trajectory import load_hdf, load
 import mdtraj.trajectory
+from mdtraj import topology
 
 TestDocstrings = DocStringFormatTester(mdtraj.trajectory, error_on_none=True)
 
@@ -37,9 +38,8 @@ def teardown_module(module):
     for e in [temp1, temp2, temp3, temp4]:
         os.unlink(e)
 
-def test_hdf0():
+def test_legacy_hdf0():
     t0 = load(fn)
-
 
 def test_box():
     t = load(get_fn('native.pdb'))
@@ -67,7 +67,10 @@ def test_box_load_save():
     # cycle, the box information is preserved:
     for temp_fn in [temp1, temp2, temp4, temp5]:
         t.save(temp_fn)
-        t2 = load(temp_fn, top=get_fn('native.pdb'))
+        if temp_fn.endswith('.h5'):
+            t2 = load(temp_fn)
+        else:
+            t2 = load(temp_fn, top=get_fn('native.pdb'))
 
         assert t.unitcell_vectors != None
         yield lambda: eq(t.xyz, t2.xyz, decimal=3)
@@ -75,29 +78,27 @@ def test_box_load_save():
         yield lambda: eq(t.unitcell_angles, t2.unitcell_angles)
         yield lambda: eq(t.unitcell_lengths, t2.unitcell_lengths)
 
-
-
-def test_hdf1():
-    t0 = load_hdf(fn, top=nat, chunk=1)
-    t1 = load_hdf(fn, top=nat, chunk=10)
-    t2 = load_hdf(fn, top=nat, chunk=100)
+def test_legacy_hdf1():
+    t0 = load(fn, top=nat, chunk=1)
+    t1 = load(fn, top=nat, chunk=10)
+    t2 = load(fn, top=nat, chunk=100)
 
     yield lambda: eq(t0.xyz, t1.xyz)
     yield lambda: eq(t0.xyz, t2.xyz)
 
-def test_hdf2():
-    t0 = load_hdf(fn, top=nat, chunk=10, stride=10)
-    t1 = load_hdf(fn, top=nat, chunk=20, stride=10)
-    t2 = load_hdf(fn, top=nat, chunk=50, stride=10)
-    t3 = load_hdf(fn, top=nat, chunk=1, stride=1)
+def test_legacy_hdf2():
+    t0 = load(fn, top=nat, chunk=10, stride=10)
+    t1 = load(fn, top=nat, chunk=20, stride=10)
+    t2 = load(fn, top=nat, chunk=50, stride=10)
+    t3 = load(fn, top=nat, chunk=1, stride=1)
 
     yield lambda: eq(t0.xyz, t1.xyz)
     yield lambda: eq(t0.xyz, t2.xyz)
     yield lambda: eq(t0.xyz, t3.xyz[::10])
 
-def test_hdf_frame():
-    t0 = load_hdf(fn)
-    t1 = load_hdf(fn, frame=1)
+def test_legacy_hdf_frame():
+    t0 = load(fn)
+    t1 = load(fn, frame=1)
 
     yield lambda: eq(t0[1].xyz, t1.xyz)
     yield lambda: eq(t0[1].unitcell_vectors, t1.unitcell_vectors)
@@ -106,7 +107,7 @@ def test_hdf_frame():
     yield lambda: eq(t0[1].time, t1.time)
 
 def test_slice():
-    t = load_hdf(fn, top=nat)
+    t = load(fn, top=nat)
     yield lambda: eq((t[0:5] + t[5:10]).xyz, t[0:10].xyz)
     yield lambda: eq((t[0:5] + t[5:10]).time, t[0:10].time)
     yield lambda: eq((t[0:5] + t[5:10]).unitcell_vectors, t[0:10].unitcell_vectors)
@@ -115,7 +116,7 @@ def test_slice():
 
 
 def test_slice2():
-    t = load_hdf(get_fn('frame1.lh5'))
+    t = load(get_fn('frame1.lh5'))
     yield lambda: t[0] == t[[0,1]][0]
 
 def test_xtc():
@@ -152,7 +153,7 @@ def test_binpos():
             eq(t.time, t2.time, err_msg=e)
         yield f
 
-def test_load():
+def test_load_join():
     filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos", "frame0.lh5"]
     num_block = 3
     for filename in filenames:
@@ -160,6 +161,36 @@ def test_load():
         t1 = mdtraj.trajectory.load(get_fn(filename), top=nat, discard_overlapping_frames=False)
         t2 = mdtraj.trajectory.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=False)
         t3 = mdtraj.trajectory.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=True)
-        eq(t0.n_frames, t1.n_frames)
-        eq(t0.n_frames * num_block, t2.n_frames)
-        eq(t3.n_frames , t0.n_frames * num_block - num_block + 1)
+
+        yield lambda: eq(t0.n_frames, t1.n_frames)
+        yield lambda: eq(t0.n_frames * num_block, t2.n_frames)
+        yield lambda: eq(t3.n_frames , t0.n_frames * num_block - num_block + 1)
+
+    # h5 loader doesn't need top
+    t0 = mdtraj.trajectory.load(get_fn('traj.h5'), discard_overlapping_frames=True)
+    t1 = mdtraj.trajectory.load(get_fn('traj.h5'), discard_overlapping_frames=False)
+    t2 = mdtraj.trajectory.load([get_fn('traj.h5') for i in xrange(num_block)], discard_overlapping_frames=False)
+    t3 = mdtraj.trajectory.load([get_fn('traj.h5') for i in xrange(num_block)], discard_overlapping_frames=True)
+    yield lambda: eq(t0.n_frames, t1.n_frames)
+    yield lambda: eq(t0.n_frames * num_block, t2.n_frames)
+    yield lambda: eq(t3.n_frames , t0.n_frames * num_block - num_block + 1)
+
+def test_hdf5_0():
+    t = load(get_fn('traj.h5'))
+    t2 = load(get_fn('native.pdb'))
+    t3 = load(get_fn('traj.h5'), frame=8)
+    
+    assert topology.equal(t.topology, t2.topology)
+    yield lambda: eq(t.time, 0.002*(1 + np.arange(100)))
+    yield lambda: eq(t.time, 0.002*(1 + np.arange(100)))
+    yield lambda: eq(t[8].xyz, t3.xyz)
+    yield lambda: eq(t[8].time, t3.time)
+    yield lambda: eq(t[8].unitcell_vectors, t3.unitcell_vectors)
+
+
+def test_center():
+    traj = load(get_fn('frame0.lh5'))
+    traj.center_coordinates()
+    mu = traj.xyz.mean(1)
+    mu0 = np.zeros(mu.shape)
+    eq(mu0, mu)

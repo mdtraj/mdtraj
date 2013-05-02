@@ -29,38 +29,7 @@ import warnings
 
 import numpy as np
 from mdtraj import version
-from mdtraj.utils.arrays import ensure_type
-
-##############################################################################
-# functions
-##############################################################################
-
-def import_netcdf():
-    """Delayed import of the netCDF4 module
-    """
-
-    if 'netCDF4' in sys.modules:
-        return sys.modules['netCDF4']
-
-    try:
-        import netCDF4
-        return netCDF4
-    except ImportError:
-        print '#'*73
-        print 'ERROR'
-        print '#'*73
-        print 'MDTraj\'s AMBER NetCDF bindings require the python-netcdf'
-        print 'library. You can install the library using the python package'
-        print 'managers "pip" or "easy_install" with'
-        print ''
-        print 'pip install netcdf4'
-        print 'or'
-        print 'easy_install netcdf4'
-        print ''
-        print 'You can also download the library directly and find more documentation at'
-        print 'https://pypi.python.org/pypi/netCDF4'
-        print '#'*73
-        raise
+from mdtraj.utils import ensure_type, import_
 
 ##############################################################################
 # classes
@@ -85,7 +54,7 @@ class NetCDFFile(object):
         """
         self._closed = True   # is the file currently closed?
         self._mode = mode      # what mode were we opened in
-        netcdf = import_netcdf()
+        netcdf = import_('netCDF4')
 
         if mode not in ['r', 'w', 'a', 'ws', 'as']:
             raise ValueError(("mode must be one of ['r', 'w', 'a', 'ws', 'as']"
