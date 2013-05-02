@@ -48,12 +48,12 @@ int frame
     if not (xyz1.shape[2] == xyz2.shape[2]):
         raise(ValueError("Input arrays must have same third dimension, found %d and %d." % (xyz1.shape[2], xyz2.shape[2])))
     
-    n_frames = xyz1.shape[0]
+    n_frames = xyz2.shape[0]
     n_atoms_padded = xyz1.shape[2]
     true_stride = n_atoms_padded * 3
 
     cdef np.ndarray[np.float32_t, ndim=1] distances = np.zeros(n_frames, dtype='float32')
     
     for i in prange(n_frames, nogil=True):
-        distances[i] = ls_rmsd2_aligned_T_g(n_atoms, n_atoms_padded, n_atoms_padded, &xyz1[i,0,0], &xyz2[frame,0,0], g1[i], g2[frame]) ** 0.5
+        distances[i] = ls_rmsd2_aligned_T_g(n_atoms, n_atoms_padded, n_atoms_padded, &xyz1[frame,0,0], &xyz2[i,0,0], g1[frame], g2[i]) ** 0.5
     return distances
