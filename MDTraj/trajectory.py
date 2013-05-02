@@ -1190,24 +1190,6 @@ class Trajectory(object):
         ----------
         atom_indices : list([int])
             List of atom indices to keep.
-        """
-        
-        # Delete undesired atoms
-        for chain in self.top._chains:
-            for residue in chain._residues:
-                residue._atoms = [a for a in residue._atoms if a.index in atom_indices]
-        
-        # Delete empty residues
-        for chain in self.top._chains:
-            chain._residues = [r for r in chain._residues if len(r._atoms) > 0]
-        
-        # Delete empty chains
-        self.top._chains = [c for c in self.top._chains if len(c._residues) > 0]
-
-        self.top._bonds = [(a,b) for (a,b) in self.top._bonds if a.index in atom_indices and b.index in atom_indices]
-
-        # Re-index atom indices
-        for k, atom in enumerate(self.top.atoms()):
-            atom.index = k
-
+        """        
+        self.top.restrict_atoms(atom_indices)
         self._xyz = self.xyz[:,atom_indices]

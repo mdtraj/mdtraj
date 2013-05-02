@@ -292,6 +292,34 @@ class Topology(object):
                 if distance < 0.3: # this is supposed to be nm. I think we're good
                     self.addBond(sg1, sg2)
 
+    def restrict_atoms(self, atom_indices):
+        """Delete atoms not in `atom_indices` and re-index those that remain.  (Inplace)
+
+        Parameters
+        ----------
+        atom_indices : list([int])
+            List of atom indices to keep.
+        """
+        
+        # Delete undesired atoms
+        for chain in self._chains:
+            for residue in chain._residues:
+                residue._atoms = [a for a in residue._atoms if a.index in atom_indices]
+        
+        # Delete empty residues
+        for chain in self._chains:
+            chain._residues = [r for r in chain._residues if len(r._atoms) > 0]
+        
+        # Delete empty chains
+        self._chains = [c for c in self._chains if len(c._residues) > 0]
+
+        self._bonds = [(a,b) for (a,b) in self._bonds if a.index in atom_indices and b.index in atom_indices]
+
+        # Re-index atom indices
+        for k, atom in enumerate(self.atoms()):
+            atom.index = k
+
+
 class Chain(object):
     """A Chain object represents a chain within a Topology."""
     def __init__(self, index, topology):

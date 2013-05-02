@@ -204,4 +204,5 @@ def test_restrict_atoms():
     eq(traj.xyz.shape[1], 4)
     eq(traj.n_atoms, 4)
     eq(traj.n_residues, 1)
+    eq(len(traj.top._bonds), 2)
     
