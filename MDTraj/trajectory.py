@@ -1183,3 +1183,13 @@ class Trajectory(object):
         for x in self._xyz:
             x -= (x.astype('float64').mean(0))
 
+    def restrict_atoms(self, atom_indices):
+        """Delete atoms not in `atom_indices` and re-index those that remain.  (Inplace)
+
+        Parameters
+        ----------
+        atom_indices : list([int])
+            List of atom indices to keep.
+        """        
+        self.top.restrict_atoms(atom_indices)
+        self._xyz = self.xyz[:,atom_indices]
