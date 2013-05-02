@@ -161,6 +161,7 @@ def test_load_join():
         t1 = mdtraj.trajectory.load(get_fn(filename), top=nat, discard_overlapping_frames=False)
         t2 = mdtraj.trajectory.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=False)
         t3 = mdtraj.trajectory.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=True)
+
         yield lambda: eq(t0.n_frames, t1.n_frames)
         yield lambda: eq(t0.n_frames * num_block, t2.n_frames)
         yield lambda: eq(t3.n_frames , t0.n_frames * num_block - num_block + 1)
@@ -186,4 +187,10 @@ def test_hdf5_0():
     yield lambda: eq(t[8].time, t3.time)
     yield lambda: eq(t[8].unitcell_vectors, t3.unitcell_vectors)
 
-    
+
+def test_center():
+    traj = load(get_fn('frame0.lh5'))
+    traj.center_coordinates()
+    mu = traj.xyz.mean(1)
+    mu0 = np.zeros(mu.shape)
+    eq(mu0, mu)
