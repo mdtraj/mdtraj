@@ -1183,7 +1183,7 @@ class Trajectory(object):
         for x in self._xyz:
             x -= (x.astype('float64').mean(0))
 
-    def select_atoms(self, atom_indices):
+    def restrict_atoms(self, atom_indices):
         """Delete atoms not in `atom_indices` and re-index those that remain.  (Inplace)
 
         Parameters
@@ -1203,6 +1203,8 @@ class Trajectory(object):
         
         # Delete empty chains
         self.top._chains = [c for c in self.top._chains if len(c._residues) > 0]
+
+        self.top._bonds = [(a,b) for (a,b) in self.top._bonds if a.index in atom_indices and b.index in atom_indices]
 
         # Re-index atom indices
         for k, atom in enumerate(self.top.atoms()):
