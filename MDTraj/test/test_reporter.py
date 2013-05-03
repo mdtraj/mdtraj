@@ -75,7 +75,7 @@ def test_reporter():
         yield lambda: eq(got.velocities.shape, (50, 22, 3))
         yield lambda: eq(got.cell_lengths, 2 * np.ones((50, 3)))
         yield lambda: eq(got.cell_angles, 90*np.ones((50, 3)))
-        yield lambda: eq(got.time, 0.002*(1+np.arange(50)))
+        yield lambda: eq(got.time, 0.002*2*(1+np.arange(50)))
     
         yield lambda: topology.equal(f.topology,
                                      trajectory.load(get_fn('native.pdb')).top)
