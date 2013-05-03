@@ -57,7 +57,7 @@ def test_reporter():
     
     simulation.context.setVelocitiesToTemperature(300*kelvin)
     
-    reporter = HDF5Reporter(temp, 1, coordinates=True, time=True,
+    reporter = HDF5Reporter(temp, 2, coordinates=True, time=True,
         cell=True, potentialEnergy=True, kineticEnergy=True, temperature=True,
         velocities=True)
     simulation.reporters.append(reporter)
@@ -68,14 +68,14 @@ def test_reporter():
     
     with HDF5Trajectory(temp) as f:
         got = f.read()
-        yield lambda: eq(got.temperature.shape, (100,))
-        yield lambda: eq(got.potentialEnergy.shape, (100,))
-        yield lambda: eq(got.kineticEnergy.shape, (100,))
-        yield lambda: eq(got.coordinates.shape, (100, 22, 3))
-        yield lambda: eq(got.velocities.shape, (100, 22, 3))
-        yield lambda: eq(got.cell_lengths, 2 * np.ones((100, 3)))
-        yield lambda: eq(got.cell_angles, 90*np.ones((100, 3)))
-        yield lambda: eq(got.time, 0.002*(1+np.arange(100)))
+        yield lambda: eq(got.temperature.shape, (50,))
+        yield lambda: eq(got.potentialEnergy.shape, (50,))
+        yield lambda: eq(got.kineticEnergy.shape, (50,))
+        yield lambda: eq(got.coordinates.shape, (50, 22, 3))
+        yield lambda: eq(got.velocities.shape, (50, 22, 3))
+        yield lambda: eq(got.cell_lengths, 2 * np.ones((50, 3)))
+        yield lambda: eq(got.cell_angles, 90*np.ones((50, 3)))
+        yield lambda: eq(got.time, 0.002*(1+np.arange(50)))
     
         yield lambda: topology.equal(f.topology,
                                      trajectory.load(get_fn('native.pdb')).top)
