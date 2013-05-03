@@ -26,5 +26,6 @@ install:
 script:
   - sudo python setup.py -q install
   - nosetests
-  - nosetests --with-performance MDTraj/test/performance
+  - nosetests --with-performance MDTraj/test/performance --performance-revision=`git rev-parse HEAD`
+  - curl --form "fileupload=@performance.json" http://mdtraj-performance.appspot.com
   - cat performance.json
