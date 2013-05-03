@@ -180,9 +180,11 @@ class HDF5Trajectory(object):
         topology : mdtraj.Topology
             A topology object
         """
-        if not hasattr(self._handle.root._v_attrs, 'topology'):
+        try:
+            topology_dict = json.loads(self._handle.getNode('/', name='topology')[0])
+        except self.tables.NoSuchNodeError:
             return None
-        topology_dict = json.loads(self._handle.root._v_attrs.topology)
+
         topology = Topology()
 
         for chain_dict in sorted(topology_dict['chains'], key=operator.itemgetter('index')):
@@ -249,8 +251,12 @@ class HDF5Trajectory(object):
                 'chains() -> residue() -> atoms() and bond() protocol. '
                 'Specifically, we encountered the following %s' % e)
 
-        # actually set the attribute
-        self._handle.root._v_attrs.topology = json.dumps(topology_dict)
+        # actually set the tables
+        try:
+            self._handle.removeNode(where='/', name='topology')
+        except self.tables.NoSuchNodeError:
+            pass
+        self._handle.createArray(where='/', name='topology', object=[str(json.dumps(topology_dict))])
 
     #####################################################
     # randomState global attribute (optional)
