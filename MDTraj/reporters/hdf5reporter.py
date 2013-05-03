@@ -176,7 +176,7 @@ class HDF5Reporter(object):
 
         kwargs = {}
         if self._coordinates:
-            kwargs['coordinates'] = state.getPositions(asNumpy=True)
+            kwargs['coordinates'] = state.getPositions(asNumpy=True).astype(np.float32)
         if self._time:
             kwargs['time'] = state.getTime()
         if self._cell:
