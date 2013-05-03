@@ -52,7 +52,7 @@ class HDF5Reporter(object):
     Example
     -------
     >>> simulation = Simulation(topology, system, integrator) # doctest: +SKIP
-    >>> h5_reporter = HDF5Reporter('traj.h5', 100)           # doctest: +SKIP
+    >>> h5_reporter = HDF5Reporter('traj.h5', 100)            # doctest: +SKIP
     >>> simulation.reporters.append(h5_reporter)              # doctest: +SKIP
     >>> simulation.step(10000)                                # doctest: +SKIP
 
@@ -93,7 +93,7 @@ class HDF5Reporter(object):
         else:
             raise TypeError("I don't know how to handle %s" % file)
 
-        self._reportInterval = bool(reportInterval)
+        self._reportInterval = int(reportInterval)
         self._is_intialized = False
         self._n_particles = None
 
