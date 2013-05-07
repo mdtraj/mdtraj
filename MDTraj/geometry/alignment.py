@@ -28,7 +28,7 @@ class Transformation():
         return xyz.dot(self.rotation) + self.translation - mu1.dot(self.rotation)
 
 
-def find_transformation(mobile, target):
+def compute_transformation(mobile, target):
     """Returns a Transformation object to align mobile onto target.
 
     Parameters
@@ -42,7 +42,7 @@ def find_transformation(mobile, target):
     -------
     T : Transformation aligning mobile to target.
     """
-    translation, rotation = _find_translation_and_rotation(mobile, target)
+    translation, rotation = _compute_translation_and_rotation(mobile, target)
     return Transformation(rotation, translation)
 
 
@@ -60,7 +60,7 @@ def transform(mobile, target):
     -------
     mobile_prime : transformed coordinates of mobile.
     """
-    T = find_transformation(mobile, target)
+    T = compute_transformation(mobile, target)
     mobile_prime = T.transform(mobile)
     return mobile_prime
 
@@ -83,7 +83,7 @@ def transform_inplace(mobile, target):
     mobile[:] = mobile_prime
 
 
-def _find_translation_and_rotation(mobile, target):
+def _compute_translation_and_rotation(mobile, target):
     """Returns the translation and rotation mapping mobile onto target.
 
     Parameters

@@ -5,19 +5,21 @@ from mdtraj import IRMSD
 def calculate_G(xyz):
     return (xyz.astype('float64') ** 2.0).sum(-1).sum(-1).astype('float32')
 
+def reshape_irmsd(xyz):
+    n_frames, n_atoms = xyz.shape[0:2]
+    n_atoms_padded = 4 + n_atoms - n_atoms % 4
+    xyz_irmsd = np.zeros((n_frames, 3, n_atoms_padded), dtype='float32')
+    xyz_irmsd[:, :, :n_atoms] = xyz.transpose((0, 2, 1))
+    return xyz_irmsd, n_atoms_padded
 
 class RMSDTrajectory():
     def __init__(self, traj):
         self.n_frames = traj.n_frames
         self.n_atoms = traj.n_atoms
-        self.n_atoms_padded = 4 + traj.n_atoms - traj.n_atoms % 4
 
         traj.center_coordinates()
         self.G = calculate_G(traj.xyz)
-
-        self.xyz = np.zeros((traj.n_frames, 3, self.n_atoms_padded), dtype='float32')
-        self.xyz[:, :, :self.n_atoms] = traj.xyz.transpose((0, 2, 1))
-
+        self.xyz, self.n_atoms_padded = reshape_irmsd(traj.xyz)
 
 class RMSD():
     def __init__(self):
