@@ -35,3 +35,9 @@ def test_rmsd_nonzero():
     rmsd_kabsch = alignment.rmsd_kabsch(xyz1, xyz3)
     rmsd_qcp = alignment.rmsd_qcp(xyz1, xyz3)
     eq(rmsd_kabsch, rmsd_qcp, decimal=5)
+
+def test_transform():
+    T = alignment.compute_transformation(xyz2, xyz1)
+    xyz2_prime = T.transform(xyz2)
+    
+    eq(xyz1, xyz2_prime)
