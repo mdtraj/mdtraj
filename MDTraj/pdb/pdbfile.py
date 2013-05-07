@@ -68,7 +68,7 @@ class PDBFile(object):
     _residueNameReplacements = {}
     _atomNameReplacements = {}
     
-    def __init__(self, file):
+    def __init__(self, file, load_all_models=True):
         """Load a PDB file.
         
         The atom positions and Topology can be retrieved by calling getPositions() and getTopology().
@@ -83,7 +83,7 @@ class PDBFile(object):
         
         # Load the PDB file
         
-        pdb = PdbStructure(open(file))
+        pdb = PdbStructure(open(file), load_all_models=load_all_models)
         PDBFile._loadNameReplacementTables()
 
         # Build the topology

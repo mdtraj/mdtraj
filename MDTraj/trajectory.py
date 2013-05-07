@@ -143,13 +143,15 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     return loader(filename, **kwargs)
 
 
-def load_pdb(filename):
+def load_pdb(filename, load_all_models=True):
     """Load a pdb file.
 
     Parameters
     ----------
     filename : str
-        Filename of PDB
+        Path to the PDB file on disk.
+    load_all_models : bool, default=True
+        If the file contains multiple models, load all of them.
 
     Returns
     -------
@@ -161,7 +163,7 @@ def load_pdb(filename):
             'you supplied %s' % type(filename))
 
     filename = str(filename)
-    f = pdbfile.PDBFile(filename)
+    f = pdbfile.PDBFile(filename, load_all_models)
 
     # convert from angstroms to nm
     coords = f.positions / 10.0

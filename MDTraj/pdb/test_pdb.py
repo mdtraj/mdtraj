@@ -16,6 +16,7 @@
 
 import numpy as np
 import os, tempfile
+from mdtraj import topology
 from mdtraj.testing import get_fn, eq
 from mdtraj import trajectory
 
@@ -82,9 +83,17 @@ def test_4K6Q():
     # that first bond is from a conect record
 
 
-def test_2EQQ():
+def test_2EQQ_0():
     # this is an nmr structure with 20 models
     t = trajectory.load(get_fn('2EQQ.pdb'))
-    eq(t.n_frames, 20)
-    eq(t.n_atoms, 423)
-    eq(len(list(t.top.residues())), 28)
+    yield lambda: eq(t.n_frames, 20)
+    yield lambda: eq(t.n_atoms, 423)
+    yield lambda: eq(len(list(t.top.residues())), 28)
+
+    t2 = trajectory.load(get_fn('2EQQ.pdb'), load_all_models=False)
+    yield lambda: eq(t2.n_frames, 1)
+    yield lambda: eq(t2.n_atoms, 423)
+    yield lambda: eq(len(list(t2.top.residues())), 28)
+
+    yield lambda: eq(t.xyz[0], t2.xyz[0])
+    yield lambda: topology.equal(t.top, t2.top)
