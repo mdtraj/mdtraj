@@ -220,7 +220,7 @@ PHI_ATOMS = ["-C", "N", "CA", "C"]
 PSI_ATOMS = ["N", "CA", "C", "+N"]
 OMEGA_ATOMS = ["CA", "C", "+N", "+CA"]
 CHI_ATOMS = ["N", "CA", "CB", "CG"]
-#CHI_ATOMS_ALT = ["N", "CA", "CB", "CG1"]  # Need to incorporate this somehow!!!
+# CHI_ATOMS_ALT = ["N", "CA", "CB", "CG1"]  # Need to incorporate this somehow!!!
 
 _get_indices_omega = lambda traj: atom_sequence_finder(traj, OMEGA_ATOMS)
 _get_indices_phi = lambda traj: atom_sequence_finder(traj, PHI_ATOMS)

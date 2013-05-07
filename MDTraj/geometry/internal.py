@@ -29,7 +29,7 @@ import scipy.linalg
 from itertools import combinations, ifilter
 import logging
 
-from mdtraj.geometry.contact import compute_atom_distances
+from mdtraj.geometry.distance import compute_distances
 from mdtraj.geometry.dihedral import compute_dihedrals
 from mdtraj.geometry.angle import compute_bond_angles
 from mdtraj.utils import import_
@@ -107,7 +107,7 @@ def get_redundant_internal_coordinates(trajectory, **kwargs):
     iangles = np.array(iangles, dtype=np.int32, order='c')
     idihedrals = np.array(idihedrals, dtype=np.int32, order='c')
 
-    b = compute_atom_distances(xyzlist, ibonds)
+    b = compute_distances(xyzlist, ibonds)
     a = compute_bond_angles(xyzlist, iangles)
     d = compute_dihedrals(xyzlist, idihedrals, degrees=False)
 
