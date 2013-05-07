@@ -14,18 +14,24 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
-import  os
 from mdtraj.testing import get_fn, eq, DocStringFormatTester
 import mdtraj.geometry
 import numpy as np
-from mdtraj.trajectory import load_hdf, load
+from mdtraj.trajectory import load
 import mdtraj.trajectory
+
+
+RgDocStringTester = DocStringFormatTester(mdtraj.geometry.rg)
+ContactDocStringTester = DocStringFormatTester(mdtraj.geometry.contact)
+DihedralDocStringTester = DocStringFormatTester(mdtraj.geometry.dihedral)
+
 
 def test_rg():
     t0 = load(get_fn('frame0.lh5'))
     Rg = mdtraj.geometry.rg.compute_rg(t0)
     Rg0 = np.loadtxt(get_fn("Rg_frame0_ref.dat"))
     eq(Rg, Rg0)
+
 
 """
 # Compute reference data using MSMBuilder2.
@@ -58,7 +64,8 @@ distances = msmbuilder.geometry.contact.atom_distances(x, atom_pairs)
 np.savetxt("atom_distances_frame0_ref.dat", distances)
 """
 
-def test_dihedral_indices():    
+
+def test_dihedral_indices():
     traj = load(get_fn('1bpi.pdb'))
     # Manually compare generated indices to known answers.
     phi0_ind = np.array([3, 12, 13, 14]) - 1  # Taken from PDB, so subtract 1
@@ -72,7 +79,8 @@ def test_dihedral_indices():
     eq(ind[0], psi0_ind)
     eq(int(rid[0]), 0)
 
-def test_dihedral_index_offset_generation():    
+
+def test_dihedral_index_offset_generation():
     traj = load(get_fn('1bpi.pdb'))
 
     result = np.array([2, 11, 12, 13])  # The atom indices of the first phi angle
@@ -89,6 +97,7 @@ def test_dihedral_index_offset_generation():
     eq(ind1, ind3)
     eq(ind1, ind4)
     eq(ind1[0], result)
+
 
 def test_dihedral():
     """We compared phi and psi angles from pymol to MDTraj output."""

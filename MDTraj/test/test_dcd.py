@@ -60,7 +60,7 @@ def test_read_2():
 def test_read_3():
     "DCDReader: check streaming read of frames 1 at a time"
     xyz_ref, box_lengths_ref, box_angles_ref = dcd.DCDReader(fn_dcd).read()
-    
+
     reader = dcd.DCDReader(fn_dcd)
     for i in range(len(xyz_ref)):
         xyz, box_lenths, box_angles = reader.read(1)
@@ -72,7 +72,7 @@ def test_read_3():
 def test_read_4():
     "DCDReader: check streaming read followed by reading the 'rest'"
     xyz_ref, box_lengths_ref, box_angles_ref = dcd.DCDReader(fn_dcd).read()
-    
+
     reader = dcd.DCDReader(fn_dcd)
     for i in range(int(len(xyz_ref)/2)):
         xyz, box_lenths, box_angles = reader.read(1)
@@ -84,7 +84,7 @@ def test_read_4():
     yield lambda: eq(xyz_ref[i+1:], xyz_rest)
     yield lambda: eq(box_lengths_ref[i+1:], box_rest)
     yield lambda: eq(box_angles_ref[i+1:], angles_rest)
-    
+
     yield lambda: len(xyz_ref) == i + len(xyz_rest)
 
 

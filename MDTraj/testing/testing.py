@@ -21,7 +21,6 @@
 import os
 import functools
 import numpy as np
-from numpy.linalg import norm
 from numpy.testing import (assert_allclose, assert_almost_equal,
   assert_approx_equal, assert_array_almost_equal, assert_array_almost_equal_nulp,
   assert_array_equal, assert_array_less, assert_array_max_ulp, assert_equal,

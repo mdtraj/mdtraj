@@ -59,9 +59,11 @@ def to_bytearray(topology):
     "Serializer a compete topology (bonds, atoms, etc) to an array of bytes"
     return np.fromstring(pickle.dumps(topology, protocol=-1), dtype='uint8')
 
+
 def from_bytearray(arr):
     "Reconstruct a complete topology (bonds, atoms, etc) from an array of bytes"
     return pickle.loads(arr.tostring())
+
 
 def equal(topology1, topology2):
     """Are two topologies equal?
@@ -104,6 +106,7 @@ def equal(topology1, topology2):
                     if getattr(a1.element, attr) != getattr(a2.element, attr):
                         return False
     return True
+
 
 class Topology(object):
     """Topology stores the topological information about a system.
@@ -300,16 +303,16 @@ class Topology(object):
         atom_indices : list([int])
             List of atom indices to keep.
         """
-        
+
         # Delete undesired atoms
         for chain in self._chains:
             for residue in chain._residues:
                 residue._atoms = [a for a in residue._atoms if a.index in atom_indices]
-        
+
         # Delete empty residues
         for chain in self._chains:
             chain._residues = [r for r in chain._residues if len(r._atoms) > 0]
-        
+
         # Delete empty chains
         self._chains = [c for c in self._chains if len(c._residues) > 0]
 

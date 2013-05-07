@@ -24,7 +24,6 @@ The code is heavily based on amber_netcdf_trajectory_tools.py by John Chodera.
 # imports
 ##############################################################################
 
-import sys
 import warnings
 
 import numpy as np

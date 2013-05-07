@@ -1,27 +1,30 @@
 import numpy as np
 import tempfile
 import os
+from mdtraj import hdf5
 from mdtraj.hdf5 import HDF5Trajectory
-from mdtraj.testing import get_fn, eq
+from mdtraj.testing import get_fn, eq, DocStringFormatTester
 from nose.tools import assert_raises
+#DocStringTester = DocStringFormatTester(hdf5)
 
 try:
     import simtk.unit as units
     HAVE_UNITS = True
 except ImportError:
     HAVE_UNITS = False
-    
+
 temp = tempfile.mkstemp(suffix='.h5')[1]
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
     os.unlink(temp)
 
+
 def test_write_coordinates():
     coordinates = np.random.randn(4, 10,3)
     with HDF5Trajectory(temp, 'w') as f:
         f.write(coordinates)
-    
+
     with HDF5Trajectory(temp) as f:
         yield lambda: eq(f.root.coordinates[:], coordinates)
         yield lambda: eq(str(f.root.coordinates.attrs['units']), 'nanometers')
@@ -31,20 +34,21 @@ def test_write_coordinates_reshape():
     coordinates = np.random.randn(10,3)
     with HDF5Trajectory(temp, 'w') as f:
         f.write(coordinates)
-    
+
     with HDF5Trajectory(temp) as f:
         yield lambda: eq(f.root.coordinates[:], coordinates.reshape(1,10,3))
         yield lambda: eq(str(f.root.coordinates.attrs['units']), 'nanometers')
-    
+
 
 def test_write_multiple():
     coordinates = np.random.randn(4, 10,3)
     with HDF5Trajectory(temp, 'w') as f:
         f.write(coordinates)
         f.write(coordinates)
-    
+
     with HDF5Trajectory(temp) as f:
         yield lambda: eq(f.root.coordinates[:], np.vstack((coordinates, coordinates)))
+
 
 def test_write_inconsistent():
     coordinates = np.random.randn(4, 10,3)
@@ -55,6 +59,7 @@ def test_write_inconsistent():
             # can't save more velocities
             f.write(coordinates, velocities=coordinates)
 
+
 def test_write_inconsistent_2():
     coordinates = np.random.randn(4, 10,3)
     with HDF5Trajectory(temp, 'w') as f:
@@ -64,29 +69,31 @@ def test_write_inconsistent_2():
             # more information.
             f.write(coordinates)
 
+
 @np.testing.decorators.skipif(not HAVE_UNITS)
 def test_write_units():
     "simtk.units are automatically converted into MD units for storage on disk"
     coordinates = units.Quantity(np.random.randn(4, 10,3), units.angstroms)
     velocities = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.year)
-    
+
     with HDF5Trajectory(temp, 'w') as f:
         f.write(coordinates, velocities=velocities)
 
     with HDF5Trajectory(temp) as f:
         yield lambda: eq(f.root.coordinates[:], coordinates.value_in_unit(units.nanometers))
         yield lambda: eq(str(f.root.coordinates.attrs['units']), 'nanometers')
-        
+
         yield lambda: eq(f.root.velocities[:], velocities.value_in_unit(units.nanometers/units.picosecond))
         yield lambda: eq(str(f.root.velocities.attrs['units']), 'nanometers/picosecond')
+
 
 @np.testing.decorators.skipif(not HAVE_UNITS)
 def test_write_units_mismatch():
     velocoties = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.picosecond)
-    
+
     with HDF5Trajectory(temp, 'w') as f:
         with assert_raises(TypeError):
-            # if you try to write coordinates that are unitted and not 
+            # if you try to write coordinates that are unitted and not
             # in the correct units, we find that
             f.write(coordinates=velocoties)
 
@@ -97,7 +104,7 @@ def test_topology():
 
     with HDF5Trajectory(temp, 'w') as f:
         f.topology = top
-    
+
     with HDF5Trajectory(temp) as f:
         topology.equal(f.topology, top)
 
@@ -128,6 +135,7 @@ def test_read_1():
         yield lambda: eq(got.coordinates, coordinates.value_in_unit(units.nanometers))
         yield lambda: eq(got.velocities, velocities.value_in_unit(units.nanometers/units.picoseconds))
 
+
 def test_read_slice_0():
     coordinates = np.random.randn(4, 10,3)
     with HDF5Trajectory(temp, 'w') as f:
@@ -138,7 +146,8 @@ def test_read_slice_0():
         yield lambda: eq(got.coordinates, coordinates[:2])
         yield lambda: eq(got.velocities, None)
         yield lambda: eq(got.alchemicalLambda, np.array([1,2]))
-        
+
+
 def test_read_slice_1():
     coordinates = np.random.randn(4, 10,3)
     with HDF5Trajectory(temp, 'w') as f:
@@ -153,6 +162,7 @@ def test_read_slice_1():
         yield lambda: eq(got.coordinates, coordinates[2:])
         yield lambda: eq(got.velocities, None)
 
+
 def test_read_slice_2():
     coordinates = np.random.randn(4, 10,3)
     with HDF5Trajectory(temp, 'w') as f:
@@ -162,6 +172,7 @@ def test_read_slice_2():
         got = f.read(atom_indices=np.array([0,1]))
         yield lambda: eq(got.coordinates, coordinates[:, [0,1], :])
         yield lambda: eq(got.alchemicalLambda, np.arange(4))
+
 
 def test_read_slice_3():
     coordinates = np.random.randn(4, 10,3)
