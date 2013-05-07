@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
+import numpy as np
 import os, tempfile
 from mdtraj.testing import get_fn, eq
 from mdtraj import trajectory
@@ -21,7 +22,7 @@ from mdtraj import trajectory
 pdb = get_fn('native.pdb')
 temp = tempfile.mkstemp(suffix='.pdb')[1]
 def teardown_module(module):
-    """remove the temporary file created by tests in this file 
+    """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
     os.unlink(temp)
 
@@ -33,8 +34,7 @@ def test_pdbread():
 def test_pdbwrite():
     p = trajectory.load(pdb)
     p.save(temp)
-    
-    os.system('cat %s' % temp)
+
     r = trajectory.load(temp)
     eq(p.xyz, r.xyz)
 
@@ -56,3 +56,27 @@ def test_load_multiframe():
     yield lambda: eq(t.n_frames, 2)
     yield lambda: eq(t.n_atoms, 22)
     yield lambda: eq(t.xyz[0], t.xyz[1])
+
+
+def test_4K6Q():
+    t = trajectory.load(get_fn('4K6Q.pdb'))
+    eq(t.n_frames, 1)
+    eq(t.n_atoms, 2208)
+
+    # this is a random line from the file
+    #ATOM   1567  O   LEU A 201      40.239  19.248 -14.530  1.00 33.74           O
+
+    atom = list(t.top.atoms())[1566]
+    eq(atom.element.symbol, 'O')
+    eq(atom.residue.name, 'LEU')
+    eq(atom.index, 1566)
+    eq(t.xyz[0, 1566], np.array([40.239, 19.248, -14.530]) / 10)  # converting to NM
+
+    # this is atom 1913 in the PDB
+    atom = list(t.top.atoms())[1911]
+    eq(atom.name, 'C1')
+    eq(atom.residue.name, 'NAG')
+    eq([(a1.index, a2.index) for a1, a2 in t.top.bonds() if a1.index == 1911 or a2.index == 1911],
+       [(1765, 1911), (1911, 1912), (1911, 1922)])
+
+    # that first bond is from a conect record
