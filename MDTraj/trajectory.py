@@ -917,8 +917,10 @@ class Trajectory(object):
 
 
     def __init__(self, xyz, topology, time=None, unitcell_lengths=None, unitcell_angles=None):
-        self.xyz = xyz
+        # install the topology into the object first, so that when setting
+        # the xyz, we can check that it lines up (e.g. n_atoms), with the topology
         self.topology = topology
+        self.xyz = xyz
 
         # box has no default, it'll just be none normally
         self.unitcell_lengths = unitcell_lengths
