@@ -16,7 +16,7 @@
 
 import tempfile, os
 from mdtraj import binpos, dcd, io
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
+from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises
 import numpy as np
 from mdtraj.trajectory import load_hdf, load
 import mdtraj.trajectory
@@ -38,8 +38,17 @@ def teardown_module(module):
     for e in [temp1, temp2, temp3, temp4]:
         os.unlink(e)
 
+
 def test_legacy_hdf0():
     t0 = load(fn)
+
+
+def test_mismatch():
+    # loading a 22 atoms xtc with a topology that has 2,000 atoms
+    # some kind of error should happen!
+    with assert_raises(ValueError):
+        load(get_fn('frame0.xtc'), top=get_fn('4K6Q.pdb'))
+
 
 def test_box():
     t = load(get_fn('native.pdb'))
