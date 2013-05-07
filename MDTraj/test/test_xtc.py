@@ -34,7 +34,7 @@ pdb = get_fn('native.pdb')
 
 temp = tempfile.mkstemp(suffix='.xtc')[1]
 def teardown_module(module):
-    """remove the temporary file created by tests in this file 
+    """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
     os.unlink(temp)
 
@@ -48,6 +48,7 @@ def test_read_chunk1():
     yield lambda: eq(time, iofile['time'])
     yield lambda: eq(prec, iofile['prec'])
 
+
 def test_read_chunk10():
     xyz, time, step, box, prec = xtc.read(fn_xtc, chunk=10)
     iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
@@ -56,6 +57,7 @@ def test_read_chunk10():
     yield lambda: eq(box, iofile['box'])
     yield lambda: eq(time, iofile['time'])
     yield lambda:eq(prec, iofile['prec'])
+
 
 def test_read_chunk1000():
     xyz, time, step, box, prec = xtc.read(fn_xtc, chunk=1000)
@@ -81,6 +83,3 @@ def test_write_1():
     xtc.write(temp, xyz=xyz, force_overwrite=True)
     xyz2, time2, step2, box2, prec2 = xtc.read(temp)
     eq(xyz, xyz2)
-
-
-

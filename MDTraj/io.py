@@ -56,7 +56,7 @@ import tables
 
 try:
     COMPRESSION = tables.Filters(complevel=9, complib='blosc', shuffle=True)
-except Exception: #type?
+except Exception:  #type?
     warnings.warn("Missing BLOSC; no compression will used.")
     COMPRESSION = tables.Filters()
 
@@ -237,7 +237,7 @@ class DeferredTable(object):
 
         repr_strings = []
         for name in self._node_names:
-            repr_strings.append('  %s: [shape=%s, dtype=%s]' % \
+            repr_strings.append('  %s: [shape=%s, dtype=%s]' %
                 (name, handle.getNode(where='/', name=name).shape,
                 handle.getNode(where='/', name=name).dtype))
         self._repr_string = '{\n%s\n}' % ',\n'.join(repr_strings)

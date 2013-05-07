@@ -58,7 +58,7 @@ def compute_atom_distances(traj, atom_pairs):
 
     Parameters
     ----------
-    tray : Trajectory
+    traj : Trajectory
         Trajectory to compute distances in
     atom_pairs : np.ndarray, shape[num_pairs, 2], dtype=int
         Each row gives the indices of two atoms.

@@ -14,14 +14,23 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
-from inspect import (isclass, ismodule, isfunction, ismethod, \
-    getmembers, getdoc, getmodule, getargs, isbuiltin)
+##############################################################################
+# Imports
+##############################################################################
+
+from inspect import (isclass, ismodule, isfunction, ismethod,
+                     getmembers, getdoc, getmodule, getargs, isbuiltin)
 import docscrape
 import types
 import sys
 import warnings
 
 __all__ = ['DocStringFormatTester']
+
+##############################################################################
+# functions
+##############################################################################
+
 
 def DocStringFormatTester(module, error_on_none=False):
     """
@@ -136,7 +145,6 @@ def DocStringFormatTester(module, error_on_none=False):
                         "docstring, %d" % (format(f), n_args, len(param_names)))
                 return
 
-
             args = set(getargs(f.func_code).args)
             if ismethod(f):
                 args.remove('self')
@@ -146,11 +154,10 @@ def DocStringFormatTester(module, error_on_none=False):
                     "match Parameters list %s" % (format(f),
                         list(args), list(param_names)))
 
-
     funcdict = {}
     # populate the func dict before calling type()
     for i, f in enumerate(functions):
-        name = 'test_%s' % i  #  this is the name we give the method
+        name = 'test_%s' % i  # this is the name we give the method
 
         # create the method. this is a little complicated, but the basic
         # idea is that NoseTests checks the func_name, so we need to create
@@ -214,7 +221,6 @@ def walk(module):
             if isclass(obj):
                 return True
         return False
-
 
     instack = [v for k, v in getmembers(module) if is_valid(v)]
     outstack = []

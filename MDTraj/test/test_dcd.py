@@ -39,11 +39,13 @@ def teardown_module(module):
     this gets automatically called by nose"""
     os.unlink(temp)
 
+
 def test_read():
     xyz, box_lengths, box_angles = dcd.read(fn_dcd)
     xyz2 = io.loadh(get_fn('frame0.dcd.h5'), 'xyz')
 
     eq(xyz, xyz2)
+
 
 def test_read_2():
     "DCDReader: check nframes"
@@ -54,10 +56,11 @@ def test_read_2():
     yield lambda: eq(box_lengths1, box_lengths2)
     yield lambda: eq(box_angles1, box_angles2)
 
+
 def test_read_3():
     "DCDReader: check streaming read of frames 1 at a time"
     xyz_ref, box_lengths_ref, box_angles_ref = dcd.DCDReader(fn_dcd).read()
-    
+
     reader = dcd.DCDReader(fn_dcd)
     for i in range(len(xyz_ref)):
         xyz, box_lenths, box_angles = reader.read(1)
@@ -69,7 +72,7 @@ def test_read_3():
 def test_read_4():
     "DCDReader: check streaming read followed by reading the 'rest'"
     xyz_ref, box_lengths_ref, box_angles_ref = dcd.DCDReader(fn_dcd).read()
-    
+
     reader = dcd.DCDReader(fn_dcd)
     for i in range(int(len(xyz_ref)/2)):
         xyz, box_lenths, box_angles = reader.read(1)
@@ -81,8 +84,9 @@ def test_read_4():
     yield lambda: eq(xyz_ref[i+1:], xyz_rest)
     yield lambda: eq(box_lengths_ref[i+1:], box_rest)
     yield lambda: eq(box_angles_ref[i+1:], angles_rest)
-    
+
     yield lambda: len(xyz_ref) == i + len(xyz_rest)
+
 
 def test_write_0():
     xyz = dcd.read(fn_dcd)[0]
@@ -91,12 +95,14 @@ def test_write_0():
 
     eq(xyz, xyz2)
 
+
 def test_write_1():
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
     dcd.write(temp, xyz, force_overwrite=True)
     xyz2 = dcd.read(temp)[0]
 
     eq(xyz, xyz2)
+
 
 def test_write_2():
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
