@@ -166,3 +166,10 @@ def test_write_3():
         with assert_raises(ValueError):
             # or the other way aroun
             f.write(np.random.randn(100, 3, 3), cell_angles=np.random.randn(100, 3))
+
+
+def test_n_atoms():
+    with netcdf.NetCDFFile(temp, 'w', force_overwrite=True) as f:
+        f.write(np.random.randn(1,11,3))
+    with netcdf.NetCDFFile(temp) as f:
+        eq(f.n_atoms, 11)

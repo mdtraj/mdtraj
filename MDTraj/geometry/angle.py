@@ -70,13 +70,14 @@ def compute_bond_angles(traj, angle_indices):
 
     Parameters
     ----------
-    xyz : np.ndarray, shape=[n_frames, n_atoms, 3], dtype=float
-        The cartesian coordinates
+    traj : Trajectory
+        Trajectory to compute bond angles in.
     angle_indices : np.ndarray, shape[n_angles, 3], dtype=int
         Each row gives the indices of three atoms which together make an angle
 
     Returns
     -------
     angles : np.ndarray, shape=[n_frames, n_angles], dtype=float
+        The angles are in radians
     """
     return _compute_bond_angles_xyz(traj.xyz, angle_indices)

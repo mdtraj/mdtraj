@@ -24,7 +24,7 @@ import mdtraj.trajectory
 RgDocStringTester = DocStringFormatTester(mdtraj.geometry.rg)
 ContactDocStringTester = DocStringFormatTester(mdtraj.geometry.contact)
 DihedralDocStringTester = DocStringFormatTester(mdtraj.geometry.dihedral)
-
+AngleDocStringTester = DocStringFormatTester(mdtraj.geometry.angle)
 
 def test_rg():
     t0 = load(get_fn('frame0.lh5'))
@@ -116,3 +116,11 @@ def test_dihedral():
     chi0 = np.array([-43.37841, -18.14592]) * np.pi / 180.  # Pymol
     eq(chi[0,0:2], chi0, decimal=4)
     eq(int(rid[0]), 0)
+
+
+def test_angle():
+    x1 = [0,0,0]
+    x2 = [0,1,0]
+    x3 = [1,1,0]
+    
+    yield lambda: eq(0.5*np.pi, float(mdtraj.geometry.angle._compute_bond_angles_xyz(np.array([[x1, x2, x3]]), [[0,1,2]])[0,0]))
