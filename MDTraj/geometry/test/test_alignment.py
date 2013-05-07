@@ -26,12 +26,12 @@ xyz2 = rotation.dot(xyz1.T).T + offset
 xyz3 = xyz1 + np.random.normal(size=xyz1.shape)
 
 def test_rmsd_zero():
-    rmsd_kabsch = alignment.rmsd(xyz1, xyz2)
+    rmsd_kabsch = alignment.rmsd_kabsch(xyz1, xyz2)
     rmsd_qcp = alignment.rmsd_qcp(xyz1, xyz2)
     eq(float(rmsd_kabsch), 0.0, decimal=5)
     eq(float(rmsd_qcp), 0.0, decimal=5)
 
 def test_rmsd_nonzero():
-    rmsd_kabsch = alignment.rmsd(xyz1, xyz3)
+    rmsd_kabsch = alignment.rmsd_kabsch(xyz1, xyz3)
     rmsd_qcp = alignment.rmsd_qcp(xyz1, xyz3)
     eq(rmsd_kabsch, rmsd_qcp, decimal=5)

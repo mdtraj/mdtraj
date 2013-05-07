@@ -2,8 +2,7 @@ import numpy as np
 from mdtraj import IRMSD
 
 def calculate_G(xyz):
-    xyz = xyz.astype('float64')
-    return (xyz ** 2.0).sum(-1).sum(-1)
+    return (xyz.astype('float64') ** 2.0).sum(-1).sum(-1).astype('float32')
 
 class RMSDTrajectory():
     def __init__(self, traj):
@@ -12,17 +11,17 @@ class RMSDTrajectory():
         self.n_atoms_padded = 4 + traj.n_atoms - traj.n_atoms % 4
         
         traj.center_coordinates()
+        self.G = calculate_G(traj.xyz)
 
         self.xyz = np.zeros((traj.n_frames, 3, self.n_atoms_padded), dtype='float32')
         self.xyz[:,:,:self.n_atoms] = traj.xyz.transpose((0,2,1))
-        self.G = (traj.xyz.astype('float64') ** 2.).sum(-1).sum(-1).astype('float32')
+        
 
 class RMSD():
     def __init__(self):
         pass
 
-
-    def one_to_all(self, r_traj1, r_traj2, index1):
+    def one_to_all(self, r_traj, r_traj_all, index1, parallel=True):
         """Calculate a vector of distances from one frame of the first trajectory
         to all of the frames in the second trajectory
 
@@ -31,21 +30,18 @@ class RMSD():
 
         Parameters
         ----------
-        r_traj : rmsd.TheoData
+        r_traj : RMSDTrajectory
             Calculate RMSD to the index1 frame of this.
-        r_traj_many : rmsd.TheoData
+        r_traj_all : RMSDTrajectory
             Calculate RMSD to all of these frames.
         index1 : int
             index of reference frame in `r_traj`
+        parallel : bool, default True
+            if True, use OpenMP parallelization.
 
         Returns
         -------
-        Vector of distances of length len(r_traj_many)
-
-        Notes
-        -----
-        If the omp_parallel optional argument is True, we use shared-memory
-        parallelization in C to do this faster.
+        Vector of distances of length len(r_traj_all)
         """
 
-        return IRMSD.rmsd_one_to_all(r_traj1.xyz, r_traj2.xyz, r_traj1.G, r_traj2.G, r_traj1.n_atoms, index1)
+        return IRMSD.rmsd_one_to_all(r_traj.xyz, r_traj_all.xyz, r_traj.G, r_traj_all.G, r_traj.n_atoms, index1, parallel)
