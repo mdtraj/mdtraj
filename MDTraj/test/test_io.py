@@ -18,6 +18,13 @@ from mdtraj import io
 
 import numpy as np
 
+temp = tempfile.mkstemp(suffix='.h5')[1]
+def teardown_module(module):
+    """remove the temporary file created by tests in this file
+    this gets automatically called by nose"""
+    os.unlink(temp)
+
+
 def test_overwrite_1():
     fid, fn = tempfile.mkstemp()
     try:
@@ -106,3 +113,23 @@ class test_io_int(test_io):
         hdfFile.root.arr_0[:] = self.data[:]
         hdfFile.flush()
         hdfFile.close()
+
+
+def test_groups():
+    """Test to ensure that files are loaded correctly even if they contain nested
+    groups and stuff"""
+    x = np.random.randn(10)
+    y = np.random.randn(11)
+    f = tables.openFile(temp, 'w')
+    f.createGroup(where='/', name='mygroup')
+    f.createArray(where='/mygroup', name='myarray', object=x)
+    f.createArray(where='/', name='mya2', object=y)
+    f.close()
+
+    yield lambda: eq(io.loadh(temp)['mygroup/myarray'], x)
+    yield lambda: eq(io.loadh(temp)['mya2'], y)
+    yield lambda: eq(io.loadh(temp, deferred=False)['mygroup/myarray'], x)
+    yield lambda: eq(io.loadh(temp, deferred=False)['mya2'], y)
+    yield lambda: eq(io.loadh(temp, 'mygroup/myarray'), x)
+    yield lambda: eq(io.loadh(temp, 'mya2'), y)
+
