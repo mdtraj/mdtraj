@@ -158,13 +158,22 @@ class PDBFile(object):
                                 
                     newAtom = top.addAtom(atomName, element, r)
                     atomByNumber[atom.serial_number] = newAtom
-                    pos = atom.get_position()
-                    coords.append(pos)
+
+        # load all of the positions (from every model)
+        positions = []
+        for model in pdb.iter_models(use_all_models=True):
+            model_positions = []
+            for atom in model.iter_atoms():
+                model_positions.append(atom.get_position())
+            positions.append(model_positions)
+        self.positions = np.array(positions)
+
         ## The atom positions read from the PDB file
-        self.positions = np.array(coords)
+        #self.positions = np.array(coords)
+        #print self.positions.shape
         self.topology.setUnitCellDimensions(pdb.get_unit_cell_dimensions())
         self.topology.createStandardBonds()
-        self.topology.createDisulfideBonds(self.positions)
+        self.topology.createDisulfideBonds(self.positions[0])
         
         # Add bonds based on CONECT records.
         

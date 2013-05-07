@@ -33,5 +33,26 @@ def test_pdbread():
 def test_pdbwrite():
     p = trajectory.load(pdb)
     p.save(temp)
+    
+    os.system('cat %s' % temp)
     r = trajectory.load(temp)
     eq(p.xyz, r.xyz)
+
+def test_load_multiframe():
+    from mdtraj.pdb.pdbstructure import PdbStructure
+    with open(get_fn('multiframe.pdb')) as f:
+        pdb = PdbStructure(f)
+        yield lambda: eq(len(pdb.models), 2)
+        yield lambda: eq(len(pdb.models[0].chains), 1)
+        yield lambda: eq(len(pdb.models[0].chains[0].residues), 3)
+        yield lambda: eq(len(list(pdb.models[0].iter_atoms())), 22)
+
+        yield lambda: eq(len(pdb.models[1].chains), 1)
+        yield lambda: eq(len(pdb.models[1].chains[0].residues), 3)
+        yield lambda: eq(len(list(pdb.models[1].iter_atoms())), 22)
+
+
+    t = trajectory.load(get_fn('multiframe.pdb'))
+    yield lambda: eq(t.n_frames, 2)
+    yield lambda: eq(t.n_atoms, 22)
+    yield lambda: eq(t.xyz[0], t.xyz[1])

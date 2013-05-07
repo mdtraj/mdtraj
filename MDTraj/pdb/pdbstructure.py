@@ -135,7 +135,7 @@ class PdbStructure(object):
     """
 
 
-    def __init__(self, input_stream, load_all_models = False):
+    def __init__(self, input_stream, load_all_models=True):
         """Create a PDB model from a PDB file stream.
 
         Parameters:
@@ -156,28 +156,48 @@ class PdbStructure(object):
         self._load(input_stream)
 
     def _load(self, input_stream):
+        state = None
+
         # Read one line at a time
         for pdb_line in input_stream:
             # Look for atoms
             if (pdb_line.find("ATOM  ") == 0) or (pdb_line.find("HETATM") == 0):
+                if state  == 'NEW_MODEL':
+                    new_number = self._current_model.number + 1
+                    self._add_model(Model(new_number))
+                    state = None
                 self._add_atom(Atom(pdb_line))
             # Notice MODEL punctuation, for the next level of detail
             # in the structure->model->chain->residue->atom->position hierarchy
             elif (pdb_line.find("MODEL") == 0):
-                model_number = int(pdb_line[10:14])
-                self._add_model(Model(model_number))
+                #model_number = int(pdb_line[10:14])
+                if self._current_model is None:
+                    new_number = 0 
+                else:
+                    new_number = self._current_model.number + 1
+                self._add_model(Model(new_number))
+                state = None
+
             elif (pdb_line.find("ENDMDL") == 0):
                 self._current_model._finalize()
-                if not self.load_all_models:
-                    break
+                if self.load_all_models:
+                    state = 'NEW_MODEL'
+                else:
+                   break 
+
             elif (pdb_line.find("END") == 0):
                 self._current_model._finalize()
-                if not self.load_all_models:
+                if self.load_all_models:
+                    state = 'NEW_MODEL'
+                else:
                     break
+
             elif (pdb_line.find("TER") == 0 and pdb_line.split()[0] == "TER"):
                 self._current_model._current_chain._add_ter_record()
+
             elif (pdb_line.find("CRYST1") == 0):
                 self._unit_cell_dimensions = (float(pdb_line[6:15]), float(pdb_line[15:24]), float(pdb_line[24:33]))
+
             elif (pdb_line.find("CONECT") == 0):
                 atoms = [int(pdb_line[7:12])]
                 for pos in (12,17,22,27):
@@ -185,6 +205,7 @@ class PdbStructure(object):
                         atoms.append(int(pdb_line[pos:pos+5]))
                     except:
                         pass
+
                 self._current_model.connects.append(atoms)
         self._finalize()
 
