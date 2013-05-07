@@ -1,21 +1,23 @@
 import numpy as np
 from mdtraj import IRMSD
 
+
 def calculate_G(xyz):
     return (xyz.astype('float64') ** 2.0).sum(-1).sum(-1).astype('float32')
+
 
 class RMSDTrajectory():
     def __init__(self, traj):
         self.n_frames = traj.n_frames
         self.n_atoms = traj.n_atoms
         self.n_atoms_padded = 4 + traj.n_atoms - traj.n_atoms % 4
-        
+
         traj.center_coordinates()
         self.G = calculate_G(traj.xyz)
 
         self.xyz = np.zeros((traj.n_frames, 3, self.n_atoms_padded), dtype='float32')
-        self.xyz[:,:,:self.n_atoms] = traj.xyz.transpose((0,2,1))
-        
+        self.xyz[:, :, :self.n_atoms] = traj.xyz.transpose((0, 2, 1))
+
 
 class RMSD():
     def __init__(self):
