@@ -151,9 +151,10 @@ def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
 
     return found_residue_ids, atom_indices
 
+
 def parse_offsets(atom_names):
     """Convert a list of atom+offset strings into lists offsets.
-    
+
     Notes
     -----
     For example, ["-C", "N", "CA", "C"] will be parsed as
@@ -169,9 +170,10 @@ def parse_offsets(atom_names):
             offsets.append(0)
     return offsets
 
+
 def strip_offsets(atom_names):
     """Convert a list of atom + offset strings into lists of atoms.
-    
+
     Notes
     -----
     For example, ["-C", "N", "CA", "C"] will be parsed as
@@ -186,12 +188,12 @@ def strip_offsets(atom_names):
         else:
             atoms.append(atom)
     return atoms
-    
+
 PHI_ATOMS = ["-C", "N", "CA", "C"]
 PSI_ATOMS = ["N", "CA", "C", "+N"]
 OMEGA_ATOMS = ["CA", "C", "+N", "+CA"]
 CHI_ATOMS = ["N", "CA", "CB", "CG"]
-#CHI_ATOMS_ALT = ["N", "CA", "CB", "CG1"]  # Need to incorporate this somehow!!!
+# CHI_ATOMS_ALT = ["N", "CA", "CB", "CG1"]  # Need to incorporate this somehow!!!
 
 _get_indices_omega = lambda traj: atom_sequence_finder(traj, OMEGA_ATOMS)
 _get_indices_phi = lambda traj: atom_sequence_finder(traj, PHI_ATOMS)

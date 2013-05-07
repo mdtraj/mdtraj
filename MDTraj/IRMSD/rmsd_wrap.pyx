@@ -5,8 +5,8 @@ import numpy as np
 cimport numpy as np
 from cython.parallel cimport prange
 
-cdef extern float ls_rmsd2_aligned_T_g (const int nrealatoms, const int npaddedatoms, const int rowstride,
-                          const float* aT, const float* bT, const float G_a, const float G_b) nogil
+cdef extern float ls_rmsd2_aligned_T_g (int nrealatoms, int npaddedatoms, int rowstride,
+                          float* aT, float* bT, float G_a, float G_b) nogil
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
