@@ -1,5 +1,5 @@
 import numpy as np
-import IRMSD
+from mdtraj import IRMSD
 
 def calculate_G(xyz):
     xyz = xyz.astype('float64')

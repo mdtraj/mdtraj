@@ -47,7 +47,7 @@ def rmsd(xyz1, xyz2):
     T = Transformation.align(xyz1, xyz2)
     xyz1_prime = T.transform(xyz1)
     delta = xyz1_prime - xyz2
-    rms = (delta ** 2.0).mean() ** 0.5
+    rms = (delta ** 2.0).sum(1).mean() ** 0.5
     return rms
 
 def find_translation_and_rotation(xyz1, xyz2):
