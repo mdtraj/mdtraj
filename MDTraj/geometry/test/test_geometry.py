@@ -38,10 +38,10 @@ Rg = msmbuilder.geometry.rg.calculate_rg(xyz)
 np.savetxt("Rg_frame0_ref.dat", Rg)
 """
 
-def test_atom_distances():
+def test_distances():
     t0 = load(get_fn('frame0.lh5'))
     atom_pairs = np.loadtxt(get_fn("atom_pairs.dat"),'int')
-    distances = mdtraj.geometry.contact.compute_atom_distances(t0, atom_pairs)
+    distances = mdtraj.geometry.distance.compute_distances(t0, atom_pairs)
     distances0 = np.loadtxt(get_fn("atom_distances_frame0_ref.dat"))
     eq(distances, distances0)
 
