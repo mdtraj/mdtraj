@@ -22,7 +22,7 @@ import mdtraj.trajectory
 
 
 RgDocStringTester = DocStringFormatTester(mdtraj.geometry.rg)
-ContactDocStringTester = DocStringFormatTester(mdtraj.geometry.contact)
+DistanceDocStringTester = DocStringFormatTester(mdtraj.geometry.distance)
 DihedralDocStringTester = DocStringFormatTester(mdtraj.geometry.dihedral)
 AngleDocStringTester = DocStringFormatTester(mdtraj.geometry.angle)
 
