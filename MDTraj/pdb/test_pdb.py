@@ -80,3 +80,9 @@ def test_4K6Q():
        [(1765, 1911), (1911, 1912), (1911, 1922)])
 
     # that first bond is from a conect record
+
+
+def test_2EQQ():
+    # this is an nmr structure with 20 models
+    t = trajectory.load(get_fn('2EQQ.pdb'))
+    eq(t.n_frames, 20)
