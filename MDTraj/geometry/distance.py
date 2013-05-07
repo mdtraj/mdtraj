@@ -28,7 +28,7 @@ import numpy as np
 ##############################################################################
 
 
-def _compute_atom_distances_xyz(xyz, atom_pairs):
+def _compute_distances_xyz(xyz, atom_pairs):
     """Compute the bond angles for each frame in xyz
 
     Parameters
@@ -53,7 +53,7 @@ def _compute_atom_distances_xyz(xyz, atom_pairs):
     return distances
 
 
-def compute_atom_distances(traj, atom_pairs):
+def compute_distances(traj, atom_pairs):
     """Compute the bond angles for each frame in traj
 
     Parameters
@@ -71,4 +71,4 @@ def compute_atom_distances(traj, atom_pairs):
     -----
     This is a reference implementation in python/numpy.
     """
-    return _compute_atom_distances_xyz(traj.xyz, atom_pairs)
+    return _compute_distances_xyz(traj.xyz, atom_pairs)
