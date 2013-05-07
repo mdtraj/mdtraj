@@ -219,8 +219,11 @@ def loadh(file, name=Ellipsis, deferred=True):
 
     if not deferred:
         result = {}
-        for node in handle.iterNodes(where='/'):
-            result[node.name] = node[:]
+        for node in handle.walkNodes(where='/'):
+            if isinstance(node, tables.Array):
+                # note that we want to strip off the leading "/"
+                # also, we're skipping Tables and other hdf5 structures
+                result[node._v_pathname[1:]] = node[:]
         if own_fid:
             handle.close()
         return result
@@ -231,7 +234,10 @@ def loadh(file, name=Ellipsis, deferred=True):
 class DeferredTable(object):
     def __init__(self, handle, own_fid):
         self._handle = handle
-        self._node_names = [e.name for e in handle.iterNodes(where='/')]
+
+        # get the paths of all of the nodes that are arrays (note that)
+        # we're skipping Tables
+        self._node_names = [node._v_pathname[1:] for node in handle.walkNodes(where='/') if isinstance(node, tables.Array)]
         self._loaded = {}
         self._own_fid = own_fid
 
@@ -249,7 +255,7 @@ class DeferredTable(object):
         self.close()
 
     def close(self):
-        if self._own_fid:
+        if hasattr(self, '_own_fid') and self._own_fid:
             self._handle.close()
 
     def __getitem__(self, key):
