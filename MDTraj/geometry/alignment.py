@@ -14,7 +14,7 @@ class Transformation():
 
         Parameters
         ----------
-        xyz : ndarray
+        xyz : ndarray, shape = (n_atoms, 3)
             xyz coordinates of a SINGLE frame
 
         Returns
@@ -35,7 +35,7 @@ def rmsd(xyz1, xyz2):
 
     Parameters
     ----------
-    xyz : ndarray
+    xyz : ndarray, shape = (n_atoms, 3)
         xyz coordinates of a SINGLE frame
 
     Returns
@@ -54,7 +54,7 @@ def find_translation_and_rotation(xyz1, xyz2):
 
     Parameters
     ----------
-    xyz : ndarray
+    xyz : ndarray, shape = (n_atoms, 3)
         xyz coordinates of a SINGLE frame
 
     Returns
