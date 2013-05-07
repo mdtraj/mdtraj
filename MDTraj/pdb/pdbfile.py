@@ -26,7 +26,7 @@ Portions copyright (c) 2012 Stanford University and the Authors.
 Authors: Peter Eastman
 Contributors:
 
-Permission is hereby granted, free of charge, to any person obtaining a 
+Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
 to deal in the Software without restriction, including without limitation
 the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -60,19 +60,19 @@ import element as elem
 
 class PDBFile(object):
     """PDBFile parses a Protein Data Bank (PDB) file and constructs a Topology and a set of atom positions from it.
-    
+
     This class also provides methods for creating PDB files.  To write a file containing a single model, call
     writeFile().  You also can create files that contain multiple models.  To do this, first call writeHeader(),
     then writeModel() once for each model in the file, and finally writeFooter() to complete the file."""
-    
+
     _residueNameReplacements = {}
     _atomNameReplacements = {}
-    
+
     def __init__(self, file, load_all_models=True):
         """Load a PDB file.
-        
+
         The atom positions and Topology can be retrieved by calling getPositions() and getTopology().
-        
+
         Parameters:
          - file (string) the name of the file to load
         """
@@ -80,14 +80,13 @@ class PDBFile(object):
         coords = [];
         ## The Topology read from the PDB file
         self.topology = top
-        
+
         # Load the PDB file
-        
         pdb = PdbStructure(open(file), load_all_models=load_all_models)
         PDBFile._loadNameReplacementTables()
 
         # Build the topology
-        
+
         # TJL QUESTION:
         # Isn't the following parsing supported in pdbstructure.py, which we just
         # called??
@@ -112,7 +111,7 @@ class PDBFile(object):
                     element = None
 
                     # Try to guess the element.
-                    
+
                     upper = atomName.upper()
                     if upper.startswith('CL'):
                         element = elem.chlorine
@@ -128,13 +127,13 @@ class PDBFile(object):
                         element = elem.potassium
                     elif( len( residue ) == 1 and upper.startswith('CA') ):
                         element = elem.calcium
-                        
+
                     # TJL has edited this. There are a few issues here. First,
                     # parsing for the element is non-trivial, so I do my best
                     # below. Second, there is additional parsing code in
                     # pdbstructure.py, and I am unsure why it doesn't get used
                     # here...
-                    
+
                     elif ( len( residue ) > 1 and upper.startswith('CE') ):
                         element = elem.carbon # (probably) not Celenium...
                     elif ( len( residue ) > 1 and upper.startswith('CD') ):
@@ -146,7 +145,7 @@ class PDBFile(object):
                     elif ( residue.name == 'CYS' and upper.startswith('SG') ):
                         element = elem.sulfur # (probably) not SG...
 
-                        
+
                     else:
                         try:
                             symbol = atomName[0:2].strip().rstrip("AB0123456789").lstrip("0123456789")
@@ -155,7 +154,7 @@ class PDBFile(object):
                             try:
                                 element = elem.get_by_symbol(atomName[0])
                             except KeyError: pass
-                                
+
                     newAtom = top.addAtom(atomName, element, r)
                     atomByNumber[atom.serial_number] = newAtom
 
@@ -176,7 +175,6 @@ class PDBFile(object):
         self.topology.createDisulfideBonds(self.positions[0])
         
         # Add bonds based on CONECT records.
-        
         connectBonds = []
         for connect in pdb.models[0].connects:
             i = connect[0]
@@ -193,7 +191,7 @@ class PDBFile(object):
     def getTopology(self):
         """Get the Topology of the model."""
         return self.topology
-        
+
     def getPositions(self):
         """Get the atomic positions."""
         return self.positions
@@ -239,11 +237,11 @@ class PDBFile(object):
             name = atom.attrib['name']
             for id in atom.attrib:
                 map[atom.attrib[id]] = name
-    
+
     @staticmethod
     def writeFile(topology, positions, file=sys.stdout, modelIndex=None):
         """Write a PDB file containing a single model.
-                
+
         Parameters:
          - topology (Topology) The Topology defining the model to write
          - positions (list) The list of atomic positions to write
@@ -256,7 +254,7 @@ class PDBFile(object):
     @staticmethod
     def writeHeader(topology, file=sys.stdout):
         """Write out the header for a PDB file.
-        
+
         Parameters:
          - topology (Topology) The Topology defining the molecular system being written
          - file (file=stdout) A file to write the file to
@@ -264,11 +262,11 @@ class PDBFile(object):
         boxSize = topology.getUnitCellDimensions()
         if boxSize is not None:
             print >>file, "CRYST1%9.3f%9.3f%9.3f  90.00  90.00  90.00 P 1           1 " % boxSize
-    
+
     @staticmethod
     def writeModel(topology, positions, file=sys.stdout, modelIndex=None):
         """Write out a model to a PDB file.
-                
+
         Parameters:
          - topology (Topology) The Topology defining the model to write
          - positions (list) The list of atomic positions to write
@@ -276,7 +274,7 @@ class PDBFile(object):
          - modelIndex (int=None) If not None, the model will be surrounded by MODEL/ENDMDL records with this index
         """
         if len(list(topology.atoms())) != len(positions):
-            raise ValueError('The number of positions must match the number of atoms') 
+            raise ValueError('The number of positions must match the number of atoms')
         if np.any(np.isnan(positions)):
             raise ValueError('Particle position is NaN')
         if np.any(np.isinf(positions)):
@@ -313,10 +311,9 @@ class PDBFile(object):
     @staticmethod
     def writeFooter(topology, file=sys.stdout):
         """Write out the footer for a PDB file.
-        
+
         Parameters:
          - topology (Topology) The Topology defining the molecular system being written
          - file (file=stdout) A file to write the file to
         """
         print >>file, "END"
-

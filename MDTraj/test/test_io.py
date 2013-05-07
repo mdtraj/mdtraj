@@ -21,7 +21,7 @@ import numpy as np
 def test_overwrite_1():
     fid, fn = tempfile.mkstemp()
     try:
-        a = np.arange(10) 
+        a = np.arange(10)
         b = a + 1
         io.saveh(fn, a=a)
         io.saveh(fn, b=b)
@@ -33,10 +33,11 @@ def test_overwrite_1():
         if os.path.exists(fn):
             os.unlink(fn)
 
+
 def test_overwrite_2():
     fid, fn = tempfile.mkstemp()
     try:
-        a = np.arange(10) 
+        a = np.arange(10)
         b = a + 1
         io.saveh(fn, a=a)
         io.saveh(fn, a=b)
@@ -46,6 +47,7 @@ def test_overwrite_2():
     finally:
         if os.path.exists(fn):
             os.unlink(fn)
+
 
 class test_io(unittest.TestCase):
     def setUp(self):
@@ -61,23 +63,23 @@ class test_io(unittest.TestCase):
         hdfFile.root.arr_0[:] = self.data[:]
         hdfFile.flush()
         hdfFile.close()
-        
+
     def test_load_1(self):
         "Load by specifying array name"
         TestData = io.loadh(self.filename1, 'arr_0')
         eq(TestData, self.data)
-        
+
     def test_load_2(self):
         "load using deferred=False"
         TestData = io.loadh(self.filename1, deferred=False)['arr_0']
         eq(TestData, self.data)
-    
+
     def test_load_2(self):
         "load using deferred=True"
         deferred = io.loadh(self.filename1, deferred=True)
         eq(deferred['arr_0'], self.data)
         deferred.close()
-            
+
     def test_save(self):
         """Save HDF5 to disk and load it back up"""
         io.saveh(self.filename2, self.data)
@@ -104,4 +106,3 @@ class test_io_int(test_io):
         hdfFile.root.arr_0[:] = self.data[:]
         hdfFile.flush()
         hdfFile.close()
-

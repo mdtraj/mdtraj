@@ -28,7 +28,7 @@ TestDocstrings = DocStringFormatTester(netcdf, error_on_none=True)
 
 temp = tempfile.mkstemp(suffix='.nc')[1]
 def teardown_module(module):
-    """remove the temporary file created by tests in this file 
+    """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
     os.unlink(temp)
 
@@ -54,7 +54,7 @@ def test_write_without_clobber():
 
 def test_shape():
     xyz, time, boxlength, boxangles = netcdf.NetCDFFile(get_fn('mdcrd.nc')).read()
-    
+
     yield lambda: eq(xyz.shape, (101, 223, 3))
     yield lambda: eq(time.shape, (101,))
     yield lambda: eq(boxlength, None)
@@ -73,7 +73,7 @@ def test_read_chunk_1():
         yield lambda: eq(len(f), 101-10)
 
     xyz = netcdf.NetCDFFile(get_fn('mdcrd.nc')).read()[0]
-    
+
     yield lambda: eq(a, xyz[0:10])
     yield lambda: eq(e, xyz[10:])
 
@@ -90,7 +90,7 @@ def test_read_chunk_2():
         yield lambda: eq(len(f), 101-10)
 
     xyz = netcdf.NetCDFFile(get_fn('mdcrd.nc')).read()[0]
-    
+
     yield lambda: eq(a, xyz[0:10])
     yield lambda: eq(e, xyz[10:])
 
@@ -99,7 +99,7 @@ def test_read_chunk_3():
     # too big of a chunk should not be an issue
     a = netcdf.NetCDFFile(get_fn('mdcrd.nc')).read(1000000000)
     b = netcdf.NetCDFFile(get_fn('mdcrd.nc')).read()
-    
+
     eq(a[0], b[0])
 
 
@@ -111,7 +111,7 @@ def test_read_write_1():
 
     with netcdf.NetCDFFile(temp, 'w', force_overwrite=True) as f:
         f.write(xyz, time, boxlengths, boxangles)
-    
+
     with netcdf.NetCDFFile(temp) as f:
         a, b, c, d = f.read()
         yield lambda: eq(a, xyz)
@@ -126,7 +126,7 @@ def test_read_write_2():
 
     with netcdf.NetCDFFile(temp, 'w', force_overwrite=True) as f:
         f.write(xyz, time)
-    
+
     with netcdf.NetCDFFile(temp) as f:
         a, b, c, d = f.read()
         yield lambda: eq(a, xyz)
@@ -142,14 +142,14 @@ def test_read_write_25():
     with netcdf.NetCDFFile(temp, 'w', force_overwrite=True) as f:
         f.write(xyz, time)
         f.write(xyz, time)
-    
+
     with netcdf.NetCDFFile(temp) as f:
         a, b, c, d = f.read()
         yield lambda: eq(a[0:100], xyz)
         yield lambda: eq(b[0:100], time)
         yield lambda: eq(c.mask[0:100], np.ma.masked_all((100,3)).mask)
         yield lambda: eq(d.mask[0:100], np.ma.masked_all((100,3)).mask)
-        
+
         yield lambda: eq(a[100:], xyz)
         yield lambda: eq(b[100:], time)
         yield lambda: eq(c.mask[100:], np.ma.masked_all((100,3)).mask)
@@ -166,5 +166,3 @@ def test_write_3():
         with assert_raises(ValueError):
             # or the other way aroun
             f.write(np.random.randn(100, 3, 3), cell_angles=np.random.randn(100, 3))
-
-

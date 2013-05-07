@@ -41,6 +41,7 @@ def teardown_module(module):
     this gets automatically called by nose"""
     os.unlink(temp)
 
+
 def test_read_chunk1():
     xyz = binpos.read(fn_binpos)
     xyz2 = dcd.read(fn_dcd)[0]
@@ -48,6 +49,7 @@ def test_read_chunk1():
 
     yield lambda: eq(xyz[1:], xyz2)
     yield lambda: eq(xyz, xyz3)
+
 
 def test_read_chunk10():
     xyz = binpos.read(fn_binpos, chunk=10)
@@ -57,6 +59,7 @@ def test_read_chunk10():
     yield lambda: eq(xyz[1:], xyz2)
     yield lambda: eq(xyz, xyz3)
 
+
 def test_read_chunk1000():
     xyz = binpos.read(fn_binpos, chunk=1000)
     xyz2 = dcd.read(fn_dcd)[0]
@@ -64,6 +67,7 @@ def test_read_chunk1000():
 
     yield lambda: eq(xyz[1:], xyz2)
     yield lambda: eq(xyz, xyz3)
+
 
 def test_write_1():
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)

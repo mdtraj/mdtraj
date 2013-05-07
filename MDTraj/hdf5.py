@@ -23,7 +23,6 @@ https://github.com/rmcgibbo/mdtraj/issues/36
 ##############################################################################
 
 # stdlib
-import sys
 import warnings
 import operator
 from collections import namedtuple
@@ -59,8 +58,8 @@ def ensure_mode(*m):
         One or more of ['w', 'r', 'a'], giving the allowable modes
         for the method
 
-    Example
-    -------
+    Examples
+    --------
     class HDF5Trajectory:
         @ensure_mode('w')
         def method_that_is_only_allowed_to_be_called_in_write_mode(self):

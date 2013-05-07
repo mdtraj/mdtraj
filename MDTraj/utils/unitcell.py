@@ -33,15 +33,15 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
     -------
     a : np.ndarray
         If the inputs are scalar, the vectors will one dimesninoal (length 3).
-        If the inputs are one dimension, shape=(n_frames, ), then the output 
+        If the inputs are one dimension, shape=(n_frames, ), then the output
         will be (n_frames, 3)
     b : np.ndarray
         If the inputs are scalar, the vectors will one dimesninoal (length 3).
-        If the inputs are one dimension, shape=(n_frames, ), then the output 
+        If the inputs are one dimension, shape=(n_frames, ), then the output
         will be (n_frames, 3)
     c : np.ndarray
         If the inputs are scalar, the vectors will one dimesninoal (length 3).
-        If the inputs are one dimension, shape=(n_frames, ), then the output 
+        If the inputs are one dimension, shape=(n_frames, ), then the output
         will be (n_frames, 3)
 
     Examples
@@ -68,7 +68,7 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
     cy = c_length*(np.cos(alpha) - np.cos(beta)*np.cos(gamma))
     cz = np.sqrt(c_length*c_length - cx*cx - cy*cy)
     c = np.array([cx,cy,cz])
-    
+
     if not a.shape == b.shape == c.shape:
         raise TypeError('Shape is messed up.')
 
@@ -77,7 +77,7 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
 
 def box_vectors_to_lengths_and_angles(a, b, c):
     """Convert box vectors into the lengths and angles definining the box
-    
+
     Parameters
     ----------
     a : np.ndarray
@@ -139,9 +139,9 @@ def box_vectors_to_lengths_and_angles(a, b, c):
     # we allow 2d input, where the first dimension is the frame index
     # so we want to do the dot product only over the last dimension
     alpha = np.arccos(np.einsum('...i, ...i', b, c) / (b_length * c_length))
-    beta  = np.arccos(np.einsum('...i, ...i', c, a) / (c_length * a_length))
+    beta = np.arccos(np.einsum('...i, ...i', c, a) / (c_length * a_length))
     gamma = np.arccos(np.einsum('...i, ...i', a, b) / (a_length * b_length))
-    
+
     # convert to degrees
     alpha = alpha * 180.0 / np.pi
     beta = beta * 180.0 / np.pi

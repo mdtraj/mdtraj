@@ -15,10 +15,9 @@
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
 import tempfile, os
-from mdtraj import binpos, dcd, io
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises
 import numpy as np
-from mdtraj.trajectory import load_hdf, load
+from mdtraj.trajectory import load
 import mdtraj.trajectory
 from mdtraj import topology
 
@@ -31,6 +30,7 @@ temp2 = tempfile.mkstemp(suffix='.dcd')[1]
 temp3 = tempfile.mkstemp(suffix='.binpos')[1]
 temp4 = tempfile.mkstemp(suffix='.trr')[1]
 temp5 = tempfile.mkstemp(suffix='.h5')[1]
+
 
 def teardown_module(module):
     """remove the temporary file created by tests in this file
@@ -56,16 +56,16 @@ def test_box():
     yield lambda: eq(t.unitcell_lengths, None)
     yield lambda: eq(t.unitcell_angles, None)
 
-
-    t.unitcell_vectors = np.array([[1,0,0], [0,1,0], [0,0,1]]).reshape(1,3,3)
+    t.unitcell_vectors = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]).reshape(1, 3, 3)
     yield lambda: eq(np.array([1.0, 1.0, 1.0]), t.unitcell_lengths[0])
     yield lambda: eq(np.array([90.0, 90.0, 90.0]), t.unitcell_angles[0])
+
 
 def test_load_pdb_box():
     t = load(get_fn('native2.pdb'))
     yield lambda: eq(t.unitcell_lengths[0], np.array([0.1, 0.2, 0.3]))
     yield lambda: eq(t.unitcell_angles[0], np.array([90.0, 90.0, 90.0]))
-    yield lambda: eq(t.unitcell_vectors[0], np.array([[0.1,0,0], [0,0.2,0], [0,0,0.3]]))
+    yield lambda: eq(t.unitcell_vectors[0], np.array([[0.1, 0, 0], [0, 0.2, 0], [0, 0, 0.3]]))
 
 
 def test_box_load_save():
@@ -87,6 +87,7 @@ def test_box_load_save():
         yield lambda: eq(t.unitcell_angles, t2.unitcell_angles)
         yield lambda: eq(t.unitcell_lengths, t2.unitcell_lengths)
 
+
 def test_legacy_hdf1():
     t0 = load(fn, top=nat, chunk=1)
     t1 = load(fn, top=nat, chunk=10)
@@ -94,6 +95,7 @@ def test_legacy_hdf1():
 
     yield lambda: eq(t0.xyz, t1.xyz)
     yield lambda: eq(t0.xyz, t2.xyz)
+
 
 def test_legacy_hdf2():
     t0 = load(fn, top=nat, chunk=10, stride=10)
@@ -105,6 +107,7 @@ def test_legacy_hdf2():
     yield lambda: eq(t0.xyz, t2.xyz)
     yield lambda: eq(t0.xyz, t3.xyz[::10])
 
+
 def test_legacy_hdf_frame():
     t0 = load(fn)
     t1 = load(fn, frame=1)
@@ -114,6 +117,7 @@ def test_legacy_hdf_frame():
     yield lambda: eq(t0[1].unitcell_angles, t1.unitcell_angles)
     yield lambda: eq(t0[1].unitcell_lengths, t1.unitcell_lengths)
     yield lambda: eq(t0[1].time, t1.time)
+
 
 def test_slice():
     t = load(fn, top=nat)
@@ -127,6 +131,7 @@ def test_slice():
 def test_slice2():
     t = load(get_fn('frame1.lh5'))
     yield lambda: t[0] == t[[0,1]][0]
+
 
 def test_xtc():
     t = mdtraj.trajectory.load(get_fn('frame0.xtc'), top=nat)
@@ -142,6 +147,7 @@ def test_xtc():
                 eq(t.time, t2.time, err_msg=e)
         yield f
 
+
 def test_dcd():
     t = mdtraj.trajectory.load(get_fn('frame0.dcd'), top=nat)
     for e in [temp1, temp2, temp3, temp4]:
@@ -152,6 +158,7 @@ def test_dcd():
             eq(t.time, t2.time, err_msg=e)
         yield f
 
+
 def test_binpos():
     t = mdtraj.trajectory.load(get_fn('frame0.binpos'), top=nat)
     for e in [temp1, temp2, temp3, temp4]:
@@ -161,6 +168,7 @@ def test_binpos():
             eq(t.xyz, t2.xyz, err_msg=e)
             eq(t.time, t2.time, err_msg=e)
         yield f
+
 
 def test_load_join():
     filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos", "frame0.lh5"]
@@ -184,11 +192,12 @@ def test_load_join():
     yield lambda: eq(t0.n_frames * num_block, t2.n_frames)
     yield lambda: eq(t3.n_frames , t0.n_frames * num_block - num_block + 1)
 
+
 def test_hdf5_0():
     t = load(get_fn('traj.h5'))
     t2 = load(get_fn('native.pdb'))
     t3 = load(get_fn('traj.h5'), frame=8)
-    
+
     assert topology.equal(t.topology, t2.topology)
     yield lambda: eq(t.time, 0.002*(1 + np.arange(100)))
     yield lambda: eq(t.time, 0.002*(1 + np.arange(100)))
@@ -204,6 +213,7 @@ def test_center():
     mu0 = np.zeros(mu.shape)
     eq(mu0, mu)
 
+
 def test_restrict_atoms():
     traj = load(get_fn('frame0.lh5'))
     desired_atom_indices = [0,1,2,5]
@@ -214,4 +224,3 @@ def test_restrict_atoms():
     eq(traj.n_atoms, 4)
     eq(traj.n_residues, 1)
     eq(len(traj.top._bonds), 2)
-    

@@ -20,15 +20,13 @@
 
 import os
 import warnings
-import sys
 import logging
 import functools
 from itertools import izip
 from copy import deepcopy
 import numpy as np
-from mdtraj import dcd, xtc, binpos, trr, io, hdf5
+from mdtraj import dcd, xtc, binpos, trr, hdf5
 from mdtraj.pdb import pdbfile
-from mdtraj import io
 from mdtraj.utils import unitcell, arrays
 import mdtraj.topology
 
@@ -122,16 +120,16 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             return functools.reduce(lambda a, b: a.join(b, discard_overlapping_frames=discard_overlapping_frames), (load(f,**kwargs) for f in filename_or_filenames))
 
     # We have only a single trajectory now.
-    loaders = {'.xtc':    load_xtc,
-               '.xml':    load_xml,
-               '.trr':    load_trr,
-               '.pdb':    load_pdb,
-               '.dcd':    load_dcd,
-               '.h5':     load_hdf,
-               '.lh5':    _load_legacy_hdf,
+    loaders = {'.xtc': load_xtc,
+               '.xml': load_xml,
+               '.trr': load_trr,
+               '.pdb': load_pdb,
+               '.dcd': load_dcd,
+               '.h5': load_hdf,
+               '.lh5': _load_legacy_hdf,
                '.binpos': load_binpos,
-               '.ncdf':   load_netcdf,
-               '.nc':     load_netcdf}
+               '.ncdf': load_netcdf,
+               '.nc': load_netcdf}
 
     try:
         loader = loaders[extension]
@@ -221,7 +219,6 @@ def load_xml(filename, top=None):
         positions.append((float(position.attrib['x']),
                           float(position.attrib['y']),
                           float(position.attrib['z'])))
-
 
     box = []
     vectors = tree.getroot().find('PeriodicBoxVectors')
@@ -391,6 +388,7 @@ def load_hdf(filename, stride=None, frame=None):
 
     return trajectory
 
+
 def _load_legacy_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
                      upconvert_int16=True):
     """Load an HDF5 file in the legacy MSMBuilder format
@@ -494,10 +492,10 @@ def _load_legacy_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
         else:
             stride = 1
 
-
         shape = xyz_node.shape
         begin_range_list = np.arange(0, shape[0], chunk)
         end_range_list = np.concatenate((begin_range_list[1:], [shape[0]]))
+
         def enum_chunks():
             for r0, r1 in zip(begin_range_list, end_range_list):
                 xyz = np.array(xyz_node[r0: r1: stride])
@@ -776,7 +774,6 @@ class Trajectory(object):
             'unitcell_angles', can_be_none=True, shape=(len(self), 3),
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
 
-
     @property
     def xyz(self):
         return self._xyz
@@ -916,7 +913,6 @@ class Trajectory(object):
         newtraj = self.__class__(xyz, topology, time, unitcell_lengths=unitcell_lengths,
                                  unitcell_angles=unitcell_angles)
         return newtraj
-
 
     def __init__(self, xyz, topology, time=None, unitcell_lengths=None, unitcell_angles=None):
         # install the topology into the object first, so that when setting

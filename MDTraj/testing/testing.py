@@ -14,10 +14,13 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
+##############################################################################
+# imports
+##############################################################################
+
 import os
 import functools
 import numpy as np
-from numpy.linalg import norm
 from numpy.testing import (assert_allclose, assert_almost_equal,
   assert_approx_equal, assert_array_almost_equal, assert_array_almost_equal_nulp,
   assert_array_equal, assert_array_less, assert_array_max_ulp, assert_equal,
@@ -35,10 +38,23 @@ try:
     from scipy.sparse import isspmatrix
 except ImportError:
     isspmatrix = lambda x: False
+    
+    
+__all__ = ['assert_allclose', 'assert_almost_equal', 'assert_approx_equal',
+           'assert_array_almost_equal', 'assert_array_almost_equal_nulp',
+           'assert_array_equal', 'assert_array_less', 'assert_array_max_ulp',
+           'assert_equal', 'assert_raises', 'assert_string_equal', 'assert_warns',
+           'get_fn', 'eq', 'assert_dict_equal', 'assert_spase_matrix_equal',
+           'expected_failure', 'skip', 'ok_', 'eq_', 'raises']
+
+##############################################################################
+# functions
+##############################################################################
+
 
 def get_fn(name):
     fn = resource_filename('mdtraj', os.path.join('testing/reference', name))
-    
+
     if not os.path.exists(fn):
         raise ValueError('Sorry! %s does not exists. If you just '
             'added it, you\'ll have to re install' % fn)
@@ -83,7 +99,7 @@ def assert_dict_equal(t1, t2, decimal=6):
     # make sure the keys are the same
     eq_(t1.keys(), t2.keys())
 
-    for key, val in t1.iteritems():        
+    for key, val in t1.iteritems():
         # compare numpy arrays using numpy.testing
         if isinstance(val, np.ndarray):
             if val.dtype.kind ==  'f':
@@ -109,6 +125,7 @@ def assert_spase_matrix_equal(m1, m2, decimal=6):
     # work for scalars
     assert_array_almost_equal((m1 - m2).sum(), 0, decimal=decimal)
 
+
 # decorator to mark tests as expected failure
 def expected_failure(test):
     @functools.wraps(test)
@@ -120,6 +137,7 @@ def expected_failure(test):
         else:
             raise AssertionError('Failure expected')
     return inner
+
 
 # decorator to skip tests
 def skip(reason):
