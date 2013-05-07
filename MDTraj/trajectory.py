@@ -166,6 +166,9 @@ def load_pdb(filename):
     # convert from angstroms to nm
     coords = f.positions / 10.0
 
+    assert coords.ndim == 3, 'internal shape error'
+    n_frames = len(coords)
+
     trajectory = Trajectory(xyz=coords, topology=f.topology)
 
     if f.topology.getUnitCellDimensions() is not None:
@@ -174,8 +177,11 @@ def load_pdb(filename):
         unitcell_lengths = np.array([[a / 10.0, b / 10.0, c / 10.0]])
         unitcell_angles = np.array([[90.0, 90.0, 90.0]])
 
-        trajectory.unitcell_lengths = unitcell_lengths
-        trajectory.unitcell_angles = unitcell_angles
+        # we need to project these unitcell parameters
+        # into each frame, for a multiframe PDB
+
+        trajectory.unitcell_lengths = np.repeat(unitcell_lengths, n_frames, axis=0)
+        trajectory.unitcell_angles = np.repeat(unitcell_angles, n_frames, axis=0)
 
     return trajectory
 

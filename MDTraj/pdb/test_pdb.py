@@ -86,3 +86,5 @@ def test_2EQQ():
     # this is an nmr structure with 20 models
     t = trajectory.load(get_fn('2EQQ.pdb'))
     eq(t.n_frames, 20)
+    eq(t.n_atoms, 423)
+    eq(len(list(t.top.residues())), 28)
