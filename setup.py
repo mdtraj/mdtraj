@@ -28,6 +28,13 @@ from setuptools import setup, Extension
 from Cython.Distutils import build_ext
 import numpy
 
+IRMSD = Extension('mdtraj.IRMSD',
+    sources = ['MDTraj/IRMSD/theobald_rmsd.c','MDTraj/IRMSD/rmsd_wrap.pyx'],
+    include_dirs = ["MDTraj/IRMSD/", numpy.get_include()],
+    extra_compile_args = ["-std=c99","-O2", "-msse2","-msse3","-fopenmp"],
+    extra_link_args = ['-lgomp'],
+    )
+
 xtc = Extension('mdtraj.xtc',
     sources = ['MDTraj/xtc/src/xdrfile.c', 'MDTraj/xtc/src/xdrfile_xtc.c',
                'MDTraj/xtc/xtc.pyx'],
@@ -114,7 +121,7 @@ setup(name='mdtraj',
       package_dir={'mdtraj':'MDTraj'},
       install_requires=['numpy', 'cython', 'nose', 'nose-exclude'],
       zip_safe=False,
-      ext_modules=[xtc, trr, dcd, binpos],
+      ext_modules=[xtc, trr, dcd, binpos, IRMSD],
       cmdclass = {'build_ext': build_ext},
       package_data = {'mdtraj.pdb': ['data/*'],
                       'mdtraj.testing': ["reference/*"]})
