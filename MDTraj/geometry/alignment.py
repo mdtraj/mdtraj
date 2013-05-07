@@ -15,7 +15,7 @@ Acta Crystallogr A 61(4):478-480.
 
 import numpy as np
 import scipy.optimize
-
+from mdtraj.utils.arrays import ensure_type
 
 class Transformation():
     def __init__(self, rotation, translation):
@@ -42,7 +42,7 @@ def compute_transformation(mobile, target):
     -------
     T : Transformation aligning mobile to target.
     """
-    translation, rotation = _compute_translation_and_rotation(mobile, target)
+    translation, rotation = compute_translation_and_rotation(mobile, target)
     return Transformation(rotation, translation)
 
 
@@ -65,25 +65,7 @@ def transform(mobile, target):
     return mobile_prime
 
 
-def transform_inplace(mobile, target):
-    """Align mobile onto target and adjust mobile's coordinates.
-
-    Parameters
-    ----------
-    mobile : ndarray, shape = (n_atoms, 3)
-        xyz coordinates of a SINGLE frame, to be aligned onto target.
-    target : ndarray, shape = (n_atoms, 3)
-        xyz coordinates of a SINGLE frame
-
-    Notes
-    -----
-    This is an inplace operation on mobile.
-    """
-    mobile_prime = transform(mobile, target)
-    mobile[:] = mobile_prime
-
-
-def _compute_translation_and_rotation(mobile, target):
+def compute_translation_and_rotation(mobile, target):
     """Returns the translation and rotation mapping mobile onto target.
 
     Parameters
@@ -98,8 +80,9 @@ def _compute_translation_and_rotation(mobile, target):
     R : ndarray
         rotation
     """
-    assert(mobile.shape[1] == 3)
-    assert(mobile.shape == target.shape)
+    
+    ensure_type(mobile, 'float', 2, 'mobile', shape=(None, 3))
+    ensure_type(target, 'float', 2, 'mobile', shape=(target.shape[0], 3))
 
     mu1 = mobile.mean(0)
     mu2 = target.mean(0)
@@ -140,15 +123,8 @@ def rmsd_kabsch(xyz1, xyz2):
 
 
 def _center(conformation):
-    """Center and typecheck the conformation"""
-
-    conformation = np.asarray(conformation)
-    if not conformation.ndim == 2:
-        raise ValueError('conformation must be two dimensional')
-    _, three = conformation.shape
-    if not three == 3:
-        raise ValueError('conformation second dimension must be 3')
-
+    """Center the conformation"""
+    ensure_type(conformation, 'float', 2, 'conformation', shape=(None, 3))
     centroid = np.mean(conformation, axis=0)
     centered = conformation - centroid
     return centered
@@ -173,7 +149,9 @@ def rmsd_qcp(conformation1, conformation2):
     rmsd : float
         The root-mean square deviation after alignment between the two pointsets
     """
-    # center and typecheck the conformations
+    ensure_type(conformation1, 'float', 2, 'conformation1', shape=(None, 3))
+    ensure_type(conformation2, 'float', 2, 'conformation2', shape=(conformation1.shape[0], 3))
+    
     A = _center(conformation1)
     B = _center(conformation2)
     if not A.shape[0] == B.shape[0]:
