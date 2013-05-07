@@ -5,7 +5,6 @@
 ##############################################################################
 
 import ast
-import warnings
 from mdtraj.utils import import_
 
 __all__ = ['in_units_of']
@@ -25,12 +24,13 @@ class _UnitContext(ast.NodeTransformer):
     # appear in unit expressions
     allowed_ops = [ast.Expression, ast.BinOp, ast.Name,
                    ast.Pow, ast.Div, ast.Mult, ast.Num]
+
     def visit(self, node):
         if not any(isinstance(node, a) for a in self.allowed_ops):
             raise ValueError('Invalid unit expression. Contains dissallowed '
                              'operation %s' % node.__class__.__name__)
         return super(_UnitContext, self).visit(node)
-        
+
     def visit_Name(self, node):
         # we want to prefix all names to look like unit.nanometers instead
         # of just "nanometers", because I don't want to import * from
@@ -50,20 +50,20 @@ _unit_context = _UnitContext()  # global instance of the visitor
 def _str_to_unit(unit_string):
     """eval() based transformer that extracts a simtk.unit object
     from a string description.
-    
+
     Parameters
     ----------
     unit_string : str
         string description of a unit. this may contain expressions with
         multiplication, division, powers, etc.
-        
+
     Examples
     --------
     >>> type(_str_to_unit('nanometers**2/meters*gigajoules'))
     <class 'simtk.unit.unit.Unit'>
     >>> str(_str_to_unit('nanometers**2/meters*gigajoules'))
     'nanometer**2*gigajoule/meter'
-    
+
     """
     units = import_('simtk.unit')
     # parse the string with the ast, and then run out unit context
@@ -80,7 +80,7 @@ def _str_to_unit(unit_string):
 
 def in_units_of(quantity, units_out, units_in=None):
     """Convert a quantity between unit systems
-    
+
     Parameters
     ----------
     quantity : number, np.ndarray, or simtk.unit.Quantity
@@ -93,7 +93,7 @@ def in_units_of(quantity, units_out, units_in=None):
         If you supply a quantity that's not a simtk.unit.Quantity, you should
         tell me what units it is in. If you don't, i'm just going to echo you
         back your quantity without doing any unit checking.
-        
+
     Examples
     --------
     >>> units = import_('simtk.unit')

@@ -1,3 +1,11 @@
+"""
+Code to delay the import of a moldule, and give a nice error message if
+the module is not installed. for dealing with dependencies.
+"""
+##############################################################################
+# imports
+##############################################################################
+
 import os
 import sys
 import inspect
@@ -5,6 +13,10 @@ import importlib
 import textwrap
 
 __all__ = ['import_']
+
+##############################################################################
+# globals
+##############################################################################
 
 MESSAGES = {
     'networkx': '''
@@ -68,6 +80,10 @@ MESSAGES = {
     '''
 }
 
+##############################################################################
+# functions
+##############################################################################
+
 def import_(module):
     """Import a module, and issue a nice message to stderr if the module
     isn't installed.
@@ -80,7 +96,7 @@ def import_(module):
         except KeyError:
             message = 'The code at {filename}:{line_number} requires the ' + module + ' package'
 
-        frame,filename,line_number,function_name,lines,index=\
+        frame,filename,line_number,function_name,lines,index = \
             inspect.getouterframes(inspect.currentframe())[1]
 
         m = message.format(filename=filename, line_number=line_number)
