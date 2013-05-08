@@ -51,3 +51,26 @@ def test_irmsd_against_numpy_qcp():
     eq(rmsd_IRMSD, rmsd_qcp, decimal=5)
     
 
+def test_irmsd_against_numpy_qcp2():
+  
+    n_atoms1 = len(xyz1)
+    n_atoms3 = len(xyz3)
+    
+    xyz1_traj = np.array([xyz1, xyz1, xyz3])
+    xyz3_traj = np.array([xyz3, xyz3])
+    center(xyz1_traj)
+    center(xyz3_traj)
+    
+    xyz1_irmsd, n_atoms_padded = rmsd.reshape_irmsd(xyz1_traj)
+    xyz3_irmsd, n_atoms_padded = rmsd.reshape_irmsd(xyz3_traj)
+    
+    G1 = rmsd.calculate_G(xyz1_traj)
+    G3 = rmsd.calculate_G(xyz3_traj)
+    
+    rmsd_IRMSD = IRMSD.rmsd_one_to_all(xyz1_irmsd, xyz3_irmsd, G1, G3, n_atoms3, 2).astype('float64')[0]
+    rmsd_qcp = alignment.rmsd_qcp(xyz3, xyz3)
+    eq(rmsd_IRMSD, rmsd_qcp, decimal=5)
+
+    rmsd_IRMSD = IRMSD.rmsd_one_to_all(xyz3_irmsd, xyz1_irmsd, G3, G1, n_atoms1, 0).astype('float64')[0]
+    rmsd_qcp = alignment.rmsd_qcp(xyz1, xyz3)
+    eq(rmsd_IRMSD, rmsd_qcp, decimal=5)    
