@@ -48,11 +48,13 @@ bool parallel=True
     cdef int n_atoms_padded = xyz1.shape[2]
     cdef int true_stride = n_atoms_padded * 3
     
-    ensure_type(val=xyz1, dtype='float32', ndim=3, name="xyz1", shape=(n_frames, 3, None))
+    ensure_type(val=xyz1, dtype='float32', ndim=3, name="xyz1", shape=(None, 3, None))
     ensure_type(val=xyz2, dtype='float32', ndim=3, name="xyz2", shape=(n_frames, 3, None))
     if not ((xyz1.shape[2] % 4 == 0) & (xyz2.shape[2] % 4 == 0)):
         raise(ValueError("Input arrays must have third dimension of 4*n, found %d and %d." % (xyz1.shape[2], xyz2.shape[2])))
-    
+    if frame >= xyz1.shape[0]:
+        raise(ValueError("Cannot calculate RMSD of frame %d: xyz1 has only %d frames." % (frame, xyz1.shape[0])))
+
     cdef np.ndarray[np.float32_t, ndim=1] distances = np.zeros(n_frames, dtype='float32')
 
     if parallel == True:
