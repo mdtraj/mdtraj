@@ -69,8 +69,8 @@ def test_irmsd_against_numpy_qcp2():
     
     rmsd_IRMSD = IRMSD.rmsd_one_to_all(xyz1_irmsd, xyz3_irmsd, G1, G3, n_atoms3, 2).astype('float64')[0]
     rmsd_qcp = alignment.rmsd_qcp(xyz3, xyz3)
-    eq(rmsd_IRMSD, rmsd_qcp, decimal=5)
+    eq(rmsd_IRMSD, rmsd_qcp, decimal=3)
 
     rmsd_IRMSD = IRMSD.rmsd_one_to_all(xyz3_irmsd, xyz1_irmsd, G3, G1, n_atoms1, 0).astype('float64')[0]
     rmsd_qcp = alignment.rmsd_qcp(xyz1, xyz3)
-    eq(rmsd_IRMSD, rmsd_qcp, decimal=5)    
+    eq(rmsd_IRMSD, rmsd_qcp, decimal=4)    
