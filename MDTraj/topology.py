@@ -322,6 +322,9 @@ class Topology(object):
         for k, atom in enumerate(self.atoms()):
             atom.index = k
 
+        # Re-set the numAtoms and numResidues
+        self._numAtoms = len(list(self.atoms()))
+        self._numResidues = len(list(self.residues()))
 
 class Chain(object):
     """A Chain object represents a chain within a Topology."""
