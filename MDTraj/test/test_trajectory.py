@@ -224,3 +224,5 @@ def test_restrict_atoms():
     eq(traj.n_atoms, 4)
     eq(traj.n_residues, 1)
     eq(len(traj.top._bonds), 2)
+    eq(traj.n_residues, traj.topology._numResidues)
+    eq(traj.n_atoms, traj.topology._numAtoms)
