@@ -255,7 +255,12 @@ class HDF5Trajectory(object):
             self._handle.removeNode(where='/', name='topology')
         except self.tables.NoSuchNodeError:
             pass
-        self._handle.createArray(where='/', name='topology', object=[str(json.dumps(topology_dict))])
+
+        data = [str(json.dumps(topology_dict))]
+        if self.tables.__version__ >= '3.0.0':
+            self._handle.createArray(where='/', name='topology', obj=data)
+        else:
+            self._handle.createArray(where='/', name='topology', object=data)
 
     #####################################################
     # randomState global attribute (optional)
