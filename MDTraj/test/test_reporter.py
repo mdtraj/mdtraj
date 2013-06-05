@@ -15,6 +15,7 @@
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
 import os
+import shutil
 import tempfile
 import numpy as np
 
@@ -29,17 +30,19 @@ except ImportError:
 from mdtraj.testing import get_fn, eq, DocStringFormatTester
 from mdtraj import topology
 from mdtraj import trajectory
-from mdtraj.reporters import hdf5reporter
-from mdtraj.reporters import HDF5Reporter
-from mdtraj.hdf5 import HDF5Trajectory
+from mdtraj.reporters import hdf5reporter, netcdfreporter
+from mdtraj.reporters import HDF5Reporter, NetCDFReporter
+from mdtraj import HDF5TrajectoryFile, NetCDFTrajectoryFile
 DocStringTester = DocStringFormatTester(hdf5reporter)
+DocStringTester = DocStringFormatTester(netcdfreporter)
 
 
-temp = tempfile.mkstemp(suffix='.h5')[1]
+tempdir = tempfile.mkdtemp()
 def teardown_module(module):
-    """remove the temporary file created by tests in this file
+    """remove the temporary directory created by tests in this file
     this gets automatically called by nose"""
-    os.unlink(temp)
+    shutil.rmtree(tempdir)
+    #print tempdir
 
 
 @np.testing.decorators.skipif(not HAVE_OPENMM, 'No OpenMM')
@@ -60,15 +63,23 @@ def test_reporter():
 
     simulation.context.setVelocitiesToTemperature(300*kelvin)
 
-    reporter = HDF5Reporter(temp, 2, coordinates=True, time=True,
+    hdf5file = os.path.join(tempdir, 'traj.h5')
+    ncfile = os.path.join(tempdir, 'traj.nc')
+
+    reporter = HDF5Reporter(hdf5file, 2, coordinates=True, time=True,
         cell=True, potentialEnergy=True, kineticEnergy=True, temperature=True,
         velocities=True)
+    reporter2 = NetCDFReporter(ncfile, 2, coordinates=True, time=True,
+        cell=True)
+
     simulation.reporters.append(reporter)
+    simulation.reporters.append(reporter2)
     simulation.step(100)
 
     reporter.close()
+    reporter2.close()
 
-    with HDF5Trajectory(temp) as f:
+    with HDF5TrajectoryFile(hdf5file) as f:
         got = f.read()
         yield lambda: eq(got.temperature.shape, (50,))
         yield lambda: eq(got.potentialEnergy.shape, (50,))
@@ -81,3 +92,11 @@ def test_reporter():
 
         yield lambda: topology.equal(f.topology,
                                      trajectory.load(get_fn('native.pdb')).top)
+
+    with NetCDFTrajectoryFile(ncfile) as f:
+        xyz, time, cell_lengths, cell_angles = f.read()
+        yield lambda: eq(cell_lengths, 2 * np.ones((50, 3)))
+        yield lambda: eq(cell_angles, 90*np.ones((50, 3)))
+        yield lambda: eq(time, 0.002*2*(1+np.arange(50)))
+
+    yield lambda: eq(xyz, trajectory.load(hdf5file).xyz)

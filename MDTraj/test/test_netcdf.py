@@ -34,7 +34,7 @@ def teardown_module(module):
 
 
 def test_read_after_close():
-    f = netcdf.NetCDFFile(get_fn('mdcrd.nc'))
+    f = netcdf.NetCDFTrajectoryFile(get_fn('mdcrd.nc'))
     yield lambda: eq(f.n_atoms, 223)
     yield lambda: eq(f.n_frames, 101)
 
@@ -49,11 +49,11 @@ def test_write_without_clobber():
     # opening a file for writing without explicitly setting force_overwrite
     # is not cool
     with assert_raises(RuntimeError):
-        f = netcdf.NetCDFFile(get_fn('mdcrd.nc'), 'w')
+        f = netcdf.NetCDFTrajectoryFile(get_fn('mdcrd.nc'), 'w')
 
 
 def test_shape():
-    xyz, time, boxlength, boxangles = netcdf.NetCDFFile(get_fn('mdcrd.nc')).read()
+    xyz, time, boxlength, boxangles = netcdf.NetCDFTrajectoryFile(get_fn('mdcrd.nc')).read()
 
     yield lambda: eq(xyz.shape, (101, 223, 3))
     yield lambda: eq(time.shape, (101,))
@@ -62,7 +62,7 @@ def test_shape():
 
 
 def test_read_chunk_1():
-    with netcdf.NetCDFFile(get_fn('mdcrd.nc')) as f:
+    with netcdf.NetCDFTrajectoryFile(get_fn('mdcrd.nc')) as f:
         a, b, c, d = f.read(10)
         e, f, g, h = f.read()
 
@@ -72,14 +72,14 @@ def test_read_chunk_1():
         yield lambda: eq(len(e), 101-10)
         yield lambda: eq(len(f), 101-10)
 
-    xyz = netcdf.NetCDFFile(get_fn('mdcrd.nc')).read()[0]
+    xyz = netcdf.NetCDFTrajectoryFile(get_fn('mdcrd.nc')).read()[0]
 
     yield lambda: eq(a, xyz[0:10])
     yield lambda: eq(e, xyz[10:])
 
 
 def test_read_chunk_2():
-    with netcdf.NetCDFFile(get_fn('mdcrd.nc')) as f:
+    with netcdf.NetCDFTrajectoryFile(get_fn('mdcrd.nc')) as f:
         a, b, c, d = f.read(10)
         e, f, g, h = f.read(100000000000)
 
@@ -89,7 +89,7 @@ def test_read_chunk_2():
         yield lambda: eq(len(e), 101-10)
         yield lambda: eq(len(f), 101-10)
 
-    xyz = netcdf.NetCDFFile(get_fn('mdcrd.nc')).read()[0]
+    xyz = netcdf.NetCDFTrajectoryFile(get_fn('mdcrd.nc')).read()[0]
 
     yield lambda: eq(a, xyz[0:10])
     yield lambda: eq(e, xyz[10:])
@@ -97,8 +97,8 @@ def test_read_chunk_2():
 
 def test_read_chunk_3():
     # too big of a chunk should not be an issue
-    a = netcdf.NetCDFFile(get_fn('mdcrd.nc')).read(1000000000)
-    b = netcdf.NetCDFFile(get_fn('mdcrd.nc')).read()
+    a = netcdf.NetCDFTrajectoryFile(get_fn('mdcrd.nc')).read(1000000000)
+    b = netcdf.NetCDFTrajectoryFile(get_fn('mdcrd.nc')).read()
 
     eq(a[0], b[0])
 
@@ -109,10 +109,10 @@ def test_read_write_1():
     boxlengths = np.random.randn(100, 3)
     boxangles = np.random.randn(100, 3)
 
-    with netcdf.NetCDFFile(temp, 'w', force_overwrite=True) as f:
+    with netcdf.NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
         f.write(xyz, time, boxlengths, boxangles)
 
-    with netcdf.NetCDFFile(temp) as f:
+    with netcdf.NetCDFTrajectoryFile(temp) as f:
         a, b, c, d = f.read()
         yield lambda: eq(a, xyz)
         yield lambda: eq(b, time)
@@ -124,10 +124,10 @@ def test_read_write_2():
     xyz = np.random.randn(100, 3, 3)
     time = np.random.randn(100)
 
-    with netcdf.NetCDFFile(temp, 'w', force_overwrite=True) as f:
+    with netcdf.NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
         f.write(xyz, time)
 
-    with netcdf.NetCDFFile(temp) as f:
+    with netcdf.NetCDFTrajectoryFile(temp) as f:
         a, b, c, d = f.read()
         yield lambda: eq(a, xyz)
         yield lambda: eq(b, time)
@@ -139,11 +139,11 @@ def test_read_write_25():
     xyz = np.random.randn(100, 3, 3)
     time = np.random.randn(100)
 
-    with netcdf.NetCDFFile(temp, 'w', force_overwrite=True) as f:
+    with netcdf.NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
         f.write(xyz, time)
         f.write(xyz, time)
 
-    with netcdf.NetCDFFile(temp) as f:
+    with netcdf.NetCDFTrajectoryFile(temp) as f:
         a, b, c, d = f.read()
         yield lambda: eq(a[0:100], xyz)
         yield lambda: eq(b[0:100], time)
@@ -159,7 +159,7 @@ def test_write_3():
     xyz = np.random.randn(100, 3, 3)
     time = np.random.randn(100)
 
-    with netcdf.NetCDFFile(temp, 'w', force_overwrite=True) as f:
+    with netcdf.NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
         with assert_raises(ValueError):
             # you can't supply cell_lengths without cell_angles
             f.write(np.random.randn(100, 3, 3), cell_lengths=np.random.randn(100, 3))
@@ -169,7 +169,7 @@ def test_write_3():
 
 
 def test_n_atoms():
-    with netcdf.NetCDFFile(temp, 'w', force_overwrite=True) as f:
+    with netcdf.NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
         f.write(np.random.randn(1,11,3))
-    with netcdf.NetCDFFile(temp) as f:
+    with netcdf.NetCDFTrajectoryFile(temp) as f:
         eq(f.n_atoms, 11)
