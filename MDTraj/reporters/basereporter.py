@@ -21,6 +21,7 @@
 import math
 
 # ours
+from mdtraj.topology import topology_from_subset
 from mdtraj.utils import unitcell
 
 import numpy as np
@@ -39,7 +40,6 @@ except ImportError:
 ##############################################################################
 # Classes
 ##############################################################################
-
 
 class _BaseReporter(object):
     """
@@ -104,9 +104,6 @@ class _BaseReporter(object):
         if not OPENMM_IMPORTED:
             raise ImportError('OpenMM not found.')
     
-    def _subsetTopology(self, topology):
-        pass
-
 
     def _initialize(self, simulation):
         """Deferred initialization of the reporter, which happens before
@@ -121,7 +118,11 @@ class _BaseReporter(object):
         simulation : simtk.openmm.app.Simulation
             The Simulation to generate a report for
         """
-        self._traj_file.topology = simulation.topology
+        if self._atomSubset:
+            self._traj_file.topology = topology_from_subset(simulation.topology, self._atomSubset)
+        else:
+            self._traj_file.topology = simulation.topology
+
 
         system = simulation.system
         if self._temperature:

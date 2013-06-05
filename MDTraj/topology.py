@@ -108,6 +108,50 @@ def equal(topology1, topology2):
     return True
 
 
+def topology_from_subset(topology, atom_indices):
+    """Create a new topology that only contains the supplied indices
+
+    Note
+    ----
+    This really should be a copy constructor (class method) on Topology,
+    but I want it to work on either the mdtraj topology OR the OpenMM
+    topology.
+    
+    Parameters
+    ----------
+    topology : topology
+        The base topology
+    atom_indices : list([int])
+        The indices of the atoms to keep
+    """
+    newTopology = topology.__class__()
+    old_atom_to_new_atom = {}
+
+    for chain in topology._chains:
+        newChain = newTopology.addChain()
+        for residue in chain._residues:
+            newResidue = newTopology.addResidue(residue.name, newChain)
+            for atom in residue.atoms():
+                if atom.index in atom_indices:
+                    newAtom = newTopology.addAtom(atom.name, atom.element, newResidue)
+                    old_atom_to_new_atom[atom] = newAtom
+    
+    for atom1, atom2 in topology.bonds():
+        try:
+            newTopology.addBond(old_atom_to_new_atom[atom1],
+                                old_atom_to_new_atom[atom2])
+        except KeyError:
+            pass
+            # we only put bonds into the new topology if both of their partners
+            # were indexed and thus HAVE a new atom
+
+
+    newTopology._numAtoms = len(list(newTopology.atoms()))
+    newTopology._numResidues = len(list(newTopology.residues()))
+    return newTopology
+
+
+
 class Topology(object):
     """Topology stores the topological information about a system.
 

@@ -37,18 +37,18 @@ DocStringTester = DocStringFormatTester(hdf5reporter)
 DocStringTester = DocStringFormatTester(netcdfreporter)
 
 
-tempdir = tempfile.mkdtemp()
+dir = tempfile.mkdtemp()
 def teardown_module(module):
     """remove the temporary directory created by tests in this file
     this gets automatically called by nose"""
-    shutil.rmtree(tempdir)
+    shutil.rmtree(dir)
     #print tempdir
 
 
 @np.testing.decorators.skipif(not HAVE_OPENMM, 'No OpenMM')
 def test_reporter():
-    if not HAVE_OPENMM:
-        return
+    tempdir = os.path.join(dir, 'test1')
+    os.makedirs(tempdir)
 
     pdb = PDBFile(get_fn('native.pdb'))
     forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
@@ -105,8 +105,8 @@ def test_reporter():
 
 @np.testing.decorators.skipif(not HAVE_OPENMM, 'No OpenMM')
 def test_reporter_subset():
-    if not HAVE_OPENMM:
-        return
+    tempdir = os.path.join(dir, 'test_2')
+    os.makedirs(tempdir)
 
     pdb = PDBFile(get_fn('native.pdb'))
     forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
@@ -130,7 +130,7 @@ def test_reporter_subset():
         cell=True, potentialEnergy=True, kineticEnergy=True, temperature=True,
                             velocities=True, atomSubset=atomSubset)
     reporter2 = NetCDFReporter(ncfile, 2, coordinates=True, time=True,
-                               cell=True, atomSubset=atomAubset)
+                               cell=True, atomSubset=atomSubset)
 
     simulation.reporters.append(reporter)
     simulation.reporters.append(reporter2)
@@ -139,24 +139,28 @@ def test_reporter_subset():
     reporter.close()
     reporter2.close()
 
+    t = trajectory.load(get_fn('native.pdb'))
+    t.restrict_atoms(atomSubset)
+
     with HDF5TrajectoryFile(hdf5file) as f:
         got = f.read()
         yield lambda: eq(got.temperature.shape, (50,))
         yield lambda: eq(got.potentialEnergy.shape, (50,))
         yield lambda: eq(got.kineticEnergy.shape, (50,))
-        yield lambda: eq(got.coordinates.shape, (50, 22, 3))
-        yield lambda: eq(got.velocities.shape, (50, 22, 3))
+        yield lambda: eq(got.coordinates.shape, (50, len(atomSubset), 3))
+        yield lambda: eq(got.velocities.shape, (50, len(atomSubset), 3))
         yield lambda: eq(got.cell_lengths, 2 * np.ones((50, 3)))
         yield lambda: eq(got.cell_angles, 90*np.ones((50, 3)))
         yield lambda: eq(got.time, 0.002*2*(1+np.arange(50)))
-
-        yield lambda: topology.equal(f.topology,
-                                     trajectory.load(get_fn('native.pdb')).top)
+        yield lambda: topology.equal(f.topology, t.topology)
 
     with NetCDFTrajectoryFile(ncfile) as f:
         xyz, time, cell_lengths, cell_angles = f.read()
         yield lambda: eq(cell_lengths, 2 * np.ones((50, 3)))
         yield lambda: eq(cell_angles, 90*np.ones((50, 3)))
         yield lambda: eq(time, 0.002*2*(1+np.arange(50)))
+        yield lambda: eq(xyz.shape, (50, len(atomSubset), 3))
 
-    yield lambda: eq(trajectory.load(ncfile, top=get_fn('native.pdb')).xyz, trajectory.load(hdf5file).xyz)
+
+    yield lambda: eq(trajectory.load(ncfile, top=t).xyz,
+                     trajectory.load(hdf5file).xyz)
