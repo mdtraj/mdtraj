@@ -67,6 +67,17 @@ class HDF5Reporter(_BaseReporter):
             Whether to write the kinetic energy to the file.
         temperature : bool
             Whether to write the instantaneous temperature to the file.
+        atomSubset : array_like, default=None
+            Only write a subset of the atoms, with these (zero based) indices
+            to the file. If None, *all* of the atoms will be written to disk.
+
+        Notes
+        -----
+        If you use the atomSubset option to write only a subset of the atoms
+        to disk, the kineticEnergy, potentialEnergy, and temperature fields will
+        not change. They will still refer to the energy and temperature of the *whole*
+        system, and are not "subsetted" to only include the energy of your
+        subsystem.
         """
         super(HDF5Reporter, self).__init__(file, reportInterval,
             coordinates, time, cell, potentialEnergy, kineticEnergy,

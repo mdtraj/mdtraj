@@ -50,7 +50,7 @@ class _BaseReporter(object):
     def __init__(self, file, reportInterval, coordinates=True, time=True,
                  cell=True, potentialEnergy=True, kineticEnergy=True,
                  temperature=True, velocities=False, atomSubset=None):
-        """Create a rich reporter
+        """Create an OpenMM reporter
 
         Parameters
         ----------
@@ -76,6 +76,14 @@ class _BaseReporter(object):
         atomSubset : array_like, default=None
             Only write a subset of the atoms, with these (zero based) indices
             to the file. If None, *all* of the atoms will be written.
+
+        Notes
+        -----
+        If you use the atomSubset option to write only a subset of the atoms
+        to disk, the kineticEnergy, potentialEnergy, and temperature fields will
+        not change. They will still refer to the energy and temperature of the *whole*
+        system, and are not "subsetted" to only include the energy of your
+        subsystem.
         """
         if isinstance(file, basestring):
             self._traj_file = self.backend(file, 'w')
