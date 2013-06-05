@@ -99,4 +99,64 @@ def test_reporter():
         yield lambda: eq(cell_angles, 90*np.ones((50, 3)))
         yield lambda: eq(time, 0.002*2*(1+np.arange(50)))
 
-    yield lambda: eq(xyz, trajectory.load(hdf5file).xyz)
+    yield lambda: eq(trajectory.load(ncfile, top=get_fn('native.pdb')).xyz, trajectory.load(hdf5file).xyz)
+
+
+
+@np.testing.decorators.skipif(not HAVE_OPENMM, 'No OpenMM')
+def test_reporter_subset():
+    if not HAVE_OPENMM:
+        return
+
+    pdb = PDBFile(get_fn('native.pdb'))
+    forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
+    system = forcefield.createSystem(pdb.topology, nonbondedMethod=CutoffNonPeriodic,
+        nonbondedCutoff=1.0*nanometers, constraints=HBonds, rigidWater=True)
+    integrator = LangevinIntegrator(300*kelvin, 1.0/picoseconds, 2.0*femtoseconds)
+    integrator.setConstraintTolerance(0.00001)
+
+    platform = Platform.getPlatformByName('Reference')
+    simulation = Simulation(pdb.topology, system, integrator, platform)
+    simulation.context.setPositions(pdb.positions)
+
+    simulation.context.setVelocitiesToTemperature(300*kelvin)
+
+    hdf5file = os.path.join(tempdir, 'traj.h5')
+    ncfile = os.path.join(tempdir, 'traj.nc')
+
+    atomSubset = [0,1,2,  4,5]
+
+    reporter = HDF5Reporter(hdf5file, 2, coordinates=True, time=True,
+        cell=True, potentialEnergy=True, kineticEnergy=True, temperature=True,
+                            velocities=True, atomSubset=atomSubset)
+    reporter2 = NetCDFReporter(ncfile, 2, coordinates=True, time=True,
+                               cell=True, atomSubset=atomAubset)
+
+    simulation.reporters.append(reporter)
+    simulation.reporters.append(reporter2)
+    simulation.step(100)
+
+    reporter.close()
+    reporter2.close()
+
+    with HDF5TrajectoryFile(hdf5file) as f:
+        got = f.read()
+        yield lambda: eq(got.temperature.shape, (50,))
+        yield lambda: eq(got.potentialEnergy.shape, (50,))
+        yield lambda: eq(got.kineticEnergy.shape, (50,))
+        yield lambda: eq(got.coordinates.shape, (50, 22, 3))
+        yield lambda: eq(got.velocities.shape, (50, 22, 3))
+        yield lambda: eq(got.cell_lengths, 2 * np.ones((50, 3)))
+        yield lambda: eq(got.cell_angles, 90*np.ones((50, 3)))
+        yield lambda: eq(got.time, 0.002*2*(1+np.arange(50)))
+
+        yield lambda: topology.equal(f.topology,
+                                     trajectory.load(get_fn('native.pdb')).top)
+
+    with NetCDFTrajectoryFile(ncfile) as f:
+        xyz, time, cell_lengths, cell_angles = f.read()
+        yield lambda: eq(cell_lengths, 2 * np.ones((50, 3)))
+        yield lambda: eq(cell_angles, 90*np.ones((50, 3)))
+        yield lambda: eq(time, 0.002*2*(1+np.arange(50)))
+
+    yield lambda: eq(trajectory.load(ncfile, top=get_fn('native.pdb')).xyz, trajectory.load(hdf5file).xyz)

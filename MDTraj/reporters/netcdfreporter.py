@@ -22,13 +22,13 @@ through time in the AMBER NetCDF format
 ##############################################################################
 
 from mdtraj.netcdf import NetCDFTrajectoryFile
-from mdtraj.reporters.basereporter import _BaseRichReporter
+from mdtraj.reporters.basereporter import _BaseReporter
 
 ##############################################################################
 # Imports
 ##############################################################################
 
-class NetCDFReporter(_BaseRichReporter):
+class NetCDFReporter(_BaseReporter):
     """NetCDFReporter stores a molecular dynamics trajectory in the AMBER
     NetCDF format.
 
@@ -44,7 +44,7 @@ class NetCDFReporter(_BaseRichReporter):
     backend = NetCDFTrajectoryFile
 
     def __init__(self, file, reportInterval, coordinates=True, time=True,
-                 cell=True):
+                 cell=True, atomSubset=None):
         """Create a NetCDFReporter.
 
         Parameters
@@ -60,7 +60,10 @@ class NetCDFReporter(_BaseRichReporter):
             Whether to write the current time to the file.
         cell : bool
             Whether to write the current unitcell dimensions to the file.
+        atomSubset : array_like, default=None
+            Only write a subset of the atoms, with these (zero based) indices
+            to the file. If None, *all* of the atoms will be written.
         """
         super(NetCDFReporter, self).__init__(file, reportInterval,
             coordinates, time, cell, potentialEnergy=False, kineticEnergy=False,
-            temperature=False, velocities=False)
+            temperature=False, velocities=False, atomSubset=atomSubset)

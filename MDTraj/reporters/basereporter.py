@@ -41,24 +41,15 @@ except ImportError:
 ##############################################################################
 
 
-class _BaseRichReporter(object):
-    """HDF5Reporter stores a molecular dynamics trajectory in the HDF5 format.
-    The atomic positions, periodic box vectors, and time index are saved.
-
-    Example
-    -------
-    >>> simulation = Simulation(topology, system, integrator) # doctest: +SKIP
-    >>> h5_reporter = HDF5Reporter('traj.h5', 100)            # doctest: +SKIP
-    >>> simulation.reporters.append(h5_reporter)              # doctest: +SKIP
-    >>> simulation.step(10000)                                # doctest: +SKIP
-
-    >>> traj = mdtraj.trajectory.load('traj.lh5')             # doctest: +SKIP
+class _BaseReporter(object):
+    """
+    Baseclass for reporters.
     """
     backend = None
 
     def __init__(self, file, reportInterval, coordinates=True, time=True,
                  cell=True, potentialEnergy=True, kineticEnergy=True,
-                 temperature=True, velocities=False):
+                 temperature=True, velocities=False, atomSubset=None):
         """Create a rich reporter
 
         Parameters
@@ -68,18 +59,23 @@ class _BaseRichReporter(object):
             specifying the filename of a new HDF5 file
         reportInterval : int
             The interval (in time steps) at which to write frames.
-        coordinates : bool
+        coordinates : bool, default=True
             Whether to write the coordinates to the file.
-        time : bool
+        time : bool, default=True
             Whether to write the current time to the file.
-        cell : bool
+        cell : bool, default=True
             Whether to write the current unitcell dimensions to the file.
-        potentialEnergy : bool
+        potentialEnergy : bool, default=True
             Whether to write the potential energy to the file.
-        kineticEnergy : bool
+        kineticEnergy : bool, default=True
             Whether to write the kinetic energy to the file.
-        temperature : bool
+        temperature : bool, default=True
             Whether to write the instantaneous temperature to the file.
+        velocities : bool, default=False
+            Whether to write the velocities of each atom to the file
+        atomSubset : array_like, default=None
+            Only write a subset of the atoms, with these (zero based) indices
+            to the file. If None, *all* of the atoms will be written.
         """
         if isinstance(file, basestring):
             self._traj_file = self.backend(file, 'w')
@@ -103,9 +99,14 @@ class _BaseRichReporter(object):
         self._temperature = bool(temperature)
         self._velocities = bool(velocities)
         self._needEnergy = potentialEnergy or kineticEnergy or temperature
+        self._atomSubset = atomSubset
 
         if not OPENMM_IMPORTED:
             raise ImportError('OpenMM not found.')
+    
+    def _subsetTopology(self, topology):
+        pass
+
 
     def _initialize(self, simulation):
         """Deferred initialization of the reporter, which happens before
@@ -134,7 +135,6 @@ class _BaseRichReporter(object):
                 dof -= 3
             self._dof = dof
 
-        #self._traj_file.flush()
 
     def describeNextReport(self, simulation):
         """Get information about the next report this object will generate.
@@ -173,7 +173,7 @@ class _BaseRichReporter(object):
 
         kwargs = {}
         if self._coordinates:
-            kwargs['coordinates'] = state.getPositions(asNumpy=True).astype(np.float32)
+            kwargs['coordinates'] = state.getPositions(asNumpy=True)
         if self._time:
             kwargs['time'] = state.getTime()
         if self._cell:

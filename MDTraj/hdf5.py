@@ -464,7 +464,7 @@ class HDF5TrajectoryFile(object):
         # (n_frames, n_atoms, 3)
         coordinates = ensure_type(coordinates, dtype=np.float32, ndim=3,
             name='coordinates', shape=(None, None, 3), can_be_none=False,
-            warn_on_cast=True, add_newaxis_on_deficient_ndim=True)
+            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         n_frames, n_atoms, = coordinates.shape[0:2]
         time = ensure_type(time, dtype=np.float32, ndim=1,
             name='time', shape=(n_frames,), can_be_none=True,

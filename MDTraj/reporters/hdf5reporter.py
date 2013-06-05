@@ -21,14 +21,14 @@ in the HDF5 format.
 # Imports
 ##############################################################################
 from mdtraj.hdf5 import HDF5TrajectoryFile
-from mdtraj.reporters.basereporter import _BaseRichReporter
+from mdtraj.reporters.basereporter import _BaseReporter
 
 ##############################################################################
 # Classes
 ##############################################################################
 
 
-class HDF5Reporter(_BaseRichReporter):
+class HDF5Reporter(_BaseReporter):
     """HDF5Reporter stores a molecular dynamics trajectory in the HDF5 format.
     The atomic positions, periodic box vectors, and time index are saved.
 
@@ -45,7 +45,7 @@ class HDF5Reporter(_BaseRichReporter):
 
     def __init__(self, file, reportInterval, coordinates=True, time=True,
                  cell=True, potentialEnergy=True, kineticEnergy=True,
-                 temperature=True, velocities=False):
+                 temperature=True, velocities=False, atomSubset=None):
         """Create a HDF5Reporter.
 
         Parameters
@@ -70,4 +70,4 @@ class HDF5Reporter(_BaseRichReporter):
         """
         super(HDF5Reporter, self).__init__(file, reportInterval,
             coordinates, time, cell, potentialEnergy, kineticEnergy,
-            temperature, velocities)
+            temperature, velocities, atomSubset)
