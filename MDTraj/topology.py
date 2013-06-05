@@ -115,7 +115,8 @@ def topology_from_subset(topology, atom_indices):
     ----
     This really should be a copy constructor (class method) on Topology,
     but I want it to work on either the mdtraj topology OR the OpenMM
-    topology.
+    topology. An inplace version for the topology object we have here
+    is also available.
     
     Parameters
     ----------

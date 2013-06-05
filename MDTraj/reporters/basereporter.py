@@ -100,6 +100,7 @@ class _BaseReporter(object):
         self._velocities = bool(velocities)
         self._needEnergy = potentialEnergy or kineticEnergy or temperature
         self._atomSubset = atomSubset
+        self._atomSlice = None
 
         if not OPENMM_IMPORTED:
             raise ImportError('OpenMM not found.')
@@ -118,9 +119,21 @@ class _BaseReporter(object):
         simulation : simtk.openmm.app.Simulation
             The Simulation to generate a report for
         """
-        if self._atomSubset:
+        if self._atomSubset is not None:
+            if not min(self._atomSubset) >= 0:
+                raise ValueError('atomSubset must be zero indexed. '
+                                 'the smallest allowable value is zero')
+            if not max(self._atomSubset) < simulation.system.getNumParticles():
+                raise ValueError('atomSubset must be zero indexed. '
+                                 'the largest value must be less than the number '
+                                 'of particles in the system')
+            if not all(a==int(a) for a in self._atomSubset):
+                raise ValueError('all of the indices in atomSubset must be integers')
+
+            self._atomSlice = self._atomSubset
             self._traj_file.topology = topology_from_subset(simulation.topology, self._atomSubset)
         else:
+            self._atomSlice = slice(None)
             self._traj_file.topology = simulation.topology
 
 
@@ -174,7 +187,7 @@ class _BaseReporter(object):
 
         kwargs = {}
         if self._coordinates:
-            kwargs['coordinates'] = state.getPositions(asNumpy=True)
+            kwargs['coordinates'] = state.getPositions(asNumpy=True)[self._atomSlice, :]
         if self._time:
             kwargs['time'] = state.getTime()
         if self._cell:
@@ -189,7 +202,7 @@ class _BaseReporter(object):
         if self._temperature:
             kwargs['temperature'] = 2*state.getKineticEnergy()/(self._dof*units.MOLAR_GAS_CONSTANT_R)
         if self._velocities:
-            kwargs['velocities'] = state.getVelocities(asNumpy=True)
+            kwargs['velocities'] = state.getVelocities(asNumpy=True)[self._atomSlice, :]
 
         self._traj_file.write(**kwargs)
         # flush the file to disk. it might not be necessary to do this every
