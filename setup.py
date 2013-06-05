@@ -16,6 +16,9 @@
 
 import os
 import subprocess
+from setuptools import setup, Extension
+from Cython.Distutils import build_ext
+import numpy
 
 ##########################
 VERSION = "0.2"
@@ -23,10 +26,6 @@ ISRELEASED = False
 __version__ = VERSION
 ##########################
 
-
-from setuptools import setup, Extension
-from Cython.Distutils import build_ext
-import numpy
 
 IRMSD = Extension('mdtraj.IRMSD',
     sources = ['MDTraj/IRMSD/theobald_rmsd.c','MDTraj/IRMSD/rmsd_wrap.pyx'],
