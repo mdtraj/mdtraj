@@ -122,8 +122,12 @@ def test_groups():
     y = np.random.randn(11)
     f = tables.openFile(temp, 'w')
     f.createGroup(where='/', name='mygroup')
-    f.createArray(where='/mygroup', name='myarray', object=x)
-    f.createArray(where='/', name='mya2', object=y)
+    if tables.__version__ >= '3.0.0':
+        f.createArray(where='/mygroup', name='myarray', obj=x)
+        f.createArray(where='/', name='mya2', obj=y)
+    else:
+        f.createArray(where='/mygroup', name='myarray', object=x)
+        f.createArray(where='/', name='mya2', object=y)
     f.close()
 
     yield lambda: eq(io.loadh(temp)['mygroup/myarray'], x)
