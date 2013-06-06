@@ -2,7 +2,8 @@ import os
 import tempfile
 from noseperf.testcases import PerformanceTest
 
-from mdtraj import xtc, dcd, binpos, trr, netcdf, hdf5
+from mdtraj import DCDTrajectoryFile
+from mdtraj import xtc, binpos, trr, netcdf, hdf5
 import numpy as np
 
 ######################################################
@@ -45,17 +46,20 @@ class TestXTCRead(WithTemp):
 class TestDCDWrite(WithTemp):
     def test(self):
         "Test the write speed of the DCD code (10000 frames, 100 atoms)"
-        dcd.write(self.fn, xyz=self.xyz, force_overwrite=True)
+        with DCDTrajectoryFile(self.fn, 'w') as f:
+            f.write(xyz=self.xyz)
 
 
 class TestDCDRead(WithTemp):
     def setUp(self):
         super(TestDCDRead, self).setUp()
-        dcd.write(self.fn, xyz=self.xyz, force_overwrite=True)
+        with DCDTrajectoryFile(self.fn, 'w') as f:
+            f.write(xyz=self.xyz)
 
     def test(self):
         "Test the read speed of the DCD code (10000 frames, 100 atoms)"
-        dcd.read(self.fn)
+        with DCDTrajectoryFile(self.fn) as f:
+            f.read()
 
 
 class TestBINPOSWrite(WithTemp):
