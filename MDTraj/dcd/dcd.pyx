@@ -1,4 +1,4 @@
-# Copyright 2012 mdtraj developers
+# Copyright 2013 mdtraj developers
 #
 # This file is part of mdtraj
 #
@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
+##############################################################################
+# Imports
+##############################################################################
+
 import cython
 cimport cython
 import os
@@ -25,20 +29,17 @@ from libc.stdlib cimport malloc, free
 from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
 from dcdlib cimport open_dcd_write, close_file_write, write_timestep
-from collections import namedtuple
-DCDFile = namedtuple('DCDFile', ['xyz', 'box_lengths', 'box_angles'])
+
+
+##############################################################################
+# Globals
+##############################################################################
+
 
 # codes that indicate status on return from library
 cdef int _DCD_SUCCESS    = 0   # No problems
-cdef int _DCD_EOF        = -1  # Normal EOF
-cdef int _DCD_DNE        = -2  # DCD file does not exist
-cdef int _DCD_OPENFAILED = -3  # Open of DCD file failed
-cdef int _DCD_BADREAD    = -4  # read call on DCD file failed
-cdef int _DCD_BADEOF     = -5  # premature EOF found in DCD file
-cdef int _DCD_BADFORMAT  = -6  # format of DCD file is wrong
-cdef int _DCD_FILEEXISTS = -7  # output file already exists
-cdef int _DCD_BADMALLOC  = -8  # malloc failed
-cdef int _DCD_BADWRITE   = -9  # write call on DCD file failed
+cdef int _DCD_EOF    = -1   # No problems
+
 
 cdef ERROR_MESSAGES = {
     -1: 'Normal EOF',
@@ -52,158 +53,206 @@ cdef ERROR_MESSAGES = {
     -9: 'Write call on DCD file failed',
 }
 
-
-def read(filename):
-    """Read the data from a NAMD/CHARMM DCD file
-
-    Parameters
-    ----------
-    filename : str
-        The filename of the dcd file to read from
-    chunk : int
-        Size of the chunks to read
-
-    Returns
-    -------
-    xyz : np.ndarray, dtype=float32, shape=(n_frames, n_atoms, 3)
-        The xyz coordinates
-    """
-    xyz, box_lengths, box_angles = DCDReader(filename).read()
-
-    return DCDFile(xyz, box_lengths, box_angles)
+##############################################################################
+# Classes
+##############################################################################
 
 
-def write(filename, xyz, box_lengths=None, box_angles=None, force_overwrite=True):
-    """Write data to a NAMD/CHARMM DCD file
 
-    Note that the box size entries in the DCD file will be left blank (zeros)
+cdef class DCDTrajectoryFile:
+    """Interface for reading and writing to a CHARMM/NAMD DCD file.
+    This is a file-like object, that supports both reading a writing. It
+    supports the context manager protocol, so you can also use it with the
+    python 'with' statement.
 
-    Parameters
-    ----------
-    filename : str
-        The filename of the dcd file to write to
-    xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
-        The xyz coordinates of each atom in each frame
-    box_lengths : np.ndarray, shape=(n_frames, 3), dtype=float32, optional
-        The length of the box in each frame. `box_lengths[i,0]` is the length
-        of the A axis (in frame i), and `box_lengths[i,1]` and
-        `box_lengths[i,2]` are the B and C axis respectively. If unsupplied,
-        all of the box lengths will be set to 1
-    box_angles : np.ndarray, shape=(n_frames, 3), dtype=float32, optional
-        Organized analogously to box_lengths. Gives the alpha, beta and
-        gamma angles respectively in entries `box_angles[i,0]`,
-        `box_angles[i,1]`, `box_angles[i,2]`. If unsupplied, all of the box
-        angles will be set to 90.0.
-    force_overwrite : bool, default=False
-        Overwrite anything that exists at filename, if its already there
+    The conventional units in the DCD file are angstroms and degrees. The format
+    only supports saving coordinates and unit cell parameters (lengths and angles)
+
+    Examples
+    --------
+    >>> f = DCDTrajectoryFile('mytrajectory.dcd', 'r')
+    >>> f.read(n_frames=1)  # read a single frame
+    >>> f.read()            # read all of the remaining frames
+
+    >>> with DCDTrajectoryFile('mytrajectory2.dcd. 'w') as f:
+    >>>     f.write(np.random.randn(10,3,3))
     """
 
-    if not force_overwrite and os.path.exists(filename):
-        raise IOError('The file already exists: %s' % filename)
 
-    # make sure all the arrays are the right shape
-    xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False)
-    n_frames = len(xyz)
-
-    box_lengths = ensure_type(box_lengths, dtype=np.float32, ndim=2, name='box_lengths',
-        can_be_none=True, shape=(n_frames, 3))
-    if box_lengths is None:
-        box_lengths = np.ones((n_frames, 3), dtype=np.float32)
-
-    box_angles = ensure_type(box_angles, dtype=np.float32, ndim=2, name='box_angles',
-        can_be_none=True, shape=(n_frames, 3))
-    if box_angles is None:
-        box_angles = 90.0 * np.ones((n_frames, 3), dtype=np.float32)
-
-    writer = DCDWriter(filename, xyz, box_lengths, box_angles)
-    writer.write()
-
-
-cdef class DCDReader:
-    # these variables hold the number of atoms and number of frames in the
-    # file, as read off the header of the DCD file
-    cdef int n_atoms, n_frames
-    # the number of frames we're currently read off the file.
-    cdef int frame_counter
-    # this is the filehandle
+    # n_atoms and n_frames hold the number of atoms and the number of frames
+    # in the file, as read off the header of the DCD file during read mode
+    cdef int frame_counter, n_atoms, n_frames
     cdef dcdhandle* fh
-    # C struct into which the library deposits all the data from the
-    # most recent timestep
+    cdef char* mode
+    cdef char* filename
+    cdef int is_open, _needs_write_initialization
     cdef molfile_timestep_t* timestep
 
-    def __cinit__(self, char* filename):
-        # open the file handle and read n_atoms and n_frames
-        self.fh = open_dcd_read(filename, "dcd", &self.n_atoms, &self.n_frames)
-        if self.fh is NULL:
-            raise IOError('There was an error opening the dcd file: %s' % filename)
-        assert self.n_atoms > 0, 'DCD Corruption: n_atoms was not positive'
-        assert self.n_frames >= 0, 'DCD corruption: n_frames < 0'
+    def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True):
+        """Open a DCD Trajectory File
+        
+        Parameters
+        ----------
+        filename : string
+            Path to the file to open
+        mode : {'r', 'w'}
+            Mode in which to open the file. 'r' is for reading, and 'w' is for writing.
+        force_overwrite : bool
+            In mode='w', how do you want to behave if a file by the name of `filename`
+            already exists? if `force_overwrite=True`, it will be overwritten.
+        """
+        self.is_open = False
+
+        if mode == b'r':
+            self.fh = open_dcd_read(filename, "dcd", &self.n_atoms, &self.n_frames)
+            assert self.n_atoms > 0, 'DCD Corruption: n_atoms was not positive'
+            assert self.n_frames >= 0, 'DCD corruption: n_frames < 0'
+            # we're at the beginning of the file now
+            self.frame_counter = 0
+            self.is_open = True
+            if self.fh is NULL:
+                raise IOError('There was an error opening the file: %s' % filename)
+        elif mode == b'w':
+            self.filename = filename
+            self._needs_write_initialization = 1
+            if not force_overwrite and os.path.exists(filename):
+                raise IOError('"%s" already exists')
+        else:
+            raise ValueError("most must be one of ['r', 'w']")
+
+
         # alloc the molfile_timestep, which is the struct that the library is
         # going to deposit its data into each timestep
         self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
-        if self.fh is  NULL:
-            raise MemoryError('Malloc failed.')
+        if self.timestep is NULL:
+            raise MemoryError('There was an error allocating memory')
 
-        # we've currently read zero frames...
-        self.frame_counter = 0
-
+        self.mode = mode
 
     def __dealloc__(self):
-        "Shut this whole thing down"
-
         # free whatever we malloced
         free(self.timestep)
+        self.close()
 
-        # close the file
-        if self.fh is not NULL:
-            close_file_read(self.fh)
+    def _initialize_write(self, int n_atoms):
+        """We don't actually want to open the dcd file during write mode
+        until we know how many atoms the user wants to save. so this
+        is delayed until the first call to write()
+        """
+        assert not self.is_open and self._needs_write_initialization
 
-    @cython.boundscheck(False)
-    def read(self, n_frames=None):
-        """Extract the coordinates from a DCD file
+        self.n_atoms = n_atoms
+        self.fh = open_dcd_write(self.filename, "dcd", self.n_atoms)
+        if self.fh is NULL:
+            raise IOError('There was an error opening the file: %s' % self.filename)
+
+        self._needs_write_initialization = False
+
+    def close(self):
+        "Close the file"
+        if self.is_open and self.fh is not NULL:
+            if self.mode == b'r':
+                close_file_read(self.fh)
+            else:
+                close_file_write(self.fh)
+            self.is_open = False
+
+    def __enter__(self):
+        "Support the context manager protocol"
+        return self
+
+    def __exit__(self, *exc_info):
+        "Support the context manager protocol"
+        self.close()
+
+
+    def read(self, n_frames=None, stride=None, atom_indices=None):
+        """Read the data from a DCD file
 
         Parameters
         ----------
         n_frames : int, optional
-            If not None, then read only the next `n_frames` frames.
+            If positive, then read only the next `n_frames` frames. Otherwise read all
+            of the frames in the file.
+        stride : np.ndarray, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
 
         Returns
         -------
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
-            The xyz coordinates of each atom in each frame
-        box_lengths : np.ndarray, shape=(n_frames, 3), dtype=float32
-            The length of the box in each frame. `box_lengths[i,0]` is the length
-            of the A axis (in frame i), and `box_lengths[i,1]` and
-            `box_lengths[i,2]` are the B and C axis respectively.
-        box_angles : np.ndarray, shape=(n_frames, 3), dtype=float32
-            Organized analogously to box_lengths. Gives the alpha, beta and
-            gamma angles respectively in entries `box_angles[i,0]`,
-            `box_angles[i,1]`, `box_angles[i,2]`.
+            The xyz coordinates of each atom in each frame. By convention, the
+            coordinates in the dcd file are stored in units of angstroms.
+        cell_lengths : np.ndarray, shape=(n_frames, 3), dtype=float32
+            The length of the box in each frame. `cell_lengths[i,0]` is the length
+            of the A axis (in frame i), and `cell_lengths[i,1]` and
+            `cell_lengths[i,2]` are the B and C axis respectively. By convention,
+            the cell lengths in the dcd file are stored in units of angstroms.
+        cell_angles : np.ndarray, shape=(n_frames, 3), dtype=float32
+            Organized analogously to cell_lengths. Gives the alpha, beta and
+            gamma angles respectively in entries `cell_angles[i,0]`,
+            `cell_angles[i,1]`, `cell_angles[i,2]`. By convention, the cell
+            angles in the dcd file are stored in units of degrees.
         """
-        
+        if self.mode != b'r':
+            raise ValueError('read() is only available when the file is opened in mode="r"')
+
+        if stride is not None:
+            raise NotImplementedError('Sorry, striding has not been implemented yet')
+
+
+        cdef int _n_frames, n_atoms_to_read
         if n_frames is None:
             # if the user specifies n_frames=None, they want to read to the
             # end of the file
-            n_frames = self.n_frames - self.frame_counter
+            _n_frames = self.n_frames - self.frame_counter
+        else:
+            _n_frames = int(n_frames)
+
+
+        if atom_indices is None:
+            n_atoms_to_read = self.n_atoms
+        elif isinstance(atom_indices, slice):
+            n_atoms_to_read = len(np.arange(self.n_atoms)[atom_indices])
+        else:
+            if min(atom_indices) < 0:
+                raise ValueError('atom_indices should be zero indexed. you gave an index less than zerp')
+            if max(atom_indices) >= self.n_atoms:
+                raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
+            n_atoms_to_read = len(atom_indices)
+            
 
         # malloc space to put the data that we're going to read off the disk
-        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((n_frames, self.n_atoms, 3), dtype=np.float32)
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] box_lengths = np.zeros((n_frames, 3), dtype=np.float32)
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] box_angles = np.zeros((n_frames, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((_n_frames, n_atoms_to_read, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] cell_lengths = np.zeros((_n_frames, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] cell_angles = np.zeros((_n_frames, 3), dtype=np.float32)
+
+        # only used if atom_indices is given
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
+
 
         cdef int i = 0
         cdef int status = _DCD_SUCCESS
 
-        for i in range(n_frames):
-            self.timestep.coords = &xyz[i,0,0]
-            status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+        for i in range(_n_frames):
+            if atom_indices is None:
+                self.timestep.coords = &xyz[i,0,0]
+                status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+            else:
+                self.timestep.coords = &framebuffer[0,0]
+                status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+                xyz[i, :, :] = framebuffer[atom_indices, :]
+
             self.frame_counter += 1
-            box_lengths[i, 0] = self.timestep.A
-            box_lengths[i, 1] = self.timestep.B
-            box_lengths[i, 2] = self.timestep.C
-            box_angles[i, 0] = self.timestep.alpha
-            box_angles[i, 1] = self.timestep.beta
-            box_angles[i, 2] = self.timestep.gamma
+            cell_lengths[i, 0] = self.timestep.A
+            cell_lengths[i, 1] = self.timestep.B
+            cell_lengths[i, 2] = self.timestep.C
+            cell_angles[i, 0] = self.timestep.alpha
+            cell_angles[i, 1] = self.timestep.beta
+            cell_angles[i, 2] = self.timestep.gamma
 
             if status != _DCD_SUCCESS:
                 # if the frame was not successfully read, then we're done
@@ -212,7 +261,7 @@ cdef class DCDReader:
         if status == _DCD_SUCCESS:
             # if we're done either because of we read all of the n_frames
             # requested succcessfully, return
-            return xyz, box_lengths, box_angles
+            return xyz, cell_lengths, cell_angles
 
         if status == _DCD_EOF:
             # if we're doing because we reached a normal EOF (perhaps the)
@@ -220,88 +269,61 @@ cdef class DCDReader:
             # to truncate the return arrays -- we don't want to return them
             # a big stack of zeros.
             xyz = xyz[0:i]
-            box_lengths = box_lengths[0:i]
-            box_angles = box_angles[0:i]
-            return xyz, box_lengths, box_angles
-    
+            cell_lengths = cell_lengths[0:i]
+            cell_angles = cell_angles[0:i]
+            return xyz, cell_lengths, cell_angles
+
         # If we got some other status, thats a "real" error.
         raise IOError("Error: %s", ERROR_MESSAGES(status))
 
-        
+
+    def write(self, xyz, cell_lengths=None, cell_angles=None):
+        if self.mode != b'w':
+            raise ValueError('write() is only available when the file is opened in mode="w"')
+
+        # do typechecking, and then dispatch to the c level function
+        xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False,
+                          add_newaxis_on_deficient_ndim=True)
+        n_frames = len(xyz)
+
+        cell_lengths = ensure_type(cell_lengths, dtype=np.float32, ndim=2, name='cell_lengths',
+                                  can_be_none=True, shape=(n_frames, 3), add_newaxis_on_deficient_ndim=True)
+        if cell_lengths is None:
+            cell_lengths = np.ones((n_frames, 3), dtype=np.float32)
+
+        cell_angles = ensure_type(cell_angles, dtype=np.float32, ndim=2, name='cell_angles',
+                                     can_be_none=True, shape=(n_frames, 3))
+        if cell_angles is None:
+            cell_angles = 90.0 * np.ones((n_frames, 3), dtype=np.float32)
 
 
-cdef class DCDWriter:
-    cdef char* filename
-    cdef dcdhandle* fh
-    cdef np.ndarray xyz
-    cdef np.ndarray box_lengths
-    cdef np.ndarray box_angles
-    cdef int n_atoms
-    cdef molfile_timestep_t* timestep
+        if self._needs_write_initialization:
+            self._initialize_write(xyz.shape[1])
+        else:
+            if not self.n_atoms == xyz.shape[1]:
+                raise ValueError('Number of atoms doesnt match')
 
-    def __cinit__(self, char* filename,
-        np.ndarray[np.float32_t, ndim=3, mode="c"] xyz,
-        np.ndarray[np.float32_t, ndim=2, mode="c"] box_lengths,
-        np.ndarray[np.float32_t, ndim=2, mode="c"] box_angles):
-        """
-        Set up the DCD writer
-
-        Nothing will be written to disk until you call write()
-
-        Parameters
-        ----------
-        xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
-            The xyz coordinates of each atom in each frame
-        box_lengths : np.ndarray, shape=(n_frames, 3), dtype=float32
-            The length of the box in each frame. `box_lengths[i,0]` is the length
-            of the A axis (in frame i), and `box_lengths[i,1]` and
-            `box_lengths[i,2]` are the B and C axis respectively.
-        box_angles : np.ndarray, shape=(n_frames, 3), dtype=float32
-            Organized analogously to box_lengths. Gives the alpha, beta and
-            gamma angles respectively in entries `box_angles[i,0]`,
-            `box_angles[i,1]`, `box_angles[i,2]`.
-        """
-        self.filename = filename
-        self.xyz = xyz
-        self.box_lengths = box_lengths
-        self.box_angles = box_angles
-        self.n_atoms = self.xyz.shape[1]
-
-        assert self.box_lengths.shape[0] == len(self.xyz)
-        assert self.box_lengths.shape[1] == 3
-        assert self.box_angles.shape[0] == len(self.xyz)
-        assert self.box_angles.shape[1] == 3
-
-        self.fh = open_dcd_write(filename, "dcd", self.n_atoms)
-        if self.fh is NULL:
-            raise IOError('There was an error opening the file: %s' % filename)
-
-        self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
-        if self.timestep is NULL:
-            raise MemoryError
+        self._write(xyz, cell_lengths, cell_angles)
 
 
-    def __dealloc__(self):
-        close_file_write(self.fh)
-        if self.timestep is not NULL:
-            free(self.timestep)
+    cdef _write(self, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz,
+                np.ndarray[np.float32_t, ndim=2, mode="c"] cell_lengths,
+                np.ndarray[np.float32_t, ndim=2, mode="c"] cell_angles):
+        if self.mode != b'w':
+            raise ValueError('_write() is only available when the file is opened in mode="w"')
 
-    @cython.boundscheck(False)
-    def write(self):
-        "Write all the data"
+
         cdef int i, status
-        cdef n_frames = len(self.xyz)
-
-        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = self.xyz
+        cdef int n_frames = len(xyz)
 
         for i in range(n_frames):
             self.timestep.coords = &xyz[i, 0, 0]
-            self.timestep.A = self.box_lengths[i, 0]
-            self.timestep.B = self.box_lengths[i, 1]
-            self.timestep.C = self.box_lengths[i, 2]
-            self.timestep.alpha = self.box_angles[i, 0]
-            self.timestep.beta  = self.box_angles[i, 1]
-            self.timestep.gamma = self.box_angles[i, 2]
+            self.timestep.A = cell_lengths[i, 0]
+            self.timestep.B = cell_lengths[i, 1]
+            self.timestep.C = cell_lengths[i, 2]
+            self.timestep.alpha = cell_angles[i, 0]
+            self.timestep.beta  = cell_angles[i, 1]
+            self.timestep.gamma = cell_angles[i, 2]
 
             status = write_timestep(self.fh, self.timestep)
 
