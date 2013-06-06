@@ -166,7 +166,7 @@ cdef class DCDTrajectoryFile:
         self.close()
 
 
-    def read(self, n_frames=None):
+    def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read the data from a DCD file
 
         Parameters
@@ -174,6 +174,12 @@ cdef class DCDTrajectoryFile:
         n_frames : int, optional
             If positive, then read only the next `n_frames` frames. Otherwise read all
             of the frames in the file.
+        stride : np.ndarray, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
 
         Returns
         -------
@@ -194,7 +200,11 @@ cdef class DCDTrajectoryFile:
         if self.mode != b'r':
             raise ValueError('read() is only available when the file is opened in mode="r"')
 
-        cdef int _n_frames
+        if stride is not None:
+            raise NotImplementedError('Sorry, striding has not been implemented yet')
+
+
+        cdef int _n_frames, n_atoms_to_read
         if n_frames is None:
             # if the user specifies n_frames=None, they want to read to the
             # end of the file
@@ -202,17 +212,40 @@ cdef class DCDTrajectoryFile:
         else:
             _n_frames = int(n_frames)
 
+
+        if atom_indices is None:
+            n_atoms_to_read = self.n_atoms
+        elif isinstance(atom_indices, slice):
+            n_atoms_to_read = len(np.arange(self.n_atoms)[atom_indices])
+        else:
+            if min(atom_indices) < 0:
+                raise ValueError('atom_indices should be zero indexed. you gave an index less than zerp')
+            if max(atom_indices) >= self.n_atoms:
+                raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
+            n_atoms_to_read = len(atom_indices)
+            
+
         # malloc space to put the data that we're going to read off the disk
-        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((_n_frames, self.n_atoms, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((_n_frames, n_atoms_to_read, 3), dtype=np.float32)
         cdef np.ndarray[dtype=np.float32_t, ndim=2] cell_lengths = np.zeros((_n_frames, 3), dtype=np.float32)
         cdef np.ndarray[dtype=np.float32_t, ndim=2] cell_angles = np.zeros((_n_frames, 3), dtype=np.float32)
+
+        # only used if atom_indices is given
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
+
 
         cdef int i = 0
         cdef int status = _DCD_SUCCESS
 
         for i in range(_n_frames):
-            self.timestep.coords = &xyz[i,0,0]
-            status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+            if atom_indices is None:
+                self.timestep.coords = &xyz[i,0,0]
+                status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+            else:
+                self.timestep.coords = &framebuffer[0,0]
+                status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+                xyz[i, :, :] = framebuffer[atom_indices, :]
+
             self.frame_counter += 1
             cell_lengths[i, 0] = self.timestep.A
             cell_lengths[i, 1] = self.timestep.B

@@ -88,6 +88,24 @@ def test_read_4():
     yield lambda: len(xyz_ref) == i + len(xyz_rest)
 
 
+def test_read_5():
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz_ref, box_lengths_ref, box_angles_ref = f.read()
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz, box_lengths, box_angles = f.read(atom_indices=[1,2,5])
+    
+    yield lambda: eq(xyz_ref[:, [1,2,5], :], xyz)
+
+
+def test_read_6():
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz_ref, box_lengths_ref, box_angles_ref = f.read()
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz, box_lengths, box_angles = f.read(atom_indices=slice(None, None, 2))
+    
+    yield lambda: eq(xyz_ref[:, ::2, :], xyz)
+
+
 def test_write_0():
     with DCDTrajectoryFile(fn_dcd) as f:
         xyz = f.read()[0]
@@ -136,4 +154,3 @@ def test_write_3():
     
     with DCDTrajectoryFile(temp, 'w') as f:
         f.write(xyz, box_lengths)
-
