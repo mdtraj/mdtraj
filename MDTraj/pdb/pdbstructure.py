@@ -71,7 +71,7 @@ class PdbStructure(object):
 
     Loop over all of the atoms of the structure
     > for atom in pdb.iter_atoms():
-    >     print atom
+    >     print(atom)
     ATOM      1  O5'   G N  17      13.768  -8.431  11.865  1.00  0.00           O
     ...
 
@@ -585,7 +585,7 @@ class Residue(object):
         ...     res._add_atom(Atom(l))
         ...
         >>> for atom in res:
-        ...     print atom
+        ...     print(atom)
         ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N  
         ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C  
         ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C  
@@ -621,7 +621,6 @@ class Residue(object):
     def iter_positions(self, include_alt_loc=False):
         """
         Returns one position per atom, even if an individual atom has multiple positions.
-        >>> from __future__ import print_function
         >>> pdb_lines = [ \
                          "ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N",\
                          "ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C",\
@@ -771,7 +770,7 @@ class Atom(object):
 
         >>> atom = Atom("ATOM   2209  CB  TYR A 299       6.167  22.607  20.046  1.00  8.12           C")
         >>> for c in atom.iter_locations():
-        ...     print c
+        ...     print(c)
         ...
         [  6.167  22.607  20.046]
         """
@@ -792,7 +791,7 @@ class Atom(object):
 
         >>> atom = Atom("ATOM   2209  CB  TYR A 299       6.167  22.607  20.046  1.00  8.12           C")
         >>> for c in atom.iter_coordinates():
-        ...     print c
+        ...     print(c)
         ...
         6.167
         22.607
@@ -919,7 +918,7 @@ class Atom(object):
 
             >>> l = Atom.Location(' ', [1,2,3], 1.0, 20.0, "XXX")
             >>> for c in l:
-            ...     print c
+            ...     print(c)
             ...
             1
             2
