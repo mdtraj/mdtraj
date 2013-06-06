@@ -25,8 +25,8 @@ import logging
 import functools
 
 if sys.version < '3':
-    from itertools import izip
-    zip = izip
+    from itertools import izip as zip
+    pass
 
 from copy import deepcopy
 import numpy as np

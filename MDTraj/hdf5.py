@@ -180,7 +180,7 @@ class HDF5Trajectory(object):
             A topology object
         """
         try:
-            topology_dict = json.loads(self._handle.getNode('/', name='topology')[0])
+            topology_dict = json.loads(self._handle.getNode('/', name='topology')[0].decode('ascii'))
         except self.tables.NoSuchNodeError:
             return None
 
