@@ -35,6 +35,40 @@ if sizeof(float) != sizeof(np.float32_t):
     raise RuntimeError('Floats on your compiler are not 32 bits. This is not good')
 
 
+
+cdef class XTCTrajectoryFile:
+    """Interface for reading and writing to a GROMACS XTC file.
+    This is a file-like objec that supports both reading and writing.
+    It also supports the context manager ptorocol, so you can use it
+    with the python 'with' statement.
+
+    The conventional units in the XTC file are nanometers and picoseconds.
+    The format only supports saving coordinates, the time, the md step,
+    and the unit cell parametrs (box vectors)
+    """
+
+    def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True):
+        pass
+
+    def close(self):
+        pass
+
+    def read(self, n_frames, chunk=1000):
+        pass
+
+
+    def write(self, xyz, time, step, box):
+        pass
+
+
+
+
+
+
+
+
+
+
 def read(filename, chunk=1000):
     """
     Read the xyz coordinates from a Gromacs XTC file
