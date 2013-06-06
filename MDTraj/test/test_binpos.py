@@ -22,7 +22,8 @@ directory is not a python package (it has no __init__.py) and is thus tests
 there are not discovered by nose
 """
 import tempfile, os
-from mdtraj import binpos, dcd, io
+from mdtraj import DCDTrajectoryFile
+from mdtraj import binpos, io
 from mdtraj.testing import get_fn, eq, DocStringFormatTester
 import numpy as np
 
@@ -44,7 +45,8 @@ def teardown_module(module):
 
 def test_read_chunk1():
     xyz = binpos.read(fn_binpos)
-    xyz2 = dcd.read(fn_dcd)[0]
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz2 = f.read()[0]
     xyz3 = io.loadh(get_fn('frame0.binpos.h5'), 'xyz')
 
     yield lambda: eq(xyz[1:], xyz2)
@@ -53,7 +55,8 @@ def test_read_chunk1():
 
 def test_read_chunk10():
     xyz = binpos.read(fn_binpos, chunk=10)
-    xyz2 = dcd.read(fn_dcd)[0]
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz2 = f.read()[0]
     xyz3 = io.loadh(get_fn('frame0.binpos.h5'), 'xyz')
 
     yield lambda: eq(xyz[1:], xyz2)
@@ -62,7 +65,8 @@ def test_read_chunk10():
 
 def test_read_chunk1000():
     xyz = binpos.read(fn_binpos, chunk=1000)
-    xyz2 = dcd.read(fn_dcd)[0]
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz2 = f.read()[0]
     xyz3 = io.loadh(get_fn('frame0.binpos.h5'), 'xyz')
 
     yield lambda: eq(xyz[1:], xyz2)

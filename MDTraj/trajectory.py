@@ -25,7 +25,8 @@ import functools
 from itertools import izip
 from copy import deepcopy
 import numpy as np
-from mdtraj import dcd, xtc, binpos, trr, hdf5
+from mdtraj import DCDTrajectoryFile
+from mdtraj import xtc, binpos, trr, hdf5
 from mdtraj.pdb import pdbfile
 from mdtraj.utils import unitcell, arrays
 import mdtraj.topology
@@ -344,7 +345,8 @@ def load_dcd(filename, top=None):
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
-    xyz, box_length, box_angle = dcd.read(filename)
+    with DCDTrajectoryFile(filename) as f:
+        xyz, box_length, box_angle = f.read()
 
     xyz /= 10.  # convert from anstroms to nanometer
     box_length /= 10.  # convert from anstroms to nanometer
@@ -1150,8 +1152,9 @@ class Trajectory(object):
         if lengths is not None:
             lengths = lengths * 10
 
-        return dcd.write(filename, xyz, force_overwrite=force_overwrite,
-            box_lengths=lengths, box_angles=self.unitcell_angles)
+        with DCDTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(xyz, lengths, self.unitcell_angles)
+
 
     def save_binpos(self, filename, force_overwrite=True):
         """
