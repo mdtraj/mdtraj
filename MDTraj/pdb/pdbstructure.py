@@ -46,11 +46,12 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from __future__ import print_function
 __author__ = "Christopher M. Bruns"
 __version__ = "1.0"
 
 
-import element
+from . import element
 import numpy as np
 import warnings
 import sys
@@ -503,7 +504,7 @@ class Residue(object):
         """
         """
         alt_loc = atom.alternate_location_indicator
-        if not self.locations.has_key(alt_loc):
+        if not alt_loc in self.locations:
             self.locations[alt_loc] = Residue.Location(alt_loc, atom.residue_name_with_spaces)
         assert atom.residue_number == self.number
         assert atom.insertion_code == self.insertion_code
@@ -620,7 +621,7 @@ class Residue(object):
     def iter_positions(self, include_alt_loc=False):
         """
         Returns one position per atom, even if an individual atom has multiple positions.
-
+        >>> from __future__ import print_function
         >>> pdb_lines = [ \
                          "ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N",\
                          "ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C",\
@@ -630,13 +631,8 @@ class Residue(object):
                          "ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S"]
         >>> res = Residue("CYS", 42)
         >>> for l in pdb_lines: res._add_atom(Atom(l))
-        >>> for c in res.iter_positions:
-        ...     print c
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-        TypeError: 'instancemethod' object is not iterable
         >>> for c in res.iter_positions():
-        ...     print c
+        ...     print(c)
         [ 40.714  -5.292  12.123]
         [ 39.736  -5.883  12.911]
         [ 40.339  -6.654  14.087]
@@ -991,7 +987,7 @@ if __name__=='__main__':
 
     def parse_one_pdb(pdb_file_name):
         global atom_count, residue_count, chain_count, model_count, structure_count
-        print pdb_file_name
+        print(pdb_file_name)
         if pdb_file_name[-3:] == ".gz":
             fh = gzip.open(pdb_file_name)
         else:
@@ -1049,10 +1045,10 @@ if __name__=='__main__':
         seconds = elapsed % 60
         hours = minutes / 60
         minutes = minutes % 60
-        print "%dh:%02dm:%02ds elapsed" % (hours, minutes, seconds)
+        print("%dh:%02dm:%02ds elapsed" % (hours, minutes, seconds))
 
-        print "%d atoms found" % atom_count
-        print "%d residues found" % residue_count
-        print "%d chains found" % chain_count
-        print "%d models found" % model_count
-        print "%d structures found" % structure_count
+        print("%d atoms found" % atom_count)
+        print("%d residues found" % residue_count)
+        print("%d chains found" % chain_count)
+        print("%d models found" % model_count)
+        print("%d structures found" % structure_count)

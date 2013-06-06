@@ -256,7 +256,7 @@ class HDF5Trajectory(object):
         except self.tables.NoSuchNodeError:
             pass
 
-        data = [str(json.dumps(topology_dict))]
+        data = [str(json.dumps(topology_dict)).encode('ascii')]
         if self.tables.__version__ >= '3.0.0':
             self._handle.createArray(where='/', name='topology', obj=data)
         else:

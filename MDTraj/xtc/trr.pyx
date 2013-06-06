@@ -1,3 +1,4 @@
+#cython: c_string_type=str, c_string_encoding=ascii
 # Copyright 2012 mdtraj developers
 #
 # This file is part of mdtraj
@@ -17,7 +18,11 @@
 import os
 import cython
 cimport cython
-from itertools import izip
+try:
+    from itertools import izip
+    zip = izip
+except ImportError:  # python3
+    pass
 import numpy as np
 cimport numpy as np
 import numpy as np
@@ -61,7 +66,7 @@ def read(filename, chunk=1000):
     box : np.ndarray, dtype=float32, shape=(n_frames, 3, 3)
     lambd :  np.ndarray, dtype=float32, shape=(n_frames)
     """
-    zipper = tuple(izip(*TRRReader(filename, chunk)))
+    zipper = tuple(zip(*TRRReader(filename, chunk)))
     xyz = np.vstack(zipper[0])
     time = np.concatenate(zipper[1])
     step = np.concatenate(zipper[2])

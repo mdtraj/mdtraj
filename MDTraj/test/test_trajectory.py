@@ -176,8 +176,8 @@ def test_load_join():
     for filename in filenames:
         t0 = mdtraj.trajectory.load(get_fn(filename), top=nat, discard_overlapping_frames=True)
         t1 = mdtraj.trajectory.load(get_fn(filename), top=nat, discard_overlapping_frames=False)
-        t2 = mdtraj.trajectory.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=False)
-        t3 = mdtraj.trajectory.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=True)
+        t2 = mdtraj.trajectory.load([get_fn(filename) for i in range(num_block)], top=nat, discard_overlapping_frames=False)
+        t3 = mdtraj.trajectory.load([get_fn(filename) for i in range(num_block)], top=nat, discard_overlapping_frames=True)
 
         yield lambda: eq(t0.n_frames, t1.n_frames)
         yield lambda: eq(t0.n_frames * num_block, t2.n_frames)
@@ -186,8 +186,8 @@ def test_load_join():
     # h5 loader doesn't need top
     t0 = mdtraj.trajectory.load(get_fn('traj.h5'), discard_overlapping_frames=True)
     t1 = mdtraj.trajectory.load(get_fn('traj.h5'), discard_overlapping_frames=False)
-    t2 = mdtraj.trajectory.load([get_fn('traj.h5') for i in xrange(num_block)], discard_overlapping_frames=False)
-    t3 = mdtraj.trajectory.load([get_fn('traj.h5') for i in xrange(num_block)], discard_overlapping_frames=True)
+    t2 = mdtraj.trajectory.load([get_fn('traj.h5') for i in range(num_block)], discard_overlapping_frames=False)
+    t3 = mdtraj.trajectory.load([get_fn('traj.h5') for i in range(num_block)], discard_overlapping_frames=True)
     yield lambda: eq(t0.n_frames, t1.n_frames)
     yield lambda: eq(t0.n_frames * num_block, t2.n_frames)
     yield lambda: eq(t3.n_frames , t0.n_frames * num_block - num_block + 1)

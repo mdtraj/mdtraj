@@ -18,10 +18,16 @@
 # imports
 ##############################################################################
 
+import sys
 import itertools
 import warnings
-
 import numpy as np
+
+if sys.version < '3':
+    zip_longest = itertools.izip_longest
+else:
+    zip_longest = itertools.zip_longest
+
 
 ##############################################################################
 # functions / classes
@@ -115,7 +121,7 @@ def ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=No
         sentenel = object()
         error = ValueError(("%s must be shape %s. You supplied  "
                 "%s" % (name, str(shape).replace('None', 'Any'), val.shape)))
-        for a, b in itertools.izip_longest(val.shape, shape, fillvalue=sentenel):
+        for a, b in zip_longest(val.shape, shape, fillvalue=sentenel):
             if a is sentenel or b is sentenel:
                 # if the sentenel was reached, it means that the ndim didn't
                 # match or something. this really shouldn't happen
