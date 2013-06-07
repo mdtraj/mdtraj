@@ -42,5 +42,7 @@ Modules
     Low level XTC/TRR interface
 """
 
-__all__ = ['binpos', 'dcd', 'io', 'pdb', 'netcdf', "test", "hdf5"
+__all__ = ['binpos', 'xtc', 'dcd', 'io', 'pdb', 'netcdf', "test", "hdf5"
             'testing', 'trajectory', 'topology', 'reporters', 'geometry']
+
+from mdtraj.xtc import XTCTrajectoryFile

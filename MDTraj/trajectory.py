@@ -25,7 +25,8 @@ import functools
 from itertools import izip
 from copy import deepcopy
 import numpy as np
-from mdtraj import dcd, xtc, binpos, trr, hdf5
+from mdtraj import dcd, binpos, trr, hdf5
+from mdtraj import XTCTrajectoryFile
 from mdtraj.pdb import pdbfile
 from mdtraj.utils import unitcell, arrays
 import mdtraj.topology
@@ -233,7 +234,7 @@ def load_xml(filename, top=None):
     return traj
 
 
-def load_xtc(filename, top=None, chunk=500):
+def load_xtc(filename, top=None, chunk=None):
     """Load an xtc file. Since the xtc doesn't contain information
     to specify the topolgy, you need to supply the topology yourself
 
@@ -244,9 +245,8 @@ def load_xtc(filename, top=None, chunk=500):
     top : {str, Trajectory, Topology}
         The XTC format does not contain topology information. Pass in either the
         path to a pdb file, a trajectory, or a topology to supply this information.
-    chunk : int, default=500
-        Size of the chunk to use for loading the xtc file. Memory is allocated
-        in units of the chunk size, so larger chunk can be more time-efficient.
+    chunk : None
+        This option is depricated.
 
     Returns
     -------
@@ -266,7 +266,9 @@ def load_xtc(filename, top=None, chunk=500):
 
     topology = _parse_topology(top)
 
-    xyz, time, step, box, prec = xtc.read(filename, chunk)
+    with XTCTrajectoryFile(filename, 'r') as f:
+        xyz, time, step, box = f.read()
+
     # note we're not doing anything with the box vectors
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     trajectory.unitcell_vectors = box
@@ -1111,8 +1113,8 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        return xtc.write(filename, self.xyz, time=self.time,
-            box=self.unitcell_vectors, force_overwrite=force_overwrite)
+        with XTCTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(xyz=self.xyz, time=self.time, box=self.unitcell_vectors)
 
     def save_trr(self, filename, force_overwrite=True):
         """
