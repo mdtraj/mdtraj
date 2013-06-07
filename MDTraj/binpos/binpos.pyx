@@ -19,6 +19,7 @@
 ###############################################################################
 
 import cython
+import warnings
 cimport cython
 import os
 import numpy as np
@@ -44,6 +45,12 @@ cdef int _BINPOS_EOF = -1  # end of file (or error)
 
 cdef class BINPOSTrajectoryFile:
     cdef int n_atoms
+    cdef int approx_n_frames
+    cdef int min_chunk_size
+    cdef int chunk_size_multiplier
+    cdef int is_open
+    cdef int frame_counter
+
     cdef void* fh
     cdef molfile_timestep_t* timestep
 
@@ -80,6 +87,14 @@ cdef class BINPOSTrajectoryFile:
             if self.n_atoms <= 0:
                 raise IOError('Malformed BINPOS file. Number of atoms <= 0. '
                               'Are you sure this is a valid AMBER BINPOS file?')
+
+            # binpos stores the 8 bytes per float, 3*n_atoms floats per frame, directly
+            # with no compression
+            self.approx_n_frames = os.stat(filename).st_size / (self.n_atoms * 8 * 3)
+
+            self.min_chunk_size = kwargs.pop('min_chunk_size', 100)
+            self.chunk_size_multiplier = kwargs.pop('chunk_size_multiplier', 1.5)
+
         elif mode == b'w':
             pass
 
@@ -90,24 +105,44 @@ cdef class BINPOSTrajectoryFile:
         if self.fh is NULL:
             raise IOError('There was an error opening the binpos file: %s' % filename)
 
+        for key in kwargs.keys():
+            warnings.warn('kwarg "%s" was not recognized or processed' % key)
+
+        self.is_open = True
+        self.mode = mode
+
     def close(self):
         if self.is_open:
             close_file_read(self.fh)
             self.is_open = False
-    
+
     def __dealloc__(self):
         free(self.timestep)
         self.close()
 
-    def read(self, n_frames):
-        pass
+    def read(self, n_frames=None):
+        """Read data from a BINPOS file
+
+        Parameters
+        ----------
+        n_frames : int, None
+            The number of frames you would like to read from the file.
+            If None, all of the remaining frames will be loaded.
+
+        Returns
+        -------
+        xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=np.float32
+            The cartesian coordinates
+        """
+        if not self.mode == b'r':
+            raise ValueError('read() is only available when file is opened in mode="r"')
 
     def _read(self, n_frames):
         pass
 
     def write(self, xyz):
         pass
-    
+
 
 
 
