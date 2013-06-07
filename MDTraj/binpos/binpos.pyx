@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
+###############################################################################
+# Imports
+###############################################################################
+
 import cython
 cimport cython
 import os
@@ -26,56 +30,18 @@ from binposlib cimport molfile_timestep_t
 from binposlib cimport open_binpos_read, close_file_read, read_next_timestep
 from binposlib cimport open_binpos_write, close_file_write, write_timestep
 
+###############################################################################
+# Globals
+###############################################################################
+
 # codes that indicate status on return from library
 cdef int _BINPOS_SUCESS = 0  # regular exit code
 cdef int _BINPOS_EOF = -1  # end of file (or error)
 
-def read(filename, chunk=1):
-    """Read the data from a AMBER binpos file
+###############################################################################
+# Classes
+###############################################################################
 
-    Parameters
-    ----------
-    filename : str
-        The filename of the binpos file to read from
-    chunk : int
-        Size of the chunks to read
-
-    Returns
-    -------
-    xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
-        The xyz coordinates of each atom in each frame
-    """
-    xyz = np.vstack(tuple(BINPOSReader(filename, chunk)))
-
-    return xyz
-
-
-def write(filename, xyz, force_overwrite=True):
-    """Write xyz coordinates to a AMBER binpos file
-
-    Note that the box size entries in the BINPOS file will be left blank (zeros)
-
-    Parameters
-    ----------
-    filename : str
-        The path to the binpos file to write to
-    xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
-        The xyz coordinates of each atom in each frame
-    force_overwrite : bool, default=False
-        Overwrite anything that exists at filename, if its already there
-    """
-
-    if force_overwrite and os.path.exists(filename):
-        os.unlink(filename)
-
-    if not force_overwrite and os.path.exists(filename):
-        raise IOError('The file already exists: %s' % filename)
-
-    #make sure all the arrays are the right shape
-    xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False)
-
-    writer = BINPOSWriter(filename, xyz)
-    writer.write()
 
 
 cdef class BINPOSReader:
