@@ -42,6 +42,73 @@ cdef int _BINPOS_EOF = -1  # end of file (or error)
 # Classes
 ###############################################################################
 
+cdef class BINPOSTrajectoryFile:
+    cdef int n_atoms
+    cdef void* fh
+    cdef molfile_timestep_t* timestep
+
+    def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True):
+        """Open an AMBER BINPOS file for reading/writing.
+
+        Parameters
+        ----------
+        filename : str
+            The filename to open. A path to a file on disk.
+        mode : {'r', 'w'}
+            The mode in which to open the file, either 'r' for read or 'w' for write.
+        force_overwrite : bool
+            If opened in write mode, and a file by the name of `filename` already exists on disk, should we overwrite it?
+
+        Other Parameters
+        ----------------
+        min_chunk_size : int, default=100
+            In read mode, we need to allocate a buffer in which to store the data without knowing how many frames are
+            in the file. This parameter is the minimum size of the buffer to allocate.
+        chunk_size_multiplier, int, default=1.5
+            In read mode, we need to allocate a buffer in which to store the data without knowing how many frames are in
+            the file. We can *guess* this information based on the size of the file on disk, but it's not perfect. This
+            parameter inflates the guess by a multiplicative factor.
+        """
+        self.is_open = False
+        self.frame_counter = 0
+
+        if mode == b'r':
+            self.n_atoms = 0
+            if not os.path.exists(filename):
+                raise IOError("The file '%s' doesn't exist" % filename)
+            self.fh = open_binpos_read(filename, "binpos", &self.n_atoms)
+            if self.n_atoms <= 0:
+                raise IOError('Malformed BINPOS file. Number of atoms <= 0. '
+                              'Are you sure this is a valid AMBER BINPOS file?')
+        elif mode == b'w':
+            pass
+
+        self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
+        if self.timestep is NULL:
+            raise MemoryError('There was an error allocating working space')
+
+        if self.fh is NULL:
+            raise IOError('There was an error opening the binpos file: %s' % filename)
+
+    def close(self):
+        if self.is_open:
+            close_file_read(self.fh)
+            self.is_open = False
+    
+    def __dealloc__(self):
+        free(self.timestep)
+        self.close()
+
+    def read(self, n_frames):
+        pass
+
+    def _read(self, n_frames):
+        pass
+
+    def write(self, xyz):
+        pass
+    
+
 
 
 cdef class BINPOSReader:
