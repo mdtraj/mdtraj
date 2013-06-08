@@ -117,8 +117,8 @@ cdef class XTCTrajectoryFile:
                 raise IOError('File not found: "%s"' % filename)
             self.approx_n_frames = self._estimate_n_frames_from_filesize(os.stat(filename).st_size)
 
-            self.min_chunk_size = kwargs.pop('min_chunk_size', 100)
-            self.chunk_size_multiplier = kwargs.pop('chunk_size_multiplier', 1.5)
+            self.min_chunk_size = max(kwargs.pop('min_chunk_size', 100), 1)
+            self.chunk_size_multiplier = max(kwargs.pop('chunk_size_multiplier', 1.5), 0.01)
 
 
         elif mode == b'w':
