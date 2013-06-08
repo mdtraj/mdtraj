@@ -50,11 +50,14 @@ cdef class BINPOSTrajectoryFile:
     cdef int chunk_size_multiplier
     cdef int is_open
     cdef int frame_counter
+    cdef char* mode
+    cdef char* filename
+    cdef int write_initialized
 
     cdef void* fh
     cdef molfile_timestep_t* timestep
 
-    def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True):
+    def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True, **kwargs):
         """Open an AMBER BINPOS file for reading/writing.
 
         Parameters
@@ -88,37 +91,36 @@ cdef class BINPOSTrajectoryFile:
                 raise IOError('Malformed BINPOS file. Number of atoms <= 0. '
                               'Are you sure this is a valid AMBER BINPOS file?')
 
-            # binpos stores the 8 bytes per float, 3*n_atoms floats per frame, directly
+            # binpos stores the 4 bytes per float, 3*n_atoms floats per frame, directly
             # with no compression
-            self.approx_n_frames = os.stat(filename).st_size / (self.n_atoms * 8 * 3)
+            self.approx_n_frames = os.stat(filename).st_size / (self.n_atoms * 4 * 3)
 
-            self.min_chunk_size = kwargs.pop('min_chunk_size', 100)
-            self.chunk_size_multiplier = kwargs.pop('chunk_size_multiplier', 1.5)
+            self.min_chunk_size = max(kwargs.pop('min_chunk_size', 100), 1)
+            self.chunk_size_multiplier = max(kwargs.pop('chunk_size_multiplier', 1.1), 0.01)
+            self.is_open = True
+
+            if self.fh is NULL:
+                raise IOError('There was an error opening the binpos file: %s' % filename)
 
         elif mode == b'w':
-            pass
+            self.write_initialized = False
+        else:
+            raise ValueError('mode must be one of "r" or "w". you supplied "%s"' % mode)
 
         self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
         if self.timestep is NULL:
             raise MemoryError('There was an error allocating working space')
 
-        if self.fh is NULL:
-            raise IOError('There was an error opening the binpos file: %s' % filename)
-
         for key in kwargs.keys():
             warnings.warn('kwarg "%s" was not recognized or processed' % key)
 
-        self.is_open = True
+        self.filename = filename
         self.mode = mode
 
-    def close(self):
-        if self.is_open:
-            close_file_read(self.fh)
-            self.is_open = False
-
-    def __dealloc__(self):
-        free(self.timestep)
-        self.close()
+    def _initialize_write(self, n_atoms):
+        self.fh = open_binpos_write(self.filename, "binpos", n_atoms)
+        self.n_atoms = n_atoms
+        self.is_open = True
 
     def read(self, n_frames=None):
         """Read data from a BINPOS file
@@ -132,115 +134,73 @@ cdef class BINPOSTrajectoryFile:
         Returns
         -------
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=np.float32
-            The cartesian coordinates
+            The cartesian coordinates, in angstroms
         """
         if not self.mode == b'r':
             raise ValueError('read() is only available when file is opened in mode="r"')
+        
+        if n_frames is not None:
+            # if they supply the number of frames they want, that's easy
+            if not int(n_frames) == n_frames:
+                raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
+            return self._read(int(n_frames))
 
-    def _read(self, n_frames):
-        pass
+        else:
+            all_xyz = []
+            while True:
+                # guess the size of the chunk to read, based on how many frames we think are in the file
+                # and how many we've currently read
+                chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
+                            self.min_chunk_size)            
+                
+                xyz = self._read(chunk)
 
-    def write(self, xyz):
-        pass
+                if len(xyz) <= 0:
+                    break
+                all_xyz.append(xyz)
+            
+            return np.concatenate(all_xyz)
 
-
-
-
-cdef class BINPOSReader:
-    cdef int n_atoms
-    cdef void* fh
-    cdef molfile_timestep_t* timestep
-    cdef int status
-    cdef int chunk
-
-    def __cinit__(self, char* filename, int chunk=1):
-        self.chunk = chunk
-        #open the file
-        self.fh = open_binpos_read(filename, "binpos", &self.n_atoms)
-        if self.fh is NULL:
-            raise IOError('There was an error opening the binpos file: %s' % filename)
-
-        # alloc the molfile_timestep, which is the struct that the library is
-        # going to deposit its data into each timestep
-        self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
-        if self.fh is  NULL:
-            raise MemoryError
-
-
-    def __dealloc__(self):
-        "Shut this whole thing down"
-
-        # free whatever we malloced
-        free(self.timestep)
-
-        # close the file
-        if self.fh is not NULL:
-            close_file_read(self.fh)
-
-
-    def __iter__(self):
-        return self
-
-    @cython.boundscheck(False)
-    def __next__(self):
+                
+    def _read(self, int n_frames):
         cdef int i
-        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((self.chunk, self.n_atoms, 3), dtype=np.float32)
-
-        for i in range(self.chunk):
+        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((n_frames, self.n_atoms, 3), dtype=np.float32)
+        
+        for i in range(n_frames):
             self.timestep.coords = &xyz[i,0,0]
             status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
             if status != _BINPOS_SUCESS:
-                if i == 0:
-                    raise StopIteration
                 break
 
-        if status != _BINPOS_SUCESS:
-            return xyz[0:i]
+        self.frame_counter += i
 
+        if status != _BINPOS_SUCESS:
+            return xyz[:i]
         return xyz
 
-
-cdef class BINPOSWriter:
-    cdef char* filename
-    cdef void* fh
-    cdef np.ndarray xyz
-    cdef int n_atoms
-    cdef molfile_timestep_t* timestep
-
-    def __cinit__(self, char* filename, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz):
-        """
-        Set up the BINPOS writer
-
-        Nothing will be written to disk until you call write()
+    def write(self, xyz):
+        """Write cartesian coordinates to a binpos file
 
         Parameters
         ----------
-        xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
-            The xyz coordinates of each atom in each frame
+        xyz : np.ndarray, dtype=np.float32, shape=(n_frames, n_atoms, 3)
+            The cartesian coordinates of the atoms in every frame, in angstroms.
         """
-        self.filename = filename
-        self.xyz = xyz
-        self.n_atoms = self.xyz.shape[1]
+        xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False,
+                          add_newaxis_on_deficient_ndim=True)
+        
+        if not self.write_initialized:
+            self._initialize_write(xyz.shape[1])
+        else:
+            if not self.n_atoms == xyz.shape[1]:
+                raise ValueError('number of atoms in file (%d) does not match number '
+                                 'of atoms youre trying to save (%d)' % (self.n_atoms, xyz.shape[1]))
 
-        self.fh = open_binpos_write(filename, "binpos", self.n_atoms)
-        if self.fh is NULL:
-            raise IOError('There was an error opening the file: %s' % filename)
+        self._write(xyz)
 
-        self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
-        if self.timestep is NULL:
-            raise MemoryError
-
-    def __dealloc__(self):
-        close_file_write(self.fh)
-        if self.timestep is not NULL:
-            free(self.timestep)
-
-    @cython.boundscheck(False)
-    def write(self):
-        "Write all the data"
+    def _write(self, np.ndarray[dtype=np.float32_t, ndim=3] xyz):
         cdef int i, status
-        cdef n_frames = len(self.xyz)
-        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = self.xyz
+        cdef int n_frames = len(xyz)
 
         for i in range(n_frames):
             self.timestep.coords = &xyz[i, 0, 0]
@@ -248,3 +208,23 @@ cdef class BINPOSWriter:
 
             if status != _BINPOS_SUCESS:
                 raise RuntimeError("BINPOS Error: %s" % status)
+
+    def close(self):
+        if self.is_open:
+            if self.mode == b'r':
+                close_file_read(self.fh)
+            else:
+                close_file_write(self.fh)
+            self.is_open = False
+
+    def __dealloc__(self):
+        free(self.timestep)
+        self.close()
+
+    def __enter__(self):
+        "Support the context manager protocol"
+        return self
+
+    def __exit__(self, *exc_info):
+        "Support the context manager protocol"
+        self.close()

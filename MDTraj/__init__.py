@@ -44,3 +44,4 @@ Modules
 
 __all__ = ['binpos', 'dcd', 'io', 'pdb', 'netcdf', "test", "hdf5"
             'testing', 'trajectory', 'topology', 'reporters', 'geometry']
+from mdtraj.binpos import BINPOSTrajectoryFile

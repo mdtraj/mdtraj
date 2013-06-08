@@ -25,7 +25,8 @@ import functools
 from itertools import izip
 from copy import deepcopy
 import numpy as np
-from mdtraj import dcd, xtc, binpos, trr, hdf5
+from mdtraj import BINPOSTrajectoryFile
+from mdtraj import dcd, xtc, trr, hdf5
 from mdtraj.pdb import pdbfile
 from mdtraj.utils import unitcell, arrays
 import mdtraj.topology
@@ -567,7 +568,8 @@ def load_binpos(filename, top=None, chunk=500):
 
     topology = _parse_topology(top)
 
-    xyz = binpos.read(filename)
+    with BINPOSTrajectoryFile(filename) as f:
+        xyz = f.read()
     xyz /= 10.0  # convert from anstroms to nanometer
 
     return Trajectory(xyz=xyz, topology=topology)
@@ -1166,7 +1168,9 @@ class Trajectory(object):
         """
         # convert from internal nm representation to angstroms for output
         xyz = self.xyz * 10
-        return binpos.write(filename, xyz, force_overwrite=force_overwrite)
+        with BINPOSTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(xyz)
+
 
     def save_netcdf(self, filename, force_overwrite=True):
         """Save a trajectory in AMBER NetCDF format
