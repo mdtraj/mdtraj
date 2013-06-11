@@ -1,4 +1,4 @@
-from mdtraj import trr
+from mdtraj import trr, TRRTrajectoryFile
 import os, tempfile
 import numpy as np
 from mdtraj.testing import eq, DocStringFormatTester
@@ -12,15 +12,18 @@ def teardown_module(module):
 
 
 def test1():
-    xyz = np.array(np.random.randn(500,10,3), dtype=np.float32)
-    trr.write(temp, xyz=xyz)
-    xyz2 = trr.read(temp, chunk=10)[0]
+    xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
+    time = np.random.randn(500)
+    step = np.arange(500)
+    lambd = np.random.randn(500)
 
-    eq(xyz, xyz2)
+    with TRRTrajectoryFile(temp, 'w') as f:
+        f.write(xyz=xyz, time=time, step=step, lambd=lambd)
+    with TRRTrajectoryFile(temp) as f:
+        xyz2, time2, step2, box2, lambd2 = f.read()
 
+    yield lambda: eq(xyz, xyz2)
+    yield lambda: eq(time, time2)
+    yield lambda: eq(step, step2)
+    yield lambda: eq(lambd, lambd2)
 
-def test2():
-    xyz = np.array(np.random.randn(500,10,3), dtype=np.float32)
-    trr.write(temp, xyz=xyz)
-    xyz2 = trr.read(temp, chunk=1000)[0]
-    eq(xyz, xyz2)

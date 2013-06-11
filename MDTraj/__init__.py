@@ -46,3 +46,5 @@ __all__ = ['binpos', 'xtc', 'dcd', 'io', 'pdb', 'netcdf', "test", "hdf5"
             'testing', 'trajectory', 'topology', 'reporters', 'geometry']
 
 from mdtraj.xtc import XTCTrajectoryFile
+from mdtraj.trr import TRRTrajectoryFile
+

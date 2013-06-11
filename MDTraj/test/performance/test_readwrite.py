@@ -3,7 +3,7 @@ import tempfile
 from noseperf.testcases import PerformanceTest
 
 from mdtraj import dcd, binpos, trr, netcdf, hdf5
-from mdtraj import XTCTrajectoryFile
+from mdtraj import XTCTrajectoryFile, TRRTrajectoryFile
 import numpy as np
 
 ######################################################
@@ -27,7 +27,7 @@ class WithTemp(PerformanceTest):
 ########################################
 
 
-class TestXTCWrite(WithTemp):
+class TestXTCWriter(WithTemp):
     def test(self):
         "Test the write speed of the XTC code (10000 frames, 100 atoms)"
         with XTCTrajectoryFile(self.fn, 'w') as f:
@@ -78,20 +78,23 @@ class TestBINPOSRead(WithTemp):
         binpos.read(self.fn)
 
 
-class TestTRRWrite(WithTemp):
+class TestTRRWriter(WithTemp):
     def test(self):
         "Test the write speed of the TRR code (10000 frames, 100 atoms)"
-        trr.write(self.fn, xyz=self.xyz, force_overwrite=True)
+        with TRRTrajectoryFile(self.fn, 'w') as f:
+            f.write(xyz=self.xyz)
 
 
 class TestTRRRead(WithTemp):
     def setUp(self):
         super(TestTRRRead, self).setUp()
-        trr.write(self.fn, xyz=self.xyz, force_overwrite=True)
+        with TRRTrajectoryFile(self.fn, 'w') as f:
+            f.write(xyz=self.xyz)
 
     def test(self):
         "Test the read speed of the TRR code (10000 frames, 100 atoms)"
-        trr.read(self.fn)
+        with TRRTrajectoryFile(self.fn) as f:
+            f.read()
 
 
 class TestNetCDFWrite(WithTemp):
