@@ -108,52 +108,50 @@ class PDBFile(object):
                     if atomName in atomReplacements:
                         atomName = atomReplacements[atomName]
                     atomName = atomName.strip()
-                    element = None
+                    element = atom.element
+                    if element is None:
+                        # Try to guess the element.
 
-                    # Try to guess the element.
+                        upper = atomName.upper()
+                        if upper.startswith('CL'):
+                            element = elem.chlorine
+                        elif upper.startswith('NA'):
+                            element = elem.sodium
+                        elif upper.startswith('MG'):
+                            element = elem.magnesium
+                        elif upper.startswith('BE'):
+                            element = elem.beryllium
+                        elif upper.startswith('LI'):
+                            element = elem.lithium
+                        elif upper.startswith('K'):
+                            element = elem.potassium
+                        elif( len( residue ) == 1 and upper.startswith('CA') ):
+                            element = elem.calcium
 
-                    upper = atomName.upper()
-                    if upper.startswith('CL'):
-                        element = elem.chlorine
-                    elif upper.startswith('NA'):
-                        element = elem.sodium
-                    elif upper.startswith('MG'):
-                        element = elem.magnesium
-                    elif upper.startswith('BE'):
-                        element = elem.beryllium
-                    elif upper.startswith('LI'):
-                        element = elem.lithium
-                    elif upper.startswith('K'):
-                        element = elem.potassium
-                    elif( len( residue ) == 1 and upper.startswith('CA') ):
-                        element = elem.calcium
-
-                    # TJL has edited this. There are a few issues here. First,
-                    # parsing for the element is non-trivial, so I do my best
-                    # below. Second, there is additional parsing code in
-                    # pdbstructure.py, and I am unsure why it doesn't get used
-                    # here...
-
-                    elif ( len( residue ) > 1 and upper.startswith('CE') ):
-                        element = elem.carbon # (probably) not Celenium...
-                    elif ( len( residue ) > 1 and upper.startswith('CD') ):
-                        element = elem.carbon # (probably) not Cadmium...
-                    elif ( residue.name in ['TRP', 'ARG', 'GLN', 'HIS'] and upper.startswith('NE') ):
-                        element = elem.nitrogen # (probably) not Neon...
-                    elif ( residue.name in ['ASN'] and upper.startswith('ND') ):
-                        element = elem.nitrogen # (probably) not ND...
-                    elif ( residue.name == 'CYS' and upper.startswith('SG') ):
-                        element = elem.sulfur # (probably) not SG...
-
-
-                    else:
-                        try:
-                            symbol = atomName[0:2].strip().rstrip("AB0123456789").lstrip("0123456789")
-                            element = elem.get_by_symbol(symbol)
-                        except KeyError:
+                        # TJL has edited this. There are a few issues here. First,
+                        # parsing for the element is non-trivial, so I do my best
+                        # below. Second, there is additional parsing code in
+                        # pdbstructure.py, and I am unsure why it doesn't get used
+                        # here...
+                        elif ( len( residue ) > 1 and upper.startswith('CE') ):
+                            element = elem.carbon # (probably) not Celenium...
+                        elif ( len( residue ) > 1 and upper.startswith('CD') ):
+                            element = elem.carbon # (probably) not Cadmium...
+                        elif ( residue.name in ['TRP', 'ARG', 'GLN', 'HIS'] and upper.startswith('NE') ):
+                            element = elem.nitrogen # (probably) not Neon...
+                        elif ( residue.name in ['ASN'] and upper.startswith('ND') ):
+                            element = elem.nitrogen # (probably) not ND...
+                        elif ( residue.name == 'CYS' and upper.startswith('SG') ):
+                            element = elem.sulfur # (probably) not SG...
+                        else:
                             try:
-                                element = elem.get_by_symbol(atomName[0])
-                            except KeyError: pass
+                                symbol = atomName[0:2].strip().rstrip("AB0123456789").lstrip("0123456789")
+                                element = elem.get_by_symbol(symbol)
+                            except KeyError:
+                                try:
+                                    element = elem.get_by_symbol(atomName[0])
+                                except KeyError:
+                                    pass
 
                     newAtom = top.addAtom(atomName, element, r)
                     atomByNumber[atom.serial_number] = newAtom
@@ -284,7 +282,7 @@ class PDBFile(object):
         if modelIndex is not None:
             print >>file, "MODEL     %4d" % modelIndex
         for (chainIndex, chain) in enumerate(topology.chains()):
-            chainName = chr(ord('A')+chainIndex)
+            chainName = chr(ord('A')+chainIndex%26)
             residues = list(chain.residues())
             for (resIndex, res) in enumerate(residues):
                 if len(res.name) > 3:
