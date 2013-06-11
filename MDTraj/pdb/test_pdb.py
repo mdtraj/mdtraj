@@ -17,8 +17,9 @@
 import numpy as np
 import os, tempfile
 from mdtraj import topology
-from mdtraj.testing import get_fn, eq
+from mdtraj.testing import get_fn, eq, raises
 from mdtraj import trajectory
+from mdtraj.pdb.pdbfile import PDBFormatOverFlowError
 
 pdb = get_fn('native.pdb')
 temp = tempfile.mkstemp(suffix='.pdb')[1]
@@ -38,6 +39,7 @@ def test_pdbwrite():
 
     r = trajectory.load(temp)
     eq(p.xyz, r.xyz)
+
 
 def test_load_multiframe():
     from mdtraj.pdb.pdbstructure import PdbStructure
@@ -97,3 +99,10 @@ def test_2EQQ_0():
 
     yield lambda: eq(t.xyz[0], t2.xyz[0])
     yield lambda: topology.equal(t.top, t2.top)
+
+
+@raises(PDBFormatOverFlowError)
+def test_write_large():
+    traj = trajectory.load(get_fn('native.pdb'))
+    traj.xyz.fill(1000)
+    traj.save(temp)
