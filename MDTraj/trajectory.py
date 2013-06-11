@@ -375,7 +375,7 @@ def load_hdf(filename, stride=None, frame=None):
     trajectory : Trajectory
         A trajectory file!
     """
-    tf = hdf5.HDF5Trajectory(filename)
+    tf = hdf5.HDF5TrajectoryFile(filename)
     if frame is None:
         data = tf.read(stride=stride)
     else:
@@ -594,10 +594,10 @@ def load_netcdf(filename, top=None, stride=None):
     trajectory : Trajectory
         A trajectory file!
     """
-    from mdtraj.netcdf import NetCDFFile
+    from mdtraj.netcdf import NetCDFTrajectoryFile
 
     topology = _parse_topology(top)
-    with NetCDFFile(filename) as f:
+    with NetCDFTrajectoryFile(filename) as f:
         xyz, time, cell_lengths, cell_angles = f.read(stride=stride)
         xyz /= 10.0  # convert from angstroms to nanometer
 
@@ -1050,7 +1050,7 @@ class Trajectory(object):
         filename : str
             filesystem path in which to save the trajectory
         """
-        with hdf5.HDF5Trajectory(filename, 'w') as f:
+        with hdf5.HDF5TrajectoryFile(filename, 'w') as f:
             f.write(coordinates=self.xyz, time=self.time,
                     cell_angles=self.unitcell_angles,
                     cell_lengths=self.unitcell_lengths)
