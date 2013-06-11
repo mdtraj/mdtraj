@@ -47,3 +47,6 @@ __all__ = ['binpos', 'dcd', 'io', 'pdb', 'netcdf', "test", "hdf5"
 from .hdf5 import HDF5TrajectoryFile
 from .netcdf import NetCDFTrajectoryFile
 from .trajectory import Trajectory
+
+from mdtraj.dcd import DCDTrajectoryFile
+
