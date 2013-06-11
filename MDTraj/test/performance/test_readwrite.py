@@ -93,36 +93,36 @@ class TestTRRRead(WithTemp):
 class TestNetCDFWrite(WithTemp):
     def test(self):
         "Test the write speed of the NetCDF code (10000 frames, 100 atoms)"
-        with netcdf.NetCDFFile(self.fn, 'w', force_overwrite=True) as f:
+        with netcdf.NetCDFTrajectoryFile(self.fn, 'w', force_overwrite=True) as f:
             f.write(self.xyz)
 
 
 class TestNetCDFRead(WithTemp):
     def setUp(self):
         super(TestNetCDFRead, self).setUp()
-        with netcdf.NetCDFFile(self.fn, 'w', force_overwrite=True) as f:
+        with netcdf.NetCDFTrajectoryFile(self.fn, 'w', force_overwrite=True) as f:
             f.write(self.xyz)
 
     def test(self):
         "Test the read speed of the NetCDF code (10000 frames, 100 atoms)"
-        with netcdf.NetCDFFile(self.fn) as f:
+        with netcdf.NetCDFTrajectoryFile(self.fn) as f:
             f.read()
 
 
 class TestHDF5Write(WithTemp):
     def test(self):
         "Test the write speed of the hdf5 code (10000 frames, 100 atoms)"
-        with hdf5.HDF5Trajectory(self.fn, 'w', force_overwrite=True) as f:
+        with hdf5.HDF5TrajectoryFile(self.fn, 'w', force_overwrite=True) as f:
             f.write(self.xyz)
 
 
 class TestHDF5Read(WithTemp):
     def setUp(self):
         super(TestHDF5Read, self).setUp()
-        with hdf5.HDF5Trajectory(self.fn, 'w', force_overwrite=True) as f:
+        with hdf5.HDF5TrajectoryFile(self.fn, 'w', force_overwrite=True) as f:
             f.write(self.xyz)
 
     def test(self):
         "Test the read speed of the hdf5 code (10000 frames, 100 atoms)"
-        with hdf5.HDF5Trajectory(self.fn) as f:
+        with hdf5.HDF5TrajectoryFile(self.fn) as f:
             f.read()
