@@ -4,6 +4,7 @@
 # imports
 ##############################################################################
 
+import sys
 import ast
 from mdtraj.utils import import_
 
@@ -24,6 +25,10 @@ class _UnitContext(ast.NodeTransformer):
     # appear in unit expressions
     allowed_ops = [ast.Expression, ast.BinOp, ast.Name,
                    ast.Pow, ast.Div, ast.Mult, ast.Num]
+
+    def __init__(self):
+        if sys.version > '3':
+            self.allowed_ops.append(ast.Bytes)
 
     def visit(self, node):
         if not any(isinstance(node, a) for a in self.allowed_ops):
@@ -71,10 +76,9 @@ def _str_to_unit(unit_string):
     # "nanometers" into "unit.nanometers" and simulataniously check that
     # there's no nefarious stuff in the expression.
 
-    node = _unit_context.visit(ast.parse(unit_string, mode='eval'))
+    node = _unit_context.visit(ast.parse(str(unit_string), mode='eval'))
     fixed_node = ast.fix_missing_locations(node)
     output = eval(compile(fixed_node, '<string>', mode='eval'))
-
     return output
 
 
@@ -97,18 +101,22 @@ def in_units_of(quantity, units_out, units_in=None):
     Examples
     --------
     >>> units = import_('simtk.unit')
-    >>> str(in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond'))
-    '1000000.0'
+    >>> abs(in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond') - 1000000) < 1e-8
+    True
     """
     units = import_('simtk.unit')
 
     if quantity is None:
         return quantity
 
+    units_out = _str_to_unit(units_out)
+    assert isinstance(units_out, units.Unit)
+
     if isinstance(quantity, units.Quantity):
-        return quantity.value_in_unit(_str_to_unit(units_out))
+        return quantity.value_in_unit(units_out)
     else:
         if units_in is None:
             return quantity
-        united_quantity = units.Quantity(quantity, _str_to_unit(units_in))
-        return united_quantity.value_in_unit(_str_to_unit(units_out))
+        units_in = _str_to_unit(units_in)
+        united_quantity = units.Quantity(quantity, units_in)
+        return united_quantity.value_in_unit(units_out)

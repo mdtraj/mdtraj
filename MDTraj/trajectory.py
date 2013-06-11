@@ -19,10 +19,15 @@
 ##############################################################################
 
 import os
+import sys
 import warnings
 import logging
 import functools
-from itertools import izip
+
+if sys.version < '3':
+    from itertools import izip as zip
+    pass
+
 from copy import deepcopy
 import numpy as np
 from mdtraj import dcd, xtc, binpos, trr, hdf5
@@ -460,7 +465,7 @@ def _load_legacy_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
         if hasattr(F.root, 'box'):
             box_node = F.root.box
 
-        if chunk < stride:
+        if stride is not None and chunk < stride:
             raise ValueError('Chunk must be greater than or equal to the stride')
 
         # if they want only a single frame, quit early without
@@ -510,7 +515,7 @@ def _load_legacy_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
 
                 yield xyz, time, box
 
-        zipper = tuple(izip(*enum_chunks()))
+        zipper = tuple(zip(*enum_chunks()))
         xyz = np.concatenate(zipper[0])
 
         time = None

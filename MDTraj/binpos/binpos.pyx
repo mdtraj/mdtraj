@@ -1,3 +1,4 @@
+#cython: c_string_type=str, c_string_encoding=ascii
 # Copyright 2012 mdtraj developers
 #
 # This file is part of mdtraj

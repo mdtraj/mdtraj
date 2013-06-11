@@ -5,7 +5,7 @@
 ##############################################################################
 
 import numpy as np
-from arrays import ensure_type, TypeCastPerformanceWarning
+from .arrays import ensure_type, TypeCastPerformanceWarning
 from mdtraj.testing import raises
 import warnings
 

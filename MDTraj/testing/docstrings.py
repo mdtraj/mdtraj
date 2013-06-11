@@ -20,7 +20,7 @@
 
 from inspect import (isclass, ismodule, isfunction, ismethod,
                      getmembers, getdoc, getmodule, getargs, isbuiltin)
-import docscrape
+from mdtraj.testing import docscrape
 import types
 import sys
 import warnings
@@ -146,7 +146,7 @@ def DocStringFormatTester(module, error_on_none=False):
                 return
 
             args = set(getargs(f.func_code).args)
-            if ismethod(f):
+            if 'self' in args:
                 args.remove('self')
 
             if args != param_names:

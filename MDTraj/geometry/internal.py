@@ -24,9 +24,14 @@ This code is new and should be considered __unstable__
 # Imports
 ##############################################################################
 
+import sys
 import numpy as np
 import scipy.linalg
-from itertools import combinations, ifilter
+from itertools import combinations
+if sys.version < '3':
+    from itertools import ifilter as filter
+    pass
+
 import logging
 
 from mdtraj.geometry.distance import compute_distances
@@ -329,8 +334,8 @@ def get_dihedral_connectivity(ibonds):
 
     for a in xrange(n_atoms):
         for b in graph.neighbors(a):
-            for c in ifilter(lambda c: c not in [a, b], graph.neighbors(b)):
-                for d in ifilter(lambda d: d not in [a, b, c], graph.neighbors(c)):
+            for c in filter(lambda c: c not in [a, b], graph.neighbors(b)):
+                for d in filter(lambda d: d not in [a, b, c], graph.neighbors(c)):
                     idihedrals.append((a, b, c, d))
 
     return np.array(idihedrals)

@@ -46,7 +46,11 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 __author__ = "Peter Eastman"
 __version__ = "1.0"
 
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:  # python3
+    import pickle
+
 import os
 import numpy as np
 import xml.etree.ElementTree as etree
