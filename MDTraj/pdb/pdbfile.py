@@ -157,13 +157,15 @@ class PDBFile(object):
                     atomByNumber[atom.serial_number] = newAtom
 
         # load all of the positions (from every model)
-        positions = []
+        _positions = []
         for model in pdb.iter_models(use_all_models=True):
-            model_positions = []
-            for atom in model.iter_atoms():
-                model_positions.append(atom.get_position())
-            positions.append(model_positions)
-        self.positions = np.array(positions)
+            coords = []
+            for chain in model.iter_chains():
+                for residue in chain.iter_residues():
+                    for atom in residue.atoms:
+                        coords.append(atom.get_position())
+            _positions.append(coords)
+        self.positions = np.array(_positions)
 
         ## The atom positions read from the PDB file
         #self.positions = np.array(coords)
