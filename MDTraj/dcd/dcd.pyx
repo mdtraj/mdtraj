@@ -58,26 +58,47 @@ cdef ERROR_MESSAGES = {
 ##############################################################################
 
 
-
 cdef class DCDTrajectoryFile:
     """Interface for reading and writing to a CHARMM/NAMD DCD file.
-    This is a file-like object, that supports both reading a writing. It
-    supports the context manager protocol, so you can also use it with the
-    python 'with' statement.
+    This is a file-like object, that both reading or writing depending
+    on the `mode` flag. It implements the context manager protocol,
+    so you can also use it with the python 'with' statement.
 
     The conventional units in the DCD file are angstroms and degrees. The format
-    only supports saving coordinates and unit cell parameters (lengths and angles)
+    supports saving coordinates and unit cell parameters (lengths and angles)
+
+    Parameters
+    ----------
+    filename : string
+        Path to the file to open
+    mode : {'r', 'w'}
+        Mode in which to open the file. 'r' is for reading, and 'w' is for writing.
+    force_overwrite : bool
+        In mode='w', how do you want to behave if a file by the name of `filename`
+        already exists? if `force_overwrite=True`, it will be overwritten.
 
     Examples
     --------
+    >>> # read a single frame, and then read the remaining frames
     >>> f = DCDTrajectoryFile('mytrajectory.dcd', 'r')
-    >>> f.read(n_frames=1)  # read a single frame
-    >>> f.read()            # read all of the remaining frames
+    >>> f.read(n_frames=1)  # read a single frame from the file
+    >>> xyzf.read()            # read all of the remaining frames
+    >>> f.close()
 
+    >>> # read all of the data with automatic closing of the file
+    >>> with DCDTrajectoryFile('mytrajectory.dcd') as f:
+    >>>    xyz, cell_lengths, cell_angles = f.read()
+
+    >>> # write some xyz coordinates to a new file
     >>> with DCDTrajectoryFile('mytrajectory2.dcd. 'w') as f:
     >>>     f.write(np.random.randn(10,3,3))
-    """
 
+    >>> # write frames one at a time
+    >>> with DCDTrajectoryFile('mytrajectory2.dcd. 'w') as f:
+    >>>     n_frames, n_atoms = 5, 10
+    >>>     for i in range(n_frames):
+    >>>         f.write(np.random.randn(n_atoms, 3))
+    """
 
     # n_atoms and n_frames hold the number of atoms and the number of frames
     # in the file, as read off the header of the DCD file during read mode
@@ -90,18 +111,6 @@ cdef class DCDTrajectoryFile:
     cdef readonly char* distance_unit
 
     def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True):
-        """Open a DCD Trajectory File
-        
-        Parameters
-        ----------
-        filename : string
-            Path to the file to open
-        mode : {'r', 'w'}
-            Mode in which to open the file. 'r' is for reading, and 'w' is for writing.
-        force_overwrite : bool
-            In mode='w', how do you want to behave if a file by the name of `filename`
-            already exists? if `force_overwrite=True`, it will be overwritten.
-        """
         self.distance_unit = 'angstroms'
         self.is_open = False
 
@@ -280,6 +289,22 @@ cdef class DCDTrajectoryFile:
 
 
     def write(self, xyz, cell_lengths=None, cell_angles=None):
+        """Write one or more frames of data to the DCD file
+
+        Parameters
+        ----------
+        xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
+            The cartesian coordinates of the atoms to write. By convention, the
+            lengths should be in units of angstroms.
+        cell_lengths : np.ndarray, shape=(n_frames, 3), dtype=float32, optional
+            The length of the periodic box in each frame, in each direction,
+            `a`, `b`, `c`. By convention the lengths should be in units
+            of angstroms.
+        cell_angles : np.ndarray, shape=(n_frames, 3), dtype=float32, optional
+            Organized analogously to cell_lengths. Gives the alpha, beta and
+            gamma angles respectively. By convention, the angles should be
+            in units of degrees.
+        """
         if self.mode != b'w':
             raise ValueError('write() is only available when the file is opened in mode="w"')
 
