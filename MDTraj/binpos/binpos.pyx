@@ -123,7 +123,7 @@ cdef class BINPOSTrajectoryFile:
         self.is_open = True
         self.write_initialized = True
 
-    def read(self, n_frames=None):
+    def read(self, n_frames=None, int stride=1, atom_indices=None):
         """Read data from a BINPOS file
 
         Parameters
@@ -131,6 +131,12 @@ cdef class BINPOSTrajectoryFile:
         n_frames : int, None
             The number of frames you would like to read from the file.
             If None, all of the remaining frames will be loaded.
+        stride : int, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
 
         Returns
         -------
@@ -139,12 +145,12 @@ cdef class BINPOSTrajectoryFile:
         """
         if not self.mode == b'r':
             raise ValueError('read() is only available when file is opened in mode="r"')
-        
+
         if n_frames is not None:
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
-            return self._read(int(n_frames))
+            return self._read(int(n_frames), stride, atom_indices)
 
         else:
             all_xyz = []
@@ -152,9 +158,9 @@ cdef class BINPOSTrajectoryFile:
                 # guess the size of the chunk to read, based on how many frames we think are in the file
                 # and how many we've currently read
                 chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
-                            self.min_chunk_size)            
-                
-                xyz, is_eof = self._read(chunk)
+                            self.min_chunk_size)
+
+                xyz, is_eof = self._read(chunk, stride, atom_indices)
                 if len(xyz) <= 0:
                     break
                 all_xyz.append(xyz)
@@ -163,18 +169,41 @@ cdef class BINPOSTrajectoryFile:
 
             return np.concatenate(all_xyz)
 
-                
-    def _read(self, int n_frames):
-        cdef int i, status
-        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((n_frames, self.n_atoms, 3), dtype=np.float32)
-        
+
+    def _read(self, int n_frames, int stride, atom_indices):
+        cdef int i, j, status, n_atoms_to_read
+
+        if atom_indices is None:
+            n_atoms_to_read = self.n_atoms
+        elif isinstance(atom_indices, slice):
+            n_atoms_to_read = len(np.arange(self.n_atoms)[atom_indices])
+        else:
+            atom_indices = np.asarray(atom_indices)
+            if min(atom_indices) < 0:
+                raise ValueError('atom_indices should be zero indexed. you gave an index less than zero')
+            if max(atom_indices) >= self.n_atoms:
+                raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
+            n_atoms_to_read = len(atom_indices)
+
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((n_frames, n_atoms_to_read, 3), dtype=np.float32)
+
         for i in range(n_frames):
-            self.timestep.coords = &xyz[i,0,0]
-            status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+            if atom_indices is None:
+                self.timestep.coords = &xyz[i,0,0]
+                status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+            else:
+                self.timestep.coords = &framebuffer[0,0]
+                status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+                xyz[i, :, :] = framebuffer[atom_indices, :]
+
             if status == _BINPOS_EOF:
                 break
             if status != _BINPOS_SUCESS:
                 raise RuntimeError('binpos read error: %s' % status)
+
+            for j in range(stride - 1):
+                status = read_next_timestep(self.fh, self.n_atoms, NULL)
 
         self.frame_counter += i
 
@@ -193,7 +222,7 @@ cdef class BINPOSTrajectoryFile:
         """
         xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False,
                           add_newaxis_on_deficient_ndim=True)
-        
+
         if not self.write_initialized:
             self._initialize_write(xyz.shape[1])
         else:

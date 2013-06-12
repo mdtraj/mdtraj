@@ -73,6 +73,23 @@ def test_read_2():
     yield lambda: eq(xyz, xyz3)
 
 
+def test_read_stride():
+    with BINPOSTrajectoryFile(fn_binpos) as f:
+        xyz = f.read()[::2]
+    with BINPOSTrajectoryFile(fn_binpos) as f:
+        xyz2 = f.read(stride=2)
+
+    yield lambda: eq(xyz, xyz2)
+
+def test_read_atomindices():
+    with BINPOSTrajectoryFile(fn_binpos) as f:
+        xyz = f.read()[:, [0,3]]
+    with BINPOSTrajectoryFile(fn_binpos) as f:
+        xyz2 = f.read(atom_indices=[0,3])
+
+    yield lambda: eq(xyz, xyz2)
+
+
 def test_write_1():
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
     with BINPOSTrajectoryFile(temp, 'w') as f:
