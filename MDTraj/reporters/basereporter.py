@@ -19,7 +19,6 @@
 ##############################################################################
 # stdlib
 import math
-import abc
 
 # ours
 from mdtraj.topology import topology_from_subset
