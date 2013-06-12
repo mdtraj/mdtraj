@@ -87,7 +87,7 @@ cdef class DCDTrajectoryFile:
     cdef char* filename
     cdef int is_open, _needs_write_initialization
     cdef molfile_timestep_t* timestep
-    cdef readonly char* distance_units 
+    cdef readonly char* distance_unit
 
     def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True):
         """Open a DCD Trajectory File
@@ -102,7 +102,7 @@ cdef class DCDTrajectoryFile:
             In mode='w', how do you want to behave if a file by the name of `filename`
             already exists? if `force_overwrite=True`, it will be overwritten.
         """
-        self.distance_units = 'angstroms'
+        self.distance_unit = 'angstroms'
         self.is_open = False
 
         if mode == b'r':

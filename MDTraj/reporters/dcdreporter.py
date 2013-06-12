@@ -41,10 +41,12 @@ class DCDReporter(_BaseReporter):
 
     >>> traj = mdtraj.trajectory.load('traj.dcd')              # doctest: +SKIP
     """
-    #backend = DCDTrajectoryFile
+    @property
+    def backend(self):
+        return DCDTrajectoryFile
 
     def __init__(self, file, reportInterval, atomSubset=None):
-        super(DCDTrajectoryFile, self).__init__(file, reportInterval,
+        super(DCDReporter, self).__init__(file, reportInterval,
             coordinates=True, time=False, cell=True, potentialEnergy=False,
             kineticEnergy=False, temperature=False, velocities=False,
             atomSubset=atomSubset)
