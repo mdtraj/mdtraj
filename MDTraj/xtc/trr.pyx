@@ -49,18 +49,20 @@ cimport trrlib
 ###############################################################################
 
 cdef int _EXDROK = 0             # OK
-cdef int _EXDRHEADER = 1         # Header
-cdef int _EXDRSTRING = 2         # String
-cdef int _EXDRDOUBLE = 3         # Double
-cdef int _EXDRINT = 4            # Integer
-cdef int _EXDRFLOAT = 5          # Float
-cdef int _EXDRUINT = 6           # Unsigned integer
-cdef int _EXDR3DX = 7            # Compressed 3d coordinate
-cdef int _EXDRCLOSE = 8          # Closing file
-cdef int _EXDRMAGIC = 9          # Magic number
-cdef int _EXDRNOMEM = 10         # Not enough memory
 cdef int _EXDRENDOFFILE = 11     # End of file
-cdef int _EXDRFILENOTFOUND = 12  # File not found
+_EXDR_ERROR_MESSAGES = {
+    1: "Header",
+    2: "String",
+    3: "Double",
+    4: "Integer",
+    5: "Float",
+    6: "Unsigned integer",
+    7: "Compressed 3d coordinate",
+    8: "Closing file",
+    9: " Magic number",
+    10: 'Not enough memory',
+    12: "File not found"
+}
 
 # numpy variable types include the specific numpy of bytes of each, but the c
 # variables in our interface file don't. this could get bad if we're on a wierd
@@ -160,10 +162,8 @@ cdef class TRRTrajectoryFile:
         approx_n_frames = filesize / ((self.n_atoms * 2 * + 16) / 2)
         return approx_n_frames
 
-
     def __dealloc__(self):
         self.close()
-
 
     def close(self):
         if self.is_open:
@@ -252,7 +252,7 @@ cdef class TRRTrajectoryFile:
             status = trrlib.read_trr(self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
                                      &box[i,0,0], &xyz[i,0,0], NULL, NULL)
             if status != _EXDRENDOFFILE and status != _EXDROK:
-                raise RuntimeError('TRR read error: %s' % status)
+                raise RuntimeError('TRR read error: %s' % _EXDR_ERROR_MESSAGES.get(status, 'unknown'))
             i += 1
 
         if status == _EXDRENDOFFILE:
@@ -265,7 +265,6 @@ cdef class TRRTrajectoryFile:
         self.frame_counter += i
 
         return xyz, time, step, box, lambd
-
 
     def write(self, xyz, time=None, step=None, box=None, lambd=None):
         """Write data to a TRR file
@@ -296,13 +295,17 @@ cdef class TRRTrajectoryFile:
                           add_newaxis_on_deficient_ndim=True)
         n_frames = len(xyz)
         time = ensure_type(time, dtype=np.float32, ndim=1, name='time', can_be_none=True,
-                           shape=(n_frames,), add_newaxis_on_deficient_ndim=True)
+                           shape=(n_frames,), add_newaxis_on_deficient_ndim=True,
+                           warn_on_cast=False)
         step = ensure_type(step, dtype=np.int32, ndim=1, name='step', can_be_none=True,
-                           shape=(n_frames,), add_newaxis_on_deficient_ndim=True)
+                           shape=(n_frames,), add_newaxis_on_deficient_ndim=True,
+                           warn_on_cast=False)
         box = ensure_type(box, dtype=np.float32, ndim=3, name='box', can_be_none=True,
-                           shape=(n_frames, 3, 3), add_newaxis_on_deficient_ndim=True)
+                          shape=(n_frames, 3, 3), add_newaxis_on_deficient_ndim=True,
+                          warn_on_cast=False)
         lambd = ensure_type(lambd, dtype=np.float32, ndim=1, name='lambd', can_be_none=True,
-                            shape=(n_frames,), add_newaxis_on_deficient_ndim=True)
+                            shape=(n_frames,), add_newaxis_on_deficient_ndim=True,
+                            warn_on_cast=False)
         if time is None:
             time = np.arange(0, n_frames, dtype=np.float32)
         if step is None:
@@ -324,7 +327,6 @@ cdef class TRRTrajectoryFile:
 
         self._write(xyz, time, step, box, lambd)
 
-
     def _write(self, np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz not None,
                np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time not None,
                np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step not None,
@@ -335,7 +337,7 @@ cdef class TRRTrajectoryFile:
         cdef int n_atoms = xyz.shape[1]
         cdef int status, i
 
-        # all same shape
+        # all same length
         assert n_frames == len(box) == len(step) == len(time) == len(lambd)
 
         for i in range(n_frames):

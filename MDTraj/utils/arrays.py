@@ -95,14 +95,14 @@ def ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=No
         warnings.warn("Casting %s dtype=%s to %s " % (name, val.dtype, dtype),
             TypeCastPerformanceWarning)
 
-    val = np.ascontiguousarray(val, dtype=dtype)
-
     if not val.ndim == ndim:
         if add_newaxis_on_deficient_ndim and val.ndim + 1 == ndim:
             val = val[np.newaxis, ...]
         else:
             raise ValueError(("%s must be ndim %s. "
                 "You supplied %s" % (name, ndim, val.ndim)))
+
+    val = np.ascontiguousarray(val, dtype=dtype)
 
     if length is not None and len(val) != length:
         raise ValueError(("%s must be length %s. "

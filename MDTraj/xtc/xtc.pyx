@@ -33,18 +33,20 @@ cimport xdrlib
 ###############################################################################
 
 cdef int _EXDROK = 0             # OK
-cdef int _EXDRHEADER = 1         # Header
-cdef int _EXDRSTRING = 2         # String
-cdef int _EXDRDOUBLE = 3         # Double
-cdef int _EXDRINT = 4            # Integer
-cdef int _EXDRFLOAT = 5          # Float
-cdef int _EXDRUINT = 6           # Unsigned integer
-cdef int _EXDR3DX = 7            # Compressed 3d coordinate
-cdef int _EXDRCLOSE = 8          # Closing file
-cdef int _EXDRMAGIC = 9          # Magic number
-cdef int _EXDRNOMEM = 10         # Not enough memory
 cdef int _EXDRENDOFFILE = 11     # End of file
-cdef int _EXDRFILENOTFOUND = 12  # File not found
+_EXDR_ERROR_MESSAGES = {
+    1: "Header",
+    2: "String",
+    3: "Double",
+    4: "Integer",
+    5: "Float",
+    6: "Unsigned integer",
+    7: "Compressed 3d coordinate",
+    8: "Closing file",
+    9: " Magic number",
+    10: 'Not enough memory',
+    12: "File not found"
+}
 
 # numpy variable types include the specific numpy of bytes of each, but the c
 # variables in our interface file don't. this could get bad if we're on a wierd
@@ -236,7 +238,7 @@ cdef class XTCTrajectoryFile:
             status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[i],
                                      &time[i], &box[i,0,0], &xyz[i,0,0], &prec[i])
             if status != _EXDRENDOFFILE and status != _EXDROK:
-                raise RuntimeError('XTC read error: %s' % status)
+                raise RuntimeError('XTC read error: %s' % _EXDR_ERROR_MESSAGES.get(status, 'unknown'))
             i += 1
 
         if status == _EXDRENDOFFILE:
@@ -276,11 +278,14 @@ cdef class XTCTrajectoryFile:
                           add_newaxis_on_deficient_ndim=True)
         n_frames = len(xyz)
         time = ensure_type(time, dtype=np.float32, ndim=1, name='time', can_be_none=True,
-                           shape=(n_frames,), add_newaxis_on_deficient_ndim=True)
+                           shape=(n_frames,), add_newaxis_on_deficient_ndim=True,
+                           warn_on_cast=False)
         step = ensure_type(step, dtype=np.int32, ndim=1, name='step', can_be_none=True,
-                           shape=(n_frames,), add_newaxis_on_deficient_ndim=True)
+                           shape=(n_frames,), add_newaxis_on_deficient_ndim=True,
+                            warn_on_cast=False)
         box = ensure_type(box, dtype=np.float32, ndim=3, name='box', can_be_none=True,
-                           shape=(n_frames, 3, 3), add_newaxis_on_deficient_ndim=True)
+                          shape=(n_frames, 3, 3), add_newaxis_on_deficient_ndim=True,
+                          warn_on_cast=False)
         if time is None:
             time = np.arange(0, n_frames, dtype=np.float32)
         if step is None:

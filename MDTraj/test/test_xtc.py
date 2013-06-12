@@ -85,13 +85,37 @@ def test_write_0():
 
 def test_write_1():
     xyz = np.around(np.random.randn(100, 10, 3), 3)
+    time = np.random.randn(100)
+    step = np.arange(100)
+    box = np.random.randn(100,3,3)
 
     with XTCTrajectoryFile(temp, 'w') as f:
-        f.write(xyz)
+        f.write(xyz, time=time, step=step, box=box)
     with XTCTrajectoryFile(temp) as f:
         xyz2, time2, step2, box2 = f.read()
 
     eq(xyz, xyz2)
+    eq(time, time2)
+    eq(step, step2)
+    eq(box, box2)
+
+
+def test_write_2():
+    xyz = np.around(np.random.randn(100, 10, 3), 3)
+    time = np.random.randn(100)
+    step = np.arange(100)
+    box = np.random.randn(100,3,3)
+
+    with XTCTrajectoryFile(temp, 'w') as f:
+        for i in range(len(xyz)):
+            f.write(xyz[i], time=time[i], step=step[i], box=box[i])
+    with XTCTrajectoryFile(temp) as f:
+        xyz2, time2, step2, box2 = f.read()
+
+    eq(xyz, xyz2)
+    eq(time, time2)
+    eq(step, step2)
+    eq(box, box2)
 
 @raises(ValueError)
 def test_write_error_0():
