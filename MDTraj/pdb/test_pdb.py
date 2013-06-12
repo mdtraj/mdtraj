@@ -104,5 +104,12 @@ def test_2EQQ_0():
 @raises(PDBFormatOverFlowError)
 def test_write_large():
     traj = trajectory.load(get_fn('native.pdb'))
-    traj.xyz.fill(1000)
+    traj.xyz.fill(123456789)
+    traj.save(temp)
+
+
+@raises(PDBFormatOverFlowError)
+def test_write_large_2():
+    traj = trajectory.load(get_fn('native.pdb'))
+    traj.xyz.fill(-123456789)
     traj.save(temp)
