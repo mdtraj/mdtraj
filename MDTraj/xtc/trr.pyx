@@ -170,7 +170,7 @@ cdef class TRRTrajectoryFile:
             trrlib.xdrfile_close(self.fh)
             self.is_open = False
 
-    def read(self, n_frames=None):
+    def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read data from a TRR file
 
         Parameters
@@ -178,6 +178,12 @@ cdef class TRRTrajectoryFile:
         n_frames : int, None
             The number of frames you would like to read from the file.
             If None, all of the remaining frames will be loaded.
+        stride : int, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
 
         Returns
         -------
@@ -200,12 +206,14 @@ cdef class TRRTrajectoryFile:
         """
         if not self.mode == b'r':
             raise ValueError('read() is only available when file is opened in mode="r"')
+        if not self.is_open:
+            raise IOError('file must be open to read from it.')
 
         if n_frames is not None:
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
-            return self._read(int(n_frames))[:-1]  # don't return the exit status of _read, which was the last argument
+            return self._read(int(n_frames, atom_indices))[:-1]  # don't return the exit status of _read, which was the last argument
         else:
             # if they want ALL of the remaining frames, we need to guess at the chunk
             # size, and then check the exit status to make sure we're really at the EOF
@@ -216,7 +224,7 @@ cdef class TRRTrajectoryFile:
                 # and how many we've currently read
                 chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
                             self.min_chunk_size)
-                xyz, time, step, box, lambd = self._read(chunk)
+                xyz, time, step, box, lambd = self._read(chunk, atom_indices)
                 if len(xyz) <= 0:
                     break
 
@@ -230,14 +238,27 @@ cdef class TRRTrajectoryFile:
                    np.concatenate(all_step), np.concatenate(all_box),
                    np.concatenate(all_lambd))
 
-    def _read(self, int n_frames):
+    def _read(self, int n_frames, atom_indices):
         """Read a specified number of TRR frames from the buffer"""
 
         cdef int i = 0
         cdef int status = _EXDROK
+        cdef int n_atoms_to_read
+        
+        if atom_indices is None:
+            n_atoms_to_read = self.n_atoms
+        elif isinstance(atom_indices, slice):
+            n_atoms_to_read = len(np.arange(self.n_atoms)[atom_indices])
+        else:
+            atom_indices = np.asarray(atom_indices)
+            if min(atom_indices) < 0:
+                raise ValueError('atom_indices should be zero indexed. you gave an index less than zero')
+            if max(atom_indices) >= self.n_atoms:
+                raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
+            n_atoms_to_read = len(atom_indices)
 
         cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz = \
-            np.empty((n_frames, self.n_atoms, 3), dtype=np.float32)
+            np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
         cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time = \
             np.empty((n_frames), dtype=np.float32)
         cdef np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step = \
@@ -246,11 +267,21 @@ cdef class TRRTrajectoryFile:
             np.empty((n_frames), dtype=np.float32)
         cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box = \
             np.empty((n_frames, 3, 3), dtype=np.float32)
+            
+        # only used if atom_indices is given
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
+
 
 
         while (i < n_frames) and (status != _EXDRENDOFFILE):
-            status = trrlib.read_trr(self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
-                                     &box[i,0,0], &xyz[i,0,0], NULL, NULL)
+            if atom_indices is None:
+                status = trrlib.read_trr(self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
+                                         &box[i,0,0], &xyz[i,0,0], NULL, NULL)
+            else:
+                status = trrlib.read_trr(self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
+                                         &box[i,0,0], &framebuffer[0,0], NULL, NULL)
+                xyz[i, :, :] = framebuffer[atom_indices, :]
+                                                                 
             if status != _EXDRENDOFFILE and status != _EXDROK:
                 raise RuntimeError('TRR read error: %s' % _EXDR_ERROR_MESSAGES.get(status, 'unknown'))
             i += 1

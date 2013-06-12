@@ -50,6 +50,24 @@ def test_read_chunk1():
     yield lambda: eq(time, iofile['time'])
 
 
+def test_read_atomindices_1():
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    with XTCTrajectoryFile(fn_xtc) as f:
+         xyz, time, step, box = f.read(atom_indices=[0,1,2])
+    yield lambda: eq(xyz, iofile['xyz'][:, [0,1,2]])
+    yield lambda: eq(step, iofile['step'])
+    yield lambda: eq(box, iofile['box'])
+    yield lambda: eq(time, iofile['time'])
+
+def test_read_atomindices_2():
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    with XTCTrajectoryFile(fn_xtc) as f:
+         xyz, time, step, box = f.read(atom_indices=slice(None, None, 2))
+    yield lambda: eq(xyz, iofile['xyz'][:, ::2])
+    yield lambda: eq(step, iofile['step'])
+    yield lambda: eq(box, iofile['box'])
+    yield lambda: eq(time, iofile['time'])
+
 def test_read_chunk2():
     with XTCTrajectoryFile(fn_xtc, 'r', chunk_size_multiplier=1) as f:
         xyz, time, step, box = f.read()
