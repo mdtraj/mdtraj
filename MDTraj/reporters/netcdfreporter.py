@@ -41,7 +41,9 @@ class NetCDFReporter(_BaseReporter):
 
     >>> traj = mdtraj.trajectory.load('traj.nc')              # doctest: +SKIP
     """
-    backend = NetCDFTrajectoryFile
+    @property
+    def backend(self):
+        return NetCDFTrajectoryFile
 
     def __init__(self, file, reportInterval, coordinates=True, time=True,
                  cell=True, atomSubset=None):

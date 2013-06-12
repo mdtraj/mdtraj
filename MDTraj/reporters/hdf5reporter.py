@@ -41,7 +41,9 @@ class HDF5Reporter(_BaseReporter):
 
     >>> traj = mdtraj.trajectory.load('traj.lh5')             # doctest: +SKIP
     """
-    backend = HDF5TrajectoryFile
+    @property
+    def backend(self):
+        return HDF5TrajectoryFile 
 
     def __init__(self, file, reportInterval, coordinates=True, time=True,
                  cell=True, potentialEnergy=True, kineticEnergy=True,

@@ -31,7 +31,7 @@ from mdtraj.testing import get_fn, eq, DocStringFormatTester
 from mdtraj import topology
 from mdtraj import trajectory
 from mdtraj.reporters import hdf5reporter, netcdfreporter
-from mdtraj.reporters import HDF5Reporter, NetCDFReporter
+from mdtraj.reporters import HDF5Reporter, NetCDFReporter, DCDReporter
 from mdtraj import HDF5TrajectoryFile, NetCDFTrajectoryFile
 DocStringTester = DocStringFormatTester(hdf5reporter)
 DocStringTester = DocStringFormatTester(netcdfreporter)
@@ -65,15 +65,17 @@ def test_reporter():
 
     hdf5file = os.path.join(tempdir, 'traj.h5')
     ncfile = os.path.join(tempdir, 'traj.nc')
+    dcdfile = os.path.join(tempdir, 'traj.dcd')
 
     reporter = HDF5Reporter(hdf5file, 2, coordinates=True, time=True,
         cell=True, potentialEnergy=True, kineticEnergy=True, temperature=True,
         velocities=True)
-    reporter2 = NetCDFReporter(ncfile, 2, coordinates=True, time=True,
-        cell=True)
+    reporter2 = NetCDFReporter(ncfile, 2, coordinates=True, time=True, cell=True)
+    reporter3 = DCDReporter(dcdfile, 2)
 
     simulation.reporters.append(reporter)
     simulation.reporters.append(reporter2)
+    simulation.reporters.append(reporter3)
     simulation.step(100)
 
     reporter.close()
@@ -99,8 +101,16 @@ def test_reporter():
         yield lambda: eq(cell_angles, 90*np.ones((50, 3)))
         yield lambda: eq(time, 0.002*2*(1+np.arange(50)))
 
-    yield lambda: eq(trajectory.load(ncfile, top=get_fn('native.pdb')).xyz, trajectory.load(hdf5file).xyz)
+    hdf5_traj = trajectory.load(hdf5file)
+    dcd_traj = trajectory.load(dcdfile, top=get_fn('native.pdb'))
+    netcdf_traj = trajectory.load(ncfile, top=get_fn('native.pdb'))
+    
+    yield lambda: eq(hdf5_traj.xyz, netcdf_traj.xyz)
+    yield lambda: eq(hdf5_traj.unitcell_vectors, netcdf_traj.unitcell_vectors)
+    yield lambda: eq(hdf5_traj.time, netcdf_traj.time)
 
+    yield lambda: eq(dcd_traj.xyz, hdf5_traj.xyz)
+    yield lambda: eq(dcd_traj.unitcell_vectors, hdf5_traj.unitcell_vectors)
 
 
 @np.testing.decorators.skipif(not HAVE_OPENMM, 'No OpenMM')
@@ -123,6 +133,7 @@ def test_reporter_subset():
 
     hdf5file = os.path.join(tempdir, 'traj.h5')
     ncfile = os.path.join(tempdir, 'traj.nc')
+    dcdfile= os.path.join(tempdir, 'traj.dcd')
 
     atomSubset = [0,1,2,  4,5]
 
@@ -131,9 +142,11 @@ def test_reporter_subset():
                             velocities=True, atomSubset=atomSubset)
     reporter2 = NetCDFReporter(ncfile, 2, coordinates=True, time=True,
                                cell=True, atomSubset=atomSubset)
+    reporter3 = DCDReporter(dcdfile, 2, atomSubset=atomSubset)
 
     simulation.reporters.append(reporter)
     simulation.reporters.append(reporter2)
+    simulation.reporters.append(reporter3)
     simulation.step(100)
 
     reporter.close()
@@ -161,6 +174,13 @@ def test_reporter_subset():
         yield lambda: eq(time, 0.002*2*(1+np.arange(50)))
         yield lambda: eq(xyz.shape, (50, len(atomSubset), 3))
 
+    hdf5_traj = trajectory.load(hdf5file)
+    dcd_traj = trajectory.load(dcdfile, top=hdf5_traj)
+    netcdf_traj = trajectory.load(ncfile, top=hdf5_traj)
+    
+    yield lambda: eq(hdf5_traj.xyz, netcdf_traj.xyz)
+    yield lambda: eq(hdf5_traj.unitcell_vectors, netcdf_traj.unitcell_vectors)
+    yield lambda: eq(hdf5_traj.time, netcdf_traj.time)
 
-    yield lambda: eq(trajectory.load(ncfile, top=t).xyz,
-                     trajectory.load(hdf5file).xyz)
+    yield lambda: eq(dcd_traj.xyz, hdf5_traj.xyz)
+    yield lambda: eq(dcd_traj.unitcell_vectors, hdf5_traj.unitcell_vectors)
