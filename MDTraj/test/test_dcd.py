@@ -154,3 +154,22 @@ def test_write_3():
     
     with DCDTrajectoryFile(temp, 'w') as f:
         f.write(xyz, box_lengths)
+
+def test_write_4():
+    xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
+    box_lengths = 25 * np.ones((500, 3), dtype=np.float32)
+    box_angles = 90 * np.ones((500, 3), dtype=np.float32)
+    box_lengths[0,0] = 10.0
+
+    f = DCDTrajectoryFile(temp, 'w')
+    for i in range(len(xyz)):
+        f.write(xyz[i], box_lengths[i], box_angles[i])
+    f.close()
+
+    f = DCDTrajectoryFile(temp)
+    xyz2, box_lengths2, box_angles2 = f.read()
+    f.close()
+
+    yield lambda: eq(xyz, xyz2)
+    yield lambda: eq(box_lengths, box_lengths2)
+    yield lambda: eq(box_angles, box_angles2)

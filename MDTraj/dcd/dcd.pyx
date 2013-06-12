@@ -287,12 +287,14 @@ cdef class DCDTrajectoryFile:
         n_frames = len(xyz)
 
         cell_lengths = ensure_type(cell_lengths, dtype=np.float32, ndim=2, name='cell_lengths',
-                                  can_be_none=True, shape=(n_frames, 3), add_newaxis_on_deficient_ndim=True)
+                                   can_be_none=True, shape=(n_frames, 3), add_newaxis_on_deficient_ndim=True,
+                                   warn_on_cast=False)
         if cell_lengths is None:
             cell_lengths = np.ones((n_frames, 3), dtype=np.float32)
 
         cell_angles = ensure_type(cell_angles, dtype=np.float32, ndim=2, name='cell_angles',
-                                     can_be_none=True, shape=(n_frames, 3))
+                                  can_be_none=True, shape=(n_frames, 3), add_newaxis_on_deficient_ndim=True,
+                                  warn_on_cast=False)
         if cell_angles is None:
             cell_angles = 90.0 * np.ones((n_frames, 3), dtype=np.float32)
 
