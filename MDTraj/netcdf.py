@@ -38,21 +38,25 @@ __all__ = ['NetCDFTrajectoryFile']
 
 
 class NetCDFTrajectoryFile(object):
-    def __init__(self, filename, mode='r', force_overwrite=False):
-        """Open an AMBER NetCDF Trajectory file
+    """Interface for reading and writing to AMBER NetCDF files. This is a
+    file-like object, that both reading or writing depending
+    on the `mode` flag. It implements the context manager protocol,
+    so you can also use it with the python 'with' statement.
 
-        Parameters
-        ----------
-        xfilename : str
-            The name of the file to open
-        mode : {'r', 'w', 'a', 'ws', 'as'}, default='r'
-            The mode in which to open the file. Valid options are 'r', 'w',
-            and 'a' for 'read', 'write', and 'append' respectively. The modes
-            'w' and 'a' may also be prefixed with 's' which turns off buffering.
-        force_overwrite : bool, default=False
-            In write mode, if a file named `filename` already exists, clobber
-            it and overwrite it.
-        """
+    Parameters
+    ----------
+    filename : str
+        The name of the file to open
+    mode : {'r', 'w', 'a', 'ws', 'as'}, default='r'
+        The mode in which to open the file. Valid options are 'r', 'w',
+        and 'a' for 'read', 'write', and 'append' respectively. The modes
+        'w' and 'a' may also be prefixed with 's' which turns off buffering.
+    force_overwrite : bool, default=False
+        In write mode, if a file named `filename` already exists, clobber
+        it and overwrite it.
+    """
+
+    def __init__(self, filename, mode='r', force_overwrite=False):
         self._closed = True   # is the file currently closed?
         self._mode = mode      # what mode were we opened in
         netcdf = import_('netCDF4')

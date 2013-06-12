@@ -8,3 +8,5 @@ file formats with a unified API.
    :maxdepth: 1
 
    dcd
+   hdf5
+   netcdf

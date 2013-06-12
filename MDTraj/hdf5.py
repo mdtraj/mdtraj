@@ -24,6 +24,7 @@ https://github.com/rmcgibbo/mdtraj/issues/36
 
 # stdlib
 import warnings
+import functools
 import operator
 from collections import namedtuple
 try:
@@ -67,6 +68,7 @@ def ensure_mode(*m):
     """
 
     def inner(f):
+        @functools.wraps(f)
         def wrapper(*args, **kwargs):
             # args[0] is self on the method
             if args[0].mode in m:
@@ -87,6 +89,34 @@ Frames = namedtuple('Frames', ['coordinates', 'time', 'cell_lengths', 'cell_angl
 
 
 class HDF5TrajectoryFile(object):
+    """Interface for reading and writing to a MDTraj HDF5 molecular
+    dynanmics trajectory file, whose format is described
+    `here <https://github.com/rmcgibbo/mdtraj/issues/36>`_.
+
+    This is a file-like object, that both reading or writing depending
+    on the `mode` flag. It implements the context manager protocol,
+    so you can also use it with the python 'with' statement.
+
+    The format is extremely flexible and high performance. It can hold a wide
+    variety of information about a trajectory, including fields like the
+    temperature and energies. Because it's built on the fantastic HDF5 library,
+    it's easily extensible too.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the file to open
+    mode :  {'r, 'w'}
+        Mode in which to open the file. 'r' is for reading and 'w' is for
+        writing
+    force_overwrite : bool
+        In mode='w', how do you want to behave if a file by the name of `filename`
+        already exists? if `force_overwrite=True`, it will be overwritten.
+    compression : {'zlib', None}
+        Apply compression to the file? This will save space, and does not
+        cost too many cpu cycles, so it's recommended.
+
+    """
     def __init__(self, filename, mode='r', force_overwrite=False, compression='zlib'):
         self._open = False  # is the file handle currently open?
         self.mode = mode  # the mode in which the file was opened?
@@ -142,6 +172,7 @@ class HDF5TrajectoryFile(object):
 
     @property
     def title(self):
+        """Get the title attribute"""
         if hasattr(self._handle.root._v_attrs, 'title'):
             return self._handle.root._v_attrs.title
         return None
@@ -367,13 +398,14 @@ class HDF5TrajectoryFile(object):
 
         Returns
         -------
-        frames : namedtuple with fields "coordinates", "time", "cell_lengths",
-                "cell_angles", "velocities", "kineticEnergy", "potentialEnergy",
-                "temperature", "alchemicalLambda"
-            Each of the fields in the returned namedtuple will either be a
-            numpy array or None, dependening on if that data was saved in the
-            trajectory. All of the data shall be in units of "nanometers",
-            "picoseconds", "kelvin", "degrees" and "kilojoules_per_mole".
+        frames : namedtuple
+            The returned namedtuple will have the fields "coordinates", "time", "cell_lengths",
+            "cell_angles", "velocities", "kineticEnergy", "potentialEnergy",
+            "temperature" and "alchemicalLambda". Each of the fields in the
+            returned namedtuple will either be a numpy array or None, dependening
+            on if that data was saved in the trajectory. All of the data shall be
+            n units of "nanometers", "picoseconds", "kelvin", "degrees" and
+            "kilojoules_per_mole".
         """
         if n_frames is None:
             n_frames = np.inf
@@ -430,13 +462,56 @@ class HDF5TrajectoryFile(object):
                     temperature=None, alchemicalLambda=None):
         """Write one or more frames of data to the file
 
-        This method saves data that is associated with a single simulation
-        frame. To save global attributes, use the methods
+        This method saves data that is associated with one or more simulation
+        frames. Note that all of the arguments can either be raw numpy arrays
+        or unitted arrays (with simtk.unit.Quantity). If the arrays are unittted,
+        a unit conversion will be automatically done from the supplied units
+        into the proper units for saving on disk. You won't have to worry about
+        it.
+
+        Furthermore, if you wish to save a single frame of simulation data, you
+        can do so naturally, for instance by supplying a 2d array for the
+        coordinates and a single float for the time. This "shape deficiency"
+        will be recognized, and handled appropriately.
 
         Parameters
         ----------
         coordinates : np.ndarray, shape=(n_frames, n_atoms, 3)
+            The cartesian coordinates of the atoms to write. By convention, the
+            lengths should be in units of nanometers.
+        time : np.ndarray, shape=(n_frames,), optional
+            You may optionally specify the simulation time, in picoseconds
+            corresponding to each frame.
+        cell_lengths : np.ndarray, shape=(n_frames, 3), dtype=float32, optional
+            You may optionally specify the unitcell lengths.
+            The length of the periodic box in each frame, in each direction,
+            `a`, `b`, `c`. By convention the lengths should be in units
+            of angstroms.
+        cell_angles : np.ndarray, shape=(n_frames, 3), dtype=float32, optional
+            You may optionally specify the unitcell angles in each frame.
+            Organized analogously to cell_lengths. Gives the alpha, beta and
+            gamma angles respectively. By convention, the angles should be
+            in units of degrees.
+        velocities :  np.ndarray, shape=(n_frames, n_atoms, 3), optional
+            You may optionally specify the cartesian components of the velocity
+            for each atom in each frame. By convention, the velocities
+            should be in units of nanometers / picosecond.
+        kineticEnergy : np.ndarray, shape=(n_frames,), optional
+            You may optionally specify the kinetic energy in each frame. By
+            convention the kinetic energies should b in units of kilojoules per
+            mole.
+        potentialEnergy : np.ndarray, shape=(n_frames,), optional
+            You may optionally specify the potential energy in each frame. By
+            convention the kinetic energies should b in units of kilojoules per
+            mole.
+        temperature : np.ndarray, shape=(n_frames,), optional
+            You may optionally specify the temperature in each frame. By
+            convention the temperatures should b in units of Kelvin.
+        alchemicalLambda : np.ndarray, shape=(n_frames,), optional
+            You may optionally specify the alchemical lambda in each frame. These
+            have no units, but are generally between zero and one.
         """
+
 
         # these must be either both present or both absent. since
         # we're going to throw an error if one is present w/o the other,
@@ -629,13 +704,13 @@ class HDF5TrajectoryFile(object):
 
 
     def close(self):
-        "Close the file handle"
+        "Close the HDF5 file handle"
         if self._open:
             self._handle.close()
             self._open = False
 
     def flush(self):
-        "Flush all information to disk"
+        "Write all buffered data in the to the disk file."
         if self._open:
             self._handle.flush()
 

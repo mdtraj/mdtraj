@@ -160,7 +160,7 @@ cdef class DCDTrajectoryFile:
         self._needs_write_initialization = False
 
     def close(self):
-        "Close the file"
+        "Close the DCD file handle"
         if self.is_open and self.fh is not NULL:
             if self.mode == b'r':
                 close_file_read(self.fh)
