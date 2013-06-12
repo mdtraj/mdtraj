@@ -45,7 +45,9 @@ class _BaseReporter(object):
     """
     Baseclass for reporters.
     """
-    backend = None
+    @property
+    def backend(self):
+        raise NotImplementedError('Must be implemented by the subclass')
 
     def __init__(self, file, reportInterval, coordinates=True, time=True,
                  cell=True, potentialEnergy=True, kineticEnergy=True,
@@ -112,7 +114,7 @@ class _BaseReporter(object):
 
         if not OPENMM_IMPORTED:
             raise ImportError('OpenMM not found.')
-    
+
 
     def _initialize(self, simulation):
         """Deferred initialization of the reporter, which happens before
@@ -139,10 +141,12 @@ class _BaseReporter(object):
                 raise ValueError('all of the indices in atomSubset must be integers')
 
             self._atomSlice = self._atomSubset
-            self._traj_file.topology = topology_from_subset(simulation.topology, self._atomSubset)
+            if hasattr(self._traj_file, 'topology'):
+                self._traj_file.topology = topology_from_subset(simulation.topology, self._atomSubset)
         else:
             self._atomSlice = slice(None)
-            self._traj_file.topology = simulation.topology
+            if hasattr(self._traj_file, 'topology'):
+                self._traj_file.topology = simulation.topology
 
 
         system = simulation.system
@@ -193,13 +197,20 @@ class _BaseReporter(object):
 
         self._checkForErrors(simulation, state)
 
+        args = ()
         kwargs = {}
         if self._coordinates:
-            kwargs['coordinates'] = state.getPositions(asNumpy=True)[self._atomSlice, :]
+            coordinates = state.getPositions(asNumpy=True)[self._atomSlice]
+            if hasattr(self._traj_file, 'distance_unit'):
+                coordinates = coordinates.value_in_unit(getattr(units, self._traj_file.distance_unit))
+            args = (coordinates,)
+
         if self._time:
             kwargs['time'] = state.getTime()
         if self._cell:
             vectors = state.getPeriodicBoxVectors(asNumpy=True)
+            if hasattr(self._traj_file, 'distance_unit'):
+                vectors = vectors.value_in_unit(getattr(units, self._traj_file.distance_unit))
             a, b, c, alpha, beta, gamma = unitcell.box_vectors_to_lengths_and_angles(*vectors)
             kwargs['cell_lengths'] = np.array([a, b, c])
             kwargs['cell_angles'] = np.array([alpha, beta, gamma])
@@ -212,13 +223,15 @@ class _BaseReporter(object):
         if self._velocities:
             kwargs['velocities'] = state.getVelocities(asNumpy=True)[self._atomSlice, :]
 
-        self._traj_file.write(**kwargs)
+
+        self._traj_file.write(*args, **kwargs)
         # flush the file to disk. it might not be necessary to do this every
         # report, but this is the most proactive solution. We don't want to
         # accumulate a lot of data in memory only to find out, at the very
         # end of the run, that there wasn't enough space on disk to hold the
         # data.
-        self._traj_file.flush()
+        if hasattr(self._traj_file, 'flush'):
+            self._traj_file.flush()
 
     def _checkForErrors(self, simulation, state):
         """Check for errors in the current state of the simulation

@@ -608,7 +608,10 @@ def load_netcdf(filename, top=None, stride=None):
         # then we just tread it as if we never found it
         time = None
 
-    return Trajectory(xyz=xyz, topology=topology, time=time)
+    trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
+    trajectory.unitcell_lengths = cell_lengths
+    trajectory.unitcell_angles = cell_angles
+    return trajectory
 
 
 class Trajectory(object):
