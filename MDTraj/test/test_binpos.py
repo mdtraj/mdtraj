@@ -78,6 +78,24 @@ def test_write_1():
     with BINPOSTrajectoryFile(temp, 'w') as f:
         f.write(xyz)
 
+    xyz2 = BINPOSTrajectoryFile(temp).read()
+    eq(xyz, xyz2)
+
+def test_write_2():
+    xyz = np.array(np.random.randn(5, 10, 3), dtype=np.float32)
+    with BINPOSTrajectoryFile(temp, 'w') as f:
+        f._initialize_write(10)
+        for i in range(len(xyz)):
+            f._write(xyz[i].reshape(1,10,3))
+
+    xyz2 = BINPOSTrajectoryFile(temp).read()
+    eq(xyz, xyz2)
+
+def test_write_3():
+    xyz = np.array(np.random.randn(5, 10, 3), dtype=np.float32)
+    with BINPOSTrajectoryFile(temp, 'w') as f:
+        for i in range(len(xyz)):
+            f.write(xyz[i])
 
     xyz2 = BINPOSTrajectoryFile(temp).read()
     eq(xyz, xyz2)

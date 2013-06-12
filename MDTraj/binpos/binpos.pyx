@@ -121,6 +121,7 @@ cdef class BINPOSTrajectoryFile:
         self.fh = open_binpos_write(self.filename, "binpos", n_atoms)
         self.n_atoms = n_atoms
         self.is_open = True
+        self.write_initialized = True
 
     def read(self, n_frames=None):
         """Read data from a BINPOS file
@@ -153,30 +154,34 @@ cdef class BINPOSTrajectoryFile:
                 chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
                             self.min_chunk_size)            
                 
-                xyz = self._read(chunk)
-
+                xyz, is_eof = self._read(chunk)
                 if len(xyz) <= 0:
                     break
                 all_xyz.append(xyz)
-            
+                if is_eof:
+                    break
+
             return np.concatenate(all_xyz)
 
                 
     def _read(self, int n_frames):
-        cdef int i
+        cdef int i, status
         cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((n_frames, self.n_atoms, 3), dtype=np.float32)
         
         for i in range(n_frames):
             self.timestep.coords = &xyz[i,0,0]
             status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
-            if status != _BINPOS_SUCESS:
+            if status == _BINPOS_EOF:
                 break
+            if status != _BINPOS_SUCESS:
+                raise RuntimeError('binpos read error: %s' % status)
 
         self.frame_counter += i
 
-        if status != _BINPOS_SUCESS:
-            return xyz[:i]
-        return xyz
+        if status == _BINPOS_EOF:
+            return xyz[:i], True
+
+        return xyz, False
 
     def write(self, xyz):
         """Write cartesian coordinates to a binpos file
@@ -195,7 +200,6 @@ cdef class BINPOSTrajectoryFile:
             if not self.n_atoms == xyz.shape[1]:
                 raise ValueError('number of atoms in file (%d) does not match number '
                                  'of atoms youre trying to save (%d)' % (self.n_atoms, xyz.shape[1]))
-
         self._write(xyz)
 
     def _write(self, np.ndarray[dtype=np.float32_t, ndim=3] xyz):
@@ -204,6 +208,7 @@ cdef class BINPOSTrajectoryFile:
 
         for i in range(n_frames):
             self.timestep.coords = &xyz[i, 0, 0]
+            assert self.fh != NULL
             status = write_timestep(self.fh, self.timestep)
 
             if status != _BINPOS_SUCESS:
