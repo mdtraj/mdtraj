@@ -29,6 +29,24 @@ def test_1():
     yield lambda: eq(lambd, lambd2)
 
 
+def test_15():
+    "Write data and read it back"
+    xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
+    time = np.random.randn(500)
+    step = np.arange(500)
+    lambd = np.random.randn(500)
+
+    with TRRTrajectoryFile(temp, 'w') as f:
+        f.write(xyz=xyz, time=time, step=step, lambd=lambd)
+    with TRRTrajectoryFile(temp) as f:
+        xyz2, time2, step2, box2, lambd2 = f.read(n_frames=500)
+
+    yield lambda: eq(xyz, xyz2)
+    yield lambda: eq(time, time2)
+    yield lambda: eq(step, step2)
+    yield lambda: eq(lambd, lambd2)
+
+
 def test_read_atomindices_1():
     with TRRTrajectoryFile(temp) as f:
          xyz, time, step, box, lambd = f.read()

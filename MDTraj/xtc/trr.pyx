@@ -213,7 +213,7 @@ cdef class TRRTrajectoryFile:
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
-            return self._read(int(n_frames, atom_indices))[:-1]  # don't return the exit status of _read, which was the last argument
+            return self._read(int(n_frames), atom_indices)
         else:
             # if they want ALL of the remaining frames, we need to guess at the chunk
             # size, and then check the exit status to make sure we're really at the EOF
