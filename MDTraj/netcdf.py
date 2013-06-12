@@ -24,6 +24,8 @@ The code is heavily based on amber_netcdf_trajectory_tools.py by John Chodera.
 # imports
 ##############################################################################
 
+# stdlib
+import os
 import warnings
 
 import numpy as np
@@ -38,7 +40,7 @@ __all__ = ['NetCDFTrajectoryFile']
 
 
 class NetCDFTrajectoryFile(object):
-    def __init__(self, filename, mode='r', force_overwrite=False):
+    def __init__(self, filename, mode='r', force_overwrite=True):
         """Open an AMBER NetCDF Trajectory file
 
         Parameters
@@ -62,6 +64,9 @@ class NetCDFTrajectoryFile(object):
                 " 'r' indicates read, 'w' indicates write, and 'a' indicates"
                 " append. 'a' and 'w' can be appended with 's', which turns "
                 " off buffering"))
+                
+        if mode in ['w', 'ws'] and not force_overwrite and os.path.exists(filename):
+            raise IOError('"%s" already exists')
 
         # AMBER uses the NetCDF3 format, with 64 bit encodings
         self._handle = netcdf.Dataset(filename, mode=mode, format='NETCDF3_64BIT',

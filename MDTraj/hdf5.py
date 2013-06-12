@@ -23,6 +23,7 @@ https://github.com/rmcgibbo/mdtraj/issues/36
 ##############################################################################
 
 # stdlib
+import os
 import warnings
 import operator
 from collections import namedtuple
@@ -87,7 +88,7 @@ Frames = namedtuple('Frames', ['coordinates', 'time', 'cell_lengths', 'cell_angl
 
 
 class HDF5TrajectoryFile(object):
-    def __init__(self, filename, mode='r', force_overwrite=False, compression='zlib'):
+    def __init__(self, filename, mode='r', force_overwrite=True, compression='zlib'):
         self._open = False  # is the file handle currently open?
         self.mode = mode  # the mode in which the file was opened?
 
@@ -114,6 +115,9 @@ class HDF5TrajectoryFile(object):
             self._needs_initialization = True
             if not filename.endswith('.h5'):
                 warnings.warn('The .h5 extension is recommended.')
+                
+            if not force_overwrite and os.path.exists(filename):
+                raise IOError('"%s" already exists')
 
         elif mode == 'a':
             try:

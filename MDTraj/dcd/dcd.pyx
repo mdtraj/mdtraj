@@ -121,8 +121,7 @@ cdef class DCDTrajectoryFile:
                 raise IOError('"%s" already exists')
         else:
             raise ValueError("most must be one of ['r', 'w']")
-
-
+        
         # alloc the molfile_timestep, which is the struct that the library is
         # going to deposit its data into each timestep
         self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
@@ -147,6 +146,7 @@ cdef class DCDTrajectoryFile:
         self.fh = open_dcd_write(self.filename, "dcd", self.n_atoms)
         if self.fh is NULL:
             raise IOError('There was an error opening the file: %s' % self.filename)
+        self.is_open = True
 
         self._needs_write_initialization = False
 
@@ -158,6 +158,8 @@ cdef class DCDTrajectoryFile:
             else:
                 close_file_write(self.fh)
             self.is_open = False
+        
+        self._needs_write_initialization = False
 
     def __enter__(self):
         "Support the context manager protocol"
@@ -201,6 +203,8 @@ cdef class DCDTrajectoryFile:
         """
         if self.mode != b'r':
             raise ValueError('read() is only available when the file is opened in mode="r"')
+        if not self.is_open:
+            raise IOError("file is not open")
 
         if stride is not None:
             raise NotImplementedError('Sorry, striding has not been implemented yet')
@@ -282,7 +286,9 @@ cdef class DCDTrajectoryFile:
     def write(self, xyz, cell_lengths=None, cell_angles=None):
         if self.mode != b'w':
             raise ValueError('write() is only available when the file is opened in mode="w"')
-
+        if not self._needs_write_initialization and not self.is_open:
+            raise IOError("file is not open")
+            
         # do typechecking, and then dispatch to the c level function
         xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False,
                           add_newaxis_on_deficient_ndim=True)
