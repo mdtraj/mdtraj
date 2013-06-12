@@ -57,6 +57,16 @@ def test_read_2():
     yield lambda: eq(box_angles1, box_angles2)
 
 
+def test_read_stride():
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz1, box_lengths1, box_angles1 = f.read()
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz2, box_lengths2, box_angles2 = f.read(stride=2)
+
+    yield lambda: eq(xyz1[::2], xyz2)
+    yield lambda: eq(box_lengths1[::2], box_lengths2)
+    yield lambda: eq(box_angles1[::2], box_angles2)
+
 def test_read_3():
     "DCDReader: check streaming read of frames 1 at a time"
     xyz_ref, box_lengths_ref, box_angles_ref = DCDTrajectoryFile(fn_dcd).read()
