@@ -19,6 +19,7 @@
 ##############################################################################
 # stdlib
 import math
+import abc
 
 # ours
 from mdtraj.topology import topology_from_subset
@@ -45,7 +46,9 @@ class _BaseReporter(object):
     """
     Baseclass for reporters.
     """
-    backend = None
+    @property
+    def backend(self):
+        raise NotImplementedError('Must be implemented by the subclass')
 
     def __init__(self, file, reportInterval, coordinates=True, time=True,
                  cell=True, potentialEnergy=True, kineticEnergy=True,
