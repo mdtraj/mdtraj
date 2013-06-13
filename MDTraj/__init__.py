@@ -44,8 +44,10 @@ Modules
 
 __all__ = ['binpos', 'dcd', 'io', 'pdb', 'netcdf', "test", "hdf5"
             'testing', 'trajectory', 'topology', 'reporters', 'geometry']
+
 from .hdf5 import HDF5TrajectoryFile
 from .netcdf import NetCDFTrajectoryFile
 from mdtraj.dcd import DCDTrajectoryFile
-from .trajectory import Trajectory  # needs to be last
+from mdtraj.binpos import BINPOSTrajectoryFile
 
+from .trajectory import Trajectory  # needs to be last

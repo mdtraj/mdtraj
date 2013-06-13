@@ -1,10 +1,10 @@
 import os
 import tempfile
+import numpy as np
 from noseperf.testcases import PerformanceTest
 
-from mdtraj import DCDTrajectoryFile
-from mdtraj import xtc, binpos, trr, netcdf, hdf5
-import numpy as np
+from mdtraj import xtc, trr, netcdf, hdf5
+from mdtraj import DCDTrajectoryFile, BINPOSTrajectoryFile
 
 ######################################################
 # Base class: handles setting up a temp file and array
@@ -65,17 +65,20 @@ class TestDCDRead(WithTemp):
 class TestBINPOSWrite(WithTemp):
     def test(self):
         "Test the write speed of the BINPOS code (10000 frames, 100 atoms)"
-        binpos.write(self.fn, xyz=self.xyz, force_overwrite=True)
+        with BINPOSTrajectoryFile(self.fn, 'w', force_overwrite=True) as f:
+            f.write(self.xyz)
 
 
 class TestBINPOSRead(WithTemp):
     def setUp(self):
         super(TestBINPOSRead, self).setUp()
-        binpos.write(self.fn, xyz=self.xyz, force_overwrite=True)
+        with BINPOSTrajectoryFile(self.fn, 'w', force_overwrite=True) as f:
+            f.write(self.xyz)
 
     def test(self):
         "Test the read speed of the BINPOS code (10000 frames, 100 atoms)"
-        binpos.read(self.fn)
+        with BINPOSTrajectoryFile(self.fn) as f:
+            xyz = f.read()
 
 
 class TestTRRWrite(WithTemp):
