@@ -76,11 +76,46 @@ def test_read_2():
     yield lambda: eq(xyz, xyz3)
 
 
+def test_read_stride():
+    with BINPOSTrajectoryFile(fn_binpos) as f:
+        xyz = f.read()[::2]
+    with BINPOSTrajectoryFile(fn_binpos) as f:
+        xyz2 = f.read(stride=2)
+
+    yield lambda: eq(xyz, xyz2)
+
+def test_read_atomindices():
+    with BINPOSTrajectoryFile(fn_binpos) as f:
+        xyz = f.read()[:, [0,3]]
+    with BINPOSTrajectoryFile(fn_binpos) as f:
+        xyz2 = f.read(atom_indices=[0,3])
+
+    yield lambda: eq(xyz, xyz2)
+
+
 def test_write_1():
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
     with BINPOSTrajectoryFile(temp, 'w') as f:
         f.write(xyz)
 
+    xyz2 = BINPOSTrajectoryFile(temp).read()
+    eq(xyz, xyz2)
+
+def test_write_2():
+    xyz = np.array(np.random.randn(5, 10, 3), dtype=np.float32)
+    with BINPOSTrajectoryFile(temp, 'w') as f:
+        f._initialize_write(10)
+        for i in range(len(xyz)):
+            f._write(xyz[i].reshape(1,10,3))
+
+    xyz2 = BINPOSTrajectoryFile(temp).read()
+    eq(xyz, xyz2)
+
+def test_write_3():
+    xyz = np.array(np.random.randn(5, 10, 3), dtype=np.float32)
+    with BINPOSTrajectoryFile(temp, 'w') as f:
+        for i in range(len(xyz)):
+            f.write(xyz[i])
 
     xyz2 = BINPOSTrajectoryFile(temp).read()
     eq(xyz, xyz2)
