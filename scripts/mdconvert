@@ -5,13 +5,61 @@
 ###############################################################################
 
 import os
-import re
 import sys
+import warnings
+import functools
 import operator
 from argparse import ArgumentParser
 
 import numpy as np
 import mdtraj as md
+
+###############################################################################
+# Crappy class that should go elsewhere
+###############################################################################
+
+
+class PDBTrajectoryFile(object):
+    """Bootleg wrapper around PDBFile that puts it in the same format as
+    the other XXXTrajectoryFile"""
+    # if we're going to have this class, it should either replace
+    # pdbfile or go in that module
+    def __init__(self, file, topology, mode='r', force_overwrite=True):
+        if mode == 'w' and not force_overwrite and os.path.exists(file):
+            raise IOError('"%s" already exists')
+        self.fh = open(file, mode)
+        self.mode = mode
+        self.topology = topology
+        self.model_index = 0
+        self.closed = False
+
+        print self.topology
+        if mode == 'w':
+            md.pdb.PDBFile.writeHeader(self.topology, file=self.fh)
+
+    def write(self, xyz):
+        if not self.mode == 'w':
+            raise ValueError('mode must be w')
+        xyz = md.utils.ensure_type(xyz, dtype=np.float32, ndim=3,
+                                   name='xyz', shape=(None, None, 3),
+                                   can_be_none=False, warn_on_cast=False,
+                                   add_newaxis_on_deficient_ndim=True)
+
+        for i in range(self.model_index, len(xyz)):
+            md.pdb.PDBFile.writeModel(self.topology, xyz[i], file=self.fh, modelIndex=i)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        self.close()
+
+    def close(self):
+        if not self.closed:
+            if self.mode == 'w':
+                md.pdb.PDBFile.writeFooter(self.topology, file=self.fh)
+            self.fh.close()
+            self.closed = True
 
 ###############################################################################
 # Globals
@@ -22,7 +70,8 @@ formats = {'.dcd': md.DCDTrajectoryFile,
            '.trr': md.TRRTrajectoryFile,
            '.binpos': md.BINPOSTrajectoryFile,
            '.nc': md.NetCDFTrajectoryFile,
-           '.h5': md.HDF5TrajectoryFile}
+           '.h5': md.HDF5TrajectoryFile,
+           '.pdb': PDBTrajectoryFile}
 
 fields = {'.trr': ('xyz', 'time', 'step', 'box', 'lambda'),
           '.xtc': ('xyz', 'time', 'step', 'box'),
@@ -31,14 +80,16 @@ fields = {'.trr': ('xyz', 'time', 'step', 'box', 'lambda'),
           '.binpos': ('xyz',),
           '.h5': ('xyz', 'time', 'cell_lengths', 'cell_angles',
                   'velocities', 'kineticEnergy', 'potentialEnergy',
-                  'temperature', 'lambda')}
+                  'temperature', 'lambda'),
+          '.pdb': ('xyz',)}
 
 units = {'.xtc': 'nanometers',
          '.trr': 'nanometers',
          '.binpos': 'angstroms',
          '.nc': 'angstroms',
          '.dcd': 'angstroms',
-         '.h5': 'nanometers'}
+         '.h5': 'nanometers',
+         '.pdb': 'angstroms'}
 
 ###############################################################################
 # Utility Functions
@@ -64,24 +115,26 @@ def unit_convert(array, in_units, out_units):
               ('angstroms', 'nanometers'): 0.1,
               ('nanometers', 'angstroms'): 10}[(in_units, out_units)]
     array *= factor
-    
+
+
 def index(str):
     def int_or_none(s):
         try:
             return int(s)
         except:
             return None
-    
+
     if str.count(':') == 0:
         return int(str)
-        
+
     elif str.count(':') == 1:
-        start, end = [int_or_none(e) for e in str.split(':') ]
+        start, end = [int_or_none(e) for e in str.split(':')]
         step = None
     elif str.count(':') == 2:
         start, end, step = [int_or_none(e) for e in str.split(':')]
 
     return slice(start, end, step)
+
 
 ###############################################################################
 # Code
@@ -168,20 +221,26 @@ def parse_args():
                      ext(args.output)))
 
     if args.atom_indices is not None and not os.path.isfile(args.atom_indices):
-        parser.error('No such file: %s' % fn)
+        parser.error('no such file: %s' % fn)
 
     if args.stride <= 0:
         parser.error('stride must be positive')
     if args.chunk <= 0:
         parser.error('chunk must be positive')
-    
+
     if args.index and len(args.input) > 1:
         parser.error('index notation only allowed with a single input trajectory')
     if args.index and args.stride != 1:
         parser.error('stride and index selections are incompatible')
     if args.index is not None:
         args.chunk = None
-    
+
+    if args.topology is not None and not os.path.isfile(args.topology):
+        parser.error('no such file: %s' % args.topology)
+
+    if args.topology is None and ext(args.output) == '.pdb':
+        parser.error('to output a pdb file, you need to supply a topology (-t, or --topology)')
+
     return args
 
 
@@ -206,12 +265,30 @@ def main(args, verbose=True):
     in_x = ext(args.input[0])
     InFileFormat = formats[in_x]
 
+    if args.topology is not None:
+        topology = md.pdb.PDBFile(args.topology).topology
+    else:
+        topology = None
+
     n_total = 0
     if args.index is not None:
         assert len(args.input) == 1
+        # when chunk is None, we load up ALL of the frames. this isn't
+        # strictly necessary, and it costs more memory, but it's ALOT
+        # harder to get the code correct when we need to use data[start:end]
+        # notation when all of the data isn't loaded up at once. it's easy
+        # for hdf5 and netcdf, but for the others...
         assert args.chunk is None
 
-    with OutFileFormat(args.output, 'w', force_overwrite=args.force) as outfile:
+    # this is the normal invocation pattern, but for PDBTrajectoryFile it's
+    # different
+    outfile_factory = functools.partial(OutFileFormat, args.output, 'w',
+                        force_overwrite=args.force)
+    if out_x == '.pdb':
+        outfile_factory = functools.partial(OutFileFormat, args.output,
+                                 topology, 'w', force_overwrite=args.force)
+
+    with outfile_factory() as outfile:
         for fn in args.input:
             assert in_x == ext(fn)
             with InFileFormat(fn, 'r') as infile:
@@ -222,12 +299,20 @@ def main(args, verbose=True):
                     if n_frames == 0:
                         break
 
+                    if topology is not None:
+                        # if the user supplied a topology, we should probably
+                        # do some simple checks
+                        if data['xyz'].shape[1] != topology._numAtoms:
+                            warnings.warn('sdsfsd!!!!')
+
+                    # if they want a specific set of frames, get those
+                    # with slice notation
                     if args.index is not None:
                         # we don't want the dimensionality to go deficient
                         if isinstance(args.index, int):
                             data = {k: v[np.newaxis, args.index] for k, v in data.iteritems()}
                         else:
-                            data = {k: v[args.index] for k, v in daa.iteritems()}
+                            data = {k: v[args.index] for k, v in data.iteritems()}
                         n_frames = len(data.values()[0])
 
                     convert(data, in_units, out_units, out_fields)
@@ -267,6 +352,8 @@ def write(outfile, data):
         outfile.write(data.get('xyz', None), data.get('cell_lengths', None),
                       data.get('cell_angles', None))
     elif isinstance(outfile, md.BINPOSTrajectoryFile):
+        outfile.write(data.get('xyz', None))
+    elif isinstance(outfile, PDBTrajectoryFile):
         outfile.write(data.get('xyz', None))
     elif isinstance(outfile, md.NetCDFTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
