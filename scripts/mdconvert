@@ -314,7 +314,7 @@ def main(args, verbose=True):
                     n_total += n_frames
 
                     if verbose:
-                        sys.stdout.write('\rconverted %d frames.' % n_total)
+                        sys.stdout.write('\rconverted %d frames, %d atoms' % (n_total, data['xyz'].shape[1]))
                         sys.stdout.flush()
 
     if verbose:
