@@ -264,6 +264,10 @@ def main(args, verbose=True):
     else:
         topology = None
 
+    if topology is not None and atom_indices is not None:
+        topology.restrict_atoms(atom_indices)
+
+
     n_total = 0
     if args.index is not None:
         assert len(args.input) == 1
