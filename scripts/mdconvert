@@ -1,0 +1,263 @@
+#!/usr/bin/env python
+
+###############################################################################
+# Imports
+###############################################################################
+
+import os
+import sys
+import operator
+from argparse import ArgumentParser
+
+import numpy as np
+import mdtraj as md
+
+###############################################################################
+# Globals
+###############################################################################
+
+formats = {'.dcd': md.DCDTrajectoryFile,
+           '.xtc': md.XTCTrajectoryFile,
+           '.trr': md.TRRTrajectoryFile,
+           '.binpos': md.BINPOSTrajectoryFile,
+           '.nc': md.NetCDFTrajectoryFile,
+           '.h5': md.HDF5TrajectoryFile}
+
+fields = {'.trr': ('xyz', 'time', 'step', 'box', 'lambd'),
+          '.xtc': ('xyz', 'time', 'step', 'box'),
+          '.dcd': ('xyz', 'cell_lengths', 'cell_angles'),
+          '.binpos': ('xyz',)}
+
+units = {'.xtc': 'nanometers',
+         '.trr': 'nanometers',
+         '.binpos': 'angstroms',
+         '.dcd': 'angstroms'}
+
+###############################################################################
+# Utility Functions
+###############################################################################
+
+
+ext = lambda fn: os.path.splitext(fn)[1]
+
+
+class _Warner(object):
+    def __init__(self):
+        self.active = True
+
+    def __call__(self, msg):
+        if self.active:
+            print >> sys.stderr, 'Warning:', msg
+warn = _Warner()
+
+
+def unit_convert(array, in_units, out_units):
+    factor = {('angstroms', 'angstroms'): 1,
+              ('nanometers', 'nanometers'): 1,
+              ('angstroms', 'nanometers'): 0.1,
+              ('nanometers', 'angstroms'): 10}[(in_units, out_units)]
+    array *= factor
+
+###############################################################################
+# Code
+###############################################################################
+
+def parse_args():
+    """Parse the command line arguments and perform some validation on the arguments
+    
+    Returns
+    -------
+    args : argparse.Namespace
+        The namespace containing the arguments
+    """
+
+    parser = ArgumentParser(description='''Convert molecular dynamics trajectories between
+    formats. The DCD, XTC, TRR, binpos, NetCDF, binpos, and HDF5 formats are supported, corresponding to the extensions: %s''' % ', '.join(formats.keys()))
+    parser.add_argument('input', nargs='+', help='''Ppath to one or more trajectories.
+                    Multiple trajectories, if supplied, will be concatenated together
+                    in the output in the order supplied''')
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('-o', '--output', required=True, help='Path to the output')
+    # dirty hack to move the 'optional arguments' group to the end. such that
+    # the 'required arguments' group shows up before it.
+    parser._action_groups.append(parser._action_groups.pop(1))
+    parser.add_argument('-c', '--chunk', default=1000, type=int,
+                        help='''number of frames to read in at once. this determines
+                        the memory requirements of this code.''')
+    parser.add_argument('-f', '--force', action='store_true',
+                        help='''force overwrite if output already exsits''')
+    parser.add_argument('-s', '--stride', default=1, type=int, help='''load only every
+        stride-th frame from the input file(s), subsampling them''')
+    parser.add_argument('-a', '--atom_indices', default='', type=str,
+                        help='''load only specific atoms from the input file(s). provide a
+                        path to file containing a space, tab or newline separated list of
+                        the (zero-based) integer indices corresponding to the atoms you
+                        wish to keep.''')
+    args = parser.parse_args()
+
+    if not args.force and os.path.exists(args.output):
+        parser.error('file exists: %s' % args.output)
+    for fn in args.input:
+        if not os.path.exists(fn):
+            parser.error('No such file: %s' % fn)
+        if os.path.isdir(fn):
+            parser.error('%s: Is a directory' % fn)
+        if not os.path.isfile(fn):
+            parser.error('%s: Is not a file' % fn)
+
+    for fn in args.input:
+        if not ext(fn) in formats:
+            parser.error("%s: '%s' is not a known extension" % (fn, ext(fn)))
+
+    if not reduce(operator.eq, map(ext, args.input)):
+        parser.error("all input trajectories do not have the same extension")
+
+    if not ext(args.output) in formats:
+        parser.error("%s: '%s' is not a known extension" % (args.output, ext(args.output)))
+
+    if args.atom_indices != '' and not os.path.isfile(args.atom_indices):
+        parser.error('No such file: %s' % fn)
+
+    if args.stride <= 0:
+        parser.error('stride must be positive')
+    if args.chunk <= 0:
+        parser.error('chunk must be positive')
+
+    return args
+
+
+def main(args, verbose=True):
+    """Run the main script.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        The collected commandline arguments
+    """
+    if args.atom_indices == '':
+        atom_indices = None
+    else:
+        atom_indices = np.loadtxt(args.atom_indices, int)
+
+    out_x = ext(args.output)
+    out_units = units[out_x]
+    out_fields = fields[out_x]
+    OutFileFormat = formats[out_x]
+
+    in_x = ext(args.input[0])
+    InFileFormat = formats[in_x]
+
+    n_total = 0
+
+    with OutFileFormat(args.output, 'w', force_overwrite=args.force) as outfile:
+        for fn in args.input:
+            assert in_x == ext(fn)
+            with InFileFormat(fn, 'r') as infile:
+
+                while True:
+                    data, in_units, n_frames = read(infile, args.chunk, stride=args.stride,
+                                                    atom_indices=atom_indices)
+                    if n_frames == 0:
+                        break
+                    convert(data, in_units, out_units, out_fields)
+                    write(outfile, data)
+                    n_total += n_frames
+                    
+                    if verbose:
+                        sys.stdout.write('\rconverted %d frames.' % n_total)
+                        sys.stdout.flush()
+
+    if verbose:
+        print 
+
+
+def write(outfile, data):
+    """Write data out to a file
+
+    This is a small wrapper around the native write() method on the
+    XXXTRajectoryFile objects that is necessary to make sure we pass the
+    right arguments in the right position
+
+    Parameters
+    ----------
+    outfile : TrajectoryFile
+        An open trajectory file with a write() method
+    data : dict
+        A dict with the data to write in it.
+    """
+    if isinstance(outfile, md.XTCTrajectoryFile):
+        outfile.write(data.get('xyz', None), data.get('time', None),
+                      data.get('step', None), data.get('box', None))
+    if isinstance(outfile, md.TRRTrajectoryFile):
+        outfile.write(data.get('xyz', None), data.get('time', None),
+                      data.get('step', None), data.get('box', None),
+                      data.get('lambd', None))
+    if isinstance(outfile, md.DCDTrajectoryFile):
+        outfile.write(data.get('xyz', None), data.get('cell_lengths', None),
+                      data.get('cell_angles', None))
+    if isinstance(outfile, md.BINPOSTrajectoryFile):
+        outfile.write(data.get('xyz', None))
+
+
+def read(infile, chunk, stride, atom_indices):
+    """Read data from the infile.
+
+    This is a small wrapper around the read() method on the XXXTrajectoryFile
+    that performs the read and then puts the results in a little dict. It also
+    returns the distance units that the file uses.
+    """
+    _data = infile.read(chunk, stride=stride, atom_indices=atom_indices)
+
+    if isinstance(infile, md.XTCTrajectoryFile):
+        data = dict(zip(['xyz', 'time', 'step', 'box'], _data))
+        in_units = 'nanometers'
+    if isinstance(infile, md.TRRTrajectoryFile):
+        data = dict(zip(['xyz', 'time', 'step', 'box', 'lambd'], _data))
+        in_units = 'nanometers'
+    elif isinstance(infile, md.DCDTrajectoryFile):
+        data = dict(zip(['xyz', 'cell_lengths', 'cell_angles'], _data))
+        in_units = 'angstroms'
+    elif isinstance(infile, md.BINPOSTrajectoryFile):
+        data = {'xyz': _data}
+        in_units = 'angstroms'
+
+    return data, in_units, len(data['xyz'])
+
+
+def convert(data, in_units, out_units, out_fields):
+    # do unit conversion
+    if 'xyz' in out_fields and 'xyz' in data:
+        unit_convert(data['xyz'], in_units, out_units)
+    if 'box' in out_fields:
+        if 'box' in data:
+            unit_convert(data['box'], in_units, out_units)
+        elif 'cell_angles' in data and 'cell_lengths' in data:
+            a, b, c = data['cell_lengths'].T
+            alpha, beta, gamma = data['cell_angles'].T
+            data['box'] = np.dstack(md.utils.unitcell.lengths_and_angles_to_box_vectors(a, b, c, alpha, beta, gamma))
+            unit_convert(data['box'], in_units, out_units)
+            del data['cell_lengths']
+            del data['cell_angles']
+
+    if 'cell_lengths' in out_fields:
+        if 'cell_lengths' in data:
+            unit_convert(data['cell_lengths'], in_units, out_units)
+        elif 'box' in data:
+            a, b, c, alpha, beta, gamma = md.utils.unitcell.box_vectors_to_lengths_and_angles(data['box'][:, 0], data['box'][:, 1], data['box'][:, 2])
+            data['cell_lengths'] = np.vstack((a, b, c)).T
+            data['cell_angles'] = np.vstack((alpha, beta, gamma)).T
+            unit_convert(data['cell_lengths'], in_units, out_units)
+            del data['box']
+
+    for key in set(data) - set(out_fields):
+        formated_fields = ', '.join("'%s'" % o for o in out_fields)
+        warn('\'%s\' data from input file(s) will be discarded. '
+             'output format only supports fields: %s' % (key, formated_fields))
+    warn.active = False
+
+    return data
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    main(args)
