@@ -164,7 +164,7 @@ cdef class XTCTrajectoryFile:
             xdrlib.xdrfile_close(self.fh)
             self.is_open = False
 
-    def read(self, n_frames=None, stride=None, atom_indices=None):
+    def read(self, n_frames=None, int stride=1, atom_indices=None):
         """Read data from an XTC file
 
         Parameters
@@ -195,7 +195,7 @@ cdef class XTCTrajectoryFile:
         if not self.is_open:
             raise IOError('file must be open to read from it.')
         
-        if stride is not None:
+        if stride != 1:
             raise NotImplementedError('Sorry, striding has not been implemented yet')
             
         if n_frames is not None:
@@ -223,6 +223,8 @@ cdef class XTCTrajectoryFile:
                 all_step.append(step)
                 all_box.append(box)
 
+            if len(all_xyz) == 0:
+                return np.array([]), np.array([]), np.array([]), np.array([])
             return np.concatenate(all_xyz), np.concatenate(all_time), np.concatenate(all_step), np.concatenate(all_box)
 
 

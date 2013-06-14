@@ -5,6 +5,7 @@
 ###############################################################################
 
 import os
+import re
 import sys
 import operator
 from argparse import ArgumentParser
@@ -63,6 +64,24 @@ def unit_convert(array, in_units, out_units):
               ('angstroms', 'nanometers'): 0.1,
               ('nanometers', 'angstroms'): 10}[(in_units, out_units)]
     array *= factor
+    
+def index(str):
+    def int_or_none(s):
+        try:
+            return int(s)
+        except:
+            return None
+    
+    if str.count(':') == 0:
+        return int(str)
+        
+    elif str.count(':') == 1:
+        start, end = [int_or_none(e) for e in str.split(':') ]
+        step = None
+    elif str.count(':') == 2:
+        start, end, step = [int_or_none(e) for e in str.split(':')]
+
+    return slice(start, end, step)
 
 ###############################################################################
 # Code
@@ -105,6 +124,13 @@ def parse_args():
     parser.add_argument('-s', '--stride', default=1, type=int, help='''load
                         only every stride-th frame from the input file(s),
                         to subsample.''')
+    parser.add_argument('-i', '--index', type=index, help='''load a *specific*
+                        set of frames. flexible, but inefficient for a large
+                        trajectory. specify your selection using (pythonic)
+                        "slice notation" e.g. '-i N' to load the the Nth
+                        frame, '-i -1' will load the last frame, '-i N:M to
+                        load frames N to M, etc. see http://bit.ly/143kloq
+                        for details on the notation''')
     parser.add_argument('-a', '--atom_indices',  type=str,
                         help='''load only specific atoms from the input file(s).
                         provide a path to file containing a space, tab or
@@ -141,14 +167,21 @@ def parse_args():
         parser.error("%s: '%s' is not a known extension" % (args.output,
                      ext(args.output)))
 
-    if args.atom_indices != '' and not os.path.isfile(args.atom_indices):
+    if args.atom_indices is not None and not os.path.isfile(args.atom_indices):
         parser.error('No such file: %s' % fn)
 
     if args.stride <= 0:
         parser.error('stride must be positive')
     if args.chunk <= 0:
         parser.error('chunk must be positive')
-
+    
+    if args.index and len(args.input) > 1:
+        parser.error('index notation only allowed with a single input trajectory')
+    if args.index and args.stride != 1:
+        parser.error('stride and index selections are incompatible')
+    if args.index is not None:
+        args.chunk = None
+    
     return args
 
 
@@ -160,10 +193,10 @@ def main(args, verbose=True):
     args : argparse.Namespace
         The collected commandline arguments
     """
-    if args.atom_indices == '':
-        atom_indices = None
-    else:
+    if args.atom_indices is not None:
         atom_indices = np.loadtxt(args.atom_indices, int)
+    else:
+        atom_indices = None
 
     out_x = ext(args.output)
     out_units = units[out_x]
@@ -174,6 +207,9 @@ def main(args, verbose=True):
     InFileFormat = formats[in_x]
 
     n_total = 0
+    if args.index is not None:
+        assert len(args.input) == 1
+        assert args.chunk is None
 
     with OutFileFormat(args.output, 'w', force_overwrite=args.force) as outfile:
         for fn in args.input:
@@ -185,6 +221,15 @@ def main(args, verbose=True):
                                                     atom_indices=atom_indices)
                     if n_frames == 0:
                         break
+
+                    if args.index is not None:
+                        # we don't want the dimensionality to go deficient
+                        if isinstance(args.index, int):
+                            data = {k: v[np.newaxis, args.index] for k, v in data.iteritems()}
+                        else:
+                            data = {k: v[args.index] for k, v in daa.iteritems()}
+                        n_frames = len(data.values()[0])
+
                     convert(data, in_units, out_units, out_fields)
                     write(outfile, data)
                     n_total += n_frames
