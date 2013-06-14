@@ -76,29 +76,41 @@ def parse_args():
     args : argparse.Namespace
         The namespace containing the arguments
     """
-
+    extensions = ', '.join(formats.keys())
     parser = ArgumentParser(description='''Convert molecular dynamics trajectories between
-    formats. The DCD, XTC, TRR, binpos, NetCDF, binpos, and HDF5 formats are supported, corresponding to the extensions: %s''' % ', '.join(formats.keys()))
-    parser.add_argument('input', nargs='+', help='''Ppath to one or more trajectories.
+    formats. The DCD, XTC, TRR, binpos, NetCDF, binpos, and HDF5 formats are supported
+    (%s)''' % extensions)
+    parser.add_argument('input', nargs='+', help='''path to one or more trajectory files.
                     Multiple trajectories, if supplied, will be concatenated together
-                    in the output in the order supplied''')
+                    in the output file in the order supplied. all of the trajectories
+                    should be in the same format. the format will be detected based
+                    on the file extension''')
     required = parser.add_argument_group('required arguments')
-    required.add_argument('-o', '--output', required=True, help='Path to the output')
+    required.add_argument('-o', '--output', required=True,
+                          help='''path to the save the output. the output format will
+                          chosen based on the file extension (%s)''' % extensions)
     # dirty hack to move the 'optional arguments' group to the end. such that
     # the 'required arguments' group shows up before it.
     parser._action_groups.append(parser._action_groups.pop(1))
     parser.add_argument('-c', '--chunk', default=1000, type=int,
                         help='''number of frames to read in at once. this determines
-                        the memory requirements of this code.''')
+                        the memory requirements of this code. default=1000''')
     parser.add_argument('-f', '--force', action='store_true',
                         help='''force overwrite if output already exsits''')
     parser.add_argument('-s', '--stride', default=1, type=int, help='''load only every
-        stride-th frame from the input file(s), subsampling them''')
-    parser.add_argument('-a', '--atom_indices', default='', type=str,
+        stride-th frame from the input file(s), to subsample.''')
+    parser.add_argument('-a', '--atom_indices',  type=str,
                         help='''load only specific atoms from the input file(s). provide a
                         path to file containing a space, tab or newline separated list of
                         the (zero-based) integer indices corresponding to the atoms you
                         wish to keep.''')
+    parser.add_argument('-t', '--topology', type=str, help='''path to a PDB file. this will
+                        be used to parse the topology of the system. it's optional,
+                        but useful. if specified, it enables you to output the coordinates
+                        of your dcd/xtc/trr/netcdf/binpos as a PDB file. If you\'re
+                        converting *to* .h5, the topology will be stored inside the h5
+                        file.''')
+
     args = parser.parse_args()
 
     if not args.force and os.path.exists(args.output):
@@ -111,7 +123,7 @@ def parse_args():
         if not os.path.isfile(fn):
             parser.error('%s: Is not a file' % fn)
 
-    for fn in args.input: -
+    for fn in args.input:
         if not ext(fn) in formats:
             parser.error("%s: '%s' is not a known extension" % (fn, ext(fn)))
 
