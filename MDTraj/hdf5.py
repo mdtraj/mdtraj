@@ -23,6 +23,7 @@ https://github.com/rmcgibbo/mdtraj/issues/36
 ##############################################################################
 
 # stdlib
+import os
 import warnings
 import operator
 from collections import namedtuple
@@ -40,7 +41,7 @@ import mdtraj.pdb.element as elem
 from mdtraj.topology import Topology
 from mdtraj.utils import in_units_of, ensure_type, import_
 
-__all__ = ['HDF5Trajectory']
+__all__ = ['HDF5TrajectoryFile']
 
 ##############################################################################
 # Utilities
@@ -86,8 +87,8 @@ Frames = namedtuple('Frames', ['coordinates', 'time', 'cell_lengths', 'cell_angl
 ##############################################################################
 
 
-class HDF5Trajectory(object):
-    def __init__(self, filename, mode='r', force_overwrite=False, compression='zlib'):
+class HDF5TrajectoryFile(object):
+    def __init__(self, filename, mode='r', force_overwrite=True, compression='zlib'):
         self._open = False  # is the file handle currently open?
         self.mode = mode  # the mode in which the file was opened?
 
@@ -114,6 +115,9 @@ class HDF5Trajectory(object):
             self._needs_initialization = True
             if not filename.endswith('.h5'):
                 warnings.warn('The .h5 extension is recommended.')
+                
+            if not force_overwrite and os.path.exists(filename):
+                raise IOError('"%s" already exists')
 
         elif mode == 'a':
             try:
@@ -469,7 +473,7 @@ class HDF5Trajectory(object):
         # (n_frames, n_atoms, 3)
         coordinates = ensure_type(coordinates, dtype=np.float32, ndim=3,
             name='coordinates', shape=(None, None, 3), can_be_none=False,
-            warn_on_cast=True, add_newaxis_on_deficient_ndim=True)
+            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         n_frames, n_atoms, = coordinates.shape[0:2]
         time = ensure_type(time, dtype=np.float32, ndim=1,
             name='time', shape=(n_frames,), can_be_none=True,

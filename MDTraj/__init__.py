@@ -47,4 +47,10 @@ __all__ = ['binpos', 'xtc', 'dcd', 'io', 'pdb', 'netcdf', "test", "hdf5"
 
 from mdtraj.xtc import XTCTrajectoryFile
 from mdtraj.trr import TRRTrajectoryFile
+from .hdf5 import HDF5TrajectoryFile
+from .netcdf import NetCDFTrajectoryFile
+from mdtraj.dcd import DCDTrajectoryFile
+from mdtraj.binpos import BINPOSTrajectoryFile
+
+from .trajectory import Trajectory  # needs to be last
 

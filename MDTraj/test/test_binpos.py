@@ -22,9 +22,11 @@ directory is not a python package (it has no __init__.py) and is thus tests
 there are not discovered by nose
 """
 import tempfile, os
-from mdtraj import binpos, dcd, io
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
 import numpy as np
+
+from mdtraj import io, binpos
+from mdtraj import DCDTrajectoryFile, BINPOSTrajectoryFile
+from mdtraj.testing import get_fn, eq, DocStringFormatTester
 
 TestDocstrings = DocStringFormatTester(binpos, error_on_none=True)
 
@@ -35,34 +37,39 @@ TestDocstrings = DocStringFormatTester(binpos, error_on_none=True)
 fn_binpos = get_fn('frame0.binpos')
 fn_dcd = get_fn('frame0.dcd')
 
-temp = tempfile.mkstemp(suffix='.dcd')[1]
+temp = tempfile.mkstemp(suffix='.binpos')[1]
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
     os.unlink(temp)
 
-
-def test_read_chunk1():
-    xyz = binpos.read(fn_binpos)
-    xyz2 = dcd.read(fn_dcd)[0]
+def test_read_0():
+    with BINPOSTrajectoryFile(fn_binpos) as f:
+        xyz = f.read()
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz2 = f.read()[0]
     xyz3 = io.loadh(get_fn('frame0.binpos.h5'), 'xyz')
 
     yield lambda: eq(xyz[1:], xyz2)
     yield lambda: eq(xyz, xyz3)
 
 
-def test_read_chunk10():
-    xyz = binpos.read(fn_binpos, chunk=10)
-    xyz2 = dcd.read(fn_dcd)[0]
+def test_read_1():
+    with BINPOSTrajectoryFile(fn_binpos, chunk_size_multiplier=0.5) as f:
+        xyz = f.read()
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz2 = f.read()[0]
     xyz3 = io.loadh(get_fn('frame0.binpos.h5'), 'xyz')
 
     yield lambda: eq(xyz[1:], xyz2)
     yield lambda: eq(xyz, xyz3)
 
 
-def test_read_chunk1000():
-    xyz = binpos.read(fn_binpos, chunk=1000)
-    xyz2 = dcd.read(fn_dcd)[0]
+def test_read_2():
+    with BINPOSTrajectoryFile(fn_binpos, chunk_size_multiplier=10) as f:
+        xyz = f.read()
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz2 = f.read()[0]
     xyz3 = io.loadh(get_fn('frame0.binpos.h5'), 'xyz')
 
     yield lambda: eq(xyz[1:], xyz2)
@@ -71,7 +78,9 @@ def test_read_chunk1000():
 
 def test_write_1():
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
-    binpos.write(temp, xyz, force_overwrite=True)
-    xyz2 = binpos.read(temp)
+    with BINPOSTrajectoryFile(temp, 'w') as f:
+        f.write(xyz)
 
+
+    xyz2 = BINPOSTrajectoryFile(temp).read()
     eq(xyz, xyz2)

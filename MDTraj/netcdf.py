@@ -24,19 +24,23 @@ The code is heavily based on amber_netcdf_trajectory_tools.py by John Chodera.
 # imports
 ##############################################################################
 
+# stdlib
+import os
 import warnings
 
 import numpy as np
 from mdtraj import version
-from mdtraj.utils import ensure_type, import_
+from mdtraj.utils import ensure_type, import_, in_units_of
+
+__all__ = ['NetCDFTrajectoryFile']
 
 ##############################################################################
 # classes
 ##############################################################################
 
 
-class NetCDFFile(object):
-    def __init__(self, filename, mode='r', force_overwrite=False):
+class NetCDFTrajectoryFile(object):
+    def __init__(self, filename, mode='r', force_overwrite=True):
         """Open an AMBER NetCDF Trajectory file
 
         Parameters
@@ -60,6 +64,9 @@ class NetCDFFile(object):
                 " 'r' indicates read, 'w' indicates write, and 'a' indicates"
                 " append. 'a' and 'w' can be appended with 's', which turns "
                 " off buffering"))
+                
+        if mode in ['w', 'ws'] and not force_overwrite and os.path.exists(filename):
+            raise IOError('"%s" already exists')
 
         # AMBER uses the NetCDF3 format, with 64 bit encodings
         self._handle = netcdf.Dataset(filename, mode=mode, format='NETCDF3_64BIT',
@@ -213,9 +220,14 @@ class NetCDFFile(object):
         if self._mode not in ['w', 'ws', 'a', 'as']:
             raise IOError('The file was opened in mode=%s. Writing is not allowed.' % self._mode)
 
+        coordinates = in_units_of(coordinates, 'angstroms')
+        time = in_units_of(time, 'picoseconds')
+        cell_lengths = in_units_of(cell_lengths, 'angstroms')
+        cell_angles = in_units_of(cell_angles, 'degrees')
+
         # typecheck all of the input arguments rigorously
         coordinates = ensure_type(coordinates, np.float32, 3, 'coordinates', length=None,
-            can_be_none=False, shape=(None, None, 3), warn_on_cast=True, add_newaxis_on_deficient_ndim=True)
+            can_be_none=False, shape=(None, None, 3), warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         n_frames, n_atoms = coordinates.shape[0], coordinates.shape[1]
 
         time = ensure_type(time, np.float32, 1, 'time', length=n_frames,
