@@ -23,15 +23,21 @@ formats = {'.dcd': md.DCDTrajectoryFile,
            '.nc': md.NetCDFTrajectoryFile,
            '.h5': md.HDF5TrajectoryFile}
 
-fields = {'.trr': ('xyz', 'time', 'step', 'box', 'lambd'),
+fields = {'.trr': ('xyz', 'time', 'step', 'box', 'lambda'),
           '.xtc': ('xyz', 'time', 'step', 'box'),
           '.dcd': ('xyz', 'cell_lengths', 'cell_angles'),
-          '.binpos': ('xyz',)}
+          '.nc': ('xyz', 'time', 'cell_lengths', 'cell_angles'),
+          '.binpos': ('xyz',),
+          '.h5': ('xyz', 'time', 'cell_lengths', 'cell_angles',
+                  'velocities', 'kineticEnergy', 'potentialEnergy',
+                  'temperature', 'lambda')}
 
 units = {'.xtc': 'nanometers',
          '.trr': 'nanometers',
          '.binpos': 'angstroms',
-         '.dcd': 'angstroms'}
+         '.nc': 'angstroms',
+         '.dcd': 'angstroms',
+         '.h5': 'nanometers'}
 
 ###############################################################################
 # Utility Functions
@@ -64,7 +70,7 @@ def unit_convert(array, in_units, out_units):
 
 def parse_args():
     """Parse the command line arguments and perform some validation on the arguments
-    
+
     Returns
     -------
     args : argparse.Namespace
@@ -105,7 +111,7 @@ def parse_args():
         if not os.path.isfile(fn):
             parser.error('%s: Is not a file' % fn)
 
-    for fn in args.input:
+    for fn in args.input: -
         if not ext(fn) in formats:
             parser.error("%s: '%s' is not a known extension" % (fn, ext(fn)))
 
@@ -162,13 +168,13 @@ def main(args, verbose=True):
                     convert(data, in_units, out_units, out_fields)
                     write(outfile, data)
                     n_total += n_frames
-                    
+
                     if verbose:
                         sys.stdout.write('\rconverted %d frames.' % n_total)
                         sys.stdout.flush()
 
     if verbose:
-        print 
+        print
 
 
 def write(outfile, data):
@@ -188,16 +194,26 @@ def write(outfile, data):
     if isinstance(outfile, md.XTCTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
                       data.get('step', None), data.get('box', None))
-    if isinstance(outfile, md.TRRTrajectoryFile):
+    elif isinstance(outfile, md.TRRTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
                       data.get('step', None), data.get('box', None),
                       data.get('lambd', None))
-    if isinstance(outfile, md.DCDTrajectoryFile):
+    elif isinstance(outfile, md.DCDTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('cell_lengths', None),
                       data.get('cell_angles', None))
-    if isinstance(outfile, md.BINPOSTrajectoryFile):
+    elif isinstance(outfile, md.BINPOSTrajectoryFile):
         outfile.write(data.get('xyz', None))
-
+    elif isinstance(outfile, md.NetCDFTrajectoryFile):
+        outfile.write(data.get('xyz', None), data.get('time', None),
+                      data.get('cell_lengths', None), data.get('cell_angles', None))
+    elif isinstance(outfile, md.HDF5TrajectoryFile):
+        outfile.write(data.get('xyz', None), data.get('time', None),
+                      data.get('cell_lengths', None), data.get('cell_angles', None),
+                      data.get('velocities', None), data.get('kineticEnergy', None),
+                      data.get('potentialEnergy', None), data.get('temperature', None),
+                      data.get('lambda', None))
+    else:
+        raise RuntimeError()
 
 def read(infile, chunk, stride, atom_indices):
     """Read data from the infile.
@@ -209,18 +225,27 @@ def read(infile, chunk, stride, atom_indices):
     _data = infile.read(chunk, stride=stride, atom_indices=atom_indices)
 
     if isinstance(infile, md.XTCTrajectoryFile):
-        data = dict(zip(['xyz', 'time', 'step', 'box'], _data))
+        data = dict(zip(fields['.xtc'], _data))
         in_units = 'nanometers'
-    if isinstance(infile, md.TRRTrajectoryFile):
-        data = dict(zip(['xyz', 'time', 'step', 'box', 'lambd'], _data))
+    elif isinstance(infile, md.TRRTrajectoryFile):
+        data = dict(zip(fields['.trr'], _data))
         in_units = 'nanometers'
     elif isinstance(infile, md.DCDTrajectoryFile):
-        data = dict(zip(['xyz', 'cell_lengths', 'cell_angles'], _data))
+        data = dict(zip(fields['.dcd'], _data))
         in_units = 'angstroms'
     elif isinstance(infile, md.BINPOSTrajectoryFile):
         data = {'xyz': _data}
         in_units = 'angstroms'
+    elif isinstance(infile, md.NetCDFTrajectoryFile):
+        data = dict(zip(fields['.nc'], _data))
+        in_units = 'angstroms'
+    elif isinstance(infile, md.HDF5TrajectoryFile):
+        data = dict(zip(fields['.h5'], _data))
+        in_units = 'angstroms'
+    else:
+        raise RuntimeError
 
+    data = {k: v for k, v in data.iteritems() if v is not None}
     return data, in_units, len(data['xyz'])
 
 

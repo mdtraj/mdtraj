@@ -117,7 +117,7 @@ class HDF5TrajectoryFile(object):
                 warnings.warn('The .h5 extension is recommended.')
                 
             if not force_overwrite and os.path.exists(filename):
-                raise IOError('"%s" already exists')
+                raise IOError('"%s" already exists' % filename)
 
         elif mode == 'a':
             try:
