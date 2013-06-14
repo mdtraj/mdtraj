@@ -118,20 +118,14 @@ def unit_convert(array, in_units, out_units):
 
 
 def index(str):
-    def int_or_none(s):
-        try:
-            return int(s)
-        except:
-            return None
-
     if str.count(':') == 0:
         return int(str)
 
     elif str.count(':') == 1:
-        start, end = [int_or_none(e) for e in str.split(':')]
+        start, end = [(None if e == '' else int(e)) for e in str.split(':')]
         step = None
     elif str.count(':') == 2:
-        start, end, step = [int_or_none(e) for e in str.split(':')]
+        start, end, step = [(None if e == '' else int(e)) for e in str.split(':')]
 
     return slice(start, end, step)
 
