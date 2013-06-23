@@ -95,6 +95,9 @@ class HDF5TrajectoryFile(object):
         if not mode in ['r', 'w', 'a']:
             raise ValueError("mode must be one of ['r', 'w', 'a']")
 
+        if mode == 'w' and not force_overwrite and os.path.exists(filename):
+            raise IOError('"%s" already exists' % filename)
+
         # import tables
         self.tables = import_('tables')
 
@@ -115,9 +118,6 @@ class HDF5TrajectoryFile(object):
             self._needs_initialization = True
             if not filename.endswith('.h5'):
                 warnings.warn('The .h5 extension is recommended.')
-                
-            if not force_overwrite and os.path.exists(filename):
-                raise IOError('"%s" already exists')
 
         elif mode == 'a':
             try:

@@ -145,8 +145,13 @@ class NetCDFTrajectoryFile(object):
 
         if n_frames is None:
             n_frames = np.inf
+
         total_n_frames = len(self._handle.dimensions['frame'])
         frame_slice = slice(self._frame_index, self._frame_index + min(n_frames, total_n_frames), stride)
+        if self._frame_index >= total_n_frames:
+            # just return something that'll look like len(xyz) == 0
+            # this is basically just an alternative to throwing an indexerror
+            return np.array([]), None, None, None
 
         if atom_indices is None:
             # get all of the atoms
