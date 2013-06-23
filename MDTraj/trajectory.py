@@ -29,7 +29,7 @@ import numpy as np
 from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
                     TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
                     PDBTrajectoryFile)
-from mdtraj.utils import unitcell, arrays
+from mdtraj.utils import unitcell, ensure_type
 import mdtraj.topology
 
 try:
@@ -762,7 +762,7 @@ class Trajectory(object):
             The distances a, b, and c that define the shape of the unit cell in
             each frame.
         """
-        self._unitcell_lengths = arrays.ensure_type(value, np.float32, 2,
+        self._unitcell_lengths = ensure_type(value, np.float32, 2,
             'unitcell_lengths', can_be_none=True, shape=(len(self), 3),
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
 
@@ -776,7 +776,7 @@ class Trajectory(object):
             The angles alpha, beta and gamma that define the shape of the
             unit cell in each frame. The angles should be in **degrees*
         """
-        self._unitcell_angles = arrays.ensure_type(value, np.float32, 2,
+        self._unitcell_angles = ensure_type(value, np.float32, 2,
             'unitcell_angles', can_be_none=True, shape=(len(self), 3),
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
 
@@ -786,23 +786,14 @@ class Trajectory(object):
 
     @xyz.setter
     def xyz(self, value):
-        #TODO control the precision of xyz
-        if value.ndim == 2:
-            n_frames = 1
-            n_atoms, n_dims = value.shape
-            assert n_dims == 3
-
-            xyz = value.reshape((n_frames, n_atoms, n_dims))
-        elif value.ndim == 3:
-            xyz = value
+        if hasattr(self, 'topology'):
+            shape = (None, self.topology._numAtoms, 3)
         else:
-            raise ValueError('xyz is wrong shape')
+            shape = (None, None, 3)
 
-        if hasattr(self, 'topology') and self.topology._numAtoms != xyz.shape[1]:
-            raise ValueError("Number of atoms in xyz (%s) and "
-                "in topology (%s) don't match" % (xyz.shape[1], self.topology._numAtoms))
-
-        self._xyz = xyz
+        value = ensure_type(value, np.float32, 3, 'xyz', shape=shape,
+                            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
+        self._xyz = value
 
     def __len__(self):
         return self.n_frames
@@ -1189,6 +1180,6 @@ class Trajectory(object):
         ----------
         atom_indices : list([int])
             List of atom indices to keep.
-        """        
+        """
         self.top.restrict_atoms(atom_indices)
         self._xyz = self.xyz[:,atom_indices]
