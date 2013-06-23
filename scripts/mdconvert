@@ -218,7 +218,7 @@ def main(args, verbose=True):
     InFileFormat = formats[in_x]
 
     if args.topology is not None:
-        topology = md.pdb.PDBFile(args.topology).topology
+        topology = md.PDBTrajectoryFile(args.topology).topology
     else:
         topology = None
 
@@ -257,6 +257,7 @@ def main(args, verbose=True):
                         # do some simple checks
                         if data['xyz'].shape[1] != topology._numAtoms:
                             warnings.warn('sdsfsd!!!!')
+                        data['topology'] = topology
 
                     # if they want a specific set of frames, get those
                     # with slice notation
