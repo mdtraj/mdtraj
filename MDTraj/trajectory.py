@@ -27,8 +27,8 @@ from copy import deepcopy
 import numpy as np
 
 from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
-                    TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile)
-from mdtraj.pdb import pdbfile
+                    TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
+                    PDBTrajectoryFile)
 from mdtraj.utils import unitcell, arrays
 import mdtraj.topology
 
@@ -73,7 +73,7 @@ def _parse_topology(top):
     we extract its topology.
     """
     if isinstance(top, basestring):
-        topology = pdbfile.PDBFile(top).topology
+        topology = PDBTrajectoryFile(top).topology
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, mdtraj.topology.Topology):
@@ -143,15 +143,13 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     return loader(filename, **kwargs)
 
 
-def load_pdb(filename, load_all_models=True):
+def load_pdb(filename):
     """Load a pdb file.
 
     Parameters
     ----------
     filename : str
         Path to the PDB file on disk.
-    load_all_models : bool, default=True
-        If the file contains multiple models, load all of them.
 
     Returns
     -------
@@ -163,7 +161,7 @@ def load_pdb(filename, load_all_models=True):
             'you supplied %s' % type(filename))
 
     filename = str(filename)
-    f = pdbfile.PDBFile(filename, load_all_models)
+    f = PDBTrajectoryFile(filename)
 
     # convert from angstroms to nm
     coords = f.positions / 10.0
@@ -1064,7 +1062,7 @@ class Trajectory(object):
                     cell_lengths=self.unitcell_lengths)
             f.topology = self.topology
 
-    def save_pdb(self, filename, no_models=False):
+    def save_pdb(self, filename):
         """
         Save a trajectory to pdb
 
@@ -1072,12 +1070,7 @@ class Trajectory(object):
         ----------
         filename : str
             filesystem path in which to save the trajectory
-        no_models : bool
-            TODO: Document this feature. What does it do?
         """
-
-        f = open(filename, 'w')
-
         topology = self.topology
 
         # convert to angstroms
@@ -1091,22 +1084,11 @@ class Trajectory(object):
 
             topology.setUnitCellDimensions((a, b, c))
 
-        pdbfile.PDBFile.writeHeader(topology, file=f)
+        with PDBTrajectoryFile(filename, 'w') as f:
+            for i in xrange(self.n_frames):
+                # need to convert internal nm to angstroms for output
+                f.write(self._xyz[i] * 10, topology, modelIndex=i)
 
-        for i in xrange(self.n_frames):
-            if no_models:
-                mind = None
-            else:
-                mind = i
-
-            # need to convert internal nm to angstroms for output
-            positions = [list(self._xyz[i, j, :].flatten() * 10) for j in xrange(self.n_atoms)]
-            pdbfile.PDBFile.writeModel(topology, positions, file=f, modelIndex=mind)
-
-        pdbfile.PDBFile.writeFooter(topology, file=f)
-        f.close()
-
-        return
 
     def save_xtc(self, filename, force_overwrite=True):
         """

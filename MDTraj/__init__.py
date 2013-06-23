@@ -51,6 +51,8 @@ from .hdf5 import HDF5TrajectoryFile
 from .netcdf import NetCDFTrajectoryFile
 from mdtraj.dcd import DCDTrajectoryFile
 from mdtraj.binpos import BINPOSTrajectoryFile
+from mdtraj.pdb import PDBTrajectoryFile
+
 
 from .trajectory import Trajectory  # needs to be last
 

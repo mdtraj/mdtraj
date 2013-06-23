@@ -118,7 +118,7 @@ cdef class DCDTrajectoryFile:
             self.filename = filename
             self._needs_write_initialization = 1
             if not force_overwrite and os.path.exists(filename):
-                raise IOError('"%s" already exists')
+                raise IOError('"%s" already exists' % filename)
         else:
             raise ValueError("most must be one of ['r', 'w']")
 

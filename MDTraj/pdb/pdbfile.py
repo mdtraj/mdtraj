@@ -58,49 +58,156 @@ from mdtraj.topology import Topology
 import element as elem
 
 
-class PDBFile(object):
-    """PDBFile parses a Protein Data Bank (PDB) file and constructs a Topology and a set of atom positions from it.
-
-    This class also provides methods for creating PDB files.  To write a file containing a single model, call
-    writeFile().  You also can create files that contain multiple models.  To do this, first call writeHeader(),
-    then writeModel() once for each model in the file, and finally writeFooter() to complete the file."""
-
+class PDBTrajectoryFile(object):
+    """Interface for reading and writing Protein Data Bank (PDB) files
+    """
+    distance_unit = 'angstroms'
     _residueNameReplacements = {}
     _atomNameReplacements = {}
 
-    def __init__(self, file, load_all_models=True):
-        """Load a PDB file.
+    def __init__(self, filename, mode='r', force_overwrite=True):
+        self._open = False
+        self._file = None
+        self._topology = None
+        self._positions = None
+        self._mode = mode
 
-        The atom positions and Topology can be retrieved by calling getPositions() and getTopology().
+        if mode == 'r':
+            PDBTrajectoryFile._loadNameReplacementTables()
+            self._file = open(filename, 'r')
+            self._read_models()
+        elif mode == 'w':
+            self._header_written = False
+            self._footer_written = False
+            if os.path.exists(filename) and not force_overwrite:
+                raise IOError('"%s" already exists' % filename)
+            self._file = open(filename, 'w')
+        else:
+            raise ValueError("invalid mode: %s" % mode)
 
-        Parameters:
-         - file (string) the name of the file to load
+        self._open = True
+
+    def write(self, positions, topology, modelIndex):
+        """Write a PDB file
+
+        Parameters
+        ----------
+        positions : list
+            The list of atomic positions to write.
+        topology : Topology, optional
+            The Topology defining the model to write.
+        modelIndex : {int, None}
+            If not None, the model will be surrounded by MODEL/ENDMDL records
+            with this index
         """
-        top = Topology()
-        coords = [];
-        ## The Topology read from the PDB file
-        self.topology = top
+        if not self._mode == 'w':
+            raise ValueError('file not opened for writing')
+        if not self._header_written:
+            self._write_header(topology)
+            self._header_written = True
 
-        # Load the PDB file
-        pdb = PdbStructure(open(file), load_all_models=load_all_models)
-        PDBFile._loadNameReplacementTables()
+        if len(list(topology.atoms())) != len(positions):
+            raise ValueError('The number of positions must match the number of atoms')
+        if np.any(np.isnan(positions)):
+            raise ValueError('Particle position is NaN')
+        if np.any(np.isinf(positions)):
+            raise ValueError('Particle position is infinite')
 
-        # Build the topology
+        atomIndex = 1
+        posIndex = 0
+        if modelIndex is not None:
+            print >> self._file, "MODEL     %4d" % modelIndex
+        for (chainIndex, chain) in enumerate(topology.chains()):
+            chainName = chr(ord('A')+chainIndex%26)
+            residues = list(chain.residues())
+            for (resIndex, res) in enumerate(residues):
+                if len(res.name) > 3:
+                    resName = res.name[:3]
+                else:
+                    resName = res.name
+                for atom in res.atoms():
+                    if len(atom.name) < 4 and atom.name[:1].isalpha() and (atom.element is None or len(atom.element.symbol) < 2):
+                        atomName = ' '+atom.name
+                    elif len(atom.name) > 4:
+                        atomName = atom.name[:4]
+                    else:
+                        atomName = atom.name
+                    coords = positions[posIndex]
+                    line = "ATOM  %5d %-4s %3s %s%4d    %s%s%s  1.00  0.00" % (
+                        atomIndex%100000, atomName, resName, chainName,
+                        (resIndex+1)%10000, _format_83(coords[0]),
+                        _format_83(coords[1]), _format_83(coords[2]))
+                    assert len(line) == 66, 'Fixed width overflow detected'
+                    print >> self._file, line
+                    posIndex += 1
+                    atomIndex += 1
+                if resIndex == len(residues)-1:
+                    print >> self._file, "TER   %5d      %3s %s%4d" % (atomIndex, resName, chainName, resIndex+1)
+                    atomIndex += 1
 
-        # TJL QUESTION:
-        # Isn't the following parsing supported in pdbstructure.py, which we just
-        # called??
+        if modelIndex is not None:
+            print >> self._file, "ENDMDL"
+
+    def _write_header(self, topology):
+        """Write out the header for a PDB file.
+
+        Parameters
+        ----------
+         topology : Topology
+            The Topology defining the molecular system being written
+        """
+        if not self._mode == 'w':
+            raise ValueError('file not opened for writing')
+        boxSize = topology.getUnitCellDimensions()
+        if boxSize is not None:
+            print >>self._file, "CRYST1%9.3f%9.3f%9.3f  90.00  90.00  90.00 P 1           1 " % boxSize
+
+    def _write_footer(self):
+        if not self._mode == 'w':
+            raise ValueError('file not opened for writing')
+        print >>self._file, "END"
+        self._footer_written = True
+
+    @property
+    def positions(self):
+        return self._positions
+
+    @property
+    def topology(self):
+        "Get the topology from this PDB file"
+        return self._topology
+
+    @property
+    def closed(self):
+        "True if the file is closed"
+        return not self._open
+
+    def close(self):
+        "Close the file"
+        if self._mode == 'w' and not self._footer_written:
+            self._write_footer()
+        if self._open:
+            self._file.close()
+        self._open = False
+
+    def _read_models(self):
+        if not self._mode == 'r':
+            raise ValueError('file not opened for reading')
+
+        self._topology = Topology()
+
+        pdb = PdbStructure(self._file, load_all_models=True)
 
         atomByNumber = {}
         for chain in pdb.iter_chains():
-            c = top.addChain()
+            c = self._topology.addChain()
             for residue in chain.iter_residues():
                 resName = residue.get_name()
-                if resName in PDBFile._residueNameReplacements:
-                    resName = PDBFile._residueNameReplacements[resName]
-                r = top.addResidue(resName, c)
-                if resName in PDBFile._atomNameReplacements:
-                    atomReplacements = PDBFile._atomNameReplacements[resName]
+                if resName in PDBTrajectoryFile._residueNameReplacements:
+                    resName = PDBTrajectoryFile._residueNameReplacements[resName]
+                r = self._topology.addResidue(resName, c)
+                if resName in PDBTrajectoryFile._atomNameReplacements:
+                    atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
                 else:
                     atomReplacements = {}
                 for atom in residue.atoms:
@@ -153,7 +260,7 @@ class PDBFile(object):
                                 except KeyError:
                                     pass
 
-                    newAtom = top.addAtom(atomName, element, r)
+                    newAtom = self._topology.addAtom(atomName, element, r)
                     atomByNumber[atom.serial_number] = newAtom
 
         # load all of the positions (from every model)
@@ -165,15 +272,15 @@ class PDBFile(object):
                     for atom in residue.atoms:
                         coords.append(atom.get_position())
             _positions.append(coords)
-        self.positions = np.array(_positions)
+        self._positions = np.array(_positions)
 
         ## The atom positions read from the PDB file
         #self.positions = np.array(coords)
         #print self.positions.shape
-        self.topology.setUnitCellDimensions(pdb.get_unit_cell_dimensions())
-        self.topology.createStandardBonds()
-        self.topology.createDisulfideBonds(self.positions[0])
-        
+        self._topology.setUnitCellDimensions(pdb.get_unit_cell_dimensions())
+        self._topology.createStandardBonds()
+        self._topology.createDisulfideBonds(self.positions[0])
+
         # Add bonds based on CONECT records.
         connectBonds = []
         for connect in pdb.models[0].connects:
@@ -182,24 +289,16 @@ class PDBFile(object):
                 connectBonds.append((atomByNumber[i], atomByNumber[j]))
         if len(connectBonds) > 0:
             # Only add bonds that don't already exist.
-            existingBonds = set(top.bonds())
+            existingBonds = set(self._topology.bonds())
             for bond in connectBonds:
                 if bond not in existingBonds and (bond[1], bond[0]) not in existingBonds:
-                    top.addBond(bond[0], bond[1])
+                    self._topology.addBond(bond[0], bond[1])
                     existingBonds.add(bond)
-
-    def getTopology(self):
-        """Get the Topology of the model."""
-        return self.topology
-
-    def getPositions(self):
-        """Get the atomic positions."""
-        return self.positions
 
     @staticmethod
     def _loadNameReplacementTables():
         """Load the list of atom and residue name replacements."""
-        if len(PDBFile._residueNameReplacements) == 0:
+        if len(PDBTrajectoryFile._residueNameReplacements) == 0:
             tree = etree.parse(os.path.join(os.path.dirname(__file__), 'data', 'pdbNames.xml'))
             allResidues = {}
             proteinResidues = {}
@@ -207,11 +306,11 @@ class PDBFile(object):
             for residue in tree.getroot().findall('Residue'):
                 name = residue.attrib['name']
                 if name == 'All':
-                    PDBFile._parseResidueAtoms(residue, allResidues)
+                    PDBTrajectoryFile._parseResidueAtoms(residue, allResidues)
                 elif name == 'Protein':
-                    PDBFile._parseResidueAtoms(residue, proteinResidues)
+                    PDBTrajectoryFile._parseResidueAtoms(residue, proteinResidues)
                 elif name == 'Nucleic':
-                    PDBFile._parseResidueAtoms(residue, nucleicAcidResidues)
+                    PDBTrajectoryFile._parseResidueAtoms(residue, nucleicAcidResidues)
             for atom in allResidues:
                 proteinResidues[atom] = allResidues[atom]
                 nucleicAcidResidues[atom] = allResidues[atom]
@@ -219,7 +318,7 @@ class PDBFile(object):
                 name = residue.attrib['name']
                 for id in residue.attrib:
                     if id == 'name' or id.startswith('alt'):
-                        PDBFile._residueNameReplacements[residue.attrib[id]] = name
+                        PDBTrajectoryFile._residueNameReplacements[residue.attrib[id]] = name
                 if 'type' not in residue.attrib:
                     atoms = copy(allResidues)
                 elif residue.attrib['type'] == 'Protein':
@@ -228,8 +327,8 @@ class PDBFile(object):
                     atoms = copy(nucleicAcidResidues)
                 else:
                     atoms = copy(allResidues)
-                PDBFile._parseResidueAtoms(residue, atoms)
-                PDBFile._atomNameReplacements[name] = atoms
+                PDBTrajectoryFile._parseResidueAtoms(residue, atoms)
+                PDBTrajectoryFile._atomNameReplacements[name] = atoms
 
     @staticmethod
     def _parseResidueAtoms(residue, map):
@@ -238,104 +337,24 @@ class PDBFile(object):
             for id in atom.attrib:
                 map[atom.attrib[id]] = name
 
-    @staticmethod
-    def writeFile(topology, positions, file=sys.stdout, modelIndex=None):
-        """Write a PDB file containing a single model.
+    def __del__(self):
+        self.close()
 
-        Parameters:
-         - topology (Topology) The Topology defining the model to write
-         - positions (list) The list of atomic positions to write
-         - file (file=stdout) A file to write to
-        """
-        PDBFile.writeHeader(topology, file)
-        PDBFile.writeModel(topology, positions, file)
-        PDBFile.writeFooter(topology, file)
+    def __enter__(self):
+        return self
 
-    @staticmethod
-    def writeHeader(topology, file=sys.stdout):
-        """Write out the header for a PDB file.
-
-        Parameters:
-         - topology (Topology) The Topology defining the molecular system being written
-         - file (file=stdout) A file to write the file to
-        """
-        boxSize = topology.getUnitCellDimensions()
-        if boxSize is not None:
-            print >>file, "CRYST1%9.3f%9.3f%9.3f  90.00  90.00  90.00 P 1           1 " % boxSize
-
-    @staticmethod
-    def writeModel(topology, positions, file=sys.stdout, modelIndex=None):
-        """Write out a model to a PDB file.
-
-        Parameters:
-         - topology (Topology) The Topology defining the model to write
-         - positions (list) The list of atomic positions to write
-         - file (file=stdout) A file to write the model to
-         - modelIndex (int=None) If not None, the model will be surrounded by MODEL/ENDMDL records with this index
-        """
-        if len(list(topology.atoms())) != len(positions):
-            raise ValueError('The number of positions must match the number of atoms')
-        if np.any(np.isnan(positions)):
-            raise ValueError('Particle position is NaN')
-        if np.any(np.isinf(positions)):
-            raise ValueError('Particle position is infinite')
-        atomIndex = 1
-        posIndex = 0
-        if modelIndex is not None:
-            print >>file, "MODEL     %4d" % modelIndex
-        for (chainIndex, chain) in enumerate(topology.chains()):
-            chainName = chr(ord('A')+chainIndex%26)
-            residues = list(chain.residues())
-            for (resIndex, res) in enumerate(residues):
-                if len(res.name) > 3:
-                    resName = res.name[:3]
-                else:
-                    resName = res.name
-                for atom in res.atoms():
-                    if len(atom.name) < 4 and atom.name[:1].isalpha() and (atom.element is None or len(atom.element.symbol) < 2):
-                        atomName = ' '+atom.name
-                    elif len(atom.name) > 4:
-                        atomName = atom.name[:4]
-                    else:
-                        atomName = atom.name
-                    coords = positions[posIndex]
-                    line = "ATOM  %5d %-4s %3s %s%4d    %s%s%s  1.00  0.00" % (
-                        atomIndex%100000, atomName, resName, chainName,
-                        (resIndex+1)%10000, _format_83(coords[0]),
-                        _format_83(coords[1]), _format_83(coords[2]))
-                    assert len(line) == 66, 'Fixed width overflow detected'
-                    print >>file, line
-                    posIndex += 1
-                    atomIndex += 1
-                if resIndex == len(residues)-1:
-                    print >>file, "TER   %5d      %3s %s%4d" % (atomIndex, resName, chainName, resIndex+1)
-                    atomIndex += 1
-        if modelIndex is not None:
-            print >>file, "ENDMDL"
-
-    @staticmethod
-    def writeFooter(topology, file=sys.stdout):
-        """Write out the footer for a PDB file.
-
-        Parameters:
-         - topology (Topology) The Topology defining the molecular system being written
-         - file (file=stdout) A file to write the file to
-        """
-        print >>file, "END"
-
-
-class PDBFormatOverFlowError(ValueError):
-    pass
+    def __exit__(self, *exc_info):
+        self.close()
 
 
 def _format_83(f):
     """Format a single float into a string of width 8, with ideally 3 decimal
     places of precision. If the number is a little too large, we can
     gracefully degrade the precision by lopping off some of the decimal
-    places. If it's much too large, we throw a PDBFormatOverFlowError"""
+    places. If it's much too large, we throw a ValueError"""
     if -999.999 < f < 9999.999:
         return '%8.3f' % f
     if -9999999 < f < 99999999:
         return ('%8.3f' % f)[:8]
-    raise PDBFormatOverFlowError('coordinate "%s" could not be represnted '
-                                 'in a width-8 field' % f)
+    raise ValueError('coordinate "%s" could not be represnted '
+                     'in a width-8 field' % f)

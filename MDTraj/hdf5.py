@@ -385,7 +385,9 @@ class HDF5TrajectoryFile(object):
             stride = int(stride)
 
         total_n_frames = len(self._handle.root.coordinates)
-        frame_slice = slice(self._frame_index, self._frame_index + min(n_frames, total_n_frames), stride)
+        frame_slice = slice(self._frame_index, min(self._frame_index + n_frames, total_n_frames), stride)
+        if frame_slice.stop - frame_slice.start == 0:
+            return []
 
         if atom_indices is None:
             # get all of the atoms
