@@ -226,3 +226,14 @@ def test_restrict_atoms():
     eq(len(traj.top._bonds), 2)
     eq(traj.n_residues, traj.topology._numResidues)
     eq(traj.n_atoms, traj.topology._numAtoms)
+
+
+def test_array_vs_matrix():
+    top = load(get_fn('native.pdb')).topology
+    xyz = np.random.randn(1, 22, 3)
+    xyz_mat = np.matrix(xyz)
+    t1 = mdtraj.trajectory.Trajectory(xyz, top)
+    t2 = mdtraj.trajectory.Trajectory(xyz_mat, top)
+
+    eq(t1.xyz, xyz)
+    eq(t2.xyz, xyz)
