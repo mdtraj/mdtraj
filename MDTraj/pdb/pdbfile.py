@@ -60,6 +60,24 @@ import element as elem
 
 class PDBTrajectoryFile(object):
     """Interface for reading and writing Protein Data Bank (PDB) files
+    
+    Parameters
+    ----------
+    filename : str
+        The filename to open. A path to a file on disk.
+    mode : {'r', 'w'}
+        The mode in which to open the file, either 'r' for read or 'w' for write.
+    force_overwrite : bool
+        If opened in write mode, and a file by the name of `filename` already
+        exists on disk, should we overwrite it?
+        
+    Attributes
+    ----------
+    positions : np.ndarray, shape=(n_frames, n_atoms, 3)
+        The cartesian coordinates of each of the atoms in every model, available
+        when a file is opened in mode='r'
+    topology : mdtraj.Topology
+        The topology of the system, available when a file is opened in mode='r'
     """
     distance_unit = 'angstroms'
     _residueNameReplacements = {}
@@ -92,9 +110,9 @@ class PDBTrajectoryFile(object):
 
         Parameters
         ----------
-        positions : list
+        positions : array_like
             The list of atomic positions to write.
-        topology : Topology, optional
+        topology : mdtraj.Topology
             The Topology defining the model to write.
         modelIndex : {int, None}
             If not None, the model will be surrounded by MODEL/ENDMDL records
@@ -170,11 +188,14 @@ class PDBTrajectoryFile(object):
 
     @property
     def positions(self):
+        """Get the cartesian coordinates of all of the atoms in each frame. Available when a file is opened in mode='r'
+        """
         return self._positions
 
     @property
     def topology(self):
-        "Get the topology from this PDB file"
+        """Get the topology from this PDB file. Available when a file is opened in mode='r'
+        """
         return self._topology
 
     @property
@@ -183,7 +204,7 @@ class PDBTrajectoryFile(object):
         return not self._open
 
     def close(self):
-        "Close the file"
+        "Close the PDB file"
         if self._mode == 'w' and not self._footer_written:
             self._write_footer()
         if self._open:
