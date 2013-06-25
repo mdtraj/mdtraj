@@ -25,8 +25,8 @@ html:
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)"
 
 github: html
-	cd $(BUILDDIR)
-	git commit -am "new docs built"
+	cd $(BUILDDIR); \
+	git commit -am "new docs built"; \
 	git push origin gh-pages
 
 
