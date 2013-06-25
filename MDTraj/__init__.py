@@ -32,3 +32,6 @@ from mdtraj.pdb import PDBTrajectoryFile
 from .topology import Topology
 from .trajectory import Trajectory  # needs to be last
 
+def test():
+    import nose
+    nose.run()

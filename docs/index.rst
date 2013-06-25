@@ -35,11 +35,25 @@ The best way to report a bug or request a new feature is to make an issue
 on github. Don't hesitate to fork the repository, make some changes, and submit
 a pull request!
 
+.. Developing
+.. ----------
+.. :ref:`building-docs`
+.. 
+.. :ref:`getting-started`
+
+Documentation
+-------------
+
+.. toctree::
+   :maxdepth: 2
+   
+   getting_started
+   building_docs
+
 API Reference
 -------------
 
 .. toctree::
    :maxdepth: 2
 
-   getting_started
    file_formats

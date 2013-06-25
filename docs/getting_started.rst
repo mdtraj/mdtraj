@@ -1,3 +1,5 @@
+.. _getting-started:
+
 Getting started
 ###############
 
@@ -16,7 +18,25 @@ You can install MDTraj by cloning the repository from github::
 Or by installing it directly with `pip <http://www.pip-installer.org/>`_::
 
 	pip install git+git://github.com/rmcgibbo/mdtraj.git
-	
+
+Running the tests
+=================
+Running the tests is a great way to verify that everything is working. The test
+suite uses `nose <https://nose.readthedocs.org/en/latest/>`_, which you can pick
+up via ``pip`` if you don't already have it. ::
+
+  pip install nose
+  
+Then, to run the tests, just run from the project root directory ::
+
+  cd /path/to/mdtraj
+  nosetests
+
+You can also run the tests from within a python shell with ::
+
+  >>> import mdtraj
+  >>> mdtraj.test()
+
 Dependencies
 ============
 
