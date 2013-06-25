@@ -16,30 +16,6 @@
 """The mdtraj package contains tools for loading and saving molecular dynamics
 trajectories in a variety of formats, including Gromacs XTC & TRR, CHARMM/NAMD
 DCD, AMBER BINPOS, PDB, and HDF5.
-
-Examples
---------
->>> from mdtraj import trajectory                             # doctest: +SKIP
->>> t = trajectory.load('traj.dcd', topology='structure.pdb') # doctest: +SKIP
->>> t.save('traj.binpos')                                     # doctest: +SKIP
-
-Modules
--------
-- trajectory
-    This is the core module, with high level interfaces to all of the loading
-    and saving, as well as the central Trajectory object.
-- topology
-    An object oriented molecular topology.
-- io
-    Convenience interface to the (pytables) HDF5 library
-- pdb
-    PDB interface
-- binpos
-    Low level BINPOS interface
-- dcd
-    Low level DCD interface
-- xtc
-    Low level XTC/TRR interface
 """
 
 __all__ = ['binpos', 'xtc', 'dcd', 'io', 'pdb', 'netcdf', "test", "hdf5"
@@ -53,6 +29,6 @@ from mdtraj.dcd import DCDTrajectoryFile
 from mdtraj.binpos import BINPOSTrajectoryFile
 from mdtraj.pdb import PDBTrajectoryFile
 
-
+from .topology import Topology
 from .trajectory import Trajectory  # needs to be last
 

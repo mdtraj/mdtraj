@@ -69,6 +69,35 @@ cdef class XTCTrajectoryFile:
     The conventional units in the XTC file are nanometers and picoseconds.
     The format only supports saving coordinates, the time, the md step,
     and the unit cell parametrs (box vectors)
+    
+    Parameters
+    ----------
+    filename : str
+        The filename to open. A path to a file on disk.
+    mode : {'r', 'w'}
+        The mode in which to open the file, either 'r' for read or 'w' for write.
+    force_overwrite : bool
+        If opened in write mode, and a file by the name of `filename` already exists on disk, should we overwrite it?
+
+    Other Parameters
+    ----------------
+    min_chunk_size : int, default=100
+        In read mode, we need to allocate a buffer in which to store the data without knowing how many frames are
+        in the file. This parameter is the minimum size of the buffer to allocate.
+    chunk_size_multiplier, int, default=1.5
+        In read mode, we need to allocate a buffer in which to store the data without knowing how many frames are in
+        the file. We can *guess* this information based on the size of the file on disk, but it's not perfect. This
+        parameter inflates the guess by a multiplicative factor.
+
+    Examples
+    --------
+    >>> # read the data from from an XTC file
+    >>> with XTCTrajectoryFile('traj.xtc') as f:
+    >>>    xyz, time, step, box = f.read()
+
+    >>> # write some random coordinates to an XTC file
+    >>> with XTCTrajectoryFile('output.xtc', 'w') as f:
+    >>>     f.write(np.random.randn(10,1,3))
     """
     cdef xdrlib.XDRFILE* fh
     cdef int n_atoms          # number of atoms in the file
@@ -160,6 +189,7 @@ cdef class XTCTrajectoryFile:
 
 
     def close(self):
+        "Close the XTC file handle"
         if self.is_open:
             xdrlib.xdrfile_close(self.fh)
             self.is_open = False

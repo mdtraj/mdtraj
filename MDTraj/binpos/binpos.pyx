@@ -44,6 +44,46 @@ cdef int _BINPOS_EOF = -1  # end of file (or error)
 ###############################################################################
 
 cdef class BINPOSTrajectoryFile:
+    """"
+    Interface for reading and writing to an AMBER BINPOS file.
+    This is a file-like object, that both reading or writing depending
+    on the `mode` flag. It implements the context manager protocol,
+    so you can also use it with the python 'with' statement.
+
+    The conventional units in the BINPOS file are angstroms. The format only
+    supports storing the cartesian coordinates.
+    
+    Parameters
+    ----------
+    filename : str
+        The filename to open. A path to a file on disk.
+    mode : {'r', 'w'}
+        The mode in which to open the file, either 'r' for read or 'w' for write.
+    force_overwrite : bool
+        If opened in write mode, and a file by the name of `filename` already
+        exists on disk, should we overwrite it?
+
+    Other Parameters
+    ----------------
+    min_chunk_size : int, default=100
+        In read mode, we need to allocate a buffer in which to store the data
+        without knowing how many frames are in the file. This parameter is the
+        minimum size of the buffer to allocate.
+    chunk_size_multiplier, int, default=1.5
+        In read mode, we need to allocate a buffer in which to store the data
+        without knowing how many frames are in the file. We can *guess* this
+        information based on the size of the file on disk, but it's not perfect.
+        This parameter inflates the guess by a multiplicative factor.
+        
+    Examples
+    --------
+    >>> # copy data from one file to another
+    >>> with BINPOSTrajectoryFile('traj.binpos') as f:
+    >>>     xyz = f.read()
+    >>> with BINPOSTrajectoryFile('out.binpos') as f:
+    >>>    f.write(xyz)
+    """
+    
     cdef int n_atoms
     cdef int approx_n_frames
     cdef int min_chunk_size
@@ -210,6 +250,7 @@ cdef class BINPOSTrajectoryFile:
                 raise RuntimeError("BINPOS Error: %s" % status)
 
     def close(self):
+        """Close the BINPOS file"""
         if self.is_open:
             if self.mode == b'r':
                 close_file_read(self.fh)
