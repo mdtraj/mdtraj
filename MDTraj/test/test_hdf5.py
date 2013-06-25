@@ -3,7 +3,7 @@ import tempfile
 import os
 from mdtraj import hdf5
 from mdtraj import HDF5TrajectoryFile
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
+from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
 from nose.tools import assert_raises
 #DocStringTester = DocStringFormatTester(hdf5)
 
@@ -183,3 +183,20 @@ def test_read_slice_3():
         got = f.read(stride=2, atom_indices=np.array([0,1]))
         yield lambda: eq(got.coordinates, coordinates[::2, [0,1], :])
         yield lambda: eq(got.alchemicalLambda, np.arange(4)[::2])
+
+
+def test_do_overwrite():
+    with open(temp, 'w') as f:
+        f.write('a')
+
+    with HDF5TrajectoryFile(temp, 'w', force_overwrite=True) as f:
+        f.write(np.random.randn(10,5,3))
+
+@raises(IOError)
+def test_do_overwrite():
+    with open(temp, 'w') as f:
+        f.write('a')
+
+    with HDF5TrajectoryFile(temp, 'w', force_overwrite=False) as f:
+        f.write(np.random.randn(10,5,3))
+

@@ -23,6 +23,7 @@ https://github.com/rmcgibbo/mdtraj/issues/36
 ##############################################################################
 
 # stdlib
+import os
 import warnings
 import functools
 import operator
@@ -117,12 +118,15 @@ class HDF5TrajectoryFile(object):
         cost too many cpu cycles, so it's recommended.
 
     """
-    def __init__(self, filename, mode='r', force_overwrite=False, compression='zlib'):
+    def __init__(self, filename, mode='r', force_overwrite=True, compression='zlib'):
         self._open = False  # is the file handle currently open?
         self.mode = mode  # the mode in which the file was opened?
 
         if not mode in ['r', 'w', 'a']:
             raise ValueError("mode must be one of ['r', 'w', 'a']")
+
+        if mode == 'w' and not force_overwrite and os.path.exists(filename):
+            raise IOError('"%s" already exists' % filename)
 
         # import tables
         self.tables = import_('tables')
@@ -413,7 +417,9 @@ class HDF5TrajectoryFile(object):
             stride = int(stride)
 
         total_n_frames = len(self._handle.root.coordinates)
-        frame_slice = slice(self._frame_index, self._frame_index + min(n_frames, total_n_frames), stride)
+        frame_slice = slice(self._frame_index, min(self._frame_index + n_frames, total_n_frames), stride)
+        if frame_slice.stop - frame_slice.start == 0:
+            return []
 
         if atom_indices is None:
             # get all of the atoms

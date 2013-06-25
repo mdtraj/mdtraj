@@ -111,6 +111,18 @@ cdef class DCDTrajectoryFile:
     cdef readonly char* distance_unit
 
     def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True):
+        """Open a DCD Trajectory File
+
+        Parameters
+        ----------
+        filename : string
+            Path to the file to open
+        mode : {'r', 'w'}
+            Mode in which to open the file. 'r' is for reading, and 'w' is for writing.
+        force_overwrite : bool
+            In mode='w', how do you want to behave if a file by the name of `filename`
+            already exists? if `force_overwrite=True`, it will be overwritten.
+        """
         self.distance_unit = 'angstroms'
         self.is_open = False
 
@@ -127,10 +139,9 @@ cdef class DCDTrajectoryFile:
             self.filename = filename
             self._needs_write_initialization = 1
             if not force_overwrite and os.path.exists(filename):
-                raise IOError('"%s" already exists')
+                raise IOError('"%s" already exists' % filename)
         else:
             raise ValueError("most must be one of ['r', 'w']")
-
 
         # alloc the molfile_timestep, which is the struct that the library is
         # going to deposit its data into each timestep
@@ -156,6 +167,7 @@ cdef class DCDTrajectoryFile:
         self.fh = open_dcd_write(self.filename, "dcd", self.n_atoms)
         if self.fh is NULL:
             raise IOError('There was an error opening the file: %s' % self.filename)
+        self.is_open = True
 
         self._needs_write_initialization = False
 
@@ -168,6 +180,8 @@ cdef class DCDTrajectoryFile:
                 close_file_write(self.fh)
             self.is_open = False
 
+        self._needs_write_initialization = False
+
     def __enter__(self):
         "Support the context manager protocol"
         return self
@@ -177,7 +191,7 @@ cdef class DCDTrajectoryFile:
         self.close()
 
 
-    def read(self, n_frames=None, stride=None, atom_indices=None):
+    def read(self, n_frames=None, int stride=1, atom_indices=None):
         """Read the data from a DCD file
 
         Parameters
@@ -210,10 +224,8 @@ cdef class DCDTrajectoryFile:
         """
         if self.mode != b'r':
             raise ValueError('read() is only available when the file is opened in mode="r"')
-
-        if stride is not None:
-            raise NotImplementedError('Sorry, striding has not been implemented yet')
-
+        if not self.is_open:
+            raise IOError("file is not open")
 
         cdef int _n_frames, n_atoms_to_read
         if n_frames is None:
@@ -222,7 +234,6 @@ cdef class DCDTrajectoryFile:
             _n_frames = self.n_frames - self.frame_counter
         else:
             _n_frames = int(n_frames)
-
 
         if atom_indices is None:
             n_atoms_to_read = self.n_atoms
@@ -234,7 +245,7 @@ cdef class DCDTrajectoryFile:
             if max(atom_indices) >= self.n_atoms:
                 raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
             n_atoms_to_read = len(atom_indices)
-            
+
 
         # malloc space to put the data that we're going to read off the disk
         cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((_n_frames, n_atoms_to_read, 3), dtype=np.float32)
@@ -244,8 +255,7 @@ cdef class DCDTrajectoryFile:
         # only used if atom_indices is given
         cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
-
-        cdef int i = 0
+        cdef int i, j
         cdef int status = _DCD_SUCCESS
 
         for i in range(_n_frames):
@@ -269,6 +279,9 @@ cdef class DCDTrajectoryFile:
                 # if the frame was not successfully read, then we're done
                 break
 
+            for j in range(stride - 1):
+                status = read_next_timestep(self.fh, self.n_atoms, NULL)
+
         if status == _DCD_SUCCESS:
             # if we're done either because of we read all of the n_frames
             # requested succcessfully, return
@@ -282,7 +295,8 @@ cdef class DCDTrajectoryFile:
             xyz = xyz[0:i]
             cell_lengths = cell_lengths[0:i]
             cell_angles = cell_angles[0:i]
-            return xyz, cell_lengths, cell_angles
+
+        return xyz, cell_lengths, cell_angles
 
         # If we got some other status, thats a "real" error.
         raise IOError("Error: %s", ERROR_MESSAGES(status))
@@ -307,6 +321,8 @@ cdef class DCDTrajectoryFile:
         """
         if self.mode != b'w':
             raise ValueError('write() is only available when the file is opened in mode="w"')
+        if not self._needs_write_initialization and not self.is_open:
+            raise IOError("file is not open")
 
         # do typechecking, and then dispatch to the c level function
         xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False,

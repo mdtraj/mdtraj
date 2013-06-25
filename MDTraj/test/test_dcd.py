@@ -57,6 +57,16 @@ def test_read_2():
     yield lambda: eq(box_angles1, box_angles2)
 
 
+def test_read_stride():
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz1, box_lengths1, box_angles1 = f.read()
+    with DCDTrajectoryFile(fn_dcd) as f:
+        xyz2, box_lengths2, box_angles2 = f.read(stride=2)
+
+    yield lambda: eq(xyz1[::2], xyz2)
+    yield lambda: eq(box_lengths1[::2], box_lengths2)
+    yield lambda: eq(box_angles1[::2], box_angles2)
+
 def test_read_3():
     "DCDReader: check streaming read of frames 1 at a time"
     xyz_ref, box_lengths_ref, box_angles_ref = DCDTrajectoryFile(fn_dcd).read()
@@ -93,7 +103,7 @@ def test_read_5():
         xyz_ref, box_lengths_ref, box_angles_ref = f.read()
     with DCDTrajectoryFile(fn_dcd) as f:
         xyz, box_lengths, box_angles = f.read(atom_indices=[1,2,5])
-    
+
     yield lambda: eq(xyz_ref[:, [1,2,5], :], xyz)
 
 
@@ -102,7 +112,7 @@ def test_read_6():
         xyz_ref, box_lengths_ref, box_angles_ref = f.read()
     with DCDTrajectoryFile(fn_dcd) as f:
         xyz, box_lengths, box_angles = f.read(atom_indices=slice(None, None, 2))
-    
+
     yield lambda: eq(xyz_ref[:, ::2, :], xyz)
 
 
@@ -151,7 +161,7 @@ def test_write_3():
     "checking"
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
     box_lengths = 25 * np.ones((600, 3), dtype=np.float32)
-    
+
     with DCDTrajectoryFile(temp, 'w') as f:
         f.write(xyz, box_lengths)
 
@@ -173,3 +183,32 @@ def test_write_4():
     yield lambda: eq(xyz, xyz2)
     yield lambda: eq(box_lengths, box_lengths2)
     yield lambda: eq(box_angles, box_angles2)
+
+
+def test_do_overwrite():
+    with open(temp, 'w') as f:
+        f.write('a')
+
+    with DCDTrajectoryFile(temp, 'w', force_overwrite=True) as f:
+        f.write(np.random.randn(10,5,3))
+
+@raises(IOError)
+def test_do_overwrite():
+    with open(temp, 'w') as f:
+        f.write('a')
+
+    with DCDTrajectoryFile(temp, 'w', force_overwrite=False) as f:
+        f.write(np.random.randn(10,5,3))
+
+@raises(IOError)
+def test_read_closed():
+    f = DCDTrajectoryFile(fn_dcd)
+    f.close()
+    f.read()
+
+@raises(IOError)
+def test_write_closed():
+    f = DCDTrajectoryFile(fn_dcd, 'w')
+    f.close()
+    f.write(np.random.randn(10,3,3))
+     

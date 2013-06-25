@@ -25,10 +25,11 @@ import functools
 from itertools import izip
 from copy import deepcopy
 import numpy as np
-from mdtraj import DCDTrajectoryFile
-from mdtraj import xtc, binpos, trr, hdf5
-from mdtraj.pdb import pdbfile
-from mdtraj.utils import unitcell, arrays
+
+from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
+                    TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
+                    PDBTrajectoryFile)
+from mdtraj.utils import unitcell, ensure_type
 import mdtraj.topology
 
 try:
@@ -72,7 +73,7 @@ def _parse_topology(top):
     we extract its topology.
     """
     if isinstance(top, basestring):
-        topology = pdbfile.PDBFile(top).topology
+        topology = PDBTrajectoryFile(top).topology
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, mdtraj.topology.Topology):
@@ -142,15 +143,13 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     return loader(filename, **kwargs)
 
 
-def load_pdb(filename, load_all_models=True):
+def load_pdb(filename):
     """Load a pdb file.
 
     Parameters
     ----------
     filename : str
         Path to the PDB file on disk.
-    load_all_models : bool, default=True
-        If the file contains multiple models, load all of them.
 
     Returns
     -------
@@ -162,7 +161,7 @@ def load_pdb(filename, load_all_models=True):
             'you supplied %s' % type(filename))
 
     filename = str(filename)
-    f = pdbfile.PDBFile(filename, load_all_models)
+    f = PDBTrajectoryFile(filename)
 
     # convert from angstroms to nm
     coords = f.positions / 10.0
@@ -234,7 +233,7 @@ def load_xml(filename, top=None):
     return traj
 
 
-def load_xtc(filename, top=None, chunk=500):
+def load_xtc(filename, top=None, chunk=None):
     """Load an xtc file. Since the xtc doesn't contain information
     to specify the topolgy, you need to supply the topology yourself
 
@@ -245,9 +244,8 @@ def load_xtc(filename, top=None, chunk=500):
     top : {str, Trajectory, Topology}
         The XTC format does not contain topology information. Pass in either the
         path to a pdb file, a trajectory, or a topology to supply this information.
-    chunk : int, default=500
-        Size of the chunk to use for loading the xtc file. Memory is allocated
-        in units of the chunk size, so larger chunk can be more time-efficient.
+    chunk : None
+        This option is depricated.
 
     Returns
     -------
@@ -267,7 +265,9 @@ def load_xtc(filename, top=None, chunk=500):
 
     topology = _parse_topology(top)
 
-    xyz, time, step, box, prec = xtc.read(filename, chunk)
+    with XTCTrajectoryFile(filename, 'r') as f:
+        xyz, time, step, box = f.read()
+
     # note we're not doing anything with the box vectors
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     trajectory.unitcell_vectors = box
@@ -275,7 +275,7 @@ def load_xtc(filename, top=None, chunk=500):
     return trajectory
 
 
-def load_trr(filename, top=None, chunk=500):
+def load_trr(filename, top=None, chunk=None):
     """Load a trr file. Since the trr doesn't contain information
     to specify the topolgy, you need to supply the topology yourself
 
@@ -286,9 +286,8 @@ def load_trr(filename, top=None, chunk=500):
     top : {str, Trajectory, Topology}
         The TRR format does not contain topology information. Pass in either the
         path to a pdb file, a trajectory, or a topology to supply this information.
-    chunk : int, default=500
-        Size of the chunk to use for loading the xtc file. Memory is allocated
-        in units of the chunk size, so larger chunk can be more time-efficient.
+    chunk : None
+        This option is depricated.
 
     Returns
     -------
@@ -308,7 +307,8 @@ def load_trr(filename, top=None, chunk=500):
 
     topology = _parse_topology(top)
 
-    xyz, time, step, box, lambd = trr.read(filename, chunk)
+    with TRRTrajectoryFile(filename) as f:
+        xyz, time, step, box, lambd = f.read()
 
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     trajectory.unitcell_vectors = box
@@ -377,7 +377,7 @@ def load_hdf(filename, stride=None, frame=None):
     trajectory : Trajectory
         A trajectory file!
     """
-    tf = hdf5.HDF5TrajectoryFile(filename)
+    tf = HDF5TrajectoryFile(filename)
     if frame is None:
         data = tf.read(stride=stride)
     else:
@@ -569,7 +569,8 @@ def load_binpos(filename, top=None, chunk=500):
 
     topology = _parse_topology(top)
 
-    xyz = binpos.read(filename)
+    with BINPOSTrajectoryFile(filename) as f:
+        xyz = f.read()
     xyz /= 10.0  # convert from anstroms to nanometer
 
     return Trajectory(xyz=xyz, topology=topology)
@@ -761,7 +762,7 @@ class Trajectory(object):
             The distances a, b, and c that define the shape of the unit cell in
             each frame.
         """
-        self._unitcell_lengths = arrays.ensure_type(value, np.float32, 2,
+        self._unitcell_lengths = ensure_type(value, np.float32, 2,
             'unitcell_lengths', can_be_none=True, shape=(len(self), 3),
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
 
@@ -775,7 +776,7 @@ class Trajectory(object):
             The angles alpha, beta and gamma that define the shape of the
             unit cell in each frame. The angles should be in **degrees*
         """
-        self._unitcell_angles = arrays.ensure_type(value, np.float32, 2,
+        self._unitcell_angles = ensure_type(value, np.float32, 2,
             'unitcell_angles', can_be_none=True, shape=(len(self), 3),
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
 
@@ -785,23 +786,14 @@ class Trajectory(object):
 
     @xyz.setter
     def xyz(self, value):
-        #TODO control the precision of xyz
-        if value.ndim == 2:
-            n_frames = 1
-            n_atoms, n_dims = value.shape
-            assert n_dims == 3
-
-            xyz = value.reshape((n_frames, n_atoms, n_dims))
-        elif value.ndim == 3:
-            xyz = value
+        if hasattr(self, 'topology'):
+            shape = (None, self.topology._numAtoms, 3)
         else:
-            raise ValueError('xyz is wrong shape')
+            shape = (None, None, 3)
 
-        if hasattr(self, 'topology') and self.topology._numAtoms != xyz.shape[1]:
-            raise ValueError("Number of atoms in xyz (%s) and "
-                "in topology (%s) don't match" % (xyz.shape[1], self.topology._numAtoms))
-
-        self._xyz = xyz
+        value = ensure_type(value, np.float32, 3, 'xyz', shape=shape,
+                            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
+        self._xyz = value
 
     def __len__(self):
         return self.n_frames
@@ -1055,13 +1047,13 @@ class Trajectory(object):
         filename : str
             filesystem path in which to save the trajectory
         """
-        with hdf5.HDF5TrajectoryFile(filename, 'w') as f:
+        with HDF5TrajectoryFile(filename, 'w') as f:
             f.write(coordinates=self.xyz, time=self.time,
                     cell_angles=self.unitcell_angles,
                     cell_lengths=self.unitcell_lengths)
             f.topology = self.topology
 
-    def save_pdb(self, filename, no_models=False):
+    def save_pdb(self, filename):
         """
         Save a trajectory to pdb
 
@@ -1069,12 +1061,7 @@ class Trajectory(object):
         ----------
         filename : str
             filesystem path in which to save the trajectory
-        no_models : bool
-            TODO: Document this feature. What does it do?
         """
-
-        f = open(filename, 'w')
-
         topology = self.topology
 
         # convert to angstroms
@@ -1088,22 +1075,11 @@ class Trajectory(object):
 
             topology.setUnitCellDimensions((a, b, c))
 
-        pdbfile.PDBFile.writeHeader(topology, file=f)
+        with PDBTrajectoryFile(filename, 'w') as f:
+            for i in xrange(self.n_frames):
+                # need to convert internal nm to angstroms for output
+                f.write(self._xyz[i] * 10, topology, modelIndex=i)
 
-        for i in xrange(self.n_frames):
-            if no_models:
-                mind = None
-            else:
-                mind = i
-
-            # need to convert internal nm to angstroms for output
-            positions = [list(self._xyz[i, j, :].flatten() * 10) for j in xrange(self.n_atoms)]
-            pdbfile.PDBFile.writeModel(topology, positions, file=f, modelIndex=mind)
-
-        pdbfile.PDBFile.writeFooter(topology, file=f)
-        f.close()
-
-        return
 
     def save_xtc(self, filename, force_overwrite=True):
         """
@@ -1116,8 +1092,8 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        return xtc.write(filename, self.xyz, time=self.time,
-            box=self.unitcell_vectors, force_overwrite=force_overwrite)
+        with XTCTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(xyz=self.xyz, time=self.time, box=self.unitcell_vectors)
 
     def save_trr(self, filename, force_overwrite=True):
         """
@@ -1135,8 +1111,8 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        return trr.write(filename, self.xyz, time=self.time,
-            box=self.unitcell_vectors, force_overwrite=force_overwrite)
+        with TRRTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(xyz=self.xyz, time=self.time, box=self.unitcell_vectors)
 
     def save_dcd(self, filename, force_overwrite=True):
         """
@@ -1172,7 +1148,9 @@ class Trajectory(object):
         """
         # convert from internal nm representation to angstroms for output
         xyz = self.xyz * 10
-        return binpos.write(filename, xyz, force_overwrite=force_overwrite)
+        with BINPOSTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(xyz)
+
 
     def save_netcdf(self, filename, force_overwrite=True):
         """Save a trajectory in AMBER NetCDF format
@@ -1202,6 +1180,6 @@ class Trajectory(object):
         ----------
         atom_indices : list([int])
             List of atom indices to keep.
-        """        
+        """
         self.top.restrict_atoms(atom_indices)
         self._xyz = self.xyz[:,atom_indices]

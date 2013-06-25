@@ -24,6 +24,8 @@ The code is heavily based on amber_netcdf_trajectory_tools.py by John Chodera.
 # imports
 ##############################################################################
 
+# stdlib
+import os
 import warnings
 
 import numpy as np
@@ -55,8 +57,7 @@ class NetCDFTrajectoryFile(object):
         In write mode, if a file named `filename` already exists, clobber
         it and overwrite it.
     """
-
-    def __init__(self, filename, mode='r', force_overwrite=False):
+    def __init__(self, filename, mode='r', force_overwrite=True):
         self._closed = True   # is the file currently closed?
         self._mode = mode      # what mode were we opened in
         netcdf = import_('netCDF4')
@@ -66,6 +67,9 @@ class NetCDFTrajectoryFile(object):
                 " 'r' indicates read, 'w' indicates write, and 'a' indicates"
                 " append. 'a' and 'w' can be appended with 's', which turns "
                 " off buffering"))
+                
+        if mode in ['w', 'ws'] and not force_overwrite and os.path.exists(filename):
+            raise IOError('"%s" already exists')
 
         # AMBER uses the NetCDF3 format, with 64 bit encodings
         self._handle = netcdf.Dataset(filename, mode=mode, format='NETCDF3_64BIT',
@@ -144,8 +148,13 @@ class NetCDFTrajectoryFile(object):
 
         if n_frames is None:
             n_frames = np.inf
+
         total_n_frames = len(self._handle.dimensions['frame'])
         frame_slice = slice(self._frame_index, self._frame_index + min(n_frames, total_n_frames), stride)
+        if self._frame_index >= total_n_frames:
+            # just return something that'll look like len(xyz) == 0
+            # this is basically just an alternative to throwing an indexerror
+            return np.array([]), None, None, None
 
         if atom_indices is None:
             # get all of the atoms
