@@ -49,6 +49,7 @@ Documentation
    
    getting_started
    building_docs
+   hdf5_format
 
 API Reference
 -------------
