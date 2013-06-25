@@ -7,6 +7,10 @@ file formats with a unified API.
 .. toctree::
    :maxdepth: 1
 
+   pdb
    dcd
-   hdf5
+   xtc
+   trr
+   binpos
    netcdf
+   hdf5

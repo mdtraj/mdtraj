@@ -35,7 +35,7 @@ The best way to report a bug or request a new feature is to make an issue
 on github. Don't hesitate to fork the repository, make some changes, and submit
 a pull request!
 
-Documentation
+API Reference
 -------------
 
 .. toctree::
