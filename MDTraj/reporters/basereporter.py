@@ -201,16 +201,14 @@ class _BaseReporter(object):
         kwargs = {}
         if self._coordinates:
             coordinates = state.getPositions(asNumpy=True)[self._atomSlice]
-            if hasattr(self._traj_file, 'distance_unit'):
-                coordinates = coordinates.value_in_unit(getattr(units, self._traj_file.distance_unit))
+            coordinates = coordinates.value_in_unit(getattr(units, self._traj_file.distance_unit))
             args = (coordinates,)
 
         if self._time:
             kwargs['time'] = state.getTime()
         if self._cell:
             vectors = state.getPeriodicBoxVectors(asNumpy=True)
-            if hasattr(self._traj_file, 'distance_unit'):
-                vectors = vectors.value_in_unit(getattr(units, self._traj_file.distance_unit))
+            vectors = vectors.value_in_unit(getattr(units, self._traj_file.distance_unit))
             a, b, c, alpha, beta, gamma = unitcell.box_vectors_to_lengths_and_angles(*vectors)
             kwargs['cell_lengths'] = np.array([a, b, c])
             kwargs['cell_angles'] = np.array([alpha, beta, gamma])

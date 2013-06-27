@@ -370,7 +370,7 @@ def read(infile, chunk, stride, atom_indices):
         data['topology'] = infile.topology  # need to hack this one in manually
         if atom_indices is not None:
             data['topology'].restrict_atoms(atom_indices)
-        in_units = 'angstroms'
+        in_units = 'nanometers'
     else:
         raise RuntimeError
 
@@ -403,10 +403,11 @@ def convert(data, in_units, out_units, out_fields):
             unit_convert(data['cell_lengths'], in_units, out_units)
             del data['box']
 
-    for key in set(data) - set(out_fields):
-        formated_fields = ', '.join("'%s'" % o for o in out_fields)
-        warn('\'%s\' data from input file(s) will be discarded. '
-             'output format only supports fields: %s' % (key, formated_fields))
+    ignored_keys = ["'%s'" % s for s in set(data) - set(out_fields)]
+    formated_fields = ', '.join("'%s'" % o for o in out_fields)
+    warn('%s data from input file(s) will be discarded. '
+         'output format only supports fields: %s' % (', '.join(ignored_keys),
+                                                     formated_fields))
     warn.active = False
 
     return data

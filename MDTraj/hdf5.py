@@ -118,6 +118,8 @@ class HDF5TrajectoryFile(object):
         cost too many cpu cycles, so it's recommended.
 
     """
+    distance_unit = 'nanometers'
+
     def __init__(self, filename, mode='r', force_overwrite=True, compression='zlib'):
         self._open = False  # is the file handle currently open?
         self.mode = mode  # the mode in which the file was opened?

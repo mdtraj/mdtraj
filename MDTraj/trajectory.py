@@ -602,7 +602,8 @@ def load_netcdf(filename, top=None, stride=None):
     topology = _parse_topology(top)
     with NetCDFTrajectoryFile(filename) as f:
         xyz, time, cell_lengths, cell_angles = f.read(stride=stride)
-        xyz /= 10.0  # convert from angstroms to nanometer
+        xyz /= 10.0           # convert from angstroms to nanometer
+        cell_lengths /= 10.0  # convert from angstroms to nanometer
 
     if isinstance(time, np.ma.masked_array) and np.all(time.mask):
         # if time is a masked array and all the entries are masked
