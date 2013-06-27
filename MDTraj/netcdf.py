@@ -57,6 +57,8 @@ class NetCDFTrajectoryFile(object):
         In write mode, if a file named `filename` already exists, clobber
         it and overwrite it.
     """
+    distance_unit = 'angstroms'
+
     def __init__(self, filename, mode='r', force_overwrite=True):
         self._closed = True   # is the file currently closed?
         self._mode = mode      # what mode were we opened in
