@@ -58,3 +58,4 @@ API Reference
    :maxdepth: 2
 
    file_formats
+   trajectory

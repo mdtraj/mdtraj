@@ -617,40 +617,47 @@ def load_netcdf(filename, top=None, stride=None):
 
 
 class Trajectory(object):
-    """
+    """Container object for a molecular dynamics trajectory
+
     Attributes
     ----------
     n_frames : int
     n_atoms : int
+    n_residues : int
     time : np.ndarray dims=1, shape=(n_frames)
-    timestep
-    topology : pdb.topology
-    top : pdb.topology
-       Alias for topology
+    timestep : float
+    top : md.Topology
+
     """
 
     @property
     def n_frames(self):
+        "Number of frames"
         return self._xyz.shape[0]
 
     @property
     def n_atoms(self):
+        "Number of atoms in the trajectory"
         return self._xyz.shape[1]
 
     @property
     def n_residues(self):
+        "Number of residues (amino acids) in the trajectory"
         return sum([1 for r in self.top.residues()])
 
     @property
     def top(self):
+        "Alias for self.topology"
         return self.topology
 
     @property
     def timestep(self):
+        "Timestep between frames, in picoseconds"
         return self._time[1] - self._time[0]
 
     @property
     def time(self):
+        "The simulation time corresponding to each frame, in picoseconds"
         return self._time
 
     @time.setter
@@ -875,7 +882,7 @@ class Trajectory(object):
 
     def slice(self, key, copy=True):
         """
-        Slice a trajectory, by extracting one or more frames a separate traj
+        Slice trajectory, by extracting one or more frames into a separate object
 
         This method can also be called using index bracket notation, i.e
         `traj[1] == traj.slice(1)`
@@ -985,7 +992,7 @@ class Trajectory(object):
     # so effectively, lets make it both?
     def load(filenames, **kwargs):
         """
-        Load a trajectory
+        Load a trajectory from disk
 
         Parameters
         ----------
@@ -1000,7 +1007,7 @@ class Trajectory(object):
 
     def save(self, filename, **kwargs):
         """
-        Save trajectory to a file
+        Save trajectory to disk, in a format determined by the filename
 
         Parameters
         ----------
@@ -1024,7 +1031,7 @@ class Trajectory(object):
                   '.trr': self.save_trr,
                   '.pdb': self.save_pdb,
                   '.dcd': self.save_dcd,
-                  '.h5': self.save_hdf,
+                  '.h5': self.save_h5,
                   '.binpos': self.save_binpos,
                   '.nc': self.save_netcdf,
                   '.ncdf': self.save_netcdf}
@@ -1039,29 +1046,33 @@ class Trajectory(object):
         # run the saver, and return whatever output it gives
         return saver(filename)
 
-    def save_hdf(self, filename):
+    def save_h5(self, filename, force_overwrite=True):
         """
-        Save trajectory to an hdf5
+        Save trajectory to MDTraj HDF5 format
 
         Parameters
         ----------
         filename : str
             filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
         """
-        with HDF5TrajectoryFile(filename, 'w') as f:
+        with HDF5TrajectoryFile(filename, 'w', force_overwrite=True) as f:
             f.write(coordinates=self.xyz, time=self.time,
                     cell_angles=self.unitcell_angles,
                     cell_lengths=self.unitcell_lengths)
             f.topology = self.topology
 
-    def save_pdb(self, filename):
+    def save_pdb(self, filename, force_overwrite=True):
         """
-        Save a trajectory to pdb
+        Save trajectory to RCSB PDB format
 
         Parameters
         ----------
         filename : str
             filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
         """
         topology = self.topology
 
@@ -1076,7 +1087,7 @@ class Trajectory(object):
 
             topology.setUnitCellDimensions((a, b, c))
 
-        with PDBTrajectoryFile(filename, 'w') as f:
+        with PDBTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             for i in xrange(self.n_frames):
                 # need to convert internal nm to angstroms for output
                 f.write(self._xyz[i] * 10, topology, modelIndex=i)
@@ -1084,7 +1095,7 @@ class Trajectory(object):
 
     def save_xtc(self, filename, force_overwrite=True):
         """
-        Save a trajectory to gromacs XTC format
+        Save trajectory to Gromacs XTC format
 
         Parameters
         ----------
@@ -1098,7 +1109,7 @@ class Trajectory(object):
 
     def save_trr(self, filename, force_overwrite=True):
         """
-        Save a trajectory to gromacs TRR format
+        Save trajectory to Gromacs TRR format
 
         Notes
         -----
@@ -1117,7 +1128,7 @@ class Trajectory(object):
 
     def save_dcd(self, filename, force_overwrite=True):
         """
-        Save a trajectory to CHARMM dcd format
+        Save trajectory to CHARMM/NAMD DCD format
 
         Parameters
         ----------
@@ -1138,7 +1149,7 @@ class Trajectory(object):
 
     def save_binpos(self, filename, force_overwrite=True):
         """
-        Save a trajectory to AMBER BINPOS format
+        Save trajectory to AMBER BINPOS format
 
         Parameters
         ----------
@@ -1154,7 +1165,7 @@ class Trajectory(object):
 
 
     def save_netcdf(self, filename, force_overwrite=True):
-        """Save a trajectory in AMBER NetCDF format
+        """Save trajectory in AMBER NetCDF format
 
         Parameters
         ----------
@@ -1170,12 +1181,17 @@ class Trajectory(object):
             f.write(coordinates=xyz, time=self.time)
 
     def center_coordinates(self):
-        """Remove the center of mass from each frame in trajectory.  Acts inplace."""
+        """Remove the center of mass from each frame in trajectory.
+        
+        This method acts inplace on the trajectory
+        """
         for x in self._xyz:
             x -= (x.astype('float64').mean(0))
 
     def restrict_atoms(self, atom_indices):
-        """Delete atoms not in `atom_indices` and re-index those that remain.  (Inplace)
+        """Retain only a subset of the atoms in a trajectory (inplace)
+
+        Deletes atoms not in `atom_indices`, and re-indexes those that remain
 
         Parameters
         ----------

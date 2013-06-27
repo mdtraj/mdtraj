@@ -13,15 +13,11 @@ First, you'll need to install sphinx and numpydoc ::
 Next, make a new directory for the documentation that's not inside the mdtraj
 repository. It should be "adjacent to it". From the mdtraj project root, run ::
 
-    cd /path/to/mdtraj/..
-    git checkout git@github.com:rmcgibbo/mdtraj.git mdtraj-docs
-
-And run these commands.::
-
-    git symbolic-ref HEAD refs/heads/gh-pages
-    rm .git/index
-    git clean -fdx
-    touch .nojekyll
+    cd /path/to/mdtraj
+    cd ..
+    git clone git@github.com:rmcgibbo/mdtraj.git mdtraj-docs
+    cd mdtraj-docs
+    git checkout gh-pages
     
 Now, go back to the docs subdirectory in the main repository. This will require
 push access to the mdtraj repository. ::
