@@ -88,7 +88,7 @@ def test_reporter():
         yield lambda: eq(got.kineticEnergy.shape, (50,))
         yield lambda: eq(got.coordinates.shape, (50, 22, 3))
         yield lambda: eq(got.velocities.shape, (50, 22, 3))
-        yield lambda: eq(got.cell_lengths, 2 * np.ones((50, 3)))
+        yield lambda: eq(got.cell_lengths, 2 * np.ones((50, 3)))  # 2 nanometers
         yield lambda: eq(got.cell_angles, 90*np.ones((50, 3)))
         yield lambda: eq(got.time, 0.002*2*(1+np.arange(50)))
 
@@ -97,7 +97,7 @@ def test_reporter():
 
     with NetCDFTrajectoryFile(ncfile) as f:
         xyz, time, cell_lengths, cell_angles = f.read()
-        yield lambda: eq(cell_lengths, 2 * np.ones((50, 3)))
+        yield lambda: eq(cell_lengths, 20 * np.ones((50, 3)))  # 20 angstroms
         yield lambda: eq(cell_angles, 90*np.ones((50, 3)))
         yield lambda: eq(time, 0.002*2*(1+np.arange(50)))
 
@@ -105,6 +105,8 @@ def test_reporter():
     dcd_traj = trajectory.load(dcdfile, top=get_fn('native.pdb'))
     netcdf_traj = trajectory.load(ncfile, top=get_fn('native.pdb'))
     
+    # we don't have to convert units here, because trajectory.load already
+    # handles that
     yield lambda: eq(hdf5_traj.xyz, netcdf_traj.xyz)
     yield lambda: eq(hdf5_traj.unitcell_vectors, netcdf_traj.unitcell_vectors)
     yield lambda: eq(hdf5_traj.time, netcdf_traj.time)
@@ -169,7 +171,7 @@ def test_reporter_subset():
 
     with NetCDFTrajectoryFile(ncfile) as f:
         xyz, time, cell_lengths, cell_angles = f.read()
-        yield lambda: eq(cell_lengths, 2 * np.ones((50, 3)))
+        yield lambda: eq(cell_lengths, 20 * np.ones((50, 3)))
         yield lambda: eq(cell_angles, 90*np.ones((50, 3)))
         yield lambda: eq(time, 0.002*2*(1+np.arange(50)))
         yield lambda: eq(xyz.shape, (50, len(atomSubset), 3))
@@ -178,6 +180,8 @@ def test_reporter_subset():
     dcd_traj = trajectory.load(dcdfile, top=hdf5_traj)
     netcdf_traj = trajectory.load(ncfile, top=hdf5_traj)
     
+    # we don't have to convert units here, because trajectory.load already handles
+    # that
     yield lambda: eq(hdf5_traj.xyz, netcdf_traj.xyz)
     yield lambda: eq(hdf5_traj.unitcell_vectors, netcdf_traj.unitcell_vectors)
     yield lambda: eq(hdf5_traj.time, netcdf_traj.time)
