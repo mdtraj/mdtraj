@@ -30,8 +30,7 @@ from mdtraj.binpos import BINPOSTrajectoryFile
 from mdtraj.pdb import PDBTrajectoryFile
 
 from .topology import Topology
-from .trajectory import Trajectory  # needs to be last
-from .trajectory import load
+from .trajectory import *
 
 def test():
     import nose

@@ -1,5 +1,5 @@
 BINPOSTrajectoryFile
-=================
+====================
 
 .. currentmodule:: mdtraj
 

@@ -40,6 +40,10 @@ try:
 except ImportError:
     HAVE_OPENMM = False
 
+
+__all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr',
+           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_xml']
+
 ##############################################################################
 # Globals
 ##############################################################################
@@ -127,7 +131,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                '.trr': load_trr,
                '.pdb': load_pdb,
                '.dcd': load_dcd,
-               '.h5': load_hdf,
+               '.h5': load_hdf5,
                '.lh5': _load_legacy_hdf,
                '.binpos': load_binpos,
                '.ncdf': load_netcdf,
@@ -358,9 +362,9 @@ def load_dcd(filename, top=None):
     return trajectory
 
 
-def load_hdf(filename, stride=None, frame=None):
+def load_hdf5(filename, stride=None, frame=None):
     """
-    Load an hdf file.
+    Load an hdf5  trajectory file.
 
     Parameters
     ----------
@@ -428,7 +432,7 @@ def _load_legacy_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
     import tables
 
     if not isinstance(filename, basestring):
-        raise TypeError('filename must be of type string for load_hdf. '
+        raise TypeError('filename must be of type string for load_hdf5. '
             'you supplied %s' % type(filename))
 
     F = tables.File(filename, 'r')
@@ -619,49 +623,152 @@ def load_netcdf(filename, top=None, stride=None):
 class Trajectory(object):
     """Container object for a molecular dynamics trajectory
 
+    A Trajectory represents a collection of one or more molecular structures,
+    generally (but not necessarily) from a molecular dynamics trajectory. The
+    Trajectory stores a number of fields describing the system through time,
+    including the cartesian coordinates of each atoms (``xyz``), the topology
+    of the molecular system (``topology``), and information about the
+    unitcell if appropriate (``unitcell_vectors``, ``unitcell_length``,
+    ``unitcell_angles``).
+
+    A Trajectory should generally be constructed by loading a file from disk.
+    Trajectories can be loaded from (and saved to) the PDB, XTC, TRR, DCD,
+    binpos, NetCDF or MDTraj HDF5 formats.
+
+    Trajectory supports fancy indexing, so you can extract one or more frames
+    from a Trajectory as a separate trajectory. For example, to form a
+    trajectory with every other frame, you can slice with ``traj[::2]``.
+
+    Trajectory uses the nanometers, angstroms & picoseconds unit system.
+
+    Examples
+    --------
+    >>> # loading a trajectory
+    >>> import mdtraj as md
+    >>> md.load('trajectory.xtc', top='native.pdb')           # doctest: +SKIP
+    <mdtraj.Trajectory with 1000 frames, 22 atoms at 0x1058a73d0>
+
+    >>> # slicing a trajectory
+    >>> t = md.load('trajectory.h5')                          # doctest: +SKIP
+    >>> print t                                               # doctest: +SKIP
+    <mdtraj.Trajectory with 100 frames, 22 atoms>
+    >>> print t[::2]                                          # doctest: +SKIP
+    <mdtraj.Trajectory with 50 frames, 22 atoms>
+
+    >>> # calculating the average distance between two atoms
+    >>> import mdtraj as md
+    >>> import numpy as np
+    >>> t = md.load('trajectory.h5')                                              # doctest: +SKIP
+    >>> np.mean(np.sqrt(np.sum((t.xyz[:, 0, :] - t.xyz[:, 21, :])**2, axis=1)))   # doctest: +SKIP
+
+    See Also
+    --------
+    mdtraj.load
+
     Attributes
     ----------
     n_frames : int
     n_atoms : int
     n_residues : int
-    time : np.ndarray dims=1, shape=(n_frames)
+    time : np.ndarray, shape=(n_frames,)
     timestep : float
+    topology : md.Topology
     top : md.Topology
-
+    xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
+    unitcell_vectors : {np.ndarray, shape=(n_frames, 3, 3), None}
+    unitcell_lengths : {np.ndarray, shape=(n_frames, 3), None}
+    unitcell_angles : {np.ndarray, shape=(n_frames, 3), None}
     """
 
     @property
+    def topology(self):
+        """Topology of the system, describing the organization of atoms into residues, bonds, etc
+
+        Returns
+        -------
+        topology : md.Topology
+            The topology object, describing the organization of atoms into
+            residues, bonds, etc
+        """
+
+        return self._topology
+
+    @topology.setter
+    def topology(self, value):
+        "Set the topology of the system, describing the organization of atoms into residues, bonds, etc"
+        # todo: more typechecking
+        self._topology = value
+
+    @property
     def n_frames(self):
-        "Number of frames"
+        """Number of frames in the trajectory
+
+        Returns
+        -------
+        n_frames : int
+            The number of frames in the trajectory
+        """
         return self._xyz.shape[0]
 
     @property
     def n_atoms(self):
-        "Number of atoms in the trajectory"
+        """Number of atoms in the trajectory
+
+        Returns
+        -------
+        n_atoms : int
+            The number of atoms in the trajectory
+        """
         return self._xyz.shape[1]
 
     @property
     def n_residues(self):
-        "Number of residues (amino acids) in the trajectory"
+        """Number of residues (amino acids) in the trajectory
+
+        Returns
+        -------
+        n_residues : int
+            The number of residues in the trajectory's topology
+        """
         return sum([1 for r in self.top.residues()])
 
     @property
     def top(self):
-        "Alias for self.topology"
-        return self.topology
+        """Alias for self.topology, describing the organization of atoms into residues, bonds, etc
+
+        Returns
+        -------
+        topology : md.Topology
+            The topology object, describing the organization of atoms into
+            residues, bonds, etc
+        """
+        return self._topology
 
     @property
     def timestep(self):
-        "Timestep between frames, in picoseconds"
+        """Timestep between frames, in picoseconds
+
+        Returns
+        -------
+        timestep : float
+            The timestep between frames, in picoseconds.
+        """
         return self._time[1] - self._time[0]
 
     @property
     def time(self):
-        "The simulation time corresponding to each frame, in picoseconds"
+        """The simulation time corresponding to each frame, in picoseconds
+
+        Returns
+        -------
+        time : np.ndarray, shape=(n_frames,)
+            The simulation time corresponding to each frame, in picoseconds
+        """
         return self._time
 
     @time.setter
     def time(self, value):
+        "Set the simulation time corresponding to each frame, in picoseconds"
         if isinstance(value, list):
             value = np.array(value)
 
@@ -675,16 +782,15 @@ class Trajectory(object):
 
     @property
     def unitcell_vectors(self):
-        """Get the vectors that define the shape of the unit cell
-        in each frame
+        """The vectors that define the shape of the unit cell in each frame
 
         Returns
         -------
         vectors : np.ndarray, shape(n_frames, 3, 3)
             Vectors definiing the shape of the unit cell in each frame.
             The semantics of this array are that the shape of the unit cell
-            in frame `i` are given by the three vectors, value[i, 0, :],
-            `value[i, 1, :]`, and `value[i, 2, :]`.
+            in frame ``i`` are given by the three vectors, ``value[i, 0, :]``,
+            ``value[i, 1, :]``, and ``value[i, 2, :]``.
         """
         if self._unitcell_lengths is None or self._unitcell_angles is None:
             return None
@@ -706,10 +812,9 @@ class Trajectory(object):
         Parameters
         ----------
         vectors : tuple of three arrays, each of shape=(n_frames, 3)
-
             The semantics of this array are that the shape of the unit cell
-            in frame `i` are given by the three vectors, value[i, 0, :],
-            `value[i, 1, :]`, and `value[i, 2, :]`.
+            in frame ``i`` are given by the three vectors, ``value[i, 0, :]``,
+            ``value[i, 1, :]``, and ``value[i, 2, :]``.
         """
         if vectors is None:
             self._unitcell_lengths = None
@@ -730,33 +835,28 @@ class Trajectory(object):
 
     @property
     def unitcell_lengths(self):
-        """Get the lengths that define the shape of the unit
-        cell in each frame.
+        """Lengths that define the shape of the unit cell in each frame.
 
         Returns
         -------
-        lengths : np.ndarray, shape=(n_frames, 3)
-            Parameters describing the shape of the unit cell in each frame. The
-            return value is a six field  record array. The records 'a', 'b', and 'c'
-            give the length of the three unit cell vectors, 'alpha' gives the
-            angle between vectors **b** and **c**, beta gives the angle between
-            vectors **c** and **a**, and gamma gives the angle between vectors
-            **a** and **b**. The angles are in degrees.
+        lengths : {np.ndarray, shape=(n_frames, 3), None}
+            Lengths of the unit cell in each frame, in nanometers, or None
+            if the Trajectory contains no unitcell information.
         """
         return self._unitcell_lengths
 
     @property
     def unitcell_angles(self):
-        """Get the angles that define the shape of the unit
-        cell in each frame.
+        """Angles that define the shape of the unit cell in each frame.
 
         Returns
         -------
         lengths : np.ndarray, shape=(n_frames, 3)
-            'alpha' gives the angle between vectors **b** and **c**, beta
-            gives the angle between vectors **c** and **a**, and gamma gives
-            the angle between vectors **a** and **b**. The angles are in
-            degrees.
+            The angles between the three unitcell vectors in each frame,
+            ``alpha``, ``beta``, and ``gamma``. ``alpha' gives the angle
+            between vectors ``b`` and ``c``, ``beta`` gives the angle between
+            vectors ``c`` and ``a``, and ``gamma`` gives the angle between
+            vectors ``a`` and ``b``. The angles are in degrees.
         """
         return self._unitcell_angles
 
@@ -767,8 +867,8 @@ class Trajectory(object):
         Parameters
         ----------
         value : np.ndarray, shape=(n_frames, 3)
-            The distances a, b, and c that define the shape of the unit cell in
-            each frame.
+            The distances ``a``, ``b``, and ``c`` that define the shape of the
+            unit cell in each frame, or None
         """
         self._unitcell_lengths = ensure_type(value, np.float32, 2,
             'unitcell_lengths', can_be_none=True, shape=(len(self), 3),
@@ -781,8 +881,9 @@ class Trajectory(object):
         Parameters
         ----------
         value : np.ndarray, shape=(n_frames, 3)
-            The angles alpha, beta and gamma that define the shape of the
-            unit cell in each frame. The angles should be in **degrees*
+            The angles ``alpha``, ``beta`` and ``gamma`` that define the
+            shape of the unit cell in each frame. The angles should be in
+            degrees.
         """
         self._unitcell_angles = ensure_type(value, np.float32, 2,
             'unitcell_angles', can_be_none=True, shape=(len(self), 3),
@@ -790,10 +891,19 @@ class Trajectory(object):
 
     @property
     def xyz(self):
+        """Cartesian coordinates of each atom in each simulation frame
+
+        Returns
+        -------
+        xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
+            A three dimensional numpy array, with the cartesian coordinates
+            of each atoms in each frame.
+        """
         return self._xyz
 
     @xyz.setter
     def xyz(self, value):
+        "Set the cartesian coordinates of each atom in each simulation frame"
         if hasattr(self, 'topology'):
             shape = (None, self.topology._numAtoms, 3)
         else:
@@ -810,9 +920,15 @@ class Trajectory(object):
         "Concatenate two trajectories"
         return self.join(other)
 
+    def __str__(self):
+        return "<mdtraj.Trajectory with %d frames, %d atoms>" % (self.n_frames, self.n_atoms)
+
+    def __repr__(self):
+        return "<mdtraj.Trajectory with %d frames, %d atoms at 0x%02x>" % (self.n_frames, self.n_atoms, id(self))
+
+
     def join(self, other, check_topology=True, discard_overlapping_frames=False):
-        """
-        Join two trajectories together
+        """Join two trajectories together
 
         This method can also be called by using `self + other`
 
@@ -873,7 +989,7 @@ class Trajectory(object):
 
         # use this syntax so that if you subclass Trajectory,
         # the subclass's join() will return an instance of the subclass
-        return self.__class__(xyz, deepcopy(self.topology), time=time,
+        return self.__class__(xyz, deepcopy(self._topology), time=time,
             unitcell_lengths=lengths, unitcell_angles=angles)
 
     def __getitem__(self, key):
@@ -881,8 +997,7 @@ class Trajectory(object):
         return self.slice(key)
 
     def slice(self, key, copy=True):
-        """
-        Slice trajectory, by extracting one or more frames into a separate object
+        """Slice trajectory, by extracting one or more frames into a separate object
 
         This method can also be called using index bracket notation, i.e
         `traj[1] == traj.slice(1)`
@@ -908,7 +1023,7 @@ class Trajectory(object):
         if copy:
             xyz = xyz.copy()
             time = time.copy()
-            topology = deepcopy(self.topology)
+            topology = deepcopy(self._topology)
 
             if self.unitcell_angles is not None:
                 unitcell_angles = unitcell_angles.copy()
@@ -939,17 +1054,22 @@ class Trajectory(object):
                 "in topology (%s) don't match" % (self.n_atoms, topology._numAtoms))
 
     def openmm_positions(self, frame):
-        """
-        Return OpenMM compatable positions of a single frame.
+        """OpenMM-compatable positions of a single frame.
+
+        Examples
+        --------
+        >>> t = md.load('trajectory.h5')                      # doctest: +SKIP
+        >>> context.setPositions(t.openmm_positions(0))       # doctest: +SKIP
 
         Parameters
         ----------
         frame : int
-            Which trajectory frame to return.
+            The index of frame of the trajectory that you wish to extract
 
         Returns
         -------
-        positions : list of XYZ coordinates of specific trajectory frame, formatted
+        positions : list
+            The cartesian coordinates of specific trajectory frame, formatted
             for input to OpenMM
 
         """
@@ -964,7 +1084,12 @@ class Trajectory(object):
         return Pos * nanometer
 
     def openmm_boxes(self, frame):
-        """Return OpenMM compatable box vectors of a single frame.
+        """OpenMM-compatable box vectors of a single frame.
+
+        Examples
+        --------
+        >>> t = md.load('trajectory.h5')                          # doctest: +SKIP
+        >>> context.setPeriodicBoxVectors(t.openmm_positions(0))  # doctest: +SKIP
 
         Parameters
         ----------
@@ -973,8 +1098,9 @@ class Trajectory(object):
 
         Returns
         -------
-        box : list of XYZ coordinates of periodic box vectors, formatted
-            for input to OpenMM
+        box : tuple
+            The periodic box vectors for this frame, formatted for input to
+            OpenMM.
         """
         # copied from Lee-Ping Wang's Molecule.py
         if not HAVE_OPENMM:
@@ -991,8 +1117,7 @@ class Trajectory(object):
     # im not really sure if the load function should be just a function or a method on the class
     # so effectively, lets make it both?
     def load(filenames, **kwargs):
-        """
-        Load a trajectory from disk
+        """Load a trajectory from disk
 
         Parameters
         ----------
@@ -1006,14 +1131,13 @@ class Trajectory(object):
         return load(filenames, **kwargs)
 
     def save(self, filename, **kwargs):
-        """
-        Save trajectory to disk, in a format determined by the filename
+        """Save trajectory to disk, in a format determined by the filename extension
 
         Parameters
         ----------
         filename : str
-            filesystem path in which to save the trajectory. The extension will be parsed and will
-            control the format.
+            filesystem path in which to save the trajectory. The extension will
+            be parsed and will control the format.
 
         Other Parameters
         ----------------
@@ -1031,7 +1155,7 @@ class Trajectory(object):
                   '.trr': self.save_trr,
                   '.pdb': self.save_pdb,
                   '.dcd': self.save_dcd,
-                  '.h5': self.save_h5,
+                  '.h5': self.save_hdf5,
                   '.binpos': self.save_binpos,
                   '.nc': self.save_netcdf,
                   '.ncdf': self.save_netcdf}
@@ -1046,9 +1170,8 @@ class Trajectory(object):
         # run the saver, and return whatever output it gives
         return saver(filename)
 
-    def save_h5(self, filename, force_overwrite=True):
-        """
-        Save trajectory to MDTraj HDF5 format
+    def save_hdf5(self, filename, force_overwrite=True):
+        """Save trajectory to MDTraj HDF5 format
 
         Parameters
         ----------
@@ -1064,8 +1187,7 @@ class Trajectory(object):
             f.topology = self.topology
 
     def save_pdb(self, filename, force_overwrite=True):
-        """
-        Save trajectory to RCSB PDB format
+        """Save trajectory to RCSB PDB format
 
         Parameters
         ----------
@@ -1094,8 +1216,7 @@ class Trajectory(object):
 
 
     def save_xtc(self, filename, force_overwrite=True):
-        """
-        Save trajectory to Gromacs XTC format
+        """Save trajectory to Gromacs XTC format
 
         Parameters
         ----------
@@ -1108,8 +1229,7 @@ class Trajectory(object):
             f.write(xyz=self.xyz, time=self.time, box=self.unitcell_vectors)
 
     def save_trr(self, filename, force_overwrite=True):
-        """
-        Save trajectory to Gromacs TRR format
+        """Save trajectory to Gromacs TRR format
 
         Notes
         -----
@@ -1127,8 +1247,7 @@ class Trajectory(object):
             f.write(xyz=self.xyz, time=self.time, box=self.unitcell_vectors)
 
     def save_dcd(self, filename, force_overwrite=True):
-        """
-        Save trajectory to CHARMM/NAMD DCD format
+        """Save trajectory to CHARMM/NAMD DCD format
 
         Parameters
         ----------
@@ -1148,8 +1267,7 @@ class Trajectory(object):
 
 
     def save_binpos(self, filename, force_overwrite=True):
-        """
-        Save trajectory to AMBER BINPOS format
+        """Save trajectory to AMBER BINPOS format
 
         Parameters
         ----------
@@ -1182,7 +1300,7 @@ class Trajectory(object):
 
     def center_coordinates(self):
         """Remove the center of mass from each frame in trajectory.
-        
+
         This method acts inplace on the trajectory
         """
         for x in self._xyz:

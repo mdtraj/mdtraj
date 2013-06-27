@@ -1,5 +1,5 @@
 NetCDFTrajectoryFile
-=================
+====================
 
 .. currentmodule:: mdtraj
 
