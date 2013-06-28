@@ -25,7 +25,9 @@ https://github.com/rmcgibbo/mdtraj/issues/36
 # stdlib
 import os
 import warnings
-import functools
+import inspect
+from functools import wraps
+
 import operator
 from collections import namedtuple
 try:
@@ -67,15 +69,16 @@ def ensure_mode(*m):
         def method_that_is_only_allowed_to_be_called_in_write_mode(self):
             print 'i must be in write mode!'
     """
-
     def inner(f):
-        @functools.wraps(f)
+        @wraps(f)
         def wrapper(*args, **kwargs):
             # args[0] is self on the method
             if args[0].mode in m:
                 return f(*args, **kwargs)
             raise ValueError('This operation is only available when a file '
                              'is open in mode="%s".' % args[0].mode)
+        # hack for to set argpsec for our custon numpydoc sphinx extension
+        setattr(wrapper, '__argspec__', inspect.getargspec(f))
         return wrapper
     return inner
 
@@ -116,6 +119,17 @@ class HDF5TrajectoryFile(object):
     compression : {'zlib', None}
         Apply compression to the file? This will save space, and does not
         cost too many cpu cycles, so it's recommended.
+
+    Attributes
+    ----------
+    root
+    title
+    application
+    topology
+    randomState
+    forcefield
+    reference
+    constraints
 
     """
     distance_unit = 'nanometers'
@@ -165,7 +179,7 @@ class HDF5TrajectoryFile(object):
     @property
     @ensure_mode('r')
     def root(self):
-        """Direct access to the root group of the underlying Tables HDF5 file.
+        """Direct access to the root group of the underlying Tables HDF5 file handle.
 
         This can be used for random or specific access to the underlying arrays
         on disk
@@ -178,7 +192,7 @@ class HDF5TrajectoryFile(object):
 
     @property
     def title(self):
-        """Get the title attribute"""
+        """User-defined title for the data represented in the file"""
         if hasattr(self._handle.root._v_attrs, 'title'):
             return self._handle.root._v_attrs.title
         return None
@@ -186,6 +200,7 @@ class HDF5TrajectoryFile(object):
     @title.setter
     @ensure_mode('w', 'a')
     def title(self, value):
+        """Set the user-defined title for the data represented in the file"""
         self._handle.root._v_attrs.title = str(value)
 
     #####################################################
@@ -194,6 +209,7 @@ class HDF5TrajectoryFile(object):
 
     @property
     def application(self):
+        "Suite of programs that created the file"
         if hasattr(self._handle.root._v_attrs, 'application'):
             return self._handle.root._v_attrs.application
         return None
@@ -201,6 +217,7 @@ class HDF5TrajectoryFile(object):
     @application.setter
     @ensure_mode('w', 'a')
     def application(self, value):
+        "Set the suite of programs that created the file"
         self._handle.root._v_attrs.application = str(value)
 
     #####################################################
@@ -305,6 +322,7 @@ class HDF5TrajectoryFile(object):
 
     @property
     def randomState(self):
+        "State of the creators internal random number generator at the start of the simulation"
         if hasattr(self._handle.root._v_attrs, 'randomState'):
             return self._handle.root._v_attrs.randomState
         return None
@@ -312,6 +330,7 @@ class HDF5TrajectoryFile(object):
     @randomState.setter
     @ensure_mode('w', 'a')
     def randomState(self, value):
+        "Set the state of the creators internal random number generator at the start of the simulation"
         self._handle.root._v_attrs.randomState = str(value)
 
     #####################################################
@@ -320,6 +339,7 @@ class HDF5TrajectoryFile(object):
 
     @property
     def forcefield(self):
+        "Description of the hamiltonian used. A short, human readable string, like AMBER99sbildn."
         if hasattr(self._handle.root._v_attrs, 'forcefield'):
             return self._handle.root._v_attrs.forcefield
         return None
@@ -327,6 +347,7 @@ class HDF5TrajectoryFile(object):
     @forcefield.setter
     @ensure_mode('w', 'a')
     def forcefield(self, value):
+        "Set the description of the hamiltonian used. A short, human readable string, like AMBER99sbildn."
         self._handle.root._v_attrs.forcefield = str(value)
 
     #####################################################
@@ -335,6 +356,7 @@ class HDF5TrajectoryFile(object):
 
     @property
     def reference(self):
+        "A published reference that documents the program or parameters used to generate the data"
         if hasattr(self._handle.root._v_attrs, 'reference'):
             return self._handle.root._v_attrs.reference
         return None
@@ -342,6 +364,7 @@ class HDF5TrajectoryFile(object):
     @reference.setter
     @ensure_mode('w', 'a')
     def reference(self, value):
+        "Set a published reference that documents the program or parameters used to generate the data"
         self._handle.root._v_attrs.reference = str(value)
 
     #####################################################
@@ -350,6 +373,16 @@ class HDF5TrajectoryFile(object):
 
     @property
     def constraints(self):
+        """Constraints applied to the bond lengths
+
+        Returns
+        -------
+        constraints : {None, np.array, dtype=[('atom1', '<i4'), ('atom2', '<i4'), ('distance', '<f4')])}
+            A one dimensional array with the a int, int, float type giving
+            the index of the two atoms involved in the constraints and the
+            distance of the constraint. If no constraint information
+            is in the file, the return value is None.
+        """
         if hasattr(self._handle.root, 'constraints'):
             return self._handle.root.constraints[:]
         return None
@@ -357,6 +390,15 @@ class HDF5TrajectoryFile(object):
     @constraints.setter
     @ensure_mode('w', 'a')
     def constraints(self, value):
+        """Set the constraints applied to bond lengths
+
+        Returns
+        -------
+        valu : np.array, dtype=[('atom1', '<i4'), ('atom2', '<i4'), ('distance', '<f4')])
+            A one dimensional array with the a int, int, float type giving
+            the index of the two atoms involved in the constraints and the
+            distance of the constraint.
+        """
         dtype = np.dtype([
                 ('atom1', np.int32),
                 ('atom2', np.int32),
@@ -370,7 +412,8 @@ class HDF5TrajectoryFile(object):
             self._handle.createTable(where='/', name='constraints',
                                      description=dtype)
 
-        self._handle.root.constraints[:] = value
+        self._handle.root.constraints.truncate(0)
+        self._handle.root.constraints.append(value)
 
     #####################################################
     # read/write methods for file-like behavior

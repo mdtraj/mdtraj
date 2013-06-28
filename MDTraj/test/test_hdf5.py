@@ -109,6 +109,25 @@ def test_topology():
         topology.equal(f.topology, top)
 
 
+def test_constraints():
+    c = np.array([(1,2,3.5)], dtype=np.dtype([('atom1', np.int32), ('atom2', np.int32), ('distance', np.float32)]))
+
+    with HDF5TrajectoryFile(temp, 'w') as f:
+        f.constraints = c
+
+    with HDF5TrajectoryFile(temp) as f:
+        yield lambda: eq(f.constraints, c)
+
+
+def test_constraints2():
+    c = np.array([(1,2,3.5)], dtype=np.dtype([('atom1', np.int32), ('atom2', np.int32), ('distance', np.float32)]))
+
+    with HDF5TrajectoryFile(temp, 'w') as f:
+        f.constraints = c
+        f.constraints = c
+
+    with HDF5TrajectoryFile(temp) as f:
+        yield lambda: eq(f.constraints, c)
 def test_read_0():
     coordinates = np.random.randn(4, 10,3)
     with HDF5TrajectoryFile(temp, 'w') as f:
