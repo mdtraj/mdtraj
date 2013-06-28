@@ -27,8 +27,9 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)"
 
-github: html
+github: view
 	cd $(BUILDDIR); \
+	git add . ; \
 	git commit -am "new docs built"; \
 	git push origin gh-pages
 
@@ -39,7 +40,7 @@ clean:
 	rm -rf $(BUILDDIR)/*
 	mv tmp.git $(BUILDDIR)/.git
 	mv tmp.nojekyll $(BUILDDIR)/.nojekyll 
-	
+
 # dirhtml:
 # 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
 # 	@echo

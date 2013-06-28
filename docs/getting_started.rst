@@ -79,8 +79,7 @@ Linux
 ++++++
 If you're on ubuntu and have root, you can install everything through your package manager. ::
 
-  $ sudo apt-get install libhdf5-serial-dev python-dev python-numpy python-nose python-setuptools cython python-numexpr python-tables netcdf-bin libnetcdf-dev python-netcdf python-networkx
-  $ sudo easy_install netcdf4
+  $ sudo apt-get install libhdf5-serial-dev python-dev python-numpy python-nose python-setuptools cython python-numexpr python-tables netcdf-bin libnetcdf-dev python-netcdf python-networkx python-netcdf
 
 Mac
 +++
