@@ -27,9 +27,9 @@ DihedralDocStringTester = DocStringFormatTester(mdtraj.geometry.dihedral)
 AngleDocStringTester = DocStringFormatTester(mdtraj.geometry.angle)
 
 def test_rg():
-    t0 = load(get_fn('frame0.lh5'))
+    t0 = load(get_fn('traj.h5'))
     Rg = mdtraj.geometry.rg.compute_rg(t0)
-    Rg0 = np.loadtxt(get_fn("Rg_frame0_ref.dat"))
+    Rg0 = np.loadtxt(get_fn("Rg_traj_ref.dat"))
     eq(Rg, Rg0)
 
 
@@ -45,10 +45,10 @@ np.savetxt("Rg_frame0_ref.dat", Rg)
 """
 
 def test_distances():
-    t0 = load(get_fn('frame0.lh5'))
+    t0 = load(get_fn('traj.h5'))
     atom_pairs = np.loadtxt(get_fn("atom_pairs.dat"),'int')
     distances = mdtraj.geometry.distance.compute_distances(t0, atom_pairs)
-    distances0 = np.loadtxt(get_fn("atom_distances_frame0_ref.dat"))
+    distances0 = np.loadtxt(get_fn("atom_distances_traj_ref.dat"))
     eq(distances, distances0)
 
 """

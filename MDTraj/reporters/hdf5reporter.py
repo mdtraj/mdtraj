@@ -30,10 +30,46 @@ from mdtraj.reporters.basereporter import _BaseReporter
 
 class HDF5Reporter(_BaseReporter):
     """HDF5Reporter stores a molecular dynamics trajectory in the HDF5 format.
-    The atomic positions, periodic box vectors, and time index are saved.
 
-    Example
-    -------
+    This object supports saving all kinds of information from the simulation --
+    more than any other trajectory format. In addition to all of the options,
+    the topology of the system will also (of course) be stored in the file. All
+    of the information is compressed, so the size of the file is not much
+    different than DCD, despite the added flexibility.
+
+    Parameters
+    ----------
+    file : str, or HDF5Trajectory
+        Either an open HDF5Trajecory object to write to, or a string
+        specifying the filename of a new HDF5 file to save the trajectory to.
+    reportInterval : int
+        The interval (in time steps) at which to write frames.
+    coordinates : bool
+        Whether to write the coordinates to the file.
+    time : bool
+        Whether to write the current time to the file.
+    cell : bool
+        Whether to write the current unit cell dimensions to the file.
+    potentialEnergy : bool
+        Whether to write the potential energy to the file.
+    kineticEnergy : bool
+        Whether to write the kinetic energy to the file.
+    temperature : bool
+        Whether to write the instantaneous temperature to the file.
+    atomSubset : array_like, default=None
+        Only write a subset of the atoms, with these (zero based) indices
+        to the file. If None, *all* of the atoms will be written to disk.
+
+    Notes
+    -----
+    If you use the ``atomSubset`` option to write only a subset of the atoms
+    to disk, the ``kineticEnergy``, ``potentialEnergy``, and ``temperature``
+    fields will not change. They will still refer to the energy and temperature
+    of the *whole* system, and are not "subsetted" to only include the energy
+    of your subsystem.
+
+    Examples
+    --------
     >>> simulation = Simulation(topology, system, integrator) # doctest: +SKIP
     >>> h5_reporter = HDF5Reporter('traj.h5', 100)            # doctest: +SKIP
     >>> simulation.reporters.append(h5_reporter)              # doctest: +SKIP
@@ -49,37 +85,6 @@ class HDF5Reporter(_BaseReporter):
                  cell=True, potentialEnergy=True, kineticEnergy=True,
                  temperature=True, velocities=False, atomSubset=None):
         """Create a HDF5Reporter.
-
-        Parameters
-        ----------
-        file : str, or HDF5Trajectory
-            Either an open HDF5Trajecory object to write to, or a string
-            specifying the filename of a new HDF5 file
-        reportInterval : int
-            The interval (in time steps) at which to write frames.
-        coordinates : bool
-            Whether to write the coordinates to the file.
-        time : bool
-            Whether to write the current time to the file.
-        cell : bool
-            Whether to write the current unitcell dimensions to the file.
-        potentialEnergy : bool
-            Whether to write the potential energy to the file.
-        kineticEnergy : bool
-            Whether to write the kinetic energy to the file.
-        temperature : bool
-            Whether to write the instantaneous temperature to the file.
-        atomSubset : array_like, default=None
-            Only write a subset of the atoms, with these (zero based) indices
-            to the file. If None, *all* of the atoms will be written to disk.
-
-        Notes
-        -----
-        If you use the atomSubset option to write only a subset of the atoms
-        to disk, the kineticEnergy, potentialEnergy, and temperature fields will
-        not change. They will still refer to the energy and temperature of the *whole*
-        system, and are not "subsetted" to only include the energy of your
-        subsystem.
         """
         super(HDF5Reporter, self).__init__(file, reportInterval,
             coordinates, time, cell, potentialEnergy, kineticEnergy,
