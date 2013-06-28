@@ -305,7 +305,10 @@ class HDF5TrajectoryFile(object):
                     chain_dict['residues'].append(residue_dict)
                 topology_dict['chains'].append(chain_dict)
 
-            for atom1, atom2 in topology_object.bonds:
+            bond_iter = topology_object.bonds
+            if not hasattr(bond_iter, '__iter__'):
+                 bond_iter = bond_iter()
+            for atom1, atom2 in bond_iter:
                 topology_dict['bonds'].append([
                     int(atom1.index),
                     int(atom2.index)
