@@ -11,14 +11,32 @@ I like ``flake8``. There's also pylint. ::
 
   pip install flake8 pylint
 
-There are a few stupid flake8 errors that you can overlook, but most of them should be corrected. The ones that are probably alright to skip are E501 (line too ling). Sometimes you just need more than 80 characters. Readability is what counts. Use your judgement. Also, I'm not convinced that whitespace after a comma is always necessary (E231). You can ignore these two warnings by running ``flake8`` with as ::
+There are a few stupid flake8 errors that you can overlook, but most of them should be corrected. The ones that are probably alright to skip are E501 (line too ling), E231, and a few others. Sometimes you just need more than 80 characters. Readability is what counts. Use your judgement. But err on the side of following PEP8. To ignore specific warnings with ``flake8``, you can run it as so. ::
 
   flake8 --ignore=errors=E501,E231 MDTraj/
+
+Properties
+----------
+
+This is not java. Don't write ``get_myattribute`` and ``set_myattribute`` methods. Use the ``@property`` decorator. See the `atropy coding guidelines <http://docs.astropy.org/en/latest/development/codeguide.html#properties-vs-get-set>`_ for details.
+
+
+Writing Tests
+-------------
+Untested code is broken code. So testing isn't really a feature of programming style, it's about correctness. Even tested code `might` be broken code, but untested code is by definition broken, and that's worse. Writing tests is annoying, but it pays off big time. `Nose <https://nose.readthedocs.org/en/latest/>`_ makes writing tests pretty easy, and MDTraj has some testing infrastructure to make it easier.
+
+Tests should go in a file named ``test_modulename.py``, either in ``MDTraj/test/`` or in the ``test`` directory in a subpackage, like ``MDTraj/geometry/test``. If a subpackage only contains one test module, then it's fine to put the test module in the package directory directly, without making a ``test`` subdirectory. This is how the ``mdtraj.pdb`` subpackage's tests are organized currently.
+
+MDTraj contains some infrastructure to help with testing. The most useful is the function ``mdtraj.testing.eq``,
+
+.. autofunction:: mdtraj.testing.eq
+
+.. autofunction:: mdtraj.testing.get_fn
 
 Docstrings
 ----------
 
-Most of the information in the documentation is pulled directly from the docstrings, which means that the docstrings are really important. In order
+Every function should have a docstring. This is critical. Most of the information in the documentation is pulled directly from the docstrings, which means that the docstrings are really important. In order
 to have sphinx properly parse the docstrings, they need to be written in the numpy format. A detailed description of the numpy docstring format is available `here <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_.
 
 Cython Docstrings

@@ -28,7 +28,7 @@ except ImportError:
     HAVE_OPENMM = False
 
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
+from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
 from mdtraj.reporters import hdf5reporter, netcdfreporter
 from mdtraj.reporters import HDF5Reporter, NetCDFReporter, DCDReporter
 from mdtraj import HDF5TrajectoryFile, NetCDFTrajectoryFile
@@ -43,7 +43,7 @@ def teardown_module(module):
     shutil.rmtree(dir)
 
 
-@np.testing.decorators.skipif(not HAVE_OPENMM, 'No OpenMM')
+@skipif(not HAVE_OPENMM, 'No OpenMM')
 def test_reporter():
     tempdir = os.path.join(dir, 'test1')
     os.makedirs(tempdir)
@@ -113,7 +113,7 @@ def test_reporter():
     yield lambda: eq(dcd_traj.unitcell_vectors, hdf5_traj.unitcell_vectors)
 
 
-@np.testing.decorators.skipif(not HAVE_OPENMM, 'No OpenMM')
+@skipif(not HAVE_OPENMM, 'No OpenMM')
 def test_reporter_subset():
     tempdir = os.path.join(dir, 'test_2')
     os.makedirs(tempdir)

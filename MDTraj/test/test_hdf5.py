@@ -3,9 +3,8 @@ import tempfile
 import os
 from mdtraj import hdf5
 from mdtraj import HDF5TrajectoryFile
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
-from nose.tools import assert_raises
-#DocStringTester = DocStringFormatTester(hdf5)
+from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises, skipif, assert_raises
+# DocStringTester = DocStringFormatTester(hdf5)
 
 try:
     import simtk.unit as units
@@ -70,7 +69,7 @@ def test_write_inconsistent_2():
             f.write(coordinates)
 
 
-@np.testing.decorators.skipif(not HAVE_UNITS)
+@skipif(not HAVE_UNITS, 'No units')
 def test_write_units():
     "simtk.units are automatically converted into MD units for storage on disk"
     coordinates = units.Quantity(np.random.randn(4, 10,3), units.angstroms)
@@ -87,7 +86,7 @@ def test_write_units():
         yield lambda: eq(str(f.root.velocities.attrs['units']), 'nanometers/picosecond')
 
 
-@np.testing.decorators.skipif(not HAVE_UNITS)
+@skipif(not HAVE_UNITS, 'No units')
 def test_write_units_mismatch():
     velocoties = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.picosecond)
 
