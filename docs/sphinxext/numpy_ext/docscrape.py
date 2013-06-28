@@ -432,6 +432,9 @@ class FunctionDoc(NumpyDocString):
             try:
                 # try to read signature
                 argspec = inspect.getargspec(func)
+                if hasattr(func, '__argspec__'):
+                    # hack for decorators that manually set the argspec
+                    argspec = func.__argspec__
                 argspec = inspect.formatargspec(*argspec)
                 argspec = argspec.replace('*', '\*')
                 signature = '%s%s' % (func_name, argspec)

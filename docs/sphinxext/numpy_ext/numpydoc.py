@@ -88,12 +88,12 @@ def mangle_signature(app, what, name, obj,
     if not hasattr(obj, '__doc__'):
         return
 
-    doc = SphinxDocString(pydoc.getdoc(obj))
+    doc = get_doc_object(obj, what)
+
     if doc['Signature']:
         sig = re.sub(u"^[^(]*", u"", doc['Signature'])
         return sig, u''
 
-    return '', ''
 
 def setup(app, get_doc_object_=get_doc_object):
     global get_doc_object
