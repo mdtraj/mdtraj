@@ -19,6 +19,11 @@ class SphinxDocString(NumpyDocString):
         return ['.. rubric:: ' + name, '']
 
     def _str_field_list(self, name):
+        if name == 'Other Parameters':
+            # this makes the "Other Params" part of the table narrow enough
+            # that docutils will put it into a single column. It looks better
+            # this way.
+            return [':Other Params:']
         return [':' + name + ':']
 
     def _str_indent(self, doc, indent=4):
