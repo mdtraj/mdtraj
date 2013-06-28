@@ -198,7 +198,7 @@ def test_restrict_atoms():
     traj = load(get_fn('traj.h5'))
     desired_atom_indices = [0,1,2,5]
     traj.restrict_atoms(desired_atom_indices)
-    atom_indices = [a.index for a in traj.top.atoms()]
+    atom_indices = [a.index for a in traj.top.atoms]
     eq([0,1,2,3], atom_indices)
     eq(traj.xyz.shape[1], 4)
     eq(traj.n_atoms, 4)

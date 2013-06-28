@@ -175,8 +175,8 @@ def load_pdb(filename):
 
     trajectory = Trajectory(xyz=coords, topology=f.topology)
 
-    if f.topology.getUnitCellDimensions() is not None:
-        a, b, c = f.topology.getUnitCellDimensions()
+    if f.unitcell_vectors is not None:
+        a, b, c = f.unitcell_vectors
         # we need to convert the distances from angstroms to nanometers
         unitcell_lengths = np.array([[a / 10.0, b / 10.0, c / 10.0]])
         unitcell_angles = np.array([[90.0, 90.0, 90.0]])
@@ -609,7 +609,7 @@ class Trajectory(object):
         n_residues : int
             The number of residues in the trajectory's topology
         """
-        return sum([1 for r in self.top.residues()])
+        return sum([1 for r in self.top.residues])
 
     @property
     def top(self):

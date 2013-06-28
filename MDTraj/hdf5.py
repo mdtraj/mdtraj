@@ -244,19 +244,19 @@ class HDF5TrajectoryFile(object):
         topology = Topology()
 
         for chain_dict in sorted(topology_dict['chains'], key=operator.itemgetter('index')):
-            chain = topology.addChain()
+            chain = topology.add_chain()
             for residue_dict in sorted(chain_dict['residues'], key=operator.itemgetter('index')):
-                residue = topology.addResidue(residue_dict['name'], chain)
+                residue = topology.add_residue(residue_dict['name'], chain)
                 for atom_dict in sorted(residue_dict['atoms'], key=operator.itemgetter('index')):
                     try:
                         element = elem.get_by_symbol(atom_dict['element'])
                     except KeyError:
                         raise ValueError('The symbol %s isn\'t a valid element' % atom_dict['element'])
-                    topology.addAtom(atom_dict['name'], element, residue)
+                    topology.add_atom(atom_dict['name'], element, residue)
 
-        atoms = list(topology.atoms())
+        atoms = list(topology.atoms)
         for index1, index2 in topology_dict['bonds']:
-            topology.addBond(atoms[index1], atoms[index2])
+            topology.add_bond(atoms[index1], atoms[index2])
 
         return topology
 
@@ -276,18 +276,18 @@ class HDF5TrajectoryFile(object):
                 'chains': [],
                 'bonds': []
             }
-            for chain in topology_object.chains():
+            for chain in topology_object.chains:
                 chain_dict = {
                     'residues': [],
                     'index': int(chain.index)
                 }
-                for residue in chain.residues():
+                for residue in chain.residues:
                     residue_dict = {
                         'index': int(residue.index),
                         'name': str(residue.name),
                         'atoms': []
                     }
-                    for atom in residue.atoms():
+                    for atom in residue.atoms:
                         residue_dict['atoms'].append({
                             'index': int(atom.index),
                             'name': str(atom.name),
@@ -296,7 +296,7 @@ class HDF5TrajectoryFile(object):
                     chain_dict['residues'].append(residue_dict)
                 topology_dict['chains'].append(chain_dict)
 
-            for atom1, atom2 in topology_object.bonds():
+            for atom1, atom2 in topology_object.bonds:
                 topology_dict['bonds'].append([
                     int(atom1.index),
                     int(atom2.index)

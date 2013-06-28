@@ -98,11 +98,11 @@ def _construct_atom_dict(top, chain_id=0):
     By default, we assume you are interested in the first chain.
     """
     atom_dict = {}
-    for chain in top.chains():
+    for chain in top.chains:
         if chain.index == chain_id:
-            for residue in chain.residues():
+            for residue in chain.residues:
                 local_dict = {}
-                for atom in residue.atoms():
+                for atom in residue.atoms:
                     local_dict[atom.name] = atom.index
                 atom_dict[residue.index] = local_dict
             break
@@ -147,9 +147,9 @@ def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
     atom_indices = []
     found_residue_ids = []
     atoms_and_offsets = zip(atom_names, rid_offsets)
-    for chain in traj.top.chains():
+    for chain in traj.top.chains:
         if chain.index == chain_id:
-            for residue in chain.residues():
+            for residue in chain.residues:
                 rid = residue.index
                 if all([rid + offset in atom_dict for offset in rid_offsets]):  # Check that desired residue_IDs are in dict
                     if all([atom in atom_dict[rid + offset] for atom, offset in atoms_and_offsets]):  # Check that we find all atom names in dict

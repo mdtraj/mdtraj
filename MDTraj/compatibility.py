@@ -163,27 +163,28 @@ def load_legacy_hdf(filename, stride=None, frame=None, chunk=50000,
 
 def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
     topology = Topology()
-    
+
     # assert that the ChainID is just an array of empty strings, which appears
     # to be the case in our test systems for this legacy format
     assert np.all(chainid == '' for chainid in ChainID), 'Im not prepaed to parse multiple chains'
-    chain0 = topology.addChain()
-    
-    
+    chain0 = topology.add_chain()
+
+
     # register the residues
     registered_residues = {}
     for i in np.argsort(ResidueID):
         if ResidueID[i] not in registered_residues:
-            res = topology.addResidue(ResidueNames[i], chain0)
+            res = topology.add_residue(ResidueNames[i], chain0)
             registered_residues[ResidueID[i]] = res
 
     # register the atoms
     for i in np.argsort(AtomID):
         element_symbol = AtomNames[i].lstrip('0123456789')[0]
         element = mdtraj.pdb.element.get_by_symbol(element_symbol)
-        topology.addAtom(AtomNames[i], element,
+        topology.add_atom(AtomNames[i], element,
                          registered_residues[ResidueID[i]])
-        
+
+    topology.create_standard_bonds()
     return topology
 
 
