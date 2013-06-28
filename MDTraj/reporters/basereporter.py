@@ -161,6 +161,8 @@ class _BaseReporter(object):
                 dof -= 3
             self._dof = dof
 
+        if simulation.topology.getUnitCellDimensions() is None:
+            self._cell = False
 
     def describeNextReport(self, simulation):
         """Get information about the next report this object will generate.
@@ -249,4 +251,5 @@ class _BaseReporter(object):
         self.close()
 
     def close(self):
+        "Close the underlying trajectory file"
         self._traj_file.close()

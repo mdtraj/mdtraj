@@ -32,13 +32,29 @@ class NetCDFReporter(_BaseReporter):
     """NetCDFReporter stores a molecular dynamics trajectory in the AMBER
     NetCDF format.
 
-    Example
-    -------
+    Parameters
+    ----------
+    file : str, or HDF5Trajectory
+        Either an open NetCDFFile object to write to, or a string
+        specifying the filename of a new HDF5 file
+    reportInterval : int
+        The interval (in time steps) at which to write frames.
+    coordinates : bool
+        Whether to write the coordinates to the file.
+    time : bool
+        Whether to write the current time to the file.
+    cell : bool
+        Whether to write the current unitcell dimensions to the file.
+    atomSubset : array_like, default=None
+        Only write a subset of the atoms, with these (zero based) indices
+        to the file. If None, *all* of the atoms will be written.
+
+    Examples
+    --------
     >>> simulation = Simulation(topology, system, integrator) # doctest: +SKIP
     >>> h5_reporter = NetCDFReporter('traj.h5', 100)          # doctest: +SKIP
     >>> simulation.reporters.append(h5_reporter)              # doctest: +SKIP
     >>> simulation.step(10000)                                # doctest: +SKIP
-
     >>> traj = mdtraj.trajectory.load('traj.nc')              # doctest: +SKIP
     """
     @property
@@ -48,23 +64,6 @@ class NetCDFReporter(_BaseReporter):
     def __init__(self, file, reportInterval, coordinates=True, time=True,
                  cell=True, atomSubset=None):
         """Create a NetCDFReporter.
-
-        Parameters
-        ----------
-        file : str, or HDF5Trajectory
-            Either an open NetCDFFile object to write to, or a string
-            specifying the filename of a new HDF5 file
-        reportInterval : int
-            The interval (in time steps) at which to write frames.
-        coordinates : bool
-            Whether to write the coordinates to the file.
-        time : bool
-            Whether to write the current time to the file.
-        cell : bool
-            Whether to write the current unitcell dimensions to the file.
-        atomSubset : array_like, default=None
-            Only write a subset of the atoms, with these (zero based) indices
-            to the file. If None, *all* of the atoms will be written.
         """
         super(NetCDFReporter, self).__init__(file, reportInterval,
             coordinates, time, cell, potentialEnergy=False, kineticEnergy=False,

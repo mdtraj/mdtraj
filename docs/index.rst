@@ -40,6 +40,7 @@ Documentation
    topology
    io
    compatibility
+   reporters
 
 Example Usage
 -------------
