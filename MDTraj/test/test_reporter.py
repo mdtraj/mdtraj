@@ -120,7 +120,7 @@ def test_reporter_subset():
     pdb = PDBFile(get_fn('native2.pdb'))
     forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
     system = forcefield.createSystem(pdb.topology, nonbondedMethod=CutoffPeriodic,
-        nonbondedCutoff=1.0*nanometers, constraints=HBonds, rigidWater=True)
+        nonbondedCutoff=0.5*angstrom, constraints=HBonds, rigidWater=True)
     integrator = LangevinIntegrator(300*kelvin, 1.0/picoseconds, 2.0*femtoseconds)
     integrator.setConstraintTolerance(0.00001)
 
