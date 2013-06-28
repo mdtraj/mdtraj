@@ -83,7 +83,7 @@ If you're on ubuntu and have root, you can install everything through your packa
 
 Mac
 +++
-If you're on mac and want a package manager, you should be using `homebrew <http://mxcl.github.io/homebrew/>`_ and ``brews``'s python see `this page <https://github.com/mxcl/homebrew/wiki/Homebrew-and-Python>`_ for details. The best way to install numpy and scipy with ``brew`` is to use
+If you're on mac and want a package manager, you should be using `homebrew <http://mxcl.github.io/homebrew/>`_ and ``brews``'s python (see `this page <https://github.com/mxcl/homebrew/wiki/Homebrew-and-Python>`_ for details). The best way to install numpy and scipy with ``brew`` is to use
 samueljohn's tap. ::
 
   $ brew tap samueljohn/python
