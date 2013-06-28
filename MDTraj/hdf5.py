@@ -276,18 +276,27 @@ class HDF5TrajectoryFile(object):
                 'chains': [],
                 'bonds': []
             }
-            for chain in topology_object.chains:
+            chain_iter = topology_object.chains
+            if not hasattr(chain_iter, '__iter__'):
+                chain_iter = chain_iter()
+            for chain in chain_iter:
                 chain_dict = {
                     'residues': [],
                     'index': int(chain.index)
                 }
-                for residue in chain.residues:
+                residue_iter = chain.residues
+                if not hasattr(residue_iter, '__iter__'):
+                    residue_iter = residue_iter()
+                for residue in residue_iter:
                     residue_dict = {
                         'index': int(residue.index),
                         'name': str(residue.name),
                         'atoms': []
                     }
-                    for atom in residue.atoms:
+                    atom_iter = residue.atoms
+                    if not hasattr(atom_iter, '__iter__'):
+                        atom_iter = atom_iter()
+                    for atom in atom_iter:
                         residue_dict['atoms'].append({
                             'index': int(atom.index),
                             'name': str(atom.name),
