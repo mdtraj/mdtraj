@@ -1,4 +1,54 @@
 import numpy as np
+from mdtraj import _rmsd
+
+
+def rmsd_cache(trajectory, major='axis'):
+    """Create a specialized copy of a trajectory's cartesian coordinates fast repeated RMSD calculations
+
+    Parameters
+    ----------
+    trajectory : md.Trajectory
+        A Trajectory object, containing the cartesian coordinates
+    major : {'atom' or 'axis'}
+        Resulting memory layout for the coordinates array. Axis-major ordering
+        performs better for typical structure sizes. Axis-major ordering has
+        all the x-coordinates, followed by all the y-coordinates, followed by
+        all the z-coordinates. Atom-major ordering has each atom's coordinates
+        in atom order.
+        
+    Returns
+    -------
+    cache : RMSDCache
+        The returned data structured contains the coordinate data from the
+        trajectory, prepared for the RMSD calculation. This includes alignment
+        to the appropriate byte boundaries, and other low-level stuff.
+    
+    Notes
+    -----
+    This operation will make a copy of the trajectory data.
+    
+    Examples
+    --------
+    >>> import mdtraj as md
+    >>> t = md.load('trajectory.h5')
+    >>> r = md.rmsd_cache(t)
+    >>> r.rmsd_to_reference(r, 0)
+    [1, 2, 3]
+    """
+
+    if major == 'atom':
+        aligned = align_array(trajectory.xyz, major)
+    elif major == 'axis':
+        aligned = _allocate_aligned_array((trajectory.n_frames, 3, trajectory.n_atoms), major)
+        print 'TODO: MAKE THIS COPY MORE EFFICIENT'
+        for i in range(trajectory.n_frames):
+            aligned[i, 0, 0:trajectory.n_atoms] = trajectory.xyz[i, 0:trajectory.n_atoms, 0]
+            aligned[i, 1, 0:trajectory.n_atoms] = trajectory.xyz[i, 0:trajectory.n_atoms, 1]
+            aligned[i, 2, 0:trajectory.n_atoms] = trajectory.xyz[i, 0:trajectory.n_atoms, 2]
+    else:
+        raise ValueError
+
+    return RMSDCache(aligned, major, trajectory.n_atoms)
 
 
 def _allocate_aligned_array(shape, major):
@@ -13,7 +63,7 @@ def _allocate_aligned_array(shape, major):
         elements along the atoms dimension of the array will be rounded up to
         the nearest multiple of four.
     major : {'axis', 'atoms'}
-        See TheobaldConformations.__init__` for the definition of axis and atom
+        See RMSDCache.__init__` for the definition of axis and atom
         majority.
 
     Returns
@@ -80,14 +130,14 @@ def align_array(coordinates, major):
     return aligned
 
 
-class TheobaldConformations(object):
+class RMSDCache(object):
     """Structure to store coordinates and compute RMSDs between conformations.
 
-    TheobaldConformations wraps a 3-dimensional numpy array of coordinates,
-    transparently handling structure centering and G (matrix trace) computation
-    required to use the IRMSD fast-Theobald RMSD routines.
+    RMSDCache wraps a 3-dimensional numpy array of coordinates, transparently
+    handling structure centering and G (matrix trace) computation required to
+    use the IRMSD fast-Theobald RMSD routines.
 
-    Note that `TheobaldConformations` will modify the array of coordinates it
+    Note that `RMSDCache` will modify the array of coordinates it
     is given, when those structures are centered!
 
     Parameters
@@ -129,7 +179,7 @@ class TheobaldConformations(object):
         to the conformations (with coordinates 0) so that the number of atoms
         is a multiple of four.
     n_frames : int
-        The number of conformations in the TheobaldConformations
+        The number of conformations in the RMSDCache
     n_dims : int
         The number of cartesian dimensions. This is always three.
     major : {'axis', 'atom'}
@@ -139,7 +189,7 @@ class TheobaldConformations(object):
     """
 
     def __init__(self, coordinates, major, n_atoms):
-        """Initialize a `TheobaldConformations` object.
+        """Initialize a `RMSDCache` object.
         """
         if major not in ('atom', 'axis'):
             raise ValueError("Must specify atom or axis major coordinates")
@@ -191,17 +241,17 @@ class TheobaldConformations(object):
 
         Modifies data in-place since it might be very large.
         """
-        for ci in xrange(self.nconfs):
+        for ci in xrange(self.n_frames):
             if self.atom_major:
-                centroid = np.mean(self.cords[ci, :self.natoms, :], axis=0) \
+                centroid = np.mean(self.cords[ci, :self.n_atoms, :], axis=0) \
                              .reshape(1, 3)
-                repcent = np.tile(centroid, (self.natoms, 1))
-                self.cords[ci, :self.natoms, :] -= repcent
+                repcent = np.tile(centroid, (self.n_atoms, 1))
+                self.cords[ci, :self.n_atoms, :] -= repcent
             else:
-                centroid = np.mean(self.cords[ci, :, :self.natoms], axis=1) \
+                centroid = np.mean(self.cords[ci, :, :self.n_atoms], axis=1) \
                              .reshape(3, 1)
-                repcent = np.tile(centroid, (1, self.natoms))
-                self.cords[ci, :, :self.natoms] -= repcent
+                repcent = np.tile(centroid, (1, self.n_atoms))
+                self.cords[ci, :, :self.n_atoms] -= repcent
         self._centered = True
         return
 
@@ -221,9 +271,9 @@ class TheobaldConformations(object):
     def _compute_g(self):
         if not self._centered:
             self.center()
-        self._G = np.zeros((self.nconfs,), dtype=np.float32)
-        for i in xrange(self.nconfs):
-            for j in xrange(self.ndims):
+        self._G = np.zeros((self.n_frames,), dtype=np.float32)
+        for i in xrange(self.n_frames):
+            for j in xrange(self.n_dims):
                 if self.axis_major:
                     self._G[i] += np.dot(self.cords[i, j, :],
                                          self.cords[i, j, :])
@@ -232,7 +282,7 @@ class TheobaldConformations(object):
                                          self.cords[i, :, j])
         return
 
-    def rmsds_to_reference(self, other_confs, ref_idx):
+    def rmsds_to_reference(self, other_cache, ref_idx):
         """Compute RMSD of all conformations to a reference conformation.
 
         The underlying computation uses OpenMP and so will automatically
@@ -247,10 +297,10 @@ class TheobaldConformations(object):
 
         Parameters
         ----------
-        other_confs : TheobaldConformations
-            For each conformation in this TheobaldConformations object,
+        other_cache : RMSDCache
+            For each conformation in this RMSDCache object,
             compute the RMSD to a particular 'reference' conformation in
-            another TheobaldConformations object ``other_confs``, identified
+            another RMSDCache object ``other_cache``, identified
             by index ``ref_idx``.
         ref_idx : int
             The ind
@@ -260,28 +310,21 @@ class TheobaldConformations(object):
         rmsds : np.ndarray, shape=(n_frames,)
             A 1-D numpy array of the RMSDs.
         """
-        if other_confs.major != self.major:
+        if other_cache.major != self.major:
             raise ValueError("Cannot align two conformation sets of differing "
                              "atom/axis majority")
-        if other_confs.natoms != self.n_atoms:
+        if other_cache.n_atoms != self.n_atoms:
             raise ValueError("Cannot align two conformation sets of differing "
                              "number of atoms")
-        if other_confs.n_padded_atoms != self.n_padded_atoms:
+        if other_cache.n_padded_atoms != self.n_padded_atoms:
             raise ValueError("Cannot align two conformation sets of differing "
                              "number of padded atoms")
 
-        ref_structure = other_confs.cords[ref_idx, :, :]
-        # Getting G will implicitly center structures if needed
-        G = self.G
-        ref_G = other_confs.G[ref_idx]
 
         if self.axis_major:
-            return rmsdcalc.getMultipleRMSDs_axis_major(
-                self.n_atoms, self.n_padded_atoms, self.n_padded_atoms,
-                self.cords, ref_structure,
-                G, ref_G)
-        else:
-            return rmsdcalc.getMultipleRMSDs_atom_major(
-                self.n_atoms, self.n_padded_atoms,
-                self.cords, ref_structure,
-                G, ref_G)
+            return _rmsd.getMultipleRMSDs_axis_major(other_cache.cords, self.cords,
+                        other_cache.G, self.G, self.n_atoms, ref_idx, parallel=True)
+        elif self.atom_major:
+            return _rmsd.getMultipleRMSDs_atom_major(other_cache.cords, self.cords,
+                        other_cache.G, self.G, self.n_atoms, ref_idx, parallel=True)
+        raise RuntimeError()
