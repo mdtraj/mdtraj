@@ -61,7 +61,9 @@ if sizeof(float) != sizeof(np.float32_t):
 ###############################################################################
 
 cdef class XTCTrajectoryFile:
-    """Interface for reading and writing to a GROMACS XTC file.
+    """XTCTrajectoryFile(filenamee, mode='r', force_overwrite=True, **kwargs)
+    
+    Interface for reading and writing to a GROMACS XTC file.
     This is a file-like objec that supports both reading and writing.
     It also supports the context manager ptorocol, so you can use it
     with the python 'with' statement.
@@ -82,9 +84,10 @@ cdef class XTCTrajectoryFile:
     Other Parameters
     ----------------
     min_chunk_size : int, default=100
-        In read mode, we need to allocate a buffer in which to store the data without knowing how many frames are
-        in the file. This parameter is the minimum size of the buffer to allocate.
-    chunk_size_multiplier, int, default=1.5
+        In read mode, we need to allocate a buffer in which to store the data
+        without knowing how many frames are in the file. This parameter is the
+        minimum size of the buffer to allocate.
+    chunk_size_multiplier : int, default=1.5
         In read mode, we need to allocate a buffer in which to store the data without knowing how many frames are in
         the file. We can *guess* this information based on the size of the file on disk, but it's not perfect. This
         parameter inflates the guess by a multiplicative factor.
@@ -98,6 +101,10 @@ cdef class XTCTrajectoryFile:
     >>> # write some random coordinates to an XTC file
     >>> with XTCTrajectoryFile('output.xtc', 'w') as f:
     >>>     f.write(np.random.randn(10,1,3))
+
+    See Also
+    --------
+    mdtraj.load_xtc : High-level wrapper that returns a ``md.Trajectory``
     """
     cdef xdrlib.XDRFILE* fh
     cdef int n_atoms          # number of atoms in the file
@@ -111,25 +118,6 @@ cdef class XTCTrajectoryFile:
 
     def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True, **kwargs):
         """Open a GROMACS XTC file for reading/writing.
-
-        Parameters
-        ----------
-        filename : str
-            The filename to open. A path to a file on disk.
-        mode : {'r', 'w'}
-            The mode in which to open the file, either 'r' for read or 'w' for write.
-        force_overwrite : bool
-            If opened in write mode, and a file by the name of `filename` already exists on disk, should we overwrite it?
-
-        Other Parameters
-        ----------------
-        min_chunk_size : int, default=100
-            In read mode, we need to allocate a buffer in which to store the data without knowing how many frames are
-            in the file. This parameter is the minimum size of the buffer to allocate.
-        chunk_size_multiplier, int, default=1.5
-            In read mode, we need to allocate a buffer in which to store the data without knowing how many frames are in
-            the file. We can *guess* this information based on the size of the file on disk, but it's not perfect. This
-            parameter inflates the guess by a multiplicative factor.
         """
         self.is_open = False
         self.frame_counter = 0
@@ -195,7 +183,9 @@ cdef class XTCTrajectoryFile:
             self.is_open = False
 
     def read(self, n_frames=None, int stride=1, atom_indices=None):
-        """Read data from an XTC file
+        """read(n_frames=None, stride=1, atom_indices=None)
+        
+        Read data from an XTC file
 
         Parameters
         ----------
@@ -317,7 +307,9 @@ cdef class XTCTrajectoryFile:
 
 
     def write(self, xyz, time=None, step=None, box=None):
-        """Write data to an XTC file
+        """write(xyz, time=None, step=None, box=None)
+        
+        Write data to an XTC file
 
         Parameters
         ----------

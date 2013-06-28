@@ -1,5 +1,5 @@
-Direct Access to Files
-######################
+Low-level access to files
+#########################
 
 MDTraj implements reading and writing a diverse set of molecular dynamics
 file formats with a unified API.

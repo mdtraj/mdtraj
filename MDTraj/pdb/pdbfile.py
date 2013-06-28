@@ -74,10 +74,12 @@ class PDBTrajectoryFile(object):
     Attributes
     ----------
     positions : np.ndarray, shape=(n_frames, n_atoms, 3)
-        The cartesian coordinates of each of the atoms in every model, available
-        when a file is opened in mode='r'
     topology : mdtraj.Topology
-        The topology of the system, available when a file is opened in mode='r'
+    closed : bool
+        
+    See Also
+    --------
+    mdtraj.load_pdb : High-level wrapper that returns a ``md.Trajectory``
     """
     distance_unit = 'angstroms'
     _residueNameReplacements = {}
@@ -188,19 +190,19 @@ class PDBTrajectoryFile(object):
 
     @property
     def positions(self):
-        """Get the cartesian coordinates of all of the atoms in each frame. Available when a file is opened in mode='r'
+        """The cartesian coordinates of all of the atoms in each frame. Available when a file is opened in mode='r'
         """
         return self._positions
 
     @property
     def topology(self):
-        """Get the topology from this PDB file. Available when a file is opened in mode='r'
+        """The topology from this PDB file. Available when a file is opened in mode='r'
         """
         return self._topology
 
     @property
     def closed(self):
-        "True if the file is closed"
+        "Whether the file is closed"
         return not self._open
 
     def close(self):

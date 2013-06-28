@@ -41,7 +41,7 @@ except ImportError:
     HAVE_OPENMM = False
 
 
-__all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr',
+__all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpos',
            'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_xml']
 
 ##############################################################################
@@ -91,8 +91,13 @@ def _parse_topology(top):
 
 
 def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
-    """Load a trajectory from a file or list of files
-
+    """Load a trajectory from one or more files on disk.
+    
+    This function dispatches to one of the specialized trajectory loaders based
+    on the extension on the filename. Because different trajectory formats save
+    different information on disk, the specific keyword argument options supported
+    depend on the specific loaded.
+    
     Parameters
     ----------
     filename_or_filenames : {str, list of strings}
@@ -103,13 +108,17 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
 
     Other Parameters
-    -------------------------
+    ----------------
     DEPENDS ON THE LOADER. NOT FILLED IN YET. NEED TO ADD STRIDING AND SUCH
+
+    See Also
+    --------
+    load_pdb, load_xtc, load_trr, load_hdf5, load_netcdf, load_dcd, load_binpos
 
     Returns
     -------
-    trajectory : Trajectory
-        A trajectory file!
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
     """
 
     _assert_files_exist(filename_or_filenames)
@@ -148,7 +157,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
 
 def load_pdb(filename):
-    """Load a pdb file.
+    """Load a RCSB Protein Data Bank file from disk.
 
     Parameters
     ----------
@@ -157,8 +166,12 @@ def load_pdb(filename):
 
     Returns
     -------
-    trajectory : Trajectory
-        A trajectory file!
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+        
+    See Also
+    --------
+    mdtraj.PDBTrajectoryFile : Low level interface to PDB files
     """
     if not isinstance(filename, basestring):
         raise TypeError('filename must be of type string for load_pdb. '
@@ -208,8 +221,8 @@ def load_xml(filename, top=None):
 
     Returns
     -------
-    trajectory : Trajectory
-        A trajectory object!
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
     """
     topology = _parse_topology(top)
 
@@ -238,8 +251,10 @@ def load_xml(filename, top=None):
 
 
 def load_xtc(filename, top=None, chunk=None):
-    """Load an xtc file. Since the xtc doesn't contain information
-    to specify the topolgy, you need to supply the topology yourself
+    """Load an Gromacs XTC file from disk.
+    
+    Since the Gromacs XTC format doesn't contain information to specify the
+    topolgy, you need to supply the topology yourself.
 
     Parameters
     ----------
@@ -247,14 +262,19 @@ def load_xtc(filename, top=None, chunk=None):
         Filename (string) of xtc trajectory.
     top : {str, Trajectory, Topology}
         The XTC format does not contain topology information. Pass in either the
-        path to a pdb file, a trajectory, or a topology to supply this information.
+        path to a RCSB PDB file, a trajectory, or a topology to supply this
+        information.
     chunk : None
         This option is depricated.
 
     Returns
     -------
-    trajectory : Trajectory
-        A trajectory file!
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.XTCTrajectoryFile :  Low level interface to XTC files
     """
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a
@@ -295,8 +315,12 @@ def load_trr(filename, top=None, chunk=None):
 
     Returns
     -------
-    trajectory : Trajectory
-        A trajectory file!
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.TRRTrajectoryFile :  Low level interface to TRR files
     """
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a
@@ -334,8 +358,12 @@ def load_dcd(filename, top=None):
 
     Returns
     -------
-    trajectory : Trajectory
-        A trajectory file!
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.DCDTrajectoryFile :  Low level interface to DCD files
     """
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a
@@ -363,8 +391,7 @@ def load_dcd(filename, top=None):
 
 
 def load_hdf5(filename, stride=None, frame=None):
-    """
-    Load an hdf5  trajectory file.
+    """Load an MDTraj hdf5 trajectory file from disk.
 
     Parameters
     ----------
@@ -378,8 +405,12 @@ def load_hdf5(filename, stride=None, frame=None):
 
     Returns
     -------
-    trajectory : Trajectory
-        A trajectory file!
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.HDF5TrajectoryFile :  Low level interface to HDF5 files
     """
     tf = HDF5TrajectoryFile(filename)
     if frame is None:
@@ -418,8 +449,8 @@ def _load_legacy_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
 
     Returns
     -------
-    trajectory : Trajectory
-        A trajectory file!
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
     """
 
     def _convert_from_lossy_integers(X, precision=1000):
@@ -556,8 +587,12 @@ def load_binpos(filename, top=None, chunk=500):
 
     Returns
     -------
-    trajectory : Trajectory
-        A trajectory file!
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.BINPOSTrajectoryFile :  Low level interface to BINPOS files
     """
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a
@@ -595,14 +630,15 @@ def load_netcdf(filename, top=None, stride=None):
     stride : int, default=None
         Only read every stride-th frame
 
-
     Returns
     -------
-    trajectory : Trajectory
-        A trajectory file!
-    """
-    from mdtraj.netcdf import NetCDFTrajectoryFile
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
 
+    See Also
+    --------
+    mdtraj.NetCDFTrajectoryFile :  Low level interface to NetCDF files
+    """
     topology = _parse_topology(top)
     with NetCDFTrajectoryFile(filename) as f:
         xyz, time, cell_lengths, cell_angles = f.read(stride=stride)
@@ -663,7 +699,7 @@ class Trajectory(object):
 
     See Also
     --------
-    mdtraj.load
+    mdtraj.load : High-level function that loads files and returns an ``md.Trajectory``
 
     Attributes
     ----------

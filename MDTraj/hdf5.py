@@ -131,6 +131,9 @@ class HDF5TrajectoryFile(object):
     reference
     constraints
 
+    See Also
+    --------
+    mdtraj.load_hdf5 : High-level wrapper that returns a ``md.Trajectory``
     """
     distance_unit = 'nanometers'
 

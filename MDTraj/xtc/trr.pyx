@@ -77,7 +77,9 @@ if sizeof(float) != sizeof(np.float32_t):
 ###############################################################################
 
 cdef class TRRTrajectoryFile:
-    """Interface for reading and writing to a GROMACS TRR file.
+    """TRRTrajectoryFile(filename, mode='r', force_overwrite=True, **kwargs)
+    
+    Interface for reading and writing to a GROMACS TRR file.
     This is a file-like objec that supports both reading and writing.
     It also supports the context manager protocol, so you can use it
     with the python 'with' statement.
@@ -113,7 +115,10 @@ cdef class TRRTrajectoryFile:
     >>> # load up the data from a trr
     >>> with XTCTrajectoryFile('traj.trr') as f:
     >>>    xyz, time, step, box, lambdas = f.read()
-    
+
+    See Also
+    --------
+    mdtraj.load_trr : High-level wrapper that returns a ``md.Trajectory``
     """
     cdef trrlib.XDRFILE* fh
     cdef int n_atoms          # number of atoms in the file
@@ -127,30 +132,6 @@ cdef class TRRTrajectoryFile:
 
     def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True, **kwargs):
         """Open a GROMACS TRR file for reading/writing.
-
-        Parameters
-        ----------
-        filename : str
-            The filename to open. A path to a file on disk.
-        mode : {'r', 'w'}
-            The mode in which to open the file, either 'r' for read or 'w'
-            for write.
-        force_overwrite : bool
-            If opened in write mode, and a file by the name of `filename`
-            already exists on disk, should we overwrite it?
-
-        Other Parameters
-        ----------------
-        min_chunk_size : int, default=100
-            In read mode, we need to allocate a buffer in which to store the
-            data without knowing how many frames are in the file. This
-            parameter is the minimum size of the buffer to allocate.
-        chunk_size_multiplier, int, default=1.5
-            In read mode, we need to allocate a buffer in which to store
-            the data without knowing how many frames are in the file. We can
-            *guess* this information based on the size of the file on disk,
-            but it's not perfect. This parameter inflates the guess by a
-            multiplicative factor.
         """
         self.is_open = False
         self.frame_counter = 0
@@ -206,7 +187,9 @@ cdef class TRRTrajectoryFile:
             self.is_open = False
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
-        """Read data from a TRR file
+        """read(n_frames=None, stride=None, atom_indices=None)
+        
+        Read data from a TRR file
 
         Parameters
         ----------
@@ -333,7 +316,9 @@ cdef class TRRTrajectoryFile:
         return xyz, time, step, box, lambd
 
     def write(self, xyz, time=None, step=None, box=None, lambd=None):
-        """Write data to a TRR file
+        """write(xyz, time=None, step=None, box=None, lambd=None)
+
+        Write data to a TRR file
 
         Parameters
         ----------

@@ -35,7 +35,6 @@ from dcdlib cimport open_dcd_write, close_file_write, write_timestep
 # Globals
 ##############################################################################
 
-
 # codes that indicate status on return from library
 cdef int _DCD_SUCCESS    = 0   # No problems
 cdef int _DCD_EOF    = -1   # No problems
@@ -59,7 +58,9 @@ cdef ERROR_MESSAGES = {
 
 
 cdef class DCDTrajectoryFile:
-    """Interface for reading and writing to a CHARMM/NAMD DCD file.
+    """DCDTrajectoryFile(filename, mode='r', force_overwrite=True)
+    
+    Interface for reading and writing to a CHARMM/NAMD DCD file.
     This is a file-like object, that both reading or writing depending
     on the `mode` flag. It implements the context manager protocol,
     so you can also use it with the python 'with' statement.
@@ -98,6 +99,10 @@ cdef class DCDTrajectoryFile:
     >>>     n_frames, n_atoms = 5, 10
     >>>     for i in range(n_frames):
     >>>         f.write(np.random.randn(n_atoms, 3))
+
+    See Also
+    --------
+    mdtraj.load_dcd : High-level wrapper that returns a ``md.Trajectory``
     """
 
     # n_atoms and n_frames hold the number of atoms and the number of frames
@@ -112,16 +117,6 @@ cdef class DCDTrajectoryFile:
 
     def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True):
         """Open a DCD Trajectory File
-
-        Parameters
-        ----------
-        filename : string
-            Path to the file to open
-        mode : {'r', 'w'}
-            Mode in which to open the file. 'r' is for reading, and 'w' is for writing.
-        force_overwrite : bool
-            In mode='w', how do you want to behave if a file by the name of `filename`
-            already exists? if `force_overwrite=True`, it will be overwritten.
         """
         self.distance_unit = 'angstroms'
         self.is_open = False
@@ -192,7 +187,9 @@ cdef class DCDTrajectoryFile:
 
 
     def read(self, n_frames=None, int stride=1, atom_indices=None):
-        """Read the data from a DCD file
+        """read(n_frames=None, int stride=1, atom_indices=None)
+        
+        Read the data from a DCD file
 
         Parameters
         ----------
@@ -303,7 +300,9 @@ cdef class DCDTrajectoryFile:
 
 
     def write(self, xyz, cell_lengths=None, cell_angles=None):
-        """Write one or more frames of data to the DCD file
+        """write(xyz, cell_lengths=None, cell_angles=None)
+        
+        Write one or more frames of data to the DCD file
 
         Parameters
         ----------

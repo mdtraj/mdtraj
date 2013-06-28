@@ -44,7 +44,8 @@ cdef int _BINPOS_EOF = -1  # end of file (or error)
 ###############################################################################
 
 cdef class BINPOSTrajectoryFile:
-    """"
+    """BINPOSTrajectoryFile(filename, mode='r', force_overwrite=True, **kwargs)
+    
     Interface for reading and writing to an AMBER BINPOS file.
     This is a file-like object, that both reading or writing depending
     on the `mode` flag. It implements the context manager protocol,
@@ -66,10 +67,10 @@ cdef class BINPOSTrajectoryFile:
     Other Parameters
     ----------------
     min_chunk_size : int, default=100
-        In read mode, we need to allocate a buffer in which to store the data
+        BINPOS, In read mode, we need to allocate a buffer in which to store the data
         without knowing how many frames are in the file. This parameter is the
         minimum size of the buffer to allocate.
-    chunk_size_multiplier, int, default=1.5
+    chunk_size_multiplier : int, default=1.5
         In read mode, we need to allocate a buffer in which to store the data
         without knowing how many frames are in the file. We can *guess* this
         information based on the size of the file on disk, but it's not perfect.
@@ -82,6 +83,10 @@ cdef class BINPOSTrajectoryFile:
     >>>     xyz = f.read()
     >>> with BINPOSTrajectoryFile('out.binpos') as f:
     >>>    f.write(xyz)
+
+    See Also
+    --------
+    mdtraj.load_binpos : High-level wrapper that returns a ``md.Trajectory``
     """
     
     cdef int n_atoms
@@ -99,25 +104,6 @@ cdef class BINPOSTrajectoryFile:
 
     def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True, **kwargs):
         """Open an AMBER BINPOS file for reading/writing.
-
-        Parameters
-        ----------
-        filename : str
-            The filename to open. A path to a file on disk.
-        mode : {'r', 'w'}
-            The mode in which to open the file, either 'r' for read or 'w' for write.
-        force_overwrite : bool
-            If opened in write mode, and a file by the name of `filename` already exists on disk, should we overwrite it?
-
-        Other Parameters
-        ----------------
-        min_chunk_size : int, default=100
-            In read mode, we need to allocate a buffer in which to store the data without knowing how many frames are
-            in the file. This parameter is the minimum size of the buffer to allocate.
-        chunk_size_multiplier, int, default=1.5
-            In read mode, we need to allocate a buffer in which to store the data without knowing how many frames are in
-            the file. We can *guess* this information based on the size of the file on disk, but it's not perfect. This
-            parameter inflates the guess by a multiplicative factor.
         """
         self.is_open = False
         self.frame_counter = 0
@@ -163,7 +149,9 @@ cdef class BINPOSTrajectoryFile:
         self.is_open = True
 
     def read(self, n_frames=None):
-        """Read data from a BINPOS file
+        """read(n_frames=None)
+        
+        Read data from a BINPOS file
 
         Parameters
         ----------
@@ -219,7 +207,9 @@ cdef class BINPOSTrajectoryFile:
         return xyz
 
     def write(self, xyz):
-        """Write cartesian coordinates to a binpos file
+        """write(xyz) 
+        
+        Write cartesian coordinates to a binpos file
 
         Parameters
         ----------

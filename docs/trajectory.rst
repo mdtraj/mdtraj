@@ -1,5 +1,7 @@
-Trajectory
-==========
+.. _Trajectory:
+
+:class:`mdtraj.Trajectory`
+==========================
 
 .. currentmodule:: mdtraj
 

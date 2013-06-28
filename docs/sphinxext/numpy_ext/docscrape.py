@@ -435,7 +435,16 @@ class FunctionDoc(NumpyDocString):
                 if hasattr(func, '__argspec__'):
                     # hack for decorators that manually set the argspec
                     argspec = func.__argspec__
+
                 argspec = inspect.formatargspec(*argspec)
+                
+                # hack to remove self from the list that gets shown
+                # I think this is only happening with decorated functions
+                if argspec == '(self)':
+                    argspec = ''
+                else:
+                    argspec = argspec.replace('(self, ', '(')
+                                
                 argspec = argspec.replace('*', '\*')
                 signature = '%s%s' % (func_name, argspec)
             except TypeError, e:

@@ -1,3 +1,5 @@
+.. _TRRTrajectoryFile:
+
 TRRTrajectoryFile
 =================
 
