@@ -44,7 +44,24 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-numpy.savez clone using HDF5 format, via the PyTables HDF5 library.
+mdtraj.io provides IO for generic arrays via the functions ``mdtraj.io.loadh``
+and ``mdtraj.io.saveh``, for loading and saving generic arrays to disk.
+These functions act like ``numpy.savez`` and ``numpy.loadz``, but use a
+PyTables HDF5 for supperior performance and compression.
+
+Nothing in this module is specific to molecular dynamics trajectories.
+
+Examples
+--------
+>>> import numpy as np
+>>> from mdtraj import io
+>>> x = np.random.randn(100, 3)
+>>> io.saveh('file.hdf5', x=x)                                  # doctest: +SKIP
+>>> np.all(x == io.loadh('file.hdf5')['x'])                     # doctest: +SKIP
+True
+
+Functions
+---------
 """
 
 __all__ = ['saveh', 'loadh']
@@ -52,7 +69,8 @@ __all__ = ['saveh', 'loadh']
 import os
 import warnings
 import numpy as np
-import tables
+from mdtraj.utils import import_
+tables = import_('tables')
 
 try:
     COMPRESSION = tables.Filters(complevel=9, complib='blosc', shuffle=True)
@@ -61,8 +79,7 @@ except Exception:  #type?
     COMPRESSION = tables.Filters()
 
 def saveh(file, *args, **kwargs):
-    """
-    Save several numpy arrays into a single file in compressed ``.hdf`` format.
+    """Save several numpy arrays into a single file in compressed ``.hdf`` format.
 
     If arguments are passed in with no keywords, the corresponding variable
     names, in the ``.hdf`` file, are 'arr_0', 'arr_1', etc. If keyword arguments
@@ -102,7 +119,7 @@ def saveh(file, *args, **kwargs):
 
     See Also
     --------
-    numpy.savez : Saves files in uncompressed .npy format
+    numpy.savez : Save several arrays into a single file in uncompressed ``.npz`` format.
     """
 
 
@@ -164,8 +181,7 @@ def saveh(file, *args, **kwargs):
 
 
 def loadh(file, name=Ellipsis, deferred=True):
-    """
-    Load an array(s) from .hdf format files
+    """Load one or more array(s) from HDF5 format files
 
     Parameters
     ----------
@@ -192,6 +208,10 @@ def loadh(file, name=Ellipsis, deferred=True):
         If file does not exist
     KeyError
         If the request name does not exist
+        
+    See Also
+    --------
+    numpy.load : Load an array(s) or pickled objects from .npy, .npz, or pickled files.
     """
 
     if isinstance(file, basestring):

@@ -37,6 +37,9 @@ Documentation
    file_formats
    loading
    trajectory
+   topology
+   io
+   compatibility
 
 Example Usage
 -------------

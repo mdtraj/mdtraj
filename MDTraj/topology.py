@@ -12,39 +12,38 @@
 #
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
-
-"""
-topology.py: Used for storing topological information about a system.
-
-This is part of the OpenMM molecular simulation toolkit originating from
-Simbios, the NIH National Center for Physics-Based Simulation of
-Biological Structures at Stanford, funded under the NIH Roadmap for
-Medical Research, grant U54 GM072970. See https://simtk.org.
-
-Portions copyright (c) 2012 Stanford University and the Authors.
-Authors: Peter Eastman
-Contributors: mdtraj developers
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-THE AUTHORS, CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-__author__ = "Peter Eastman"
-__version__ = "1.0"
+#
+# topology.py: Used for storing topological information about a system.
+# 
+# This is part of the OpenMM molecular simulation toolkit originating from
+# Simbios, the NIH National Center for Physics-Based Simulation of
+# Biological Structures at Stanford, funded under the NIH Roadmap for
+# Medical Research, grant U54 GM072970. See https://simtk.org.
+# 
+# Portions copyright (c) 2012 Stanford University and the Authors.
+# Authors: Peter Eastman
+# Contributors: mdtraj developers
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS, CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# __author__ = "Peter Eastman"
+# __version__ = "1.0"
 
 import cPickle as pickle
 import os
@@ -55,57 +54,7 @@ import xml.etree.ElementTree as etree
 # Utilities
 ##############################################################################
 
-def to_bytearray(topology):
-    "Serializer a compete topology (bonds, atoms, etc) to an array of bytes"
-    return np.fromstring(pickle.dumps(topology, protocol=-1), dtype='uint8')
 
-
-def from_bytearray(arr):
-    "Reconstruct a complete topology (bonds, atoms, etc) from an array of bytes"
-    return pickle.loads(arr.tostring())
-
-
-def equal(topology1, topology2):
-    """Are two topologies equal?
-
-    Note that this method should be able to sucessfully compare an topology
-    that's an instance of mdtraj.topolology.Topology with one thats an
-    instance of simtk.openmm.app.topology.Topology
-
-    Parameters
-    ----------
-    topology1 : simtk.openmm.app or mdtraj Topology
-        The first topology to compare
-    topology1 : simtk.openmm.app or mdtraj Topology
-        The second topology to compare
-
-    Returns
-    -------
-    equality : bool
-        Are the two topologies identical?
-    """
-    if len(topology1._chains) != len(topology2._chains):
-        return False
-
-    for c1, c2 in zip(topology1.chains(), topology2.chains()):
-        if c1.index != c2.index:
-            return False
-        if len(c1._residues) != len(c2._residues):
-            return False
-
-        for r1, r2 in zip(c1.residues(), c2.residues()):
-            if (r1.index != r1.index) or (r1.name != r2.name):
-                return False
-            if len(r1._atoms) != len(r2._atoms):
-                return False
-
-            for a1, a2 in zip(r1.atoms(), r2.atoms()):
-                if (a1.index != a2.index)  or (a1.name != a2.name):
-                    return False
-                for attr in ['atomic_number', 'name', 'symbol']:
-                    if getattr(a1.element, attr) != getattr(a2.element, attr):
-                        return False
-    return True
 
 
 def topology_from_subset(topology, atom_indices):
@@ -173,24 +122,59 @@ class Topology(object):
         self._numAtoms = 0
         self._bonds = []
         self._unitCellDimensions = None
+    
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
-    def to_bytearray(self):
-        """Serializer a compete topology (bonds, atoms, etc) to an array of
-        bytes
+    def __eq__(self, other):
+        """Are two topologies equal?
 
-        This is DEPRICATED. Use the module level function to_bytearray instead
+        Parameters
+        ----------
+        other : object
+            The object to compare to
+
+        Returns
+        -------
+        equality : bool
+            Are the two topologies identical?
         """
-        return np.fromstring(pickle.dumps(self, protocol=-1), dtype='uint8')
+        if not isinstance(other, Topology):
+            print 'A'
+            return False
+        if self is other:
+            return True
+        
+        if len(self._chains) != len(other._chains):
+            print 'B'
+            return False
 
-    @staticmethod
-    def from_bytearray(arr):
-        """Reconstruct a complete topology (bonds, atoms, etc) from an array
-        of bytes
+        for c1, c2 in zip(self.chains(), other.chains()):
+            if c1.index != c2.index:
+                print 'D'
+                return False
+            if len(c1._residues) != len(c2._residues):
+                print 'E'
+                return False
 
-        This is DEPRICATED. Use the module level function from_bytearray
-        instead"""
+            for r1, r2 in zip(c1.residues(), c2.residues()):
+                if (r1.index != r1.index) or (r1.name != r2.name):
+                    print 'F'
+                    return False
+                if len(r1._atoms) != len(r2._atoms):
+                    print 'G'
+                    return False
 
-        return pickle.loads(arr.tostring())
+                for a1, a2 in zip(r1.atoms(), r2.atoms()):
+                    if (a1.index != a2.index)  or (a1.name != a2.name):
+                        print 'H'
+                        return False
+                    for attr in ['atomic_number', 'name', 'symbol']:
+                        if getattr(a1.element, attr) != getattr(a2.element, attr):
+                            print 'I'
+                            return False
+        return True
+
 
     def addChain(self):
         """Create a new Chain and add it to the Topology.

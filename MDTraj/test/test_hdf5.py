@@ -106,7 +106,7 @@ def test_topology():
         f.topology = top
 
     with HDF5TrajectoryFile(temp) as f:
-        topology.equal(f.topology, top)
+        assert f.topology == top
 
 
 def test_constraints():

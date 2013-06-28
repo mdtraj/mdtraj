@@ -28,11 +28,20 @@ sys.path.insert(0, os.path.abspath('sphinxext'))
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.autosummary',
-              'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'numpy_ext.numpydoc']
+              'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'numpy_ext.numpydoc',
+              'sphinx.ext.intersphinx',]
 
 autosummary_generate = True
 autodoc_default_flags = ['members', 'inherited-members']
 
+
+_python_doc_base = 'http://docs.python.org/2.7'
+intersphinx_mapping = {
+    _python_doc_base: None,
+    'http://docs.scipy.org/doc/numpy': None,
+    'http://docs.scipy.org/doc/scipy/reference': None,
+    'http://scikit-learn.org/stable': None
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -42,7 +42,6 @@ def teardown_module(module):
     """remove the temporary directory created by tests in this file
     this gets automatically called by nose"""
     shutil.rmtree(dir)
-    #print tempdir
 
 
 @np.testing.decorators.skipif(not HAVE_OPENMM, 'No OpenMM')

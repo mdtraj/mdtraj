@@ -28,14 +28,12 @@ import numpy as np
 
 from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
                     TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
-                    PDBTrajectoryFile)
+                    PDBTrajectoryFile, Topology)
 from mdtraj.utils import unitcell, ensure_type
-import mdtraj.topology
 
 try:
     from simtk.openmm import Vec3
     from simtk.unit import nanometer
-    import simtk.openmm.app.topology
     HAVE_OPENMM = True
 except ImportError:
     HAVE_OPENMM = False
@@ -49,6 +47,9 @@ __all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpo
 ##############################################################################
 
 logger = logging.getLogger(__name__)
+
+# note, there's another global named "_LoaderRegistry" that's declared at
+# the bottom of the file
 
 ##############################################################################
 # Utilities
@@ -80,9 +81,7 @@ def _parse_topology(top):
         topology = PDBTrajectoryFile(top).topology
     elif isinstance(top, Trajectory):
         topology = top.topology
-    elif isinstance(top, mdtraj.topology.Topology):
-        topology = top
-    elif HAVE_OPENMM and isinstance(top, simtk.openmm.app.topology.Topology):
+    elif isinstance(top, Topology):
         topology = top
     else:
         raise TypeError('Could not interpreted top=%s' % top)
@@ -134,24 +133,12 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         else:
             return functools.reduce(lambda a, b: a.join(b, discard_overlapping_frames=discard_overlapping_frames), (load(f,**kwargs) for f in filename_or_filenames))
 
-    # We have only a single trajectory now.
-    loaders = {'.xtc': load_xtc,
-               '.xml': load_xml,
-               '.trr': load_trr,
-               '.pdb': load_pdb,
-               '.dcd': load_dcd,
-               '.h5': load_hdf5,
-               '.lh5': _load_legacy_hdf,
-               '.binpos': load_binpos,
-               '.ncdf': load_netcdf,
-               '.nc': load_netcdf}
-
     try:
-        loader = loaders[extension]
+        loader = _LoaderRegistry[extension]
     except KeyError:
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
                       'was found. I can only load files '
-                      'with extensions in %s' % (filename, extension, loaders.keys()))
+                      'with extensions in %s' % (filename, extension, _LoaderRegistry.keys()))
 
     return loader(filename, **kwargs)
 
@@ -423,150 +410,6 @@ def load_hdf5(filename, stride=None, frame=None):
     trajectory.unitcell_lengths = data.cell_lengths
     trajectory.unitcell_angles = data.cell_angles
 
-    return trajectory
-
-
-def _load_legacy_hdf(filename, top=None, stride=None, frame=None, chunk=50000,
-                     upconvert_int16=True):
-    """Load an HDF5 file in the legacy MSMBuilder format
-
-    Parameters
-    ----------
-    filename : str
-        String filename of HDF Trajectory file.
-    top : topology
-        Replace the topology in the file with this topology
-    stride : int, default=None
-        Only read every stride-th frame
-    frame : {None, int}, default=None
-        Use this option to load only a single frame from a trajectory on disk.
-        If frame is None, the default, the entire trajectory will be loaded.
-    chunk : int, default=50000
-       Size of the chunk to use for loading the file.
-    upconvert_int16 : bool, default=True
-        If the data is encoded in the file as int16, an automatic upconversion
-        to float32 based on the gromacs lossy encoding scheme is done.
-
-    Returns
-    -------
-    trajectory : md.Trajectory
-        The resulting trajectory, as an md.Trajectory object.
-    """
-
-    def _convert_from_lossy_integers(X, precision=1000):
-        """Implementation of the lossy compression used in Gromacs XTC using
-        the pytables library.  Convert 16 bit integers into 32 bit floats."""
-        X2 = X.astype("float32")
-        X2 /= float(precision)
-        return X2
-
-    import tables
-
-    if not isinstance(filename, basestring):
-        raise TypeError('filename must be of type string for load_hdf5. '
-            'you supplied %s' % type(filename))
-
-    F = tables.File(filename, 'r')
-    try:
-        # get the topology from the file, or input argument list
-        if top is None:
-            if hasattr(F.root, 'topology'):
-                topology = mdtraj.topology.from_bytearray(F.root.topology[:])
-            else:
-                raise ValueError("I can't read the topology from your old HDF "
-                    "file, so how about you give me a new topology with the top "
-                    "optional argument")
-        else:
-            topology = _parse_topology(top)
-
-        # find the xyz coordinates in the file
-        if hasattr(F.root, 'xyz'):
-            xyz_node = F.root.xyz
-        elif hasattr(F.root, 'XYZList'):
-            xyz_node = F.root.XYZList
-        else:
-            raise ValueError('XYZ data not found in %s' % filename)
-
-        # find the time in the file
-        time_node = None
-        if hasattr(F.root, 'time'):
-            time_node = F.root.time
-
-        # find box in the file
-        box_node = None
-        if hasattr(F.root, 'box'):
-            box_node = F.root.box
-
-        if chunk < stride:
-            raise ValueError('Chunk must be greater than or equal to the stride')
-
-        # if they want only a single frame, quit early without
-        # doing the chunking
-        if frame is not None:
-            time = None
-            if time_node is not None:
-                time = time_node[int(frame)]
-
-            box = None
-            if box_node is not None:
-                box = box_node[int(frame)]
-
-            xyz = xyz_node[int(frame)]
-            if upconvert_int16 and xyz.dtype == np.int16:
-                xyz = _convert_from_lossy_integers(xyz)
-
-            trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
-            trajectory.unitcell_vectors = box
-            return trajectory
-
-        # adjust the stride/chunk
-        if stride is not None:
-            # Need to do this in order to make sure we stride correctly.
-            # since we read in chunks, and then we need the strides
-            # to line up
-            while chunk % stride != 0:
-                chunk -= 1
-        else:
-            stride = 1
-
-        shape = xyz_node.shape
-        begin_range_list = np.arange(0, shape[0], chunk)
-        end_range_list = np.concatenate((begin_range_list[1:], [shape[0]]))
-
-        def enum_chunks():
-            for r0, r1 in zip(begin_range_list, end_range_list):
-                xyz = np.array(xyz_node[r0: r1: stride])
-
-                time = None
-                if time_node is not None:
-                    time = np.array(time_node[r0: r1: stride])
-
-                box = None
-                if box_node is not None:
-                    box = np.array(box_node[r0: r1: stride])
-
-                yield xyz, time, box
-
-        zipper = tuple(izip(*enum_chunks()))
-        xyz = np.concatenate(zipper[0])
-
-        time = None
-        if time_node is not None:
-            time = np.concatenate(zipper[1])
-
-        box = None
-        if box_node is not None:
-            box = np.concatenate(zipper[2])
-
-        if upconvert_int16 and xyz.dtype == np.int16:
-            xyz = _convert_from_lossy_integers(xyz)
-    except:
-        raise
-    finally:
-        F.close()
-
-    trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
-    trajectory.unitcell_vectors = box
     return trajectory
 
 
@@ -988,8 +831,8 @@ class Trajectory(object):
                 'to number of atoms in other (%d)' % (self.n_atoms, other.n_atoms))
 
         if check_topology:
-            if not mdtraj.topology.equal(self.topology, other.topology):
-                raise ValueError('The topologies are not the same')
+            if self.topology != other.topology:
+                raise ValueError('The topologies of the two Trajectories are not the same')
 
         lengths2 = None
         angles2 = None
@@ -1188,13 +1031,13 @@ class Trajectory(object):
         extension = os.path.splitext(filename)[1]
 
         savers = {'.xtc': self.save_xtc,
-                  '.trr': self.save_trr,
-                  '.pdb': self.save_pdb,
-                  '.dcd': self.save_dcd,
-                  '.h5': self.save_hdf5,
-                  '.binpos': self.save_binpos,
-                  '.nc': self.save_netcdf,
-                  '.ncdf': self.save_netcdf}
+          '.trr': self.save_trr,
+          '.pdb': self.save_pdb,
+          '.dcd': self.save_dcd,
+          '.h5': self.save_hdf5,
+          '.binpos': self.save_binpos,
+          '.nc': self.save_netcdf,
+          '.ncdf': self.save_netcdf}
 
         try:
             saver = savers[extension]
@@ -1204,7 +1047,7 @@ class Trajectory(object):
                           'with extensions in %s' % (filename, extension, savers.keys()))
 
         # run the saver, and return whatever output it gives
-        return saver(filename)
+        return saver(filename, **kwargs)
 
     def save_hdf5(self, filename, force_overwrite=True):
         """Save trajectory to MDTraj HDF5 format
@@ -1354,3 +1197,21 @@ class Trajectory(object):
         """
         self.top.restrict_atoms(atom_indices)
         self._xyz = self.xyz[:,atom_indices]
+
+
+##############################################################################
+# Global hack for registration of loaders.
+##############################################################################
+
+_LoaderRegistry = {
+    '.xtc': load_xtc,
+    '.xml': load_xml,
+    '.trr': load_trr,
+    '.pdb': load_pdb,
+    '.dcd': load_dcd,
+    '.h5': load_hdf5,
+    #'.lh5': _load_legacy_hdf,
+    '.binpos': load_binpos,
+    '.ncdf': load_netcdf,
+    '.nc': load_netcdf
+}

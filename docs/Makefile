@@ -33,7 +33,13 @@ github: html
 	git push origin gh-pages
 
 
-
+clean:
+	mv $(BUILDDIR)/.git tmp.git
+	mv $(BUILDDIR)/.nojekyll tmp.nojekyll
+	rm -rf $(BUILDDIR)/*
+	mv tmp.git $(BUILDDIR)/.git
+	mv tmp.nojekyll $(BUILDDIR)/.nojekyll 
+	
 # dirhtml:
 # 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
 # 	@echo
