@@ -276,9 +276,16 @@ class HDF5TrajectoryFile(object):
                 'chains': [],
                 'bonds': []
             }
+            
+            # we want to be able to handle the simtk.openmm Topology object
+            # here too, for the purpose of having a reporter
+            # it doesnt use decorators on the chains/residues/atoms/bonds
+            # so we need to call the methods explicitly. this adds some
+            # annoying bulk to the code
             chain_iter = topology_object.chains
             if not hasattr(chain_iter, '__iter__'):
                 chain_iter = chain_iter()
+
             for chain in chain_iter:
                 chain_dict = {
                     'residues': [],
