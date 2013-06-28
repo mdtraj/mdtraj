@@ -107,7 +107,7 @@ def import_(module):
     >>> # user-facing message about what's wrong (where you can install the
     >>> # module from, etc) if the import fails
     >>> import tables
-    >>> tables = import_(tables)
+    >>> tables = import_('tables')
     """
     try:
         return importlib.import_module(module)
