@@ -7,7 +7,7 @@ MDTraj
 ======
 
 MDTraj is a python library for loading, saving, and manipulating molecular
-dynamics trajectory files.
+dynamics trajectories.
 
 Features
 --------
@@ -124,6 +124,7 @@ Developer
 ---------
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    building_docs
+   style

@@ -31,6 +31,7 @@ import numpy as np
 class TypeCastPerformanceWarning(RuntimeWarning):
     pass
 
+
 def ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=None,
     warn_on_cast=True, add_newaxis_on_deficient_ndim=False):
     """Typecheck the size, shape and dtype of a numpy array, with optional

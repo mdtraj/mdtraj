@@ -28,6 +28,7 @@ from mdtraj.reporters.basereporter import _BaseReporter
 # Imports
 ##############################################################################
 
+
 class NetCDFReporter(_BaseReporter):
     """NetCDFReporter stores a molecular dynamics trajectory in the AMBER
     NetCDF format.
