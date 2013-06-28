@@ -103,8 +103,8 @@ def parse_args():
     """
     extensions = ', '.join(formats.keys())
     parser = ArgumentParser(description='''Convert molecular dynamics
-    trajectories between formats. The DCD, XTC, TRR, binpos, NetCDF, binpos,
-    and HDF5 formats are supported (%s)''' % extensions)
+    trajectories between formats. The DCD, XTC, TRR, PDB, binpos, NetCDF,
+    binpos, and HDF5 formats are supported (%s)''' % extensions)
     parser.add_argument('input', nargs='+', help='''path to one or more
                     trajectory files. Multiple trajectories, if supplied, will
                     be concatenated together in the output file in the order

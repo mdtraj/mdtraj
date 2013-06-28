@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.abspath('sphinxext'))
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.autosummary',
               'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'numpy_ext.numpydoc',
-              'sphinx.ext.intersphinx',]
+              'sphinx.ext.intersphinx', 'sphinx.ext.viewcode']
 
 autosummary_generate = True
 autodoc_default_flags = ['members', 'inherited-members']

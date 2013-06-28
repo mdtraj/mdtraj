@@ -25,6 +25,10 @@ square deviation (RMSD) distances, the calculation of bond lengths, bond
 angles, dihedral angles, non-redundant internal coordinates, and radius
 of gyration.
 
+MDTraj also ships with a flexible command-line application for converting
+trajectories between formats. When you install MDTraj, the script will be
+installed under the name ``mdconvert``.
+
 Documentation
 -------------
 
@@ -32,7 +36,7 @@ Documentation
    :maxdepth: 1
    
    getting_started
-   building_docs
+   mdconvert
    hdf5_format
    file_formats
    loading
@@ -41,6 +45,7 @@ Documentation
    io
    compatibility
    reporters
+   utils
 
 Example Usage
 -------------
@@ -114,3 +119,11 @@ Feedback
 The best way to report a bug or request a new feature is to make an issue
 on github. Don't hesitate to fork the repository, make some changes, and 
 submit a pull request!
+
+Developer
+---------
+
+.. toctree::
+   :maxdepth: 1
+
+   building_docs
