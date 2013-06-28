@@ -146,7 +146,7 @@ If you don't have ``easy_install`` or ``pip`` yet, you can get them with ::
   $ python setup.py install
   $ easy_install pip
 
-Now you're home free::
+Now you're home free ::
 
   $ pip install numpy
   $ pip install scipy
