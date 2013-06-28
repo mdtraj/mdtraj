@@ -41,22 +41,24 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
-# __author__ = "Peter Eastman"
-# __version__ = "1.0"
+
+##############################################################################
+# Imports
+##############################################################################
 
 import cPickle as pickle
 import os
 import numpy as np
 import xml.etree.ElementTree as etree
 
+from mdtraj.utils import ilen
 
 ##############################################################################
 # Utilities
 ##############################################################################
 
 
-def topology_from_subset(topology, atom_indices):
+def _topology_from_subset(topology, atom_indices):
     """Create a new topology that only contains the supplied indices
 
     Note
@@ -73,16 +75,16 @@ def topology_from_subset(topology, atom_indices):
     atom_indices : list([int])
         The indices of the atoms to keep
     """
-    newTopology = topology.__class__()
+    newTopology = Topology()
     old_atom_to_new_atom = {}
 
     for chain in topology._chains:
-        newChain = newTopology.addChain()
+        newChain = newTopology.add_chain()
         for residue in chain._residues:
-            newResidue = newTopology.addResidue(residue.name, newChain)
-            for atom in residue.atoms():
+            newResidue = newTopology.add_residue(residue.name, newChain)
+            for atom in residue._atoms:
                 if atom.index in atom_indices:
-                    newAtom = newTopology.addAtom(atom.name, atom.element, newResidue)
+                    newAtom = newTopology.add_atom(atom.name, atom.element, newResidue)
                     old_atom_to_new_atom[atom] = newAtom
 
     bondsiter = topology.bonds
@@ -91,12 +93,21 @@ def topology_from_subset(topology, atom_indices):
 
     for atom1, atom2 in bondsiter:
         try:
-            newTopology.addBond(old_atom_to_new_atom[atom1],
+            newTopology.add_bond(old_atom_to_new_atom[atom1],
                                 old_atom_to_new_atom[atom2])
         except KeyError:
             pass
             # we only put bonds into the new topology if both of their partners
             # were indexed and thus HAVE a new atom
+
+    # Delete empty residues
+    for chain in newTopology._chains:
+        chain._residues = [r for r in chain._residues if len(r._atoms) > 0]
+    # Delete empty chains
+    newTopology._chains = [c for c in newTopology._chains if len(c._residues) > 0]
+    # Re-set the numAtoms and numResidues
+    newTopology._numAtoms = ilen(newTopology.atoms)
+    newTopology._numResidues = ilen(newTopology.residues)
 
     return newTopology
 
@@ -153,38 +164,30 @@ class Topology(object):
             Are the two topologies identical?
         """
         if not isinstance(other, Topology):
-            print 'A'
             return False
         if self is other:
             return True
 
         if len(self._chains) != len(other._chains):
-            print 'B'
             return False
 
         for c1, c2 in zip(self.chains, other.chains):
             if c1.index != c2.index:
-                print 'D'
                 return False
             if len(c1._residues) != len(c2._residues):
-                print 'E'
                 return False
 
             for r1, r2 in zip(c1.residues, c2.residues):
                 if (r1.index != r1.index) or (r1.name != r2.name):
-                    print 'F'
                     return False
                 if len(r1._atoms) != len(r2._atoms):
-                    print 'G'
                     return False
 
                 for a1, a2 in zip(r1.atoms, r2.atoms):
                     if (a1.index != a2.index)  or (a1.name != a2.name):
-                        print 'H'
                         return False
                     for attr in ['atomic_number', 'name', 'symbol']:
                         if getattr(a1.element, attr) != getattr(a2.element, attr):
-                            print 'I'
                             return False
         return True
 
@@ -379,36 +382,21 @@ class Topology(object):
                 if distance < 0.3: # this is supposed to be nm. I think we're good
                     self.add_bond(sg1, sg2)
 
-    def restrict_atoms(self, atom_indices):
-        """Delete atoms not in `atom_indices` and re-index those that remain.  (Inplace)
+    def subset(self, atom_indices):
+        """Create a new Topology from a subset of the atoms in an existing topology.
+
+        Notes
+        -----
+        The existing topology will not be altered.
 
         Parameters
         ----------
-        atom_indices : list([int])
-            List of atom indices to keep.
+        atom_indices array_like
+            A list of the indices corresponding to the atoms in that you'd
+            like to retain.
         """
+        return _topology_from_subset(self, atom_indices)
 
-        # Delete undesired atoms
-        for chain in self._chains:
-            for residue in chain._residues:
-                residue._atoms = [a for a in residue._atoms if a.index in atom_indices]
-
-        # Delete empty residues
-        for chain in self._chains:
-            chain._residues = [r for r in chain._residues if len(r._atoms) > 0]
-
-        # Delete empty chains
-        self._chains = [c for c in self._chains if len(c._residues) > 0]
-
-        self._bonds = [(a,b) for (a,b) in self._bonds if a.index in atom_indices and b.index in atom_indices]
-
-        # Re-index atom indices
-        for k, atom in enumerate(self.atoms):
-            atom.index = k
-
-        # Re-set the numAtoms and numResidues
-        self._numAtoms = len(list(self.atoms))
-        self._numResidues = len(list(self.residues))
 
 class Chain(object):
     """A Chain object represents a chain within a Topology.

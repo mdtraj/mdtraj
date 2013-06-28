@@ -1195,7 +1195,7 @@ class Trajectory(object):
         atom_indices : list([int])
             List of atom indices to keep.
         """
-        self.top.restrict_atoms(atom_indices)
+        self._topology = self._topology.subset(atom_indices)
         self._xyz = self.xyz[:,atom_indices]
 
 

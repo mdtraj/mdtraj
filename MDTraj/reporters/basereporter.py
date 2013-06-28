@@ -21,7 +21,7 @@
 import math
 
 # ours
-from mdtraj.topology import topology_from_subset
+from mdtraj.topology import _topology_from_subset
 from mdtraj.utils import unitcell
 
 import numpy as np
@@ -142,7 +142,7 @@ class _BaseReporter(object):
 
             self._atomSlice = self._atomSubset
             if hasattr(self._traj_file, 'topology'):
-                self._traj_file.topology = topology_from_subset(simulation.topology, self._atomSubset)
+                self._traj_file.topology = _topology_from_subset(simulation.topology, self._atomSubset)
         else:
             self._atomSlice = slice(None)
             if hasattr(self._traj_file, 'topology'):

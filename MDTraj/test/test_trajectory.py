@@ -206,6 +206,7 @@ def test_restrict_atoms():
     eq(len(traj.top._bonds), 2)
     eq(traj.n_residues, traj.topology._numResidues)
     eq(traj.n_atoms, traj.topology._numAtoms)
+    eq(np.array([a.index for a in traj.topology.atoms]), np.arange(traj.n_atoms))
 
 
 def test_array_vs_matrix():
