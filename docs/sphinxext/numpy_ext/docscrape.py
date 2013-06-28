@@ -290,7 +290,7 @@ class NumpyDocString(object):
                 section = ' '.join([s.capitalize()
                                     for s in section.split(' ')])
             if section in ('Parameters', 'Attributes', 'Methods',
-                           'Returns', 'Raises', 'Warns'):
+                           'Other Parameters', 'Returns', 'Raises', 'Warns'):
                 self[section] = self._parse_param_list(content)
             elif section.startswith('.. index::'):
                 self['index'] = self._parse_index(section, content)
@@ -387,7 +387,7 @@ class NumpyDocString(object):
         out += self._str_signature()
         out += self._str_summary()
         out += self._str_extended_summary()
-        for param_list in ('Parameters', 'Returns', 'Raises'):
+        for param_list in ('Parameters', 'Returns', 'Raises', 'Other Parameters'):
             out += self._str_param_list(param_list)
         out += self._str_section('Warnings')
         out += self._str_see_also(func_role)
