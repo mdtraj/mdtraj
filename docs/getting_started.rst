@@ -6,9 +6,9 @@ Getting started
 Installing MDTraj
 =================
 
-MDTraj currently runs best on Python 2.7.x; earlier versions of Python are not 
-supported. We are working on support for Python 3.3+. MDTraj is developed and 
-tested on mac and linux platforms. It probably works on windows, but might 
+MDTraj currently runs best on Python 2.7.x; earlier versions of Python are not
+supported. We are working on support for Python 3.3+. MDTraj is developed and
+tested on mac and linux platforms. It probably works on windows, but might
 require some hacking.
 
 Easy Way
