@@ -48,7 +48,7 @@ def test_reporter():
     tempdir = os.path.join(dir, 'test1')
     os.makedirs(tempdir)
 
-    pdb = PDBFile(get_fn('native.pdb'))
+    pdb = PDBFile(get_fn('native.pdb'))    
     forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
     system = forcefield.createSystem(pdb.topology, nonbondedMethod=CutoffNonPeriodic,
         nonbondedCutoff=1.0*nanometers, constraints=HBonds, rigidWater=True)
@@ -118,9 +118,10 @@ def test_reporter_subset():
     os.makedirs(tempdir)
 
     pdb = PDBFile(get_fn('native2.pdb'))
+    pdb.topology.setUnitCellDimensions((2*nanometers, 2*nanometers, 2*nanometers))
     forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
     system = forcefield.createSystem(pdb.topology, nonbondedMethod=CutoffPeriodic,
-        nonbondedCutoff=0.5*angstrom, constraints=HBonds, rigidWater=True)
+        nonbondedCutoff=1*nanometers, constraints=HBonds, rigidWater=True)
     integrator = LangevinIntegrator(300*kelvin, 1.0/picoseconds, 2.0*femtoseconds)
     integrator.setConstraintTolerance(0.00001)
 
