@@ -50,11 +50,10 @@ import os
 import numpy as np
 import xml.etree.ElementTree as etree
 
+
 ##############################################################################
 # Utilities
 ##############################################################################
-
-
 
 
 def topology_from_subset(topology, atom_indices):
@@ -78,28 +77,33 @@ def topology_from_subset(topology, atom_indices):
     old_atom_to_new_atom = {}
 
     for chain in topology._chains:
-        newChain = newTopology.add_chain()
+        newChain = newTopology.addChain()
         for residue in chain._residues:
-            newResidue = newTopology.add_residue(residue.name, newChain)
+            newResidue = newTopology.addResidue(residue.name, newChain)
             for atom in residue.atoms():
                 if atom.index in atom_indices:
-                    newAtom = newTopology.add_atom(atom.name, atom.element, newResidue)
+                    newAtom = newTopology.addAtom(atom.name, atom.element, newResidue)
                     old_atom_to_new_atom[atom] = newAtom
 
-    for atom1, atom2 in topology.bonds():
+    bondsiter = topology.bonds
+    if not hasattr(bondsiter, '__iter__'):
+        bondsiter = bondsiter()
+
+    for atom1, atom2 in bondsiter:
         try:
-            newTopology.add_bond(old_atom_to_new_atom[atom1],
+            newTopology.addBond(old_atom_to_new_atom[atom1],
                                 old_atom_to_new_atom[atom2])
         except KeyError:
             pass
             # we only put bonds into the new topology if both of their partners
             # were indexed and thus HAVE a new atom
 
-
-    newTopology._numAtoms = len(list(newTopology.atoms()))
-    newTopology._numResidues = len(list(newTopology.residues()))
     return newTopology
 
+
+##############################################################################
+# Classes
+##############################################################################
 
 
 class Topology(object):
