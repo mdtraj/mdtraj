@@ -79,7 +79,7 @@ bool parallel=True):
     frame : int
         Index of the desired reference frame in xyz1.
     parallel : bool, default True
-        If True, use openmp parallelization.
+        If True, use OpenMP parallelization.
 
     Returns
     -------
@@ -146,7 +146,7 @@ bool parallel=True):
     frame : int
         Index of the desired reference frame in xyz1.
     parallel : bool, default True
-        If True, use openmp parallelization.
+        If True, use OpenMP parallelization.
 
     Returns
     -------

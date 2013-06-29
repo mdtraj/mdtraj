@@ -361,6 +361,12 @@ class RMSDCache(object):
             The index of the conformation in ``other_cache`` to measure
             distances to
 
+        Notes
+        -----
+        This function uses OpenMP to parallelize the calculation across
+        multiple cores. To control the number of threads launched by OpenMP,
+        you can set the environment variable ``OMP_NUM_THREADS``.
+
         Returns
         -------
         rmsds : np.ndarray, shape=(n_frames,)
