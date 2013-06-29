@@ -29,6 +29,7 @@ from mdtraj.dcd import DCDTrajectoryFile
 from mdtraj.binpos import BINPOSTrajectoryFile
 from mdtraj.pdb import PDBTrajectoryFile
 
+from mdtraj.rmsd import rmsd_cache
 from .topology import Topology
 from .trajectory import *
 

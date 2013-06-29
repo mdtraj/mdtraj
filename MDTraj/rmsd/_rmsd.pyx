@@ -1,10 +1,38 @@
-from cpython cimport bool
-from mdtraj.utils.arrays import ensure_type
+# Copyright 2012-present mdtraj developers
+#
+# This file is part of mdtraj
+#
+# mdtraj is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# mdtraj. If not, see http://www.gnu.org/licenses/.
+
+# This code was written by Kyle Beauchamp with some contributes by
+# Robert McGibbon
+
+##############################################################################
+# Imports
+##############################################################################
+
 import cython
 import numpy as np
+
 cimport numpy as np
-np.import_array()
+from cpython cimport bool
 from cython.parallel cimport prange
+
+np.import_array()
+
+##############################################################################
+# External Declarations
+##############################################################################
 
 cdef extern float msd_axis_major(int nrealatoms, int npaddedatoms, int rowstride,
                                  float* aT, float* bT, float G_a, float G_b) nogil
@@ -14,6 +42,11 @@ cdef extern float msd_atom_major(int nrealatoms, int npaddedatoms,  float* a,
 
 cdef extern from "math.h":
     float sqrtf(float x) nogil
+
+
+##############################################################################
+# Functions
+##############################################################################
 
 
 @cython.boundscheck(False)
@@ -27,7 +60,7 @@ int n_atoms,
 int frame,
 bool parallel=True):
     """getMultipleRMSDs_axis_major(xyz1, xyz2, g1, g2, n_atoms, frame, parallel=True)
-    
+
     Calculate the RMSD of several frames to a single frame, with the
     coordinates laid out in axis-major orders
 
@@ -53,7 +86,7 @@ bool parallel=True):
     rmsds: np.ndarray, shape=(len(xyz2)),
         RMSDS between xyz1[frame] and all of xyz2
     """
-    
+
     cdef Py_ssize_t i
     cdef int n_frames = xyz2.shape[0]
     cdef int n_atoms_padded = xyz1.shape[2]
@@ -94,7 +127,7 @@ int n_atoms,
 int frame,
 bool parallel=True):
     """getMultipleRMSDs_atom_major(xyz1, xyz2, g1, g2, n_atoms, frame, parallel=True)
-    
+
     Calculate the RMSD of several frames to a single frame, with the
     coordinates laid out in atom-major orders
 
@@ -120,7 +153,7 @@ bool parallel=True):
     rmsds: np.ndarray, shape=(len(xyz2)),
         RMSDS between xyz1[frame] and all of xyz2
     """
-    
+
     cdef Py_ssize_t i
     cdef int n_frames = xyz2.shape[0]
     cdef int n_atoms_padded = xyz1.shape[1]

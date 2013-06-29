@@ -1,5 +1,39 @@
+# Copyright 2012-present mdtraj developers
+#
+# This file is part of mdtraj
+#
+# mdtraj is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# mdtraj. If not, see http://www.gnu.org/licenses/.
+
+# This code was written by Imran S. Haque, with some contributes by
+# Robert McGibbon
+
+
+##############################################################################
+# Imports
+##############################################################################
+
 import numpy as np
 from mdtraj import _rmsd
+
+##############################################################################
+# Globals
+##############################################################################
+
+__all__ = ['rmsd_cache', 'RMSDCache', 'align_array']
+
+##############################################################################
+# Code
+##############################################################################
 
 
 def rmsd_cache(trajectory, major='axis'):
@@ -182,8 +216,11 @@ class RMSDCache(object):
         The number of cartesian dimensions. This is always three.
     major : {'axis', 'atom'}
         Specifies the memory layout of the coordinates.
-    G : np.ndarray
-        Conformation traces
+    traces : np.ndarray, shape=(n_frames)
+        For a structure S made of column vectors Sx, Sy, Sz representing the x,
+        y, and z coordinates of each atom in the structure, G(S) = tr(S'S) =
+        dot(x,x) + dot(y,y) + dot(z,z). This quantity is related to the radius
+        of gyration and is needed in the Theobald RMSD computation.
     """
 
     def __init__(self, coordinates, major, n_atoms):
@@ -212,7 +249,7 @@ class RMSDCache(object):
 
         self.major = major
         self.cords = coordinates
-        self._G = None
+        self._traces = None
         self._centered = False
         assert self.axis_major ^ self.atom_major
 
@@ -254,29 +291,29 @@ class RMSDCache(object):
         return
 
     @property
-    def G(self):
-        """Conformation traces
+    def traces(self):
+        """Conformation traces. These are also known as the "G values"
 
         For a structure S made of column vectors Sx, Sy, Sz representing the x,
         y, and z coordinates of each atom in the structure, G(S) = tr(S'S) =
         dot(x,x) + dot(y,y) + dot(z,z). This quantity is related to the radius
         of gyration and is needed in the Theobald RMSD computation.
         """
-        if self._G is None:
-            self._compute_g()
-        return self._G
+        if self._traces is None:
+            self._compute_traces()
+        return self._traces
 
-    def _compute_g(self):
+    def _compute_traces(self):
         if not self._centered:
             self.center()
-        self._G = np.zeros((self.n_frames,), dtype=np.float32)
+        self._traces = np.zeros((self.n_frames,), dtype=np.float32)
         for i in xrange(self.n_frames):
             for j in xrange(self.n_dims):
                 if self.axis_major:
-                    self._G[i] += np.dot(self.cords[i, j, :],
+                    self._traces[i] += np.dot(self.cords[i, j, :],
                                          self.cords[i, j, :])
                 else:
-                    self._G[i] += np.dot(self.cords[i, :, j],
+                    self._traces[i] += np.dot(self.cords[i, :, j],
                                          self.cords[i, :, j])
         return
 
@@ -320,8 +357,8 @@ class RMSDCache(object):
 
         if self.axis_major:
             return _rmsd.getMultipleRMSDs_axis_major(other_cache.cords, self.cords,
-                        other_cache.G, self.G, self.n_atoms, ref_idx, parallel=True)
+                        other_cache.traces, self.traces, self.n_atoms, ref_idx, parallel=True)
         elif self.atom_major:
             return _rmsd.getMultipleRMSDs_atom_major(other_cache.cords, self.cords,
-                        other_cache.G, self.G, self.n_atoms, ref_idx, parallel=True)
+                        other_cache.traces, self.traces, self.n_atoms, ref_idx, parallel=True)
         raise RuntimeError()

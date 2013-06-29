@@ -28,7 +28,7 @@ __version__ = VERSION
 
 
 rmsd = Extension('mdtraj._rmsd',
-    sources = ['MDTraj/rmsd/src/theobald_rmsd.c','MDTraj/rmsd/wrapper.pyx'],
+    sources = ['MDTraj/rmsd/src/theobald_rmsd.c','MDTraj/rmsd/_rmsd.pyx'],
     include_dirs = ["MDTraj/rmsd/include", numpy.get_include()],
     extra_compile_args = ["-std=c99","-O2", "-msse2","-msse3","-fopenmp"],
     extra_link_args = ['-lgomp', '-lm'],
