@@ -82,9 +82,9 @@ def get_fn(name):
 
 
 def eq(o1, o2, decimal=6, err_msg=''):
-    """Convenience function for asserting that two objects are equal to oneaanother
+    """Convenience function for asserting that two objects are equal to one another
 
-    If the objects are both arrays or sparse matricies, this method will
+    If the objects are both arrays or sparse matrices, this method will
     dispatch to an appropriate handler, which makes it a little bit more
     useful than just calling ``assert o1 == o2`` (which wont work for numpy
     arrays -- it returns an array of bools, not a single True or False)

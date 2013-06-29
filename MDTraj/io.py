@@ -47,7 +47,7 @@
 mdtraj.io provides IO for generic arrays via the functions ``mdtraj.io.loadh``
 and ``mdtraj.io.saveh``, for loading and saving generic arrays to disk.
 These functions act like ``numpy.savez`` and ``numpy.loadz``, but use a
-PyTables HDF5 for supperior performance and compression.
+PyTables HDF5 for superior performance and compression.
 
 Nothing in this module is specific to molecular dynamics trajectories.
 
