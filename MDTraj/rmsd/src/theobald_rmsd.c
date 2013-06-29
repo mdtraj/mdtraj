@@ -1,8 +1,6 @@
-// This file is part of MSMBuilder.
-//
 // Copyright 2011 Stanford University
 //
-// MSMBuilder is free software; you can redistribute it and/or modify
+// IRMSD is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
@@ -23,21 +21,23 @@
 // [1] Theobald DL. Rapid calculation of RMSDs using a quaternion-based characteristic polynomial. 
 //     Acta Cryst., A61:478, 2005.  doi:10.1107/50108767305015266
 //
-// Written by John D. Chodera <jchodera@gmail.com>, Dill lab, UCSF, 2006.
-// Contributions in 2010 from:
-//      Kyle Beauchamp(kyleb@stanford.edu)
-//      Peter Kasson (kasson@stanford.edu)
-//      Kai Kohlhoff (kohlhoff@stanford.edu)
-//      Imran Haque  (ihaque@cs.stanford.edu)
+// Contributions from:
+//      John D. Chodera <jchodera AT gmail.com>, Dill lab, UCSF, 2006.
+//      Kyle Beauchamp(kyleb AT stanford.edu)
+//      Peter Kasson (kasson AT stanford.edu)
+//      Kai Kohlhoff (kohlhoff AT stanford.edu)
+//      Imran Haque  (ihaque AT cs.stanford.edu)
 //=============================================================================================
 
+#include <assert.h>
 #include <math.h>
-#include "theobald_rmsd.h"
 #include <stdio.h>
 #include <xmmintrin.h>
 #ifdef __SSE3__
 #include <pmmintrin.h>
 #endif
+#include "theobald_rmsd.h"
+#include "util.h"
 
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
@@ -208,9 +208,8 @@ float NewtonSolve(float lambda, float C_0, float C_1, float C_2)
   return(lambda);
 }
 
-float rmsd2FromMandG(const float M[9],const float G_x,const float G_y,const int numAtoms) 
+float msdFromMandG(const float M[9],const float G_x,const float G_y,const int numAtoms) 
 {
-        // DEV: still too many glob mem accesses, can reduce this
     const int m = 3;
     float k00 =  M[0+0*m ] + M[1+1*m] + M[2+2*m];       // [0, 0]
     float k01 =  M[1+2*m ] - M[2+1*m];                  // [0, 1]
@@ -230,7 +229,6 @@ float rmsd2FromMandG(const float M[9],const float G_x,const float G_y,const int 
 
     float lambda = (G_x + G_y) / 2.0f;
 
-    unsigned int i;
     float rmsd2,ls_rmsd2;
     C_2 = 0.0f;
     for (int i = 0; i < m * m; i++)
@@ -239,7 +237,7 @@ float rmsd2FromMandG(const float M[9],const float G_x,const float G_y,const int 
     }
     C_2 *= -2.0f;
 
-    // get determinante M
+    // get det(M)
     // could use rule of Sarrus, but better:
     // computationally more efficient with Laplace expansion
     detM = M[0] * (M[4] * M[8] - M[5] * M[7])
@@ -257,20 +255,21 @@ float rmsd2FromMandG(const float M[9],const float G_x,const float G_y,const int 
     C_1 = -8.0f * detM;
     C_0 = detK;
 
-    lambda=DirectSolve(lambda, C_0,C_1,C_2);
+    lambda = DirectSolve(lambda, C_0,C_1,C_2);
 
     rmsd2 = (G_x + G_y - 2.0f * lambda) / numAtoms;
     ls_rmsd2 = 0.0f;
     if (rmsd2 > 0.0f) ls_rmsd2 = rmsd2;
 
     return ls_rmsd2;
-    
 }
 
-real ls_rmsd2_aligned_T_g(const int nrealatoms, const int npaddedatoms, const int rowstride,
-                          const float* aT, const float* bT, const real G_a, const real G_b)
+float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int rowstride,
+                     const float* aT, const float* bT, const float G_a, const float G_b)
 {
-    /* Structure setup for this function:
+    /*   Computes the mean-square-deviation between two centered structures in axis-major format.
+     *
+     *   Structure setup for this function:
      *
      *   structures are stored axis major, possibly with extra padding to ensure you
      *   meet two constraints:
@@ -280,7 +279,7 @@ real ls_rmsd2_aligned_T_g(const int nrealatoms, const int npaddedatoms, const in
      *   note that if you meet the second condition for the first row, and meet the
      *   first condition, the alignment will automatically be satisfied for every row.
      *
-     *   the layout in memory for a structure of 7 atoms would look like this:
+     *   the layout in memory for a structure of 7 atoms would look like this (read row-major):
      *
      *       x0 x1 x2 x3 x4 x5 x6 0
      *       y0 y1 y2 y3 y4 y5 y6 0
@@ -311,12 +310,12 @@ real ls_rmsd2_aligned_T_g(const int nrealatoms, const int npaddedatoms, const in
      *       G_b:          trace of B'B
      */
 
-            
-            
-	int nIndex;
     // Will have 3 garbage elements at the end
     float M[12] __attribute__ ((aligned (16)));
-
+    int niters = npaddedatoms >> 2;
+    __m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
+    __m128 ax,ay,az,b;
+    __m128 t0,t1,t2;
     const float* aTx = aT;
     const float* aTy = aT+rowstride;
     const float* aTz = aT+2*rowstride;
@@ -324,22 +323,10 @@ real ls_rmsd2_aligned_T_g(const int nrealatoms, const int npaddedatoms, const in
     const float* bTy = bT+rowstride;
     const float* bTz = bT+2*rowstride;
 
-
     // npaddedatoms must be a multiple of 4
-    int niters = npaddedatoms >> 2;
-    __m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
-    __m128 ax,ay,az,b;
-    __m128 t0,t1,t2;
-    // Prologue
-    xx = _mm_xor_ps(xx,xx);
-    xy = _mm_xor_ps(xy,xy);
-    xz = _mm_xor_ps(xz,xz);
-    yx = _mm_xor_ps(yx,yx);
-    yy = _mm_xor_ps(yy,yy);
-    yz = _mm_xor_ps(yz,yz);
-    zx = _mm_xor_ps(zx,zx);
-    zy = _mm_xor_ps(zy,zy);
-    zz = _mm_xor_ps(zz,zz);
+    assert(npaddedatoms % 4 == 0);
+
+    xx = xy = xz = yx = yy = yz = zx = zy = zz = _mm_setzero_ps();
     for (int k = 0; k < niters; k++) {
         ax = _mm_load_ps(aTx);
         ay = _mm_load_ps(aTy);
@@ -389,111 +376,108 @@ real ls_rmsd2_aligned_T_g(const int nrealatoms, const int npaddedatoms, const in
         bTz += 4;
     }
     // Epilogue - reduce 4 wide vectors to one wide
-   /*xmm07 = xx0 xx1 xx2 xx3
-     xmm08 = xy0 xy1 xy2 xy3
-     xmm09 = xz0 xz1 xz2 xz3
-     xmm10 = yx0 yx1 yx2 yx3
-     xmm11 = yy0 yy1 yy2 yy3
-     xmm12 = yz0 yz1 yz2 yz3
-     xmm13 = zx0 zx1 zx2 zx3
-     xmm14 = zy0 zy1 zy2 zy3
-     xmm15 = zz0 zz1 zz2 zz3
-     
-     haddps xmm07 xmm08
-         xmm07 = xx0+1 xx2+3 xy0+1 xy2+3
-     haddps xmm09 xmm10
-         xmm09 = xz0+1 xz2+3 yx0+1 yx2+3
-     haddps xmm11 xmm12
-         xmm11 = yy0+1 yy2+3 yz0+1 yz2+3
-     haddps xmm13 xmm14
-         xmm13 = zx0+1 zx2+3 zy0+1 zy2+3
-     haddps xmm15 xmm14
-         xmm15 = zz0+1 zz2+3 zy0+1 zy2+3
-     
-     haddps xmm07 xmm09
-         xmm07 = xx0123 xy0123 xz0123 yx0123
-     haddps xmm11 xmm13
-         xmm11 = yy0123 yz0123 zx0123 zy0123
-     haddps xmm15 xmm09
-         xmm15 = zz0123 zy0123 xz0123 yx0123*/ 
-    #ifdef __SSE3__
-    xx = _mm_hadd_ps(xx,xy);
-    xz = _mm_hadd_ps(xz,yx);
-    yy = _mm_hadd_ps(yy,yz);
-    zx = _mm_hadd_ps(zx,zy);
-    zz = _mm_hadd_ps(zz,zy);
-
-    xx = _mm_hadd_ps(xx,xz);
-    yy = _mm_hadd_ps(yy,zx);
-    zz = _mm_hadd_ps(zz,xz);
-    #else
-    // Emulate horizontal adds using UNPCKLPS/UNPCKHPS
-    t0 = xx;
-    t1 = xx;
-    t0 = _mm_unpacklo_ps(t0,xz);
-        // = xx0 xz0 xx1 xz1
-    t1 = _mm_unpackhi_ps(t1,xz);
-        // = xx2 xz2 xx3 xz3
-    t0 = _mm_add_ps(t0,t1);
-        // = xx02 xz02 xx13 xz13
-
-    t1 = xy;
-    t2 = xy;
-    t1 = _mm_unpacklo_ps(t1,yx);
-        // = xy0 yx0 xy1 yx1
-    t2 = _mm_unpackhi_ps(t2,yx);
-        // = xy2 yx2 xy3 yx3
-    t1 = _mm_add_ps(t1,t2);
-        // = xy02 yx02 xy13 yx13
-
-    xx = t0;
-    xx = _mm_unpacklo_ps(xx,t1);
-        // = xx02 xy02 xz02 yx02
-    t0 = _mm_unpackhi_ps(t0,t1);
-        // = xx13 xy13 xz13 yx13
-    xx = _mm_add_ps(xx,t0);
-        // = xx0123 xy0123 xz0123 yx0123
-
-    t0 = yy;
-    t1 = yy;
-    t0 = _mm_unpacklo_ps(t0,zx);
-        // = yy0 zx0 yy1 zx1
-    t1 = _mm_unpackhi_ps(t1,zx);
-        // = yy2 zx2 yy3 zx3
-    t0 = _mm_add_ps(t0,t1);
-        // = yy02 zx02 yy13 zx13
-
-    t1 = yz;
-    t2 = yz;
-    t1 = _mm_unpacklo_ps(t1,zy);
-        // = yz0 zy0 yz1 zy1
-    t2 = _mm_unpackhi_ps(t2,zy);
-        // = yz2 zy2 yz3 zy3
-    t1 = _mm_add_ps(t1,t2);
-        // = yz02 zy02 yz13 zy13
-
-    yy = t0;
-    yy = _mm_unpacklo_ps(yy,t1);
-        // = yy02 yz02 zx02 zy02
-    t0 = _mm_unpackhi_ps(t0,t1);
-        // = yy13 yz13 zx13 zy13
-    yy = _mm_add_ps(yy,t0);
-        // = yy0123 yz0123 zx0123 zy0123
-
-    t1 = _mm_movehl_ps(t1,zz);
-        // = zz2 zz3 - -
-    zz = _mm_add_ps(zz,t1);
-        // = zz02 zz13 - -
-    t1 = _mm_shuffle_ps(zz,zz,_MM_SHUFFLE(1,1,1,1));
-        // = zz13 zz13 zz13 zz13
-    zz = _mm_add_ps(zz,t1);
-        // = zz0123 zz1133 - -
-    #endif
+    REDUCTION_EPILOGUE(xx, xy, xz, yx, yy, yz, zx, zy, zz, t0, t1, t2);
 
     _mm_store_ps(M  , xx);
     _mm_store_ps(M+4, yy);
     _mm_store_ps(M+8, zz);
 
-    return rmsd2FromMandG(M,G_a,G_b,nrealatoms);
+    return msdFromMandG(M,G_a,G_b,nrealatoms);
 }
 
+float msd_atom_major(const int nrealatoms, const int npaddedatoms,
+                     const float* a, const float* b, const float G_a, const float G_b)
+{
+    /*   Computes the mean-square-deviation between two centered structures in atom-major format.
+     * Structure setup for this function:
+     *
+     *   structures are stored atom major obeying two constraints:
+     *       - if the number of atoms is not divisible by four, the structure is padded out
+     *         with dummy atoms with zero in each coordinate up to an even multiple of 4 atoms.
+     *       - the structure is aligned to a 16-byte boundary
+     *
+     *   the layout in memory for a structure of 7 atoms would look like this (read row-major):
+     *
+     *       x0 y0 z0
+     *       x1 y1 z1
+     *       x2 y2 x2
+     *       x3 y3 x3
+     *       x4 y4 x4
+     *       x5 y5 x5
+     *       x6 y6 x6
+     *        0  0  0
+     *
+     *   if your structure has a number of atoms that is not a multiple of 4, you must
+     *   pad it out to a multiple of 4 using zeros (using anything other than zero will
+     *   make the calculation go wrong).
+     *
+     *   arguments:
+     *       nrealatoms:   the *actual* number of atoms in the structure
+     *
+     *       npaddedatoms: the number of atoms in the structure including padding atoms;
+     *                     should equal nrealatoms rounded up to the next multiple of 4
+     *
+     *       a:           pointer to start of first structure (A). should be aligned to
+     *                     a 16-byte boundary
+     *
+     *       b:           pointer to start of second structure (B). should be aligned to
+     *                     a 16-byte boundary
+     *
+     *       G_a:          trace of A'A
+     *
+     *       G_b:          trace of B'B
+     */
+
+    // Will have 3 garbage elements at the end
+    float M[12] __attribute__ ((aligned (16)));
+    int niters = npaddedatoms >> 2;
+    __m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
+    __m128 ax,ay,az,bx,by,bz;
+    __m128 t0,t1,t2;
+
+    // npaddedatoms must be a multiple of 4
+    assert(npaddedatoms % 4 == 0);
+
+    xx = xy = xz = yx = yy = yz = zx = zy = zz = _mm_setzero_ps();
+    for (int k = 0; k < niters; k++)
+    {
+        aos_deinterleaved_load(b,&bx,&by,&bz);
+        aos_deinterleaved_load(a,&ax,&ay,&az);
+
+        t0 = bx;
+        t1 = by;
+        t2 = bz;
+        t0 = _mm_mul_ps(t0,ax);
+        t1 = _mm_mul_ps(t1,ax);
+        t2 = _mm_mul_ps(t2,ax);
+        xx = _mm_add_ps(xx,t0);
+        xy = _mm_add_ps(xy,t1);
+        xz = _mm_add_ps(xz,t2);
+
+        t0 = bx;
+        t1 = by;
+        t2 = bz;
+        t0 = _mm_mul_ps(t0,ay);
+        t1 = _mm_mul_ps(t1,ay);
+        t2 = _mm_mul_ps(t2,ay);
+        yx = _mm_add_ps(yx,t0);
+        yy = _mm_add_ps(yy,t1);
+        yz = _mm_add_ps(yz,t2);
+
+        bx = _mm_mul_ps(bx,az);
+        by = _mm_mul_ps(by,az);
+        bz = _mm_mul_ps(bz,az);
+        zx = _mm_add_ps(zx,bx);
+        zy = _mm_add_ps(zy,by);
+        zz = _mm_add_ps(zz,bz);
+
+        a += 12;
+        b += 12;
+    }
+    REDUCTION_EPILOGUE(xx, xy, xz, yx, yy, yz, zx, zy, zz, t0, t1, t2);
+
+    _mm_store_ps(M  , xx);
+    _mm_store_ps(M+4, yy);
+    _mm_store_ps(M+8, zz);
+    return msdFromMandG(M,G_a,G_b,nrealatoms);
+}
