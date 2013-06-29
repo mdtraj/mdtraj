@@ -98,6 +98,7 @@ cdef class BINPOSTrajectoryFile:
     cdef char* mode
     cdef char* filename
     cdef int write_initialized
+    cdef readonly char* distance_unit
 
     cdef void* fh
     cdef molfile_timestep_t* timestep
@@ -105,6 +106,7 @@ cdef class BINPOSTrajectoryFile:
     def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True, **kwargs):
         """Open an AMBER BINPOS file for reading/writing.
         """
+        self.distance_unit = 'angstroms'
         self.is_open = False
         self.frame_counter = 0
 

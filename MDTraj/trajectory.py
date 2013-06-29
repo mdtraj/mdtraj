@@ -1106,13 +1106,13 @@ class Trajectory(object):
             for i in xrange(self.n_frames):
 
                 if self._have_unitcell:
-                    f.write(_convert(self._xyz[i], Trajectory.__distance_unit, PDBTrajectoryFile.distance_unit),
+                    f.write(_convert(self._xyz[i], Trajectory.__distance_unit, f.distance_unit),
                             self.topology,
                             modelIndex=i,
-                            unitcell_lengths=_convert(self.unitcell_lengths[i], Trajectory.__distance_unit, PDBTrajectoryFile.distance_unit),
+                            unitcell_lengths=_convert(self.unitcell_lengths[i], Trajectory.__distance_unit, f.distance_unit),
                             unitcell_angles=self.unitcell_angles[i])
                 else:
-                    f.write(_convert(self._xyz[i], Trajectory.__distance_unit, PDBTrajectoryFile.distance_unit),
+                    f.write(_convert(self._xyz[i], Trajectory.__distance_unit, f.distance_unit),
                             self.topology,
                             modelIndex=i)
 
@@ -1157,14 +1157,11 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filenames, if its already there
         """
-        # convert from internal nm representation to angstroms for output
-        xyz = self.xyz * 10
-        lengths = self.unitcell_lengths
-        if lengths is not None:
-            lengths = lengths * 10
-
+        self._check_valid_unitcell()
         with DCDTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(xyz, lengths, self.unitcell_angles)
+            f.write(_convert(self.xyz, Trajectory.__distance_unit, f.distance_unit),
+                    cell_lengths=_convert(self.unitcell_lengths, Trajectory.__distance_unit, f.distance_unit),
+                    cell_angles=self.unitcell_angles)
 
 
     def save_binpos(self, filename, force_overwrite=True):
@@ -1177,10 +1174,8 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        # convert from internal nm representation to angstroms for output
-        xyz = self.xyz * 10
         with BINPOSTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(xyz)
+            f.write(_convert(self.xyz, Trajectory.__distance_unit, f.distance_unit))
 
 
     def save_netcdf(self, filename, force_overwrite=True):
@@ -1197,7 +1192,7 @@ class Trajectory(object):
         with NetCDFTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(coordinates=_convert(self._xyz, Trajectory.__distance_unit, NetCDFTrajectoryFile.distance_unit),
                     time=self.time,
-                    cell_lengths=_convert(self.unitcell_lengths, Trajectory.__distance_unit, NetCDFTrajectoryFile.distance_unit),
+                    cell_lengths=_convert(self.unitcell_lengths, Trajectory.__distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
     def center_coordinates(self):
