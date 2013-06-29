@@ -1,5 +1,4 @@
 from cpython cimport bool
-#from libc.math cimport sqrtf
 from mdtraj.utils.arrays import ensure_type
 import cython
 import numpy as np
@@ -20,10 +19,10 @@ cdef extern from "math.h":
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def getMultipleRMSDs_axis_major(
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz1,
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz2,
-np.ndarray[np.float32_t, ndim=1, mode="c"] g1,
-np.ndarray[np.float32_t, ndim=1, mode="c"] g2,
+np.ndarray[np.float32_t, ndim=3, mode="c"] xyz1 not None,
+np.ndarray[np.float32_t, ndim=3, mode="c"] xyz2 not None,
+np.ndarray[np.float32_t, ndim=1, mode="c"] g1 not None,
+np.ndarray[np.float32_t, ndim=1, mode="c"] g2 not None,
 int n_atoms,
 int frame,
 bool parallel=True):
@@ -58,7 +57,6 @@ bool parallel=True):
     cdef Py_ssize_t i
     cdef int n_frames = xyz2.shape[0]
     cdef int n_atoms_padded = xyz1.shape[2]
-    cdef int true_stride = n_atoms_padded * 3
     cdef float msd
 
     assert xyz1.ndim == 3 and xyz2.ndim == 3 and xyz1.shape[1] == 3 and xyz2.shape[1] == 3
@@ -88,10 +86,10 @@ bool parallel=True):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def getMultipleRMSDs_atom_major(
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz1,
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz2,
-np.ndarray[np.float32_t, ndim=1, mode="c"] g1,
-np.ndarray[np.float32_t, ndim=1, mode="c"] g2,
+np.ndarray[np.float32_t, ndim=3, mode="c"] xyz1 not None,
+np.ndarray[np.float32_t, ndim=3, mode="c"] xyz2 not None,
+np.ndarray[np.float32_t, ndim=1, mode="c"] g1 not None,
+np.ndarray[np.float32_t, ndim=1, mode="c"] g2 not None,
 int n_atoms,
 int frame,
 bool parallel=True):
@@ -125,8 +123,7 @@ bool parallel=True):
     
     cdef Py_ssize_t i
     cdef int n_frames = xyz2.shape[0]
-    cdef int n_atoms_padded = xyz1.shape[2]
-    cdef int true_stride = n_atoms_padded * 3
+    cdef int n_atoms_padded = xyz1.shape[1]
     cdef float msd
 
     assert xyz1.ndim == 3 and xyz2.ndim == 3 and xyz1.shape[2] == 3 and xyz2.shape[2] == 3
