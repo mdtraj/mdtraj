@@ -244,19 +244,19 @@ class HDF5TrajectoryFile(object):
         topology = Topology()
 
         for chain_dict in sorted(topology_dict['chains'], key=operator.itemgetter('index')):
-            chain = topology.addChain()
+            chain = topology.add_chain()
             for residue_dict in sorted(chain_dict['residues'], key=operator.itemgetter('index')):
-                residue = topology.addResidue(residue_dict['name'], chain)
+                residue = topology.add_residue(residue_dict['name'], chain)
                 for atom_dict in sorted(residue_dict['atoms'], key=operator.itemgetter('index')):
                     try:
                         element = elem.get_by_symbol(atom_dict['element'])
                     except KeyError:
                         raise ValueError('The symbol %s isn\'t a valid element' % atom_dict['element'])
-                    topology.addAtom(atom_dict['name'], element, residue)
+                    topology.add_atom(atom_dict['name'], element, residue)
 
-        atoms = list(topology.atoms())
+        atoms = list(topology.atoms)
         for index1, index2 in topology_dict['bonds']:
-            topology.addBond(atoms[index1], atoms[index2])
+            topology.add_bond(atoms[index1], atoms[index2])
 
         return topology
 
@@ -276,18 +276,34 @@ class HDF5TrajectoryFile(object):
                 'chains': [],
                 'bonds': []
             }
-            for chain in topology_object.chains():
+            
+            # we want to be able to handle the simtk.openmm Topology object
+            # here too, for the purpose of having a reporter
+            # it doesnt use decorators on the chains/residues/atoms/bonds
+            # so we need to call the methods explicitly. this adds some
+            # annoying bulk to the code
+            chain_iter = topology_object.chains
+            if not hasattr(chain_iter, '__iter__'):
+                chain_iter = chain_iter()
+
+            for chain in chain_iter:
                 chain_dict = {
                     'residues': [],
                     'index': int(chain.index)
                 }
-                for residue in chain.residues():
+                residue_iter = chain.residues
+                if not hasattr(residue_iter, '__iter__'):
+                    residue_iter = residue_iter()
+                for residue in residue_iter:
                     residue_dict = {
                         'index': int(residue.index),
                         'name': str(residue.name),
                         'atoms': []
                     }
-                    for atom in residue.atoms():
+                    atom_iter = residue.atoms
+                    if not hasattr(atom_iter, '__iter__'):
+                        atom_iter = atom_iter()
+                    for atom in atom_iter:
                         residue_dict['atoms'].append({
                             'index': int(atom.index),
                             'name': str(atom.name),
@@ -296,7 +312,10 @@ class HDF5TrajectoryFile(object):
                     chain_dict['residues'].append(residue_dict)
                 topology_dict['chains'].append(chain_dict)
 
-            for atom1, atom2 in topology_object.bonds():
+            bond_iter = topology_object.bonds
+            if not hasattr(bond_iter, '__iter__'):
+                 bond_iter = bond_iter()
+            for atom1, atom2 in bond_iter:
                 topology_dict['bonds'].append([
                     int(atom1.index),
                     int(atom2.index)
