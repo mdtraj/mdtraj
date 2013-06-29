@@ -89,14 +89,30 @@ def _parse_topology(top):
     return topology
 
 
+def _convert(quantity, in_unit, out_unit):
+    if quantity is None:
+        return None
+
+    factor = {('angstroms', 'angstroms'): 1,
+              ('nanometers', 'nanometers'): 1,
+              ('angstroms', 'nanometers'): 0.1,
+              ('nanometers', 'angstroms'): 10}[(in_unit, out_unit)]
+    return quantity * factor
+
+
+##############################################################################
+# Utilities
+##############################################################################
+
+
 def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     """Load a trajectory from one or more files on disk.
-    
+
     This function dispatches to one of the specialized trajectory loaders based
     on the extension on the filename. Because different trajectory formats save
     different information on disk, the specific keyword argument options supported
     depend on the specific loaded.
-    
+
     Parameters
     ----------
     filename_or_filenames : {str, list of strings}
@@ -155,7 +171,7 @@ def load_pdb(filename):
     -------
     trajectory : md.Trajectory
         The resulting trajectory, as an md.Trajectory object.
-        
+
     See Also
     --------
     mdtraj.PDBTrajectoryFile : Low level interface to PDB files
@@ -165,27 +181,32 @@ def load_pdb(filename):
             'you supplied %s' % type(filename))
 
     filename = str(filename)
-    f = PDBTrajectoryFile(filename)
+    with PDBTrajectoryFile(filename) as f:
+        # convert from angstroms to nm
+        coords = f.positions / 10.0
 
-    # convert from angstroms to nm
-    coords = f.positions / 10.0
+        assert coords.ndim == 3, 'internal shape error'
+        n_frames = len(coords)
 
-    assert coords.ndim == 3, 'internal shape error'
-    n_frames = len(coords)
+        trajectory = Trajectory(xyz=coords, topology=f.topology)
 
-    trajectory = Trajectory(xyz=coords, topology=f.topology)
+        if f.unitcell_angles is not None and f.unitcell_lengths is not None:
+            a, b, c = f.unitcell_lengths
+            alpha, beta, gamma = f.unitcell_angles
+            # we need to convert the distances from angstroms to nanometers
+            unitcell_lengths = np.array([[a / 10.0, b / 10.0, c / 10.0]])
+            unitcell_angles = np.array([[alpha, beta, gamma]])
 
-    if f.unitcell_vectors is not None:
-        a, b, c = f.unitcell_vectors
-        # we need to convert the distances from angstroms to nanometers
-        unitcell_lengths = np.array([[a / 10.0, b / 10.0, c / 10.0]])
-        unitcell_angles = np.array([[90.0, 90.0, 90.0]])
+            # we need to project these unitcell parameters
+            # into each frame, for a multiframe PDB
 
-        # we need to project these unitcell parameters
-        # into each frame, for a multiframe PDB
+            trajectory.unitcell_lengths = np.repeat(unitcell_lengths, n_frames, axis=0)
+            trajectory.unitcell_angles = np.repeat(unitcell_angles, n_frames, axis=0)
+        elif f.unitcell_angles is None and f.unitcell_lengths is None:
+            pass
+        else:
+            raise ValueError('Unitcell not parsed correctedly')
 
-        trajectory.unitcell_lengths = np.repeat(unitcell_lengths, n_frames, axis=0)
-        trajectory.unitcell_angles = np.repeat(unitcell_angles, n_frames, axis=0)
 
     return trajectory
 
@@ -239,7 +260,7 @@ def load_xml(filename, top=None):
 
 def load_xtc(filename, top=None, chunk=None):
     """Load an Gromacs XTC file from disk.
-    
+
     Since the Gromacs XTC format doesn't contain information to specify the
     topolgy, you need to supply the topology yourself.
 
@@ -558,6 +579,10 @@ class Trajectory(object):
     unitcell_lengths : {np.ndarray, shape=(n_frames, 3), None}
     unitcell_angles : {np.ndarray, shape=(n_frames, 3), None}
     """
+
+    # this is NOT configurable. if it's set to something else, things will break
+    # (thus why I make it private)
+    __distance_unit = 'nanometers'
 
     @property
     def topology(self):
@@ -1075,24 +1100,21 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        topology = self.topology
-
-        # convert to angstroms
-        if self.unitcell_lengths is not None and self.unitcell_angles is not None:
-            a, b, c = 10*self.unitcell_lengths[0]
-
-            if (np.abs(self.unitcell_angles[0, 0] - 90.0) > 1e-8 or
-                    np.abs(self.unitcell_angles[0, 1] - 90.0) > 1e-8 or
-                    np.abs(self.unitcell_angles[0, 2] - 90.0) > 1e-8):
-                warnings.warn('Unit cell information not saved correctly to PDB')
-
-            topology.setUnitCellDimensions((a, b, c))
+        self._check_valid_unitcell()
 
         with PDBTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             for i in xrange(self.n_frames):
-                # need to convert internal nm to angstroms for output
-                f.write(self._xyz[i] * 10, topology, modelIndex=i)
 
+                if self._have_unitcell:
+                    f.write(_convert(self._xyz[i], Trajectory.__distance_unit, PDBTrajectoryFile.distance_unit),
+                            self.topology,
+                            modelIndex=i,
+                            unitcell_lengths=_convert(self.unitcell_lengths[i], Trajectory.__distance_unit, PDBTrajectoryFile.distance_unit),
+                            unitcell_angles=self.unitcell_angles[i])
+                else:
+                    f.write(_convert(self._xyz[i], Trajectory.__distance_unit, PDBTrajectoryFile.distance_unit),
+                            self.topology,
+                            modelIndex=i)
 
     def save_xtc(self, filename, force_overwrite=True):
         """Save trajectory to Gromacs XTC format
@@ -1171,11 +1193,12 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        from mdtraj.netcdf import NetCDFFile
-
-        xyz = self.xyz * 10
-        with NetCDFFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(coordinates=xyz, time=self.time)
+        self._check_valid_unitcell()
+        with NetCDFTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(coordinates=_convert(self._xyz, Trajectory.__distance_unit, NetCDFTrajectoryFile.distance_unit),
+                    time=self.time,
+                    cell_lengths=_convert(self.unitcell_lengths, Trajectory.__distance_unit, NetCDFTrajectoryFile.distance_unit),
+                    cell_angles=self.unitcell_angles)
 
     def center_coordinates(self):
         """Remove the center of mass from each frame in trajectory.
@@ -1197,6 +1220,25 @@ class Trajectory(object):
         """
         self._topology = self._topology.subset(atom_indices)
         self._xyz = self.xyz[:,atom_indices]
+
+
+    def _check_valid_unitcell(self):
+        """Do some sanity checking on self.unitcell_lengths and self.unitcell_angles
+        """
+        if self.unitcell_lengths is not None and self.unitcell_angles is None:
+            raise AttributeError('unitcell length data exists, but no angles')
+        if self.unitcell_lengths is None and self.unitcell_angles is not None:
+            raise AttributeError('unitcell angles data exists, but no lengths')
+
+        if self.unitcell_lengths is not None and np.any(self.unitcell_lengths < 0):
+            raise ValueError('unitcell length < 0')
+
+        if self.unitcell_angles is not None and np.any(self.unitcell_angles < 0):
+            raise ValueError('unitcell angle < 0')
+
+    @property
+    def _have_unitcell(self):
+        return self._unitcell_lengths is not None and self._unitcell_angles is not None
 
 
 ##############################################################################

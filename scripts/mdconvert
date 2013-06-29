@@ -66,14 +66,6 @@ class _Warner(object):
 warn = _Warner()
 
 
-def unit_convert(array, in_units, out_units):
-    factor = {('angstroms', 'angstroms'): 1,
-              ('nanometers', 'nanometers'): 1,
-              ('angstroms', 'nanometers'): 0.1,
-              ('nanometers', 'angstroms'): 10}[(in_units, out_units)]
-    array *= factor
-
-
 def index(str):
     if str.count(':') == 0:
         return int(str)
@@ -381,26 +373,26 @@ def read(infile, chunk, stride, atom_indices):
 def convert(data, in_units, out_units, out_fields):
     # do unit conversion
     if 'xyz' in out_fields and 'xyz' in data:
-        unit_convert(data['xyz'], in_units, out_units)
+        data['xyz'] = md.trajectory._convert(data['xyz'], in_units, out_units)
     if 'box' in out_fields:
         if 'box' in data:
-            unit_convert(data['box'], in_units, out_units)
+            md.trajectory._convert(data['box'], in_units, out_units)
         elif 'cell_angles' in data and 'cell_lengths' in data:
             a, b, c = data['cell_lengths'].T
             alpha, beta, gamma = data['cell_angles'].T
             data['box'] = np.dstack(md.utils.unitcell.lengths_and_angles_to_box_vectors(a, b, c, alpha, beta, gamma))
-            unit_convert(data['box'], in_units, out_units)
+            data['box'] = md.trajectory._convert(data['box'], in_units, out_units)
             del data['cell_lengths']
             del data['cell_angles']
 
     if 'cell_lengths' in out_fields:
         if 'cell_lengths' in data:
-            unit_convert(data['cell_lengths'], in_units, out_units)
+            data['cell_lengths'] = md.trajectory._convert(data['cell_lengths'], in_units, out_units)
         elif 'box' in data:
             a, b, c, alpha, beta, gamma = md.utils.unitcell.box_vectors_to_lengths_and_angles(data['box'][:, 0], data['box'][:, 1], data['box'][:, 2])
             data['cell_lengths'] = np.vstack((a, b, c)).T
             data['cell_angles'] = np.vstack((alpha, beta, gamma)).T
-            unit_convert(data['cell_lengths'], in_units, out_units)
+            data['cell_lengths'] = md.trajectory._convert(data['cell_lengths'], in_units, out_units)
             del data['box']
 
     ignored_keys = ["'%s'" % s for s in set(data) - set(out_fields)]

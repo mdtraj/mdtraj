@@ -108,7 +108,7 @@ class PDBTrajectoryFile(object):
 
         self._open = True
 
-    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, unitcell_vectors=None):
+    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, unitcell_angles=None):
         """Write a PDB file to disk
 
         Parameters
@@ -120,11 +120,15 @@ class PDBTrajectoryFile(object):
         modelIndex : {int, None}
             If not None, the model will be surrounded by MODEL/ENDMDL records
             with this index
+        unitcell_lengths : {tuple, None}
+            Lengths of the three unit cell vectors, or None for a non-periodic system
+        unitcell_angles : {tuple, None}
+            Angles between the three unit cell vectors, or None for a non-periodic system
         """
         if not self._mode == 'w':
             raise ValueError('file not opened for writing')
         if not self._header_written:
-            self._write_header(unitcell_lengths, unitcell_vectors)
+            self._write_header(unitcell_lengths, unitcell_angles)
             self._header_written = True
 
         if ilen(topology.atoms) != len(positions):
@@ -176,7 +180,7 @@ class PDBTrajectoryFile(object):
         ----------
         unitcell_lengths : {tuple, None}
             The lengths of the three unitcell vectors, ``a``, ``b``, ``c``
-        unitcell_vectors : {tuple, None}
+        unitcell_angles : {tuple, None}
             The angles between the three unitcell vectors, ``alpha``,
             ``beta``, ``gamma``
         """
@@ -189,12 +193,15 @@ class PDBTrajectoryFile(object):
             if not len(unitcell_lengths) == 3:
                 raise ValueError('unitcell_lengths must be length 3')
             if not len(unitcell_angles) == 3:
-                raise ValueError('unitcell_vectors must be length 3')
+                raise ValueError('unitcell_angles must be length 3')
         else:
             raise ValueError('either unitcell_lengths and unitcell_angles'
                              'should both be spefied, or neither')
 
-        print >>self._file, "CRYST1%9.3f%9.3f%9.3f  90.00  90.00  90.00 P 1           1 " % unitcell_lengths
+        box = list(unitcell_lengths) + list(unitcell_angles)
+        assert len(box) == 6
+
+        print >>self._file, "CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f P 1           1 " % tuple(box)
 
     def _write_footer(self):
         if not self._mode == 'w':
@@ -215,9 +222,14 @@ class PDBTrajectoryFile(object):
         return self._topology
 
     @property
-    def unitcell_vectors(self):
-        "The unitcell vectors in this PDB file."
-        return self._unitcell_vectors
+    def unitcell_lengths(self):
+        "The unitcell lengths (3-tuple) in this PDB file. May be None"
+        return self._unitcell_lengths
+
+    @property
+    def unitcell_angles(self):
+        "The unitcell angles (3-tuple) in this PDB file. May be None"
+        return self._unitcell_angles
 
     @property
     def closed(self):
@@ -317,9 +329,8 @@ class PDBTrajectoryFile(object):
         self._positions = np.array(_positions)
 
         ## The atom positions read from the PDB file
-        #self.positions = np.array(coords)
-        #print self.positions.shape
-        self._unitcell_vectors = pdb.get_unit_cell_dimensions()
+        self._unitcell_lengths = pdb.get_unit_cell_lengths()
+        self._unitcell_angles = pdb.get_unit_cell_angles()
         self._topology.create_standard_bonds()
         self._topology.create_disulfide_bonds(self.positions[0])
 

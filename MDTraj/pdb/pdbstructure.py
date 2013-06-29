@@ -151,7 +151,8 @@ class PdbStructure(object):
         self._current_model = None
         self.default_model = None
         self.models_by_number = {}
-        self._unit_cell_dimensions = None
+        self._unit_cell_lengths = None
+        self._unit_cell_angles = None
         # read file
         self._load(input_stream)
 
@@ -196,7 +197,8 @@ class PdbStructure(object):
                 self._current_model._current_chain._add_ter_record()
 
             elif (pdb_line.find("CRYST1") == 0):
-                self._unit_cell_dimensions = (float(pdb_line[6:15]), float(pdb_line[15:24]), float(pdb_line[24:33]))
+                self._unit_cell_lengths = (float(pdb_line[6:15]), float(pdb_line[15:24]), float(pdb_line[24:33]))
+                self._unit_cell_angles = (float(pdb_line[33:40]), float(pdb_line[40:47]), float(pdb_line[47:54]))
 
             elif (pdb_line.find("CONECT") == 0):
                 atoms = [int(pdb_line[7:12])]
@@ -296,10 +298,13 @@ class PdbStructure(object):
         for model in self.models:
             model._finalize()
     
-    def get_unit_cell_dimensions(self):
-        """Get the dimensions of the crystallographic unit cell (may be None)."""
-        return self._unit_cell_dimensions
+    def get_unit_cell_lengths(self):
+        """Get the lengths of the crystallographic unit cell (may be None)."""
+        return self._unit_cell_lengths
 
+    def get_unit_cell_angles(self):
+        """Get the angles of the crystallographic unit cell (may be None)."""
+        return self._unit_cell_angles
 
 class Model(object):
     """Model holds one model of a PDB structure.

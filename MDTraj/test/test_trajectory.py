@@ -30,12 +30,13 @@ temp2 = tempfile.mkstemp(suffix='.dcd')[1]
 temp3 = tempfile.mkstemp(suffix='.binpos')[1]
 temp4 = tempfile.mkstemp(suffix='.trr')[1]
 temp5 = tempfile.mkstemp(suffix='.h5')[1]
-
+temp6 = tempfile.mkstemp(suffix='.pdb')[1]
+temp7 = tempfile.mkstemp(suffix='.nc')[1]
 
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
-    for e in [temp1, temp2, temp3, temp4]:
+    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
         os.unlink(e)
 
 
@@ -218,3 +219,14 @@ def test_array_vs_matrix():
 
     eq(t1.xyz, xyz)
     eq(t2.xyz, xyz)
+    
+def test_pdb_unitcell_loadsave():
+    """Make sure that nonstandard unitcell dimensions are saved and loaded
+    correctly with PDB"""
+    tref = load(get_fn('native.pdb'))
+    tref.unitcell_lengths = 1 + 0.1  * np.random.randn(tref.n_frames, 3)
+    tref.unitcell_angles = 90 + 0.0  * np.random.randn(tref.n_frames, 3)
+    tref.save(temp6)
+
+    tnew = load(temp6)
+    eq(tref.unitcell_vectors, tnew.unitcell_vectors, decimal=3)
