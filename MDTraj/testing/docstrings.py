@@ -146,7 +146,7 @@ def DocStringFormatTester(module, error_on_none=False):
                 return
 
             args = set(getargs(f.func_code).args)
-            if ismethod(f):
+            if ismethod(f) and 'self' in args:
                 args.remove('self')
 
             if args != param_names:

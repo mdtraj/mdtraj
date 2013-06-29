@@ -25,6 +25,7 @@ from numpy.testing import (assert_allclose, assert_almost_equal,
   assert_approx_equal, assert_array_almost_equal, assert_array_almost_equal_nulp,
   assert_array_equal, assert_array_less, assert_array_max_ulp, assert_equal,
   assert_raises, assert_string_equal, assert_warns)
+from numpy.testing.decorators import skipif
 from nose.tools import ok_, eq_, raises
 from nose import SkipTest
 from pkg_resources import resource_filename
@@ -45,7 +46,7 @@ __all__ = ['assert_allclose', 'assert_almost_equal', 'assert_approx_equal',
            'assert_array_equal', 'assert_array_less', 'assert_array_max_ulp',
            'assert_equal', 'assert_raises', 'assert_string_equal', 'assert_warns',
            'get_fn', 'eq', 'assert_dict_equal', 'assert_spase_matrix_equal',
-           'expected_failure', 'skip', 'ok_', 'eq_', 'raises']
+           'expected_failure', 'skip', 'ok_', 'eq_', 'raises', 'skipif']
 
 ##############################################################################
 # functions
@@ -53,6 +54,24 @@ __all__ = ['assert_allclose', 'assert_almost_equal', 'assert_approx_equal',
 
 
 def get_fn(name):
+    """Get the full path to one of the reference files shipped for testing
+
+    In the source distribution, these files are in ``MDTraj/testing/reference``,
+    but on installation, they're moved to somewhere in the user's python
+    site-packages directory.
+
+    Parameters
+    ----------
+    name : str
+        Name of the file to load (with respect to the reference/ folder).
+
+    Examples
+    --------
+    >>> import mdtraj as md
+    >>> t = md.load(get_fn('2EQQ.pdb'))
+    >>> eq(t.n_frames, 20)    # this runs the assert, using the eq() func.
+    """
+    
     fn = resource_filename('mdtraj', os.path.join('testing/reference', name))
 
     if not os.path.exists(fn):
@@ -63,6 +82,25 @@ def get_fn(name):
 
 
 def eq(o1, o2, decimal=6, err_msg=''):
+    """Convenience function for asserting that two objects are equal to one another
+
+    If the objects are both arrays or sparse matrices, this method will
+    dispatch to an appropriate handler, which makes it a little bit more
+    useful than just calling ``assert o1 == o2`` (which wont work for numpy
+    arrays -- it returns an array of bools, not a single True or False)
+
+    Parameters
+    ----------
+    o1 : object
+        The first object
+    o2 : object
+        The second object
+    decimal : int
+        If the two objects are floats or arrays of floats, they'll be checked for
+        equality up to this decimal place.
+    err_msg : str
+        Custom error message
+    """
     assert (type(o1) is type(o2)), 'o1 and o2 not the same type: %s %s' % (type(o1), type(o2))
 
     if isinstance(o1, dict):

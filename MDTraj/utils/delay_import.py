@@ -85,8 +85,29 @@ MESSAGES = {
 ##############################################################################
 
 def import_(module):
-    """Import a module, and issue a nice message to stderr if the module
-    isn't installed.
+    """Import a module, and issue a nice message to stderr if the module isn't installed.
+
+    Currently, this function will print nice error messages for networkx,
+    tables, netCDF4, and simtk.unit, which are optional MDTraj dependencies.
+
+    Parameters
+    ----------
+    module : str
+        The module you'd like to import, as a string
+
+    Returns
+    -------
+    module : {module, object}
+        The module object
+
+    Examples
+    --------
+    >>> # the following two lines are equivalent. the difference is that the
+    >>> # second will check for an ImportError and print you a very nice
+    >>> # user-facing message about what's wrong (where you can install the
+    >>> # module from, etc) if the import fails
+    >>> import tables
+    >>> tables = import_('tables')
     """
     try:
         return importlib.import_module(module)

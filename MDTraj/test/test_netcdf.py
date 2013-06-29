@@ -22,6 +22,7 @@ from mdtraj import netcdf, NetCDFTrajectoryFile
 import os, tempfile
 from nose.tools import assert_raises
 import numpy as np
+import mdtraj as md
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
 
 TestDocstrings = DocStringFormatTester(netcdf, error_on_none=True)
@@ -181,3 +182,15 @@ def test_do_overwrite():
 
     with NetCDFTrajectoryFile(temp, 'w', force_overwrite=False) as f:
         f.write(np.random.randn(10,5,3))
+
+
+def test_trajectory_save_load():
+    t = md.load(get_fn('native.pdb'))
+    t.unitcell_lengths = 1 * np.ones((1, 3))
+    t.unitcell_angles = 90 * np.ones((1, 3))
+
+    t.save(temp)
+    t2 = md.load(temp, top=t.topology)
+    
+    eq(t.xyz, t2.xyz)
+    eq(t.unitcell_lengths, t2.unitcell_lengths)
