@@ -1,3 +1,5 @@
+.. _HDF5FormatSpec:
+
 MDTraj HDF5 Format Specification
 ================================
 

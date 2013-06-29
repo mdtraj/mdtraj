@@ -32,8 +32,19 @@ class DCDReporter(_BaseReporter):
     """DCDReporter stores a molecular dynamics trajectory in the CHARMM / NAMD
     DCD Format
 
-    Example
-    -------
+    Parameters
+    ----------
+    file : str, or HDF5Trajectory
+        Either an open HDF5Trajecory object to write to, or a string
+        specifying the filename of a new HDF5 file to save the trajectory to.
+    reportInterval : int
+        The interval (in time steps) at which to write frames.
+    atomSubset : array_like, default=None
+        Only write a subset of the atoms, with these (zero based) indices
+        to the file. If None, *all* of the atoms will be written to disk.
+
+    Examples
+    --------
     >>> simulation = Simulation(topology, system, integrator) # doctest: +SKIP
     >>> dcd_reporter = DCDReporter('traj.dcd', 100)           # doctest: +SKIP
     >>> simulation.reporters.append(dcd_reporter)             # doctest: +SKIP

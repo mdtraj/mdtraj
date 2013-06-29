@@ -55,12 +55,13 @@ import xml.etree.ElementTree as etree
 from copy import copy
 from pdbstructure import PdbStructure
 from mdtraj.topology import Topology
+from mdtraj.utils import ilen
 import element as elem
 
 
 class PDBTrajectoryFile(object):
     """Interface for reading and writing Protein Data Bank (PDB) files
-    
+
     Parameters
     ----------
     filename : str
@@ -70,13 +71,13 @@ class PDBTrajectoryFile(object):
     force_overwrite : bool
         If opened in write mode, and a file by the name of `filename` already
         exists on disk, should we overwrite it?
-        
+
     Attributes
     ----------
     positions : np.ndarray, shape=(n_frames, n_atoms, 3)
     topology : mdtraj.Topology
     closed : bool
-        
+
     See Also
     --------
     mdtraj.load_pdb : High-level wrapper that returns a ``md.Trajectory``
@@ -107,8 +108,8 @@ class PDBTrajectoryFile(object):
 
         self._open = True
 
-    def write(self, positions, topology, modelIndex):
-        """Write a PDB file
+    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, unitcell_angles=None):
+        """Write a PDB file to disk
 
         Parameters
         ----------
@@ -119,14 +120,18 @@ class PDBTrajectoryFile(object):
         modelIndex : {int, None}
             If not None, the model will be surrounded by MODEL/ENDMDL records
             with this index
+        unitcell_lengths : {tuple, None}
+            Lengths of the three unit cell vectors, or None for a non-periodic system
+        unitcell_angles : {tuple, None}
+            Angles between the three unit cell vectors, or None for a non-periodic system
         """
         if not self._mode == 'w':
             raise ValueError('file not opened for writing')
         if not self._header_written:
-            self._write_header(topology)
+            self._write_header(unitcell_lengths, unitcell_angles)
             self._header_written = True
 
-        if len(list(topology.atoms())) != len(positions):
+        if ilen(topology.atoms) != len(positions):
             raise ValueError('The number of positions must match the number of atoms')
         if np.any(np.isnan(positions)):
             raise ValueError('Particle position is NaN')
@@ -137,15 +142,15 @@ class PDBTrajectoryFile(object):
         posIndex = 0
         if modelIndex is not None:
             print >> self._file, "MODEL     %4d" % modelIndex
-        for (chainIndex, chain) in enumerate(topology.chains()):
+        for (chainIndex, chain) in enumerate(topology.chains):
             chainName = chr(ord('A')+chainIndex%26)
-            residues = list(chain.residues())
+            residues = list(chain.residues)
             for (resIndex, res) in enumerate(residues):
                 if len(res.name) > 3:
                     resName = res.name[:3]
                 else:
                     resName = res.name
-                for atom in res.atoms():
+                for atom in res.atoms:
                     if len(atom.name) < 4 and atom.name[:1].isalpha() and (atom.element is None or len(atom.element.symbol) < 2):
                         atomName = ' '+atom.name
                     elif len(atom.name) > 4:
@@ -168,19 +173,35 @@ class PDBTrajectoryFile(object):
         if modelIndex is not None:
             print >> self._file, "ENDMDL"
 
-    def _write_header(self, topology):
+    def _write_header(self, unitcell_lengths, unitcell_angles):
         """Write out the header for a PDB file.
 
         Parameters
         ----------
-         topology : Topology
-            The Topology defining the molecular system being written
+        unitcell_lengths : {tuple, None}
+            The lengths of the three unitcell vectors, ``a``, ``b``, ``c``
+        unitcell_angles : {tuple, None}
+            The angles between the three unitcell vectors, ``alpha``,
+            ``beta``, ``gamma``
         """
         if not self._mode == 'w':
             raise ValueError('file not opened for writing')
-        boxSize = topology.getUnitCellDimensions()
-        if boxSize is not None:
-            print >>self._file, "CRYST1%9.3f%9.3f%9.3f  90.00  90.00  90.00 P 1           1 " % boxSize
+
+        if unitcell_lengths is None and unitcell_angles is None:
+            return
+        if unitcell_lengths is not None and unitcell_angles is not None:
+            if not len(unitcell_lengths) == 3:
+                raise ValueError('unitcell_lengths must be length 3')
+            if not len(unitcell_angles) == 3:
+                raise ValueError('unitcell_angles must be length 3')
+        else:
+            raise ValueError('either unitcell_lengths and unitcell_angles'
+                             'should both be spefied, or neither')
+
+        box = list(unitcell_lengths) + list(unitcell_angles)
+        assert len(box) == 6
+
+        print >>self._file, "CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f P 1           1 " % tuple(box)
 
     def _write_footer(self):
         if not self._mode == 'w':
@@ -199,6 +220,16 @@ class PDBTrajectoryFile(object):
         """The topology from this PDB file. Available when a file is opened in mode='r'
         """
         return self._topology
+
+    @property
+    def unitcell_lengths(self):
+        "The unitcell lengths (3-tuple) in this PDB file. May be None"
+        return self._unitcell_lengths
+
+    @property
+    def unitcell_angles(self):
+        "The unitcell angles (3-tuple) in this PDB file. May be None"
+        return self._unitcell_angles
 
     @property
     def closed(self):
@@ -223,12 +254,12 @@ class PDBTrajectoryFile(object):
 
         atomByNumber = {}
         for chain in pdb.iter_chains():
-            c = self._topology.addChain()
+            c = self._topology.add_chain()
             for residue in chain.iter_residues():
                 resName = residue.get_name()
                 if resName in PDBTrajectoryFile._residueNameReplacements:
                     resName = PDBTrajectoryFile._residueNameReplacements[resName]
-                r = self._topology.addResidue(resName, c)
+                r = self._topology.add_residue(resName, c)
                 if resName in PDBTrajectoryFile._atomNameReplacements:
                     atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
                 else:
@@ -283,7 +314,7 @@ class PDBTrajectoryFile(object):
                                 except KeyError:
                                     pass
 
-                    newAtom = self._topology.addAtom(atomName, element, r)
+                    newAtom = self._topology.add_atom(atomName, element, r)
                     atomByNumber[atom.serial_number] = newAtom
 
         # load all of the positions (from every model)
@@ -298,11 +329,10 @@ class PDBTrajectoryFile(object):
         self._positions = np.array(_positions)
 
         ## The atom positions read from the PDB file
-        #self.positions = np.array(coords)
-        #print self.positions.shape
-        self._topology.setUnitCellDimensions(pdb.get_unit_cell_dimensions())
-        self._topology.createStandardBonds()
-        self._topology.createDisulfideBonds(self.positions[0])
+        self._unitcell_lengths = pdb.get_unit_cell_lengths()
+        self._unitcell_angles = pdb.get_unit_cell_angles()
+        self._topology.create_standard_bonds()
+        self._topology.create_disulfide_bonds(self.positions[0])
 
         # Add bonds based on CONECT records.
         connectBonds = []
@@ -312,10 +342,10 @@ class PDBTrajectoryFile(object):
                 connectBonds.append((atomByNumber[i], atomByNumber[j]))
         if len(connectBonds) > 0:
             # Only add bonds that don't already exist.
-            existingBonds = set(self._topology.bonds())
+            existingBonds = set(self._topology.bonds)
             for bond in connectBonds:
                 if bond not in existingBonds and (bond[1], bond[0]) not in existingBonds:
-                    self._topology.addBond(bond[0], bond[1])
+                    self._topology.add_bond(bond[0], bond[1])
                     existingBonds.add(bond)
 
     @staticmethod

@@ -31,9 +31,11 @@ import numpy as np
 class TypeCastPerformanceWarning(RuntimeWarning):
     pass
 
+
 def ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=None,
     warn_on_cast=True, add_newaxis_on_deficient_ndim=False):
-    """Ensure dtype and shape of an ndarray
+    """Typecheck the size, shape and dtype of a numpy array, with optional
+    casting.
 
     Parameters
     ----------
@@ -44,26 +46,27 @@ def ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=No
     ndim : int
         The number of dimensions you'd like the array to have
     name : str
-        name of the array. This is used when throwing exceptions.
+        name of the array. This is used when throwing exceptions, so that
+        we can describe to the user which array is messed up.
     length : int, optional
         How long should the array be?
     can_be_none : bool
-        Is `val=None` acceptable?
+        Is ``val == None`` acceptable?
     shape : tuple, optional
         What should be shape of the array be? If the provided tuple has
         Nones in it, those will be semantically interpreted as matching
         any length in that dimension. So, for example, using the shape
-        spec `(None, None, 3)` will ensure that the last dimension is of
+        spec ``(None, None, 3)`` will ensure that the last dimension is of
         length three without constraining the first two dimensions
     warn_on_cast : bool, default=True
         Raise a warning when the dtypes don't match and a cast is done.
     add_newaxis_on_deficient_ndim : bool, default=True
         Add a new axis to the beginining of the array if the number of
         dimensions is deficient by one compared to your specification. For
-        instance, if you're trying to get out an array of ndim=3,
-        but the user provides an array of shape=(10,10), a new axis will
+        instance, if you're trying to get out an array of ``ndim == 3``,
+        but the user provides an array of ``shape == (10, 10)``, a new axis will
         be created with length 1 in front, so that the return value is of
-        shape (1, 10, 10).
+        shape ``(1, 10, 10)``.
 
     Notes
     -----

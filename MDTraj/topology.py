@@ -12,103 +12,53 @@
 #
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
+#
+# topology.py: Used for storing topological information about a system.
+#
+# This is part of the OpenMM molecular simulation toolkit originating from
+# Simbios, the NIH National Center for Physics-Based Simulation of
+# Biological Structures at Stanford, funded under the NIH Roadmap for
+# Medical Research, grant U54 GM072970. See https://simtk.org.
+#
+# Portions copyright (c) 2012 Stanford University and the Authors.
+# Authors: Peter Eastman
+# Contributors: mdtraj developers
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS, CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""
-topology.py: Used for storing topological information about a system.
-
-This is part of the OpenMM molecular simulation toolkit originating from
-Simbios, the NIH National Center for Physics-Based Simulation of
-Biological Structures at Stanford, funded under the NIH Roadmap for
-Medical Research, grant U54 GM072970. See https://simtk.org.
-
-Portions copyright (c) 2012 Stanford University and the Authors.
-Authors: Peter Eastman
-Contributors: mdtraj developers
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-THE AUTHORS, CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-__author__ = "Peter Eastman"
-__version__ = "1.0"
+##############################################################################
+# Imports
+##############################################################################
 
 import cPickle as pickle
 import os
 import numpy as np
 import xml.etree.ElementTree as etree
 
+from mdtraj.utils import ilen
+
 ##############################################################################
 # Utilities
 ##############################################################################
 
-def to_bytearray(topology):
-    "Serializer a compete topology (bonds, atoms, etc) to an array of bytes"
-    return np.fromstring(pickle.dumps(topology, protocol=-1), dtype='uint8')
 
-
-def from_bytearray(arr):
-    "Reconstruct a complete topology (bonds, atoms, etc) from an array of bytes"
-    return pickle.loads(arr.tostring())
-
-
-def equal(topology1, topology2):
-    """Are two topologies equal?
-
-    Note that this method should be able to sucessfully compare an topology
-    that's an instance of mdtraj.topolology.Topology with one thats an
-    instance of simtk.openmm.app.topology.Topology
-
-    Parameters
-    ----------
-    topology1 : simtk.openmm.app or mdtraj Topology
-        The first topology to compare
-    topology1 : simtk.openmm.app or mdtraj Topology
-        The second topology to compare
-
-    Returns
-    -------
-    equality : bool
-        Are the two topologies identical?
-    """
-    if len(topology1._chains) != len(topology2._chains):
-        return False
-
-    for c1, c2 in zip(topology1.chains(), topology2.chains()):
-        if c1.index != c2.index:
-            return False
-        if len(c1._residues) != len(c2._residues):
-            return False
-
-        for r1, r2 in zip(c1.residues(), c2.residues()):
-            if (r1.index != r1.index) or (r1.name != r2.name):
-                return False
-            if len(r1._atoms) != len(r2._atoms):
-                return False
-
-            for a1, a2 in zip(r1.atoms(), r2.atoms()):
-                if (a1.index != a2.index)  or (a1.name != a2.name):
-                    return False
-                for attr in ['atomic_number', 'name', 'symbol']:
-                    if getattr(a1.element, attr) != getattr(a2.element, attr):
-                        return False
-    return True
-
-
-def topology_from_subset(topology, atom_indices):
+def _topology_from_subset(topology, atom_indices):
     """Create a new topology that only contains the supplied indices
 
     Note
@@ -117,7 +67,7 @@ def topology_from_subset(topology, atom_indices):
     but I want it to work on either the mdtraj topology OR the OpenMM
     topology. An inplace version for the topology object we have here
     is also available.
-    
+
     Parameters
     ----------
     topology : topology
@@ -125,32 +75,46 @@ def topology_from_subset(topology, atom_indices):
     atom_indices : list([int])
         The indices of the atoms to keep
     """
-    newTopology = topology.__class__()
+    newTopology = Topology()
     old_atom_to_new_atom = {}
 
     for chain in topology._chains:
-        newChain = newTopology.addChain()
+        newChain = newTopology.add_chain()
         for residue in chain._residues:
-            newResidue = newTopology.addResidue(residue.name, newChain)
-            for atom in residue.atoms():
+            newResidue = newTopology.add_residue(residue.name, newChain)
+            for atom in residue._atoms:
                 if atom.index in atom_indices:
-                    newAtom = newTopology.addAtom(atom.name, atom.element, newResidue)
+                    newAtom = newTopology.add_atom(atom.name, atom.element, newResidue)
                     old_atom_to_new_atom[atom] = newAtom
-    
-    for atom1, atom2 in topology.bonds():
+
+    bondsiter = topology.bonds
+    if not hasattr(bondsiter, '__iter__'):
+        bondsiter = bondsiter()
+
+    for atom1, atom2 in bondsiter:
         try:
-            newTopology.addBond(old_atom_to_new_atom[atom1],
+            newTopology.add_bond(old_atom_to_new_atom[atom1],
                                 old_atom_to_new_atom[atom2])
         except KeyError:
             pass
             # we only put bonds into the new topology if both of their partners
             # were indexed and thus HAVE a new atom
 
+    # Delete empty residues
+    for chain in newTopology._chains:
+        chain._residues = [r for r in chain._residues if len(r._atoms) > 0]
+    # Delete empty chains
+    newTopology._chains = [c for c in newTopology._chains if len(c._residues) > 0]
+    # Re-set the numAtoms and numResidues
+    newTopology._numAtoms = ilen(newTopology.atoms)
+    newTopology._numResidues = ilen(newTopology.residues)
 
-    newTopology._numAtoms = len(list(newTopology.atoms()))
-    newTopology._numResidues = len(list(newTopology.residues()))
     return newTopology
 
+
+##############################################################################
+# Classes
+##############################################################################
 
 
 class Topology(object):
@@ -162,6 +126,15 @@ class Topology(object):
     pairs are bonded to each other, and the dimensions of the crystallographic unit cell.
 
     Atom and residue names should follow the PDB 3.0 nomenclature for all molecules for which one exists.
+
+    Attributes
+    ----------
+    chains : generator
+        Iterator over all Chains in the Topology.
+    residues : genetator
+        Iterator over all Residues in the Chain.
+    atoms : generator
+        Iterator over all Atoms in the Chain.
     """
 
     _standardBonds = {}
@@ -174,103 +147,170 @@ class Topology(object):
         self._bonds = []
         self._unitCellDimensions = None
 
-    def to_bytearray(self):
-        """Serializer a compete topology (bonds, atoms, etc) to an array of
-        bytes
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
-        This is DEPRICATED. Use the module level function to_bytearray instead
+    def __eq__(self, other):
+        """Are two topologies equal?
+
+        Parameters
+        ----------
+        other : object
+            The object to compare to
+
+        Returns
+        -------
+        equality : bool
+            Are the two topologies identical?
         """
-        return np.fromstring(pickle.dumps(self, protocol=-1), dtype='uint8')
+        if not isinstance(other, Topology):
+            return False
+        if self is other:
+            return True
 
-    @staticmethod
-    def from_bytearray(arr):
-        """Reconstruct a complete topology (bonds, atoms, etc) from an array
-        of bytes
+        if len(self._chains) != len(other._chains):
+            return False
 
-        This is DEPRICATED. Use the module level function from_bytearray
-        instead"""
+        for c1, c2 in zip(self.chains, other.chains):
+            if c1.index != c2.index:
+                return False
+            if len(c1._residues) != len(c2._residues):
+                return False
 
-        return pickle.loads(arr.tostring())
+            for r1, r2 in zip(c1.residues, c2.residues):
+                if (r1.index != r1.index) or (r1.name != r2.name):
+                    return False
+                if len(r1._atoms) != len(r2._atoms):
+                    return False
 
-    def addChain(self):
+                for a1, a2 in zip(r1.atoms, r2.atoms):
+                    if (a1.index != a2.index)  or (a1.name != a2.name):
+                        return False
+                    for attr in ['atomic_number', 'name', 'symbol']:
+                        if getattr(a1.element, attr) != getattr(a2.element, attr):
+                            return False
+        return True
+
+
+    def add_chain(self):
         """Create a new Chain and add it to the Topology.
 
-        Returns: the newly created Chain
+        Returns
+        -------
+        chain : mdtraj.topology.Chain
+            the newly created Chain
         """
         chain = Chain(len(self._chains), self)
         self._chains.append(chain)
         return chain
 
-    def addResidue(self, name, chain):
+    def add_residue(self, name, chain):
         """Create a new Residue and add it to the Topology.
 
-        Parameters:
-         - name (string) The name of the residue to add
-         - chain (Chain) The Chain to add it to
-        Returns: the newly created Residue
+        Parameters
+        ----------
+        name : str
+            The name of the residue to add
+        chain : mdtraj.topology.Chain
+            The Chain to add it to
+
+        Returns
+        -------
+        residue : mdtraj.topology.Residue
+            The newly created Residue
         """
         residue = Residue(name, self._numResidues, chain)
         self._numResidues += 1
         chain._residues.append(residue)
         return residue
 
-    def addAtom(self, name, element, residue):
+    def add_atom(self, name, element, residue):
         """Create a new Atom and add it to the Topology.
 
-        Parameters:
-         - name (string) The name of the atom to add
-         - element (Element) The element of the atom to add
-         - residue (Residue) The Residue to add it to
-        Returns: the newly created Atom
+        Parameters
+        ----------
+        name : str
+            The name of the atom to add
+        element : mdtraj.pdb.element.Element
+            The element of the atom to add
+        residue : mdtraj.topology.Residue
+            The Residue to add it to
+
+        Returns
+        -------
+        atom : mdtraj.topology.Atom
+            the newly created Atom
         """
         atom = Atom(name, element, self._numAtoms, residue)
         self._numAtoms += 1
         residue._atoms.append(atom)
         return atom
 
-    def addBond(self, atom1, atom2):
+    def add_bond(self, atom1, atom2):
         """Create a new bond and add it to the Topology.
 
-        Parameters:
-         - atom1 (Atom) The first Atom connected by the bond
-         - atom2 (Atom) The second Atom connected by the bond
+        Parameters
+        ----------
+        atom1 : mdtraj.topology.Atom
+            The first Atom connected by the bond
+        atom2 : mdtraj.topology.Atom
+            The second Atom connected by the bond
         """
         self._bonds.append((atom1, atom2))
 
+    @property
     def chains(self):
-        """Iterate over all Chains in the Topology."""
+        """Iterator over all Chains in the Topology.
+
+        Returns
+        -------
+        chainiter : listiterator
+            Iterator over all Chains in the Topology.
+        """
         return iter(self._chains)
 
+    @property
     def residues(self):
-        """Iterate over all Residues in the Topology."""
+        """Iterator over all Residues in the Topology.
+
+        Returns
+        -------
+        residueiter : generator
+            Iterator over all Residues in the Topology.
+        """
         for chain in self._chains:
             for residue in chain._residues:
                 yield residue
 
+    @property
     def atoms(self):
-        """Iterate over all Atoms in the Topology."""
+        """Iterator over all Atoms in the Topology.
+
+        Returns
+        -------
+        atomiter : generator
+            Iterator over all Atoms in the Topology.
+        """
         for chain in self._chains:
             for residue in chain._residues:
                 for atom in residue._atoms:
                     yield atom
 
+    @property
     def bonds(self):
-        """Iterate over all bonds (each represented as a tuple of two Atoms) in the Topology."""
+        """Iterator over all bonds (each represented as a tuple of two Atoms) in the Topology.
+
+        Returns
+        -------
+        atomiter : generator
+            Iterator over all tuple of Atoms in the Trajectory involved in a bond.
+        """
         return iter(self._bonds)
 
-    def getUnitCellDimensions(self):
-        """Get the dimensions of the crystallographic unit cell.
 
-        The return value may be None if this Topology does not represent a periodic structure.
+    def create_standard_bonds(self):
+        """Create bonds based on the atom and residue names for all standard residue types.
         """
-        return self._unitCellDimensions
-
-    def setUnitCellDimensions(self, dimensions):
-        """Set the dimensions of the crystallographic unit cell."""
-        self._unitCellDimensions = dimensions
-
-    def createStandardBonds(self):
-        """Create bonds based on the atom and residue names for all standard residue types."""
         if len(Topology._standardBonds) == 0:
             # Load the standard bond defitions.
 
@@ -315,19 +355,21 @@ class Topology(object):
                             toResidue = i
                             toAtom = bond[1]
                         if fromAtom in atomMaps[fromResidue] and toAtom in atomMaps[toResidue]:
-                            self.addBond(atomMaps[fromResidue][fromAtom], atomMaps[toResidue][toAtom])
+                            self.add_bond(atomMaps[fromResidue][fromAtom], atomMaps[toResidue][toAtom])
 
-    def createDisulfideBonds(self, positions):
+    def create_disulfide_bonds(self, positions):
         """Identify disulfide bonds based on proximity and add them to the Topology.
 
-        Parameters:
-         - positions (list) The list of atomic positions based on which to identify bonded atoms
+        Parameters
+        ----------
+        positions : list
+            The list of atomic positions based on which to identify bonded atoms
         """
         def isCyx(res):
             names = [atom.name for atom in res._atoms]
             return 'SG' in names and 'HG' not in names
 
-        cyx = [res for res in self.residues() if res.name == 'CYS' and isCyx(res)]
+        cyx = [res for res in self.residues if res.name == 'CYS' and isCyx(res)]
         atomNames = [[atom.name for atom in res._atoms] for res in cyx]
         for i in range(len(cyx)):
             sg1 = cyx[i]._atoms[atomNames[i].index('SG')]
@@ -338,63 +380,80 @@ class Topology(object):
                 delta = [x-y for (x,y) in zip(pos1, pos2)]
                 distance = np.sqrt(delta[0]*delta[0] + delta[1]*delta[1] + delta[2]*delta[2])
                 if distance < 0.3: # this is supposed to be nm. I think we're good
-                    self.addBond(sg1, sg2)
+                    self.add_bond(sg1, sg2)
 
-    def restrict_atoms(self, atom_indices):
-        """Delete atoms not in `atom_indices` and re-index those that remain.  (Inplace)
+    def subset(self, atom_indices):
+        """Create a new Topology from a subset of the atoms in an existing topology.
+
+        Notes
+        -----
+        The existing topology will not be altered.
 
         Parameters
         ----------
-        atom_indices : list([int])
-            List of atom indices to keep.
+        atom_indices array_like
+            A list of the indices corresponding to the atoms in that you'd
+            like to retain.
         """
+        return _topology_from_subset(self, atom_indices)
 
-        # Delete undesired atoms
-        for chain in self._chains:
-            for residue in chain._residues:
-                residue._atoms = [a for a in residue._atoms if a.index in atom_indices]
-
-        # Delete empty residues
-        for chain in self._chains:
-            chain._residues = [r for r in chain._residues if len(r._atoms) > 0]
-
-        # Delete empty chains
-        self._chains = [c for c in self._chains if len(c._residues) > 0]
-
-        self._bonds = [(a,b) for (a,b) in self._bonds if a.index in atom_indices and b.index in atom_indices]
-
-        # Re-index atom indices
-        for k, atom in enumerate(self.atoms()):
-            atom.index = k
-
-        # Re-set the numAtoms and numResidues
-        self._numAtoms = len(list(self.atoms()))
-        self._numResidues = len(list(self.residues()))
 
 class Chain(object):
-    """A Chain object represents a chain within a Topology."""
+    """A Chain object represents a chain within a Topology.
+
+    Attributes
+    ----------
+    index : int
+        The index of the Chain within its Topology
+    topology : mdtraj.Topology
+        The Topology this Chain belongs to
+    residues : genetator
+        Iterator over all Residues in the Chain.
+    atoms : generator
+        Iterator over all Atoms in the Chain.
+    """
     def __init__(self, index, topology):
-        """Construct a new Chain.  You should call addChain() on the Topology instead of calling this directly."""
+        """Construct a new Chain.  You should call add_chain() on the Topology instead of calling this directly."""
         ## The index of the Chain within its Topology
         self.index = index
         ## The Topology this Chain belongs to
         self.topology = topology
         self._residues = []
 
+    @property
     def residues(self):
-        """Iterate over all Residues in the Chain."""
+        """Iterator over all Residues in the Chain.
+
+        Returns
+        -------
+        residueiter : listiterator
+            Iterator over all Residues in the Topology.
+        """
         return iter(self._residues)
 
+    @property
     def atoms(self):
-        """Iterate over all Atoms in the Chain."""
+        """Iterator over all Atoms in the Chain.
+
+        Returns
+        -------
+        atomiter : generator
+            Iterator over all Atoms in the Chain.
+        """
         for residue in self._residues:
             for atom in residue._atoms:
                 yield atom
 
 class Residue(object):
-    """A Residue object represents a residue within a Topology."""
+    """A Residue object represents a residue within a Topology.
+
+    Attributes
+    ----------
+    atoms : genetator
+    """
     def __init__(self, name, index, chain):
-        """Construct a new Residue.  You should call addResidue() on the Topology instead of calling this directly."""
+        """Construct a new Residue.  You should call add_residue()
+        on the Topology instead of calling this directly."""
         ## The name of the Residue
         self.name = name
         ## The index of the Residue within its Topology
@@ -403,15 +462,34 @@ class Residue(object):
         self.chain = chain
         self._atoms = []
 
+    @property
     def atoms(self):
-        """Iterate over all Atoms in the Residue."""
+        """Iterator over all Atoms in the Residue.
+
+        Returns
+        -------
+        atomiter : listiterator
+            Iterator over all Atoms in the Residue.
+        """
         return iter(self._atoms)
 
 class Atom(object):
-    """An Atom object represents a residue within a Topology."""
+    """An Atom object represents a residue within a Topology.
+
+    Attributes
+    ----------
+    name : str
+        The name of the Atom
+    element : mdtraj.pdb.element.Element
+        The element of the Atoms
+    index : int
+        The index of the Atom within its Topology
+    residue : mdtraj.topology.Residue
+        The Residue this Atom belongs to
+    """
 
     def __init__(self, name, element, index, residue):
-        """Construct a new Atom.  You should call addAtom() on the Topology instead of calling this directly."""
+        """Construct a new Atom.  You should call add_atom() on the Topology instead of calling this directly."""
         ## The name of the Atom
         self.name = name
         ## That Atom's element

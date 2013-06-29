@@ -23,19 +23,20 @@ from mdtraj import topology
 
 TestDocstrings = DocStringFormatTester(mdtraj.trajectory, error_on_none=True)
 
-fn = get_fn('frame0.lh5')
+fn = get_fn('traj.h5')
 nat = get_fn('native.pdb')
 temp1 = tempfile.mkstemp(suffix='.xtc')[1]
 temp2 = tempfile.mkstemp(suffix='.dcd')[1]
 temp3 = tempfile.mkstemp(suffix='.binpos')[1]
 temp4 = tempfile.mkstemp(suffix='.trr')[1]
 temp5 = tempfile.mkstemp(suffix='.h5')[1]
-
+temp6 = tempfile.mkstemp(suffix='.pdb')[1]
+temp7 = tempfile.mkstemp(suffix='.nc')[1]
 
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
-    for e in [temp1, temp2, temp3, temp4]:
+    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
         os.unlink(e)
 
 
@@ -88,26 +89,6 @@ def test_box_load_save():
         yield lambda: eq(t.unitcell_lengths, t2.unitcell_lengths)
 
 
-def test_legacy_hdf1():
-    t0 = load(fn, top=nat, chunk=1)
-    t1 = load(fn, top=nat, chunk=10)
-    t2 = load(fn, top=nat, chunk=100)
-
-    yield lambda: eq(t0.xyz, t1.xyz)
-    yield lambda: eq(t0.xyz, t2.xyz)
-
-
-def test_legacy_hdf2():
-    t0 = load(fn, top=nat, chunk=10, stride=10)
-    t1 = load(fn, top=nat, chunk=20, stride=10)
-    t2 = load(fn, top=nat, chunk=50, stride=10)
-    t3 = load(fn, top=nat, chunk=1, stride=1)
-
-    yield lambda: eq(t0.xyz, t1.xyz)
-    yield lambda: eq(t0.xyz, t2.xyz)
-    yield lambda: eq(t0.xyz, t3.xyz[::10])
-
-
 def test_legacy_hdf_frame():
     t0 = load(fn)
     t1 = load(fn, frame=1)
@@ -120,7 +101,7 @@ def test_legacy_hdf_frame():
 
 
 def test_slice():
-    t = load(fn, top=nat)
+    t = load(fn)
     yield lambda: eq((t[0:5] + t[5:10]).xyz, t[0:10].xyz)
     yield lambda: eq((t[0:5] + t[5:10]).time, t[0:10].time)
     yield lambda: eq((t[0:5] + t[5:10]).unitcell_vectors, t[0:10].unitcell_vectors)
@@ -129,7 +110,7 @@ def test_slice():
 
 
 def test_slice2():
-    t = load(get_fn('frame1.lh5'))
+    t = load(get_fn('traj.h5'))
     yield lambda: t[0] == t[[0,1]][0]
 
 
@@ -171,7 +152,7 @@ def test_binpos():
 
 
 def test_load_join():
-    filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos", "frame0.lh5"]
+    filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos"] #, "traj.h5"]
     num_block = 3
     for filename in filenames:
         t0 = mdtraj.trajectory.load(get_fn(filename), top=nat, discard_overlapping_frames=True)
@@ -198,7 +179,7 @@ def test_hdf5_0():
     t2 = load(get_fn('native.pdb'))
     t3 = load(get_fn('traj.h5'), frame=8)
 
-    assert topology.equal(t.topology, t2.topology)
+    assert t.topology == t2.topology
     yield lambda: eq(t.time, 0.002*(1 + np.arange(100)))
     yield lambda: eq(t.time, 0.002*(1 + np.arange(100)))
     yield lambda: eq(t[8].xyz, t3.xyz)
@@ -207,7 +188,7 @@ def test_hdf5_0():
 
 
 def test_center():
-    traj = load(get_fn('frame0.lh5'))
+    traj = load(get_fn('traj.h5'))
     traj.center_coordinates()
     mu = traj.xyz.mean(1)
     mu0 = np.zeros(mu.shape)
@@ -215,10 +196,10 @@ def test_center():
 
 
 def test_restrict_atoms():
-    traj = load(get_fn('frame0.lh5'))
+    traj = load(get_fn('traj.h5'))
     desired_atom_indices = [0,1,2,5]
     traj.restrict_atoms(desired_atom_indices)
-    atom_indices = [a.index for a in traj.top.atoms()]
+    atom_indices = [a.index for a in traj.top.atoms]
     eq([0,1,2,3], atom_indices)
     eq(traj.xyz.shape[1], 4)
     eq(traj.n_atoms, 4)
@@ -226,6 +207,7 @@ def test_restrict_atoms():
     eq(len(traj.top._bonds), 2)
     eq(traj.n_residues, traj.topology._numResidues)
     eq(traj.n_atoms, traj.topology._numAtoms)
+    eq(np.array([a.index for a in traj.topology.atoms]), np.arange(traj.n_atoms))
 
 
 def test_array_vs_matrix():
@@ -237,3 +219,14 @@ def test_array_vs_matrix():
 
     eq(t1.xyz, xyz)
     eq(t2.xyz, xyz)
+    
+def test_pdb_unitcell_loadsave():
+    """Make sure that nonstandard unitcell dimensions are saved and loaded
+    correctly with PDB"""
+    tref = load(get_fn('native.pdb'))
+    tref.unitcell_lengths = 1 + 0.1  * np.random.randn(tref.n_frames, 3)
+    tref.unitcell_angles = 90 + 0.0  * np.random.randn(tref.n_frames, 3)
+    tref.save(temp6)
+
+    tnew = load(temp6)
+    eq(tref.unitcell_vectors, tnew.unitcell_vectors, decimal=3)
