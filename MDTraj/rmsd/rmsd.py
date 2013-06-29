@@ -37,37 +37,45 @@ __all__ = ['rmsd_cache', 'RMSDCache', 'align_array']
 
 
 def rmsd_cache(trajectory, major='axis'):
-    """Create a specialized copy of a trajectory's cartesian coordinates fast repeated RMSD calculations
+    """Create a specialized copy of a trajectory's cartesian coordinates for fast RMSD calculations.
 
     Parameters
     ----------
     trajectory : md.Trajectory
-        A Trajectory object, containing the cartesian coordinates
+        A Trajectory object, containing the cartesian coordinates of the system.
     major : {'atom' or 'axis'}
         Resulting memory layout for the coordinates array. Axis-major ordering
         performs better for typical structure sizes. Axis-major ordering has
         all the x-coordinates, followed by all the y-coordinates, followed by
         all the z-coordinates. Atom-major ordering has each atom's coordinates
         in atom order.
-        
+
     Returns
     -------
     cache : RMSDCache
         The returned data structured contains the coordinate data from the
         trajectory, prepared for the RMSD calculation. This includes alignment
         to the appropriate byte boundaries, and other low-level stuff.
-    
+
     Notes
     -----
-    This operation will make a copy of the trajectory data.
-    
+    This operation will make a copy of the cartesian coordinates. This can be
+    problematic if you have a lot of data (and limited memory). In that case,
+    you can construct the RMSDCache directory from its constructor in a
+    copy-free manner.
+
     Examples
     --------
     >>> import mdtraj as md
     >>> t = md.load('trajectory.h5')                          # doctest: +SKIP
-    >>> r = md.rmsd_cache(t)                                  # doctest: +SKIP
-    >>> r.rmsd_to_reference(r, 0)                             # doctest: +SKIP
-    [1, 2, 3]
+    >>> c = md.rmsd_cache(t)                                  # doctest: +SKIP
+    >>> c.rmsds_to(r, 0)                                      # doctest: +SKIP
+    array([0.0001953,  0.1906953, 0.37336711, ...,  0.29543064,
+           0.68428138, 0.35189939], dtype=float32)
+
+    See Also
+    --------
+    mdtraj.rmsd.RMSDCache : The constructed RMSDCache object. Note that you can manually construct an RMSDCache without a trajectory, using that classes's constructor.
     """
 
     if major == 'atom':
@@ -178,12 +186,10 @@ class RMSDCache(object):
         an M x N x P numpy ndarray of type float32. See `major` for
         definition of dimensions.
     major: {'atom' or 'axis'}
-        Specifies the storage format of M x N x P ndarray ``coordinates``
-        'axis': M = # conformations; N = # dimensions;
-                P = # padded atoms
-        'atom': M = # conformations; N = # padded atoms;
-                P = # dimensions
-        note that 'dimensions' must be 3 (points in 3D space)
+        Specifies the storage format of M x N x P ndarray ``coordinates``.
+        If ``major=='axis'``, then coordinates should be of shape
+        ``(n_conformations, 3, n_padded_atoms)``. If ``major=='atom'``, then
+        coordinates should be of shape ``(n_conformations, n_padded_atoms, 3)``
     n_atoms : int
         the number of actual, not padding, atoms in each structure in the
         array
@@ -191,16 +197,16 @@ class RMSDCache(object):
     Notes
     -----
     There are special restrictions on ``coordinates`` to use the IRMSD
-    routines. First, if the number of atoms ``n_atoms` is not a multiple of
+    routines. First, if the number of atoms ``n_atoms`` is not a multiple of
     4, then n_padded_atoms should be the next multiple of 4 that is larger
-    than n_atoms, and the corresponding 'padding atoms' in the coordinates
+    than ``n_atoms``, and the corresponding 'padding atoms' in the coordinates
     array must be all-zero. Second, the coordinates array must be aligned
     to a 16-byte boundary.
 
     If your input array does not satisfy these requirements, you may use
-    the `align_array` function to create a copy meeting them. `align_array`
-    is NOT automatically called in this constructor, to avoid silently
-    allocating/copying large memory structures.
+    the ``mdtraj.rmsd.align_array`` function to create a copy meeting them.
+    ``mdtraj.rmsd.align_array`` is NOT automatically called in this
+    constructor, to avoid silently allocating/copying large memory structures.
 
     Attributes
     ----------
@@ -216,11 +222,27 @@ class RMSDCache(object):
         The number of cartesian dimensions. This is always three.
     major : {'axis', 'atom'}
         Specifies the memory layout of the coordinates.
-    traces : np.ndarray, shape=(n_frames)
-        For a structure S made of column vectors Sx, Sy, Sz representing the x,
-        y, and z coordinates of each atom in the structure, G(S) = tr(S'S) =
-        dot(x,x) + dot(y,y) + dot(z,z). This quantity is related to the radius
-        of gyration and is needed in the Theobald RMSD computation.
+
+    See Also
+    --------
+    mdtraj.rmsd_cache : Convenience function to construct an RMSDCache from a Trajectory
+
+    Examples
+    --------
+    >>> import mdtraj as md
+    >>> from mdtraj.rmsd import RMSDCache
+    >>> axis_coords = np.sin(np.arange(30).reshape(2, 3, 5))
+    >>> print axis_coords                                     # doctest: +SKIP
+     [[[ 0.          0.84147098  0.90929743  0.14112001 -0.7568025 ]
+       [-0.95892427 -0.2794155   0.6569866   0.98935825  0.41211849]
+       [-0.54402111 -0.99999021 -0.53657292  0.42016704  0.99060736]]
+     <BLANKLINE>
+      [[ 0.65028784 -0.28790332 -0.96139749 -0.75098725  0.14987721]
+       [ 0.91294525  0.83665564 -0.00885131 -0.8462204  -0.90557836]
+       [-0.13235175  0.76255845  0.95637593  0.27090579 -0.66363388]]]
+    >>> c = RMSDCache(md.rmsd.align_array(axis_coords, 'axis'), 'axis', n_atoms=5)
+    >>> c.rmsds_to(c, 0)
+    array([ 0.        ,  0.17355414], dtype=float32)
     """
 
     def __init__(self, coordinates, major, n_atoms):
@@ -249,7 +271,7 @@ class RMSDCache(object):
 
         self.major = major
         self.cords = coordinates
-        self._traces = None
+        self._g = None
         self._centered = False
         assert self.axis_major ^ self.atom_major
 
@@ -267,7 +289,7 @@ class RMSDCache(object):
     def __len__(self):
         return self.n_frames
 
-    def center(self):
+    def _center(self):
         """Transform conformations so that each is centered about 0.
 
         This function is automatically called if necessary for an alignment to
@@ -290,8 +312,7 @@ class RMSDCache(object):
         self._centered = True
         return
 
-    @property
-    def traces(self):
+    def _traces(self):
         """Conformation traces. These are also known as the "G values"
 
         For a structure S made of column vectors Sx, Sy, Sz representing the x,
@@ -299,25 +320,25 @@ class RMSDCache(object):
         dot(x,x) + dot(y,y) + dot(z,z). This quantity is related to the radius
         of gyration and is needed in the Theobald RMSD computation.
         """
-        if self._traces is None:
+        if self._g is None:
             self._compute_traces()
-        return self._traces
+        return self._g
 
     def _compute_traces(self):
         if not self._centered:
-            self.center()
-        self._traces = np.zeros((self.n_frames,), dtype=np.float32)
+            self._center()
+        self._g = np.zeros((self.n_frames,), dtype=np.float32)
         for i in xrange(self.n_frames):
             for j in xrange(self.n_dims):
                 if self.axis_major:
-                    self._traces[i] += np.dot(self.cords[i, j, :],
+                    self._g[i] += np.dot(self.cords[i, j, :],
                                          self.cords[i, j, :])
                 else:
-                    self._traces[i] += np.dot(self.cords[i, :, j],
+                    self._g[i] += np.dot(self.cords[i, :, j],
                                          self.cords[i, :, j])
         return
 
-    def rmsds_to(self, other_cache, ref_idx):
+    def rmsds_to(self, other_cache, other_index):
         """Compute RMSD of all conformations to a reference conformation.
 
         The underlying computation uses OpenMP and so will automatically
@@ -335,9 +356,10 @@ class RMSDCache(object):
         other_cache : RMSDCache
             For each conformation in this RMSDCache object compute the RMSD
             to a particular 'reference' conformation in another RMSDCache
-            object ``other_cache``, identified by index ``ref_idx``.
-        ref_idx : int
-            The ind
+            object ``other_cache``, identified by index ``other_index``.
+        other_index : int
+            The index of the conformation in ``other_cache`` to measure
+            distances to
 
         Returns
         -------
@@ -356,8 +378,10 @@ class RMSDCache(object):
 
         if self.axis_major:
             return _rmsd.getMultipleRMSDs_axis_major(other_cache.cords, self.cords,
-                        other_cache.traces, self.traces, self.n_atoms, ref_idx, parallel=True)
+                        other_cache._traces(), self._traces(), self.n_atoms,
+                        other_index, parallel=True)
         elif self.atom_major:
             return _rmsd.getMultipleRMSDs_atom_major(other_cache.cords, self.cords,
-                        other_cache.traces, self.traces, self.n_atoms, ref_idx, parallel=True)
+                        other_cache._traces(), self._traces(), self.n_atoms,
+                        other_index, parallel=True)
         raise RuntimeError()

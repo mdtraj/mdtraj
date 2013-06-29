@@ -18,8 +18,8 @@ trajectories in a variety of formats, including Gromacs XTC & TRR, CHARMM/NAMD
 DCD, AMBER BINPOS, PDB, and HDF5.
 """
 
-__all__ = ['binpos', 'xtc', 'dcd', 'io', 'pdb', 'netcdf', "test", "hdf5"
-            'testing', 'trajectory', 'topology', 'reporters', 'geometry']
+#__all__ = ['binpos', 'xtc', 'dcd', 'io', 'pdb', 'netcdf', "test", "hdf5"
+#            'testing', 'trajectory', 'topology', 'reporters', 'geometry']
 
 from mdtraj.xtc import XTCTrajectoryFile
 from mdtraj.trr import TRRTrajectoryFile
@@ -29,7 +29,7 @@ from mdtraj.dcd import DCDTrajectoryFile
 from mdtraj.binpos import BINPOSTrajectoryFile
 from mdtraj.pdb import PDBTrajectoryFile
 
-from mdtraj.rmsd import rmsd_cache
+from mdtraj.rmsd.rmsd import rmsd_cache
 from .topology import Topology
 from .trajectory import *
 

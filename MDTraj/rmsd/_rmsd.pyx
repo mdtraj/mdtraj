@@ -70,9 +70,9 @@ bool parallel=True):
         Coordinates of reference frame.
     xyz2 : np.ndarray, shape=(n_frames, 3, n_atoms_padded), dtype=float32
         Coordinates of frames to iterate over
-    g1 : np.ndarray, shape = (n_frames), dtype='float32'
+    g1 : np.ndarray, shape = (n_frames), dtype=float32
         Pre-calculated G factors (traces) for each frame in xyz1
-    g2 : np.ndarray, shape = (n_frames), dtype='float32'
+    g2 : np.ndarray, shape = (n_frames), dtype=float32
         Pre-calculated G factors (traces) for each frame in xyz2
     n_atoms : int
         The number of atoms in the system.
@@ -83,7 +83,7 @@ bool parallel=True):
 
     Returns
     -------
-    rmsds: np.ndarray, shape=(len(xyz2)),
+    rmsds: np.ndarray, shape=(len(xyz2),)
         RMSDS between xyz1[frame] and all of xyz2
     """
 
@@ -137,9 +137,9 @@ bool parallel=True):
         Coordinates of reference frame.
     xyz2 : np.ndarray, shape=(n_frames, n_atoms_padded, 3), dtype=float32
         Coordinates of frames to iterate over
-    g1 : np.ndarray, shape = (n_frames), dtype='float32'
+    g1 : np.ndarray, shape = (n_frames), dtype=float32
         Pre-calculated G factors (traces) for each frame in xyz1
-    g2 : np.ndarray, shape = (n_frames), dtype='float32'
+    g2 : np.ndarray, shape = (n_frames), dtype=float32
         Pre-calculated G factors (traces) for each frame in xyz2
     n_atoms : int
         The number of atoms in the system.
@@ -150,7 +150,7 @@ bool parallel=True):
 
     Returns
     -------
-    rmsds: np.ndarray, shape=(len(xyz2)),
+    rmsds: np.ndarray, shape=(len(xyz2),)
         RMSDS between xyz1[frame] and all of xyz2
     """
 

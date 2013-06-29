@@ -37,6 +37,7 @@ Documentation
    file_formats
    loading
    trajectory
+   rmsd
 
 Example Usage
 -------------

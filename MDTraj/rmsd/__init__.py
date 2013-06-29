@@ -1,1 +1,1 @@
-from .rmsd import *
+from rmsd import *
