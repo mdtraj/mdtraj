@@ -317,7 +317,7 @@ class RMSDCache(object):
                                          self.cords[i, :, j])
         return
 
-    def rmsds_to_reference(self, other_cache, ref_idx):
+    def rmsds_to(self, other_cache, ref_idx):
         """Compute RMSD of all conformations to a reference conformation.
 
         The underlying computation uses OpenMP and so will automatically
@@ -333,10 +333,9 @@ class RMSDCache(object):
         Parameters
         ----------
         other_cache : RMSDCache
-            For each conformation in this RMSDCache object,
-            compute the RMSD to a particular 'reference' conformation in
-            another RMSDCache object ``other_cache``, identified
-            by index ``ref_idx``.
+            For each conformation in this RMSDCache object compute the RMSD
+            to a particular 'reference' conformation in another RMSDCache
+            object ``other_cache``, identified by index ``ref_idx``.
         ref_idx : int
             The ind
 
