@@ -27,11 +27,11 @@ __version__ = VERSION
 ##########################
 
 
-IRMSD = Extension('mdtraj.IRMSD',
-    sources = ['MDTraj/IRMSD/theobald_rmsd.c','MDTraj/IRMSD/rmsd_wrap.pyx'],
-    include_dirs = ["MDTraj/IRMSD/", numpy.get_include()],
+rmsd = Extension('mdtraj._rmsd',
+    sources = ['MDTraj/rmsd/src/theobald_rmsd.c','MDTraj/rmsd/_rmsd.pyx'],
+    include_dirs = ["MDTraj/rmsd/include", numpy.get_include()],
     extra_compile_args = ["-std=c99","-O2", "-msse2","-msse3","-fopenmp"],
-    extra_link_args = ['-lgomp'],
+    extra_link_args = ['-lgomp', '-lm'],
     )
 
 xtc = Extension('mdtraj.xtc',
@@ -121,7 +121,7 @@ setup(name='mdtraj',
       install_requires=['numpy', 'cython', 'nose', 'nose-exclude'],
       zip_safe=False,
       scripts=['scripts/mdconvert'],
-      ext_modules=[xtc, trr, dcd, binpos, IRMSD],
+      ext_modules=[xtc, trr, dcd, binpos, rmsd],
       cmdclass = {'build_ext': build_ext},
       package_data = {'mdtraj.pdb': ['data/*'],
                       'mdtraj.testing': ["reference/*"]})

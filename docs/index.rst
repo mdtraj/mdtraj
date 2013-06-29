@@ -42,6 +42,7 @@ Documentation
    loading
    trajectory
    topology
+   rmsd
    io
    compatibility
    reporters
