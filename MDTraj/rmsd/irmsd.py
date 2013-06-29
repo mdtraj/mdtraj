@@ -30,9 +30,9 @@ def rmsd_cache(trajectory, major='axis'):
     Examples
     --------
     >>> import mdtraj as md
-    >>> t = md.load('trajectory.h5')
-    >>> r = md.rmsd_cache(t)
-    >>> r.rmsd_to_reference(r, 0)
+    >>> t = md.load('trajectory.h5')                          # doctest: +SKIP
+    >>> r = md.rmsd_cache(t)                                  # doctest: +SKIP
+    >>> r.rmsd_to_reference(r, 0)                             # doctest: +SKIP
     [1, 2, 3]
     """
 

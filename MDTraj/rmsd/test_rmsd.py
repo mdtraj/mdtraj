@@ -22,7 +22,7 @@ def test_axis_major():
     pp.ylabel('calculated')
     
     pp.savefig('rmsd_axis.png')
-    eq(testing, reference, decimal=4)
+    eq(calculated, reference, decimal=4)
 
 
 def test_atom_major():
@@ -40,4 +40,4 @@ def test_atom_major():
     pp.ylabel('calculated')
     
     pp.savefig('rmsd_atom.png')
-    eq(testing, reference, decimal=4)
+    eq(calculated, reference, decimal=4)
