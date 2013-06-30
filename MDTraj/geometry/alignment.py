@@ -149,8 +149,8 @@ def rmsd_qcp(conformation1, conformation2):
     rmsd : float
         The root-mean square deviation after alignment between the two pointsets
     """
-    ensure_type(conformation1, 'float', 2, 'conformation1', shape=(None, 3))
-    ensure_type(conformation2, 'float', 2, 'conformation2', shape=(conformation1.shape[0], 3))
+    ensure_type(conformation1, np.float32, 2, 'conformation1', shape=(None, 3))
+    ensure_type(conformation2, np.float32, 2, 'conformation2', shape=(conformation1.shape[0], 3))
     
     A = _center(conformation1)
     B = _center(conformation2)

@@ -25,7 +25,7 @@ from numpy.testing import (assert_allclose, assert_almost_equal,
   assert_approx_equal, assert_array_almost_equal, assert_array_almost_equal_nulp,
   assert_array_equal, assert_array_less, assert_array_max_ulp, assert_equal,
   assert_raises, assert_string_equal, assert_warns)
-from numpy.testing.decorators import skipif
+from numpy.testing.decorators import skipif, slow
 from nose.tools import ok_, eq_, raises
 from nose import SkipTest
 from pkg_resources import resource_filename
@@ -39,14 +39,14 @@ try:
     from scipy.sparse import isspmatrix
 except ImportError:
     isspmatrix = lambda x: False
-    
-    
+
+
 __all__ = ['assert_allclose', 'assert_almost_equal', 'assert_approx_equal',
            'assert_array_almost_equal', 'assert_array_almost_equal_nulp',
            'assert_array_equal', 'assert_array_less', 'assert_array_max_ulp',
            'assert_equal', 'assert_raises', 'assert_string_equal', 'assert_warns',
            'get_fn', 'eq', 'assert_dict_equal', 'assert_spase_matrix_equal',
-           'expected_failure', 'skip', 'ok_', 'eq_', 'raises', 'skipif']
+           'expected_failure', 'skip', 'ok_', 'eq_', 'raises', 'skipif', 'slow']
 
 ##############################################################################
 # functions
@@ -71,7 +71,7 @@ def get_fn(name):
     >>> t = md.load(get_fn('2EQQ.pdb'))
     >>> eq(t.n_frames, 20)    # this runs the assert, using the eq() func.
     """
-    
+
     fn = resource_filename('mdtraj', os.path.join('testing/reference', name))
 
     if not os.path.exists(fn):
@@ -100,6 +100,16 @@ def eq(o1, o2, decimal=6, err_msg=''):
         equality up to this decimal place.
     err_msg : str
         Custom error message
+
+    Returns
+    -------
+    passed : bool
+        True if the tests pass. If the tests doesn't pass, since the AssertionError will be raised
+
+    Raises
+    ------
+    AssertionError
+        If the tests fail
     """
     assert (type(o1) is type(o2)), 'o1 and o2 not the same type: %s %s' % (type(o1), type(o2))
 
@@ -126,6 +136,7 @@ def eq(o1, o2, decimal=6, err_msg=''):
     else:
         eq_(o1, o2)
 
+    return True
 
 def assert_dict_equal(t1, t2, decimal=6):
     """

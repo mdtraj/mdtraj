@@ -13,6 +13,7 @@ from argparse import ArgumentParser
 
 import numpy as np
 import mdtraj as md
+from mdtraj.trajectory import _convert
 
 ###############################################################################
 # Crappy class that should go elsewhere
@@ -38,7 +39,7 @@ fields = {'.trr': ('xyz', 'time', 'step', 'box', 'lambda'),
           '.h5': ('xyz', 'time', 'cell_lengths', 'cell_angles',
                   'velocities', 'kineticEnergy', 'potentialEnergy',
                   'temperature', 'lambda', 'topology'),
-          '.pdb': ('xyz', 'topology')}
+          '.pdb': ('xyz', 'topology', 'cell_angles', 'cell_lengths')}
 
 units = {'.xtc': 'nanometers',
          '.trr': 'nanometers',
@@ -185,6 +186,9 @@ def parse_args():
                 and ext(args.output) == '.pdb'):
         parser.error('to output a pdb file, you need to supply a topology (-t, or --topology)')
 
+    if (args.chunk % args.stride != 0):
+        parser.error('--stride must be a divisor of --chunk')
+
     return args
 
 
@@ -215,8 +219,7 @@ def main(args, verbose=True):
         topology = None
 
     if topology is not None and atom_indices is not None:
-        topology.restrict_atoms(atom_indices)
-
+        topology = topology.subset(atom_indices)
 
     n_total = 0
     if args.index is not None:
@@ -290,21 +293,33 @@ def write(outfile, data):
     if isinstance(outfile, md.XTCTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
                       data.get('step', None), data.get('box', None))
+
     elif isinstance(outfile, md.TRRTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
                       data.get('step', None), data.get('box', None),
                       data.get('lambd', None))
+
     elif isinstance(outfile, md.DCDTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('cell_lengths', None),
                       data.get('cell_angles', None))
+
     elif isinstance(outfile, md.BINPOSTrajectoryFile):
         outfile.write(data.get('xyz', None))
+
     elif isinstance(outfile, md.PDBTrajectoryFile):
+        lengths, angles = None, None
         for i, frame in enumerate(data.get('xyz')):
-            outfile.write(frame, data.get('topology', None), i)
+            if 'cell_lengths' in data:
+                lengths = data['cell_lengths'][i]
+            if 'cell_angles' in data:
+                angles = data['cell_angles'][i]
+                
+            outfile.write(frame, data.get('topology', None), i, lengths, angles)
+
     elif isinstance(outfile, md.NetCDFTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
                       data.get('cell_lengths', None), data.get('cell_angles', None))
+
     elif isinstance(outfile, md.HDF5TrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
                       data.get('cell_lengths', None), data.get('cell_angles', None),
@@ -312,7 +327,7 @@ def write(outfile, data):
                       data.get('potentialEnergy', None), data.get('temperature', None),
                       data.get('lambda', None))
         if outfile.topology is None:
-            # only want to write the topology once
+            # only want to write the topology once if we're chunking
             outfile.topology = data.get('topology', None)
     else:
         raise RuntimeError()
@@ -335,34 +350,44 @@ def read(infile, chunk, stride, atom_indices):
 
         if atom_indices is None:
             atom_indices = slice(None)
+            topology = infile.topology
         else:
-            infile.topology.restrict_atoms(atom_indices)
+            topology = infile.topology.subset(atom_indices)
 
         data = {'xyz': infile.positions[::stride, atom_indices, :],
-                'topology': infile.topology}
+                'topology': topology}
+        data['cell_lengths'] =np.array([infile.unitcell_lengths] * len(data['xyz']))
+        data['cell_angles'] = np.array([infile.unitcell_angles] * len(data['xyz']))
         in_units = 'angstroms'
         infile.close()
+
     elif isinstance(infile, md.XTCTrajectoryFile):
         data = dict(zip(fields['.xtc'], _data))
         in_units = 'nanometers'
+
     elif isinstance(infile, md.TRRTrajectoryFile):
         data = dict(zip(fields['.trr'], _data))
         in_units = 'nanometers'
+
     elif isinstance(infile, md.DCDTrajectoryFile):
         data = dict(zip(fields['.dcd'], _data))
         in_units = 'angstroms'
+
     elif isinstance(infile, md.BINPOSTrajectoryFile):
         data = {'xyz': _data}
         in_units = 'angstroms'
+
     elif isinstance(infile, md.NetCDFTrajectoryFile):
         data = dict(zip(fields['.nc'], _data))
         in_units = 'angstroms'
+
     elif isinstance(infile, md.HDF5TrajectoryFile):
         data = dict(zip(fields['.h5'], _data))
         data['topology'] = infile.topology  # need to hack this one in manually
         if atom_indices is not None:
-            data['topology'].restrict_atoms(atom_indices)
+            data['topology'] = data['topology'].subset(atom_indices)
         in_units = 'nanometers'
+
     else:
         raise RuntimeError
 
@@ -373,26 +398,26 @@ def read(infile, chunk, stride, atom_indices):
 def convert(data, in_units, out_units, out_fields):
     # do unit conversion
     if 'xyz' in out_fields and 'xyz' in data:
-        data['xyz'] = md.trajectory._convert(data['xyz'], in_units, out_units)
+        _convert(data['xyz'], in_units, out_units, inplace=True)
     if 'box' in out_fields:
         if 'box' in data:
-            md.trajectory._convert(data['box'], in_units, out_units)
+            _convert(data['box'], in_units, out_units, inplace=True)
         elif 'cell_angles' in data and 'cell_lengths' in data:
             a, b, c = data['cell_lengths'].T
             alpha, beta, gamma = data['cell_angles'].T
             data['box'] = np.dstack(md.utils.unitcell.lengths_and_angles_to_box_vectors(a, b, c, alpha, beta, gamma))
-            data['box'] = md.trajectory._convert(data['box'], in_units, out_units)
+            _convert(data['box'], in_units, out_units, inplace=True)
             del data['cell_lengths']
             del data['cell_angles']
 
     if 'cell_lengths' in out_fields:
         if 'cell_lengths' in data:
-            data['cell_lengths'] = md.trajectory._convert(data['cell_lengths'], in_units, out_units)
+            _convert(data['cell_lengths'], in_units, out_units, inplace=True)
         elif 'box' in data:
             a, b, c, alpha, beta, gamma = md.utils.unitcell.box_vectors_to_lengths_and_angles(data['box'][:, 0], data['box'][:, 1], data['box'][:, 2])
             data['cell_lengths'] = np.vstack((a, b, c)).T
             data['cell_angles'] = np.vstack((alpha, beta, gamma)).T
-            data['cell_lengths'] = md.trajectory._convert(data['cell_lengths'], in_units, out_units)
+            _convert(data['cell_lengths'], in_units, out_units, inplace=True)
             del data['box']
 
     ignored_keys = ["'%s'" % s for s in set(data) - set(out_fields)]

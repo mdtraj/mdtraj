@@ -27,9 +27,9 @@ MESSAGES = {
     NetworkX can be downloaded from https://pypi.python.org/pypi/networkx/, or
     installed with the python "easy_install" or "pip" package managers using:
 
-    easy_install networkx
+    # easy_install networkx
     or
-    pip install networkx
+    # pip install networkx
     ''',
 
     'tables': '''
@@ -40,9 +40,9 @@ MESSAGES = {
     PyTables can be downloaded from http://www.pytables.org, or installed with
     the python "easy_install" or "pip" package managers using:
 
-    easy_install tables
+    # easy_install tables
     or
-    pip install tables
+    # pip install tables
 
     PyTables also depends on the numexpr package, as well as the C-language
     HDF5 library. For detailed installation instructions, visit
@@ -58,9 +58,9 @@ MESSAGES = {
     netcdf4-python can be downloaded from https://pypi.python.org/pypi/netCDF,
     or installed with the python "easy_install" or "pip" package managers using:
 
-    easy_install netCDF4
+    # easy_install netCDF4
     or
-    pip install netCDF4
+    # pip install netCDF4
 
     netcdf4-python also depends on the C-language HDF5 and NetCDF libraries.
     For detailed installation instructions, visit
@@ -77,6 +77,18 @@ MESSAGES = {
     "pip" package mangers using:
 
     pip install git+git://github.com/rmcgibbo/simtk.unit
+    ''',
+
+    'scripttest': '''
+    The code at {filename}:{line_number} requires the scripttest module,
+    which is a python package for testing command-line applications
+
+    scripttest can be downloaded from https://pypi.python.org/pypi/ScriptTest/,
+    or installed with the python "easy_install" or "pip" package managers using:
+
+    # easy_install scripttest
+    or
+    # pip install scripttest
     '''
 }
 

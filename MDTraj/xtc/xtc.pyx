@@ -221,33 +221,35 @@ cdef class XTCTrajectoryFile:
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
-            return self._read(int(n_frames), atom_indices)
-        else:
-            # if they want ALL of the remaining frames, we need to guess at the chunk
-            # size, and then check the exit status to make sure we're really at the EOF
-            all_xyz, all_time, all_step, all_box = [], [], [], []
+            xyz, time, step, box = self._read(int(n_frames), atom_indices)
+            return xyz[::stride], time[::stride], step[::stride], box[::stride]
 
-            while True:
-                # guess the size of the chunk to read, based on how many frames we think are in the file
-                # and how many we've currently read
-                chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
-                            self.min_chunk_size)
 
-                xyz, time, step, box = self._read(chunk, atom_indices)
-                if len(xyz) <= 0:
-                    break
+        # if they want ALL of the remaining frames, we need to guess at the chunk
+        # size, and then check the exit status to make sure we're really at the EOF
+        all_xyz, all_time, all_step, all_box = [], [], [], []
 
-                all_xyz.append(xyz)
-                all_time.append(time)
-                all_step.append(step)
-                all_box.append(box)
+        while True:
+            # guess the size of the chunk to read, based on how many frames we think are in the file
+            # and how many we've currently read
+            chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
+                        self.min_chunk_size)
 
-            if len(all_xyz) == 0:
-                return np.array([]), np.array([]), np.array([]), np.array([])
-            return (np.concatenate(all_xyz)[::stride],
-                    np.concatenate(all_time)[::stride],
-                    np.concatenate(all_step)[::stride],
-                    np.concatenate(all_box)[::stride])
+            xyz, time, step, box = self._read(chunk, atom_indices)
+            if len(xyz) <= 0:
+                break
+
+            all_xyz.append(xyz)
+            all_time.append(time)
+            all_step.append(step)
+            all_box.append(box)
+
+        if len(all_xyz) == 0:
+            return np.array([]), np.array([]), np.array([]), np.array([])
+        return (np.concatenate(all_xyz)[::stride],
+                np.concatenate(all_time)[::stride],
+                np.concatenate(all_step)[::stride],
+                np.concatenate(all_box)[::stride])
 
 
     def _read(self, int n_frames, atom_indices):

@@ -30,6 +30,21 @@ from mdtraj.rmsd import rmsd_cache
 from .topology import Topology
 from .trajectory import *
 
-def test():
-    import nose
-    nose.run()
+def test(label='full', verbose=2):
+    """Run tests for mdtraj using nose.
+
+    Parameters
+    ----------
+    label : {'fast', 'full'}
+        Identifies the tests to run. The fast tests take about 10 seconds,
+        and the full test suite takes about two minutes (as of this writing).
+    verbose : int, optional
+        Verbosity value for test outputs, in the range 1-10. Default is 2. 
+    """
+    import mdtraj
+    from mdtraj.testing.nosetester import MDTrajTester
+    tester = MDTrajTester(mdtraj)
+    return tester.test(label=label, verbose=verbose, extra_argv=('--exe',))
+# prevent nose from discovering this function, or otherwise when its run
+# the test suite in an infinite loop
+test.__test__ = False  
