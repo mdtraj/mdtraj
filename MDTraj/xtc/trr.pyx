@@ -128,11 +128,13 @@ cdef class TRRTrajectoryFile:
     cdef char* mode           # mode in which the file is open, either 'r' or 'w'
     cdef int min_chunk_size
     cdef float chunk_size_multiplier
+    cdef readonly char* distance_unit
 
 
     def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True, **kwargs):
         """Open a GROMACS TRR file for reading/writing.
         """
+        self.distance_unit = 'nanometers'
         self.is_open = False
         self.frame_counter = 0
 
@@ -186,7 +188,7 @@ cdef class TRRTrajectoryFile:
             trrlib.xdrfile_close(self.fh)
             self.is_open = False
 
-    def read(self, n_frames=None, int stride=1, atom_indices=None):
+    def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)
         
         Read data from a TRR file
@@ -227,9 +229,6 @@ cdef class TRRTrajectoryFile:
         if not self.is_open:
             raise IOError('file must be open to read from it.')
 
-        if stride != 1:
-            raise NotImplementedError('Sorry, striding has not been implemented yet')
-
         if n_frames is not None:
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
@@ -255,9 +254,11 @@ cdef class TRRTrajectoryFile:
                 all_box.append(box)
                 all_lambd.append(lambd)
 
-            return (np.concatenate(all_xyz), np.concatenate(all_time),
-                   np.concatenate(all_step), np.concatenate(all_box),
-                   np.concatenate(all_lambd))
+            return (np.concatenate(all_xyz)[::stride],
+                    np.concatenate(all_time)[::stride],
+                    np.concatenate(all_step)[::stride],
+                    np.concatenate(all_box)[::stride],
+                    np.concatenate(all_lambd)[::stride])
 
     def _read(self, int n_frames, atom_indices):
         """Read a specified number of TRR frames from the buffer"""
