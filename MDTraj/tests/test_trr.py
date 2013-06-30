@@ -39,6 +39,18 @@ def test_read_stride():
     yield lambda: eq(box[::3], box3)
     yield lambda: eq(time[::3], time3)
 
+def test_read_stride_2():
+    "trr read stride when n_frames is supplied (different path)"
+    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+         xyz, time, step, box, lambd = f.read()
+    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+         xyz3, time3, step3, box3, lambd3 = f.read(n_frames=1000, stride=3)
+    yield lambda: eq(xyz[::3], xyz3)
+    yield lambda: eq(step[::3], step3)
+    yield lambda: eq(box[::3], box3)
+    yield lambda: eq(time[::3], time3)
+
+
 
 def test_15():
     "Write data and read it back"

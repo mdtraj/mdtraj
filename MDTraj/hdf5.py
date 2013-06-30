@@ -526,7 +526,7 @@ class HDF5TrajectoryFile(object):
             alchemicalLambda = get_field('lambda', frame_slice, out_units='dimensionless')
         )
 
-        self._frame_index += min(n_frames, total_n_frames)
+        self._frame_index += (frame_slice.stop - frame_slice.start)
         return frames
 
     @ensure_mode('w', 'a')

@@ -51,9 +51,20 @@ def test_read_chunk1():
 
 
 def test_read_stride():
+    "read xtc with stride"
     iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
     with XTCTrajectoryFile(fn_xtc) as f:
          xyz, time, step, box = f.read(stride=3)
+    yield lambda: eq(xyz, iofile['xyz'][::3])
+    yield lambda: eq(step, iofile['step'][::3])
+    yield lambda: eq(box, iofile['box'][::3])
+    yield lambda: eq(time, iofile['time'][::3])
+
+def test_read_stride_2():
+    "read xtc with stride with n_frames"
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    with XTCTrajectoryFile(fn_xtc) as f:
+         xyz, time, step, box = f.read(n_frames=1000, stride=3)
     yield lambda: eq(xyz, iofile['xyz'][::3])
     yield lambda: eq(step, iofile['step'][::3])
     yield lambda: eq(box, iofile['box'][::3])
@@ -112,10 +123,10 @@ def test_write_0():
 
 
 def test_write_1():
-    xyz = np.around(np.random.randn(100, 10, 3), 3)
-    time = np.random.randn(100)
+    xyz = np.asarray(np.around(np.random.randn(100, 10, 3), 3), dtype=np.float32)
+    time = np.asarray(np.random.randn(100), dtype=np.float32)
     step = np.arange(100)
-    box = np.random.randn(100,3,3)
+    box = np.asarray(np.random.randn(100,3,3), dtype=np.float32)
 
     with XTCTrajectoryFile(temp, 'w') as f:
         f.write(xyz, time=time, step=step, box=box)
@@ -129,10 +140,10 @@ def test_write_1():
 
 
 def test_write_2():
-    xyz = np.around(np.random.randn(100, 10, 3), 3)
-    time = np.random.randn(100)
+    xyz = np.asarray(np.around(np.random.randn(100, 10, 3), 3), dtype=np.float32)
+    time = np.asarray(np.random.randn(100), dtype=np.float32)
     step = np.arange(100)
-    box = np.random.randn(100,3,3)
+    box = np.asarray(np.random.randn(100,3,3), dtype=np.float32)
 
     with XTCTrajectoryFile(temp, 'w') as f:
         for i in range(len(xyz)):
@@ -147,14 +158,14 @@ def test_write_2():
 
 @raises(ValueError)
 def test_write_error_0():
-    xyz = np.around(np.random.randn(100, 10, 3), 3)
+    xyz = np.asarray(np.random.randn(100,3,3), dtype=np.float32)
 
     with XTCTrajectoryFile(temp, 'r') as f:
         f.write(xyz)
 
 @raises(ValueError)
 def test_read_error_0():
-    xyz = np.around(np.random.randn(100, 10, 3), 3)
+    xyz = np.asarray(np.random.randn(100,3,3), dtype=np.float32)
 
     with XTCTrajectoryFile(temp, 'w') as f:
         f.read(xyz)
@@ -169,8 +180,8 @@ def test_read_error_2():
 
 @raises(ValueError)
 def test_xtc_write_wierd_0():
-    x0 = np.random.randn(100,3,3)
-    x1 = np.random.randn(100,9,3)
+    x0 = np.asarray(np.random.randn(100,3,3), dtype=np.float32)
+    x1 = np.asarray(np.random.randn(100,9,3), dtype=np.float32)
     with XTCTrajectoryFile(temp, 'w') as f:
         f.write(x0)
         f.write(x1)
