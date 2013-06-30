@@ -179,7 +179,7 @@ cdef class BINPOSTrajectoryFile:
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
-            return self._read(int(n_frames), atom_indices)
+            return self._read(int(n_frames), atom_indices)[::stride]
 
         else:
             all_xyz = []
