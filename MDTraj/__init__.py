@@ -42,9 +42,8 @@ def test(label='full', verbose=2):
         Verbosity value for test outputs, in the range 1-10. Default is 2. 
     """
     import mdtraj
-    from numpy.testing import Tester
-
-    tester = Tester(mdtraj)
+    from mdtraj.testing.nosetester import MDTrajTester
+    tester = MDTrajTester(mdtraj)
     return tester.test(label=label, verbose=verbose, extra_argv=('--exe',))
 # prevent nose from discovering this function, or otherwise when its run
 # the test suite in an infinite loop
