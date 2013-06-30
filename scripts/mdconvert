@@ -314,7 +314,6 @@ def write(outfile, data):
                       data.get('lambda', None))
         if outfile.topology is None:
             # only want to write the topology once if we're chunking
-            import IPython as ip; ip.embed()
             outfile.topology = data.get('topology', None)
     else:
         raise RuntimeError()

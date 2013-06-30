@@ -249,6 +249,7 @@ cdef class BINPOSTrajectoryFile:
 
         if not self.write_initialized:
             self._initialize_write(xyz.shape[1])
+            self.write_initialized = True
         else:
             if not self.n_atoms == xyz.shape[1]:
                 raise ValueError('number of atoms in file (%d) does not match number '
@@ -256,7 +257,7 @@ cdef class BINPOSTrajectoryFile:
 
         self._write(xyz)
 
-    def _write(self, np.ndarray[dtype=np.float32_t, ndim=3] xyz):
+    def _write(self, np.ndarray[dtype=np.float32_t, ndim=3] xyz not None):
         cdef int i, status
         cdef int n_frames = len(xyz)
 

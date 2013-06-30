@@ -16,7 +16,8 @@ test_dir = './mdconvert-test-output'
 staging_dir = tempfile.mkdtemp()
 def teardown_module(module):
     shutil.rmtree(staging_dir)
-    shutil.rmtree(test_dir)
+    if os.path.exists(test_dir):
+        shutil.rmtree(test_dir)
 
 def setup_module():
     global TRAJ
@@ -40,7 +41,7 @@ def setup_module():
                          unitcell_angles=unitcell_angles)
 
 
-@skipif(not HAVE_SCRIPTTEST, 'need "scripttest" module to test mdconvert')
+@skipif(not HAVE_SCRIPTTEST, 'need "scripttest" module to test mdconvert (pip install scripttest)')
 def test_mdconvert_0():
     """ensure that the xyz coordinates are preserved by a trip
        from python -> save in format X -> mdconvert to format Y -> python
@@ -59,9 +60,9 @@ def test_mdconvert_0():
         
         for fn2 in filter(lambda e: e != fn, fns):
             if os.path.splitext(fn2)[1] in ['.pdb', '.h5']:
-                generate = lambda : env.run('mdconvert', path, '-o', fn2, '-t', topology_fn, expect_stderr=True)
+                generate = lambda : env.run('mdconvert', path, '-o', fn2, '-c 3', '-t', topology_fn, expect_stderr=True)
             else:
-                generate = lambda : env.run('mdconvert', path, '-o', fn2, expect_stderr=True)
+                generate = lambda : env.run('mdconvert', path, '-o', fn2, '-c 3', expect_stderr=True)
             
             generate.description = 'Converting %s -> %s' % (fn, fn2)
             yield generate
@@ -79,7 +80,8 @@ def test_mdconvert_0():
             env.run('rm', '-f', fn2)        
         os.unlink(path)
 
-#def test_mdconvert_1():
-#    """Test that atom_indices are converted correctly
-#    """
-#    pass
+@skipif(not HAVE_SCRIPTTEST, 'need "scripttest" module to test mdconvert (pip install scripttest)')
+def test_mdconvert_1():
+   """Test that atom_indices are converted correctly
+   """
+   pass
