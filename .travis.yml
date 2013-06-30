@@ -23,6 +23,7 @@ install:
   - sudo pip install nose-performance
   - sudo pip install git+git://github.com/rmcgibbo/simtk.unit
   - sudo pip install flake8
+  - sudo pip install scripttest
 
 script:
   - sudo python setup.py -q install
