@@ -186,8 +186,8 @@ cdef class DCDTrajectoryFile:
         self.close()
 
 
-    def read(self, n_frames=None, int stride=1, atom_indices=None):
-        """read(n_frames=None, int stride=1, atom_indices=None)
+    def read(self, n_frames=None, stride=None, atom_indices=None):
+        """read(n_frames=None, stride=None, atom_indices=None)
         
         Read the data from a DCD file
 
@@ -224,7 +224,7 @@ cdef class DCDTrajectoryFile:
         if not self.is_open:
             raise IOError("file is not open")
 
-        cdef int _n_frames, n_atoms_to_read
+        cdef int _n_frames, n_atoms_to_read, _stride
         if n_frames is None:
             # if the user specifies n_frames=None, they want to read to the
             # end of the file
@@ -243,6 +243,10 @@ cdef class DCDTrajectoryFile:
                 raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
             n_atoms_to_read = len(atom_indices)
 
+        if stride is None:
+            _stride = 1
+        else:
+            _stride = stride
 
         # malloc space to put the data that we're going to read off the disk
         cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((_n_frames, n_atoms_to_read, 3), dtype=np.float32)
@@ -276,7 +280,7 @@ cdef class DCDTrajectoryFile:
                 # if the frame was not successfully read, then we're done
                 break
 
-            for j in range(stride - 1):
+            for j in range(_stride - 1):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
 
         if status == _DCD_SUCCESS:

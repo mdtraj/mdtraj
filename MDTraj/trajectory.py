@@ -89,7 +89,10 @@ def _parse_topology(top):
     return topology
 
 
-def _convert(quantity, in_unit, out_unit):
+def _convert(quantity, in_unit, out_unit, inplace=False):
+    """Convert between distance units. Note, inplace==True won't
+    work unless the quantity is a numpy array.
+    """
     if quantity is None:
         return None
 
@@ -97,7 +100,10 @@ def _convert(quantity, in_unit, out_unit):
               ('nanometers', 'nanometers'): 1,
               ('angstroms', 'nanometers'): 0.1,
               ('nanometers', 'angstroms'): 10}[(in_unit, out_unit)]
-    return quantity * factor
+    if not inplace:
+        return quantity * factor
+
+    quantity *= factor
 
 
 ##############################################################################
@@ -121,10 +127,18 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         Look for overlapping frames between the last frame of one filename and
         the first frame of a subsequent filename and discard them
 
-
     Other Parameters
     ----------------
-    DEPENDS ON THE LOADER. NOT FILLED IN YET. NEED TO ADD STRIDING AND SUCH
+    top : {str, Trajectory, Topology}
+        Most trajectory formats do not contain topology information. Pass in
+        either the path to a RCSB PDB file, a trajectory, or a topology to
+        supply this information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
 
     See Also
     --------
@@ -156,16 +170,34 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                       'was found. I can only load files '
                       'with extensions in %s' % (filename, extension, _LoaderRegistry.keys()))
 
+    if loader == load_hdf5 or loader == load_pdb:
+        if 'top' in kwargs:
+            warnings.warn('top= kwarg ignored since file contains topology information')
+        # this is a little hack that makes calling load() more predicable. since
+        # most of the loaders take a kwargs "top" except for load_hdf5, (since
+        # it saves the topology inside the file), we often end up calling
+        # load_hdf5 via this function with the top kwarg specified. but then
+        # there would be a signature binding error. it's easier just to ignore
+        # it.
+        kwargs.pop('top', None)
+
     return loader(filename, **kwargs)
 
 
-def load_pdb(filename):
+def load_pdb(filename, stride=None, atom_indices=None):
     """Load a RCSB Protein Data Bank file from disk.
 
     Parameters
     ----------
     filename : str
         Path to the PDB file on disk.
+    stride : int, default=None
+        Only read every stride-th model from the file
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. These indices are zero-based (not 1 based, as used by the PDB
+        format). So if you want to load only the first atom in the file, you
+        would supply ``atom_indices = np.array([0])``.
 
     Returns
     -------
@@ -180,35 +212,38 @@ def load_pdb(filename):
         raise TypeError('filename must be of type string for load_pdb. '
             'you supplied %s' % type(filename))
 
+    if atom_indices is None:
+        _atom_slice = slice(None)
+    else:
+        _atom_slice = atom_indices
+
     filename = str(filename)
     with PDBTrajectoryFile(filename) as f:
-        # convert from angstroms to nm
-        coords = f.positions / 10.0
-
+        coords = f.positions[::stride, _atom_slice, :]
         assert coords.ndim == 3, 'internal shape error'
         n_frames = len(coords)
 
-        trajectory = Trajectory(xyz=coords, topology=f.topology)
+        topology = f.topology
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
 
         if f.unitcell_angles is not None and f.unitcell_lengths is not None:
-            a, b, c = f.unitcell_lengths
-            alpha, beta, gamma = f.unitcell_angles
-            # we need to convert the distances from angstroms to nanometers
-            unitcell_lengths = np.array([[a / 10.0, b / 10.0, c / 10.0]])
-            unitcell_angles = np.array([[alpha, beta, gamma]])
-
-            # we need to project these unitcell parameters
-            # into each frame, for a multiframe PDB
-
-            trajectory.unitcell_lengths = np.repeat(unitcell_lengths, n_frames, axis=0)
-            trajectory.unitcell_angles = np.repeat(unitcell_angles, n_frames, axis=0)
-        elif f.unitcell_angles is None and f.unitcell_lengths is None:
-            pass
+            unitcell_lengths = np.array([f.unitcell_lengths] * n_frames)
+            unitcell_angles = np.array([f.unitcell_angles] * n_frames)
         else:
-            raise ValueError('Unitcell not parsed correctedly')
+            unitcell_lengths = None
+            unitcell_angles = None
 
+        _convert(coords, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        _convert(unitcell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
-    return trajectory
+    time = np.arange(n_frames)
+    if stride is not None:
+        time *= stride
+
+    return Trajectory(xyz=coords, time=time, topology=topology,
+                      unitcell_lengths=unitcell_lengths,
+                      unitcell_angles=unitcell_angles)
 
 
 def load_xml(filename, top=None):
@@ -258,7 +293,7 @@ def load_xml(filename, top=None):
     return traj
 
 
-def load_xtc(filename, top=None, chunk=None):
+def load_xtc(filename, top=None, stride=None, atom_indices=None):
     """Load an Gromacs XTC file from disk.
 
     Since the Gromacs XTC format doesn't contain information to specify the
@@ -272,8 +307,12 @@ def load_xtc(filename, top=None, chunk=None):
         The XTC format does not contain topology information. Pass in either the
         path to a RCSB PDB file, a trajectory, or a topology to supply this
         information.
-    chunk : None
-        This option is depricated.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
 
     Returns
     -------
@@ -296,18 +335,22 @@ def load_xtc(filename, top=None, chunk=None):
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
 
     with XTCTrajectoryFile(filename, 'r') as f:
-        xyz, time, step, box = f.read()
+        xyz, time, step, box = f.read(stride=stride, atom_indices=atom_indices)
 
-    # note we're not doing anything with the box vectors
+        _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        _convert(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     trajectory.unitcell_vectors = box
 
     return trajectory
 
 
-def load_trr(filename, top=None, chunk=None):
+def load_trr(filename, top=None, stride=None, atom_indices=None):
     """Load a trr file. Since the trr doesn't contain information
     to specify the topolgy, you need to supply the topology yourself
 
@@ -318,8 +361,12 @@ def load_trr(filename, top=None, chunk=None):
     top : {str, Trajectory, Topology}
         The TRR format does not contain topology information. Pass in either the
         path to a pdb file, a trajectory, or a topology to supply this information.
-    chunk : None
-        This option is depricated.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
 
     Returns
     -------
@@ -342,16 +389,22 @@ def load_trr(filename, top=None, chunk=None):
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
 
     with TRRTrajectoryFile(filename) as f:
-        xyz, time, step, box, lambd = f.read()
+        xyz, time, step, box, lambd = f.read(stride=stride, atom_indices=atom_indices)
+
+        _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        _convert(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
 
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     trajectory.unitcell_vectors = box
     return trajectory
 
 
-def load_dcd(filename, top=None):
+def load_dcd(filename, top=None, stride=None, atom_indices=None):
     """Load an xtc file. Since the dcd format doesn't contain information
     to specify the topolgy, you need to supply a pdb_filename
 
@@ -363,6 +416,12 @@ def load_dcd(filename, top=None):
         DCD XTC format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
         information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
 
     Returns
     -------
@@ -385,20 +444,28 @@ def load_dcd(filename, top=None):
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
+
     with DCDTrajectoryFile(filename) as f:
-        xyz, box_length, box_angle = f.read()
+        xyz, box_length, box_angle = f.read(stride=stride, atom_indices=atom_indices)
 
-    xyz /= 10.  # convert from anstroms to nanometer
-    box_length /= 10.  # convert from anstroms to nanometer
+        _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        _convert(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
-    trajectory = Trajectory(xyz=xyz, topology=topology)
-    trajectory.unitcell_lengths = box_length
-    trajectory.unitcell_angles = box_angle
+    time = np.arange(len(xyz))
+    if stride is not None:
+        # if we loaded with a stride, the Trajectories's time field should
+        # respect that
+        time *= stride
 
+    trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
+                            unitcell_lengths=box_length,
+                            unitcell_angles=box_angle)
     return trajectory
 
 
-def load_hdf5(filename, stride=None, frame=None):
+def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     """Load an MDTraj hdf5 trajectory file from disk.
 
     Parameters
@@ -407,9 +474,14 @@ def load_hdf5(filename, stride=None, frame=None):
         String filename of HDF Trajectory file.
     stride : int, default=None
         Only read every stride-th frame
-    frame : {None, int}, default=None
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
+    frame : int, optional
         Use this option to load only a single frame from a trajectory on disk.
         If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` and ``atom_indices`` will be ignored.
 
     Returns
     -------
@@ -420,21 +492,29 @@ def load_hdf5(filename, stride=None, frame=None):
     --------
     mdtraj.HDF5TrajectoryFile :  Low level interface to HDF5 files
     """
-    tf = HDF5TrajectoryFile(filename)
-    if frame is None:
-        data = tf.read(stride=stride)
-    else:
-        tf._frame_index += int(frame)
-        data = tf.read(n_frames=1)
 
-    trajectory = Trajectory(xyz=data.coordinates, topology=tf.topology, time=data.time)
-    trajectory.unitcell_lengths = data.cell_lengths
-    trajectory.unitcell_angles = data.cell_angles
+    with HDF5TrajectoryFile(filename) as f:
+        if frame is not None:
+            f._frame_index += int(frame)
+            data = f.read(n_frames=1)
+        else:
+            data = f.read(stride=stride, atom_indices=atom_indices)
 
+        topology = f.topology
+
+        _convert(data.coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        _convert(data.cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+        if atom_indices is not None:
+            topology = f.topology.subset(atom_indices)
+
+    trajectory = Trajectory(xyz=data.coordinates, topology=topology,
+                            time=data.time, unitcell_lengths=data.cell_lengths,
+                            unitcell_angles=data.cell_angles)
     return trajectory
 
 
-def load_binpos(filename, top=None, chunk=500):
+def load_binpos(filename, top=None, stride=None, atom_indices=None):
     """Load an AMBER BINPOS file.
 
     Parameters
@@ -445,9 +525,12 @@ def load_binpos(filename, top=None, chunk=500):
         The BINPOS format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
         information.
-    chunk : int, default=500
-        Size of the chunk to use for loading the xtc file. Memory is allocated
-        in units of the chunk size, so larger chunk can be more time-efficient.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
 
     Returns
     -------
@@ -471,15 +554,25 @@ def load_binpos(filename, top=None, chunk=500):
 
 
     topology = _parse_topology(top)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
 
     with BINPOSTrajectoryFile(filename) as f:
-        xyz = f.read()
-    xyz /= 10.0  # convert from anstroms to nanometer
+        xyz = f.read(stride=stride, atom_indices=atom_indices)
 
-    return Trajectory(xyz=xyz, topology=topology)
+        _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+    time = np.arange(len(xyz))
+
+    if stride is not None:
+        # if we loaded with a stride, the Trajectories's time field should
+        # respect that
+        time *= stride
+
+    return Trajectory(xyz=xyz, topology=topology, time=time)
 
 
-def load_netcdf(filename, top=None, stride=None):
+def load_netcdf(filename, top=None, stride=None, atom_indices=None):
     """Load an AMBER NetCDF file. Since the NetCDF format doesn't contain
     information to specify the topolgy, you need to supply a topology
 
@@ -493,6 +586,10 @@ def load_netcdf(filename, top=None, stride=None):
         information.
     stride : int, default=None
         Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
 
     Returns
     -------
@@ -504,19 +601,27 @@ def load_netcdf(filename, top=None, stride=None):
     mdtraj.NetCDFTrajectoryFile :  Low level interface to NetCDF files
     """
     topology = _parse_topology(top)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
+
     with NetCDFTrajectoryFile(filename) as f:
-        xyz, time, cell_lengths, cell_angles = f.read(stride=stride)
-        xyz /= 10.0           # convert from angstroms to nanometer
-        cell_lengths /= 10.0  # convert from angstroms to nanometer
+        xyz, time, cell_lengths, cell_angles = f.read(stride=stride, atom_indices=atom_indices)
+
+        _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        _convert(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     if isinstance(time, np.ma.masked_array) and np.all(time.mask):
         # if time is a masked array and all the entries are masked
         # then we just tread it as if we never found it
         time = None
+    if isinstance(cell_lengths, np.ma.masked_array) and np.all(cell_lengths.mask):
+        cell_lengths = None
+    if isinstance(cell_angles, np.ma.masked_array) and np.all(cell_angles.mask):
+        cell_angles = None
 
-    trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
-    trajectory.unitcell_lengths = cell_lengths
-    trajectory.unitcell_angles = cell_angles
+    trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
+                            unitcell_lengths=cell_lengths,
+                            unitcell_angles=cell_angles)
     return trajectory
 
 
@@ -582,7 +687,7 @@ class Trajectory(object):
 
     # this is NOT configurable. if it's set to something else, things will break
     # (thus why I make it private)
-    __distance_unit = 'nanometers'
+    _distance_unit = 'nanometers'
 
     @property
     def topology(self):
@@ -1106,13 +1211,13 @@ class Trajectory(object):
             for i in xrange(self.n_frames):
 
                 if self._have_unitcell:
-                    f.write(_convert(self._xyz[i], Trajectory.__distance_unit, f.distance_unit),
+                    f.write(_convert(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
                             self.topology,
                             modelIndex=i,
-                            unitcell_lengths=_convert(self.unitcell_lengths[i], Trajectory.__distance_unit, f.distance_unit),
+                            unitcell_lengths=_convert(self.unitcell_lengths[i], Trajectory._distance_unit, f.distance_unit),
                             unitcell_angles=self.unitcell_angles[i])
                 else:
-                    f.write(_convert(self._xyz[i], Trajectory.__distance_unit, f.distance_unit),
+                    f.write(_convert(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
                             self.topology,
                             modelIndex=i)
 
@@ -1159,8 +1264,8 @@ class Trajectory(object):
         """
         self._check_valid_unitcell()
         with DCDTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(_convert(self.xyz, Trajectory.__distance_unit, f.distance_unit),
-                    cell_lengths=_convert(self.unitcell_lengths, Trajectory.__distance_unit, f.distance_unit),
+            f.write(_convert(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    cell_lengths=_convert(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
 
@@ -1175,7 +1280,7 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         with BINPOSTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(_convert(self.xyz, Trajectory.__distance_unit, f.distance_unit))
+            f.write(_convert(self.xyz, Trajectory._distance_unit, f.distance_unit))
 
 
     def save_netcdf(self, filename, force_overwrite=True):
@@ -1190,9 +1295,9 @@ class Trajectory(object):
         """
         self._check_valid_unitcell()
         with NetCDFTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(coordinates=_convert(self._xyz, Trajectory.__distance_unit, NetCDFTrajectoryFile.distance_unit),
+            f.write(coordinates=_convert(self._xyz, Trajectory._distance_unit, NetCDFTrajectoryFile.distance_unit),
                     time=self.time,
-                    cell_lengths=_convert(self.unitcell_lengths, Trajectory.__distance_unit, f.distance_unit),
+                    cell_lengths=_convert(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
     def center_coordinates(self):

@@ -45,7 +45,7 @@ cdef int _BINPOS_EOF = -1  # end of file (or error)
 
 cdef class BINPOSTrajectoryFile:
     """BINPOSTrajectoryFile(filename, mode='r', force_overwrite=True, **kwargs)
-    
+
     Interface for reading and writing to an AMBER BINPOS file.
     This is a file-like object, that both reading or writing depending
     on the `mode` flag. It implements the context manager protocol,
@@ -53,7 +53,7 @@ cdef class BINPOSTrajectoryFile:
 
     The conventional units in the BINPOS file are angstroms. The format only
     supports storing the cartesian coordinates.
-    
+
     Parameters
     ----------
     filename : str
@@ -75,7 +75,7 @@ cdef class BINPOSTrajectoryFile:
         without knowing how many frames are in the file. We can *guess* this
         information based on the size of the file on disk, but it's not perfect.
         This parameter inflates the guess by a multiplicative factor.
-        
+
     Examples
     --------
     >>> # copy data from one file to another
@@ -88,7 +88,7 @@ cdef class BINPOSTrajectoryFile:
     --------
     mdtraj.load_binpos : High-level wrapper that returns a ``md.Trajectory``
     """
-    
+
     cdef int n_atoms
     cdef int approx_n_frames
     cdef int min_chunk_size
@@ -150,9 +150,9 @@ cdef class BINPOSTrajectoryFile:
         self.n_atoms = n_atoms
         self.is_open = True
 
-    def read(self, n_frames=None):
-        """read(n_frames=None)
-        
+    def read(self, n_frames=None, stride=None, atom_indices=None):
+        """read(n_frames=None, stride=None, atom_indices=1)
+
         Read data from a BINPOS file
 
         Parameters
@@ -160,6 +160,12 @@ cdef class BINPOSTrajectoryFile:
         n_frames : int, None
             The number of frames you would like to read from the file.
             If None, all of the remaining frames will be loaded.
+        stride : np.ndarray, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from
+            the file. This may be slightly slower than the standard read
+            because it required an extra copy, but will save memory.
 
         Returns
         -------
@@ -168,12 +174,12 @@ cdef class BINPOSTrajectoryFile:
         """
         if not self.mode == b'r':
             raise ValueError('read() is only available when file is opened in mode="r"')
-        
+
         if n_frames is not None:
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
-            return self._read(int(n_frames))
+            return self._read(int(n_frames), atom_indices)
 
         else:
             all_xyz = []
@@ -181,36 +187,56 @@ cdef class BINPOSTrajectoryFile:
                 # guess the size of the chunk to read, based on how many frames we think are in the file
                 # and how many we've currently read
                 chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
-                            self.min_chunk_size)            
-                
-                xyz = self._read(chunk)
+                            self.min_chunk_size)
+                xyz = self._read(chunk, atom_indices)
 
                 if len(xyz) <= 0:
                     break
                 all_xyz.append(xyz)
-            
-            return np.concatenate(all_xyz)
 
-                
-    def _read(self, int n_frames):
-        cdef int i
-        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((n_frames, self.n_atoms, 3), dtype=np.float32)
-        
+            return np.concatenate(all_xyz)[::stride]
+
+
+    def _read(self, int n_frames, atom_indices=None):
+        cdef int n_atoms_to_read, i
+
+        if atom_indices is None:
+            n_atoms_to_read = self.n_atoms
+        elif isinstance(atom_indices, slice):
+            n_atoms_to_read = len(np.arange(self.n_atoms)[atom_indices])
+        else:
+            if min(atom_indices) < 0:
+                raise ValueError('atom_indices should be zero indexed. you gave an index less than zerp')
+            if max(atom_indices) >= self.n_atoms:
+                raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
+            n_atoms_to_read = len(atom_indices)
+
+        # only used if atom_indices is given
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
+
+        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((n_frames, n_atoms_to_read, 3), dtype=np.float32)
+
         for i in range(n_frames):
-            self.timestep.coords = &xyz[i,0,0]
-            status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+            if atom_indices is None:
+                self.timestep.coords = &xyz[i,0,0]
+                status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+            else:
+                self.timestep.coords = &framebuffer[0, 0]
+                status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
+                xyz[i, :, :] = framebuffer[atom_indices, :]
+
+            self.frame_counter += 1
+
             if status != _BINPOS_SUCESS:
                 break
-
-        self.frame_counter += i
 
         if status != _BINPOS_SUCESS:
             return xyz[:i]
         return xyz
 
     def write(self, xyz):
-        """write(xyz) 
-        
+        """write(xyz)
+
         Write cartesian coordinates to a binpos file
 
         Parameters
@@ -220,7 +246,7 @@ cdef class BINPOSTrajectoryFile:
         """
         xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False,
                           add_newaxis_on_deficient_ndim=True)
-        
+
         if not self.write_initialized:
             self._initialize_write(xyz.shape[1])
         else:

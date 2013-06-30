@@ -54,6 +54,31 @@ def test_read_0():
     yield lambda: eq(xyz, xyz3)
 
 
+def test_read_stride():
+    "Read a binpos with stride=3"
+    with BINPOSTrajectoryFile(fn_binpos) as f:
+        xyz = f.read(stride=3)
+    xyz2 = io.loadh(get_fn('frame0.binpos.h5'), 'xyz')
+    yield lambda: eq(xyz, xyz2[::3])
+
+
+def test_read_atom_indices():
+    "Read a binpos with atom_indices as a list"
+    with BINPOSTrajectoryFile(fn_binpos) as f:
+        xyz = f.read(atom_indices=[0,1,2])
+    xyz2 = io.loadh(get_fn('frame0.binpos.h5'), 'xyz')
+    yield lambda: eq(xyz, xyz2[:, [0,1,2], :])
+
+
+def test_read_atom_indices_slice():
+    "Read a binpos with atom_indices as a slice"
+    with BINPOSTrajectoryFile(fn_binpos) as f:
+        xyz = f.read(atom_indices=slice(0, 10, None))
+    xyz2 = io.loadh(get_fn('frame0.binpos.h5'), 'xyz')
+    yield lambda: eq(xyz, xyz2[:, 0:10, :])
+
+
+
 def test_read_1():
     with BINPOSTrajectoryFile(fn_binpos, chunk_size_multiplier=0.5) as f:
         xyz = f.read()
