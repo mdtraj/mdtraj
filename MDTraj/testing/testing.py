@@ -39,8 +39,8 @@ try:
     from scipy.sparse import isspmatrix
 except ImportError:
     isspmatrix = lambda x: False
-    
-    
+
+
 __all__ = ['assert_allclose', 'assert_almost_equal', 'assert_approx_equal',
            'assert_array_almost_equal', 'assert_array_almost_equal_nulp',
            'assert_array_equal', 'assert_array_less', 'assert_array_max_ulp',
@@ -71,7 +71,7 @@ def get_fn(name):
     >>> t = md.load(get_fn('2EQQ.pdb'))
     >>> eq(t.n_frames, 20)    # this runs the assert, using the eq() func.
     """
-    
+
     fn = resource_filename('mdtraj', os.path.join('testing/reference', name))
 
     if not os.path.exists(fn):
@@ -100,6 +100,16 @@ def eq(o1, o2, decimal=6, err_msg=''):
         equality up to this decimal place.
     err_msg : str
         Custom error message
+
+    Returns
+    -------
+    passed : bool
+        True if the tests pass. If the tests doesn't pass, since the AssertionError will be raised
+
+    Raises
+    ------
+    AssertionError
+        If the tests fail
     """
     assert (type(o1) is type(o2)), 'o1 and o2 not the same type: %s %s' % (type(o1), type(o2))
 
@@ -126,6 +136,7 @@ def eq(o1, o2, decimal=6, err_msg=''):
     else:
         eq_(o1, o2)
 
+    return True
 
 def assert_dict_equal(t1, t2, decimal=6):
     """
