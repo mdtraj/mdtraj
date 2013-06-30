@@ -28,7 +28,7 @@ install:
 script:
   - sudo python setup.py -q install
   - nosetests
-  - nosetests --with-performance MDTraj/test/performance --performance-revision=`git rev-parse HEAD`
+  - nosetests --with-performance MDTraj/tests/performance --performance-revision=`git rev-parse HEAD`
   - curl --form "fileupload=@performance.json" http://mdtraj-performance.appspot.com
   - cat performance.json
   - flake8 --ignore=E121,E122,E123,E125,E126,E127,E128,E226,E231,E501,E712 MDTraj/ || echo ""  # don't want nonzero exit status
