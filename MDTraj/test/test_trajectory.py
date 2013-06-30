@@ -219,7 +219,7 @@ def test_array_vs_matrix():
 
     eq(t1.xyz, xyz)
     eq(t2.xyz, xyz)
-    
+
 def test_pdb_unitcell_loadsave():
     """Make sure that nonstandard unitcell dimensions are saved and loaded
     correctly with PDB"""
@@ -230,3 +230,30 @@ def test_pdb_unitcell_loadsave():
 
     tnew = load(temp6)
     eq(tref.unitcell_vectors, tnew.unitcell_vectors, decimal=3)
+
+
+def test_load_combination():
+    "Test that the load() function's stride and atom_indices work accross all trajectory formats"
+
+    topology = load(get_fn('native.pdb')).topology
+    ainds = np.array([a.index for a in topology.atoms if a.element.symbol == 'C'])
+    filenames = ['frame0.binpos', 'frame0.dcd', 'frame0.trr', 'frame0.xtc', 'frame0.nc', 'frame0.h5', 'frame0.pdb']
+
+    no_kwargs = [load(fn, top=topology) for fn in map(get_fn, filenames)]
+    strided3 =  [load(fn, top=topology, stride=3) for fn in map(get_fn, filenames)]
+    subset =    [load(fn, top=topology, atom_indices=ainds) for fn in map(get_fn, filenames)]
+
+
+    for i, (t1, t2) in enumerate(zip(no_kwargs, strided3)):
+        yield lambda: eq(t1.xyz[::3], t2.xyz)
+        yield lambda: eq(t1.time[::3], t2.time)
+        if t1.unitcell_vectors != None:
+            yield lambda: eq(t1.unitcell_vectors[::3], t2.unitcell_vectors)
+        yield lambda: eq(t1.topology, t2.topology)
+
+    for i, (t1, t2) in enumerate(zip(no_kwargs, subset)):
+        yield lambda: eq(t1.xyz[:, ainds, :], t2.xyz)
+        yield lambda: eq(t1.time, t2.time)
+        if t1.unitcell_vectors != None:
+            yield lambda: eq(t1.unitcell_vectors, t2.unitcell_vectors)
+        yield lambda: eq(t1.topology.subset(ainds), t2.topology)

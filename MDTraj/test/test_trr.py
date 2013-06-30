@@ -29,6 +29,17 @@ def test_1():
     yield lambda: eq(lambd, lambd2)
 
 
+def test_read_stride():
+    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+         xyz, time, step, box, lambd = f.read()
+    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+         xyz3, time3, step3, box3, lambd3 = f.read(stride=3)
+    yield lambda: eq(xyz[::3], xyz3)
+    yield lambda: eq(step[::3], step3)
+    yield lambda: eq(box[::3], box3)
+    yield lambda: eq(time[::3], time3)
+
+
 def test_15():
     "Write data and read it back"
     xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
