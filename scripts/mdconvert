@@ -307,10 +307,14 @@ def write(outfile, data):
         outfile.write(data.get('xyz', None))
 
     elif isinstance(outfile, md.PDBTrajectoryFile):
+        lengths, angles = None, None
         for i, frame in enumerate(data.get('xyz')):
-            outfile.write(frame, data.get('topology', None), i,
-            unitcell_lengths=data.get('cell_lengths', None)[i],
-            unitcell_angles=data.get('cell_angles', None)[i])
+            if 'cell_lengths' in data:
+                lengths = data['cell_lengths'][i]
+            if 'cell_angles' in data:
+                angles = data['cell_angles'][i]
+                
+            outfile.write(frame, data.get('topology', None), i, lengths, angles)
 
     elif isinstance(outfile, md.NetCDFTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
