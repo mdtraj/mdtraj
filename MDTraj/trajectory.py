@@ -102,7 +102,6 @@ def _convert(quantity, in_unit, out_unit, inplace=False):
               ('nanometers', 'angstroms'): 10}[(in_unit, out_unit)]
     if not inplace:
         return quantity * factor
-
     quantity *= factor
 
 
