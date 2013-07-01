@@ -16,10 +16,6 @@ Easy Way
 
 Just run ::
 
-  pip install git+git://github.com/rmcgibbo/mdtraj.git
-
-Soon, once I put the project on PyPI, you will be able to just run ::
-
   pip install mdtraj
 
 Medium Way
@@ -41,15 +37,13 @@ up via ``pip`` if you don't already have it. ::
 
   pip install nose
   
-Then, to run the tests, just run from the project root directory ::
-
-  cd /path/to/mdtraj
-  nosetests
-
-You can also run the tests from within a python shell with ::
+Then, to run the tests, open a python shell and do ::
 
   >>> import mdtraj
   >>> mdtraj.test()
+
+From the source directory, you can also run the tests with ``nosetests`` on
+the command line
 
 Dependencies
 ============

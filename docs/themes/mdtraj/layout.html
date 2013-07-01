@@ -2,7 +2,7 @@
 {% set reldelim1 = ' |' %}
 
 {% block sidebarlogo %}
-<img src="{{pathto('_static/mdtraj_logo-small.png', 1) }}" alt="Logo"/>
+<a href="{{pathto('index')}}"><img src="{{pathto('_static/mdtraj_logo-small.png', 1) }}" alt="Logo"/></a>
 {% endblock %}
 
 {% if pagename == 'index' %}
