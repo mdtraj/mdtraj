@@ -30,7 +30,9 @@ sys.path.insert(0, os.path.abspath('sphinxext'))
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.autosummary',
               'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'numpy_ext.numpydoc',
-              'sphinx.ext.intersphinx', 'sphinx.ext.viewcode']
+              'sphinx.ext.intersphinx', 'sphinx.ext.viewcode',
+              'ipython_console_highlighting', 'ipython_directive',
+              'matplotlib.sphinxext.plot_directive']
 
 autosummary_generate = True
 autodoc_default_flags = ['members', 'inherited-members']
@@ -108,8 +110,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#html_theme = 'sphinxdoc'
-html_style = 'scipy.css'
+html_theme = 'mdtraj'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -118,6 +119,8 @@ html_style = 'scipy.css'
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
+html_theme_path = ['themes']
+
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".

@@ -36,6 +36,7 @@ Documentation
    :maxdepth: 1
    
    getting_started
+   examples/index
    mdconvert
    hdf5_format
    file_formats
@@ -48,11 +49,8 @@ Documentation
    reporters
    utils
 
-Example Usage
--------------
-Here are some examples of how you can use MDTraj to simplify access to and 
-manipulation of molecular dynamics trajectories.
-
+Minimal Example
+---------------
 Start by loading up a trajectory from disk. MDTraj will automatically parse the file extension and use the appropriate loader. ::
 
   >>> import mdtraj as md

@@ -82,7 +82,6 @@ def rmsd_cache(trajectory, major='axis'):
         aligned = align_array(trajectory.xyz, major)
     elif major == 'axis':
         aligned = _allocate_aligned_array((trajectory.n_frames, 3, trajectory.n_atoms), major)
-        print 'TODO: MAKE THIS COPY MORE EFFICIENT'
         for i in range(trajectory.n_frames):
             aligned[i, :, 0:trajectory.n_atoms] = trajectory.xyz[i, 0:trajectory.n_atoms, :].T
     else:
