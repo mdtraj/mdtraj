@@ -1,4 +1,4 @@
-""""MDTraj: a python library for loading, saving, and manipulating molecular dynamics trajectories.
+"""MDTraj: a python library for loading, saving, and manipulating molecular dynamics trajectories.
 
 MDTraj provides an easy to use python interface for manipulating MD trajectories.
 It supports the reading and writing of molecular dynamics trajectories
