@@ -84,7 +84,7 @@ def _parse_topology(top):
     elif isinstance(top, Topology):
         topology = top
     else:
-        raise TypeError('Could not interpreted top=%s' % top)
+        raise TypeError('A topology is required. You supplied top=%s' % top)
 
     return topology
 
@@ -103,6 +103,31 @@ def _convert(quantity, in_unit, out_unit, inplace=False):
     if not inplace:
         return quantity * factor
     quantity *= factor
+
+
+def _cast_indices(indices):
+    """Check that ``indices`` are approprate for indexing an array
+
+    Parameters
+    ----------
+    indices : {None, array_like, slice}
+        If indices is None or slice, it'll just pass through. Otherwise, it'll
+        be converted to a numpy array and checked to make sure it contains
+        integers.
+
+    Returns
+    -------
+    value : {slice, np.ndarray}
+        Either a slice or an array of integers, depending on the input type
+    """
+    if indices is None or isinstance(indices, slice):
+        return indices
+
+    out = np.asarray(indices)
+    if not issubclass(out.dtype.type, np.integer):
+        raise ValueError('indices must be of an integer type. %s is not an integer type' % out.dtype)
+
+    return out
 
 
 ##############################################################################
@@ -211,14 +236,12 @@ def load_pdb(filename, stride=None, atom_indices=None):
         raise TypeError('filename must be of type string for load_pdb. '
             'you supplied %s' % type(filename))
 
-    if atom_indices is None:
-        _atom_slice = slice(None)
-    else:
-        _atom_slice = atom_indices
+    atom_indices = _cast_indices(atom_indices)
 
     filename = str(filename)
     with PDBTrajectoryFile(filename) as f:
-        coords = f.positions[::stride, _atom_slice, :]
+        atom_slice = slice(None) if atom_indices is None else atom_indices
+        coords = f.positions[::stride, atom_slice, :]
         assert coords.ndim == 3, 'internal shape error'
         n_frames = len(coords)
 
@@ -334,6 +357,8 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None):
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
+
+    atom_indices = _cast_indices(atom_indices)
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
 
@@ -388,6 +413,7 @@ def load_trr(filename, top=None, stride=None, atom_indices=None):
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
+    atom_indices = _cast_indices(atom_indices)
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
 
@@ -443,6 +469,7 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None):
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
+    atom_indices = _cast_indices(atom_indices)
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
 
@@ -491,6 +518,7 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.HDF5TrajectoryFile :  Low level interface to HDF5 files
     """
+    atom_indices = _cast_indices(atom_indices)
 
     with HDF5TrajectoryFile(filename) as f:
         if frame is not None:
@@ -551,8 +579,8 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None):
         raise TypeError('filename must be of type string for load_binpos. '
             'you supplied %s' % type(filename))
 
-
     topology = _parse_topology(top)
+    atom_indices = _cast_indices(atom_indices)
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
 
@@ -600,6 +628,7 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None):
     mdtraj.NetCDFTrajectoryFile :  Low level interface to NetCDF files
     """
     topology = _parse_topology(top)
+    atom_indices = _cast_indices(atom_indices)
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
 

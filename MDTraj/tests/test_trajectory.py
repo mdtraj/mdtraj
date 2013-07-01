@@ -195,6 +195,23 @@ def test_center():
     eq(mu0, mu)
 
 
+def test_float_atom_indices_exception():
+    "Is an informative error message given when you supply floats for atom_indices?"
+    top = load(get_fn('native.pdb')).topology
+    for ext in mdtraj.trajectory._LoaderRegistry.keys():
+        try:
+            fn = get_fn('frame0' + ext)
+        except:
+            continue
+
+        try:
+            load(fn, atom_indices=[0.5, 1.3], top=top)
+        except ValueError as e:
+            assert e.message == 'indices must be of an integer type. float64 is not an integer type'
+        except Exception as e:
+            raise
+
+
 def test_restrict_atoms():
     traj = load(get_fn('traj.h5'))
     desired_atom_indices = [0,1,2,5]
