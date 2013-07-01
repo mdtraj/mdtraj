@@ -16,8 +16,8 @@ from Cython.Distutils import build_ext
 import numpy
 
 ##########################
-VERSION = "0.3.1"
-ISRELEASED = True
+VERSION = "0.3.2"
+ISRELEASED = False
 __version__ = VERSION
 ##########################
 
