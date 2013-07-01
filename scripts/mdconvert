@@ -186,7 +186,7 @@ def parse_args():
                 and ext(args.output) == '.pdb'):
         parser.error('to output a pdb file, you need to supply a topology (-t, or --topology)')
 
-    if (args.chunk % args.stride != 0):
+    if args.chunk is not None and (args.chunk % args.stride != 0):
         parser.error('--stride must be a divisor of --chunk')
 
     return args
@@ -257,12 +257,21 @@ def main(args, verbose=True):
                     # if they want a specific set of frames, get those
                     # with slice notation
                     if args.index is not None:
-                        # we don't want the dimensionality to go deficient
-                        if isinstance(args.index, int):
-                            data = {k: v[np.newaxis, args.index] for k, v in data.iteritems()}
-                        else:
-                            data = {k: v[args.index] for k, v in data.iteritems()}
-                        n_frames = len(data.values()[0])
+                        _data = {}
+                        for k, v in data.iteritems():
+                            if isinstance(v, np.ndarray):
+                                # we don't want the dimensionality to go deficient
+                                if isinstance(args.index, int):
+                                    _data[k] = v[np.newaxis, args.index]
+                                else:
+                                    _data[k] = v[args.index]
+                            elif isinstance(v, md.Topology):
+                                _data[k] = v
+                            else:
+                                raise RuntineError()
+                        data = _data
+                        print data.keys()
+                        n_frames = len(data['xyz'])
 
                     convert(data, in_units, out_units, out_fields)
                     write(outfile, data)
