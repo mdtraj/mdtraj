@@ -1,0 +1,27 @@
+{% extends "basic/layout.html" %}
+{% set reldelim1 = ' |' %}
+
+{% block sidebarlogo %}
+<img src="{{pathto('_static/mdtraj_logo-small.png', 1) }}" alt="Logo"/>
+{% endblock %}
+
+{% if pagename == 'index' %}
+    {% set title = 'MDTraj' %}
+{% endif %}
+
+
+{# {% block document %}
+{% block relbaritems %}
+    {% if pagename != 'index' %}
+{{ title }}
+    {% endif %}
+    {% endblock %}
+    {{ super() }}
+    {% endblock %} #}
+    
+{% block relbaritems %}
+<a href="{{pathto('getting_started')}}">Getting Started</a> |
+<a href="https://github.com/rmcgibbo/mdtraj/issues">Bugs</a> |
+<a href="{{pathto('examples/index')}}">Examples</a>
+{{ super() }}
+{% endblock %}

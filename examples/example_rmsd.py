@@ -1,41 +1,46 @@
-# -*- coding: utf-8 -*-
-"""Out of sample prediction
+"""Plotting RMSD drift
 """
 
-import numpy as np
-import statsmodels.api as sm
+import mdtraj as md
 
-#Create some data
+# Find two files that are distributed with MDTraj for testing purposes -- 
+# we can us them to make our plot
 
-nsample = 50
-sig = 0.25
-x1 = np.linspace(0, 20, nsample)
-X = np.c_[x1, np.sin(x1), (x1 - 5)**2, np.ones(nsample)]
-beta = [0.5, 0.5, -0.02, 5.]
-y_true = np.dot(X, beta)
-y = y_true + sig * np.random.normal(size=nsample)
+import mdtraj.testing
+crystal_fn = mdtraj.testing.get_fn('native.pdb')
+trajectory_fn = mdtraj.testing.get_fn('frame0.xtc')
 
-#Setup and estimate the model
+# Load up the trajectories from disk
 
-olsmod = sm.OLS(y, X)
-olsres = olsmod.fit()
-print olsres.params
-print olsres.bse
+crystal = md.load(crystal_fn)
+trajectory = md.load(trajectory_fn, top=crystal)  # load the xtc. the crystal structure defines the topology
+print trajectory
 
-#In-sample prediction
+# Let's also try loading only the heavy atoms from disk, because calculating
+# RMSD with exchangeable hydrogen atoms is generally not a good idea
 
-ypred = olsres.predict(X)
+heavy_atoms = [atom.index for atom in crystal.topology.atoms if atom.element.symbol != 'H']
+heavy_crystal = md.load(crystal_fn, atom_indices=heavy_atoms)
+heavy_trajectory = md.load(trajectory_fn, top=crystal, atom_indices=heavy_atoms)
+print heavy_trajectory
 
-#Create a new sample of explanatory variables Xnew, predict and plot
+# Format the data for the RMSD calculation by building an RMSDCache.
 
-x1n = np.linspace(20.5, 25, 10)
-Xnew = np.c_[x1n, np.sin(x1n), (x1n - 5)**2, np.ones(10)]
-ynewpred = olsres.predict(Xnew)  # predict out of sample
-print ypred
+crystal_cache = md.rmsd_cache(crystal)
+trajectory_cache = md.rmsd_cache(trajectory)
+crystal_heavy_cache = md.rmsd_cache(heavy_crystal)
+trajectory_heavy_cache = md.rmsd_cache(heavy_trajectory)
+rmsds_to_crystal = trajectory_cache.rmsds_to(crystal_cache, 0)
+heavy_rmds_to_crystal = trajectory_heavy_cache.rmsds_to(crystal_heavy_cache, 0)
 
-import matplotlib.pyplot as plt
-plt.figure();
-plt.plot(x1, y, 'o', x1, y_true, 'b-');
-plt.plot(np.hstack((x1, x1n)), np.hstack((ypred, ynewpred)), 'r');
-#@savefig ols_predict.png
-plt.title('OLS prediction, blue: true and data, fitted/predicted values:red');
+# Plot the results
+
+import matplotlib.pyplot as pp
+pp.figure();
+pp.plot(trajectory.time, rmsds_to_crystal, 'r', label='all atom');
+pp.plot(heavy_trajectory.time, heavy_rmds_to_crystal, 'b', label='heavy atom');
+pp.legend();
+pp.title('RMSDs to crystal');
+pp.xlabel('simulation time (ps)');
+#@savefig rmsds_to_crystal.png
+pp.ylabel('RMSD (nm)');
