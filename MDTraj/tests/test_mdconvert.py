@@ -83,6 +83,34 @@ def setup_module():
 # test
 ##############################################################################
 
+
+@skipif(not HAVE_SCRIPTTEST)
+def test_mdconvert_index():
+    "Check that extracting a specific index works"
+    env = scripttest.TestFileEnvironment(output_dir)
+    path = os.path.join(staging_dir, 'traj.h5')
+    TRAJ.save(path)
+    command = ['mdconvert', path, '-i 4', '-o', 'frame4.pdb']
+    env.run(*command, expect_stderr=True)
+    frame4 = md.load(os.path.join(output_dir, 'frame4.pdb'))
+    eq(frame4.xyz, TRAJ[4].xyz)
+
+    os.unlink(path)
+
+
+@skipif(not HAVE_SCRIPTTEST)
+def test_mdconvert_slice():
+    "Check that extracting a specific slice works"
+    env = scripttest.TestFileEnvironment(output_dir)
+    path = os.path.join(staging_dir, 'traj.h5')
+    TRAJ.save(path)
+    command = ['mdconvert', path, '-i 1:5:2', '-o', 'frame13.pdb']
+    env.run(*command, expect_stderr=True)
+    frame13 = md.load(os.path.join(output_dir, 'frame13.pdb'))
+    eq(frame13.xyz, TRAJ[1:5:2].xyz)
+    os.unlink(path)
+
+
 @slow
 @skipif(not HAVE_SCRIPTTEST)
 def test_mdconvert_0():
