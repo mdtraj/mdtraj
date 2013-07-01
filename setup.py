@@ -1,18 +1,13 @@
-# Copyright 2012 mdtraj developers
-#
-# This file is part of mdtraj
-#
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
-#
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+""""MDTraj: a python library for loading, saving, and manipulating molecular dynamics trajectories.
+
+MDTraj provides an easy to use python interface for manipulating MD trajectories.
+It supports the reading and writing of molecular dynamics trajectories
+in a variety of formats, including full support for PDB, DCD, XTC, TRR, binpos,
+AMBER NetCDF, and MDTraj HDF5. The package also provides a command line script
+for converting trajectories between supported formats.
+"""
+
+DOCLINES = __doc__.split("\n")
 
 import os
 import subprocess
@@ -22,10 +17,23 @@ import numpy
 
 ##########################
 VERSION = "0.3"
-ISRELEASED = False
+ISRELEASED = True
 __version__ = VERSION
 ##########################
 
+CLASSIFIERS = """\
+Development Status :: 3 - Alpha
+Intended Audience :: Science/Research
+Intended Audience :: Developers
+License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+Programming Language :: C
+Programming Language :: Python
+Topic :: Scientific/Engineering :: Bio-Informatics
+Topic :: Scientific/Engineering :: Chemistry
+Operating System :: POSIX
+Operating System :: Unix
+Operating System :: MacOS
+"""
 
 rmsd = Extension('mdtraj._rmsd',
     sources = ['MDTraj/rmsd/src/theobald_rmsd.c','MDTraj/rmsd/_rmsd.pyx'],
@@ -114,7 +122,15 @@ if not release:
 
 write_version_py()
 setup(name='mdtraj',
+      author='Robert McGibbon',
+      author_email='rmcgibbo@gmail.com',
+      description=DOCLINES[0],
+      long_description="\n".join(DOCLINES[2:]),
       version=__version__,
+      license='GPLv3+',
+      url = "http://rmcgibbo.github.io/mdtraj",
+      platforms = ["Linux", "Mac OS-X", "Unix"],
+      classifiers = CLASSIFIERS.splitlines(),
       packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.testing', 'mdtraj.utils',
                 'mdtraj.reporters', 'mdtraj.geometry', 'mdtraj.tests'],
       package_dir={'mdtraj':'MDTraj'},
