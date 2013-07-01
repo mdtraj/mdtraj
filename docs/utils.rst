@@ -1,8 +1,8 @@
 .. currentmodule:: mdtraj.utils
 
-Utilities
-=========
+Utilities : :class:`md.utils`
+=============================
 
-These functions are some miscellanious functions used by other parts of the MDTraj library.
+These functions are some miscellaneous functions used by other parts of the MDTraj library.
 
 .. automodule:: mdtraj.utils

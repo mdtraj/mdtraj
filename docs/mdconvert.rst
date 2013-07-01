@@ -1,12 +1,23 @@
-Command line trajectory conversion: ``mdconvert``
+Command-line trajectory conversion: ``mdconvert``
 =================================================
 
-``mdconvert`` is a command-line script installed with MDTraj. After installing the library, it should be in your ``$PATH``. You can check this from the command line with this command. ::
+``mdconvert`` is a command-line script installed with MDTraj to convert
+molecular dynamics trajectories between formats. The DCD, XTC, TRR,
+binpos, NetCDF, binpos, and HDF5 formats are supported (.xtc, .nc, .trr, .h5,
+.pdb, .binpos, .dcd). ``mdconvert`` is memory-efficient, and processes
+trajectories in a chunked, streaming fashion. It is capable of converting
+trajectory files which cannot be fully loaded into memory. It can also
+concatenate trajectories, convert only a subset of the atoms in a trajectory
+(i.e. strip solvent molecules), and down-sample trajectories by extract only a
+subset of the frames.
+
+After installing the library, it should be in your  ``$PATH``. You can check
+this from the command line with this command. ::
   
   $ which mdconvert
   
 
-Here's the ``mdconvert`` help text. TODO: Document this further. ::
+Here's the ``mdconvert`` help text. ::
 
   $ mdconvert -h
   usage: mdconvert [-h] -o OUTPUT [-c CHUNK] [-f] [-s STRIDE] [-i INDEX]

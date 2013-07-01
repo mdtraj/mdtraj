@@ -49,10 +49,10 @@ Dependencies
 ============
 
 MDTraj requires a few external libraries to work properly. Some of them are
-optional. You'll definitely need ``numpy`` and ``scipy``. You'll also need
-a working C compiler and build environment, to compile the C-level extensions
-that connect the python code to the bit-twiddling C libraries that read and 
-write most of these binary formats.
+optional. You'll definitely need ``numpy``. You'll also need a working C
+compiler and build environment, to compile the C-level extensions that connect
+the python code to the bit-twiddling C libraries that read and  write most of
+these binary formats.
 
 Easy Way
 --------

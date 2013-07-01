@@ -1,7 +1,7 @@
 .. currentmodule:: mdtraj.reporters
 
-OpenMM Reporters
-================
+OpenMM Reporters : :class:`md.reporters`
+========================================
 
 MDTraj provides a few flexible reporters for use with the `OpenMM <https://simtk.org/home/openmm>`_ python app. OpenMM is a toolkit for molecular simulation using high performance GPU code. OpenMM itself ships with a `DCD reporter <https://simtk.org/api_docs/openmm/api5_0/python/classsimtk_1_1openmm_1_1app_1_1dcdreporter_1_1DCDReporter.html>`_, but it lacks the ability to, for instance, report on only a subset of the atoms, which might be desired to print only the protein coordinates and discard water during a simulation.
 

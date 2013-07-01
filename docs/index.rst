@@ -6,26 +6,16 @@
 MDTraj
 ======
 
-MDTraj is a python library for loading, saving, and manipulating molecular
-dynamics trajectories.
+MDTraj is a library for loading, saving, and manipulating molecular
+dynamics trajectories in the python programming language.
 
 Features
 --------
-MDTraj currently supports loading and saving trajectories in the following
-formats.
+MDTraj currently supports loading and saving trajectories in the RCSB PDB, GROMACS XTC and TRR, CHARMM / NAMD DCD, AMBER binpos, NetCDF and :ref:`MDTraj HDF5 <HDF5FormatSpec>` formats.
 
-- PDB
-- GROMACS XTC and TRR
-- CHARMM / NAMD DCD
-- AMBER binpos, NetCDF
-- MDTraj HDF5
+MTraj is structured around a convent numpy-based ``Trajectory`` object.  Its RMSD (optimal cartesian root-mean-square deviation) library gives you access to `fast` parallel SSE3-based structural deviations using the quaternion characteristic polynomial (Theobald QCP) method at 4x the speed of the original Theobald code and over 3x as fast as Theobald code modified to use GotoBLAS.
 
-The MDTraj geometry library gives you access to fast cartesian root-mean
-square deviation (RMSD) distances, the calculation of bond lengths, bond
-angles, dihedral angles, non-redundant internal coordinates, and radius
-of gyration.
-
-MDTraj also ships with a flexible command-line application for converting
+The library also ships with a flexible command-line application for converting
 trajectories between formats. When you install MDTraj, the script will be
 installed under the name ``mdconvert``.
 
@@ -111,7 +101,7 @@ only alpha carbons present, you can do that pretty easily. ::
 
 Source Code
 -----------
-The source code is licensed under the GPL, and available at: https://github.com/rmcgibbo/mdtraj
+The source code is licensed under the GPLv3+, and available at: https://github.com/rmcgibbo/mdtraj
 
 Feedback
 --------

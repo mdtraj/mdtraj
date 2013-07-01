@@ -266,3 +266,19 @@ div.viewcode-block:target {
     border-top: 1px solid #ac9;
     border-bottom: 1px solid #ac9;
 }
+
+/* In numpydoc generated function signatures,
+   we don't want Parameters: to have a linebreak
+   in it. Also add a few thing for coloring the
+   parameter tables from scipy.css */
+
+table.field-list th.field-name {
+  width: 97px;
+  color: rgb(13,43,136);
+  white-space: nowrap;
+  background-color: rgb(219,224,234);
+}
+table.field-list {
+  border-collapse: separate;
+  border-spacing: 10px;
+}

@@ -1,7 +1,7 @@
 .. _Trajectory:
 
-:class:`mdtraj.Trajectory`
-==========================
+The Trajectory Object : :class:`md.Trajectory`
+==============================================
 
 .. currentmodule:: mdtraj
 
