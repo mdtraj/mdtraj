@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+"""Sanity checking for molecular dynamics trajectories.
+"""
+#------------------------------------------------------------------------------
+# Imports
+#------------------------------------------------------------------------------
+
+import os
+import sys
+import warnings
+import functools
+import operator
+from argparse import ArgumentParser
+
+import numpy as np
+import mdtraj as md
+from mdtraj.utils import import_, ilen
+spatial = import_('scipy.spatial')
+
+#------------------------------------------------------------------------------
+# Code
+#------------------------------------------------------------------------------
+
+def parse_args():
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument('files', nargs='+', help='''Input trajectory files, in any supported format. If you supply a file containing topology information (pdb, hdf5), that enables many more checks than are available when no topology information is present''')
+    parser.add_argument('-n', '--noload', action='store_true', help='''Do not load the coordinate data from the trajectory, for example if the trajectory is too large to load into memory. Only a limited number of checks will be done.''')
+    parser.add_argument('--bond-low', type=float, help='''Minimum fraction of sum of van der Waals radii for bonded atoms.''', default=0.4)
+    parser.add_argument('--bond-high', type=float, help='''Maximum fraction of sum of van der Waals radii for bonded atoms.''', default=0.7)
+    return parser.parse_args(), parser
+
+    
+def main(args, parser):
+    topology = None
+    for f in sorted(args.files, cmp=cmp_pdb):
+        if not os.path.exists(f):
+            parser.error("File '%s' does not exist" % f)
+        if not os.path.isfile(f):
+            parser.error("File '%s' is not a file" % f)
+        
+        Inspector(f, noload=args.noload)
+
+
+
+def cmp_pdb(a, b):
+    """String comparision function, for sorting, that puts things
+    ending in .pdb at the beginning"""
+    if a.endswith('.pdb') and b.endswith('.pdb'):
+        return 0
+    if a.endswith('.pdb'):
+        return -1
+    if b.endswith('.pdb'):
+        return 1
+    if a < b:
+        return -1
+    if a > b:
+        return 1
+    return 0
+
+
+class Inspector(object):
+    def __init__(self, f, noload):
+        self.f = f
+        self.t = None
+
+        self.open()
+
+    def open(self):
+        ext = os.path.splitext(self.f)[1].lstrip('.')
+        return getattr(self, 'open_%s' % ext)()
+        
+    def open_pdb(self):
+        self.t = md.load(self.f)
+        self.check_unitcell()
+        self.check_topology()
+        self.check_positions()
+    
+    def open_h5(self):
+        return self.open_pdb()
+
+    def check_unitcell(self):
+        self.log('== unitcell ==')
+        if not self.t._have_unitcell:
+            self.log('No unitcell information')
+        else:
+            self.log('First frame:')
+            self.log('Unitcell angles (deg): %s' % self.t.unitcell_angles[0])
+            self.log('Unitcell lengths (nm): %s' % self.t.unitcell_lengths[0])
+
+    def check_topology(self):
+        self.log('== topology ==')
+        self.log('Number of Atoms:    %d' % ilen(self.t.topology.atoms))
+        self.log('Number of Residues: %d' % ilen(self.t.topology.residues))
+        self.log('Number of Chains:   %d' % ilen(self.t.topology.chains))
+        self.log('Residue names:      %s' % str([r.name for r in self.t.topology.residues]))
+        self.log('Unique atom names:  %s' % np.unique([a.name for a in self.t.topology.atoms]))
+
+    def log(self, msg):
+        print '%s: %s' % (os.path.basename(self.f), msg)
+
+    def check_positions(self):
+        self.log('== Positions ==')
+        self.log('Number of frames: %d' % self.t.xyz.shape[0])
+        self.log('Number of atoms:  %d' % self.t.xyz.shape[1])
+
+        for i, frame in enumerate(self.t.xyz):
+            dist = spatial.distance_matrix(frame, frame)
+
+            if i < 5:
+                dist = np.ma.array(dist, mask=np.eye(*dist.shape))
+                a, b = np.unravel_index(np.ma.argmin(dist), dist.shape)
+                self.log('Frame %d: closest contact between atoms %d, %d, at d=%.4f nm'
+                         % (i, a, b, dist[a, b]))
+
+
+
+if __name__ == '__main__':
+    args, parser = parse_args()
+    main(args, parser)
+
+
