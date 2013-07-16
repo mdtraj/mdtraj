@@ -94,6 +94,9 @@ class Inspector(object):
         self.log('Number of Chains:   %d' % ilen(self.t.topology.chains))
         self.log('Residue names:      %s' % str([r.name for r in self.t.topology.residues]))
         self.log('Unique atom names:  %s' % np.unique([a.name for a in self.t.topology.atoms]))
+        
+        # print number of atoms of each element, number of residues of each type?
+
 
     def log(self, msg):
         print '%s: %s' % (os.path.basename(self.f), msg)
