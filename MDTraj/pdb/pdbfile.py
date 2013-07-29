@@ -48,8 +48,6 @@ __author__ = "Peter Eastman"
 __version__ = "1.0"
 
 import os
-import sys
-import math
 import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy
@@ -78,6 +76,14 @@ class PDBTrajectoryFile(object):
     topology : mdtraj.Topology
     closed : bool
 
+    Notes
+    -----
+    When writing pdb files, mdtraj follows the PDB3.0 standard as closely as
+    possible. During *reading* however, we try to be more lenient. For instance,
+    we will parse common nonstandard atom names during reading, and convert them
+    into the standard names. The replacement table used by mdtraj is at
+    {mdtraj_source}/pdb/data/pdbNames.xml.
+
     See Also
     --------
     mdtraj.load_pdb : High-level wrapper that returns a ``md.Trajectory``
@@ -85,6 +91,7 @@ class PDBTrajectoryFile(object):
     distance_unit = 'angstroms'
     _residueNameReplacements = {}
     _atomNameReplacements = {}
+    _chain_names = [chr(ord('A') + i) for i in range(26)]
 
     def __init__(self, filename, mode='r', force_overwrite=True):
         self._open = False
@@ -143,7 +150,7 @@ class PDBTrajectoryFile(object):
         if modelIndex is not None:
             print >> self._file, "MODEL     %4d" % modelIndex
         for (chainIndex, chain) in enumerate(topology.chains):
-            chainName = chr(ord('A')+chainIndex%26)
+            chainName = self._chain_names[chainIndex % len(self._chain_names)]
             residues = list(chain.residues)
             for (resIndex, res) in enumerate(residues):
                 if len(res.name) > 3:
@@ -159,8 +166,8 @@ class PDBTrajectoryFile(object):
                         atomName = atom.name
                     coords = positions[posIndex]
                     line = "ATOM  %5d %-4s %3s %s%4d    %s%s%s  1.00  0.00" % (
-                        atomIndex%100000, atomName, resName, chainName,
-                        (resIndex+1)%10000, _format_83(coords[0]),
+                        atomIndex % 100000, atomName, resName, chainName,
+                        (resIndex + 1) % 10000, _format_83(coords[0]),
                         _format_83(coords[1]), _format_83(coords[2]))
                     assert len(line) == 66, 'Fixed width overflow detected'
                     print >> self._file, line
@@ -208,6 +215,19 @@ class PDBTrajectoryFile(object):
             raise ValueError('file not opened for writing')
         print >>self._file, "END"
         self._footer_written = True
+
+    @classmethod
+    def set_chain_names(cls, values):
+        """Set the cycle of chain names used when writing PDB files
+
+        When writing PDB files, PDBTrajectoryFile translates each chain's
+        index into a name -- the name is what's written in the file. By
+        default, chains are named with the letters A-Z.
+        """
+        for item in values:
+            if not isinstance(item, basestring) and len(item) == 1:
+                raise TypeError('Names must be a single character string')
+        cls._chain_names = values
 
     @property
     def positions(self):
@@ -271,48 +291,7 @@ class PDBTrajectoryFile(object):
                     atomName = atomName.strip()
                     element = atom.element
                     if element is None:
-                        # Try to guess the element.
-
-                        upper = atomName.upper()
-                        if upper.startswith('CL'):
-                            element = elem.chlorine
-                        elif upper.startswith('NA'):
-                            element = elem.sodium
-                        elif upper.startswith('MG'):
-                            element = elem.magnesium
-                        elif upper.startswith('BE'):
-                            element = elem.beryllium
-                        elif upper.startswith('LI'):
-                            element = elem.lithium
-                        elif upper.startswith('K'):
-                            element = elem.potassium
-                        elif( len( residue ) == 1 and upper.startswith('CA') ):
-                            element = elem.calcium
-
-                        # TJL has edited this. There are a few issues here. First,
-                        # parsing for the element is non-trivial, so I do my best
-                        # below. Second, there is additional parsing code in
-                        # pdbstructure.py, and I am unsure why it doesn't get used
-                        # here...
-                        elif ( len( residue ) > 1 and upper.startswith('CE') ):
-                            element = elem.carbon # (probably) not Celenium...
-                        elif ( len( residue ) > 1 and upper.startswith('CD') ):
-                            element = elem.carbon # (probably) not Cadmium...
-                        elif ( residue.name in ['TRP', 'ARG', 'GLN', 'HIS'] and upper.startswith('NE') ):
-                            element = elem.nitrogen # (probably) not Neon...
-                        elif ( residue.name in ['ASN'] and upper.startswith('ND') ):
-                            element = elem.nitrogen # (probably) not ND...
-                        elif ( residue.name == 'CYS' and upper.startswith('SG') ):
-                            element = elem.sulfur # (probably) not SG...
-                        else:
-                            try:
-                                symbol = atomName[0:2].strip().rstrip("AB0123456789").lstrip("0123456789")
-                                element = elem.get_by_symbol(symbol)
-                            except KeyError:
-                                try:
-                                    element = elem.get_by_symbol(atomName[0])
-                                except KeyError:
-                                    pass
+                        element = self._guess_element(atomName, residue)
 
                     newAtom = self._topology.add_atom(atomName, element, r)
                     atomByNumber[atom.serial_number] = newAtom
@@ -382,6 +361,52 @@ class PDBTrajectoryFile(object):
                     atoms = copy(allResidues)
                 PDBTrajectoryFile._parseResidueAtoms(residue, atoms)
                 PDBTrajectoryFile._atomNameReplacements[name] = atoms
+
+    def _guess_element(self, atom_name, residue):
+        "Try to guess the element name"
+
+        upper = atom_name.upper()
+        if upper.startswith('CL'):
+            element = elem.chlorine
+        elif upper.startswith('NA'):
+            element = elem.sodium
+        elif upper.startswith('MG'):
+            element = elem.magnesium
+        elif upper.startswith('BE'):
+            element = elem.beryllium
+        elif upper.startswith('LI'):
+            element = elem.lithium
+        elif upper.startswith('K'):
+            element = elem.potassium
+        elif len(residue) == 1 and upper.startswith('CA'):
+            element = elem.calcium
+
+        # TJL has edited this. There are a few issues here. First,
+        # parsing for the element is non-trivial, so I do my best
+        # below. Second, there is additional parsing code in
+        # pdbstructure.py, and I am unsure why it doesn't get used
+        # here...
+        elif len(residue) > 1 and upper.startswith('CE'):
+            element = elem.carbon  # (probably) not Celenium...
+        elif len(residue) > 1 and upper.startswith('CD'):
+            element = elem.carbon  # (probably) not Cadmium...
+        elif residue.name in ['TRP', 'ARG', 'GLN', 'HIS'] and upper.startswith('NE'):
+            element = elem.nitrogen  # (probably) not Neon...
+        elif residue.name in ['ASN'] and upper.startswith('ND'):
+            element = elem.nitrogen  # (probably) not ND...
+        elif residue.name == 'CYS' and upper.startswith('SG'):
+            element = elem.sulfur  # (probably) not SG...
+        else:
+            try:
+                symbol = atomName[0:2].strip().rstrip("AB0123456789").lstrip("0123456789")
+                element = elem.get_by_symbol(symbol)
+            except KeyError:
+                try:
+                    element = elem.get_by_symbol(atomName[0])
+                except KeyError:
+                    element = None
+
+        return element
 
     @staticmethod
     def _parseResidueAtoms(residue, map):
