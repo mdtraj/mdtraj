@@ -223,6 +223,12 @@ class PDBTrajectoryFile(object):
         When writing PDB files, PDBTrajectoryFile translates each chain's
         index into a name -- the name is what's written in the file. By
         default, chains are named with the letters A-Z.
+
+        Parameters
+        ----------
+        values : list
+            A list of chacters (strings of length 1) that the PDB writer will
+            cycle through to choose chain names.
         """
         for item in values:
             if not isinstance(item, basestring) and len(item) == 1:
