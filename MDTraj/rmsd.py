@@ -82,8 +82,7 @@ def rmsd_cache(trajectory, major='axis'):
         aligned = align_array(trajectory.xyz, major)
     elif major == 'axis':
         aligned = _allocate_aligned_array((trajectory.n_frames, 3, trajectory.n_atoms), major)
-        for i in range(trajectory.n_frames):
-            aligned[i, :, 0:trajectory.n_atoms] = trajectory.xyz[i, 0:trajectory.n_atoms, :].T
+        aligned[:, :, 0:trajectory.n_atoms] = np.swapaxes(trajectory.xyz, 1, 2)
     else:
         raise ValueError("Must specify 'atom' or 'axis' major ordering")
 
