@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""Sanity checking for molecular dynamics trajectories.
+"""Sanity checking for molecular dynamics trajectories. This script is currently
+a work in progress. Contributions are encouraged. 
 """
 #------------------------------------------------------------------------------
 # Imports
