@@ -72,6 +72,9 @@ class MDCRDTrajectoryFile(object):
         self._n_atoms = n_atoms
         self._mode = mode
         self._has_box = has_box
+        # track which line we're on. this is not essential, but its useful
+        # when reporting errors to the user to say what line it occured on.
+        self._line_counter = 0
 
         if has_box not in [True, False, "detect"]:
             raise ValueError('has_box must be one of [True, False, "detect"]')
@@ -85,6 +88,7 @@ class MDCRDTrajectoryFile(object):
             self._fh = open(filename, 'r')
             self._is_open = True
             self._fh.readline()  # read comment
+            self._line_counter += 1
         elif mode == 'w':
             if os.path.exists(filename) and not force_overwrite:
                 raise IOError("The file '%s' already exists" % filename)
@@ -184,15 +188,24 @@ class MDCRDTrajectoryFile(object):
 
         while i < self._n_atoms * 3:
             line = self._fh.readline()
+            self._line_counter += 1
+
             if line == '':
                 raise _EOF()
+            try:
+                items = [float(elem) for elem in line.split()]
+                assert len(items) != 0  # trigger the exception below too
+            except Exception:
+                raise IOError('mdcrd parse error on line %d of "%s". This file '
+                              'does not apear to be a valid mdcrd file.' % \
+                              (self._line_counter,  self._filename))
 
-            items = [float(elem) for elem in line.split()]
             length = len(items)
 
             if i + length > len(coords):
-                raise IOError('Incorrct buffer shape. The number of atoms '
-                              'you specified is likely incorrect.')
+                raise IOError('mdcrd parse error: specified n_atoms (%d) is '
+                              'likely incorrect. Incorrct buffer size '
+                              'encountered. ' % self._n_atoms)
 
             coords[i:i+length] = items
             i += length
@@ -216,8 +229,8 @@ class MDCRDTrajectoryFile(object):
         return coords.reshape(self._n_atoms, 3), box
 
 
-f = MDCRDTrajectoryFile('/Users/rmcgibbo/local/mdtraj/frame0.mdcrd', n_atoms=22)
-print f.read()[0][-1]
-
-f = MDCRDTrajectoryFile('/Users/rmcgibbo/local/mdtraj/frame0.mdcrdbox', n_atoms=22)
-print f.read()[0][-1]
+# f = MDCRDTrajectoryFile('/Users/rmcgibbo/local/mdtraj/frame0.mdcrd', n_atoms=20)
+# print f.read()[0][-1]
+# 
+# f = MDCRDTrajectoryFile('/Users/rmcgibbo/local/mdtraj/README.md', n_atoms=22)
+# print f.read()[0][-1]
