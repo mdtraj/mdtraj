@@ -641,7 +641,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None):
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
 
-    with MDCRDTrajectoryFile(filename) as f:
+    with MDCRDTrajectoryFile(filename, n_atoms=top._numAtoms) as f:
         xyz, cell_lengths = f.read(stride=stride, atom_indices=atom_indices)
         _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
@@ -1393,7 +1393,7 @@ class Trajectory(object):
             if not np.all(self.unitcell_angles == 90):
                 raise ValueError('Only rectilinear boxes can be saved to mdcrd files')
 
-        with MDCRDTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+        with MDCRDTrajectoryFile(filename, mode='w', force_overwrite=force_overwrite) as f:
             f.write(_convert(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     _convert(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit))
 

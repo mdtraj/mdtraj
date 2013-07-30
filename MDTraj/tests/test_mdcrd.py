@@ -16,6 +16,7 @@
 
 import tempfile, os
 import numpy as np
+import mdtraj as md
 from mdtraj import MDCRDTrajectoryFile, mdcrd
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
 TestDocstrings = DocStringFormatTester(mdcrd, error_on_none=True)
@@ -47,6 +48,7 @@ def test_read_write_0():
     eq(_, None)
     eq(xyz, xyz2, decimal=3)
 
+
 def test_read_write_1():
     xyz = 10*np.random.randn(100, 11, 3)
     box = np.random.randn(100,3)
@@ -57,3 +59,13 @@ def test_read_write_1():
 
     eq(box, box2, decimal=3)
     eq(xyz, xyz2, decimal=3)
+
+
+def test_read_write_2():
+    pdb = md.load(get_fn('1bpi.pdb'))
+    pdb.save(temp)
+
+    t = md.load(temp, top=pdb.topology)
+
+    eq(t.xyz, pdb.xyz)
+    eq(t.unitcell_vectors, pdb.unitcell_vectors)
