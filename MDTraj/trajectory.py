@@ -1379,7 +1379,7 @@ class Trajectory(object):
 
 
     def save_mdcrd(self, filename, force_overwrite=True):
-        """Save trajectory to AMBER BINPOS format
+        """Save trajectory to AMBER mdcrd format
 
         Parameters
         ----------

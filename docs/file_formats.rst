@@ -13,4 +13,5 @@ file formats with a unified API.
    trr
    binpos
    netcdf
+   mdcrd
    hdf5
