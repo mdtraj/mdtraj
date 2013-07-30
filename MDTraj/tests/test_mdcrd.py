@@ -46,3 +46,14 @@ def test_read_write_0():
 
     eq(_, None)
     eq(xyz, xyz2, decimal=3)
+
+def test_read_write_1():
+    xyz = 10*np.random.randn(100, 11, 3)
+    box = np.random.randn(100,3)
+    with MDCRDTrajectoryFile(temp, mode='w') as f:
+        f.write(xyz, box)
+    with MDCRDTrajectoryFile(temp, n_atoms=11) as f:
+        xyz2, box2 = f.read()
+
+    eq(box, box2, decimal=3)
+    eq(xyz, xyz2, decimal=3)

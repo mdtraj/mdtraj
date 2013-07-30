@@ -288,4 +288,4 @@ class MDCRDTrajectoryFile(object):
                 self._fh.write("\n")
 
             if cell_lengths is not None:
-                self._fh.write("%8.3f %8.3f %8.3f\n" % cell_lengths[i])
+                self._fh.write("%8.3f %8.3f %8.3f\n" % tuple(cell_lengths[i]))
