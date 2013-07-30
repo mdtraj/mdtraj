@@ -20,15 +20,16 @@ DCD, AMBER BINPOS, PDB, and HDF5.
 
 from mdtraj.xtc import XTCTrajectoryFile
 from mdtraj.trr import TRRTrajectoryFile
-from .hdf5 import HDF5TrajectoryFile
-from .netcdf import NetCDFTrajectoryFile
+from mdtraj.hdf5 import HDF5TrajectoryFile
+from mdtraj.netcdf import NetCDFTrajectoryFile
+from mdtraj.mdcrd import MDCRDTrajectoryFile
 from mdtraj.dcd import DCDTrajectoryFile
 from mdtraj.binpos import BINPOSTrajectoryFile
 from mdtraj.pdb import PDBTrajectoryFile
 
 from mdtraj.rmsd import rmsd_cache
-from .topology import Topology
-from .trajectory import *
+from mdtraj.topology import Topology
+from mdtraj.trajectory import *
 
 def test(label='full', verbose=2):
     """Run tests for mdtraj using nose.

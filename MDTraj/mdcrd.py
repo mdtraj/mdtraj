@@ -21,7 +21,7 @@
 import os
 import itertools
 import numpy as np
-
+from mdtraj.utils import ensure_type
 
 ##############################################################################
 # Classes
@@ -71,6 +71,7 @@ class MDCRDTrajectoryFile(object):
         self._filename = filename
         self._n_atoms = n_atoms
         self._mode = mode
+        self._w_has_box = None
         self._has_box = has_box
         # track which line we're on. this is not essential, but its useful
         # when reporting errors to the user to say what line it occured on.
@@ -133,7 +134,7 @@ class MDCRDTrajectoryFile(object):
         -------
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=np.float32
             The cartesian coordinates, in angstroms
-        unitcell_lengths : {np.ndarray, None}
+        cell_lengths : {np.ndarray, None}
             If the file contains unitcell lengths, they will be returned as an
             array of shape=(n_frames, 3). Otherwise, unitcell_angles will be
             None.
@@ -228,9 +229,63 @@ class MDCRDTrajectoryFile(object):
 
         return coords.reshape(self._n_atoms, 3), box
 
+    def write(self, xyz, cell_lengths=None):
+        """Write one or more frames of data to a mdcrd file
 
-# f = MDCRDTrajectoryFile('/Users/rmcgibbo/local/mdtraj/frame0.mdcrd', n_atoms=20)
-# print f.read()[0][-1]
-# 
-# f = MDCRDTrajectoryFile('/Users/rmcgibbo/local/mdtraj/README.md', n_atoms=22)
-# print f.read()[0][-1]
+        Parameters
+        ----------
+        xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
+            The cartesian coordinates of the atoms to write. By convention, the
+            lengths should be in units of angstroms.
+        cell_lengths : np.ndarray, shape=(n_frames, 3), dtype=float32, optional
+            The length of the periodic box in each frame, in each direction,
+            `a`, `b`, `c`. By convention the lengths should be in units
+            of angstroms.
+        """
+        if not self._mode == 'w':
+            raise ValueError('write() is only available when file is opened '
+                             'in mode="w"')
+
+        xyz = ensure_type(xyz, np.float32, 3, 'xyz', can_be_none=False,
+                shape=(None, None, 3), warn_on_cast=False,
+                add_newaxis_on_deficient_ndim=True)
+        cell_lengths = ensure_type(cell_lengths, np.float32, 2, 'cell_lengths',
+                can_be_none=True, shape=(len(xyz), 3), warn_on_cast=False,
+                add_newaxis_on_deficient_ndim=True)
+
+        if self._w_has_box is None:
+            # this is the first write()
+            self._n_atoms = xyz.shape[1]
+            self._fh.write('TITLE : Created by MDTraj with %d atoms\n' % self._n_atoms)
+
+            if cell_lengths is None:
+                self._w_has_box = False
+            else:
+                self._w_has_box = True
+        elif self._w_has_box is True:
+            if cell_lengths is None:
+                raise ValueError('This mdcrd file must contain unitcell '
+                                 'information')
+        elif self._w_has_box is False:
+            if cell_lengthsl_lengths is not None:
+                raise ValueError('This mdcrd file must not contain unitcell '
+                                 'information')
+        else:
+            raise RuntimeError()
+
+        for i in range(xyz.shape[0]):
+            for j, coord in enumerate(xyz[i].reshape(-1)):
+                lfdone = False
+                out = "%8.3f" % coord
+                if len(out) > 8:
+                    raise ValueError('Overflow error')
+                self._fh.write(out)
+                if (j+1) % 10 == 0:
+                    self._fh.write("\n")
+                    lfdone = True
+
+            if not lfdone:
+                self._fh.write("\n")
+
+            if cell_lengths is not None:
+                self._fh.write("%8.3f %8.3f %8.3f\n" % cell_lengths[i])
