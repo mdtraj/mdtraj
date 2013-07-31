@@ -31,14 +31,6 @@ from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
                     PDBTrajectoryFile, MDCRDTrajectoryFile, Topology)
 from mdtraj.utils import unitcell, ensure_type
 
-try:
-    from simtk.openmm import Vec3
-    from simtk.unit import nanometer
-    HAVE_OPENMM = True
-except ImportError:
-    HAVE_OPENMM = False
-
-
 __all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpos',
            'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_xml']
 
@@ -1175,9 +1167,8 @@ class Trajectory(object):
             for input to OpenMM
 
         """
-        # copied from Lee-Ping Wang's Molecule.py
-        if not HAVE_OPENMM:
-            raise ImportError('OpenMM was not imported')
+        from simtk.openmm import Vec3
+        from simtk.unit import nanometer
 
         Pos = []
         for xyzi in self.xyz[frame]:
@@ -1204,9 +1195,8 @@ class Trajectory(object):
             The periodic box vectors for this frame, formatted for input to
             OpenMM.
         """
-        # copied from Lee-Ping Wang's Molecule.py
-        if not HAVE_OPENMM:
-            raise ImportError('OpenMM was not imported')
+        from simtk.openmm import Vec3
+        from simtk.unit import nanometer
 
         vectors = self[frame].unitcell_vectors
         if vectors is None:
