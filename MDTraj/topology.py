@@ -145,6 +145,8 @@ class Topology(object):
         self._numResidues = 0
         self._numAtoms = 0
         self._bonds = []
+        self._atoms = []
+        self._residues = []
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -174,7 +176,6 @@ class Topology(object):
             out.addBond(atom_mapping[a1], atom_mapping[a2])
 
         return out
-
 
     @classmethod
     def from_openmm(cls, value):
@@ -209,14 +210,16 @@ class Topology(object):
 
         return out
 
-
     def to_dataframe(self):
         """Convert this topology into a pandas dataframe
 
         Returns
         ------
-        df : pandas.DataFrame
-            This topology, represented as a data frame.
+        atoms : pandas.DataFrame
+            The atoms in the topology, represented as a data frame.
+        bonds : np.ndarray
+            The bonds in this topology, represented as an n_bonds x 2 array
+            of the indices of the atoms involved in each bond.
         """
         pd = import_('pandas')
         data = []
@@ -225,49 +228,56 @@ class Topology(object):
                          atom.residue.index, atom.residue.name,
                          atom.residue.chain.index))
 
-        out = pd.DataFrame(data, columns = ["index", "atom", "element",
+        atoms = pd.DataFrame(data, columns=["index", "atom", "element",
                                             "rindex" , "residue", "chain"])
-        return out
-        
+        bonds = np.array([(a.index, b.index) for (a, b) in self.bonds])
+        return atoms, bonds
 
     @classmethod
-    def from_dataframe(cls, value):
+    def from_dataframe(cls, atoms, bonds):
         """Create a mdtraj topology from a pandas data frame
 
         Parameters
         ----------
-        value : pandas.DataFrame
-            A pandas dataframe topology that you wish to convert to a
-            mdtraj topology.
+        atoms : pandas.DataFrame
+            The atoms in the topology, represented as a data frame.
+        bonds : np.ndarray
+            The bonds in the topology, represented as an n_bonds x 2 array
+            of the indices of the atoms involved in each bond.
         """
         pd = import_('pandas')
-        out = cls()
-        if not isinstance(value, pd.DataFrame):
-            raise TypeError('value must be an instance of pandas.DataFrame. '
-                            'You supplied a %s' % type(value))
+        from mdtraj import pdb
 
-        for ci in np.unique(value['chain']):
-            chain_atoms = value[value['chain'] == ci]
+        out = cls()
+        if not isinstance(atoms, pd.DataFrame):
+            raise TypeError('atoms must be an instance of pandas.DataFrame. '
+                            'You supplied a %s' % type(atoms))
+        if not isinstance(bonds, np.ndarray):
+            raise TypeError('bonds must be an instance of numpy.ndarray. '
+                            'You supplied a %s' % type(bonds))
+
+        if not np.all(np.arange(len(atoms)) == atoms['index']):
+            raise ValueError('atoms must be uniquely numbered starting from zero.')
+        out._atoms = [None for i in range(len(atoms))]
+        for ci in np.unique(atoms['chain']):
+            chain_atoms = atoms[atoms['chain'] == ci]
             c = out.add_chain()
 
             for ri in np.unique(chain_atoms['rindex']):
-                rnames = chain_atoms[chain_atoms['rindex'] == ri]['residue']
-                print len(rnames)
-                print rnames
-                print np.array(rnames)[0]
-
-                
-                if not np.all(rnames == np.array(rnames)[0]):
+                residue_atoms = chain_atoms[chain_atoms['rindex'] == ri]
+                rnames = residue_atoms['residue']
+                residue_name = np.array(rnames)[0]
+                if not np.all(rnames == residue_name):
                     raise ValueError('All of the atoms with residue index %d do not share the same residue name' % ri)
-                r = out.add_residue(rnames[0], c)
+                r = out.add_residue(residue_name, c)
 
+                for ai, atom in residue_atoms.iterrows():
+                    a = Atom(atom['atom'], pdb.element.get_by_symbol(atom['element']), atom['index'], r)
+                    out._atoms[atom['index']] = a
+                    r._atoms.append(a)
 
-
-        import IPython as ip; ip.embed()
-        #for i, row in value.iterrows():
-        #    c = out._chains[row['chain']]
-            
-
+        for ai1, ai2 in bonds:
+            out.add_bond(out.atom(ai1), out.atom(ai2))
 
         return out
 
@@ -310,8 +320,14 @@ class Topology(object):
                     for attr in ['atomic_number', 'name', 'symbol']:
                         if getattr(a1.element, attr) != getattr(a2.element, attr):
                             return False
-        return True
 
+        if len(self._bonds) != len(other._bonds):
+            return False
+        for (a1, b1), (a2, b2) in zip(self.bonds, other.bonds):
+            if (a1.index != a2.index) or (b1.index != b2.index):
+                return False
+
+        return True
 
     def add_chain(self):
         """Create a new Chain and add it to the Topology.
@@ -341,6 +357,7 @@ class Topology(object):
             The newly created Residue
         """
         residue = Residue(name, self._numResidues, chain)
+        self._residues.append(residue)
         self._numResidues += 1
         chain._residues.append(residue)
         return residue
@@ -363,6 +380,7 @@ class Topology(object):
             the newly created Atom
         """
         atom = Atom(name, element, self._numAtoms, residue)
+        self._atoms.append(atom)
         self._numAtoms += 1
         residue._atoms.append(atom)
         return atom
@@ -379,6 +397,16 @@ class Topology(object):
         """
         self._bonds.append((atom1, atom2))
 
+    def chain(self, index):
+        """Get a specific chain
+
+        Returns
+        -------
+        chain : Chain
+            The `index`-th chain in the topology.
+        """
+        return self._chains[index]
+
     @property
     def chains(self):
         """Iterator over all Chains in the Topology.
@@ -389,6 +417,21 @@ class Topology(object):
             Iterator over all Chains in the Topology.
         """
         return iter(self._chains)
+
+    @property
+    def n_chains(self):
+        """Get the number of chains in the Topology"""
+        return len(self._chains)
+
+    def residue(self, index):
+        """Get a specific residue
+
+        Returns
+        -------
+        residue : Residue
+            The `index`-th residue in the topology.
+        """
+        return self._residues[index]
 
     @property
     def residues(self):
@@ -402,6 +445,21 @@ class Topology(object):
         for chain in self._chains:
             for residue in chain._residues:
                 yield residue
+
+    @property
+    def n_residues(self):
+        """Get the number of residues in the Topology"""
+        return len(self._residues)
+
+    def atom(self, index):
+        """Get a specific atom
+
+        Returns
+        -------
+        atom : Atom
+            The `index`-th atom in the topology.
+        """
+        return self._atoms[index]
 
     @property
     def atoms(self):
@@ -418,6 +476,11 @@ class Topology(object):
                     yield atom
 
     @property
+    def n_atoms(self):
+        """Get the number of atoms in the Topology"""
+        return len(self._atoms)
+
+    @property
     def bonds(self):
         """Iterator over all bonds (each represented as a tuple of two Atoms) in the Topology.
 
@@ -427,7 +490,6 @@ class Topology(object):
             Iterator over all tuple of Atoms in the Trajectory involved in a bond.
         """
         return iter(self._bonds)
-
 
     def create_standard_bonds(self):
         """Create bonds based on the atom and residue names for all standard residue types.
