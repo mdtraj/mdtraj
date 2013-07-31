@@ -145,10 +145,23 @@ class Topology(object):
         self._numResidues = 0
         self._numAtoms = 0
         self._bonds = []
-        self._unitCellDimensions = None
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def to_openmm(self):
+        pass
+
+    @classmethod
+    def from_openmm(self):
+        pass
+
+    def to_dataframe(self):
+        pass
+
+    @classmethod
+    def from_dataframe(self):
+        pass
 
     def __eq__(self, other):
         """Are two topologies equal?
