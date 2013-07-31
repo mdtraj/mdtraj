@@ -190,7 +190,8 @@ class Topology(object):
         app = import_('simtk.openmm.app')
 
         if not isinstance(value, app.Topology):
-            raise TypeError('value must be an OpenMM Topology')
+            raise TypeError('value must be an OpenMM Topology. '
+                            'You supplied a %s' % type(value))
 
         out = cls()
         atom_mapping = {}
@@ -218,6 +219,16 @@ class Topology(object):
             This topology, represented as a data frame.
         """
         pd = import_('pandas')
+        data = []
+        for atom in self.atoms:
+            data.append((atom.index, atom.name, atom.element.symbol,
+                         atom.residue.index, atom.residue.name,
+                         atom.residue.chain.index))
+
+        out = pd.DataFrame(data, columns = ["index", "atom", "element",
+                                            "rindex" , "residue", "chain"])
+        return out
+        
 
     @classmethod
     def from_dataframe(cls, value):
@@ -230,6 +241,35 @@ class Topology(object):
             mdtraj topology.
         """
         pd = import_('pandas')
+        out = cls()
+        if not isinstance(value, pd.DataFrame):
+            raise TypeError('value must be an instance of pandas.DataFrame. '
+                            'You supplied a %s' % type(value))
+
+        for ci in np.unique(value['chain']):
+            chain_atoms = value[value['chain'] == ci]
+            c = out.add_chain()
+
+            for ri in np.unique(chain_atoms['rindex']):
+                rnames = chain_atoms[chain_atoms['rindex'] == ri]['residue']
+                print len(rnames)
+                print rnames
+                print np.array(rnames)[0]
+
+                
+                if not np.all(rnames == np.array(rnames)[0]):
+                    raise ValueError('All of the atoms with residue index %d do not share the same residue name' % ri)
+                r = out.add_residue(rnames[0], c)
+
+
+
+        import IPython as ip; ip.embed()
+        #for i, row in value.iterrows():
+        #    c = out._chains[row['chain']]
+            
+
+
+        return out
 
     def __eq__(self, other):
         """Are two topologies equal?
