@@ -142,8 +142,8 @@ class Topology(object):
     >>> topology = md.load('example.pdb').topology            # doctest: +SKIP
     >>> print topology                                        # doctest: +SKIP
     <mdtraj.Topology with 1 chains, 3 residues, 22 atoms, 21 bonds at 0x105a98e90>
-    >>> atoms, bonds = topology.to_dataframe()
-    >>> print atoms.head()
+    >>> atoms, bonds = topology.to_dataframe()                # doctest: +SKIP
+    >>> print atoms.head()                                    # doctest: +SKIP
        index atom element  rindex residue  chain
     0      0   H1       H       0     ACE      0
     1      1  CH3       C       0     ACE      0
