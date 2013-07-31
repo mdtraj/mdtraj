@@ -51,7 +51,7 @@ import os
 import numpy as np
 import xml.etree.ElementTree as etree
 
-from mdtraj.utils import ilen
+from mdtraj.utils import ilen, import_
 
 ##############################################################################
 # Utilities
@@ -150,18 +150,86 @@ class Topology(object):
         return not self.__eq__(other)
 
     def to_openmm(self):
-        pass
+        """Convert this topology into OpenMM topology
+
+        Returns
+        -------
+        topology : simtk.openmm.app.Topology
+           This topology, as an OpenMM topology
+        """
+        app = import_('simtk.openmm.app')
+
+        out = app.Topology()
+        atom_mapping = {}
+
+        for chain in self.chains:
+            c = out.addChain()
+            for residue in chain.residues:
+                r = out.addResidue(residue.name, c)
+                for atom in residue.atoms:
+                    a = out.addAtom(atom.name, app.Element.getBySymbol(atom.element.symbol), r)
+                    atom_mapping[atom] = a
+
+        for a1, a2 in self.bonds:
+            out.addBond(atom_mapping[a1], atom_mapping[a2])
+
+        return out
+
 
     @classmethod
-    def from_openmm(self):
-        pass
+    def from_openmm(cls, value):
+        """Create a mdtraj topology from an OpenMM topology
+
+        Parameters
+        ----------
+        value : simtk.openmm.app.Topology
+            An OpenMM topology that you wish to convert to a
+            mdtraj topology.
+        """
+        from mdtraj import pdb
+        app = import_('simtk.openmm.app')
+
+        if not isinstance(value, app.Topology):
+            raise TypeError('value must be an OpenMM Topology')
+
+        out = cls()
+        atom_mapping = {}
+
+        for chain in value.chains():
+            c = out.add_chain()
+            for residue in chain.residues():
+                r = out.add_residue(residue.name, c)
+                for atom in residue.atoms():
+                    a = out.add_atom(atom.name, pdb.element.get_by_symbol(atom.element.symbol), r)
+                    atom_mapping[atom] = a
+
+        for a1, a2 in value.bonds():
+            out.add_bond(atom_mapping[a1], atom_mapping[a2])
+
+        return out
+
 
     def to_dataframe(self):
-        pass
+        """Convert this topology into a pandas dataframe
+
+        Returns
+        ------
+        df : pandas.DataFrame
+            This topology, represented as a data frame.
+        """
+        pd = import_('pandas')
 
     @classmethod
-    def from_dataframe(self):
-        pass
+    def from_dataframe(cls, value):
+        """Create a mdtraj topology from a pandas data frame
+
+        Parameters
+        ----------
+        value : pandas.DataFrame
+            A pandas dataframe topology that you wish to convert to a
+            mdtraj topology.
+        """
+        pd = import_('pandas')
 
     def __eq__(self, other):
         """Are two topologies equal?
