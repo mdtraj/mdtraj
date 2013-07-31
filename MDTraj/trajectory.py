@@ -28,7 +28,7 @@ import numpy as np
 
 from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
                     TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
-                    PDBTrajectoryFile, Topology)
+                    PDBTrajectoryFile, MDCRDTrajectoryFile, Topology)
 from mdtraj.utils import unitcell, ensure_type
 
 try:
@@ -597,6 +597,71 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None):
         time *= stride
 
     return Trajectory(xyz=xyz, topology=topology, time=time)
+
+
+def load_mdcrd(filename, top=None, stride=None, atom_indices=None):
+    """Load an AMBER mdcrd file.
+
+    Parameters
+    ----------
+    filename : str
+        String filename of AMBER mdcrd file.
+    top : {str, Trajectory, Topology}
+        The BINPOS format does not contain topology information. Pass in either
+        the path to a pdb file, a trajectory, or a topology to supply this
+        information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file.
+
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.MDCRDTrajectoryFile :  Low level interface to MDCRD files
+    """
+    # we make it not required in the signature, but required here. although this
+    # is a little wierd, its good because this function is usually called by a
+    # dispatch from load(), where top comes from **kwargs. So if its not supplied
+    # we want to give the user an informative error message
+    if top is None:
+        raise ValueError('"top" argument is required for load_mdcrd')
+
+    if not isinstance(filename, basestring):
+        raise TypeError('filename must be of type string for load_mdcrd. '
+            'you supplied %s' % type(filename))
+
+    topology = _parse_topology(top)
+    atom_indices = _cast_indices(atom_indices)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
+
+    with MDCRDTrajectoryFile(filename, n_atoms=top._numAtoms) as f:
+        xyz, cell_lengths = f.read(stride=stride, atom_indices=atom_indices)
+        _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+        if cell_lengths is not None:
+            _convert(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+            # Assume that its a rectilinear box
+            cell_angles = 90.0 * np.ones_like(cell_lengths)
+
+    time = np.arange(len(xyz))
+    if stride is not None:
+        # if we loaded with a stride, the Trajectories's time field should
+        # respect that
+        time *= stride
+
+    t = Trajectory(xyz=xyz, topology=topology, time=time)
+    if cell_lengths is not None:
+        t.unitcell_lengths = cell_lengths
+        t.unitcell_angles = cell_angles
+    return t
 
 
 def load_netcdf(filename, top=None, stride=None, atom_indices=None):
@@ -1189,13 +1254,15 @@ class Trajectory(object):
         extension = os.path.splitext(filename)[1]
 
         savers = {'.xtc': self.save_xtc,
-          '.trr': self.save_trr,
-          '.pdb': self.save_pdb,
-          '.dcd': self.save_dcd,
-          '.h5': self.save_hdf5,
-          '.binpos': self.save_binpos,
-          '.nc': self.save_netcdf,
-          '.ncdf': self.save_netcdf}
+                  '.trr': self.save_trr,
+                  '.pdb': self.save_pdb,
+                  '.dcd': self.save_dcd,
+                  '.h5': self.save_hdf5,
+                  '.binpos': self.save_binpos,
+                  '.nc': self.save_netcdf,
+                  '.crd': self.save_mdcrd,
+                  '.mdcrd': self.save_mdcrd,
+                  '.ncdf': self.save_netcdf}
 
         try:
             saver = savers[extension]
@@ -1311,6 +1378,26 @@ class Trajectory(object):
             f.write(_convert(self.xyz, Trajectory._distance_unit, f.distance_unit))
 
 
+    def save_mdcrd(self, filename, force_overwrite=True):
+        """Save trajectory to AMBER mdcrd format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
+        """
+        self._check_valid_unitcell()
+        if self._have_unitcell:
+            if not np.all(self.unitcell_angles == 90):
+                raise ValueError('Only rectilinear boxes can be saved to mdcrd files')
+
+        with MDCRDTrajectoryFile(filename, mode='w', force_overwrite=force_overwrite) as f:
+            f.write(_convert(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    _convert(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit))
+
+
     def save_netcdf(self, filename, force_overwrite=True):
         """Save trajectory in AMBER NetCDF format
 
@@ -1380,6 +1467,8 @@ _LoaderRegistry = {
     '.pdb': load_pdb,
     '.dcd': load_dcd,
     '.h5': load_hdf5,
+    '.crd': load_mdcrd,
+    '.mdcrd': load_mdcrd,
     #'.lh5': _load_legacy_hdf,
     '.binpos': load_binpos,
     '.ncdf': load_netcdf,
