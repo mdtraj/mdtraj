@@ -21,8 +21,7 @@
 # Medical Research, grant U54 GM072970. See https://simtk.org.
 #
 # Portions copyright (c) 2012 Stanford University and the Authors.
-# Authors: Peter Eastman
-# Contributors: mdtraj developers
+# Authors: Peter Eastman, Robert McGibbon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -120,12 +119,14 @@ def _topology_from_subset(topology, atom_indices):
 class Topology(object):
     """Topology stores the topological information about a system.
 
-    The structure of a Topology object is similar to that of a PDB file.  It consists of a set of Chains
-    (often but not always corresponding to polymer chains).  Each Chain contains a set of Residues,
-    and each Residue contains a set of Atoms.  In addition, the Topology stores a list of which atom
-    pairs are bonded to each other, and the dimensions of the crystallographic unit cell.
+    The structure of a Topology object is similar to that of a PDB file.
+    It consists of a set of Chains (often but not always corresponding to
+    polymer chains).  Each Chain contains a set of Residues, and each Residue
+    contains a set of Atoms.  In addition, the Topology stores a list of which
+    atom pairs are bonded to each other.
 
-    Atom and residue names should follow the PDB 3.0 nomenclature for all molecules for which one exists.
+    Atom and residue names should follow the PDB 3.0 nomenclature for all
+    molecules for which one exists.
 
     Attributes
     ----------
@@ -135,6 +136,20 @@ class Topology(object):
         Iterator over all Residues in the Chain.
     atoms : generator
         Iterator over all Atoms in the Chain.
+
+    Examples
+    --------
+    >>> topology = md.load('example.pdb').topology            # doctest: +SKIP
+    >>> print topology                                        # doctest: +SKIP
+    <mdtraj.Topology with 1 chains, 3 residues, 22 atoms, 21 bonds at 0x105a98e90>
+    >>> atoms, bonds = topology.to_dataframe()
+    >>> print atoms.head()
+       index atom element  rindex residue  chain
+    0      0   H1       H       0     ACE      0
+    1      1  CH3       C       0     ACE      0
+    2      2   H2       H       0     ACE      0
+    3      3   H3       H       0     ACE      0
+    4      4    C       C       0     ACE      0
     """
 
     _standardBonds = {}
@@ -150,6 +165,12 @@ class Topology(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __str__(self):
+        return "<mdtraj.Topology with %d chains, %d residues, %d atoms, %d bonds>" % (self.n_chains, self.n_residues, self.n_atoms, len(self._bonds))
+
+    def __repr__(self):
+        return "<mdtraj.Topology with %d chains, %d residues, %d atoms, %d bonds at 0x%02x>" % (self.n_chains, self.n_residues, self.n_atoms, len(self._bonds), id(self))
 
     def to_openmm(self):
         """Convert this topology into OpenMM topology
@@ -214,7 +235,7 @@ class Topology(object):
         """Convert this topology into a pandas dataframe
 
         Returns
-        ------
+        -------
         atoms : pandas.DataFrame
             The atoms in the topology, represented as a data frame.
         bonds : np.ndarray
@@ -398,7 +419,7 @@ class Topology(object):
         self._bonds.append((atom1, atom2))
 
     def chain(self, index):
-        """Get a specific chain
+        """Get a specific chain by index
 
         Returns
         -------
@@ -424,7 +445,7 @@ class Topology(object):
         return len(self._chains)
 
     def residue(self, index):
-        """Get a specific residue
+        """Get a specific residue by index
 
         Returns
         -------
@@ -452,7 +473,7 @@ class Topology(object):
         return len(self._residues)
 
     def atom(self, index):
-        """Get a specific atom
+        """Get a specific atom by index
 
         Returns
         -------

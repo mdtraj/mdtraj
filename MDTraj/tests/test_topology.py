@@ -26,6 +26,7 @@ def test_topology_openmm():
 def test_topology_pandas():
     topology = md.load(get_fn('native.pdb')).topology
     atoms, bonds = topology.to_dataframe()
+
     topology2 = md.Topology.from_dataframe(atoms, bonds)
     eq(topology, topology2)
 
