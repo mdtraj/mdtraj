@@ -15,9 +15,9 @@ Why HDF5?
 Design Goals
 ~~~~~~~~~~~~
 
-In storing MD trajectory data for the for purposes including building
-MSMs, there are a few design goals. (1) The trajectories should be small
-and space efficient on disk. (2) The trajectories should be fast to
+In storing MD trajectory data for the for purposes including very large
+scale analysis, there are a few design goals. (1) The trajectories should
+be small and space efficient on disk. (2) The trajectories should be fast to
 write and fast to read. (3) The data format should support flexible read
 options. For instance, random access to different frames in the
 trajectory should be possible. It should be possible to easily query the
@@ -32,14 +32,14 @@ breaking backwards compatibility.
 Other Formats
 ~~~~~~~~~~~~~
 
-Currently, MDTraj is able to read and write trajectories in dcd, xtc,
-trr, binpos, and amber netcdf formats, in addition to hdf5. This
+Currently, MDTraj is able to read and write trajectories in DCD, XTC,
+TRR, BINPOS, and AMBER NetCDF formats, in addition to HDF5. This
 presents an opportunity to compare these formats and see how they fit
-our design goals. The most space efficient is xtc, because it uses 16bit
-fixed precision encoding. For some reason, the xtc read times are quite
-slow though. dcd is fast to read and write, but relatively inflexible.
-netcdf is fast and flexible. binpos is garbage -- it's neither fast,
-small, nor flexible.
+our design goals. The most space efficient is XTC, because it uses 16 bit
+fixed precision encoding. For some reason, the XTC read times are quite
+slow though. DCD is fast to read and write, but relatively inflexible.
+NetCDF is fast and flexible. BINPOS and MDCRD are garbage -- they're
+neither fast, small, nor flexible.
 
 What's lacking?
 ~~~~~~~~~~~~~~~
@@ -47,11 +47,13 @@ What's lacking?
 Of the formats we currently have, AMBER NetCDF is the best, in that it
 it satisfies all of the design goals except for the first. But the
 trajectories are twice as big on disk as XTC, which is really quite
-unfortunate. For dealing with FAH data, size matters. So let's define a
-HDF5 standard that has the benefits of AMBER NetCDF and the benefits of
-XTC mixed together. We'll use an extensible data format (HDF5), we'll
-provide options for lossy and lossless compression, and we'll store the
-topology inside the trajectory.
+unfortunate. For dealing with large data sets, size matters. So let's
+define a HDF5 standard that has the benefits of AMBER NetCDF and the
+benefits of XTC mixed together. We'll use an extensible data format
+(HDF5), we'll provide options for lossy and lossless compression, and
+we'll store the topology inside the trajectory, so that a single
+trajectory file always contains the information needed to understand
+(and visualize) the system.
 
 Details
 -------
@@ -197,6 +199,7 @@ Arrays
    of this document. The JSON string encoding the topology shall be
    stored as the sole row in an array of strings.
 
+
 Array Metadata
 ~~~~~~~~~~~~~~
 
@@ -213,6 +216,15 @@ Array Metadata
    significant digits by setting the "least\_significant\_digit"
    attribue, which should be a positive integer.
 
+
+ Extended Arrays
+~~~~~~~~~~~~~~~
+Creators may extend this format by adding new arrays. Arrays containing
+per-atom and per-frame data that naturally possesses physical units should
+declare those units explicitly in the array attributes. Readers should be
+flexible, ignoring the presence of arrays that they are not equiped to handle.
+
+
 Topology
 --------
 
@@ -220,7 +232,7 @@ Rational
 ~~~~~~~~
 
 It is our experience that not having the topology stored in the same
-file as the the trajectory's coordinate data is a pain. It's just really
+file as the the trajectory's coordinate data is a pain -- tt's just really
 inconvenient. And generally, the trajectories are long enough that it
 doesn't take up much incremental storage space to store the topology in
 there too. The topology is not that complicated.
@@ -239,12 +251,11 @@ a list of residues. Each residue is associated with a ``name``, an
 be zero-based.
 
 The ``name`` of a residue is not strictly proscribed, but should
-generally be one of the three letter codes for amino acids, or the
-commonly used extensions thereof, e.g. "HOH" for water. The ``element``
-of an atom shall be one of the one or two letter element abbreviations
-from the periodic table. The ``name`` of an atom shall indicate some
-information about the type of the atom beyond just its element, such as
-'CA' for the alpha carbom, 'HG' for a gamma hydrogen, etc. This format
+generally follow PDB 3.0 nomenclature. The ``element`` of an atom
+shall be one of the one or two letter element abbreviations from the
+periodic table. The ``name`` of an atom shall indicate some information
+about the type of the atom beyond just its element, such as 'CA' for
+the alpha carbom, 'HG' for a gamma hydrogen, etc. This format
 does not specify exactly what atom names are allowed -- creators should
 follow the conventions from the forcefield they are using.
 
