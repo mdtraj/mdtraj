@@ -445,7 +445,8 @@ class Topology(object):
         self._bonds.append((atom1, atom2))
 
     def chain(self, index):
-        """Get a specific chain by index
+        """Get a specific chain by index.  These indices
+        start from zero.
 
         Returns
         -------
@@ -471,7 +472,8 @@ class Topology(object):
         return len(self._chains)
 
     def residue(self, index):
-        """Get a specific residue by index
+        """Get a specific residue by index.  These indices
+        start from zero.
 
         Returns
         -------
@@ -499,7 +501,8 @@ class Topology(object):
         return len(self._residues)
 
     def atom(self, index):
-        """Get a specific atom by index
+        """Get a specific atom by index. These indices
+        start from zero.
 
         Returns
         -------
