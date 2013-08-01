@@ -260,8 +260,8 @@ class Topology(object):
                          atom.residue.chain.index))
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
-                                            "resSeq" , "resName", "chainID"])
-        atoms.index = atoms['serial']
+                                            "resSeq", "resName", "chainID"])
+        atoms = atoms.set_index("serial")
         bonds = np.array([(a.index, b.index) for (a, b) in self.bonds])
         return atoms, bonds
 
@@ -289,9 +289,9 @@ class Topology(object):
         create_standard_bonds
         """
         pd = import_('pandas')
-        from mdtraj import pdbls
+        from mdtraj import pdb
 
-        for col in ["serial", "name", "element", "resSeq" , "resName", "chainID"]:
+        for col in ["name", "element", "resSeq" , "resName", "chainID"]:
             if col not in atoms.columns:
                 raise ValueError('dataframe must have column %s' % col)
 
@@ -303,7 +303,7 @@ class Topology(object):
             raise TypeError('bonds must be an instance of numpy.ndarray. '
                             'You supplied a %s' % type(bonds))
 
-        if not np.all(np.arange(len(atoms)) == atoms['serial']):
+        if not np.all(np.arange(len(atoms)) == atoms.index):
             raise ValueError('atoms must be uniquely numbered starting from zero.')
         out._atoms = [None for i in range(len(atoms))]
         for ci in np.unique(atoms['chainID']):
@@ -319,8 +319,8 @@ class Topology(object):
                 r = out.add_residue(residue_name, c)
 
                 for ai, atom in residue_atoms.iterrows():
-                    a = Atom(atom['name'], pdb.element.get_by_symbol(atom['element']), atom['serial'], r)
-                    out._atoms[atom['serial']] = a
+                    a = Atom(atom['name'], pdb.element.get_by_symbol(atom['element']), ai, r)
+                    out._atoms[ai] = a
                     r._atoms.append(a)
 
         if bonds is not None:
