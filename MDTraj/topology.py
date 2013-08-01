@@ -261,6 +261,7 @@ class Topology(object):
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
                                             "resSeq" , "resName", "chainID"])
+        atoms.index = atoms['serial']
         bonds = np.array([(a.index, b.index) for (a, b) in self.bonds])
         return atoms, bonds
 
