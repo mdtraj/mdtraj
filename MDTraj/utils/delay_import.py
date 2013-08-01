@@ -80,7 +80,7 @@ MESSAGES = {
     ''',
 
     'scripttest': '''
-    The code at {filename}:{line_number} requires the scripttest module,
+    The code at {filename}:{line_number} requires the scripttest package,
     which is a python package for testing command-line applications
 
     scripttest can be downloaded from https://pypi.python.org/pypi/ScriptTest/,
@@ -89,6 +89,27 @@ MESSAGES = {
     # easy_install scripttest
     or
     # pip install scripttest
+    ''',
+
+    'simtk.openmm.app': '''
+    The code at {filename}:{line_number} requires the simtk.openmm.app module, which is
+    the python OpenMM application layer. OpenMM is a toolkit for molecular simulation
+    using high performance GPU code.
+
+    simtk.openmm.app is installed with OpenMM, which is available at http://openmm.org
+    ''',
+
+    'pandas': '''
+    The code at {filename}:{line_number} requires the "pandas" package, which is
+    an open source, BSD-licensed library providing high-performance, easy-to-use
+    data structures and data analysis tools for the Python programming language.
+
+    pandas can be downloaded from https://pypi.python.org/pypi/pandas or installed
+    with the python "easy_install" or "pip" package managers sing:
+
+    # easy_install pandas
+    or
+    # pip install pandas
     '''
 }
 
@@ -132,11 +153,12 @@ def import_(module):
         frame,filename,line_number,function_name,lines,index = \
             inspect.getouterframes(inspect.currentframe())[1]
 
-        m = message.format(filename=filename, line_number=line_number)
+        m = message.format(filename=os.path.basename(filename), line_number=line_number)
         m = textwrap.dedent(m)
 
         bar = '\033[91m' + '#' * max(len(line) for line in m.split(os.linesep)) + '\033[0m'
 
+        print >> sys.stderr
         print >> sys.stderr, bar
         print >> sys.stderr, m
         print >> sys.stderr, bar
