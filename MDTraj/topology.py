@@ -144,21 +144,21 @@ class Topology(object):
     <mdtraj.Topology with 1 chains, 3 residues, 22 atoms, 21 bonds at 0x105a98e90>
     >>> table, bonds = topology.to_dataframe()                # doctest: +SKIP
     >>> print table.head()                                    # doctest: +SKIP
-        index atom  rid residue  chain
-    0       0    N    1     CYS      0
-    1       1    H    1     CYS      0
-    2       2   CA    1     CYS      0
-    3       3   HA    1     CYS      0
-    4       4   CB    1     CYS      0
+       serial name element  resSeq resName  chainID
+    0       0   H1       H       0     CYS        0
+    1       1  CH3       C       0     CYS        0
+    2       2   H2       H       0     CYS        0
+    3       3   H3       H       0     CYS        0
+    4       4    C       C       0     CYS        0
     >>> # rename residue "CYS" to "CYSS"
     >>> table[table['residue'] == 'CYS']['residue'] = 'CYSS'  # doctest: +SKIP
     >>> print table.head()                                    # doctest: +SKIP
-        index atom  rid residue   chain
-    0       0    N    1     CYSS      0
-    1       1    H    1     CYSS      0
-    2       2   CA    1     CYSS      0
-    3       3   HA    1     CYSS      0
-    4       4   CB    1     CYSS      0
+       serial name element  resSeq resName   chainID
+    0       0   H1       H       0     CYSS        0
+    1       1  CH3       C       0     CYSS        0
+    2       2   H2       H       0     CYSS        0
+    3       3   H3       H       0     CYSS        0
+    4       4    C       C       0     CYSS        0
     >>> t2 = md.Topology.from_dataframe(table, bonds)         # doctest: +SKIP
     """
 
@@ -259,25 +259,40 @@ class Topology(object):
                          atom.residue.index, atom.residue.name,
                          atom.residue.chain.index))
 
-        atoms = pd.DataFrame(data, columns=["index", "atom", "element",
-                                            "rindex" , "residue", "chain"])
+        atoms = pd.DataFrame(data, columns=["serial", "name", "element",
+                                            "resSeq" , "resName", "chainID"])
         bonds = np.array([(a.index, b.index) for (a, b) in self.bonds])
         return atoms, bonds
 
     @classmethod
-    def from_dataframe(cls, atoms, bonds):
+    def from_dataframe(cls, atoms, bonds=None):
         """Create a mdtraj topology from a pandas data frame
 
         Parameters
         ----------
         atoms : pandas.DataFrame
-            The atoms in the topology, represented as a data frame.
-        bonds : np.ndarray
+            The atoms in the topology, represented as a data frame. This data
+            frame should have columns "serial" (atom index), "name" (atom name),
+            "element" (atom's element), "resSeq" (index of the residue)
+            "resName" (name of the residue), "chainID" (index of the chain),
+            following the same conventions as wwPDB 3.0 format.
+        bonds : np.ndarray, shape=(n_bonds, 2), dtype=int, optional
             The bonds in the topology, represented as an n_bonds x 2 array
-            of the indices of the atoms involved in each bond.
+            of the indices of the atoms involved in each bond. Specifiying
+            bonds here is optional. To create standard protein bonds, you can
+            use `create_standard_bonds` to "fill in" the bonds on your newly
+            created Topology object
+
+        See Also
+        --------
+        create_standard_bonds
         """
         pd = import_('pandas')
-        from mdtraj import pdb
+        from mdtraj import pdbls
+
+        for col in ["serial", "name", "element", "resSeq" , "resName", "chainID"]:
+            if col not in atoms.columns:
+                raise ValueError('dataframe must have column %s' % col)
 
         out = cls()
         if not isinstance(atoms, pd.DataFrame):
@@ -287,28 +302,29 @@ class Topology(object):
             raise TypeError('bonds must be an instance of numpy.ndarray. '
                             'You supplied a %s' % type(bonds))
 
-        if not np.all(np.arange(len(atoms)) == atoms['index']):
+        if not np.all(np.arange(len(atoms)) == atoms['serial']):
             raise ValueError('atoms must be uniquely numbered starting from zero.')
         out._atoms = [None for i in range(len(atoms))]
-        for ci in np.unique(atoms['chain']):
-            chain_atoms = atoms[atoms['chain'] == ci]
+        for ci in np.unique(atoms['chainID']):
+            chain_atoms = atoms[atoms['chainID'] == ci]
             c = out.add_chain()
 
-            for ri in np.unique(chain_atoms['rindex']):
-                residue_atoms = chain_atoms[chain_atoms['rindex'] == ri]
-                rnames = residue_atoms['residue']
+            for ri in np.unique(chain_atoms['resSeq']):
+                residue_atoms = chain_atoms[chain_atoms['resSeq'] == ri]
+                rnames = residue_atoms['resName']
                 residue_name = np.array(rnames)[0]
                 if not np.all(rnames == residue_name):
                     raise ValueError('All of the atoms with residue index %d do not share the same residue name' % ri)
                 r = out.add_residue(residue_name, c)
 
                 for ai, atom in residue_atoms.iterrows():
-                    a = Atom(atom['atom'], pdb.element.get_by_symbol(atom['element']), atom['index'], r)
-                    out._atoms[atom['index']] = a
+                    a = Atom(atom['name'], pdb.element.get_by_symbol(atom['element']), atom['serial'], r)
+                    out._atoms[atom['serial']] = a
                     r._atoms.append(a)
 
-        for ai1, ai2 in bonds:
-            out.add_bond(out.atom(ai1), out.atom(ai2))
+        if bonds is not None:
+            for ai1, ai2 in bonds:
+                out.add_bond(out.atom(ai1), out.atom(ai2))
 
         return out
 
