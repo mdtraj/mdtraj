@@ -3,7 +3,7 @@
 MDTraj provides an easy to use python interface for manipulating MD trajectories.
 It supports the reading and writing of molecular dynamics trajectories
 in a variety of formats, including full support for PDB, DCD, XTC, TRR, binpos,
-AMBER NetCDF, and MDTraj HDF5. The package also provides a command line script
+AMBER NetCDF, AMBER mdcrd and MDTraj HDF5. The package also provides a command line script
 for converting trajectories between supported formats.
 """
 
@@ -16,8 +16,8 @@ from Cython.Distutils import build_ext
 import numpy
 
 ##########################
-VERSION = "0.4.0"
-ISRELEASED = True
+VERSION = "0.4.1"
+ISRELEASED = False
 __version__ = VERSION
 ##########################
 
