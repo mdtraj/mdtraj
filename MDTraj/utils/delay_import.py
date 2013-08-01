@@ -107,7 +107,7 @@ MESSAGES = {
     pandas can be downloaded from https://pypi.python.org/pypi/pandas or installed
     with the python "easy_install" or "pip" package managers sing:
 
-    # easy_instll pandas
+    # easy_install pandas
     or
     # pip install pandas
     '''
