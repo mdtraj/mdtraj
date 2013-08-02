@@ -29,7 +29,7 @@ import numpy as np
 
 
 def _compute_distances_xyz(xyz, atom_pairs):
-    """Compute the bond angles for each frame in xyz
+    """Compute the distances between atoms in atom pair for each frame in xyz.
 
     Parameters
     ----------
@@ -54,7 +54,7 @@ def _compute_distances_xyz(xyz, atom_pairs):
 
 
 def compute_distances(traj, atom_pairs):
-    """Compute the bond angles for each frame in traj
+    """Compute the distances between atoms in atom pair for each frame in xyz.
 
     Parameters
     ----------
