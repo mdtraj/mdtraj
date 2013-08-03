@@ -14,6 +14,7 @@ import subprocess
 from setuptools import setup, Extension
 from Cython.Distutils import build_ext
 import numpy
+import platform
 
 ##########################
 VERSION = "0.4.1"
@@ -35,11 +36,18 @@ Operating System :: Unix
 Operating System :: MacOS
 """
 
+rmsd_extra_compile_args = ["-std=c99","-O2", "-msse2","-msse3", "-fopenmp"]
+rmsd_extra_link_args = ['-lgomp', '-lm']
+
+if platform.platform() == "Darwin":
+    rmsd_extra_compile_args.remove("-fopenmp")
+    rmsd_extra_link_args.remove('-lgomp')
+
 rmsd = Extension('mdtraj._rmsd',
     sources = ['MDTraj/rmsd/src/theobald_rmsd.c','MDTraj/rmsd/_rmsd.pyx'],
     include_dirs = ["MDTraj/rmsd/include", numpy.get_include()],
-    extra_compile_args = ["-std=c99","-O2", "-msse2","-msse3","-fopenmp"],
-    extra_link_args = ['-lgomp', '-lm'],
+    extra_compile_args = rmsd_extra_compile_args,
+    extra_link_args = rmsd_extra_link_args,
     )
 
 xtc = Extension('mdtraj.xtc',
