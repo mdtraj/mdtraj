@@ -51,6 +51,7 @@ def compute_distances(traj, atom_pairs, periodic=True):
     Returns
     -------
     distances : np.ndarray, shape=(n_frames, num_pairs), dtype=float
+        The distance, in each frame, between each pair of atoms.
     """
     if periodic is True and traj._have_unitcell:
         if _HAVE_OPT:
@@ -71,7 +72,7 @@ def compute_distances(traj, atom_pairs, periodic=True):
     return _distance_mic(traj.yz, atom_pairs)
     
 
-def compute_displacement(traj, atom_pairs, periodic=True):
+def compute_displacements(traj, atom_pairs, periodic=True):
     """Compute the displacement vector between pairs of atoms in each frame 
 
     Parameters
@@ -80,10 +81,15 @@ def compute_displacement(traj, atom_pairs, periodic=True):
         Trajectory to compute distances in
     atom_pairs : np.ndarray, shape[num_pairs, 2], dtype=int
         Each row gives the indices of two atoms.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will compute distances under the minimum image
+        convention.
 
     Returns
     -------
-    distances : np.ndarray, shape=[n_frames, num_pairs], dtype=float
+    displacements : np.ndarray, shape=[n_frames, n_pairs, 3], dtype=float32
+         The displacememt vector, in each frame, between each pair of atoms.
     """
     
     if periodic is True and traj._have_unitcell:
