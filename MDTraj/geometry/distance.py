@@ -62,7 +62,7 @@ def compute_distances(traj, atom_pairs, periodic=True):
                 # the pure python
                 pass
         return _distance_mic(traj.xyz, atom_pairs, traj.unitcell_vectors)
-    
+
     # either there are no unitcell vectors or they dont want to use them
     if _HAVE_OPT:
         try:
@@ -70,10 +70,10 @@ def compute_distances(traj, atom_pairs, periodic=True):
         except ValueError:
             pass
     return _distance_mic(traj.yz, atom_pairs)
-    
+
 
 def compute_displacements(traj, atom_pairs, periodic=True):
-    """Compute the displacement vector between pairs of atoms in each frame 
+    """Compute the displacement vector between pairs of atoms in each frame
 
     Parameters
     ----------
@@ -91,7 +91,7 @@ def compute_displacements(traj, atom_pairs, periodic=True):
     displacements : np.ndarray, shape=[n_frames, n_pairs, 3], dtype=float32
          The displacememt vector, in each frame, between each pair of atoms.
     """
-    
+
     if periodic is True and traj._have_unitcell:
         if _HAVE_OPT:
             try:
@@ -99,7 +99,7 @@ def compute_displacements(traj, atom_pairs, periodic=True):
             except ValueError:
                 pass
         return _displacement_mic(traj.xyz, atom_pairs, traj.unitcell_vectors)
-    
+
     # either there are no unitcell vectors or they dont want to use them
     if _HAVE_OPT:
         try:
@@ -107,7 +107,7 @@ def compute_displacements(traj, atom_pairs, periodic=True):
         except ValueError:
             pass
     return _displacement(traj.xyz, atom_pairs)
-    
+
 
 ##############################################################################
 # pure python implementation of the core routines
@@ -127,10 +127,10 @@ def _displacement(xyz, pairs):
 def _distance_mic(xyz, pairs, box_vectors):
     """Distance between pairs of points in each frame under the minimum image
     convention for periodic boundary conditions.
-    
+
     The computation follows scheme B.9 in Tukerman, M. "Statistical
     Mechanics: Theory and Molecular Simulation", 2010.
-    
+
     This is a slow pure python implementation, mostly for testing.
     """
     out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
@@ -141,7 +141,7 @@ def _distance_mic(xyz, pairs, box_vectors):
             s1 = np.dot(hinv, xyz[i,a,:])
             s2 = np.dot(hinv, xyz[i,b,:])
             s12 = s2 - s1
-            
+
             s12 = s12 - np.round(s12)
             r12 = np.dot(box_vectors[i], s12)
             out[i, j] = np.sqrt(np.sum(r12 * r12))
@@ -151,10 +151,10 @@ def _distance_mic(xyz, pairs, box_vectors):
 def _displacement_mic(xyz, pairs, box_vectors):
     """Displacement vector between pairs of points in each frame under the
     minimum image convention for periodic boundary conditions.
-        
+
     The computation follows scheme B.9 in Tukerman, M. "Statistical
     Mechanics: Theory and Molecular Simulation", 2010.
-    
+
     This is a slow pure python implementation, mostly for testing.
     """
     out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
