@@ -1,12 +1,15 @@
 import numpy as np
 cimport numpy as np
 
+
 cdef extern int dist(float*, np.int32_t*, float*, int, int, int)
-cdef extern int dist_orthorhombic(float*, np.int32_t*, float*, float*)
+cdef extern int dist_mic(float* xyz, np.int32_t* atom_pairs, float* box_matrix,
+                         float* out, int n_frames, int n_atoms, int n_pairs)
+
 
 def distance(np.ndarray[dtype=np.float32_t, ndim=3] xyz not None,
              np.ndarray[dtype=np.int32_t, ndim=2]  pairs not None,
-             np.ndarray[dtype=np.float32_t, ndim=1] box_lengths=None,
+             np.ndarray[dtype=np.float32_t, ndim=2] box_vectors=None,
              np.ndarray[dtype=np.float32_t, ndim=2] out=None):
     """Compute the distances between atoms in atom pair for each frame in xyz.
 
@@ -16,10 +19,8 @@ def distance(np.ndarray[dtype=np.float32_t, ndim=3] xyz not None,
         The cartesian coordinates of each atom in each simulation snapshot.
     pairs : np.ndarray, shape=[n_pairs, 2], dtype=int, default=None
         Each row gives the indices of two atoms whose distance we calculate.
-    box_lengths : np.ndarray, shape=(3,), dtype=float32, default=None
-        If box lengths is supplied, and is not note, the distances will
-        be computed with respect to the minimum image convention for an 
-        orthorhombic box with the given box lengths.
+    box_vectors : np.ndarray, shape=(3, 3), dtype=float32, default=None
+
     Returns
     -------
     distances : np.ndarray, shape=[n_frames, n_pairs], dtype=float32
@@ -28,11 +29,12 @@ def distance(np.ndarray[dtype=np.float32_t, ndim=3] xyz not None,
     if out is None:
         out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
 
-    if box_lengths is None:
+    if box_vectors is None:
         dist(&xyz[0,0,0], &pairs[0,0], &out[0,0],
              xyz.shape[0], xyz.shape[1], pairs.shape[0])
     else:
-        dist_orthorhombic(&xyz[0,0,0], &pairs[0,0], &box_lengths[0], &out[0,0])
+        dist_mic(&xyz[0,0,0], &pairs[0,0], &box_vectors[0, 0], &out[0,0],
+                 xyz.shape[0], xyz.shape[1], pairs.shape[0])
 
     return out
 

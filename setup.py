@@ -230,7 +230,7 @@ if detect_sse3():
                   sources=['MDTraj/geometry/_distance.pyx',
                            'MDTraj/geometry/src/distance.c'],
                   include_dirs=[numpy.get_include()],
-                  extra_compile_args=['-mssse3'])
+                  extra_compile_args=['-msse4'])
     )
 
 
