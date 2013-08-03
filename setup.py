@@ -10,16 +10,25 @@ for converting trajectories between supported formats.
 DOCLINES = __doc__.split("\n")
 
 import os
+import shutil
+import tempfile
 import subprocess
+from distutils.ccompiler import new_compiler
 from setuptools import setup, Extension
 from Cython.Distutils import build_ext
 import numpy
+
 
 ##########################
 VERSION = "0.4.1"
 ISRELEASED = False
 __version__ = VERSION
 ##########################
+
+# If your machine supports only SSE2 but not SSSE3, change the following
+# definition to True.
+SSE2_ONLY = False
+
 
 CLASSIFIERS = """\
 Development Status :: 3 - Alpha
@@ -35,12 +44,71 @@ Operating System :: Unix
 Operating System :: MacOS
 """
 
-rmsd = Extension('mdtraj._rmsd',
-    sources = ['MDTraj/rmsd/src/theobald_rmsd.c','MDTraj/rmsd/_rmsd.pyx'],
-    include_dirs = ["MDTraj/rmsd/include", numpy.get_include()],
-    extra_compile_args = ["-std=c99","-O2", "-msse2","-msse3","-fopenmp"],
-    extra_link_args = ['-lgomp', '-lm'],
-    )
+# From http://stackoverflow.com/questions/
+#            7018879/disabling-output-when-compiling-with-distutils
+def hasfunction(cc, funcname):
+    tmpdir = tempfile.mkdtemp(prefix='irmsd-install-')
+    devnull = oldstderr = None
+    try:
+        try:
+            fname = os.path.join(tmpdir, 'funcname.c')
+            f = open(fname, 'w')
+            f.write('int main(void) {\n')
+            f.write('    %s();\n' % funcname)
+            f.write('}\n')
+            f.close()
+            # Redirect stderr to /dev/null to hide any error messages
+            # from the compiler.
+            # This will have to be changed if we ever have to check
+            # for a function on Windows.
+            devnull = open('/dev/null', 'w')
+            oldstderr = os.dup(sys.stderr.fileno())
+            os.dup2(devnull.fileno(), sys.stderr.fileno())
+            objects = cc.compile([fname], output_dir=tmpdir)
+            cc.link_executable(objects, os.path.join(tmpdir, "a.out"))
+        except:
+            return False
+        return True
+    finally:
+        if oldstderr is not None:
+            os.dup2(oldstderr, sys.stderr.fileno())
+        if devnull is not None:
+            devnull.close()
+        shutil.rmtree(tmpdir)
+
+
+def detect_openmp():
+    compiler = new_compiler()
+    print "Attempting to autodetect OpenMP support...",
+    hasopenmp = hasfunction(compiler, 'omp_get_num_threads')
+    needs_gomp = hasopenmp
+    if not hasopenmp:
+        compiler.add_library('gomp')
+        hasopenmp = hasfunction(compiler, 'omp_get_num_threads')
+        needs_gomp = hasopenmp
+    print
+    if hasopenmp:
+        print "Compiler supports OpenMP"
+    else:
+        print "Did not detect OpenMP support; parallel RMSD disabled"
+    return hasopenmp, needs_gomp
+
+def rmsd_extension():
+    openmp_enabled, needs_gomp = detect_openmp()
+    compiler_args = ['-msse2' if SSE2_ONLY else '-mssse3',
+                     '--std=gnu99', '-O3', '-funroll-loops']
+    if openmp_enabled:
+        compiler_args.append('-fopenmp')
+    compiler_libraries = ['gomp'] if needs_gomp else []
+    #compiler_defs = [('USE_OPENMP', None)] if openmp_enabled else []
+    
+    rmsd = Extension('mdtraj._rmsd',
+                     sources = ['MDTraj/rmsd/src/theobald_rmsd.c','MDTraj/rmsd/_rmsd.pyx'],
+                     include_dirs = ["MDTraj/rmsd/include", numpy.get_include()],
+                     extra_compile_args=compiler_args,
+                     #define_macros=compiler_defs,
+                     libraries=compiler_libraries)
+    return rmsd
 
 xtc = Extension('mdtraj.xtc',
     sources = ['MDTraj/xtc/src/xdrfile.c', 'MDTraj/xtc/src/xdrfile_xtc.c',
@@ -137,7 +205,7 @@ setup(name='mdtraj',
       install_requires=['numpy', 'cython', 'nose', 'nose-exclude'],
       zip_safe=False,
       scripts=['scripts/mdconvert', 'scripts/mdinspect'],
-      ext_modules=[xtc, trr, dcd, binpos, rmsd],
+      ext_modules=[xtc, trr, dcd, binpos, rmsd_extension()],
       cmdclass = {'build_ext': build_ext},
       package_data = {'mdtraj.pdb': ['data/*'],
                       'mdtraj.testing': ["reference/*"]})
