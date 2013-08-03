@@ -1,10 +1,6 @@
-#include <stdio.h>
-
 #include <xmmintrin.h>
 #include <pmmintrin.h>
 #include <immintrin.h>   // (Meta-header, for GCC only)
-#pragma intrinsic ( _mm_hadd_ps )
-
 
 inline __m128 LoadFloat3(float* value) {
   // Load (x,y,z) into a SSE register, leaving the last entry

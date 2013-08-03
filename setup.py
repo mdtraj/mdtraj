@@ -26,10 +26,6 @@ ISRELEASED = False
 __version__ = VERSION
 ##########################
 
-# If your machine supports only SSE2 but not SSSE3, change the following
-# definition to True.
-SSE2_ONLY = False
-
 
 CLASSIFIERS = """\
 Development Status :: 3 - Alpha
@@ -45,108 +41,13 @@ Operating System :: Unix
 Operating System :: MacOS
 """
 
-# From http://stackoverflow.com/questions/
-#            7018879/disabling-output-when-compiling-with-distutils
-def hasfunction(cc, funcname, include=None):
-    tmpdir = tempfile.mkdtemp(prefix='hasfunction-')
-    devnull = oldstderr = None
-    try:
-        try:
-            fname = os.path.join(tmpdir, 'funcname.c')
-            f = open(fname, 'w')
-            if include is not None:
-                f.write('#include %s\n' % include)
-            f.write('int main(void) {\n')
-            f.write('    %s;\n' % funcname)
-            f.write('}\n')
-            f.close()
-            # Redirect stderr to /dev/null to hide any error messages
-            # from the compiler.
-            # This will have to be changed if we ever have to check
-            # for a function on Windows.
-            devnull = open('/dev/null', 'w')
-            oldstderr = os.dup(sys.stderr.fileno())
-            os.dup2(devnull.fileno(), sys.stderr.fileno())
-            objects = cc.compile([fname], output_dir=tmpdir)
-            cc.link_executable(objects, os.path.join(tmpdir, "a.out"))
-        except Exception as e:
-            return False
-        return True
-    finally:
-        if oldstderr is not None:
-            os.dup2(oldstderr, sys.stderr.fileno())
-        if devnull is not None:
-            devnull.close()
-        shutil.rmtree(tmpdir)
+################################################################################
+# Writing version control information to the module
+################################################################################
 
-
-def detect_openmp():
-    compiler = new_compiler()
-    print "Attempting to autodetect OpenMP support...",
-    hasopenmp = hasfunction(compiler, 'omp_get_num_threads()')
-    needs_gomp = hasopenmp
-    if not hasopenmp:
-        compiler.add_library('gomp')
-        hasopenmp = hasfunction(compiler, 'omp_get_num_threads()')
-        needs_gomp = hasopenmp
-    print
-    if hasopenmp:
-        print "Compiler supports OpenMP"
-    else:
-        print "Did not detect OpenMP support; parallel RMSD disabled"
-    return hasopenmp, needs_gomp
-
-
-def detect_sse():
-    compiler = new_compiler()
-    return hasfunction(compiler, '_mm_set1_ps(1)', '<xmmintrin.h>')
-
-
-def rmsd_extension():
-    openmp_enabled, needs_gomp = detect_openmp()
-    compiler_args = ['-msse2' if SSE2_ONLY else '-mssse3',
-                     '--std=gnu99', '-O3', '-funroll-loops']
-    if openmp_enabled:
-        compiler_args.append('-fopenmp')
-    compiler_libraries = ['gomp'] if needs_gomp else []
-    #compiler_defs = [('USE_OPENMP', None)] if openmp_enabled else []
-    
-    rmsd = Extension('mdtraj._rmsd',
-                     sources = ['MDTraj/rmsd/src/theobald_rmsd.c','MDTraj/rmsd/_rmsd.pyx'],
-                     include_dirs = ["MDTraj/rmsd/include", numpy.get_include()],
-                     extra_compile_args=compiler_args,
-                     #define_macros=compiler_defs,
-                     libraries=compiler_libraries)
-    return rmsd
-
-xtc = Extension('mdtraj.xtc',
-    sources = ['MDTraj/xtc/src/xdrfile.c', 'MDTraj/xtc/src/xdrfile_xtc.c',
-               'MDTraj/xtc/xtc.pyx'],
-    include_dirs = ["MDTraj/xtc/include/", 'MDTraj/xtc/', numpy.get_include()])
-
-trr = Extension('mdtraj.trr',
-    sources = ['MDTraj/xtc/src/xdrfile.c', 'MDTraj/xtc/src/xdrfile_trr.c', 
-               'MDTraj/xtc/trr.pyx'],
-    include_dirs = ["MDTraj/xtc/include/", 'MDTraj/xtc/', numpy.get_include()])
-
-dcd = Extension('mdtraj.dcd',
-    sources = ["MDTraj/dcd/src/dcdplugin.c", "MDTraj/dcd/dcd.pyx"],
-    libraries=['m'],
-    include_dirs = ["MDTraj/dcd/include/", 'MDTraj/dcd/', numpy.get_include()])
-
-binpos = Extension('mdtraj.binpos',
-    sources = ['MDTraj/binpos/src/binposplugin.c', 'MDTraj/binpos/binpos.pyx'],
-    include_dirs = ["MDTraj/binpos/include/", 'MDTraj/binpos/', numpy.get_include()])
-
-distance = Extension('mdtraj.geometry._distance',
-    sources = ['MDTraj/geometry/_distance.pyx', 'MDTraj/geometry/src/distance.c'],
-    include_dirs = [numpy.get_include()],
-    extra_compile_args=['-msse3'])
-
-
-# Return the git revision as a string
-# copied from numpy setup.py
 def git_version():
+    # Return the git revision as a string
+    # copied from numpy setup.py
     def _minimal_ext_cmd(cmd):
         # construct minimal environment
         env = {}
@@ -158,7 +59,8 @@ def git_version():
         env['LANGUAGE'] = 'C'
         env['LANG'] = 'C'
         env['LC_ALL'] = 'C'
-        out = subprocess.Popen(cmd, stdout = subprocess.PIPE, env=env).communicate()[0]
+        out = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, env=env).communicate()[0]
         return out
 
     try:
@@ -168,6 +70,7 @@ def git_version():
         GIT_REVISION = "Unknown"
 
     return GIT_REVISION
+
 
 def write_version_py(filename='MDTraj/version.py'):
     cnt = """
@@ -195,11 +98,140 @@ if not release:
     a = open(filename, 'w')
     try:
         a.write(cnt % {'version': VERSION,
-                       'full_version' : FULLVERSION,
-                       'git_revision' : GIT_REVISION,
+                       'full_version': FULLVERSION,
+                       'git_revision': GIT_REVISION,
                        'isrelease': str(ISRELEASED)})
     finally:
         a.close()
+
+################################################################################
+# Detection of compiler capabilities
+################################################################################
+
+def hasfunction(cc, funcname, include=None, extra_postargs=None):
+    # From http://stackoverflow.com/questions/
+    #            7018879/disabling-output-when-compiling-with-distutils
+    tmpdir = tempfile.mkdtemp(prefix='hasfunction-')
+    devnull = oldstderr = None
+    try:
+        try:
+            fname = os.path.join(tmpdir, 'funcname.c')
+            f = open(fname, 'w')
+            if include is not None:
+                f.write('#include %s\n' % include)
+            f.write('int main(void) {\n')
+            f.write('    %s;\n' % funcname)
+            f.write('}\n')
+            f.close()
+            # Redirect stderr to /dev/null to hide any error messages
+            # from the compiler.
+            # This will have to be changed if we ever have to check
+            # for a function on Windows.
+            devnull = open('/dev/null', 'w')
+            oldstderr = os.dup(sys.stderr.fileno())
+            os.dup2(devnull.fileno(), sys.stderr.fileno())
+            objects = cc.compile([fname], output_dir=tmpdir,
+                                 extra_postargs=extra_postargs)
+            cc.link_executable(objects, os.path.join(tmpdir, "a.out"))
+        except Exception as e:
+            return False
+        return True
+    finally:
+        if oldstderr is not None:
+            os.dup2(oldstderr, sys.stderr.fileno())
+        if devnull is not None:
+            devnull.close()
+        shutil.rmtree(tmpdir)
+
+
+def detect_openmp():
+    "Does this compiler support OpenMP parallelization?"
+    compiler = new_compiler()
+    print "Attempting to autodetect OpenMP support...",
+    hasopenmp = hasfunction(compiler, 'omp_get_num_threads()')
+    needs_gomp = hasopenmp
+    if not hasopenmp:
+        compiler.add_library('gomp')
+        hasopenmp = hasfunction(compiler, 'omp_get_num_threads()')
+        needs_gomp = hasopenmp
+    print
+    if hasopenmp:
+        print "Compiler supports OpenMP"
+    else:
+        print "Did not detect OpenMP support; parallel RMSD disabled"
+    return hasopenmp, needs_gomp
+
+
+def detect_sse3():
+    "Does this compiler support SSE3 intrinsics?"
+    compiler = new_compiler()
+    return hasfunction(compiler, '__m128 v; _mm_hadd_ps(v,v)',
+                       include='<pmmintrin.h>',
+                       extra_postargs=['-msse3'])
+
+
+################################################################################
+# Declaration of the compiled extension modules (cython + c)
+################################################################################
+
+
+xtc = Extension('mdtraj.xtc',
+                sources=['MDTraj/xtc/src/xdrfile.c',
+                         'MDTraj/xtc/src/xdrfile_xtc.c',
+                         'MDTraj/xtc/xtc.pyx'],
+                include_dirs=["MDTraj/xtc/include/",
+                              'MDTraj/xtc/', numpy.get_include()])
+
+trr = Extension('mdtraj.trr',
+                sources=['MDTraj/xtc/src/xdrfile.c',
+                         'MDTraj/xtc/src/xdrfile_trr.c',
+                         'MDTraj/xtc/trr.pyx'],
+                include_dirs=["MDTraj/xtc/include/",
+                              'MDTraj/xtc/', numpy.get_include()])
+
+dcd = Extension('mdtraj.dcd',
+                sources=["MDTraj/dcd/src/dcdplugin.c", "MDTraj/dcd/dcd.pyx"],
+                libraries=['m'],
+                include_dirs=["MDTraj/dcd/include/",
+                              'MDTraj/dcd/', numpy.get_include()])
+
+binpos = Extension('mdtraj.binpos',
+                   sources=['MDTraj/binpos/src/binposplugin.c',
+                            'MDTraj/binpos/binpos.pyx'],
+                   include_dirs=["MDTraj/binpos/include/",
+                                 'MDTraj/binpos/', numpy.get_include()])
+
+
+def rmsd_extension():
+    openmp_enabled, needs_gomp = detect_openmp()
+    compiler_args = ['-msse2' if not detect_sse3() else '-mssse3',
+                     '--std=gnu99', '-O3', '-funroll-loops']
+    if openmp_enabled:
+        compiler_args.append('-fopenmp')
+    compiler_libraries = ['gomp'] if needs_gomp else []
+    #compiler_defs = [('USE_OPENMP', None)] if openmp_enabled else []
+
+    rmsd = Extension('mdtraj._rmsd',
+                     sources=[
+                         'MDTraj/rmsd/src/theobald_rmsd.c', 'MDTraj/rmsd/_rmsd.pyx'],
+                     include_dirs=[
+                         "MDTraj/rmsd/include", numpy.get_include()],
+                     extra_compile_args=compiler_args,
+                     # define_macros=compiler_defs,
+                     libraries=compiler_libraries)
+    return rmsd
+
+
+extensions = [xtc, trr, dcd, binpos, rmsd_extension()]
+
+if detect_sse3():
+    extensions.append(
+        Extension('mdtraj.geometry._distance',
+                  sources=['MDTraj/geometry/_distance.pyx',
+                           'MDTraj/geometry/src/distance.c'],
+                  include_dirs=[numpy.get_include()],
+                  extra_compile_args=['-mssse3'])
+    )
 
 
 write_version_py()
@@ -210,17 +242,16 @@ setup(name='mdtraj',
       long_description="\n".join(DOCLINES[2:]),
       version=__version__,
       license='GPLv3+',
-      url = "http://rmcgibbo.github.io/mdtraj",
-      platforms = ["Linux", "Mac OS-X", "Unix"],
-      classifiers = CLASSIFIERS.splitlines(),
+      url="http://rmcgibbo.github.io/mdtraj",
+      platforms=["Linux", "Mac OS-X", "Unix"],
+      classifiers=CLASSIFIERS.splitlines(),
       packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.testing', 'mdtraj.utils',
                 'mdtraj.reporters', 'mdtraj.geometry', 'mdtraj.tests'],
-      package_dir={'mdtraj':'MDTraj'},
+      package_dir={'mdtraj': 'MDTraj'},
       install_requires=['numpy', 'cython', 'nose', 'nose-exclude'],
       zip_safe=False,
       scripts=['scripts/mdconvert', 'scripts/mdinspect'],
-      ext_modules=[xtc, trr, dcd, binpos, rmsd_extension(), distance],
-      cmdclass = {'build_ext': build_ext},
-      package_data = {'mdtraj.pdb': ['data/*'],
-                      'mdtraj.testing': ["reference/*"]})
-
+      ext_modules=extensions,
+      cmdclass={'build_ext': build_ext},
+      package_data={'mdtraj.pdb': ['data/*'],
+                    'mdtraj.testing': ["reference/*"]})
