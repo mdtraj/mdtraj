@@ -21,11 +21,17 @@ int dist(float* xyz, int* pairs, float* out,
   /* Compute the distance between pairs of atoms in every frame
      of xyz.
 
+     Uses SSE3 horizontal add for the reduction (compile with -msse3)
+
      Parameters
      ----------
      xyz : array, shape=(n_frames, n_atoms, 3)
+         Cartesian coordinates of the atoms in every frame, in contiguous C order.
      pairs : array, shape=(n_pairs, 2)
+         The specific pairs of atoms whose distance you want to compute. A 2d
+         array of pairs, in C order.
      out : array, shape=(n_frames, n_pairs)
+         Array where the output will be stored, in contiguous C order.
 
      All of the arrays are assumed to be contiguous. This code will
      segfault if they're not.
