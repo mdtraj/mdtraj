@@ -17,10 +17,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <pmmintrin.h>
-#include <xmmintrin.h>
-#include <smmintrin.h>
 #include <stdio.h>
+#include <pmmintrin.h>
+#ifdef HAVE_SSE4
+#include <smmintrin.h>
+#endif
+
 
 
 static inline __m128 load_float3(float* value) {
@@ -139,6 +141,9 @@ int dist_mic(float* xyz, int* pairs, float* box_matrix, float* out,
      All of the arrays are assumed to be contiguous. This code will
      segfault if they're not.
   */
+#ifndef HAVE_SSE4
+   _MM_SET_ROUNDING_MODE(_MM_ROUND_NEAREST);
+#endif
 
   // Invert the box matrix, and store each row of the result in a float4
   // with zero padding on the last element
@@ -171,7 +176,12 @@ int dist_mic(float* xyz, int* pairs, float* box_matrix, float* out,
 
       // s12 = s12 - NEAREST_INTEGER(s12)
       s12 = _mm_sub_ps(s2, s1);
+
+#ifdef HAVE_SSE4
       s12 = _mm_sub_ps(s12, _mm_round_ps(s12, _MM_FROUND_TO_NEAREST_INT));
+#else
+      s12 = _mm_sub_ps(s12, _mm_cvtepi32_ps(_mm_cvtps_epi32(s12)));
+#endif
 
       r12 = _mm_add_ps(_mm_add_ps(
           _mm_mul_ps(h[0], _mm_shuffle_ps(s12, s12, _MM_SHUFFLE(0,0,0,0))),

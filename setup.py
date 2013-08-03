@@ -169,6 +169,12 @@ def detect_sse3():
                        include='<pmmintrin.h>',
                        extra_postargs=['-msse3'])
 
+def detect_sse4():
+    "Does this compiler support SSE4 intrinsics?"
+    compiler = new_compiler()
+    return hasfunction(compiler, '__m128 v; _mm_round_ps(v,0x00)',
+                       include='<smmintrin.h>',
+                       extra_postargs=['-msse4'])
 
 ################################################################################
 # Declaration of the compiled extension modules (cython + c)
@@ -222,17 +228,27 @@ def rmsd_extension():
     return rmsd
 
 
-extensions = [xtc, trr, dcd, binpos, rmsd_extension()]
+def distance_extension():
+    if not detect_sse3():
+        return None
 
-if detect_sse3():
-    extensions.append(
-        Extension('mdtraj.geometry._distance',
+    extra_compile_args = ['-mssse3']
+    compiler_defs = []
+    if detect_sse4():
+        compiler_defs = [('HAVE_SSE4', None)]
+        extra_compile_args.append('-msse4')
+
+    return Extension('mdtraj.geometry._distance',
                   sources=['MDTraj/geometry/_distance.pyx',
                            'MDTraj/geometry/src/distance.c'],
                   include_dirs=[numpy.get_include()],
-                  extra_compile_args=['-msse4'])
-    )
+                  define_macros=compiler_defs,
+                  extra_compile_args=extra_compile_args)
 
+extensions = [xtc, trr, dcd, binpos, rmsd_extension()]
+ext = distance_extension()
+if ext is not None:
+    extensions.append(ext)
 
 write_version_py()
 setup(name='mdtraj',
