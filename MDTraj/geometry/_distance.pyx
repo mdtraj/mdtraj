@@ -1,15 +1,15 @@
 import numpy as np
 cimport numpy as np
+from mdtraj.utils import ensure_type
 
-
-cdef extern int dist(float*, np.int32_t*, float*, int, int, int)
+cdef extern int dist(float*, np.int32_t*, float*, float*, int, int, int)
 cdef extern int dist_mic(float* xyz, np.int32_t* atom_pairs, float* box_matrix,
-                         float* out, int n_frames, int n_atoms, int n_pairs)
-
+                         float* distance_out, float* distance_out,
+                         int n_frames, int n_atoms, int n_pairs)
 
 def distance(np.ndarray[dtype=np.float32_t, ndim=3] xyz not None,
              np.ndarray[dtype=np.int32_t, ndim=2]  pairs not None,
-             np.ndarray[dtype=np.float32_t, ndim=2] box_vectors=None,
+             np.ndarray[dtype=np.float32_t, ndim=3] box_vectors=None,
              np.ndarray[dtype=np.float32_t, ndim=2] out=None):
     """Compute the distances between atoms in atom pair for each frame in xyz.
 
@@ -20,28 +20,40 @@ def distance(np.ndarray[dtype=np.float32_t, ndim=3] xyz not None,
     pairs : np.ndarray, shape=[n_pairs, 2], dtype=int, default=None
         Each row gives the indices of two atoms whose distance we calculate.
     box_vectors : np.ndarray, shape=(3, 3), dtype=float32, default=None
-
+        Periodic box vectors in each frame. If supplied, the distance will
+        be computed using the minimum image convention.
+    out : np.ndarray, shape=[n_frames, n_pairs], dtype=float32, optional
+        You may presupply the output buffer
+    
     Returns
     -------
-    distances : np.ndarray, shape=[n_frames, n_pairs], dtype=float32
+    out : np.ndarray, shape=[n_frames, n_pairs], dtype=float32
          The distance, in each frame, between each pair of atoms.
     """
+    if not xyz.flags.c_contiguous:
+        raise ValueError('xyz must be c contiguous')
+
     if out is None:
         out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+    else:
+        if not out.flags.c_contiguous:
+            raise ValueError('out must be c contiguous')
+        ensure_type(out, np.float32, 3, 'out', shape=(xyz.shape[0], pairs.shape[0], 3))
 
     if box_vectors is None:
-        dist(&xyz[0,0,0], &pairs[0,0], &out[0,0],
+        dist(&xyz[0,0,0], &pairs[0,0], &out[0,0], NULL,
              xyz.shape[0], xyz.shape[1], pairs.shape[0])
     else:
-        dist_mic(&xyz[0,0,0], &pairs[0,0], &box_vectors[0, 0], &out[0,0],
-                 xyz.shape[0], xyz.shape[1], pairs.shape[0])
+        dist_mic(&xyz[0,0,0], &pairs[0,0], &box_vectors[0, 0, 0], &out[0,0],
+                 NULL, xyz.shape[0], xyz.shape[1], pairs.shape[0])
 
     return out
 
 
 def displacement(np.ndarray[dtype=np.float32_t, ndim=3] xyz not None,
-                 np.ndarray[dtype=np.int32_t, ndim=2]   atom_pairs not None,
-                 np.ndarray[dtype=np.float32_t, ndim=1] box_lengths):
+                 np.ndarray[dtype=np.int32_t, ndim=2]  pairs not None,
+                 np.ndarray[dtype=np.float32_t, ndim=3] box_vectors=None,
+                 np.ndarray[dtype=np.float32_t, ndim=3] out=None):
     """Compute the displacement vectors between pairs of atoms in each frame of
     xyz.
 
@@ -51,13 +63,35 @@ def displacement(np.ndarray[dtype=np.float32_t, ndim=3] xyz not None,
         The cartesian coordinates of each atom in each simulation snapshot.
     atom_pairs : np.ndarray, shape=[n_pairs, 2], dtype=int
         Each row gives the indices of two atoms whose displacement we calculate.
-    box_lengths : np.ndarray, shape=(3,), dtype=float32, default=None
-        If box lengths is supplied, and is not note, the distances will
-        be computed with respect to the minimum image convention for an 
-        orthorhombic box with the given box lengths.
+    box_vectors : np.ndarray, shape=(3, 3), dtype=float32, default=None
+        Periodic box vectors in each frame. If supplied, the distance will
+        be computed using the minimum image convention.
+    out : np.ndarray, shape=[n_frames, n_pairs, 3], dtype=float32, optional
+        You may presupply the output buffer
+
     Returns
     -------
-    displacement : np.ndarray, shape=[n_frames, n_pairs, 3], dtype=float32
+    out : np.ndarray, shape=[n_frames, n_pairs, 3], dtype=float32
          The displacememt vector, in each frame, between each pair of atoms.
     """
-    pass
+    if not xyz.flags.c_contiguous:
+        raise ValueError('xyz must be c contiguous')
+
+    if out is None:
+        out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
+    else:
+        if not out.flags.c_contiguous:
+            raise ValueError('out must be c contiguous')
+        ensure_type(out, np.float32, 3, 'out', shape=(xyz.shape[0], pairs.shape[0], 3))
+        
+    if box_vectors is None:
+        dist(&xyz[0,0,0], &pairs[0,0], NULL, &out[0,0, 0],
+             xyz.shape[0], xyz.shape[1], pairs.shape[0])
+    else:
+        if not box_vectors.flags.c_contiguous:
+             raise ValueError('box_vectors must be c contiguous')
+        ensure_type(box_vectors, np.float32, 3, 'box_vectors', shape=(xyz.shape[0], 3, 3))
+        dist_mic(&xyz[0,0,0], &pairs[0,0], &box_vectors[0, 0, 0], NULL,
+                 &out[0,0,0], xyz.shape[0], xyz.shape[1], pairs.shape[0])
+
+    return out
