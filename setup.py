@@ -10,6 +10,7 @@ for converting trajectories between supported formats.
 DOCLINES = __doc__.split("\n")
 
 import os
+import sys
 import shutil
 import tempfile
 import subprocess
@@ -46,15 +47,17 @@ Operating System :: MacOS
 
 # From http://stackoverflow.com/questions/
 #            7018879/disabling-output-when-compiling-with-distutils
-def hasfunction(cc, funcname):
-    tmpdir = tempfile.mkdtemp(prefix='irmsd-install-')
+def hasfunction(cc, funcname, include=None):
+    tmpdir = tempfile.mkdtemp(prefix='hasfunction-')
     devnull = oldstderr = None
     try:
         try:
             fname = os.path.join(tmpdir, 'funcname.c')
             f = open(fname, 'w')
+            if include is not None:
+                f.write('#include %s\n' % include)
             f.write('int main(void) {\n')
-            f.write('    %s();\n' % funcname)
+            f.write('    %s;\n' % funcname)
             f.write('}\n')
             f.close()
             # Redirect stderr to /dev/null to hide any error messages
@@ -66,7 +69,7 @@ def hasfunction(cc, funcname):
             os.dup2(devnull.fileno(), sys.stderr.fileno())
             objects = cc.compile([fname], output_dir=tmpdir)
             cc.link_executable(objects, os.path.join(tmpdir, "a.out"))
-        except:
+        except Exception as e:
             return False
         return True
     finally:
@@ -80,11 +83,11 @@ def hasfunction(cc, funcname):
 def detect_openmp():
     compiler = new_compiler()
     print "Attempting to autodetect OpenMP support...",
-    hasopenmp = hasfunction(compiler, 'omp_get_num_threads')
+    hasopenmp = hasfunction(compiler, 'omp_get_num_threads()')
     needs_gomp = hasopenmp
     if not hasopenmp:
         compiler.add_library('gomp')
-        hasopenmp = hasfunction(compiler, 'omp_get_num_threads')
+        hasopenmp = hasfunction(compiler, 'omp_get_num_threads()')
         needs_gomp = hasopenmp
     print
     if hasopenmp:
@@ -92,6 +95,12 @@ def detect_openmp():
     else:
         print "Did not detect OpenMP support; parallel RMSD disabled"
     return hasopenmp, needs_gomp
+
+
+def detect_sse():
+    compiler = new_compiler()
+    return hasfunction(compiler, '_mm_set1_ps(1)', '<xmmintrin.h>')
+
 
 def rmsd_extension():
     openmp_enabled, needs_gomp = detect_openmp()
@@ -128,6 +137,11 @@ dcd = Extension('mdtraj.dcd',
 binpos = Extension('mdtraj.binpos',
     sources = ['MDTraj/binpos/src/binposplugin.c', 'MDTraj/binpos/binpos.pyx'],
     include_dirs = ["MDTraj/binpos/include/", 'MDTraj/binpos/', numpy.get_include()])
+
+distance = Extension('mdtraj.geometry._distance',
+    sources = ['MDTraj/geometry/_distance.pyx', 'MDTraj/geometry/src/distance.c'],
+    include_dirs = [numpy.get_include()],
+    extra_compile_args=['-msse3'])
 
 
 # Return the git revision as a string
@@ -205,7 +219,7 @@ setup(name='mdtraj',
       install_requires=['numpy', 'cython', 'nose', 'nose-exclude'],
       zip_safe=False,
       scripts=['scripts/mdconvert', 'scripts/mdinspect'],
-      ext_modules=[xtc, trr, dcd, binpos, rmsd_extension()],
+      ext_modules=[xtc, trr, dcd, binpos, rmsd_extension(), distance],
       cmdclass = {'build_ext': build_ext},
       package_data = {'mdtraj.pdb': ['data/*'],
                       'mdtraj.testing': ["reference/*"]})
