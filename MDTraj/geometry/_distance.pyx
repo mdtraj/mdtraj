@@ -1,6 +1,5 @@
 import numpy as np
 cimport numpy as np
-from mdtraj.utils import ensure_type
 
 cdef extern int dist(float*, np.int32_t*, float*, float*, int, int, int)
 cdef extern int dist_mic(float* xyz, np.int32_t* atom_pairs, float* box_matrix,
@@ -38,7 +37,6 @@ def distance(np.ndarray[dtype=np.float32_t, ndim=3] xyz not None,
     else:
         if not out.flags.c_contiguous:
             raise ValueError('out must be c contiguous')
-        ensure_type(out, np.float32, 3, 'out', shape=(xyz.shape[0], pairs.shape[0], 3))
 
     if box_vectors is None:
         dist(&xyz[0,0,0], &pairs[0,0], &out[0,0], NULL,
@@ -82,7 +80,6 @@ def displacement(np.ndarray[dtype=np.float32_t, ndim=3] xyz not None,
     else:
         if not out.flags.c_contiguous:
             raise ValueError('out must be c contiguous')
-        ensure_type(out, np.float32, 3, 'out', shape=(xyz.shape[0], pairs.shape[0], 3))
         
     if box_vectors is None:
         dist(&xyz[0,0,0], &pairs[0,0], NULL, &out[0,0, 0],
@@ -90,7 +87,6 @@ def displacement(np.ndarray[dtype=np.float32_t, ndim=3] xyz not None,
     else:
         if not box_vectors.flags.c_contiguous:
              raise ValueError('box_vectors must be c contiguous')
-        ensure_type(box_vectors, np.float32, 3, 'box_vectors', shape=(xyz.shape[0], 3, 3))
         dist_mic(&xyz[0,0,0], &pairs[0,0], &box_vectors[0, 0, 0], NULL,
                  &out[0,0,0], xyz.shape[0], xyz.shape[1], pairs.shape[0])
 

@@ -21,6 +21,7 @@
 ##############################################################################
 
 import numpy as np
+from mdtraj.utils import ensure_type
 try:
     from mdtraj.geometry._distance import distance as _opt_distance
     from mdtraj.geometry._distance import displacement as _opt_displacement
@@ -35,7 +36,7 @@ except ImportError:
 
 
 def compute_distances(traj, atom_pairs, periodic=True):
-    """Compute the distances between pairs of atoms in each frame
+    """Compute the distances between pairs of atoms in each frame.
 
     Parameters
     ----------
@@ -53,23 +54,19 @@ def compute_distances(traj, atom_pairs, periodic=True):
     distances : np.ndarray, shape=(n_frames, num_pairs), dtype=float
         The distance, in each frame, between each pair of atoms.
     """
+    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='taj.xyz', shape=(None, None, 3))
+    pairs = ensure_type(np.asarray(atom_pairs), dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2))
+
     if periodic is True and traj._have_unitcell:
+        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
         if _HAVE_OPT:
-            try:
-                return _opt_distance(traj.xyz, atom_pairs, traj.unitcell_vectors)
-            except ValueError:
-                # let cython's dtype mismatch error fall through, and we use
-                # the pure python
-                pass
-        return _distance_mic(traj.xyz, atom_pairs, traj.unitcell_vectors)
+            return _opt_distance(xyz, pairs, box)
+        return _distance_mic(xyz, pairs, box)
 
     # either there are no unitcell vectors or they dont want to use them
     if _HAVE_OPT:
-        try:
-            return _opt_distance(traj.xyz, atom_pairs)
-        except ValueError:
-            pass
-    return _distance_mic(traj.yz, atom_pairs)
+        return _opt_distance(xyz, pairs)
+    return _distance_mic(yz, pairs)
 
 
 def compute_displacements(traj, atom_pairs, periodic=True):
@@ -91,22 +88,19 @@ def compute_displacements(traj, atom_pairs, periodic=True):
     displacements : np.ndarray, shape=[n_frames, n_pairs, 3], dtype=float32
          The displacememt vector, in each frame, between each pair of atoms.
     """
+    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='taj.xyz', shape=(None, None, 3))
+    pairs = ensure_type(np.asarray(atom_pairs), dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2))
 
     if periodic is True and traj._have_unitcell:
+        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
         if _HAVE_OPT:
-            try:
-                return _opt_displacement(traj.xyz, atom_pairs, traj.unitcell_vectors)
-            except ValueError:
-                pass
-        return _displacement_mic(traj.xyz, atom_pairs, traj.unitcell_vectors)
+            return _opt_displacement(xyz, pairs, box)
+        return _displacement_mic(xyz, pairs, box)
 
     # either there are no unitcell vectors or they dont want to use them
     if _HAVE_OPT:
-        try:
-            return _opt_displacement(traj.xyz, atom_pairs)
-        except ValueError:
-            pass
-    return _displacement(traj.xyz, atom_pairs)
+        return _opt_displacement(xyz, pairs)
+    return _displacement(xyz, pairs)
 
 
 ##############################################################################
