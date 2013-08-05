@@ -26,7 +26,7 @@ import numpy as np
 from mdtraj.utils import ensure_type
 
 try:
-    import cffid
+    import cffi
     from mdtraj.utils.ffi import cpointer, find_library
     _HAVE_OPT = None   # not sure if we have the library yet
 except ImportError:
@@ -93,19 +93,19 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
     if periodic is True and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
         if _HAVE_OPT and opt:
-            out = np.empty((traj.xyz.shape[0], atom_pairs.shape[0]), dtype=np.float32)
-            C.dist_mic(cpointer(traj.xyz), cpointer(atom_pairs), cpointer(box),
-                       cpointer(out), ffi.NULL, traj.xyz.shape[0], traj.xyz.shape[1],
-                       atom_pairs.shape[0])
+            out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+            C.dist_mic(cpointer(xyz), cpointer(pairs), cpointer(box),
+                       cpointer(out), ffi.NULL, xyz.shape[0], xyz.shape[1],
+                       pairs.shape[0])
             return out
 
         return _distance_mic(xyz, pairs, box)
 
     # either there are no unitcell vectors or they dont want to use them
     if _HAVE_OPT and opt:
-        out = np.empty((traj.xyz.shape[0], atom_pairs.shape[0]), dtype=np.float32)
-        C.dist(cpointer(traj.xyz), cpointer(atom_pairs), cpointer(out), ffi.NULL,
-               traj.xyz.shape[0], traj.xyz.shape[1], atom_pairs.shape[0])
+        out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+        C.dist(cpointer(xyz), cpointer(pairs), cpointer(out), ffi.NULL,
+               xyz.shape[0], xyz.shape[1], pairs.shape[0])
         return out
     return _distance(xyz, pairs)
 
@@ -144,7 +144,7 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
         if _HAVE_OPT and opt:
             out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
-            C.dist_mic(cpointer(traj.xyz), cpointer(atom_pairs), cpointer(box),
+            C.dist_mic(cpointer(xyz), cpointer(pairs), cpointer(box),
                        ffi.NULL, cpointer(out), xyz.shape[0], xyz.shape[1], pairs.shape[0])
             return out
         return _displacement_mic(xyz, pairs, box)
@@ -152,8 +152,8 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
     # either there are no unitcell vectors or they dont want to use them
     if _HAVE_OPT and opt:
         out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
-        C.dist(cpointer(traj.xyz), cpointer(atom_pairs), ffi.NULL, cpointer(out),
-               xyz.shape[0], xyz.shape[1], atom_pairs.shape[0])
+        C.dist(cpointer(xyz), cpointer(pairs), ffi.NULL, cpointer(out),
+               xyz.shape[0], xyz.shape[1], pairs.shape[0])
         return out
     return _displacement(xyz, pairs)
 
