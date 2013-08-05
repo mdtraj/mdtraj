@@ -1055,19 +1055,16 @@ class Trajectory(object):
 
         if discard_overlapping_frames:
             x0 = self.xyz[-1]
-            x1 = other.xyz[-1]
-            if np.linalg.norm(x1 - x0) < 1e-8:
-                xyz = other.xyz[1:]
-                time = other.time[1:]
-                if other_has_unitcell:
-                    lengths2 = other.unitcell_lengths[1:]
-                    angles2 = other.unitcell_angles[1:]
-        else:
-            xyz = other.xyz
-            time = other.time
-            if other_has_unitcell:
-                lengths2 = other.unitcell_lengths
-                angles2 = other.unitcell_angles
+            x1 = other.xyz[0]
+            start_frame = 0 if np.linalg.norm(x1 - x0) < 1e-8 else 1
+        else: 
+            start_frame = 0
+
+        xyz = other.xyz[start_frame:]
+        time = other.time[start_frame:]
+        if other_has_unitcell:
+            lengths2 = other.unitcell_lengths[start_frame:]
+            angles2 = other.unitcell_angles[start_frame:]
 
         xyz = np.concatenate((self.xyz, xyz))
         time = np.concatenate((self.time, time))
