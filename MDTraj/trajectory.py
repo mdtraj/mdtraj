@@ -998,7 +998,7 @@ class Trajectory(object):
     @xyz.setter
     def xyz(self, value):
         "Set the cartesian coordinates of each atom in each simulation frame"
-        if hasattr(self, 'topology'):
+        if getattr(self, 'topology', None) is not None:
             shape = (None, self.topology._numAtoms, 3)
         else:
             shape = (None, None, 3)
@@ -1143,7 +1143,7 @@ class Trajectory(object):
             time = np.arange(len(self.xyz))
         self.time = time
 
-        if not topology._numAtoms == self.n_atoms:
+        if (topology is not None) and (topology._numAtoms != self.n_atoms):
             raise ValueError("Number of atoms in xyz (%s) and "
                 "in topology (%s) don't match" % (self.n_atoms, topology._numAtoms))
 

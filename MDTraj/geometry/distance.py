@@ -20,22 +20,47 @@
 # Imports
 ##############################################################################
 
+import os
+import warnings
 import numpy as np
 from mdtraj.utils import ensure_type
-try:
-    from mdtraj.geometry._distance import distance as _opt_distance
-    from mdtraj.geometry._distance import displacement as _opt_displacement
-    _HAVE_OPT = True
-except ImportError:
-    _HAVE_OPT = False
 
+try:
+    import cffid
+    from mdtraj.utils.ffi import cpointer, find_library
+    _HAVE_OPT = None   # not sure if we have the library yet
+except ImportError:
+    warnings.warn('Optimized distance library requires the "cffi" package, '
+                  'which is installable with easy_install or pip via '
+                  '"pip install cffi" or "easy_install cffi".')
+    _HAVE_OPT = False  # we definitely don't have the library
+
+if _HAVE_OPT is not False:
+    # lets try to open the library
+    ffi = cffi.FFI()
+    ffi.cdef('''int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
+                             float* distance_out, float* displacement_out,
+                             const int n_frames, const int n_atoms, const int n_pairs);''')
+    ffi.cdef('''int dist(const float* xyz, const int* pairs, float* distance_out,
+                         float* displacement_out, const int n_frames, const int n_atoms,
+                          const int n_pairs);''')
+    here = os.path.dirname(os.path.abspath(__file__))
+    libpath = find_library(here, 'distance')
+    if libpath is not None:
+        C = ffi.dlopen(libpath)
+        _HAVE_OPT = True
+    else:
+        _HAVE_OPT = False
+
+if not _HAVE_OPT:
+    warnings.warn('Optimized distance library was not imported sucessfully.')
 
 ##############################################################################
 # Functions
 ##############################################################################
 
 
-def compute_distances(traj, atom_pairs, periodic=True):
+def compute_distances(traj, atom_pairs, periodic=True, opt=True):
     """Compute the distances between pairs of atoms in each frame.
 
     Parameters
@@ -48,6 +73,14 @@ def compute_distances(traj, atom_pairs, periodic=True):
         If `periodic` is True and the trajectory contains unitcell
         information, we will compute distances under the minimum image
         convention.
+    opt : bool, default=True
+        Use an optimized native library to calculate distances. Using this
+        library requires the python package "cffi" (c foreign function
+        interface) which is installable via "easy_install cffi" or "pip
+        install cffi". See https://pypi.python.org/pypi/cffi for more details.
+        Our optimized minimum image convention calculation implementation is
+        over 1000x faster than the naive numpy implementation, so installing
+        cffi is worth it.
 
     Returns
     -------
@@ -59,17 +92,25 @@ def compute_distances(traj, atom_pairs, periodic=True):
 
     if periodic is True and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
-        if _HAVE_OPT:
-            return _opt_distance(xyz, pairs, box)
+        if _HAVE_OPT and opt:
+            out = np.empty((traj.xyz.shape[0], atom_pairs.shape[0]), dtype=np.float32)
+            C.dist_mic(cpointer(traj.xyz), cpointer(atom_pairs), cpointer(box),
+                       cpointer(out), ffi.NULL, traj.xyz.shape[0], traj.xyz.shape[1],
+                       atom_pairs.shape[0])
+            return out
+
         return _distance_mic(xyz, pairs, box)
 
     # either there are no unitcell vectors or they dont want to use them
-    if _HAVE_OPT:
-        return _opt_distance(xyz, pairs)
-    return _distance_mic(yz, pairs)
+    if _HAVE_OPT and opt:
+        out = np.empty((traj.xyz.shape[0], atom_pairs.shape[0]), dtype=np.float32)
+        C.dist(cpointer(traj.xyz), cpointer(atom_pairs), cpointer(out), ffi.NULL,
+               traj.xyz.shape[0], traj.xyz.shape[1], atom_pairs.shape[0])
+        return out
+    return _distance(xyz, pairs)
 
 
-def compute_displacements(traj, atom_pairs, periodic=True):
+def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
     """Compute the displacement vector between pairs of atoms in each frame
 
     Parameters
@@ -82,24 +123,38 @@ def compute_displacements(traj, atom_pairs, periodic=True):
         If `periodic` is True and the trajectory contains unitcell
         information, we will compute distances under the minimum image
         convention.
+    opt : bool, default=True
+        Use an optimized native library to calculate distances. Using this
+        library requires the python package "cffi" (c foreign function
+        interface) which is installable via "easy_install cffi" or "pip
+        install cffi". See https://pypi.python.org/pypi/cffi for more details.
+        Our optimized minimum image convention calculation implementation is
+        over 1000x faster than the naive numpy implementation, so installing
+        cffi is worth it.
 
     Returns
     -------
     displacements : np.ndarray, shape=[n_frames, n_pairs, 3], dtype=float32
          The displacememt vector, in each frame, between each pair of atoms.
     """
-    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='taj.xyz', shape=(None, None, 3))
+    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3))
     pairs = ensure_type(np.asarray(atom_pairs), dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2))
 
     if periodic is True and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
-        if _HAVE_OPT:
-            return _opt_displacement(xyz, pairs, box)
+        if _HAVE_OPT and opt:
+            out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
+            C.dist_mic(cpointer(traj.xyz), cpointer(atom_pairs), cpointer(box),
+                       ffi.NULL, cpointer(out), xyz.shape[0], xyz.shape[1], pairs.shape[0])
+            return out
         return _displacement_mic(xyz, pairs, box)
 
     # either there are no unitcell vectors or they dont want to use them
-    if _HAVE_OPT:
-        return _opt_displacement(xyz, pairs)
+    if _HAVE_OPT and opt:
+        out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
+        C.dist(cpointer(traj.xyz), cpointer(atom_pairs), ffi.NULL, cpointer(out),
+               xyz.shape[0], xyz.shape[1], atom_pairs.shape[0])
+        return out
     return _displacement(xyz, pairs)
 
 

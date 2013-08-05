@@ -1,55 +1,69 @@
 import time
 import itertools
 import numpy as np
+import mdtraj as md
+
 from mdtraj.testing import eq, skipif
-
 from mdtraj.geometry.distance import _HAVE_OPT
-from mdtraj.geometry.distance import _distance, _displacement
-from mdtraj.geometry.distance import _distance_mic, _displacement_mic
-if _HAVE_OPT:
-    from mdtraj.geometry.distance import _opt_distance, _opt_displacement
+from mdtraj.geometry.distance import compute_distances, compute_displacements
+from mdtraj.geometry.distance import _displacement_mic, _displacement
 
-
-N_FRAMES = 10
+N_FRAMES = 20
 N_ATOMS = 20
 
 xyz = np.asarray(np.random.randn(N_FRAMES, N_ATOMS, 3), dtype=np.float32)
 pairs = np.array(list(itertools.combinations(range(N_ATOMS), 2)), dtype=np.int32)
-box = np.ascontiguousarray(np.random.randn(N_FRAMES, 3, 3) + 2*np.eye(3,3), dtype=np.float32)
+
+ptraj = md.Trajectory(xyz=xyz, topology=None)
+ptraj.unitcell_vectors = np.ascontiguousarray(np.random.randn(N_FRAMES, 3, 3) + 2*np.eye(3,3), dtype=np.float32)
 
 @skipif(not _HAVE_OPT)
 def test_0():
-    a = _distance(xyz, pairs)
-    b = _opt_distance(xyz, pairs)
+    a = compute_distances(ptraj, pairs, periodic=False, opt=True)
+    b = compute_distances(ptraj, pairs, periodic=False, opt=False)
     eq(a, b)
 
 @skipif(not _HAVE_OPT)
 def test_1():
-    a = _displacement(xyz, pairs)
-    b = _opt_displacement(xyz, pairs)
+    a = compute_displacements(ptraj, pairs, periodic=False, opt=True)
+    b = compute_displacements(ptraj, pairs, periodic=False, opt=False)
     eq(a, b)
 
-def test_15():
-    a = _displacement(xyz, pairs)
-    c = _distance(xyz, pairs)
-    eq(c, np.sqrt(np.sum(np.square(a), axis=2)))
-
-@skipif(not _HAVE_OPT)
 def test_2():
-    a = _distance_mic(xyz, pairs, box)
-    b = _opt_distance(xyz, pairs, box)
-    eq(a, b, decimal=3)
+    a = compute_distances(ptraj, pairs, periodic=False, opt=False)
+    b = compute_displacements(ptraj, pairs, periodic=False, opt=False)
+    eq(a, np.sqrt(np.sum(np.square(b), axis=2)))
 
 @skipif(not _HAVE_OPT)
 def test_3():
-    a = _displacement_mic(xyz, pairs, box)
-    b = _opt_displacement(xyz, pairs, box)
+    a = compute_distances(ptraj, pairs, periodic=False, opt=True)
+    b = compute_displacements(ptraj, pairs, periodic=False, opt=True)
+    eq(a, np.sqrt(np.sum(np.square(b), axis=2)))
+
+
+@skipif(not _HAVE_OPT)
+def test_0p():
+    a = compute_distances(ptraj, pairs, periodic=True, opt=True)
+    b = compute_distances(ptraj, pairs, periodic=True, opt=False)
     eq(a, b, decimal=3)
 
-def test_35():
-    a = _displacement_mic(xyz, pairs, box)
-    c = _distance_mic(xyz, pairs, box)
-    eq(c, np.sqrt(np.sum(np.square(a), axis=2)))
+@skipif(not _HAVE_OPT)
+def test_1p():
+    a = compute_displacements(ptraj, pairs, periodic=True, opt=True)
+    b = compute_displacements(ptraj, pairs, periodic=True, opt=False)
+    eq(a, b, decimal=3)
+
+def test_2p():
+    a = compute_distances(ptraj, pairs, periodic=True, opt=False)
+    b = compute_displacements(ptraj, pairs, periodic=True, opt=False)
+    eq(a, np.sqrt(np.sum(np.square(b), axis=2)))
+
+@skipif(not _HAVE_OPT)
+def test_3p():
+    a = compute_distances(ptraj, pairs, periodic=True, opt=True)
+    b = compute_displacements(ptraj, pairs, periodic=True, opt=True)
+    eq(a, np.sqrt(np.sum(np.square(b), axis=2)))
+
 
 def test_4():
     # using a really big box, we should get the same results with and without
