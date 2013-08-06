@@ -999,6 +999,7 @@ class Trajectory(object):
     def xyz(self, value):
         "Set the cartesian coordinates of each atom in each simulation frame"
         if getattr(self, 'topology', None) is not None:
+            # if we have a topology and its not None
             shape = (None, self.topology._numAtoms, 3)
         else:
             shape = (None, None, 3)
@@ -1022,9 +1023,11 @@ class Trajectory(object):
 
 
     def join(self, other, check_topology=True, discard_overlapping_frames=False):
-        """Join two trajectories together
+        """Join two trajectories together along the time/frame axis.
 
-        This method can also be called by using `self + other`
+        This method joins trajectories along the time axis, giving a new trajectory
+        of length equal to the sum of the lengths of `self` and `other`.
+        It can also be called by using `self + other`
 
         Parameters
         ----------
@@ -1037,6 +1040,10 @@ class Trajectory(object):
         discard_overlapping_frames : bool, optional
             If True, compare coordinates at trajectory edges to discard overlapping
             frames.  Default: False.
+
+        See Also
+        --------
+        stack : join two trajectories along the atom axis
         """
         if not isinstance(other, Trajectory):
             raise TypeError('You can only add two Trajectory instances')
@@ -1051,30 +1058,27 @@ class Trajectory(object):
 
         lengths2 = None
         angles2 = None
-        other_has_unitcell = (other.unitcell_lengths is not None and other.unitcell_angles is not None)
 
         if discard_overlapping_frames:
             x0 = self.xyz[-1]
-            x1 = other.xyz[-1]
-            if np.linalg.norm(x1 - x0) < 1e-8:
-                xyz = other.xyz[1:]
-                time = other.time[1:]
-                if other_has_unitcell:
-                    lengths2 = other.unitcell_lengths[1:]
-                    angles2 = other.unitcell_angles[1:]
-        else:
-            xyz = other.xyz
-            time = other.time
-            if other_has_unitcell:
-                lengths2 = other.unitcell_lengths
-                angles2 = other.unitcell_angles
+            x1 = other.xyz[0]
+            start_frame = 1 if np.linalg.norm(x1 - x0) < 1e-8 else 0
+        else: 
+            start_frame = 0
+
+        xyz = other.xyz[start_frame:]
+        time = other.time[start_frame:]
+        if other._have_unitcell:
+            lengths2 = other.unitcell_lengths[start_frame:]
+            angles2 = other.unitcell_angles[start_frame:]
 
         xyz = np.concatenate((self.xyz, xyz))
         time = np.concatenate((self.time, time))
 
-        if self.unitcell_lengths is None and self.unitcell_angles is None and not other_has_unitcell:
+        #if self.unitcell_lengths is None and self.unitcell_angles is None and not other_has_unitcell:
+        if not self._have_unitcell and not other._have_unitcell:
             lengths, angles = None, None
-        elif self.unitcell_lengths is not None and self.unitcell_angles is not None and other_has_unitcell:
+        elif self._have_unitcell and other._have_unitcell:
             lengths = np.concatenate((self.unitcell_lengths, lengths2))
             angles = np.concatenate((self.unitcell_angles, angles2))
         else:
@@ -1085,6 +1089,53 @@ class Trajectory(object):
         # the subclass's join() will return an instance of the subclass
         return self.__class__(xyz, deepcopy(self._topology), time=time,
             unitcell_lengths=lengths, unitcell_angles=angles)
+
+    def stack(self, other):
+        """Stack two trajectories along the atom axis
+
+        This method joins trajectories along the atom axis, giving a new trajectory
+        with a number of atoms equal to the sum of the number of atoms in
+        `self` and `other`.
+
+        Notes
+        -----
+        The resulting trajectory will have the unitcell and time information
+        the left operand.
+
+        Examples
+        --------
+        >>> t1 = md.load('traj1.h5')                            # doctest: +SKIP
+        >>> t2 = md.load('traj2.h5')                            # doctest: +SKIP
+        >>> # even when t2 contains no unitcell information
+        >>> t2.unitcell_vectors = None                          # doctest: +SKIP
+        >>> stacked = t1.stack(t2)                              # doctest: +SKIP
+        >>> # the stacked trajectory inherits the unitcell information
+        >>> # from the first trajectory
+        >>> np.all(stacked.unitcell_vectors == t1.unitcell_vectors) # doctest: +SKIP
+        True
+
+        Parameters
+        ----------
+        other : Trajectory
+            The other trajectory to join
+
+        See Also
+        --------
+        join : join two trajectories along the time/frame axis.
+        """
+        if not isinstance(other, Trajectory):
+            raise TypeError('You can only stack two Trajectory instances')
+        if self.n_frames != other.n_frames:
+            raise ValueError('Number of frames in self (%d) is not equal '
+                             'to number of frames in other (%d)' % (self.n_frames, other.n_frames))
+        if self.topology is not None:
+            topology = self.topology.join(other.topology)
+        else:
+            topology = None
+
+        xyz = np.hstack((self.xyz, other.xyz))
+        return self.__class__(xyz=xyz, topology=topology, unitcell_angles=self.unitcell_angles,
+                              unitcell_lengths=self.unitcell_lengths, time=self.time)
 
     def __getitem__(self, key):
         "Get a slice of this trajectory"
@@ -1144,7 +1195,7 @@ class Trajectory(object):
         self.time = time
 
         if (topology is not None) and (topology._numAtoms != self.n_atoms):
-            raise ValueError("Number of atoms in xyz (%s) and "
+             raise ValueError("Number of atoms in xyz (%s) and "
                 "in topology (%s) don't match" % (self.n_atoms, topology._numAtoms))
 
     def openmm_positions(self, frame):
