@@ -182,6 +182,65 @@ class Topology(object):
     def __repr__(self):
         return "<mdtraj.Topology with %d chains, %d residues, %d atoms, %d bonds at 0x%02x>" % (self.n_chains, self.n_residues, self.n_atoms, len(self._bonds), id(self))
 
+    def copy(self):
+        """Return a copy of the topology
+
+        Returns
+        -------
+        out : Topology
+            A copy of this topology
+        """
+        out = Topology()
+        for chain in self.chains:
+            c = out.add_chain()
+            for residue in chain.residues:
+                r = out.add_residue(residue.name, c)
+                for atom in residue.atoms:
+                    out.add_atom(atom.name, atom.element, r)
+
+        for a1, a2 in self.bonds:
+            out.add_bond(a1, a2)
+
+        return out
+
+    def __copy__(self, *args):
+        return self.copy()
+
+    def __deepcopy__(self, *args):
+        return self.copy()
+
+    def join(self, other):
+        """Join two topologies together
+
+        Parameters
+        ----------
+        other : Topology
+            Another topology object
+
+        Returns
+        -------
+        out : Topology
+            A joint topology, with all of the atoms/residues/chains/bonds
+            in each of the individual topologies
+        """
+        if not isinstance(other, Topology):
+            raise ValueError('other must be an instance of Topology to join')
+        out = self.copy()
+
+        atom_mapping = {}
+        for chain in other.chains:
+            c = out.add_chain()
+            for residue in chain.residues:
+                r = out.add_residue(residue.name, c)
+                for atom in residue.atoms:
+                    a = out.add_atom(atom.name, atom.element, r)
+                    atom_mapping[atom] = a
+
+        for a1, a2 in other.bonds:
+            out.add_bond(atom_mapping[a1], atom_mapping[a2])
+
+        return out
+
     def to_openmm(self):
         """Convert this topology into OpenMM topology
 
