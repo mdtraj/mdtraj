@@ -17,7 +17,7 @@
 import tempfile, os
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises
 import numpy as np
-from mdtraj.trajectory import load
+import mdtraj as md
 import mdtraj.trajectory
 from mdtraj import topology
 
@@ -41,18 +41,18 @@ def teardown_module(module):
 
 
 def test_legacy_hdf0():
-    t0 = load(fn)
+    t0 = md.load(fn)
 
 
 def test_mismatch():
     # loading a 22 atoms xtc with a topology that has 2,000 atoms
     # some kind of error should happen!
     with assert_raises(ValueError):
-        load(get_fn('frame0.xtc'), top=get_fn('4K6Q.pdb'))
+        md.load(get_fn('frame0.xtc'), top=get_fn('4K6Q.pdb'))
 
 
 def test_box():
-    t = load(get_fn('native.pdb'))
+    t = md.load(get_fn('native.pdb'))
     yield lambda: eq(t.unitcell_vectors, None)
     yield lambda: eq(t.unitcell_lengths, None)
     yield lambda: eq(t.unitcell_angles, None)
@@ -63,14 +63,14 @@ def test_box():
 
 
 def test_load_pdb_box():
-    t = load(get_fn('native2.pdb'))
+    t = md.load(get_fn('native2.pdb'))
     yield lambda: eq(t.unitcell_lengths[0], np.array([0.1, 0.2, 0.3]))
     yield lambda: eq(t.unitcell_angles[0], np.array([90.0, 90.0, 90.0]))
     yield lambda: eq(t.unitcell_vectors[0], np.array([[0.1, 0, 0], [0, 0.2, 0], [0, 0, 0.3]]))
 
 
 def test_box_load_save():
-    t = load(get_fn('native2.pdb'))
+    t = md.load(get_fn('native2.pdb'))
 
     # these three tempfile have extensions (dcd, xtc, trr) that
     # should store the box information. lets make sure than through a load/save
@@ -78,9 +78,9 @@ def test_box_load_save():
     for temp_fn in [temp1, temp2, temp4, temp5]:
         t.save(temp_fn)
         if temp_fn.endswith('.h5'):
-            t2 = load(temp_fn)
+            t2 = md.load(temp_fn)
         else:
-            t2 = load(temp_fn, top=get_fn('native.pdb'))
+            t2 = md.load(temp_fn, top=get_fn('native.pdb'))
 
         assert t.unitcell_vectors != None
         yield lambda: eq(t.xyz, t2.xyz, decimal=3)
@@ -90,8 +90,8 @@ def test_box_load_save():
 
 
 def test_legacy_hdf_frame():
-    t0 = load(fn)
-    t1 = load(fn, frame=1)
+    t0 = md.load(fn)
+    t1 = md.load(fn, frame=1)
 
     yield lambda: eq(t0[1].xyz, t1.xyz)
     yield lambda: eq(t0[1].unitcell_vectors, t1.unitcell_vectors)
@@ -101,7 +101,7 @@ def test_legacy_hdf_frame():
 
 
 def test_slice():
-    t = load(fn)
+    t = md.load(fn)
     yield lambda: eq((t[0:5] + t[5:10]).xyz, t[0:10].xyz)
     yield lambda: eq((t[0:5] + t[5:10]).time, t[0:10].time)
     yield lambda: eq((t[0:5] + t[5:10]).unitcell_vectors, t[0:10].unitcell_vectors)
@@ -110,16 +110,16 @@ def test_slice():
 
 
 def test_slice2():
-    t = load(get_fn('traj.h5'))
+    t = md.load(get_fn('traj.h5'))
     yield lambda: t[0] == t[[0,1]][0]
 
 
 def test_xtc():
-    t = mdtraj.trajectory.load(get_fn('frame0.xtc'), top=nat)
+    t = md.load(get_fn('frame0.xtc'), top=nat)
     for e in [temp1, temp2, temp3, temp4]:
         def f():
             t.save(e)
-            t2 = mdtraj.trajectory.load(e, top=nat)
+            t2 = md.load(e, top=nat)
             eq(t.xyz, t2.xyz, err_msg=e)
 
             # ony trr and xtc save the time that we read from the original
@@ -130,54 +130,47 @@ def test_xtc():
 
 
 def test_dcd():
-    t = mdtraj.trajectory.load(get_fn('frame0.dcd'), top=nat)
+    t = md.load(get_fn('frame0.dcd'), top=nat)
     for e in [temp1, temp2, temp3, temp4]:
         def f():
             t.save(e)
-            t2 = mdtraj.trajectory.load(e, top=nat)
+            t2 = md.load(e, top=nat)
             eq(t.xyz, t2.xyz, err_msg=e)
             eq(t.time, t2.time, err_msg=e)
         yield f
 
 
 def test_binpos():
-    t = mdtraj.trajectory.load(get_fn('frame0.binpos'), top=nat)
+    t = md.load(get_fn('frame0.binpos'), top=nat)
     for e in [temp1, temp2, temp3, temp4]:
         def f():
             t.save(e)
-            t2 = mdtraj.trajectory.load(e, top=nat)
+            t2 = md.load(e, top=nat)
             eq(t.xyz, t2.xyz, err_msg=e)
             eq(t.time, t2.time, err_msg=e)
         yield f
 
 
-def test_load_join():
-    filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos"] #, "traj.h5"]
+def test_load():
+    filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos", "traj.h5"]
     num_block = 3
     for filename in filenames:
-        t0 = mdtraj.trajectory.load(get_fn(filename), top=nat, discard_overlapping_frames=True)
-        t1 = mdtraj.trajectory.load(get_fn(filename), top=nat, discard_overlapping_frames=False)
-        t2 = mdtraj.trajectory.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=False)
-        t3 = mdtraj.trajectory.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=True)
+        t0 = md.load(get_fn(filename), top=nat, discard_overlapping_frames=True)
+        t1 = md.load(get_fn(filename), top=nat, discard_overlapping_frames=False)
+        t2 = md.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=False)
+        t3 = md.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=True)
 
+        # these don't actually overlap, so discard_overlapping_frames should have no effect
+        # the overlap is between the last frame of one and the first frame of the next.
         yield lambda: eq(t0.n_frames, t1.n_frames)
         yield lambda: eq(t0.n_frames * num_block, t2.n_frames)
-        yield lambda: eq(t3.n_frames , t0.n_frames * num_block - num_block + 1)
-
-    # h5 loader doesn't need top
-    t0 = mdtraj.trajectory.load(get_fn('traj.h5'), discard_overlapping_frames=True)
-    t1 = mdtraj.trajectory.load(get_fn('traj.h5'), discard_overlapping_frames=False)
-    t2 = mdtraj.trajectory.load([get_fn('traj.h5') for i in xrange(num_block)], discard_overlapping_frames=False)
-    t3 = mdtraj.trajectory.load([get_fn('traj.h5') for i in xrange(num_block)], discard_overlapping_frames=True)
-    yield lambda: eq(t0.n_frames, t1.n_frames)
-    yield lambda: eq(t0.n_frames * num_block, t2.n_frames)
-    yield lambda: eq(t3.n_frames , t0.n_frames * num_block - num_block + 1)
+        yield lambda: eq(t3.n_frames, t2.n_frames)
 
 
 def test_hdf5_0():
-    t = load(get_fn('traj.h5'))
-    t2 = load(get_fn('native.pdb'))
-    t3 = load(get_fn('traj.h5'), frame=8)
+    t = md.load(get_fn('traj.h5'))
+    t2 = md.load(get_fn('native.pdb'))
+    t3 = md.load(get_fn('traj.h5'), frame=8)
 
     assert t.topology == t2.topology
     yield lambda: eq(t.time, 0.002*(1 + np.arange(100)))
@@ -188,7 +181,7 @@ def test_hdf5_0():
 
 
 def test_center():
-    traj = load(get_fn('traj.h5'))
+    traj = md.load(get_fn('traj.h5'))
     traj.center_coordinates()
     mu = traj.xyz.mean(1)
     mu0 = np.zeros(mu.shape)
@@ -197,7 +190,7 @@ def test_center():
 
 def test_float_atom_indices_exception():
     "Is an informative error message given when you supply floats for atom_indices?"
-    top = load(get_fn('native.pdb')).topology
+    top = md.load(get_fn('native.pdb')).topology
     for ext in mdtraj.trajectory._LoaderRegistry.keys():
         try:
             fn = get_fn('frame0' + ext)
@@ -205,7 +198,7 @@ def test_float_atom_indices_exception():
             continue
 
         try:
-            load(fn, atom_indices=[0.5, 1.3], top=top)
+            md.load(fn, atom_indices=[0.5, 1.3], top=top)
         except ValueError as e:
             assert e.message == 'indices must be of an integer type. float64 is not an integer type'
         except Exception as e:
@@ -213,7 +206,7 @@ def test_float_atom_indices_exception():
 
 
 def test_restrict_atoms():
-    traj = load(get_fn('traj.h5'))
+    traj = md.load(get_fn('traj.h5'))
     desired_atom_indices = [0,1,2,5]
     traj.restrict_atoms(desired_atom_indices)
     atom_indices = [a.index for a in traj.top.atoms]
@@ -228,7 +221,7 @@ def test_restrict_atoms():
 
 
 def test_array_vs_matrix():
-    top = load(get_fn('native.pdb')).topology
+    top = md.load(get_fn('native.pdb')).topology
     xyz = np.random.randn(1, 22, 3)
     xyz_mat = np.matrix(xyz)
     t1 = mdtraj.trajectory.Trajectory(xyz, top)
@@ -240,25 +233,25 @@ def test_array_vs_matrix():
 def test_pdb_unitcell_loadsave():
     """Make sure that nonstandard unitcell dimensions are saved and loaded
     correctly with PDB"""
-    tref = load(get_fn('native.pdb'))
+    tref = md.load(get_fn('native.pdb'))
     tref.unitcell_lengths = 1 + 0.1  * np.random.randn(tref.n_frames, 3)
     tref.unitcell_angles = 90 + 0.0  * np.random.randn(tref.n_frames, 3)
     tref.save(temp6)
 
-    tnew = load(temp6)
+    tnew = md.load(temp6)
     eq(tref.unitcell_vectors, tnew.unitcell_vectors, decimal=3)
 
 
 def test_load_combination():
-    "Test that the load() function's stride and atom_indices work accross all trajectory formats"
+    "Test that the load function's stride and atom_indices work accross all trajectory formats"
 
-    topology = load(get_fn('native.pdb')).topology
+    topology = md.load(get_fn('native.pdb')).topology
     ainds = np.array([a.index for a in topology.atoms if a.element.symbol == 'C'])
     filenames = ['frame0.binpos', 'frame0.dcd', 'frame0.trr', 'frame0.xtc', 'frame0.nc', 'frame0.h5', 'frame0.pdb']
 
-    no_kwargs = [load(fn, top=topology) for fn in map(get_fn, filenames)]
-    strided3 =  [load(fn, top=topology, stride=3) for fn in map(get_fn, filenames)]
-    subset =    [load(fn, top=topology, atom_indices=ainds) for fn in map(get_fn, filenames)]
+    no_kwargs = [md.load(fn, top=topology) for fn in map(get_fn, filenames)]
+    strided3 =  [md.load(fn, top=topology, stride=3) for fn in map(get_fn, filenames)]
+    subset =    [md.load(fn, top=topology, atom_indices=ainds) for fn in map(get_fn, filenames)]
 
 
     for i, (t1, t2) in enumerate(zip(no_kwargs, strided3)):
@@ -274,3 +267,37 @@ def test_load_combination():
         if t1.unitcell_vectors != None:
             yield lambda: eq(t1.unitcell_vectors, t2.unitcell_vectors)
         yield lambda: eq(t1.topology.subset(ainds), t2.topology)
+
+def test_no_topology():
+    "We can make trajectories without a topology"
+    md.Trajectory(xyz=np.random.randn(10,5,3), topology=None)
+
+def test_join():
+    xyz = np.random.rand(10,5,3)
+    # overlapping frames
+    t1 = md.Trajectory(xyz=xyz[:5], topology=None)
+    t2 = md.Trajectory(xyz=xyz[4:], topology=None)
+
+    t3 = t1.join(t2, discard_overlapping_frames=True)
+    t4 = t1.join(t2, discard_overlapping_frames=False)
+    eq(t3.xyz, xyz)
+    eq(len(t4.xyz), 11)
+    eq(t4.xyz, np.vstack((xyz[:5], xyz[4:])))
+
+def test_stack_1():
+    t1 = md.load(get_fn('native.pdb'))
+    t2 = t1.stack(t1)
+    eq(t2.n_atoms, 2*t1.n_atoms)
+    eq(t2.topology._numAtoms, 2*t1.n_atoms)
+    eq(t1.xyz, t2.xyz[:, 0:t1.n_atoms])
+    eq(t1.xyz, t2.xyz[:, t1.n_atoms:])
+
+
+def test_stack_2():
+    t1 = md.Trajectory(xyz=np.random.rand(10,5,3), topology=None)
+    t2 = md.Trajectory(xyz=np.random.rand(10,6,3), topology=None)
+    t3 = t1.stack(t2)
+
+    eq(t3.xyz[:, :5], t1.xyz)
+    eq(t3.xyz[:, 5:], t2.xyz)
+    eq(t3.n_atoms, 11)
