@@ -1,11 +1,11 @@
 """
-We have implemented RMSD calculation using both Kabsch algorithm and
+Here, we have implemented RMSD calculation using both Kabsch algorithm and
 via the quaterion-based characteristic polynomial.  Both are implemented
 in pure python/numpy.
 
 Notes
 -----
-This file works at a frame-by-frame level, not the trajectory level.
+This module works at a frame-by-frame level, not the trajectory level.
 
 Reference
 ---------
@@ -17,15 +17,39 @@ import numpy as np
 import scipy.optimize
 from mdtraj.utils.arrays import ensure_type
 
-class Transformation():
+class Transformation(object):
+    """Operator capable of rotating and translating a conformation
+
+    Parameters
+    ----------
+    rotation : np.array, shape=(3,3)
+        Rotation matrix
+    rotation : np.array, shape=(3)
+        Translation vector
+    """
     def __init__(self, rotation, translation):
         self.rotation = rotation
         self.translation = translation
 
-    def transform(self, xyz):
-        """Apply transformation to xyz."""
+    def transform(self, coordinates):
+        """Apply an affine transformation to a set of coordinates.
+
+        Parameters
+        ----------
+        coordinates : ndarray, shape = (n_atoms, 3)
+            xyz coordinates of a `single` frame.
+
+        Returns
+        -------
+        mapped_coordinates : ndarray, shape = (n_atoms, 3)
+            xyz coordinates after being rotated and translated
+
+        """
         mu1 = xyz.mean(0)
         return xyz.dot(self.rotation) + self.translation - mu1.dot(self.rotation)
+
+    def __call__self(self, xyz):
+        return self.transform(xyz)
 
 
 def compute_transformation(mobile, target):
@@ -34,9 +58,9 @@ def compute_transformation(mobile, target):
     Parameters
     ----------
     mobile : ndarray, shape = (n_atoms, 3)
-        xyz coordinates of a SINGLE frame, to be aligned onto target.
+        xyz coordinates of a `single` frame, to be aligned onto target.
     target : ndarray, shape = (n_atoms, 3)
-        xyz coordinates of a SINGLE frame
+        xyz coordinates of a `single` frame
 
     Returns
     -------
@@ -52,13 +76,14 @@ def transform(mobile, target):
     Parameters
     ----------
     mobile : ndarray, shape = (n_atoms, 3)
-        xyz coordinates of a SINGLE frame, to be aligned onto target.
+        xyz coordinates of a `single` frame, to be aligned onto target.
     target : ndarray, shape = (n_atoms, 3)
-        xyz coordinates of a SINGLE frame
+        xyz coordinates of a `single` frame
 
     Returns
     -------
-    mobile_prime : transformed coordinates of mobile.
+    mobile_prime : ndarray, shape = (n_atoms, 3)
+        Transformed coordinates of mobile, optimally aligned to target.
     """
     T = compute_transformation(mobile, target)
     mobile_prime = T.transform(mobile)
@@ -71,18 +96,20 @@ def compute_translation_and_rotation(mobile, target):
     Parameters
     ----------
     mobile : ndarray, shape = (n_atoms, 3)
-        xyz coordinates of a SINGLE frame, to be aligned onto target.
+        xyz coordinates of a `single` frame, to be aligned onto target.
     target : ndarray, shape = (n_atoms, 3)
-        xyz coordinates of a SINGLE frame
+        xyz coordinates of a `single` frame
 
     Returns
     -------
-    R : ndarray
-        rotation
+    translation : ndarray, shape=(3,)
+        Difference between the centroids of the two conformations
+    rotation : ndarray, shape=(3,3)
+        Rotation matrix to apply to mobile to carry out the transformation.
     """
-    
+
     ensure_type(mobile, 'float', 2, 'mobile', shape=(None, 3))
-    ensure_type(target, 'float', 2, 'mobile', shape=(target.shape[0], 3))
+    ensure_type(target, 'float', 2, 'target', shape=(target.shape[0], 3))
 
     mu1 = mobile.mean(0)
     mu2 = target.mean(0)
@@ -151,7 +178,7 @@ def rmsd_qcp(conformation1, conformation2):
     """
     ensure_type(conformation1, np.float32, 2, 'conformation1', shape=(None, 3))
     ensure_type(conformation2, np.float32, 2, 'conformation2', shape=(conformation1.shape[0], 3))
-    
+
     A = _center(conformation1)
     B = _center(conformation2)
     if not A.shape[0] == B.shape[0]:

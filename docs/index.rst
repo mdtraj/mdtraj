@@ -35,6 +35,7 @@ Documentation
    topology
    rmsd
    io
+   geometry
    compatibility
    reporters
    utils

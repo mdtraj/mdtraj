@@ -1,3 +1,5 @@
+.. _RMSD:
+
 RMSD : Fast SSE2/SSE3-based code for RMSD computation
 =====================================================
 

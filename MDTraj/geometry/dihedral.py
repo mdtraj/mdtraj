@@ -27,7 +27,8 @@ if _HAVE_OPT:
     from mdtraj.geometry import C
     from mdtraj.utils.ffi import cpointer
 
-__all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega']
+__all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega',
+           'atom_sequence_finder']
 
 ##############################################################################
 # Functions
