@@ -14,20 +14,23 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
-import mdtraj.geometry
+import itertools
 import numpy as np
-from mdtraj.trajectory import load
-import mdtraj.trajectory
 
+import mdtraj as md
+import mdtraj.geometry
+from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
 
 RgDocStringTester = DocStringFormatTester(mdtraj.geometry.rg)
 DistanceDocStringTester = DocStringFormatTester(mdtraj.geometry.distance)
 DihedralDocStringTester = DocStringFormatTester(mdtraj.geometry.dihedral)
 AngleDocStringTester = DocStringFormatTester(mdtraj.geometry.angle)
 
+RUN_PERFOMANCE_TESTS = False
+
+
 def test_rg():
-    t0 = load(get_fn('traj.h5'))
+    t0 = md.load(get_fn('traj.h5'))
     Rg = mdtraj.geometry.rg.compute_rg(t0)
     Rg0 = np.loadtxt(get_fn("Rg_traj_ref.dat"))
     eq(Rg, Rg0)
@@ -45,7 +48,7 @@ np.savetxt("Rg_frame0_ref.dat", Rg)
 """
 
 def test_distances():
-    t0 = load(get_fn('traj.h5'))
+    t0 = md.load(get_fn('traj.h5'))
     atom_pairs = np.loadtxt(get_fn("atom_pairs.dat"),'int')
     distances = mdtraj.geometry.distance.compute_distances(t0, atom_pairs)
     distances0 = np.loadtxt(get_fn("atom_distances_traj_ref.dat"))
@@ -66,7 +69,7 @@ np.savetxt("atom_distances_frame0_ref.dat", distances)
 
 
 def test_dihedral_indices():
-    traj = load(get_fn('1bpi.pdb'))
+    traj = md.load(get_fn('1bpi.pdb'))
     # Manually compare generated indices to known answers.
     phi0_ind = np.array([3, 12, 13, 14]) - 1  # Taken from PDB, so subtract 1
     psi0_ind = np.array([1, 2,  3, 12]) - 1  # Taken from PDB, so subtract 1
@@ -81,7 +84,7 @@ def test_dihedral_indices():
 
 
 def test_dihedral_index_offset_generation():
-    traj = load(get_fn('1bpi.pdb'))
+    traj = md.load(get_fn('1bpi.pdb'))
 
     result = np.array([2, 11, 12, 13])  # The atom indices of the first phi angle
 
@@ -99,9 +102,9 @@ def test_dihedral_index_offset_generation():
     eq(ind1[0], result)
 
 
-def test_dihedral():
+def test_dihedral_0():
     """We compared phi and psi angles from pymol to MDTraj output."""
-    traj = load(get_fn('1bpi.pdb'))
+    traj = md.load(get_fn('1bpi.pdb'))[0]
     rid, phi = mdtraj.geometry.dihedral.compute_phi(traj)
     phi0 = np.array([-34.50956, -50.869690]) * np.pi / 180.  # Pymol
     eq(phi[0,0:2], phi0, decimal=4)
@@ -111,16 +114,83 @@ def test_dihedral():
     psi0 = np.array([134.52554, 144.880173]) * np.pi / 180.  # Pymol
     eq(psi[0,0:2], psi0, decimal=4)
     eq(int(rid[0]), 0)
-
+    
     rid, chi = mdtraj.geometry.dihedral.compute_chi(traj)
     chi0 = np.array([-43.37841, -18.14592]) * np.pi / 180.  # Pymol
     eq(chi[0,0:2], chi0, decimal=4)
     eq(int(rid[0]), 0)
 
 
-def test_angle():
-    x1 = [0,0,0]
-    x2 = [0,1,0]
-    x3 = [1,1,0]
+def test_dihedral_1():
+    n_atoms = 10
+    np.random.seed(42)
+    xyz = np.random.randn(500, n_atoms, 3)
+    t = md.Trajectory(xyz=xyz, topology=None)
+    indices = list(itertools.combinations(range(n_atoms), 4))
+    r1 = md.geometry.compute_dihedrals(t, indices, opt=False)
+    r2 = md.geometry.compute_dihedrals(t, indices, opt=True)
+    eq(r1, r2)
+
+
+def test_angle_0():
+    xyz = np.array([[[0, 0, 0],
+                    [0, 1, 0],
+                    [1, 1, 0]]])
+    t = md.Trajectory(xyz=xyz, topology=None)
+    result = np.array(np.pi/2).reshape(1,1)
+    yield lambda: eq(result, md.geometry.compute_angles(t, [[0,1,2]], opt=False))
+    yield lambda: eq(result, md.geometry.compute_angles(t, [[0,1,2]], opt=True))
+
+
+def test_angle_1():
+    # the two routines sometimes give slightly different answers for
+    # wierd angles really close to 0 or 180. I suspect this is because
+    # different implementations of acos -- which are basically implemented
+    # taylor series expansions -- are parameterized slightly differently on
+    # different libraries/platforms. setting the random number seed helps to
+    # ensure that this doesn't break stochastically too often.
     
-    yield lambda: eq(0.5*np.pi, float(mdtraj.geometry.angle._compute_bond_angles_xyz(np.array([[x1, x2, x3]]), [[0,1,2]])[0,0]))
+    n_atoms = 5
+    np.random.seed(24)
+    xyz = np.random.randn(50, n_atoms, 3)
+    t = md.Trajectory(xyz=xyz, topology=None)
+    indices = list(itertools.combinations(range(n_atoms), 3))
+    r1 = md.geometry.compute_angles(t, indices, opt=False)
+    r2 = md.geometry.compute_angles(t, indices, opt=True)
+    assert np.nanmax(np.abs(r1 - r2)) < 1e-2
+    assert np.nansum(np.abs(r1 - r2)) / r1.size < 5e-4
+
+
+@skipif(not RUN_PERFOMANCE_TESTS, 'Not doing performance testing')
+def test_dihedral_performance():
+    n_atoms = 10
+    xyz = np.random.randn(5000, n_atoms, 3)
+    t = md.Trajectory(xyz=xyz, topology=None)
+    indices = np.asarray(list(itertools.combinations(range(n_atoms), 4)), dtype=np.int32)
+    import time
+    t1 = time.time()
+    r1 = md.geometry.compute_dihedrals(t, indices, opt=False)
+    t2 = time.time()
+    r2 = md.geometry.compute_dihedrals(t, indices, opt=True)
+    t3 = time.time()
+    
+    print '\ndihedral performance:'
+    print 'numpy:   %f s' % (t2 - t1)
+    print 'opt sse: %f s' % (t3 - t2)
+
+@skipif(not RUN_PERFOMANCE_TESTS, 'Not doing performance testing')
+def test_angle_performance():
+    n_atoms = 20
+    xyz = np.random.randn(10000, n_atoms, 3)
+    t = md.Trajectory(xyz=xyz, topology=None)
+    indices = np.asarray(list(itertools.combinations(range(n_atoms), 3)), dtype=np.int32)
+    import time
+    t1 = time.time()
+    r1 = md.geometry.compute_angles(t, indices, opt=False)
+    t2 = time.time()
+    r2 = md.geometry.compute_angles(t, indices, opt=True)
+    t3 = time.time()
+    
+    print '\nangle performance:'
+    print 'numpy:   %f s' % (t2 - t1)
+    print 'opt sse: %f s' % (t3 - t2)
