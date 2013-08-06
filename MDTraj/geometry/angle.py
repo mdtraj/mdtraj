@@ -35,8 +35,7 @@ __all__ = ['compute_angles']
 
 
 def compute_angles(traj, angle_indices, opt=True):
-    """Compute the bond angles between the supplied triplets of indices
-    for each frame in a trajectory
+    """Compute the bond angles between the supplied triplets of indices in each frame of a trajectory.
 
     Parameters
     ----------
@@ -49,9 +48,9 @@ def compute_angles(traj, angle_indices, opt=True):
         library requires the python package "cffi" (c foreign function
         interface) which is installable via "easy_install cffi" or "pip
         install cffi". See https://pypi.python.org/pypi/cffi for more details.
-        Our optimized angle calculation implementation is 10-020x faster than
+        Our optimized angle calculation implementation is 10-20x faster than
         the (itself optimized) numpy implementation, so installing cffi is
-        worth it.
+        generally worth it.
 
     Returns
     -------

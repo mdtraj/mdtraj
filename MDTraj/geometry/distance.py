@@ -85,7 +85,7 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
 
 
 def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
-    """Compute the displacement vector between pairs of atoms in each frame
+    """Compute the displacement vector between pairs of atoms in each frame of a trajectory.
 
     Parameters
     ----------
@@ -104,7 +104,7 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
         install cffi". See https://pypi.python.org/pypi/cffi for more details.
         Our optimized minimum image convention calculation implementation is
         over 1000x faster than the naive numpy implementation, so installing
-        cffi is worth it.
+        cffi is generally worth it.
 
     Returns
     -------

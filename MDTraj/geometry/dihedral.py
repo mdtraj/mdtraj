@@ -71,7 +71,7 @@ def _dihedrals(xyz, indices, out=None):
 
 
 def compute_dihedrals(traj, indices, opt=True):
-    """Compute the dihedral angles of traj for the atom indices in indices.
+    """Compute the dihedral angles between the supplied quartets of atoms in each frame in a trajectory.
 
     Parameters
     ----------
@@ -88,7 +88,7 @@ def compute_dihedrals(traj, indices, opt=True):
         interface) which is installable via "easy_install cffi" or "pip
         install cffi". See https://pypi.python.org/pypi/cffi for more details.
         The optimized dihedral calculation is ~10-20x faster than the numpy
-        implementation.
+        implementation, so installing cffi is generally worth it.
 
     Returns
     -------
