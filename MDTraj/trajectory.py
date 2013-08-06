@@ -1194,8 +1194,8 @@ class Trajectory(object):
             time = np.arange(len(self.xyz))
         self.time = time
 
-        if topology is not None and topology._numAtoms != self.n_atoms:
-            raise ValueError("Number of atoms in xyz (%s) and "
+        if (topology is not None) and (topology._numAtoms != self.n_atoms):
+             raise ValueError("Number of atoms in xyz (%s) and "
                 "in topology (%s) don't match" % (self.n_atoms, topology._numAtoms))
 
     def openmm_positions(self, frame):
