@@ -45,11 +45,11 @@ class Transformation(object):
             xyz coordinates after being rotated and translated
 
         """
-        mu1 = xyz.mean(0)
-        return xyz.dot(self.rotation) + self.translation - mu1.dot(self.rotation)
+        mu1 = coordinates.mean(0)
+        return coordinates.dot(self.rotation) + self.translation - mu1.dot(self.rotation)
 
-    def __call__self(self, xyz):
-        return self.transform(xyz)
+    def __call__self(self, coordinates):
+        return self.transform(coordinates)
 
 
 def compute_transformation(mobile, target):
