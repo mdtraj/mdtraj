@@ -31,7 +31,7 @@ import logging
 
 from mdtraj.geometry.distance import compute_distances
 from mdtraj.geometry.dihedral import compute_dihedrals
-from mdtraj.geometry.angle import compute_bond_angles
+from mdtraj.geometry.angle import compute_angles
 from mdtraj.utils import import_
 
 from scipy.spatial.distance import squareform, pdist
@@ -108,7 +108,7 @@ def get_redundant_internal_coordinates(trajectory, **kwargs):
     idihedrals = np.array(idihedrals, dtype=np.int32, order='c')
 
     b = compute_distances(xyzlist, ibonds)
-    a = compute_bond_angles(xyzlist, iangles)
+    a = compute_angles(xyzlist, iangles)
     d = compute_dihedrals(xyzlist, idihedrals, degrees=False)
 
     return np.hstack((b, a, d))

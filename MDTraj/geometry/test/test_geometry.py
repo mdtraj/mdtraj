@@ -14,11 +14,11 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
-import mdtraj.geometry
 import numpy as np
-from mdtraj.trajectory import load
-import mdtraj.trajectory
+
+from mdtraj.testing import get_fn, eq, DocStringFormatTester
+import mdtraj as md
+import mdtraj.geometry
 
 
 RgDocStringTester = DocStringFormatTester(mdtraj.geometry.rg)
@@ -27,7 +27,7 @@ DihedralDocStringTester = DocStringFormatTester(mdtraj.geometry.dihedral)
 AngleDocStringTester = DocStringFormatTester(mdtraj.geometry.angle)
 
 def test_rg():
-    t0 = load(get_fn('traj.h5'))
+    t0 = md.load(get_fn('traj.h5'))
     Rg = mdtraj.geometry.rg.compute_rg(t0)
     Rg0 = np.loadtxt(get_fn("Rg_traj_ref.dat"))
     eq(Rg, Rg0)
@@ -45,7 +45,7 @@ np.savetxt("Rg_frame0_ref.dat", Rg)
 """
 
 def test_distances():
-    t0 = load(get_fn('traj.h5'))
+    t0 = md.load(get_fn('traj.h5'))
     atom_pairs = np.loadtxt(get_fn("atom_pairs.dat"),'int')
     distances = mdtraj.geometry.distance.compute_distances(t0, atom_pairs)
     distances0 = np.loadtxt(get_fn("atom_distances_traj_ref.dat"))
@@ -66,7 +66,7 @@ np.savetxt("atom_distances_frame0_ref.dat", distances)
 
 
 def test_dihedral_indices():
-    traj = load(get_fn('1bpi.pdb'))
+    traj = md.load(get_fn('1bpi.pdb'))
     # Manually compare generated indices to known answers.
     phi0_ind = np.array([3, 12, 13, 14]) - 1  # Taken from PDB, so subtract 1
     psi0_ind = np.array([1, 2,  3, 12]) - 1  # Taken from PDB, so subtract 1
@@ -81,7 +81,7 @@ def test_dihedral_indices():
 
 
 def test_dihedral_index_offset_generation():
-    traj = load(get_fn('1bpi.pdb'))
+    traj = md.load(get_fn('1bpi.pdb'))
 
     result = np.array([2, 11, 12, 13])  # The atom indices of the first phi angle
 
@@ -101,7 +101,7 @@ def test_dihedral_index_offset_generation():
 
 def test_dihedral():
     """We compared phi and psi angles from pymol to MDTraj output."""
-    traj = load(get_fn('1bpi.pdb'))
+    traj = md.load(get_fn('1bpi.pdb'))
     rid, phi = mdtraj.geometry.dihedral.compute_phi(traj)
     phi0 = np.array([-34.50956, -50.869690]) * np.pi / 180.  # Pymol
     eq(phi[0,0:2], phi0, decimal=4)
@@ -119,8 +119,8 @@ def test_dihedral():
 
 
 def test_angle():
-    x1 = [0,0,0]
-    x2 = [0,1,0]
-    x3 = [1,1,0]
-    
-    yield lambda: eq(0.5*np.pi, float(mdtraj.geometry.angle._compute_bond_angles_xyz(np.array([[x1, x2, x3]]), [[0,1,2]])[0,0]))
+    xyz = np.array([[0, 0, 0],
+                    [0, 1, 0],
+                    [1, 1, 0]])
+    t = md.Trajectory(xyz=xyz, topology=None)
+    print md.geometry.angle.compute_angles(xyz, [[0,1,2]])
