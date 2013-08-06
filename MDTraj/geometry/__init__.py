@@ -23,6 +23,8 @@ if _HAVE_OPT is not False:
                           const int n_pairs);''')
     ffi.cdef('''int angle(const float* xyz, const int* triplets, float* out,
                           const int n_frames, const int n_atoms, const int n_pairs);''')
+    ffi.cdef('''int dihedral(const float* xyz, const int* quartets, float* out,
+                             const int n_frames, const int n_atoms, const int n_pairs);''')
 
     here = os.path.dirname(os.path.abspath(__file__))
     libpath = find_library(here, 'geometry')
@@ -36,4 +38,7 @@ if _HAVE_OPT is not False:
 if not _HAVE_OPT:
     warnings.warn('Optimized distance library was not imported sucessfully.')
 
-import rg, angle, distance, dihedral, internal, alignment
+import rg, internal, alignment
+from .angle import *
+from .distance import *
+from .dihedral import *

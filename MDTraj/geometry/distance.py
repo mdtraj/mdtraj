@@ -20,12 +20,16 @@
 # Imports
 ##############################################################################
 
+import os
+import warnings
 import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import _HAVE_OPT
 if _HAVE_OPT:
     from mdtraj.geometry import ffi, C
     from mdtraj.utils.ffi import cpointer
+
+__all__ = ['compute_distances', 'compute_displacements']
 
 ##############################################################################
 # Functions
@@ -133,6 +137,7 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
 ##############################################################################
 # pure python implementation of the core routines
 ##############################################################################
+
 
 def _distance(xyz, pairs):
     "Distance between pairs of points in each frame"

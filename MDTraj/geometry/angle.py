@@ -27,6 +27,8 @@ if _HAVE_OPT:
     from mdtraj.geometry import ffi, C
     from mdtraj.utils.ffi import cpointer
 
+__all__ = ['compute_angles']
+
 ##############################################################################
 # Functions
 ##############################################################################
@@ -46,6 +48,9 @@ def compute_angles(traj, angle_indices, opt=True):
         library requires the python package "cffi" (c foreign function
         interface) which is installable via "easy_install cffi" or "pip
         install cffi". See https://pypi.python.org/pypi/cffi for more details.
+        Our optimized angle calculation implementation is 10-020x faster than
+        the (itself optimized) numpy implementation, so installing cffi is
+        worth it.
 
     Returns
     -------
@@ -53,10 +58,10 @@ def compute_angles(traj, angle_indices, opt=True):
         The angles are in radians
     """
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3))
-    triplets = ensure_type(np.asarray(angle_indices), dtype=np.int32, ndim=2, name='angle_indices', shape=(None, 2))
+    triplets = ensure_type(np.asarray(angle_indices), dtype=np.int32, ndim=2, name='angle_indices', shape=(None, 3))
     out = np.zeros((xyz.shape[0], triplets.shape[0]), dtype=np.float32)
     if _HAVE_OPT and opt:
-        C.angles(cpointer(xyz), cpointer(triplets), cpointer(out), xyz.shape[0],
+        C.angle(cpointer(xyz), cpointer(triplets), cpointer(out), xyz.shape[0],
                  xyz.shape[1], triplets.shape[0])
     else:
         _angles(xyz, triplets, out)
@@ -64,14 +69,15 @@ def compute_angles(traj, angle_indices, opt=True):
 
 
 def _angles(xyz, angle_indices, out):
-    for i in xrange(xyz.shape[1]):
-        for j, (m, o, n) in enumerate(angle_indices):
-            u_prime = xyz[i, m, :] - xyz[i, o, :]
-            v_prime = xyz[i, n, :] - xyz[i, o, :]
-            u_norm = np.linalg.norm(u_prime)
-            v_norm = np.linalg.norm(v_prime)
+    #for j, (m, o, n) in enumerate(angle_indices):
+    u_prime = xyz[:, angle_indices[:, 0], :] - xyz[:, angle_indices[:, 1], :]
+    v_prime = xyz[:, angle_indices[:, 2], :] - xyz[:, angle_indices[:, 1], :]
+    u_norm = np.sqrt((u_prime**2).sum(-1))#np.linalg.norm(u_prime)
+    v_norm = np.sqrt((v_prime**2).sum(-1))#np.linalg.norm(v_prime)
+    
+    # adding a new axis makes sure that broasting rules kick in on the third
+    # dimension
+    u = u_prime / (u_norm[..., np.newaxis])
+    v = v_prime / (v_norm[..., np.newaxis])
 
-            out[i, j] = np.arccos(np.dot(u_prime / u_norm, v_prime / v_norm))
-
-    return angles
-
+    out = np.arccos((u * v).sum(-1), out=out)

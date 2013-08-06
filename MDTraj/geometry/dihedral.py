@@ -15,20 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-"""Pure python code to calculate dihedral angles in a trajectory
-"""
+
 ##############################################################################
 # Imports
 ##############################################################################
 
 import numpy as np
+from mdtraj.utils import ensure_type
+from mdtraj.geometry import _HAVE_OPT
+if _HAVE_OPT:
+    from mdtraj.geometry import ffi, C
+    from mdtraj.utils.ffi import cpointer
+
+__all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega']
 
 ##############################################################################
 # Functions
 ##############################################################################
 
 
-def _compute_dihedrals_xyz(xyz, indices):
+def _dihedrals(xyz, indices, out=None):
     """Compute the dihedral angles of traj for the atom indices in indices.
 
     Parameters
@@ -60,19 +66,29 @@ def _compute_dihedrals_xyz(xyz, indices):
     p1 = (b1 * c1).sum(-1)
     p1 *= (b2 * b2).sum(-1) ** 0.5
     p2 = (c1 * c2).sum(-1)
+    
+    return np.arctan2(p1, p2, out)
 
-    return np.arctan2(p1, p2)
 
-
-def compute_dihedrals(traj, indices):
+def compute_dihedrals(traj, indices, opt=True):
     """Compute the dihedral angles of traj for the atom indices in indices.
 
     Parameters
     ----------
     traj : Trajectory
-        The trajectory whose dihedrals you will compute.
+        An mtraj trajectory.
     indices : np.ndarray, shape=(num_dihedrals, 4), dtype=int
-        Atom indices to compute dihedrals.
+        Each row gives the indices of four atoms which together make a
+        dihedral angle. The angle is between the planes spanned by the first
+        three atoms and the last three atoms, a torsion around the bond
+        between the middle two atoms.
+    opt : bool, default=True
+        Use an optimized native library to calculate distances. Using this
+        library requires the python package "cffi" (c foreign function
+        interface) which is installable via "easy_install cffi" or "pip
+        install cffi". See https://pypi.python.org/pypi/cffi for more details.
+        The optimized dihedral calculation is ~10-20x faster than the numpy
+        implementation.
 
     Returns
     -------
@@ -80,8 +96,15 @@ def compute_dihedrals(traj, indices):
         dih[i,j] gives the dihedral angle at traj[i] correponding to indices[j].
 
     """
-    return _compute_dihedrals_xyz(traj.xyz, indices)
-
+    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3))
+    quartets = ensure_type(np.asarray(indices), dtype=np.int32, ndim=2, name='indices', shape=(None, 4))
+    out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
+    if _HAVE_OPT and opt:
+        C.dihedral(cpointer(xyz), cpointer(quartets), cpointer(out), xyz.shape[0],
+                 xyz.shape[1], quartets.shape[0])
+    else:
+        _dihedrals(xyz, quartets, out)
+    return out
 
 def _construct_atom_dict(top, chain_id=0):
     """Create dictionary to lookup indices by atom name and residue_id.
