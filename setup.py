@@ -228,7 +228,7 @@ def rmsd_extension():
     return rmsd
 
 
-def libdistance():
+def libgeometry():
     if not detect_sse3():
         return None
 
@@ -238,13 +238,13 @@ def libdistance():
         compiler_defs = [('HAVE_SSE4', None)]
         extra_compile_args.append('-msse4')
 
-    return Extension('mdtraj.geometry.libdistance',
-                  sources=['MDTraj/geometry/src/distance.c'],
+    return Extension('mdtraj.geometry.libgeometry',
+                  sources=['MDTraj/geometry/src/geometry.c'],
                   define_macros=compiler_defs,
                   extra_compile_args=extra_compile_args)
 
 extensions = [xtc, trr, dcd, binpos, rmsd_extension()]
-ext = libdistance()
+ext = libgeometry()
 if ext is not None:
     extensions.append(ext)
 
