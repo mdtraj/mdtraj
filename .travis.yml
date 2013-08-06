@@ -24,6 +24,7 @@ install:
   - sudo pip install git+git://github.com/rmcgibbo/simtk.unit
   - sudo pip install flake8
   - sudo pip install scripttest
+  - sudo pip install cffi
 
 script:
   - sudo python setup.py -q install
