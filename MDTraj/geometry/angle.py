@@ -24,7 +24,7 @@ import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import _HAVE_OPT
 if _HAVE_OPT:
-    from mdtraj.geometry import ffi, C
+    from mdtraj.geometry import C
     from mdtraj.utils.ffi import cpointer
 
 __all__ = ['compute_angles']
@@ -32,6 +32,7 @@ __all__ = ['compute_angles']
 ##############################################################################
 # Functions
 ##############################################################################
+
 
 def compute_angles(traj, angle_indices, opt=True):
     """Compute the bond angles between the supplied triplets of indices
@@ -72,9 +73,9 @@ def _angles(xyz, angle_indices, out):
     #for j, (m, o, n) in enumerate(angle_indices):
     u_prime = xyz[:, angle_indices[:, 0], :] - xyz[:, angle_indices[:, 1], :]
     v_prime = xyz[:, angle_indices[:, 2], :] - xyz[:, angle_indices[:, 1], :]
-    u_norm = np.sqrt((u_prime**2).sum(-1))#np.linalg.norm(u_prime)
-    v_norm = np.sqrt((v_prime**2).sum(-1))#np.linalg.norm(v_prime)
-    
+    u_norm = np.sqrt((u_prime**2).sum(-1))
+    v_norm = np.sqrt((v_prime**2).sum(-1))
+
     # adding a new axis makes sure that broasting rules kick in on the third
     # dimension
     u = u_prime / (u_norm[..., np.newaxis])

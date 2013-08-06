@@ -24,7 +24,7 @@ import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import _HAVE_OPT
 if _HAVE_OPT:
-    from mdtraj.geometry import ffi, C
+    from mdtraj.geometry import C
     from mdtraj.utils.ffi import cpointer
 
 __all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega']
@@ -105,6 +105,7 @@ def compute_dihedrals(traj, indices, opt=True):
     else:
         _dihedrals(xyz, quartets, out)
     return out
+
 
 def _construct_atom_dict(top, chain_id=0):
     """Create dictionary to lookup indices by atom name and residue_id.

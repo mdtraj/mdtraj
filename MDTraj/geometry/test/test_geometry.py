@@ -26,7 +26,7 @@ DistanceDocStringTester = DocStringFormatTester(mdtraj.geometry.distance)
 DihedralDocStringTester = DocStringFormatTester(mdtraj.geometry.dihedral)
 AngleDocStringTester = DocStringFormatTester(mdtraj.geometry.angle)
 
-RUN_PERFOMANCE_TESTS = True
+RUN_PERFOMANCE_TESTS = False
 
 
 def test_rg():
