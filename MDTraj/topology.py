@@ -203,6 +203,12 @@ class Topology(object):
 
         return out
 
+    def __copy__(self, *args):
+        return self.copy()
+
+    def __deepcopy__(self, *args):
+        return self.copy()
+
     def join(self, other):
         """Join two topologies together
 

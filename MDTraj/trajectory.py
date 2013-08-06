@@ -1104,14 +1104,14 @@ class Trajectory(object):
 
         Examples
         --------
-        >>> t1 = md.load('traj1.h5')
-        >>> t2 = md.load('traj2.h5')
+        >>> t1 = md.load('traj1.h5')                            # doctest: +SKIP
+        >>> t2 = md.load('traj2.h5')                            # doctest: +SKIP
         >>> # even when t2 contains no unitcell information
-        >>> t2.unitcell_vectors = None
-        >>> stacked = t1.stack(t2)
+        >>> t2.unitcell_vectors = None                          # doctest: +SKIP
+        >>> stacked = t1.stack(t2)                              # doctest: +SKIP
         >>> # the stacked trajectory inherits the unitcell information
         >>> # from the first trajectory
-        >>> np.all(stacked.unitcell_vectors == t1.unitcell_vectors)
+        >>> np.all(stacked.unitcell_vectors == t1.unitcell_vectors) # doctest: +SKIP
         True
 
         Parameters
