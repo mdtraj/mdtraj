@@ -2,7 +2,7 @@
 #
 # Copyright 2013 Stanford University
 #
-# MSMBuilder is free software; you can redistribute it and/or modify
+# MDTraj is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
@@ -51,7 +51,6 @@ def _dihedrals(xyz, indices, out=None):
         dih[i,j] gives the dihedral angle at traj[i] correponding to indices[j].
 
     """
-    # Code adapted from RMG MSMBuilder2 dihedral.c
     x0 = xyz[:, indices[:, 0]]
     x1 = xyz[:, indices[:, 1]]
     x2 = xyz[:, indices[:, 2]]
