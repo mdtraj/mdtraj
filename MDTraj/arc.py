@@ -45,9 +45,8 @@ class ArcTrajectoryFile(object):
     ----------
     filename : str
         The filename to open. A path to a file on disk.
-    mode : {'r', 'w'}
-        The mode in which to open the file, either 'r' for read or 'w' for
-        write.
+    mode : {'r'}
+        The mode in which to open the file, only 'r' for read is supported.
     force_overwrite : bool
         If opened in write mode, and a file by the name of `filename` already
         exists on disk, should we overwrite it?
@@ -99,7 +98,10 @@ class ArcTrajectoryFile(object):
         self.close()
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
-        """Read data from a TINKER .arc file.
+        """Read data from a TINKER .arc file.  Note that only the
+        Cartesian coordinates are read in.  The .arc file also
+        contains TINKER-specific numeric atom types and some bonding
+        information, which we do not read in.
 
         Parameters
         ----------
