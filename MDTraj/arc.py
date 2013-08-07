@@ -170,5 +170,16 @@ class ArcTrajectoryFile(object):
         return coords
 
     def write(self, xyz):
+        """ The ArcTrajectoryFile does not have a write method,
+        because TINKER .arc files have special numerical atom types
+        which are not shared by any other trajectory file format.
+
+        Parameters
+        ----------
+        xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
+            The cartesian coordinates of the atoms to write. 
+
+        """
+        
         raise RuntimeError('write() is not available for .arc files')
 
