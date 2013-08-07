@@ -46,7 +46,6 @@ if _HAVE_OPT is not False:
 
     here = os.path.dirname(os.path.abspath(__file__))
     libpath = find_library(here, 'geometry')
-    print libpath
     if libpath is not None:
         C = ffi.dlopen(libpath)
         _HAVE_OPT = True
