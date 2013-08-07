@@ -57,8 +57,8 @@ def compute_angles(traj, angle_indices, opt=True):
     angles : np.ndarray, shape=[n_frames, n_angles], dtype=float
         The angles are in radians
     """
-    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3))
-    triplets = ensure_type(np.asarray(angle_indices), dtype=np.int32, ndim=2, name='angle_indices', shape=(None, 3))
+    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
+    triplets = ensure_type(np.asarray(angle_indices), dtype=np.int32, ndim=2, name='angle_indices', shape=(None, 3), warn_on_cast=False)
     out = np.zeros((xyz.shape[0], triplets.shape[0]), dtype=np.float32)
     if _HAVE_OPT and opt:
         C.angle(cpointer(xyz), cpointer(triplets), cpointer(out), xyz.shape[0],
