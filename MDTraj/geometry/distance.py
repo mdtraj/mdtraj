@@ -61,8 +61,8 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
     distances : np.ndarray, shape=(n_frames, num_pairs), dtype=float
         The distance, in each frame, between each pair of atoms.
     """
-    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='taj.xyz', shape=(None, None, 3))
-    pairs = ensure_type(np.asarray(atom_pairs), dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2))
+    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='taj.xyz', shape=(None, None, 3), warn_on_cast=False)
+    pairs = ensure_type(np.asarray(atom_pairs), dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2), warn_on_cast=False)
 
     if periodic is True and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
