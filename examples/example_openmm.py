@@ -1,4 +1,4 @@
-"""Running a simulation in OpenMM  nd alalyzing the Ramachandran map with mdtraj.
+"""Running a simulation in OpenMM and analyzing the Ramachandran map with mdtraj.
 """
 
 # In this example, we'e going to actually run a short simulation with OpenMM

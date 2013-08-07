@@ -1,4 +1,4 @@
-"""Plotting RMSD drift
+"""Rapid calculation of the RMSD drift of a simulation.
 """
 
 import mdtraj as md
