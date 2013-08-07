@@ -205,7 +205,7 @@ int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
   int store_displacement = displacement_out == NULL ? 0 : 1;
   int store_distance = distance_out == NULL ? 0 : 1;
 
-  __m128 r1, r2, s1, s2, s12, r12, s, r12_2;
+  __m128 r1, r2, s12, r12, s, r12_2;
   __m128 hinv[3];
   __m128 h[3];
 
@@ -323,6 +323,8 @@ int angle(const float* xyz, const int* triplets, float* out,
     // advance to the next frame
     xyz += n_atoms*3;
   }
+  
+  return 1;
 }
 
 /****************************************************************************/
