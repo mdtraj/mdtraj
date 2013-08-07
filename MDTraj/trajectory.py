@@ -28,11 +28,11 @@ import numpy as np
 
 from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
                     TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
-                    PDBTrajectoryFile, MDCRDTrajectoryFile, Topology)
+                    PDBTrajectoryFile, MDCRDTrajectoryFile, ArcTrajectoryFile, Topology)
 from mdtraj.utils import unitcell, ensure_type
 
 __all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpos',
-           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_xml']
+           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml']
 
 ##############################################################################
 # Globals
@@ -655,6 +655,60 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None):
         t.unitcell_angles = cell_angles
     return t
 
+def load_arc(filename, top=None, stride=None, atom_indices=None):
+    """Load a TINKER .arc file.
+
+    Parameters
+    ----------
+    filename : str
+        String filename of TINKER .arc file.
+    top : {str, Trajectory, Topology}
+        The .arc format does not contain topology information. Pass in either
+        the path to a pdb file, a trajectory, or a topology to supply this
+        information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file.
+
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.ArcTrajectoryFile :  Low level interface to TINKER .arc files
+    """
+    # we make it not required in the signature, but required here. although this
+    # is a little weird, its good because this function is usually called by a
+    # dispatch from load(), where top comes from **kwargs. So if its not supplied
+    # we want to give the user an informative error message
+    if top is None:
+        raise ValueError('"top" argument is required for load_arc')
+
+    if not isinstance(filename, basestring):
+        raise TypeError('filename must be of type string for load_arc. '
+            'you supplied %s' % type(filename))
+
+    topology = _parse_topology(top)
+    atom_indices = _cast_indices(atom_indices)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
+
+    with ArcTrajectoryFile(filename) as f:
+        xyz = f.read(stride=stride, atom_indices=atom_indices)
+        _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+    time = np.arange(len(xyz))
+    if stride is not None:
+        # if we loaded with a stride, the Trajectories's time field should
+        # respect that
+        time *= stride
+
+    t = Trajectory(xyz=xyz, topology=topology, time=time)
+    return t
 
 def load_netcdf(filename, top=None, stride=None, atom_indices=None):
     """Load an AMBER NetCDF file. Since the NetCDF format doesn't contain
@@ -1513,5 +1567,6 @@ _LoaderRegistry = {
     #'.lh5': _load_legacy_hdf,
     '.binpos': load_binpos,
     '.ncdf': load_netcdf,
-    '.nc': load_netcdf
+    '.nc': load_netcdf,
+    '.arc': load_arc
 }

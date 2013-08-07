@@ -791,3 +791,23 @@ class Atom(object):
         self.index = index
         ## The Residue this Atom belongs to
         self.residue = residue
+
+    def __eq__(self, other):
+        """ Check whether two Atom objects are equal. """
+        if self.name != other.name:
+            return False
+        if self.index != other.index:
+            return False
+        if self.element.name != other.element.name:
+            return False
+        if self.residue.name != other.residue.name:
+            return False
+        if self.residue.index != other.residue.index:
+            return False
+        if self.residue.chain.index != other.residue.chain.index:
+            return False
+        return True
+
+    def __hash__(self):
+        """ A quick comparison. """
+        return self.index
