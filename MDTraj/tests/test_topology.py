@@ -40,7 +40,7 @@ def test_topology_numbers():
     assert len(list(topology.residues)) == topology.n_residues
     assert all([topology.atom(i).index == i for i in range(topology.n_atoms)])
 
-
+@skipif(not HAVE_PANDAS)
 def test_topology_unique_elements_bpti():
     traj = md.load(get_fn('bpti.pdb'))
     top, bonds = traj.top.to_dataframe()
