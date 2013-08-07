@@ -15,3 +15,5 @@ file formats with a unified API.
    netcdf
    mdcrd
    hdf5
+   arc
+

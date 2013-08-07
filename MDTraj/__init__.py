@@ -26,9 +26,11 @@ from mdtraj.mdcrd import MDCRDTrajectoryFile
 from mdtraj.dcd import DCDTrajectoryFile
 from mdtraj.binpos import BINPOSTrajectoryFile
 from mdtraj.pdb import PDBTrajectoryFile
+from mdtraj.arc import ArcTrajectoryFile
 
 from mdtraj.rmsd import rmsd_cache
 from mdtraj.topology import Topology
+from mdtraj.geometry import *
 from mdtraj.trajectory import *
 
 def test(label='full', verbose=2):
