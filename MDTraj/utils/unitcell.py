@@ -47,8 +47,7 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
     Examples
     --------
     >>> lengths_and_angles_to_box_vectors(1, 1, 1, 90.0, 90.0, 90.0)
-    (array([1, 0, 0]), array([  6.12323400e-17,   1.00000000e+00,   0.00000000e+00]), array([  6.12323400e-17,   6.12323400e-17,   1.00000000e+00]))
-
+    (array([1, 0, 0]), array([ 0.,  1.,  0.]), array([ 0.,  0.,  1.]))
 
     Notes
     -----
