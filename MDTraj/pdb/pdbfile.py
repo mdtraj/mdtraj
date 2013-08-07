@@ -404,11 +404,11 @@ class PDBTrajectoryFile(object):
             element = elem.sulfur  # (probably) not SG...
         else:
             try:
-                symbol = atom_name[0:2].strip().rstrip("AB0123456789").lstrip("0123456789")
-                element = elem.get_by_symbol(symbol)
+                element = elem.get_by_symbol(atom_name[0])
             except KeyError:
                 try:
-                    element = elem.get_by_symbol(atom_name[0])
+                    symbol = atom_name[0:2].strip().rstrip("AB0123456789").lstrip("0123456789")
+                    element = elem.get_by_symbol(symbol)                                    
                 except KeyError:
                     element = None
 

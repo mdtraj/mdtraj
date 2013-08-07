@@ -6,6 +6,7 @@
 
 import os
 import sys
+import glob
 import warnings
 import functools
 import operator
@@ -145,19 +146,30 @@ def parse_args():
 
     if not args.force and os.path.exists(args.output):
         parser.error('file exists: %s' % args.output)
+
+    # rebuild the input list, doing any glob expansions
+    # necessary
+    input = []
     for fn in args.input:
         if not os.path.exists(fn):
-            parser.error('No such file: %s' % fn)
-        if os.path.isdir(fn):
+            if '*' in fn:
+                input.extend(glob.glob(fn))
+            else:
+                parser.error('No such file: %s' % fn)
+        elif os.path.isdir(fn):
             parser.error('%s: Is a directory' % fn)
-        if not os.path.isfile(fn):
+        elif not os.path.isfile(fn):
             parser.error('%s: Is not a file' % fn)
+        else:
+            input.append(fn)
+    args.input = input
 
     for fn in args.input:
         if not ext(fn) in formats:
             parser.error("%s: '%s' is not a known extension" % (fn, ext(fn)))
 
-    if not reduce(operator.eq, map(ext, args.input)):
+    extensions = map(ext, args.input)
+    if any(e != extensions[0] for e in extensions):
         parser.error("all input trajectories do not have the same extension")
 
     if not ext(args.output) in formats:
