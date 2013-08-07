@@ -18,6 +18,7 @@ install:
   - sudo apt-get install -qq netcdf-bin libnetcdf-dev
   - sudo apt-get install     python-netcdf
   - sudo apt-get install -qq python-setuptools
+  - sudo apt-get install -qq python-pandas  
   - sudo easy_install netcdf4
   - sudo easy_install pip
   - sudo pip install nose-performance
