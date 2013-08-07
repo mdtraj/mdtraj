@@ -11,7 +11,7 @@ dynamics trajectories in the python programming language.
 
 Features
 --------
-MDTraj currently supports loading and saving trajectories in the RCSB PDB, GROMACS XTC and TRR, CHARMM / NAMD DCD, AMBER binpos, AMBER NetCDF, TINKER arc and :ref:`MDTraj HDF5 <HDF5FormatSpec>` formats.
+MDTraj currently supports loading and saving trajectories in the RCSB PDB, GROMACS XTC and TRR, CHARMM / NAMD DCD, AMBER binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and :ref:`MDTraj HDF5 <HDF5FormatSpec>` formats.
 
 MTraj is structured around a convent numpy-based ``Trajectory`` object.  Its RMSD (optimal cartesian root-mean-square deviation) library gives you access to `fast` parallel SSE3-based structural deviations using the quaternion characteristic polynomial (Theobald QCP) method at 4x the speed of the original Theobald code and over 3x as fast as Theobald code modified to use GotoBLAS.
 
