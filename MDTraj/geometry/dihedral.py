@@ -97,8 +97,8 @@ def compute_dihedrals(traj, indices, opt=True):
         dih[i,j] gives the dihedral angle at traj[i] correponding to indices[j].
 
     """
-    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3))
-    quartets = ensure_type(np.asarray(indices), dtype=np.int32, ndim=2, name='indices', shape=(None, 4))
+    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
+    quartets = ensure_type(np.asarray(indices), dtype=np.int32, ndim=2, name='indices', shape=(None, 4), warn_on_cast=False)
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
     if _HAVE_OPT and opt:
         C.dihedral(cpointer(xyz), cpointer(quartets), cpointer(out), xyz.shape[0],
