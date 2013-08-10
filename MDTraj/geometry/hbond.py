@@ -118,16 +118,16 @@ def kabsch_sander(traj):
     
     return matrices
 
-import mdtraj as md
-import matplotlib.pyplot as pp
-t = md.load('MDTraj/testing/reference/2EQQ.pdb')
-#t = md.Trajectory(xyz=np.random.randn(10000,t.n_atoms, 3), topology=t.topology)
-
-import time
-t0 = time.time()
-a = kabsch_sander(t)
-print a[0].sum(axis=0)
-print a[0].nonzero()
-print time.time() - t0
-#pp.matshow(kabsch_sander(t[0])[0].todense())
-#pp.show()
+# import mdtraj as md
+# import matplotlib.pyplot as pp
+# t = md.load('MDTraj/testing/reference/2EQQ.pdb')
+# #t = md.Trajectory(xyz=np.random.randn(10000,t.n_atoms, 3), topology=t.topology)
+# 
+# import time
+# t0 = time.time()
+# a = kabsch_sander(t)
+# print a[0].sum(axis=0)
+# print a[0].nonzero()
+# print time.time() - t0
+# #pp.matshow(kabsch_sander(t[0])[0].todense())
+# #pp.show()
