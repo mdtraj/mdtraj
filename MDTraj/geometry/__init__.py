@@ -43,6 +43,9 @@ if _HAVE_OPT is not False:
                           const int n_frames, const int n_atoms, const int n_pairs);''')
     ffi.cdef('''int dihedral(const float* xyz, const int* quartets, float* out,
                              const int n_frames, const int n_atoms, const int n_pairs);''')
+    ffi.cdef('''int kabsch_sander(const float* xyz, const int* nhco_indices, const int* ca_indices,
+                                  const int n_frames, const int n_atoms, const int n_residues,
+                                  int* hbonds, float* henergies);''')
 
     here = os.path.dirname(os.path.abspath(__file__))
     libpath = find_library(here, 'geometry')
