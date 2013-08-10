@@ -533,7 +533,7 @@ int kabsch_sander(const float* xyz, const int* nhco_indices, const int* ca_indic
 
         // check the ca distance before proceding
         r12 = _mm_sub_ps(ri_ca, rj_ca);
-        if(_mm_extract_epi16(_mm_cmplt_ps(_mm_dp_ps(r12, r12, 0x7F), MINIMAL_CA_DISTANCE2), 0)) {
+        if(_mm_extract_epi16((__m128i) _mm_cmplt_ps(_mm_dp_ps(r12, r12, 0x7F), MINIMAL_CA_DISTANCE2), 0)) {
 
           // printf("Calling ksdonoracceptor with donor=%d, acceptor=%d\n", ri, rj);
           float e = ks_donor_acceptor(xyz, nhco_indices+ri*4, nhco_indices+rj*4, 0);
