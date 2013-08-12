@@ -58,8 +58,7 @@ if _HAVE_OPT is not False:
 if not _HAVE_OPT:
     warnings.warn('Optimized distance library was not imported sucessfully.')
 
-import rg, internal, alignment
+import rg, internal, alignment, hbond
 from .angle import *
 from .distance import *
 from .dihedral import *
-from .hbonds import *

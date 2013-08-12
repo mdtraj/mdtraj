@@ -1,4 +1,4 @@
-/* This file is part of MDTraj.
+/* This file is part of MDTraj
  *
  * Copyright 2013 Stanford University
  *
@@ -441,6 +441,16 @@ static float ks_donor_acceptor(const float* xyz, const int* nhco0,
   r_c = load_float3(xyz + 3*nhco1[2]);
   r_o = load_float3(xyz + 3*nhco1[3]);
 
+  __m128 r_co = _mm_sub_ps(load_float3(xyz + 3*nhco0[2]), load_float3(xyz + 3*nhco0[3]));
+  /*  printf("\nrN ");
+  printf_m128(r_n);
+  printf("rH ");
+  printf_m128(r_h);
+  printf("rC ");
+  printf_m128(r_c);
+  printf("rO ");
+  printf_m128(r_o);*/
+
   r_ho = _mm_sub_ps(r_h, r_o);
   r_hc = _mm_sub_ps(r_h, r_c);
   r_nc = _mm_sub_ps(r_n, r_c);
@@ -453,6 +463,7 @@ static float ks_donor_acceptor(const float* xyz, const int* nhco0,
                                _MM_SHUFFLE(2,0,2,0));
 
   float energy = _mm_cvtss_f32(_mm_dp_ps(coupling, _mm_rsqrt_ps(d2_honchcno), 0xFF));
+  //printf("Energy: %f\n", energy);
   return (energy < -9.9f ? -9.9f : energy);
 }
 
@@ -520,7 +531,9 @@ int kabsch_sander(const float* xyz, const int* nhco_indices, const int* ca_indic
   __m128 ri_ca, rj_ca, r12;
   __m128 MINIMAL_CA_DISTANCE2 = _mm_set1_ps(0.81);
 
- for (i = 0; i < n_frames; i++) {
+  //  assign_hydrogens_inplace(xyz, nhco_indices, n_frames, n_atoms, n_residues);
+
+  for (i = 0; i < n_frames; i++) {
     for (ri = 0; ri < n_residues; ri++) {
       // -1 is used to indicate that this residue lacks a this atom type
       // so just skip it
@@ -535,25 +548,62 @@ int kabsch_sander(const float* xyz, const int* nhco_indices, const int* ca_indic
         r12 = _mm_sub_ps(ri_ca, rj_ca);
         if(_mm_extract_epi16((__m128i) _mm_cmplt_ps(_mm_dp_ps(r12, r12, 0x7F), MINIMAL_CA_DISTANCE2), 0)) {
 
-          // printf("Calling ksdonoracceptor with donor=%d, acceptor=%d\n", ri, rj);
+          // printf("Calling ksdonoracceptor with donor=%d, acceptor=%d", ri, rj)
+	  //printf("MDTraj donor=%d, acceptor=%d donor[1]=%d", ri+1, rj+1, nhco_indices[ri*4+1]);
           float e = ks_donor_acceptor(xyz, nhco_indices+ri*4, nhco_indices+rj*4, 0);
+	  //printf(" energy %f\n", e);
           if (e < HBOND_ENERGY_CUTOFF)
             // hbond from donor=ri to acceptor=rj
             store_energies(hbonds, henergies, ri, rj, e);
 
           if (rj != ri + 1) {
+	    //printf("MDTraj donor=%d, acceptor=%d donor[0,1,2,3]=%d, %d, %d, %d", rj+1, ri+1,
+	    //nhco_indices[rj*4+0], nhco_indices[rj*4+1], nhco_indices[rj*4+2], nhco_indices[rj*4+3]);
             float e = ks_donor_acceptor(xyz, nhco_indices+rj*4, nhco_indices+ri*4, 0);
+	    //printf(" energy %f\n", e);
             if (e < HBOND_ENERGY_CUTOFF)
               // hbond from donor=rj to acceptor=ri
               store_energies(hbonds, henergies, rj, ri, e);
           }
         }
       }
-
     }
     xyz += n_atoms*3; // advance to the next frame
     hbonds += n_residues*2;
     henergies += n_residues*2;
   }
   return 1;
+}
+
+
+int assign_hydrogens_inplace(const float* xyz, const int* nhco_indices, const int n_frames, const int n_atoms, const int n_residues) {
+  int i, ri;
+  __m128 pc, po, r_co, r_h, r_n;
+  
+  for (i = 0; i < n_frames; i++) {
+    for (ri = 0; ri < n_residues; ri++) {
+      
+      // Assign hydrogens
+      pc = load_float3(xyz + 3*nhco_indices[4*(ri-1)+2]);
+      po = load_float3(xyz + 3*nhco_indices[4*(ri-1)+3]);
+      r_co = _mm_sub_ps(pc, po);
+      r_n = load_float3(xyz + 3*nhco_indices[4*ri]);
+      if (ri == 0) {
+	r_h = r_n;
+      } else {
+	r_h = _mm_add_ps(r_n, _mm_mul_ps(_mm_set1_ps(0.1f), _mm_mul_ps(r_co, _mm_rsqrt_ps(_mm_dp_ps(r_co, r_co, 0xFF)))));
+      }
+
+      //printf("%d\n", ri+1);
+      //printf_m128(r_h);
+      _mm_store_ss(xyz + 3*nhco_indices[4*ri+1]+0, r_h);
+      _mm_store_ss(xyz + 3*nhco_indices[4*ri+1]+1, _mm_shuffle_ps(r_h, r_h, _MM_SHUFFLE(1,1,1,1)));
+      _mm_store_ss(xyz + 3*nhco_indices[4*ri+1]+2, _mm_shuffle_ps(r_h, r_h, _MM_SHUFFLE(2,2,2,2)));
+      //printf("  ");
+      printf_m128(load_float3(xyz + 3*nhco_indices[4*ri+1]));
+
+    }
+    xyz += n_atoms*3;
+  }
+  exit(1);
 }

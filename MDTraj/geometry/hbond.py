@@ -93,6 +93,8 @@ def kabsch_sander(traj):
     hbonds.fill(-1)
     henergies.fill(np.nan)
 
+    ks_assign_hydrogens(xyz, nhco_indices, n_residues)
+
     C.kabsch_sander(cpointer(xyz), cpointer(nhco_indices), cpointer(ca_indices),
                     xyz.shape[0], xyz.shape[1], n_residues,
                     cpointer(hbonds), cpointer(henergies))
@@ -118,16 +120,16 @@ def kabsch_sander(traj):
     
     return matrices
 
-# import mdtraj as md
-# import matplotlib.pyplot as pp
-# t = md.load('MDTraj/testing/reference/2EQQ.pdb')
-# #t = md.Trajectory(xyz=np.random.randn(10000,t.n_atoms, 3), topology=t.topology)
-# 
-# import time
-# t0 = time.time()
-# a = kabsch_sander(t)
-# print a[0].sum(axis=0)
-# print a[0].nonzero()
-# print time.time() - t0
-# #pp.matshow(kabsch_sander(t[0])[0].todense())
-# #pp.show()
+def ks_assign_hydrogens(xyz, nhco_indices, n_residues):
+    for i in range(xyz.shape[0]):
+        xyz[i, nhco_indices[0, 1]] = xyz[i, nhco_indices[0, 0]]
+
+        for j in range(1, n_residues):
+            pc = xyz[i, nhco_indices[j-1, 2]]
+            po = xyz[i, nhco_indices[j-1, 3]]
+            rn = xyz[i, nhco_indices[j, 0]]
+            r_co = (pc - po) / np.linalg.norm(pc - po)
+
+            # r_h
+            xyz[i, nhco_indices[j, 1]] = rn + 0.1*r_co
+
