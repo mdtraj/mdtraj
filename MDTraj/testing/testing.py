@@ -45,7 +45,7 @@ __all__ = ['assert_allclose', 'assert_almost_equal', 'assert_approx_equal',
            'assert_array_almost_equal', 'assert_array_almost_equal_nulp',
            'assert_array_equal', 'assert_array_less', 'assert_array_max_ulp',
            'assert_equal', 'assert_raises', 'assert_string_equal', 'assert_warns',
-           'get_fn', 'eq', 'assert_dict_equal', 'assert_spase_matrix_equal',
+           'get_fn', 'eq', 'assert_dict_equal', 'assert_sparse_matrix_equal',
            'expected_failure', 'skip', 'ok_', 'eq_', 'raises', 'skipif', 'slow']
 
 ##############################################################################
@@ -118,7 +118,7 @@ def eq(o1, o2, decimal=6, err_msg=''):
     elif isinstance(o1, float):
         np.testing.assert_almost_equal(o1, o2, decimal)
     elif isspmatrix(o1):
-        assert_spase_matrix_equal(o1, o1, decimal)
+        assert_sparse_matrix_equal(o1, o1, decimal)
     elif isinstance(o1, np.ndarray):
         if o1.dtype.kind == 'f' or o2.dtype.kind == 'f':
             # compare floats for almost equality
@@ -161,7 +161,7 @@ def assert_dict_equal(t1, t2, decimal=6):
             eq_(val, t2[key])
 
 
-def assert_spase_matrix_equal(m1, m2, decimal=6):
+def assert_sparse_matrix_equal(m1, m2, decimal=6):
     """Assert two scipy.sparse matrices are equal."""
     # both are sparse matricies
     assert isspmatrix(m1)
