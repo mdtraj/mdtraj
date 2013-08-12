@@ -19,7 +19,7 @@ install:
   - sudo apt-get install -qq python-setuptools
   - sudo apt-get install -qq python-pandas
   - sudo easy_install pip
-  - sudo pip install netCDF4
+  - sudo pip install netCDF4==1.0.4
   - sudo pip install nose-performance
   - sudo pip install git+git://github.com/rmcgibbo/simtk.unit
   - sudo pip install flake8
