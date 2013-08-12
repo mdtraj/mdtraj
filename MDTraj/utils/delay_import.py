@@ -162,4 +162,4 @@ def import_(module):
         print >> sys.stderr, bar
         print >> sys.stderr, m
         print >> sys.stderr, bar
-        sys.exit(1)
+        raise
