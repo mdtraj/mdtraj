@@ -19,7 +19,17 @@ install:
   - sudo apt-get install -qq python-setuptools
   - sudo apt-get install -qq python-pandas
   - sudo easy_install pip
+
+  # Currently (august 11, 2013), the latest version of netcdf4-python
+  # requires at least libnetcdf4-4.1.2, whereas apt-get libnetcdf-dev
+  # is installing libnetcdf4-4.1.1. We're avoiding this issue by requiring
+  # the previous release of netcdf4-python. Hopefully in the future this
+  # can be resolved.
+  # See https://code.google.com/p/netcdf4-python/issues/detail?id=194&start=100
+  # https://github.com/rmcgibbo/mdtraj/pull/151
+  # https://github.com/rmcgibbo/mdtraj/issues/150
   - sudo pip install netCDF4==1.0.4
+
   - sudo pip install nose-performance
   - sudo pip install git+git://github.com/rmcgibbo/simtk.unit
   - sudo pip install flake8
