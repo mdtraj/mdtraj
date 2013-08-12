@@ -21,8 +21,8 @@ __all__ = ['compute_distances', 'compute_angles', 'compute_dihedrals']
 import os
 import warnings
 try:
-    import cffi
-    from mdtraj.utils.ffi import find_library
+    import cffi as _cffi
+    from mdtraj.utils.ffi import find_library as _find_library
     _HAVE_OPT = None   # not sure if we have the library yet
 except ImportError:
     warnings.warn('Optimized distance library requires the "cffi" package, '
@@ -32,7 +32,7 @@ except ImportError:
 
 if _HAVE_OPT is not False:
     # lets try to open the library
-    ffi = cffi.FFI()
+    ffi = _cffi.FFI()
     ffi.cdef('''int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
                              float* distance_out, float* displacement_out,
                              const int n_frames, const int n_atoms, const int n_pairs);''')
@@ -43,11 +43,14 @@ if _HAVE_OPT is not False:
                           const int n_frames, const int n_atoms, const int n_pairs);''')
     ffi.cdef('''int dihedral(const float* xyz, const int* quartets, float* out,
                              const int n_frames, const int n_atoms, const int n_pairs);''')
+    ffi.cdef('''int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indices,
+                                  const int n_frames, const int n_atoms, const int n_residues,
+                                  int* hbonds, float* henergies);''')
 
-    here = os.path.dirname(os.path.abspath(__file__))
-    libpath = find_library(here, 'geometry')
-    if libpath is not None:
-        C = ffi.dlopen(libpath)
+    _here = os.path.dirname(os.path.abspath(__file__))
+    _libpath = _find_library(_here, 'geometry')
+    if _libpath is not None:
+        C = ffi.dlopen(_libpath)
         _HAVE_OPT = True
     else:
         _HAVE_OPT = False
@@ -55,7 +58,7 @@ if _HAVE_OPT is not False:
 if not _HAVE_OPT:
     warnings.warn('Optimized distance library was not imported sucessfully.')
 
-import rg, internal, alignment
+import rg, internal, alignment, hbond
 from .angle import *
 from .distance import *
 from .dihedral import *
