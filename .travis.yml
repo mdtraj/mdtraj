@@ -16,10 +16,9 @@ install:
   - sudo apt-get install -qq python-numexpr
   - sudo apt-get install -qq python-tables
   - sudo apt-get install -qq netcdf-bin libnetcdf-dev
-  - sudo apt-get install     python-netcdf
+  - sudo apt-get install -qq python-netcdf
   - sudo apt-get install -qq python-setuptools
-  - sudo apt-get install -qq python-pandas  
-  - sudo easy_install netcdf4
+  - sudo apt-get install -qq python-pandas
   - sudo easy_install pip
   - sudo pip install nose-performance
   - sudo pip install git+git://github.com/rmcgibbo/simtk.unit
@@ -29,6 +28,7 @@ install:
 
 script:
   - sudo python setup.py -q install
+  - python -c "import netCDF4; print netCDF4.__version__"
   - nosetests
   - nosetests --with-performance MDTraj/tests/performance --performance-revision=`git rev-parse HEAD`
   - curl --form "fileupload=@performance.json" http://mdtraj-performance.appspot.com
