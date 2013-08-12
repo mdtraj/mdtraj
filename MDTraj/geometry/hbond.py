@@ -32,20 +32,20 @@ if _HAVE_OPT:
 def kabsch_sander(traj):
     """Compute the Kabsch-Sander hydrogen bond energy between each pair
     of residues in every frame.
-    
+
     Hydrogen bonds are defined using an electrostatic definition, assuming
     partial charges of -0.42 e and +0.20 e to the carbonyl oxygen and amide
     hydrogen respectively, their opposites assigned to the carbonyl carbon
     and amide nitrogen. A hydrogen bond is identified if E in the following
     equation is less than -0.5 kcal/mol:
-    
+
     E = 0.42 * 0.2 * 33.2 kcal/(mol*nm) * (1/r_ON + 1/r_CH - 1/r_OH - 1/r_CN)
-    
+
     Parameters
     ----------
     traj : md.Trajectory
         An mdtraj trajectory. It must contain topology information.
-    
+
     Returns
     -------
     matrices : list of scipy.sparse.csr_matrix
@@ -57,7 +57,7 @@ def kabsch_sander(traj):
         Kabsch-Sander energy is less than -0.5 kcal/mol (the threshold for
         existance of the "bond"). The exact value of the energy is given by the
         value `x`.
-        
+
     References
     ----------
     .. [1] Kabsch W, Sander C (1983). "Dictionary of protein secondary
@@ -69,23 +69,23 @@ def kabsch_sander(traj):
     if not _HAVE_OPT:
         raise RuntimeError('kabsch_sander implementation not available.')
     import scipy.sparse
-    
+
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz',
                       shape=(None, None, 3), warn_on_cast=False)
-    
-    # putting -1 for one of the entries in the nhco indices list is a
-    # signal that the residue does not have that atom type.
-    get = lambda l: l[0] if len(l) > 0 else -1
-    ca_indices, nhco_indices = [], []
-    for residue in traj.topology.residues:
-        ca_indices.append(get([a.index for a in residue.atoms if a.name == 'CA']))
-        n = get([a.index for a in residue.atoms if a.name == 'N'])
-        h = get([a.index for a in residue.atoms if a.name == 'H'])
-        c = get([a.index for a in residue.atoms if a.name == 'C'])
-        o = get([a.index for a in residue.atoms if a.name == 'O'])
-        nhco_indices.append([n, h, c, o])
 
-    nhco_indices = np.array(nhco_indices, np.int32)
+    ca_indices, nco_indices = [], []
+    for residue in traj.topology.residues:
+        if residue.name == 'PRO':
+            ca_indices.append(-1)
+        else:
+            ca_indices.append([a.index for a in residue.atoms if a.name == 'CA'][0])
+
+        n = [a.index for a in residue.atoms if a.name == 'N'][0]
+        c = [a.index for a in residue.atoms if a.name == 'C'][0]
+        o = [a.index for a in residue.atoms if a.name == 'O'][0]
+        nco_indices.append([n, c, o])
+
+    nco_indices = np.array(nco_indices, np.int32)
     ca_indices = np.array(ca_indices, np.int32)
     n_residues = len(ca_indices)
     hbonds = np.empty((xyz.shape[0], n_residues, 2), np.int32)
@@ -93,9 +93,7 @@ def kabsch_sander(traj):
     hbonds.fill(-1)
     henergies.fill(np.nan)
 
-    ks_assign_hydrogens(xyz, nhco_indices, n_residues)
-
-    C.kabsch_sander(cpointer(xyz), cpointer(nhco_indices), cpointer(ca_indices),
+    C.kabsch_sander(cpointer(xyz), cpointer(nco_indices), cpointer(ca_indices),
                     xyz.shape[0], xyz.shape[1], n_residues,
                     cpointer(hbonds), cpointer(henergies))
 
@@ -110,26 +108,12 @@ def kabsch_sander(traj):
         hbonds_frame = hbonds[i]
         mask = hbonds_mask[i]
         henergies_frame = henergies[i]
-        
+
         indptr = np.zeros(n_residues + 1, np.int32)
         indptr[1:] = np.cumsum(mask.sum(axis=1))
         indices = hbonds_frame[mask].flatten()
         data = henergies_frame[mask].flatten()
 
         matrices.append(scipy.sparse.csr_matrix((data, indices, indptr), shape=(n_residues, n_residues)))
-    
+
     return matrices
-
-def ks_assign_hydrogens(xyz, nhco_indices, n_residues):
-    for i in range(xyz.shape[0]):
-        xyz[i, nhco_indices[0, 1]] = xyz[i, nhco_indices[0, 0]]
-
-        for j in range(1, n_residues):
-            pc = xyz[i, nhco_indices[j-1, 2]]
-            po = xyz[i, nhco_indices[j-1, 3]]
-            rn = xyz[i, nhco_indices[j, 0]]
-            r_co = (pc - po) / np.linalg.norm(pc - po)
-
-            # r_h
-            xyz[i, nhco_indices[j, 1]] = rn + 0.1*r_co
-

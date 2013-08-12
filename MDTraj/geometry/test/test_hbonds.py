@@ -38,7 +38,7 @@ def test_hbonds():
 
     cmd = ['mkdssp', '-i', pdb, '-o', dssp]
     subprocess.check_output(' '.join(cmd), shell=True)
-    energy = scipy.sparse.lil_matrix((t.n_atoms, t.n_atoms))
+    energy = scipy.sparse.lil_matrix((t.n_residues, t.n_residues))
 
     # read the dssp N-H-->O column from the output file
     with open(dssp) as f:
@@ -49,14 +49,17 @@ def test_hbonds():
         for i, line in enumerate(f):
             line = line.rstrip()
             offset0, e0 = map(float, line[39:50].split(','))
-            offset1, e1 = map(float, line[61:72].split(','))            
-            energy[i, int(i+offset0)] = e0
-            energy[i, int(i+offset1)] = e1
-            #print e0, e1
+            offset1, e1 = map(float, line[61:72].split(','))
+            if e0 <= -0.5:
+                energy[int(i+offset0), i] = e0
+            if e1 <= -0.5:
+                energy[int(i+offset1), i] = e1
 
-    energy = energy.todense()
-    energy[energy > -0.49] = 0
-    print "\nOur code"
-    print md.geometry.hbond.kabsch_sander(t)[0]
-    print "\nFrom DSSP"
-    print scipy.sparse.csr_matrix(energy.T)
+    dssp = energy.todense()
+    ours = md.geometry.hbond.kabsch_sander(t)[0].todense()
+
+    # There is tricky issues with the rounding right at the -0.5 cutoff,
+    # so lets just check for equality with DSSP at -0.6 or less
+    eq((dssp < -0.6), (ours < -0.6))
+    eq(dssp[dssp < -0.6], ours[ours < -0.6], decimal=1)
+

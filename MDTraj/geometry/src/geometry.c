@@ -38,6 +38,14 @@ static inline __m128 load_float3(const float* value) {
   return _mm_shuffle_ps(xy, z, _MM_SHUFFLE(2, 0, 2, 0));
 }
 
+static inline int store_float3(float* loc, __m128 val) {
+  _mm_store_ss(loc, val);
+  _mm_store_ss(loc+1, _mm_shuffle_ps(val, val, _MM_SHUFFLE(1,1,1,1)));
+  _mm_store_ss(loc+2, _mm_shuffle_ps(val, val, _MM_SHUFFLE(2,2,2,2)));
+
+  return 1;
+}
+
 static int printf_m128(__m128 v) {
   float* p = (float*)(&v);
   printf("%f %f %f %f\n", p[0], p[1], p[2], p[3]);
@@ -401,8 +409,9 @@ int dihedral(const float* xyz, const int* quartets, float* out,
 /* HBond Kernels                                                            */
 /****************************************************************************/
 
-static float ks_donor_acceptor(const float* xyz, const int* nhco0,
-                               const int* nhco1, int donor) {
+static float ks_donor_acceptor(const float* xyz, const float* hcoords,
+			       const int* nco_indices, int donor, int acceptor)
+{
   /* Conpute the Kabsch-Sander hydrogen bond energy between two residues
      in a single conformation.
 
@@ -428,21 +437,19 @@ static float ks_donor_acceptor(const float* xyz, const int* nhco0,
   __m128 r_n, r_h, r_c, r_o, r_ho, r_nc, r_hc, r_no, d2_honchcno;
   __m128 coupling;
 
-  if (donor == 1) {
-    const int* temp = nhco0;
-    nhco0 = nhco1;
-    nhco1 = temp;
-  }
-
   // 332 (kcal*A/mol) * 0.42 * 0.2 * (1nm / 10 A)
   coupling = _mm_setr_ps(-2.7888, -2.7888, 2.7888, 2.7888);
-  r_n = load_float3(xyz + 3*nhco0[0]);
-  r_h = load_float3(xyz + 3*nhco0[1]);
-  r_c = load_float3(xyz + 3*nhco1[2]);
-  r_o = load_float3(xyz + 3*nhco1[3]);
+  r_n = load_float3(xyz + 3*nco_indices[3*donor]);
+  r_h = load_float3(hcoords + 3*donor);
+  r_c = load_float3(xyz + 3*nco_indices[3*acceptor + 1]);
+  r_o = load_float3(xyz + 3*nco_indices[3*acceptor + 2]);
 
-  __m128 r_co = _mm_sub_ps(load_float3(xyz + 3*nhco0[2]), load_float3(xyz + 3*nhco0[3]));
-  /*  printf("\nrN ");
+  //printf("Donor Index %d\n", donor);
+  //printf("Acceptor Index %d\n", acceptor);
+  /*printf("N index %d\n", 3*nco_indices[3*donor + 0]);
+  printf("C index %d\n", 3*nco_indices[3*acceptor + 1]);
+  printf("O index %d\n", 3*nco_indices[3*acceptor + 2]);
+  printf("\nrN ");
   printf_m128(r_n);
   printf("rH ");
   printf_m128(r_h);
@@ -463,9 +470,40 @@ static float ks_donor_acceptor(const float* xyz, const int* nhco0,
                                _MM_SHUFFLE(2,0,2,0));
 
   float energy = _mm_cvtss_f32(_mm_dp_ps(coupling, _mm_rsqrt_ps(d2_honchcno), 0xFF));
-  //printf("Energy: %f\n", energy);
+  //printf("Energy: %f\n\n", energy);
   return (energy < -9.9f ? -9.9f : energy);
 }
+
+
+static int ks_assign_hydrogens(const float* xyz, const int* nco_indices, const int n_residues, float *hcoords)
+/* Assign hydrogen atom coordinates
+ */
+{
+  int ri, pc_index, po_index;
+  __m128 pc, po, r_co, r_h, r_n, norm_r_co;
+  __m128 tenth = _mm_set1_ps(0.1f);
+
+  r_n = load_float3(xyz + 3*nco_indices[0]);
+  store_float3(hcoords, r_n);
+  hcoords += 3;
+
+  for (ri = 1; ri < n_residues; ri++) {
+    pc_index = nco_indices[3*(ri-1) + 1];
+    po_index = nco_indices[3*(ri-1) + 2];
+
+    pc = load_float3(xyz + 3*pc_index);
+    po = load_float3(xyz + 3*po_index);
+    r_co = _mm_sub_ps(pc, po);
+    r_n = load_float3(xyz + 3*nco_indices[3*ri + 0]);
+    norm_r_co = _mm_mul_ps(r_co, _mm_rsqrt_ps(_mm_dp_ps(r_co, r_co, 0xFF)));
+    r_h = _mm_add_ps(r_n, _mm_mul_ps(tenth, norm_r_co));
+    store_float3(hcoords, r_h);
+    hcoords += 3;
+  }
+
+  return 1;
+}
+
 
 static inline void store_energies(int* hbonds, float* henergies, int donor,
                              int acceptor, float e) {
@@ -491,7 +529,7 @@ static inline void store_energies(int* hbonds, float* henergies, int donor,
   }
 }
 
-int kabsch_sander(const float* xyz, const int* nhco_indices, const int* ca_indices,
+int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indices,
                   const int n_frames, const int n_atoms, const int n_residues,
                   int* hbonds, float* henergies) {
   /* Find all of backbone hydrogen bonds between residues in each frame of a
@@ -501,13 +539,12 @@ int kabsch_sander(const float* xyz, const int* nhco_indices, const int* ca_indic
     ----------
     xyz : array, shape=(n_frames, n_atoms, 3)
         The cartesian coordinates of all of the atoms in each frame.
-    nhco_indices : array, shape=(n_residues, 4)
-        The indices of the backbone N, H, C, and O atoms for each residue. If
-        a residue does not contain one of these atoms (like a proline or a capping
-        residue), the value should be -1
+    nco_indices : array, shape=(n_residues, 3)
+        The indices of the backbone N, C, and O atoms for each residue.
     ca_indices : array, shape=(n_residues,)
         The index of the CA atom of each residue. If a residue does not contain
-        a CA atom, the value should be -1.
+        a CA atom, or you want to skip the residue for another reason, the
+	value should be -1
 
     Returns
     -------
@@ -530,10 +567,15 @@ int kabsch_sander(const float* xyz, const int* nhco_indices, const int* ca_indic
   static float HBOND_ENERGY_CUTOFF = -0.5;
   __m128 ri_ca, rj_ca, r12;
   __m128 MINIMAL_CA_DISTANCE2 = _mm_set1_ps(0.81);
-
-  //  assign_hydrogens_inplace(xyz, nhco_indices, n_frames, n_atoms, n_residues);
+  float* hcoords = (float*) malloc(n_residues*3 * sizeof(float));
+  if (hcoords == NULL) {
+    fprintf(stderr, "Memory Error\n");
+    exit(1);
+  }
 
   for (i = 0; i < n_frames; i++) {
+    ks_assign_hydrogens(xyz, nco_indices, n_residues, hcoords);
+
     for (ri = 0; ri < n_residues; ri++) {
       // -1 is used to indicate that this residue lacks a this atom type
       // so just skip it
@@ -547,20 +589,13 @@ int kabsch_sander(const float* xyz, const int* nhco_indices, const int* ca_indic
         // check the ca distance before proceding
         r12 = _mm_sub_ps(ri_ca, rj_ca);
         if(_mm_extract_epi16((__m128i) _mm_cmplt_ps(_mm_dp_ps(r12, r12, 0x7F), MINIMAL_CA_DISTANCE2), 0)) {
-
-          // printf("Calling ksdonoracceptor with donor=%d, acceptor=%d", ri, rj)
-	  //printf("MDTraj donor=%d, acceptor=%d donor[1]=%d", ri+1, rj+1, nhco_indices[ri*4+1]);
-          float e = ks_donor_acceptor(xyz, nhco_indices+ri*4, nhco_indices+rj*4, 0);
-	  //printf(" energy %f\n", e);
+          float e = ks_donor_acceptor(xyz, hcoords, nco_indices, ri, rj);
           if (e < HBOND_ENERGY_CUTOFF)
             // hbond from donor=ri to acceptor=rj
             store_energies(hbonds, henergies, ri, rj, e);
 
           if (rj != ri + 1) {
-	    //printf("MDTraj donor=%d, acceptor=%d donor[0,1,2,3]=%d, %d, %d, %d", rj+1, ri+1,
-	    //nhco_indices[rj*4+0], nhco_indices[rj*4+1], nhco_indices[rj*4+2], nhco_indices[rj*4+3]);
-            float e = ks_donor_acceptor(xyz, nhco_indices+rj*4, nhco_indices+ri*4, 0);
-	    //printf(" energy %f\n", e);
+	    float e = ks_donor_acceptor(xyz, hcoords, nco_indices, rj, ri);
             if (e < HBOND_ENERGY_CUTOFF)
               // hbond from donor=rj to acceptor=ri
               store_energies(hbonds, henergies, rj, ri, e);
@@ -572,38 +607,6 @@ int kabsch_sander(const float* xyz, const int* nhco_indices, const int* ca_indic
     hbonds += n_residues*2;
     henergies += n_residues*2;
   }
+  free(hcoords);
   return 1;
-}
-
-
-int assign_hydrogens_inplace(const float* xyz, const int* nhco_indices, const int n_frames, const int n_atoms, const int n_residues) {
-  int i, ri;
-  __m128 pc, po, r_co, r_h, r_n;
-  
-  for (i = 0; i < n_frames; i++) {
-    for (ri = 0; ri < n_residues; ri++) {
-      
-      // Assign hydrogens
-      pc = load_float3(xyz + 3*nhco_indices[4*(ri-1)+2]);
-      po = load_float3(xyz + 3*nhco_indices[4*(ri-1)+3]);
-      r_co = _mm_sub_ps(pc, po);
-      r_n = load_float3(xyz + 3*nhco_indices[4*ri]);
-      if (ri == 0) {
-	r_h = r_n;
-      } else {
-	r_h = _mm_add_ps(r_n, _mm_mul_ps(_mm_set1_ps(0.1f), _mm_mul_ps(r_co, _mm_rsqrt_ps(_mm_dp_ps(r_co, r_co, 0xFF)))));
-      }
-
-      //printf("%d\n", ri+1);
-      //printf_m128(r_h);
-      _mm_store_ss(xyz + 3*nhco_indices[4*ri+1]+0, r_h);
-      _mm_store_ss(xyz + 3*nhco_indices[4*ri+1]+1, _mm_shuffle_ps(r_h, r_h, _MM_SHUFFLE(1,1,1,1)));
-      _mm_store_ss(xyz + 3*nhco_indices[4*ri+1]+2, _mm_shuffle_ps(r_h, r_h, _MM_SHUFFLE(2,2,2,2)));
-      //printf("  ");
-      printf_m128(load_float3(xyz + 3*nhco_indices[4*ri+1]));
-
-    }
-    xyz += n_atoms*3;
-  }
-  exit(1);
 }
