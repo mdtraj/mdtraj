@@ -235,12 +235,10 @@ def libgeometry():
     extra_compile_args = ['-mssse3']
     compiler_defs = []
     if detect_sse4():
-        compiler_defs = [('HAVE_SSE4', None)]
         extra_compile_args.append('-msse4')
 
     return Extension('mdtraj.geometry.libgeometry',
                   sources=['MDTraj/geometry/src/geometry.c'],
-                  define_macros=compiler_defs,
                   extra_compile_args=extra_compile_args)
 
 extensions = [xtc, trr, dcd, binpos, rmsd_extension()]
