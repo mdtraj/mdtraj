@@ -63,7 +63,7 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960):
     Section Spiral algorithm to generate the sphere points. The basic idea
     is to great a mesh of points representing the surface of each atom
     (at a distance of the van der waals radius plus the probe
-    radis from the nuclei), and then count the number of such mesh points
+    radius from the nuclei), and then count the number of such mesh points
     that are on the molecular surface -- i.e. not within the radius of another
     atom. Assuming that the points are evenly distributed, the number of points
     is directly proportional to the accessible surface area (its just 4*pi*r^2

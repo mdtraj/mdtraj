@@ -22,6 +22,9 @@ static inline __m128 load_float3(const float* value) {
 }
 
 static inline int store_float3(float* loc, __m128 val) {
+  // Store the low three floats in an SSE register into
+  // memory, at location loc[0], loc[1], loc[2]. The high
+  // float is not touched.
   _mm_store_ss(loc, val);
   _mm_store_ss(loc+1, _mm_shuffle_ps(val, val, _MM_SHUFFLE(1,1,1,1)));
   _mm_store_ss(loc+2, _mm_shuffle_ps(val, val, _MM_SHUFFLE(2,2,2,2)));
@@ -30,6 +33,7 @@ static inline int store_float3(float* loc, __m128 val) {
 }
 
 static int printf_m128(__m128 v) {
+  // Print the contents of a SSE float4 vector to stdout (debugging)
   float* p = (float*)(&v);
   printf("%f %f %f %f\n", p[0], p[1], p[2], p[3]);
   return 1;
