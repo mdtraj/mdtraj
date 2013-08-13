@@ -39,7 +39,10 @@ def kabsch_sander(traj):
     and amide nitrogen. A hydrogen bond is identified if E in the following
     equation is less than -0.5 kcal/mol:
 
-    E = 0.42 * 0.2 * 33.2 kcal/(mol*nm) * (1/r_ON + 1/r_CH - 1/r_OH - 1/r_CN)
+    .. math::
+
+        E = 0.42 \cdot 0.2 \cdot 33.2 kcal/(mol \cdot nm) * \\
+            (1/r_{ON} + 1/r_{CH} - 1/r_{OH} - 1/r_{CN})
 
     Parameters
     ----------
@@ -60,9 +63,7 @@ def kabsch_sander(traj):
 
     References
     ----------
-    .. [1] Kabsch W, Sander C (1983). "Dictionary of protein secondary
-    structure: pattern recognition of hydrogen-bonded and geometrical
-    features". Biopolymers 22 (12): 2577-637. dio:10.1002/bip.360221211
+    .. [1] Kabsch W, Sander C (1983). "Dictionary of protein secondary structure: pattern recognition of hydrogen-bonded and geometrical features". Biopolymers 22 (12): 2577-637. dio:10.1002/bip.360221211
     """
     if traj.topology is None:
         raise ValueError('kabsch_sander requires topology')
