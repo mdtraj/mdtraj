@@ -2,9 +2,12 @@ Geometry : :class:`mdtraj.geometry`
 ===================================
 
 :class:`mdtraj.geometry` contains functions to extract geometry observables
-from molecular dynamics trajectories, including distances, angles and
-dihedrals. Also included is code for global structural properties, like
-the radius of gyration, and for 3d alignment and rotation.
+from molecular dynamics trajectories, including distances, angles,
+dihedrals and solvent accessible surface areas. Also included is
+code for global structural properties, like the radius of gyration,
+3d alignment and rotation. Finally, code for more complex structural analysis,
+including the identification of backbone hydrogen bonds based on the Kabsch-Sander
+hydrogen bond energy (used by DSSP) is included.
 
 The core geometry code for calculating distances, angles and dihedrals
 is written in both SIMD optimized C and standard numpy. The implementations
@@ -40,3 +43,11 @@ Note: this code is not an interface to the IRMSD fast SSE2/SSE3
 the cost of some speed (IRMSD can only compute distances).
 
 .. automodule:: mdtraj.geometry.alignment
+
+Hydrogen Bonds
+--------------
+.. autofunction:: mdtraj.geometry.kabsch_sander
+
+Solvent Accessible Surface Area
+-------------------------------
+.. autofunction:: mdtraj.geometry.shrake_rupley

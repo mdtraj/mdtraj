@@ -46,6 +46,9 @@ if _HAVE_OPT is not False:
     ffi.cdef('''int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indices,
                                   const int n_frames, const int n_atoms, const int n_residues,
                                   int* hbonds, float* henergies);''')
+    ffi.cdef('''int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
+                         const float* atom_radii, const int n_sphere_points, float* array_of_areas);''')
+
 
     _here = os.path.dirname(os.path.abspath(__file__))
     _libpath = _find_library(_here, 'geometry')
@@ -58,7 +61,9 @@ if _HAVE_OPT is not False:
 if not _HAVE_OPT:
     warnings.warn('Optimized distance library was not imported sucessfully.')
 
-import rg, internal, alignment, hbond
+import rg, internal, alignment
 from .angle import *
 from .distance import *
 from .dihedral import *
+from .hbond import kabsch_sander
+from .sasa import shrake_rupley

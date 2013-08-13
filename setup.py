@@ -238,8 +238,10 @@ def libgeometry():
         extra_compile_args.append('-msse4')
 
     return Extension('mdtraj.geometry.libgeometry',
-                  sources=['MDTraj/geometry/src/geometry.c'],
-                  extra_compile_args=extra_compile_args)
+                     sources=['MDTraj/geometry/src/geometry.c',
+                              'MDTraj/geometry/src/sasa.c'],
+                     include_dirs=['MDTraj/geometry/include'],
+                     extra_compile_args=extra_compile_args)
 
 extensions = [xtc, trr, dcd, binpos, rmsd_extension()]
 ext = libgeometry()
