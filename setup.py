@@ -21,8 +21,8 @@ import numpy
 
 
 ##########################
-VERSION = "0.4.1"
-ISRELEASED = True
+VERSION = "0.4.2"
+ISRELEASED = False
 __version__ = VERSION
 ##########################
 
