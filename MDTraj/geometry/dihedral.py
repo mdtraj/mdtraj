@@ -179,6 +179,7 @@ def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
             index.append(resSeq)
             all_atom_indices.append(atom_indices.values)
     
+    index = pd.Series(index, name="resSeq")
     all_atom_indices = pd.DataFrame(all_atom_indices, index=index, columns=["atom_id%d" % i for i in range(len(atom_names))])
 
     return all_atom_indices
