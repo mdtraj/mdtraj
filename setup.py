@@ -22,7 +22,7 @@ import numpy
 
 ##########################
 VERSION = "0.4.1"
-ISRELEASED = False
+ISRELEASED = True
 __version__ = VERSION
 ##########################
 
