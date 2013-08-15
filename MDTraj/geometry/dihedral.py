@@ -108,31 +108,6 @@ def compute_dihedrals(traj, indices, opt=True):
     return out
 
 
-def _construct_atom_dict_old(top, chain_id=0):
-    """Create dictionary to lookup indices by atom name and residue_id.
-
-    Parameters
-    ----------
-    top : Topology
-        The topology to parse
-    chain_id : int
-        The index of the chain to sequence
-
-    Notes
-    -----
-    By default, we assume you are interested in the first chain.
-    """
-    atom_dict = {}
-    for chain in top.chains:
-        if chain.index == chain_id:
-            for residue in chain.residues:
-                local_dict = {}
-                for atom in residue.atoms:
-                    local_dict[atom.name] = atom.index
-                atom_dict[residue.index] = local_dict
-            break
-    return atom_dict
-
 def _construct_atom_dict(top, chain_id=0):
     """Create dataframe to lookup indices by (residue_id, atom name) pairs
 
@@ -152,59 +127,6 @@ def _construct_atom_dict(top, chain_id=0):
     lookup = top.pivot_table(values="serial", rows=["resSeq", "name"])
     
     return lookup
-
-
-def atom_sequence_finder_old(traj, atom_names, rid_offsets=None, chain_id=0):
-    """Find sequences of atom indices correponding to desired atoms.
-
-    Parameters
-    ----------
-    traj : Trajectory
-        Trajectory for which you want dihedrals.
-    atom_names : np.ndarray, shape=(4), dtype='str'
-        Array of atoms to in each dihedral angle.
-    rid_offsets : np.ndarray, optional, shape=(4), dtype='int'
-        Array of integer offsets for each atom.
-    chain_id : int
-        The index of the chain to sequence.
-
-    Notes
-    -----
-    In additional finding dihedral atoms, this function could be used to
-    match *general* sequences of atoms and residue_id offsets.
-
-    Examples
-    --------
-    Here we calculate the phi torsion angles by specifying the correct
-    atom names and the residue_id offsets (e.g. forward or backward in
-    chain) for each atom.
-
-    >>> traj = mdtraj.trajectory.load("native.pdb") # doctest: +SKIP
-    >>> atom_names = ["C" ,"N" , "CA", "C"] # doctest: +SKIP
-    >>> rid_offsets = [-1, 0, 0, 0] # doctest: +SKIP
-    >>> found_residue_ids, indices = atom_sequence_finder(traj, atom_names, rid_offsets) # doctest: +SKIP
-    """
-    if rid_offsets is None:
-        rid_offsets = parse_offsets(atom_names)
-    atom_names = strip_offsets(atom_names)
-
-    atom_dict = _construct_atom_dict(traj.top, chain_id=chain_id)
-    atom_indices = []
-    found_residue_ids = []
-    atoms_and_offsets = zip(atom_names, rid_offsets)
-    for chain in traj.top.chains:
-        if chain.index == chain_id:
-            for residue in chain.residues:
-                rid = residue.index
-                if all([rid + offset in atom_dict for offset in rid_offsets]):  # Check that desired residue_IDs are in dict
-                    if all([atom in atom_dict[rid + offset] for atom, offset in atoms_and_offsets]):  # Check that we find all atom names in dict
-                        atom_indices.append([atom_dict[rid + offset][atom] for atom, offset in atoms_and_offsets])  # Lookup desired atom indices and and add to list.
-                        found_residue_ids.append(rid)
-
-    atom_indices = np.array(atom_indices)
-    found_residue_ids = np.array(found_residue_ids)
-
-    return found_residue_ids, atom_indices
 
 
 def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
