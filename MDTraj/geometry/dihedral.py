@@ -21,6 +21,7 @@
 ##############################################################################
 
 import numpy as np
+import pandas as pd
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import _HAVE_OPT
 if _HAVE_OPT:
@@ -107,7 +108,7 @@ def compute_dihedrals(traj, indices, opt=True):
     return out
 
 
-def _construct_atom_dict(top, chain_id=0):
+def _construct_atom_dict_old(top, chain_id=0):
     """Create dictionary to lookup indices by atom name and residue_id.
 
     Parameters
@@ -132,8 +133,28 @@ def _construct_atom_dict(top, chain_id=0):
             break
     return atom_dict
 
+def _construct_atom_dict(top, chain_id=0):
+    """Create dataframe to lookup indices by (residue_id, atom name) pairs
 
-def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
+    Parameters
+    ----------
+    top : Topology
+        The topology to parse
+    chain_id : int
+        The index of the chain to sequence
+
+    Notes
+    -----
+    By default, we assume you are interested in the first chain.
+    """
+    top = top[top.chainID == chain_id]
+    top["serial"] = top.index
+    lookup = top.pivot_table(values="serial", rows=["resSeq", "name"])
+    
+    return lookup
+
+
+def atom_sequence_finder_old(traj, atom_names, rid_offsets=None, chain_id=0):
     """Find sequences of atom indices correponding to desired atoms.
 
     Parameters
@@ -184,6 +205,61 @@ def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
     found_residue_ids = np.array(found_residue_ids)
 
     return found_residue_ids, atom_indices
+
+
+def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
+    """Find sequences of atom indices correponding to desired atoms.
+
+    Parameters
+    ----------
+    traj : Trajectory
+        Trajectory for which you want dihedrals.
+    atom_names : np.ndarray, shape=(4), dtype='str'
+        Array of atoms to in each dihedral angle.
+    rid_offsets : np.ndarray, optional, shape=(4), dtype='int'
+        Array of integer offsets for each atom.
+    chain_id : int
+        The index of the chain to sequence.
+
+    Notes
+    -----
+    In additional finding dihedral atoms, this function could be used to
+    match *general* sequences of atoms and residue_id offsets.
+
+    Examples
+    --------
+    Here we calculate the phi torsion angles by specifying the correct
+    atom names and the residue_id offsets (e.g. forward or backward in
+    chain) for each atom.
+
+    >>> traj = mdtraj.trajectory.load("native.pdb") # doctest: +SKIP
+    >>> atom_names = ["C" ,"N" , "CA", "C"] # doctest: +SKIP
+    >>> rid_offsets = [-1, 0, 0, 0] # doctest: +SKIP
+    >>> found_residue_ids, indices = atom_sequence_finder(traj, atom_names, rid_offsets) # doctest: +SKIP
+    """
+    if rid_offsets is None:
+        rid_offsets = parse_offsets(atom_names)
+    atom_names = strip_offsets(atom_names)
+
+    top, bonds = traj.top.to_dataframe()
+    lookup = _construct_atom_dict(top, chain_id)
+    
+    all_atom_indices = []
+    index = []
+    for resSeq in top.resSeq.unique():
+        
+        residues = rid_offsets + resSeq
+        pairs = [(residues[i], atom_names[i]) for i in range(len(atom_names))]
+        atom_indices = lookup[pairs].dropna()
+        if len(atom_indices) < len(atom_names):            
+            continue
+        else:
+            index.append(resSeq)
+            all_atom_indices.append(atom_indices.values)
+    
+    all_atom_indices = pd.DataFrame(all_atom_indices, index=index, columns=["atom_id%d" % i for i in range(len(atom_names))])
+
+    return all_atom_indices
 
 
 def parse_offsets(atom_names):
@@ -269,8 +345,8 @@ def compute_phi(traj):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = _get_indices_phi(traj)
-    return rid, compute_dihedrals(traj, indices)
+    atom_indices = _get_indices_phi(traj)
+    return pd.DataFrame(compute_dihedrals(traj, atom_indices.values), columns=atom_indices.index)
 
 
 def compute_psi(traj):
@@ -290,9 +366,8 @@ def compute_psi(traj):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = _get_indices_psi(traj)
-    return rid, compute_dihedrals(traj, indices)
-
+    atom_indices = _get_indices_psi(traj)
+    return pd.DataFrame(compute_dihedrals(traj, atom_indices.values), columns=atom_indices.index)
 
 def compute_chi(traj):
     """Calculate the chi torsions of a trajectory.
@@ -311,8 +386,8 @@ def compute_chi(traj):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = _get_indices_chi(traj)
-    return rid, compute_dihedrals(traj, indices)
+    atom_indices = _get_indices_chi(traj)
+    return pd.DataFrame(compute_dihedrals(traj, atom_indices.values), columns=atom_indices.index)
 
 
 def compute_omega(traj):
@@ -332,5 +407,5 @@ def compute_omega(traj):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = _get_indices_omega(traj)
-    return rid, compute_dihedrals(traj, indices)
+    atom_indices = _get_indices_omega(traj)
+    return pd.DataFrame(compute_dihedrals(traj, atom_indices.values), columns=atom_indices.index)
