@@ -251,7 +251,7 @@ _get_indices_psi = lambda traj: atom_sequence_finder(traj, PSI_ATOMS)
 _get_indices_chi = lambda traj: atom_sequence_finder(traj, CHI_ATOMS)
 
 
-def compute_phi(traj):
+def compute_phi(traj, as_dataframe=False):
     """Calculate the phi torsions of a trajectory.
 
     Parameters
@@ -269,10 +269,16 @@ def compute_phi(traj):
         the frames.
     """
     atom_indices = _get_indices_phi(traj)
-    return pd.DataFrame(compute_dihedrals(traj, atom_indices.values), columns=atom_indices.index)
+
+    dihedrals = pd.DataFrame(compute_dihedrals(traj, atom_indices.values), columns=atom_indices.index)
+
+    if as_dataframe == True:
+        return dihedrals
+    else:
+        return dihedrals.index.values, dihedrals.values
 
 
-def compute_psi(traj):
+def compute_psi(traj, as_dataframe=False):
     """Calculate the psi torsions of a trajectory.
 
     Parameters
@@ -290,9 +296,15 @@ def compute_psi(traj):
         the frames.
     """
     atom_indices = _get_indices_psi(traj)
-    return pd.DataFrame(compute_dihedrals(traj, atom_indices.values), columns=atom_indices.index)
 
-def compute_chi(traj):
+    dihedrals = pd.DataFrame(compute_dihedrals(traj, atom_indices.values), columns=atom_indices.index)
+
+    if as_dataframe == True:
+        return dihedrals
+    else:
+        return dihedrals.index.values, dihedrals.values
+
+def compute_chi(traj, as_dataframe=False):
     """Calculate the chi torsions of a trajectory.
 
     Parameters
@@ -310,10 +322,17 @@ def compute_chi(traj):
         the frames.
     """
     atom_indices = _get_indices_chi(traj)
-    return pd.DataFrame(compute_dihedrals(traj, atom_indices.values), columns=atom_indices.index)
+    
+    dihedrals = pd.DataFrame(compute_dihedrals(traj, atom_indices.values), columns=atom_indices.index)
+
+    if as_dataframe == True:
+        return dihedrals
+    else:
+        return dihedrals.index.values, dihedrals.values
 
 
-def compute_omega(traj):
+
+def compute_omega(traj, as_dataframe=False):
     """Calculate the omega torsions of a trajectory.
 
     Parameters
@@ -331,4 +350,11 @@ def compute_omega(traj):
         the frames.
     """
     atom_indices = _get_indices_omega(traj)
-    return pd.DataFrame(compute_dihedrals(traj, atom_indices.values), columns=atom_indices.index)
+    
+    dihedrals = pd.DataFrame(compute_dihedrals(traj, atom_indices.values), columns=atom_indices.index)
+
+    if as_dataframe == True:
+        return dihedrals
+    else:
+        return dihedrals.index.values, dihedrals.values
+
