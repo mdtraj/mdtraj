@@ -10,6 +10,7 @@
 
 # Lets import some things we're going to need from mdtraj
 
+import os
 import mdtraj
 import mdtraj.reporters
 
@@ -52,5 +53,6 @@ simulation.context.setVelocitiesToTemperature(330*unit.kelvin)
 # use mdconvert on the command line to easily transform it to NetCDF, DCD,
 # or any other format of your preference.
 
-simulation.reporters.append(mdtraj.reporters.HDF5Reporter('ala2.h5', 1000))
-simulation.step(100000)
+if not os.path.exists('ala2.h5'):
+    simulation.reporters.append(mdtraj.reporters.HDF5Reporter('ala2.h5', 1000))
+    simulation.step(100000)

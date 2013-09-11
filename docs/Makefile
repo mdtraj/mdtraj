@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = ../../mdtraj-docs
+BUILDDIR      = _build
 TOOLSPATH			= ../tools/
 EXAMPLEBUILD  = examples_rst.py
 
@@ -50,17 +50,16 @@ html:	builddir
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)"
 
 builddir:
-	[ -f $(BUILDDIR) ] && echo "Found" || git clone git@github.com:rmcgibbo/mdtraj.git $(BUILDDIR)
-	cd $(BUILDDIR) && git checkout gh-pages
+	mkdir -p $(BUILDDIR)
 
 clean:
-	mv $(BUILDDIR)/.git tmp.git
-	mv $(BUILDDIR)/.nojekyll tmp.nojekyll
+	#mv $(BUILDDIR)/.git tmp.git
+	#mv $(BUILDDIR)/.nojekyll tmp.nojekyll
 	rm -rf $(BUILDDIR)/*
 	rm -rf $(TOOLSPATH)/hash_dict.pickle
 	rm -rf examples/generated/*.rst
-	mv tmp.git $(BUILDDIR)/.git
-	mv tmp.nojekyll $(BUILDDIR)/.nojekyll 
+	#mv tmp.git $(BUILDDIR)/.git
+	#mv tmp.nojekyll $(BUILDDIR)/.nojekyll 
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
