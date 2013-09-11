@@ -44,3 +44,13 @@ script:
   - curl --form "fileupload=@performance.json" http://mdtraj-performance.appspot.com
   - cat performance.json
   - flake8 --ignore=E121,E122,E123,E125,E126,E127,E128,E226,E231,E501,E712 MDTraj/ || echo ""  # don't want nonzero exit status
+
+env:
+  global:
+    # encrypted AWS_SECRET_ACCESS_KEY to push documentation to S3
+    - secure: "d3xpZOaixS6TyYTjOSPvIdwUYrTfuEM9sN8AxZKp/92sfcHj3EP7qyCMj/cuf1Gl7mT2nZJj4daOgMam4/sZD6MUnXokDwEgIMes2rrVjQX0i0MvXFU1LN8KbUcK+6QQyXc8AwxJJ603L9YxLnBdPfYTQNrd3zP7BzWYP00Nch4="
+
+after_success:
+  - cd docs && make html
+  - if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then echo "This is a pull request. No deployment will be done."; exit 0; fi
+  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then tools/travis-artifacts.sh; fi

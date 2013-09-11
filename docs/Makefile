@@ -42,12 +42,16 @@ view:
 	cd .. && python setup.py install
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)
 
-html:
+html:	builddir
 	@echo "Generating reST from examples folder"
 	$(TOOLSPATH)$(EXAMPLEBUILD)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)"
+
+builddir:
+	[ -f $(BUILDDIR) ] && echo "Found" || git clone git@github.com:rmcgibbo/mdtraj.git $(BUILDDIR)
+	cd $(BUILDDIR) && git checkout gh-pages
 
 clean:
 	mv $(BUILDDIR)/.git tmp.git
