@@ -48,6 +48,6 @@ env:
 after_success:
   - sudo apt-get install python-boto     # for interacting with S3
   - sudo apt-get install python-sklearn  # for running example_pca.py
-  - cd docs && make html
+  - cd docs && make html && cd -
   - if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then echo "This is a pull request. No deployment will be done."; exit 0; fi
   - if [[ "$TRAVIS_BRANCH" == "master" ]]; then python tools/travis-artifacts.py; else echo "No deployment on $TRAVIS_BRANCH" fi
