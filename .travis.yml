@@ -29,8 +29,6 @@ install:
   # https://github.com/rmcgibbo/mdtraj/pull/151
   # https://github.com/rmcgibbo/mdtraj/issues/150
   - sudo pip install netCDF4==1.0.4
-
-  - sudo pip install nose-performance
   - sudo pip install git+git://github.com/rmcgibbo/simtk.unit
   - sudo pip install flake8
   - sudo pip install scripttest
@@ -40,10 +38,7 @@ script:
   - sudo python setup.py -q install
   - python -c "import netCDF4; print netCDF4.__version__"
   - nosetests
-  - nosetests --with-performance MDTraj/tests/performance --performance-revision=`git rev-parse HEAD`
-  - curl --form "fileupload=@performance.json" http://mdtraj-performance.appspot.com
-  - cat performance.json
-  - flake8 --ignore=E121,E122,E123,E125,E126,E127,E128,E226,E231,E501,E712 MDTraj/ || echo ""  # don't want nonzero exit status
+  - #flake8 --ignore=E121,E122,E123,E125,E126,E127,E128,E226,E231,E501,E712 MDTraj/ || echo ""  # don't want nonzero exit status
 
 env:
   global:
@@ -55,4 +50,4 @@ after_success:
   - sudo apt-get install python-sklearn  # for running example_pca.py
   - cd docs && make html
   - if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then echo "This is a pull request. No deployment will be done."; exit 0; fi
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then python tools/travis-artifacts.py; fi
+  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then python tools/travis-artifacts.py; else echo "No deployment on $TRAVIS_BRANCH" fi
