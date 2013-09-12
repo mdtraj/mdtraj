@@ -50,7 +50,7 @@ after_success:
   - sudo apt-get install -qq python-sphinx       # for building documentation
   - sudo apt-get install -qq python-boto         # for interacting with S3
   - sudo apt-get install -qq python-sklearn      # for running example_pca.py
-  - sudo apt-get install -qq matplotlib          # for custom sphinx extensions
+  - sudo apt-get install -qq python-matplotlib   # for custom sphinx extensions
   - sudo pip install ipython
   - cd docs && make html && cd -
   - python tools/travis-artifacts.py
