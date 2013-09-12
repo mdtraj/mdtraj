@@ -45,10 +45,13 @@ env:
     - secure: "d3xpZOaixS6TyYTjOSPvIdwUYrTfuEM9sN8AxZKp/92sfcHj3EP7qyCMj/cuf1Gl7mT2nZJj4daOgMam4/sZD6MUnXokDwEgIMes2rrVjQX0i0MvXFU1LN8KbUcK+6QQyXc8AwxJJ603L9YxLnBdPfYTQNrd3zP7BzWYP00Nch4="
 
 after_success:
-  - sudo apt-get install python-sphinx       # for building documentation
-  - sudo apt-get install python-boto         # for interacting with S3
-  - sudo apt-get install python-sklearn      # for running example_pca.py
-  - sudo apt-get install ipython matplotlib  # for custom sphinx extensions
-  - cd docs && make html && cd -
   - if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then echo "This is a pull request. No deployment will be done."; exit 0; fi
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then python tools/travis-artifacts.py; else echo "No deployment on BRANCH='$TRAVIS_BRANCH'"; fi
+  - if [[ "$TRAVIS_BRANCH" != "master" ]]; then echo "No deployment on BRANCH='$TRAVIS_BRANCH'"; exit 0; fi
+  - sudo apt-get install -qq python-sphinx       # for building documentation
+  - sudo apt-get install -qq python-boto         # for interacting with S3
+  - sudo apt-get install -qq python-sklearn      # for running example_pca.py
+  - sudo apt-get install -qq matplotlib          # for custom sphinx extensions
+  - sudo pip install ipython
+  - cd docs && make html && cd -
+  - python tools/travis-artifacts.py
+
