@@ -38,7 +38,6 @@ script:
   - sudo python setup.py -q install
   - python -c "import netCDF4; print netCDF4.__version__"
   - nosetests
-  - #flake8 --ignore=E121,E122,E123,E125,E126,E127,E128,E226,E231,E501,E712 MDTraj/ || echo ""  # don't want nonzero exit status
 
 env:
   global:
