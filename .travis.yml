@@ -45,6 +45,7 @@ env:
     - secure: "d3xpZOaixS6TyYTjOSPvIdwUYrTfuEM9sN8AxZKp/92sfcHj3EP7qyCMj/cuf1Gl7mT2nZJj4daOgMam4/sZD6MUnXokDwEgIMes2rrVjQX0i0MvXFU1LN8KbUcK+6QQyXc8AwxJJ603L9YxLnBdPfYTQNrd3zP7BzWYP00Nch4="
 
 after_success:
+  - sudo apt-get install python-sphinx   # for building documentation
   - sudo apt-get install python-boto     # for interacting with S3
   - sudo apt-get install python-sklearn  # for running example_pca.py
   - cd docs && make html && cd -
