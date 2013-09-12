@@ -15,13 +15,15 @@ class cpointer(object):
         'i': ['short', 'int', 'long'],
         'u': ['unsigned short', 'unsigned int', 'unsigned long']
         }
-    nptypes = [np.float16, np.float32, np.float, np.float64, np.double, np.float128,
-               np.int16, np.int32, np.int, np.int64, np.long,
-               np.uint16, np.uint32, np.uint64, np.uint]
+    nptype_names = ['float16', 'float32', 'float', 'float64', 'double', 'float128',
+                   'int16', 'int32', 'int', 'int64', 'long',
+                   'uint16', 'uint32', 'uint64', 'uint']
 
     def __init__(self):
         ffi = cffi.FFI()
-        nptype_descr = {'%s%d' % (dtype.kind, dtype.itemsize): dtype for dtype in map(np.dtype, self.nptypes)}
+        # some platforms dont have all of these, especially wierd compilers or 32 bit machines
+        nptypes = [getattr(np, name) for name in self.nptype_names if hasattr(np, name)]
+        nptype_descr = {'%s%d' % (dtype.kind, dtype.itemsize): dtype for dtype in map(np.dtype, nptypes)}
 
         casts = {}
         for code, names in self.ctypes.iteritems():
