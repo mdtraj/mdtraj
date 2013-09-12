@@ -25,7 +25,7 @@ angles = mdtraj.geometry.compute_dihedrals(traj, [phi_indices, psi_indices])
 # Lets plot our dihedral angles in a scatter plot using matplotlib. What
 # conformational states of Alanine dipeptide did we sample?
 
-import matplotlib; matplotlib.rc('text', usetex=True)
+import matplotlib
 import matplotlib.pyplot as pp
 from math import pi
 pp.figure();

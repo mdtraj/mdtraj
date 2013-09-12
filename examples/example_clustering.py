@@ -36,4 +36,4 @@ import matplotlib.pyplot as pp
 pp.figure()
 pp.title('RMSD Ward hierarchical clustering')
 #@savefig dendrogram.png
-scipy.cluster.hierarchy.dendrogram(linkage, no_labels=True, count_sort='descendent')
+graph = scipy.cluster.hierarchy.dendrogram(linkage, no_labels=True, count_sort='descendent')
