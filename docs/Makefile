@@ -53,13 +53,9 @@ builddir:
 	mkdir -p $(BUILDDIR)
 
 clean:
-	#mv $(BUILDDIR)/.git tmp.git
-	#mv $(BUILDDIR)/.nojekyll tmp.nojekyll
 	rm -rf $(BUILDDIR)/*
 	rm -rf $(TOOLSPATH)/hash_dict.pickle
 	rm -rf examples/generated/*.rst
-	#mv tmp.git $(BUILDDIR)/.git
-	#mv tmp.nojekyll $(BUILDDIR)/.nojekyll 
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml

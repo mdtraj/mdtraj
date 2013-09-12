@@ -1,7 +1,7 @@
 .. _MDCRDTrajectoryFile:
 
 MDCRDTrajectoryFile
-=================
+===================
 
 .. currentmodule:: mdtraj
 

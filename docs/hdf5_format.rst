@@ -217,7 +217,7 @@ Array Metadata
    attribue, which should be a positive integer.
 
 
- Extended Arrays
+Extended Arrays
 ~~~~~~~~~~~~~~~
 Creators may extend this format by adding new arrays. Arrays containing
 per-atom and per-frame data that naturally possesses physical units should
