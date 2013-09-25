@@ -39,6 +39,7 @@ Documentation
    compatibility
    reporters
    utils
+   tICA
 
 Minimal Example
 ---------------
