@@ -1,8 +1,13 @@
-class BaseEstimator(object):
-    """Base class for all estimators"""
+import tables
+import numpy as np
+
+
+class BaseModeller(object):
+    """Base class for all statistical modelling
+    """
 
     def get_params(self):
-        """Get parameters for this estimator.
+        """Get parameters for this modeller
 
         Returns
         -------
@@ -12,7 +17,7 @@ class BaseEstimator(object):
         pass
 
     def set_params(self, **params):
-        """Set the parameters of this estimator.
+        """Set the parameters of this modeller
 
         Returns
         -------
@@ -20,38 +25,117 @@ class BaseEstimator(object):
         """
         pass
 
-    def serialize(self, ...):
-        """Serialize this estimator.
+    def to_pytables(self, parentnode):
+        """Serialize this modeller to a PyTables group, attaching
+        it to the parent node.
 
-        I'm not sure exactly what the API or behavior of this should be.
-        It would be nice if it integrated with pytables, so that if you
-        have a Pipeline with multiple estimators and/or large data
-        structures, you can save it efficiently as a single file. After
-        all, HDF5 is supposed to be hierachical, so you should be able to
-        put multiple estimators together in a file.
+        It this estimator wraps a series of other estimators, as
+        in a pipeline, it should call to_pytables on its children
+        recursively.
+
+        Parameters
+        ----------
+        parentnode : tables.Group
+            The parent node in the HDF5 hierachy that this group
+            should be attached to.
         """
-        return something...
+        group = tables.Group(self, parentnode, name=self.__class__.__name__)
+        # add parameters and estimated quantities to the group
+        return group
 
 
 class TransformerMixin(object):
     """"Mixin class for all transformers"""
 
-    def fit_transform(self, X,  **fit_params):
-        """Fit to data, then transform it.
+    def transform(self, X):
+        """Transform a dataset X from one represenation/basis to another
 
         Parameters
         -----------
-        X : any
-            Generall X will be a numpy array of shape [n_samples, n_features], but
-            it could be something else, like a trajectory
+        X : numpy array, trajectory, list of numpy arrays, or list of trajectories
+            If X is an individual array or trajectory, we transform it
+            into the new space indivually. If X is a list of arrays or
+            trajectories, the whole dataset is transformed, and we return a
+            list of new arrays
 
         Returns
         -------
-        X_new : numpy array of shape [n_samples, n_features_new]
-            Transformed array.
+        X_new : numpy array of shape [n_samples, n_features_new], or list of such arrays
+            Transformed data, a represenation of the input data X in the new
+            space produced by this transformer
+        """
+        pass
+
+
+class EstimatorMixin(object):
+    def fit(self, X):
+        """Fit this vectorizer to training data
+
+        Parameters
+        ----------
+        X : any
+            The dataset to fit the estimator with. This dataset should
+            encompas all of the data. Repeated calls to `fit` do not
+            incrementally update the estimator.
+
+        Returns
+        -------
+        self
+        """
+        return self
+
+
+class UpdatableEstimatorMixin(EstimatorMixin):
+    def fit_update(self, X):
+        """Update the statistical model described by this estimator by
+        exposing it to new data, without "forgetting" the data that
+        it has seen in any previous calls to `fit` or `fit_update`
+
+        Parameters
+        ----------
+        X : any
+            The dataset to update the estimator with.
+
+        Returns
+        -------
+        """
+        self
+
+
+    def fit(self, X):
+        """Fit this estimator to training data
+
+        Parameters
+        ----------
+        X : any
+            The dataset to fit the estimator with. This dataset should
+            encompas all of the data. Repeated calls to `fit` do not
+            incrementally update the estimator.
+
+        Returns
+        -------
+        self
+        """
+        self.clear()
+        if isinstance(X, list):
+            for x in X:
+                self.fit_update(x)
+        else:
+            self.fit_update(X)
+        return self
+
+    def clear(self):
+        """Clear the state of this estimator, so that it can be refit
+        on fresh data without retaining knowledge of data it has been
+        previously exposed to.
+
+        All instance variables ending in '_' (estimated quantities)
+        will be set to None
         """
 
-        self.fit(X).transform(X)
+        for name in self.__dict__.keys():
+            if name.endswith('_'):
+                setattr(self, name, None)
 
 
 ##############################################################################
@@ -60,7 +144,7 @@ class TransformerMixin(object):
 ##############################################################################
 
 
-class PositionVectorizer(BaseEstimator, TransformerMixin):
+class PositionVectorizer(BaseModeller, TransformerMixin):
     """Transforms a trajectory into a set of pairwise distances
 
     This transformer will extract the positions of the atoms in a trajectory
@@ -83,15 +167,6 @@ class PositionVectorizer(BaseEstimator, TransformerMixin):
         self.reference = reference[0]
         self.alignment_indices = alignment_indices
 
-    def fit(self, X):
-        """This is a no-op, because PositionVectorizer does not need to
-        be fit to training data.
-
-        Returns
-        -------
-        self
-        """
-        return self
 
     def transform(self, X):
         """Extract the positions of all of the atoms in a trajectory
@@ -109,13 +184,10 @@ class PositionVectorizer(BaseEstimator, TransformerMixin):
             `i`-th frame in the `d`th dimension (x, y or z) after alignment.
         """
         # do the alignment
-        return self
+        return X_new
 
 
-    def inverse_transform(self, X):
-
-
-class DistanceVectorizer(BaseEstimator, TransformerMixin):
+class DistanceVectorizer(BaseModeller, TransformerMixin):
     """Transforms a trajectory into a set of pairwise distances
 
     This transformer turns trajectories into vectors of pairwise distances
@@ -133,40 +205,31 @@ class DistanceVectorizer(BaseEstimator, TransformerMixin):
     Examples
     --------
     >>> X = md.load('trajectory.h5')
-    >>> distances = DistanceVectorizer([[1,2]]).fit_transform(X)
+    >>> distances = DistanceVectorizer([[1,2]]).transform(X)
     """
 
     def __init__(self, pair_indices, use_periodic_boundries=False):
         self.pair_indices = pair_indices
         self.use_periodic_boundries = use_periodic_boundries
 
-    def fit(self, X):
-        """This is a no-op, because DistanceVectorizer does not need to
-        be fit to training data.
-
-        Returns
-        -------
-        self
-        """
-        return self
-
     def transform(self, X):
         """Extract the distance between pairs of atoms from a trajectory
 
         Parameters
         ----------
-        X : md.Trajectory
-            A molecular dynamics trajectory
+        X : Trajectory, or list of Trajectories
+            One or more molecular dynamics trajectories
 
         Returns
         -------
         d : numpy array of shape [n_frames, n_distances]
+            One or more arrays of pairwise distances
         """
         # ... calculate the distances
         return distances
 
 
-class AngleVectorizer(BaseEstimator, TransformerMixin):
+class AngleVectorizer(BaseModeller, TransformerMixin):
     """Transforms a trajectory into a set of angles
 
     This transformer turns trajectories into vectors of angles
@@ -186,40 +249,30 @@ class AngleVectorizer(BaseEstimator, TransformerMixin):
     Examples
     --------
     >>> X = md.load('trajectory.h5')
-    >>> distances = AngleVectorizer([[0, 1, 2]]).fit_transform(X)
+    >>> distances = AngleVectorizer([[0, 1, 2]]).transform(X)
     """
 
     def __init__(self, triplet_indices):
         self.triplet_indices = triplet_indices
-
-    def fit(self, X):
-        """This is a no-op, because AngleVectorizer does not need to
-        be fit to training data.
-
-        Returns
-        -------
-        self
-        """
-        return self
 
     def transform(self, X):
         """Extract the angles between atoms from a trajectory
 
         Parameters
         ----------
-        X : md.Trajectory
-            A molecular dynamics trajectory
+        X : Trajectory or list of Trajectories
+            One or more molecular dynamics trajectories
 
         Returns
         -------
         d : numpy array of shape [n_frames, n_angles]
-            The angles, in radians
+            One or more arrays of angles, in radians
         """
         # ... calculate the angles
         return angles
 
 
-class DihedralVectorizer(BaseEstimator, TransformerMixin):
+class DihedralVectorizer(BaseModeller, TransformerMixin):
     """Transforms a trajectory into a set of torsions
 
     This transformer turns trajectories into vectors of torsion angles
@@ -240,33 +293,23 @@ class DihedralVectorizer(BaseEstimator, TransformerMixin):
     Examples
     --------
     >>> X = md.load('trajectory.h5')
-    >>> distances = DihedralVectorizer([[0, 1, 2, 3]]).fit_transform(X)
+    >>> distances = DihedralVectorizer([[0, 1, 2, 3]]).transform(X)
     """
     def __init__(self, quartet_indices):
         self.quartet_indices = quartet_indices
-
-    def fit(self, X):
-        """This is a no-op, because DihedralVectorizer does not need to
-        be fit to training data.
-
-        Returns
-        -------
-        self
-        """
-        return self
 
     def transform(X):
         """Extract torsion angles from a trajectory
 
         Parameters
         ----------
-        X : md.Trajectory
-            A molecular dynamics trajectory
+        X : Trajectory or list of trajectories
+            One or more molecular dynamics trajectories
 
         Returns
         -------
         d : numpy array of shape [n_frames, n_dihedrals]
-            The dihedral angles, in radians
+            One or more arrays of dihedral angles, in radians
         """
         # extract the dihedrals from trajectory X
         return dihedrals
@@ -285,7 +328,7 @@ class DihedralVectorizer(BaseEstimator, TransformerMixin):
 ##############################################################################
 
 
-class MergingTransformer(BaseEstimator, TransformerMixin):
+class MergingTransformer(BaseModeller, TransformerMixin):
     """Transforms a trajectory by applying a collection of other vectorizers,
     stacking the results together.
 
@@ -301,22 +344,11 @@ class MergingTransformer(BaseEstimator, TransformerMixin):
     >>> a = AngleVectorizer([[0, 1, 2]])
     >>> b = DistanceVectorizer([[1,2]])
     >>> X = md.load('trajectory.h5')
-    >>> features = MergingTransformer([a, b]).fit_transform(X)
+    >>> features = MergingTransformer([a, b]).transform(X)
     """
 
     def __init__(self, transformers):
         self.transformers = transformers
-
-    def fit(self, X):
-        """Fit this vectorizer to training data
-
-        Returns
-        -------
-        self
-        """
-        for transformer in self.transformers:
-            transformer.fit(X)
-        return self
 
     def transform(self, X):
         """Extract features from each frame in a trajectory
@@ -328,37 +360,32 @@ class MergingTransformer(BaseEstimator, TransformerMixin):
         return np.hstack([v.transform(X) for v in self.transformers])
 
 
-class PipelineTransformer(BaseEstimator, TransformerMixin):
+class PipelineTransformer(BaseModeller, TransformerMixin):
     """Transforms a trajectory by applying a pipeline sequence of
     transformations in order, with the results of one feeding the input
     to the subsequent transformer.
-    
+
     Examples
     --------
     >>> a = DistanceVectorizer([[1,2]])
     >>> b = tICA(n_components=2)
 
     >>> X = md.load('trajectory.h5')
-    >>> features = PipelineTransformer([a, b]).fit_transform(X)
+    >>> features = PipelineTransformer([a, b]).transform(X)
     """
-    
+
     def __init__(self, transformers):
         self.transformers = transformers
-    
-    def fit(self, X):
-        """Fit this vectorizer to training data
 
-        Returns
-        -------
-        self
-        """
-        for transformer in self.transformers:
-            X = transformer.fit_transform(X)
-        return self
-    
     def transform(self, X):
         """Apply this sequence of transformations to new data
-        
+
+        Parameters
+        ----------
+        X : any
+            One or more trajectories or arrays, suitable as input for the
+            first transformer in the pipeline
+
         Returns
         -------
         X_new : numpy array of shape [n_frames, features]
@@ -369,27 +396,14 @@ class PipelineTransformer(BaseEstimator, TransformerMixin):
         for transformer in self.transformers:
             X = transformer.transform(X)
         return X
-    
-    def fit_transform(self, X):
-        """Fit and apply this sequence of transformations
 
-        Returns
-        -------
-        X_new : numpy array of shape [n_frames, features]
-            The features for each frame, computed by the chain of transformers
-            operating sequentially
-        """
-        for transformer in self.transformers:
-            X = transformer.fit_transform(X)
-        return X
-        
 
 ##############################################################################
-# tICA is also a vectorizer
+# tICA  is both a transformer and an estimator
 ##############################################################################
 
 
-class tICA(BaseEstimator, TransformerMixin):
+class tICA(BaseModeller, TransformerMixin, UpdateableEstimatorMixin):
     """Time-structure based independent component analysis (tICA)
 
     Linear dimensionality reduction of the data, keeping the most slowly
@@ -410,15 +424,39 @@ class tICA(BaseEstimator, TransformerMixin):
     def __init_(self, n_components):
         self.n_components = n_components
 
-    def fit(self, X):
-        """Fit the model with one or more vectorized trajectories.
+        # estimated quantites
+        self.components_ = None
+        self.eigenvalues_ = None
+        self.means_ = None
+
+        self.covariance_ = None
+        self.time_lag_correlation_ = None
+
+    def fit_update(self, X):
+        """Update the tICA estimator with one or more featurized trajectories
+
+        Parameters
+        ----------
+        X : one or more numpy array of shape [n_frames, n_features]
+             One (or more) multivariate timeseries from the input dataset
+
+        Returns
+        -------
+        self
         """
-        # ... train tICA
-        self.mean_ = do the means need to be subtracted out?
-        self.components_ = the retained tICA eigenvectors
+        # update self.covariance_ and self.time_lag_correlation_
+        pass
+
+    def compute_components(self):
+        """Compute the slow components of the dataset
+
+        This operation requires diagonalizing a matrix of size
+        [n_features, n_features], so it can be somewhat costly
+        """
+        pass
 
     def transform(self, X):
-        """Apply the dimensionality reduction on a vectorized trajectory
+        """Apply the tICA dimensionality reduction to a multivariate timeseries
 
         Parameters
         ----------
@@ -430,6 +468,9 @@ class tICA(BaseEstimator, TransformerMixin):
         -------
         X_new : anumpy array of shape [n_frames, n_components]
         """
+        if self.covariance_ is None or self.time_lag_correlation_ is None:
+            self.compute_components()
+
         # maybe center X ?
         X_transformed = np.dot(X, self.components_.T)
         return X_transformed
