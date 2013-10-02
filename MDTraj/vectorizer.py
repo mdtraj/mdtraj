@@ -43,6 +43,19 @@ class BaseModeller(object):
         # add parameters and estimated quantities to the group
         return group
 
+    @classmethod
+    def from_pytables(cls, group):
+        """Instantiate a copy of this modeller from a pytables group.
+        This performs the inverse of to_pytables.
+        """
+
+        instance = cls()
+        instance.set_params(extract parameters from group)
+        # if this group contains any nested subgroups and cls
+        # is some kind of meta-modeller like a pipeline, then
+        # this method needs to recursively call from_pytables
+        # on the subgroups, to fully instantiate instance.
+        return instance
 
 class TransformerMixin(object):
     """"Mixin class for all transformers"""
