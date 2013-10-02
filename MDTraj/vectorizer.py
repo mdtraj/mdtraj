@@ -57,6 +57,7 @@ class BaseModeller(object):
         # on the subgroups, to fully instantiate instance.
         return instance
 
+
 class TransformerMixin(object):
     """"Mixin class for all transformers"""
 
@@ -158,7 +159,8 @@ class UpdatableEstimatorMixin(EstimatorMixin):
 
 
 class PositionVectorizer(BaseModeller, TransformerMixin):
-    """Transforms a trajectory into a set of pairwise distances
+    """Transforms a molecular dynamics trajectory into a multvariate
+    timeseries of the positions of specified atoms in cartesian space
 
     This transformer will extract the positions of the atoms in a trajectory
     after aliging (RMSD) the structure to a reference frame.
@@ -201,7 +203,8 @@ class PositionVectorizer(BaseModeller, TransformerMixin):
 
 
 class DistanceVectorizer(BaseModeller, TransformerMixin):
-    """Transforms a trajectory into a set of pairwise distances
+    """Transforms a molecular dynamics trajectory into a multvariate 
+    timeseris of pairwise distances between specified atoms
 
     This transformer turns trajectories into vectors of pairwise distances
     between specified atoms.
@@ -243,7 +246,8 @@ class DistanceVectorizer(BaseModeller, TransformerMixin):
 
 
 class AngleVectorizer(BaseModeller, TransformerMixin):
-    """Transforms a trajectory into a set of angles
+    """Transforms a molecular dynamics trajectory into a multivariate
+    timeseries of the angles between specific atoms
 
     This transformer turns trajectories into vectors of angles
     between specified triplets atoms.
@@ -286,7 +290,8 @@ class AngleVectorizer(BaseModeller, TransformerMixin):
 
 
 class DihedralVectorizer(BaseModeller, TransformerMixin):
-    """Transforms a trajectory into a set of torsions
+    """Transforms a trajectory into a multivariate timeseries of the
+    torsion angles between specific atoms
 
     This transformer turns trajectories into vectors of torsion angles
     between specified quartets of atoms.
@@ -342,8 +347,8 @@ class DihedralVectorizer(BaseModeller, TransformerMixin):
 
 
 class MergingTransformer(BaseModeller, TransformerMixin):
-    """Transforms a trajectory by applying a collection of other vectorizers,
-    stacking the results together.
+    """Transforms a trajectory or timeseries by applying a collection of
+    other transformers and stacking the results together.
 
     This transformer applies a series of other transformers to the input
     trajectories, giving a single set of features for each frame which might
@@ -374,9 +379,9 @@ class MergingTransformer(BaseModeller, TransformerMixin):
 
 
 class PipelineTransformer(BaseModeller, TransformerMixin):
-    """Transforms a trajectory by applying a pipeline sequence of
-    transformations in order, with the results of one feeding the input
-    to the subsequent transformer.
+    """Transforms a trajectory or timeseries by applying a pipeline
+    sequence of transformations in order, with the results of one
+    feeding the input to the subsequent transformer.
 
     Examples
     --------
@@ -419,10 +424,9 @@ class PipelineTransformer(BaseModeller, TransformerMixin):
 class tICA(BaseModeller, TransformerMixin, UpdateableEstimatorMixin):
     """Time-structure based independent component analysis (tICA)
 
-    Linear dimensionality reduction of the data, keeping the most slowly
-    decorrelating components of the data to project the data into a lower
-    dimensional space
-
+    Linear dimensionality reduction of multivariate timeseries data, keeping
+    the most slowly decorrelating components of the data, with which the
+    timeseries can be projected into a lower dimensional space
 
     Parameters
     ----------
