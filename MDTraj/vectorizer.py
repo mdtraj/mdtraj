@@ -25,38 +25,6 @@ class BaseModeller(object):
         """
         pass
 
-    def to_pytables(self, parentnode):
-        """Serialize this modeller to a PyTables group, attaching
-        it to the parent node.
-
-        It this estimator wraps a series of other estimators, as
-        in a pipeline, it should call to_pytables on its children
-        recursively.
-
-        Parameters
-        ----------
-        parentnode : tables.Group
-            The parent node in the HDF5 hierachy that this group
-            should be attached to.
-        """
-        group = tables.Group(self, parentnode, name=self.__class__.__name__)
-        # add parameters and estimated quantities to the group
-        return group
-
-    @classmethod
-    def from_pytables(cls, group):
-        """Instantiate a copy of this modeller from a pytables group.
-        This performs the inverse of to_pytables.
-        """
-
-        instance = cls()
-        instance.set_params(extract parameters from group)
-        # if this group contains any nested subgroups and cls
-        # is some kind of meta-modeller like a pipeline, then
-        # this method needs to recursively call from_pytables
-        # on the subgroups, to fully instantiate instance.
-        return instance
-
 
 class TransformerMixin(object):
     """"Mixin class for all transformers"""
@@ -82,6 +50,8 @@ class TransformerMixin(object):
 
 
 class EstimatorMixin(object):
+    """Mixin class for all estimators"""
+
     def fit(self, X):
         """Fit this vectorizer to training data
 
@@ -97,6 +67,38 @@ class EstimatorMixin(object):
         self
         """
         return self
+
+    def to_pytables(self, parentnode):
+        """Serialize this estimator to a PyTables group, attaching
+        it to the parent node.
+
+        It this estimator wraps a series of other estimators, as
+        in a pipeline, it should call to_pytables on its children
+        recursively.
+
+        Parameters
+        ----------
+        parentnode : tables.Group
+            The parent node in the HDF5 hierachy that this group
+            should be attached to.
+        """
+        group = tables.Group(self, parentnode, name=self.__class__.__name__)
+        # add parameters and estimated quantities to the group
+        return group
+
+    @classmethod
+    def from_pytables(cls, group):
+        """Instantiate a copy of this estimator from a pytables group.
+        This performs the inverse of to_pytables.
+        """
+
+        instance = cls()
+        instance.set_params(extract parameters from group)
+        # if this group contains any nested subgroups and cls
+        # is some kind of meta-modeller like a pipeline, then
+        # this method needs to recursively call from_pytables
+        # on the subgroups, to fully instantiate instance.
+        return instance
 
 
 class UpdatableEstimatorMixin(EstimatorMixin):
