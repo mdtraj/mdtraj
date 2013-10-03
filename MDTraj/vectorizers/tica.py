@@ -3,7 +3,7 @@ from mdtraj.vectorizer import (BaseModeller, EstimatorMixin,
                                TransformerMixin, UpdateableEstimatorMixin)
 import numpy as np
 
-class tICAVectorizer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin):
+class tICATransformer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin):
     """
     Class for doing time-structure based Independent Component Analysis
     (tICA). See (Schwantes, CR and Pande, VS. JCTC, 2013, 9 (4), pp 2000-09)
@@ -83,7 +83,7 @@ class tICAVectorizer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin):
 
             n_features = row.shape[1]
 
-            if not self.cov_mat_ is None:
+            if self.running_corr_0_0_ is None:
                 self.running_corr_0_0_ = np.zeros((n_features, n_features))
                 self.running_corr_0_dt_ = np.zeros((n_features, n_features))
                 self.running_corr_dt_dt_ = np.zeros((n_features, n_features))
@@ -136,7 +136,7 @@ class tICAVectorizer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin):
         clear the internal state, to analyze new data with tICA
         """
         
-        super(self, tICAVectorizer).clear()
+        super(tICAVectorizer, self).clear()
 
         self.total_frames_ = 0
         self._have_estimate_ = False

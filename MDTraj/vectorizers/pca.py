@@ -1,9 +1,9 @@
 
-from MDTraj.vectorizer import (BaseModeller, TransformerMixin, UpdateableEstimatorMixin)
+from mdtraj.vectorizer import (BaseModeller, TransformerMixin, UpdateableEstimatorMixin)
 
 import numpy as np
 
-class PCATransformer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin, 
+class PCATransformer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin):
     """
     Class for doing Principal Component Analysis (PCA) on any multivariate
     dataset. PCA finds the linear combinations of input coordinates that 
@@ -23,11 +23,11 @@ class PCATransformer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin,
     
         # running_corr_ is the running sum of the cross-correlation of the data
         # with itself ( Outer(X, X) ) 
-        self.running_corr_ = None
+        self.running_corr_mat_ = None
         # running_sum_ is the running sum of the data, for calculating the mean
         self.running_sum_ = None
         # total_frames_ is the number of frames that we have used in the estimator
-        self.total_frames_ = 0
+        self.total_samples_ = 0
 
         # containers for the results:
         self.cov_mat_ = None
@@ -43,7 +43,7 @@ class PCATransformer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin,
         clear the current state to do PCA on new data
         """
         
-        super(self, PCAVectorizer).clear()
+        super(PCAVectorizer, self).clear()
         
         # since the above sets everything to None, I want these to be different:
         self._have_estimate_ = False
@@ -88,7 +88,7 @@ class PCATransformer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin,
             
             n_features = row.shape[1]
 
-            if not self.cov_mat_ is None:
+            if self.running_corr_mat_ is None:
                 self.running_corr_mat_ = np.zeros((n_features, n_features))
                 self.running_sum_ = np.zeros(n_features)
 
@@ -137,7 +137,7 @@ class PCATransformer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin,
         """
             
         self.mean_ = self.running_sum_ / float(self.total_samples_)
-        cov_mat = self.running_sum / (self.total_samples_ - 1) - \
+        cov_mat = self.running_corr_mat_ / (float(self.total_samples_)) - \
                     np.outer(self.mean_, self.mean_)
 
         vals, vecs = np.linalg.eigh(cov_mat)
@@ -203,7 +203,7 @@ class PCATransformer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin,
             # are you supposed to subtract the mean before projecting?
             # if so, then this is the correct line:
             
-            # proj_X.append((row - self.mean_).dot(top_pcs)
+            # proj_X.append((row - self.mean_).dot(top_pcs))
             
             # but, this just adds a constant vector to each point, (-self.mean_.dot(top_pcs))
             # so I don't think it actually matters..
