@@ -29,10 +29,27 @@ class PCATransformer(BaseModeller, EstimatorMixin, TransformerMixin,
         # total_frames_ is the number of frames that we have used in the estimator
         self.total_frames_ = 0
 
+        # containers for the results:
+        self.cov_mat_ = None
+        self.vals_ = None
+        self.vecs_ = None
+
         # boolean telling us if we have an estimate of the PCs or not
         self._have_estimate_ = False
 
     
+    def clear(self):
+        """
+        clear the current state to do PCA on new data
+        """
+        
+        super(self, PCAVectorizer).clear()
+        
+        # since the above sets everything to None, I want these to be different:
+        self._have_estimate_ = False
+        self.total_frames_ = 0
+
+            
     def fit_update(self, X):
         """
         Update the internal state with new data, X
@@ -82,6 +99,33 @@ class PCATransformer(BaseModeller, EstimatorMixin, TransformerMixin,
             self.running_sum_ += row.sum(0)
 
             self.total_samples_ += row.shape[0]
+
+        return self
+
+
+    def fit(self, X):
+        """
+        calculate the principal components for data, X
+
+        Parameters
+        ----------
+        X : np.ndarray or list of np.ndarrays
+            data or list of numpy arrays
+        
+        Returns
+        -------
+        self
+        """
+        self.clear()
+
+        if isinstance(X, list):
+            for row in X:
+                self.fit_update(row)
+
+        else:
+            self.fit_update(row)
+
+        self.compute_components()
 
         return self
 
@@ -156,11 +200,15 @@ class PCATransformer(BaseModeller, EstimatorMixin, TransformerMixin,
                 raise RuntimeError("data is not the right shape")
 
             proj_X.append(row.dot(top_pcs))
-
+            # are you supposed to subtract the mean before projecting?
+            # if so, then this is the correct line:
+            
+            # proj_X.append((row - self.mean_).dot(top_pcs)
+            
+            # but, this just adds a constant vector to each point, (-self.mean_.dot(top_pcs))
+            # so I don't think it actually matters..
 
         if return_list:
             return proj_X
         else:
             return proj_X[0]
-
-
