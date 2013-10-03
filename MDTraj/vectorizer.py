@@ -72,7 +72,7 @@ class BaseModeller(object):
 
 
 class TransformerMixin(object):
-    """"Mixin class for all transformers"""
+    """Mixin class for all transformers"""
 
     def transform(self, X):
         """Transform a dataset X from one represenation/basis to another
