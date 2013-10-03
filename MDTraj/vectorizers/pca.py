@@ -137,7 +137,7 @@ class PCATransformer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin):
         """
             
         self.mean_ = self.running_sum_ / float(self.total_samples_)
-        cov_mat = self.running_corr_mat_ / (float(self.total_samples_)) - \
+        cov_mat = self.running_corr_mat_ / float(self.total_samples_) - \
                     np.outer(self.mean_, self.mean_)
 
         vals, vecs = np.linalg.eigh(cov_mat)
@@ -145,7 +145,7 @@ class PCATransformer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin):
         ind = np.argsort(vals)[::-1]
             
         self.vals_ = vals[ind]
-        self.vecs_ = vecs[ind]
+        self.vecs_ = vecs[:, ind]
 
         self._have_estimate_ = True
 
