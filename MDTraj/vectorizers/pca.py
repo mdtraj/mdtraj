@@ -1,9 +1,9 @@
 
-from MDTraj.vectorizer import (BaseModeller, EstimatorMixin, 
-                               TransformerMixin, UpdateableEstimatorMixin)
+from MDTraj.vectorizer import (BaseModeller, TransformerMixin, UpdateableEstimatorMixin)
 
-class PCATransformer(BaseModeller, EstimatorMixin, TransformerMixin, 
-    UpdateableEstimatorMixin):
+import numpy as np
+
+class PCATransformer(BaseModeller, UpdateableEstimatorMixin, TransformerMixin, 
     """
     Class for doing Principal Component Analysis (PCA) on any multivariate
     dataset. PCA finds the linear combinations of input coordinates that 
