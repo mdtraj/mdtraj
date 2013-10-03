@@ -214,7 +214,7 @@ if __name__ == '__main__':
 
 
 
-class UpdatableEstimatorMixin(EstimatorMixin):
+class UpdateableEstimatorMixin(EstimatorMixin):
     def fit_update(self, X):
         """Update the statistical model described by this estimator by
         exposing it to new data, without "forgetting" the data that
@@ -564,7 +564,7 @@ class PipelineTransformer(BaseModeller, TransformerMixin):
 ##############################################################################
 
 
-class tICA(BaseModeller, TransformerMixin, UpdatableEstimatorMixin):
+class tICA(BaseModeller, TransformerMixin, UpdateableEstimatorMixin):
     """Time-structure based independent component analysis (tICA)
 
     Linear dimensionality reduction of multivariate timeseries data, keeping
