@@ -783,7 +783,7 @@ class Trajectory(object):
     from a Trajectory as a separate trajectory. For example, to form a
     trajectory with every other frame, you can slice with ``traj[::2]``.
 
-    Trajectory uses the nanometers, angstroms & picoseconds unit system.
+    Trajectory uses the nanometer, degree & picosecond unit system.
 
     Examples
     --------
