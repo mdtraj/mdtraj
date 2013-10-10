@@ -29,6 +29,9 @@ from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
                     TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
                     PDBTrajectoryFile, MDCRDTrajectoryFile, ArcTrajectoryFile, Topology)
 from mdtraj.utils import unitcell, ensure_type
+from mdtraj.utils.six import PY3
+if PY3:
+    basestring = unicode = str
 
 __all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpos',
            'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml']
