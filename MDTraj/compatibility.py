@@ -43,14 +43,13 @@ Functions
 ##############################################################################
 
 import sys
-from itertools import izip
-
 import numpy as np
 
 from mdtraj import Trajectory, Topology
 import mdtraj.pdb.element
 import mdtraj.trajectory
 from mdtraj.utils import import_
+from mdtraj.utils.six.moves import zip
 
 tables = import_('tables')
 

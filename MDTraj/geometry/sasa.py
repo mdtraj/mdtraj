@@ -101,12 +101,3 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960):
 
     return out
 
-
-
-if __name__ == '__main__':
-    import mdtraj as md
-    import mdtraj.testing
-    t = md.load(mdtraj.testing.get_fn('2EQQ.pdb'))[0]
-    out = shrake_rupley(t)
-    print out
-    print np.sum(out)

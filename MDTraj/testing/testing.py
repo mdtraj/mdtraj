@@ -17,7 +17,7 @@
 ##############################################################################
 # imports
 ##############################################################################
-
+from __future__ import print_function
 import os
 import functools
 import numpy as np
@@ -194,6 +194,6 @@ def skip(reason):
         @functools.wraps(test)
         def inner(*args, **kwargs):
             raise SkipTest
-            print "After f(*args)"
+            print("After f(*args)")
         return inner
     return wrap

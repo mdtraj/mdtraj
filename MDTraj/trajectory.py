@@ -22,7 +22,6 @@ import os
 import warnings
 import logging
 import functools
-from itertools import izip
 from copy import deepcopy
 import numpy as np
 

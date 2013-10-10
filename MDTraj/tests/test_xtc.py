@@ -21,7 +21,7 @@ Note, this file cannot be located in the xtc subdirectory, because that
 directory is not a python package (it has no __init__.py) and is thus tests
 there are not discovered by nose
 """
-
+from __future__ import print_function
 import os, tempfile
 import numpy as np
 from mdtraj import xtc, io, XTCTrajectoryFile
@@ -187,6 +187,4 @@ def test_xtc_write_wierd_0():
         f.write(x1)
 
     xr = XTCTrajectoryFile(temp).read()[0]
-
-
-    print xr.shape
+    print(xr.shape)
