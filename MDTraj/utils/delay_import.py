@@ -6,6 +6,7 @@ the module is not installed. for dealing with dependencies.
 # imports
 ##############################################################################
 
+from __future__ import print_function
 import os
 import sys
 import inspect
@@ -110,6 +111,10 @@ MESSAGES = {
     # easy_install pandas
     or
     # pip install pandas
+    ''',
+
+    'scipy': '''
+    The code at {filename}:{line_number} requires the scipy package
     '''
 }
 
@@ -158,8 +163,8 @@ def import_(module):
 
         bar = '\033[91m' + '#' * max(len(line) for line in m.split(os.linesep)) + '\033[0m'
 
-        print >> sys.stderr
-        print >> sys.stderr, bar
-        print >> sys.stderr, m
-        print >> sys.stderr, bar
+        print('', file=sys.stderr)
+        print(bar, file=sys.stderr)
+        print(m, file=sys.stderr)
+        print(bar, file=sys.stderr)
         raise

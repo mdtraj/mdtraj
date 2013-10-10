@@ -67,7 +67,7 @@ def ensure_mode(*m):
     class HDF5Trajectory:
         @ensure_mode('w')
         def method_that_is_only_allowed_to_be_called_in_write_mode(self):
-            print 'i must be in write mode!'
+            print('i must be in write mode!')
     """
     def inner(f):
         @wraps(f)

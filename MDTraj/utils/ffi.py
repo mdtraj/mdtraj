@@ -2,6 +2,8 @@ from distutils.ccompiler import new_compiler
 import cffi
 import numpy as np
 
+from .six import iteritems
+
 __all__ = ['cdata', 'find_library']
 
 class cpointer(object):
@@ -26,7 +28,7 @@ class cpointer(object):
         nptype_descr = {'%s%d' % (dtype.kind, dtype.itemsize): dtype for dtype in map(np.dtype, nptypes)}
 
         casts = {}
-        for code, names in self.ctypes.iteritems():
+        for code, names in iteritems(self.ctypes):
             for name in names: 
                 casts[nptype_descr['%s%d' % (code, ffi.sizeof(name))]] = name + ' *'
         # casts is a dict that helps us cast numpy arrays, like

@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
+from __future__ import print_function
 import itertools
 import numpy as np
 
@@ -174,9 +175,9 @@ def test_dihedral_performance():
     r2 = md.geometry.compute_dihedrals(t, indices, opt=True)
     t3 = time.time()
     
-    print '\ndihedral performance:'
-    print 'numpy:   %f s' % (t2 - t1)
-    print 'opt sse: %f s' % (t3 - t2)
+    print('\ndihedral performance:')
+    print('numpy:   %f s' % (t2 - t1))
+    print('opt sse: %f s' % (t3 - t2))
 
 @skipif(not RUN_PERFOMANCE_TESTS, 'Not doing performance testing')
 def test_angle_performance():
@@ -191,6 +192,6 @@ def test_angle_performance():
     r2 = md.geometry.compute_angles(t, indices, opt=True)
     t3 = time.time()
     
-    print '\nangle performance:'
-    print 'numpy:   %f s' % (t2 - t1)
-    print 'opt sse: %f s' % (t3 - t2)
+    print('\nangle performance:')
+    print('numpy:   %f s' % (t2 - t1))
+    print('opt sse: %f s' % (t3 - t2))

@@ -24,6 +24,7 @@
 
 import numpy as np
 from mdtraj import _rmsd
+from mdtraj.utils.six.moves import xrange
 
 ##############################################################################
 # Globals

@@ -44,6 +44,8 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from __future__ import print_function
+
 __author__ = "Peter Eastman"
 __version__ = "1.0"
 
@@ -51,10 +53,10 @@ import os
 import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy
-from pdbstructure import PdbStructure
+from .pdbstructure import PdbStructure
 from mdtraj.topology import Topology
 from mdtraj.utils import ilen
-import element as elem
+from . import element as elem
 
 
 class PDBTrajectoryFile(object):
@@ -148,7 +150,7 @@ class PDBTrajectoryFile(object):
         atomIndex = 1
         posIndex = 0
         if modelIndex is not None:
-            print >> self._file, "MODEL     %4d" % modelIndex
+            print("MODEL     %4d" % modelIndex, file=self._file)
         for (chainIndex, chain) in enumerate(topology.chains):
             chainName = self._chain_names[chainIndex % len(self._chain_names)]
             residues = list(chain.residues)
@@ -174,15 +176,15 @@ class PDBTrajectoryFile(object):
                         (resIndex + 1) % 10000, _format_83(coords[0]),
                         _format_83(coords[1]), _format_83(coords[2]), symbol)
                     assert len(line) == 80, 'Fixed width overflow detected'
-                    print >> self._file, line
+                    print(line, file=self._file)
                     posIndex += 1
                     atomIndex += 1
                 if resIndex == len(residues)-1:
-                    print >> self._file, "TER   %5d      %3s %s%4d" % (atomIndex, resName, chainName, resIndex+1)
+                    print("TER   %5d      %3s %s%4d" % (atomIndex, resName, chainName, resIndex+1), file=self._file)
                     atomIndex += 1
 
         if modelIndex is not None:
-            print >> self._file, "ENDMDL"
+            print("ENDMDL", file=self._file)
 
     def _write_header(self, unitcell_lengths, unitcell_angles):
         """Write out the header for a PDB file.
@@ -212,12 +214,12 @@ class PDBTrajectoryFile(object):
         box = list(unitcell_lengths) + list(unitcell_angles)
         assert len(box) == 6
 
-        print >>self._file, "CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f P 1           1 " % tuple(box)
+        print("CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f P 1           1 " % tuple(box), file=self._file)
 
     def _write_footer(self):
         if not self._mode == 'w':
             raise ValueError('file not opened for writing')
-        print >>self._file, "END"
+        print("END", file=self._file)
         self._footer_written = True
 
     @classmethod

@@ -17,6 +17,7 @@ import numpy as np
 import scipy.optimize
 from mdtraj.utils.arrays import ensure_type
 
+
 class Transformation(object):
     """Operator capable of rotating and translating a conformation
 

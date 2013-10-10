@@ -793,9 +793,9 @@ class Trajectory(object):
 
     >>> # slicing a trajectory
     >>> t = md.load('trajectory.h5')                          # doctest: +SKIP
-    >>> print t                                               # doctest: +SKIP
+    >>> print(t)                                              # doctest: +SKIP
     <mdtraj.Trajectory with 100 frames, 22 atoms>
-    >>> print t[::2]                                          # doctest: +SKIP
+    >>> print(t[::2])                                         # doctest: +SKIP
     <mdtraj.Trajectory with 50 frames, 22 atoms>
 
     >>> # calculating the average distance between two atoms

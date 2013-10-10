@@ -39,8 +39,10 @@ import inspect
 import textwrap
 import re
 import pydoc
-from StringIO import StringIO
 from warnings import warn
+
+from mdtraj.utils.six import StringIO, iteritems
+
 
 class Reader(object):
     """A line-based string reader.
@@ -146,7 +148,7 @@ class NumpyDocString(object):
         return self._parsed_data[key]
 
     def __setitem__(self,key,val):
-        if not self._parsed_data.has_key(key):
+        if not key in self._parsed_data:
             warn("Unknown section %s" % key)
         else:
             self._parsed_data[key] = val
@@ -403,7 +405,7 @@ class NumpyDocString(object):
         idx = self['index']
         out = []
         out += ['.. index:: %s' % idx.get('default','')]
-        for section, references in idx.iteritems():
+        for section, references in iteritems(idx):
             if section == 'default':
                 continue
             out += ['   :%s: %s' % (section, ', '.join(references))]
@@ -483,7 +485,7 @@ class FunctionDoc(NumpyDocString):
                  'meth': 'method'}
 
         if self._role:
-            if not roles.has_key(self._role):
+            if not self._roles in roles:
                 print("Warning: invalid role %s" % self._role)
             out += '.. %s:: %s\n    \n\n' % (roles.get(self._role,''),
                                              func_name)

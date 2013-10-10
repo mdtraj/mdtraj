@@ -12,18 +12,18 @@
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# mdtraj. If not, see http://www.gnu.org/licenses/
 
 ##############################################################################
 # Imports
 ##############################################################################
-
+import sys
+import types
+import warnings
 from inspect import (isclass, ismodule, isfunction, ismethod,
                      getmembers, getdoc, getmodule, getargs, isbuiltin)
-import docscrape
-import types
-import sys
-import warnings
+from .docscrape import NumpyDocString
+from mdtraj.utils.six import get_function_code, get_function_closure, PY2
 
 __all__ = ['DocStringFormatTester']
 
@@ -90,7 +90,10 @@ def DocStringFormatTester(module, error_on_none=False):
             A string represntation
         """
         if ismethod(f):
-            return '.'.join([getmodule(f).__name__, f.im_class.__name__, f.__name__])
+            if PY2:
+                return '.'.join([getmodule(f).__name__, f.im_class.__name__, f.__name__])
+            else:
+                return '.'.join([getmodule(f).__name__, f.__self__.__class__.__name__, f.__name__])
         if isfunction(f) or isbuiltin(f):
             return '.'.join([getmodule(f).__name__, f.__name__])
         if isclass(f):
@@ -120,7 +123,7 @@ def DocStringFormatTester(module, error_on_none=False):
         else:
             with warnings.catch_warnings():
                 warnings.simplefilter('error')
-                parsed = docscrape.NumpyDocString(doc)
+                parsed = NumpyDocString(doc)
 
             param_names = set([e[0] for e in parsed['Parameters']])
 
@@ -132,7 +135,7 @@ def DocStringFormatTester(module, error_on_none=False):
                 # by parseing the error hen you supply too many
                 import re
                 try:
-                    f(*range(1000))
+                    f(*list(range(100)))
                 except TypeError as e:
                     m = re.search('takes at most (\d+) positional arguments', str(e))
                     if not m:
@@ -145,8 +148,8 @@ def DocStringFormatTester(module, error_on_none=False):
                         "docstring, %d" % (format(f), n_args, len(param_names)))
                 return
 
-            args = set(getargs(f.func_code).args)
-            if ismethod(f) and 'self' in args:
+            args = set(getargs(get_function_code(f)).args)
+            if 'self' in args:
                 args.remove('self')
 
             if args != param_names:
@@ -166,11 +169,14 @@ def DocStringFormatTester(module, error_on_none=False):
         # func_code is set to the func_code of check_docstring, but we add
         # set second argument of that function (after self) to be a default
         # arg -- the f that we're iterating over.
-        method = types.FunctionType(check_docstring.func_code, globals(), name,
-            (f,), check_docstring.func_closure)
+        method = types.FunctionType(get_function_code(check_docstring), globals(), name,
+            (f,), get_function_closure(check_docstring))
 
         # give the method a short docstring
-        method.func_doc = 'NumpyDoc: ' + format(f)
+        if PY2:
+            method.func_doc = 'NumpyDoc: ' + format(f)
+        else:
+            method.__doc__ = 'NumpyDoc: ' + format(f)
         funcdict[name] = method
 
     return type('TestDoc', (), funcdict)
