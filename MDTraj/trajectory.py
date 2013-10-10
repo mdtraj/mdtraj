@@ -29,6 +29,7 @@ from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
                     TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
                     PDBTrajectoryFile, MDCRDTrajectoryFile, ArcTrajectoryFile, Topology)
 from mdtraj.utils import unitcell, ensure_type
+from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3
 if PY3:
     basestring = str

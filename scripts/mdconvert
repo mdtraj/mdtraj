@@ -3,6 +3,7 @@
 ###############################################################################
 # Imports
 ###############################################################################
+from __future__ import print_function
 
 import os
 import sys
@@ -64,7 +65,7 @@ class _Warner(object):
 
     def __call__(self, msg):
         if self.active:
-            print >> sys.stderr, 'Warning:', msg
+            print('Warning:', msg, file=sys.stderr)
 warn = _Warner()
 
 
@@ -282,7 +283,7 @@ def main(args, verbose=True):
                             else:
                                 raise RuntineError()
                         data = _data
-                        print data.keys()
+                        print(list(data.keys()))
                         n_frames = len(data['xyz'])
 
                     convert(data, in_units, out_units, out_fields)
@@ -294,7 +295,7 @@ def main(args, verbose=True):
                         sys.stdout.flush()
 
     if verbose:
-        print
+        print(' ')
 
 
 def write(outfile, data):

@@ -49,7 +49,10 @@ from mdtraj import Trajectory, Topology
 import mdtraj.pdb.element
 import mdtraj.trajectory
 from mdtraj.utils import import_
+from mdtraj.utils.six import PY3
 from mdtraj.utils.six.moves import zip
+if PY3:
+    basestring = str
 
 tables = import_('tables')
 
