@@ -2,10 +2,12 @@
 """
 ##############################################################################
 # imports
-##############################################################################
+#############################################################################
 
+import sys
 import ast
 from mdtraj.utils import import_
+# from meta.asttools import print_ast for debugging
 
 __all__ = ['in_units_of']
 
@@ -22,7 +24,7 @@ class _UnitContext(ast.NodeTransformer):
     # we want to do some validation to ensure that the AST only
     # contains "safe" operations. These are operations that can reasonably
     # appear in unit expressions
-    allowed_ops = [ast.Expression, ast.BinOp, ast.Name,
+    allowed_ops = [ast.Expression, ast.BinOp, ast.Name, ast.Attribute,
                    ast.Pow, ast.Div, ast.Mult, ast.Num]
 
     def visit(self, node):
@@ -36,7 +38,7 @@ class _UnitContext(ast.NodeTransformer):
         # of just "nanometers", because I don't want to import * from
         # units into this module.
         units = import_('simtk.unit')
-        if not hasattr(units, node.id):
+        if not (node.id == 'units' or hasattr(units, node.id)):
             # also, let's take this opporunity to check that the node.id
             # (which supposed to be the name of the unit, like "nanometers")
             # is actually an attribute in simtk.unit
@@ -71,6 +73,7 @@ def _str_to_unit(unit_string):
     # "nanometers" into "unit.nanometers" and simulataniously check that
     # there's no nefarious stuff in the expression.
 
+
     node = _unit_context.visit(ast.parse(unit_string, mode='eval'))
     fixed_node = ast.fix_missing_locations(node)
     output = eval(compile(fixed_node, '<string>', mode='eval'))
@@ -96,9 +99,8 @@ def in_units_of(quantity, units_out, units_in=None):
 
     Examples
     --------
-    >>> units = import_('simtk.unit')
-    >>> str(in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond'))
-    '1000000.0'
+    >>> in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond')  # doctest: +SKIP
+    1000000.0
     """
     units = import_('simtk.unit')
 
