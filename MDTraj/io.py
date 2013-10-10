@@ -70,6 +70,9 @@ import os
 import warnings
 import numpy as np
 from mdtraj.utils import import_
+from mdtraj.utils.six import PY3
+if PY3:
+    basestring = str
 tables = import_('tables')
 
 try:

@@ -31,7 +31,7 @@ from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
 from mdtraj.utils import unitcell, ensure_type
 from mdtraj.utils.six import PY3
 if PY3:
-    basestring = unicode = str
+    basestring = str
 
 __all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpos',
            'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml']
