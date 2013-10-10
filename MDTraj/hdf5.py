@@ -237,7 +237,10 @@ class HDF5TrajectoryFile(object):
             A topology object
         """
         try:
-            topology_dict = json.loads(self._get_node('/', name='topology')[0])
+            raw = self._get_node('/', name='topology')[0]
+            if not isinstance(raw, str):
+                raw = raw.decode()
+            topology_dict = json.loads(raw)
         except self.tables.NoSuchNodeError:
             return None
 
@@ -506,7 +509,10 @@ class HDF5TrajectoryFile(object):
             try:
                 node = self._get_node(where='/', name=name)
                 data = node.__getitem__(slice)
-                data =  in_units_of(data, out_units, str(node.attrs.units))
+                in_units = node.attrs.units
+                if not isinstance(in_units, str):
+                    in_units = in_units.decode()
+                data =  in_units_of(data, out_units, in_units)
                 return data
             except self.tables.NoSuchNodeError:
                 if can_be_none:

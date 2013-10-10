@@ -90,3 +90,8 @@ def test_unit_2():
     a = in_units_of(1, 'meter**2/second', 'nanometers**2/picosecond')
     b = 1e-6
     assert abs(a-b) < 1e-10
+
+def test_unit_2_bytes():
+    a = in_units_of(1, b'meter**2/second', b'nanometers**2/picosecond')
+    b = 1e-6
+    assert abs(a-b) < 1e-10

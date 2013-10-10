@@ -7,7 +7,9 @@
 import sys
 import ast
 from mdtraj.utils import import_
-# from meta.asttools import print_ast for debugging
+
+# Debugging
+# from meta.asttools import print_ast
 
 __all__ = ['in_units_of']
 
