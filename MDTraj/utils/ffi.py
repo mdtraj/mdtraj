@@ -1,8 +1,10 @@
+from __future__ import print_function, division
+import sysconfig
 from distutils.ccompiler import new_compiler
 import cffi
 import numpy as np
 
-from .six import iteritems
+from .six import iteritems, PY3
 
 __all__ = ['cdata', 'find_library']
 
@@ -54,6 +56,17 @@ def find_library(path, name):
     """Find a shared library
     """
     compiler = new_compiler()
-    if not hasattr(path, '__iter__'):
+    if isinstance(path, str):
         path = [path]
-    return compiler.find_library_file(path, name)
+    names = [name]
+
+    soabi = sysconfig.get_config_var('SOABI')
+    if soabi is not None:
+        names.append('%s.%s' % (names[0], soabi))
+
+    for name in names:
+        result = compiler.find_library_file(path, name)
+        if result is not None:
+            return result
+
+    return None

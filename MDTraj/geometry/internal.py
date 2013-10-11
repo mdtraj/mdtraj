@@ -24,6 +24,7 @@ This code is new and should be considered __unstable__
 # Imports
 ##############################################################################
 
+from __future__ import print_function, division
 import numpy as np
 from itertools import combinations
 from mdtraj.utils.six.moves import filter  # itertools

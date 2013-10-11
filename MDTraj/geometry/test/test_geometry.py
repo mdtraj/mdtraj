@@ -88,7 +88,7 @@ def test_dihedral_index_offset_generation():
     traj = md.load(get_fn('1bpi.pdb'))
 
     result = np.array([2, 11, 12, 13])  # The atom indices of the first phi angle
-
+    print([e.name for e in traj.topology.atoms])
     rid1, ind1 = mdtraj.geometry.dihedral._get_indices_phi(traj)
     rid2, ind2 = mdtraj.geometry.dihedral.atom_sequence_finder(traj, ["-C","N","CA","C"])
     rid3, ind3 = mdtraj.geometry.dihedral.atom_sequence_finder(traj, ["-C","N","CA","C"], [-1, 0, 0, 0])

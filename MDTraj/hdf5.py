@@ -22,6 +22,7 @@ https://github.com/rmcgibbo/mdtraj/issues/36
 # Imports
 ##############################################################################
 
+from __future__ import print_function, division
 # stdlib
 import os
 import warnings

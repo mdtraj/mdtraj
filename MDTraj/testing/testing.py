@@ -17,8 +17,8 @@
 ##############################################################################
 # imports
 ##############################################################################
-from __future__ import print_function
 
+from __future__ import print_function, division
 import os
 import functools
 import numpy as np

@@ -18,6 +18,7 @@
 
 __all__ = ['compute_distances', 'compute_angles', 'compute_dihedrals']
 
+from __future__ import print_function, division
 import os
 import warnings
 try:
@@ -29,7 +30,6 @@ except ImportError:
                   'which is installable with easy_install or pip via '
                   '"pip install cffi" or "easy_install cffi".')
     _HAVE_OPT = False  # we definitely don't have the library
-
 if _HAVE_OPT is not False:
     # lets try to open the library
     ffi = _cffi.FFI()

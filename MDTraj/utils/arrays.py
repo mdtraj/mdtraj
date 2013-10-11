@@ -18,6 +18,7 @@
 # imports
 ##############################################################################
 
+from __future__ import print_function, division
 import itertools
 import warnings
 import numpy as np

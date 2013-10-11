@@ -4,6 +4,7 @@
 # imports
 ##############################################################################
 
+from __future__ import print_function, division
 import numpy as np
 from .arrays import ensure_type, TypeCastPerformanceWarning
 from .unit import in_units_of

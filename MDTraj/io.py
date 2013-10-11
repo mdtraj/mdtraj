@@ -66,6 +66,7 @@ Functions
 
 __all__ = ['saveh', 'loadh']
 
+from __future__ import print_function, division
 import os
 import warnings
 import numpy as np

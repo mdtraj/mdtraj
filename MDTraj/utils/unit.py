@@ -4,6 +4,7 @@
 # imports
 #############################################################################
 
+from __future__ import print_function, division
 import sys
 import ast
 from mdtraj.utils import import_

@@ -18,6 +18,7 @@ trajectories in a variety of formats, including Gromacs XTC & TRR, CHARMM/NAMD
 DCD, AMBER BINPOS, PDB, and HDF5.
 """
 
+from __future__ import print_function, division
 from mdtraj.xtc import XTCTrajectoryFile
 from mdtraj.trr import TRRTrajectoryFile
 from mdtraj.hdf5 import HDF5TrajectoryFile
