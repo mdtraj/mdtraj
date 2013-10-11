@@ -41,9 +41,9 @@ def test_read_after_close():
 
     f.close()
 
-    with assert_raises(IOError):
-        # should be an ioerror if you read a file that's closed
-        eq(f.read(), 1)
+    # should be an ioerror if you read a file that's closed
+    assert_raises(IOError, lambda: f.read())
+
 
 def test_shape():
     xyz, time, boxlength, boxangles = NetCDFTrajectoryFile(get_fn('mdcrd.nc')).read()
@@ -153,12 +153,10 @@ def test_write_3():
     time = np.random.randn(100)
 
     with NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
-        with assert_raises(ValueError):
-            # you can't supply cell_lengths without cell_angles
-            f.write(np.random.randn(100, 3, 3), cell_lengths=np.random.randn(100, 3))
-        with assert_raises(ValueError):
-            # or the other way aroun
-            f.write(np.random.randn(100, 3, 3), cell_angles=np.random.randn(100, 3))
+        # you can't supply cell_lengths without cell_angles
+        assert_raises(ValueError, lambda: f.write(np.random.randn(100, 3, 3), cell_lengths=np.random.randn(100, 3)))
+        # or the other way aroun
+        assert_raises(ValueError, lambda: f.write(np.random.randn(100, 3, 3), cell_angles=np.random.randn(100, 3)))
 
 
 def test_n_atoms():

@@ -49,8 +49,7 @@ def test_legacy_hdf0():
 def test_mismatch():
     # loading a 22 atoms xtc with a topology that has 2,000 atoms
     # some kind of error should happen!
-    with assert_raises(ValueError):
-        md.load(get_fn('frame0.xtc'), top=get_fn('4K6Q.pdb'))
+    assert_raises(ValueError, lambda: md.load(get_fn('frame0.xtc'), top=get_fn('4K6Q.pdb')))
 
 
 def test_box():

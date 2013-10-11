@@ -53,20 +53,18 @@ def test_write_inconsistent():
     coordinates = np.random.randn(4, 10,3)
     with HDF5TrajectoryFile(temp, 'w') as f:
         f.write(coordinates)
-        with assert_raises(ValueError):
-            # since the first frames we saved didn't contain velocities, we
-            # can't save more velocities
-            f.write(coordinates, velocities=coordinates)
+        # since the first frames we saved didn't contain velocities, we
+        # can't save more velocities
+        assert_raises(ValueError, lambda: f.write(coordinates, velocities=coordinates))
 
 
 def test_write_inconsistent_2():
     coordinates = np.random.randn(4, 10,3)
     with HDF5TrajectoryFile(temp, 'w') as f:
         f.write(coordinates, velocities=coordinates)
-        with assert_raises(ValueError):
-            # we're saving a deficient set of data, since before we wrote
-            # more information.
-            f.write(coordinates)
+        # we're saving a deficient set of data, since before we wrote
+        # more information.
+        assert_raises(ValueError, lambda: f.write(coordinates))
 
 
 @skipif(not HAVE_UNITS, 'No units')
@@ -91,10 +89,9 @@ def test_write_units_mismatch():
     velocoties = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.picosecond)
 
     with HDF5TrajectoryFile(temp, 'w') as f:
-        with assert_raises(TypeError):
-            # if you try to write coordinates that are unitted and not
-            # in the correct units, we find that
-            f.write(coordinates=velocoties)
+        # if you try to write coordinates that are unitted and not
+        # in the correct units, we find that
+        assert_raises(TypeError, lambda: f.write(coordinates=velocoties))
 
 
 def test_topology():

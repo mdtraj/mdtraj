@@ -379,8 +379,9 @@ def read(infile, chunk, stride, atom_indices):
 
         data = {'xyz': infile.positions[::stride, atom_indices, :],
                 'topology': topology}
-        data['cell_lengths'] =np.array([infile.unitcell_lengths] * len(data['xyz']))
-        data['cell_angles'] = np.array([infile.unitcell_angles] * len(data['xyz']))
+        if infile.unitcell_lengths is not None:
+            data['cell_lengths'] =np.array([infile.unitcell_lengths] * len(data['xyz']))
+            data['cell_angles'] = np.array([infile.unitcell_angles] * len(data['xyz']))
         in_units = 'angstroms'
         infile.close()
 
@@ -414,7 +415,7 @@ def read(infile, chunk, stride, atom_indices):
     else:
         raise RuntimeError
 
-    data = {k: v for k, v in data.items() if v is not None}
+    data = dict((k, v) for k, v in data.items() if v is not None)
     return data, in_units, (0 if 'xyz' not in data else len(data['xyz']))
 
 
