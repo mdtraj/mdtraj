@@ -11,7 +11,7 @@ script:
   - echo "script"
   - $python -V
   - sudo $python setup.py -q install
-  - $python -c "import mdtraj; mdtraj.test('full')"
+  - $python -c "import mdtraj; a=mdtraj.test('full'); import sys; sys.exit((len(a.failures)+len(a.errors))>0)"
 
 env:
   matrix:
