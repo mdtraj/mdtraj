@@ -63,9 +63,6 @@ True
 Functions
 ---------
 """
-
-__all__ = ['saveh', 'loadh']
-
 from __future__ import print_function, division
 import os
 import warnings
@@ -75,6 +72,8 @@ from mdtraj.utils.six import PY3, iteritems
 if PY3:
     basestring = str
 tables = import_('tables')
+
+__all__ = ['saveh', 'loadh']
 
 try:
     COMPRESSION = tables.Filters(complevel=9, complib='blosc', shuffle=True)
