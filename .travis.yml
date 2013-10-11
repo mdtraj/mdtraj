@@ -2,56 +2,30 @@
 # travis-ci; it uses virtualenvs, they do not have numpy, scipy, matplotlib,
 # and it is impractical to build them
 
-language: c
-install:
-  - sudo apt-get update
-  - sudo apt-get install -qq libhdf5-serial-dev
-  - sudo apt-get install -qq python-dev
-  - sudo apt-get install -qq python-numpy
-  - sudo apt-get install -qq python-scipy
-  - sudo apt-get install -qq python-networkx
-  - sudo apt-get install -qq python-nose
-  - sudo apt-get install -qq python-setuptools
-  - sudo apt-get install -qq cython
-  - sudo apt-get install -qq python-numexpr
-  - sudo apt-get install -qq python-tables
-  - sudo apt-get install -qq netcdf-bin libnetcdf-dev
-  - sudo apt-get install -qq python-setuptools
-  - sudo apt-get install -qq python-pandas
-  - sudo easy_install pip
+language: python
+python:
+  - "2.6"
+  - "2.7"
+  - "3.3"
 
-  # Currently (august 11, 2013), the latest version of netcdf4-python
-  # requires at least libnetcdf4-4.1.2, whereas apt-get libnetcdf-dev
-  # is installing libnetcdf4-4.1.1. We're avoiding this issue by requiring
-  # the previous release of netcdf4-python. Hopefully in the future this
-  # can be resolved.
-  # See https://code.google.com/p/netcdf4-python/issues/detail?id=194&start=100
-  # https://github.com/rmcgibbo/mdtraj/pull/151
-  # https://github.com/rmcgibbo/mdtraj/issues/150
-  - sudo pip install netCDF4==1.0.4
-  - sudo pip install git+git://github.com/rmcgibbo/simtk.unit
-  - sudo pip install flake8
-  - sudo pip install scripttest
-  - sudo pip install cffi
+install:
+  - echo "install"
+  - echo $VIRTUAL_ENV
+  - sudo bash tools/ci/apt_install.sh
+  - sudo bash tools/ci/py_install.sh
 
 script:
+  - echo "script"
   - sudo python setup.py -q install
   - python -c "import netCDF4; print netCDF4.__version__"
   - nosetests
 
 env:
   global:
-    # encrypted AWS_SECRET_ACCESS_KEY to push documentation to S3
+    # encrypted AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to push documentation to S3
+    - secure: "fB9S4+Ok+5RO6OobqhfWzjnjxWSbJxPrtHNcciKX5/yE+IC4WjkXhGkIKY1FLVNDStoerdYKN7wHdi98QAArQBunYxruuALxifyDPo2HZNTnK2Wvq6+eMjqHKuHMyJgE+ZJ2TuQGjM3WNOT1dv+awOsGr5tNw6KJa4YAtC6a4oo="
     - secure: "d3xpZOaixS6TyYTjOSPvIdwUYrTfuEM9sN8AxZKp/92sfcHj3EP7qyCMj/cuf1Gl7mT2nZJj4daOgMam4/sZD6MUnXokDwEgIMes2rrVjQX0i0MvXFU1LN8KbUcK+6QQyXc8AwxJJ603L9YxLnBdPfYTQNrd3zP7BzWYP00Nch4="
 
 after_success:
-  - if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then echo "This is a pull request. No deployment will be done."; exit 0; fi
-  - if [[ "$TRAVIS_BRANCH" != "master" ]]; then echo "No deployment on BRANCH='$TRAVIS_BRANCH'"; exit 0; fi
-  - sudo apt-get install -qq python-sphinx       # for building documentation
-  - sudo apt-get install -qq python-boto         # for interacting with S3
-  - sudo apt-get install -qq python-sklearn      # for running example_pca.py
-  - sudo apt-get install -qq python-matplotlib   # for custom sphinx extensions
-  - sudo pip install ipython
-  - cd docs && make html && cd -
-  - python tools/travis-artifacts.py
-
+  - echo "after_success"
+  - sudo bash tools/ci/after_sucess.sh
