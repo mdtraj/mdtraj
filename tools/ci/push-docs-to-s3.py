@@ -5,13 +5,14 @@ import mdtraj
 
 # The secret key is available as a secure environment variable
 # on travis-ci to push the build documentation to Amazon S3.
-AWS_ACCESS_KEY_ID = 'AKIAJN6O6JPBACO27BLQ'
+AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+BUCKET_NAME = 'mdtraj'
 
-bucket_name = AWS_ACCESS_KEY_ID.lower() + '-mdtraj'
+bucket_name = AWS_ACCESS_KEY_ID.lower() + '-' + BUCKET_NAME
 conn = boto.connect_s3(AWS_ACCESS_KEY_ID,
             AWS_SECRET_ACCESS_KEY)
-bucket = conn.create_bucket('mdtraj')
+bucket = conn.create_bucket(BUCKET_NAME)
 
 root = 'docs/_build'
 for dirpath, dirnames, filenames in os.walk(root):
