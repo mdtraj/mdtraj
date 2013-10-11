@@ -4,9 +4,9 @@ install:
   - echo "install"
   - echo "$python $PYTHON"
   - export PYTHON=$python
-  - sudo bash tools/ci/apt_install.sh
+  - tools/ci/apt_install.sh
   - $python -V
-  - sudo bash tools/ci/py_install.sh
+  - tools/ci/py_install.sh
 
 script:
   - echo "script"
