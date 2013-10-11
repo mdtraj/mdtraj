@@ -22,6 +22,7 @@ https://github.com/rmcgibbo/mdtraj/issues/36
 # Imports
 ##############################################################################
 
+from __future__ import print_function, division
 # stdlib
 import os
 import warnings
@@ -67,7 +68,7 @@ def ensure_mode(*m):
     class HDF5Trajectory:
         @ensure_mode('w')
         def method_that_is_only_allowed_to_be_called_in_write_mode(self):
-            print 'i must be in write mode!'
+            print('i must be in write mode!')
     """
     def inner(f):
         @wraps(f)
@@ -172,7 +173,7 @@ class HDF5TrajectoryFile(object):
             try:
                 self._frame_index = len(self._handle.root.coordinates)
                 self._needs_initialization = False
-            except tables.NoSuchNodeError:
+            except self.tables.NoSuchNodeError:
                 self._frame_index = 0
                 self._needs_initialization = False
         elif mode == 'r':
@@ -237,7 +238,10 @@ class HDF5TrajectoryFile(object):
             A topology object
         """
         try:
-            topology_dict = json.loads(self._get_node('/', name='topology')[0])
+            raw = self._get_node('/', name='topology')[0]
+            if not isinstance(raw, str):
+                raw = raw.decode()
+            topology_dict = json.loads(raw)
         except self.tables.NoSuchNodeError:
             return None
 
@@ -332,11 +336,14 @@ class HDF5TrajectoryFile(object):
         except self.tables.NoSuchNodeError:
             pass
 
-        data = [str(json.dumps(topology_dict))]
+        data = json.dumps(topology_dict)
+        if not isinstance(data, bytes):
+            data = data.encode('ascii')
+
         if self.tables.__version__ >= '3.0.0':
-            self._handle.create_array(where='/', name='topology', obj=data)
+            self._handle.create_array(where='/', name='topology', obj=[data])
         else:
-            self._handle.createArray(where='/', name='topology', object=data)
+            self._handle.createArray(where='/', name='topology', object=[data])
 
     #####################################################
     # randomState global attribute (optional)
@@ -506,7 +513,10 @@ class HDF5TrajectoryFile(object):
             try:
                 node = self._get_node(where='/', name=name)
                 data = node.__getitem__(slice)
-                data =  in_units_of(data, out_units, str(node.attrs.units))
+                in_units = node.attrs.units
+                if not isinstance(in_units, str):
+                    in_units = in_units.decode()
+                data =  in_units_of(data, out_units, in_units)
                 return data
             except self.tables.NoSuchNodeError:
                 if can_be_none:

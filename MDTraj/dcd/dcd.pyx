@@ -1,3 +1,4 @@
+# cython: c_string_type=str, c_string_encoding=ascii
 # Copyright 2013 mdtraj developers
 #
 # This file is part of mdtraj
@@ -115,13 +116,13 @@ cdef class DCDTrajectoryFile:
     cdef molfile_timestep_t* timestep
     cdef readonly char* distance_unit
 
-    def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True):
+    def __cinit__(self, char* filename, char* mode='r', force_overwrite=True):
         """Open a DCD Trajectory File
         """
         self.distance_unit = 'angstroms'
         self.is_open = False
 
-        if mode == b'r':
+        if str(mode) == 'r':
             self.fh = open_dcd_read(filename, "dcd", &self.n_atoms, &self.n_frames)
             assert self.n_atoms > 0, 'DCD Corruption: n_atoms was not positive'
             assert self.n_frames >= 0, 'DCD corruption: n_frames < 0'
@@ -130,7 +131,7 @@ cdef class DCDTrajectoryFile:
             self.is_open = True
             if self.fh is NULL:
                 raise IOError('There was an error opening the file: %s' % filename)
-        elif mode == b'w':
+        elif str(mode) == 'w':
             self.filename = filename
             self._needs_write_initialization = 1
             if not force_overwrite and os.path.exists(filename):
@@ -169,7 +170,7 @@ cdef class DCDTrajectoryFile:
     def close(self):
         "Close the DCD file handle"
         if self.is_open and self.fh is not NULL:
-            if self.mode == b'r':
+            if str(self.mode) == 'r':
                 close_file_read(self.fh)
             else:
                 close_file_write(self.fh)
@@ -219,7 +220,7 @@ cdef class DCDTrajectoryFile:
             `cell_angles[i,1]`, `cell_angles[i,2]`. By convention, the cell
             angles in the dcd file are stored in units of degrees.
         """
-        if self.mode != b'r':
+        if str(self.mode) != 'r':
             raise ValueError('read() is only available when the file is opened in mode="r"')
         if not self.is_open:
             raise IOError("file is not open")
@@ -322,7 +323,7 @@ cdef class DCDTrajectoryFile:
             gamma angles respectively. By convention, the angles should be
             in units of degrees.
         """
-        if self.mode != b'w':
+        if str(self.mode) != 'w':
             raise ValueError('write() is only available when the file is opened in mode="w"')
         if not self._needs_write_initialization and not self.is_open:
             raise IOError("file is not open")
@@ -357,7 +358,7 @@ cdef class DCDTrajectoryFile:
     cdef _write(self, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz,
                 np.ndarray[np.float32_t, ndim=2, mode="c"] cell_lengths,
                 np.ndarray[np.float32_t, ndim=2, mode="c"] cell_angles):
-        if self.mode != b'w':
+        if str(self.mode) != 'w':
             raise ValueError('_write() is only available when the file is opened in mode="w"')
 
 

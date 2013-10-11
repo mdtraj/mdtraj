@@ -21,6 +21,7 @@ through time in the AMBER NetCDF format
 # Imports
 ##############################################################################
 
+from __future__ import print_function, division
 from mdtraj.netcdf import NetCDFTrajectoryFile
 from mdtraj.reporters.basereporter import _BaseReporter
 

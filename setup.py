@@ -7,6 +7,7 @@ AMBER NetCDF, AMBER mdcrd and MDTraj HDF5. The package also provides a command l
 for converting trajectories between supported formats.
 """
 
+from __future__ import print_function
 DOCLINES = __doc__.split("\n")
 
 import os
@@ -16,8 +17,16 @@ import tempfile
 import subprocess
 from distutils.ccompiler import new_compiler
 from setuptools import setup, Extension
-from Cython.Distutils import build_ext
+
 import numpy
+try:
+    from Cython.Distutils import build_ext
+    cython_extension = 'pyx'
+    cmdclass={'build_ext': build_ext}
+except ImportError:
+    cython_extension = 'c'
+    cmdclass={}
+
 
 
 ##########################
@@ -67,7 +76,7 @@ def git_version():
         out = _minimal_ext_cmd(['git', 'rev-parse', 'HEAD'])
         GIT_REVISION = out.strip().decode('ascii')
     except OSError:
-        GIT_REVISION = "Unknown"
+        GIT_REVISION = 'Unknown'
 
     return GIT_REVISION
 
@@ -90,7 +99,7 @@ if not release:
     if os.path.exists('.git'):
         GIT_REVISION = git_version()
     else:
-        GIT_REVISION = "Unknown"
+        GIT_REVISION = 'Unknown'
 
     if not ISRELEASED:
         FULLVERSION += '.dev-' + GIT_REVISION[:7]
@@ -132,7 +141,7 @@ def hasfunction(cc, funcname, include=None, extra_postargs=None):
             os.dup2(devnull.fileno(), sys.stderr.fileno())
             objects = cc.compile([fname], output_dir=tmpdir,
                                  extra_postargs=extra_postargs)
-            cc.link_executable(objects, os.path.join(tmpdir, "a.out"))
+            cc.link_executable(objects, os.path.join(tmpdir, 'a.out'))
         except Exception as e:
             return False
         return True
@@ -147,7 +156,7 @@ def hasfunction(cc, funcname, include=None, extra_postargs=None):
 def detect_openmp():
     "Does this compiler support OpenMP parallelization?"
     compiler = new_compiler()
-    print "Attempting to autodetect OpenMP support...",
+    print('Attempting to autodetect OpenMP support...', end=' ')
     hasopenmp = hasfunction(compiler, 'omp_get_num_threads()')
     needs_gomp = hasopenmp
     if not hasopenmp:
@@ -156,9 +165,9 @@ def detect_openmp():
         needs_gomp = hasopenmp
     print
     if hasopenmp:
-        print "Compiler supports OpenMP"
+        print('Compiler supports OpenMP')
     else:
-        print "Did not detect OpenMP support; parallel RMSD disabled"
+        print('Did not detect OpenMP support; parallel RMSD disabled')
     return hasopenmp, needs_gomp
 
 
@@ -184,27 +193,28 @@ def detect_sse4():
 xtc = Extension('mdtraj.xtc',
                 sources=['MDTraj/xtc/src/xdrfile.c',
                          'MDTraj/xtc/src/xdrfile_xtc.c',
-                         'MDTraj/xtc/xtc.pyx'],
-                include_dirs=["MDTraj/xtc/include/",
+                         'MDTraj/xtc/xtc.' + cython_extension],
+                include_dirs=['MDTraj/xtc/include/',
                               'MDTraj/xtc/', numpy.get_include()])
 
 trr = Extension('mdtraj.trr',
                 sources=['MDTraj/xtc/src/xdrfile.c',
                          'MDTraj/xtc/src/xdrfile_trr.c',
-                         'MDTraj/xtc/trr.pyx'],
-                include_dirs=["MDTraj/xtc/include/",
+                         'MDTraj/xtc/trr.' + cython_extension],
+                include_dirs=['MDTraj/xtc/include/',
                               'MDTraj/xtc/', numpy.get_include()])
 
 dcd = Extension('mdtraj.dcd',
-                sources=["MDTraj/dcd/src/dcdplugin.c", "MDTraj/dcd/dcd.pyx"],
+                sources=['MDTraj/dcd/src/dcdplugin.c',
+                         'MDTraj/dcd/dcd.' + cython_extension],
                 libraries=['m'],
                 include_dirs=["MDTraj/dcd/include/",
                               'MDTraj/dcd/', numpy.get_include()])
 
 binpos = Extension('mdtraj.binpos',
                    sources=['MDTraj/binpos/src/binposplugin.c',
-                            'MDTraj/binpos/binpos.pyx'],
-                   include_dirs=["MDTraj/binpos/include/",
+                            'MDTraj/binpos/binpos.' + cython_extension],
+                   include_dirs=['MDTraj/binpos/include/',
                                  'MDTraj/binpos/', numpy.get_include()])
 
 
@@ -219,9 +229,10 @@ def rmsd_extension():
 
     rmsd = Extension('mdtraj._rmsd',
                      sources=[
-                         'MDTraj/rmsd/src/theobald_rmsd.c', 'MDTraj/rmsd/_rmsd.pyx'],
+                         'MDTraj/rmsd/src/theobald_rmsd.c',
+                         'MDTraj/rmsd/_rmsd.' + cython_extension],
                      include_dirs=[
-                         "MDTraj/rmsd/include", numpy.get_include()],
+                         'MDTraj/rmsd/include', numpy.get_include()],
                      extra_compile_args=compiler_args,
                      # define_macros=compiler_defs,
                      libraries=compiler_libraries)
@@ -256,8 +267,8 @@ setup(name='mdtraj',
       long_description="\n".join(DOCLINES[2:]),
       version=__version__,
       license='GPLv3+',
-      url="http://rmcgibbo.github.io/mdtraj",
-      platforms=["Linux", "Mac OS-X", "Unix"],
+      url='http://rmcgibbo.github.io/mdtraj',
+      platforms=['Linux', 'Mac OS-X', 'Unix'],
       classifiers=CLASSIFIERS.splitlines(),
       packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.testing', 'mdtraj.utils',
                 'mdtraj.reporters', 'mdtraj.geometry', 'mdtraj.tests'],
@@ -266,6 +277,6 @@ setup(name='mdtraj',
       zip_safe=False,
       scripts=['scripts/mdconvert', 'scripts/mdinspect'],
       ext_modules=extensions,
-      cmdclass={'build_ext': build_ext},
+      cmdclass=cmdclass,
       package_data={'mdtraj.pdb': ['data/*'],
-                    'mdtraj.testing': ["reference/*"]})
+                    'mdtraj.testing': ['reference/*']})

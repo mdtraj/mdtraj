@@ -20,7 +20,7 @@
 # Imports
 ##############################################################################
 
-import copy
+from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import _HAVE_OPT

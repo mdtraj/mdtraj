@@ -18,6 +18,7 @@
 # imports
 ##############################################################################
 
+from __future__ import print_function, division
 import os
 import functools
 import numpy as np
@@ -30,6 +31,8 @@ from nose.tools import ok_, eq_, raises
 from nose import SkipTest
 from pkg_resources import resource_filename
 
+# py2/3 compatibility
+from mdtraj.utils.six import iteritems
 
 # if the system doesn't have scipy, we'd like
 # this package to still work:
@@ -146,9 +149,9 @@ def assert_dict_equal(t1, t2, decimal=6):
     """
 
     # make sure the keys are the same
-    eq_(t1.keys(), t2.keys())
+    eq_(list(t1.keys()), list(t2.keys()))
 
-    for key, val in t1.iteritems():
+    for key, val in iteritems(t1):
         # compare numpy arrays using numpy.testing
         if isinstance(val, np.ndarray):
             if val.dtype.kind ==  'f':
@@ -194,6 +197,6 @@ def skip(reason):
         @functools.wraps(test)
         def inner(*args, **kwargs):
             raise SkipTest
-            print "After f(*args)"
+            print("After f(*args)")
         return inner
     return wrap

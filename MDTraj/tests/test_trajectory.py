@@ -20,6 +20,8 @@ import numpy as np
 import mdtraj as md
 import mdtraj.trajectory
 from mdtraj import topology
+from mdtraj.utils.six import PY3
+from mdtraj.utils.six.moves import xrange
 
 TestDocstrings = DocStringFormatTester(mdtraj.trajectory, error_on_none=True)
 
@@ -200,7 +202,10 @@ def test_float_atom_indices_exception():
         try:
             md.load(fn, atom_indices=[0.5, 1.3], top=top)
         except ValueError as e:
-            assert e.message == 'indices must be of an integer type. float64 is not an integer type'
+            if PY3:
+                assert e.args[0] == 'indices must be of an integer type. float64 is not an integer type'
+            else:
+                assert e.message == 'indices must be of an integer type. float64 is not an integer type'
         except Exception as e:
             raise
 

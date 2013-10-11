@@ -1,3 +1,4 @@
+# cython: c_string_type=str, c_string_encoding=ascii
 # Copyright 2012 mdtraj developers
 #
 # This file is part of mdtraj
@@ -103,14 +104,14 @@ cdef class BINPOSTrajectoryFile:
     cdef void* fh
     cdef molfile_timestep_t* timestep
 
-    def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True, **kwargs):
+    def __cinit__(self, char* filename, char* mode='r', force_overwrite=True, **kwargs):
         """Open an AMBER BINPOS file for reading/writing.
         """
         self.distance_unit = 'angstroms'
         self.is_open = False
         self.frame_counter = 0
 
-        if mode == b'r':
+        if str(mode) == 'r':
             self.n_atoms = 0
             if not os.path.exists(filename):
                 raise IOError("The file '%s' doesn't exist" % filename)
@@ -130,7 +131,7 @@ cdef class BINPOSTrajectoryFile:
             if self.fh is NULL:
                 raise IOError('There was an error opening the binpos file: %s' % filename)
 
-        elif mode == b'w':
+        elif str(mode) == 'w':
             self.write_initialized = False
         else:
             raise ValueError('mode must be one of "r" or "w". you supplied "%s"' % mode)
@@ -172,7 +173,7 @@ cdef class BINPOSTrajectoryFile:
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=np.float32
             The cartesian coordinates, in angstroms
         """
-        if not self.mode == b'r':
+        if not str(self.mode) == 'r':
             raise ValueError('read() is only available when file is opened in mode="r"')
 
         if n_frames is not None:
@@ -271,7 +272,7 @@ cdef class BINPOSTrajectoryFile:
     def close(self):
         """Close the BINPOS file"""
         if self.is_open:
-            if self.mode == b'r':
+            if str(self.mode) == 'r':
                 close_file_read(self.fh)
             else:
                 close_file_write(self.fh)

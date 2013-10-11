@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
-
+from __future__ import print_function
 import os
 import shutil
 import tempfile
@@ -94,7 +94,7 @@ def test_reporter():
 
     with NetCDFTrajectoryFile(ncfile) as f:
         xyz, time, cell_lengths, cell_angles = f.read()
-        print 'NETCDF CELL LENGTHS, ANGLES', cell_lengths, cell_angles
+        print('NETCDF CELL LENGTHS, ANGLES', cell_lengths, cell_angles)
         #yield lambda: eq(cell_lengths, 20 * np.ones((50, 3)))  # 20 angstroms
         #yield lambda: eq(cell_angles, 90*np.ones((50, 3)))
         yield lambda: eq(time, 0.002*2*(1+np.arange(50)))

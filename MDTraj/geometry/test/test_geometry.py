@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
+from __future__ import print_function
 import itertools
 import numpy as np
 
@@ -87,7 +88,7 @@ def test_dihedral_index_offset_generation():
     traj = md.load(get_fn('1bpi.pdb'))
 
     result = np.array([2, 11, 12, 13])  # The atom indices of the first phi angle
-
+    print([e.name for e in traj.topology.atoms])
     rid1, ind1 = mdtraj.geometry.dihedral._get_indices_phi(traj)
     rid2, ind2 = mdtraj.geometry.dihedral.atom_sequence_finder(traj, ["-C","N","CA","C"])
     rid3, ind3 = mdtraj.geometry.dihedral.atom_sequence_finder(traj, ["-C","N","CA","C"], [-1, 0, 0, 0])
@@ -174,9 +175,9 @@ def test_dihedral_performance():
     r2 = md.geometry.compute_dihedrals(t, indices, opt=True)
     t3 = time.time()
     
-    print '\ndihedral performance:'
-    print 'numpy:   %f s' % (t2 - t1)
-    print 'opt sse: %f s' % (t3 - t2)
+    print('\ndihedral performance:')
+    print('numpy:   %f s' % (t2 - t1))
+    print('opt sse: %f s' % (t3 - t2))
 
 @skipif(not RUN_PERFOMANCE_TESTS, 'Not doing performance testing')
 def test_angle_performance():
@@ -191,6 +192,6 @@ def test_angle_performance():
     r2 = md.geometry.compute_angles(t, indices, opt=True)
     t3 = time.time()
     
-    print '\nangle performance:'
-    print 'numpy:   %f s' % (t2 - t1)
-    print 'opt sse: %f s' % (t3 - t2)
+    print('\nangle performance:')
+    print('numpy:   %f s' % (t2 - t1))
+    print('opt sse: %f s' % (t3 - t2))

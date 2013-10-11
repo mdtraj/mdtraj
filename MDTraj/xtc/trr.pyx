@@ -1,3 +1,4 @@
+# cython: c_string_type=str, c_string_encoding=ascii
 # Copyright 2012 mdtraj developers
 #
 # This file is part of mdtraj
@@ -131,14 +132,14 @@ cdef class TRRTrajectoryFile:
     cdef readonly char* distance_unit
 
 
-    def __cinit__(self, char* filename, char* mode=b'r', force_overwrite=True, **kwargs):
+    def __cinit__(self, char* filename, char* mode='r', force_overwrite=True, **kwargs):
         """Open a GROMACS TRR file for reading/writing.
         """
         self.distance_unit = 'nanometers'
         self.is_open = False
         self.frame_counter = 0
 
-        if mode == b'r':
+        if str(mode) == 'r':
             self.n_atoms = 0
             if not os.path.exists(filename):
                 raise IOError("The file '%s' doesn't exist" % filename)
@@ -156,7 +157,7 @@ cdef class TRRTrajectoryFile:
             self.chunk_size_multiplier = max(kwargs.pop('chunk_size_multiplier', 1.5), 0.01)
 
 
-        elif mode == b'w':
+        elif str(mode) == 'w':
             if force_overwrite and os.path.exists(filename):
                 os.unlink(filename)
 
@@ -224,7 +225,7 @@ cdef class TRRTrajectoryFile:
         fields are not read (or written) by the current implementation of this
         wrapper.
         """
-        if not self.mode == b'r':
+        if not str(self.mode) == 'r':
             raise ValueError('read() is only available when file is opened in mode="r"')
         if not self.is_open:
             raise IOError('file must be open to read from it.')
@@ -344,7 +345,7 @@ cdef class TRRTrajectoryFile:
             The alchemical lambda value at each frame. If not supplied, all
             zeros will be written.
         """
-        if self.mode != b'w':
+        if str(self.mode) != 'w':
             raise ValueError('write() is only available when the file is opened in mode="w"')
 
         # do typechecking, and then dispatch to the c level function
