@@ -14,19 +14,19 @@ before_install:
   # --------------------------------------------------------
   # Python2.7 stuff. Install as much as possible through apt
   # ---------------------------------------------------------
-  - sudo apt-get install -qq libhdf5-serial-dev
-  - sudo apt-get install -qq python-dev
-  - sudo apt-get install -qq python-numpy
-  - sudo apt-get install -qq python-scipy
-  - sudo apt-get install -qq python-nose
-  - sudo apt-get install -qq python-setuptools
-  - sudo apt-get install -qq cython
-  - sudo apt-get install -qq python-numexpr
-  - sudo apt-get install -qq python-tables
-  - sudo apt-get install -qq netcdf-bin libnetcdf-dev
-  - sudo apt-get install -qq python-setuptools
-  - sudo apt-get install -qq python-pandas
-  - sudo easy_install pip
+  - [[ $PYTHON == "python" ]] && sudo apt-get install -qq libhdf5-serial-dev
+  - [[ $PYTHON == "python" ]] && sudo apt-get install -qq python-dev
+  - [[ $PYTHON == "python" ]] && sudo apt-get install -qq python-numpy
+  - [[ $PYTHON == "python" ]] && sudo apt-get install -qq python-scipy
+  - [[ $PYTHON == "python" ]] && sudo apt-get install -qq python-nose
+  - [[ $PYTHON == "python" ]] && sudo apt-get install -qq python-setuptools
+  - [[ $PYTHON == "python" ]] && sudo apt-get install -qq cython
+  - [[ $PYTHON == "python" ]] && sudo apt-get install -qq python-numexpr
+  - [[ $PYTHON == "python" ]] && sudo apt-get install -qq python-tables
+  - [[ $PYTHON == "python" ]] && sudo apt-get install -qq netcdf-bin libnetcdf-dev
+  - [[ $PYTHON == "python" ]] && sudo apt-get install -qq python-setuptools
+  - [[ $PYTHON == "python" ]] && sudo apt-get install -qq python-pandas
+  - [[ $PYTHON == "python" ]] && sudo easy_install pip
 
   # Currently (august 11, 2013), the latest version of netcdf4-python
   # requires at least libnetcdf4-4.1.2, whereas apt-get libnetcdf-dev
@@ -36,32 +36,32 @@ before_install:
   # See https://code.google.com/p/netcdf4-python/issues/detail?id=194&start=100
   # https://github.com/rmcgibbo/mdtraj/pull/151
   # https://github.com/rmcgibbo/mdtraj/issues/150
-  - sudo pip install --use-mirrors netCDF4==1.0.4
-  - sudo pip install --use-mirrors flake8
-  - sudo pip install --use-mirrors scripttest
-  - sudo pip install --use-mirrors cffi
-  - sudo pip install git+git://github.com/rmcgibbo/simtk.unit
+  - [[ $PYTHON == "python" ]] && sudo pip install --use-mirrors netCDF4==1.0.4
+  - [[ $PYTHON == "python" ]] && sudo pip install --use-mirrors flake8
+  - [[ $PYTHON == "python" ]] && sudo pip install --use-mirrors scripttest
+  - [[ $PYTHON == "python" ]] && sudo pip install --use-mirrors cffi
+  - [[ $PYTHON == "python" ]] && sudo pip install git+git://github.com/rmcgibbo/simtk.unit
 
   # --------------------------------------------------------
   # Python3.2 stuff. Install as much as possible through apt
   # ---------------------------------------------------------
-  - sudo apt-get install -qq python3-dev
-  - sudo apt-get install -qq python3-setuptools
-  - sudo apt-get install -qq python3-numpy
-  - sudo apt-get install -qq python3-scipy
-  - sudo easy_install3 pip
-  - sudo pip-3.2 install --use-mirrors numexpr
-  - sudo pip-3.2 install --use-mirrors cython
-  - sudo pip-3.2 install --use-mirrors tables
-  - sudo pip-3.2 install --use-mirrors cffi
-  - sudo pip-3.2 install --use-mirrors netCDF4==1.0.4
-  - sudo pip-3.2 install --use-mirrors scripttest
-  - sudo pip-3.2 install git+git://github.com/rmcgibbo/simtk.unit
+  - [[ $PYTHON == "python3" ]] && sudo apt-get install -qq python3-dev
+  - [[ $PYTHON == "python3" ]] && sudo apt-get install -qq python3-setuptools
+  - [[ $PYTHON == "python3" ]] && sudo apt-get install -qq python3-numpy
+  - [[ $PYTHON == "python3" ]] && sudo apt-get install -qq python3-scipy
+  - [[ $PYTHON == "python3" ]] && sudo easy_install3 pip
+  - [[ $PYTHON == "python3" ]] && sudo pip-3.2 install --use-mirrors numexpr
+  - [[ $PYTHON == "python3" ]] && sudo pip-3.2 install --use-mirrors cython
+  - [[ $PYTHON == "python3" ]] && sudo pip-3.2 install --use-mirrors tables
+  - [[ $PYTHON == "python3" ]] && sudo pip-3.2 install --use-mirrors cffi
+  - [[ $PYTHON == "python3" ]] && sudo pip-3.2 install --use-mirrors netCDF4==1.0.4
+  - [[ $PYTHON == "python3" ]] && sudo pip-3.2 install --use-mirrors scripttest
+  - [[ $PYTHON == "python3" ]] && sudo pip-3.2 install git+git://github.com/rmcgibbo/simtk.unit
 
 
 script:
   - sudo $PYTHON setup.py -q install
-  - $PYTHON -c "import netCDF4; print netCDF4.__version__"
+  - $PYTHON -c "import netCDF4; print(netCDF4.__version__)"
   - nosetests
 
 env:
