@@ -2,8 +2,13 @@
 # travis-ci; it uses virtualenvs, they do not have numpy, scipy, matplotlib,
 # and it is impractical to build them
 
+# whitelist
+branches:
+  only:
+    - master
+
 language: c
-install:
+before_install:
   - sudo apt-get update
   - sudo apt-get install -qq libhdf5-serial-dev
   - sudo apt-get install -qq python-dev
@@ -34,9 +39,27 @@ install:
   - sudo pip install scripttest
   - sudo pip install cffi
 
+  - sudo add-apt-repository ppa:fkrull/deadsnakes
+  - sudo apt-get update
+  - sudo apt-get install -qq python3-dev
+  - sudo apt-get install -qq python3-setuptools
+  - sudo apt-get install -qq python3-numpy
+  - sudo apt-get install -qq python3-scipy
+  - sudo easy_install3 pip
+  - sudo pip-3.2 install numexpr
+  - sudo pip-3.2 install cython
+  - sudo pip-3.2 install tables
+  - sudo pip-3.2 install cffi
+  - sudo pip-3.2 install netCDF4==1.0.4
+  - sudo pip-3.2 install git+git://github.com/rmcgibbo/simtk.unit
+  - sudo pip-3.2 install scripttest
+
+env:
+  - PYTHON=python
+  - PYTHON=python3
 script:
-  - sudo python setup.py -q install
-  - python -c "import netCDF4; print netCDF4.__version__"
+  - sudo $PYTHON setup.py -q install
+  - $PYTHON -c "import netCDF4; print netCDF4.__version__"
   - nosetests
 
 env:
