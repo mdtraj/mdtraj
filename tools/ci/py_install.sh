@@ -3,8 +3,8 @@ set -x
 $python -V
 
 # Remove any old distribute or setuptools
-sudo rm -rf `$python -c 'import distutils.sysconfig; print(distutils.sysconfig.get_python_lib())'`/setuptools*
-sudo rm -rf `$python -c 'import distutils.sysconfig; print(distutils.sysconfig.get_python_lib())'`/distribute*
+# sudo rm -rf `$python -c 'import distutils.sysconfig; print(distutils.sysconfig.get_python_lib())'`/setuptools*
+# sudo rm -rf `$python -c 'import distutils.sysconfig; print(distutils.sysconfig.get_python_lib())'`/distribute*
 
 # Get  a new setuptools
 wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -O - | sudo $python
@@ -22,5 +22,5 @@ sudo pip install -I -U wheel
 
 base_url=http://stanford.edu/~rmcgibbo/wheelhouse
 PIP_ARGS=" -I --use-wheel --find-links=$base_url/${PYTHON_VERSION}/"
-sudo pip install $PIP_ARGS -r tools/ci/requirements-${PYTHON_VERSION}.txt
+time sudo pip install $PIP_ARGS -r tools/ci/requirements-${PYTHON_VERSION}.txt
 
