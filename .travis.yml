@@ -19,8 +19,7 @@ install:
 script:
   - echo "script"
   - sudo python setup.py -q install
-  - python -c "import netCDF4; print netCDF4.__version__"
-  - nosetests
+  - python -c "import mdtraj; mdtraj.test('full')"
 
 env:
   global:
