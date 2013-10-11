@@ -4,9 +4,9 @@ from distutils.ccompiler import new_compiler
 import cffi
 import numpy as np
 
-from .six import iteritems, PY3
+from .six import iteritems
 
-__all__ = ['cdata', 'find_library']
+__all__ = ['cpointer', 'find_library']
 
 class cpointer(object):
     """Function that extracts a cffi pointer from a numpy array. The function

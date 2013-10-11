@@ -23,6 +23,7 @@ import os
 import itertools
 import numpy as np
 from mdtraj.utils import ensure_type
+from mdtraj.utils.six.moves import xrange
 
 ##############################################################################
 # Classes
@@ -268,7 +269,7 @@ class MDCRDTrajectoryFile(object):
                 raise ValueError('This mdcrd file must contain unitcell '
                                  'information')
         elif self._w_has_box is False:
-            if cell_lengthsl_lengths is not None:
+            if cell_lengths is not None:
                 raise ValueError('This mdcrd file must not contain unitcell '
                                  'information')
         else:

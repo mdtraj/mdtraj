@@ -71,7 +71,7 @@ def rmsd_cache(trajectory, major='axis'):
     >>> import mdtraj as md
     >>> t = md.load('trajectory.h5')                          # doctest: +SKIP
     >>> c = md.rmsd_cache(t)                                  # doctest: +SKIP
-    >>> c.rmsds_to(r, 0)                                      # doctest: +SKIP
+    >>> c.rmsds_to(c, 0)                                      # doctest: +SKIP
     array([0.0001953,  0.1906953, 0.37336711, ...,  0.29543064,
            0.68428138, 0.35189939], dtype=float32)
 

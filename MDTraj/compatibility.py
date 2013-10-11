@@ -43,7 +43,6 @@ Functions
 ##############################################################################
 
 from __future__ import print_function, division
-import sys
 import numpy as np
 
 from mdtraj import Trajectory, Topology

@@ -451,7 +451,7 @@ class Chain(object):
         self._finalize()
 
     def get_residue(self, residue_number, insertion_code=' '):
-        return residues_by_num_icode[str(residue_number) + insertion_code]
+        return self.residues_by_num_icode[str(residue_number) + insertion_code]
 
     def __contains__(self, residue_number):
         return self.residues_by_number.__contains__(residue_number)

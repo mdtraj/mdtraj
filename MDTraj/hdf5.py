@@ -173,7 +173,7 @@ class HDF5TrajectoryFile(object):
             try:
                 self._frame_index = len(self._handle.root.coordinates)
                 self._needs_initialization = False
-            except tables.NoSuchNodeError:
+            except self.tables.NoSuchNodeError:
                 self._frame_index = 0
                 self._needs_initialization = False
         elif mode == 'r':
