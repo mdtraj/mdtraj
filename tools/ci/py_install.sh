@@ -1,4 +1,8 @@
 set -x
+
+# Install Dependencies
+# as of pip 1.4rc2, wheel files are still being broken regularly, this is a
+# known good commit. should revert to pypi when a final release is out
 pip_commit=42102e9deaea99db08b681d06906c2945f6f95e2
 PYTHON_VERSION=`python -c 'import sys; print("%d.%d" % sys.version_info[:2])'`
 pip install -I git+https://github.com/pypa/pip@$pip_commit#egg=pip
