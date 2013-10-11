@@ -6,7 +6,6 @@ set -x
 pip_commit=42102e9deaea99db08b681d06906c2945f6f95e2
 PYTHON_VERSION=`python -c 'import sys; print("%d.%d" % sys.version_info[:2])'`
 pip install -I git+https://github.com/pypa/pip@$pip_commit#egg=pip
-pip install -I setuptools==1.1.6
 pip install -I -U wheel
 
 
