@@ -18,7 +18,6 @@ before_install:
   - sudo apt-get install -qq python-dev
   - sudo apt-get install -qq python-numpy
   - sudo apt-get install -qq python-scipy
-  - sudo apt-get install -qq python-networkx
   - sudo apt-get install -qq python-nose
   - sudo apt-get install -qq python-setuptools
   - sudo apt-get install -qq cython
@@ -37,11 +36,11 @@ before_install:
   # See https://code.google.com/p/netcdf4-python/issues/detail?id=194&start=100
   # https://github.com/rmcgibbo/mdtraj/pull/151
   # https://github.com/rmcgibbo/mdtraj/issues/150
-  - sudo pip install netCDF4==1.0.4
+  - sudo pip install --use-mirrors netCDF4==1.0.4
+  - sudo pip install --use-mirrors flake8
+  - sudo pip install --use-mirrors scripttest
+  - sudo pip install --use-mirrors cffi
   - sudo pip install git+git://github.com/rmcgibbo/simtk.unit
-  - sudo pip install flake8
-  - sudo pip install scripttest
-  - sudo pip install cffi
 
   # --------------------------------------------------------
   # Python3.2 stuff. Install as much as possible through apt
@@ -51,24 +50,24 @@ before_install:
   - sudo apt-get install -qq python3-numpy
   - sudo apt-get install -qq python3-scipy
   - sudo easy_install3 pip
-  - sudo pip-3.2 install numexpr
-  - sudo pip-3.2 install cython
-  - sudo pip-3.2 install tables
-  - sudo pip-3.2 install cffi
-  - sudo pip-3.2 install netCDF4==1.0.4
+  - sudo pip-3.2 install --use-mirrors numexpr
+  - sudo pip-3.2 install --use-mirrors cython
+  - sudo pip-3.2 install --use-mirrors tables
+  - sudo pip-3.2 install --use-mirrors cffi
+  - sudo pip-3.2 install --use-mirrors netCDF4==1.0.4
+  - sudo pip-3.2 install --use-mirrors scripttest
   - sudo pip-3.2 install git+git://github.com/rmcgibbo/simtk.unit
-  - sudo pip-3.2 install scripttest
 
 
-env:
-  - PYTHON=python
-  - PYTHON=python3
 script:
   - sudo $PYTHON setup.py -q install
   - $PYTHON -c "import netCDF4; print netCDF4.__version__"
   - nosetests
 
 env:
+  matrix:
+    - PYTHON=python
+    - PYTHON=python3
   global:
     # encrypted AWS_SECRET_ACCESS_KEY to push documentation to S3
     - secure: "d3xpZOaixS6TyYTjOSPvIdwUYrTfuEM9sN8AxZKp/92sfcHj3EP7qyCMj/cuf1Gl7mT2nZJj4daOgMam4/sZD6MUnXokDwEgIMes2rrVjQX0i0MvXFU1LN8KbUcK+6QQyXc8AwxJJ603L9YxLnBdPfYTQNrd3zP7BzWYP00Nch4="
