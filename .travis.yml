@@ -1,27 +1,25 @@
-# We pretend to be C because we can't use the python support in
-# travis-ci; it uses virtualenvs, they do not have numpy, scipy, matplotlib,
-# and it is impractical to build them
-
-language: python
-python:
-  - "2.6"
-  - "2.7"
-  - "3.3"
+language: c
 
 install:
   - echo "install"
-  - rm -rf `python -c 'import distutils.sysconfig; print(distutils.sysconfig.get_python_lib())'`/setuptools*
-  - rm -rf `python -c 'import distutils.sysconfig; print(distutils.sysconfig.get_python_lib())'`/distribute*
-  - wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -O - | sudo python
+  - $python -V
+  - rm -rf `$python -c 'import distutils.sysconfig; print(distutils.sysconfig.get_python_lib())'`/distribute*
+
   - sudo bash tools/ci/apt_install.sh
   - sudo bash tools/ci/py_install.sh
 
 script:
   - echo "script"
-  - sudo python setup.py -q install
-  - python -c "import mdtraj; mdtraj.test('full')"
+  - $python -V
+  - sudo $python setup.py -q install
+  - $python -c "import mdtraj; mdtraj.test('full')"
 
 env:
+  matrix:
+    - python=python2.6
+    - python=python2.7
+    - python=python3.3
+
   global:
     # encrypted AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to push documentation to S3
     - secure: "fB9S4+Ok+5RO6OobqhfWzjnjxWSbJxPrtHNcciKX5/yE+IC4WjkXhGkIKY1FLVNDStoerdYKN7wHdi98QAArQBunYxruuALxifyDPo2HZNTnK2Wvq6+eMjqHKuHMyJgE+ZJ2TuQGjM3WNOT1dv+awOsGr5tNw6KJa4YAtC6a4oo="
