@@ -1,10 +1,14 @@
 from __future__ import print_function, division
-import sysconfig
 from distutils.ccompiler import new_compiler
+try:
+    import sysconfig  # py3
+except ImportError:
+    from distutils import sysconfig
+
 import cffi
 import numpy as np
 
-from .six import iteritems
+from .six import iteritems, PY3
 
 __all__ = ['cpointer', 'find_library']
 
@@ -27,7 +31,7 @@ class cpointer(object):
         ffi = cffi.FFI()
         # some platforms dont have all of these, especially wierd compilers or 32 bit machines
         nptypes = [getattr(np, name) for name in self.nptype_names if hasattr(np, name)]
-        nptype_descr = {'%s%d' % (dtype.kind, dtype.itemsize): dtype for dtype in map(np.dtype, nptypes)}
+        nptype_descr = dict([('%s%d' % (dtype.kind, dtype.itemsize), dtype) for dtype in map(np.dtype, nptypes)])
 
         casts = {}
         for code, names in iteritems(self.ctypes):

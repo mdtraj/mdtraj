@@ -189,7 +189,6 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
             atom_name = atom_name.decode()
         element_symbol = atom_name.lstrip('0123456789')[0]
         element = mdtraj.pdb.element.get_by_symbol(element_symbol)
-        print(atom_name)
         topology.add_atom(atom_name, element,
                          registered_residues[ResidueID[i]])
 
