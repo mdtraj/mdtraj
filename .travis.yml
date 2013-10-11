@@ -10,7 +10,9 @@ python:
 
 install:
   - echo "install"
-  - echo $VIRTUAL_ENV
+  - rm -rf `python -c 'import distutils.sysconfig; print(distutils.sysconfig.get_python_lib())'`/setuptools*
+  - rm -rf `python -c 'import distutils.sysconfig; print(distutils.sysconfig.get_python_lib())'`/distribute*
+  - wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -O - | sudo python
   - sudo bash tools/ci/apt_install.sh
   - sudo bash tools/ci/py_install.sh
 
