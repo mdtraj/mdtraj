@@ -22,8 +22,10 @@
 # Imports
 ##############################################################################
 
+from __future__ import print_function, division
 import numpy as np
 from mdtraj import _rmsd
+from mdtraj.utils.six.moves import xrange
 
 ##############################################################################
 # Globals
@@ -69,7 +71,7 @@ def rmsd_cache(trajectory, major='axis'):
     >>> import mdtraj as md
     >>> t = md.load('trajectory.h5')                          # doctest: +SKIP
     >>> c = md.rmsd_cache(t)                                  # doctest: +SKIP
-    >>> c.rmsds_to(r, 0)                                      # doctest: +SKIP
+    >>> c.rmsds_to(c, 0)                                      # doctest: +SKIP
     array([0.0001953,  0.1906953, 0.37336711, ...,  0.29543064,
            0.68428138, 0.35189939], dtype=float32)
 
@@ -124,7 +126,7 @@ def _allocate_aligned_array(shape, major):
     else:
         n_confs, n_atoms, n_dims = shape
 
-    n_padded_atoms = (n_atoms + alignment - 1) / alignment * alignment
+    n_padded_atoms = (n_atoms + alignment - 1) // alignment * alignment
     n_floats = n_dims * n_padded_atoms * n_confs
     nbytes = n_floats * dtype.itemsize
     buf = np.empty(nbytes + alignment * dtype.itemsize, dtype=np.uint8)
@@ -277,7 +279,8 @@ class RMSDCache(object):
             raise ValueError("IRMSD only supports operation in 3 dimensions")
         if self.n_padded_atoms % 4 != 0:
             raise ValueError("(Padded) number of atoms must be a multiple "
-                             "of 4 to use IRMSD routines")
+                             "of 4 to use IRMSD routines. You supplied "
+                             "self.n_padded_atoms=%s" % self.n_padded_atoms)
         if self.cords.ctypes.data % 16 != 0:
             raise ValueError("Coordinate array must be aligned to a 16-byte "
                              "boundary to use IRMSD routines")

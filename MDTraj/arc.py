@@ -18,10 +18,12 @@
 # Imports
 ##############################################################################
 
+from __future__ import print_function, division
 import os
 import itertools
 import numpy as np
 from mdtraj.utils import ensure_type
+from mdtraj.utils.six.moves import xrange
 
 ##############################################################################
 # Classes

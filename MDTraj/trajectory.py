@@ -18,11 +18,11 @@
 # Imports
 ##############################################################################
 
+from __future__ import print_function, division
 import os
 import warnings
 import logging
 import functools
-from itertools import izip
 from copy import deepcopy
 import numpy as np
 
@@ -30,6 +30,10 @@ from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
                     TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
                     PDBTrajectoryFile, MDCRDTrajectoryFile, ArcTrajectoryFile, Topology)
 from mdtraj.utils import unitcell, ensure_type
+from mdtraj.utils.six.moves import xrange
+from mdtraj.utils.six import PY3
+if PY3:
+    basestring = str
 
 __all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpos',
            'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml']
@@ -794,9 +798,9 @@ class Trajectory(object):
 
     >>> # slicing a trajectory
     >>> t = md.load('trajectory.h5')                          # doctest: +SKIP
-    >>> print t                                               # doctest: +SKIP
+    >>> print(t)                                              # doctest: +SKIP
     <mdtraj.Trajectory with 100 frames, 22 atoms>
-    >>> print t[::2]                                          # doctest: +SKIP
+    >>> print(t[::2])                                         # doctest: +SKIP
     <mdtraj.Trajectory with 50 frames, 22 atoms>
 
     >>> # calculating the average distance between two atoms

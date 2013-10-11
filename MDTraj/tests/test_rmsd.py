@@ -52,6 +52,7 @@ def test_rmsd_to_self():
     conf_atom_1 = np.array(np.random.randn(1, n_atoms, 3), dtype=np.float32)
     conf_atom_2 = np.copy(conf_atom_1)
 
+
     r_atom_1 = RMSDCache(align_array(conf_atom_1, 'atom'), major='atom', n_atoms=n_atoms)
     r_atom_2 = RMSDCache(align_array(conf_atom_2, 'atom'), major='atom', n_atoms=n_atoms)
 

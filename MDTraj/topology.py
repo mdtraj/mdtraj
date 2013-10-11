@@ -45,7 +45,7 @@
 # Imports
 ##############################################################################
 
-import cPickle as pickle
+from __future__ import print_function, division
 import os
 import numpy as np
 import xml.etree.ElementTree as etree
@@ -140,10 +140,10 @@ class Topology(object):
     Examples
     --------
     >>> topology = md.load('example.pdb').topology            # doctest: +SKIP
-    >>> print topology                                        # doctest: +SKIP
+    >>> print(topology)                                       # doctest: +SKIP
     <mdtraj.Topology with 1 chains, 3 residues, 22 atoms, 21 bonds at 0x105a98e90>
     >>> table, bonds = topology.to_dataframe()                # doctest: +SKIP
-    >>> print table.head()                                    # doctest: +SKIP
+    >>> print(table.head())                                   # doctest: +SKIP
        serial name element  resSeq resName  chainID
     0       0   H1       H       0     CYS        0
     1       1  CH3       C       0     CYS        0
@@ -152,7 +152,7 @@ class Topology(object):
     4       4    C       C       0     CYS        0
     >>> # rename residue "CYS" to "CYSS"
     >>> table[table['residue'] == 'CYS']['residue'] = 'CYSS'  # doctest: +SKIP
-    >>> print table.head()                                    # doctest: +SKIP
+    >>> print(table.head())                                   # doctest: +SKIP
        serial name element  resSeq resName   chainID
     0       0   H1       H       0     CYSS        0
     1       1  CH3       C       0     CYSS        0

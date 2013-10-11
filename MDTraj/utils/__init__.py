@@ -1,10 +1,9 @@
-from delay_import import import_
-from arrays import ensure_type
-from unit import in_units_of
-from unitcell import (lengths_and_angles_to_box_vectors,
-                      box_vectors_to_lengths_and_angles)
-
-
+from __future__ import print_function, division
+from .delay_import import import_
+from .arrays import ensure_type
+from .unit import in_units_of
+from .unitcell import (lengths_and_angles_to_box_vectors,
+                       box_vectors_to_lengths_and_angles)
 
 __all__ = ["ensure_type", "import_", "in_units_of",
     "lengths_and_angles_to_box_vectors", "box_vectors_to_lengths_and_angles",

@@ -1,8 +1,12 @@
+from __future__ import print_function, division
+import sysconfig
 from distutils.ccompiler import new_compiler
 import cffi
 import numpy as np
 
-__all__ = ['cdata', 'find_library']
+from .six import iteritems
+
+__all__ = ['cpointer', 'find_library']
 
 class cpointer(object):
     """Function that extracts a cffi pointer from a numpy array. The function
@@ -26,7 +30,7 @@ class cpointer(object):
         nptype_descr = {'%s%d' % (dtype.kind, dtype.itemsize): dtype for dtype in map(np.dtype, nptypes)}
 
         casts = {}
-        for code, names in self.ctypes.iteritems():
+        for code, names in iteritems(self.ctypes):
             for name in names: 
                 casts[nptype_descr['%s%d' % (code, ffi.sizeof(name))]] = name + ' *'
         # casts is a dict that helps us cast numpy arrays, like
@@ -52,6 +56,17 @@ def find_library(path, name):
     """Find a shared library
     """
     compiler = new_compiler()
-    if not hasattr(path, '__iter__'):
+    if isinstance(path, str):
         path = [path]
-    return compiler.find_library_file(path, name)
+    names = [name]
+
+    soabi = sysconfig.get_config_var('SOABI')
+    if soabi is not None:
+        names.append('%s.%s' % (names[0], soabi))
+
+    for name in names:
+        result = compiler.find_library_file(path, name)
+        if result is not None:
+            return result
+
+    return None

@@ -63,14 +63,17 @@ True
 Functions
 ---------
 """
-
-__all__ = ['saveh', 'loadh']
-
+from __future__ import print_function, division
 import os
 import warnings
 import numpy as np
 from mdtraj.utils import import_
+from mdtraj.utils.six import PY3, iteritems
+if PY3:
+    basestring = str
 tables = import_('tables')
+
+__all__ = ['saveh', 'loadh']
 
 try:
     COMPRESSION = tables.Filters(complevel=9, complib='blosc', shuffle=True)
@@ -155,7 +158,7 @@ def saveh(file, *args, **kwargs):
 
     # save all the arrays
     try:
-        for key, val in namedict.iteritems():
+        for key, val in iteritems(namedict):
             if not isinstance(val, np.ndarray):
                 raise TypeError('Only numpy arrays can '
                     'be saved: type(%s) is %s' % (key, type(val)))
