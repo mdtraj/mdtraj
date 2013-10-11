@@ -67,7 +67,7 @@ __all__ = ['load_legacy_hdf']
 ##############################################################################
 
 
-def load_legacy_hdf(filename, stride=None, frame=None, chunk=50000,
+def load_legacy_hdf(filename, stride=1, frame=None, chunk=50000,
                      upconvert_int16=True):
     """Load a HDF5 file in the legacy MSMBuilder2 lh5 format
 
@@ -75,7 +75,7 @@ def load_legacy_hdf(filename, stride=None, frame=None, chunk=50000,
     ----------
     filename : str
         String filename of HDF Trajectory file.
-    stride : int, default=None
+    stride : int, default=1
         Only read every stride-th frame
     frame : {None, int}, default=None
         Use this option to load only a single frame from a trajectory on disk.
@@ -175,15 +175,22 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
     # register the residues
     registered_residues = {}
     for i in np.argsort(ResidueID):
+        residue_name = ResidueNames[i]
+        if not isinstance(residue_name, str):
+            residue_name = residue_name.decode()
         if ResidueID[i] not in registered_residues:
-            res = topology.add_residue(ResidueNames[i], chain0)
+            res = topology.add_residue(residue_name, chain0)
             registered_residues[ResidueID[i]] = res
 
     # register the atoms
     for i in np.argsort(AtomID):
-        element_symbol = AtomNames[i].lstrip('0123456789')[0]
+        atom_name = AtomNames[i]
+        if not isinstance(atom_name, str):
+            atom_name = atom_name.decode()
+        element_symbol = atom_name.lstrip('0123456789')[0]
         element = mdtraj.pdb.element.get_by_symbol(element_symbol)
-        topology.add_atom(AtomNames[i], element,
+        print(atom_name)
+        topology.add_atom(atom_name, element,
                          registered_residues[ResidueID[i]])
 
     topology.create_standard_bonds()

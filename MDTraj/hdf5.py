@@ -335,11 +335,14 @@ class HDF5TrajectoryFile(object):
         except self.tables.NoSuchNodeError:
             pass
 
-        data = [str(json.dumps(topology_dict))]
+        data = json.dumps(topology_dict)
+        if not isinstance(data, bytes):
+            data = data.encode('ascii')
+
         if self.tables.__version__ >= '3.0.0':
-            self._handle.create_array(where='/', name='topology', obj=data)
+            self._handle.create_array(where='/', name='topology', obj=[data])
         else:
-            self._handle.createArray(where='/', name='topology', object=data)
+            self._handle.createArray(where='/', name='topology', object=[data])
 
     #####################################################
     # randomState global attribute (optional)

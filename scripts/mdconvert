@@ -16,6 +16,7 @@ from argparse import ArgumentParser
 import numpy as np
 import mdtraj as md
 from mdtraj.trajectory import _convert
+from mdtraj.utils.six import iteritems
 
 ###############################################################################
 # Crappy class that should go elsewhere
@@ -96,7 +97,7 @@ def parse_args():
     args : argparse.Namespace
         The namespace containing the arguments
     """
-    extensions = ', '.join(formats.keys())
+    extensions = ', '.join(list(formats.keys()))
     parser = ArgumentParser(description='''Convert molecular dynamics
     trajectories between formats. The DCD, XTC, TRR, PDB, binpos, NetCDF,
     binpos, and HDF5 formats are supported (%s)''' % extensions)
@@ -169,7 +170,7 @@ def parse_args():
         if not ext(fn) in formats:
             parser.error("%s: '%s' is not a known extension" % (fn, ext(fn)))
 
-    extensions = map(ext, args.input)
+    extensions = list(map(ext, args.input))
     if any(e != extensions[0] for e in extensions):
         parser.error("all input trajectories do not have the same extension")
 
@@ -271,7 +272,7 @@ def main(args, verbose=True):
                     # with slice notation
                     if args.index is not None:
                         _data = {}
-                        for k, v in data.iteritems():
+                        for k, v in iteritems(data):
                             if isinstance(v, np.ndarray):
                                 # we don't want the dimensionality to go deficient
                                 if isinstance(args.index, int):
@@ -413,7 +414,7 @@ def read(infile, chunk, stride, atom_indices):
     else:
         raise RuntimeError
 
-    data = {k: v for k, v in data.iteritems() if v is not None}
+    data = {k: v for k, v in data.items() if v is not None}
     return data, in_units, (0 if 'xyz' not in data else len(data['xyz']))
 
 
