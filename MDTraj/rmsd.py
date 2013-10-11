@@ -125,7 +125,7 @@ def _allocate_aligned_array(shape, major):
     else:
         n_confs, n_atoms, n_dims = shape
 
-    n_padded_atoms = (n_atoms + alignment - 1) / alignment * alignment
+    n_padded_atoms = (n_atoms + alignment - 1) // alignment * alignment
     n_floats = n_dims * n_padded_atoms * n_confs
     nbytes = n_floats * dtype.itemsize
     buf = np.empty(nbytes + alignment * dtype.itemsize, dtype=np.uint8)
