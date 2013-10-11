@@ -9,7 +9,11 @@ branches:
 
 language: c
 before_install:
+  - sudo add-apt-repository -y  ppa:fkrull/deadsnakes
   - sudo apt-get update
+  # --------------------------------------------------------
+  # Python2.7 stuff. Install as much as possible through apt
+  # ---------------------------------------------------------
   - sudo apt-get install -qq libhdf5-serial-dev
   - sudo apt-get install -qq python-dev
   - sudo apt-get install -qq python-numpy
@@ -39,8 +43,9 @@ before_install:
   - sudo pip install scripttest
   - sudo pip install cffi
 
-  - sudo add-apt-repository ppa:fkrull/deadsnakes
-  - sudo apt-get update
+  # --------------------------------------------------------
+  # Python3.2 stuff. Install as much as possible through apt
+  # ---------------------------------------------------------
   - sudo apt-get install -qq python3-dev
   - sudo apt-get install -qq python3-setuptools
   - sudo apt-get install -qq python3-numpy
@@ -53,6 +58,7 @@ before_install:
   - sudo pip-3.2 install netCDF4==1.0.4
   - sudo pip-3.2 install git+git://github.com/rmcgibbo/simtk.unit
   - sudo pip-3.2 install scripttest
+
 
 env:
   - PYTHON=python
