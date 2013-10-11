@@ -27,4 +27,4 @@ env:
 
 after_success:
   - echo "after_success"
-  - sudo bash tools/ci/after_sucess.sh
+  - tools/ci/after_sucess.sh
