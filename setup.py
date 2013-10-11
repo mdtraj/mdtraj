@@ -43,6 +43,7 @@ Intended Audience :: Developers
 License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
 Programming Language :: C
 Programming Language :: Python
+Programming Language :: Python :: 3
 Topic :: Scientific/Engineering :: Bio-Informatics
 Topic :: Scientific/Engineering :: Chemistry
 Operating System :: POSIX
