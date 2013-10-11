@@ -4,4 +4,5 @@ apt-get update
 
 apt-get install libfreetype6-dev libpng12-dev libhdf5-serial-dev \
     g++ libatlas-base-dev gfortran netcdf-bin libnetcdf-dev libffi-dev -y
-apt-get install $python-dev
+echo "apt-get install ${python}-dev"
+apt-get install ${python}-dev
