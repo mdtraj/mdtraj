@@ -11,10 +11,10 @@ language: c
 before_install:
   - sudo add-apt-repository -y  ppa:fkrull/deadsnakes
   - sudo apt-get update
+  - sudo apt-get install -qq libhdf5-serial-dev netcdf-bin libnetcdf-dev
   # --------------------------------------------------------
   # Python2.7 stuff. Install as much as possible through apt
   # ---------------------------------------------------------
-  - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq libhdf5-serial-dev; fi
   - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-dev; fi
   - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-numpy; fi
   - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-scipy; fi
@@ -23,7 +23,6 @@ before_install:
   - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq cython; fi
   - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-numexpr; fi
   - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-tables; fi
-  - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq netcdf-bin libnetcdf-dev; fi
   - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-setuptools; fi
   - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-pandas; fi
   - if [[ "$PYTHON" == "python" ]]; then sudo easy_install pip; fi
@@ -74,8 +73,8 @@ env:
 
 after_success:
   - if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then echo "This is a pull request. No deployment will be done."; exit 0; fi
-  - if [[ "$TRAVIS_BRANCH" != "master" ]]; then echo "No deployment on BRANCH='$TRAVIS_BRANCH'"; exit 0; fi
-  - if [[ $PYTHON != "python"]]; then echo "No deployment on PYTHON=$PYTHON"; exit 0; fi
+  - if [[ "$TRAVIS_BRANCH"     != "master" ]]; then echo "No deployment on BRANCH='$TRAVIS_BRANCH'";            exit 0; fi
+  - if [[ "$PYTHON"            != "python" ]]; then echo "No deployment on PYTHON=$PYTHON";                     exit 0; fi
   - sudo apt-get install -qq python-sphinx       # for building documentation
   - sudo apt-get install -qq python-boto         # for interacting with S3
   - sudo apt-get install -qq python-sklearn      # for running example_pca.py
