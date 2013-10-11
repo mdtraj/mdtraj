@@ -46,8 +46,10 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
 
     Examples
     --------
-    >>> lengths_and_angles_to_box_vectors(1, 1, 1, 90.0, 90.0, 90.0)
-    (array([1, 0, 0]), array([ 0.,  1.,  0.]), array([ 0.,  0.,  1.]))
+    >>> result = lengths_and_angles_to_box_vectors(1, 1, 1, 90.0, 90.0, 90.0)
+    >>> expected = (array([1, 0, 0]), array([ 0.,  1.,  0.]), array([ 0.,  0.,  1.]))
+    >>> for (a, b) in zip(result, expected):
+    >>>     assert np.all(a == b)
 
     Notes
     -----

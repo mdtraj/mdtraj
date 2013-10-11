@@ -278,7 +278,8 @@ class RMSDCache(object):
             raise ValueError("IRMSD only supports operation in 3 dimensions")
         if self.n_padded_atoms % 4 != 0:
             raise ValueError("(Padded) number of atoms must be a multiple "
-                             "of 4 to use IRMSD routines")
+                             "of 4 to use IRMSD routines. You supplied "
+                             "self.n_padded_atoms=%s" % self.n_padded_atoms)
         if self.cords.ctypes.data % 16 != 0:
             raise ValueError("Coordinate array must be aligned to a 16-byte "
                              "boundary to use IRMSD routines")
