@@ -11,14 +11,14 @@ script:
   - echo "script"
   - $python -V
   - sudo $python setup.py -q install
-  - $python -c "import mdtraj; a=mdtraj.test('full'); import sys; sys.exit((len(a.failures)+len(a.errors))>0)"
+  - $precmd $python -c "import mdtraj; a=mdtraj.test('full'); import sys; sys.exit((len(a.failures)+len(a.errors))>0)"
 
 env:
   matrix:
-    - python=python2.6
-    - python=python2.7
-    - python=python3.2
-    - python=python3.3
+    - python=python2.6  precmd=''
+    - python=python2.7  precmd=''
+    - python=python3.2  precmd='sudo'
+    - python=python3.3  precmd=''
 
   global:
     # encrypted AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to push documentation to S3
