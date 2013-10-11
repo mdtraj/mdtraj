@@ -2,6 +2,8 @@ language: c
 
 install:
   - echo "install"
+  - echo "$python $PYTHON"
+  - export PYTHON=$python
   - sudo bash tools/ci/apt_install.sh
   - $python -V
   - sudo bash tools/ci/py_install.sh
@@ -14,9 +16,9 @@ script:
 
 env:
   matrix:
-    - python=python2.6
-    - python=python2.7
-    - python=python3.3
+    - python=python2.6 PYTHON=python2.6
+    - python=python2.7 PYTHON=python2.7
+    - python=python3.3 PYTHON=python3.3
 
   global:
     # encrypted AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to push documentation to S3
