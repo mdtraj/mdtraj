@@ -6,10 +6,9 @@ Getting started
 Installing MDTraj
 =================
 
-MDTraj currently runs best on Python 2.7.x; earlier versions of Python are not
-supported. We are working on support for Python 3.3+. MDTraj is developed and
-tested on mac and linux platforms. It probably works on windows, but might
-require some hacking.
+MDTraj is tested (and passes) on python 2.6, 2.7, 3.2 and 3.3. The
+developers generally use python2.7, on both mac and linux platforms. Automated
+tests are performed on every incremental update to the code, but only run on linux.
 
 Easy Way
 --------
@@ -17,6 +16,10 @@ Easy Way
 Just run ::
 
   pip install mdtraj
+  
+Or, if you want the bleeding-edge source code, use
+
+  pip install git+git://github.com/rmcgibbo/mdtraj.git
 
 Medium Way
 ----------
@@ -64,7 +67,7 @@ pre-packaged scientific python distributes like `Enthought's Canopy
 the dependences, and are distributed via 1-click installers for Windows, Mac 
 and Linux. You won't have to install anything except mdtraj, which can be done, as shown above, with ::
 
-  pip install git+git://github.com/rmcgibbo/mdtraj.git
+  pip install mdtraj
 
 Medium Way
 ----------
