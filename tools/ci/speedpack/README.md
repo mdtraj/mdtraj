@@ -14,8 +14,5 @@ $ vagrant up
 $ vagrant provision
 ```
 
-Then you can push the wheelhouse to the web with
+Then you can push the wheelhouse to the web with `push-wheels-to-s3.py`
 
-```
-scp -r wheelhouse rmcgibbo@corn.stanford.edu:WWW/
-```
