@@ -14,6 +14,8 @@ if [[ "$TRAVIS_BRANCH" != "master" ]]; then
 fi
 
 
+sudo apt-get install -qq python-matplotlib
+sudo apt-get install -qq python-sklearn
 sudo apt-get install -qq python-sphinx       # for building documentation
 sudo apt-get install -qq python-boto         # for interacting with S3
 sudo pip install ipython

@@ -17,6 +17,7 @@ env:
   matrix:
     - python=python2.6
     - python=python2.7
+    - python=python3.2
     - python=python3.3
 
   global:
