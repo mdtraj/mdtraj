@@ -2,23 +2,30 @@
 # travis-ci; it uses virtualenvs, they do not have numpy, scipy, matplotlib,
 # and it is impractical to build them
 
+# whitelist
+branches:
+  only:
+    - master
+
 language: c
-install:
+before_install:
+  - sudo add-apt-repository -y  ppa:fkrull/deadsnakes
   - sudo apt-get update
-  - sudo apt-get install -qq libhdf5-serial-dev
-  - sudo apt-get install -qq python-dev
-  - sudo apt-get install -qq python-numpy
-  - sudo apt-get install -qq python-scipy
-  - sudo apt-get install -qq python-networkx
-  - sudo apt-get install -qq python-nose
-  - sudo apt-get install -qq python-setuptools
-  - sudo apt-get install -qq cython
-  - sudo apt-get install -qq python-numexpr
-  - sudo apt-get install -qq python-tables
-  - sudo apt-get install -qq netcdf-bin libnetcdf-dev
-  - sudo apt-get install -qq python-setuptools
-  - sudo apt-get install -qq python-pandas
-  - sudo easy_install pip
+  - sudo apt-get install -qq libhdf5-serial-dev netcdf-bin libnetcdf-dev
+  # --------------------------------------------------------
+  # Python2.7 stuff. Install as much as possible through apt
+  # ---------------------------------------------------------
+  - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-dev; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-numpy; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-scipy; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-nose; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-setuptools; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq cython; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-numexpr; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-tables; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-setuptools; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo apt-get install -qq python-pandas; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo easy_install pip; fi
 
   # Currently (august 11, 2013), the latest version of netcdf4-python
   # requires at least libnetcdf4-4.1.2, whereas apt-get libnetcdf-dev
@@ -28,25 +35,46 @@ install:
   # See https://code.google.com/p/netcdf4-python/issues/detail?id=194&start=100
   # https://github.com/rmcgibbo/mdtraj/pull/151
   # https://github.com/rmcgibbo/mdtraj/issues/150
-  - sudo pip install netCDF4==1.0.4
-  - sudo pip install git+git://github.com/rmcgibbo/simtk.unit
-  - sudo pip install flake8
-  - sudo pip install scripttest
-  - sudo pip install cffi
+  - if [[ "$PYTHON" == "python" ]]; then sudo pip install --use-mirrors netCDF4==1.0.4; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo pip install --use-mirrors flake8; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo pip install --use-mirrors scripttest; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo pip install --use-mirrors cffi; fi
+  - if [[ "$PYTHON" == "python" ]]; then sudo pip install git+git://github.com/rmcgibbo/simtk.unit; fi
+
+  # --------------------------------------------------------
+  # Python3.2 stuff. Install as much as possible through apt
+  # ---------------------------------------------------------
+  - if [[ "$PYTHON" == "python3" ]]; then sudo apt-get install -qq python3-dev; fi
+  - if [[ "$PYTHON" == "python3" ]]; then sudo apt-get install -qq python3-setuptools; fi
+  - if [[ "$PYTHON" == "python3" ]]; then sudo apt-get install -qq python3-numpy; fi
+  - if [[ "$PYTHON" == "python3" ]]; then sudo apt-get install -qq python3-scipy; fi
+  - if [[ "$PYTHON" == "python3" ]]; then sudo easy_install3 pip; fi
+  - if [[ "$PYTHON" == "python3" ]]; then sudo pip-3.2 install --use-mirrors numexpr; fi
+  - if [[ "$PYTHON" == "python3" ]]; then sudo pip-3.2 install --use-mirrors cython; fi
+  - if [[ "$PYTHON" == "python3" ]]; then sudo pip-3.2 install --use-mirrors tables; fi
+  - if [[ "$PYTHON" == "python3" ]]; then sudo pip-3.2 install --use-mirrors cffi; fi
+  - if [[ "$PYTHON" == "python3" ]]; then sudo pip-3.2 install --use-mirrors netCDF4==1.0.4; fi
+  - if [[ "$PYTHON" == "python3" ]]; then sudo pip-3.2 install --use-mirrors scripttest; fi
+  - if [[ "$PYTHON" == "python3" ]]; then sudo pip-3.2 install git+git://github.com/rmcgibbo/simtk.unit; fi
+
 
 script:
-  - sudo python setup.py -q install
-  - python -c "import netCDF4; print netCDF4.__version__"
+  - sudo $PYTHON setup.py -q install
+  - $PYTHON -c "import netCDF4; print(netCDF4.__version__)"
   - nosetests
 
 env:
+  matrix:
+    - PYTHON=python
+    - PYTHON=python3
   global:
     # encrypted AWS_SECRET_ACCESS_KEY to push documentation to S3
     - secure: "d3xpZOaixS6TyYTjOSPvIdwUYrTfuEM9sN8AxZKp/92sfcHj3EP7qyCMj/cuf1Gl7mT2nZJj4daOgMam4/sZD6MUnXokDwEgIMes2rrVjQX0i0MvXFU1LN8KbUcK+6QQyXc8AwxJJ603L9YxLnBdPfYTQNrd3zP7BzWYP00Nch4="
 
 after_success:
-  - if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then echo "This is a pull request. No deployment will be done."; exit 0; fi
-  - if [[ "$TRAVIS_BRANCH" != "master" ]]; then echo "No deployment on BRANCH='$TRAVIS_BRANCH'"; exit 0; fi
+  - if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then echo "This is a pull request. No deployment will be done."; exit 0; fi
+  - if [[ "$TRAVIS_BRANCH"     != "master" ]]; then echo "No deployment on BRANCH='$TRAVIS_BRANCH'";            exit 0; fi
+  - if [[ "$PYTHON"            != "python" ]]; then echo "No deployment on PYTHON=$PYTHON";                     exit 0; fi
   - sudo apt-get install -qq python-sphinx       # for building documentation
   - sudo apt-get install -qq python-boto         # for interacting with S3
   - sudo apt-get install -qq python-sklearn      # for running example_pca.py

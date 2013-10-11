@@ -20,6 +20,7 @@
 # Imports
 ##############################################################################
 
+from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import _HAVE_OPT
@@ -170,7 +171,9 @@ def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
     atom_dict = _construct_atom_dict(traj.top, chain_id=chain_id)
     atom_indices = []
     found_residue_ids = []
-    atoms_and_offsets = zip(atom_names, rid_offsets)
+    # py3k criticial list(zip(, not just zip(, since we iterate multiple
+    # times through it
+    atoms_and_offsets = list(zip(atom_names, rid_offsets))
     for chain in traj.top.chains:
         if chain.index == chain_id:
             for residue in chain.residues:
@@ -180,8 +183,10 @@ def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
                         atom_indices.append([atom_dict[rid + offset][atom] for atom, offset in atoms_and_offsets])  # Lookup desired atom indices and and add to list.
                         found_residue_ids.append(rid)
 
+
     atom_indices = np.array(atom_indices)
     found_residue_ids = np.array(found_residue_ids)
+    print(atom_indices, found_residue_ids)
 
     return found_residue_ids, atom_indices
 

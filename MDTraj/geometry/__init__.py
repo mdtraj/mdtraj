@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+from __future__ import print_function, division
 
 __all__ = ['compute_distances', 'compute_angles', 'compute_dihedrals']
 
@@ -29,7 +30,6 @@ except ImportError:
                   'which is installable with easy_install or pip via '
                   '"pip install cffi" or "easy_install cffi".')
     _HAVE_OPT = False  # we definitely don't have the library
-
 if _HAVE_OPT is not False:
     # lets try to open the library
     ffi = _cffi.FFI()
@@ -61,7 +61,9 @@ if _HAVE_OPT is not False:
 if not _HAVE_OPT:
     warnings.warn('Optimized distance library was not imported sucessfully.')
 
-import rg, internal, alignment
+from . import rg
+from . import internal
+from . import alignment
 from .angle import *
 from .distance import *
 from .dihedral import *

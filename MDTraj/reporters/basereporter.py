@@ -17,12 +17,16 @@
 ##############################################################################
 # Imports
 ##############################################################################
+
+from __future__ import print_function, division
 # stdlib
 import math
-
 # ours
 from mdtraj.topology import _topology_from_subset
 from mdtraj.utils import unitcell
+from mdtraj.utils.six import PY3
+if PY3:
+    basestring = str
 
 import numpy as np
 

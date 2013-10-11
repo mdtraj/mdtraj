@@ -13,9 +13,6 @@
 #
 # You should have received a copy of the GNU General Public License along with
 # mdtraj. If not, see http://www.gnu.org/licenses/.
-
-#!/bin/env python
-
 """
 pdbstructure.py: Used for managing PDB formated files.
 
@@ -46,14 +43,16 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from __future__ import print_function, division
+
 __author__ = "Christopher M. Bruns"
 __version__ = "1.0"
 
-
-import element
-import numpy as np
-import warnings
 import sys
+import warnings
+import numpy as np
+from . import element
+
 
 class PdbStructure(object):
     """
@@ -65,12 +64,12 @@ class PdbStructure(object):
     > pdb = PdbStructure(open("1ARJ.pdb"))
 
     Fetch the first atom of the structure:
-    > print pdb.iter_atoms().next()
+    > print(pdb.iter_atoms().next())
     ATOM      1  O5'   G N  17      13.768  -8.431  11.865  1.00  0.00           O
 
     Loop over all of the atoms of the structure
     > for atom in pdb.iter_atoms():
-    >     print atom
+    >     print(atom)
     ATOM      1  O5'   G N  17      13.768  -8.431  11.865  1.00  0.00           O
     ...
 
@@ -84,21 +83,21 @@ class PdbStructure(object):
     models = list(pdb.iter_models())
 
     Fetch atomic coordinates of first atom:
-    > print pdb.iter_positions().next()
+    > print(pdb.iter_positions().next())
     [13.768, -8.431, 11.865]
 
      or
 
-    > print pdb.iter_atoms().next().position
+    > print(pdb.iter_atoms().next().position)
     [13.768, -8.431, 11.865]
 
     Strip the length units from an atomic position:
     > pos = pdb.iter_positions().next()
-    > print pos
+    > print(pos)
     [13.768, -8.431, 11.865]
-    > print pos
+    > print(pos)
     [13.768, -8.431, 11.865]
-    > print pos
+    > print(pos)
     [1.3768, -0.8431, 1.1865]
 
 
@@ -217,11 +216,11 @@ class PdbStructure(object):
             if len(model.chains) == 0:
                 continue
             if len(self.models) > 1:
-                print >>output_stream, "MODEL     %4d" % (model.number)
+                print("MODEL     %4d" % model.number, file=output_stream)
             model.write(output_stream)
             if len(self.models) > 1:
-                print >>output_stream, "ENDMDL"
-        print >>output_stream, "END"
+                print("ENDMDL", file=output_stream)
+        print("END", file=output_stream)
 
     def _add_model(self, model):
         if self.default_model == None:
@@ -235,7 +234,7 @@ class PdbStructure(object):
         return self.models_by_number[model_number]
 
     def model_numbers(self):
-        return self.models_by_number.keys()
+        return list(self.models_by_number.keys())
 
     def __contains__(self, model_number):
         return self.models_by_number.__contains__(model_number)
@@ -342,7 +341,7 @@ class Model(object):
         return self.chains_by_id[chain_id]
 
     def chain_ids(self):
-        return self.chains_by_id.keys()
+        return list(self.chains_by_id.keys())
 
     def __contains__(self, chain_id):
         return self.chains_by_id.__contains__(chain_id)
@@ -444,7 +443,7 @@ class Chain(object):
             residue.write(next_serial_number, output_stream)
         if self.has_ter_record:
             r = self.residues[-1]
-            print >>output_stream, "TER   %5d      %3s %1s%4d%1s" % (next_serial_number.val, r.name_with_spaces, self.chain_id, r.number, r.insertion_code)
+            print("TER   %5d      %3s %1s%4d%1s" % (next_serial_number.val, r.name_with_spaces, self.chain_id, r.number, r.insertion_code), file=output_stream)
             next_serial_number.increment()
 
     def _add_ter_record(self):
@@ -452,7 +451,7 @@ class Chain(object):
         self._finalize()
 
     def get_residue(self, residue_number, insertion_code=' '):
-        return residues_by_num_icode[str(residue_number) + insertion_code]
+        return self.residues_by_num_icode[str(residue_number) + insertion_code]
 
     def __contains__(self, residue_number):
         return self.residues_by_number.__contains__(residue_number)
@@ -508,7 +507,7 @@ class Residue(object):
         """
         """
         alt_loc = atom.alternate_location_indicator
-        if not self.locations.has_key(alt_loc):
+        if not alt_loc in self.locations:
             self.locations[alt_loc] = Residue.Location(alt_loc, atom.residue_name_with_spaces)
         assert atom.residue_number == self.number
         assert atom.insertion_code == self.insertion_code
@@ -589,7 +588,7 @@ class Residue(object):
         ...     res._add_atom(Atom(l))
         ...
         >>> for atom in res:
-        ...     print atom
+        ...     print(atom)
         ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N  
         ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C  
         ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C  
@@ -614,7 +613,6 @@ class Residue(object):
         for atom in self.atoms:
             use_atom = False # start pessimistic
             for loc2 in atom.locations.keys():
-                # print "#%s#%s" % (loc2,locs)
                 if locs == None: # means all locations
                     use_atom = True
                 elif loc2 in locs:
@@ -635,13 +633,8 @@ class Residue(object):
                          "ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S"]
         >>> res = Residue("CYS", 42)
         >>> for l in pdb_lines: res._add_atom(Atom(l))
-        >>> for c in res.iter_positions:
-        ...     print c
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-        TypeError: 'instancemethod' object is not iterable
         >>> for c in res.iter_positions():
-        ...     print c
+        ...     print(c)
         [ 40.714  -5.292  12.123]
         [ 39.736  -5.883  12.911]
         [ 40.339  -6.654  14.087]
@@ -780,7 +773,7 @@ class Atom(object):
 
         >>> atom = Atom("ATOM   2209  CB  TYR A 299       6.167  22.607  20.046  1.00  8.12           C")
         >>> for c in atom.iter_locations():
-        ...     print c
+        ...     print(c)
         ...
         [  6.167  22.607  20.046]
         """
@@ -801,7 +794,7 @@ class Atom(object):
 
         >>> atom = Atom("ATOM   2209  CB  TYR A 299       6.167  22.607  20.046  1.00  8.12           C")
         >>> for c in atom.iter_coordinates():
-        ...     print c
+        ...     print(c)
         ...
         6.167
         22.607
@@ -896,7 +889,7 @@ class Atom(object):
         else:
             locs = list(alt_loc)
         for loc_id in locs:
-            print >>output_stream, self._pdb_string(next_serial_number.val, loc_id)
+            print(self._pdb_string(next_serial_number.val, loc_id), file=output_stream)
             next_serial_number.increment()
 
     def set_name_with_spaces(self, name):
@@ -928,7 +921,7 @@ class Atom(object):
 
             >>> l = Atom.Location(' ', [1,2,3], 1.0, 20.0, "XXX")
             >>> for c in l:
-            ...     print c
+            ...     print(c)
             ...
             1
             2
@@ -940,124 +933,3 @@ class Atom(object):
         def __str__(self):
             return str(self.position)
 
-
-# run module directly for testing
-if __name__=='__main__':
-    # Test the examples in the docstrings
-    import doctest, sys
-    doctest.testmod(sys.modules[__name__])
-
-    import sys
-    import os
-    import gzip
-    import re
-    import time
-
-    # Test atom line parsing
-    pdb_line = "ATOM   2209  CB  TYR A 299       6.167  22.607  20.046  1.00  8.12           C"
-    a = Atom(pdb_line)
-    assert a.record_name == "ATOM"
-    assert a.serial_number == 2209
-    assert a.name == "CB"
-    assert a.name_with_spaces == " CB "
-    assert a.residue_name == "TYR"
-    assert a.residue_name_with_spaces == "TYR"
-    assert a.chain_id == "A"
-    assert a.residue_number == 299
-    assert a.insertion_code == " "
-    assert a.alternate_location_indicator == " "
-    assert a.x ==  6.167
-    assert a.y == 22.607
-    assert a.z == 20.046
-    assert a.occupancy == 1.00
-    assert a.temperature_factor == 8.12
-    assert a.segment_id == ""
-    assert a.element_symbol == "C"
-
-    # print pdb_line
-    # print str(a)
-    assert str(a).rstrip() == pdb_line.rstrip()
-
-    a = Atom("ATOM   2209  CB  TYR A 299       6.167  22.607  20.046  1.00  8.12           C")
-
-    # misaligned residue name - bad
-    try:
-        a = Atom("ATOM   2209  CB   TYRA 299       6.167  22.607  20.046  1.00  8.12           C")
-        assert(False)
-    except ValueError: pass
-    # four character residue name -- not so bad
-    a = Atom("ATOM   2209  CB  NTYRA 299       6.167  22.607  20.046  1.00  8.12           C")
-
-    atom_count = 0
-    residue_count = 0
-    chain_count = 0
-    model_count = 0
-    structure_count = 0
-
-    def parse_one_pdb(pdb_file_name):
-        global atom_count, residue_count, chain_count, model_count, structure_count
-        print pdb_file_name
-        if pdb_file_name[-3:] == ".gz":
-            fh = gzip.open(pdb_file_name)
-        else:
-            fh = open(pdb_file_name)
-        pdb = PdbStructure(fh, load_all_models=True)
-        # print "  %d atoms found" % len(pdb.atoms)
-        atom_count += len(list(pdb.iter_atoms()))
-        residue_count += len(list(pdb.iter_residues()))
-        chain_count += len(list(pdb.iter_chains()))
-        model_count += len(list(pdb.iter_models()))
-        structure_count += 1
-        fh.close
-        return pdb
-
-    # Parse one file
-    pdb_file_name = "/home/Christopher Bruns/Desktop/1ARJ.pdb"
-    if os.path.exists(pdb_file_name):
-        parse_one_pdb(pdb_file_name)
-
-    # try parsing the entire PDB
-    pdb_dir = "/cygdrive/j/pdb/data/structures/divided/pdb"
-    if os.path.exists(pdb_dir):
-        parse_entire_pdb = False
-        parse_one_division = False
-        parse_one_file = False
-        start_time = time.time()
-        if parse_one_file:
-            pdb_id = "2aed"
-            middle_two = pdb_id[1:3]
-            full_pdb_file = os.path.join(pdb_dir, middle_two, "pdb%s.ent.gz" % pdb_id)
-            parse_one_pdb(full_pdb_file)
-        if parse_one_division:
-            subdir = "ae"
-            full_subdir = os.path.join(pdb_dir, subdir)
-            for pdb_file in os.listdir(full_subdir):
-                if not re.match("pdb.%2s.\.ent\.gz" % subdir , pdb_file):
-                    continue
-                full_pdb_file = os.path.join(full_subdir, pdb_file)
-                parse_one_pdb(full_pdb_file)
-        if parse_entire_pdb:
-            for subdir in os.listdir(pdb_dir):
-                if not len(subdir) == 2: continue
-                full_subdir = os.path.join(pdb_dir, subdir)
-                if not os.path.isdir(full_subdir):
-                    continue
-                for pdb_file in os.listdir(full_subdir):
-                    if not re.match("pdb.%2s.\.ent\.gz" % subdir , pdb_file):
-                        continue
-                    full_pdb_file = os.path.join(full_subdir, pdb_file)
-                    parse_one_pdb(full_pdb_file)
-
-        end_time = time.time()
-        elapsed = end_time - start_time
-        minutes = elapsed / 60
-        seconds = elapsed % 60
-        hours = minutes / 60
-        minutes = minutes % 60
-        print "%dh:%02dm:%02ds elapsed" % (hours, minutes, seconds)
-
-        print "%d atoms found" % atom_count
-        print "%d residues found" % residue_count
-        print "%d chains found" % chain_count
-        print "%d models found" % model_count
-        print "%d structures found" % structure_count

@@ -24,17 +24,16 @@ This code is new and should be considered __unstable__
 # Imports
 ##############################################################################
 
+from __future__ import print_function, division
 import numpy as np
-import scipy.linalg
-from itertools import combinations, ifilter
+from itertools import combinations
+from mdtraj.utils.six.moves import filter, xrange  # itertools
 import logging
 
 from mdtraj.geometry.distance import compute_distances
 from mdtraj.geometry.dihedral import compute_dihedrals
 from mdtraj.geometry.angle import compute_angles
 from mdtraj.utils import import_
-
-from scipy.spatial.distance import squareform, pdist
 
 # these are covalent radii taken from the crystalographic data in nm
 # Dalton Trans., 2008, 2832-2838, DOI: 10.1039/B801115J
@@ -175,6 +174,7 @@ def get_nonredundant_internal_coordinates(trajectory, conformation, get_operator
     ----------
     Baker, Kessi, Delley J. Chem. Phys. 105, 192 (1996); doi: 10.1063/1.471864
     """
+    import scipy.linalg
 
     ibonds, iangles, idihedrals = get_connectivity(conformation)
 
@@ -241,6 +241,7 @@ def get_bond_connectivity(conf):
     Bakken and Helgaker, JCP Vol. 117, Num. 20 22 Nov. 2002
     http://folk.uio.no/helgaker/reprints/2002/JCP117b_GeoOpt.pdf
     """
+    from scipy.spatial.distance import squareform, pdist
 
     xyz = conf.xyz[0, :, :]
     n_atoms = xyz.shape[0]
@@ -329,8 +330,8 @@ def get_dihedral_connectivity(ibonds):
 
     for a in xrange(n_atoms):
         for b in graph.neighbors(a):
-            for c in ifilter(lambda c: c not in [a, b], graph.neighbors(b)):
-                for d in ifilter(lambda d: d not in [a, b, c], graph.neighbors(c)):
+            for c in filter(lambda c: c not in [a, b], graph.neighbors(b)):
+                for d in filter(lambda d: d not in [a, b, c], graph.neighbors(c)):
                     idihedrals.append((a, b, c, d))
 
     return np.array(idihedrals)

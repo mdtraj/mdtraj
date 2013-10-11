@@ -18,7 +18,7 @@ import tempfile, os
 import numpy as np
 import mdtraj as md
 from mdtraj import ArcTrajectoryFile, arc, PDBTrajectoryFile
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
+from mdtraj.testing import get_fn, eq, DocStringFormatTester
 TestDocstrings = DocStringFormatTester(arc, error_on_none=True)
 
 temp = tempfile.mkstemp(suffix='.arc')[1]

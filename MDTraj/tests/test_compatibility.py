@@ -1,5 +1,4 @@
-import tempfile, os
-import numpy as np
+import os
 
 from mdtraj import load
 from mdtraj.testing import get_fn, eq

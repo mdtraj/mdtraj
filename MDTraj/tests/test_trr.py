@@ -1,4 +1,4 @@
-from mdtraj import trr, TRRTrajectoryFile, io
+from mdtraj import trr, TRRTrajectoryFile
 import os, tempfile
 import numpy as np
 from mdtraj.testing import eq, DocStringFormatTester, get_fn

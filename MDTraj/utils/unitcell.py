@@ -2,6 +2,7 @@
 # Imports
 ##############################################################################
 
+from __future__ import print_function, division
 import warnings
 import numpy as np
 
@@ -46,8 +47,10 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
 
     Examples
     --------
-    >>> lengths_and_angles_to_box_vectors(1, 1, 1, 90.0, 90.0, 90.0)
-    (array([1, 0, 0]), array([ 0.,  1.,  0.]), array([ 0.,  0.,  1.]))
+    >>> import numpy as np
+    >>> result = lengths_and_angles_to_box_vectors(1, 1, 1, 90.0, 90.0, 90.0)
+    >>> expected = (np.array([1, 0, 0]), np.array([ 0.,  1.,  0.]), np.array([ 0.,  0.,  1.]))
+    >>> for (a, b) in zip(result, expected): np.testing.assert_array_almost_equal(a, b)
 
     Notes
     -----
