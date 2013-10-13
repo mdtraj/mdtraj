@@ -33,10 +33,10 @@ fn_dcd = get_fn('frame0.dcd')
 pdb = get_fn('native.pdb')
 
 fd, temp = tempfile.mkstemp(suffix='.dcd')
+os.close(fd)
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
-    os.close(fd)
     os.unlink(temp)
 
 
