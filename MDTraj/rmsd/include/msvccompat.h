@@ -44,8 +44,8 @@
  #define CAST__M128(x)  ( _mm_castsi128_ps(x) )
  #define CAST__M128I(x) ( _mm_castps_si128(x) )
 #else
- #define CAST__M128(x)  ( (__m128) x )
- #define CAST__M128I(x) ( CAST__M128I( x )
+ #define CAST__M128(x)  ( (__m128)  x )
+ #define CAST__M128I(x) ( (__m128i) x )
 #endif
 
 /**

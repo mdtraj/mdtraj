@@ -222,7 +222,10 @@ binpos = Extension('mdtraj.binpos',
 def rmsd_extension():
     openmp_enabled, needs_gomp = detect_openmp()
     compiler_args = ['-msse2' if not detect_sse3() else '-mssse3',
-                     '--std=gnu99', '-O3', '-funroll-loops', '/arch:SSE2']
+                     '--std=gnu99', '-O3', '-funroll-loops']
+    if new_compiler().compiler_type == 'msvc':
+        compiler_args.append('/arch:SSE2')
+
     if openmp_enabled:
         compiler_args.append('-fopenmp')
     compiler_libraries = ['gomp'] if needs_gomp else []
