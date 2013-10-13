@@ -36,7 +36,7 @@
 /* Utilities                                                                */
 /****************************************************************************/
 
-static int inverse33(const float M[9], _m128 cols[3]) {
+static int inverse33(const float M[9], __m128 cols[3]) {
   /* Compute the inverse of a 3x3 matrix, storing the columns of the
    * result into three __m128 SSE registers
    */
