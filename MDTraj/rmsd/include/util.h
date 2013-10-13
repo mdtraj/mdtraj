@@ -5,14 +5,14 @@
 
     Common intrinsic subroutines shared among files.
 */
-
+#include "msvccompat.h"
 #include <xmmintrin.h>
 #ifdef __SSSE3__
 #include <pmmintrin.h>
 #endif
 #include "sse_swizzle.h"
 
-static inline void aos_deinterleaved_load(const float* S, __m128* x, __m128* y, __m128* z)
+static INLINE void aos_deinterleaved_load(const float* S, __m128* x, __m128* y, __m128* z)
 {
   __m128 t1, t2;
   *x  = _mm_load_ps(S);

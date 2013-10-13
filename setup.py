@@ -208,7 +208,7 @@ trr = Extension('mdtraj.trr',
 dcd = Extension('mdtraj.dcd',
                 sources=['MDTraj/dcd/src/dcdplugin.c',
                          'MDTraj/dcd/dcd.' + cython_extension],
-                libraries=['m'],
+                #libraries=['m'],
                 include_dirs=["MDTraj/dcd/include/",
                               'MDTraj/dcd/', numpy.get_include()])
 
