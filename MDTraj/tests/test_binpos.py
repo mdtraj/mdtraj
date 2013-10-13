@@ -38,10 +38,10 @@ fn_binpos = get_fn('frame0.binpos')
 fn_dcd = get_fn('frame0.dcd')
 
 fd, temp = tempfile.mkstemp(suffix='.binpos')
+os.close(fd)
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
-    os.close(fd)
     os.unlink(temp)
 
 def test_read_0():

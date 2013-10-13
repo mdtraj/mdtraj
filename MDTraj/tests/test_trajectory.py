@@ -34,12 +34,12 @@ fd4, temp4 = tempfile.mkstemp(suffix='.trr')
 fd5, temp5 = tempfile.mkstemp(suffix='.h5')
 fd6, temp6 = tempfile.mkstemp(suffix='.pdb')
 fd7, temp7 = tempfile.mkstemp(suffix='.nc')
-
+for e in [fd1, fd2, fd3, fd4, fd5, fd6, fd7]:
+    os.close(e)
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
-    for e in [fd1, fd2, fd3, fd4, fd5, fd6, fd7]:
-        os.close(e)
+
     for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
         os.unlink(e)
 

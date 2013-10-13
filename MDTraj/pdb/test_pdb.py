@@ -23,7 +23,8 @@ from mdtraj import load
 from mdtraj.utils import ilen
 
 pdb = get_fn('native.pdb')
-temp = tempfile.mkstemp(suffix='.pdb')[1]
+fd, temp = tempfile.mkstemp(suffix='.pdb')
+os.close(fd)
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
