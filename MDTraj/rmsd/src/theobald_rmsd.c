@@ -315,14 +315,12 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
      *
      *       G_b:          trace of B'B
      */
-
-    // Will have 3 garbage elements at the end
-    //float M[12] __attribute__ ((aligned (16)));
-	float M[12] _ALIGNED(16);
-    int niters = npaddedatoms >> 2;
-    __m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
+	int niters, k;
+	__m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
     __m128 ax,ay,az,b;
     __m128 t0,t1,t2;
+    // Will have 3 garbage elements at the end
+	_ALIGNED(16) float M[12];
     const float* aTx = aT;
     const float* aTy = aT+rowstride;
     const float* aTz = aT+2*rowstride;
@@ -330,11 +328,12 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
     const float* bTy = bT+rowstride;
     const float* bTz = bT+2*rowstride;
 
+    niters = npaddedatoms >> 2;
     // npaddedatoms must be a multiple of 4
     assert(npaddedatoms % 4 == 0);
 
     xx = xy = xz = yx = yy = yz = zx = zy = zz = _mm_setzero_ps();
-    for (int k = 0; k < niters; k++) {
+    for (k = 0; k < niters; k++) {
         ax = _mm_load_ps(aTx);
         ay = _mm_load_ps(aTy);
         az = _mm_load_ps(aTz);
@@ -434,19 +433,19 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
      *
      *       G_b:          trace of B'B
      */
-
+    int niters, k;
     // Will have 3 garbage elements at the end
-    float M[12] __attribute__ ((aligned (16)));
-    int niters = npaddedatoms >> 2;
+    _ALIGNED(16) float M[12];
     __m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
     __m128 ax,ay,az,bx,by,bz;
     __m128 t0,t1,t2;
 
+    niters = npaddedatoms >> 2;
     // npaddedatoms must be a multiple of 4
     assert(npaddedatoms % 4 == 0);
 
     xx = xy = xz = yx = yy = yz = zx = zy = zz = _mm_setzero_ps();
-    for (int k = 0; k < niters; k++)
+    for (k = 0; k < niters; k++)
     {
         aos_deinterleaved_load(b,&bx,&by,&bz);
         aos_deinterleaved_load(a,&ax,&ay,&az);
