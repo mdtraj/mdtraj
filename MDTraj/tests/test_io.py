@@ -39,6 +39,7 @@ def test_overwrite_1():
         raise
     finally:
         if os.path.exists(fn):
+            os.close(fid)
             os.unlink(fn)
 
 
@@ -54,6 +55,7 @@ def test_overwrite_2():
         raise
     finally:
         if os.path.exists(fn):
+            os.close(fid)
             os.unlink(fn)
 
 
