@@ -222,7 +222,7 @@ binpos = Extension('mdtraj.binpos',
 def rmsd_extension():
     openmp_enabled, needs_gomp = detect_openmp()
     compiler_args = ['-msse2' if not detect_sse3() else '-mssse3',
-                     '--std=gnu99', '-O3', '-funroll-loops']
+                     '--std=gnu99', '-O3', '-funroll-loops', '/arch:SSE2']
     if openmp_enabled:
         compiler_args.append('-fopenmp')
     compiler_libraries = ['gomp'] if needs_gomp else []
@@ -235,7 +235,7 @@ def rmsd_extension():
                      include_dirs=[
                          'MDTraj/rmsd/include', numpy.get_include()],
                      extra_compile_args=compiler_args,
-                     # define_macros=compiler_defs,
+                     #define_macros=compiler_defs,
                      libraries=compiler_libraries)
     return rmsd
 

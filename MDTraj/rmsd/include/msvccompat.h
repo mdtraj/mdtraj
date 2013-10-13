@@ -36,6 +36,10 @@
   #endif
 #endif
 
+/**
+ * Bitwise casts of SSE registers
+ * http://stackoverflow.com/questions/13631951/bitwise-cast-from-m128-to-m128i-on-msvc/13632812#13632812
+ **/
 #ifdef _MSC_VER
  #define CAST__M128(x)  ( _mm_castsi128_ps(x) )
  #define CAST__M128I(x) ( _mm_castps_si128(x) )
@@ -43,6 +47,19 @@
  #define CAST__M128(x)  ( (__m128) x )
  #define CAST__M128I(x) ( CAST__M128I( x )
 #endif
+
+/**
+ * Alignment of stack variables
+ * http://stackoverflow.com/questions/7895869/cross-platform-alignx-macro
+ **/
+#if defined(_MSC_VER)
+#define _ALIGNED(x) __declspec(align(x))
+#else
+#if defined(__GNUC__)
+#define _ALIGNED(x) __attribute__ ((aligned(x)))
+#endif
+#endif
+
 
 
 #endif

@@ -29,6 +29,7 @@
 //      Imran Haque  (ihaque AT cs.stanford.edu)
 //=============================================================================================
 
+#include "msvccompat.h"
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -59,44 +60,46 @@
 int quartic_equation_solve_exact(double *r1, double *r2, double *r3, double *r4,
 				 int *nr12, int *nr34,double d0,double d1,double d2, double d3, double d4)
 {
-  double a3 = d3/d4;
-  double a2 = d2/d4;
-  double a1 = d1/d4;
-  double a0 = d0/d4;
+  int nr;
+  double a0, a1, a2, a3, au0, au1, au2;
+  double x1, x2, x3, u1, R, R2, D, D2, E, E2, foo1, foo2;
 
-  double au2 = -a2;
-  double au1 = (a1*a3 - 4.0*a0) ;
-  double au0 = 4.0*a0*a2 - a1*a1 - a0*a3*a3;
+  a3 = d3/d4;
+  a3 = d3/d4;
+  a2 = d2/d4;
+  a1 = d1/d4;
+  a0 = d0/d4;
 
-  double x1, x2, x3;
-  int nr = solve_cubic_equation(1.0, au2, au1, au0, &x1, &x2, &x3);
+  au2 = -a2;
+  au1 = (a1*a3 - 4.0*a0) ;
+  au0 = 4.0*a0*a2 - a1*a1 - a0*a3*a3;
 
-  double u1;
+  nr = solve_cubic_equation(1.0, au2, au1, au0, &x1, &x2, &x3);
+
   if (nr==1) u1 = x1;
   else u1 = (x1>x3) ? x1 : x3;
 
-  double R2 = 0.25*a3*a3 + u1 - a2;
-  double R = (R2>0.0) ? sqrt(R2) : 0.0;
+  R2 = 0.25*a3*a3 + u1 - a2;
+  R = (R2>0.0) ? sqrt(R2) : 0.0;
 
-  double D2, E2;
   if (R != 0.0)
     {
-      double foo1 = 0.75*a3*a3 - R2 - 2.0*a2;
-      double foo2 = 0.25*(4.0*a3*a2 - 8.0*a1 - a3*a3*a3) / R;
+      foo1 = 0.75*a3*a3 - R2 - 2.0*a2;
+      foo2 = 0.25*(4.0*a3*a2 - 8.0*a1 - a3*a3*a3) / R;
       D2 = foo1 + foo2;
       E2 = foo1 - foo2;
     }
   else
     {
-      double foo1 = 0.75*a3*a3 - 2.0*a2;
-      double foo2 = 2.0 * sqrt(u1*u1 - 4.0*a0);
+      foo1 = 0.75*a3*a3 - 2.0*a2;
+      foo2 = 2.0 * sqrt(u1*u1 - 4.0*a0);
       D2 = foo1 + foo2;
       E2 = foo1 - foo2;
     }
 
   if (D2 >= 0.0)
     {
-      double D = sqrt(D2);
+      D = sqrt(D2);
       *r1 = -0.25*a3 + 0.5*R - 0.5*D;
       *r2 = -0.25*a3 + 0.5*R + 0.5*D;
       *nr12 = 2;
@@ -109,7 +112,7 @@ int quartic_equation_solve_exact(double *r1, double *r2, double *r3, double *r4,
 
   if (E2 >= 0.0)
     {
-      double E = sqrt(E2);
+      E = sqrt(E2);
       *r3 = -0.25*a3 - 0.5*R - 0.5*E;
       *r4 = -0.25*a3 - 0.5*R + 0.5*E;
       *nr34 = 2;
@@ -125,6 +128,7 @@ int quartic_equation_solve_exact(double *r1, double *r2, double *r3, double *r4,
 int solve_cubic_equation(double  c3, double  c2,  double c1, double c0,
                          double *x1, double *x2, double *x3)
 {
+  double s1, s2;
   double a2 = c2/c3;
   double a1 = c1/c3;
   double a0 = c0/c3;
@@ -135,10 +139,10 @@ int solve_cubic_equation(double  c3, double  c2,  double c1, double c0,
 
   if (delta>0.0)
     {
-      double s1 = r + sqrt(delta);
+      s1 = r + sqrt(delta);
       s1 = (s1>=0.0) ? pow(s1,1./3.) : -pow(-s1,1./3.);
 
-      double s2 = r - sqrt(delta);
+      s2 = r - sqrt(delta);
       s2 = (s2>=0.0) ? pow(s2,1./3.) : -pow(-s2,1./3.);
 
       *x1 = (s1+s2) - a2/3.0;
@@ -185,13 +189,14 @@ float DirectSolve(float lambda, float C_0, float C_1, float C_2)
 }
 
 float NewtonSolve(float lambda, float C_0, float C_1, float C_2)
-{
+{ 
+  int i;
   unsigned int maxits = 500;
   float tolerance = 1.0e-6f;
   float lambda_old,lambda2;
   float a,b;
 
-  for (int i = 0; i < maxits; i++)
+  for (i = 0; i < maxits; i++)
     {     
         lambda_old = lambda;
         lambda2 = lambda_old * lambda_old;
@@ -210,6 +215,7 @@ float NewtonSolve(float lambda, float C_0, float C_1, float C_2)
 
 float msdFromMandG(const float M[9],const float G_x,const float G_y,const int numAtoms) 
 {
+    int i;
     const int m = 3;
     float k00 =  M[0+0*m ] + M[1+1*m] + M[2+2*m];       // [0, 0]
     float k01 =  M[1+2*m ] - M[2+1*m];                  // [0, 1]
@@ -231,7 +237,7 @@ float msdFromMandG(const float M[9],const float G_x,const float G_y,const int nu
 
     float rmsd2,ls_rmsd2;
     C_2 = 0.0f;
-    for (int i = 0; i < m * m; i++)
+    for (i = 0; i < m * m; i++)
     {
         C_2 += M[i] * M[i];
     }
@@ -311,7 +317,8 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
      */
 
     // Will have 3 garbage elements at the end
-    float M[12] __attribute__ ((aligned (16)));
+    //float M[12] __attribute__ ((aligned (16)));
+	float M[12] _ALIGNED(16);
     int niters = npaddedatoms >> 2;
     __m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
     __m128 ax,ay,az,b;
