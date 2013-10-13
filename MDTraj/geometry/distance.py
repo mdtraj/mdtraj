@@ -23,10 +23,11 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-from mdtraj.geometry import _HAVE_OPT
-if _HAVE_OPT:
-    from mdtraj.geometry import ffi, C
-    from mdtraj.utils.ffi import cpointer
+try:
+    import _geometry
+    _HAVE_OPT = True
+except ImportError:
+    _HAVE_OPT = False
 
 __all__ = ['compute_distances', 'compute_displacements']
 
@@ -69,20 +70,18 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
         if _HAVE_OPT and opt:
             out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
-            C.dist_mic(cpointer(xyz), cpointer(pairs), cpointer(box),
-                       cpointer(out), ffi.NULL, xyz.shape[0], xyz.shape[1],
-                       pairs.shape[0])
+            _geometry._dist_mic(xyz, pairs, box, out)
             return out
-
-        return _distance_mic(xyz, pairs, box)
+        else:
+            return _distance_mic(xyz, pairs, box)
 
     # either there are no unitcell vectors or they dont want to use them
     if _HAVE_OPT and opt:
         out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
-        C.dist(cpointer(xyz), cpointer(pairs), cpointer(out), ffi.NULL,
-               xyz.shape[0], xyz.shape[1], pairs.shape[0])
+        _geometry._dist(xyz, pairs, out)
         return out
-    return _distance(xyz, pairs)
+    else:
+        return _distance(xyz, pairs)
 
 
 def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
@@ -117,18 +116,17 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
 
     if periodic is True and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
-        if _HAVE_OPT and opt:
+        if _HAVE_OPT:
             out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
-            C.dist_mic(cpointer(xyz), cpointer(pairs), cpointer(box),
-                       ffi.NULL, cpointer(out), xyz.shape[0], xyz.shape[1], pairs.shape[0])
+            _geometry._dist_mic_displacement(xyz, pairs, box, out)
             return out
-        return _displacement_mic(xyz, pairs, box)
+        else:
+            return _distance_mic(xyz, pairs, box)
 
     # either there are no unitcell vectors or they dont want to use them
     if _HAVE_OPT and opt:
         out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
-        C.dist(cpointer(xyz), cpointer(pairs), ffi.NULL, cpointer(out),
-               xyz.shape[0], xyz.shape[1], pairs.shape[0])
+        _geometry._dist_displacement(xyz, pairs, out)
         return out
     return _displacement(xyz, pairs)
 

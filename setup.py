@@ -175,8 +175,8 @@ def detect_sse3():
                        include='<pmmintrin.h>',
                        extra_postargs=['-msse3'])
 
-def detect_sse4():
-    "Does this compiler support SSE4 intrinsics?"
+def detect_sse41():
+    "Does this compiler support SSE4.1 intrinsics?"
     compiler = new_compiler()
     return hasfunction(compiler, '__m128 v; _mm_round_ps(v,0x00)',
                        include='<smmintrin.h>',
@@ -239,23 +239,27 @@ def rmsd_extension():
     return rmsd
 
 
-def libgeometry():
+def geometry():
     if not detect_sse3():
         return None
 
     extra_compile_args = ['-mssse3']
-    compiler_defs = []
-    if detect_sse4():
+    define_macros = []
+    if detect_sse41():
+        define_macros.append(('__SSE4__', 1))
+        define_macros.append(('__SSE4_1__', 1))
         extra_compile_args.append('-msse4')
 
-    return Extension('mdtraj.geometry.libgeometry',
+    return Extension('mdtraj.geometry._geometry',
                      sources=['MDTraj/geometry/src/geometry.c',
-                              'MDTraj/geometry/src/sasa.c'],
-                     include_dirs=['MDTraj/geometry/include'],
+                              'MDTraj/geometry/src/sasa.c',
+                              'MDTraj/geometry/src/_geometry.' + cython_extension],
+                     include_dirs=['MDTraj/geometry/include', numpy.get_include()],
+                     define_macros=define_macros,
                      extra_compile_args=extra_compile_args)
 
 extensions = [xtc, trr, dcd, binpos, rmsd_extension()]
-ext = libgeometry()
+ext = geometry()
 if ext is not None:
     extensions.append(ext)
 

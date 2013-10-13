@@ -23,11 +23,11 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-from mdtraj.geometry import _HAVE_OPT
-if _HAVE_OPT:
-    from mdtraj.geometry import C
-    from mdtraj.utils.ffi import cpointer
-
+try:
+    import _geometry
+    _HAVE_OPT = True
+except ImportError:
+    _HAVE_OPT = False
 
 def kabsch_sander(traj):
     """Compute the Kabsch-Sander hydrogen bond energy between each pair
@@ -94,9 +94,7 @@ def kabsch_sander(traj):
     hbonds.fill(-1)
     henergies.fill(np.nan)
 
-    C.kabsch_sander(cpointer(xyz), cpointer(nco_indices), cpointer(ca_indices),
-                    xyz.shape[0], xyz.shape[1], n_residues,
-                    cpointer(hbonds), cpointer(henergies))
+    _geometry._kabsch_sander(xyz, nco_indices, ca_indices, hbonds, henergies)
 
     # The C code returns its info in a pretty inconvenient format.
     # Let's change it to a list of scipy CSR matrices.

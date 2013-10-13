@@ -23,10 +23,11 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-from mdtraj.geometry import _HAVE_OPT
-if _HAVE_OPT:
-    from mdtraj.geometry import C
-    from mdtraj.utils.ffi import cpointer
+try:
+    import _geometry
+    _HAVE_OPT = True
+except ImportError:
+    _HAVE_OPT = False
 
 __all__ = ['shrake_rupley']
 
@@ -98,7 +99,7 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960):
     radii = np.array(atom_radii, np.float32) + probe_radius
 
     # Call kernel
-    C.sasa(xyz.shape[0], xyz.shape[1], cpointer(xyz), cpointer(radii), n_sphere_points, cpointer(out))
+    #C.sasa(xyz.shape[0], xyz.shape[1], cpointer(xyz), cpointer(radii), n_sphere_points, cpointer(out))
 
     return out
 
