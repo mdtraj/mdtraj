@@ -453,7 +453,9 @@ def convert(data, in_units, out_units, out_fields):
 
     return data
 
-
-if __name__ == '__main__':
+def entry_point():
     args = parse_args()
     main(args)
+    
+if __name__ == '__main__':
+    entry_point()
