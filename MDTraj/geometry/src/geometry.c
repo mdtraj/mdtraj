@@ -36,7 +36,7 @@
 /* Utilities                                                                */
 /****************************************************************************/
 
-static int inverse33(const float M[9], __m128 cols[3]) {
+static int inverse33(const float M[9], __m128* cols_0, __m128* cols_1, __m128* cols_2) {
   /* Compute the inverse of a 3x3 matrix, storing the columns of the
    * result into three __m128 SSE registers
    */
@@ -55,13 +55,13 @@ static int inverse33(const float M[9], __m128 cols[3]) {
   //       M[0]*M[4] - M[3]*M[1] , 0.0f));
   //
   //
-  cols[0] = _mm_mul_ps(inverse_det, _mm_setr_ps(
+  *cols_0 = _mm_mul_ps(inverse_det, _mm_setr_ps(
        M[4]*M[8] - M[7]*M[5], -(M[3]*M[8] - M[5]*M[6]),
        M[3]*M[7] - M[6]*M[4], 0.0f));
-  cols[1] = _mm_mul_ps(inverse_det, _mm_setr_ps(
+  *cols_1 = _mm_mul_ps(inverse_det, _mm_setr_ps(
      -(M[1]*M[8] - M[2]*M[7]), M[0]*M[8] - M[2]*M[6],
      -(M[0]*M[7] - M[6]*M[1]), 0.0f));
-  cols[2] = _mm_mul_ps(inverse_det, _mm_setr_ps(
+  *cols_2 = _mm_mul_ps(inverse_det, _mm_setr_ps(
       M[1]*M[5] - M[2]*M[4], -(M[0]*M[5] - M[3]*M[2]),
       M[0]*M[4] - M[3]*M[1] , 0.0f));
 
@@ -210,7 +210,7 @@ int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
     h[2] = _mm_setr_ps(box_matrix[2], box_matrix[5], box_matrix[8], 0.0f);
     // Calculate the inverse of the box matrix, and also store it in the same
     // format.
-    inverse33(box_matrix, h);
+    inverse33(box_matrix, hinv+0, hinv+1, hinv+2);
     
     for (j = 0; j < n_pairs; j++) {
       // Load the two vectors whos distance we want to compute
