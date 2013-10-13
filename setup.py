@@ -21,11 +21,11 @@ from setuptools import setup, Extension
 import numpy
 try:
     from Cython.Distutils import build_ext
+    setup_kwargs = {'cmdclass': {'build_ext': build_ext}}
     cython_extension = 'pyx'
-    cmdclass={'build_ext': build_ext}
 except ImportError:
+    setup_kwargs = {}
     cython_extension = 'c'
-    cmdclass={}
 
 
 
@@ -278,6 +278,6 @@ setup(name='mdtraj',
       zip_safe=False,
       scripts=['scripts/mdconvert', 'scripts/mdinspect'],
       ext_modules=extensions,
-      cmdclass=cmdclass,
       package_data={'mdtraj.pdb': ['data/*'],
-                    'mdtraj.testing': ['reference/*']})
+                    'mdtraj.testing': ['reference/*']},
+      **setup_kwargs)
