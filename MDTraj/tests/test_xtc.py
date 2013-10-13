@@ -32,10 +32,11 @@ TestDocstrings = DocStringFormatTester(xtc, error_on_none=True)
 fn_xtc = get_fn('frame0.xtc')
 pdb = get_fn('native.pdb')
 
-temp = tempfile.mkstemp(suffix='.xtc')[1]
+fd, temp = tempfile.mkstemp(suffix='.xtc')
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
+    os.close(fd)
     os.unlink(temp)
 
 

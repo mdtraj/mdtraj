@@ -32,10 +32,11 @@ from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
 fn_dcd = get_fn('frame0.dcd')
 pdb = get_fn('native.pdb')
 
-temp = tempfile.mkstemp(suffix='.dcd')[1]
+fd, temp = tempfile.mkstemp(suffix='.dcd')
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
+    os.close(fd)
     os.unlink(temp)
 
 

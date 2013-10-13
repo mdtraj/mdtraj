@@ -37,10 +37,11 @@ TestDocstrings = DocStringFormatTester(binpos, error_on_none=True)
 fn_binpos = get_fn('frame0.binpos')
 fn_dcd = get_fn('frame0.dcd')
 
-temp = tempfile.mkstemp(suffix='.binpos')[1]
+fd, temp = tempfile.mkstemp(suffix='.binpos')
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
+    os.close(fd)
     os.unlink(temp)
 
 def test_read_0():

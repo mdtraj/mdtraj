@@ -18,10 +18,11 @@ from mdtraj import io
 
 import numpy as np
 
-temp = tempfile.mkstemp(suffix='.h5')[1]
+fd, temp = tempfile.mkstemp(suffix='.h5')
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
+    os.close(fd)
     os.unlink(temp)
 
 

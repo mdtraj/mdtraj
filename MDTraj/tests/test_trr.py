@@ -4,10 +4,11 @@ import numpy as np
 from mdtraj.testing import eq, DocStringFormatTester, get_fn
 DocStringFormatTester(trr)
 
-temp = tempfile.mkstemp(suffix='.trr')[1]
+fd, temp = tempfile.mkstemp(suffix='.trr')
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
+    os.close(fd)
     os.unlink(temp)
 
 
