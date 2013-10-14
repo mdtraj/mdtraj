@@ -30,8 +30,8 @@ except ImportError:
 
 
 ##########################
-VERSION = "0.4.2"
-ISRELEASED = False
+VERSION = "0.4.3"
+ISRELEASED = True
 __version__ = VERSION
 ##########################
 
@@ -46,6 +46,7 @@ Programming Language :: Python
 Programming Language :: Python :: 3
 Topic :: Scientific/Engineering :: Bio-Informatics
 Topic :: Scientific/Engineering :: Chemistry
+Operating System :: Microsoft :: Windows
 Operating System :: POSIX
 Operating System :: Unix
 Operating System :: MacOS
@@ -272,7 +273,7 @@ setup(name='mdtraj',
       version=__version__,
       license='GPLv3+',
       url='http://rmcgibbo.github.io/mdtraj',
-      platforms=['Linux', 'Mac OS-X', 'Unix'],
+      platforms=['Linux', 'Mac OS-X', 'Unix', 'Windows'],
       classifiers=CLASSIFIERS.splitlines(),
       packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.testing', 'mdtraj.utils',
                 'mdtraj.reporters', 'mdtraj.geometry', 'mdtraj.tests', 'mdtraj.scripts'],
