@@ -23,10 +23,11 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-from mdtraj.geometry import _HAVE_OPT
-if _HAVE_OPT:
-    from mdtraj.geometry import C
-    from mdtraj.utils.ffi import cpointer
+try:
+    import _geometry
+    _HAVE_OPT = True
+except ImportError:
+    _HAVE_OPT = False
 
 __all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega',
            'atom_sequence_finder']
@@ -36,7 +37,7 @@ __all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega',
 ##############################################################################
 
 
-def _dihedrals(xyz, indices, out=None):
+def _dihedral(xyz, indices, out=None):
     """Compute the dihedral angles of traj for the atom indices in indices.
 
     Parameters
@@ -101,10 +102,9 @@ def compute_dihedrals(traj, indices, opt=True):
     quartets = ensure_type(np.asarray(indices), dtype=np.int32, ndim=2, name='indices', shape=(None, 4), warn_on_cast=False)
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
     if _HAVE_OPT and opt:
-        C.dihedral(cpointer(xyz), cpointer(quartets), cpointer(out), xyz.shape[0],
-                 xyz.shape[1], quartets.shape[0])
+        _geometry._dihedral(xyz, quartets, out)
     else:
-        _dihedrals(xyz, quartets, out)
+        _dihedral(xyz, quartets, out)
     return out
 
 

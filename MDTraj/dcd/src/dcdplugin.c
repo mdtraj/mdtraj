@@ -737,7 +737,12 @@ static int write_dcdheader(fio_fd fd, const char *remarks, int N,
 
   cur_time=time(NULL);
   tmbuf=localtime(&cur_time);
-  strftime(time_str, 80, "REMARKS Created %d %B, %Y at %R", tmbuf);
+  // This line segfaults under MSVC 2008. I don't know why. Replacing
+  // it with a sprintf and asctime seems to acomplish the same goal
+  // and solve the problem. The final length of time_str will not buffer
+  // overflow in sprintf -- I checked the asctime docs make sure. RTM10/13/13
+  //strftime(time_str, 80, "REMARKS Created %d %B, %Y at %R", tmbuf);
+  sprintf(time_str, "REMARKS Created %s", asctime(tmbuf));
   WRITE(fd, time_str, 80);
 
   fio_write_int32(fd, 164);

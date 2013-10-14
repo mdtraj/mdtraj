@@ -56,7 +56,7 @@ def test_rmsd_to_self():
     r_atom_1 = RMSDCache(align_array(conf_atom_1, 'atom'), major='atom', n_atoms=n_atoms)
     r_atom_2 = RMSDCache(align_array(conf_atom_2, 'atom'), major='atom', n_atoms=n_atoms)
 
-    yield lambda: eq(float(r_atom_1.rmsds_to(r_atom_2, 0)[0]), 0.0, decimal=3)
+    yield lambda: eq(float(r_atom_1.rmsds_to(r_atom_2, 0)[0]), 0.0, decimal=2)
 
     conf_axis_1 = np.copy(conf_atom_1[0].T.reshape(1, 3, n_atoms))
     conf_axis_2 = np.copy(conf_axis_1)
@@ -64,4 +64,4 @@ def test_rmsd_to_self():
     r_axis_1 = RMSDCache(align_array(conf_axis_1, 'axis'), major='axis', n_atoms=n_atoms)
     r_axis_2 = RMSDCache(align_array(conf_axis_2, 'axis'), major='axis', n_atoms=n_atoms)
 
-    yield lambda: eq(float(r_axis_1.rmsds_to(r_axis_2, 0)[0]), 0.0, decimal=3)
+    yield lambda: eq(float(r_axis_1.rmsds_to(r_axis_2, 0)[0]), 0.0, decimal=2)

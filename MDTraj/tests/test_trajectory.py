@@ -27,17 +27,19 @@ TestDocstrings = DocStringFormatTester(mdtraj.trajectory, error_on_none=True)
 
 fn = get_fn('traj.h5')
 nat = get_fn('native.pdb')
-temp1 = tempfile.mkstemp(suffix='.xtc')[1]
-temp2 = tempfile.mkstemp(suffix='.dcd')[1]
-temp3 = tempfile.mkstemp(suffix='.binpos')[1]
-temp4 = tempfile.mkstemp(suffix='.trr')[1]
-temp5 = tempfile.mkstemp(suffix='.h5')[1]
-temp6 = tempfile.mkstemp(suffix='.pdb')[1]
-temp7 = tempfile.mkstemp(suffix='.nc')[1]
-
+fd1, temp1 = tempfile.mkstemp(suffix='.xtc')
+fd2, temp2 = tempfile.mkstemp(suffix='.dcd')
+fd3, temp3 = tempfile.mkstemp(suffix='.binpos')
+fd4, temp4 = tempfile.mkstemp(suffix='.trr')
+fd5, temp5 = tempfile.mkstemp(suffix='.h5')
+fd6, temp6 = tempfile.mkstemp(suffix='.pdb')
+fd7, temp7 = tempfile.mkstemp(suffix='.nc')
+for e in [fd1, fd2, fd3, fd4, fd5, fd6, fd7]:
+    os.close(e)
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
+
     for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
         os.unlink(e)
 

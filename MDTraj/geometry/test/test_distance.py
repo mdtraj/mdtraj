@@ -56,7 +56,8 @@ def test_1p():
 def test_2p():
     a = compute_distances(ptraj, pairs, periodic=True, opt=False)
     b = compute_displacements(ptraj, pairs, periodic=True, opt=False)
-    eq(a, np.sqrt(np.sum(np.square(b), axis=2)))
+    b = np.sqrt(np.sum(np.square(b), axis=2))
+    eq(a, b, decimal=5)
 
 @skipif(not _HAVE_OPT)
 def test_3p():

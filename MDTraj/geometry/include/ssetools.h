@@ -1,6 +1,7 @@
 #ifndef _SSE_TOOLS_H
 #define _SSE_TOOLS_H
 
+#include "msvccompat.h"
 #include <stdio.h>
 #include <pmmintrin.h>
 #ifdef __SSE4_1__
@@ -11,7 +12,7 @@
 /* Utilities                                                                */
 /****************************************************************************/
 
-static inline __m128 load_float3(const float* value) {
+static INLINE __m128 load_float3(const float* value) {
   // Load (x,y,z) into a SSE register, leaving the last entry
   // set to zero.
   __m128 x = _mm_load_ss(&value[0]);
@@ -21,7 +22,7 @@ static inline __m128 load_float3(const float* value) {
   return _mm_shuffle_ps(xy, z, _MM_SHUFFLE(2, 0, 2, 0));
 }
 
-static inline int store_float3(float* loc, __m128 val) {
+static INLINE int store_float3(float* loc, __m128 val) {
   // Store the low three floats in an SSE register into
   // memory, at location loc[0], loc[1], loc[2]. The high
   // float is not touched.
@@ -40,7 +41,7 @@ static int printf_m128(__m128 v) {
 }
 
 #ifndef __SSE4_1__
-static inline __m128 _mm_dp_ps(__m128 a, __m128 b, int mask) {
+static INLINE __m128 _mm_dp_ps(__m128 a, __m128 b, int mask) {
   // Replacement for _mm_dp_ps without SSE 4.1.
   if ((mask & 0x70) != 0x70) exit(1);
   __m128 s = _mm_mul_ps(a, b);
