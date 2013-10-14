@@ -385,7 +385,8 @@ class Topology(object):
         if bonds is not None:
             for ai1, ai2 in bonds:
                 out.add_bond(out.atom(ai1), out.atom(ai2))
-
+        
+        out._numAtoms = out.n_atoms
         return out
 
     def __eq__(self, other):
