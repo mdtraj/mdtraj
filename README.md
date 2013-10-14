@@ -1,8 +1,8 @@
 ## Molecular Dynamics Trajectory: File IO and manipulation
 
 [![Build Status](https://travis-ci.org/rmcgibbo/mdtraj.png?branch=master)](https://travis-ci.org/rmcgibbo/mdtraj)
-[![PyPI Version](https://badge.fury.io/py/mdtraj.png)](https://pypi.python.org/pypi/mdtraj/0.4.1)
-[![Downloads](https://pypip.in/d/mdtraj/badge.png)](https://pypi.python.org/pypi/mdtraj/0.4.1)
+[![PyPI Version](https://badge.fury.io/py/mdtraj.png)](https://pypi.python.org/pypi/mdtraj)
+[![Downloads](https://pypip.in/d/mdtraj/badge.png)](https://pypi.python.org/pypi/mdtraj)
 
 This library supports the reading and writing of molecular dynamics trajectories in a variety of formats. Currently, there is full support for [PDB](http://deposit.rcsb.org/adit/docs/pdb_atom_format.html), [DCD](https://www-s.ks.uiuc.edu/Research/vmd/plugins/molfile/dcdplugin.html),
 [XTC](http://manual.gromacs.org/online/xtc.html), [TRR](http://www.gromacs.org/Documentation/File_Formats/.trr_File),
