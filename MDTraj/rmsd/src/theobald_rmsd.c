@@ -185,12 +185,12 @@ float DirectSolve(float lambda, float C_0, float C_1, float C_2)
   result=max(result,r3);
   result=max(result,r4);
   
-  return(result);
+  return (float) result;
 }
 
 float NewtonSolve(float lambda, float C_0, float C_1, float C_2)
 { 
-  int i;
+  unsigned int i;
   unsigned int maxits = 500;
   float tolerance = 1.0e-6f;
   float lambda_old,lambda2;
@@ -328,6 +328,9 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
     const float* bTy = bT+rowstride;
     const float* bTz = bT+2*rowstride;
 
+    if (aT==bT && G_a==G_b)
+        return 0.0;
+
     niters = npaddedatoms >> 2;
     // npaddedatoms must be a multiple of 4
     assert(npaddedatoms % 4 == 0);
@@ -439,6 +442,9 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
     __m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
     __m128 ax,ay,az,bx,by,bz;
     __m128 t0,t1,t2;
+
+    if (a==b && G_a==G_b)
+        return 0.0;
 
     niters = npaddedatoms >> 2;
     // npaddedatoms must be a multiple of 4
