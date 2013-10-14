@@ -23,10 +23,11 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-from mdtraj.geometry import _HAVE_OPT
-if _HAVE_OPT:
-    from mdtraj.geometry import C
-    from mdtraj.utils.ffi import cpointer
+try:
+    import _geometry
+    _HAVE_OPT = True
+except ImportError:
+    _HAVE_OPT = False
 
 __all__ = ['compute_angles']
 
@@ -62,14 +63,15 @@ def compute_angles(traj, angle_indices, opt=True):
     triplets = ensure_type(np.asarray(angle_indices), dtype=np.int32, ndim=2, name='angle_indices', shape=(None, 3), warn_on_cast=False)
     out = np.zeros((xyz.shape[0], triplets.shape[0]), dtype=np.float32)
     if _HAVE_OPT and opt:
-        C.angle(cpointer(xyz), cpointer(triplets), cpointer(out), xyz.shape[0],
-                 xyz.shape[1], triplets.shape[0])
+        print("CALLING OPT")
+        _geometry._angle(xyz, triplets, out)
+        print("CALLED OPT")
     else:
-        _angles(xyz, triplets, out)
+        _angle(xyz, triplets, out)
     return out
 
 
-def _angles(xyz, angle_indices, out):
+def _angle(xyz, angle_indices, out):
     #for j, (m, o, n) in enumerate(angle_indices):
     u_prime = xyz[:, angle_indices[:, 0], :] - xyz[:, angle_indices[:, 1], :]
     v_prime = xyz[:, angle_indices[:, 2], :] - xyz[:, angle_indices[:, 1], :]

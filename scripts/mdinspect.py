@@ -180,8 +180,9 @@ class Inspector(object):
             self.log('Frame %d: closest nb dist between '
                      '%d (%s), %d (%s), at d=%.4f nm' % (i, a, names[a], b, names[b], dist[a, b]))
 
-
-
-if __name__ == '__main__':
+def entry_point():
     args, parser = parse_args()
     main(args, parser)
+
+if __name__ == '__main__':
+    entry_point()

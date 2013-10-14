@@ -26,6 +26,7 @@
 #include <smmintrin.h>
 #endif
 
+#include "msvccompat.h"
 #include "ssetools.h"
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -88,16 +89,15 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
       radius_cutoff =  _mm_add_ps(atom_radius_i, atom_radius_j);
       radius_cutoff2 = _mm_mul_ps(radius_cutoff, radius_cutoff);
       r2 = _mm_dp_ps(r_ij, r_ij, 0x7F);
-      if (_mm_extract_epi16((__m128i) _mm_cmplt_ps(r2, radius_cutoff2), 0)) {
-	neighbor_indices[n_neighbor_indices]  = j;
-	n_neighbor_indices++;
+      if (_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(r2, radius_cutoff2)), 0)) {
+	    neighbor_indices[n_neighbor_indices]  = j;
+	    n_neighbor_indices++;
       }
-	
-      if (_mm_extract_epi16((__m128i) _mm_cmplt_ps(r2, _mm_set1_ps(1e-10)), 0)) {
-	printf("ERROR: THIS CODE IS KNOWN TO FAIL WHEN ATOMS ARE VIRTUALLY");
-	printf("ON TOP OF ONE ANOTHER. YOU SUPPLIED TWO ATOMS %f", _mm_cvtss_f32(r));
-	printf("APART. QUITTING NOW");
-	exit(1);
+    if (_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(r2, _mm_set1_ps(1e-10))), 0)) {
+	  printf("ERROR: THIS CODE IS KNOWN TO FAIL WHEN ATOMS ARE VIRTUALLY");
+	  printf("ON TOP OF ONE ANOTHER. YOU SUPPLIED TWO ATOMS %f", _mm_cvtss_f32(r));
+	  printf("APART. QUITTING NOW");
+	  exit(1);
       }
     }
         
@@ -121,7 +121,7 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
 	r = _mm_set1_ps(atom_radii[neighbor_indices[k_prime]]);
 	
 	r_jk = _mm_sub_ps(r_j, load_float3(frame+3*neighbor_indices[k_prime]));
-	if (_mm_extract_epi16((__m128i) _mm_cmplt_ps(_mm_dp_ps(r_jk, r_jk, 0xFF), _mm_mul_ps(r, r)), 0)) {
+	if (_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(_mm_dp_ps(r_jk, r_jk, 0xFF), _mm_mul_ps(r, r))), 0)) {
 	  k_closest_neighbor = k;
 	  is_accessible = 0;
 	  break;
@@ -199,7 +199,7 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   float* wb2;
     
   //generate the sphere points
-  float* sphere_points = (const float*) malloc(n_sphere_points*3*sizeof(float));
+  float* sphere_points = (float*) malloc(n_sphere_points*3*sizeof(float));
   generate_sphere_points(sphere_points, n_sphere_points);
    
 #ifdef _OPENMP

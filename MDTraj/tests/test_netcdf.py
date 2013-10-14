@@ -27,10 +27,11 @@ from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
 
 TestDocstrings = DocStringFormatTester(netcdf, error_on_none=True)
 
-temp = tempfile.mkstemp(suffix='.nc')[1]
+fd, temp = tempfile.mkstemp(suffix='.nc')
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
+    os.close(fd)
     os.unlink(temp)
 
 

@@ -17,18 +17,26 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdlib.h>
 #include <math.h>
 #include <pmmintrin.h>
 #ifdef __SSE4_1__
 #include <smmintrin.h>
 #endif
 #include "ssetools.h"
+#include "msvccompat.h"
+
+#ifdef _MSC_VER
+ #include "float.h"
+ #define isnan(x) (_isnan(x))
+#endif
+
 
 /****************************************************************************/
 /* Utilities                                                                */
 /****************************************************************************/
 
-static int inverse33(const float M[9], __m128 cols[3]) {
+static int inverse33(const float M[9], __m128* cols_0, __m128* cols_1, __m128* cols_2) {
   /* Compute the inverse of a 3x3 matrix, storing the columns of the
    * result into three __m128 SSE registers
    */
@@ -47,20 +55,20 @@ static int inverse33(const float M[9], __m128 cols[3]) {
   //       M[0]*M[4] - M[3]*M[1] , 0.0f));
   //
   //
-  cols[0] = _mm_mul_ps(inverse_det, _mm_setr_ps(
+  *cols_0 = _mm_mul_ps(inverse_det, _mm_setr_ps(
        M[4]*M[8] - M[7]*M[5], -(M[3]*M[8] - M[5]*M[6]),
        M[3]*M[7] - M[6]*M[4], 0.0f));
-  cols[1] = _mm_mul_ps(inverse_det, _mm_setr_ps(
+  *cols_1 = _mm_mul_ps(inverse_det, _mm_setr_ps(
      -(M[1]*M[8] - M[2]*M[7]), M[0]*M[8] - M[2]*M[6],
      -(M[0]*M[7] - M[6]*M[1]), 0.0f));
-   cols[2] = _mm_mul_ps(inverse_det, _mm_setr_ps(
+  *cols_2 = _mm_mul_ps(inverse_det, _mm_setr_ps(
       M[1]*M[5] - M[2]*M[4], -(M[0]*M[5] - M[3]*M[2]),
       M[0]*M[4] - M[3]*M[1] , 0.0f));
 
   return 1;
 }
 
-inline __m128 cross(const __m128 a, const __m128 b) {
+INLINE __m128 cross(const __m128 a, const __m128 b) {
    return _mm_sub_ps(
     _mm_mul_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 0, 2, 1)), _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 1, 0, 2))),
     _mm_mul_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 1, 0, 2)), _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 0, 2, 1)))
@@ -202,8 +210,8 @@ int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
     h[2] = _mm_setr_ps(box_matrix[2], box_matrix[5], box_matrix[8], 0.0f);
     // Calculate the inverse of the box matrix, and also store it in the same
     // format.
-    inverse33(box_matrix, hinv);
-
+    inverse33(box_matrix, hinv+0, hinv+1, hinv+2);
+    
     for (j = 0; j < n_pairs; j++) {
       // Load the two vectors whos distance we want to compute
       r1 = load_float3(xyz + 3*pairs[2*j + 0]);
@@ -399,7 +407,7 @@ static float ks_donor_acceptor(const float* xyz, const float* hcoords,
          The KS backbone hydrogen bond energy, in kcal/mol. A number under -0.5
          is considered significant.
   */
-
+  float energy;
   __m128 r_n, r_h, r_c, r_o, r_ho, r_nc, r_hc, r_no, d2_honchcno;
   __m128 coupling;
 
@@ -435,7 +443,7 @@ static float ks_donor_acceptor(const float* xyz, const float* hcoords,
                                _mm_shuffle_ps(_mm_dp_ps(r_hc, r_hc, 0xF3), _mm_dp_ps(r_no, r_no, 0xF3), _MM_SHUFFLE(0,1,0,1)),
                                _MM_SHUFFLE(2,0,2,0));
 
-  float energy = _mm_cvtss_f32(_mm_dp_ps(coupling, _mm_rsqrt_ps(d2_honchcno), 0xFF));
+  energy = _mm_cvtss_f32(_mm_dp_ps(coupling, _mm_rsqrt_ps(d2_honchcno), 0xFF));
   //printf("Energy: %f\n\n", energy);
   return (energy < -9.9f ? -9.9f : energy);
 }
@@ -471,7 +479,7 @@ static int ks_assign_hydrogens(const float* xyz, const int* nco_indices, const i
 }
 
 
-static inline void store_energies(int* hbonds, float* henergies, int donor,
+static INLINE void store_energies(int* hbonds, float* henergies, int donor,
                              int acceptor, float e) {
   /* Store a computed hbond energy and the appropriate residue indices
      in the output arrays. This function is called twice by kabsch_sander,
@@ -554,7 +562,7 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
 
         // check the ca distance before proceding
         r12 = _mm_sub_ps(ri_ca, rj_ca);
-        if(_mm_extract_epi16((__m128i) _mm_cmplt_ps(_mm_dp_ps(r12, r12, 0x7F), MINIMAL_CA_DISTANCE2), 0)) {
+        if(_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(_mm_dp_ps(r12, r12, 0x7F), MINIMAL_CA_DISTANCE2)), 0)) {
           float e = ks_donor_acceptor(xyz, hcoords, nco_indices, ri, rj);
           if (e < HBOND_ENERGY_CUTOFF)
             // hbond from donor=ri to acceptor=rj

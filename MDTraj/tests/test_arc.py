@@ -21,10 +21,11 @@ from mdtraj import ArcTrajectoryFile, arc, PDBTrajectoryFile
 from mdtraj.testing import get_fn, eq, DocStringFormatTester
 TestDocstrings = DocStringFormatTester(arc, error_on_none=True)
 
-temp = tempfile.mkstemp(suffix='.arc')[1]
+fd, temp = tempfile.mkstemp(suffix='.arc')
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
+    os.close(fd)
     os.unlink(temp)
 
 

@@ -30,8 +30,8 @@ except ImportError:
 
 
 ##########################
-VERSION = "0.4.2"
-ISRELEASED = False
+VERSION = "0.4.3"
+ISRELEASED = True
 __version__ = VERSION
 ##########################
 
@@ -46,6 +46,7 @@ Programming Language :: Python
 Programming Language :: Python :: 3
 Topic :: Scientific/Engineering :: Bio-Informatics
 Topic :: Scientific/Engineering :: Chemistry
+Operating System :: Microsoft :: Windows
 Operating System :: POSIX
 Operating System :: Unix
 Operating System :: MacOS
@@ -133,11 +134,7 @@ def hasfunction(cc, funcname, include=None, extra_postargs=None):
             f.write('    %s;\n' % funcname)
             f.write('}\n')
             f.close()
-            # Redirect stderr to /dev/null to hide any error messages
-            # from the compiler.
-            # This will have to be changed if we ever have to check
-            # for a function on Windows.
-            devnull = open('/dev/null', 'w')
+            devnull = open(os.devnull, 'w')
             oldstderr = os.dup(sys.stderr.fileno())
             os.dup2(devnull.fileno(), sys.stderr.fileno())
             objects = cc.compile([fname], output_dir=tmpdir,
@@ -179,8 +176,8 @@ def detect_sse3():
                        include='<pmmintrin.h>',
                        extra_postargs=['-msse3'])
 
-def detect_sse4():
-    "Does this compiler support SSE4 intrinsics?"
+def detect_sse41():
+    "Does this compiler support SSE4.1 intrinsics?"
     compiler = new_compiler()
     return hasfunction(compiler, '__m128 v; _mm_round_ps(v,0x00)',
                        include='<smmintrin.h>',
@@ -208,7 +205,7 @@ trr = Extension('mdtraj.trr',
 dcd = Extension('mdtraj.dcd',
                 sources=['MDTraj/dcd/src/dcdplugin.c',
                          'MDTraj/dcd/dcd.' + cython_extension],
-                libraries=['m'],
+                #libraries=['m'],
                 include_dirs=["MDTraj/dcd/include/",
                               'MDTraj/dcd/', numpy.get_include()])
 
@@ -223,6 +220,9 @@ def rmsd_extension():
     openmp_enabled, needs_gomp = detect_openmp()
     compiler_args = ['-msse2' if not detect_sse3() else '-mssse3',
                      '--std=gnu99', '-O3', '-funroll-loops']
+    if new_compiler().compiler_type == 'msvc':
+        compiler_args.append('/arch:SSE2')
+
     if openmp_enabled:
         compiler_args.append('-fopenmp')
     compiler_libraries = ['gomp'] if needs_gomp else []
@@ -235,28 +235,32 @@ def rmsd_extension():
                      include_dirs=[
                          'MDTraj/rmsd/include', numpy.get_include()],
                      extra_compile_args=compiler_args,
-                     # define_macros=compiler_defs,
+                     #define_macros=compiler_defs,
                      libraries=compiler_libraries)
     return rmsd
 
 
-def libgeometry():
+def geometry():
     if not detect_sse3():
         return None
 
     extra_compile_args = ['-mssse3']
-    compiler_defs = []
-    if detect_sse4():
+    define_macros = []
+    if detect_sse41():
+        define_macros.append(('__SSE4__', 1))
+        define_macros.append(('__SSE4_1__', 1))
         extra_compile_args.append('-msse4')
 
-    return Extension('mdtraj.geometry.libgeometry',
+    return Extension('mdtraj.geometry._geometry',
                      sources=['MDTraj/geometry/src/geometry.c',
-                              'MDTraj/geometry/src/sasa.c'],
-                     include_dirs=['MDTraj/geometry/include'],
+                              'MDTraj/geometry/src/sasa.c',
+                              'MDTraj/geometry/src/_geometry.' + cython_extension],
+                     include_dirs=['MDTraj/geometry/include', numpy.get_include()],
+                     define_macros=define_macros,
                      extra_compile_args=extra_compile_args)
 
 extensions = [xtc, trr, dcd, binpos, rmsd_extension()]
-ext = libgeometry()
+ext = geometry()
 if ext is not None:
     extensions.append(ext)
 
@@ -269,14 +273,17 @@ setup(name='mdtraj',
       version=__version__,
       license='GPLv3+',
       url='http://rmcgibbo.github.io/mdtraj',
-      platforms=['Linux', 'Mac OS-X', 'Unix'],
+      platforms=['Linux', 'Mac OS-X', 'Unix', 'Windows'],
       classifiers=CLASSIFIERS.splitlines(),
       packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.testing', 'mdtraj.utils',
-                'mdtraj.reporters', 'mdtraj.geometry', 'mdtraj.tests'],
-      package_dir={'mdtraj': 'MDTraj'},
-      install_requires=['numpy', 'cython', 'nose', 'nose-exclude'],
+                'mdtraj.reporters', 'mdtraj.geometry', 'mdtraj.tests', 'mdtraj.scripts'],
+      package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
+      install_requires=['numpy', 'nose', 'nose-exclude'],
       zip_safe=False,
-      scripts=['scripts/mdconvert', 'scripts/mdinspect'],
+      #scripts=['scripts/mdconvert.py', 'scripts/mdinspect.py'],
+      entry_points={'console_scripts':
+                ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
+                 'mdinspect = mdtraj.scripts.mdinspect:entry_point']},
       ext_modules=extensions,
       package_data={'mdtraj.pdb': ['data/*'],
                     'mdtraj.testing': ['reference/*']},

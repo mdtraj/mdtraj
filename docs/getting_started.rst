@@ -8,7 +8,8 @@ Installing MDTraj
 
 MDTraj is tested (and passes) on python 2.6, 2.7, 3.2 and 3.3. The
 developers generally use python2.7, on both mac and linux platforms. Automated
-tests are performed on every incremental update to the code, but only run on linux.
+tests on linux are performed on every incremental update to the code, and release
+tests are performed on mac, linux and windows.
 
 Easy Way
 --------
@@ -17,9 +18,12 @@ Just run ::
 
   pip install mdtraj
   
-Or, if you want the bleeding-edge source code, use
+Or, if you want the bleeding-edge source code, use ::
 
   pip install git+git://github.com/rmcgibbo/mdtraj.git
+
+On windows, you'll probably want to use the prebuilt binary packages
+hosted on pypi.
 
 Medium Way
 ----------

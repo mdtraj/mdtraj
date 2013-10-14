@@ -203,9 +203,9 @@ def test_mdconvert_0():
             yield check
 
             if not DEBUG_MODE:
-                env.run('rm', '-f', fn2)
-                env.run('rm', '-f', 'subset.' + fn2)
-                env.run('rm', '-f', 'stride.' + fn2)
+                os.unlink(os.path.join(output_dir, fn2))
+                os.unlink(os.path.join(output_dir, 'subset.' + fn2))
+                os.unlink(os.path.join(output_dir, 'stride.' + fn2))
 
         if not DEBUG_MODE:
             os.unlink(path)
