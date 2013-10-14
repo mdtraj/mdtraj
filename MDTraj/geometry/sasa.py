@@ -98,8 +98,6 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960):
     atom_radii = [_ATOMIC_RADII[atom.element.symbol] for atom in traj.topology.atoms]
     radii = np.array(atom_radii, np.float32) + probe_radius
 
-    # Call kernel
-    #C.sasa(xyz.shape[0], xyz.shape[1], cpointer(xyz), cpointer(radii), n_sphere_points, cpointer(out))
+    _geometry._sasa(xyz, radii, int(n_sphere_points), out)
 
     return out
-

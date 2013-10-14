@@ -5,9 +5,7 @@ try:
 except ImportError:
     from distutils import sysconfig
 
-import cffi
 import numpy as np
-
 from .six import iteritems, PY3
 
 __all__ = ['cpointer', 'find_library']
@@ -27,7 +25,8 @@ class cpointer(object):
                    'int16', 'int32', 'int', 'int64', 'long',
                    'uint16', 'uint32', 'uint64', 'uint']
 
-    def __init__(self):
+    def _delayed_init(self):
+        import cffi
         ffi = cffi.FFI()
         # some platforms dont have all of these, especially wierd compilers or 32 bit machines
         nptypes = [getattr(np, name) for name in self.nptype_names if hasattr(np, name)]
@@ -39,12 +38,12 @@ class cpointer(object):
                 casts[nptype_descr['%s%d' % (code, ffi.sizeof(name))]] = name + ' *'
         # casts is a dict that helps us cast numpy arrays, like
         # {np.float32 : 'float *', np.int32: 'int *'}
-        
-        
         self._ffi = ffi
         self._casts = casts
 
     def __call__(self, ndarray):
+        if not hasattr(self, '_ffi'):
+            self._delayed_init()
         if not isinstance(ndarray, np.ndarray):
             raise TypeError('ndarray must be an instance of numpy.ndarray')
         if not ndarray.flags.contiguous:
