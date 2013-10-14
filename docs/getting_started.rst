@@ -14,7 +14,7 @@ tests are performed on mac, linux and windows.
 Easy Way
 --------
 
-Just run ::
+On a Mac or Linux machine, just run ::
 
   pip install mdtraj
   
@@ -23,9 +23,8 @@ Or, if you want the bleeding-edge source code, use ::
   pip install git+git://github.com/rmcgibbo/mdtraj.git
 
 On windows, you'll probably want to use the prebuilt binary packages
-hosted on pypi.
-
-.. note:: On python26, two backported packages, ``argparse`` and ``importlib`` are required.
+hosted on PyPi. Choose the one that is appropriate for your
+version of python.
 
 Medium Way
 ----------
@@ -74,6 +73,9 @@ the dependences, and are distributed via 1-click installers for Windows, Mac
 and Linux. You won't have to install anything except mdtraj, which can be done, as shown above, with ::
 
   pip install mdtraj
+  
+.. note:: On python26, two backported packages, ``argparse`` and ``importlib`` are required.
+You can install them with ``pip install argparse`` and ``pip install importlib``.
 
 Medium Way
 ----------
@@ -100,6 +102,13 @@ Then, you can install the remaining packages with pip. ::
 
   $ pip install nose numexpr cython tables
   $ pip install netcdf4
+  
+Windows
++++++++
+Chris Gohlke maintains windows binary distributions for an ever-growing
+set of python extensions on `his website <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_.
+Download and install the the installers for setuptools, nose, numpy, scipy, numexpr, tables,
+and necdf.
 
 Harder Way : Compiling from source (no root needed)
 ---------------------------------------------------
