@@ -25,6 +25,8 @@ Or, if you want the bleeding-edge source code, use ::
 On windows, you'll probably want to use the prebuilt binary packages
 hosted on pypi.
 
+.. note:: On python26, two backported packages, ``argparse`` and ``importlib`` are required.
+
 Medium Way
 ----------
 Clone the source code repository from github::
