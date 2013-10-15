@@ -1,8 +1,5 @@
 .. _getting-started:
 
-Getting started
-###############
-
 Installing MDTraj
 =================
 
@@ -108,7 +105,7 @@ Windows
 Chris Gohlke maintains windows binary distributions for an ever-growing
 set of python extensions on `his website <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_.
 Download and install the the installers for setuptools, nose, numpy, scipy, numexpr, tables,
-and necdf.
+and netcdf.
 
 Harder Way : Compiling from source (no root needed)
 ---------------------------------------------------
