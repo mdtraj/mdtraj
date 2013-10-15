@@ -13,6 +13,8 @@ if [[ "$TRAVIS_BRANCH" != "master" ]]; then
     echo "No deployment on BRANCH='$TRAVIS_BRANCH'"; exit 0
 fi
 
+sudo pip install coveralls
+coveralls
 
 sudo apt-get install -qq python-matplotlib
 sudo apt-get install -qq python-sklearn
