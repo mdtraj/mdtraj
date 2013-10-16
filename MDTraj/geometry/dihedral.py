@@ -188,7 +188,6 @@ def atom_sequence_finder(trajectory, atom_names, residue_offsets=None, chain_id=
 
     atom_indices = np.array(atom_indices)
     found_residue_ids = np.array(found_residue_ids)
-    print(atom_indices, found_residue_ids)
 
     return found_residue_ids, atom_indices
 
