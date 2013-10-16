@@ -72,30 +72,26 @@ def _dihedral(xyz, indices, out=None):
     return np.arctan2(p1, p2, out)
 
 
-def compute_dihedrals(traj, indices, opt=True):
+def compute_dihedrals(trajectory, indices, opt=True):
     """Compute the dihedral angles between the supplied quartets of atoms in each frame in a trajectory.
 
     Parameters
     ----------
-    traj : Trajectory
+    trajectory : Trajectory
         An mtraj trajectory.
-    indices : np.ndarray, shape=(num_dihedrals, 4), dtype=int
+    indices : np.ndarray, shape=(n_dihedrals, 4), dtype=int
         Each row gives the indices of four atoms which together make a
         dihedral angle. The angle is between the planes spanned by the first
         three atoms and the last three atoms, a torsion around the bond
         between the middle two atoms.
     opt : bool, default=True
-        Use an optimized native library to calculate distances. Using this
-        library requires the python package "cffi" (c foreign function
-        interface) which is installable via "easy_install cffi" or "pip
-        install cffi". See https://pypi.python.org/pypi/cffi for more details.
-        The optimized dihedral calculation is ~10-20x faster than the numpy
-        implementation, so installing cffi is generally worth it.
+        Use an optimized native library to calculate distances.
 
     Returns
     -------
-    dih : np.ndarray, shape=(num_dihedrals), dtype=float
-        dih[i,j] gives the dihedral angle at traj[i] correponding to indices[j].
+    dihedrals : np.ndarray, shape=(n_frames, n_dihedrals), dtype=float
+        The output array gives, in each frame from the trajectory, each of the 
+        `n_dihedrals` torsion angles. The angles are measured in **radians**.
 
     """
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
@@ -108,12 +104,12 @@ def compute_dihedrals(traj, indices, opt=True):
     return out
 
 
-def _construct_atom_dict(top, chain_id=0):
+def _construct_atom_dict(topology, chain_id=0):
     """Create dictionary to lookup indices by atom name and residue_id.
 
     Parameters
     ----------
-    top : Topology
+    topology : Topology
         The topology to parse
     chain_id : int
         The index of the chain to sequence
@@ -134,17 +130,23 @@ def _construct_atom_dict(top, chain_id=0):
     return atom_dict
 
 
-def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
+def atom_sequence_finder(trajectory, atom_names, residue_offsets=None, chain_id=0):
     """Find sequences of atom indices correponding to desired atoms.
+    
+    This method can be used to find sets of atoms corresponding to specific
+    dihedral angles (like phi or psi). It looks for the given pattern of atoms
+    in each residue of a given chain. See the example for details.
 
     Parameters
     ----------
-    traj : Trajectory
+    trajectory : Trajectory
         Trajectory for which you want dihedrals.
     atom_names : np.ndarray, shape=(4), dtype='str'
         Array of atoms to in each dihedral angle.
-    rid_offsets : np.ndarray, optional, shape=(4), dtype='int'
-        Array of integer offsets for each atom.
+    residue_offsets : np.ndarray, optional, shape=(4), dtype='int'
+        Array of integer offsets for each atom. These are used to refer
+        to atoms forward or backward in the chain relative to the current
+        residue
     chain_id : int
         The index of the chain to sequence.
 
@@ -161,8 +163,8 @@ def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
 
     >>> traj = mdtraj.trajectory.load("native.pdb") # doctest: +SKIP
     >>> atom_names = ["C" ,"N" , "CA", "C"] # doctest: +SKIP
-    >>> rid_offsets = [-1, 0, 0, 0] # doctest: +SKIP
-    >>> found_residue_ids, indices = atom_sequence_finder(traj, atom_names, rid_offsets) # doctest: +SKIP
+    >>> residue_offsets = [-1, 0, 0, 0] # doctest: +SKIP
+    >>> found_residue_ids, indices = atom_sequence_finder(traj, atom_names, residue_offsets) # doctest: +SKIP
     """
     if rid_offsets is None:
         rid_offsets = parse_offsets(atom_names)
@@ -173,7 +175,7 @@ def atom_sequence_finder(traj, atom_names, rid_offsets=None, chain_id=0):
     found_residue_ids = []
     # py3k criticial list(zip(, not just zip(, since we iterate multiple
     # times through it
-    atoms_and_offsets = list(zip(atom_names, rid_offsets))
+    atoms_and_offsets = list(zip(atom_names, residue_offsets))
     for chain in traj.top.chains:
         if chain.index == chain_id:
             for residue in chain.residues:
@@ -257,19 +259,18 @@ _get_indices_psi = lambda traj: atom_sequence_finder(traj, PSI_ATOMS)
 _get_indices_chi = lambda traj: atom_sequence_finder(traj, CHI_ATOMS)
 
 
-def compute_phi(traj):
+def compute_phi(trajectory):
     """Calculate the phi torsions of a trajectory.
 
     Parameters
     ----------
-    traj : Trajectory
+    trajectory : Trajectory
         Trajectory for which you want dihedrals.
 
     Returns
     -------
-    rid : np.ndarray, shape=(n_phi, 4)
-        The indices of the atoms involved in each of the
-        phi dihedral angles
+    indices : np.ndarray, shape=(n_phi, 4)
+        The indices of the atoms involved in each of the phi dihedral angles
     angles : np.ndarray, shape=(n_frames, n_phi)
         The value of the dihedral angle for each of the angles in each of
         the frames.
@@ -278,19 +279,18 @@ def compute_phi(traj):
     return rid, compute_dihedrals(traj, indices)
 
 
-def compute_psi(traj):
+def compute_psi(trajectory):
     """Calculate the psi torsions of a trajectory.
 
     Parameters
     ----------
-    traj : Trajectory
+    trajectory : Trajectory
         Trajectory for which you want dihedrals.
 
     Returns
     -------
-    rid : np.ndarray, shape=(n_psi, 4)
-        The indices of the atoms involved in each of the
-        psi dihedral angles
+    indices : np.ndarray, shape=(n_psi, 4)
+        The indices of the atoms involved in each of the psi dihedral angles
     angles : np.ndarray, shape=(n_frames, n_psi)
         The value of the dihedral angle for each of the angles in each of
         the frames.
@@ -299,19 +299,18 @@ def compute_psi(traj):
     return rid, compute_dihedrals(traj, indices)
 
 
-def compute_chi(traj):
+def compute_chi(trajectory):
     """Calculate the chi torsions of a trajectory.
 
     Parameters
     ----------
-    traj : Trajectory
+    trajectory : Trajectory
         Trajectory for which you want dihedrals.
 
     Returns
     -------
-    rid : np.ndarray, shape=(n_chi, 4)
-        The indices of the atoms involved in each of the
-        chi dihedral angles
+    indices : np.ndarray, shape=(n_chi, 4)
+        The indices of the atoms involved in each of the chi dihedral angles
     angles : np.ndarray, shape=(n_frames, n_chi)
         The value of the dihedral angle for each of the angles in each of
         the frames.
@@ -320,19 +319,18 @@ def compute_chi(traj):
     return rid, compute_dihedrals(traj, indices)
 
 
-def compute_omega(traj):
+def compute_omega(trajectory):
     """Calculate the omega torsions of a trajectory.
 
     Parameters
     ----------
-    traj : Trajectory
+    trajectory : Trajectory
         Trajectory for which you want dihedrals.
 
     Returns
     -------
-    rid : np.ndarray, shape=(n_omega, 4)
-        The indices of the atoms involved in each of the
-        omega dihedral angles
+    indices : np.ndarray, shape=(n_omega, 4)
+        The indices of the atoms involved in each of the omega dihedral angles
     angles : np.ndarray, shape=(n_frames, n_omega)
         The value of the dihedral angle for each of the angles in each of
         the frames.
