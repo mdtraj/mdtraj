@@ -189,6 +189,13 @@ def test_center():
     mu = traj.xyz.mean(1)
     mu0 = np.zeros(mu.shape)
     eq(mu0, mu)
+    
+    for a in traj.top.atoms:
+        a.element.mass = 1.0  # Set all masses equal so we can compare against unweighted result
+    
+    traj.center_coordinates(mass_weighted=True)
+    mu2 = traj.xyz.mean(1)
+    eq(mu0, mu2)
 
 
 def test_float_atom_indices_exception():

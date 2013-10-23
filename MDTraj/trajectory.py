@@ -1514,13 +1514,24 @@ class Trajectory(object):
                     cell_lengths=_convert(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
-    def center_coordinates(self):
+    def center_coordinates(self, mass_weighted=False):
         """Remove the center of mass from each frame in trajectory.
 
         This method acts inplace on the trajectory
+
+        Parameters
+        ----------
+        mass_weighted : bool, optional (default = False)
+            If True, weight atoms by mass when removing COM.
         """
-        for x in self._xyz:
-            x -= (x.astype('float64').mean(0))
+        if mass_weighted == True:
+            masses = np.array([a.element.mass for a in self.top.atoms])
+            masses /= masses.sum()
+            for x in self._xyz:
+                x -= (x.astype('float64').T.dot(masses))
+        else:
+            for x in self._xyz:
+                x -= (x.astype('float64').mean(0))
 
     def restrict_atoms(self, atom_indices):
         """Retain only a subset of the atoms in a trajectory (inplace)
