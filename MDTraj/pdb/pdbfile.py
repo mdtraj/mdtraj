@@ -71,6 +71,9 @@ class PDBTrajectoryFile(object):
     force_overwrite : bool
         If opened in write mode, and a file by the name of `filename` already
         exists on disk, should we overwrite it?
+    topology : mdtraj.Topology, optional
+        Set the topology int the PDBTrajectoryFile object so that it can 
+        write conect entries.
 
     Attributes
     ----------
