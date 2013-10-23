@@ -1401,7 +1401,7 @@ class Trajectory(object):
         """
         self._check_valid_unitcell()
 
-        with PDBTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+        with PDBTrajectoryFile(filename, 'w', force_overwrite=force_overwrite, topology=self.top) as f:
             for i in xrange(self.n_frames):
 
                 if self._have_unitcell:
