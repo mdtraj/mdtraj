@@ -1515,14 +1515,18 @@ class Trajectory(object):
                     cell_angles=self.unitcell_angles)
 
     def center_coordinates(self, mass_weighted=False):
-        """Remove the center of mass from each frame in trajectory.
+        """Center each trajectory frame at the origin (0,0,0).
 
-        This method acts inplace on the trajectory
+        This method acts inplace on the trajectory.  The centering can 
+        be either uniformly weighted (mass_weighted=False) or weighted by
+        the mass of each atom (mass_weighted=True).  
 
         Parameters
         ----------
         mass_weighted : bool, optional (default = False)
             If True, weight atoms by mass when removing COM.
+            
+        
         """
         if mass_weighted == True:
             masses = np.array([a.element.mass for a in self.top.atoms])
