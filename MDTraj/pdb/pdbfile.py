@@ -95,10 +95,10 @@ class PDBTrajectoryFile(object):
     _atomNameReplacements = {}
     _chain_names = [chr(ord('A') + i) for i in range(26)]
 
-    def __init__(self, filename, mode='r', force_overwrite=True):
+    def __init__(self, filename, mode='r', force_overwrite=True, topology=None):
         self._open = False
         self._file = None
-        self._topology = None
+        self._topology = topology
         self._positions = None
         self._mode = mode
 
@@ -117,15 +117,13 @@ class PDBTrajectoryFile(object):
 
         self._open = True
 
-    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, unitcell_angles=None):
+    def write(self, positions, modelIndex=None, unitcell_lengths=None, unitcell_angles=None):
         """Write a PDB file to disk
 
         Parameters
         ----------
         positions : array_like
             The list of atomic positions to write.
-        topology : mdtraj.Topology
-            The Topology defining the model to write.
         modelIndex : {int, None}
             If not None, the model will be surrounded by MODEL/ENDMDL records
             with this index
@@ -140,7 +138,7 @@ class PDBTrajectoryFile(object):
             self._write_header(unitcell_lengths, unitcell_angles)
             self._header_written = True
 
-        if ilen(topology.atoms) != len(positions):
+        if ilen(self.topology.atoms) != len(positions):
             raise ValueError('The number of positions must match the number of atoms')
         if np.any(np.isnan(positions)):
             raise ValueError('Particle position is NaN')
@@ -151,7 +149,7 @@ class PDBTrajectoryFile(object):
         posIndex = 0
         if modelIndex is not None:
             print("MODEL     %4d" % modelIndex, file=self._file)
-        for (chainIndex, chain) in enumerate(topology.chains):
+        for (chainIndex, chain) in enumerate(self.topology.chains):
             chainName = self._chain_names[chainIndex % len(self._chain_names)]
             residues = list(chain.residues)
             for (resIndex, res) in enumerate(residues):
@@ -221,12 +219,11 @@ class PDBTrajectoryFile(object):
             raise ValueError('file not opened for writing')
 
         # Identify bonds that should be listed as CONECT records.
-        topology = self.topology.to_openmm()  # Allows us to copy-paste code from OpenMM
         standardResidues = ['ALA', 'ASN', 'CYS', 'GLU', 'HIS', 'LEU', 'MET', 'PRO', 'THR', 'TYR',
                             'ARG', 'ASP', 'GLN', 'GLY', 'ILE', 'LYS', 'PHE', 'SER', 'TRP', 'VAL',
                             'A', 'G', 'C', 'U', 'I', 'DA', 'DG', 'DC', 'DT', 'DI', 'HOH']
         conectBonds = []
-        for atom1, atom2 in topology.bonds():
+        for atom1, atom2 in self.topology.bonds:
             if atom1.residue.name not in standardResidues or atom2.residue.name not in standardResidues:
                 conectBonds.append((atom1, atom2))
             elif atom1.name == 'SG' and atom2.name == 'SG' and atom1.residue.name == 'CYS' and atom2.residue.name == 'CYS':
@@ -238,8 +235,8 @@ class PDBTrajectoryFile(object):
             atomIndex = {}
             nextAtomIndex = 0
             prevChain = None
-            for chain in topology.chains():
-                for atom in chain.atoms():
+            for chain in self.topology.chains:
+                for atom in chain.atoms:
                     if atom.residue.chain != prevChain:
                         nextAtomIndex += 1
                         prevChain = atom.residue.chain
