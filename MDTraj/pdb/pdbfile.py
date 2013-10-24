@@ -98,10 +98,10 @@ class PDBTrajectoryFile(object):
     _atomNameReplacements = {}
     _chain_names = [chr(ord('A') + i) for i in range(26)]
 
-    def __init__(self, filename, mode='r', force_overwrite=True, topology=None):
+    def __init__(self, filename, mode='r', force_overwrite=True):
         self._open = False
         self._file = None
-        self._topology = topology
+        self._topology = None
         self._positions = None
         self._mode = mode
 
