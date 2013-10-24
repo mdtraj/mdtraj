@@ -50,13 +50,9 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
         information, we will compute distances under the minimum image
         convention.
     opt : bool, default=True
-        Use an optimized native library to calculate distances. Using this
-        library requires the python package "cffi" (c foreign function
-        interface) which is installable via "easy_install cffi" or "pip
-        install cffi". See https://pypi.python.org/pypi/cffi for more details.
-        Our optimized minimum image convention calculation implementation is
-        over 1000x faster than the naive numpy implementation, so installing
-        cffi is worth it.
+        Use an optimized native library to calculate distances. Our optimized
+        SSE minimum image convention calculation implementation is over 1000x
+        faster than the naive numpy implementation.
 
     Returns
     -------
@@ -98,13 +94,9 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
         information, we will compute distances under the minimum image
         convention.
     opt : bool, default=True
-        Use an optimized native library to calculate distances. Using this
-        library requires the python package "cffi" (c foreign function
-        interface) which is installable via "easy_install cffi" or "pip
-        install cffi". See https://pypi.python.org/pypi/cffi for more details.
-        Our optimized minimum image convention calculation implementation is
-        over 1000x faster than the naive numpy implementation, so installing
-        cffi is generally worth it.
+        Use an optimized native library to calculate distances. Our
+        optimized minimum image convention calculation implementation is
+        over 1000x faster than the naive numpy implementation.
 
     Returns
     -------

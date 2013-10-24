@@ -46,13 +46,9 @@ def compute_angles(traj, angle_indices, opt=True):
     angle_indices : np.ndarray, shape=(num_pairs, 2), dtype=int
        Each row gives the indices of three atoms which together make an angle.
     opt : bool, default=True
-        Use an optimized native library to calculate distances. Using this
-        library requires the python package "cffi" (c foreign function
-        interface) which is installable via "easy_install cffi" or "pip
-        install cffi". See https://pypi.python.org/pypi/cffi for more details.
-        Our optimized angle calculation implementation is 10-20x faster than
-        the (itself optimized) numpy implementation, so installing cffi is
-        generally worth it.
+        Use an optimized native library to calculate distances. Our optimized
+        SSE angle calculation implementation is 10-20x faster than the
+        (itself optimized) numpy implementation.
 
     Returns
     -------
