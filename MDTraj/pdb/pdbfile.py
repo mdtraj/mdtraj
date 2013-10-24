@@ -299,6 +299,7 @@ class PDBTrajectoryFile(object):
     @property
     def topology(self):
         """The topology from this PDB file. Available when a file is opened in mode='r'
+        or from the input Trajectory when saving.  
         """
         return self._topology
 
