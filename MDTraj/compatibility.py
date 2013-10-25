@@ -165,7 +165,15 @@ def load_legacy_hdf(filename, stride=1, frame=None, chunk=50000,
     return trajectory
 
 def save_legacy_hdf(traj, filename):
-    """Saves an MDTraj Trajectory as an MSMB2 lh5 file."""
+    """Saves an MDTraj Trajectory as an MSMB2 lh5 file.
+
+    Parameters
+    ----------
+    traj : MDTraj.Trajectory
+        Trajectory object to be saved
+    filename : str
+        String filename of HDF Trajectory file.
+    """
 
     MAXINT16 = np.iinfo(np.int16).max
     MAXINT32 = np.iinfo(np.int32).max
