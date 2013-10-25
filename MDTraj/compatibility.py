@@ -62,6 +62,8 @@ tables = import_('tables')
 
 __all__ = ['load_legacy_hdf']
 
+COMPRESSION = tables.Filters(complib='blosc', shuffle=True, complevel=1)  # Compression style of legacy MSMBuilder2 lh5 trajectory format
+
 ##############################################################################
 # Functions
 ##############################################################################
@@ -162,6 +164,53 @@ def load_legacy_hdf(filename, stride=1, frame=None, chunk=50000,
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     return trajectory
 
+def save_legacy_hdf(traj, filename):
+    """Saves an MDTraj Trajectory as an MSMB2 lh5 file."""
+
+    MAXINT16 = np.iinfo(np.int16).max
+    MAXINT32 = np.iinfo(np.int32).max
+    DEFAULT_PRECISION = 1000
+
+    def _convert_to_lossy_integers(X, precision):
+        """Implementation of the lossy compression used in Gromacs XTC using the pytables library.  Convert 32 bit floats into 16 bit integers.  These conversion functions have been optimized for memory use.  Further memory reduction would require an in-place astype() operation, which one could create using ctypes."""
+        if np.max(X) * float(precision) < MAXINT16 and np.min(X) * float(precision) > -MAXINT16:
+            X *= float(precision)
+            Rounded = X.astype("int16")
+            X /= float(precision)
+        else:
+            X *= float(precision)
+            Rounded = X.astype("int32")
+            X /= float(precision)
+            logger.error("Data range too large for int16: try removing center of mass motion, check for 'blowing up, or just use .h5 or .xtc format.'")
+        return(Rounded)
+
+
+    top, bonds = traj.top.to_dataframe()
+
+    data_dict = {}
+    data_dict["AtomID"] = top.index.values + 1
+    data_dict["AtomNames"] = top.name.values
+    data_dict["ResidueNames"] = top.resName.values
+    data_dict["ChainID"] = top.chainID.values
+    data_dict["ResidueID"] = top.resSeq.values + 1
+    data_dict["XYZList"] = _convert_to_lossy_integers(traj.xyz, DEFAULT_PRECISION)
+    
+    atom_dict = {}
+    atom_dict["AtomID"] = tables.Int64Atom()
+    atom_dict["AtomNames"] = tables.StringAtom(itemsize=4)
+    atom_dict["ResidueNames"] = tables.StringAtom(itemsize=4)
+    atom_dict["ChainID"] = tables.StringAtom(itemsize=1)
+    atom_dict["ResidueID"] = tables.Int64Atom()
+    atom_dict["XYZList"] = tables.Int16Atom()
+    
+    file_handle = tables.File(filename, 'w')
+
+    for key, val in data_dict.iteritems():
+        node = file_handle.createCArray(where='/', name=key, atom=atom_dict[key], shape=val.shape, filters=COMPRESSION)
+        node[:] = val[:]
+
+    file_handle.close()
+    
 
 def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
     topology = Topology()
