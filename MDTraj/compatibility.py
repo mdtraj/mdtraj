@@ -49,7 +49,7 @@ from mdtraj import Trajectory, Topology
 import mdtraj.pdb.element
 import mdtraj.trajectory
 from mdtraj.utils import import_
-from mdtraj.utils.six import PY3
+from mdtraj.utils.six import PY3, iteritems
 from mdtraj.utils.six.moves import zip
 if PY3:
     basestring = str
@@ -213,7 +213,7 @@ def save_legacy_hdf(traj, filename):
     
     file_handle = tables.File(filename, 'w')
 
-    for key, val in data_dict.iteritems():
+    for key, val in iteritems(data_dict):
         node = file_handle.createCArray(where='/', name=key, atom=atom_dict[key], shape=val.shape, filters=COMPRESSION)
         node[:] = val[:]
 
