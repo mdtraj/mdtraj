@@ -248,7 +248,7 @@ def main(args, verbose=True):
     # this is the normal invocation pattern, but for PDBTrajectoryFile it's
     # different
     outfile_factory = functools.partial(OutFileFormat, args.output, 'w',
-                        force_overwrite=args.force)
+                        force_overwrite=args.force, topology=topology)
 
     with outfile_factory() as outfile:
         for fn in args.input:
@@ -337,7 +337,7 @@ def write(outfile, data):
             if 'cell_angles' in data:
                 angles = data['cell_angles'][i]
                 
-            outfile.write(frame, data.get('topology', None), i, lengths, angles)
+            outfile.write(frame, i, lengths, angles)
 
     elif isinstance(outfile, md.NetCDFTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
