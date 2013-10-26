@@ -38,7 +38,7 @@ if PY3:
     basestring = str
 
 __all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpos',
-           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml']
+           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml', 'load_legacy_hdf']
 
 ##############################################################################
 # Globals
@@ -772,6 +772,7 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None):
                             unitcell_angles=cell_angles)
     return trajectory
 
+load_legacy_hdf = mdtraj.compatibility.load_legacy_hdf
 
 class Trajectory(object):
     """Container object for a molecular dynamics trajectory
@@ -1362,6 +1363,7 @@ class Trajectory(object):
                   '.pdb': self.save_pdb,
                   '.dcd': self.save_dcd,
                   '.h5': self.save_hdf5,
+                  ".lh5": self.save_legacy_hdf,
                   '.binpos': self.save_binpos,
                   '.nc': self.save_netcdf,
                   '.crd': self.save_mdcrd,
@@ -1603,5 +1605,5 @@ _LoaderRegistry = {
     '.binpos': load_binpos,
     '.ncdf': load_netcdf,
     '.nc': load_netcdf,
-    '.arc': load_arc
+    '.arc': load_arc,
 }
