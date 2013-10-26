@@ -1,27 +1,27 @@
-# Copyright 2012 the authors
-# This file is part of mdtraj
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
-#
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
-#
-# topology.py: Used for storing topological information about a system.
-#
-# This is part of the OpenMM molecular simulation toolkit originating from
-# Simbios, the NIH National Center for Physics-Based Simulation of
-# Biological Structures at Stanford, funded under the NIH Roadmap for
-# Medical Research, grant U54 GM072970. See https://simtk.org.
-#
-# Portions copyright (c) 2012 Stanford University and the Authors.
 # Authors: Peter Eastman, Robert McGibbon
+# Contributors: Kyle A. Beauchamp
+#
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+#
+# Portions of this code originate from the OpenMM molecular simulation
+# toolkit, copyright (c) 2012 Stanford University and Peter Eastman. Those
+# portions are distributed under the following terms:
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -40,6 +40,8 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
+##############################################################################
+
 
 ##############################################################################
 # Imports
@@ -385,7 +387,7 @@ class Topology(object):
         if bonds is not None:
             for ai1, ai2 in bonds:
                 out.add_bond(out.atom(ai1), out.atom(ai2))
-        
+
         out._numAtoms = out.n_atoms
         return out
 

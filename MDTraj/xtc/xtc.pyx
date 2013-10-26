@@ -1,19 +1,26 @@
 # cython: c_string_type=str, c_string_encoding=ascii
-# Copyright 2012 mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Robert McGibbon
+# Contributors:
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU Lesser General Public
+# License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 ###############################################################################
 # Imports
@@ -63,7 +70,7 @@ if sizeof(float) != sizeof(np.float32_t):
 
 cdef class XTCTrajectoryFile:
     """XTCTrajectoryFile(filenamee, mode='r', force_overwrite=True, **kwargs)
-    
+
     Interface for reading and writing to a GROMACS XTC file.
     This is a file-like objec that supports both reading and writing.
     It also supports the context manager ptorocol, so you can use it
@@ -72,7 +79,7 @@ cdef class XTCTrajectoryFile:
     The conventional units in the XTC file are nanometers and picoseconds.
     The format only supports saving coordinates, the time, the md step,
     and the unit cell parametrs (box vectors)
-    
+
     Parameters
     ----------
     filename : str
@@ -187,7 +194,7 @@ cdef class XTCTrajectoryFile:
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)
-        
+
         Read data from an XTC file
 
         Parameters
@@ -259,7 +266,7 @@ cdef class XTCTrajectoryFile:
         cdef int i = 0
         cdef int status = _EXDROK
         cdef int n_atoms_to_read
-        
+
         if atom_indices is None:
             n_atoms_to_read = self.n_atoms
         elif isinstance(atom_indices, slice):
@@ -295,7 +302,7 @@ cdef class XTCTrajectoryFile:
                 status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[i],
                                          &time[i], &box[i,0,0], &framebuffer[0,0], &prec[i])
                 xyz[i, :, :] = framebuffer[atom_indices, :]
-                
+
             if status != _EXDRENDOFFILE and status != _EXDROK:
                 raise RuntimeError('XTC read error: %s' % _EXDR_ERROR_MESSAGES.get(status, 'unknown'))
             i += 1
@@ -313,7 +320,7 @@ cdef class XTCTrajectoryFile:
 
     def write(self, xyz, time=None, step=None, box=None):
         """write(xyz, time=None, step=None, box=None)
-        
+
         Write data to an XTC file
 
         Parameters

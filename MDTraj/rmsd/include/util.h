@@ -1,6 +1,6 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
-/* 
+/*
     Utility functions for IRMSD matrix multiply routines.
 
     Common intrinsic subroutines shared among files.
@@ -20,7 +20,7 @@ static INLINE void aos_deinterleaved_load(const float* S, __m128* x, __m128* y, 
   t1 = _mm_load_ps(S+8);
   *z  = *x;
   t2 = *y;
-    
+
   t2 = _mm_shuffle_ps_yzyz(t2,t1);
   *z  = _mm_shuffle_ps_yzxw(*z,t2);
   *x  = _mm_shuffle_ps_xwyz(*x,t2);
@@ -42,7 +42,7 @@ static INLINE void aos_deinterleaved_load(const float* S, __m128* x, __m128* y, 
   xmm13 = zx0 zx1 zx2 zx3
   xmm14 = zy0 zy1 zy2 zy3
   xmm15 = zz0 zz1 zz2 zz3
-  
+
   haddps xmm07 xmm08
       xmm07 = xx0+1 xx2+3 xy0+1 xy2+3
   haddps xmm09 xmm10
@@ -53,14 +53,14 @@ static INLINE void aos_deinterleaved_load(const float* S, __m128* x, __m128* y, 
       xmm13 = zx0+1 zx2+3 zy0+1 zy2+3
   haddps xmm15 xmm14
       xmm15 = zz0+1 zz2+3 zy0+1 zy2+3
-  
+
   haddps xmm07 xmm09
       xmm07 = xx0123 xy0123 xz0123 yx0123
   haddps xmm11 xmm13
       xmm11 = yy0123 yz0123 zx0123 zy0123
   haddps xmm15 xmm09
       xmm15 = zz0123 zy0123 xz0123 yx0123
-*/ 
+*/
 #define REDUCTION_EPILOGUE(xx, xy, xz, yx, yy, yz, zx, zy, zz, t0, t1, t2) \
   xx = _mm_hadd_ps(xx,xy); /* xx = xx01 xx23 xy01 xy23 */\
   xz = _mm_hadd_ps(xz,yx); /* xz = xz01 xz23 yx01 yx23 */\

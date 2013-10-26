@@ -1,18 +1,25 @@
-# Copyright 2012 mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Robert McGibbon
+# Contributors:
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU Lesser General Public
+# License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 from __future__ import print_function
 import os
 import shutil
@@ -48,7 +55,7 @@ def test_reporter():
     tempdir = os.path.join(dir, 'test1')
     os.makedirs(tempdir)
 
-    pdb = PDBFile(get_fn('native.pdb'))    
+    pdb = PDBFile(get_fn('native.pdb'))
     forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
     system = forcefield.createSystem(pdb.topology, nonbondedMethod=CutoffNonPeriodic,
         nonbondedCutoff=1.0*nanometers, constraints=HBonds, rigidWater=True)
@@ -102,7 +109,7 @@ def test_reporter():
     hdf5_traj = md.load(hdf5file)
     dcd_traj = md.load(dcdfile, top=get_fn('native.pdb'))
     netcdf_traj = md.load(ncfile, top=get_fn('native.pdb'))
-    
+
     # we don't have to convert units here, because md.load already
     # handles that
     yield lambda: eq(hdf5_traj.xyz, netcdf_traj.xyz)
@@ -178,7 +185,7 @@ def test_reporter_subset():
     hdf5_traj = md.load(hdf5file)
     dcd_traj = md.load(dcdfile, top=hdf5_traj)
     netcdf_traj = md.load(ncfile, top=hdf5_traj)
-    
+
     # we don't have to convert units here, because md.load already handles
     # that
     yield lambda: eq(hdf5_traj.xyz, netcdf_traj.xyz)

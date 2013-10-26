@@ -1,18 +1,25 @@
-# Copyright 2012 mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Robert McGibbon
+# Contributors: Kyle A. Beauchamp, TJ Lane, Joshua Adelman, Lee-Ping Wang
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU Lesser General Public
+# License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 ##############################################################################
 # Imports
@@ -32,13 +39,11 @@ from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
 from mdtraj.utils import unitcell, ensure_type
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3
-import mdtraj.compatibility
-
 if PY3:
     basestring = str
 
 __all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpos',
-           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml', 'load_legacy_hdf']
+           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml']
 
 ##############################################################################
 # Globals
@@ -173,7 +178,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     """
 
     _assert_files_exist(filename_or_filenames)
-    
+
     if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
         kwargs["top"] = _parse_topology(kwargs["top"])
 
@@ -772,7 +777,6 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None):
                             unitcell_angles=cell_angles)
     return trajectory
 
-load_legacy_hdf = mdtraj.compatibility.load_legacy_hdf
 
 class Trajectory(object):
     """Container object for a molecular dynamics trajectory
@@ -1127,7 +1131,7 @@ class Trajectory(object):
             x0 = self.xyz[-1]
             x1 = other.xyz[0]
             start_frame = 1 if np.linalg.norm(x1 - x0) < 1e-8 else 0
-        else: 
+        else:
             start_frame = 0
 
         xyz = other.xyz[start_frame:]
@@ -1363,7 +1367,6 @@ class Trajectory(object):
                   '.pdb': self.save_pdb,
                   '.dcd': self.save_dcd,
                   '.h5': self.save_hdf5,
-                  ".lh5": self.save_legacy_hdf,
                   '.binpos': self.save_binpos,
                   '.nc': self.save_netcdf,
                   '.crd': self.save_mdcrd,
@@ -1395,17 +1398,6 @@ class Trajectory(object):
                     cell_angles=self.unitcell_angles,
                     cell_lengths=self.unitcell_lengths)
             f.topology = self.topology
-
-    def save_legacy_hdf(self, filename):
-        """Saves an MDTraj Trajectory as an MSMB2 lh5 file.
-
-        Parameters
-        ----------
-        filename : str
-            String filename of HDF Trajectory file.
-        """
-        print("Warning: Legacy (MSMBuilder2) HDF files ('.lh5') are deprecated and should be replaced with standard trajectory formats.")
-        mdtraj.compatibility.save_legacy_hdf(self, filename)
 
     def save_pdb(self, filename, force_overwrite=True):
         """Save trajectory to RCSB PDB format
@@ -1535,16 +1527,16 @@ class Trajectory(object):
     def center_coordinates(self, mass_weighted=False):
         """Center each trajectory frame at the origin (0,0,0).
 
-        This method acts inplace on the trajectory.  The centering can 
+        This method acts inplace on the trajectory.  The centering can
         be either uniformly weighted (mass_weighted=False) or weighted by
-        the mass of each atom (mass_weighted=True).  
+        the mass of each atom (mass_weighted=True).
 
         Parameters
         ----------
         mass_weighted : bool, optional (default = False)
             If True, weight atoms by mass when removing COM.
-            
-        
+
+
         """
         if mass_weighted == True:
             masses = np.array([a.element.mass for a in self.top.atoms])
@@ -1601,9 +1593,9 @@ _LoaderRegistry = {
     '.h5': load_hdf5,
     '.crd': load_mdcrd,
     '.mdcrd': load_mdcrd,
-    '.lh5': mdtraj.compatibility.load_legacy_hdf,
+    #'.lh5': _load_legacy_hdf,
     '.binpos': load_binpos,
     '.ncdf': load_netcdf,
     '.nc': load_netcdf,
-    '.arc': load_arc,
+    '.arc': load_arc
 }

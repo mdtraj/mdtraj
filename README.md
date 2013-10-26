@@ -16,3 +16,22 @@ deviations using the quaternion characteristic polynomial (Theobald QCP) method 
 speed of the original Theobald code and over 3x as fast as Theobald code modified to use GotoBLAS.
 
 For details, see the [documentation](http://rmcgibbo.github.io/mdtraj/).
+
+License
+-------
+
+```
+MDtraj is free software; you can redistribute it and/or modify it under the
+terms of the GNU Lesser General Public License as published by the Free
+Software Foundation; either version 2.1 of the License, or (at your option)
+any later version.
+
+This library is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+details. You should have received a copy of the GNU Lesser General Public
+License along with this Module; if not, see <http://www.gnu.org/licenses/>.
+```
+
+Various sub-portions of this library may be individually distributed under
+different licenses. See those files for their specific terms.

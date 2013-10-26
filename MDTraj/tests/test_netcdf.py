@@ -1,18 +1,25 @@
-# Copyright 2012 mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Robert McGibbon
+# Contributors:
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU Lesser General Public
+# License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 """
 Tests for the AMBER netcdf reader/writer code
@@ -165,7 +172,7 @@ def test_n_atoms():
         f.write(np.random.randn(1,11,3))
     with NetCDFTrajectoryFile(temp) as f:
         eq(f.n_atoms, 11)
-        
+
 
 def test_do_overwrite():
     with open(temp, 'w') as f:
@@ -190,6 +197,6 @@ def test_trajectory_save_load():
 
     t.save(temp)
     t2 = md.load(temp, top=t.topology)
-    
+
     eq(t.xyz, t2.xyz)
     eq(t.unitcell_lengths, t2.unitcell_lengths)

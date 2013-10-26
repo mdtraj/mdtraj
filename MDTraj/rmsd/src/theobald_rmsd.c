@@ -1,33 +1,36 @@
-// Copyright 2011 Stanford University
+/////////////////////////////////////////////////////////////////////////////
+// MDTraj: A Python Library for Loading, Saving, and Manipulating
+//         Molecular Dynamics Trajectories.
+// Copyright 2012-2013 Stanford University and the Authors
 //
-// IRMSD is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// Authors: Imran S. Haque
+// Contributors: John D. Chodera, Kyle Beauchamp, Peter Kasson,
+//               Kai Kohlhoff, Jonathan Zrake, Robert McGibbon
 //
-// This program is distributed in the hope that it will be useful,
+// MDTraj is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// GNU Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// You should have received a copy of the GNU Lesser General Public
+// License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+///////////////////////////////////////////////////////////////////////////////
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Calculation of RMSD by a the quaternion-based characteristic polynomial
+// (QCP) algorithm of Theobald [1].
 //
-//=============================================================================================
-// Calculation of RMSD by a the quaternion-based characteristic polynomial (QCP) algorithm of Theobald [1].
-// 
-// [1] Theobald DL. Rapid calculation of RMSDs using a quaternion-based characteristic polynomial. 
-//     Acta Cryst., A61:478, 2005.  doi:10.1107/50108767305015266
-//
-// Contributions from:
-//      John D. Chodera <jchodera AT gmail.com>, Dill lab, UCSF, 2006.
-//      Kyle Beauchamp(kyleb AT stanford.edu)
-//      Peter Kasson (kasson AT stanford.edu)
-//      Kai Kohlhoff (kohlhoff AT stanford.edu)
-//      Imran Haque  (ihaque AT cs.stanford.edu)
-//=============================================================================================
+// [1] Theobald DL. Rapid calculation of RMSDs using a quaternion-based
+//     characteristic polynomial. Acta Cryst., A61:478, 2005.
+//     doi:10.1107/50108767305015266
+///////////////////////////////////////////////////////////////////////////////
+
 
 #include "msvccompat.h"
 #include <assert.h>
@@ -184,12 +187,12 @@ float DirectSolve(float lambda, float C_0, float C_1, float C_2)
   result=max(r1,r2);
   result=max(result,r3);
   result=max(result,r4);
-  
+
   return (float) result;
 }
 
 float NewtonSolve(float lambda, float C_0, float C_1, float C_2)
-{ 
+{
   unsigned int i;
   unsigned int maxits = 500;
   float tolerance = 1.0e-6f;
@@ -197,7 +200,7 @@ float NewtonSolve(float lambda, float C_0, float C_1, float C_2)
   float a,b;
 
   for (i = 0; i < maxits; i++)
-    {     
+    {
         lambda_old = lambda;
         lambda2 = lambda_old * lambda_old;
         b = (lambda2 + C_2) * lambda_old;
@@ -205,15 +208,15 @@ float NewtonSolve(float lambda, float C_0, float C_1, float C_2)
         lambda = lambda_old - (a * lambda_old + C_0) / (2.0f * lambda2 * lambda_old + b + a);
         if (fabsf(lambda - lambda_old) < fabsf(tolerance * lambda)) break;
     }
-  if (fabsf(lambda - lambda_old) >= fabsf(100*tolerance * lambda))    
+  if (fabsf(lambda - lambda_old) >= fabsf(100*tolerance * lambda))
     {
       printf("RMSD Warning: No convergence after %d iterations: Lambda,Lambda0,Diff,Allowed = %f, %f, %f, %f \n",maxits,lambda, lambda_old, fabsf(lambda - lambda_old), fabsf(tolerance * lambda) );
     }
-    
+
   return(lambda);
 }
 
-float msdFromMandG(const float M[9],const float G_x,const float G_y,const int numAtoms) 
+float msdFromMandG(const float M[9],const float G_x,const float G_y,const int numAtoms)
 {
     int i;
     const int m = 3;
