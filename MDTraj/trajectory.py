@@ -172,7 +172,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     _assert_files_exist(filename_or_filenames)
     
-    if "top" in kwargs:
+    if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
         kwargs["top"] = _parse_topology(kwargs["top"])
 
     # grab the extension of the filename
