@@ -1402,6 +1402,7 @@ class Trajectory(object):
         filename : str
             String filename of HDF Trajectory file.
         """
+        print("Warning: Legacy (MSMBuilder2) HDF files ('.lh5') are deprecated and should be replaced with standard trajectory formats.")
         mdtraj.compatibility.save_legacy_hdf(self, filename)
 
     def save_pdb(self, filename, force_overwrite=True):
