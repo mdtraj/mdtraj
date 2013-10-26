@@ -247,8 +247,12 @@ def main(args, verbose=True):
 
     # this is the normal invocation pattern, but for PDBTrajectoryFile it's
     # different
-    outfile_factory = functools.partial(OutFileFormat, args.output, 'w',
-                        force_overwrite=args.force, topology=topology)
+    if OutFileFormat == md.PDBTrajectoryFile:
+        outfile_factory = functools.partial(OutFileFormat, args.output, 'w',
+                            force_overwrite=args.force, topology=topology)
+    else:
+        outfile_factory = functools.partial(OutFileFormat, args.output, 'w',
+                            force_overwrite=args.force)
 
     with outfile_factory() as outfile:
         for fn in args.input:
