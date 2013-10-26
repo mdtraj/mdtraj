@@ -17,7 +17,7 @@
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 #
 # Portions of this code originate from the OpenMM molecular simulation
 # toolkit, copyright (c) 2012 Stanford University and Peter Eastman. Those
