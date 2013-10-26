@@ -4,6 +4,7 @@ from mdtraj import load
 from mdtraj.testing import get_fn, eq
 import mdtraj.compatibility
 from mdtraj.utils import ilen
+import tempfile
 
 
 fn = get_fn('legacy_msmbuilder_trj0.lh5')
@@ -37,3 +38,16 @@ def test_legacy_hdf3():
 
     yield lambda: eq(t0.xyz, t1[0].xyz)
     yield lambda: t0.topology == load(nat).topology
+
+
+def test_legacy_hdf4_save_and_load():
+    t0 = load(fn, frame=0)
+    t1 = load(fn)
+
+    temp = tempfile.NamedTemporaryFile(suffix=".lh5")
+    mdtraj.compatibility.save_legacy_hdf(t0, temp.name)
+    
+    t2 = load(temp.name)
+
+    yield lambda: eq(t0.xyz, t2.xyz)
+    yield lambda: t0.topology == t2.topology
