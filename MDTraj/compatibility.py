@@ -45,7 +45,6 @@ Functions
 from __future__ import print_function, division
 import numpy as np
 
-from mdtraj import Trajectory, Topology
 import mdtraj.pdb.element
 import mdtraj.trajectory
 from mdtraj.utils import import_
@@ -93,7 +92,7 @@ def load_legacy_hdf(filename, stride=1, frame=None, chunk=50000,
     trajectory : md.Trajectory
         The resulting trajectory, as an md.Trajectory object.
     """
-
+    from mdtraj import Trajectory
     def _convert_from_lossy_integers(X, precision=1000):
         """Implementation of the lossy compression used in Gromacs XTC using
         the pytables library.  Convert 16 bit integers into 32 bit floats."""
@@ -221,6 +220,7 @@ def save_legacy_hdf(traj, filename):
     
 
 def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
+    from mdtraj import Topology
     topology = Topology()
 
     # assert that the ChainID is just an array of empty strings, which appears
@@ -254,4 +254,4 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
 
 
 # register this reader with mdtraj!
-mdtraj.trajectory._LoaderRegistry['.lh5'] = load_legacy_hdf
+#mdtraj.trajectory._LoaderRegistry['.lh5'] = load_legacy_hdf

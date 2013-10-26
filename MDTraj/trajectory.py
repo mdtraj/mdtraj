@@ -32,11 +32,13 @@ from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
 from mdtraj.utils import unitcell, ensure_type
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3
+import mdtraj.compatibility
+
 if PY3:
     basestring = str
 
 __all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpos',
-           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml']
+           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml', 'load_legacy_hdf']
 
 ##############################################################################
 # Globals
@@ -770,6 +772,7 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None):
                             unitcell_angles=cell_angles)
     return trajectory
 
+load_legacy_hdf = mdtraj.compatibility.load_legacy_hdf
 
 class Trajectory(object):
     """Container object for a molecular dynamics trajectory
@@ -1360,6 +1363,7 @@ class Trajectory(object):
                   '.pdb': self.save_pdb,
                   '.dcd': self.save_dcd,
                   '.h5': self.save_hdf5,
+                  ".lh5": self.save_legacy_hdf,
                   '.binpos': self.save_binpos,
                   '.nc': self.save_netcdf,
                   '.crd': self.save_mdcrd,
@@ -1391,6 +1395,17 @@ class Trajectory(object):
                     cell_angles=self.unitcell_angles,
                     cell_lengths=self.unitcell_lengths)
             f.topology = self.topology
+
+    def save_legacy_hdf(self, filename):
+        """Saves an MDTraj Trajectory as an MSMB2 lh5 file.
+
+        Parameters
+        ----------
+        filename : str
+            String filename of HDF Trajectory file.
+        """
+        print("Warning: Legacy (MSMBuilder2) HDF files ('.lh5') are deprecated and should be replaced with standard trajectory formats.")
+        mdtraj.compatibility.save_legacy_hdf(self, filename)
 
     def save_pdb(self, filename, force_overwrite=True):
         """Save trajectory to RCSB PDB format
@@ -1586,9 +1601,9 @@ _LoaderRegistry = {
     '.h5': load_hdf5,
     '.crd': load_mdcrd,
     '.mdcrd': load_mdcrd,
-    #'.lh5': _load_legacy_hdf,
+    '.lh5': mdtraj.compatibility.load_legacy_hdf,
     '.binpos': load_binpos,
     '.ncdf': load_netcdf,
     '.nc': load_netcdf,
-    '.arc': load_arc
+    '.arc': load_arc,
 }

@@ -34,8 +34,11 @@ fd4, temp4 = tempfile.mkstemp(suffix='.trr')
 fd5, temp5 = tempfile.mkstemp(suffix='.h5')
 fd6, temp6 = tempfile.mkstemp(suffix='.pdb')
 fd7, temp7 = tempfile.mkstemp(suffix='.nc')
-for e in [fd1, fd2, fd3, fd4, fd5, fd6, fd7]:
+fd8, temp8 = tempfile.mkstemp(suffix='.lh5')
+
+for e in [fd1, fd2, fd3, fd4, fd5, fd6, fd7, fd8]:
     os.close(e)
+
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
@@ -169,6 +172,14 @@ def test_load():
         yield lambda: eq(t0.n_frames * num_block, t2.n_frames)
         yield lambda: eq(t3.n_frames, t2.n_frames)
 
+
+def test_legacy_hdf_save():
+    t = md.load(get_fn('traj.h5'))
+    t.save(temp8)
+
+    t2 = md.load_legacy_hdf(temp8)
+
+    eq(t.xyz, t2.xyz, decimal=3)
 
 def test_hdf5_0():
     t = md.load(get_fn('traj.h5'))
