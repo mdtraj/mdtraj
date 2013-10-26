@@ -171,6 +171,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     """
 
     _assert_files_exist(filename_or_filenames)
+    
+    if "top" in kwargs:
+        kwargs["top"] = _parse_topology(kwargs["top"])
 
     # grab the extension of the filename
     if isinstance(filename_or_filenames, basestring):  # If a single filename
