@@ -1,24 +1,24 @@
-/*
-MDTraj: A Python Library for Loading, Saving, and Manipulating
-        Molecular Dynamics Trajectories.
-Copyright 2012-2013 Stanford University and the Authors
-
-Authors: Robert McGibbon
-Contributors:
-
-MDTraj is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as
-published by the Free Software Foundation, either version 2.1
-of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
-*/
+/*=======================================================================*/
+/* MDTraj: A Python Library for Loading, Saving, and Manipulating        */
+/*         Molecular Dynamics Trajectories.                              */
+/* Copyright 2012-2013 Stanford University and the Authors               */
+/*                                                                       */
+/* Authors: Robert McGibbon                                              */
+/* Contributors:                                                         */
+/*                                                                       */
+/* MDTraj is free software: you can redistribute it and/or modify        */
+/* it under the terms of the GNU Lesser General Public License as        */
+/* published by the Free Software Foundation, either version 2.1         */
+/* of the License, or (at your option) any later version.                */
+/*                                                                       */
+/* This library is distributed in the hope that it will be useful,       */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of        */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
+/* GNU Lesser General Public License for more details.                   */
+/*                                                                       */
+/* You should have received a copy of the GNU Lesser General Public      */
+/* License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.*/
+/*=======================================================================*/
 
 
 #include <stdlib.h>
@@ -290,12 +290,6 @@ int angle(const float* xyz, const int* triplets, float* out,
 
      All of the arrays are assumed to be contiguous. This code will
      segfault if they're not.
-
-     Some of the SSE code is adapted from "FastC++: Coding Cpp Efficiently Source Examples"
-     Copyright (C) 2011-2013 Matthias Straka, and licensed under the GNU LGPL3.0.
-     http://fastcpp.blogspot.com/2011/12/simple-vector3-class-with-sse-support.html
-
-     Thanks Matthias!
   */
 
   int i, j;
@@ -347,12 +341,6 @@ int dihedral(const float* xyz, const int* quartets, float* out,
 
      All of the arrays are assumed to be contiguous. This code will
      segfault if they're not.
-
-     Some of the SSE code is adapted from "FastC++: Coding Cpp Efficiently Source Examples"
-     Copyright (C) 2011-2013 Matthias Straka, and licensed under the GNU LGPL3.0.
-     http://fastcpp.blogspot.com/2011/12/simple-vector3-class-with-sse-support.html
-
-     Thanks Matthias!
   */
 
   int i, j;
