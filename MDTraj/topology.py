@@ -765,7 +765,7 @@ class Chain(object):
         return next(itertools.slice(self.atoms), index, index+1)
 
     @property
-    def n_atoms(self)::
+    def n_atoms(self):
         """Get the number of atoms in this Chain"""
         return sum(r.n_atoms for r in self._residues)
 
@@ -810,7 +810,7 @@ class Residue(object):
         return self._atoms[index]
 
     @property
-    def n_atoms(self)::
+    def n_atoms(self):
         """Get the number of atoms in this Residue"""
         return len(self._atoms)
 
