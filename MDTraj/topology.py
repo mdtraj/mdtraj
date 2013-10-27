@@ -48,6 +48,7 @@
 from __future__ import print_function, division
 import os
 import numpy as np
+import itertools
 import xml.etree.ElementTree as etree
 
 from mdtraj.utils import ilen, import_
@@ -725,6 +726,20 @@ class Chain(object):
         """
         return iter(self._residues)
 
+    def residue(self, index):
+        """Get a specific residue in this Chain
+
+        Returns
+        -------
+        residue : Residue
+        """
+        return self._residue[index]
+
+    @property
+    def n_residues(self):
+        "Get the number of residues in this Chain"
+        return len(self._residues)
+
     @property
     def atoms(self):
         """Iterator over all Atoms in the Chain.
@@ -738,12 +753,30 @@ class Chain(object):
             for atom in residue._atoms:
                 yield atom
 
+    def atom(self, index):
+        """Get a specific atom in this Chain
+
+        Returns
+        -------
+        atom : Atom
+        """
+        # this could be made faster by caching the list
+        # of atoms internally if necessary
+        return next(itertools.slice(self.atoms), index, index+1)
+
+    @property
+    def n_atoms(self)::
+        """Get the number of atoms in this Chain"""
+        return sum(r.n_atoms for r in self._residues)
+
+
 class Residue(object):
     """A Residue object represents a residue within a Topology.
 
     Attributes
     ----------
     atoms : genetator
+    n_atoms : int
     """
     def __init__(self, name, index, chain):
         """Construct a new Residue.  You should call add_residue()
@@ -766,6 +799,21 @@ class Residue(object):
             Iterator over all Atoms in the Residue.
         """
         return iter(self._atoms)
+
+    def atom(self, index):
+        """Get a specific atom in this Residue.
+
+        Returns
+        -------
+        atom : Atom
+        """
+        return self._atoms[index]
+
+    @property
+    def n_atoms(self)::
+        """Get the number of atoms in this Residue"""
+        return len(self._atoms)
+
 
 class Atom(object):
     """An Atom object represents a residue within a Topology.
