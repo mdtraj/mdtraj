@@ -1,18 +1,25 @@
-# Copyright 2012 mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Robert McGibbon
+# Contributors:
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 from __future__ import print_function
 import itertools
@@ -115,7 +122,7 @@ def test_dihedral_0():
     psi0 = np.array([134.52554, 144.880173]) * np.pi / 180.  # Pymol
     eq(psi[0,0:2], psi0, decimal=4)
     eq(int(rid[0]), 0)
-    
+
     rid, chi = mdtraj.geometry.dihedral.compute_chi(traj)
     chi0 = np.array([-43.37841, -18.14592]) * np.pi / 180.  # Pymol
     eq(chi[0,0:2], chi0, decimal=4)
@@ -150,7 +157,7 @@ def test_angle_1():
     # taylor series expansions -- are parameterized slightly differently on
     # different libraries/platforms. setting the random number seed helps to
     # ensure that this doesn't break stochastically too often.
-    
+
     n_atoms = 5
     np.random.seed(24)
     xyz = np.random.randn(50, n_atoms, 3)
@@ -174,7 +181,7 @@ def test_dihedral_performance():
     t2 = time.time()
     r2 = md.geometry.compute_dihedrals(t, indices, opt=True)
     t3 = time.time()
-    
+
     print('\ndihedral performance:')
     print('numpy:   %f s' % (t2 - t1))
     print('opt sse: %f s' % (t3 - t2))
@@ -191,7 +198,7 @@ def test_angle_performance():
     t2 = time.time()
     r2 = md.geometry.compute_angles(t, indices, opt=True)
     t3 = time.time()
-    
+
     print('\nangle performance:')
     print('numpy:   %f s' % (t2 - t1))
     print('opt sse: %f s' % (t3 - t2))

@@ -1,21 +1,25 @@
-/* This file is part of MDTraj
- *
- * Copyright 2013 Stanford University
- *
- * MDTraj is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/*=======================================================================*/
+/* MDTraj: A Python Library for Loading, Saving, and Manipulating        */
+/*         Molecular Dynamics Trajectories.                              */
+/* Copyright 2012-2013 Stanford University and the Authors               */
+/*                                                                       */
+/* Authors: Robert McGibbon                                              */
+/* Contributors:                                                         */
+/*                                                                       */
+/* MDTraj is free software: you can redistribute it and/or modify        */
+/* it under the terms of the GNU Lesser General Public License as        */
+/* published by the Free Software Foundation, either version 2.1         */
+/* of the License, or (at your option) any later version.                */
+/*                                                                       */
+/* This library is distributed in the hope that it will be useful,       */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of        */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
+/* GNU Lesser General Public License for more details.                   */
+/*                                                                       */
+/* You should have received a copy of the GNU Lesser General Public      */
+/* License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.*/
+/*=======================================================================*/
+
 
 #include <stdlib.h>
 #include <math.h>
@@ -211,7 +215,7 @@ int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
     // Calculate the inverse of the box matrix, and also store it in the same
     // format.
     inverse33(box_matrix, hinv+0, hinv+1, hinv+2);
-    
+
     for (j = 0; j < n_pairs; j++) {
       // Load the two vectors whos distance we want to compute
       r1 = load_float3(xyz + 3*pairs[2*j + 0]);
@@ -286,12 +290,6 @@ int angle(const float* xyz, const int* triplets, float* out,
 
      All of the arrays are assumed to be contiguous. This code will
      segfault if they're not.
-
-     Some of the SSE code is adapted from "FastC++: Coding Cpp Efficiently Source Examples"
-     Copyright (C) 2011-2013 Matthias Straka, and licensed under the GNU LGPL3.0.
-     http://fastcpp.blogspot.com/2011/12/simple-vector3-class-with-sse-support.html
-
-     Thanks Matthias!
   */
 
   int i, j;
@@ -343,12 +341,6 @@ int dihedral(const float* xyz, const int* quartets, float* out,
 
      All of the arrays are assumed to be contiguous. This code will
      segfault if they're not.
-
-     Some of the SSE code is adapted from "FastC++: Coding Cpp Efficiently Source Examples"
-     Copyright (C) 2011-2013 Matthias Straka, and licensed under the GNU LGPL3.0.
-     http://fastcpp.blogspot.com/2011/12/simple-vector3-class-with-sse-support.html
-
-     Thanks Matthias!
   */
 
   int i, j;

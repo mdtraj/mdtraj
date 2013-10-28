@@ -1,18 +1,25 @@
-# Copyright 2012 mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Christopher M. Bruns
+# Contributors: Robert McGibbon, Jason Swails
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 """
 element.py: Used for managing elements.
@@ -45,8 +52,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from __future__ import print_function, division
-__author__ = "Christopher M. Bruns"
-__version__ = "1.0"
 
 
 class Element:
@@ -57,6 +62,7 @@ class Element:
     look up the Element with a particular chemical symbol."""
 
     _elements_by_symbol = {}
+    _elements_by_atomic_number = {}
 
     def __init__(self, number, name, symbol, mass):
         ## The atomic number of the element
@@ -71,6 +77,16 @@ class Element:
         s = symbol.strip().upper()
         assert s not in Element._elements_by_symbol
         Element._elements_by_symbol[s] = self
+        if number in Element._elements_by_atomic_number:
+            other_element = Element._elements_by_atomic_number[number]
+            if mass < other_element.mass:
+                # If two "elements" share the same atomic number, they're
+                # probably hydrogen and deuterium, and we want to choose
+                # the lighter one to put in the table by atomic_number,
+                # since it's the "canonical" element.
+                Element._elements_by_atomic_number[number] = self
+        else:
+            Element._elements_by_atomic_number[number] = self
 
     @staticmethod
     def getBySymbol(symbol):
@@ -201,3 +217,8 @@ ununtrium =      Element(113, "ununtrium",      "Uut", 284)
 ununquadium =    Element(114, "ununquadium",    "Uuq", 289)
 ununpentium =    Element(115, "ununpentium",    "Uup", 288)
 ununhexium =     Element(116, "ununhexium",     "Uuh", 292)
+
+# Aliases to recognize common alternative spellings. Both the '==' and 'is'
+# relational operators will work with any chosen name
+sulphur = sulfur
+aluminium = aluminum

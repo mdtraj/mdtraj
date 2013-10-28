@@ -1,18 +1,25 @@
-# Copyright 2012-present mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Robert McGibbon, Kyle A. Beauchamp
+# Contributors:
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 """Compatibility loader for MSMBuilder2 "LH5" trajectory format.
 
 To load .lh5 trajectory files produced by MSMBuilder2, you can import this
@@ -45,6 +52,7 @@ Functions
 from __future__ import print_function, division
 import numpy as np
 
+from mdtraj import Trajectory, Topology
 import mdtraj.pdb.element
 import mdtraj.trajectory
 from mdtraj.utils import import_
@@ -92,7 +100,7 @@ def load_legacy_hdf(filename, stride=1, frame=None, chunk=50000,
     trajectory : md.Trajectory
         The resulting trajectory, as an md.Trajectory object.
     """
-    from mdtraj import Trajectory
+
     def _convert_from_lossy_integers(X, precision=1000):
         """Implementation of the lossy compression used in Gromacs XTC using
         the pytables library.  Convert 16 bit integers into 32 bit floats."""
@@ -201,7 +209,7 @@ def save_legacy_hdf(traj, filename):
     data_dict["ChainID"] = top.chainID.values
     data_dict["ResidueID"] = top.resSeq.values + 1
     data_dict["XYZList"] = _convert_to_lossy_integers(traj.xyz, DEFAULT_PRECISION)
-    
+
     atom_dict = {}
     atom_dict["AtomID"] = tables.Int64Atom()
     atom_dict["AtomNames"] = tables.StringAtom(itemsize=4)
@@ -209,7 +217,7 @@ def save_legacy_hdf(traj, filename):
     atom_dict["ChainID"] = tables.StringAtom(itemsize=1)
     atom_dict["ResidueID"] = tables.Int64Atom()
     atom_dict["XYZList"] = tables.Int16Atom()
-    
+
     file_handle = tables.File(filename, 'w')
 
     for key, val in iteritems(data_dict):
@@ -217,10 +225,9 @@ def save_legacy_hdf(traj, filename):
         node[:] = val[:]
 
     file_handle.close()
-    
+
 
 def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
-    from mdtraj import Topology
     topology = Topology()
 
     # assert that the ChainID is just an array of empty strings, which appears
@@ -254,4 +261,4 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
 
 
 # register this reader with mdtraj!
-#mdtraj.trajectory._LoaderRegistry['.lh5'] = load_legacy_hdf
+mdtraj.trajectory._LoaderRegistry['.lh5'] = load_legacy_hdf

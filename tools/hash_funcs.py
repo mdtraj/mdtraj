@@ -1,7 +1,28 @@
+# Copyright (C) 2006, Jonathan E. Taylor
+# All rights reserved.
+#
+# Copyright (c) 2006-2008 Scipy Developers.
+# All rights reserved.
+#
+# Copyright (c) 2009-2012 Statsmodels Developers.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#   a. Redistributions of source code must retain the above copyright notice,
+#      this list of conditions and the following disclaimer.
+#   b. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#   c. Neither the name of Statsmodels nor the names of its contributors
+#      may be used to endorse or promote products derived from this software
+#      without specific prior written permission.
 """
 A collection of utilities to see if new ReST files need to be automatically
 generated from certain files in the project (examples, datasets).
 """
+
 import os
 import pickle
 

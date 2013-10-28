@@ -103,7 +103,7 @@ only alpha carbons present, you can do that pretty easily. ::
 
 Source Code
 -----------
-The source code is licensed under the GPLv3+, and available at: https://github.com/rmcgibbo/mdtraj
+The source code is licensed under the Lesser GNU General Pluglic License (v2.1+), and available at: https://github.com/rmcgibbo/mdtraj
 
 Feedback
 --------

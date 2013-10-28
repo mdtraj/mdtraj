@@ -1,20 +1,25 @@
-# This file is part of MDTraj.
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# Copyright 2013 Stanford University
+# Authors: Robert McGibbon
+# Contributors: Kyle A Beauchamp
 #
-# MDTraj is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
+# This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 ##############################################################################
 # Imports
@@ -68,7 +73,7 @@ def _dihedral(xyz, indices, out=None):
     p1 = (b1 * c1).sum(-1)
     p1 *= (b2 * b2).sum(-1) ** 0.5
     p2 = (c1 * c2).sum(-1)
-    
+
     return np.arctan2(p1, p2, out)
 
 
@@ -90,7 +95,7 @@ def compute_dihedrals(trajectory, indices, opt=True):
     Returns
     -------
     dihedrals : np.ndarray, shape=(n_frames, n_dihedrals), dtype=float
-        The output array gives, in each frame from the trajectory, each of the 
+        The output array gives, in each frame from the trajectory, each of the
         `n_dihedrals` torsion angles. The angles are measured in **radians**.
 
     """
@@ -132,7 +137,7 @@ def _construct_atom_dict(topology, chain_id=0):
 
 def atom_sequence_finder(trajectory, atom_names, residue_offsets=None, chain_id=0):
     """Find sequences of atom indices correponding to desired atoms.
-    
+
     This method can be used to find sets of atoms corresponding to specific
     dihedral angles (like phi or psi). It looks for the given pattern of atoms
     in each residue of a given chain. See the example for details.
