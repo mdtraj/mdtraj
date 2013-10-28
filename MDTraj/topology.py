@@ -762,7 +762,7 @@ class Chain(object):
         """
         # this could be made faster by caching the list
         # of atoms internally if necessary
-        return next(itertools.slice(self.atoms), index, index+1)
+        return next(itertools.islice(self.atoms, index, index+1))
 
     @property
     def n_atoms(self):

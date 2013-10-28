@@ -46,3 +46,21 @@ def test_topology_unique_elements_bpti():
     top, bonds = traj.top.to_dataframe()
     atoms = np.unique(["C", "O", "N", "H", "S"])
     eq(atoms, np.unique(top.element.values))
+
+def test_chain():
+    top = md.load(get_fn('bpti.pdb')).topology
+    chain = top.chain(0)
+    assert chain.n_residues == len(list(chain.residues))
+
+    atoms = list(chain.atoms)
+    assert chain.n_atoms == len(atoms)
+    for i in range(chain.n_atoms):
+        assert atoms[i] == chain.atom(i)
+
+def test_residue():
+    top = md.load(get_fn('bpti.pdb')).topology
+    residue = top.residue(0)
+    assert len(list(residue.atoms)) == residue.n_atoms
+    atoms = list(residue.atoms)
+    for i in range(residue.n_atoms):
+        assert residue.atom(i) == atoms[i]
