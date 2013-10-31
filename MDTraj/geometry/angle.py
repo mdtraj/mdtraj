@@ -28,11 +28,7 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-try:
-    import _geometry
-    _HAVE_OPT = True
-except ImportError:
-    _HAVE_OPT = False
+from mdtraj.geometry import _geometry
 
 __all__ = ['compute_angles']
 
@@ -63,10 +59,8 @@ def compute_angles(traj, angle_indices, opt=True):
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     triplets = ensure_type(np.asarray(angle_indices), dtype=np.int32, ndim=2, name='angle_indices', shape=(None, 3), warn_on_cast=False)
     out = np.zeros((xyz.shape[0], triplets.shape[0]), dtype=np.float32)
-    if _HAVE_OPT and opt:
-        print("CALLING OPT")
+    if opt:
         _geometry._angle(xyz, triplets, out)
-        print("CALLED OPT")
     else:
         _angle(xyz, triplets, out)
     return out
