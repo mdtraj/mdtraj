@@ -1,8 +1,11 @@
 [run]
 
 include =
-    *mdtraj*
+    *.egg/mdtraj*
 
+exclude:
+    *test_*.py
+    MDTraj/*
 
 exclude_lines =
     # Have to re-enable the standard pragma
