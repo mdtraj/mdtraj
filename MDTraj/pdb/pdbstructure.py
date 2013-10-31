@@ -584,6 +584,7 @@ class Residue(object):
         ...
         >>> for atom in res:
         ...     print(atom)
+        ... # doctest: +NORMALIZE_WHITESPACE
         ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N
         ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C
         ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C
