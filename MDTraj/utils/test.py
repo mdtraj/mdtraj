@@ -28,8 +28,9 @@
 
 from __future__ import print_function, division
 import numpy as np
-from .arrays import ensure_type, TypeCastPerformanceWarning
-from .unit import in_units_of
+from mdtraj.utils.arrays import ensure_type, TypeCastPerformanceWarning
+from mdtraj.utils.unit import in_units_of
+from mdtraj.utils import import_
 from mdtraj.testing import raises
 import warnings
 
@@ -132,3 +133,10 @@ def test_unit_2_bytes():
     a = in_units_of(1, b'meter**2/second', b'nanometers**2/picosecond')
     b = 1e-6
     assert abs(a-b) < 1e-10
+
+@raises(ImportError)
+def test_delay_import_fail_1():
+    import_('sdfsdfsfsfdsdf')
+
+def test_delay_import():
+    import_('scipy.sparse')

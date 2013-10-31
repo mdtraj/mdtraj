@@ -238,3 +238,31 @@ def test_do_overwrite():
     with HDF5TrajectoryFile(temp, 'w', force_overwrite=False) as f:
         f.write(np.random.randn(10,5,3))
 
+def test_attributes():
+    constraints = np.zeros(10, dtype=[('atom1', np.int32), ('atom2', np.int32), ('distance', np.float32)])
+    with HDF5TrajectoryFile(temp, 'w') as f:
+        f.title = 'mytitle'
+        f.reference = 'myreference'
+        f.forcefield = 'amber99'
+        f.randomState = 'sdf'
+        f.application = 'openmm'
+        f.constraints = constraints
+
+    with HDF5TrajectoryFile(temp) as g:
+        eq(g.title, 'mytitle')
+        eq(g.reference, 'myreference')
+        eq(g.forcefield, 'amber99')
+        eq(g.randomState, 'sdf')
+        eq(g.application, 'openmm')
+        eq(g.constraints, constraints)
+
+def test_append():
+    x1 = np.random.randn(10,5,3)
+    x2 = np.random.randn(8,5,3)
+    with HDF5TrajectoryFile(temp, 'w') as f:
+        f.write(x1)
+    with HDF5TrajectoryFile(temp, 'a') as f:
+        f.write(x2)
+
+    with HDF5TrajectoryFile(temp) as f:
+        eq(f.root.coordinates[:], np.concatenate((x1,x2)))

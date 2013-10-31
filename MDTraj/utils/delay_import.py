@@ -171,11 +171,12 @@ def import_(module):
     """
     try:
         return importlib.import_module(module)
-    except ImportError:
+    except ImportError as e:
         try:
             message = MESSAGES[module]
         except KeyError:
             message = 'The code at {filename}:{line_number} requires the ' + module + ' package'
+            e = ImportError('No module named %s' % module)
 
         frame,filename,line_number,function_name,lines,index = \
             inspect.getouterframes(inspect.currentframe())[1]
@@ -189,4 +190,4 @@ def import_(module):
         print(bar, file=sys.stderr)
         print(m, file=sys.stderr)
         print(bar, file=sys.stderr)
-        raise
+        raise e

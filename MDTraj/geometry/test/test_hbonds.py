@@ -48,8 +48,12 @@ def setup():
 def teardown():
     shutil.rmtree(tmpdir)
 
-@skipif(not HAVE_DSSP, "This tests required mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/")
 def test_hbonds():
+    t = md.load(get_fn('2EQQ.pdb'))
+    ours = md.geometry.hbond.kabsch_sander(t)
+
+@skipif(not HAVE_DSSP, "This tests required mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/")
+def test_hbonds_against_dssp():
     t = md.load(get_fn('2EQQ.pdb'))[0]
     pdb = os.path.join(tmpdir, 'f.pdb')
     dssp = os.path.join(tmpdir, 'f.pdb.dssp')

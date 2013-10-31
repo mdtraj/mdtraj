@@ -5,7 +5,9 @@ include =
 
 exclude:
     *test_*.py
+    *testing/*.py
     MDTraj/*
+    six.py
 
 exclude_lines =
     # Have to re-enable the standard pragma
