@@ -1,15 +1,8 @@
 [run]
-omit =
-    */python?.?/*
-    */lib-python/?.?/*.py
-    */lib_pypy/_*.py
-    */site-packages/ordereddict.py
-    */site-packages/nose/*
-    */unittest2/*
-    */pyshared/*
-    MDTraj/tests/*
-    MDTraj/testing/*
-    */test_*.py
+
+include =
+    *mdtraj*
+
 
 exclude_lines =
     # Have to re-enable the standard pragma
