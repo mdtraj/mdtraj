@@ -90,7 +90,7 @@ def compute_dihedrals(trajectory, indices, opt=True):
         three atoms and the last three atoms, a torsion around the bond
         between the middle two atoms.
     opt : bool, default=True
-        Use an optimized native library to calculate distances.
+        Use an optimized native library to calculate angles.
 
     Returns
     -------
@@ -263,13 +263,15 @@ _get_indices_psi = lambda traj: atom_sequence_finder(traj, PSI_ATOMS)
 _get_indices_chi = lambda traj: atom_sequence_finder(traj, CHI_ATOMS)
 
 
-def compute_phi(trajectory):
+def compute_phi(trajectory, opt=True):
     """Calculate the phi torsions of a trajectory.
 
     Parameters
     ----------
     trajectory : Trajectory
         Trajectory for which you want dihedrals.
+    opt : bool, default=True
+        Use an optimized native library to calculate angles.
 
     Returns
     -------
@@ -280,16 +282,18 @@ def compute_phi(trajectory):
         the frames.
     """
     rid, indices = _get_indices_phi(trajectory)
-    return rid, compute_dihedrals(trajectory, indices)
+    return rid, compute_dihedrals(trajectory, indices, opt=opt)
 
 
-def compute_psi(trajectory):
+def compute_psi(trajectory, opt=True):
     """Calculate the psi torsions of a trajectory.
 
     Parameters
     ----------
     trajectory : Trajectory
         Trajectory for which you want dihedrals.
+    opt : bool, default=True
+        Use an optimized native library to calculate angles.
 
     Returns
     -------
@@ -300,16 +304,18 @@ def compute_psi(trajectory):
         the frames.
     """
     rid, indices = _get_indices_psi(trajectory)
-    return rid, compute_dihedrals(trajectory, indices)
+    return rid, compute_dihedrals(trajectory, indices, opt=opt)
 
 
-def compute_chi(trajectory):
+def compute_chi(trajectory, opt=True):
     """Calculate the chi torsions of a trajectory.
 
     Parameters
     ----------
     trajectory : Trajectory
         Trajectory for which you want dihedrals.
+    opt : bool, default=True
+        Use an optimized native library to calculate angles.
 
     Returns
     -------
@@ -320,16 +326,18 @@ def compute_chi(trajectory):
         the frames.
     """
     rid, indices = _get_indices_chi(trajectory)
-    return rid, compute_dihedrals(trajectory, indices)
+    return rid, compute_dihedrals(trajectory, indices, opt=opt)
 
 
-def compute_omega(trajectory):
+def compute_omega(trajectory, opt=True):
     """Calculate the omega torsions of a trajectory.
 
     Parameters
     ----------
     trajectory : Trajectory
         Trajectory for which you want dihedrals.
+    opt : bool, default=True
+        Use an optimized native library to calculate angles.
 
     Returns
     -------
@@ -340,4 +348,4 @@ def compute_omega(trajectory):
         the frames.
     """
     rid, indices = _get_indices_omega(trajectory)
-    return rid, compute_dihedrals(trajectory, indices)
+    return rid, compute_dihedrals(trajectory, indices, opt=opt)
