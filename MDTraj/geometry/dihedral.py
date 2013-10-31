@@ -279,8 +279,8 @@ def compute_phi(trajectory):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = _get_indices_phi(traj)
-    return rid, compute_dihedrals(traj, indices)
+    rid, indices = _get_indices_phi(trajectory)
+    return rid, compute_dihedrals(trajectory, indices)
 
 
 def compute_psi(trajectory):
@@ -299,8 +299,8 @@ def compute_psi(trajectory):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = _get_indices_psi(traj)
-    return rid, compute_dihedrals(traj, indices)
+    rid, indices = _get_indices_psi(trajectory)
+    return rid, compute_dihedrals(trajectory, indices)
 
 
 def compute_chi(trajectory):
@@ -319,8 +319,8 @@ def compute_chi(trajectory):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = _get_indices_chi(traj)
-    return rid, compute_dihedrals(traj, indices)
+    rid, indices = _get_indices_chi(trajectory)
+    return rid, compute_dihedrals(trajectory, indices)
 
 
 def compute_omega(trajectory):
@@ -339,5 +339,5 @@ def compute_omega(trajectory):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = _get_indices_omega(traj)
-    return rid, compute_dihedrals(traj, indices)
+    rid, indices = _get_indices_omega(trajectory)
+    return rid, compute_dihedrals(trajectory, indices)
