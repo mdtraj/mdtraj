@@ -28,11 +28,7 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-try:
-    import _geometry
-    _HAVE_OPT = True
-except ImportError:
-    _HAVE_OPT = False
+from mdtraj.geometry import _geometry
 
 __all__ = ['shrake_rupley']
 
@@ -97,9 +93,6 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960):
     """
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     out = np.zeros((xyz.shape[0], xyz.shape[1]), dtype=np.float32)
-    if not _HAVE_OPT:
-        raise ValueError("The C library was not imported correctly")
-
     atom_radii = [_ATOMIC_RADII[atom.element.symbol] for atom in traj.topology.atoms]
     radii = np.array(atom_radii, np.float32) + probe_radius
 

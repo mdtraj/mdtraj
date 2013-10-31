@@ -27,6 +27,7 @@ a work in progress. Contributions are encouraged.
 # Imports
 #------------------------------------------------------------------------------
 
+from __future__ import print_function
 import os
 import sys
 import warnings
@@ -172,12 +173,12 @@ class Inspector(object):
 
     def section(self, title):
         if self._printed_section:
-            print
-        print '=== %s: %s ===' % (os.path.basename(self.fn), title)
+            print()
+        print('=== %s: %s ===' % (os.path.basename(self.fn), title))
         self._printed_section = True
 
     def log(self, msg):
-        print msg
+        print(msg)
 
     def check_positions(self):
         self.section('Positions')

@@ -100,11 +100,25 @@ def test_ensure_type_8():
     c = ensure_type(np.zeros((5,10)), np.float32, ndim=2, name='', shape=(None, 10))
     assert c.shape == (5, 10)
 
-
 @raises(ValueError)
 def test_ensure_type_9():
     c = ensure_type(np.zeros((5,11)), np.float32, ndim=2, name='', shape=(None, 10))
 
+@raises(TypeError)
+def test_ensure_type_10():
+    c = ensure_type([0,1], np.float32, ndim=2, name='')
+
+def test_ensure_type_11():
+    c = ensure_type(0, np.float32, ndim=1, name='', add_newaxis_on_deficient_ndim=True)
+    assert c.shape == (1,)
+
+@raises(TypeError)
+def test_ensure_type_12():
+    ensure_type(np.zeros((2,2)), np.float32, ndim=3)
+
+@raises(ValueError)
+def test_ensure_type_13():
+    ensure_type(np.zeros((2,2)), np.float32, ndim=2, name='', shape=(None, None, None))
 
 def test_unit_1():
     assert 1 == in_units_of(100, 'meter', 'centimeter')
