@@ -116,13 +116,13 @@ def _dihedral(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
 
 def _kabsch_sander(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
                    np.ndarray[np.int32_t, ndim=2, mode='c'] nco_indices not None,
-                   np.ndarray[np.int32_t, ndim=2, mode='c'] ca_indices not None,
+                   np.ndarray[np.int32_t, ndim=1, mode='c'] ca_indices not None,
                    np.ndarray[np.int32_t, ndim=3, mode='c'] hbonds not None,
                    np.ndarray[np.float32_t, ndim=3, mode='c'] henergies not None):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_residues = ca_indices.shape[0]
-    kabsch_sander(&xyz[0,0,0], <int*> &nco_indices[0,0], <int*> &ca_indices[0,0],
+    kabsch_sander(&xyz[0,0,0], <int*> &nco_indices[0,0], <int*> &ca_indices[0],
                   n_frames, n_atoms, n_residues, <int*> &hbonds[0,0,0], &henergies[0,0,0])
 
 
