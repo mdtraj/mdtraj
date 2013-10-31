@@ -4,6 +4,7 @@ from mdtraj.geometry.dihedral import (compute_chi, compute_omega,
 from mdtraj.testing import get_fn, eq
 traj = md.load(get_fn('2EQQ.pdb'))
 
+
 def test_compute_phi():
     rx, x = compute_phi(traj, opt=True)
     ry, y = compute_phi(traj, opt=False)
