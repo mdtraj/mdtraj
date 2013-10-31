@@ -13,3 +13,4 @@ nose-exclude==0.1.10
 importlib==1.0.2
 ordereddict==1.1
 coverage
+coveralls
