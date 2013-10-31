@@ -28,11 +28,8 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-try:
-    import _geometry
-    _HAVE_OPT = True
-except ImportError:
-    _HAVE_OPT = False
+from mdtraj.geometry import _geometry
+
 
 __all__ = ['compute_distances', 'compute_displacements']
 
@@ -69,7 +66,7 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
 
     if periodic is True and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
-        if _HAVE_OPT and opt:
+        if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
             _geometry._dist_mic(xyz, pairs, box, out)
             return out
@@ -77,7 +74,7 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
             return _distance_mic(xyz, pairs, box)
 
     # either there are no unitcell vectors or they dont want to use them
-    if _HAVE_OPT and opt:
+    if opt:
         out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
         _geometry._dist(xyz, pairs, out)
         return out
@@ -113,15 +110,15 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
 
     if periodic is True and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
-        if _HAVE_OPT:
+        if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
             _geometry._dist_mic_displacement(xyz, pairs, box, out)
             return out
         else:
-            return _distance_mic(xyz, pairs, box)
+            return _displacement_mic(xyz, pairs, box)
 
     # either there are no unitcell vectors or they dont want to use them
-    if _HAVE_OPT and opt:
+    if opt:
         out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
         _geometry._dist_displacement(xyz, pairs, out)
         return out
@@ -141,7 +138,9 @@ def _distance(xyz, pairs):
 
 def _displacement(xyz, pairs):
     "Displacement vector between pairs of points in each frame"
-    return np.diff(xyz[:, pairs], axis=2)[:, :, 0]
+    value = np.diff(xyz[:, pairs], axis=2)[:, :, 0]
+    assert value.shape == (xyz.shape[0], pairs.shape[0], 3), 'v.shape %s, xyz.shape %s, pairs.shape %s' % (str(value.shape), str(xyz.shape), str(pairs.shape))
+    return value
 
 
 def _distance_mic(xyz, pairs, box_vectors):
