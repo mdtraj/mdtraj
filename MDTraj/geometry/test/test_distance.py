@@ -78,6 +78,8 @@ def test_1p():
 def test_2p():
     a = compute_distances(ptraj, pairs, periodic=True, opt=False)
     b = compute_displacements(ptraj, pairs, periodic=True, opt=False)
+    assert a.shape == (len(ptraj), len(pairs))
+    assert b.shape == (len(ptraj), len(pairs), 3)
     b = np.sqrt(np.sum(np.square(b), axis=2))
     eq(a, b, decimal=5)
 
