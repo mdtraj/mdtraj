@@ -28,11 +28,7 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-try:
-    import _geometry
-    _HAVE_OPT = True
-except ImportError:
-    _HAVE_OPT = False
+from mdtraj.geometry import _geometry
 
 def kabsch_sander(traj):
     """Compute the Kabsch-Sander hydrogen bond energy between each pair
@@ -72,8 +68,6 @@ def kabsch_sander(traj):
     """
     if traj.topology is None:
         raise ValueError('kabsch_sander requires topology')
-    if not _HAVE_OPT:
-        raise RuntimeError('kabsch_sander implementation not available.')
     import scipy.sparse
 
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz',
