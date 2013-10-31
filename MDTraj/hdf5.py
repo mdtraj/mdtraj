@@ -205,7 +205,7 @@ class HDF5TrajectoryFile(object):
     def title(self):
         """User-defined title for the data represented in the file"""
         if hasattr(self._handle.root._v_attrs, 'title'):
-            return self._handle.root._v_attrs.title
+            return str(self._handle.root._v_attrs.title)
         return None
 
     @title.setter
@@ -222,7 +222,7 @@ class HDF5TrajectoryFile(object):
     def application(self):
         "Suite of programs that created the file"
         if hasattr(self._handle.root._v_attrs, 'application'):
-            return self._handle.root._v_attrs.application
+            return str(self._handle.root._v_attrs.application)
         return None
 
     @application.setter
@@ -360,7 +360,7 @@ class HDF5TrajectoryFile(object):
     def randomState(self):
         "State of the creators internal random number generator at the start of the simulation"
         if hasattr(self._handle.root._v_attrs, 'randomState'):
-            return self._handle.root._v_attrs.randomState
+            return str(self._handle.root._v_attrs.randomState)
         return None
 
     @randomState.setter
@@ -377,7 +377,7 @@ class HDF5TrajectoryFile(object):
     def forcefield(self):
         "Description of the hamiltonian used. A short, human readable string, like AMBER99sbildn."
         if hasattr(self._handle.root._v_attrs, 'forcefield'):
-            return self._handle.root._v_attrs.forcefield
+            return str(self._handle.root._v_attrs.forcefield)
         return None
 
     @forcefield.setter
@@ -394,7 +394,7 @@ class HDF5TrajectoryFile(object):
     def reference(self):
         "A published reference that documents the program or parameters used to generate the data"
         if hasattr(self._handle.root._v_attrs, 'reference'):
-            return self._handle.root._v_attrs.reference
+            return str(self._handle.root._v_attrs.reference)
         return None
 
     @reference.setter
