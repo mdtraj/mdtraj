@@ -99,7 +99,7 @@ def compute_dihedrals(trajectory, indices, opt=True):
         `n_dihedrals` torsion angles. The angles are measured in **radians**.
 
     """
-    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
+    xyz = ensure_type(trajectory.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     quartets = ensure_type(np.asarray(indices), dtype=np.int32, ndim=2, name='indices', shape=(None, 4), warn_on_cast=False)
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
     if _HAVE_OPT and opt:
@@ -124,7 +124,7 @@ def _construct_atom_dict(topology, chain_id=0):
     By default, we assume you are interested in the first chain.
     """
     atom_dict = {}
-    for chain in top.chains:
+    for chain in topology.chains:
         if chain.index == chain_id:
             for residue in chain.residues:
                 local_dict = {}
@@ -171,21 +171,21 @@ def atom_sequence_finder(trajectory, atom_names, residue_offsets=None, chain_id=
     >>> residue_offsets = [-1, 0, 0, 0] # doctest: +SKIP
     >>> found_residue_ids, indices = atom_sequence_finder(traj, atom_names, residue_offsets) # doctest: +SKIP
     """
-    if rid_offsets is None:
-        rid_offsets = parse_offsets(atom_names)
+    if residue_offsets is None:
+        residue_offsets = parse_offsets(atom_names)
     atom_names = strip_offsets(atom_names)
 
-    atom_dict = _construct_atom_dict(traj.top, chain_id=chain_id)
+    atom_dict = _construct_atom_dict(trajectory.top, chain_id=chain_id)
     atom_indices = []
     found_residue_ids = []
     # py3k criticial list(zip(, not just zip(, since we iterate multiple
     # times through it
     atoms_and_offsets = list(zip(atom_names, residue_offsets))
-    for chain in traj.top.chains:
+    for chain in trajectory.top.chains:
         if chain.index == chain_id:
             for residue in chain.residues:
                 rid = residue.index
-                if all([rid + offset in atom_dict for offset in rid_offsets]):  # Check that desired residue_IDs are in dict
+                if all([rid + offset in atom_dict for offset in residue_offsets]):  # Check that desired residue_IDs are in dict
                     if all([atom in atom_dict[rid + offset] for atom, offset in atoms_and_offsets]):  # Check that we find all atom names in dict
                         atom_indices.append([atom_dict[rid + offset][atom] for atom, offset in atoms_and_offsets])  # Lookup desired atom indices and and add to list.
                         found_residue_ids.append(rid)
