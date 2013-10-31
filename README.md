@@ -1,6 +1,7 @@
 ## Molecular Dynamics Trajectory: File IO and manipulation
 
 [![Build Status](https://travis-ci.org/rmcgibbo/mdtraj.png?branch=master)](https://travis-ci.org/rmcgibbo/mdtraj)
+[![Coverage](https://coveralls.io/repos/rmcgibbo/mdtraj/badge.png?branch=master)](https://coveralls.io/r/rmcgibbo/mdtraj)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.png)](https://pypi.python.org/pypi/mdtraj)
 [![Downloads](https://pypip.in/d/mdtraj/badge.png)](https://pypi.python.org/pypi/mdtraj)
 
