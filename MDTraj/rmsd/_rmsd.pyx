@@ -45,7 +45,8 @@ cdef extern float msd_axis_major(int nrealatoms, int npaddedatoms, int rowstride
                                  float* aT, float* bT, float G_a, float G_b) nogil
 
 cdef extern float msd_atom_major(int nrealatoms, int npaddedatoms,  float* a,
-                                 float* b, float G_a, float G_b) nogil
+                                 float* b, float G_a, float G_b, int computeRot,
+                                 float rot[9]) nogil
 
 cdef extern from "math.h":
     float sqrtf(float x) nogil
@@ -178,11 +179,11 @@ bool parallel=True):
 
     if parallel == True:
         for i in prange(n_frames, nogil=True):
-            msd = msd_atom_major(n_atoms, n_atoms_padded,  &xyz1[frame, 0, 0], &xyz2[i, 0, 0], g1[frame], g2[i])
+            msd = msd_atom_major(n_atoms, n_atoms_padded,  &xyz1[frame, 0, 0], &xyz2[i, 0, 0], g1[frame], g2[i], 0, NULL)
             distances[i] = sqrtf(msd)
     else:
         for i in range(n_frames):
-            msd = msd_atom_major(n_atoms, n_atoms_padded, &xyz1[frame, 0, 0], &xyz2[i, 0, 0], g1[frame], g2[i])
+            msd = msd_atom_major(n_atoms, n_atoms_padded, &xyz1[frame, 0, 0], &xyz2[i, 0, 0], g1[frame], g2[i], 0, NULL)
             distances[i] = sqrtf(msd)
 
     return distances
