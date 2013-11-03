@@ -116,7 +116,7 @@ def _cast_indices(indices):
     indices : {None, array_like, slice}
         If indices is None or slice, it'll just pass through. Otherwise, it'll
         be converted to a numpy array and checked to make sure it contains
-        integers.
+        unique integers.
 
     Returns
     -------
@@ -126,6 +126,9 @@ def _cast_indices(indices):
     if indices is None or isinstance(indices, slice):
         return indices
 
+    if not len(indices) == len(set(indices)):
+        raise ValueError("indices must be unique.")
+        
     out = np.asarray(indices)
     if not issubclass(out.dtype.type, np.integer):
         raise ValueError('indices must be of an integer type. %s is not an integer type' % out.dtype)
