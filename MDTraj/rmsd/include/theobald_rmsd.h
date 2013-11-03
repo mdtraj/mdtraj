@@ -11,6 +11,7 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
                      const float* aT, const float* bT, const float G_a, const float G_b);
 
 float msd_atom_major(const int nrealatoms, const int npaddedatoms,
-                     const float* a, const float* b, const float G_a, const float G_b);
+                     const float* a, const float* b, const float G_a, const float G_b,
+                     int computeRot, float rot[9]);
 
 #endif

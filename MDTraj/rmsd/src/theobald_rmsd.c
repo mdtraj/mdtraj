@@ -1,4 +1,4 @@
-/////////////////////////////////////////////////////////////////////////////
+/*/////////////////////////////////////////////////////////////////////////////
 // MDTraj: A Python Library for Loading, Saving, and Manipulating
 //         Molecular Dynamics Trajectories.
 // Copyright 2012-2013 Stanford University and the Authors
@@ -29,8 +29,7 @@
 // [1] Theobald DL. Rapid calculation of RMSDs using a quaternion-based
 //     characteristic polynomial. Acta Cryst., A61:478, 2005.
 //     doi:10.1107/50108767305015266
-///////////////////////////////////////////////////////////////////////////////
-
+///////////////////////////////////////////////////////////////////////////////*/
 
 #include "msvccompat.h"
 #include <assert.h>
@@ -216,23 +215,33 @@ float NewtonSolve(float lambda, float C_0, float C_1, float C_2)
   return(lambda);
 }
 
-float msdFromMandG(const float M[9],const float G_x,const float G_y,const int numAtoms)
+float msdFromMandG(const float M[9], const float G_x, const float G_y,
+                   const int numAtoms, int computeRot, float rot[9])
 {
+	/* Compute the RMSD and (optionally) the rotation matrix from M and G. Core routine of the
+	   theobald QCP method.
+	
+	when computeRot == 0, the rotation matrix will not be computed.
+	otherwise, it will be computed and stored in `rot`.
+	*/
     int i;
     const int m = 3;
-    float k00 =  M[0+0*m ] + M[1+1*m] + M[2+2*m];       // [0, 0]
-    float k01 =  M[1+2*m ] - M[2+1*m];                  // [0, 1]
-    float k02 =  M[2+0*m ] - M[0+2*m];                  // [0, 2]
-    float k03 =  M[0+1*m ] - M[1+0*m];                  // [0, 3]
-    float k11 =  M[0+0*m ] - M[1+1*m] - M[2+2*m];       // [1, 1]
-    float k12 =  M[0+1*m ] + M[1+0*m];                  // [1, 2]
-    float k13 =  M[2+0*m ] + M[0+2*m];                  // [1, 3]
-    float k22 = -M[0+0*m ] + M[1+1*m] - M[2+2*m];       // [2, 2]
-    float k23 =  M[1+2*m ] + M[2+1*m];                  // [2, 3]
-    float k33 = -M[0+0*m ] - M[1+1*m] + M[2+2*m];       // [3, 3]
-
-
-    // float C_4 = 1.0, C_3 = 0.0;
+    float k00 =  M[0+0*m ] + M[1+1*m] + M[2+2*m];       /* [0, 0] */
+    float k01 =  M[1+2*m ] - M[2+1*m];                  /* [0, 1] */
+    float k02 =  M[2+0*m ] - M[0+2*m];                  /* [0, 2] */
+    float k03 =  M[0+1*m ] - M[1+0*m];                  /* [0, 3] */
+    float k11 =  M[0+0*m ] - M[1+1*m] - M[2+2*m];       /* [1, 1] */
+    float k12 =  M[0+1*m ] + M[1+0*m];                  /* [1, 2] */
+    float k13 =  M[2+0*m ] + M[0+2*m];                  /* [1, 3] */
+    float k22 = -M[0+0*m ] + M[1+1*m] - M[2+2*m];       /* [2, 2] */
+    float k23 =  M[1+2*m ] + M[2+1*m];                  /* [2, 3] */
+    float k33 = -M[0+0*m ] - M[1+1*m] + M[2+2*m];       /* [3, 3] */
+    
+    /* declarations required for rotation code */
+    float k2233_2323, k1233_1323, k1223_1322, k0223_0322, k0233_0323, k0213_0312;
+    float q0, q1, q2, q3, qsqr, normq, a2, x2, y2, z2, xy, az, zx, ay, yz, ax;
+         
+    /* float C_4 = 1.0, C_3 = 0.0; */
     float detM = 0.0f, detK = 0.0f;
     float C_2, C_1, C_0;
 
@@ -246,9 +255,9 @@ float msdFromMandG(const float M[9],const float G_x,const float G_y,const int nu
     }
     C_2 *= -2.0f;
 
-    // get det(M)
-    // could use rule of Sarrus, but better:
-    // computationally more efficient with Laplace expansion
+    /* get det(M) */
+    /* could use rule of Sarrus, but better: */
+    /* computationally more efficient with Laplace expansion */
     detM = M[0] * (M[4] * M[8] - M[5] * M[7])
          + M[3] * (M[7] * M[2] - M[8] * M[1])
          + M[6] * (M[1] * M[5] - M[2] * M[4]);
@@ -270,7 +279,61 @@ float msdFromMandG(const float M[9],const float G_x,const float G_y,const int nu
     ls_rmsd2 = 0.0f;
     if (rmsd2 > 0.0f) ls_rmsd2 = rmsd2;
 
-    return ls_rmsd2;
+    if (computeRot != 0) {
+		/* compute the rotation matrix */
+		k00 -= lambda;
+		k11 -= lambda;
+		k22 -= lambda;
+		k33 -= lambda;
+
+	    k2233_2323 = k22*k33 - k23*k23;
+	    k1233_1323 = k12*k33 - k13*k23;
+	    k1223_1322 = k12*k23 - k13*k22;
+	    k0223_0322 = k02*k23 - k03*k22;
+	    k0233_0323 = k02*k33 - k03*k23;
+	    k0213_0312 = k02*k13 - k03*k12;
+        
+	    q0 =  k11*k2233_2323 - k12*k1233_1323 + k13*k1223_1322;
+	    q1 = -k01*k2233_2323 + k12*k0233_0323 - k13*k0223_0322;
+	    q2 =  k01*k1233_1323 - k11*k0233_0323 + k13*k0213_0312;
+	    q3 = -k01*k1223_1322 + k11*k0223_0322 - k12*k0213_0312;
+		qsqr = q0*q0 + q1*q1 + q2*q2 + q3*q3;
+
+		if (qsqr < 1e-11f) {
+			fprintf(stderr, "%s UNCONVEGED ROTATION MATRIX. RETURNING IDENTITY=%d\n", __FILE__, __LINE__);
+			rot[0] = rot[4] = rot[8] = 1.0;
+			rot[1] = rot[2] = rot[3] = rot[5] = rot[6] = rot[7] = 0.0;
+		} else {
+		    normq = sqrt(qsqr);
+		    q0 /= normq;
+		    q1 /= normq;
+		    q2 /= normq;
+		    q3 /= normq;
+
+		    a2 = q0 * q0;
+		    x2 = q1 * q1;
+		    y2 = q2 * q2;
+		    z2 = q3 * q3;
+
+		    xy = q1 * q2;
+		    az = q0 * q3;
+		    zx = q3 * q1;
+		    ay = q0 * q2;
+		    yz = q2 * q3;
+		    ax = q0 * q1;
+		
+		    rot[0] = a2 + x2 - y2 - z2;
+		    rot[3] = 2 * (xy + az);
+		    rot[6] = 2 * (zx - ay);
+		    rot[1] = 2 * (xy - az);
+		    rot[4] = a2 - x2 + y2 - z2;
+		    rot[7] = 2 * (yz + ax);
+		    rot[2] = 2 * (zx + ay);
+		    rot[5] = 2 * (yz - ax);
+		    rot[8] = a2 - x2 - y2 + z2;
+		}
+	}
+	return ls_rmsd2;
 }
 
 float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int rowstride,
@@ -322,7 +385,7 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
 	__m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
     __m128 ax,ay,az,b;
     __m128 t0,t1,t2;
-    // Will have 3 garbage elements at the end
+    /* Will have 3 garbage elements at the end */
 	_ALIGNED(16) float M[12];
     const float* aTx = aT;
     const float* aTy = aT+rowstride;
@@ -335,7 +398,7 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
         return 0.0;
 
     niters = npaddedatoms >> 2;
-    // npaddedatoms must be a multiple of 4
+    /* npaddedatoms must be a multiple of 4 */
     assert(npaddedatoms % 4 == 0);
 
     xx = xy = xz = yx = yy = yz = zx = zy = zz = _mm_setzero_ps();
@@ -387,18 +450,19 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
         bTy += 4;
         bTz += 4;
     }
-    // Epilogue - reduce 4 wide vectors to one wide
+    /* Epilogue - reduce 4 wide vectors to one wide */
     REDUCTION_EPILOGUE(xx, xy, xz, yx, yy, yz, zx, zy, zz, t0, t1, t2);
 
     _mm_store_ps(M  , xx);
     _mm_store_ps(M+4, yy);
     _mm_store_ps(M+8, zz);
 
-    return msdFromMandG(M,G_a,G_b,nrealatoms);
+    return msdFromMandG(M, G_a, G_b, nrealatoms, 0, NULL);
 }
 
 float msd_atom_major(const int nrealatoms, const int npaddedatoms,
-                     const float* a, const float* b, const float G_a, const float G_b)
+                     const float* a, const float* b, const float G_a, const float G_b,
+					 int computeRot, float rot[9])
 {
     /*   Computes the mean-square-deviation between two centered structures in atom-major format.
      * Structure setup for this function:
@@ -429,28 +493,39 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
      *       npaddedatoms: the number of atoms in the structure including padding atoms;
      *                     should equal nrealatoms rounded up to the next multiple of 4
      *
-     *       a:           pointer to start of first structure (A). should be aligned to
+     *       a:            pointer to start of first structure (A). should be aligned to
      *                     a 16-byte boundary
      *
-     *       b:           pointer to start of second structure (B). should be aligned to
+     *       b:            pointer to start of second structure (B). should be aligned to
      *                     a 16-byte boundary
      *
      *       G_a:          trace of A'A
      *
      *       G_b:          trace of B'B
+     *
+	 *       computeRot:   if 0, the rotation matrix will not be computed. Otherwise, it
+     *                     will be computed and stored in rot	                 
+     *
+	 *       rot:          output variable where the rotation matrix will be stored,
+	 *                     if computeRot != 0.
      */
     int niters, k;
-    // Will have 3 garbage elements at the end
+    /* Will have 3 garbage elements at the end */
     _ALIGNED(16) float M[12];
     __m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
     __m128 ax,ay,az,bx,by,bz;
     __m128 t0,t1,t2;
 
-    if (a==b && G_a==G_b)
+    if (a==b && G_a==G_b) {
+        if (computeRot) {
+            rot[0] = rot[4] = rot[8] = 1.0;
+            rot[1] = rot[2] = rot[3] = rot[5] = rot[6] = rot[7] = 0.0;
+        }
         return 0.0;
+    }
 
     niters = npaddedatoms >> 2;
-    // npaddedatoms must be a multiple of 4
+    /* npaddedatoms must be a multiple of 4 */
     assert(npaddedatoms % 4 == 0);
 
     xx = xy = xz = yx = yy = yz = zx = zy = zz = _mm_setzero_ps();
@@ -494,5 +569,5 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
     _mm_store_ps(M  , xx);
     _mm_store_ps(M+4, yy);
     _mm_store_ps(M+8, zz);
-    return msdFromMandG(M,G_a,G_b,nrealatoms);
+    return msdFromMandG(M, G_a, G_b, nrealatoms, computeRot, rot);
 }
