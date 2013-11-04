@@ -45,7 +45,7 @@ float rot_msd_atom_major(const int n_real_atoms, const int n_padded_atoms,
  *    0  0  0
  */
 {
-    int i;
+    unsigned int i;
     unsigned int n_iters = 0;
     double sum_displacement = 0.0; /* accumulate the sum-squared-displacement here */
     float sum4 = 0; /* a single sum-squared-displacement for 4 values */

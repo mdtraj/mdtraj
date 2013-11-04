@@ -292,10 +292,10 @@ cdef class TRRTrajectoryFile:
         while (i < n_frames) and (status != _EXDRENDOFFILE):
             if atom_indices is None:
                 status = trrlib.read_trr(self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
-                                         &box[i,0,0], &xyz[i,0,0], NULL, NULL)
+                                         <trrlib.matrix>&box[i,0,0], <trrlib.rvec*>&xyz[i,0,0], NULL, NULL)
             else:
                 status = trrlib.read_trr(self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
-                                         &box[i,0,0], &framebuffer[0,0], NULL, NULL)
+                                         <trrlib.matrix> &box[i,0,0], <trrlib.rvec*>&framebuffer[0,0], NULL, NULL)
                 xyz[i, :, :] = framebuffer[atom_indices, :]
 
             if status != _EXDRENDOFFILE and status != _EXDROK:
@@ -391,7 +391,7 @@ cdef class TRRTrajectoryFile:
 
         for i in range(n_frames):
             status = trrlib.write_trr(self.fh, n_atoms, step[i], time[i], lambd[i],
-                &box[i, 0, 0], &xyz[i, 0, 0], NULL, NULL)
+                <trrlib.matrix>&box[i, 0, 0], <trrlib.rvec*>&xyz[i, 0, 0], NULL, NULL)
             if status != _EXDROK:
                 raise RuntimeError('TRR write error: %s' % status)
 
