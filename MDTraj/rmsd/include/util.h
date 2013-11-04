@@ -30,9 +30,9 @@ static INLINE void aos_deinterleaved_load(const float* S, __m128* x, __m128* y, 
   return;
 }
 
-// Epilogue - reduce 4 wide vectors to one wide
+/* Epilogue - reduce 4 wide vectors to one wide */
 #ifdef __SSE3__
-// Use SSE3 horizontal add to do the reduction
+/* Use SSE3 horizontal add to do the reduction */
 /*xmm07 = xx0 xx1 xx2 xx3
   xmm08 = xy0 xy1 xy2 xy3
   xmm09 = xz0 xz1 xz2 xz3
@@ -72,7 +72,7 @@ static INLINE void aos_deinterleaved_load(const float* S, __m128* x, __m128* y, 
   zz = _mm_hadd_ps(zz,xz); /* zz = zz0123 zy0123 xz0123 yx0123 */\
 
 #else
-// Emulate horizontal adds using SSE2 UNPCKLPS/UNPCKHPS
+/* Emulate horizontal adds using SSE2 UNPCKLPS/UNPCKHPS */
 #define REDUCTION_EPILOGUE(xx, xy, xz, yx, yy, yz, zx, zy, zz, t0, t1, t2) \
   t0 = xx; \
   t1 = xx; \
