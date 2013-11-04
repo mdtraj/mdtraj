@@ -243,7 +243,8 @@ bool parallel=True):
     rotations: np.ndarray, shape=(len(xyz2), 3, 3)
         The rotation matrix for each of the alignments
     """
-    assert xyz_align1.shape[2] == 3 and xyz_align2.shape[2] == 3 and xyz_displ1.shape[2] == 3 and xyz_displ2.shape[2]
+    assert (xyz_align1.shape[2] == 3) and (xyz_align2.shape[2] == 3)
+    assert (xyz_displ1.shape[2] == 3) and (xyz_displ2.shape[2] == 3)
     if not ((xyz_align1.shape[1] % 4 == 0) & (xyz_align2.shape[1] % 4 == 0)):
         raise ValueError("Input arrays must have middle dimension of 4*n, "
                          "found %d and %d." % (xyz_align1.shape[1], xyz_align2.shape[1]))
