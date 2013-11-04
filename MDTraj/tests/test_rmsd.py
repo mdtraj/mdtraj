@@ -26,7 +26,8 @@ import numpy as np
 import mdtraj as md
 from mdtraj.testing import get_fn, eq
 from mdtraj.rmsd import RMSDCache, align_array
-from mdtraj.geometry.alignment import rmsd_qcp
+from mdtraj._rmsd import getMultipleAlignDisplaceRMSDs_atom_major
+from mdtraj.geometry.alignment import rmsd_qcp, compute_translation_and_rotation
 
 
 def test_axis_major():
@@ -72,3 +73,15 @@ def test_rmsd_to_self():
     r_axis_2 = RMSDCache(align_array(conf_axis_2, 'axis'), major='axis', n_atoms=n_atoms)
 
     yield lambda: eq(float(r_axis_1.rmsds_to(r_axis_2, 0)[0]), 0.0, decimal=2)
+
+
+def test_align_displace():
+    t = md.load(get_fn('traj.h5'))
+    t.center_coordinates()
+    pt = md.rmsd_cache(t, major='atom')
+    rmsd, rot = getMultipleAlignDisplaceRMSDs_atom_major(pt.cords, pt.cords, pt._traces(), pt._traces(), pt.cords, pt.cords, t.n_atoms, t.n_atoms, 0)
+
+    for i in range(t.n_frames):
+        translation, rotation = compute_translation_and_rotation(t.xyz[0], t.xyz[i])
+        eq(rot[i], rotation)
+        eq(float(rmsd_qcp(t.xyz[0], t.xyz[i])), float(rmsd[i]), decimal=3)

@@ -48,7 +48,7 @@ cdef extern float msd_atom_major(int nrealatoms, int npaddedatoms,  float* a,
                                  float* b, float G_a, float G_b, int computeRot,
                                  float rot[9]) nogil
 cdef extern float rot_msd_atom_major(const int n_real_atoms, const int n_padded_atoms,
-                                     const float* a, const float* b, const float rot[9])
+                                     const float* a, const float* b, const float rot[9]) nogil
 
 cdef extern from "math.h":
     float sqrtf(float x) nogil
