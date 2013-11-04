@@ -297,10 +297,10 @@ cdef class XTCTrajectoryFile:
         while (i < n_frames) and (status != _EXDRENDOFFILE):
             if atom_indices is None:
                 status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[i],
-                                         &time[i], &box[i,0,0], &xyz[i,0,0], &prec[i])
+                                         &time[i], <xdrlib.matrix>&box[i,0,0], <xdrlib.rvec*>&xyz[i,0,0], &prec[i])
             else:
                 status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[i],
-                                         &time[i], &box[i,0,0], &framebuffer[0,0], &prec[i])
+                                         &time[i], <xdrlib.matrix>&box[i,0,0], <xdrlib.rvec*>&framebuffer[0,0], &prec[i])
                 xyz[i, :, :] = framebuffer[atom_indices, :]
 
             if status != _EXDRENDOFFILE and status != _EXDROK:
@@ -392,7 +392,7 @@ cdef class XTCTrajectoryFile:
 
 
         for i in range(n_frames):
-            status = xdrlib.write_xtc(self.fh, n_atoms, step[i], time[i], &box[i, 0, 0], &xyz[i, 0, 0], prec[i])
+            status = xdrlib.write_xtc(self.fh, n_atoms, step[i], time[i], <xdrlib.matrix>&box[i, 0, 0], <xdrlib.rvec*>&xyz[i, 0, 0], prec[i])
             if status != _EXDROK:
                 raise RuntimeError('XTC write error: %s' % status)
 

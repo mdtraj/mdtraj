@@ -4,6 +4,8 @@ cdef extern from "include/xdrfile.h":
 
     XDRFILE* xdrfile_open (char * path, char * mode)
     int xdrfile_close (XDRFILE * xfp)
+    ctypedef float matrix[3][3]
+    ctypedef float rvec[3]
 
 
 cdef extern from "include/xdrfile_trr.h":
@@ -13,8 +15,8 @@ cdef extern from "include/xdrfile_trr.h":
     # Read one frame of an open xtc file. If either of x, v, f, box are
     # NULL the arrays will be read from the file but not used.
     int read_trr(XDRFILE *xd, int natoms, int *step, float *t, float* lambd,
-        float* box, float* x, float* v, float* f)
+        matrix box, rvec* x, rvec* v, rvec* f)
 
     # Write a frame to xtc file
     int write_trr(XDRFILE *xd, int natoms, int step, float t, float lambd,
-        float* box, float* x, float* v, float* f)
+        matrix box, rvec* x, rvec* v, rvec* f)
