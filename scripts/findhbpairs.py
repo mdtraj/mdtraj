@@ -3,10 +3,10 @@
 Find the hydrogen bond pairs for a conformation
 """
 
-acceptors = [('N', 'H'), ('NZ', 'HZ1'), ('NZ', 'HZ2'), ('NZ', 'HZ3')]
+acceptors = [('N', 'H'), ('NZ', 'HZ1'), ('NZ', 'HZ2'), ('NZ', 'HZ3'), ('OE1', 'HE1'), ('OE2', 'HE2'), ('OD1', 'HD1'), ('OD2', 'HD2'), ('ND1', 'HD1'), ('NE2', 'HE2'), ('NE2', 'HE21'), ('NE2', 'HE22'), ('ND2', 'HD21'), ('ND2', 'HD22'), ('OG', 'HG'), ('OG1', 'HG1'), ('OH', 'HH'), ('NH1', 'HH11'), ('NH1', 'HH12'), ('NH2', 'HH21'), ('NH2', 'HH22'), ('NE1', 'HE1'), ('SG', 'HG'), ('NE', 'HE')]
 accHs = [tup[1] for tup in acceptors]
 print accHs
-donors = ['O', 'OD1', 'OD2', 'OE1', 'OE2', 'OG1', 'OG', 'OXT', 'OH']
+donors = ['O', 'OD1', 'OD2', 'OE1', 'OE2', 'OG1', 'OG', 'OXT', 'OH', 'ND1', 'NE2', 'NZ', 'NE1', 'SG', 'SD']
 
 donor_list = []
 accH_list = []
