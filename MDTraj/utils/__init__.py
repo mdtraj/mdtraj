@@ -38,11 +38,15 @@ class timing(object):
     """
     def __init__(self, name='block'):
         self.name = name
+        self.time = 0
+        self.start = None
+        self.end = None
     
     def __enter__(self):
         self.start = time.time()
     
     def __exit__(self, ty, val, tb):
-        end = time.time()
-        print("%s : %0.3f seconds" % (self.name, end - self.start))
+        self.end = time.time()
+        self.time = self.end - self.start
+        print("%s : %0.3f seconds" % (self.name, self.time)
         return False
