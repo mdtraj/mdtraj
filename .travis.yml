@@ -11,7 +11,7 @@ script:
   - echo "script"
   - $python -V
   - sudo $python setup.py -q install
-  - $precmd $python -c "import mdtraj; a=mdtraj.test('full'); import sys; sys.exit((len(a.failures)+len(a.errors))>0)"
+  - pydir=$(which $python); $precmd $(dirname $pydir)/nosetests --with-coverage --cover-erase
 
 env:
   matrix:

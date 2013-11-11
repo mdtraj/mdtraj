@@ -1,27 +1,27 @@
-# Copyright 2012 the authors
-# This file is part of mdtraj
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
-#
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
-#
-# topology.py: Used for storing topological information about a system.
-#
-# This is part of the OpenMM molecular simulation toolkit originating from
-# Simbios, the NIH National Center for Physics-Based Simulation of
-# Biological Structures at Stanford, funded under the NIH Roadmap for
-# Medical Research, grant U54 GM072970. See https://simtk.org.
-#
-# Portions copyright (c) 2012 Stanford University and the Authors.
 # Authors: Peter Eastman, Robert McGibbon
+# Contributors: Kyle A. Beauchamp
+#
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+#
+# Portions of this code originate from the OpenMM molecular simulation
+# toolkit, copyright (c) 2012 Stanford University and Peter Eastman. Those
+# portions are distributed under the following terms:
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -40,6 +40,8 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
+##############################################################################
+
 
 ##############################################################################
 # Imports
@@ -48,6 +50,7 @@
 from __future__ import print_function, division
 import os
 import numpy as np
+import itertools
 import xml.etree.ElementTree as etree
 
 from mdtraj.utils import ilen, import_
@@ -385,7 +388,7 @@ class Topology(object):
         if bonds is not None:
             for ai1, ai2 in bonds:
                 out.add_bond(out.atom(ai1), out.atom(ai2))
-        
+
         out._numAtoms = out.n_atoms
         return out
 
@@ -725,6 +728,20 @@ class Chain(object):
         """
         return iter(self._residues)
 
+    def residue(self, index):
+        """Get a specific residue in this Chain
+
+        Returns
+        -------
+        residue : Residue
+        """
+        return self._residue[index]
+
+    @property
+    def n_residues(self):
+        "Get the number of residues in this Chain"
+        return len(self._residues)
+
     @property
     def atoms(self):
         """Iterator over all Atoms in the Chain.
@@ -738,12 +755,30 @@ class Chain(object):
             for atom in residue._atoms:
                 yield atom
 
+    def atom(self, index):
+        """Get a specific atom in this Chain
+
+        Returns
+        -------
+        atom : Atom
+        """
+        # this could be made faster by caching the list
+        # of atoms internally if necessary
+        return next(itertools.islice(self.atoms, index, index+1))
+
+    @property
+    def n_atoms(self):
+        """Get the number of atoms in this Chain"""
+        return sum(r.n_atoms for r in self._residues)
+
+
 class Residue(object):
     """A Residue object represents a residue within a Topology.
 
     Attributes
     ----------
     atoms : genetator
+    n_atoms : int
     """
     def __init__(self, name, index, chain):
         """Construct a new Residue.  You should call add_residue()
@@ -766,6 +801,21 @@ class Residue(object):
             Iterator over all Atoms in the Residue.
         """
         return iter(self._atoms)
+
+    def atom(self, index):
+        """Get a specific atom in this Residue.
+
+        Returns
+        -------
+        atom : Atom
+        """
+        return self._atoms[index]
+
+    @property
+    def n_atoms(self):
+        """Get the number of atoms in this Residue"""
+        return len(self._atoms)
+
 
 class Atom(object):
     """An Atom object represents a residue within a Topology.

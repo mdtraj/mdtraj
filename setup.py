@@ -219,7 +219,7 @@ binpos = Extension('mdtraj.binpos',
 def rmsd_extension():
     openmp_enabled, needs_gomp = detect_openmp()
     compiler_args = ['-msse2' if not detect_sse3() else '-mssse3',
-                     '--std=gnu99', '-O3', '-funroll-loops']
+                     '-O3', '-funroll-loops']
     if new_compiler().compiler_type == 'msvc':
         compiler_args.append('/arch:SSE2')
 
@@ -231,6 +231,7 @@ def rmsd_extension():
     rmsd = Extension('mdtraj._rmsd',
                      sources=[
                          'MDTraj/rmsd/src/theobald_rmsd.c',
+                         'MDTraj/rmsd/src/rotation.c',
                          'MDTraj/rmsd/_rmsd.' + cython_extension],
                      include_dirs=[
                          'MDTraj/rmsd/include', numpy.get_include()],

@@ -1,3 +1,25 @@
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
+#
+# Authors: Robert McGibbon
+# Contributors:
+#
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 from mdtraj import trr, TRRTrajectoryFile
 import os, tempfile
 import numpy as np
@@ -74,7 +96,7 @@ def test_15():
 def test_read_atomindices_1():
     with TRRTrajectoryFile(temp) as f:
          xyz, time, step, box, lambd = f.read()
-         
+
     with TRRTrajectoryFile(temp) as f:
          xyz2, time2, step2, box2, lambd2 = f.read(atom_indices=[0,1,2])
     yield lambda: eq(xyz[:, [0,1,2]], xyz2)
@@ -86,7 +108,7 @@ def test_read_atomindices_1():
 def test_read_atomindices_2():
     with TRRTrajectoryFile(temp) as f:
          xyz, time, step, box, lambd = f.read()
-         
+
     with TRRTrajectoryFile(temp) as f:
          xyz2, time2, step2, box2, lambd2 = f.read(atom_indices=slice(None, None, 2))
     yield lambda: eq(xyz[:, ::2], xyz2)

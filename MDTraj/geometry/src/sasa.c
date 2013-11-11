@@ -1,21 +1,24 @@
-/* This file is part of MDTraj
- *
- * Copyright 2013 Stanford University
- *
- * MDTraj is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/*=======================================================================*/
+/* MDTraj: A Python Library for Loading, Saving, and Manipulating        */
+/*         Molecular Dynamics Trajectories.                              */
+/* Copyright 2012-2013 Stanford University and the Authors               */
+/*                                                                       */
+/* Authors: Robert McGibbon                                              */
+/* Contributors:                                                         */
+/*                                                                       */
+/* MDTraj is free software: you can redistribute it and/or modify        */
+/* it under the terms of the GNU Lesser General Public License as        */
+/* published by the Free Software Foundation, either version 2.1         */
+/* of the License, or (at your option) any later version.                */
+/*                                                                       */
+/* This library is distributed in the hope that it will be useful,       */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of        */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
+/* GNU Lesser General Public License for more details.                   */
+/*                                                                       */
+/* You should have received a copy of the GNU Lesser General Public      */
+/* License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.*/
+/*=======================================================================*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,7 +41,7 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
 		      int* neighbor_indices, float* centered_sphere_points, float* areas)
 {
   // Calculate the accessible surface area of each atom in a single snapshot
-  // 
+  //
   // Parameters
   // ----------
   // frame : 2d array, shape=[n_atoms, 3]
@@ -51,7 +54,7 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
   //     a bunch of uniformly distributed points on a sphere
   // n_sphere_points : int
   //    the number of sphere points
-  
+
   // centered_sphere_points : WORK BUFFER 2d array, shape=[n_sphere_points, 3]
   //    empty memory that intermediate calculations can be stored in
   // neighbor_indices : WORK BUFFER 2d array, shape=[n_atoms]
@@ -59,17 +62,17 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
   // NOTE: the point of these work buffers is that if we want to call
   //    this function repreatedly, its more efficient not to keep re-mallocing
   //    these work buffers, but instead just reuse them.
-  
+
   // areas : 1d array, shape=[n_atoms]
   //     the output buffer to place the results in -- the surface area of each
   //     atom
-  
+
   int i, j, k, k_prime;
   __m128 r, r_i, r_j, r_ij, atom_radius_i, atom_radius_j, radius_cutoff;
   __m128 radius_cutoff2, sp, r_jk, r2;
   int n_neighbor_indices, is_accessible, k_closest_neighbor;
   float constant = 4.0 * M_PI / n_sphere_points;
-  
+
   for (i = 0; i < n_atoms; i++) {
     atom_radius_i = _mm_set1_ps(atom_radii[i]);
     r_i = load_float3(frame+i*3);
@@ -80,7 +83,7 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
       if (i == j) {
 	continue;
       }
-      
+
       r_j = load_float3(frame+j*3);
       r_ij = _mm_sub_ps(r_i, r_j);
       atom_radius_j = _mm_set1_ps(atom_radii[j]);
@@ -100,19 +103,19 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
 	  exit(1);
       }
     }
-        
+
     // Center the sphere points on atom i
     for (j = 0; j < n_sphere_points; j++) {
       sp = _mm_add_ps(r_i, _mm_mul_ps(atom_radius_i, load_float3(sphere_points + 3*j)));
       store_float3(centered_sphere_points + 3*j, sp);
     }
-    
+
     // Check if each of these points is accessible
     k_closest_neighbor = 0;
     for (j = 0; j < n_sphere_points; j++) {
       is_accessible = 1;
       r_j = load_float3(centered_sphere_points + 3*j);
-      
+
       // iterate through the sphere points by cycling through them
       // in a circle, starting with k_closest_neighbor and then wrapping
       // around
@@ -127,7 +130,7 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
 	  break;
 	}
       }
-      
+
       if (is_accessible) {
 	areas[i]++;
       }
@@ -141,7 +144,7 @@ static void generate_sphere_points(float* sphere_points, int n_points)
 {
   // Compute the coordinates of points on a sphere using the
   // Golden Section Spiral algorithm.
-  // 
+  //
   // Parameters
   // ----------
   // sphere_points : array, shape=(n_points, 3)
@@ -150,18 +153,18 @@ static void generate_sphere_points(float* sphere_points, int n_points)
   //     and sphere_points[3*i+2] are the x,y,z coordinates of the ith point
   // n_pts : int
   //     Number of points to generate on the sphere
-  // 
+  //
   // """
   int i;
   float y, r, phi;
   float inc = M_PI * (3.0 - sqrt(5));
   float offset = 2.0 / n_points;
-  
+
   for (i = 0; i < n_points; i++) {
     y = i * offset - 1.0 + (offset / 2.0);
     r = sqrt(1.0 - y*y);
     phi = i * inc;
-    
+
     sphere_points[3*i] = cos(phi) * r;
     sphere_points[3*i+1] = y;
     sphere_points[3*i+2] = sin(phi) * r;
@@ -174,7 +177,7 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
 {
   // Calculate the accessible surface area of each atom in each frame of
   // a trajectory
-  // 
+  //
   // Parameters
   // ----------
   // xyzlist : 3d array, shape=[n_frames, n_atoms, 3]
@@ -191,17 +194,17 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   // array_of_areas : 2d array, shape=[n_frames, n_atoms]
   //     the output buffer to place the results in -- the surface area of each
   //     frame (each atom within that frame)
-    
+
   int i;
-  
+
   //work buffers that will be thread-local
   int* wb1;
   float* wb2;
-    
+
   //generate the sphere points
   float* sphere_points = (float*) malloc(n_sphere_points*3*sizeof(float));
   generate_sphere_points(sphere_points, n_sphere_points);
-   
+
 #ifdef _OPENMP
   #pragma omp parallel private(wb1, wb2) {
 #endif
@@ -214,7 +217,7 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   #pragma omp for
 #endif
   for (i = 0; i < n_frames; i++) {
-    asa_frame(xyzlist + i*n_atoms*3, n_atoms, atom_radii, sphere_points, 
+    asa_frame(xyzlist + i*n_atoms*3, n_atoms, atom_radii, sphere_points,
 	      n_sphere_points, wb1, wb2, array_of_areas + i*n_atoms);
   }
 
@@ -222,8 +225,8 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   free(wb2);
 #ifdef _OPENMP
   } // close omp parallel private
-#endif 
-    
+#endif
+
   free(sphere_points);
   return 1;
 }

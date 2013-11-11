@@ -1,18 +1,25 @@
-# Copyright 2012 mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Robert McGibbon
+# Contributors: Kyle A Beauchamp
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 import tempfile, os
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises
@@ -189,6 +196,13 @@ def test_center():
     mu = traj.xyz.mean(1)
     mu0 = np.zeros(mu.shape)
     eq(mu0, mu)
+
+    for a in traj.top.atoms:
+        a.element.mass = 1.0  # Set all masses equal so we can compare against unweighted result
+
+    traj.center_coordinates(mass_weighted=True)
+    mu2 = traj.xyz.mean(1)
+    eq(mu0, mu2)
 
 
 def test_float_atom_indices_exception():

@@ -1,3 +1,25 @@
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
+#
+# Authors: Robert McGibbon
+# Contributors:
+#
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 """
 Code to delay the import of a moldule, and give a nice error message if
 the module is not installed. for dealing with dependencies.
@@ -149,11 +171,12 @@ def import_(module):
     """
     try:
         return importlib.import_module(module)
-    except ImportError:
+    except ImportError as e:
         try:
             message = MESSAGES[module]
         except KeyError:
             message = 'The code at {filename}:{line_number} requires the ' + module + ' package'
+            e = ImportError('No module named %s' % module)
 
         frame,filename,line_number,function_name,lines,index = \
             inspect.getouterframes(inspect.currentframe())[1]
@@ -167,4 +190,4 @@ def import_(module):
         print(bar, file=sys.stderr)
         print(m, file=sys.stderr)
         print(bar, file=sys.stderr)
-        raise
+        raise e

@@ -1,3 +1,25 @@
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
+#
+# Authors: Kyle A. Beauchamp
+# Contributors: Robert McGibbon
+#
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 import mdtraj as md
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
 import numpy as np
@@ -46,3 +68,21 @@ def test_topology_unique_elements_bpti():
     top, bonds = traj.top.to_dataframe()
     atoms = np.unique(["C", "O", "N", "H", "S"])
     eq(atoms, np.unique(top.element.values))
+
+def test_chain():
+    top = md.load(get_fn('bpti.pdb')).topology
+    chain = top.chain(0)
+    assert chain.n_residues == len(list(chain.residues))
+
+    atoms = list(chain.atoms)
+    assert chain.n_atoms == len(atoms)
+    for i in range(chain.n_atoms):
+        assert atoms[i] == chain.atom(i)
+
+def test_residue():
+    top = md.load(get_fn('bpti.pdb')).topology
+    residue = top.residue(0)
+    assert len(list(residue.atoms)) == residue.n_atoms
+    atoms = list(residue.atoms)
+    for i in range(residue.n_atoms):
+        assert residue.atom(i) == atoms[i]

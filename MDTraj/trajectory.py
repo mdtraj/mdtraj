@@ -1,18 +1,25 @@
-# Copyright 2012 mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Robert McGibbon
+# Contributors: Kyle A. Beauchamp, TJ Lane, Joshua Adelman, Lee-Ping Wang
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 ##############################################################################
 # Imports
@@ -109,7 +116,7 @@ def _cast_indices(indices):
     indices : {None, array_like, slice}
         If indices is None or slice, it'll just pass through. Otherwise, it'll
         be converted to a numpy array and checked to make sure it contains
-        integers.
+        unique integers.
 
     Returns
     -------
@@ -119,6 +126,9 @@ def _cast_indices(indices):
     if indices is None or isinstance(indices, slice):
         return indices
 
+    if not len(indices) == len(set(indices)):
+        raise ValueError("indices must be unique.")
+        
     out = np.asarray(indices)
     if not issubclass(out.dtype.type, np.integer):
         raise ValueError('indices must be of an integer type. %s is not an integer type' % out.dtype)
@@ -171,6 +181,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     """
 
     _assert_files_exist(filename_or_filenames)
+
+    if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
+        kwargs["top"] = _parse_topology(kwargs["top"])
 
     # grab the extension of the filename
     if isinstance(filename_or_filenames, basestring):  # If a single filename
@@ -1121,7 +1134,7 @@ class Trajectory(object):
             x0 = self.xyz[-1]
             x1 = other.xyz[0]
             start_frame = 1 if np.linalg.norm(x1 - x0) < 1e-8 else 0
-        else: 
+        else:
             start_frame = 0
 
         xyz = other.xyz[start_frame:]
@@ -1512,13 +1525,28 @@ class Trajectory(object):
                     cell_lengths=_convert(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
-    def center_coordinates(self):
-        """Remove the center of mass from each frame in trajectory.
+    def center_coordinates(self, mass_weighted=False):
+        """Center each trajectory frame at the origin (0,0,0).
 
-        This method acts inplace on the trajectory
+        This method acts inplace on the trajectory.  The centering can
+        be either uniformly weighted (mass_weighted=False) or weighted by
+        the mass of each atom (mass_weighted=True).
+
+        Parameters
+        ----------
+        mass_weighted : bool, optional (default = False)
+            If True, weight atoms by mass when removing COM.
+
+
         """
-        for x in self._xyz:
-            x -= (x.astype('float64').mean(0))
+        if mass_weighted == True:
+            masses = np.array([a.element.mass for a in self.top.atoms])
+            masses /= masses.sum()
+            for x in self._xyz:
+                x -= (x.astype('float64').T.dot(masses))
+        else:
+            for x in self._xyz:
+                x -= (x.astype('float64').mean(0))
 
     def restrict_atoms(self, atom_indices):
         """Retain only a subset of the atoms in a trajectory (inplace)

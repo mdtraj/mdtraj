@@ -1,20 +1,25 @@
-# This file is part of MDTraj.
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# Copyright 2013 Stanford University
+# Authors: Robert McGibbon
+# Contributors: Kyle A Beauchamp
 #
-# MDTraj is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
+# This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 ##############################################################################
 # Imports
@@ -23,11 +28,8 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-try:
-    import _geometry
-    _HAVE_OPT = True
-except ImportError:
-    _HAVE_OPT = False
+from mdtraj.geometry import _geometry
+
 
 __all__ = ['compute_distances', 'compute_displacements']
 
@@ -50,13 +52,9 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
         information, we will compute distances under the minimum image
         convention.
     opt : bool, default=True
-        Use an optimized native library to calculate distances. Using this
-        library requires the python package "cffi" (c foreign function
-        interface) which is installable via "easy_install cffi" or "pip
-        install cffi". See https://pypi.python.org/pypi/cffi for more details.
-        Our optimized minimum image convention calculation implementation is
-        over 1000x faster than the naive numpy implementation, so installing
-        cffi is worth it.
+        Use an optimized native library to calculate distances. Our optimized
+        SSE minimum image convention calculation implementation is over 1000x
+        faster than the naive numpy implementation.
 
     Returns
     -------
@@ -68,7 +66,7 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
 
     if periodic is True and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
-        if _HAVE_OPT and opt:
+        if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
             _geometry._dist_mic(xyz, pairs, box, out)
             return out
@@ -76,7 +74,7 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
             return _distance_mic(xyz, pairs, box)
 
     # either there are no unitcell vectors or they dont want to use them
-    if _HAVE_OPT and opt:
+    if opt:
         out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
         _geometry._dist(xyz, pairs, out)
         return out
@@ -98,13 +96,9 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
         information, we will compute distances under the minimum image
         convention.
     opt : bool, default=True
-        Use an optimized native library to calculate distances. Using this
-        library requires the python package "cffi" (c foreign function
-        interface) which is installable via "easy_install cffi" or "pip
-        install cffi". See https://pypi.python.org/pypi/cffi for more details.
-        Our optimized minimum image convention calculation implementation is
-        over 1000x faster than the naive numpy implementation, so installing
-        cffi is generally worth it.
+        Use an optimized native library to calculate distances. Our
+        optimized minimum image convention calculation implementation is
+        over 1000x faster than the naive numpy implementation.
 
     Returns
     -------
@@ -116,15 +110,15 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
 
     if periodic is True and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
-        if _HAVE_OPT:
+        if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
             _geometry._dist_mic_displacement(xyz, pairs, box, out)
             return out
         else:
-            return _distance_mic(xyz, pairs, box)
+            return _displacement_mic(xyz, pairs, box)
 
     # either there are no unitcell vectors or they dont want to use them
-    if _HAVE_OPT and opt:
+    if opt:
         out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
         _geometry._dist_displacement(xyz, pairs, out)
         return out
@@ -144,7 +138,9 @@ def _distance(xyz, pairs):
 
 def _displacement(xyz, pairs):
     "Displacement vector between pairs of points in each frame"
-    return np.diff(xyz[:, pairs], axis=2)[:, :, 0]
+    value = np.diff(xyz[:, pairs], axis=2)[:, :, 0]
+    assert value.shape == (xyz.shape[0], pairs.shape[0], 3), 'v.shape %s, xyz.shape %s, pairs.shape %s' % (str(value.shape), str(xyz.shape), str(pairs.shape))
+    return value
 
 
 def _distance_mic(xyz, pairs, box_vectors):

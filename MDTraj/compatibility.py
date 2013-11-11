@@ -1,18 +1,25 @@
-# Copyright 2012-present mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Robert McGibbon, Kyle A. Beauchamp
+# Contributors:
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 """Compatibility loader for MSMBuilder2 "LH5" trajectory format.
 
 To load .lh5 trajectory files produced by MSMBuilder2, you can import this
@@ -49,7 +56,7 @@ from mdtraj import Trajectory, Topology
 import mdtraj.pdb.element
 import mdtraj.trajectory
 from mdtraj.utils import import_
-from mdtraj.utils.six import PY3
+from mdtraj.utils.six import PY3, iteritems
 from mdtraj.utils.six.moves import zip
 if PY3:
     basestring = str
@@ -61,6 +68,8 @@ tables = import_('tables')
 ##############################################################################
 
 __all__ = ['load_legacy_hdf']
+
+COMPRESSION = tables.Filters(complib='blosc', shuffle=True, complevel=1)  # Compression style of legacy MSMBuilder2 lh5 trajectory format
 
 ##############################################################################
 # Functions
@@ -161,6 +170,61 @@ def load_legacy_hdf(filename, stride=1, frame=None, chunk=50000,
 
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     return trajectory
+
+def save_legacy_hdf(traj, filename):
+    """Saves an MDTraj Trajectory as an MSMB2 lh5 file.
+
+    Parameters
+    ----------
+    traj : MDTraj.Trajectory
+        Trajectory object to be saved
+    filename : str
+        String filename of HDF Trajectory file.
+    """
+
+    MAXINT16 = np.iinfo(np.int16).max
+    MAXINT32 = np.iinfo(np.int32).max
+    DEFAULT_PRECISION = 1000
+
+    def _convert_to_lossy_integers(X, precision):
+        """Implementation of the lossy compression used in Gromacs XTC using the pytables library.  Convert 32 bit floats into 16 bit integers.  These conversion functions have been optimized for memory use.  Further memory reduction would require an in-place astype() operation, which one could create using ctypes."""
+        if np.max(X) * float(precision) < MAXINT16 and np.min(X) * float(precision) > -MAXINT16:
+            X *= float(precision)
+            Rounded = X.astype("int16")
+            X /= float(precision)
+        else:
+            X *= float(precision)
+            Rounded = X.astype("int32")
+            X /= float(precision)
+            logger.error("Data range too large for int16: try removing center of mass motion, check for 'blowing up, or just use .h5 or .xtc format.'")
+        return(Rounded)
+
+
+    top, bonds = traj.top.to_dataframe()
+
+    data_dict = {}
+    data_dict["AtomID"] = top.index.values + 1
+    data_dict["AtomNames"] = top.name.values
+    data_dict["ResidueNames"] = top.resName.values
+    data_dict["ChainID"] = top.chainID.values
+    data_dict["ResidueID"] = top.resSeq.values + 1
+    data_dict["XYZList"] = _convert_to_lossy_integers(traj.xyz, DEFAULT_PRECISION)
+
+    atom_dict = {}
+    atom_dict["AtomID"] = tables.Int64Atom()
+    atom_dict["AtomNames"] = tables.StringAtom(itemsize=4)
+    atom_dict["ResidueNames"] = tables.StringAtom(itemsize=4)
+    atom_dict["ChainID"] = tables.StringAtom(itemsize=1)
+    atom_dict["ResidueID"] = tables.Int64Atom()
+    atom_dict["XYZList"] = tables.Int16Atom()
+
+    file_handle = tables.File(filename, 'w')
+
+    for key, val in iteritems(data_dict):
+        node = file_handle.createCArray(where='/', name=key, atom=atom_dict[key], shape=val.shape, filters=COMPRESSION)
+        node[:] = val[:]
+
+    file_handle.close()
 
 
 def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):

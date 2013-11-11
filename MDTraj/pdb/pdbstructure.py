@@ -1,52 +1,47 @@
-# Copyright 2012 mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Christopher M. Bruns
+# Contributors: Peter Eastman, Robert McGibbon
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
-"""
-pdbstructure.py: Used for managing PDB formated files.
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+#
+# Portions of this code originate from the OpenMM molecular simulation toolkit,
+# copyright (c) 2012 Stanford University, Christopher M. Bruns and Peter Eastman,
+# and are distributed under the following terms:
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS, CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+# USE OR OTHER DEALINGS IN THE SOFTWARE.
+##############################################################################
 
-This is part of the OpenMM molecular simulation toolkit originating from
-Simbios, the NIH National Center for Physics-Based Simulation of
-Biological Structures at Stanford, funded under the NIH Roadmap for
-Medical Research, grant U54 GM072970. See https://simtk.org.
-
-Portions copyright (c) 2012 Stanford University and the Authors.
-Authors: Christopher M. Bruns
-Contributors: Peter Eastman
-
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-THE AUTHORS, CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
 from __future__ import print_function, division
-
-__author__ = "Christopher M. Bruns"
-__version__ = "1.0"
 
 import sys
 import warnings
@@ -172,7 +167,7 @@ class PdbStructure(object):
             elif (pdb_line.find("MODEL") == 0):
                 #model_number = int(pdb_line[10:14])
                 if self._current_model is None:
-                    new_number = 0 
+                    new_number = 0
                 else:
                     new_number = self._current_model.number + 1
                 self._add_model(Model(new_number))
@@ -183,7 +178,7 @@ class PdbStructure(object):
                 if self.load_all_models:
                     state = 'NEW_MODEL'
                 else:
-                   break 
+                   break
 
             elif (pdb_line.find("END") == 0):
                 self._current_model._finalize()
@@ -296,7 +291,7 @@ class PdbStructure(object):
         """Establish first and last residues, atoms, etc."""
         for model in self.models:
             model._finalize()
-    
+
     def get_unit_cell_lengths(self):
         """Get the lengths of the crystallographic unit cell (may be None)."""
         return self._unit_cell_lengths
@@ -511,7 +506,7 @@ class Residue(object):
             self.locations[alt_loc] = Residue.Location(alt_loc, atom.residue_name_with_spaces)
         assert atom.residue_number == self.number
         assert atom.insertion_code == self.insertion_code
-        
+
         # Check whether this is an existing atom with another position
         if (atom.name_with_spaces in self.atoms_by_name):
             old_atom = self.atoms_by_name[atom.name_with_spaces]
@@ -523,7 +518,7 @@ class Residue(object):
                 for alt_loc, position in atom.locations.items():
                     old_atom.locations[alt_loc] = position
                 return # no new atom added
-                
+
         # actually use new atom
         self.atoms_by_name[atom.name] = atom
         self.atoms_by_name[atom.name_with_spaces] = atom
@@ -589,12 +584,13 @@ class Residue(object):
         ...
         >>> for atom in res:
         ...     print(atom)
-        ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N  
-        ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C  
-        ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C  
-        ATOM    191  O   CYS A  42      41.181  -7.530  13.859  1.00 13.70           O  
-        ATOM    192  CB  CYS A  42      38.949  -6.825  12.002  1.00  9.67           C  
-        ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S  
+        ... # doctest: +NORMALIZE_WHITESPACE
+        ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N
+        ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C
+        ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C
+        ATOM    191  O   CYS A  42      41.181  -7.530  13.859  1.00 13.70           O
+        ATOM    192  CB  CYS A  42      38.949  -6.825  12.002  1.00  9.67           C
+        ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S
         """
         for atom in self.iter_atoms():
             yield atom

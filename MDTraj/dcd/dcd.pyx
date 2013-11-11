@@ -1,19 +1,26 @@
 # cython: c_string_type=str, c_string_encoding=ascii
-# Copyright 2013 mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Robert McGibbon
+# Contributors:
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 ##############################################################################
 # Imports
@@ -60,7 +67,7 @@ cdef ERROR_MESSAGES = {
 
 cdef class DCDTrajectoryFile:
     """DCDTrajectoryFile(filename, mode='r', force_overwrite=True)
-    
+
     Interface for reading and writing to a CHARMM/NAMD DCD file.
     This is a file-like object, that both reading or writing depending
     on the `mode` flag. It implements the context manager protocol,
@@ -189,7 +196,7 @@ cdef class DCDTrajectoryFile:
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)
-        
+
         Read the data from a DCD file
 
         Parameters
@@ -306,7 +313,7 @@ cdef class DCDTrajectoryFile:
 
     def write(self, xyz, cell_lengths=None, cell_angles=None):
         """write(xyz, cell_lengths=None, cell_angles=None)
-        
+
         Write one or more frames of data to the DCD file
 
         Parameters

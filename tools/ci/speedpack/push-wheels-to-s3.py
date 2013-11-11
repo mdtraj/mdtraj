@@ -28,7 +28,7 @@ def main():
             k = Key(bucket)
             k.key = os.path.relpath(fn, ROOT)
             k.set_contents_from_filename(fn)
-        
+
         # Put up an index page
         k = Key(bucket)
         k.key = os.path.relpath(os.path.join(dirpath, 'index.html'), ROOT)

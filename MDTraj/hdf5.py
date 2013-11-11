@@ -1,18 +1,25 @@
-# Copyright 2013 mdtraj developers
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# This file is part of mdtraj
+# Authors: Robert McGibbon
+# Contributors:
 #
-# mdtraj is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later
-# version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# mdtraj is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# mdtraj. If not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 """
 This module implements the MDTraj HDF5 format described in
 https://github.com/rmcgibbo/mdtraj/issues/36
@@ -198,7 +205,7 @@ class HDF5TrajectoryFile(object):
     def title(self):
         """User-defined title for the data represented in the file"""
         if hasattr(self._handle.root._v_attrs, 'title'):
-            return self._handle.root._v_attrs.title
+            return str(self._handle.root._v_attrs.title)
         return None
 
     @title.setter
@@ -215,7 +222,7 @@ class HDF5TrajectoryFile(object):
     def application(self):
         "Suite of programs that created the file"
         if hasattr(self._handle.root._v_attrs, 'application'):
-            return self._handle.root._v_attrs.application
+            return str(self._handle.root._v_attrs.application)
         return None
 
     @application.setter
@@ -280,7 +287,7 @@ class HDF5TrajectoryFile(object):
                 'chains': [],
                 'bonds': []
             }
-            
+
             # we want to be able to handle the simtk.openmm Topology object
             # here too, for the purpose of having a reporter
             # it doesnt use decorators on the chains/residues/atoms/bonds
@@ -353,7 +360,7 @@ class HDF5TrajectoryFile(object):
     def randomState(self):
         "State of the creators internal random number generator at the start of the simulation"
         if hasattr(self._handle.root._v_attrs, 'randomState'):
-            return self._handle.root._v_attrs.randomState
+            return str(self._handle.root._v_attrs.randomState)
         return None
 
     @randomState.setter
@@ -370,7 +377,7 @@ class HDF5TrajectoryFile(object):
     def forcefield(self):
         "Description of the hamiltonian used. A short, human readable string, like AMBER99sbildn."
         if hasattr(self._handle.root._v_attrs, 'forcefield'):
-            return self._handle.root._v_attrs.forcefield
+            return str(self._handle.root._v_attrs.forcefield)
         return None
 
     @forcefield.setter
@@ -387,7 +394,7 @@ class HDF5TrajectoryFile(object):
     def reference(self):
         "A published reference that documents the program or parameters used to generate the data"
         if hasattr(self._handle.root._v_attrs, 'reference'):
-            return self._handle.root._v_attrs.reference
+            return str(self._handle.root._v_attrs.reference)
         return None
 
     @reference.setter

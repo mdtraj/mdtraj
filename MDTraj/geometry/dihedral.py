@@ -1,20 +1,25 @@
-# This file is part of MDTraj.
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# Copyright 2013 Stanford University
+# Authors: Robert McGibbon
+# Contributors: Kyle A Beauchamp
 #
-# MDTraj is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
+# This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 ##############################################################################
 # Imports
@@ -23,11 +28,7 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-try:
-    import _geometry
-    _HAVE_OPT = True
-except ImportError:
-    _HAVE_OPT = False
+from mdtraj.geometry import _geometry
 
 __all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega',
            'atom_sequence_finder']
@@ -68,7 +69,7 @@ def _dihedral(xyz, indices, out=None):
     p1 = (b1 * c1).sum(-1)
     p1 *= (b2 * b2).sum(-1) ** 0.5
     p2 = (c1 * c2).sum(-1)
-    
+
     return np.arctan2(p1, p2, out)
 
 
@@ -85,19 +86,19 @@ def compute_dihedrals(trajectory, indices, opt=True):
         three atoms and the last three atoms, a torsion around the bond
         between the middle two atoms.
     opt : bool, default=True
-        Use an optimized native library to calculate distances.
+        Use an optimized native library to calculate angles.
 
     Returns
     -------
     dihedrals : np.ndarray, shape=(n_frames, n_dihedrals), dtype=float
-        The output array gives, in each frame from the trajectory, each of the 
+        The output array gives, in each frame from the trajectory, each of the
         `n_dihedrals` torsion angles. The angles are measured in **radians**.
 
     """
-    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
+    xyz = ensure_type(trajectory.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     quartets = ensure_type(np.asarray(indices), dtype=np.int32, ndim=2, name='indices', shape=(None, 4), warn_on_cast=False)
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
-    if _HAVE_OPT and opt:
+    if opt:
         _geometry._dihedral(xyz, quartets, out)
     else:
         _dihedral(xyz, quartets, out)
@@ -119,7 +120,7 @@ def _construct_atom_dict(topology, chain_id=0):
     By default, we assume you are interested in the first chain.
     """
     atom_dict = {}
-    for chain in top.chains:
+    for chain in topology.chains:
         if chain.index == chain_id:
             for residue in chain.residues:
                 local_dict = {}
@@ -132,7 +133,7 @@ def _construct_atom_dict(topology, chain_id=0):
 
 def atom_sequence_finder(trajectory, atom_names, residue_offsets=None, chain_id=0):
     """Find sequences of atom indices correponding to desired atoms.
-    
+
     This method can be used to find sets of atoms corresponding to specific
     dihedral angles (like phi or psi). It looks for the given pattern of atoms
     in each residue of a given chain. See the example for details.
@@ -166,21 +167,21 @@ def atom_sequence_finder(trajectory, atom_names, residue_offsets=None, chain_id=
     >>> residue_offsets = [-1, 0, 0, 0] # doctest: +SKIP
     >>> found_residue_ids, indices = atom_sequence_finder(traj, atom_names, residue_offsets) # doctest: +SKIP
     """
-    if rid_offsets is None:
-        rid_offsets = parse_offsets(atom_names)
+    if residue_offsets is None:
+        residue_offsets = parse_offsets(atom_names)
     atom_names = strip_offsets(atom_names)
 
-    atom_dict = _construct_atom_dict(traj.top, chain_id=chain_id)
+    atom_dict = _construct_atom_dict(trajectory.top, chain_id=chain_id)
     atom_indices = []
     found_residue_ids = []
     # py3k criticial list(zip(, not just zip(, since we iterate multiple
     # times through it
     atoms_and_offsets = list(zip(atom_names, residue_offsets))
-    for chain in traj.top.chains:
+    for chain in trajectory.top.chains:
         if chain.index == chain_id:
             for residue in chain.residues:
                 rid = residue.index
-                if all([rid + offset in atom_dict for offset in rid_offsets]):  # Check that desired residue_IDs are in dict
+                if all([rid + offset in atom_dict for offset in residue_offsets]):  # Check that desired residue_IDs are in dict
                     if all([atom in atom_dict[rid + offset] for atom, offset in atoms_and_offsets]):  # Check that we find all atom names in dict
                         atom_indices.append([atom_dict[rid + offset][atom] for atom, offset in atoms_and_offsets])  # Lookup desired atom indices and and add to list.
                         found_residue_ids.append(rid)
@@ -258,13 +259,15 @@ _get_indices_psi = lambda traj: atom_sequence_finder(traj, PSI_ATOMS)
 _get_indices_chi = lambda traj: atom_sequence_finder(traj, CHI_ATOMS)
 
 
-def compute_phi(trajectory):
+def compute_phi(trajectory, opt=True):
     """Calculate the phi torsions of a trajectory.
 
     Parameters
     ----------
     trajectory : Trajectory
         Trajectory for which you want dihedrals.
+    opt : bool, default=True
+        Use an optimized native library to calculate angles.
 
     Returns
     -------
@@ -274,17 +277,19 @@ def compute_phi(trajectory):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = _get_indices_phi(traj)
-    return rid, compute_dihedrals(traj, indices)
+    rid, indices = _get_indices_phi(trajectory)
+    return rid, compute_dihedrals(trajectory, indices, opt=opt)
 
 
-def compute_psi(trajectory):
+def compute_psi(trajectory, opt=True):
     """Calculate the psi torsions of a trajectory.
 
     Parameters
     ----------
     trajectory : Trajectory
         Trajectory for which you want dihedrals.
+    opt : bool, default=True
+        Use an optimized native library to calculate angles.
 
     Returns
     -------
@@ -294,17 +299,19 @@ def compute_psi(trajectory):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = _get_indices_psi(traj)
-    return rid, compute_dihedrals(traj, indices)
+    rid, indices = _get_indices_psi(trajectory)
+    return rid, compute_dihedrals(trajectory, indices, opt=opt)
 
 
-def compute_chi(trajectory):
+def compute_chi(trajectory, opt=True):
     """Calculate the chi torsions of a trajectory.
 
     Parameters
     ----------
     trajectory : Trajectory
         Trajectory for which you want dihedrals.
+    opt : bool, default=True
+        Use an optimized native library to calculate angles.
 
     Returns
     -------
@@ -314,17 +321,19 @@ def compute_chi(trajectory):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = _get_indices_chi(traj)
-    return rid, compute_dihedrals(traj, indices)
+    rid, indices = _get_indices_chi(trajectory)
+    return rid, compute_dihedrals(trajectory, indices, opt=opt)
 
 
-def compute_omega(trajectory):
+def compute_omega(trajectory, opt=True):
     """Calculate the omega torsions of a trajectory.
 
     Parameters
     ----------
     trajectory : Trajectory
         Trajectory for which you want dihedrals.
+    opt : bool, default=True
+        Use an optimized native library to calculate angles.
 
     Returns
     -------
@@ -334,5 +343,5 @@ def compute_omega(trajectory):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = _get_indices_omega(traj)
-    return rid, compute_dihedrals(traj, indices)
+    rid, indices = _get_indices_omega(trajectory)
+    return rid, compute_dihedrals(trajectory, indices, opt=opt)

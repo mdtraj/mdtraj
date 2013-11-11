@@ -1,5 +1,25 @@
-#cython: boundscheck=False
-#cython: wraparound=False
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
+#
+# Authors: Robert McGibbon
+# Contributors:
+#
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 import cython
 import numpy as np
 cimport numpy as np
@@ -96,13 +116,13 @@ def _dihedral(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
 
 def _kabsch_sander(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
                    np.ndarray[np.int32_t, ndim=2, mode='c'] nco_indices not None,
-                   np.ndarray[np.int32_t, ndim=2, mode='c'] ca_indices not None,
+                   np.ndarray[np.int32_t, ndim=1, mode='c'] ca_indices not None,
                    np.ndarray[np.int32_t, ndim=3, mode='c'] hbonds not None,
                    np.ndarray[np.float32_t, ndim=3, mode='c'] henergies not None):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_residues = ca_indices.shape[0]
-    kabsch_sander(&xyz[0,0,0], <int*> &nco_indices[0,0], <int*> &ca_indices[0,0],
+    kabsch_sander(&xyz[0,0,0], <int*> &nco_indices[0,0], <int*> &ca_indices[0],
                   n_frames, n_atoms, n_residues, <int*> &hbonds[0,0,0], &henergies[0,0,0])
 
 

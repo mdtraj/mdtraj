@@ -1,20 +1,25 @@
-# This file is part of MDTraj.
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
 #
-# Copyright 2013 Stanford University
+# Authors: Robert McGibbon
+# Contributors:
 #
-# MDTraj is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
+# This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 ##############################################################################
 # Imports
@@ -23,11 +28,7 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-try:
-    import _geometry
-    _HAVE_OPT = True
-except ImportError:
-    _HAVE_OPT = False
+from mdtraj.geometry import _geometry
 
 def kabsch_sander(traj):
     """Compute the Kabsch-Sander hydrogen bond energy between each pair
@@ -67,8 +68,6 @@ def kabsch_sander(traj):
     """
     if traj.topology is None:
         raise ValueError('kabsch_sander requires topology')
-    if not _HAVE_OPT:
-        raise RuntimeError('kabsch_sander implementation not available.')
     import scipy.sparse
 
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz',

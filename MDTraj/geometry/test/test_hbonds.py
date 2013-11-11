@@ -1,6 +1,25 @@
-###############################################################################
-# Imports
-###############################################################################
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
+#
+# Authors: Robert McGibbon
+# Contributors:
+#
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 
 import os
 import shutil
@@ -29,8 +48,12 @@ def setup():
 def teardown():
     shutil.rmtree(tmpdir)
 
-@skipif(not HAVE_DSSP, "This tests required mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/")
 def test_hbonds():
+    t = md.load(get_fn('2EQQ.pdb'))
+    ours = md.geometry.hbond.kabsch_sander(t)
+
+@skipif(not HAVE_DSSP, "This tests required mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/")
+def test_hbonds_against_dssp():
     t = md.load(get_fn('2EQQ.pdb'))[0]
     pdb = os.path.join(tmpdir, 'f.pdb')
     dssp = os.path.join(tmpdir, 'f.pdb.dssp')

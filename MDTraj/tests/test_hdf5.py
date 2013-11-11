@@ -1,3 +1,25 @@
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
+#
+# Authors: Robert McGibbon
+# Contributors:
+#
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 import numpy as np
 import tempfile
 import os
@@ -216,3 +238,31 @@ def test_do_overwrite():
     with HDF5TrajectoryFile(temp, 'w', force_overwrite=False) as f:
         f.write(np.random.randn(10,5,3))
 
+def test_attributes():
+    constraints = np.zeros(10, dtype=[('atom1', np.int32), ('atom2', np.int32), ('distance', np.float32)])
+    with HDF5TrajectoryFile(temp, 'w') as f:
+        f.title = 'mytitle'
+        f.reference = 'myreference'
+        f.forcefield = 'amber99'
+        f.randomState = 'sdf'
+        f.application = 'openmm'
+        f.constraints = constraints
+
+    with HDF5TrajectoryFile(temp) as g:
+        eq(g.title, 'mytitle')
+        eq(g.reference, 'myreference')
+        eq(g.forcefield, 'amber99')
+        eq(g.randomState, 'sdf')
+        eq(g.application, 'openmm')
+        eq(g.constraints, constraints)
+
+def test_append():
+    x1 = np.random.randn(10,5,3)
+    x2 = np.random.randn(8,5,3)
+    with HDF5TrajectoryFile(temp, 'w') as f:
+        f.write(x1)
+    with HDF5TrajectoryFile(temp, 'a') as f:
+        f.write(x2)
+
+    with HDF5TrajectoryFile(temp) as f:
+        eq(f.root.coordinates[:], np.concatenate((x1,x2)))

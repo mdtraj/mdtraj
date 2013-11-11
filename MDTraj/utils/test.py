@@ -1,3 +1,25 @@
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
+#
+# Authors: Robert McGibbon
+# Contributors:
+#
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
 """Tests for some of the utilities
 """
 ##############################################################################
@@ -6,8 +28,9 @@
 
 from __future__ import print_function, division
 import numpy as np
-from .arrays import ensure_type, TypeCastPerformanceWarning
-from .unit import in_units_of
+from mdtraj.utils.arrays import ensure_type, TypeCastPerformanceWarning
+from mdtraj.utils.unit import in_units_of
+from mdtraj.utils import import_
 from mdtraj.testing import raises
 import warnings
 
@@ -78,11 +101,25 @@ def test_ensure_type_8():
     c = ensure_type(np.zeros((5,10)), np.float32, ndim=2, name='', shape=(None, 10))
     assert c.shape == (5, 10)
 
-
 @raises(ValueError)
 def test_ensure_type_9():
     c = ensure_type(np.zeros((5,11)), np.float32, ndim=2, name='', shape=(None, 10))
 
+@raises(TypeError)
+def test_ensure_type_10():
+    c = ensure_type([0,1], np.float32, ndim=2, name='')
+
+def test_ensure_type_11():
+    c = ensure_type(0, np.float32, ndim=1, name='', add_newaxis_on_deficient_ndim=True)
+    assert c.shape == (1,)
+
+@raises(TypeError)
+def test_ensure_type_12():
+    ensure_type(np.zeros((2,2)), np.float32, ndim=3)
+
+@raises(ValueError)
+def test_ensure_type_13():
+    ensure_type(np.zeros((2,2)), np.float32, ndim=2, name='', shape=(None, None, None))
 
 def test_unit_1():
     assert 1 == in_units_of(100, 'meter', 'centimeter')
@@ -96,3 +133,10 @@ def test_unit_2_bytes():
     a = in_units_of(1, b'meter**2/second', b'nanometers**2/picosecond')
     b = 1e-6
     assert abs(a-b) < 1e-10
+
+@raises(ImportError)
+def test_delay_import_fail_1():
+    import_('sdfsdfsfsfdsdf')
+
+def test_delay_import():
+    import_('scipy.sparse')
