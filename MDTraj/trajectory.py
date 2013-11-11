@@ -1414,18 +1414,16 @@ class Trajectory(object):
         """
         self._check_valid_unitcell()
 
-        with PDBTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+        with PDBTrajectoryFile(filename, 'w', force_overwrite=force_overwrite, topology=self.topology) as f:
             for i in xrange(self.n_frames):
 
                 if self._have_unitcell:
                     f.write(_convert(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
-                            self.topology,
                             modelIndex=i,
                             unitcell_lengths=_convert(self.unitcell_lengths[i], Trajectory._distance_unit, f.distance_unit),
                             unitcell_angles=self.unitcell_angles[i])
                 else:
                     f.write(_convert(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
-                            self.topology,
                             modelIndex=i)
 
     def save_xtc(self, filename, force_overwrite=True):
