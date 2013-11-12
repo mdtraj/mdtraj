@@ -102,6 +102,13 @@ def test_2EQQ_0():
     yield lambda: eq(ilen(t.top.residues), 28)
 
 
+def test_1vii_solvated_with_ligand():
+    traj = load(get_fn("1vii_sustiva_water.pdb"))
+    eq(len(list(traj.top.bonds)), 5124)
+    traj.save(temp)
+    traj = load(temp)
+    eq(len(list(traj.top.bonds)), 5124)
+
 @raises(ValueError)
 def test_write_large():
     traj = load(get_fn('native.pdb'))

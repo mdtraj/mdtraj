@@ -32,9 +32,10 @@ class timing(object):
 
     Example
     -------
-    >>> with timing('long function'):
-    >>>    long_function()
-    long function: 0.500 seconds
+    >>> long_function = lambda : None
+    >>> with timing('long_function'):
+    ...     long_function()
+    long_function: 0.000 seconds
     """
     def __init__(self, name='block'):
         self.name = name
