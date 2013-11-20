@@ -27,6 +27,7 @@ from mdtraj.testing import get_fn, eq
 import mdtraj.compatibility
 from mdtraj.utils import ilen
 import tempfile
+import numpy as np
 
 
 fn = get_fn('legacy_msmbuilder_trj0.lh5')
