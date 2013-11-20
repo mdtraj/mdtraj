@@ -76,7 +76,7 @@ COMPRESSION = tables.Filters(complib='blosc', shuffle=True, complevel=1)  # Comp
 ##############################################################################
 
 
-def load_legacy_hdf(filename, stride=1, frame=None, chunk=50000,
+def load_legacy_hdf(filename, stride=1, atom_indices=None, frame=None, chunk=50000,
                      upconvert_int16=True):
     """Load a HDF5 file in the legacy MSMBuilder2 lh5 format
 
@@ -169,6 +169,10 @@ def load_legacy_hdf(filename, stride=1, frame=None, chunk=50000,
         F.close()
 
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
+
+    if atom_indices is not None:
+        trajectory.restrict_atoms(atom_indices)
+
     return trajectory
 
 def save_legacy_hdf(traj, filename):

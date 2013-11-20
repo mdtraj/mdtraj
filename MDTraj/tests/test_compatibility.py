@@ -73,3 +73,8 @@ def test_legacy_hdf4_save_and_load():
 
     yield lambda: eq(t0.xyz, t2.xyz)
     yield lambda: t0.topology == t2.topology
+
+def test_legacy_hdf5():
+    atom_indices = np.arange(10)
+    t0 = load(fn, atom_indices=atom_indices)
+    eq(t0.n_atoms, 10)
