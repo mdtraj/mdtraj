@@ -27,6 +27,7 @@ from mdtraj.testing import get_fn, eq
 import mdtraj.compatibility
 from mdtraj.utils import ilen
 import tempfile
+import numpy as np
 
 
 fn = get_fn('legacy_msmbuilder_trj0.lh5')
@@ -73,3 +74,8 @@ def test_legacy_hdf4_save_and_load():
 
     yield lambda: eq(t0.xyz, t2.xyz)
     yield lambda: t0.topology == t2.topology
+
+def test_legacy_hdf5():
+    atom_indices = np.arange(10)
+    t0 = load(fn, atom_indices=atom_indices)
+    eq(t0.n_atoms, 10)
