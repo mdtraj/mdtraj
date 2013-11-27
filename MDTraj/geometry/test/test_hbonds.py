@@ -86,7 +86,22 @@ def test_hbonds_against_dssp():
     eq((dssp < -0.6), (ours < -0.6))
     eq(dssp[dssp < -0.6], ours[ours < -0.6], decimal=1)
 
+
 def test_baker_hubbard():
      t = md.load(get_fn('2EQQ.pdb'))
-     for e in md.geometry.hbond.baker_hubbard(t):
-         print 'distance RANK %d, RANK %d' % (e[1], e[2])
+     
+     # print('to view the hbonds defined in 2EQQ by baker_hubbard()')
+     # print('put these commands into pymol on top of the pdb:\n')
+     # for e in md.geometry.hbond.baker_hubbard(t):
+     #     print('distance RANK %d, RANK %d' % (e[1], e[2]))
+
+     # these are the results produced by the algorithm on this protein as
+     # of 11/26/13. This unit test basically just ensures that the method
+     # runs and produces the same results it did then. It's no guarentee that
+     # these are the "TRUE" hydrogen bonds in this system.
+     ref =  np.array([[0, 10, 8], [0, 11, 7], [69, 73, 54], [76, 82, 65],
+                      [119, 131, 89], [140, 148, 265], [166, 177, 122],
+                      [181, 188, 231], [209, 217, 215], [221, 225, 184],
+                      [228, 239, 186], [235, 247, 216], [262, 271, 143],
+                      [298, 305, 115], [186, 191, 215], [413, 419, 392]])
+     eq(ref, md.geometry.hbond.baker_hubbard(t))
