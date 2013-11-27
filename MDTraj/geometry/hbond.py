@@ -43,12 +43,12 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle.
 
-    The criterion employed is ..math:`\theta > 120` and 
-    ..math:`r_{H...Acceptor} < 2.5 \AA`. When donor the donor is 'N' and the
-    acceptor is 'O', this corresponds to the definition established in [1]_.
+    The criterion employed is :math:`\\theta > 120` and
+    :math:`r_\\text{H...Acceptor} < 2.5 A`.
 
-    The donors considered by this method are NH and OH, and the acceptors
-    considered are O.
+    When donor the donor is 'N' and the acceptor is 'O', this corresponds to
+    the definition established in [1]_. The donors considered by this method
+    are NH and OH, and the acceptors considered are O.
 
     Parameters
     ----------
@@ -62,18 +62,17 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True):
 
     Notes
     -----
-    .. [1] Baker, E. N., and R. E. Hubbard. "Hydrogen bonding in globular
-    proteins." Progress in Biophysics and Molecular Biology 44.2 (1984): 97-179.
+    .. [1] Baker, E. N., and R. E. Hubbard. "Hydrogen bonding in globular proteins." Progress in Biophysics and Molecular Biology 44.2 (1984): 97-179.
 
     Returns
     -------
     hbonds : np.array, shape=[n_hbonds, 3], dtype=int
         An array containing the indices atoms involved in each of the identified
-        hydrogen bonds. Each row contains three integer indices, (d_i, h_i, a_i),
-        such that d_i is the index of the donor atom, h_i the index of the
-        hydrogen atom, and a_i the index of the acceptor atom involved in a hydrogen
-        bond which occurs (according to the definition above) in proportion
-        greater than `freq` of the trajectory.
+        hydrogen bonds. Each row contains three integer indices, `(d_i, h_i,
+        a_i)`, such that `d_i` is the index of the donor atom, `h_i` the index
+        of the hydrogen atom, and `a_i` the index of the acceptor atom involved
+        in a hydrogen bond which occurs (according to the definition above) in
+        proportion greater than `freq` of the trajectory.
     """
     # Cutoff criteria: these could be exposed as function arguments, or
     # modified if there are better definitions than the this one based only
