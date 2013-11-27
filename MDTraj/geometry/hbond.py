@@ -26,9 +26,105 @@
 ##############################################################################
 
 from __future__ import print_function, division
+from itertools import product
 import numpy as np
 from mdtraj.utils import ensure_type
+from mdtraj.geometry import compute_distances, compute_angles
 from mdtraj.geometry import _geometry
+
+__all__ = ['baker_hubbard', 'kabsch_sander']
+
+##############################################################################
+# Functions
+##############################################################################
+
+
+def baker_hubbard(traj, freq=0.1, exclude_water=True):
+    """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
+    distance and angle.
+
+    The criterion employed is ..math:`\theta > 120` and 
+    ..math:`r_{H...Acceptor} < 2.5 \AA`. When donor the donor is 'N' and the
+    acceptor is 'O', this corresponds to the definition established in [1]_.
+
+    The donors considered by this method are NH and OH, and the acceptors
+    considered are O.
+
+    Parameters
+    ----------
+    traj : md.Trajectory
+        An mdtraj trajectory. It must contain topology information.
+    freq : float, default=0.1
+        Return only hydrogen bonds that occur in greater this fraction of the
+        frames in the trajectory.
+    exclude_water : bool, default=True
+        Exclude solvent molecules from consideration
+
+    Notes
+    -----
+    .. [1] Baker, E. N., and R. E. Hubbard. "Hydrogen bonding in globular
+    proteins." Progress in Biophysics and Molecular Biology 44.2 (1984): 97-179.
+
+    Returns
+    -------
+    hbonds : np.array, shape=[n_hbonds, 3], dtype=int
+        An array containing the indices atoms involved in each of the identified
+        hydrogen bonds. Each row contains three integer indices, (d_i, h_i, a_i),
+        such that d_i is the index of the donor atom, h_i the index of the
+        hydrogen atom, and a_i the index of the acceptor atom involved in a hydrogen
+        bond which occurs (according to the definition above) in proportion
+        greater than `freq` of the trajectory.
+    """
+    # Cutoff criteria: these could be exposed as function arguments, or
+    # modified if there are better definitions than the this one based only
+    # on distances and angles
+    distance_cutoff = 0.25            # nanometers
+    angle_cutoff = 2.0 * np.pi / 3.0  # radians
+
+    if traj.topology is None:
+        raise ValueError('baker_hubbard requires that traj contain topology '
+                         'information')
+
+    def get_donors(e0, e1):
+        elems = set((e0, e1))
+        bonditer = traj.topology.bonds
+        atoms = [(b[0], b[1]) for b in bonditer if set((b[0].element.symbol, b[1].element.symbol)) == elems]
+
+        indices = []
+        for a0, a1 in atoms:
+            if exclude_water and a0.residue.name == 'HOH':
+                continue
+            pair = (a0.index, a1.index)
+            # make sure to get the pair in the right order, so that the index
+            # for e0 comes before e1
+            if a0.element.symbol == e1:
+                pair = pair[::-1]
+            indices.append(pair)
+
+        return indices
+
+    nh_donors = get_donors('N', 'H')
+    oh_donors = get_donors('O', 'H')
+
+    if not exclude_water:
+        acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O']
+    else:
+        acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O' and a.residue.name != 'HOH']
+
+    nho_angle_triplets = np.array([(e[0][0], e[0][1], e[1]) for e in product(nh_donors, acceptors)])
+    oho_angle_triplets = np.array([(e[0][0], e[0][1], e[1]) for e in product(oh_donors, acceptors)])
+    angle_triplets = np.vstack((nho_angle_triplets, oho_angle_triplets))
+    distance_pairs = angle_triplets[:, [1,2]]  # possible H..acceptor pairs
+
+    angles = compute_angles(traj, angle_triplets)
+    distances = compute_distances(traj, distance_pairs, periodic=False)
+
+    mask = np.logical_and(distances < distance_cutoff, angles > angle_cutoff)
+    # frequency of occurance of each hydrogen bond in the trajectory
+    occurance = np.sum(mask, axis=0).astype(np.double) / traj.n_frames
+
+    return angle_triplets[occurance > freq]
+
 
 def kabsch_sander(traj):
     """Compute the Kabsch-Sander hydrogen bond energy between each pair
@@ -55,11 +151,11 @@ def kabsch_sander(traj):
     matrices : list of scipy.sparse.csr_matrix
         The return value is a list of length equal to the number of frames
         in the trajectory. Each element is an n_residues x n_residues sparse
-        matrix, where the existance of an entry at row `i`, column `j` with value
+        matrix, where the existence of an entry at row `i`, column `j` with value
         `x` means that there exists a hydrogen bond between a backbone CO
         group at residue `i` with a backbone NH group at residue `j` whose
         Kabsch-Sander energy is less than -0.5 kcal/mol (the threshold for
-        existance of the "bond"). The exact value of the energy is given by the
+        existence of the "bond"). The exact value of the energy is given by the
         value `x`.
 
     References

@@ -86,3 +86,7 @@ def test_hbonds_against_dssp():
     eq((dssp < -0.6), (ours < -0.6))
     eq(dssp[dssp < -0.6], ours[ours < -0.6], decimal=1)
 
+def test_baker_hubbard():
+     t = md.load(get_fn('2EQQ.pdb'))
+     for e in md.geometry.hbond.baker_hubbard(t):
+         print 'distance RANK %d, RANK %d' % (e[1], e[2])
