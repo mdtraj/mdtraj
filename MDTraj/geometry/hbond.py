@@ -105,15 +105,14 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True):
 
     nh_donors = get_donors('N', 'H')
     oh_donors = get_donors('O', 'H')
+    xh_donors = np.concatenate((nh_donors, oh_donors))
 
     if not exclude_water:
         acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O']
     else:
         acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O' and a.residue.name != 'HOH']
 
-    nho_angle_triplets = np.array([(e[0][0], e[0][1], e[1]) for e in product(nh_donors, acceptors)])
-    oho_angle_triplets = np.array([(e[0][0], e[0][1], e[1]) for e in product(oh_donors, acceptors)])
-    angle_triplets = np.vstack((nho_angle_triplets, oho_angle_triplets))
+    angle_triplets = np.array([(e[0][0], e[0][1], e[1]) for e in product(xh_donors, acceptors)])
     distance_pairs = angle_triplets[:, [1,2]]  # possible H..acceptor pairs
 
     angles = compute_angles(traj, angle_triplets)
