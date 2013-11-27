@@ -92,7 +92,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True):
 
         indices = []
         for a0, a1 in atoms:
-            if exclude_water and a0.residue.name == 'HOH':
+            if exclude_water and (a0.residue.name == 'HOH' or a1.residue.name == 'HOH'):
                 continue
             pair = (a0.index, a1.index)
             # make sure to get the pair in the right order, so that the index
