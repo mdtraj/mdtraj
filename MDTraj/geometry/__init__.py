@@ -30,5 +30,5 @@ from . import alignment
 from .angle import *
 from .distance import *
 from .dihedral import *
-from .hbond import kabsch_sander
+from .hbond import *
 from .sasa import shrake_rupley
