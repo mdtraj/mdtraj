@@ -1141,51 +1141,6 @@ class Trajectory(object):
         self.xyz = self_displace_xyz
         return self
 
-    def rmsd(self, reference, frame=0, atom_indices=None, parallel=True):
-        """Compute RMSD of all conformations to a reference conformation.
-
-        Parameters
-        ----------
-        reference : md.Trajectory
-            For each conformation in this trajectory, compute the RMSD to
-            a particular 'reference' conformation in another trajectory 
-            object.
-        frame : int
-            The index of the conformation in `reference` to measure
-            distances to.
-        atom_indices : array_like, or None
-            The indices of the atoms to use in the RMSD calculation. If not
-            supplied, all atoms will be used.
-        parallel : bool
-            Use OpenMP to calculate each of the RMSDs in parallel over
-            multiple cores
-
-        Notes
-        -----
-        This function uses OpenMP to parallelize the calculation across
-        multiple cores. To control the number of threads launched by OpenMP,
-        you can set the environment variable ``OMP_NUM_THREADS``.
-
-        Returns
-        -------
-        rmsds : np.ndarray, shape=(n_frames,)
-            A 1-D numpy array of the optimal root-mean-square deviations.
-        """
-
-        if atom_indices is None:
-            atom_indices = slice(None)
-            
-        self_xyz = np.asarray(self.xyz[:, atom_indices, :], order='c')
-        ref_xyz = np.asarray(reference.xyz[frame, atom_indices, :], order='c').reshape(1, -1, 3)
-        for i in range(self.n_frames):
-            self_xyz[i] -= (self_xyz[i].astype('float64').mean(0))
-        ref_xyz[0] -= (ref_xyz[0].astype('float64').mean(0))
-        self_g = np.einsum('ijk,ijk->i', self_xyz, self_xyz)
-        ref_g = np.einsum('ijk,ijk->i', ref_xyz , ref_xyz)
-
-        return _rmsd.getMultipleRMSDs_atom_major(
-                ref_xyz, self_xyz, ref_g, self_g, 0, parallel=parallel)
-
     def join(self, other, check_topology=True, discard_overlapping_frames=False):
         """Join two trajectories together along the time/frame axis.
 

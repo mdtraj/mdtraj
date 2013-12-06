@@ -57,7 +57,62 @@ cdef extern from "math.h":
 
 
 ##############################################################################
-# Functions
+# External (Public) Functions
+##############################################################################
+
+def rmsd(target, reference, frame=0, atom_indices=None, parallel=True):
+    """rmsd(target, reference, frame=0, atom_indices=None, parallel=True)
+    
+    Compute RMSD of all conformations in target to a reference conformation.
+
+    Parameters
+    ----------
+    target : md.Trajectory
+        For each conformation in this trajectory, compute the RMSD to
+        a particular 'reference' conformation in another trajectory 
+        object.
+    reference : md.Trajectory
+        The object containing the reference conformation to measure distances
+        to.
+    frame : int
+        The index of the conformation in `reference` to measure
+        distances to.
+    atom_indices : array_like, or None
+        The indices of the atoms to use in the RMSD calculation. If not
+        supplied, all atoms will be used.
+    parallel : bool
+        Use OpenMP to calculate each of the RMSDs in parallel over
+        multiple cores
+
+    Notes
+    -----
+    This function uses OpenMP to parallelize the calculation across
+    multiple cores. To control the number of threads launched by OpenMP,
+    you can set the environment variable ``OMP_NUM_THREADS``.
+
+    Returns
+    -------
+    rmsds : np.ndarray, shape=(n_frames,)
+        A 1-D numpy array of the optimal root-mean-square deviations.
+    """
+
+    if atom_indices is None:
+        atom_indices = slice(None)
+
+    target_xyz = np.asarray(target.xyz[:, atom_indices, :], order='c')
+    ref_xyz = np.asarray(reference.xyz[frame, atom_indices, :], order='c').reshape(1, -1, 3)
+    for i in range(target.n_frames):
+        target_xyz[i] -= (target_xyz[i].astype('float64').mean(0))
+    ref_xyz[0] -= (ref_xyz[0].astype('float64').mean(0))
+    target_g = np.einsum('ijk,ijk->i', target_xyz, target_xyz)
+    ref_g = np.einsum('ijk,ijk->i', ref_xyz , ref_xyz)
+
+    return getMultipleRMSDs_atom_major(ref_xyz, target_xyz, ref_g, target_g,
+                                       0, parallel=parallel)
+
+
+##############################################################################
+# Private Functions
 ##############################################################################
 
 
