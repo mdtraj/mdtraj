@@ -14,10 +14,36 @@
 
 static INLINE void aos_deinterleaved_load(const float* S, __m128* x, __m128* y, __m128* z)
 {
+    /* Deinterleaved load of x, y, z coordinates of 4 atoms in atom-major
+       ordering using aligned loads.
+    */
+
   __m128 t1, t2;
   *x  = _mm_load_ps(S);
   *y  = _mm_load_ps(S+4);
   t1 = _mm_load_ps(S+8);
+  *z  = *x;
+  t2 = *y;
+
+  t2 = _mm_shuffle_ps_yzyz(t2,t1);
+  *z  = _mm_shuffle_ps_yzxw(*z,t2);
+  *x  = _mm_shuffle_ps_xwyz(*x,t2);
+  *y  = _mm_shuffle_ps_xwxw(*y,*z);
+  *z  = _mm_shuffle_ps_yzxw(*z,t1);
+  *y  = _mm_swizzle_ps_zxyw(*y);
+  return;
+}
+
+static INLINE void aos_deinterleaved_loadu(const float* S, __m128* x, __m128* y, __m128* z)
+{
+    /* Deinterleaved load of x, y, z coordinates of 4 atoms in atom-major
+       ordering using unaligned loads
+    */
+
+  __m128 t1, t2;
+  *x  = _mm_loadu_ps(S);
+  *y  = _mm_loadu_ps(S+4);
+  t1 = _mm_loadu_ps(S+8);
   *z  = *x;
   t2 = *y;
 

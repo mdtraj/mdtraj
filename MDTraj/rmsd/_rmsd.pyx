@@ -128,6 +128,69 @@ bool parallel=True):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def getMultipleRMSDs_atom_major_new(
+np.ndarray[np.float32_t, ndim=3, mode="c"] xyz1 not None,
+np.ndarray[np.float32_t, ndim=3, mode="c"] xyz2 not None,
+np.ndarray[np.float32_t, ndim=1, mode="c"] g1 not None,
+np.ndarray[np.float32_t, ndim=1, mode="c"] g2 not None,
+int frame,
+bool parallel=True):
+    """getMultipleRMSDs_atom_major(xyz1, xyz2, g1, g2, n_atoms, frame, parallel=True)
+
+    Calculate the RMSD of several frames to a single frame, with the
+    coordinates laid out in atom-major orders
+
+    Parameters
+    ----------
+    xyz1 : np.ndarray, shape=(n_frames, n_atoms_padded, 3), dtype=float32
+        Coordinates of reference frame.
+    xyz2 : np.ndarray, shape=(n_frames, n_atoms_padded, 3), dtype=float32
+        Coordinates of frames to iterate over
+    g1 : np.ndarray, shape = (n_frames), dtype=float32
+        Pre-calculated G factors (traces) for each frame in xyz1
+    g2 : np.ndarray, shape = (n_frames), dtype=float32
+        Pre-calculated G factors (traces) for each frame in xyz2
+    n_atoms : int
+        The number of atoms in the system.
+    frame : int
+        Index of the desired reference frame in xyz1.
+    parallel : bool, default True
+        If True, use OpenMP parallelization.
+
+    Returns
+    -------
+    rmsds: np.ndarray, shape=(len(xyz2),)
+        RMSDS between xyz1[frame] and all of xyz2
+    """
+
+    cdef Py_ssize_t i
+    cdef int n_frames = xyz2.shape[0]
+    cdef int n_atoms = xyz1.shape[1]
+    cdef float msd
+
+    assert xyz1.ndim == 3 and xyz2.ndim == 3 and xyz1.shape[2] == 3 and xyz2.shape[2] == 3
+    if not (xyz1.shape[1]  == xyz2.shape[1]):
+        raise ValueError("Input arrays must have same number of atoms. "
+                         "found %d and %d." % (xyz1.shape[1], xyz2.shape[1]))
+    if frame >= xyz1.shape[0]:
+        raise ValueError("Cannot calculate RMSD of frame %d: xyz1 has "
+                         "only %d frames." % (frame, xyz1.shape[0]))
+
+    cdef np.ndarray[dtype=np.float32_t, ndim=1] distances = np.zeros(n_frames, dtype=np.float32)
+
+    if parallel == True:
+        for i in prange(n_frames, nogil=True):
+            msd = msd_atom_major(n_atoms, n_atoms,  &xyz1[frame, 0, 0], &xyz2[i, 0, 0], g1[frame], g2[i], 0, NULL)
+            distances[i] = sqrtf(msd)
+    else:
+        for i in range(n_frames):
+            msd = msd_atom_major(n_atoms, n_atoms, &xyz1[frame, 0, 0], &xyz2[i, 0, 0], g1[frame], g2[i], 0, NULL)
+            distances[i] = sqrtf(msd)
+
+    return distances
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def getMultipleRMSDs_atom_major(
 np.ndarray[np.float32_t, ndim=3, mode="c"] xyz1 not None,
 np.ndarray[np.float32_t, ndim=3, mode="c"] xyz2 not None,

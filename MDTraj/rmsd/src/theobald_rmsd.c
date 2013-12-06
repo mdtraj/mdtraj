@@ -41,6 +41,13 @@
 #endif
 #include "theobald_rmsd.h"
 #include "util.h"
+#include "stdio.h"
+
+/* 
+Using #define ALIGNED enables aligned loads. Slight speed boost, but
+requires that input data be 16-byte aligned.
+*/
+// #define ALIGNED
 
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
@@ -320,8 +327,8 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
      *
      *   Structure setup for this function:
      *
-     *   structures are stored axis major, possibly with extra padding to ensure you
-     *   meet two constraints:
+     *   structures are stored axis major, and if this file is compiled with 
+     *   -DALIGNED, possibly with extra padding to ensure you meet two constraints:
      *       - the number of elements in a row must be a multiple of 4
      *       - the first element in each row must be aligned to a 16 byte boundary
      *
@@ -338,27 +345,42 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
      *   pad it out to a multiple of 4 using zeros (using anything other than zero will
      *   make the calculation go wrong).
      *
+     * On the other hand, when this file is compiled without -DALIGNED, then 
+     * there are no 16 byte alignment or dummy atom requirements, and the
+     * "npaddedatoms" argument is ignored.
+     *
      *   arguments:
      *       nrealatoms:   the *actual* number of atoms in the structure
      *
      *       npaddedatoms: the number of atoms in the structure including padding atoms;
      *                     should equal nrealatoms rounded up to the next multiple of 4
+     *                     THIS IS ONLY USED IF COMPILED WITH -DALIGNED. OTHERWISE
+     *                     IT IS IGNORED.
      *
      *       rowstride:    the offset in elements between rows in the arrays. will prob
      *                     be equal to npaddedatoms, but you might use something else if
      *                     (for example) you were subsetting the structure
      *
      *       aT:           pointer to start of first structure (A). should be aligned to
-     *                     a 16-byte boundary
+     *                     a 16-byte boundary if compiled with -DALIGNED
      *
      *       bT:           pointer to start of second structure (B). should be aligned to
-     *                     a 16-byte boundary
+     *                     a 16-byte boundary if compiled with -DALIGNED
      *
      *       G_a:          trace of A'A
      *
      *       G_b:          trace of B'B
      */
     int niters, k;
+#ifndef ALIGNED
+    static const unsigned int __masks[4][4] = {
+        {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+        {0xFFFFFFFF, 0, 0, 0},
+        {0xFFFFFFFF, 0xFFFFFFFF, 0, 0},
+        {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0}
+    };
+    __m128 mask;
+#endif
     __m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
     __m128 ax,ay,az,b;
     __m128 t0,t1,t2;
@@ -374,17 +396,35 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
     if (aT==bT && G_a==G_b)
         return 0.0;
 
+#ifdef ALIGNED
     niters = npaddedatoms >> 2;
     /* npaddedatoms must be a multiple of 4 */
     assert(npaddedatoms % 4 == 0);
-
+#else
+    niters = (nrealatoms + 4-1) / 4;
+    mask = _mm_loadu_ps((float*) __masks[nrealatoms%4]);
+#endif
+    
     xx = xy = xz = yx = yy = yz = zx = zy = zz = _mm_setzero_ps();
     for (k = 0; k < niters; k++) {
+#ifdef ALIGNED
         ax = _mm_load_ps(aTx);
         ay = _mm_load_ps(aTy);
         az = _mm_load_ps(aTz);
-
         b = _mm_load_ps(bTx);
+#else
+        ax = _mm_loadu_ps(aTx);
+        ay = _mm_loadu_ps(aTy);
+        az = _mm_loadu_ps(aTz);
+        b = _mm_loadu_ps(bTx);
+        if (k == niters - 1) {
+            ax = _mm_and_ps(ax, mask);
+            ay = _mm_and_ps(ay, mask);
+            az = _mm_and_ps(az, mask);
+            b = _mm_and_ps(b, mask);
+        }
+#endif
+
         t0 = ax;
         t1 = ay;
         t2 = az;
@@ -397,7 +437,13 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
         yx = _mm_add_ps(yx,t1);
         zx = _mm_add_ps(zx,t2);
 
+#ifdef ALIGNED
         b = _mm_load_ps(bTy);
+#else
+        b = _mm_loadu_ps(bTy);
+        if (k == niters - 1)
+            b = _mm_and_ps(b, mask);
+#endif
         t0 = ax;
         t1 = ay;
         t2 = az;
@@ -410,7 +456,13 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
         yy = _mm_add_ps(yy,t1);
         zy = _mm_add_ps(zy,t2);
 
+#ifdef ALIGNED
         b = _mm_load_ps(bTz);
+#else
+        b = _mm_loadu_ps(bTz);
+        if (k == niters - 1)
+            b = _mm_and_ps(b, mask);
+#endif
 
         ax = _mm_mul_ps(ax,b);
         ay = _mm_mul_ps(ay,b);
@@ -437,13 +489,17 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
     return msdFromMandG(M, G_a, G_b, nrealatoms, 0, NULL);
 }
 
+
 float msd_atom_major(const int nrealatoms, const int npaddedatoms,
                      const float* a, const float* b, const float G_a, const float G_b,
                      int computeRot, float rot[9]) {
-    /*   Computes the mean-square-deviation between two centered structures in atom-major format.
+    /* Computes the mean-square-deviation between two centered structures in
+     * atom-major format.
+     *
      * Structure setup for this function:
      *
-     *   structures are stored atom major obeying two constraints:
+     *   If this file is compiled with -DALIGNED, structures are stored atom
+     *   major obeying two constraints:
      *       - if the number of atoms is not divisible by four, the structure is padded out
      *         with dummy atoms with zero in each coordinate up to an even multiple of 4 atoms.
      *       - the structure is aligned to a 16-byte boundary
@@ -463,17 +519,22 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
      *   pad it out to a multiple of 4 using zeros (using anything other than zero will
      *   make the calculation go wrong).
      *
+     * On the other hand, when this file is compiled without -DALIGNED, then 
+     * there are no 16 byte alignment or dummy atom requirements, and the
+     * "npaddedatoms" argument is ignored.
+     *
      *   arguments:
      *       nrealatoms:   the *actual* number of atoms in the structure
      *
      *       npaddedatoms: the number of atoms in the structure including padding atoms;
-     *                     should equal nrealatoms rounded up to the next multiple of 4
+     *                     should equal nrealatoms rounded up to the next multiple of 4.
+     *                     THIS IS ONLY USED IF COMPILED WITH -DALIGNED
      *
      *       a:            pointer to start of first structure (A). should be aligned to
-     *                     a 16-byte boundary
+     *                     a 16-byte boundary if compiled with -DALIGNED
      *
      *       b:            pointer to start of second structure (B). should be aligned to
-     *                     a 16-byte boundary
+     *                     a 16-byte boundary if compiled with -DALIGNED
      *
      *       G_a:          trace of A'A
      *
@@ -486,6 +547,15 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
      *                     if computeRot != 0.
      */
     int niters, k;
+#ifndef ALIGNED
+    static const unsigned int __masks[4][4] = {
+        {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+        {0xFFFFFFFF, 0, 0, 0},
+        {0xFFFFFFFF, 0xFFFFFFFF, 0, 0},
+        {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0}
+    };
+    __m128 mask;
+#endif
     /* Will have 3 garbage elements at the end */
     _ALIGNED(16) float M[12];
     __m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
@@ -497,17 +567,35 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
             rot[0] = rot[4] = rot[8] = 1.0;
             rot[1] = rot[2] = rot[3] = rot[5] = rot[6] = rot[7] = 0.0;
         }
-        return 0.0;
+        return 0.0f;
     }
 
+#ifdef ALIGNED
     niters = npaddedatoms >> 2;
     /* npaddedatoms must be a multiple of 4 */
     assert(npaddedatoms % 4 == 0);
-
+#else
+    niters = (nrealatoms + 4-1) / 4;
+    mask = _mm_loadu_ps((float*) __masks[nrealatoms%4]);
+#endif
+    
     xx = xy = xz = yx = yy = yz = zx = zy = zz = _mm_setzero_ps();
     for (k = 0; k < niters; k++) {
+#ifdef ALIGNED
         aos_deinterleaved_load(b,&bx,&by,&bz);
         aos_deinterleaved_load(a,&ax,&ay,&az);
+#else 
+        aos_deinterleaved_loadu(b,&bx,&by,&bz);
+        aos_deinterleaved_loadu(a,&ax,&ay,&az);
+        if (k == niters - 1) {
+            ax = _mm_and_ps(ax, mask);
+            ay = _mm_and_ps(ay, mask);
+            az = _mm_and_ps(az, mask);
+            bx = _mm_and_ps(bx, mask);
+            by = _mm_and_ps(by, mask);
+            bz = _mm_and_ps(bz, mask);
+        }
+#endif
 
         t0 = bx;
         t1 = by;
@@ -546,3 +634,4 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
     _mm_store_ps(M+8, zz);
     return msdFromMandG(M, G_a, G_b, nrealatoms, computeRot, rot);
 }
+
