@@ -59,13 +59,29 @@ def test_trajectory_rmsd():
     t.restrict_atoms(np.arange(16))
     calculated = t.rmsd(t, 0, parallel=False)
     
-    pt = md.rmsd_cache(t, major='atom')
     reference = np.zeros(t.n_frames)
     for i in range(t.n_frames):
         reference[i] = rmsd_qcp(t.xyz[0], t.xyz[i])
 
     eq(calculated, reference, decimal=3)
-    
+
+
+def test_superpose():
+    # t0 = md.load(get_fn('traj.h5'))[0:10]
+    # t0.restrict_atoms(np.arange(8))
+    # print t0.rmsd(t0, 0)
+
+    t1 = md.load(get_fn('traj.h5'))
+    reference_rmsd = t1.rmsd(t1, 0)
+
+    t1.superpose(t1, 0)
+    displ_rmsd = np.zeros(t1.n_frames)
+    for i in range(t1.n_frames):
+        delta = t1.xyz[i] - t1.xyz[0]
+        displ_rmsd[i] = (delta ** 2.0).sum(1).mean() ** 0.5
+
+    eq(reference_rmsd, displ_rmsd)
+
 # 
 # def test_rmsd_to_self():
 #     n_atoms = 16

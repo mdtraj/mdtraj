@@ -12,6 +12,37 @@
 #endif
 #include "sse_swizzle.h"
 
+static INLINE void aos_interleaved_storeu(float* p, __m128 x, __m128 y, __m128 z)
+{
+    __m128 x0x2y0y2 = _mm_shuffle_ps(x, y, _MM_SHUFFLE(2,0,2,0));
+    __m128 y1y3z1z3 = _mm_shuffle_ps(y, z, _MM_SHUFFLE(3,1,3,1));
+    __m128 z0z2x1x3 = _mm_shuffle_ps(z, x, _MM_SHUFFLE(3,1,2,0));
+
+    __m128 rx0y0z0x1 = _mm_shuffle_ps(x0x2y0y2, z0z2x1x3, _MM_SHUFFLE(2,0,2,0));
+    __m128 ry1z2x2y2 = _mm_shuffle_ps(y1y3z1z3, x0x2y0y2, _MM_SHUFFLE(3,1,2,0));
+    __m128 rz2x3y3z3 = _mm_shuffle_ps(z0z2x1x3, y1y3z1z3, _MM_SHUFFLE(3,1,3,1));
+
+    _mm_storeu_ps(p+0, rx0y0z0x1);
+    _mm_storeu_ps(p+4, ry1z2x2y2);
+    _mm_storeu_ps(p+8, rz2x3y3z3);
+}
+
+static INLINE void aos_interleaved_store(float* p, __m128 x, __m128 y, __m128 z)
+{
+    __m128 x0x2y0y2 = _mm_shuffle_ps(x, y, _MM_SHUFFLE(2,0,2,0));
+    __m128 y1y3z1z3 = _mm_shuffle_ps(y, z, _MM_SHUFFLE(3,1,3,1));
+    __m128 z0z2x1x3 = _mm_shuffle_ps(z, x, _MM_SHUFFLE(3,1,2,0));
+
+    __m128 rx0y0z0x1 = _mm_shuffle_ps(x0x2y0y2, z0z2x1x3, _MM_SHUFFLE(2,0,2,0));
+    __m128 ry1z2x2y2 = _mm_shuffle_ps(y1y3z1z3, x0x2y0y2, _MM_SHUFFLE(3,1,2,0));
+    __m128 rz2x3y3z3 = _mm_shuffle_ps(z0z2x1x3, y1y3z1z3, _MM_SHUFFLE(3,1,3,1));
+
+    _mm_store_ps(p+0, rx0y0z0x1);
+    _mm_store_ps(p+4, ry1z2x2y2);
+    _mm_store_ps(p+8, rz2x3y3z3);
+}
+
+
 static INLINE void aos_deinterleaved_load(const float* S, __m128* x, __m128* y, __m128* z)
 {
     /* Deinterleaved load of x, y, z coordinates of 4 atoms in atom-major

@@ -50,6 +50,8 @@ cdef extern float msd_atom_major(int nrealatoms, int npaddedatoms,  float* a,
 cdef extern float rot_msd_atom_major(const int n_real_atoms, const int n_padded_atoms,
                                      const float* a, const float* b, const float rot[9]) nogil
 
+cdef extern float rot_atom_major(const int n_atoms, const int n_padded_atoms,
+                                 float* a, const float rot[9]) nogil
 cdef extern from "math.h":
     float sqrtf(float x) nogil
 
@@ -128,7 +130,7 @@ bool parallel=True):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def getMultipleRMSDs_atom_major_new(
+def getMultipleRMSDs_atom_major(
 np.ndarray[np.float32_t, ndim=3, mode="c"] xyz1 not None,
 np.ndarray[np.float32_t, ndim=3, mode="c"] xyz2 not None,
 np.ndarray[np.float32_t, ndim=1, mode="c"] g1 not None,
@@ -188,6 +190,62 @@ bool parallel=True):
             distances[i] = sqrtf(msd)
 
     return distances
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def superpose_atom_major(
+np.ndarray[np.float32_t, ndim=3, mode="c"] xyz_align_target not None,
+np.ndarray[np.float32_t, ndim=3, mode="c"] xyz_align_mobile not None,
+np.ndarray[np.float32_t, ndim=1, mode="c"] g_target not None,
+np.ndarray[np.float32_t, ndim=1, mode="c"] g_mobile not None,
+np.ndarray[np.float32_t, ndim=3, mode="c"] xyz_displace_mobile not None,
+int target_frame,
+bool parallel=True):
+    """superpose_atom_major(xyz_target, xyz_mobile, g_target, g_mobile, xyz_mobile_displace)
+
+    Superpose each frame in xyz2 upon a frame in xyz1
+
+    Parameters
+    ----------
+    xyz_align_target : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
+        Coordinates of reference frame to align to.
+    xyz_align_mobile: np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
+        Coordinates of the mobile trajectory to align to target the target.
+    g_target : np.ndarray, shape = (n_frames), dtype=float32
+        Pre-calculated G factors (traces) for each frame in xyz_target
+    g_mobile : np.ndarray, shape = (n_frames), dtype=float32
+        Pre-calculated G factors (traces) for each frame in xyz_mobile
+    xyz_displace_mobile : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
+        The coordinates of the mobile trajectory to displace
+    """
+    cdef int i
+    cdef int n_frames = xyz_align_mobile.shape[0]
+    cdef int n_atoms_align = xyz_align_target.shape[1]
+    cdef int n_atoms_displace = xyz_displace_mobile.shape[1]
+    if not (xyz_align_target.shape[1]  == xyz_align_mobile.shape[1]):
+        raise ValueError("Input arrays must have same number of atoms. "
+                         "found %d and %d." % (
+                         xyz_align_target.shape[1],
+                         xyz_align_mobile.shape[1]))
+    if not xyz_align_mobile.shape[0] == xyz_displace_mobile.shape[0]:
+        raise ValueError("xyz_align_mobile and xyz_displace_mobile must contain the same number of frames")
+
+    cdef np.ndarray[ndim=3, dtype=np.float32_t] rot = np.zeros((n_frames, 3, 3), dtype=np.float32)
+
+    if parallel == True:
+        for i in prange(n_frames, nogil=True):
+            msd_atom_major(n_atoms_align, n_atoms_align, &xyz_align_mobile[i, 0, 0],
+                                 &xyz_align_target[target_frame, 0, 0], g_target[target_frame],
+                                 g_mobile[i], 1, &rot[i, 0, 0])
+            rot_atom_major(n_atoms_displace, n_atoms_displace,
+                           &xyz_displace_mobile[i, 0, 0], &rot[i, 0, 0])
+    else:
+        for i in range(n_frames):
+            msd_atom_major(n_atoms_align, n_atoms_align, &xyz_align_mobile[i, 0, 0],
+                                 &xyz_align_target[target_frame, 0, 0], g_target[target_frame],
+                                 g_mobile[i], 1, &rot[i, 0, 0])
+            rot_atom_major(n_atoms_displace, n_atoms_displace,
+                           &xyz_displace_mobile[i, 0, 0], &rot[i, 0, 0])
 
 @cython.boundscheck(False)
 @cython.wraparound(False)

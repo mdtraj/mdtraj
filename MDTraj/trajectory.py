@@ -1093,6 +1093,54 @@ class Trajectory(object):
     def __repr__(self):
         return "<mdtraj.Trajectory with %d frames, %d atoms at 0x%02x>" % (self.n_frames, self.n_atoms, id(self))
 
+    def superpose(self, reference, frame=0, atom_indices=None, parallel=True):
+        """Superpose each conformation in this trajectory upon a reference
+
+        Parameters
+        ----------
+        reference : md.Trajectory
+            For each conformation in this trajectory, aligned to a particular
+            reference conformation in another trajectory object.
+        frame : int
+            The index of the conformation in `reference` to align to.
+        atom_indices : array_like, or None
+            The indices of the atoms to superpose. If not
+            supplied, all atoms will be used.
+        parallel : bool
+            Use OpenMP to run the superposition in parallel over multiple cores
+
+        Returns
+        -------
+        self
+        """
+        if atom_indices is None:
+            atom_indices = slice(None)
+
+        self_align_xyz = np.asarray(self.xyz[:, atom_indices, :], order='c')
+        self_displace_xyz = np.asarray(self.xyz, order='c')
+        ref_align_xyz = np.asarray(reference.xyz[frame, atom_indices, :], order='c').reshape(1, -1, 3)
+
+        for i in range(self.n_frames):
+            offset = self_align_xyz[i].astype('float64').mean(0)
+            self_align_xyz[i] -= offset
+            if self_align_xyz.ctypes.data != self_displace_xyz.ctypes.data:
+                # when atom_indices is None, these two arrays alias the same
+                # memory
+                self_displace_xyz[i] -= offset
+
+        ref_offset = ref_align_xyz[0].astype('float64').mean(0)
+        ref_align_xyz[0] -= ref_offset
+
+        self_g = np.einsum('ijk,ijk->i', self_align_xyz, self_align_xyz)
+        ref_g = np.einsum('ijk,ijk->i', ref_align_xyz , ref_align_xyz)
+
+        _rmsd.superpose_atom_major(
+            ref_align_xyz, self_align_xyz, ref_g, self_g, self_displace_xyz,
+            0, parallel=parallel)
+
+        self.xyz = self_displace_xyz
+        return self
+
     def rmsd(self, reference, frame=0, atom_indices=None, parallel=True):
         """Compute RMSD of all conformations to a reference conformation.
 
@@ -1102,8 +1150,8 @@ class Trajectory(object):
             For each conformation in this trajectory, compute the RMSD to
             a particular 'reference' conformation in another trajectory 
             object.
-        other_index : int
-            The index of the conformation in ``reference`` to measure
+        frame : int
+            The index of the conformation in `reference` to measure
             distances to.
         atom_indices : array_like, or None
             The indices of the atoms to use in the RMSD calculation. If not
@@ -1135,7 +1183,7 @@ class Trajectory(object):
         self_g = np.einsum('ijk,ijk->i', self_xyz, self_xyz)
         ref_g = np.einsum('ijk,ijk->i', ref_xyz , ref_xyz)
 
-        return _rmsd.getMultipleRMSDs_atom_major_new(
+        return _rmsd.getMultipleRMSDs_atom_major(
                 ref_xyz, self_xyz, ref_g, self_g, 0, parallel=parallel)
 
     def join(self, other, check_topology=True, discard_overlapping_frames=False):
