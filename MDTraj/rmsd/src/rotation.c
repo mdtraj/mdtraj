@@ -31,14 +31,19 @@ static INLINE __m128 _mm_add3_ps(__m128 a, __m128 b, __m128 c) {
     return _mm_add_ps(_mm_add_ps(a, b), c);
 }
 
-void rot_atom_major(const int n_atoms, const int n_padded_atoms,
-                    float* a, const float rot[9])
+void rot_atom_major(const int n_atoms, float* a, const float rot[9])
 {
-    /* Apply rotation matrix `rot` to conformation `a`*/
+    /* Apply rotation matrix `rot` to conformation `a`. If this file
+       is compiled with -DALIGNED, then `a` is assumed to be aligned on a
+       16-byte boundary and n_atoms must be a multiple of four.
+       Otherwise, no alignment requirements exist.
+    */
 
     unsigned int k;
     unsigned int n_iters = 0;
+#ifndef ALIGNED
     float x, y, z;
+#endif
     __m128 ax, ay, az, tx, ty, tz;
     __m128 rXX = _mm_load1_ps(rot + 0);
     __m128 rXY = _mm_load1_ps(rot + 1);
@@ -52,8 +57,8 @@ void rot_atom_major(const int n_atoms, const int n_padded_atoms,
 
 #ifdef ALIGNED
     /* npaddedatoms must be a multiple of 4 */
-    assert(n_padded_atoms % 4 == 0);
-    n_iters = n_padded_atoms >> 2;
+    assert(n_atoms % 4 == 0);
+    n_iters = n_atoms >> 2;
 #else
     n_iters = n_atoms / 4;
 #endif
@@ -78,6 +83,7 @@ void rot_atom_major(const int n_atoms, const int n_padded_atoms,
         a += 12;
     }
 
+#ifndef ALIGNED
     // Epilogue to process the last atoms that are past the last multiple of
     // four
     for (k = 0; k < n_atoms % 4; k++) {
@@ -88,6 +94,7 @@ void rot_atom_major(const int n_atoms, const int n_padded_atoms,
         a[3*k + 1] = x*rot[1] + y*rot[4] + z*rot[7];
         a[3*k + 2] = x*rot[2] + y*rot[5] + z*rot[8];
     }
+#endif
 }
 
 
