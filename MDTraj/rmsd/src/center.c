@@ -1,26 +1,29 @@
 #include "util.h"
 #include "stdio.h"
 
-void inplace_center_atom_major(float* coords, const int n_frames, const int n_atoms)
+void inplace_center_and_trace_atom_major(float* coords, float* traces, const int n_frames, const int n_atoms)
 {
     /* Center a trajectory containing multiple conformations inplace.
        The coordinates are store in float, but the accumulation is done in
-       double
+       double.
+
+       Also compute the traces of the centered conformations, which are necessary
+       for RMSD.
     */ 
     int i, k;
     float* confp;
-    __m128d sx_, sy_, sz_;
+    __m128d sx_, sy_, sz_, trace_;
     __m128 mux_, muy_, muz_;
     float sxf, syf, szf;
-    double sx[2], sy[2], sz[2];
-    __m128 x, y, z;
+    double sx[2], sy[2], sz[2], trace[2];
+    __m128 x, y, z, x2, y2, z2;
 
     #ifdef _OPENMP
     #pragma omp parallel for default(none) shared(coords)
     #endif
     for (k = 0; k < n_frames; k++) {
         confp = &coords[k * n_atoms * 3];
-        sx_ = sy_ = sz_ = _mm_setzero_pd();
+        sx_ = sy_ = sz_ = trace_ = _mm_setzero_pd();
         for (i = 0; i < n_atoms/4; i++) {
             aos_deinterleaved_loadu(confp, &x, &y, &z);
 
@@ -73,13 +76,31 @@ void inplace_center_atom_major(float* coords, const int n_frames, const int n_at
             x = _mm_sub_ps(x, mux_);
             y = _mm_sub_ps(y, muy_);
             z = _mm_sub_ps(z, muz_);
+
+            x2 = _mm_mul_ps(x, x);
+            y2 = _mm_mul_ps(y, y);
+            z2 = _mm_mul_ps(z, z);
+            trace_ = _mm_add_pd(trace_, _mm_cvtps_pd(x2));
+            trace_ = _mm_add_pd(trace_, _mm_cvtps_pd(y2));
+            trace_ = _mm_add_pd(trace_, _mm_cvtps_pd(z2));
+            trace_ = _mm_add_pd(trace_, _mm_cvtps_pd(_mm_movehl_ps(x2, x2)));
+            trace_ = _mm_add_pd(trace_, _mm_cvtps_pd(_mm_movehl_ps(y2, y2)));
+            trace_ = _mm_add_pd(trace_, _mm_cvtps_pd(_mm_movehl_ps(z2, z2)));
+
             aos_interleaved_storeu(confp, x, y, z);
             confp += 12;
         }
+        _mm_storeu_pd(trace, trace_);
+
         for (i = 0; i < n_atoms % 4; i++) {
             confp[i*3 + 0] -= sxf;
             confp[i*3 + 1] -= syf;
             confp[i*3 + 2] -= szf;
+            trace[0] += confp[i*3 + 0]*confp[i*3 + 0];
+            trace[0] += confp[i*3 + 1]*confp[i*3 + 1];
+            trace[0] += confp[i*3 + 2]*confp[i*3 + 2];
         }
+        trace[0] += trace[1];
+        traces[k] = (float) trace[0];
     }
 }
