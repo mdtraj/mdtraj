@@ -144,7 +144,7 @@ def eq(o1, o2, decimal=6, err_msg=''):
     # probably these are other specialized types
     # that need a special check?
     else:
-        eq_(o1, o2)
+        eq_(o1, o2, msg=err_msg)
 
     return True
 
