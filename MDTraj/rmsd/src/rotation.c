@@ -25,20 +25,76 @@
 #include "util.h"
 #include "theobald_rmsd.h"
 #include "rotation.h"
-#ifndef INLINE
-#if defined(__GNUC__)
-#define INLINE __inline__
-#elif defined(_MSC_VER)
-#define INLINE __inline
-#elif defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-#define INLINE inline
-#else
-#define INLINE
-#endif
-#endif
+#include "msvccompat.h"
 
 static INLINE __m128 _mm_add3_ps(__m128 a, __m128 b, __m128 c) {
     return _mm_add_ps(_mm_add_ps(a, b), c);
+}
+
+void rot_atom_major(const int n_atoms, float* a, const float rot[9])
+{
+    /* Apply rotation matrix `rot` to conformation `a`. If this file
+       is compiled with -DALIGNED, then `a` is assumed to be aligned on a
+       16-byte boundary and n_atoms must be a multiple of four.
+       Otherwise, no alignment requirements exist.
+    */
+
+    unsigned int k;
+    unsigned int n_iters = 0;
+#ifndef ALIGNED
+    float x, y, z;
+#endif
+    __m128 ax, ay, az, tx, ty, tz;
+    __m128 rXX = _mm_load1_ps(rot + 0);
+    __m128 rXY = _mm_load1_ps(rot + 1);
+    __m128 rXZ = _mm_load1_ps(rot + 2);
+    __m128 rYX = _mm_load1_ps(rot + 3);
+    __m128 rYY = _mm_load1_ps(rot + 4);
+    __m128 rYZ = _mm_load1_ps(rot + 5);
+    __m128 rZX = _mm_load1_ps(rot + 6);
+    __m128 rZY = _mm_load1_ps(rot + 7);
+    __m128 rZZ = _mm_load1_ps(rot + 8);
+
+#ifdef ALIGNED
+    /* npaddedatoms must be a multiple of 4 */
+    assert(n_atoms % 4 == 0);
+    n_iters = n_atoms >> 2;
+#else
+    n_iters = n_atoms / 4;
+#endif
+
+    for (k = 0; k < n_iters; k++) {
+        /* load four atoms at a time */
+#ifdef ALIGNED
+        aos_deinterleaved_load(a,&ax,&ay,&az);
+#else
+        aos_deinterleaved_loadu(a,&ax,&ay,&az);
+#endif
+
+        tx = _mm_add3_ps(_mm_mul_ps(ax, rXX), _mm_mul_ps(ay, rYX), _mm_mul_ps(az, rZX));
+        ty = _mm_add3_ps(_mm_mul_ps(ax, rXY), _mm_mul_ps(ay, rYY), _mm_mul_ps(az, rZY));
+        tz = _mm_add3_ps(_mm_mul_ps(ax, rXZ), _mm_mul_ps(ay, rYZ), _mm_mul_ps(az, rZZ));
+
+#ifdef ALIGNED
+        aos_interleaved_store(a, tx, ty, tz);
+#else
+        aos_interleaved_storeu(a, tx, ty, tz);
+#endif
+        a += 12;
+    }
+
+#ifndef ALIGNED
+    // Epilogue to process the last atoms that are past the last multiple of
+    // four
+    for (k = 0; k < n_atoms % 4; k++) {
+        x = a[3*k + 0];
+        y = a[3*k + 1];
+        z = a[3*k + 2];
+        a[3*k + 0] = x*rot[0] + y*rot[3] + z*rot[6];
+        a[3*k + 1] = x*rot[1] + y*rot[4] + z*rot[7];
+        a[3*k + 2] = x*rot[2] + y*rot[5] + z*rot[8];
+    }
+#endif
 }
 
 

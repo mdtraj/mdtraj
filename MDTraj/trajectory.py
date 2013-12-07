@@ -39,6 +39,7 @@ from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
 from mdtraj.utils import unitcell, ensure_type
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3
+from mdtraj import _rmsd
 if PY3:
     basestring = str
 
@@ -1092,6 +1093,52 @@ class Trajectory(object):
     def __repr__(self):
         return "<mdtraj.Trajectory with %d frames, %d atoms at 0x%02x>" % (self.n_frames, self.n_atoms, id(self))
 
+    def superpose(self, reference, frame=0, atom_indices=None, parallel=True):
+        """Superpose each conformation in this trajectory upon a reference
+
+        Parameters
+        ----------
+        reference : md.Trajectory
+            For each conformation in this trajectory, aligned to a particular
+            reference conformation in another trajectory object.
+        frame : int
+            The index of the conformation in `reference` to align to.
+        atom_indices : array_like, or None
+            The indices of the atoms to superpose. If not
+            supplied, all atoms will be used.
+        parallel : bool
+            Use OpenMP to run the superposition in parallel over multiple cores
+
+        Returns
+        -------
+        self
+        """
+        if atom_indices is None:
+            atom_indices = slice(None)
+
+        self_align_xyz = np.asarray(self.xyz[:, atom_indices, :], order='c')
+        self_displace_xyz = np.asarray(self.xyz, order='c')
+        ref_align_xyz = np.asarray(reference.xyz[frame, atom_indices, :], order='c').reshape(1, -1, 3)
+
+        offset = self_align_xyz.mean(axis=1, dtype=np.float64, keepdims=True)
+        self_align_xyz -= offset
+        if self_align_xyz.ctypes.data != self_displace_xyz.ctypes.data:
+            # when atom_indices is None, these two arrays alias the same
+            # memory
+            self_displace_xyz[i] -= offset
+
+        ref_offset = ref_align_xyz[0].astype('float64').mean(0)
+        ref_align_xyz[0] -= ref_offset
+
+        self_g = np.einsum('ijk,ijk->i', self_align_xyz, self_align_xyz)
+        ref_g = np.einsum('ijk,ijk->i', ref_align_xyz , ref_align_xyz)
+
+        _rmsd.superpose_atom_major(
+            ref_align_xyz, self_align_xyz, ref_g, self_g, self_displace_xyz,
+            0, parallel=parallel)
+
+        self.xyz = self_displace_xyz
+        return self
 
     def join(self, other, check_topology=True, discard_overlapping_frames=False):
         """Join two trajectories together along the time/frame axis.
@@ -1539,16 +1586,19 @@ class Trajectory(object):
         mass_weighted : bool, optional (default = False)
             If True, weight atoms by mass when removing COM.
 
-
+        Returns
+        -------
+        self
         """
-        if mass_weighted == True:
+        if mass_weighted:
             masses = np.array([a.element.mass for a in self.top.atoms])
             masses /= masses.sum()
             for x in self._xyz:
                 x -= (x.astype('float64').T.dot(masses))
         else:
-            for x in self._xyz:
-                x -= (x.astype('float64').mean(0))
+            _rmsd._center_inplace_atom_major(self._xyz)
+
+        return self
 
     def restrict_atoms(self, atom_indices):
         """Retain only a subset of the atoms in a trajectory (inplace)
@@ -1559,9 +1609,14 @@ class Trajectory(object):
         ----------
         atom_indices : list([int])
             List of atom indices to keep.
+
+        Returns
+        -------
+        self
         """
         self._topology = self._topology.subset(atom_indices)
         self._xyz = self.xyz[:,atom_indices]
+        return self
 
 
     def _check_valid_unitcell(self):
