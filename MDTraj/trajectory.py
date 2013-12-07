@@ -1120,13 +1120,12 @@ class Trajectory(object):
         self_displace_xyz = np.asarray(self.xyz, order='c')
         ref_align_xyz = np.asarray(reference.xyz[frame, atom_indices, :], order='c').reshape(1, -1, 3)
 
-        for i in range(self.n_frames):
-            offset = self_align_xyz[i].astype('float64').mean(0)
-            self_align_xyz[i] -= offset
-            if self_align_xyz.ctypes.data != self_displace_xyz.ctypes.data:
-                # when atom_indices is None, these two arrays alias the same
-                # memory
-                self_displace_xyz[i] -= offset
+        offset = self_align_xyz.mean(axis=1, dtype=np.float64, keepdims=True)
+        self_align_xyz -= offset
+        if self_align_xyz.ctypes.data != self_displace_xyz.ctypes.data:
+            # when atom_indices is None, these two arrays alias the same
+            # memory
+            self_displace_xyz[i] -= offset
 
         ref_offset = ref_align_xyz[0].astype('float64').mean(0)
         ref_align_xyz[0] -= ref_offset
