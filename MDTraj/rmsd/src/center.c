@@ -101,6 +101,7 @@ void inplace_center_and_trace_atom_major(float* coords, float* traces, const int
             trace[0] += confp[i*3 + 2]*confp[i*3 + 2];
         }
         trace[0] += trace[1];
-        traces[k] = (float) trace[0];
+        if (traces != NULL)
+            traces[k] = (float) trace[0];
     }
 }

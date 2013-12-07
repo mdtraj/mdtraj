@@ -115,6 +115,13 @@ def rmsd(target, reference, frame=0, atom_indices=None, parallel=True):
                     ref_xyz, target_xyz, ref_g, target_g, 0, parallel=parallel)
     return distances
 
+
+def _center_inplace_atom_major(np.ndarray[ndim=3, dtype=np.float32_t] xyz not None):
+    assert xyz.shape[2] == 3
+    inplace_center_and_trace_atom_major(&xyz[0,0,0], NULL, xyz.shape[0], xyz.shape[1])
+
+
+
 ##############################################################################
 # Private Functions
 ##############################################################################

@@ -1587,16 +1587,19 @@ class Trajectory(object):
         mass_weighted : bool, optional (default = False)
             If True, weight atoms by mass when removing COM.
 
-
+        Returns
+        -------
+        self
         """
-        if mass_weighted == True:
+        if mass_weighted:
             masses = np.array([a.element.mass for a in self.top.atoms])
             masses /= masses.sum()
             for x in self._xyz:
                 x -= (x.astype('float64').T.dot(masses))
         else:
-            for x in self._xyz:
-                x -= (x.astype('float64').mean(0))
+            _rmsd._center_inplace_atom_major(self._xyz)
+
+        return self
 
     def restrict_atoms(self, atom_indices):
         """Retain only a subset of the atoms in a trajectory (inplace)
@@ -1607,9 +1610,14 @@ class Trajectory(object):
         ----------
         atom_indices : list([int])
             List of atom indices to keep.
+
+        Returns
+        -------
+        self
         """
         self._topology = self._topology.subset(atom_indices)
         self._xyz = self.xyz[:,atom_indices]
+        return self
 
 
     def _check_valid_unitcell(self):
