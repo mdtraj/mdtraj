@@ -232,6 +232,7 @@ def rmsd_extension():
                      sources=[
                          'MDTraj/rmsd/src/theobald_rmsd.c',
                          'MDTraj/rmsd/src/rotation.c',
+                         'MDTraj/rmsd/src/center.c',
                          'MDTraj/rmsd/_rmsd.' + cython_extension],
                      include_dirs=[
                          'MDTraj/rmsd/include', numpy.get_include()],

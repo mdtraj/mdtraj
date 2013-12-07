@@ -49,8 +49,8 @@ cdef extern float msd_atom_major(int nrealatoms, int npaddedatoms,  float* a,
                                  float rot[9]) nogil
 cdef extern float rot_msd_atom_major(const int n_real_atoms, const int n_padded_atoms,
                                      const float* a, const float* b, const float rot[9]) nogil
-
 cdef extern float rot_atom_major(const int n_atoms, float* a, const float rot[9]) nogil
+cdef extern void inplace_center_atom_major(float* coords, const int n_frames, const int n_atoms) nogil
 
 cdef extern from "math.h":
     float sqrtf(float x) nogil
@@ -95,21 +95,29 @@ def rmsd(target, reference, frame=0, atom_indices=None, parallel=True):
     rmsds : np.ndarray, shape=(n_frames,)
         A 1-D numpy array of the optimal root-mean-square deviations.
     """
+    #import time
 
     if atom_indices is None:
         atom_indices = slice(None)
 
-    target_xyz = np.asarray(target.xyz[:, atom_indices, :], order='c')
-    ref_xyz = np.asarray(reference.xyz[frame, atom_indices, :], order='c').reshape(1, -1, 3)
-    for i in range(target.n_frames):
-        target_xyz[i] -= (target_xyz[i].astype('float64').mean(0))
-    ref_xyz[0] -= (ref_xyz[0].astype('float64').mean(0))
+    cdef np.ndarray[ndim=3, dtype=np.float32_t] target_xyz = np.asarray(target.xyz[:, atom_indices, :], order='c', dtype=np.float32)
+    cdef np.ndarray[ndim=3, dtype=np.float32_t] ref_xyz = np.asarray(reference.xyz[frame, atom_indices, :], order='c', dtype=np.float32).reshape(1, -1, 3)
+
+    inplace_center_atom_major(&target_xyz[0,0,0], target_xyz.shape[0], target_xyz.shape[1])
+    inplace_center_atom_major(&ref_xyz[0,0,0], 1, ref_xyz.shape[1])
+
+    #target_xyz -= target_xyz.mean(axis=1, dtype=np.float64, keepdims=True)[0]
+    #ref_xyz[0] -= (ref_xyz[0].astype('float64').mean(0))
+
+    #t0 = time.time()
     target_g = np.einsum('ijk,ijk->i', target_xyz, target_xyz)
     ref_g = np.einsum('ijk,ijk->i', ref_xyz , ref_xyz)
+    #t1 = time.time()
 
-    return getMultipleRMSDs_atom_major(ref_xyz, target_xyz, ref_g, target_g,
-                                       0, parallel=parallel)
-
+    distances =  getMultipleRMSDs_atom_major(
+                    ref_xyz, target_xyz, ref_g, target_g, 0, parallel=parallel)
+    #t2 = time.time()
+    return distances
 
 ##############################################################################
 # Private Functions
