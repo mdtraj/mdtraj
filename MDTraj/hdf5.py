@@ -560,6 +560,9 @@ class HDF5TrajectoryFile(object):
         traj_chunk : Trajectory
             A chunk of trajectory
         """
+        
+        #TODO: Why can't I import this at the top of the file?
+        from mdtraj.trajectory import Trajectory
 
         if stride != None:
             while chunk_size % stride != 0:
@@ -612,7 +615,11 @@ class HDF5TrajectoryFile(object):
                 temperature = get_field('temperature', frame_slice, out_units='kelvin'),
                 alchemicalLambda = get_field('lambda', frame_slice, out_units='dimensionless')
             )
-            yield frames
+            
+            trajectory = Trajectory(xyz=frames.coordinates, topology=self.topology,
+                        time=frames.time, unitcell_lengths=frames.cell_lengths,
+                        unitcell_angles=frames.cell_angles)
+            yield trajectory
 
 
 
