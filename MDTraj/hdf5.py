@@ -545,6 +545,100 @@ class HDF5TrajectoryFile(object):
 
         self._frame_index += (frame_slice.stop - frame_slice.start)
         return frames
+    
+    @ensure_mode('r')
+    def read_chunks(self, chunk_size=50000, stride=None, atom_indices=None ):
+        """
+        Function to read trajectory files which have been saved as HDF.
+
+        This function is an iterable, so should be used like:
+
+        for trajectory_chunk in traj.read_chuncks()
+            ... # Do something with each chunk. The chunk looks like a regular Trajectory instance
+            
+        Parameters
+        ----------
+        chunk_size : int
+            The number of size of chunks to be enumerated
+        stride : {int, None}
+            By default all of the frames will be read, but you can pass this
+            flag to read a subset of of the data by grabbing only every
+            `stride`-th frame from disk.
+        atom_indices : {int, None}
+            By default all of the atom  will be read, but you can pass this
+            flag to read only a subsets of the atoms for the `coordinates` and
+            `velocities` fields. Note that you will have to carefully manage
+            the indices and the offsets, since the `i`-th atom in the topology
+            will not necessarily correspond to the `i`-th atom in your subset.
+
+
+        Yields
+        -------
+        traj_chunk : Trajectory
+            A chunk of trajectory
+        """
+        
+        #TODO: Why can't I import this at the top of the file?
+        from mdtraj.trajectory import Trajectory
+
+        if stride != None:
+            while chunk_size % stride != 0:
+                # Need to do this in order to make sure we stride correctly.
+                # since we read in chunks, and then we need the strides
+                # to line up
+                chunk_size -= 1
+
+        if atom_indices is None:
+            # get all of the atoms
+            atom_slice = slice(None)
+        else:
+            atom_slice = ensure_type(atom_indices, dtype=np.int, ndim=1,
+                                     name='atom_indices', warn_on_cast=False)
+            if not np.all(atom_slice < self._handle.root.coordinates.shape[1]):
+                raise ValueError('As a zero-based index, the entries in '
+                    'atom_indices must all be less than the number of atoms '
+                    'in the trajectory, %d' % self._handle.root.coordinates.shape[1])
+            if not np.all(atom_slice >= 0):
+                raise ValueError('The entries in atom_indices must be greater '
+                    'than or equal to zero')
+
+        def get_field(name, slice, out_units, can_be_none=True):
+            try:
+                node = self._get_node(where='/', name=name)
+                data = node.__getitem__(slice)
+                data =  in_units_of(data, out_units, str(node.attrs.units))
+                return data
+            except self.tables.NoSuchNodeError:
+                if can_be_none:
+                    return None
+                raise
+
+
+        total_n_frames = len(self._handle.root.coordinates)
+        begin_range_list = np.arange(0, total_n_frames, chunk_size)
+        end_range_list = np.concatenate((begin_range_list[1:], [total_n_frames]))
+
+        for r0, r1 in zip(begin_range_list, end_range_list):
+            frame_slice = slice(r0, r1, stride)
+            frames = Frames(
+                coordinates = get_field('coordinates', (frame_slice, atom_slice, slice(None)),
+                                        out_units='nanometers', can_be_none=False),
+                time = get_field('time', frame_slice, out_units='picoseconds'),
+                cell_lengths = get_field('cell_lengths', (frame_slice, slice(None)), out_units='nanometers'),
+                cell_angles = get_field('cell_angles', (frame_slice, slice(None)), out_units='degrees'),
+                velocities = get_field('velocities', (frame_slice, atom_slice, slice(None)), out_units='nanometers/picosecond'),
+                kineticEnergy = get_field('kineticEnergy', frame_slice, out_units='kilojoules_per_mole'),
+                potentialEnergy = get_field('potentialEnergy', frame_slice, out_units='kilojoules_per_mole'),
+                temperature = get_field('temperature', frame_slice, out_units='kelvin'),
+                alchemicalLambda = get_field('lambda', frame_slice, out_units='dimensionless')
+            )
+            
+            trajectory = Trajectory(xyz=frames.coordinates, topology=self.topology,
+                        time=frames.time, unitcell_lengths=frames.cell_lengths,
+                        unitcell_angles=frames.cell_angles)
+            yield trajectory
+
+
 
     @ensure_mode('w', 'a')
     def write(self, coordinates, time=None, cell_lengths=None, cell_angles=None,
