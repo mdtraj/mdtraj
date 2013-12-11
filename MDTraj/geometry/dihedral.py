@@ -70,7 +70,7 @@ def _dihedrals(xyz, indices, out=None):
     return np.arctan2(p1, p2, out)
 
 
-def compute_dihedrals(traj, indices, opt=True):
+def compute_dihedrals(traj, indices, opt=False):
     """Compute the dihedral angles between the supplied quartets of atoms in each frame in a trajectory.
 
     Parameters
@@ -250,6 +250,44 @@ _get_indices_omega = lambda traj: atom_sequence_finder(traj, OMEGA_ATOMS)
 _get_indices_phi = lambda traj: atom_sequence_finder(traj, PHI_ATOMS)
 _get_indices_psi = lambda traj: atom_sequence_finder(traj, PSI_ATOMS)
 _get_indices_chi = lambda traj: atom_sequence_finder(traj, CHI_ATOMS)
+
+
+def get_indices(traj, angles='phi/psi'):
+    """Get the atom indices of the quartets of atoms involved in the
+    dihedral angle interactions.
+    
+    
+    angles can be a single string or a list of strings, that can be parsed
+    as any combination of phi, psi and or chi    
+        ['phi','psi']
+        'phi/psi'
+        'phi psi'
+    are all valid.
+    Returns a N x 4 array
+    """
+    
+    if isinstance(angles, basestring):
+        angles = angles.lower()
+        angles = angles.replace('/', ' ').replace('-', ' ').split()
+    try:
+        angles = sorted([angle.lower() for angle in angles])
+
+    except:
+        raise ValueError("I can't parse %s. Please supply a string like phi/psi" % str(angles))
+    indices = np.zeros((0,4), dtype=int)
+      
+    for angle in angles:
+        if angle == 'chi':
+            indices = np.vstack((indices, _get_indices_chi(traj)[1]))
+        elif angle == 'phi':
+            indices = np.vstack((indices, _get_indices_phi(traj)[1]))
+        elif angle == 'psi':
+            indices = np.vstack((indices, _get_indices_psi(traj)[1]))
+        elif angle == 'omega':
+            indices = np.vstack((indices, _get_indices_omega(traj)[1]))
+        else:
+            raise ValueError("Uncregozied angle type: %s. Only phi, psi and chi are supported" % angle)
+    return indices
 
 
 def compute_phi(traj):
