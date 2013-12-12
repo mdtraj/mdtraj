@@ -30,7 +30,7 @@ import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import _geometry
 
-__all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega','compute_chi_all'
+__all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega','compute_chi_all',
            'compute_chi1','compute_chi2','compute_chi3','compute_chi4','atom_sequence_finder']
 
 ##############################################################################
