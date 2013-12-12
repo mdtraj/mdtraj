@@ -41,18 +41,31 @@ fd4, temp4 = tempfile.mkstemp(suffix='.trr')
 fd5, temp5 = tempfile.mkstemp(suffix='.h5')
 fd6, temp6 = tempfile.mkstemp(suffix='.pdb')
 fd7, temp7 = tempfile.mkstemp(suffix='.nc')
-for e in [fd1, fd2, fd3, fd4, fd5, fd6, fd7]:
+fd_lh5, temp_lh5 = tempfile.mkstemp(suffix='.lh5')
+
+for e in [fd1, fd2, fd3, fd4, fd5, fd6, fd7, fd_lh5]:
     os.close(e)
+
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
 
-    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
+    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp_lh5]:
         os.unlink(e)
 
 
 def test_legacy_hdf0():
     t0 = md.load(fn)
+
+
+def test_legacy_hdf1():
+    t = md.load(get_fn('legacy_msmbuilder_trj0.lh5'))
+    t.save(temp_lh5)
+
+
+def test_legacy_hdf2():
+    t = md.load_legacy_hdf(get_fn('legacy_msmbuilder_trj0.lh5'))
+    t.save_legacy_hdf(temp_lh5)
 
 
 def test_mismatch():

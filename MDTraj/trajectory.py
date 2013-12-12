@@ -40,11 +40,12 @@ from mdtraj.utils import unitcell, ensure_type
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3
 from mdtraj import _rmsd
+from mdtraj import compatibility
 if PY3:
     basestring = str
 
 __all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpos',
-           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml']
+           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml', 'load_legacy_hdf']
 
 ##############################################################################
 # Globals
@@ -782,6 +783,9 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None):
     return trajectory
 
 
+load_legacy_hdf = compatibility.load_legacy_hdf
+
+
 class Trajectory(object):
     """Container object for a molecular dynamics trajectory
 
@@ -1421,7 +1425,9 @@ class Trajectory(object):
                   '.nc': self.save_netcdf,
                   '.crd': self.save_mdcrd,
                   '.mdcrd': self.save_mdcrd,
-                  '.ncdf': self.save_netcdf}
+                  '.ncdf': self.save_netcdf,
+                  '.lh5': self.save_legacy_hdf,
+                  }
 
         try:
             saver = savers[extension]
@@ -1574,6 +1580,18 @@ class Trajectory(object):
                     cell_lengths=_convert(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
+    def save_legacy_hdf(self, filename):
+        """Save trajectory in MSMBuilder2 legacy LH5 (lossy HDF5) format.
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory        
+
+        """
+        compatibility.save_legacy_hdf(self, filename)
+        
+
     def center_coordinates(self, mass_weighted=False):
         """Center each trajectory frame at the origin (0,0,0).
 
@@ -1651,7 +1669,7 @@ _LoaderRegistry = {
     '.h5': load_hdf5,
     '.crd': load_mdcrd,
     '.mdcrd': load_mdcrd,
-    #'.lh5': _load_legacy_hdf,
+    '.lh5': load_legacy_hdf,
     '.binpos': load_binpos,
     '.ncdf': load_netcdf,
     '.nc': load_netcdf,
