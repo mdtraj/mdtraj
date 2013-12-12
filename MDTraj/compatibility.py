@@ -52,12 +52,14 @@ Functions
 from __future__ import print_function, division
 import numpy as np
 
-from mdtraj import Trajectory, Topology
+import logging
+logger = logging.getLogger(__name__)
+
 import mdtraj.pdb.element
-import mdtraj.trajectory
 from mdtraj.utils import import_
 from mdtraj.utils.six import PY3, iteritems
 from mdtraj.utils.six.moves import zip
+
 if PY3:
     basestring = str
 
@@ -100,6 +102,9 @@ def load_legacy_hdf(filename, stride=1, atom_indices=None, frame=None, chunk=500
     trajectory : md.Trajectory
         The resulting trajectory, as an md.Trajectory object.
     """
+    logging.info("""Warning: ".lh5" (MSMB2 legacy lossy HDF) is deprecated.""")
+    
+    from mdtraj import Trajectory  # Delayed import due to wacky recursive imports in compatibilty
 
     def _convert_from_lossy_integers(X, precision=1000):
         """Implementation of the lossy compression used in Gromacs XTC using
@@ -186,6 +191,8 @@ def save_legacy_hdf(traj, filename):
         String filename of HDF Trajectory file.
     """
 
+    logging.info("""Warning: ".lh5" (MSMB2 legacy lossy HDF) is deprecated.""")
+
     MAXINT16 = np.iinfo(np.int16).max
     MAXINT32 = np.iinfo(np.int32).max
     DEFAULT_PRECISION = 1000
@@ -232,6 +239,7 @@ def save_legacy_hdf(traj, filename):
 
 
 def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
+    from mdtraj import Topology  # Delayed import due to wacky recursive imports in compatibilty
     topology = Topology()
 
     # assert that the ChainID is just an array of empty strings, which appears
@@ -263,6 +271,3 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
     topology.create_standard_bonds()
     return topology
 
-
-# register this reader with mdtraj!
-mdtraj.trajectory._LoaderRegistry['.lh5'] = load_legacy_hdf
