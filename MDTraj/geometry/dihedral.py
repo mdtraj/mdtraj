@@ -506,7 +506,7 @@ def compute_chi_all(trajectory, opt=True):
 
     allresc_list = []
     [allresc_list.append(x) for x in [residchis1,residchis2,residchis3,residchis4] if x.size]
-    allcres = np.hstack(tuple(allresc_list))
+    allresc = np.hstack(tuple(allresc_list))
 
     allchis_list = []
     [allchis_list.append(x) for x in [allchis1, allchis2, allchis3,allchis4] if x.size]
