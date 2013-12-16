@@ -346,7 +346,9 @@ def compute_psi(trajectory, opt=True):
 
 
 def compute_chi1(trajectory, opt=True):
-    """Calculate the chi1 torsions of a trajectory.
+    """Calculate the chi1 torsions of a trajectory. chi1 is the first side chain torsion angle 
+    formed between the 4 atoms over the CA-CB axis. 
+
 
     Parameters
     ----------
@@ -358,7 +360,7 @@ def compute_chi1(trajectory, opt=True):
     Returns
     -------
     indices : np.ndarray, shape=(n_chi, 4)
-        The indices of the atoms involved in each of the chi dihedral angles
+        The indices of the atoms involved in each of the chi1 dihedral angles
     angles : np.ndarray, shape=(n_frames, n_chi)
         The value of the dihedral angle for each of the angles in each of
         the frames.
@@ -381,7 +383,8 @@ def compute_chi1(trajectory, opt=True):
     return allresc1,all_chi1_array_sorted   
 
 def compute_chi2(trajectory, opt=True):
-    """Calculate the chi2 torsions of a trajectory.
+    """Calculate the chi2 torsions of a trajectory. chi2 is the second side chain torsion angle 
+    formed between the corresponding 4 atoms  over the CB-CG axis.
 
     Parameters
     ----------
@@ -416,7 +419,9 @@ def compute_chi2(trajectory, opt=True):
     return allresc2,all_chi2_array_sorted     
 
 def compute_chi3(trajectory, opt=True):
-    """Calculate the chi3 torsions of a trajectory.
+    """Calculate the chi3 torsions of a trajectory. chi3 is the third side chain torsion angle
+    formed between the corresponding 4 atoms over the CG-CD axis 
+    (only the residues ARG, GLN, GLU, LYS & MET have these atoms)
 
     Parameters
     ----------
@@ -449,7 +454,9 @@ def compute_chi3(trajectory, opt=True):
     return allresc3,all_chi3_array_sorted     
 
 def compute_chi4(trajectory, opt=True):
-    """Calculate the chi4 torsions of a trajectory.
+    """Calculate the chi4 torsions of a trajectory. chi4 is the fourth side chain torsion angle
+    formed between the corresponding 4 atoms over the CD-CE or CD-NE axis 
+    (only ARG & LYS residues have these atoms)
 
     Parameters
     ----------
@@ -482,7 +489,7 @@ def compute_chi4(trajectory, opt=True):
 
 
 def compute_chi_all(trajectory, opt=True):
-    """Calculate all the chi torsions of a trajectory.
+    """Calculate all the chi torsions (the side chain dihedral angles) of a trajectory.
 
     Parameters
     ----------
