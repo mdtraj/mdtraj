@@ -373,7 +373,7 @@ def compute_chi1(trajectory, opt=True):
 
     allresc1 = np.hstack((rid1, rid2,rid3,rid4,rid5))
     id_sort = np.argsort(allresc1)
-    allresc1 = allresc1[id_sort]
+    allresc1 = allresc1[id_sort].astype('int')
 
     all_chi1_list = []
     [all_chi1_list.append(compute_dihedrals(trajectory, x, opt=opt)) for x in [indices1,indices2, indices3,indices4, indices5] if x.size] 
@@ -409,7 +409,7 @@ def compute_chi2(trajectory, opt=True):
 
     allresc2 = np.hstack((rid1, rid2,rid3,rid4,rid5))
     id_sort = np.argsort(allresc2)
-    allresc2 = allresc2[id_sort]
+    allresc2 = allresc2[id_sort].astype('int')
 
     all_chi2_list = []
     [all_chi2_list.append(compute_dihedrals(trajectory, x, opt=opt)) for x in [indices1,indices2, indices3,indices4, indices5] if x.size] 
@@ -444,7 +444,7 @@ def compute_chi3(trajectory, opt=True):
    
     allresc3 = np.hstack((rid1, rid2,rid3))
     id_sort = np.argsort(allresc3)
-    allresc3 = allresc3[id_sort]
+    allresc3 = allresc3[id_sort].astype('int')
 
     all_chi3_list = []
     [all_chi3_list.append(compute_dihedrals(trajectory, x, opt=opt)) for x in [indices1,indices2, indices3] if x.size] 
@@ -478,7 +478,7 @@ def compute_chi4(trajectory, opt=True):
    
     allresc4 = np.hstack((rid1, rid2 ))
     id_sort = np.argsort(allresc4)
-    allresc4 = allresc4[id_sort]
+    allresc4 = allresc4[id_sort].astype('int')
 
     all_chi4_list = []
     [all_chi4_list.append(compute_dihedrals(trajectory, x, opt=opt)) for x in [indices1,indices2] if x.size] 
