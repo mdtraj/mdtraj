@@ -317,7 +317,11 @@ class Topology(object):
         pd = import_('pandas')
         data = []
         for atom in self.atoms:
-            data.append((atom.index, atom.name, atom.element.symbol,
+            if atom.element is None:
+                element_symbol = ""
+            else:
+                element_symbol = atom.element.symbol
+            data.append((atom.index, atom.name, element_symbol,
                          atom.residue.index, atom.residue.name,
                          atom.residue.chain.index))
 
@@ -381,7 +385,11 @@ class Topology(object):
                 r = out.add_residue(residue_name, c)
 
                 for ai, atom in residue_atoms.iterrows():
-                    a = Atom(atom['name'], pdb.element.get_by_symbol(atom['element']), ai, r)
+                    if atom['element'] == "":
+                        element = None
+                    else:
+                        element = pdb.element.get_by_symbol(atom['element'])
+                    a = Atom(atom['name'], element, ai, r)
                     out._atoms[ai] = a
                     r._atoms.append(a)
 
@@ -428,9 +436,10 @@ class Topology(object):
                 for a1, a2 in zip(r1.atoms, r2.atoms):
                     if (a1.index != a2.index)  or (a1.name != a2.name):
                         return False
-                    for attr in ['atomic_number', 'name', 'symbol']:
-                        if getattr(a1.element, attr) != getattr(a2.element, attr):
-                            return False
+                    if a1.element is not None and a2.element is not None:
+                        for attr in ['atomic_number', 'name', 'symbol']:
+                            if getattr(a1.element, attr) != getattr(a2.element, attr):
+                                return False
 
         if len(self._bonds) != len(other._bonds):
             return False

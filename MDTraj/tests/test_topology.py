@@ -56,6 +56,14 @@ def test_topology_pandas():
     eq(topology, topology2)
 
 
+@skipif(not HAVE_PANDAS)
+def test_topology_pandas_TIP4PEW():
+    topology = md.load(get_fn('GG-tip4pew.pdb')).topology
+    atoms, bonds = topology.to_dataframe()
+
+    topology2 = md.Topology.from_dataframe(atoms, bonds)
+    eq(topology, topology2)
+
 def test_topology_numbers():
     topology = md.load(get_fn('1bpi.pdb')).topology
     assert len(list(topology.atoms)) == topology.n_atoms
