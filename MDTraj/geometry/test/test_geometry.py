@@ -123,10 +123,10 @@ def test_dihedral_0():
     eq(psi[0,0:2], psi0, decimal=4)
     eq(int(rid[0]), 0)
 
-    rid, chi = mdtraj.geometry.dihedral.compute_chi(traj)
+    rid, chi = mdtraj.geometry.dihedral.compute_chi1(traj)
     chi0 = np.array([-43.37841, -18.14592]) * np.pi / 180.  # Pymol
     eq(chi[0,0:2], chi0, decimal=4)
-    eq(int(rid[0]), 0)
+    eq(int(rid[0,0]), 0)
 
 
 def test_dihedral_1():
