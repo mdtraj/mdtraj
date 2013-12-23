@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 from distutils.spawn import find_executable
 import tempfile
@@ -95,7 +96,14 @@ cmd.quit()''')
         with open(pymolscript_fn, 'w') as f:
             f.write(pymol_script.render({'indices_fn': indices_fn,
                                          'angles_fn':  angles_fn}))
+
+        # call os.system while suppressing stdout
+        devnull = open(os.devnull, 'w')
+        oldstdout = os.dup(sys.stdout.fileno())
+        os.dup2(devnull.fileno(), sys.stdout.fileno())
         os.system('%s %s -cr %s' % (pymol, get_fn('2EQQ.pdb'), pymolscript_fn))
+        os.dup2(oldstdout, sys.stdout.fileno())
+        devnull.close()
 
         ref_indices = [np.loadtxt(indices_fn + '.%d' % i, dtype=int) for i in range(1,5)]
         ref_angles = [np.loadtxt(angles_fn + '.%d' % i) for i in range(1,5)]
