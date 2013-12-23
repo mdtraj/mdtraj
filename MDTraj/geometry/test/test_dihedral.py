@@ -1,5 +1,5 @@
 import mdtraj as md
-from mdtraj.geometry.dihedral import (compute_chi, compute_omega,
+from mdtraj.geometry.dihedral import (compute_chi_all, compute_omega,
                                       compute_phi, compute_psi)
 from mdtraj.testing import get_fn, eq
 traj = md.load(get_fn('2EQQ.pdb'))
@@ -19,7 +19,7 @@ def test_compute_psi():
     eq(x, y)
 
 
-def test_compute_chi():
+def test_compute_chi_all():
     rx, x = compute_chi(traj, opt=True)
     ry, y = compute_chi(traj, opt=False)
     eq(rx, ry)
