@@ -334,3 +334,34 @@ def test_stack_2():
     eq(t3.xyz[:, :5], t1.xyz)
     eq(t3.xyz[:, 5:], t2.xyz)
     eq(t3.n_atoms, 11)
+
+
+def test_seek():
+    files = [(md.NetCDFTrajectoryFile, 'frame0.nc'),
+             (md.HDF5TrajectoryFile, 'frame0.h5')]
+
+    for a, b in files:
+        point = 0
+        length = len(md.load(get_fn(b), top=get_fn('native.pdb')))
+        with a(get_fn(b)) as f:
+            for i in range(100):
+                r = np.random.rand()
+                if r > 0.33:
+                    offset = np.random.randint(-5, 5)
+                    if 0 < point + offset < length:
+                        point += offset
+                        f.seek(offset, 1)
+                    else:
+                        f.seek(0)
+                        point = 0
+                elif r > 0.66:
+                    offset = np.random.randint(10)
+                    readlength = len(f.read(offset)[0])
+                    point += readlength
+                else:
+                    offset = np.random.randint(100)
+                    f.seek(offset, 0)
+                    point = offset
+
+                eq(f.tell(), point)
+
