@@ -355,7 +355,7 @@ def test_seek():
                         f.seek(0)
                         point = 0
                 if r < 0.5:
-                    offset = np.random.randint(1, 10)
+                    offset = np.random.randint(1, 5)
                     if point + offset < length:
                         read = f.read(offset)
                         readlength = len(read[0])
