@@ -128,6 +128,7 @@ cdef class DCDTrajectoryFile:
         """
         self.distance_unit = 'angstroms'
         self.is_open = False
+        self.mode = mode
 
         if str(mode) == 'r':
             self.filename = filename
@@ -152,8 +153,6 @@ cdef class DCDTrajectoryFile:
         self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
         if self.timestep is NULL:
             raise MemoryError('There was an error allocating memory')
-
-        self.mode = mode
 
     def __dealloc__(self):
         # free whatever we malloced
@@ -241,7 +240,6 @@ cdef class DCDTrajectoryFile:
     def __exit__(self, *exc_info):
         "Support the context manager protocol"
         self.close()
-
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)
@@ -359,7 +357,6 @@ cdef class DCDTrajectoryFile:
         # If we got some other status, thats a "real" error.
         raise IOError("Error: %s", ERROR_MESSAGES(status))
 
-
     def write(self, xyz, cell_lengths=None, cell_angles=None):
         """write(xyz, cell_lengths=None, cell_angles=None)
 
@@ -407,9 +404,7 @@ cdef class DCDTrajectoryFile:
         else:
             if not self.n_atoms == xyz.shape[1]:
                 raise ValueError('Number of atoms doesnt match')
-
         self._write(xyz, cell_lengths, cell_angles)
-
 
     cdef _write(self, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz,
                 np.ndarray[np.float32_t, ndim=2, mode="c"] cell_lengths,
