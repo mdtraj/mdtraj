@@ -44,8 +44,9 @@ from mdtraj import compatibility
 if PY3:
     basestring = str
 
-__all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpos',
-           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml', 'load_legacy_hdf']
+__all__ = ['Trajectory', 'load', 'load_frame', 'load_pdb', 'load_xtc',
+           'load_trr', 'load_binpos', 'load_dcd', 'load_netcdf', 'load_hdf5',
+           'load_netcdf', 'load_arc', 'load_xml', 'load_legacy_hdf']
 
 ##############################################################################
 # Globals
@@ -72,9 +73,8 @@ def _assert_files_exist(filenames):
     if isinstance(filenames, basestring):
         filenames = [filenames]
     for fn in filenames:
-        if not os.path.exists(fn):
-            raise IOError("I'm sorry, the file you requested does not seem to "
-            "exist: %s" % fn)
+        if not (os.path.exists(fn) and os.path.isfile(fn)):
+            raise IOError('No such file: %s' % fn)
 
 
 def _parse_topology(top):
@@ -141,6 +141,32 @@ def _cast_indices(indices):
 ##############################################################################
 # Utilities
 ##############################################################################
+
+def load_frame(filename, index, top=None, atom_indices=None):
+    """Load a single frame from a trajectory file
+
+    Parameters
+    ----------
+    filename : str
+        Path to the trajecory file on disk
+    index : int
+        Load the `index`-th frame from the specified file
+    top : {str, Trajectory, Topology}
+        Most trajectory formats do not contain topology information. Pass in
+        either the path to a RCSB PDB file, a trajectory, or a topology to
+        supply this information.
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. These indices are zero-based (not 1 based, as used by the PDB
+        format).
+
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting conformation, as an md.Trajectory object containing
+        a single frame.
+    """
+    raise NotImplementedError()
 
 
 def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
