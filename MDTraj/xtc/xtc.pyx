@@ -115,6 +115,7 @@ cdef class XTCTrajectoryFile:
     mdtraj.load_xtc : High-level wrapper that returns a ``md.Trajectory``
     """
     cdef xdrlib.XDRFILE* fh
+    cdef str filename
     cdef int n_atoms          # number of atoms in the file
     cdef int frame_counter    # current position in the file, in read mode
     cdef int is_open          # is the file handle currently open?
@@ -131,6 +132,7 @@ cdef class XTCTrajectoryFile:
         self.distance_unit = 'nanometers'
         self.is_open = False
         self.frame_counter = 0
+        self.filename = filename
 
         if str(mode) == 'r':
             self.n_atoms = 0
@@ -399,7 +401,7 @@ cdef class XTCTrajectoryFile:
         self.frame_counter += n_frames
         return status
 
-    def seek(self, offset, whence=0):
+    def seek(self, int offset, int whence=0):
         """Move to a new file position
 
         Parameters
@@ -412,7 +414,31 @@ cdef class XTCTrajectoryFile:
             2: move relative to the end of file, offset should be <= 0.
             Seeking beyond the end of a file is not supported
         """
-        raise NotImplementedError()
+        cdef int i, status, step
+        cdef float time = 0
+        cdef float prec = 0
+        cdef np.ndarray[dtype=np.float_t] box = np.empty(9, dtype=np.float)
+        cdef np.ndarray[dtype=np.float_t] xyz = np.empty(self.n_atoms * 3, dtype=np.float)
+
+        if whence == 0 and offset >= 0:
+            absolute = offset
+        elif whence == 1:
+            absolute = offset + self.frame_counter
+        elif whence == 2 and offset <= 0:
+            raise NotImplementedError('offsets from the end are not supported yet')
+        else:
+            raise IOError('Invalid argument')
+
+        xdrlib.xdrfile_close(self.fh)
+        self.fh = xdrlib.xdrfile_open(self.filename, self.mode)
+
+        for i in range(absolute):
+            status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step,
+                                     &time, <xdrlib.matrix>&box[0], <xdrlib.rvec*>&xyz[0], &prec)
+            if status != _EXDROK:
+                raise RuntimeError('XTC seek error: %s' % status)
+
+        self.frame_counter = absolute
 
     def tell(self):
         """Current file position

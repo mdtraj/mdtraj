@@ -215,6 +215,7 @@ def test_do_overwrite():
     with DCDTrajectoryFile(temp, 'w', force_overwrite=True) as f:
         f.write(np.random.randn(10,5,3))
 
+
 @raises(IOError)
 def test_do_overwrite():
     with open(temp, 'w') as f:
@@ -223,15 +224,55 @@ def test_do_overwrite():
     with DCDTrajectoryFile(temp, 'w', force_overwrite=False) as f:
         f.write(np.random.randn(10,5,3))
 
+
 @raises(IOError)
 def test_read_closed():
     f = DCDTrajectoryFile(fn_dcd)
     f.close()
     f.read()
 
+
 @raises(IOError)
 def test_write_closed():
     f = DCDTrajectoryFile(fn_dcd, 'w')
     f.close()
     f.write(np.random.randn(10,3,3))
+
+
+def test_tell():
+    with DCDTrajectoryFile(get_fn('frame0.dcd')) as f:
+        eq(f.tell(), 0)
+
+        f.read(101)
+        eq(f.tell(), 101)
+
+        f.read(3)
+        eq(f.tell(), 104)
+
+
+def test_seek():
+    reference = DCDTrajectoryFile(get_fn('frame0.dcd')).read()[0]
+    with DCDTrajectoryFile(get_fn('frame0.dcd')) as f:
+
+        eq(f.tell(), 0)
+        eq(f.read(1)[0][0], reference[0])
+        eq(f.tell(), 1)
+
+        xyz = f.read(1)[0][0]
+        eq(xyz, reference[1])
+        eq(f.tell(), 2)
+
+        f.seek(0)
+        eq(f.tell(), 0)
+        xyz = f.read(1)[0][0]
+        eq(f.tell(), 1)
+        eq(xyz, reference[0])
+
+        f.seek(5)
+        eq(f.read(1)[0][0], reference[5])
+        eq(f.tell(), 6)
+
+        f.seek(-5, 1)
+        eq(f.tell(), 1)
+        eq(f.read(1)[0][0], reference[1])
 

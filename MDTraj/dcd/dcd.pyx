@@ -130,6 +130,7 @@ cdef class DCDTrajectoryFile:
         self.is_open = False
 
         if str(mode) == 'r':
+            self.filename = filename
             self.fh = open_dcd_read(filename, "dcd", &self.n_atoms, &self.n_frames)
             assert self.n_atoms > 0, 'DCD Corruption: n_atoms was not positive'
             assert self.n_frames >= 0, 'DCD corruption: n_frames < 0'
@@ -198,7 +199,30 @@ cdef class DCDTrajectoryFile:
             2: move relative to the end of file, offset should be <= 0.
             Seeking beyond the end of a file is not supported
         """
-        raise NotImplementedError()
+        cdef int i, status
+        if whence == 0 and offset >= 0:
+            absolute = offset
+        elif whence == 1:
+            absolute = offset + self.frame_counter
+        elif whence == 2 and offset <= 0:
+            raise NotImplementedError('offsets from the end are not supported yet')
+        else:
+            raise IOError('Invalid argument')
+
+        if str(self.mode) == 'r':
+            close_file_read(self.fh)
+            self.fh = open_dcd_read(self.filename, "dcd", &self.n_atoms, &self.n_frames)
+        elif str(self.mode) == 'w':
+            close_file_write(self.fh)
+            if self._needs_write_initialization:
+                raise RuntimeError('You must write one or more frames before seeking')
+            self.fh = open_dcd_write(self.filename, "dcd", self.n_atoms)
+        else:
+            raise RuntimeError('')
+
+        self.frame_counter = absolute
+        for i in range(absolute):
+            status = read_next_timestep(self.fh, self.n_atoms, NULL)
 
     def tell(self):
         """Current file position
@@ -330,7 +354,7 @@ cdef class DCDTrajectoryFile:
             cell_lengths = cell_lengths[0:i]
             cell_angles = cell_angles[0:i]
 
-        return xyz, cell_lengths, cell_angles
+            return xyz, cell_lengths, cell_angles
 
         # If we got some other status, thats a "real" error.
         raise IOError("Error: %s", ERROR_MESSAGES(status))

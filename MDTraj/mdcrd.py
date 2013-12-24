@@ -320,7 +320,7 @@ class MDCRDTrajectoryFile(object):
                 if offset >= self._frame_index:
                     advance = offset - self._frame_index
                 else:
-                    absolute = offset - self._frame_index
+                    absolute = offset
             elif whence == 1 and offset >= 0:
                 advance = offset
             elif whence == 1 and offset < 0:
