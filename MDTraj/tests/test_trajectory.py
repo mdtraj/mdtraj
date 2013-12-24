@@ -336,7 +336,12 @@ def test_stack_2():
     eq(t3.n_atoms, 11)
 
 
-def test_seek():
+def test_seek_read_mode():
+    """Test the seek/tell capacity of the different TrajectoryFile objects in
+    read mode. Basically, we just seek around the files and read different
+    segments, keeping track of our location manually and checking with both
+    tell() and by checking that the right coordinates are actually returned
+    """
     files = [(md.NetCDFTrajectoryFile, 'frame0.nc'),
              (md.HDF5TrajectoryFile, 'frame0.h5'),
              (md.XTCTrajectoryFile, 'frame0.xtc'),
@@ -346,7 +351,8 @@ def test_seek():
 
     for a, b in files:
         point = 0
-        length = len(md.load(get_fn(b), top=get_fn('native.pdb')))
+        xyz = md.load(get_fn(b), top=get_fn('native.pdb')).xyz
+        length = len(xyz)
         kwargs = {}
         if a is md.MDCRDTrajectoryFile:
             kwargs = {'n_atoms': 22}
@@ -366,10 +372,11 @@ def test_seek():
                     offset = np.random.randint(1, 10)
                     if point + offset < length:
                         read = f.read(offset)
-                        if a is md.BINPOSTrajectoryFile:
-                            readlength = len(read)
-                        else:
-                            readlength = len(read[0])
+                        if a is not md.BINPOSTrajectoryFile:
+                            read = read[0]
+                        readlength = len(read)
+                        read = mdtraj.trajectory._convert(read, f.distance_unit, 'nanometers')
+                        eq(xyz[point:point+offset], read)
                         point += readlength
                 elif r < 0.75:
                     offset = np.random.randint(low=-100, high=0)
@@ -377,11 +384,14 @@ def test_seek():
                         f.seek(offset, 2)
                         point = length + offset
                     except NotImplementedError:
+                        # not all of the *TrajectoryFiles currently support
+                        # seeking from the end, so we'll let this pass if they
+                        # say that they dont implement this.
                         pass
                 else:
                     offset = np.random.randint(100)
                     f.seek(offset, 0)
                     point = offset
 
-                eq(f.tell(), point, err_msg='%s != %s: %s' % (f.tell(), point, a.__name__))
+                eq(f.tell(), point)
 
