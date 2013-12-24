@@ -135,3 +135,44 @@ def test_write_2():
     eq(xyz, xyz2)
 
 
+def test_tell():
+    with BINPOSTrajectoryFile(get_fn('frame0.binpos')) as f:
+        eq(f.tell(), 0)
+
+        f.read(101)
+        eq(f.tell(), 101)
+
+        f.read(3)
+        eq(f.tell(), 104)
+
+
+def test_seek():
+    reference = BINPOSTrajectoryFile(get_fn('frame0.binpos')).read()
+    with BINPOSTrajectoryFile(get_fn('frame0.binpos')) as f:
+        xyz = f.read(1)[0]
+        eq(xyz, reference[0])
+        eq(f.tell(), 1)
+        
+        xyz = f.read(1)[0]
+        eq(xyz, reference[1])
+        eq(f.tell(), 2)
+        
+        f.seek(0)
+        eq(f.tell(), 0)
+        xyz = f.read(1)[0]
+        eq(f.tell(), 1)
+        eq(xyz, reference[0])
+        
+        f.seek(5)
+        eq(f.read(1)[0], reference[5])
+        eq(f.tell(), 6)
+
+        f.seek(-5, 1)
+        eq(f.tell(), 1)
+        xyz = f.read(1)[0]
+        eq(xyz, reference[1])
+
+        f.seek(0, 2)
+        eq(f.tell(), len(reference))
+        
+        

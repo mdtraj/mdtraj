@@ -29,6 +29,7 @@
 import cython
 import warnings
 cimport cython
+from stdio cimport SEEK_SET, SEEK_CUR, SEEK_END
 import os
 import numpy as np
 cimport numpy as np
@@ -36,6 +37,7 @@ np.import_array()
 from mdtraj.utils.arrays import ensure_type
 from libc.stdlib cimport malloc, free
 from binposlib cimport molfile_timestep_t
+from binposlib cimport seek_timestep, tell_timestep;
 from binposlib cimport open_binpos_read, close_file_read, read_next_timestep
 from binposlib cimport open_binpos_write, close_file_write, write_timestep
 
@@ -102,7 +104,7 @@ cdef class BINPOSTrajectoryFile:
     cdef int min_chunk_size
     cdef int chunk_size_multiplier
     cdef int is_open
-    cdef int frame_counter
+    cdef long int frame_counter
     cdef char* mode
     cdef char* filename
     cdef int write_initialized
@@ -276,7 +278,7 @@ cdef class BINPOSTrajectoryFile:
             if status != _BINPOS_SUCESS:
                 raise RuntimeError("BINPOS Error: %s" % status)
 
-    def seek(self, offset, whence=0):
+    def seek(self, int offset, int whence=0):
         """Move to a new file position
 
         Parameters
@@ -289,7 +291,18 @@ cdef class BINPOSTrajectoryFile:
             2: move relative to the end of file, offset should be <= 0.
             Seeking beyond the end of a file is not supported
         """
-        raise NotImplementedError()
+        cdef int origin
+        if whence == 0:
+            origin = SEEK_SET
+        elif whence == 1:
+            origin = SEEK_CUR
+        elif whence == 2:
+            origin = SEEK_END
+        else:
+            raise IOError('Invalid argument')
+
+        seek_timestep(self.fh, offset, origin)
+        self.frame_counter = tell_timestep(self.fh)
 
     def tell(self):
         """Current file position
@@ -299,7 +312,7 @@ cdef class BINPOSTrajectoryFile:
         offset : int
             The current frame in the file.
         """
-        return int(self.frame_counter)
+        return tell_timestep(self.fh)
 
     def close(self):
         """Close the BINPOS file"""
