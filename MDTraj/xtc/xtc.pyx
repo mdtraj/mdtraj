@@ -234,7 +234,6 @@ cdef class XTCTrajectoryFile:
             xyz, time, step, box = self._read(int(n_frames), atom_indices)
             return xyz[::stride], time[::stride], step[::stride], box[::stride]
 
-
         # if they want ALL of the remaining frames, we need to guess at the chunk
         # size, and then check the exit status to make sure we're really at the EOF
         all_xyz, all_time, all_step, all_box = [], [], [], []
@@ -391,8 +390,6 @@ cdef class XTCTrajectoryFile:
 
         # all same shape
         assert n_frames == len(box) == len(step) == len(time) == len(prec)
-
-
         for i in range(n_frames):
             status = xdrlib.write_xtc(self.fh, n_atoms, step[i], time[i], <xdrlib.matrix>&box[i, 0, 0], <xdrlib.rvec*>&xyz[i, 0, 0], prec[i])
             if status != _EXDROK:
@@ -439,6 +436,33 @@ cdef class XTCTrajectoryFile:
                 raise RuntimeError('XTC seek error: %s' % status)
 
         self.frame_counter = absolute
+
+        # if whence == 0 and offset >= 0:
+        #     origin = 0
+        #     if offset >= self.frame_counter:
+        #         offset = offset - self.frame_counter
+        #         origin = 1
+        # elif whence == 1 and offset >= 0:
+        #     origin = 1
+        #     offset = offset
+        # elif whence == 1 and offset < 0:
+        #     origin = 0
+        #     offset = offset + self.frame_counter
+        # elif whence == 2 and offset <= 0:
+        #     raise NotImplementedError('offsets from the end are not supported yet')
+        # else:
+        #     raise IOError('Invalid argument')
+        # 
+        # if origin == 0:
+        #     xdrlib.xdrfile_close(self.fh)
+        #     self.fh = xdrlib.xdrfile_open(self.filename, self.mode)
+        # for i in range(offset):
+        #     status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step,
+        #                              &time, <xdrlib.matrix>&box[0], <xdrlib.rvec*>&xyz[0], &prec)
+        #     if status != _EXDROK:
+        #         raise RuntimeError('XTC seek error: %s' % status)
+        # 
+        # self.frame_counter = offset
 
     def tell(self):
         """Current file position
