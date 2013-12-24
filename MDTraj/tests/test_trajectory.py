@@ -346,7 +346,7 @@ def test_seek():
         with a(get_fn(b)) as f:
             for i in range(100):
                 r = np.random.rand()
-                if r > 0.33:
+                if r < 0.25:
                     offset = np.random.randint(-5, 5)
                     if 0 < point + offset < length:
                         point += offset
@@ -354,10 +354,16 @@ def test_seek():
                     else:
                         f.seek(0)
                         point = 0
-                elif r > 0.66:
-                    offset = np.random.randint(10)
-                    readlength = len(f.read(offset)[0])
-                    point += readlength
+                if r < 0.5:
+                    offset = np.random.randint(1, 10)
+                    if point + offset < length:
+                        read = f.read(offset)
+                        readlength = len(read[0])
+                        point += readlength
+                elif r < 0.75:
+                    offset = np.random.randint(low=-100, high=0)
+                    f.seek(offset, 2)
+                    point = length + offset
                 else:
                     offset = np.random.randint(100)
                     f.seek(offset, 0)

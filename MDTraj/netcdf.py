@@ -362,7 +362,7 @@ class NetCDFTrajectoryFile(object):
         elif whence == 1:
             self._frame_index = self._frame_index + offset
         elif whence == 2 and offset <= 0:
-            self._frame_index = len(self._handle.root.coordinates) + offset
+            self._frame_index = len(self._handle.dimensions['frame']) + offset
         else:
             raise IOError('Invalid argument')
 
