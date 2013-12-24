@@ -338,12 +338,20 @@ def test_stack_2():
 
 def test_seek():
     files = [(md.NetCDFTrajectoryFile, 'frame0.nc'),
-             (md.HDF5TrajectoryFile, 'frame0.h5')]
+             (md.HDF5TrajectoryFile, 'frame0.h5'),
+             (md.XTCTrajectoryFile, 'frame0.xtc'),
+             (md.DCDTrajectoryFile, 'frame0.dcd'),
+             (md.MDCRDTrajectoryFile, 'frame0.mdcrd'),
+             (md.BINPOSTrajectoryFile, 'frame0.binpos'),]
 
     for a, b in files:
         point = 0
         length = len(md.load(get_fn(b), top=get_fn('native.pdb')))
-        with a(get_fn(b)) as f:
+        kwargs = {}
+        if a is md.MDCRDTrajectoryFile:
+            kwargs = {'n_atoms': 22}
+
+        with a(get_fn(b), **kwargs) as f:
             for i in range(100):
                 r = np.random.rand()
                 if r < 0.25:
@@ -362,12 +370,15 @@ def test_seek():
                         point += readlength
                 elif r < 0.75:
                     offset = np.random.randint(low=-100, high=0)
-                    f.seek(offset, 2)
-                    point = length + offset
+                    try:
+                        f.seek(offset, 2)
+                        point = length + offset
+                    except NotImplementedError:
+                        pass
                 else:
                     offset = np.random.randint(100)
                     f.seek(offset, 0)
                     point = offset
 
-                eq(f.tell(), point)
+                eq(f.tell(), point, err_msg=a.__name__)
 
