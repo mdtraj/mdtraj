@@ -786,6 +786,38 @@ class HDF5TrajectoryFile(object):
                 atom=self.tables.Float32Atom(), shape=(0,))
             self._get_node('/', name='lambda').attrs['units'] = 'dimensionless'
 
+    def seek(self, offset, whence=0):
+        """Move to a new file position
+
+        Parameters
+        ----------
+        offset : int
+            A number of frames.
+        whence : {0, 1, 2}
+            0: offset from start of file, offset should be >=0.
+            1: move relative to the current position, positive or negative
+            2: move relative to the end of file, offset should be <= 0.
+            Seeking beyond the end of a file is not supported
+        """
+        if whence == 0 and offset >= 0:
+            self._frame_index = offset
+        elif whence == 1:
+            self._frame_index = self._frame_index + offset
+        elif whence == 2 and offset <= 0:
+            self._frame_index = len(self._handle.root.coordinates) + offset
+        else:
+            raise IOError('Invalid argument')
+
+    def tell(self):
+        """Current file position
+
+        Returns
+        -------
+        offset : int
+            The current frame in the file.
+        """
+        return int(self._frame_index)
+
     def _validate(self):
         raise NotImplemented
 

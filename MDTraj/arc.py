@@ -89,6 +89,31 @@ class ArcTrajectoryFile(object):
             raise ValueError('mode must be "r". '
                              'you supplied "%s"' % mode)
 
+    def seek(self, offset, whence=0):
+        """Move to a new file position
+
+        Parameters
+        ----------
+        offset : int
+            A number of frames.
+        whence : {0, 1, 2}
+            0: offset from start of file, offset should be >=0.
+            1: move relative to the current position, positive or negative
+            2: move relative to the end of file, offset should be <= 0.
+            Seeking beyond the end of a file is not supported
+        """
+        raise NotImplementedError()
+
+    def tell(self):
+        """Current file position
+
+        Returns
+        -------
+        offset : int
+            The current frame in the file.
+        """
+        raise NotImplementedError()
+
     def close(self):
         """Close the .arc file"""
         if self._is_open:
