@@ -133,12 +133,11 @@ long int tell_timestep(void* v) {
       return MOLFILE_ERROR;
     numatoms = binpos->numatoms;
     offset = ftell(binpos->fd);
-    
-    
+
     if ((offset - 4*sizeof(char) - sizeof(int)) % (sizeof(int) + 3*numatoms*sizeof(float)) != 0) {
-        printf("offset = %d\n", offset);
-        printf("offset - 4*sizeof(char) - sizeof(int) = %d\n", offset - 4*sizeof(char) - sizeof(int));
-        printf("divisor = %d\n", sizeof(int) + 3*numatoms*sizeof(float));
+        //printf("offset = %d\n", offset);
+        //printf("offset - 4*sizeof(char) - sizeof(int) = %d\n", offset - 4*sizeof(char) - sizeof(int));
+        //printf("divisor = %d\n", sizeof(int) + 3*numatoms*sizeof(float));
         fprintf(stderr, "seek/tell error\n");
     }
 

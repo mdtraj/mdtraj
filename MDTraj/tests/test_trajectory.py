@@ -366,7 +366,10 @@ def test_seek():
                     offset = np.random.randint(1, 10)
                     if point + offset < length:
                         read = f.read(offset)
-                        readlength = len(read[0])
+                        if a is md.BINPOSTrajectoryFile:
+                            readlength = len(read)
+                        else:
+                            readlength = len(read[0])
                         point += readlength
                 elif r < 0.75:
                     offset = np.random.randint(low=-100, high=0)
@@ -380,5 +383,5 @@ def test_seek():
                     f.seek(offset, 0)
                     point = offset
 
-                eq(f.tell(), point, err_msg=a.__name__)
+                eq(f.tell(), point, err_msg='%s != %s: %s' % (f.tell(), point, a.__name__))
 
