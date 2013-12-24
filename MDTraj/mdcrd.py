@@ -81,6 +81,7 @@ class MDCRDTrajectoryFile(object):
         self._n_atoms = n_atoms
         self._mode = mode
         self._w_has_box = None
+        self._frame_index = 0
         self._has_box = has_box
         # track which line we're on. this is not essential, but its useful
         # when reporting errors to the user to say what line it occured on.
@@ -236,6 +237,7 @@ class MDCRDTrajectoryFile(object):
                     self._fh.seek(here)
                 break
 
+        self._frame_index += 1
         return coords.reshape(self._n_atoms, 3), box
 
     def write(self, xyz, cell_lengths=None):
@@ -312,7 +314,38 @@ class MDCRDTrajectoryFile(object):
             2: move relative to the end of file, offset should be <= 0.
             Seeking beyond the end of a file is not supported
         """
-        raise NotImplementedError()
+        if self._mode == 'r':
+            advance, absolute = None, None
+            if whence == 0 and offset >= 0:
+                if offset >= self._frame_index:
+                    advance = offset - self._frame_index
+                else:
+                    absolute = offset - self._frame_index
+            elif whence == 1 and offset >= 0:
+                advance = offset
+            elif whence == 1 and offset < 0:
+                absolute = offset + self._frame_index
+            elif whence == 2 and offset <= 0:
+                raise NotImplementedError('offsets from the end are not supported yet')
+            else:
+                raise IOError('Invalid argument')
+
+            if advance is not None:
+                for i in range(advance):
+                    self._read()  # advance and throw away these frames
+            elif absolute is not None:
+                self._fh.close()
+                self._fh = open(self._filename, 'r')
+                self._fh.readline()  # read comment
+                self._frame_index = 0
+                self._line_counter = 1
+                for i in range(absolute):
+                    self._read()
+            else:
+                raise RuntimeError()
+
+        else:
+            raise NotImplementedError('offsets in write mode are not supported yet')
 
     def tell(self):
         """Current file position
@@ -322,4 +355,4 @@ class MDCRDTrajectoryFile(object):
         offset : int
             The current frame in the file.
         """
-        raise NotImplementedError()
+        return int(self._frame_index)

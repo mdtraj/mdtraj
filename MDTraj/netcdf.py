@@ -374,7 +374,7 @@ class NetCDFTrajectoryFile(object):
         offset : int
             The current frame in the file.
         """
-        return int(frame_index)
+        return int(self._frame_index)
 
     def close(self):
         """Close the NetCDF file handle"""

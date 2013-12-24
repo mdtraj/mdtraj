@@ -77,3 +77,34 @@ def test_read_write_2():
 
     eq(t.xyz, pdb.xyz)
     eq(t.unitcell_vectors, pdb.unitcell_vectors)
+
+def test_multiread():
+    reference = md.load(get_fn('frame0.mdcrd'), top=get_fn('native.pdb'))
+    with MDCRDTrajectoryFile(get_fn('frame0.mdcrd'), n_atoms=22) as f:
+        xyz0, box0 = f.read(n_frames=1)
+        xyz1, box1 = f.read(n_frames=1)
+
+    eq(reference.xyz[0], xyz0[0]/10)
+    eq(reference.xyz[1], xyz1[0]/10)
+
+def test_seek():
+    reference = md.load(get_fn('frame0.mdcrd'), top=get_fn('native.pdb'))
+    with MDCRDTrajectoryFile(get_fn('frame0.mdcrd'), n_atoms=22) as f:
+        f.seek(1)
+        eq(1, f.tell())
+        xyz1, box1 = f.read(n_frames=1)
+        eq(reference.xyz[1], xyz1[0]/10)
+
+        f.seek(10)
+        eq(10, f.tell())
+        xyz10, box10 = f.read(n_frames=1)
+        eq(reference.xyz[10], xyz10[0]/10)
+        eq(11, f.tell())
+
+        f.seek(-8, 1)
+        xyz3, box3 = f.read(n_frames=1)
+        eq(reference.xyz[3], xyz3[0]/10)
+
+        f.seek(4, 1)
+        xyz8, box8 = f.read(n_frames=1)
+        eq(reference.xyz[8], xyz8[0]/10)
