@@ -183,10 +183,8 @@ cdef class XTCTrajectoryFile:
 
         return approx_n_frames
 
-
     def __dealloc__(self):
         self.close()
-
 
     def close(self):
         "Close the XTC file handle"
@@ -234,8 +232,9 @@ cdef class XTCTrajectoryFile:
             xyz, time, step, box = self._read(int(n_frames), atom_indices)
             return xyz[::stride], time[::stride], step[::stride], box[::stride]
 
-        # if they want ALL of the remaining frames, we need to guess at the chunk
-        # size, and then check the exit status to make sure we're really at the EOF
+        # if they want ALL of the remaining frames, we need to guess at the
+        # chunk size, and then check the exit status to make sure we're really 
+        # at the EOF
         all_xyz, all_time, all_step, all_box = [], [], [], []
 
         while True:
@@ -259,7 +258,6 @@ cdef class XTCTrajectoryFile:
                 np.concatenate(all_time)[::stride],
                 np.concatenate(all_step)[::stride],
                 np.concatenate(all_box)[::stride])
-
 
     def _read(self, int n_frames, atom_indices):
         """Read a specified number of XTC frames from the buffer"""
@@ -293,7 +291,6 @@ cdef class XTCTrajectoryFile:
 
         # only used if atom_indices is given
         cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
-
 
         while (i < n_frames) and (status != _EXDRENDOFFILE):
             if atom_indices is None:
@@ -372,8 +369,8 @@ cdef class XTCTrajectoryFile:
             self.n_atoms = xyz.shape[1]
         else:
             if not self.n_atoms == xyz.shape[1]:
-                raise ValueError("This file has %d atoms, but you're now trying to write %d atoms" % (self.n_atoms, xyz.shape[1]))
-
+                raise ValueError("This file has %d atoms, but you're now "
+                    "trying to write %d atoms" % (self.n_atoms, xyz.shape[1]))
 
         self._write(xyz, time, step, box, prec)
 
@@ -417,6 +414,8 @@ cdef class XTCTrajectoryFile:
         cdef np.ndarray[dtype=np.float_t] box = np.empty(9, dtype=np.float)
         cdef np.ndarray[dtype=np.float_t] xyz = np.empty(self.n_atoms * 3, dtype=np.float)
 
+        if str(self.mode) != 'r':
+            raise NotImplementedError('seek() only available in mode="r" currently')
         if whence == 0 and offset >= 0:
             absolute = offset
         elif whence == 1:
@@ -437,33 +436,6 @@ cdef class XTCTrajectoryFile:
 
         self.frame_counter = absolute
 
-        # if whence == 0 and offset >= 0:
-        #     origin = 0
-        #     if offset >= self.frame_counter:
-        #         offset = offset - self.frame_counter
-        #         origin = 1
-        # elif whence == 1 and offset >= 0:
-        #     origin = 1
-        #     offset = offset
-        # elif whence == 1 and offset < 0:
-        #     origin = 0
-        #     offset = offset + self.frame_counter
-        # elif whence == 2 and offset <= 0:
-        #     raise NotImplementedError('offsets from the end are not supported yet')
-        # else:
-        #     raise IOError('Invalid argument')
-        # 
-        # if origin == 0:
-        #     xdrlib.xdrfile_close(self.fh)
-        #     self.fh = xdrlib.xdrfile_open(self.filename, self.mode)
-        # for i in range(offset):
-        #     status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step,
-        #                              &time, <xdrlib.matrix>&box[0], <xdrlib.rvec*>&xyz[0], &prec)
-        #     if status != _EXDROK:
-        #         raise RuntimeError('XTC seek error: %s' % status)
-        # 
-        # self.frame_counter = offset
-
     def tell(self):
         """Current file position
 
@@ -472,6 +444,8 @@ cdef class XTCTrajectoryFile:
         offset : int
             The current frame in the file.
         """
+        if str(self.mode) != 'r':
+            raise NotImplementedError('tell() only available in mode="r" currently')
         return int(self.frame_counter)
 
     def __enter__(self):

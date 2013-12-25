@@ -345,6 +345,7 @@ def test_seek_read_mode():
     files = [(md.NetCDFTrajectoryFile, 'frame0.nc'),
              (md.HDF5TrajectoryFile, 'frame0.h5'),
              (md.XTCTrajectoryFile, 'frame0.xtc'),
+             (md.TRRTrajectoryFile, 'frame0.trr'),
              (md.DCDTrajectoryFile, 'frame0.dcd'),
              (md.MDCRDTrajectoryFile, 'frame0.mdcrd'),
              (md.BINPOSTrajectoryFile, 'frame0.binpos'),]
