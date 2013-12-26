@@ -100,6 +100,51 @@ void *open_binpos_read(const char *path, const char *filetype,
   return binpos;
 }
 
+int seek_timestep(void* v, long int offset, int origin) {
+    binposhandle *binpos;
+    int i, numatoms;
+
+    binpos = (binposhandle *)v;
+    if (!binpos->fd) 
+      return MOLFILE_ERROR;
+    numatoms = binpos->numatoms;
+
+    if (origin == SEEK_SET) {
+        offset = sizeof(char)*4 + sizeof(int) + offset*(sizeof(int) + numatoms*3*sizeof(float));
+    } else if (origin == SEEK_CUR) {
+        offset = offset * (sizeof(int) + numatoms*3*sizeof(float));
+    } else if (origin == SEEK_END) {
+        offset = offset * (sizeof(int) + numatoms*3*sizeof(float)) + sizeof(int);
+    } else {
+        return MOLFILE_ERROR;
+    }
+
+    fseek(binpos->fd, offset, origin);
+    return MOLFILE_SUCCESS;
+}
+
+long int tell_timestep(void* v) {
+    binposhandle *binpos;
+    int i, numatoms, frame;
+    long int offset;
+
+    binpos = (binposhandle *)v;
+    if (!binpos->fd) 
+      return MOLFILE_ERROR;
+    numatoms = binpos->numatoms;
+    offset = ftell(binpos->fd);
+
+    if ((offset - 4*sizeof(char) - sizeof(int)) % (sizeof(int) + 3*numatoms*sizeof(float)) != 0) {
+        //printf("offset = %d\n", offset);
+        //printf("offset - 4*sizeof(char) - sizeof(int) = %d\n", offset - 4*sizeof(char) - sizeof(int));
+        //printf("divisor = %d\n", sizeof(int) + 3*numatoms*sizeof(float));
+        fprintf(stderr, "seek/tell error\n");
+    }
+
+    frame = (offset - 4*sizeof(char) - sizeof(int)) / (sizeof(int) + 3*numatoms*sizeof(float));
+    return frame;
+}
+
 int read_next_timestep(void *v, int natoms, molfile_timestep_t *ts) {
   binposhandle *binpos;
   int i, numatoms,igarb;

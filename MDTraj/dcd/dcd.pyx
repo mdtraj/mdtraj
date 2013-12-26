@@ -128,8 +128,10 @@ cdef class DCDTrajectoryFile:
         """
         self.distance_unit = 'angstroms'
         self.is_open = False
+        self.mode = mode
 
         if str(mode) == 'r':
+            self.filename = filename
             self.fh = open_dcd_read(filename, "dcd", &self.n_atoms, &self.n_frames)
             assert self.n_atoms > 0, 'DCD Corruption: n_atoms was not positive'
             assert self.n_frames >= 0, 'DCD corruption: n_frames < 0'
@@ -151,8 +153,6 @@ cdef class DCDTrajectoryFile:
         self.timestep = <molfile_timestep_t*> malloc(sizeof(molfile_timestep_t))
         if self.timestep is NULL:
             raise MemoryError('There was an error allocating memory')
-
-        self.mode = mode
 
     def __dealloc__(self):
         # free whatever we malloced
@@ -185,6 +185,59 @@ cdef class DCDTrajectoryFile:
 
         self._needs_write_initialization = False
 
+    def seek(self, offset, whence=0):
+        """Move to a new file position
+
+        Parameters
+        ----------
+        offset : int
+            A number of frames.
+        whence : {0, 1, 2}
+            0: offset from start of file, offset should be >=0.
+            1: move relative to the current position, positive or negative
+            2: move relative to the end of file, offset should be <= 0.
+            Seeking beyond the end of a file is not supported
+        """
+        cdef int i, status
+        if str(self.mode) != 'r':
+            raise NotImplementedError("seek is only supported in mode='r'")
+
+        advance, absolute = None, None
+        if whence == 0 and offset >= 0:
+            if offset >= self.frame_counter:
+                advance = offset - self.frame_counter
+            else:
+                absolute = offset
+        elif whence == 1 and offset >= 0:
+            advance = offset
+        elif whence == 1 and offset < 0:
+            absolute = offset + self.frame_counter
+        elif whence == 2 and offset <= 0:
+            raise NotImplementedError('offsets from the end are not supported yet')
+        else:
+            raise IOError('Invalid argument')
+
+        if advance is not None:
+            self.frame_counter += advance
+            for i in range(advance):
+                status = read_next_timestep(self.fh, self.n_atoms, NULL)
+        elif absolute is not None:
+            close_file_read(self.fh)
+            self.fh = open_dcd_read(self.filename, "dcd", &self.n_atoms, &self.n_frames)
+            for i in range(absolute):
+                status = read_next_timestep(self.fh, self.n_atoms, NULL)
+            self.frame_counter = absolute
+
+    def tell(self):
+        """Current file position
+
+        Returns
+        -------
+        offset : int
+            The current frame in the file.
+        """
+        return int(self.frame_counter)
+
     def __enter__(self):
         "Support the context manager protocol"
         return self
@@ -192,7 +245,6 @@ cdef class DCDTrajectoryFile:
     def __exit__(self, *exc_info):
         "Support the context manager protocol"
         self.close()
-
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)
@@ -305,11 +357,10 @@ cdef class DCDTrajectoryFile:
             cell_lengths = cell_lengths[0:i]
             cell_angles = cell_angles[0:i]
 
-        return xyz, cell_lengths, cell_angles
+            return xyz, cell_lengths, cell_angles
 
         # If we got some other status, thats a "real" error.
         raise IOError("Error: %s", ERROR_MESSAGES(status))
-
 
     def write(self, xyz, cell_lengths=None, cell_angles=None):
         """write(xyz, cell_lengths=None, cell_angles=None)
@@ -358,9 +409,7 @@ cdef class DCDTrajectoryFile:
         else:
             if not self.n_atoms == xyz.shape[1]:
                 raise ValueError('Number of atoms doesnt match')
-
         self._write(xyz, cell_lengths, cell_angles)
-
 
     cdef _write(self, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz,
                 np.ndarray[np.float32_t, ndim=2, mode="c"] cell_lengths,

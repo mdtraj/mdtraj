@@ -44,8 +44,9 @@ from mdtraj import compatibility
 if PY3:
     basestring = str
 
-__all__ = ['Trajectory', 'load', 'load_pdb', 'load_xtc', 'load_trr', 'load_binpos',
-           'load_dcd', 'load_netcdf', 'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml', 'load_legacy_hdf']
+__all__ = ['Trajectory', 'load', 'load_frame', 'load_pdb', 'load_xtc',
+           'load_trr', 'load_binpos', 'load_dcd', 'load_netcdf', 'load_hdf5',
+           'load_netcdf', 'load_arc', 'load_xml', 'load_legacy_hdf']
 
 ##############################################################################
 # Globals
@@ -72,9 +73,8 @@ def _assert_files_exist(filenames):
     if isinstance(filenames, basestring):
         filenames = [filenames]
     for fn in filenames:
-        if not os.path.exists(fn):
-            raise IOError("I'm sorry, the file you requested does not seem to "
-            "exist: %s" % fn)
+        if not (os.path.exists(fn) and os.path.isfile(fn)):
+            raise IOError('No such file: %s' % fn)
 
 
 def _parse_topology(top):
@@ -111,7 +111,7 @@ def _convert(quantity, in_unit, out_unit, inplace=False):
 
 
 def _cast_indices(indices):
-    """Check that ``indices`` are approprate for indexing an array
+    """Check that ``indices`` are appropriate for indexing an array
 
     Parameters
     ----------
@@ -141,6 +141,45 @@ def _cast_indices(indices):
 ##############################################################################
 # Utilities
 ##############################################################################
+
+def load_frame(filename, index, top=None, atom_indices=None):
+    """Load a single frame from a trajectory file
+
+    Parameters
+    ----------
+    filename : str
+        Path to the trajectory file on disk
+    index : int
+        Load the `index`-th frame from the specified file
+    top : {str, Trajectory, Topology}
+        Most trajectory formats do not contain topology information. Pass in
+        either the path to a RCSB PDB file, a trajectory, or a topology to
+        supply this information.
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. These indices are zero-based (not 1 based, as used by the PDB
+        format).
+
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting conformation, as an md.Trajectory object containing
+        a single frame.
+    """
+    _assert_files_exist(filename)
+    extension = os.path.splitext(filename)[1]
+    try:
+        loader = _LoaderRegistry[extension]
+    except KeyError:
+        raise IOError('Sorry, no loader for filename=%s (extension=%s) '
+                      'was found. I can only load files with extensions in %s'
+                      % (filename, extension, _LoaderRegistry.keys()))
+
+    kwargs = {'top': top, 'atom_indices': atom_indices}
+    if loader in [load_hdf5, load_pdb]:
+        kwargs.pop('top', None)
+
+    return loader(filename, frame=index, **kwargs)
 
 
 def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
@@ -219,7 +258,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     return loader(filename, **kwargs)
 
 
-def load_pdb(filename, stride=None, atom_indices=None):
+def load_pdb(filename, stride=None, atom_indices=None, frame=None):
     """Load a RCSB Protein Data Bank file from disk.
 
     Parameters
@@ -233,6 +272,10 @@ def load_pdb(filename, stride=None, atom_indices=None):
         file. These indices are zero-based (not 1 based, as used by the PDB
         format). So if you want to load only the first atom in the file, you
         would supply ``atom_indices = np.array([0])``.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
 
     Returns
     -------
@@ -252,7 +295,10 @@ def load_pdb(filename, stride=None, atom_indices=None):
     filename = str(filename)
     with PDBTrajectoryFile(filename) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
-        coords = f.positions[::stride, atom_slice, :]
+        if frame is not None:
+            coords = f.positions[[frame], atom_slice, :]
+        else:
+            coords = f.positions[::stride, atom_slice, :]
         assert coords.ndim == 3, 'internal shape error'
         n_frames = len(coords)
 
@@ -270,8 +316,10 @@ def load_pdb(filename, stride=None, atom_indices=None):
         _convert(coords, f.distance_unit, Trajectory._distance_unit, inplace=True)
         _convert(unitcell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
-    time = np.arange(n_frames)
-    if stride is not None:
+    time = np.arange(len(coords))
+    if frame is not None:
+        time *= frame
+    elif stride is not None:
         time *= stride
 
     return Trajectory(xyz=coords, time=time, topology=topology,
@@ -326,11 +374,11 @@ def load_xml(filename, top=None):
     return traj
 
 
-def load_xtc(filename, top=None, stride=None, atom_indices=None):
+def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load an Gromacs XTC file from disk.
 
     Since the Gromacs XTC format doesn't contain information to specify the
-    topolgy, you need to supply the topology yourself.
+    topology, you need to supply the topology yourself.
 
     Parameters
     ----------
@@ -346,6 +394,10 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
 
     Returns
     -------
@@ -374,7 +426,11 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None):
         topology = topology.subset(atom_indices)
 
     with XTCTrajectoryFile(filename, 'r') as f:
-        xyz, time, step, box = f.read(stride=stride, atom_indices=atom_indices)
+        if frame is not None:
+            f.seek(frame)
+            xyz, time, step, box = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz, time, step, box = f.read(stride=stride, atom_indices=atom_indices)
 
         _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
         _convert(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
@@ -385,9 +441,9 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None):
     return trajectory
 
 
-def load_trr(filename, top=None, stride=None, atom_indices=None):
+def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load a trr file. Since the trr doesn't contain information
-    to specify the topolgy, you need to supply the topology yourself
+    to specify the topology, you need to supply the topology yourself
 
     Parameters
     ----------
@@ -402,6 +458,10 @@ def load_trr(filename, top=None, stride=None, atom_indices=None):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
 
     Returns
     -------
@@ -429,26 +489,29 @@ def load_trr(filename, top=None, stride=None, atom_indices=None):
         topology = topology.subset(atom_indices)
 
     with TRRTrajectoryFile(filename) as f:
-        xyz, time, step, box, lambd = f.read(stride=stride, atom_indices=atom_indices)
+        if frame is not None:
+            f.seek(frame)
+            xyz, time, step, box, lambd = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz, time, step, box, lambd = f.read(stride=stride, atom_indices=atom_indices)
 
         _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
         _convert(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
-
 
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     trajectory.unitcell_vectors = box
     return trajectory
 
 
-def load_dcd(filename, top=None, stride=None, atom_indices=None):
+def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load an xtc file. Since the dcd format doesn't contain information
-    to specify the topolgy, you need to supply a pdb_filename
+    to specify the topology, you need to supply a pdb_filename
 
     Parameters
     ----------
     filename : str
         String filename of DCD file.
-    top : {str, Trajectoray, Topology}
+    top : {str, Trajectory, Topology}
         DCD XTC format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
         information.
@@ -458,6 +521,10 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
 
     Returns
     -------
@@ -485,15 +552,19 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None):
         topology = topology.subset(atom_indices)
 
     with DCDTrajectoryFile(filename) as f:
-        xyz, box_length, box_angle = f.read(stride=stride, atom_indices=atom_indices)
+        if frame is not None:
+            f.seek(frame)
+            xyz, box_length, box_angle = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz, box_length, box_angle = f.read(stride=stride, atom_indices=atom_indices)
 
         _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
         _convert(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     time = np.arange(len(xyz))
-    if stride is not None:
-        # if we loaded with a stride, the Trajectories's time field should
-        # respect that
+    if frame is not None:
+        time += frame
+    elif stride is not None:
         time *= stride
 
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
@@ -518,7 +589,7 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     frame : int, optional
         Use this option to load only a single frame from a trajectory on disk.
         If frame is None, the default, the entire trajectory will be loaded.
-        If supplied, ``stride`` and ``atom_indices`` will be ignored.
+        If supplied, ``stride`` will be ignored.
 
     Returns
     -------
@@ -533,13 +604,12 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
 
     with HDF5TrajectoryFile(filename) as f:
         if frame is not None:
-            f._frame_index += int(frame)
-            data = f.read(n_frames=1)
+            f.seek(frame)
+            data = f.read(n_frames=1, atom_indices=atom_indices)
         else:
             data = f.read(stride=stride, atom_indices=atom_indices)
 
         topology = f.topology
-
         _convert(data.coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
         _convert(data.cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
@@ -552,7 +622,7 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     return trajectory
 
 
-def load_binpos(filename, top=None, stride=None, atom_indices=None):
+def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load an AMBER BINPOS file.
 
     Parameters
@@ -569,6 +639,10 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
 
     Returns
     -------
@@ -596,21 +670,24 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None):
         topology = topology.subset(atom_indices)
 
     with BINPOSTrajectoryFile(filename) as f:
-        xyz = f.read(stride=stride, atom_indices=atom_indices)
+        if frame is not None:
+            f.seek(frame)
+            xyz = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz = f.read(stride=stride, atom_indices=atom_indices)
 
         _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     time = np.arange(len(xyz))
-
-    if stride is not None:
-        # if we loaded with a stride, the Trajectories's time field should
-        # respect that
+    if frame is not None:
+        time += frame
+    elif stride is not None:
         time *= stride
 
     return Trajectory(xyz=xyz, topology=topology, time=time)
 
 
-def load_mdcrd(filename, top=None, stride=None, atom_indices=None):
+def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load an AMBER mdcrd file.
 
     Parameters
@@ -626,6 +703,10 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None):
     atom_indices : array_like, optional
         If not none, then read only a subset of the atoms coordinates from the
         file.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
 
     Returns
     -------
@@ -652,10 +733,14 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None):
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
 
-    with MDCRDTrajectoryFile(filename, n_atoms=top._numAtoms) as f:
-        xyz, cell_lengths = f.read(stride=stride, atom_indices=atom_indices)
-        _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+    with MDCRDTrajectoryFile(filename, n_atoms=topology._numAtoms) as f:
+        if frame is not None:
+            f.seek(frame)
+            xyz, cell_lengths = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz, cell_lengths = f.read(stride=stride, atom_indices=atom_indices)
 
+        _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
         if cell_lengths is not None:
             _convert(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
@@ -663,9 +748,9 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None):
             cell_angles = 90.0 * np.ones_like(cell_lengths)
 
     time = np.arange(len(xyz))
-    if stride is not None:
-        # if we loaded with a stride, the Trajectories's time field should
-        # respect that
+    if frame is not None:
+        time += frame
+    elif stride is not None:
         time *= stride
 
     t = Trajectory(xyz=xyz, topology=topology, time=time)
@@ -673,6 +758,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None):
         t.unitcell_lengths = cell_lengths
         t.unitcell_angles = cell_angles
     return t
+
 
 def load_arc(filename, top=None, stride=None, atom_indices=None):
     """Load a TINKER .arc file.
@@ -729,9 +815,10 @@ def load_arc(filename, top=None, stride=None, atom_indices=None):
     t = Trajectory(xyz=xyz, topology=topology, time=time)
     return t
 
-def load_netcdf(filename, top=None, stride=None, atom_indices=None):
+
+def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load an AMBER NetCDF file. Since the NetCDF format doesn't contain
-    information to specify the topolgy, you need to supply a topology
+    information to specify the topology, you need to supply a topology
 
     Parameters
     ----------
@@ -747,6 +834,10 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
 
     Returns
     -------
@@ -763,7 +854,11 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None):
         topology = topology.subset(atom_indices)
 
     with NetCDFTrajectoryFile(filename) as f:
-        xyz, time, cell_lengths, cell_angles = f.read(stride=stride, atom_indices=atom_indices)
+        if frame is not None:
+            f.seek(frame)
+            xyz, time, cell_lengths, cell_angles = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz, time, cell_lengths, cell_angles = f.read(stride=stride, atom_indices=atom_indices)
 
         _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
         _convert(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)

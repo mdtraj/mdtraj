@@ -334,3 +334,82 @@ def test_stack_2():
     eq(t3.xyz[:, :5], t1.xyz)
     eq(t3.xyz[:, 5:], t2.xyz)
     eq(t3.n_atoms, 11)
+
+
+def test_seek_read_mode():
+    """Test the seek/tell capacity of the different TrajectoryFile objects in
+    read mode. Basically, we just seek around the files and read different
+    segments, keeping track of our location manually and checking with both
+    tell() and by checking that the right coordinates are actually returned
+    """
+    files = [(md.NetCDFTrajectoryFile, 'frame0.nc'),
+             (md.HDF5TrajectoryFile, 'frame0.h5'),
+             (md.XTCTrajectoryFile, 'frame0.xtc'),
+             (md.TRRTrajectoryFile, 'frame0.trr'),
+             (md.DCDTrajectoryFile, 'frame0.dcd'),
+             (md.MDCRDTrajectoryFile, 'frame0.mdcrd'),
+             (md.BINPOSTrajectoryFile, 'frame0.binpos'),]
+
+    for a, b in files:
+        point = 0
+        xyz = md.load(get_fn(b), top=get_fn('native.pdb')).xyz
+        length = len(xyz)
+        kwargs = {}
+        if a is md.MDCRDTrajectoryFile:
+            kwargs = {'n_atoms': 22}
+
+        with a(get_fn(b), **kwargs) as f:
+            for i in range(100):
+                r = np.random.rand()
+                if r < 0.25:
+                    offset = np.random.randint(-5, 5)
+                    if 0 < point + offset < length:
+                        point += offset
+                        f.seek(offset, 1)
+                    else:
+                        f.seek(0)
+                        point = 0
+                if r < 0.5:
+                    offset = np.random.randint(1, 10)
+                    if point + offset < length:
+                        read = f.read(offset)
+                        if a is not md.BINPOSTrajectoryFile:
+                            read = read[0]
+                        readlength = len(read)
+                        read = mdtraj.trajectory._convert(read, f.distance_unit, 'nanometers')
+                        eq(xyz[point:point+offset], read)
+                        point += readlength
+                elif r < 0.75:
+                    offset = np.random.randint(low=-100, high=0)
+                    try:
+                        f.seek(offset, 2)
+                        point = length + offset
+                    except NotImplementedError:
+                        # not all of the *TrajectoryFiles currently support
+                        # seeking from the end, so we'll let this pass if they
+                        # say that they dont implement this.
+                        pass
+                else:
+                    offset = np.random.randint(100)
+                    f.seek(offset, 0)
+                    point = offset
+
+                eq(f.tell(), point)
+
+
+def test_load_frame():
+    files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
+             'frame0.dcd', 'frame0.mdcrd', 'frame0.binpos']
+    trajectories = [md.load(get_fn(f), top=get_fn('native.pdb')) for f in files]
+    rand = [np.random.randint(len(t)) for t in trajectories]
+    frames = [md.load_frame(get_fn(f), index=r, top=get_fn('native.pdb')) for f, r in zip(files, rand)]
+
+    for traj, frame, r, f in zip(trajectories, frames, rand, files):
+        eq(traj[r].xyz, frame.xyz)
+        eq(traj[r].unitcell_vectors, frame.unitcell_vectors)
+        eq(traj[r].time, frame.time, err_msg='%d, %d: %s' % (traj[r].time[0], frame.time[0], f))
+
+    t1 = md.load(get_fn('2EQQ.pdb'))
+    r = np.random.randint(len(t1))
+    t2 = md.load_frame(get_fn('2EQQ.pdb'), r)
+    eq(t1[r].xyz, t2.xyz)
