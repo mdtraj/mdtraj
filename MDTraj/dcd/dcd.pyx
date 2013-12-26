@@ -199,29 +199,34 @@ cdef class DCDTrajectoryFile:
             Seeking beyond the end of a file is not supported
         """
         cdef int i, status
+        if str(self.mode) != 'r':
+            raise NotImplementedError("seek is only supported in mode='r'")
+
+        advance, absolute = None, None
         if whence == 0 and offset >= 0:
-            absolute = offset
-        elif whence == 1:
+            if offset >= self.frame_counter:
+                advance = offset - self.frame_counter
+            else:
+                absolute = offset
+        elif whence == 1 and offset >= 0:
+            advance = offset
+        elif whence == 1 and offset < 0:
             absolute = offset + self.frame_counter
         elif whence == 2 and offset <= 0:
             raise NotImplementedError('offsets from the end are not supported yet')
         else:
             raise IOError('Invalid argument')
 
-        if str(self.mode) == 'r':
+        if advance is not None:
+            self.frame_counter += advance
+            for i in range(advance):
+                status = read_next_timestep(self.fh, self.n_atoms, NULL)
+        elif absolute is not None:
             close_file_read(self.fh)
             self.fh = open_dcd_read(self.filename, "dcd", &self.n_atoms, &self.n_frames)
-        elif str(self.mode) == 'w':
-            close_file_write(self.fh)
-            if self._needs_write_initialization:
-                raise RuntimeError('You must write one or more frames before seeking')
-            self.fh = open_dcd_write(self.filename, "dcd", self.n_atoms)
-        else:
-            raise RuntimeError('')
-
-        self.frame_counter = absolute
-        for i in range(absolute):
-            status = read_next_timestep(self.fh, self.n_atoms, NULL)
+            for i in range(absolute):
+                status = read_next_timestep(self.fh, self.n_atoms, NULL)
+            self.frame_counter = absolute
 
     def tell(self):
         """Current file position
