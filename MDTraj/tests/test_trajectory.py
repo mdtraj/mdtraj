@@ -396,3 +396,20 @@ def test_seek_read_mode():
 
                 eq(f.tell(), point)
 
+
+def test_load_frame():
+    files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
+             'frame0.dcd', 'frame0.mdcrd', 'frame0.binpos']
+    trajectories = [md.load(get_fn(f), top=get_fn('native.pdb')) for f in files]
+    rand = [np.random.randint(len(t)) for t in trajectories]
+    frames = [md.load_frame(get_fn(f), index=r, top=get_fn('native.pdb')) for f, r in zip(files, rand)]
+
+    for traj, frame, r, f in zip(trajectories, frames, rand, files):
+        eq(traj[r].xyz, frame.xyz)
+        eq(traj[r].unitcell_vectors, frame.unitcell_vectors)
+        eq(traj[r].time, frame.time, err_msg='%d, %d: %s' % (traj[r].time[0], frame.time[0], f))
+
+    t1 = md.load(get_fn('2EQQ.pdb'))
+    r = np.random.randint(len(t1))
+    t2 = md.load_frame(get_fn('2EQQ.pdb'), r)
+    eq(t1[r].xyz, t2.xyz)
