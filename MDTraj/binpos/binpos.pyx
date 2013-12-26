@@ -29,7 +29,7 @@
 import cython
 import warnings
 cimport cython
-from stdio cimport SEEK_SET, SEEK_CUR, SEEK_END
+from libc.stdio cimport SEEK_SET, SEEK_CUR, SEEK_END
 import os
 import numpy as np
 cimport numpy as np
@@ -292,6 +292,9 @@ cdef class BINPOSTrajectoryFile:
             Seeking beyond the end of a file is not supported
         """
         cdef int origin
+        if str(self.mode) != 'r':
+            raise NotImplementedError("seek is only supported in mode='r'")
+
         if whence == 0:
             origin = SEEK_SET
         elif whence == 1:
