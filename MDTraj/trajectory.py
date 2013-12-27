@@ -1222,9 +1222,8 @@ class Trajectory(object):
         offset = self_align_xyz.mean(axis=1, dtype=np.float64, keepdims=True)
         self_align_xyz -= offset
         if self_align_xyz.ctypes.data != self_displace_xyz.ctypes.data:
-            # when atom_indices is None, these two arrays alias the same
-            # memory
-            self_displace_xyz[i] -= offset
+            # when atom_indices is None, these two arrays alias the same memory
+            self_displace_xyz -= offset
 
         ref_offset = ref_align_xyz[0].astype('float64').mean(0)
         ref_align_xyz[0] -= ref_offset
