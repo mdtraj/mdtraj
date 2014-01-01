@@ -301,9 +301,14 @@ class DeferredTable(object):
 
         repr_strings = []
         for name in self._node_names:
-            repr_strings.append('  %s: [shape=%s, dtype=%s]' %
-                (name, handle.getNode(where='/', name=name).shape,
-                handle.getNode(where='/', name=name).dtype))
+            if TABLES2:
+                repr_strings.append('  %s: [shape=%s, dtype=%s]' %
+                                    (name, handle.getNode(where='/', name=name).shape,
+                                     handle.getNode(where='/', name=name).dtype))
+            else:
+                repr_strings.append('  %s: [shape=%s, dtype=%s]' %
+                                    (name, handle.get_node(where='/', name=name).shape,
+                                     handle.get_node(where='/', name=name).dtype))
         self._repr_string = '{\n%s\n}' % ',\n'.join(repr_strings)
 
     def __repr__(self):
@@ -320,7 +325,10 @@ class DeferredTable(object):
         if key not in self._node_names:
             raise KeyError('%s not in %s' % (key, self._node_names))
         if key not in self._loaded:
-            self._loaded[key] = self._handle.getNode(where='/', name=key)[:]
+            if TABLES2:
+                self._loaded[key] = self._handle.getNode(where='/', name=key)[:]
+            else:
+                self._loaded[key] = self._handle.get_node(where='/', name=key)[:]
         return self._loaded[key]
 
     def iteritems(self):
