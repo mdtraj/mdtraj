@@ -80,6 +80,7 @@ from mdtraj.utils.six import PY3, iteritems
 if PY3:
     basestring = str
 tables = import_('tables')
+TABLES2 = tables.__version__ < '3.0.0'
 
 __all__ = ['saveh', 'loadh']
 
@@ -135,7 +136,10 @@ def saveh(file, *args, **kwargs):
 
 
     if isinstance(file, basestring):
-        handle = tables.openFile(file, 'a')
+        if TABLES2:
+            handle = tables.openFile(file, 'a')
+        else:
+            handle = tables.open_file(file, 'a')
         own_fid = True
     else:
         if not isinstance(file, tables.File):
@@ -156,7 +160,11 @@ def saveh(file, *args, **kwargs):
         namedict[key] = val
 
     # ensure that they don't already exist
-    current_nodes = [e.name for e in handle.listNodes(where='/')]
+    if TABLES2:
+        current_nodes = [e.name for e in handle.listNodes(where='/')]
+    else:
+        current_nodes = [e.name for e in handle.list_nodes(where='/')]
+
     for key in namedict.keys():
         if key in current_nodes:
             handle.removeNode('/', name=key)
@@ -176,8 +184,13 @@ def saveh(file, *args, **kwargs):
                 raise TypeError('Arrays of this dtype '
                     'cannot be saved: %s' % val.dtype)
 
-            node = handle.createCArray(where='/', name=key,
-                atom=atom, shape=val.shape, filters=COMPRESSION)
+            if TABLES2:
+                node = handle.createCArray(where='/', name=key, atom=atom,
+                                           shape=val.shape, filters=COMPRESSION)
+            else:
+                node = handle.create_carray(where='/', name=key, atom=atom,
+                                           shape=val.shape, filters=COMPRESSION)
+
             node[:] = val
 
     except Exception:
@@ -226,7 +239,10 @@ def loadh(file, name=Ellipsis, deferred=True):
     """
 
     if isinstance(file, basestring):
-        handle = tables.openFile(file, mode='r')
+        if TABLES2:
+            handle = tables.openFile(file, mode='r')
+        else:
+            handle = tables.open_file(file, mode='r')
         own_fid = True
     else:
         if not isinstance(file, tables.File):
@@ -238,7 +254,10 @@ def loadh(file, name=Ellipsis, deferred=True):
     # if name is a single string, deferred loading is not used
     if isinstance(name, basestring):
         try:
-            node = handle.getNode(where='/', name=name)
+            if TABLES2:
+                node = handle.getNode(where='/', name=name)
+            else:
+                node = handle.get_node(where='/', name=name)
         except tables.NoSuchNodeError:
             raise KeyError('Node "%s" does not exist '
                 'in file %s' % (name, file))
@@ -250,7 +269,11 @@ def loadh(file, name=Ellipsis, deferred=True):
 
     if not deferred:
         result = {}
-        for node in handle.walkNodes(where='/'):
+        if TABLES2:
+            iterator = handle.walkNodes(where='/')
+        else:
+            iterator = handle.walk_nodes(where='/')
+        for node in iterator:
             if isinstance(node, tables.Array):
                 # note that we want to strip off the leading "/"
                 # also, we're skipping Tables and other hdf5 structures
@@ -268,7 +291,11 @@ class DeferredTable(object):
 
         # get the paths of all of the nodes that are arrays (note that)
         # we're skipping Tables
-        self._node_names = [node._v_pathname[1:] for node in handle.walkNodes(where='/') if isinstance(node, tables.Array)]
+        if TABLES2:
+            self._node_names = [node._v_pathname[1:] for node in handle.walkNodes(where='/') if isinstance(node, tables.Array)]
+        else:
+            self._node_names = [node._v_pathname[1:] for node in handle.walk_nodes(where='/') if isinstance(node, tables.Array)]
+
         self._loaded = {}
         self._own_fid = own_fid
 
