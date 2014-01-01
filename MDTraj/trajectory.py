@@ -44,9 +44,10 @@ from mdtraj import compatibility
 if PY3:
     basestring = str
 
-__all__ = ['Trajectory', 'load', 'load_frame', 'load_pdb', 'load_xtc',
-           'load_trr', 'load_binpos', 'load_dcd', 'load_netcdf', 'load_hdf5',
-           'load_netcdf', 'load_arc', 'load_xml', 'load_legacy_hdf']
+__all__ = ['Trajectory', 'load', 'load_frame', 'iterload',  'load_pdb',
+           'load_xtc', 'load_trr', 'load_binpos', 'load_dcd', 'load_netcdf',
+           'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml',
+           'load_legacy_hdf']
 
 ##############################################################################
 # Globals
@@ -193,7 +194,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     Parameters
     ----------
     filename_or_filenames : {str, list of strings}
-        filename or list of filenames containing trajectory files of a single format.
+        Filename or list of filenames containing trajectory files of a single format.
     discard_overlapping_frames : bool, default=False
         Look for overlapping frames between the last frame of one filename and
         the first frame of a subsequent filename and discard them
@@ -256,6 +257,91 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         kwargs.pop('top', None)
 
     return loader(filename, **kwargs)
+
+
+def iterload(filename, chunk=100, **kwargs):
+    """An iterator over a trajectory from one or more files on disk, in fragments
+
+    This may be more memory efficient than loading an entire trajectory at
+    once
+
+    Parameters
+    ----------
+    filename : str
+        Path to the trajectory file on disk
+    chunk : int
+        Number of frames to load at once from disk per iteration.
+
+    Other Parameters
+    ----------------
+    top : {str, Trajectory, Topology}
+        Most trajectory formats do not contain topology information. Pass in
+        either the path to a RCSB PDB file, a trajectory, or a topology to
+        supply this information.
+    stride : int, default=None
+        Only read every stride-th frame.
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
+    """
+    stride = kwargs.get('stride', 1)
+    atom_indices = _cast_indices(kwargs.get('atom_indices', None))
+    if chunk % stride != 0:
+        raise ValueError('Stride must be a divisor of chunk. stride=%d does not go '
+                         'evenly into chunk=%d' % (stride, chunk))
+
+    if filename.endswith('.h5'):
+        with HDF5TrajectoryFile(filename) as f:
+            if atom_indices is None:
+                topology = f.topology
+            else:
+                topology = f.topology.subset(atom_indices)
+
+            while True:
+                data = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
+                if data == []:
+                    raise StopIteration()
+                _convert(data.coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                _convert(data.cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                yield Trajectory(xyz=data.coordinates, topology=topology,
+                                 time=data.time, unitcell_lengths=data.cell_lengths,
+                                 unitcell_angles=data.cell_angles)
+
+    elif filename.endswith('.xtc'):
+        topology = _parse_topology(kwargs.get('top', None))
+        with XTCTrajectoryFile(filename) as f:
+            while True:
+                xyz, time, step, box = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
+                if len(xyz) == 0:
+                    raise StopIteration()
+                _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                _convert(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
+                trajectory.unitcell_vectors = box
+                yield trajectory
+
+    elif filename.endswith('.dcd'):
+        topology = _parse_topology(kwargs.get('top', None))
+        with DCDTrajectoryFile(filename) as f:
+            ptr = 0
+            while True:
+                # for reasons that I have not investigated, dcdtrajectory file chunk and stride
+                # together work like this method, but HDF5/XTC do not.
+                xyz, box_length, box_angle = f.read(chunk, stride=stride, atom_indices=atom_indices)
+                if len(xyz) == 0:
+                    raise StopIteration()
+                _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                _convert(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                time = np.arange(ptr, ptr+len(xyz)*stride, stride)
+                ptr += len(xyz)*stride
+                yield Trajectory(xyz=xyz, topology=topology, time=time, unitcell_lengths=box_length,
+                                 unitcell_angles=box_angle)
+
+    else:
+        t = load(filename, **kwargs)
+        for i in range(0, len(t), chunk):
+            yield t[i:i+chunk]
 
 
 def load_pdb(filename, stride=None, atom_indices=None, frame=None):
