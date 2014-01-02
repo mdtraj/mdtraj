@@ -113,7 +113,7 @@ def rmsd(target, reference, frame=0, atom_indices=None, bool parallel=True, bool
     cdef np.ndarray[ndim=1, dtype=np.float32_t] ref_g
     # t0 = time.time()
 
-    if precomputed and (reference._rmsd_traces is not None) and (target._rmsd_traces is not None):
+    if precomputed and (reference._rmsd_traces is not None) and (target._rmsd_traces is not None) and atom_indices == slice(None):
         target_g = np.asarray(target._rmsd_traces, order='c', dtype=np.float32)
         ref_g = np.array(reference._rmsd_traces[0], dtype=np.float32).reshape(1)
     else:
