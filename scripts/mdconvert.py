@@ -53,6 +53,7 @@ formats = {'.dcd': md.DCDTrajectoryFile,
            '.binpos': md.BINPOSTrajectoryFile,
            '.nc': md.NetCDFTrajectoryFile,
            '.h5': md.HDF5TrajectoryFile,
+           '.lh5': md.LH5TrajectoryFile,
            '.pdb': md.PDBTrajectoryFile}
 
 fields = {'.trr': ('xyz', 'time', 'step', 'box', 'lambda'),
@@ -60,6 +61,7 @@ fields = {'.trr': ('xyz', 'time', 'step', 'box', 'lambda'),
           '.dcd': ('xyz', 'cell_lengths', 'cell_angles'),
           '.nc': ('xyz', 'time', 'cell_lengths', 'cell_angles'),
           '.binpos': ('xyz',),
+          '.lh5': ('xyz', 'topology'),
           '.h5': ('xyz', 'time', 'cell_lengths', 'cell_angles',
                   'velocities', 'kineticEnergy', 'potentialEnergy',
                   'temperature', 'lambda', 'topology'),
@@ -71,6 +73,7 @@ units = {'.xtc': 'nanometers',
          '.nc': 'angstroms',
          '.dcd': 'angstroms',
          '.h5': 'nanometers',
+         '.lh5': 'nanometers',
          '.pdb': 'angstroms'}
 
 ###############################################################################
@@ -121,7 +124,7 @@ def parse_args():
     extensions = ', '.join(list(formats.keys()))
     parser = ArgumentParser(description='''Convert molecular dynamics
     trajectories between formats. The DCD, XTC, TRR, PDB, binpos, NetCDF,
-    binpos, and HDF5 formats are supported (%s)''' % extensions)
+    binpos, LH5, and HDF5 formats are supported (%s)''' % extensions)
     parser.add_argument('input', nargs='+', help='''path to one or more
                     trajectory files. Multiple trajectories, if supplied, will
                     be concatenated together in the output file in the order
@@ -217,9 +220,9 @@ def parse_args():
     if args.topology is not None and not os.path.isfile(args.topology):
         parser.error('no such file: %s' % args.topology)
 
-    if ((args.topology is None and not all(ext(e) in ['.h5', '.pdb'] for e in args.input))
-                and ext(args.output) == '.pdb'):
-        parser.error('to output a pdb file, you need to supply a topology (-t, or --topology)')
+    if ((args.topology is None and not all(ext(e) in ['.h5', '.lh5', '.pdb'] for e in args.input))
+                and ext(args.output) in ['.h5', '.lh5', '.pdb']):
+        parser.error('to output a %s file, you need to supply a topology (-t, or --topology)' % ext(args.output))
 
     if args.chunk is not None and (args.chunk % args.stride != 0):
         parser.error('--stride must be a divisor of --chunk')
@@ -373,6 +376,12 @@ def write(outfile, data):
         if outfile.topology is None:
             # only want to write the topology once if we're chunking
             outfile.topology = data.get('topology', None)
+
+    elif isinstance(outfile, md.LH5TrajectoryFile):
+        outfile.write(data.get('xyz', None))
+        if outfile.topology is None:
+            # only want to write the topology once if we're chunking
+            outfile.topology = data.get('topology', None)
     else:
         raise RuntimeError()
 
@@ -433,6 +442,13 @@ def read(infile, chunk, stride, atom_indices):
             data['topology'] = data['topology'].subset(atom_indices)
         in_units = 'nanometers'
 
+    elif isinstance(infile, md.LH5TrajectoryFile):
+        data = {'xyz': _data}
+        data['topology'] = infile.topology  # need to hack this one in manually
+        if atom_indices is not None:
+            data['topology'] = data['topology'].subset(atom_indices)
+        in_units = 'nanometers'
+
     else:
         raise RuntimeError
 
@@ -467,10 +483,11 @@ def convert(data, in_units, out_units, out_fields):
 
     ignored_keys = ["'%s'" % s for s in set(data) - set(out_fields)]
     formated_fields = ', '.join("'%s'" % o for o in out_fields)
-    warn('%s data from input file(s) will be discarded. '
-         'output format only supports fields: %s' % (', '.join(ignored_keys),
-                                                     formated_fields))
-    warn.active = False
+    if len(ignored_keys) > 0:
+        warn('%s data from input file(s) will be discarded. '
+             'output format only supports fields: %s' % (', '.join(ignored_keys),
+                                                         formated_fields))
+        warn.active = False
 
     return data
 
