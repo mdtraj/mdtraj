@@ -94,3 +94,7 @@ def test_residue():
     atoms = list(residue.atoms)
     for i in range(residue.n_atoms):
         assert residue.atom(i) == atoms[i]
+
+def test_nonconsective_resSeq():
+    top = md.load(get_fn('nonconsecutive_resSeq.pdb')).topology
+    eq(np.array([r.index for r in top.residues]), np.array([5, 2, 1]))

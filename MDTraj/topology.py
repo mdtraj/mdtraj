@@ -461,7 +461,7 @@ class Topology(object):
         self._chains.append(chain)
         return chain
 
-    def add_residue(self, name, chain):
+    def add_residue(self, name, chain, index=None):
         """Create a new Residue and add it to the Topology.
 
         Parameters
@@ -470,13 +470,26 @@ class Topology(object):
             The name of the residue to add
         chain : mdtraj.topology.Chain
             The Chain to add it to
+        index : int, optional
+            The index of this residue, such as a resSeq PDB record. This field
+            is optional. If not supplied, the residues will be indexed in
+            increasing order starting from zero.
 
         Returns
         -------
         residue : mdtraj.topology.Residue
             The newly created Residue
         """
-        residue = Residue(name, self._numResidues, chain)
+
+        if index is None:
+            try:
+                index = 1 + max(r.index for r in chain.residues)
+            except ValueError:  # empty sequence
+                index = 0
+        else:
+            if index in set(r.index for r in chain.residues):
+                raise ValueError('Index must be unique')
+        residue = Residue(name, index, chain)
         self._residues.append(residue)
         self._numResidues += 1
         chain._residues.append(residue)

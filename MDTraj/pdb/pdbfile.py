@@ -338,7 +338,7 @@ class PDBTrajectoryFile(object):
                 resName = residue.get_name()
                 if resName in PDBTrajectoryFile._residueNameReplacements:
                     resName = PDBTrajectoryFile._residueNameReplacements[resName]
-                r = self._topology.add_residue(resName, c)
+                r = self._topology.add_residue(resName, c, residue.number)
                 if resName in PDBTrajectoryFile._atomNameReplacements:
                     atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
                 else:
