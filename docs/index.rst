@@ -36,7 +36,6 @@ Documentation
    rmsd
    io
    geometry
-   compatibility
    reporters
    utils
 

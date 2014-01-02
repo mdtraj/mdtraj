@@ -16,4 +16,5 @@ file formats with a unified API.
    mdcrd
    hdf5
    arc
+   lh5
 

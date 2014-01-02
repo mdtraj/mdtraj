@@ -3,11 +3,11 @@
 include =
     *.egg/mdtraj*
 
-exclude:
+omit =
     *test_*.py
     *testing/*.py
-    MDTraj/*
     *utils/six.py
+    MDTraj/*
 
 exclude_lines =
     # Have to re-enable the standard pragma

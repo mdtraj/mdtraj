@@ -67,7 +67,7 @@ def teardown_module(module):
 def setup_module():
     global TRAJ
 
-    xyz = np.arange(150, dtype=np.float32).reshape(10,5,3)
+    xyz = np.around(np.random.randn(10, 5, 3).astype(np.float32), 2)
     topology = md.Topology()
     chain = topology.add_chain()
     residue = topology.add_residue('ALA', chain)
@@ -136,8 +136,9 @@ def test_mdconvert_0():
     atom_indices_fn = os.path.join(staging_dir, 'atom_indices.dat')
     np.savetxt(atom_indices_fn, atom_indices, fmt='%d')
 
-    fns = ['traj.xtc', 'traj.dcd', 'traj.binpos', 'traj.trr', 'traj.nc',
-           'traj.pdb', 'traj.h5']
+    # fns = ['traj.xtc', 'traj.dcd', 'traj.binpos', 'traj.trr', 'traj.nc',
+    #        'traj.pdb', 'traj.h5', 'traj.lh5']
+    fns = ['traj.xtc', 'traj.lh5']
 
     for fn in fns:
         path = os.path.join(staging_dir, fn)
@@ -147,7 +148,7 @@ def test_mdconvert_0():
             ext1, ext2 = [os.path.splitext(f)[1] for f in [fn, fn2]]
 
             command1 = ['mdconvert', path, '-o', fn2, '-c 6']
-            if ext2 in ['.pdb', '.h5']:
+            if ext2 in ['.pdb', '.h5', '.lh5']:
                 # if we're saving a pdb or h5, we need to give it a topology too
                 command1 += ['-t', topology_fn]
 
@@ -174,7 +175,7 @@ def test_mdconvert_0():
             # ensure that the xyz coordinates are preserved by a trip
             # from python -> save in format X -> mdconvert to format Y -> python
             load_kwargs_check1, load_kwargs_check2 = {}, {}
-            if ext2 not in ['.pdb', '.h5']:
+            if ext2 not in ['.pdb', '.h5', '.lh5']:
                 load_kwargs_check1['top'] = TRAJ.topology
                 load_kwargs_check2['top'] = TRAJ.topology.subset(atom_indices)
 
@@ -187,7 +188,7 @@ def test_mdconvert_0():
                 eq(out2.xyz, TRAJ.xyz[:, atom_indices])
                 eq(out3.xyz, TRAJ.xyz[::3])
 
-                if ext1 != '.binpos' and ext2 != '.binpos':
+                if ext1 not in ['.binpos', '.lh5'] and ext2 not in ['.binpos', '.lh5']:
                     # binpos doesn't save unitcell information
                     eq(out1.unitcell_vectors, TRAJ.unitcell_vectors, decimal=2)
                     eq(out2.unitcell_vectors, TRAJ.unitcell_vectors, decimal=2)
@@ -199,7 +200,7 @@ def test_mdconvert_0():
                     eq(out2.time, TRAJ.time)
                     eq(out3.time, TRAJ.time[::3])
 
-                if ext2 in ['.pdb', '.h5']:
+                if ext2 in ['.pdb', '.h5', '.lh5']:
                     # these formats contain a topology in the file that was
                     # read from disk
                     eq(out1.topology, TRAJ.topology)

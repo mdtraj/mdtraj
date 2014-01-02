@@ -102,7 +102,7 @@ Frames = namedtuple('Frames', ['coordinates', 'time', 'cell_lengths', 'cell_angl
 
 class HDF5TrajectoryFile(object):
     """Interface for reading and writing to a MDTraj HDF5 molecular
-    dynanmics trajectory file, whose format is described
+    dynamics trajectory file, whose format is described
     `here <https://github.com/rmcgibbo/mdtraj/issues/36>`_.
 
     This is a file-like object, that both reading or writing depending
@@ -277,7 +277,7 @@ class HDF5TrajectoryFile(object):
         """Set the topology in the file
 
         Parameters
-        -------
+        ----------
         topology_object : mdtraj.Topology
             A topology object
         """
@@ -786,6 +786,7 @@ class HDF5TrajectoryFile(object):
                 atom=self.tables.Float32Atom(), shape=(0,))
             self._get_node('/', name='lambda').attrs['units'] = 'dimensionless'
 
+    @ensure_mode('r')
     def seek(self, offset, whence=0):
         """Move to a new file position
 
