@@ -83,7 +83,8 @@ def _topology_from_subset(topology, atom_indices):
     for chain in topology._chains:
         newChain = newTopology.add_chain()
         for residue in chain._residues:
-            newResidue = newTopology.add_residue(residue.name, newChain)
+            resSeq = getattr(residue, 'resSeq', None) or residue.index
+            newResidue = newTopology.add_residue(residue.name, newChain, resSeq)
             for atom in residue._atoms:
                 if atom.index in atom_indices:
                     newAtom = newTopology.add_atom(atom.name, atom.element, newResidue)
@@ -197,7 +198,7 @@ class Topology(object):
         for chain in self.chains:
             c = out.add_chain()
             for residue in chain.residues:
-                r = out.add_residue(residue.name, c)
+                r = out.add_residue(residue.name, c, residue.resSeq)
                 for atom in residue.atoms:
                     out.add_atom(atom.name, atom.element, r)
 
@@ -234,7 +235,7 @@ class Topology(object):
         for chain in other.chains:
             c = out.add_chain()
             for residue in chain.residues:
-                r = out.add_residue(residue.name, c)
+                r = out.add_residue(residue.name, c, residue.resSeq)
                 for atom in residue.atoms:
                     a = out.add_atom(atom.name, atom.element, r)
                     atom_mapping[atom] = a
@@ -322,7 +323,7 @@ class Topology(object):
             else:
                 element_symbol = atom.element.symbol
             data.append((atom.index, atom.name, element_symbol,
-                         atom.residue.index, atom.residue.name,
+                         atom.residue.resSeq, atom.residue.name,
                          atom.residue.chain.index))
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
@@ -382,7 +383,7 @@ class Topology(object):
                 residue_name = np.array(rnames)[0]
                 if not np.all(rnames == residue_name):
                     raise ValueError('All of the atoms with residue index %d do not share the same residue name' % ri)
-                r = out.add_residue(residue_name, c)
+                r = out.add_residue(residue_name, c, ri)
 
                 for ai, atom in residue_atoms.iterrows():
                     if atom['element'] == "":
@@ -461,7 +462,7 @@ class Topology(object):
         self._chains.append(chain)
         return chain
 
-    def add_residue(self, name, chain, index=None):
+    def add_residue(self, name, chain, resSeq=None):
         """Create a new Residue and add it to the Topology.
 
         Parameters
@@ -470,26 +471,20 @@ class Topology(object):
             The name of the residue to add
         chain : mdtraj.topology.Chain
             The Chain to add it to
-        index : int, optional
-            The index of this residue, such as a resSeq PDB record. This field
-            is optional. If not supplied, the residues will be indexed in
-            increasing order starting from zero.
+        resSeq : int, optional
+            Residue sequence number, such as from a PDB record. These sequence
+            numbers are arbitrary, and do not necessarily start at 0 (or 1).
+            If not supplied, the resSeq attribute will be set to the
+            residue's sequential (0 based) index.
 
         Returns
         -------
         residue : mdtraj.topology.Residue
             The newly created Residue
         """
-
-        if index is None:
-            try:
-                index = 1 + max(r.index for r in chain.residues)
-            except ValueError:  # empty sequence
-                index = 0
-        else:
-            if index in set(r.index for r in chain.residues):
-                raise ValueError('Index must be unique')
-        residue = Residue(name, index, chain)
+        if resSeq is None:
+            resSeq = self._numResidues
+        residue = Residue(name, self._numResidues, chain, resSeq)
         self._residues.append(residue)
         self._numResidues += 1
         chain._residues.append(residue)
@@ -799,18 +794,20 @@ class Residue(object):
 
     Attributes
     ----------
-    atoms : genetator
-    n_atoms : int
+    name : str
+        The name of the Residue
+    index : int
+        The index of the Residue within its Topology
+    chain : int
+        The residue sequence number
     """
-    def __init__(self, name, index, chain):
+    def __init__(self, name, index, chain, resSeq):
         """Construct a new Residue.  You should call add_residue()
         on the Topology instead of calling this directly."""
-        ## The name of the Residue
         self.name = name
-        ## The index of the Residue within its Topology
         self.index = index
-        ## The Chain this Residue belongs to
         self.chain = chain
+        self.resSeq = resSeq
         self._atoms = []
 
     @property

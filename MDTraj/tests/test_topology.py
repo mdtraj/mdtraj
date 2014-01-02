@@ -97,4 +97,7 @@ def test_residue():
 
 def test_nonconsective_resSeq():
     top = md.load(get_fn('nonconsecutive_resSeq.pdb')).topology
-    eq(np.array([r.index for r in top.residues]), np.array([5, 2, 1]))
+    yield lambda : eq(np.array([r.resSeq for r in top.residues]), np.array([1, 3, 5]))
+    df1 = top.to_dataframe()
+    df2 = md.Topology.from_dataframe(*df1).to_dataframe()
+    yield lambda : eq(df1[0], df2[0])
