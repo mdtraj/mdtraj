@@ -31,8 +31,7 @@ from mdtraj.utils import ensure_type
 from mdtraj.geometry import _geometry
 
 __all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega',
-           'compute_chi1','compute_chi2','compute_chi3','compute_chi4',
-           'atom_sequence_finder']
+           'compute_chi1','compute_chi2','compute_chi3','compute_chi4']
 
 ##############################################################################
 # Functions
@@ -132,7 +131,7 @@ def _construct_atom_dict(topology, chain_id=0):
     return atom_dict
 
 
-def atom_sequence_finder(trajectory, atom_names, residue_offsets=None, chain_id=0):
+def _atom_sequence(trajectory, atom_names, residue_offsets=None, chain_id=0):
     """Find sequences of atom indices corresponding to desired atoms.
 
     This method can be used to find sets of atoms corresponding to specific
@@ -166,11 +165,11 @@ def atom_sequence_finder(trajectory, atom_names, residue_offsets=None, chain_id=
     >>> traj = mdtraj.trajectory.load("native.pdb") # doctest: +SKIP
     >>> atom_names = ["C" ,"N" , "CA", "C"] # doctest: +SKIP
     >>> residue_offsets = [-1, 0, 0, 0] # doctest: +SKIP
-    >>> found_residue_ids, indices = atom_sequence_finder(traj, atom_names, residue_offsets) # doctest: +SKIP
+    >>> found_residue_ids, indices = _atom_sequence(traj, atom_names, residue_offsets) # doctest: +SKIP
     """
     if residue_offsets is None:
         residue_offsets = parse_offsets(atom_names)
-    atom_names = strip_offsets(atom_names)
+    atom_names = _strip_offsets(atom_names)
 
     atom_dict = _construct_atom_dict(trajectory.top, chain_id=chain_id)
     atom_indices = []
@@ -225,7 +224,7 @@ def parse_offsets(atom_names):
     return offsets
 
 
-def strip_offsets(atom_names):
+def _strip_offsets(atom_names):
     """Convert a list of atom + offset strings into lists of atoms.
 
     Parameters
@@ -272,9 +271,9 @@ CHI3_ATOMS = [["CB", "CG", "CD", "NE"],
 CHI4_ATOMS = [["CG", "CD", "NE", "CZ"],
               ["CG", "CD", "CE", "NZ"]]
 
-_get_indices_omega = lambda traj: atom_sequence_finder(traj, OMEGA_ATOMS)
-_get_indices_phi = lambda traj: atom_sequence_finder(traj, PHI_ATOMS)
-_get_indices_psi = lambda traj: atom_sequence_finder(traj, PSI_ATOMS)
+_get_indices_omega = lambda traj: _atom_sequence(traj, OMEGA_ATOMS)
+_get_indices_phi = lambda traj: _atom_sequence(traj, PHI_ATOMS)
+_get_indices_psi = lambda traj: _atom_sequence(traj, PSI_ATOMS)
 
 
 def compute_phi(trajectory, opt=True):
@@ -341,7 +340,7 @@ def compute_chi1(trajectory, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rids, indices = zip(*(atom_sequence_finder(trajectory, atoms) for atoms in CHI1_ATOMS))
+    rids, indices = zip(*(_atom_sequence(trajectory, atoms) for atoms in CHI1_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
     indices = np.vstack(x for x in indices if x.size)[id_sort]
 
@@ -367,7 +366,7 @@ def compute_chi2(trajectory, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rids, indices = zip(*(atom_sequence_finder(trajectory, atoms) for atoms in CHI2_ATOMS))
+    rids, indices = zip(*(_atom_sequence(trajectory, atoms) for atoms in CHI2_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
     indices = np.vstack(x for x in indices if x.size)[id_sort]
 
@@ -395,7 +394,7 @@ def compute_chi3(trajectory, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rids, indices = zip(*(atom_sequence_finder(trajectory, atoms) for atoms in CHI3_ATOMS))
+    rids, indices = zip(*(_atom_sequence(trajectory, atoms) for atoms in CHI3_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
     indices = np.vstack(x for x in indices if x.size)[id_sort]
 
@@ -423,7 +422,7 @@ def compute_chi4(trajectory, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rids, indices = zip(*(atom_sequence_finder(trajectory, atoms) for atoms in CHI4_ATOMS))
+    rids, indices = zip(*(_atom_sequence(trajectory, atoms) for atoms in CHI4_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
     indices = np.vstack(x for x in indices if x.size)[id_sort]
 
