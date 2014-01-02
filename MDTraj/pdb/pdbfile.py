@@ -170,7 +170,7 @@ class PDBTrajectoryFile(object):
                         symbol = ' '
                     line = "ATOM  %5d %-4s %3s %s%4d    %s%s%s  1.00  0.00          %2s  " % (
                         atomIndex % 100000, atomName, resName, chainName,
-                        (resIndex + 1) % 10000, _format_83(coords[0]),
+                        (res.resSeq) % 10000, _format_83(coords[0]),
                         _format_83(coords[1]), _format_83(coords[2]), symbol)
                     assert len(line) == 80, 'Fixed width overflow detected'
                     print(line, file=self._file)
@@ -338,7 +338,7 @@ class PDBTrajectoryFile(object):
                 resName = residue.get_name()
                 if resName in PDBTrajectoryFile._residueNameReplacements:
                     resName = PDBTrajectoryFile._residueNameReplacements[resName]
-                r = self._topology.add_residue(resName, c)
+                r = self._topology.add_residue(resName, c, residue.number)
                 if resName in PDBTrajectoryFile._atomNameReplacements:
                     atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
                 else:
