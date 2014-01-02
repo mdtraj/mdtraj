@@ -429,7 +429,7 @@ class Topology(object):
                 return False
 
             for r1, r2 in zip(c1.residues, c2.residues):
-                if (r1.index != r1.index) or (r1.name != r2.name):
+                if (r1.index != r1.index) or (r1.name != r2.name): # or (r1.resSeq != r2.resSeq):
                     return False
                 if len(r1._atoms) != len(r2._atoms):
                     return False
