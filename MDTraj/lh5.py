@@ -32,7 +32,7 @@ import os
 import sys
 import numpy as np
 import mdtraj.pdb.element
-from mdtraj.utils.six import iteritems, PY3
+from mdtraj.utils.six import iteritems, PY3, u
 from mdtraj.utils import import_, ensure_type
 from mdtraj.hdf5 import ensure_mode
 
@@ -168,7 +168,7 @@ class LH5TrajectoryFile(object):
             A topology object
         """
         if np.all(self._handle.root.AtomID[:] == 0) and (np.all(self._handle.root.AtomNames[:] == b'')
-            or np.all(self._handle.root.AtomNames[:] == u'')):
+            or np.all(self._handle.root.eAtomNames[:] == u(''))):
             return None
 
         return _topology_from_arrays(
