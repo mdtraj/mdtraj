@@ -1178,6 +1178,7 @@ class Trajectory(object):
         value = ensure_type(value, np.float32, 3, 'xyz', shape=shape,
                             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         self._xyz = value
+        self._rmsd_traces = None
 
     def __len__(self):
         return self.n_frames
@@ -1401,6 +1402,15 @@ class Trajectory(object):
         # the xyz, we can check that it lines up (e.g. n_atoms), with the topology
         self.topology = topology
         self.xyz = xyz
+
+        # _rmsd_traces are the inner product of each centered conformation,
+        # which are required for computing RMSD. Normally these values are
+        # calculated on the fly in the cython code (rmsd/_rmsd.pyx), but
+        # optionally, we enable the use precomputed values which can speed
+        # up the calculation (useful for clustering), but potentially be unsafe
+        # if self._xyz is modified without a corresponding change to
+        # self._rmsd_traces. This array is populated computed by
+        # center_conformations, and no other methods should really touch it.
         self._rmsd_traces = None
 
         # box has no default, it'll just be none normally
