@@ -1,4 +1,4 @@
-#
+##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
 # Copyright 2012-2014 Stanford University and the Authors
@@ -18,7 +18,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
-#
+##############################################################################
 
 """ MSMBuilder2 "LH5" trajectory format.
 """
@@ -167,7 +167,8 @@ class LH5TrajectoryFile(object):
         topology : mdtraj.Topology
             A topology object
         """
-        if np.all(self._handle.root.AtomID[:] == 0) and np.all(self._handle.root.AtomNames[:] == ''):
+        if np.all(self._handle.root.AtomID[:] == 0) and (np.all(self._handle.root.AtomNames[:] == b'')
+            or np.all(self._handle.root.AtomNames[:] == u'')):
             return None
 
         return _topology_from_arrays(
