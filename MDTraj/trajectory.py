@@ -1401,6 +1401,7 @@ class Trajectory(object):
         # the xyz, we can check that it lines up (e.g. n_atoms), with the topology
         self.topology = topology
         self.xyz = xyz
+        self._rmsd_traces = None
 
         # box has no default, it'll just be none normally
         self.unitcell_lengths = unitcell_lengths
@@ -1685,7 +1686,6 @@ class Trajectory(object):
 
         """
         compatibility.save_legacy_hdf(self, filename)
-        
 
     def center_coordinates(self, mass_weighted=False):
         """Center each trajectory frame at the origin (0,0,0).
@@ -1709,7 +1709,7 @@ class Trajectory(object):
             for x in self._xyz:
                 x -= (x.astype('float64').T.dot(masses))
         else:
-            _rmsd._center_inplace_atom_major(self._xyz)
+            self._rmsd_traces = _rmsd._center_inplace_atom_major(self._xyz)
 
         return self
 
