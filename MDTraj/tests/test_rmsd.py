@@ -38,6 +38,15 @@ def test_trajectory_rmsd():
 
         eq(calculated, reference, decimal=3)
 
+def test_precomputed():
+    t = md.load(get_fn('traj.h5'))
+    ref = md.rmsd(t, t, 0, precomputed=False)
+
+    t.center_coordinates()
+    val = md.rmsd(t, t, 0, precomputed=True)
+
+    eq(ref, val)
+
 
 def test_superpose():
     t1 = md.load(get_fn('traj.h5'))

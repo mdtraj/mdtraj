@@ -30,6 +30,7 @@ from __future__ import print_function, division
 from mdtraj.xtc import XTCTrajectoryFile
 from mdtraj.trr import TRRTrajectoryFile
 from mdtraj.hdf5 import HDF5TrajectoryFile
+from mdtraj.lh5 import LH5TrajectoryFile
 from mdtraj.netcdf import NetCDFTrajectoryFile
 from mdtraj.mdcrd import MDCRDTrajectoryFile
 from mdtraj.dcd import DCDTrajectoryFile

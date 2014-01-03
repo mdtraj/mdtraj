@@ -1,7 +1,7 @@
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
-# Copyright 2012-2013 Stanford University and the Authors
+# Copyright 2012-2014 Stanford University and the Authors
 #
 # Authors: Robert McGibbon
 # Contributors: Kyle A Beauchamp
@@ -42,32 +42,17 @@ fd4, temp4 = tempfile.mkstemp(suffix='.trr')
 fd5, temp5 = tempfile.mkstemp(suffix='.h5')
 fd6, temp6 = tempfile.mkstemp(suffix='.pdb')
 fd7, temp7 = tempfile.mkstemp(suffix='.nc')
-fd_lh5, temp_lh5 = tempfile.mkstemp(suffix='.lh5')
+fd8, temp8 = tempfile.mkstemp(suffix='.lh5')
 
-for e in [fd1, fd2, fd3, fd4, fd5, fd6, fd7, fd_lh5]:
+for e in [fd1, fd2, fd3, fd4, fd5, fd6, fd7, fd8]:
     os.close(e)
 
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
 
-    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp_lh5]:
+    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8]:
         os.unlink(e)
-
-
-def test_legacy_hdf0():
-    t0 = md.load(fn)
-
-
-def test_legacy_hdf1():
-    t = md.load(get_fn('legacy_msmbuilder_trj0.lh5'))
-    t.save(temp_lh5)
-
-
-def test_legacy_hdf2():
-    t = md.load_legacy_hdf(get_fn('legacy_msmbuilder_trj0.lh5'))
-    t.save_legacy_hdf(temp_lh5)
-
 
 def test_mismatch():
     # loading a 22 atoms xtc with a topology that has 2,000 atoms
@@ -113,17 +98,6 @@ def test_box_load_save():
         yield lambda: eq(t.unitcell_lengths, t2.unitcell_lengths)
 
 
-def test_legacy_hdf_frame():
-    t0 = md.load(fn)
-    t1 = md.load(fn, frame=1)
-
-    yield lambda: eq(t0[1].xyz, t1.xyz)
-    yield lambda: eq(t0[1].unitcell_vectors, t1.unitcell_vectors)
-    yield lambda: eq(t0[1].unitcell_angles, t1.unitcell_angles)
-    yield lambda: eq(t0[1].unitcell_lengths, t1.unitcell_lengths)
-    yield lambda: eq(t0[1].time, t1.time)
-
-
 def test_slice():
     t = md.load(fn)
     yield lambda: eq((t[0:5] + t[5:10]).xyz, t[0:10].xyz)
@@ -140,7 +114,7 @@ def test_slice2():
 
 def test_xtc():
     t = md.load(get_fn('frame0.xtc'), top=nat)
-    for e in [temp1, temp2, temp3, temp4]:
+    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
         def f():
             t.save(e)
             t2 = md.load(e, top=nat)
@@ -155,7 +129,7 @@ def test_xtc():
 
 def test_dcd():
     t = md.load(get_fn('frame0.dcd'), top=nat)
-    for e in [temp1, temp2, temp3, temp4]:
+    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
         def f():
             t.save(e)
             t2 = md.load(e, top=nat)
@@ -166,7 +140,7 @@ def test_dcd():
 
 def test_binpos():
     t = md.load(get_fn('frame0.binpos'), top=nat)
-    for e in [temp1, temp2, temp3, temp4]:
+    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
         def f():
             t.save(e)
             t2 = md.load(e, top=nat)
@@ -176,7 +150,8 @@ def test_binpos():
 
 
 def test_load():
-    filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos", "traj.h5"]
+    filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos",
+                 "traj.h5", 'legacy_msmbuilder_trj0.lh5', 'frame0.nc']
     num_block = 3
     for filename in filenames:
         t0 = md.load(get_fn(filename), top=nat, discard_overlapping_frames=True)
@@ -277,11 +252,12 @@ def test_pdb_unitcell_loadsave():
 
 
 def test_load_combination():
-    "Test that the load function's stride and atom_indices work accross all trajectory formats"
+    "Test that the load function's stride and atom_indices work across all trajectory formats"
 
     topology = md.load(get_fn('native.pdb')).topology
     ainds = np.array([a.index for a in topology.atoms if a.element.symbol == 'C'])
-    filenames = ['frame0.binpos', 'frame0.dcd', 'frame0.trr', 'frame0.xtc', 'frame0.nc', 'frame0.h5', 'frame0.pdb']
+    filenames = ['frame0.binpos', 'frame0.dcd', 'frame0.trr', 'frame0.xtc',
+                 'frame0.nc', 'frame0.h5', 'frame0.pdb', 'legacy_msmbuilder_trj0.lh5']
 
     no_kwargs = [md.load(fn, top=topology) for fn in map(get_fn, filenames)]
     strided3 =  [md.load(fn, top=topology, stride=3) for fn in map(get_fn, filenames)]
@@ -349,7 +325,9 @@ def test_seek_read_mode():
              (md.TRRTrajectoryFile, 'frame0.trr'),
              (md.DCDTrajectoryFile, 'frame0.dcd'),
              (md.MDCRDTrajectoryFile, 'frame0.mdcrd'),
-             (md.BINPOSTrajectoryFile, 'frame0.binpos'),]
+             (md.BINPOSTrajectoryFile, 'frame0.binpos'),
+             (md.BINPOSTrajectoryFile, 'frame0.binpos'),
+             (md.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'),]
 
     for a, b in files:
         point = 0
@@ -374,7 +352,7 @@ def test_seek_read_mode():
                     offset = np.random.randint(1, 10)
                     if point + offset < length:
                         read = f.read(offset)
-                        if a is not md.BINPOSTrajectoryFile:
+                        if a not in [md.BINPOSTrajectoryFile, md.LH5TrajectoryFile]:
                             read = read[0]
                         readlength = len(read)
                         read = mdtraj.trajectory._convert(read, f.distance_unit, 'nanometers')
@@ -400,7 +378,8 @@ def test_seek_read_mode():
 
 def test_load_frame():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
-             'frame0.dcd', 'frame0.mdcrd', 'frame0.binpos']
+             'frame0.dcd', 'frame0.mdcrd', 'frame0.binpos',
+             'legacy_msmbuilder_trj0.lh5']
     trajectories = [md.load(get_fn(f), top=get_fn('native.pdb')) for f in files]
     rand = [np.random.randint(len(t)) for t in trajectories]
     frames = [md.load_frame(get_fn(f), index=r, top=get_fn('native.pdb')) for f, r in zip(files, rand)]

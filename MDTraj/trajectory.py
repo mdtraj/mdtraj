@@ -1,7 +1,7 @@
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
-# Copyright 2012-2013 Stanford University and the Authors
+# Copyright 2012-2014 Stanford University and the Authors
 #
 # Authors: Robert McGibbon
 # Contributors: Kyle A. Beauchamp, TJ Lane, Joshua Adelman, Lee-Ping Wang
@@ -28,35 +28,31 @@
 from __future__ import print_function, division
 import os
 import warnings
-import logging
 import functools
 from copy import deepcopy
 import numpy as np
 
 from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
                     TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
-                    PDBTrajectoryFile, MDCRDTrajectoryFile, ArcTrajectoryFile, Topology)
+                    LH5TrajectoryFile, PDBTrajectoryFile, MDCRDTrajectoryFile,
+                    ArcTrajectoryFile, Topology)
 from mdtraj.utils import unitcell, ensure_type
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3
 from mdtraj import _rmsd
-from mdtraj import compatibility
 if PY3:
     basestring = str
-
-__all__ = ['Trajectory', 'load', 'load_frame', 'iterload',  'load_pdb',
-           'load_xtc', 'load_trr', 'load_binpos', 'load_dcd', 'load_netcdf',
-           'load_hdf5', 'load_netcdf', 'load_arc', 'load_xml',
-           'load_legacy_hdf']
 
 ##############################################################################
 # Globals
 ##############################################################################
 
-logger = logging.getLogger(__name__)
-
-# note, there's another global named "_LoaderRegistry" that's declared at
+# note, there's a global named "_LoaderRegistry" that's declared at
 # the bottom of the file
+
+__all__ = ['load', 'load_binpos', 'load_trr', 'load_netcdf', 'Trajectory',
+           'load_xtc', 'load_dcd', 'iterload', 'load_xml', 'load_frame', 
+           'load_hdf5', 'load_pdb', 'load_lh5', 'load_arc']
 
 ##############################################################################
 # Utilities
@@ -83,8 +79,9 @@ def _parse_topology(top):
     If top is a string, we try loading a pdb, if its a trajectory
     we extract its topology.
     """
-    if isinstance(top, basestring):
-        topology = PDBTrajectoryFile(top).topology
+
+    if isinstance(top, basestring) and (os.path.splitext(top)[1] in ['.pdb', '.h5','.lh5']):
+        topology = load_frame(top, 0).topology
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, Topology):
@@ -245,7 +242,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                       'was found. I can only load files '
                       'with extensions in %s' % (filename, extension, _LoaderRegistry.keys()))
 
-    if loader == load_hdf5 or loader == load_pdb:
+    if loader in [load_hdf5, load_pdb, load_lh5]:
         if 'top' in kwargs:
             warnings.warn('top= kwarg ignored since file contains topology information')
         # this is a little hack that makes calling load() more predicable. since
@@ -964,7 +961,54 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
     return trajectory
 
 
-load_legacy_hdf = compatibility.load_legacy_hdf
+def load_lh5(filename, top=None, stride=None, atom_indices=None, frame=None):
+    """Load an deprecated MSMBuilder2 LH5 trajectory file.
+
+    Parameters
+    ----------
+    filename : str
+        filename of AMBER NetCDF file.
+    top : {str, Trajectory, Topology}
+        The NetCDF format does not contain topology information. Pass in either
+        the path to a pdb file, a trajectory, or a topology to supply this
+        information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
+
+    See Also
+    --------
+    mdtraj.LH5TrajectoryFile :  Low level interface to LH5 files
+    """
+
+    atom_indices = _cast_indices(atom_indices)
+    with LH5TrajectoryFile(filename) as f:
+        if frame is not None:
+            f.seek(frame)
+            xyz = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz = f.read(stride=stride, atom_indices=atom_indices)
+
+        topology = f.topology
+        _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+        if atom_indices is not None:
+            topology = f.topology.subset(atom_indices)
+
+    time = np.arange(len(xyz))
+    if frame is not None:
+        time += frame
+    elif stride is not None:
+        time *= stride
+
+    return Trajectory(xyz=xyz, topology=topology, time=time)
 
 
 class Trajectory(object):
@@ -1264,6 +1308,7 @@ class Trajectory(object):
         value = ensure_type(value, np.float32, 3, 'xyz', shape=shape,
                             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         self._xyz = value
+        self._rmsd_traces = None
 
     def __len__(self):
         return self.n_frames
@@ -1488,6 +1533,16 @@ class Trajectory(object):
         self.topology = topology
         self.xyz = xyz
 
+        # _rmsd_traces are the inner product of each centered conformation,
+        # which are required for computing RMSD. Normally these values are
+        # calculated on the fly in the cython code (rmsd/_rmsd.pyx), but
+        # optionally, we enable the use precomputed values which can speed
+        # up the calculation (useful for clustering), but potentially be unsafe
+        # if self._xyz is modified without a corresponding change to
+        # self._rmsd_traces. This array is populated computed by
+        # center_conformations, and no other methods should really touch it.
+        self._rmsd_traces = None
+
         # box has no default, it'll just be none normally
         self.unitcell_lengths = unitcell_lengths
         self.unitcell_angles = unitcell_angles
@@ -1607,7 +1662,7 @@ class Trajectory(object):
                   '.crd': self.save_mdcrd,
                   '.mdcrd': self.save_mdcrd,
                   '.ncdf': self.save_netcdf,
-                  '.lh5': self.save_legacy_hdf,
+                  '.lh5': self.save_lh5,
                   }
 
         try:
@@ -1761,17 +1816,17 @@ class Trajectory(object):
                     cell_lengths=_convert(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
-    def save_legacy_hdf(self, filename):
-        """Save trajectory in MSMBuilder2 legacy LH5 (lossy HDF5) format.
+    def save_lh5(self, filename):
+        """Save trajectory in deprecated MSMBuilder2 LH5 (lossy HDF5) format.
 
         Parameters
         ----------
         filename : str
-            filesystem path in which to save the trajectory        
-
+            filesystem path in which to save the trajectory
         """
-        compatibility.save_legacy_hdf(self, filename)
-        
+        with LH5TrajectoryFile(filename, 'w', force_overwrite=True) as f:
+            f.write(coordinates=self.xyz)
+            f.topology = self.topology
 
     def center_coordinates(self, mass_weighted=False):
         """Center each trajectory frame at the origin (0,0,0).
@@ -1795,7 +1850,7 @@ class Trajectory(object):
             for x in self._xyz:
                 x -= (x.astype('float64').T.dot(masses))
         else:
-            _rmsd._center_inplace_atom_major(self._xyz)
+            self._rmsd_traces = _rmsd._center_inplace_atom_major(self._xyz)
 
         return self
 
@@ -1850,7 +1905,7 @@ _LoaderRegistry = {
     '.h5': load_hdf5,
     '.crd': load_mdcrd,
     '.mdcrd': load_mdcrd,
-    '.lh5': load_legacy_hdf,
+    '.lh5': load_lh5,
     '.binpos': load_binpos,
     '.ncdf': load_netcdf,
     '.nc': load_netcdf,
