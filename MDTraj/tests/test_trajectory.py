@@ -22,6 +22,7 @@
 
 
 import tempfile, os
+import functools
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises
 import numpy as np
 import mdtraj as md
@@ -392,3 +393,15 @@ def test_load_frame():
     r = np.random.randint(len(t1))
     t2 = md.load_frame(get_fn('2EQQ.pdb'), r)
     eq(t1[r].xyz, t2.xyz)
+
+def test_iterload():
+    files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
+             'frame0.dcd', 'frame0.binpos', 'legacy_msmbuilder_trj0.lh5']
+    chunk = 100
+    for stride in [1, 2, 5, 10]:
+        for file in files:
+            t_ref = md.load(get_fn(file), stride=stride, top=get_fn('native.pdb'))
+            t = functools.reduce(lambda a, b: a.join(b), md.iterload(get_fn(file), stride=stride, top=get_fn('native.pdb'), chunk=100))
+            eq(t_ref.xyz, t.xyz)
+            eq(t_ref.time, t.time)
+            eq(t_ref.topology, t.topology)
