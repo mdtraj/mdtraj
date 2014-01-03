@@ -201,7 +201,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     top : {str, Trajectory, Topology}
         Most trajectory formats do not contain topology information. Pass in
         either the path to a RCSB PDB file, a trajectory, or a topology to
-        supply this information.
+        supply this information. This option is not required for the .h5, .lh5,
+        and .pdb formats, which already contain topology information.
     stride : int, default=None
         Only read every stride-th frame
     atom_indices : array_like, optional
@@ -274,7 +275,8 @@ def iterload(filename, chunk=100, **kwargs):
     top : {str, Trajectory, Topology}
         Most trajectory formats do not contain topology information. Pass in
         either the path to a RCSB PDB file, a trajectory, or a topology to
-        supply this information.
+        supply this information. This option is not required for the .h5, .lh5,
+        and .pdb formats, which already contain topology information.
     stride : int, default=None
         Only read every stride-th frame.
     atom_indices : array_like, optional
@@ -289,6 +291,8 @@ def iterload(filename, chunk=100, **kwargs):
                          'evenly into chunk=%d' % (stride, chunk))
 
     if filename.endswith('.h5'):
+        if 'top' in kwargs:
+            warnings.warn('top= kwarg ignored since file contains topology information')
         with HDF5TrajectoryFile(filename) as f:
             if atom_indices is None:
                 topology = f.topology
@@ -306,6 +310,8 @@ def iterload(filename, chunk=100, **kwargs):
                                  unitcell_angles=data.cell_angles)
 
     if filename.endswith('.lh5'):
+        if 'top' in kwargs:
+            warnings.warn('top= kwarg ignored since file contains topology information')
         with LH5TrajectoryFile(filename) as f:
             if atom_indices is None:
                 topology = f.topology
