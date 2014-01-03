@@ -396,7 +396,7 @@ def test_load_frame():
 
 def test_iterload():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
-             'frame0.dcd', 'frame0.binpos']
+             'frame0.dcd', 'frame0.binpos', 'legacy_msmbuilder_trj0.lh5']
     chunk = 100
     for stride in [1, 2, 5, 10]:
         for file in files:

@@ -305,6 +305,23 @@ def iterload(filename, chunk=100, **kwargs):
                                  time=data.time, unitcell_lengths=data.cell_lengths,
                                  unitcell_angles=data.cell_angles)
 
+    if filename.endswith('.lh5'):
+        with LH5TrajectoryFile(filename) as f:
+            if atom_indices is None:
+                topology = f.topology
+            else:
+                topology = f.topology.subset(atom_indices)
+
+            ptr = 0
+            while True:
+                xyz = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
+                if len(xyz) == 0:
+                    raise StopIteration()
+                _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                time = np.arange(ptr, ptr+len(xyz)*stride, stride)
+                ptr += len(xyz)*stride
+                yield Trajectory(xyz=xyz, topology=topology, time=time)
+
     elif filename.endswith('.xtc'):
         topology = _parse_topology(kwargs.get('top', None))
         with XTCTrajectoryFile(filename) as f:
