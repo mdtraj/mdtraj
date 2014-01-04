@@ -1978,7 +1978,8 @@ class Trajectory(object):
         -------
         self
         """
-        self._topology = self._topology.subset(atom_indices)
+        if self._topology is not None:
+            self._topology = self._topology.subset(atom_indices)
         self._xyz = self.xyz[:,atom_indices]
         return self
 
