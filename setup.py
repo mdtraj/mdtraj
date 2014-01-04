@@ -30,8 +30,8 @@ except ImportError:
 
 
 ##########################
-VERSION = "0.5.0"
-ISRELEASED = True
+VERSION = "0.5.1"
+ISRELEASED = False
 __version__ = VERSION
 ##########################
 
@@ -40,7 +40,7 @@ CLASSIFIERS = """\
 Development Status :: 3 - Alpha
 Intended Audience :: Science/Research
 Intended Audience :: Developers
-License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)
 Programming Language :: C
 Programming Language :: Python
 Programming Language :: Python :: 3
@@ -273,7 +273,7 @@ setup(name='mdtraj',
       description=DOCLINES[0],
       long_description="\n".join(DOCLINES[2:]),
       version=__version__,
-      license='GPLv3+',
+      license='LGPLv2.1+',
       url='http://rmcgibbo.github.io/mdtraj',
       platforms=['Linux', 'Mac OS-X', 'Unix', 'Windows'],
       classifiers=CLASSIFIERS.splitlines(),
