@@ -1,7 +1,7 @@
 .. _getting-started:
 
-Installing MDTraj
-=================
+Installation
+~~~~~~~~~~~~
 
 MDTraj is tested (and passes) on python 2.6, 2.7, 3.2 and 3.3. The
 developers generally use python2.7, on both mac and linux platforms. Automated
