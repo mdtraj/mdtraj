@@ -132,8 +132,8 @@ def compute_translation_and_rotation(mobile, target):
         Rotation matrix to apply to mobile to carry out the transformation.
     """
 
-    ensure_type(mobile, 'float', 2, 'mobile', shape=(None, 3))
-    ensure_type(target, 'float', 2, 'target', shape=(target.shape[0], 3))
+    ensure_type(mobile, 'float', 2, 'mobile', warn_on_cast=False, shape=(None, 3))
+    ensure_type(target, 'float', 2, 'target', warn_on_cast=False, shape=(target.shape[0], 3))
 
     mu1 = mobile.mean(0)
     mu2 = target.mean(0)
@@ -175,7 +175,7 @@ def rmsd_kabsch(xyz1, xyz2):
 
 def _center(conformation):
     """Center the conformation"""
-    ensure_type(conformation, 'float', 2, 'conformation', shape=(None, 3))
+    ensure_type(conformation, 'float', 2, 'conformation', warn_on_cast=False, shape=(None, 3))
     centroid = np.mean(conformation, axis=0)
     centered = conformation - centroid
     return centered
@@ -200,8 +200,8 @@ def rmsd_qcp(conformation1, conformation2):
     rmsd : float
         The root-mean square deviation after alignment between the two pointsets
     """
-    ensure_type(conformation1, np.float32, 2, 'conformation1', shape=(None, 3))
-    ensure_type(conformation2, np.float32, 2, 'conformation2', shape=(conformation1.shape[0], 3))
+    ensure_type(conformation1, np.float32, 2, 'conformation1', warn_on_cast=False, shape=(None, 3))
+    ensure_type(conformation2, np.float32, 2, 'conformation2', warn_on_cast=False, shape=(conformation1.shape[0], 3))
 
     A = _center(conformation1)
     B = _center(conformation2)

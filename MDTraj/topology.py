@@ -835,6 +835,8 @@ class Residue(object):
         """Get the number of atoms in this Residue"""
         return len(self._atoms)
 
+    def  __str__(self):
+        return '%s%s' % (self.name, self.resSeq)
 
 class Atom(object):
     """An Atom object represents a residue within a Topology.
@@ -881,3 +883,6 @@ class Atom(object):
     def __hash__(self):
         """ A quick comparison. """
         return self.index
+
+    def __str__(self):
+        return '%s-%s' % (self.residue, self.name)
