@@ -16,29 +16,20 @@ crystal = md.load(crystal_fn)
 trajectory = md.load(trajectory_fn, top=crystal)  # load the xtc. the crystal structure defines the topology
 print trajectory
 
-# Let's also try loading only the heavy atoms from disk, because calculating
+
 # RMSD with exchangeable hydrogen atoms is generally not a good idea
+# so let's take a look at just the heavy atoms
 
+rmsds_to_crystal = md.rmsd(trajectory, crystal, 0)
 heavy_atoms = [atom.index for atom in crystal.topology.atoms if atom.element.symbol != 'H']
-heavy_crystal = md.load(crystal_fn, atom_indices=heavy_atoms)
-heavy_trajectory = md.load(trajectory_fn, top=crystal, atom_indices=heavy_atoms)
-print heavy_trajectory
-
-# Format the data for the RMSD calculation by building an RMSDCache.
-
-crystal_cache = md.rmsd_cache(crystal)
-trajectory_cache = md.rmsd_cache(trajectory)
-crystal_heavy_cache = md.rmsd_cache(heavy_crystal)
-trajectory_heavy_cache = md.rmsd_cache(heavy_trajectory)
-rmsds_to_crystal = trajectory_cache.rmsds_to(crystal_cache, 0)
-heavy_rmds_to_crystal = trajectory_heavy_cache.rmsds_to(crystal_heavy_cache, 0)
+heavy_rmds_to_crystal = md.rmsd(trajectory, crystal, 0, atom_indices=heavy_atoms)
 
 # Plot the results
 
 import matplotlib.pyplot as pp
 pp.figure();
 pp.plot(trajectory.time, rmsds_to_crystal, 'r', label='all atom');
-pp.plot(heavy_trajectory.time, heavy_rmds_to_crystal, 'b', label='heavy atom');
+pp.plot(trajectory.time, heavy_rmds_to_crystal, 'b', label='heavy atom');
 pp.legend();
 pp.title('RMSDs to crystal');
 pp.xlabel('simulation time (ps)');

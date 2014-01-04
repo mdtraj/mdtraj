@@ -1,7 +1,11 @@
 .. _getting-started:
 
-Installing MDTraj
-=================
+***************
+Getting Started
+***************
+
+Installation
+============
 
 MDTraj is tested (and passes) on python 2.6, 2.7, 3.2 and 3.3. The
 developers generally use python2.7, on both mac and linux platforms. Automated
@@ -33,22 +37,6 @@ If you don't have ``git``, you can download the source code as a zip file from
 https://github.com/rmcgibbo/mdtraj/archive/master.zip. Then, in the directory containing the source code, you can install it with. ::
 
   $ python setup.py install
-
-Running the tests
-=================
-Running the tests is a great way to verify that everything is working. The test
-suite uses `nose <https://nose.readthedocs.org/en/latest/>`_, which you can pick
-up via ``pip`` if you don't already have it. ::
-
-  pip install nose
-  
-Then, to run the tests, open a python shell and do ::
-
-  >>> import mdtraj
-  >>> mdtraj.test()
-
-From the source directory, you can also run the tests with ``nosetests`` on
-the command line
 
 Dependencies
 ============
@@ -164,3 +152,19 @@ Now you're home free ::
   $ pip install tables
   $ pip install netcdf4
   $ pip install nose
+
+Testing Your Installation
+=========================
+Running the tests is a great way to verify that everything is working. The test
+suite uses `nose <https://nose.readthedocs.org/en/latest/>`_, which you can pick
+up via ``pip`` if you don't already have it. ::
+
+  pip install nose
+  
+Then, to run the tests, open a python shell and do ::
+
+  >>> import mdtraj
+  >>> mdtraj.test()
+
+From the source directory, you can also run the tests with ``nosetests`` on
+the command line

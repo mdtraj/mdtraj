@@ -30,7 +30,7 @@ except ImportError:
 
 
 ##########################
-VERSION = "0.4.3"
+VERSION = "0.5.0"
 ISRELEASED = True
 __version__ = VERSION
 ##########################
