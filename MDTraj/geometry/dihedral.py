@@ -342,8 +342,10 @@ def compute_chi1(trajectory, opt=True):
     """
     rids, indices = zip(*(_atom_sequence(trajectory, atoms) for atoms in CHI1_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
-    indices = np.vstack(x for x in indices if x.size)[id_sort]
+    if not any(x for x in indices if x.size):
+        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
 
+    indices = np.vstack(x for x in indices if x.size)[id_sort]
     all_chi1 = compute_dihedrals(trajectory, indices, opt=opt)
     return indices, all_chi1
 
@@ -368,8 +370,10 @@ def compute_chi2(trajectory, opt=True):
     """
     rids, indices = zip(*(_atom_sequence(trajectory, atoms) for atoms in CHI2_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
-    indices = np.vstack(x for x in indices if x.size)[id_sort]
+    if not any(x for x in indices if x.size):
+        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
 
+    indices = np.vstack(x for x in indices if x.size)[id_sort]
     all_chi1 = compute_dihedrals(trajectory, indices, opt=opt)
     return indices, all_chi1
 
@@ -396,8 +400,10 @@ def compute_chi3(trajectory, opt=True):
     """
     rids, indices = zip(*(_atom_sequence(trajectory, atoms) for atoms in CHI3_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
-    indices = np.vstack(x for x in indices if x.size)[id_sort]
+    if not any(x for x in indices if x.size):
+        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
 
+    indices = np.vstack(x for x in indices if x.size)[id_sort]
     all_chi1 = compute_dihedrals(trajectory, indices, opt=opt)
     return indices, all_chi1
 
@@ -424,8 +430,10 @@ def compute_chi4(trajectory, opt=True):
     """
     rids, indices = zip(*(_atom_sequence(trajectory, atoms) for atoms in CHI4_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
-    indices = np.vstack(x for x in indices if x.size)[id_sort]
+    if not any(x for x in indices if x.size):
+        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
 
+    indices = np.vstack(x for x in indices if x.size)[id_sort]
     all_chi1 = compute_dihedrals(trajectory, indices, opt=opt)
     return indices, all_chi1
 
@@ -449,4 +457,6 @@ def compute_omega(trajectory, opt=True):
         the frames.
     """
     rid, indices = _get_indices_omega(trajectory)
+    if len(indices) == 0:
+        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
     return rid, compute_dihedrals(trajectory, indices, opt=opt)
