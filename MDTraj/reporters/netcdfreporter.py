@@ -43,9 +43,9 @@ class NetCDFReporter(_BaseReporter):
 
     Parameters
     ----------
-    file : str, or HDF5Trajectory
-        Either an open NetCDFFile object to write to, or a string
-        specifying the filename of a new HDF5 file
+    file : str, or NetCDFTrajectoryFile
+        Either an open NetCDFTrajectoryFile object to write to, or a string
+        specifying the filename of a new NetCDF file
     reportInterval : int
         The interval (in time steps) at which to write frames.
     coordinates : bool
@@ -61,8 +61,8 @@ class NetCDFReporter(_BaseReporter):
     Examples
     --------
     >>> simulation = Simulation(topology, system, integrator) # doctest: +SKIP
-    >>> h5_reporter = NetCDFReporter('traj.h5', 100)          # doctest: +SKIP
-    >>> simulation.reporters.append(h5_reporter)              # doctest: +SKIP
+    >>> nc_reporter = NetCDFReporter('traj.h5', 100)          # doctest: +SKIP
+    >>> simulation.reporters.append(nc_reporter)              # doctest: +SKIP
     >>> simulation.step(10000)                                # doctest: +SKIP
     >>> traj = mdtraj.trajectory.load('traj.nc')              # doctest: +SKIP
     """

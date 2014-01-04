@@ -7,6 +7,7 @@ Trajectory Analysis
   
     rmsd
     baker_hubbard
+    kabsch_sander
     shrake_rupley
 
     compute_distances

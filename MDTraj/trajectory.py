@@ -165,6 +165,10 @@ def load_frame(filename, index, top=None, atom_indices=None):
     >>> print first_frame                                       # doctest: +SKIP
     <mdtraj.Trajectory with 1 frames, 22 atoms>                 # doctest: +SKIP
 
+    See Also
+    --------
+    load, load_frame
+
     Returns
     -------
     trajectory : md.Trajectory
@@ -219,7 +223,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     See Also
     --------
-    load_pdb, load_xtc, load_trr, load_hdf5, load_netcdf, load_dcd, load_binpos
+    load_frame, iterload
 
     Examples
     --------
@@ -305,6 +309,10 @@ def iterload(filename, chunk=100, **kwargs):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+
+    See Also
+    --------
+    load, load_frame
         
     Examples
     --------
@@ -1235,6 +1243,8 @@ class Trajectory(object):
         n_residues : int
             The number of residues in the trajectory's topology
         """
+        if self.top is None:
+            return 0
         return sum([1 for r in self.top.residues])
 
     @property
@@ -1409,7 +1419,7 @@ class Trajectory(object):
     @xyz.setter
     def xyz(self, value):
         "Set the cartesian coordinates of each atom in each simulation frame"
-        if getattr(self, 'topology', None) is not None:
+        if self.top is not None:
             # if we have a topology and its not None
             shape = (None, self.topology._numAtoms, 3)
         else:
@@ -1954,7 +1964,7 @@ class Trajectory(object):
         -------
         self
         """
-        if mass_weighted:
+        if mass_weighted and self.top is not None:
             masses = np.array([a.element.mass for a in self.top.atoms])
             masses /= masses.sum()
             for x in self._xyz:

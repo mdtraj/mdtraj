@@ -42,9 +42,9 @@ class DCDReporter(_BaseReporter):
 
     Parameters
     ----------
-    file : str, or HDF5Trajectory
-        Either an open HDF5Trajecory object to write to, or a string
-        specifying the filename of a new HDF5 file to save the trajectory to.
+    file : str, or DCDTrajectoryFile
+        Either an open DCDTrajectoryFile object to write to, or a string
+        specifying the filename of a new DCD file to save the trajectory to.
     reportInterval : int
         The interval (in time steps) at which to write frames.
     atomSubset : array_like, default=None

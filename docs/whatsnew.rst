@@ -4,6 +4,12 @@ What's New
 
 These are new features and improvements of note in each release.
 
+v0.5.1 (January 4, 2013)
+------------------------
+- Minor bug fix when no dihedrals match specification
+- Add __str__ to Topology parts
+- More examples sections in docstrings
+
 v0.5.0 (January 3, 2013)
 ------------------------
 - Numerous bug fixes

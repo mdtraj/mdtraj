@@ -85,6 +85,10 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True):
     TYR11-N -- VAL8-O
     MET12-N -- LYS20-O
 
+    See Also
+    --------
+    kabsch_sander
+
     Returns
     -------
     hbonds : np.array, shape=[n_hbonds, 3], dtype=int
@@ -176,6 +180,10 @@ def kabsch_sander(traj):
         Kabsch-Sander energy is less than -0.5 kcal/mol (the threshold for
         existence of the "bond"). The exact value of the energy is given by the
         value `x`.
+
+    See Also
+    --------
+    baker_hubbard
 
     References
     ----------

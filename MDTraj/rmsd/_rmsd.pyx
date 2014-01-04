@@ -104,6 +104,10 @@ def rmsd(target, reference, frame=0, atom_indices=None, bool parallel=True, bool
     >>> trajectory.center_coordinates()
     >>> rmsds = md.rmsd(trajectory, trajectory, 0, precomputed=True)
 
+    See Also
+    --------
+    Trajectory.center_coordinates
+
     Notes
     -----
     This function uses OpenMP to parallelize the calculation across
@@ -112,8 +116,10 @@ def rmsd(target, reference, frame=0, atom_indices=None, bool parallel=True, bool
 
     Returns
     -------
-    rmsds : np.ndarray, shape=(n_frames,)
-        A 1-D numpy array of the optimal root-mean-square deviations.
+    rmsds : np.ndarray, shape=(target.n_frames,)
+        A 1-D numpy array of the optimal root-mean-square deviations from
+        the `frame`-th conformation in reference to each of the conformations
+        in target.
     """
     # import time
 

@@ -48,8 +48,8 @@ class HDF5Reporter(_BaseReporter):
 
     Parameters
     ----------
-    file : str, or HDF5Trajectory
-        Either an open HDF5Trajecory object to write to, or a string
+    file : str, or HDF5TrajectoryFile
+        Either an open HDF5TrajecoryFile object to write to, or a string
         specifying the filename of a new HDF5 file to save the trajectory to.
     reportInterval : int
         The interval (in time steps) at which to write frames.
