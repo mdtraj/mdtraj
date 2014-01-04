@@ -91,6 +91,19 @@ def rmsd(target, reference, frame=0, atom_indices=None, bool parallel=True, bool
         the trajectory's coordinates, the center and traces will be out of
         date and the RMSDs will be incorrect.
 
+    Examples
+    --------
+    >>> import mdtraj as md                                      # doctest: +SKIP
+    >>> rmsds = md.rmsd(trajectory, trajectory, 0)               # doctest: +SKIP
+    >>> print rmdsds                                             # doctest: +SKIP
+    array([ 0.0,  0.03076187,  0.02549562, ...,  0.06230228,
+        0.00666826,  0.24364147])
+
+    The calculation is slightly faster if you precenter the trajectory
+
+    >>> trajectory.center_coordinates()
+    >>> rmsds = md.rmsd(trajectory, trajectory, 0, precomputed=True)
+
     Notes
     -----
     This function uses OpenMP to parallelize the calculation across

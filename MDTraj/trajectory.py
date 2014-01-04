@@ -157,6 +157,13 @@ def load_frame(filename, index, top=None, atom_indices=None):
         If not none, then read only a subset of the atoms coordinates from the
         file. These indices are zero-based (not 1 based, as used by the PDB
         format).
+        
+    Examples
+    --------
+    >>> import mdtraj as md                                     # doctest: +SKIP
+    >>> first_frame = md.load_frame('traj.h5', 0)               # doctest: +SKIP
+    >>> print first_frame                                       # doctest: +SKIP
+    <mdtraj.Trajectory with 1 frames, 22 atoms>                 # doctest: +SKIP
 
     Returns
     -------
@@ -214,6 +221,21 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     --------
     load_pdb, load_xtc, load_trr, load_hdf5, load_netcdf, load_dcd, load_binpos
 
+    Examples
+    --------
+    >>> import mdtraj as md                                        # doctest: +SKIP
+    >>> traj = md.load('output.xtc', top='topology.pdb')           # doctest: +SKIP
+    >>> print traj                                                 # doctest: +SKIP
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    
+    >>> traj2 = md.load('output.xtc', stride=2, top='topology.pdb')   # doctest: +SKIP
+    >>> print traj2                                                   # doctest: +SKIP
+    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>     # doctest: +SKIP
+    
+    >>> traj3 = md.load_hdf5('output.xtc', atom_indices=[0,1] top='topology.pdb')  # doctest: +SKIP
+    >>> print traj3                                                                # doctest: +SKIP
+    <mdtraj.Trajectory with 500 frames, 2 atoms at 0x18236e4a0>                    # doctest: +SKIP 
+    
     Returns
     -------
     trajectory : md.Trajectory
@@ -283,6 +305,17 @@ def iterload(filename, chunk=100, **kwargs):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+        
+    Examples
+    --------
+    >>> import mdtraj as md                                        # doctest: +SKIP
+    >>> for chunk in md.iterload('output.xtc', top='topology.pdb') # doctest: +SKIP
+    ...    print chunk
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
     """
     stride = kwargs.get('stride', 1)
     atom_indices = _cast_indices(kwargs.get('atom_indices', None))
@@ -387,6 +420,13 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
     -------
     trajectory : md.Trajectory
         The resulting trajectory, as an md.Trajectory object.
+        
+    Examples
+    --------
+    >>> import mdtraj as md                                        # doctest: +SKIP
+    >>> pdb = md.load_pdb('2EQQ.pdb')                              # doctest: +SKIP
+    >>> print pdb                                                  # doctest: +SKIP
+    <mdtraj.Trajectory with 20 frames, 423 atoms at 0x110740a90>   # doctest: +SKIP
 
     See Also
     --------
@@ -505,6 +545,13 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
 
+    Examples
+    --------
+    >>> import mdtraj as md                                        # doctest: +SKIP
+    >>> traj = md.load_xtc('output.xtc', top='topology.pdb')       # doctest: +SKIP
+    >>> print traj                                                 # doctest: +SKIP
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    
     Returns
     -------
     trajectory : md.Trajectory
@@ -569,6 +616,13 @@ def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
 
+    Examples
+    --------
+    >>> import mdtraj as md                                        # doctest: +SKIP
+    >>> traj = md.load_trr('output.trr', top='topology.pdb')       # doctest: +SKIP
+    >>> print traj                                                 # doctest: +SKIP
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+
     Returns
     -------
     trajectory : md.Trajectory
@@ -632,6 +686,17 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
 
+    Examples
+    --------
+    >>> import mdtraj as md                                        # doctest: +SKIP
+    >>> traj = md.load_dcd('output.dcd', top='topology.pdb')       # doctest: +SKIP
+    >>> print traj                                                 # doctest: +SKIP
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+
+    >>> traj2 = md.load_dcd('output.dcd', stride=2, top='topology.pdb')   # doctest: +SKIP
+    >>> print traj2                                                       # doctest: +SKIP
+    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>         # doctest: +SKIP
+    
     Returns
     -------
     trajectory : md.Trajectory
@@ -697,6 +762,17 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
 
+    Examples
+    --------
+    >>> import mdtraj as md                                        # doctest: +SKIP
+    >>> traj = md.load_hdf5('output.h5')                           # doctest: +SKIP
+    >>> print traj                                                 # doctest: +SKIP
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+
+    >>> traj2 = md.load_hdf5('output.h5', stride=2, top='topology.pdb')   # doctest: +SKIP
+    >>> print traj2                                                       # doctest: +SKIP
+    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>         # doctest: +SKIP
+
     Returns
     -------
     trajectory : md.Trajectory
@@ -750,6 +826,17 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
 
+    Examples
+    --------
+    >>> import mdtraj as md                                        # doctest: +SKIP
+    >>> traj = md.load_binpos('output.binpos', top='topology.pdb') # doctest: +SKIP
+    >>> print traj                                                 # doctest: +SKIP
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+
+    >>> traj2 = md.load_binpos('output.dcd', stride=2, top='topology.pdb') # doctest: +SKIP
+    >>> print traj2                                                      # doctest: +SKIP
+    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>         # doctest: +SKIP
+    
     Returns
     -------
     trajectory : md.Trajectory
