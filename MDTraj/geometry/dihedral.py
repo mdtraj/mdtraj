@@ -295,6 +295,8 @@ def compute_phi(trajectory, opt=True):
         the frames.
     """
     rid, indices = _get_indices_phi(trajectory)
+    if len(indices) == 0:
+        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
     return rid, compute_dihedrals(trajectory, indices, opt=opt)
 
 
@@ -317,6 +319,8 @@ def compute_psi(trajectory, opt=True):
         the frames.
     """
     rid, indices = _get_indices_psi(trajectory)
+    if len(indices) == 0:
+        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
     return rid, compute_dihedrals(trajectory, indices, opt=opt)
 
 
@@ -342,7 +346,7 @@ def compute_chi1(trajectory, opt=True):
     """
     rids, indices = zip(*(_atom_sequence(trajectory, atoms) for atoms in CHI1_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
-    if not any(x for x in indices if x.size):
+    if not any(x.size for x in indices):
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
 
     indices = np.vstack(x for x in indices if x.size)[id_sort]
@@ -370,7 +374,7 @@ def compute_chi2(trajectory, opt=True):
     """
     rids, indices = zip(*(_atom_sequence(trajectory, atoms) for atoms in CHI2_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
-    if not any(x for x in indices if x.size):
+    if not any(x.size for x in indices):
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
 
     indices = np.vstack(x for x in indices if x.size)[id_sort]
@@ -400,7 +404,7 @@ def compute_chi3(trajectory, opt=True):
     """
     rids, indices = zip(*(_atom_sequence(trajectory, atoms) for atoms in CHI3_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
-    if not any(x for x in indices if x.size):
+    if not any(x.size for x in indices):
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
 
     indices = np.vstack(x for x in indices if x.size)[id_sort]
@@ -430,7 +434,7 @@ def compute_chi4(trajectory, opt=True):
     """
     rids, indices = zip(*(_atom_sequence(trajectory, atoms) for atoms in CHI4_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
-    if not any(x for x in indices if x.size):
+    if not any(x.size for x in indices):
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
 
     indices = np.vstack(x for x in indices if x.size)[id_sort]

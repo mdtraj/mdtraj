@@ -125,3 +125,13 @@ def test_compute_omega():
     ry, y = compute_omega(traj, opt=False)
     eq(rx, ry)
     eq(x, y)
+
+def test_shape_when_none():
+    t = md.load(get_fn('frame0.h5'))
+    np.hstack((md.compute_phi(t)[1],
+               md.compute_psi(t)[1],
+               md.compute_chi1(t)[1],
+               md.compute_chi2(t)[1],
+               md.compute_chi3(t)[1],
+               md.compute_chi1(t)[1],
+               md.compute_omega(t)[1]))
