@@ -7,9 +7,6 @@ started with ``mdtraj``.
 The script files for these examples and the notebooks are available in the
 top level  `examples folder <https://github.com/rmcgibbo/mdtraj/tree/master/examples>`_ in the source distribution.
 
-The Examples
-------------
-
 .. toctree::
    :maxdepth: 3
    :glob:
