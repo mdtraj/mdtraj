@@ -395,4 +395,6 @@ class NetCDFTrajectoryFile(object):
         self.close()
 
     def __len__(self):
+        if self._closed:
+            raise ValueError('I/O operation on closed file')
         return len(self._handle.dimensions['frame'])
