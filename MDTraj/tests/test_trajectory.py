@@ -23,7 +23,7 @@
 
 import tempfile, os
 import functools
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises
+from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises, SkipTest
 import numpy as np
 import mdtraj as md
 import mdtraj.trajectory
@@ -405,3 +405,21 @@ def test_iterload():
             eq(t_ref.xyz, t.xyz)
             eq(t_ref.time, t.time)
             eq(t_ref.topology, t.topology)
+
+def test_length():
+    files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
+             'frame0.mdcrd', '4waters.arc', 'frame0.dcd', '2EQQ.pdb',
+             'frame0.binpos', 'legacy_msmbuilder_trj0.lh5']
+    for file in files:
+        if file.endswith('.mdcrd'):
+            kwargs = {'n_atoms': 22}
+        else:
+            kwargs = {}
+        def f():
+            try:
+                eq(len(md.open(get_fn(file), **kwargs)),
+                   len(md.load(get_fn(file), top=get_fn('native.pdb'))))
+            except NotImplementedError as e:
+                raise SkipTest(e)
+        f.description = 'Length of file object: %s' % file
+        yield f

@@ -876,3 +876,9 @@ class HDF5TrajectoryFile(object):
     def __exit__(self, *exc_info):
         "Support the context manager protocol"
         self.close()
+
+    def __len__(self):
+        "Number of frames in the file"
+        if not self._open:
+            raise ValueError('I/O operation on closed file')
+        return len(self._handle.root.coordinates)

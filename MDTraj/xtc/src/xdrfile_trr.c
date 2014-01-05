@@ -470,6 +470,35 @@ int read_trr_natoms(char *fn,int *natoms)
 	return exdrOK;
 }
 
+int read_trr_nframes(char *fn, unsigned long *nframes) {
+    XDRFILE *xd;
+    int result, step;
+    float time, lambda;
+	int natoms;
+	matrix box;
+	rvec *x;
+	*nframes = 0;
+
+	read_trr_natoms(fn, &natoms);
+	x = malloc(natoms * sizeof(*x));
+
+    xd = xdrfile_open(fn, "r");
+    if (NULL == xd)
+        return exdrFILENOTFOUND;
+
+	do {
+		result = read_trr(xd, natoms, &step, &time, &lambda,
+						  box, x, NULL, NULL);
+		if (exdrENDOFFILE != result) {
+			(*nframes)++;
+		}
+	} while (result == exdrOK);
+
+	xdrfile_close(xd);
+	free(x);
+    return exdrOK;
+}
+
 int write_trr(XDRFILE *xd,int natoms,int step,float t,float lambda,
 			  matrix box,rvec *x,rvec *v,rvec *f)
 {

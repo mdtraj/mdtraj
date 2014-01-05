@@ -100,6 +100,7 @@ cdef class BINPOSTrajectoryFile:
     """
 
     cdef int n_atoms
+    cdef int n_frames # numnber of frames in the file, cached
     cdef int approx_n_frames
     cdef int min_chunk_size
     cdef int chunk_size_multiplier
@@ -119,6 +120,7 @@ cdef class BINPOSTrajectoryFile:
         self.distance_unit = 'angstroms'
         self.is_open = False
         self.frame_counter = 0
+        self.n_frames = -1
 
         if str(mode) == 'r':
             self.n_atoms = 0
@@ -337,3 +339,15 @@ cdef class BINPOSTrajectoryFile:
     def __exit__(self, *exc_info):
         "Support the context manager protocol"
         self.close()
+
+    def __len__(self):
+        if str(self.mode) != 'r':
+            raise NotImplementedError('len() only available in mode="r" currently')
+        if not self.is_open:
+            raise ValueError('I/O operation on closed file')
+        if self.n_frames == -1:
+            position = self.tell()
+            self.seek(0, 2)
+            self.n_frames = self.tell()
+            self.seek(position)
+        return self.n_frames

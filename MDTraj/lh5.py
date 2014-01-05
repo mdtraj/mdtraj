@@ -333,6 +333,12 @@ class LH5TrajectoryFile(object):
         if self._open:
             self._handle.flush()
 
+    def __len__(self):
+        "Number of frames in the file"
+        if not self._open:
+            raise ValueError('I/O operation on closed file')
+        return len(self._handle.root.XYZList)
+
     def __del__(self):
         self.close()
 

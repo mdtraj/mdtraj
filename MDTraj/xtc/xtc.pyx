@@ -117,6 +117,7 @@ cdef class XTCTrajectoryFile:
     cdef xdrlib.XDRFILE* fh
     cdef str filename
     cdef int n_atoms          # number of atoms in the file
+    cdef unsigned long n_frames # numnber of frames in the file, cached
     cdef int frame_counter    # current position in the file, in read mode
     cdef int is_open          # is the file handle currently open?
     cdef int approx_n_frames  # appriximate number of frames in the file, as guessed based on its size
@@ -132,6 +133,7 @@ cdef class XTCTrajectoryFile:
         self.distance_unit = 'nanometers'
         self.is_open = False
         self.frame_counter = 0
+        self.n_frames = -1  # means unknown
         self.filename = filename
 
         if str(mode) == 'r':
@@ -455,3 +457,13 @@ cdef class XTCTrajectoryFile:
     def __exit__(self, *exc_info):
         "Support the context manager protocol"
         self.close()
+
+    def __len__(self):
+        "Number of frames in the file"
+        if str(self.mode) != 'r':
+            raise NotImplementedError('len() only available in mode="r" currently')
+        if not self.is_open:
+            raise ValueError('I/O operation on closed file')
+        if self.n_frames == -1:
+            xdrlib.read_xtc_nframes(self.filename, &self.n_frames)
+        return int(self.n_frames)

@@ -356,3 +356,7 @@ class MDCRDTrajectoryFile(object):
             The current frame in the file.
         """
         return int(self._frame_index)
+
+    def __len__(self):
+        "Number of frames in the file"
+        raise NotImplementedError()

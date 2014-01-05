@@ -37,6 +37,7 @@ from libc.stdlib cimport malloc, free
 from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
 from dcdlib cimport open_dcd_write, close_file_write, write_timestep
+from dcdlib cimport dcd_nsets
 
 
 ##############################################################################
@@ -245,6 +246,20 @@ cdef class DCDTrajectoryFile:
     def __exit__(self, *exc_info):
         "Support the context manager protocol"
         self.close()
+
+    def __len__(self):
+        """Number of frames in the file
+
+        Notes
+        -----
+        This length is based on information in the header of the DCD
+        file. It is possible for it to be off by 1 if, for instance,
+        the client writing the file was killed between writing the last
+        frame and updating the header information.
+        """
+        if not self.is_open:
+            raise ValueError('I/O operation on closed file')
+        return dcd_nsets(self.fh)
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)

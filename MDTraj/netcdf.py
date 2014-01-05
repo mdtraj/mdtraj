@@ -393,3 +393,6 @@ class NetCDFTrajectoryFile(object):
 
     def __del__(self):
         self.close()
+
+    def __len__(self):
+        return len(self._handle.dimensions['frame'])

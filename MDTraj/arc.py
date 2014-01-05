@@ -131,6 +131,10 @@ class ArcTrajectoryFile(object):
         "Support the context manager protocol"
         self.close()
 
+    def __len__(self):
+        "Number of frames in the file"
+        raise NotImplementedError()
+
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read data from a TINKER .arc file.  Note that only the
         Cartesian coordinates are read in.  The .arc file also

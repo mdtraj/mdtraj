@@ -483,6 +483,14 @@ class PDBTrajectoryFile(object):
     def __exit__(self, *exc_info):
         self.close()
 
+    def __len__(self):
+        "Number of frames in the file"
+        if str(self._mode) != 'r':
+            raise NotImplementedError('len() only available in mode="r" currently')
+        if not self._open:
+            raise ValueError('I/O operation on closed file')
+        return len(self._positions)
+
 
 def _format_83(f):
     """Format a single float into a string of width 8, with ideally 3 decimal

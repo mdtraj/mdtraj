@@ -87,6 +87,35 @@ int read_xtc_natoms(char *fn,int *natoms)
 	return result;
 }
 
+int read_xtc_nframes(char* fn, unsigned long *nframes) {
+    XDRFILE *xd;
+    int result, step;
+    float time;
+	int natoms;
+	matrix box;
+	rvec *x;
+	float prec;
+	*nframes = 0;
+
+	read_xtc_natoms(fn, &natoms);
+	x = malloc(natoms * sizeof(*x));
+
+    xd = xdrfile_open(fn, "r");
+    if (NULL == xd)
+        return exdrFILENOTFOUND;
+
+	do {
+		result = read_xtc(xd, natoms, &step, &time, box, x, &prec);
+		if (exdrENDOFFILE != result) {
+			(*nframes)++;
+		}
+	} while (result == exdrOK);
+
+	xdrfile_close(xd);
+	free(x);
+    return exdrOK;
+}
+
 int read_xtc(XDRFILE *xd,
 			 int natoms,int *step,float *time,
 			 matrix box,rvec *x,float *prec)

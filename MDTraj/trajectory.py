@@ -52,7 +52,7 @@ if PY3:
 
 __all__ = ['load', 'load_binpos', 'load_trr', 'load_netcdf', 'Trajectory',
            'load_xtc', 'load_dcd', 'iterload', 'load_xml', 'load_frame', 
-           'load_hdf5', 'load_pdb', 'load_lh5', 'load_arc']
+           'load_hdf5', 'load_pdb', 'load_lh5', 'load_arc', 'open']
 
 ##############################################################################
 # Utilities
@@ -140,6 +140,55 @@ def _cast_indices(indices):
 # Utilities
 ##############################################################################
 
+
+def open(filename, mode='r', force_overwrite=True, **kwargs):
+    """Open a trajectory file-like object
+
+    This factor function returns an instance of an open file-like
+    object capable of reading/writing the trajectory (depending on
+    'mode'). It does not actually load the trajectory from disk or
+    write anything.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the trajectory file on disk
+    mode : {'r', 'w'}
+        The mode in which to open the file, either 'r' for read or 'w' for
+        write.
+    force_overwrite : bool
+        If opened in write mode, and a file by the name of `filename` already
+        exists on disk, should we overwrite it?
+
+    Other Parameters
+    ----------------
+    kwargs : dict
+        Other keyword parameters are passed directly to the file object
+
+    Returns
+    -------
+    fileobject : object
+        Open trajectory file, whose type is determined by the filename
+        extension
+
+    See Also
+    --------
+    load, ArcTrajectoryFile, BINPOSTrajectoryFile, DCDTrajectoryFile,
+    HDF5TrajectoryFile, LH5TrajectoryFile, MDCRDTrajectoryFile,
+    NetCDFTrajectoryFile, PDBTrajectoryFile, TRRTrajectoryFile,
+    XTCTrajectoryFile
+
+    """
+    extension = os.path.splitext(filename)[1]
+    try:
+        loader = _LoaderRegistry[extension][1]
+    except KeyError:
+        raise IOError('Sorry, no loader for filename=%s (extension=%s) '
+                      'was found. I can only load files with extensions in %s'
+                      % (filename, extension, _LoaderRegistry.keys()))
+    return loader(filename, mode=mode, force_overwrite=force_overwrite, **kwargs)
+
+
 def load_frame(filename, index, top=None, atom_indices=None):
     """Load a single frame from a trajectory file
 
@@ -178,7 +227,7 @@ def load_frame(filename, index, top=None, atom_indices=None):
     _assert_files_exist(filename)
     extension = os.path.splitext(filename)[1]
     try:
-        loader = _LoaderRegistry[extension]
+        loader = _LoaderRegistry[extension][0]
     except KeyError:
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
                       'was found. I can only load files with extensions in %s'
@@ -263,7 +312,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             return functools.reduce(lambda a, b: a.join(b, discard_overlapping_frames=discard_overlapping_frames), (load(f,**kwargs) for f in filename_or_filenames))
 
     try:
-        loader = _LoaderRegistry[extension]
+        loader = _LoaderRegistry[extension][0]
     except KeyError:
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
                       'was found. I can only load files '
@@ -2018,17 +2067,17 @@ class Trajectory(object):
 ##############################################################################
 
 _LoaderRegistry = {
-    '.xtc': load_xtc,
-    '.xml': load_xml,
-    '.trr': load_trr,
-    '.pdb': load_pdb,
-    '.dcd': load_dcd,
-    '.h5': load_hdf5,
-    '.crd': load_mdcrd,
-    '.mdcrd': load_mdcrd,
-    '.lh5': load_lh5,
-    '.binpos': load_binpos,
-    '.ncdf': load_netcdf,
-    '.nc': load_netcdf,
-    '.arc': load_arc
+    '.xtc': (load_xtc, XTCTrajectoryFile),
+    '.xml': (load_xml, None),
+    '.trr': (load_trr, TRRTrajectoryFile),
+    '.pdb': (load_pdb, PDBTrajectoryFile),
+    '.dcd': (load_dcd, DCDTrajectoryFile),
+    '.h5':  (load_hdf5, HDF5TrajectoryFile),
+    '.crd': (load_mdcrd, MDCRDTrajectoryFile),
+    '.mdcrd': (load_mdcrd, MDCRDTrajectoryFile),
+    '.lh5': (load_lh5, LH5TrajectoryFile),
+    '.binpos': (load_binpos, BINPOSTrajectoryFile),
+    '.ncdf': (load_netcdf, NetCDFTrajectoryFile),
+    '.nc': (load_netcdf, NetCDFTrajectoryFile),
+    '.arc': (load_arc, ArcTrajectoryFile)
 }

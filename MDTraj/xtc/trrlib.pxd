@@ -11,6 +11,7 @@ cdef extern from "include/xdrfile.h":
 cdef extern from "include/xdrfile_trr.h":
 
     int read_trr_natoms(char *fn, int *natoms)
+    int read_trr_nframes(char* fn, unsigned long *nframes)
 
     # Read one frame of an open xtc file. If either of x, v, f, box are
     # NULL the arrays will be read from the file but not used.
