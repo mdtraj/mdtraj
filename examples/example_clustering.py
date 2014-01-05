@@ -1,4 +1,4 @@
-"""Clustering with the mdtraj RMSD engine and scipy.cluster.hierarchy.
+"""Clustering with the :func:`md.rmsd` and :class:`scipy.cluster.hierarchy`.
 """
 
 # In this example, we cluster our alanine dipeptide trajectory using

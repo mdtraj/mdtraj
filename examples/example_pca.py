@@ -1,4 +1,4 @@
-"""Using mdtraj and scikits-learn to run principle components analysis.
+"""Principle components analysis (PCA) with :class:`scikit-learn`
 """
 
 # scikits-learn is a premier machine learning library for python, with

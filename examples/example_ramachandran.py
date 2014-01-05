@@ -1,4 +1,4 @@
-"""Plotting a Ramachandran map using MDTraj
+"""Plotting a Ramachandran map with :class:`matplotlib`
 """
 
 import mdtraj
