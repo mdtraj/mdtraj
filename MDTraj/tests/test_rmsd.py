@@ -38,14 +38,50 @@ def test_trajectory_rmsd():
 
         eq(calculated, reference, decimal=3)
 
-def test_precomputed():
-    t = md.load(get_fn('traj.h5'))
-    ref = md.rmsd(t, t, 0, precomputed=False)
+def test_precomputed_1():
+    # test rmsd against the numpy version, using the same trajectory
+    # as target and reference
+    t1 = md.load(get_fn('traj.h5'), stride=10)
+    t2 = md.load(get_fn('traj.h5'), stride=10)
+    # don't center t1, and use it without precomputed
+    # explicitly center t2, and use *with* precomputed
 
-    t.center_coordinates()
-    val = md.rmsd(t, t, 0, precomputed=True)
+    for parallel in [True, False]:
+        t2.center_coordinates()
+        eq(t1.n_frames, t2.n_frames)
+        for i in range(t1.n_frames):
+            ref = np.zeros(t1.n_frames)
+            for j in range(t1.n_frames):
+                ref[j] = rmsd_qcp(t1.xyz[j], t1.xyz[i])
+            val1 = md.rmsd(t1, t1, i, parallel=parallel, precomputed=False)
+            val2 = md.rmsd(t2, t2, i, parallel=parallel, precomputed=True)
 
-    eq(ref, val)
+            eq(ref, val1, decimal=3)
+            eq(val1, val2)
+
+def test_precomputed_2():
+    # test rmsd against the numpy version, using the difference
+    # trajectories as target and reference
+    t1_a = md.load(get_fn('traj.h5'), stride=10)
+    t2_a = md.load(get_fn('traj.h5'), stride=10)
+    t1_b = md.load(get_fn('traj.h5'), stride=10)
+    t2_b = md.load(get_fn('traj.h5'), stride=10)
+    # don't center t1, and use it without precomputed
+    # explicitly center t2, and use *with* precomputed
+
+    t2_a.center_coordinates()
+    t2_b.center_coordinates()
+
+    for parallel in [True, False]:
+        for i in range(t1_b.n_frames):
+            ref = np.zeros(t1_a.n_frames)
+            for j in range(t1_a.n_frames):
+                ref[j] = rmsd_qcp(t1_a.xyz[j], t1_b.xyz[i])
+            val1 = md.rmsd(t1_a, t1_b, i, parallel=parallel, precomputed=False)
+            val2 = md.rmsd(t2_a, t2_b, i, parallel=parallel, precomputed=True)
+
+            eq(ref, val1, decimal=3)
+            eq(val1, val2, decimal=4)
 
 
 def test_superpose():
@@ -58,7 +94,7 @@ def test_superpose():
         delta = t1.xyz[i] - t1.xyz[0]
         displ_rmsd[i] = (delta ** 2.0).sum(1).mean() ** 0.5
 
-    eq(reference_rmsd, displ_rmsd)
+    eq(reference_rmsd, displ_rmsd, decimal=5)
 
 
 # def test_align_displace():
