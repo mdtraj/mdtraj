@@ -27,6 +27,7 @@ from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises, Ski
 import numpy as np
 import mdtraj as md
 import mdtraj.trajectory
+import mdtraj.utils
 from mdtraj import topology
 from mdtraj.utils.six import PY3
 from mdtraj.utils.six.moves import xrange
@@ -197,7 +198,7 @@ def test_center():
 def test_float_atom_indices_exception():
     "Is an informative error message given when you supply floats for atom_indices?"
     top = md.load(get_fn('native.pdb')).topology
-    for ext in mdtraj.trajectory._LoaderRegistry.keys():
+    for ext in md._FormatRegistry.loaders.keys():
         try:
             fn = get_fn('frame0' + ext)
         except:
@@ -355,7 +356,7 @@ def test_seek_read_mode():
                         if a not in [md.BINPOSTrajectoryFile, md.LH5TrajectoryFile]:
                             read = read[0]
                         readlength = len(read)
-                        read = mdtraj.trajectory._convert(read, f.distance_unit, 'nanometers')
+                        read = mdtraj.utils.convert(read, f.distance_unit, 'nanometers')
                         eq(xyz[point:point+offset], read)
                         point += readlength
                 elif r < 0.75:

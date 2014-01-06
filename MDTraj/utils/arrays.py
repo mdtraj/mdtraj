@@ -138,3 +138,31 @@ def ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=No
                 raise error
 
     return val
+
+
+def cast_indices(indices):
+    """Check that ``indices`` are appropriate for indexing an array
+
+    Parameters
+    ----------
+    indices : {None, array_like, slice}
+        If indices is None or slice, it'll just pass through. Otherwise, it'll
+        be converted to a numpy array and checked to make sure it contains
+        unique integers.
+
+    Returns
+    -------
+    value : {slice, np.ndarray}
+        Either a slice or an array of integers, depending on the input type
+    """
+    if indices is None or isinstance(indices, slice):
+        return indices
+
+    if not len(indices) == len(set(indices)):
+        raise ValueError("indices must be unique.")
+        
+    out = np.asarray(indices)
+    if not issubclass(out.dtype.type, np.integer):
+        raise ValueError('indices must be of an integer type. %s is not an integer type' % out.dtype)
+
+    return out

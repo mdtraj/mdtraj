@@ -50,10 +50,95 @@ import xml.etree.ElementTree as etree
 from copy import copy
 from .pdbstructure import PdbStructure
 from mdtraj.topology import Topology
-from mdtraj.utils import ilen
+from mdtraj.utils import ilen, cast_indices, convert
+from mdtraj.registry import _FormatRegistry
 from . import element as elem
 
+__all__ = ['load_pdb', 'PDBTrajectoryFile']
 
+##############################################################################
+# Code
+##############################################################################
+
+@_FormatRegistry.register_loader('.pdb')
+def load_pdb(filename, stride=None, atom_indices=None, frame=None):
+    """Load a RCSB Protein Data Bank file from disk.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the PDB file on disk.
+    stride : int, default=None
+        Only read every stride-th model from the file
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. These indices are zero-based (not 1 based, as used by the PDB
+        format). So if you want to load only the first atom in the file, you
+        would supply ``atom_indices = np.array([0])``.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
+
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+        
+    Examples
+    --------
+    >>> import mdtraj as md                                        # doctest: +SKIP
+    >>> pdb = md.load_pdb('2EQQ.pdb')                              # doctest: +SKIP
+    >>> print pdb                                                  # doctest: +SKIP
+    <mdtraj.Trajectory with 20 frames, 423 atoms at 0x110740a90>   # doctest: +SKIP
+
+    See Also
+    --------
+    mdtraj.PDBTrajectoryFile : Low level interface to PDB files
+    """
+    from mdtraj import Trajectory
+    if not isinstance(filename, basestring):
+        raise TypeError('filename must be of type string for load_pdb. '
+            'you supplied %s' % type(filename))
+
+    atom_indices = cast_indices(atom_indices)
+    
+    filename = str(filename)
+    with PDBTrajectoryFile(filename) as f:
+        atom_slice = slice(None) if atom_indices is None else atom_indices
+        if frame is not None:
+            coords = f.positions[[frame], atom_slice, :]
+        else:
+            coords = f.positions[::stride, atom_slice, :]
+        assert coords.ndim == 3, 'internal shape error'
+        n_frames = len(coords)
+
+        topology = f.topology
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
+
+        if f.unitcell_angles is not None and f.unitcell_lengths is not None:
+            unitcell_lengths = np.array([f.unitcell_lengths] * n_frames)
+            unitcell_angles = np.array([f.unitcell_angles] * n_frames)
+        else:
+            unitcell_lengths = None
+            unitcell_angles = None
+
+        convert(coords, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        convert(unitcell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+    time = np.arange(len(coords))
+    if frame is not None:
+        time *= frame
+    elif stride is not None:
+        time *= stride
+
+    return Trajectory(xyz=coords, time=time, topology=topology,
+                      unitcell_lengths=unitcell_lengths,
+                      unitcell_angles=unitcell_angles)
+
+
+@_FormatRegistry.register_fileobject('.pdb')
 class PDBTrajectoryFile(object):
     """Interface for reading and writing Protein Data Bank (PDB) files
 
@@ -96,6 +181,7 @@ class PDBTrajectoryFile(object):
         self._topology = None
         self._positions = None
         self._mode = mode
+        self._last_topology = None
 
         if mode == 'r':
             PDBTrajectoryFile._loadNameReplacementTables()
@@ -222,11 +308,12 @@ class PDBTrajectoryFile(object):
                             'ARG', 'ASP', 'GLN', 'GLY', 'ILE', 'LYS', 'PHE', 'SER', 'TRP', 'VAL',
                             'A', 'G', 'C', 'U', 'I', 'DA', 'DG', 'DC', 'DT', 'DI', 'HOH']
         conectBonds = []
-        for atom1, atom2 in self._last_topology.bonds:
-            if atom1.residue.name not in standardResidues or atom2.residue.name not in standardResidues:
-                conectBonds.append((atom1, atom2))
-            elif atom1.name == 'SG' and atom2.name == 'SG' and atom1.residue.name == 'CYS' and atom2.residue.name == 'CYS':
-                conectBonds.append((atom1, atom2))
+        if self._last_topology is not None:
+            for atom1, atom2 in self._last_topology.bonds:
+                if atom1.residue.name not in standardResidues or atom2.residue.name not in standardResidues:
+                    conectBonds.append((atom1, atom2))
+                elif atom1.name == 'SG' and atom2.name == 'SG' and atom1.residue.name == 'CYS' and atom2.residue.name == 'CYS':
+                    conectBonds.append((atom1, atom2))
         if len(conectBonds) > 0:
             
             # Work out the index used in the PDB file for each atom.

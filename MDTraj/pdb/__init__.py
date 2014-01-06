@@ -15,4 +15,4 @@
 # mdtraj. If not, see http://www.gnu.org/licenses/.
 
 from __future__ import print_function, division
-from .pdbfile import PDBTrajectoryFile
+from .pdbfile import PDBTrajectoryFile, load_pdb

@@ -34,7 +34,8 @@ import os
 import numpy as np
 cimport numpy as np
 np.import_array()
-from mdtraj.utils.arrays import ensure_type
+from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.registry import _FormatRegistry
 from libc.stdlib cimport malloc, free
 from binposlib cimport molfile_timestep_t
 from binposlib cimport seek_timestep, tell_timestep;
@@ -52,6 +53,85 @@ cdef int _BINPOS_EOF = -1  # end of file (or error)
 ###############################################################################
 # Classes
 ###############################################################################
+
+@_FormatRegistry.register_loader('.binpos')
+def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
+    """Load an AMBER BINPOS file.
+
+    Parameters
+    ----------
+    filename : str
+        String filename of AMBER binpos file.
+    top : {str, Trajectory, Topology}
+        The BINPOS format does not contain topology information. Pass in either
+        the path to a pdb file, a trajectory, or a topology to supply this
+        information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
+
+    Examples
+    --------
+    >>> import mdtraj as md                                        # doctest: +SKIP
+    >>> traj = md.load_binpos('output.binpos', top='topology.pdb') # doctest: +SKIP
+    >>> print traj                                                 # doctest: +SKIP
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+
+    >>> traj2 = md.load_binpos('output.dcd', stride=2, top='topology.pdb') # doctest: +SKIP
+    >>> print traj2                                                      # doctest: +SKIP
+    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>         # doctest: +SKIP
+    
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.BINPOSTrajectoryFile :  Low level interface to BINPOS files
+    """
+    from mdtraj.trajectory import _parse_topology, Trajectory
+    
+    # we make it not required in the signature, but required here. although this
+    # is a little wierd, its good because this function is usually called by a
+    # dispatch from load(), where top comes from **kwargs. So if its not supplied
+    # we want to give the user an informative error message
+    if top is None:
+        raise ValueError('"top" argument is required for load_binpos')
+
+    if not isinstance(filename, basestring):
+        raise TypeError('filename must be of type string for load_binpos. '
+            'you supplied %s' % type(filename))
+
+    topology = _parse_topology(top)
+    atom_indices = cast_indices(atom_indices)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
+
+    with BINPOSTrajectoryFile(filename) as f:
+        if frame is not None:
+            f.seek(frame)
+            xyz = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz = f.read(stride=stride, atom_indices=atom_indices)
+
+        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+    time = np.arange(len(xyz))
+    if frame is not None:
+        time += frame
+    elif stride is not None:
+        time *= stride
+
+    return Trajectory(xyz=xyz, topology=topology, time=time)
+
 
 cdef class BINPOSTrajectoryFile:
     """BINPOSTrajectoryFile(filename, mode='r', force_overwrite=True, **kwargs)
@@ -351,3 +431,4 @@ cdef class BINPOSTrajectoryFile:
             self.n_frames = self.tell()
             self.seek(position)
         return self.n_frames
+_FormatRegistry.register_fileobject('.binpos')(BINPOSTrajectoryFile)
