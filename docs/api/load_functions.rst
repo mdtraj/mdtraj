@@ -1,6 +1,9 @@
 Load Functions
 --------------
 
+Cross-format support
+********************
+
 .. currentmodule:: mdtraj
 .. autosummary::
     :toctree: generated/
@@ -8,6 +11,13 @@ Load Functions
     load
     iterload
     load_frame
+    open
+
+Format-specific loaders
+***********************
+
+.. autosummary::
+    :toctree: generated/
 
     load_binpos
     load_lh5
