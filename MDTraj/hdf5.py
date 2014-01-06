@@ -97,7 +97,7 @@ Frames = namedtuple('Frames', ['coordinates', 'time', 'cell_lengths', 'cell_angl
                                'temperature', 'alchemicalLambda'])
 
 ##############################################################################
-# Cpde
+# Code
 ##############################################################################
 
 @_FormatRegistry.register_loader('.h5')

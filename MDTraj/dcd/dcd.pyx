@@ -45,6 +45,7 @@ from dcdlib cimport dcd_nsets
 # Globals
 ##############################################################################
 
+__all__ = ['DCDTrajectoryFile', 'load_dcd']
 # codes that indicate status on return from library
 cdef int _DCD_SUCCESS    = 0   # No problems
 cdef int _DCD_EOF    = -1   # No problems

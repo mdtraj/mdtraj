@@ -46,6 +46,7 @@ from binposlib cimport open_binpos_write, close_file_write, write_timestep
 # Globals
 ###############################################################################
 
+__all__ = ['BINPOSTrajectoryFile', 'load_binpos']
 # codes that indicate status on return from library
 cdef int _BINPOS_SUCESS = 0  # regular exit code
 cdef int _BINPOS_EOF = -1  # end of file (or error)

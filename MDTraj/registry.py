@@ -11,7 +11,7 @@ class _FormatRegistry(object):
     
     Example
     -------
-    >>> @_FormatRegistry.loader('.xyz')
+    >>> @_FormatRegistry.register_loader('.xyz')
     >>> def load_xyz(filename):
         return Trajectory(...)
     >>>
