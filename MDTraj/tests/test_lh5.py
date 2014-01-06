@@ -23,7 +23,7 @@
 import numpy as np
 import tempfile
 import os
-from mdtraj import hdf5
+import mdtraj as md
 from mdtraj import LH5TrajectoryFile
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises, skipif, assert_raises
 
@@ -73,8 +73,7 @@ def test_write_multiple():
 
 
 def test_topology():
-    from mdtraj import trajectory, topology
-    top = trajectory.load_pdb(get_fn('native.pdb')).topology
+    top = md.load(get_fn('native.pdb')).topology
 
     with LH5TrajectoryFile(temp, 'w') as f:
         f.topology = top

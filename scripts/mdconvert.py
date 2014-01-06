@@ -36,7 +36,7 @@ from argparse import ArgumentParser
 
 import numpy as np
 import mdtraj as md
-from mdtraj.trajectory import _convert
+from mdtraj.trajectory import convert as _convert
 from mdtraj.utils.six import iteritems
 
 ###############################################################################

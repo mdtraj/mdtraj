@@ -33,7 +33,8 @@ import sys
 import numpy as np
 import mdtraj.pdb.element
 from mdtraj.utils.six import iteritems, PY3, u
-from mdtraj.utils import import_, ensure_type
+from mdtraj.registry import _FormatRegistry
+from mdtraj.utils import import_, ensure_type, convert, cast_indices
 from mdtraj.hdf5 import ensure_mode
 
 MAXINT16 = np.iinfo(np.int16).max
@@ -42,7 +43,7 @@ DEFAULT_PRECISION = 1000
 if PY3:
     basestring = str
     
-__all__ = ['LH5TrajectoryFile']
+__all__ = ['LH5TrajectoryFile', 'load_lh5']
 
 ##############################################################################
 # Utilities
@@ -106,10 +107,62 @@ def _convert_to_lossy_integers(X, precision=DEFAULT_PRECISION):
 
 
 ##############################################################################
-# Classes
+# Main code
 ##############################################################################
 
+@_FormatRegistry.register_loader('.lh5')
+def load_lh5(filename, top=None, stride=None, atom_indices=None, frame=None):
+    """Load an deprecated MSMBuilder2 LH5 trajectory file.
 
+    Parameters
+    ----------
+    filename : str
+        filename of AMBER NetCDF file.
+    top : {str, Trajectory, Topology}
+        The NetCDF format does not contain topology information. Pass in either
+        the path to a pdb file, a trajectory, or a topology to supply this
+        information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
+
+    See Also
+    --------
+    mdtraj.LH5TrajectoryFile :  Low level interface to LH5 files
+    """
+    from mdtraj import Trajectory
+
+    atom_indices = cast_indices(atom_indices)
+    with LH5TrajectoryFile(filename) as f:
+        if frame is not None:
+            f.seek(frame)
+            xyz = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz = f.read(stride=stride, atom_indices=atom_indices)
+
+        topology = f.topology
+        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+        if atom_indices is not None:
+            topology = f.topology.subset(atom_indices)
+
+    time = np.arange(len(xyz))
+    if frame is not None:
+        time += frame
+    elif stride is not None:
+        time *= stride
+
+    return Trajectory(xyz=xyz, topology=topology, time=time)
+
+
+@_FormatRegistry.register_fileobject('.lh5')
 class LH5TrajectoryFile(object):
     """Interface for reading and writing to a MSMBuilder2 "LH5" molecular
     dynamics trajectory file, a deprecated format.
@@ -332,6 +385,12 @@ class LH5TrajectoryFile(object):
         "Write all buffered data in the to the disk file."
         if self._open:
             self._handle.flush()
+
+    def __len__(self):
+        "Number of frames in the file"
+        if not self._open:
+            raise ValueError('I/O operation on closed file')
+        return len(self._handle.root.XYZList)
 
     def __del__(self):
         self.close()

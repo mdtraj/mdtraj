@@ -29,8 +29,12 @@ from __future__ import print_function, division
 import os
 import itertools
 import numpy as np
-from mdtraj.utils import ensure_type
+from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.registry import _FormatRegistry
 from mdtraj.utils.six.moves import xrange
+
+__all__ = ['MDCRDTrajectoryFile', 'load_mdcrd']
+
 
 ##############################################################################
 # Classes
@@ -39,7 +43,85 @@ from mdtraj.utils.six.moves import xrange
 class _EOF(IOError):
     pass
 
+@_FormatRegistry.register_loader('.mdcrd')
+@_FormatRegistry.register_loader('.crd')
+def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
+    """Load an AMBER mdcrd file.
 
+    Parameters
+    ----------
+    filename : str
+        String filename of AMBER mdcrd file.
+    top : {str, Trajectory, Topology}
+        The BINPOS format does not contain topology information. Pass in either
+        the path to a pdb file, a trajectory, or a topology to supply this
+        information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
+
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.MDCRDTrajectoryFile :  Low level interface to MDCRD files
+    """
+    from mdtraj.trajectory import _parse_topology, Trajectory
+
+    # we make it not required in the signature, but required here. although this
+    # is a little wierd, its good because this function is usually called by a
+    # dispatch from load(), where top comes from **kwargs. So if its not supplied
+    # we want to give the user an informative error message
+    if top is None:
+        raise ValueError('"top" argument is required for load_mdcrd')
+
+    if not isinstance(filename, str):
+        raise TypeError('filename must be of type string for load_mdcrd. '
+            'you supplied %s' % type(filename))
+
+    topology = _parse_topology(top)
+    atom_indices = cast_indices(atom_indices)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
+
+    with MDCRDTrajectoryFile(filename, n_atoms=topology._numAtoms) as f:
+        if frame is not None:
+            f.seek(frame)
+            xyz, cell_lengths = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz, cell_lengths = f.read(stride=stride, atom_indices=atom_indices)
+
+        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        if cell_lengths is not None:
+            convert(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+            # Assume that its a rectilinear box
+            cell_angles = 90.0 * np.ones_like(cell_lengths)
+
+    time = np.arange(len(xyz))
+    if frame is not None:
+        time += frame
+    elif stride is not None:
+        time *= stride
+
+    t = Trajectory(xyz=xyz, topology=topology, time=time)
+    if cell_lengths is not None:
+        t.unitcell_lengths = cell_lengths
+        t.unitcell_angles = cell_angles
+    return t
+
+
+@_FormatRegistry.register_fileobject('.mdcrd')
+@_FormatRegistry.register_fileobject('.crd')
 class MDCRDTrajectoryFile(object):
     """Interface for reading and writing to an AMBER mdcrd files.
     This is a file-like object, that both reading or writing depending
@@ -356,3 +438,7 @@ class MDCRDTrajectoryFile(object):
             The current frame in the file.
         """
         return int(self._frame_index)
+
+    def __len__(self):
+        "Number of frames in the file"
+        raise NotImplementedError()

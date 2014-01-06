@@ -32,17 +32,20 @@ import os
 import numpy as np
 cimport numpy as np
 np.import_array()
-from mdtraj.utils.arrays import ensure_type
+from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.registry import _FormatRegistry
 from libc.stdlib cimport malloc, free
 from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
 from dcdlib cimport open_dcd_write, close_file_write, write_timestep
+from dcdlib cimport dcd_nsets
 
 
 ##############################################################################
 # Globals
 ##############################################################################
 
+__all__ = ['DCDTrajectoryFile', 'load_dcd']
 # codes that indicate status on return from library
 cdef int _DCD_SUCCESS    = 0   # No problems
 cdef int _DCD_EOF    = -1   # No problems
@@ -61,8 +64,91 @@ cdef ERROR_MESSAGES = {
 }
 
 ##############################################################################
-# Classes
+# Code
 ##############################################################################
+
+@_FormatRegistry.register_loader('.dcd')
+def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
+    """Load an xtc file. Since the dcd format doesn't contain information
+    to specify the topology, you need to supply a pdb_filename
+
+    Parameters
+    ----------
+    filename : str
+        String filename of DCD file.
+    top : {str, Trajectory, Topology}
+        DCD XTC format does not contain topology information. Pass in either
+        the path to a pdb file, a trajectory, or a topology to supply this
+        information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
+
+    Examples
+    --------
+    >>> import mdtraj as md                                        # doctest: +SKIP
+    >>> traj = md.load_dcd('output.dcd', top='topology.pdb')       # doctest: +SKIP
+    >>> print traj                                                 # doctest: +SKIP
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+
+    >>> traj2 = md.load_dcd('output.dcd', stride=2, top='topology.pdb')   # doctest: +SKIP
+    >>> print traj2                                                       # doctest: +SKIP
+    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>         # doctest: +SKIP
+    
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.DCDTrajectoryFile :  Low level interface to DCD files
+    """
+    from mdtraj.trajectory import _parse_topology, Trajectory
+    
+    # we make it not required in the signature, but required here. although this
+    # is a little wierd, its good because this function is usually called by a
+    # dispatch from load(), where top comes from **kwargs. So if its not supplied
+    # we want to give the user an informative error message
+    if top is None:
+        raise ValueError('"top" argument is required for load_dcd')
+
+    if not isinstance(filename, str):
+        raise TypeError('filename must be of type string for load_trr. '
+            'you supplied %s' % type(filename))
+
+    topology = _parse_topology(top)
+    atom_indices = cast_indices(atom_indices)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
+
+    with DCDTrajectoryFile(filename) as f:
+        if frame is not None:
+            f.seek(frame)
+            xyz, box_length, box_angle = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz, box_length, box_angle = f.read(stride=stride, atom_indices=atom_indices)
+
+        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        convert(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+    time = np.arange(len(xyz))
+    if frame is not None:
+        time += frame
+    elif stride is not None:
+        time *= stride
+
+    trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
+                            unitcell_lengths=box_length,
+                            unitcell_angles=box_angle)
+    return trajectory
 
 
 cdef class DCDTrajectoryFile:
@@ -245,6 +331,20 @@ cdef class DCDTrajectoryFile:
     def __exit__(self, *exc_info):
         "Support the context manager protocol"
         self.close()
+
+    def __len__(self):
+        """Number of frames in the file
+
+        Notes
+        -----
+        This length is based on information in the header of the DCD
+        file. It is possible for it to be off by 1 if, for instance,
+        the client writing the file was killed between writing the last
+        frame and updating the header information.
+        """
+        if not self.is_open:
+            raise ValueError('I/O operation on closed file')
+        return dcd_nsets(self.fh)
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)
@@ -434,3 +534,4 @@ cdef class DCDTrajectoryFile:
 
             if status != _DCD_SUCCESS:
                 raise IOError("DCD Error: %s" % ERROR_MESSAGES(status))
+_FormatRegistry.register_fileobject('.dcd')(DCDTrajectoryFile)

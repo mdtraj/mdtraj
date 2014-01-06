@@ -765,9 +765,9 @@ static void close_dcd_read(int *indexes, float *fixedcoords) {
   free(fixedcoords);
 }
 
-
-
-
+int dcd_nsets(dcdhandle* v) {
+  return v->nsets;
+}
 
 dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, int* nsets) {
   dcdhandle *dcd;

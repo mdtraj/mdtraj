@@ -38,15 +38,83 @@ import warnings
 
 import numpy as np
 from mdtraj import version
-from mdtraj.utils import ensure_type, import_, in_units_of
+from mdtraj.registry import _FormatRegistry
+from mdtraj.utils import ensure_type, import_, in_units_of, convert, cast_indices
 
-__all__ = ['NetCDFTrajectoryFile']
+__all__ = ['NetCDFTrajectoryFile', 'load_netcdf']
 
 ##############################################################################
 # classes
 ##############################################################################
 
+@_FormatRegistry.register_loader('.nc')
+@_FormatRegistry.register_loader('.netcdf')
+def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
+    """Load an AMBER NetCDF file. Since the NetCDF format doesn't contain
+    information to specify the topology, you need to supply a topology
 
+    Parameters
+    ----------
+    filename : str
+        filename of AMBER NetCDF file.
+    top : {str, Trajectory, Topology}
+        The NetCDF format does not contain topology information. Pass in either
+        the path to a pdb file, a trajectory, or a topology to supply this
+        information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
+
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.NetCDFTrajectoryFile :  Low level interface to NetCDF files
+    """
+    from mdtraj.trajectory import _parse_topology, Trajectory
+
+    topology = _parse_topology(top)
+    atom_indices = cast_indices(atom_indices)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
+
+    with NetCDFTrajectoryFile(filename) as f:
+        if frame is not None:
+            f.seek(frame)
+            xyz, time, cell_lengths, cell_angles = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz, time, cell_lengths, cell_angles = f.read(stride=stride, atom_indices=atom_indices)
+
+        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        convert(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+    if isinstance(time, np.ma.masked_array) and np.all(time.mask):
+        # if time is a masked array and all the entries are masked
+        # then we just tread it as if we never found it
+        time = None
+    if isinstance(cell_lengths, np.ma.masked_array) and np.all(cell_lengths.mask):
+        cell_lengths = None
+    if isinstance(cell_angles, np.ma.masked_array) and np.all(cell_angles.mask):
+        cell_angles = None
+
+    trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
+                            unitcell_lengths=cell_lengths,
+                            unitcell_angles=cell_angles)
+    return trajectory
+
+
+@_FormatRegistry.register_fileobject('.nc')
+@_FormatRegistry.register_fileobject('.netcdf')
 class NetCDFTrajectoryFile(object):
     """Interface for reading and writing to AMBER NetCDF files. This is a
     file-like object, that both reading or writing depending
@@ -393,3 +461,8 @@ class NetCDFTrajectoryFile(object):
 
     def __del__(self):
         self.close()
+
+    def __len__(self):
+        if self._closed:
+            raise ValueError('I/O operation on closed file')
+        return len(self._handle.dimensions['frame'])

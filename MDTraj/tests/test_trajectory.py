@@ -23,10 +23,11 @@
 
 import tempfile, os
 import functools
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises
+from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises, SkipTest
 import numpy as np
 import mdtraj as md
 import mdtraj.trajectory
+import mdtraj.utils
 from mdtraj import topology
 from mdtraj.utils.six import PY3
 from mdtraj.utils.six.moves import xrange
@@ -197,7 +198,7 @@ def test_center():
 def test_float_atom_indices_exception():
     "Is an informative error message given when you supply floats for atom_indices?"
     top = md.load(get_fn('native.pdb')).topology
-    for ext in mdtraj.trajectory._LoaderRegistry.keys():
+    for ext in md._FormatRegistry.loaders.keys():
         try:
             fn = get_fn('frame0' + ext)
         except:
@@ -355,7 +356,7 @@ def test_seek_read_mode():
                         if a not in [md.BINPOSTrajectoryFile, md.LH5TrajectoryFile]:
                             read = read[0]
                         readlength = len(read)
-                        read = mdtraj.trajectory._convert(read, f.distance_unit, 'nanometers')
+                        read = mdtraj.utils.convert(read, f.distance_unit, 'nanometers')
                         eq(xyz[point:point+offset], read)
                         point += readlength
                 elif r < 0.75:
@@ -405,3 +406,21 @@ def test_iterload():
             eq(t_ref.xyz, t.xyz)
             eq(t_ref.time, t.time)
             eq(t_ref.topology, t.topology)
+
+def test_length():
+    files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
+             'frame0.mdcrd', '4waters.arc', 'frame0.dcd', '2EQQ.pdb',
+             'frame0.binpos', 'legacy_msmbuilder_trj0.lh5']
+    for file in files:
+        if file.endswith('.mdcrd'):
+            kwargs = {'n_atoms': 22}
+        else:
+            kwargs = {}
+        def f():
+            try:
+                eq(len(md.open(get_fn(file), **kwargs)),
+                   len(md.load(get_fn(file), top=get_fn('native.pdb'))))
+            except NotImplementedError as e:
+                raise SkipTest(e)
+        f.description = 'Length of file object: %s' % file
+        yield f
