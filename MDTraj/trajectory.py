@@ -41,8 +41,6 @@ from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3
 from mdtraj import _rmsd
 from mdtraj import _FormatRegistry
-if PY3:
-    basestring = str
 
 ##############################################################################
 # Globals
@@ -63,7 +61,7 @@ def _assert_files_exist(filenames):
     filenames : {str, [str]}
         String or list of strings to check
     """
-    if isinstance(filenames, basestring):
+    if isinstance(filenames, str):
         filenames = [filenames]
     for fn in filenames:
         if not (os.path.exists(fn) and os.path.isfile(fn)):
@@ -76,7 +74,7 @@ def _parse_topology(top):
     we extract its topology.
     """
 
-    if isinstance(top, basestring) and (os.path.splitext(top)[1] in ['.pdb', '.h5','.lh5']):
+    if isinstance(top, str) and (os.path.splitext(top)[1] in ['.pdb', '.h5','.lh5']):
         topology = load_frame(top, 0).topology
     elif isinstance(top, Trajectory):
         topology = top.topology
@@ -254,7 +252,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         kwargs["top"] = _parse_topology(kwargs["top"])
 
     # grab the extension of the filename
-    if isinstance(filename_or_filenames, basestring):  # If a single filename
+    if isinstance(filename_or_filenames, str):  # If a single filename
         extension = os.path.splitext(filename_or_filenames)[1]
         filename = filename_or_filenames
     else:  # If multiple filenames, take the first one.

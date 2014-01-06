@@ -37,6 +37,8 @@ from mdtraj.utils import ensure_type, cast_indices, convert
 from mdtraj.registry import _FormatRegistry
 cimport trrlib
 
+__all__ = ['load_trr', 'TRRTrajectoryFile']
+
 
 ###############################################################################
 # globals
@@ -117,7 +119,7 @@ def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_trr')
 
-    if not isinstance(filename, basestring):
+    if not isinstance(filename, str):
         raise TypeError('filename must be of type string for load_trr. '
             'you supplied %s' % type(filename))
 

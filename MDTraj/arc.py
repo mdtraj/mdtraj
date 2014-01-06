@@ -80,7 +80,7 @@ def load_arc(filename, top=None, stride=None, atom_indices=None):
     if top is None:
         raise ValueError('"top" argument is required for load_arc')
 
-    if not isinstance(filename, basestring):
+    if not isinstance(filename, str):
         raise TypeError('filename must be of type string for load_arc. '
             'you supplied %s' % type(filename))
 

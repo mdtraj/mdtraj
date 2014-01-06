@@ -37,6 +37,9 @@ from mdtraj.utils import ensure_type, cast_indices, convert
 from mdtraj.registry import _FormatRegistry
 cimport xdrlib
 
+__all__ = ['load_xtc', 'XTCTrajectoryFile']
+
+
 ###############################################################################
 # globals
 ###############################################################################
@@ -120,7 +123,7 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_xtc')
 
-    if not isinstance(filename, basestring):
+    if not isinstance(filename, str):
         raise TypeError('filename must be of type string for load_xtc. '
             'you supplied %s' % type(filename))
 

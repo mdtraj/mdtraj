@@ -119,7 +119,7 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_dcd')
 
-    if not isinstance(filename, basestring):
+    if not isinstance(filename, str):
         raise TypeError('filename must be of type string for load_trr. '
             'you supplied %s' % type(filename))
 

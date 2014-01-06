@@ -84,7 +84,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_mdcrd')
 
-    if not isinstance(filename, basestring):
+    if not isinstance(filename, str):
         raise TypeError('filename must be of type string for load_mdcrd. '
             'you supplied %s' % type(filename))
 

@@ -106,7 +106,7 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_binpos')
 
-    if not isinstance(filename, basestring):
+    if not isinstance(filename, str):
         raise TypeError('filename must be of type string for load_binpos. '
             'you supplied %s' % type(filename))
 
