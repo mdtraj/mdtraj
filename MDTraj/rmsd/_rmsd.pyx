@@ -83,10 +83,11 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
         Use OpenMP to calculate each of the RMSDs in parallel over
         multiple cores.
     precentered : bool, default=False
-        Use precentered and precentered traces. These are intermediate
+        Assume that the conformations are already centered at the origin, and that
+        the "rmsd_traces" have been computed, as is done by
+        `Trajectory.center_coordinates`. The "rmsd_traces" are intermediate
         calculations needed for the RMSD calculation which can be computed
-        independently on each trajectory, and are computed by
-        `Trajectory.center_coordinates`. Note that this has the potential to
+        independently on each trajectory. Note that this has the potential to
         be unsafe; if you use Trajectory.center_coordinates and then modify
         the trajectory's coordinates, the center and traces will be out of
         date and the RMSDs will be incorrect.
