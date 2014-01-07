@@ -38,13 +38,13 @@ def test_trajectory_rmsd():
 
         eq(calculated, reference, decimal=3)
 
-def test_precomputed_1():
+def test_precentered_1():
     # test rmsd against the numpy version, using the same trajectory
     # as target and reference
     t1 = md.load(get_fn('traj.h5'), stride=10)
     t2 = md.load(get_fn('traj.h5'), stride=10)
-    # don't center t1, and use it without precomputed
-    # explicitly center t2, and use *with* precomputed
+    # don't center t1, and use it without precentered
+    # explicitly center t2, and use *with* precentered
 
     for parallel in [True, False]:
         t2.center_coordinates()
@@ -53,21 +53,21 @@ def test_precomputed_1():
             ref = np.zeros(t1.n_frames)
             for j in range(t1.n_frames):
                 ref[j] = rmsd_qcp(t1.xyz[j], t1.xyz[i])
-            val1 = md.rmsd(t1, t1, i, parallel=parallel, precomputed=False)
-            val2 = md.rmsd(t2, t2, i, parallel=parallel, precomputed=True)
+            val1 = md.rmsd(t1, t1, i, parallel=parallel, precentered=False)
+            val2 = md.rmsd(t2, t2, i, parallel=parallel, precentered=True)
 
             eq(ref, val1, decimal=3)
             eq(val1, val2)
 
-def test_precomputed_2():
+def test_precentered_2():
     # test rmsd against the numpy version, using the difference
     # trajectories as target and reference
     t1_a = md.load(get_fn('traj.h5'), stride=10)
     t2_a = md.load(get_fn('traj.h5'), stride=10)
     t1_b = md.load(get_fn('traj.h5'), stride=10)
     t2_b = md.load(get_fn('traj.h5'), stride=10)
-    # don't center t1, and use it without precomputed
-    # explicitly center t2, and use *with* precomputed
+    # don't center t1, and use it without precentered
+    # explicitly center t2, and use *with* precentered
 
     t2_a.center_coordinates()
     t2_b.center_coordinates()
@@ -77,8 +77,8 @@ def test_precomputed_2():
             ref = np.zeros(t1_a.n_frames)
             for j in range(t1_a.n_frames):
                 ref[j] = rmsd_qcp(t1_a.xyz[j], t1_b.xyz[i])
-            val1 = md.rmsd(t1_a, t1_b, i, parallel=parallel, precomputed=False)
-            val2 = md.rmsd(t2_a, t2_b, i, parallel=parallel, precomputed=True)
+            val1 = md.rmsd(t1_a, t1_b, i, parallel=parallel, precentered=False)
+            val2 = md.rmsd(t2_a, t2_b, i, parallel=parallel, precentered=True)
 
             eq(ref, val1, decimal=3)
             eq(val1, val2, decimal=4)
