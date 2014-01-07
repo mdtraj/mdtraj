@@ -58,8 +58,8 @@ cdef extern from "math.h":
 # External (Public) Functions
 ##############################################################################
 
-def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, bool precomputed=False):
-    """rmsd(target, reference, frame=0, atom_indices=None, parallel=True, precomputed=False)
+def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, bool precentered=False):
+    """rmsd(target, reference, frame=0, atom_indices=None, parallel=True, precentered=False)
 
     Compute RMSD of all conformations in target to a reference conformation.
     Note, this will center the conformations in place.
@@ -82,11 +82,12 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
     parallel : bool
         Use OpenMP to calculate each of the RMSDs in parallel over
         multiple cores.
-    precomputed : bool, default=False
-        Use precentered and precomputed traces. These are intermediate
+    precentered : bool, default=False
+        Assume that the conformations are already centered at the origin, and that
+        the "rmsd_traces" have been computed, as is done by
+        `Trajectory.center_coordinates`. The "rmsd_traces" are intermediate
         calculations needed for the RMSD calculation which can be computed
-        independently on each trajectory, and are computed by
-        `Trajectory.center_coordinates`. Note that this has the potential to
+        independently on each trajectory. Note that this has the potential to
         be unsafe; if you use Trajectory.center_coordinates and then modify
         the trajectory's coordinates, the center and traces will be out of
         date and the RMSDs will be incorrect.
@@ -102,7 +103,7 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
     The calculation is slightly faster if you precenter the trajectory
 
     >>> trajectory.center_coordinates()
-    >>> rmsds = md.rmsd(trajectory, trajectory, 0, precomputed=True)
+    >>> rmsds = md.rmsd(trajectory, trajectory, 0, precentered=True)
 
     See Also
     --------
@@ -149,7 +150,7 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
     ref_xyz_frame = np.asarray(reference.xyz[frame, atom_indices, :], order='c', dtype=np.float32)
 
     # t0 = time.time()
-    if precomputed and (reference._rmsd_traces is not None) and (target._rmsd_traces is not None) and atom_indices == slice(None):
+    if precentered and (reference._rmsd_traces is not None) and (target._rmsd_traces is not None) and atom_indices == slice(None):
         target_g = np.asarray(target._rmsd_traces, order='c', dtype=np.float32)
         ref_g = reference._rmsd_traces[frame]
     else:
