@@ -98,6 +98,14 @@ def test_read_slice_0():
         eq(f.read(stride=2, atom_indices=np.array([0,1])), coordinates[::2, [0,1], :], decimal=3)
 
 
+def test_vsite_elements():
+    pdb_filename = get_fn('GG-tip4pew.pdb')
+    trj = md.load(pdb_filename)
+    trj.save_lh5(temp)
+    
+    trj2 = md.load(temp, top=pdb_filename)
+
+
 def test_do_overwrite_0():
     with open(temp, 'w') as f:
         f.write('a')
