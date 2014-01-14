@@ -327,7 +327,7 @@ class HDF5TrajectoryFile(object):
                     try:
                         element = elem.get_by_symbol(atom_dict['element'])
                     except KeyError:
-                        raise ValueError('The symbol %s isn\'t a valid element' % atom_dict['element'])
+                        element = None
                     topology.add_atom(atom_dict['name'], element, residue)
 
         atoms = list(topology.atoms)
