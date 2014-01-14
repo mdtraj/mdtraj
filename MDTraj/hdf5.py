@@ -380,10 +380,16 @@ class HDF5TrajectoryFile(object):
                     if not hasattr(atom_iter, '__iter__'):
                         atom_iter = atom_iter()
                     for atom in atom_iter:
+
+                        try:
+                            element_symbol_string = str(atom.element.symbol)
+                        except AttributeError:
+                            element_symbol_string = ""
+
                         residue_dict['atoms'].append({
                             'index': int(atom.index),
                             'name': str(atom.name),
-                            'element': str(atom.element.symbol)
+                            'element': element_symbol_string
                         })
                     chain_dict['residues'].append(residue_dict)
                 topology_dict['chains'].append(chain_dict)

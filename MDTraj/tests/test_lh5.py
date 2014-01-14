@@ -99,6 +99,7 @@ def test_read_slice_0():
 
 
 def test_vsite_elements():
+    #  Test case for issue #263
     pdb_filename = get_fn('GG-tip4pew.pdb')
     trj = md.load(pdb_filename)
     trj.save_lh5(temp)
