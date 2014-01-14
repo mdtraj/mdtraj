@@ -77,7 +77,12 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
         if not isinstance(atom_name, basestring):
             atom_name = atom_name.decode()
         element_symbol = atom_name.lstrip('0123456789')[0]
-        element = mdtraj.pdb.element.get_by_symbol(element_symbol)
+        
+        try:
+            element = mdtraj.pdb.element.get_by_symbol(element_symbol)
+        except KeyError:
+            element = None
+        
         topology.add_atom(atom_name, element,
                           registered_residues[ResidueID[i]])
 
