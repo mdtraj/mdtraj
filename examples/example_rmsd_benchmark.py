@@ -25,14 +25,14 @@ print 'md.rmsd(): %.2f rmsds / s' % ((t.n_frames * 100) / (time.time() - start))
 # the centering of the trajectories is going to be done many times, which
 # leads to a slight slowdown. If we manually center the trajectory
 # and then inform the rmsd() function that the centering has been
-# precomputed, we can achieve ~2x speedup, depending on your machine
+# precentered, we can achieve ~2x speedup, depending on your machine
 # and the number of atoms.
 
 t.center_coordinates()
 start = time.time()
 for i in range(100):
-    md.rmsd(t, t, 0, precomputed=True)
-print 'md.rmsd(precomputed=True): %.2f rmsds / s' % ((t.n_frames * 100) / (time.time() - start))
+    md.rmsd(t, t, 0, precentered=True)
+print 'md.rmsd(precentered=True): %.2f rmsds / s' % ((t.n_frames * 100) / (time.time() - start))
 
 # Just for fun, let's compare this code to the straightforward
 # numpy implementation of the same algorithm, which mdtraj has
