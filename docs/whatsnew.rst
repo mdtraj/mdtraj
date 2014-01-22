@@ -4,6 +4,12 @@ What's New
 
 These are new features and improvements of note in each release.
 
+v0.6.0 (January 21, 2014)
+-----------------
+- `md.rmsd()` signature changed to be more understandable
+- All file objects now have a `__len__` function.
+- Small bugfixes related to vsites.
+
 v0.5.1 (January 4, 2014)
 ------------------------
 - Minor bug fix when no dihedrals match specification
