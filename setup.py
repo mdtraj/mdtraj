@@ -16,9 +16,17 @@ import shutil
 import tempfile
 import subprocess
 from distutils.ccompiler import new_compiler
-from setuptools import setup, Extension
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils.core import setup, Extension
 
-import numpy
+try:
+    import numpy
+except ImportError:
+    print('building and running mdtraj requires numpy', file=sys.stderr)
+    sys.exit(1)
+
 try:
     from Cython.Distutils import build_ext
     setup_kwargs = {'cmdclass': {'build_ext': build_ext}}
@@ -27,6 +35,13 @@ except ImportError:
     setup_kwargs = {}
     cython_extension = 'c'
 
+if 'setuptools' in sys.modules:
+    setup_kwargs['zip_safe'] = False
+    setup_kwargs['entry_points'] = {'console_scripts':
+              ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
+               'mdinspect = mdtraj.scripts.mdinspect:entry_point']}
+else:
+    setup_kwargs['scripts'] = ['scripts/mdconvert.py', 'scripts/mdinspect.py']
 
 
 ##########################
@@ -280,12 +295,6 @@ setup(name='mdtraj',
       packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.testing', 'mdtraj.utils',
                 'mdtraj.reporters', 'mdtraj.geometry', 'mdtraj.tests', 'mdtraj.scripts'],
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
-      install_requires=['numpy', 'nose', 'nose-exclude'],
-      zip_safe=False,
-      #scripts=['scripts/mdconvert.py', 'scripts/mdinspect.py'],
-      entry_points={'console_scripts':
-                ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
-                 'mdinspect = mdtraj.scripts.mdinspect:entry_point']},
       ext_modules=extensions,
       package_data={'mdtraj.pdb': ['data/*'],
                     'mdtraj.testing': ['reference/*']},

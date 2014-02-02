@@ -8,11 +8,24 @@ Installation
 ============
 
 MDTraj is tested (and passes) on python 2.6, 2.7, 3.2 and 3.3. The
-developers generally use python2.7, on both mac and linux platforms. Automated
-tests on linux are performed on every incremental update to the code, and release
-tests are performed on mac, linux and windows.
+developers generally use python2.7, on both mac and linux platforms. Automated tests on linux are performed on every incremental update to the code, and release tests are performed on mac, linux and windows.
 
-Easy Way
+With Conda
+----------
+`conda <http://www.continuum.io/blog/conda>`_ is a python package manager built for scientific python. Unlike ``easy_install`` or ``pip``, it handles binaries and binary dependencies, which are critical for most scientific workflows.
+
+If you're a ``conda`` user, you can install MDTraj by adding rmcgibbo's channel. If you're not a conda user, you should look into it ::
+
+    conda config --add channels http://conda.binstar.org/rmcgibbo
+
+And then installing with ::
+
+    conda install mdtraj
+
+.. note:: ``conda`` will automatically all of the tricky dependencies from binary packages automatically! This includes pytables/netCDF4/numpy/scipy.
+
+
+With Pip
 --------
 
 On a Mac or Linux machine, just run ::
@@ -27,8 +40,8 @@ On windows, you'll probably want to use the prebuilt binary packages
 hosted on PyPi. Choose the one that is appropriate for your
 version of python.
 
-Medium Way
-----------
+From Source
+-----------
 Clone the source code repository from github::
 
   $ git clone git://github.com/rmcgibbo/mdtraj.git
@@ -47,8 +60,8 @@ compiler and build environment, to compile the C-level extensions that connect
 the python code to the bit-twiddling C libraries that read and  write most of
 these binary formats.
 
-Easy Way
---------
+Prepackaged Dependencies
+------------------------
 
 The easiest way to get all of the dependencies is to install one of the 
 pre-packaged scientific python distributes like `Enthought's Canopy 
@@ -62,8 +75,8 @@ and Linux. You won't have to install anything except mdtraj, which can be done, 
 .. note:: On python26, two backported packages, ``argparse`` and ``importlib`` are required.
 You can install them with ``pip install argparse`` and ``pip install importlib``.
 
-Medium Way
-----------
+Getting Dependency Packages
+---------------------------
 
 Linux
 ++++++
@@ -95,7 +108,7 @@ set of python extensions on `his website <http://www.lfd.uci.edu/~gohlke/pythonl
 Download and install the the installers for setuptools, nose, numpy, scipy, numexpr, tables,
 and netcdf.
 
-Harder Way : Compiling from source (no root needed)
+Compiling Dependencies from source (no root needed)
 ---------------------------------------------------
 
 If you don't already have a python installation you want to use, you can compile a new one. ::
