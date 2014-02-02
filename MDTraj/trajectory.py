@@ -775,8 +775,8 @@ class Trajectory(object):
         """Extend a trajectory along the time axis with another trajectory.
 
         This method joins trajectories along the time axis.  This operation 
-        functions inplace to yield a new trajectory
-        of length equal to the sum of the lengths of `self` and `other`.
+        functions inplace with the final
+        length equal to the sum of the lengths of `self` and `other`.
 
         Parameters
         ----------
