@@ -251,19 +251,56 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
         kwargs["top"] = _parse_topology(kwargs["top"])
 
-    # grab the extension of the filename
     if isinstance(filename_or_filenames, str):  # If a single filename
-        extension = os.path.splitext(filename_or_filenames)[1]
-        filename = filename_or_filenames
-    else:  # If multiple filenames, take the first one.
-        extensions = [os.path.splitext(filename_i)[1] for filename_i in filename_or_filenames]
-        if len(set(extensions)) != 1:
-            raise(TypeError("All filenames must have same extension!"))
-        else:
-            return functools.reduce(lambda a, b: a.join(b, discard_overlapping_frames=discard_overlapping_frames), (load(f,**kwargs) for f in filename_or_filenames))
+        return _load_single(filename_or_filenames, **kwargs)
+    else:
+        return _load_multi(filename_or_filenames, discard_overlapping_frames=discard_overlapping_frames, **kwargs)
+
+
+def _load_single(filename, **kwargs):
+    """Load a trajectory from one file on disk.
+
+    This function dispatches to one of the specialized trajectory loaders based
+    on the extension on the filename. Because different trajectory formats save
+    different information on disk, the specific keyword argument options supported
+    depend on the specific loaded.
+
+    Parameters
+    ----------
+    filename : str
+        Filename
+
+    Other Parameters
+    ----------------
+    top : {str, Trajectory, Topology}
+        Most trajectory formats do not contain topology information. Pass in
+        either the path to a RCSB PDB file, a trajectory, or a topology to
+        supply this information. This option is not required for the .h5, .lh5,
+        and .pdb formats, which already contain topology information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
+    
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+    """
+
+    _assert_files_exist(filename)
+
+    if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
+        kwargs["top"] = _parse_topology(kwargs["top"])
+
+    if not isinstance(filename, str):
+        raise(TypeError("filename must be str!"))
+
+    extension = os.path.splitext(filename)[1]
 
     try:
-        #loader = _LoaderRegistry[extension][0]
         loader = _FormatRegistry.loaders[extension]
     except KeyError:
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
@@ -283,6 +320,68 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     return loader(filename, **kwargs)
 
+def _load_multi(filenames, discard_overlapping_frames=False, **kwargs):
+    """Load a trajectory from several files on disk.
+
+    This function dispatches to one of the specialized trajectory loaders based
+    on the extension on the filename. Because different trajectory formats save
+    different information on disk, the specific keyword argument options supported
+    depend on the specific loaded.
+
+    Parameters
+    ----------
+    filenames : {list of strings}
+        List of filenames containing trajectory files of a single format.
+    discard_overlapping_frames : bool, default=False
+        Look for overlapping frames between the last frame of one filename and
+        the first frame of a subsequent filename and discard them
+
+    Other Parameters
+    ----------------
+    top : {str, Trajectory, Topology}
+        Most trajectory formats do not contain topology information. Pass in
+        either the path to a RCSB PDB file, a trajectory, or a topology to
+        supply this information. This option is not required for the .h5, .lh5,
+        and .pdb formats, which already contain topology information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
+    
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+    """
+
+    _assert_files_exist(filenames)
+
+    extensions = [os.path.splitext(filename_i)[1] for filename_i in filenames]
+    if len(set(extensions)) != 1:
+        raise(TypeError("All filenames must have same extension!"))
+
+    trajectories = [_load_single(filename, **kwargs) for filename in filenames]
+
+    if discard_overlapping_frames:
+        for i in range(len(trajectories) - 1):
+            trj0 = trajectories[i]
+            trj1 = trajectories[i + 1]
+            x0 = trj0.xyz[-1]
+            x1 = trj1.xyz[0]
+            if np.all(np.abs(x1 - x0) < 2e-3):
+                trajectories[i] = trajectories[i][:-1]        
+    
+    xyz = np.concatenate([trj.xyz for trj in trajectories])
+    time = np.concatenate([trj.time for trj in trajectories])
+    
+    traj = trajectories[0]
+    traj.xyz = xyz
+    traj.time = time
+    
+    return traj
+    
 
 def iterload(filename, chunk=100, **kwargs):
     """An iterator over a trajectory from one or more files on disk, in fragments
