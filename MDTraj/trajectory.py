@@ -804,7 +804,7 @@ class Trajectory(object):
             if not all(self.n_atoms == o.n_atoms for o in other):
                 raise  ValueError('Number of atoms in self (%d) is not equal '
                           'to number of atoms in other' % (self.n_atoms))
-            if check_topology and not all(self.topology != o.topology for o in other):
+            if check_topology and not all(self.topology == o.topology for o in other):
                 raise ValueError('The topologies of the Trajectories are not the same')
             if not all(self._have_unitcell == o._have_unitcell for o in other):
                 raise ValueError('Mixing trajectories with and without unitcell')
