@@ -254,7 +254,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     if isinstance(filename_or_filenames, str):  # If a single filename
         return _load_single(filename_or_filenames, **kwargs)
     else:
-        return _load_multi(filename_or_filenames, **kwargs)
+        return _load_multi(filename_or_filenames, discard_overlapping_frames=discard_overlapping_frames, **kwargs)
 
 
 def _load_single(filename, **kwargs):
