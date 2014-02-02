@@ -260,7 +260,11 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         if len(set(extensions)) != 1:
             raise(TypeError("All filenames must have same extension!"))
         else:
-            return functools.reduce(lambda a, b: a.join(b, discard_overlapping_frames=discard_overlapping_frames), (load(f,**kwargs) for f in filename_or_filenames))
+            t = [load(f, **kwargs) for f in filename_or_filenames]
+            # we know the topology is equal because we sent the same topology kwarg
+            # in, so there's no reason to spend extra time checking
+            return t[0].join(t[1:], discard_overlapping_frames=discard_overlapping_frames,
+                             check_topology=False)
 
     try:
         #loader = _LoaderRegistry[extension][0]
@@ -776,8 +780,9 @@ class Trajectory(object):
 
         Parameters
         ----------
-        other : Trajectory
-            The other trajectory to join
+        other : Trajectory or list of Trajectory
+            One or more trajectories to join with this one. These trajectories
+            are *appended* to the end of this trajectory.
         check_topology : bool
             Ensure that the topology of `self` and `other` are identical before
             joining them. If false, the resulting trajectory will have the
@@ -790,45 +795,43 @@ class Trajectory(object):
         --------
         stack : join two trajectories along the atom axis
         """
-        if not isinstance(other, Trajectory):
-            raise TypeError('You can only add two Trajectory instances')
 
-        if self.n_atoms != other.n_atoms:
-            raise ValueError('Number of atoms in self (%d) is not equal '
-                'to number of atoms in other (%d)' % (self.n_atoms, other.n_atoms))
+        if isinstance(other, Trajectory):
+            other = [other]
+        if isinstance(other, list):
+            if not all(isinstance(o, Trajectory) for o in other):
+                raise TypeError('You can only join Trajectory instances')
+            if not all(self.n_atoms == o.n_atoms for o in other):
+                raise  ValueError('Number of atoms in self (%d) is not equal '
+                          'to number of atoms in other' % (self.n_atoms))
+            if check_topology and not all(self.topology != o.topology for o in other):
+                raise ValueError('The topologies of the Trajectories are not the same')
+            if not all(self._have_unitcell == o._have_unitcell for o in other):
+                raise ValueError('Mixing trajectories with and without unitcell')
+        else:
+            raise TypeError('`other` must be a list of Trajectory. You supplied %d' % type(other))
 
-        if check_topology:
-            if self.topology != other.topology:
-                raise ValueError('The topologies of the two Trajectories are not the same')
 
-        lengths2 = None
-        angles2 = None
-
+        # list containing all of the trajs to merge, including self
+        trajectories = [self] + other
         if discard_overlapping_frames:
-            x0 = self.xyz[-1]
-            x1 = other.xyz[0]
-            start_frame = 1 if np.all(np.abs(x1 - x0) < 2e-3) else 0
-        else:
-            start_frame = 0
+            for i in range(len(trajectories)-1):
+                # last frame of trajectory i
+                x0 = trajectories[i].xyz[-1]
+                # first frame of trajectory i+1
+                x1 = trajectories[i + 1].xyz[0]
 
-        xyz = other.xyz[start_frame:]
-        time = other.time[start_frame:]
-        if other._have_unitcell:
-            lengths2 = other.unitcell_lengths[start_frame:]
-            angles2 = other.unitcell_angles[start_frame:]
+                # check that all atoms are within 2e-3 nm
+                # (this is kind of arbitrary)
+                if np.all(np.abs(x1 - x0) < 2e-3):
+                    trajectores[i] = trajectories[i][:-1]
 
-        xyz = np.concatenate((self.xyz, xyz))
-        time = np.concatenate((self.time, time))
-
-        #if self.unitcell_lengths is None and self.unitcell_angles is None and not other_has_unitcell:
-        if not self._have_unitcell and not other._have_unitcell:
-            lengths, angles = None, None
-        elif self._have_unitcell and other._have_unitcell:
-            lengths = np.concatenate((self.unitcell_lengths, lengths2))
-            angles = np.concatenate((self.unitcell_angles, angles2))
-        else:
-            raise ValueError("One trajectory has box size, other doesn't. "
-                             "I don't know what to do")
+        xyz = np.concatenate([t.xyz for t in trajectories])
+        time = np.concatenate([t.time for t in trajectories])
+        angles = lengths = None
+        if self._have_unitcell:
+            angles = np.concatenate([t.unitcell_angles for t in trajectories])
+            lengths = np.concatenate([t.unitcell_lengths for t in trajectories])
 
         # use this syntax so that if you subclass Trajectory,
         # the subclass's join() will return an instance of the subclass
