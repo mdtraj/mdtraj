@@ -807,7 +807,7 @@ class Trajectory(object):
         if discard_overlapping_frames:
             x0 = self.xyz[-1]
             x1 = other.xyz[0]
-            start_frame = 1 if np.linalg.norm(x1 - x0) < 1e-8 else 0
+            start_frame = 1 if np.all(np.abs(x1 - x0) < 2e-3) else 0
         else:
             start_frame = 0
 
