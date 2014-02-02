@@ -824,7 +824,7 @@ class Trajectory(object):
                 # check that all atoms are within 2e-3 nm
                 # (this is kind of arbitrary)
                 if np.all(np.abs(x1 - x0) < 2e-3):
-                    trajectores[i] = trajectories[i][:-1]
+                    trajectories[i] = trajectories[i][:-1]
 
         xyz = np.concatenate([t.xyz for t in trajectories])
         time = np.concatenate([t.time for t in trajectories])
