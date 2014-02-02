@@ -257,7 +257,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         return _load_multi(filename_or_filenames, **kwargs)
 
 
-def _load_single(filename, discard_overlapping_frames=False, **kwargs):
+def _load_single(filename, **kwargs):
     """Load a trajectory from one or more files on disk.
 
     This function dispatches to one of the specialized trajectory loaders based
@@ -269,9 +269,6 @@ def _load_single(filename, discard_overlapping_frames=False, **kwargs):
     ----------
     filename : {str}
         Filename
-    discard_overlapping_frames : bool, default=False
-        Look for overlapping frames between the last frame of one filename and
-        the first frame of a subsequent filename and discard them
 
     Other Parameters
     ----------------
@@ -404,6 +401,15 @@ def _load_multi(filenames, discard_overlapping_frames=False, **kwargs):
         raise(TypeError("All filenames must have same extension!"))
 
     trajectories = [_load_single(filename, **kwargs) for filename in filenames]
+
+    if discard_overlapping_frames:
+        for i in range(len(trajectories) - 1):
+            trj0 = trajectories[i]
+            trj1 = trajectories[i + 1]
+            x0 = trj0.xyz[-1]
+            x1 = trj1.xyz[0]
+            if np.all(np.abs(x1 - x0) < 2e-3):
+                trajectories[i] = trajectories[i][:-1]        
     
     xyz = np.concatenate([trj.xyz for trj in trajectories])
     time = np.concatenate([trj.time for trj in trajectories])
