@@ -258,7 +258,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
 
 def _load_single(filename, **kwargs):
-    """Load a trajectory from one or more files on disk.
+    """Load a trajectory from one file on disk.
 
     This function dispatches to one of the specialized trajectory loaders based
     on the extension on the filename. Because different trajectory formats save
@@ -267,7 +267,7 @@ def _load_single(filename, **kwargs):
 
     Parameters
     ----------
-    filename : {str}
+    filename : str
         Filename
 
     Other Parameters
@@ -283,25 +283,6 @@ def _load_single(filename, **kwargs):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
-
-    See Also
-    --------
-    load_frame, iterload
-
-    Examples
-    --------
-    >>> import mdtraj as md                                        # doctest: +SKIP
-    >>> traj = md.load('output.xtc', top='topology.pdb')           # doctest: +SKIP
-    >>> print traj                                                 # doctest: +SKIP
-    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
-    
-    >>> traj2 = md.load('output.xtc', stride=2, top='topology.pdb')   # doctest: +SKIP
-    >>> print traj2                                                   # doctest: +SKIP
-    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>     # doctest: +SKIP
-    
-    >>> traj3 = md.load_hdf5('output.xtc', atom_indices=[0,1] top='topology.pdb')  # doctest: +SKIP
-    >>> print traj3                                                                # doctest: +SKIP
-    <mdtraj.Trajectory with 500 frames, 2 atoms at 0x18236e4a0>                    # doctest: +SKIP 
     
     Returns
     -------
@@ -340,7 +321,7 @@ def _load_single(filename, **kwargs):
     return loader(filename, **kwargs)
 
 def _load_multi(filenames, discard_overlapping_frames=False, **kwargs):
-    """Load a trajectory from one or more files on disk.
+    """Load a trajectory from several files on disk.
 
     This function dispatches to one of the specialized trajectory loaders based
     on the extension on the filename. Because different trajectory formats save
@@ -368,25 +349,6 @@ def _load_multi(filenames, discard_overlapping_frames=False, **kwargs):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
-
-    See Also
-    --------
-    load_frame, iterload
-
-    Examples
-    --------
-    >>> import mdtraj as md                                        # doctest: +SKIP
-    >>> traj = md.load('output.xtc', top='topology.pdb')           # doctest: +SKIP
-    >>> print traj                                                 # doctest: +SKIP
-    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
-    
-    >>> traj2 = md.load('output.xtc', stride=2, top='topology.pdb')   # doctest: +SKIP
-    >>> print traj2                                                   # doctest: +SKIP
-    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>     # doctest: +SKIP
-    
-    >>> traj3 = md.load_hdf5('output.xtc', atom_indices=[0,1] top='topology.pdb')  # doctest: +SKIP
-    >>> print traj3                                                                # doctest: +SKIP
-    <mdtraj.Trajectory with 500 frames, 2 atoms at 0x18236e4a0>                    # doctest: +SKIP 
     
     Returns
     -------
