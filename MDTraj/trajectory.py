@@ -160,10 +160,10 @@ def load_frame(filename, index, top=None, atom_indices=None):
         
     Examples
     --------
-    >>> import mdtraj as md                                     # doctest: +SKIP
-    >>> first_frame = md.load_frame('traj.h5', 0)               # doctest: +SKIP
-    >>> print first_frame                                       # doctest: +SKIP
-    <mdtraj.Trajectory with 1 frames, 22 atoms>                 # doctest: +SKIP
+    >>> import mdtraj as md
+    >>> first_frame = md.load_frame('traj.h5', 0)
+    >>> print first_frame
+    <mdtraj.Trajectory with 1 frames, 22 atoms>
 
     See Also
     --------
@@ -227,18 +227,18 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     Examples
     --------
-    >>> import mdtraj as md                                        # doctest: +SKIP
-    >>> traj = md.load('output.xtc', top='topology.pdb')           # doctest: +SKIP
-    >>> print traj                                                 # doctest: +SKIP
-    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    >>> import mdtraj as md
+    >>> traj = md.load('output.xtc', top='topology.pdb')
+    >>> print traj
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>
     
-    >>> traj2 = md.load('output.xtc', stride=2, top='topology.pdb')   # doctest: +SKIP
-    >>> print traj2                                                   # doctest: +SKIP
-    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>     # doctest: +SKIP
+    >>> traj2 = md.load('output.xtc', stride=2, top='topology.pdb')
+    >>> print traj2
+    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>
     
-    >>> traj3 = md.load_hdf5('output.xtc', atom_indices=[0,1] top='topology.pdb')  # doctest: +SKIP
-    >>> print traj3                                                                # doctest: +SKIP
-    <mdtraj.Trajectory with 500 frames, 2 atoms at 0x18236e4a0>                    # doctest: +SKIP 
+    >>> traj3 = md.load_hdf5('output.xtc', atom_indices=[0,1] top='topology.pdb')
+    >>> print traj3
+    <mdtraj.Trajectory with 500 frames, 2 atoms at 0x18236e4a0>
     
     Returns
     -------
@@ -321,14 +321,14 @@ def iterload(filename, chunk=100, **kwargs):
         
     Examples
     --------
-    >>> import mdtraj as md                                        # doctest: +SKIP
-    >>> for chunk in md.iterload('output.xtc', top='topology.pdb') # doctest: +SKIP
+    >>> import mdtraj as md
+    >>> for chunk in md.iterload('output.xtc', top='topology.pdb')
     ...    print chunk
-    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
-    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
-    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
-    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
-    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
     """
     stride = kwargs.get('stride', 1)
     atom_indices = cast_indices(kwargs.get('atom_indices', None))
@@ -435,21 +435,21 @@ class Trajectory(object):
     --------
     >>> # loading a trajectory
     >>> import mdtraj as md
-    >>> md.load('trajectory.xtc', top='native.pdb')           # doctest: +SKIP
+    >>> md.load('trajectory.xtc', top='native.pdb')
     <mdtraj.Trajectory with 1000 frames, 22 atoms at 0x1058a73d0>
 
     >>> # slicing a trajectory
-    >>> t = md.load('trajectory.h5')                          # doctest: +SKIP
-    >>> print(t)                                              # doctest: +SKIP
+    >>> t = md.load('trajectory.h5')
+    >>> print(t)
     <mdtraj.Trajectory with 100 frames, 22 atoms>
-    >>> print(t[::2])                                         # doctest: +SKIP
+    >>> print(t[::2])
     <mdtraj.Trajectory with 50 frames, 22 atoms>
 
     >>> # calculating the average distance between two atoms
     >>> import mdtraj as md
     >>> import numpy as np
-    >>> t = md.load('trajectory.h5')                                              # doctest: +SKIP
-    >>> np.mean(np.sqrt(np.sum((t.xyz[:, 0, :] - t.xyz[:, 21, :])**2, axis=1)))   # doctest: +SKIP
+    >>> t = md.load('trajectory.h5')
+    >>> np.mean(np.sqrt(np.sum((t.xyz[:, 0, :] - t.xyz[:, 21, :])**2, axis=1)))
 
     See Also
     --------
@@ -852,14 +852,14 @@ class Trajectory(object):
 
         Examples
         --------
-        >>> t1 = md.load('traj1.h5')                            # doctest: +SKIP
-        >>> t2 = md.load('traj2.h5')                            # doctest: +SKIP
+        >>> t1 = md.load('traj1.h5')
+        >>> t2 = md.load('traj2.h5')
         >>> # even when t2 contains no unitcell information
-        >>> t2.unitcell_vectors = None                          # doctest: +SKIP
-        >>> stacked = t1.stack(t2)                              # doctest: +SKIP
+        >>> t2.unitcell_vectors = None
+        >>> stacked = t1.stack(t2)
         >>> # the stacked trajectory inherits the unitcell information
         >>> # from the first trajectory
-        >>> np.all(stacked.unitcell_vectors == t1.unitcell_vectors) # doctest: +SKIP
+        >>> np.all(stacked.unitcell_vectors == t1.unitcell_vectors)
         True
 
         Parameters
@@ -961,8 +961,8 @@ class Trajectory(object):
 
         Examples
         --------
-        >>> t = md.load('trajectory.h5')                      # doctest: +SKIP
-        >>> context.setPositions(t.openmm_positions(0))       # doctest: +SKIP
+        >>> t = md.load('trajectory.h5')
+        >>> context.setPositions(t.openmm_positions(0))
 
         Parameters
         ----------
@@ -990,8 +990,8 @@ class Trajectory(object):
 
         Examples
         --------
-        >>> t = md.load('trajectory.h5')                          # doctest: +SKIP
-        >>> context.setPeriodicBoxVectors(t.openmm_positions(0))  # doctest: +SKIP
+        >>> t = md.load('trajectory.h5')
+        >>> context.setPeriodicBoxVectors(t.openmm_positions(0))
 
         Parameters
         ----------

@@ -66,7 +66,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True):
 
     Examples
     --------
-    >>> md.baker_hubbard(t)                                    # doctest: +SKIP
+    >>> md.baker_hubbard(t)
     array([[  0,  10,   8],
            [  0,  11,   7],
            [ 69,  73,  54],
@@ -75,9 +75,9 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True):
            [140, 148, 265],
            [166, 177, 122],
            [181, 188, 231]])
-    >>> label = lambda hbond : '%s -- %s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))  # doctest: +SKIP
-    >>> for hbond in hbonds:                                    # doctest: +SKIP
-    >>>     print label(hbond)                                  # doctest: +SKIP
+    >>> label = lambda hbond : '%s -- %s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
+    >>> for hbond in hbonds:
+    >>>     print label(hbond)
     GLU1-N -- GLU1-OE2 
     GLU1-N -- GLU1-OE1
     GLY6-N -- SER4-O

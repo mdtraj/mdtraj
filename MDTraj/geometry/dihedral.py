@@ -162,10 +162,10 @@ def _atom_sequence(trajectory, atom_names, residue_offsets=None, chain_id=0):
     atom names and the residue_id offsets (e.g. forward or backward in
     chain) for each atom.
 
-    >>> traj = mdtraj.trajectory.load("native.pdb") # doctest: +SKIP
-    >>> atom_names = ["C" ,"N" , "CA", "C"] # doctest: +SKIP
-    >>> residue_offsets = [-1, 0, 0, 0] # doctest: +SKIP
-    >>> found_residue_ids, indices = _atom_sequence(traj, atom_names, residue_offsets) # doctest: +SKIP
+    >>> traj = mdtraj.trajectory.load("native.pdb")
+    >>> atom_names = ["C" ,"N" , "CA", "C"]
+    >>> residue_offsets = [-1, 0, 0, 0]
+    >>> found_residue_ids, indices = _atom_sequence(traj, atom_names, residue_offsets)
     """
     if residue_offsets is None:
         residue_offsets = parse_offsets(atom_names)
