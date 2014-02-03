@@ -122,14 +122,14 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
 
     Examples
     --------
-    >>> import mdtraj as md                                        # doctest: +SKIP
-    >>> traj = md.load_hdf5('output.h5')                           # doctest: +SKIP
-    >>> print traj                                                 # doctest: +SKIP
-    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    >>> import mdtraj as md
+    >>> traj = md.load_hdf5('output.h5')
+    >>> print traj
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>
 
-    >>> traj2 = md.load_hdf5('output.h5', stride=2, top='topology.pdb')   # doctest: +SKIP
-    >>> print traj2                                                       # doctest: +SKIP
-    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>         # doctest: +SKIP
+    >>> traj2 = md.load_hdf5('output.h5', stride=2, top='topology.pdb')
+    >>> print traj2
+    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>
 
     Returns
     -------

@@ -141,7 +141,7 @@ def in_units_of(quantity, units_out, units_in=None):
 
     Examples
     --------
-    >>> in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond')  # doctest: +SKIP
+    >>> in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond')
     1000000.0
     """
     units = import_('simtk.unit')
