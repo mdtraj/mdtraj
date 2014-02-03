@@ -87,10 +87,10 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
         
     Examples
     --------
-    >>> import mdtraj as md                                        # doctest: +SKIP
-    >>> pdb = md.load_pdb('2EQQ.pdb')                              # doctest: +SKIP
-    >>> print pdb                                                  # doctest: +SKIP
-    <mdtraj.Trajectory with 20 frames, 423 atoms at 0x110740a90>   # doctest: +SKIP
+    >>> import mdtraj as md
+    >>> pdb = md.load_pdb('2EQQ.pdb')
+    >>> print pdb
+    <mdtraj.Trajectory with 20 frames, 423 atoms at 0x110740a90>
 
     See Also
     --------

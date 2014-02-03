@@ -25,6 +25,7 @@ from __future__ import print_function, division
 import numpy as np
 import os, tempfile
 from mdtraj import topology
+from mdtraj.pdb import pdbstructure
 from mdtraj.testing import get_fn, eq, raises
 from mdtraj import load
 from mdtraj.utils import ilen
@@ -121,3 +122,57 @@ def test_write_large_2():
     traj = load(get_fn('native.pdb'))
     traj.xyz.fill(-123456789)
     traj.save(temp)
+
+def test_pdbstructure_0():
+    pdb_lines = [
+        "ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N  ",
+        "ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C  ",
+        "ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C  ",
+        "ATOM    191  O   CYS A  42      41.181  -7.530  13.859  1.00 13.70           O  ",
+        "ATOM    192  CB  CYS A  42      38.949  -6.825  12.002  1.00  9.67           C  ",
+        "ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S  "
+    ]
+
+    res = pdbstructure.Residue("CYS", 42)
+    for l in pdb_lines:
+        res._add_atom(pdbstructure.Atom(l))
+    for i, atom in enumerate(res):
+        eq(pdb_lines[i], str(atom))
+
+
+def test_pdbstrcture_1():
+    pdb_lines = [
+         "ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N",
+         "ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C",
+         "ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C",
+         "ATOM    191  O   CYS A  42      41.181  -7.530  13.859  1.00 13.70           O",
+         "ATOM    192  CB  CYS A  42      38.949  -6.825  12.002  1.00  9.67           C",
+         "ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S"
+         ]
+    positions = np.array([
+        [ 40.714,  -5.292,  12.123],
+        [ 39.736,  -5.883,  12.911],
+        [ 40.339,  -6.654,  14.087],
+        [ 41.181,  -7.53,   13.859],
+        [ 38.949,  -6.825,  12.002],
+        [ 37.557,  -7.514,  12.922]
+    ])
+    
+    res = pdbstructure.Residue("CYS", 42)
+    for l in pdb_lines:
+        res._add_atom(pdbstructure.Atom(l))
+
+    for i, c in enumerate(res.iter_positions()):
+        eq(c, positions[i])
+
+def test_pdbstructure_2():
+    atom = pdbstructure.Atom("ATOM   2209  CB  TYR A 299       6.167  22.607  20.046  1.00  8.12           C")
+    expected = np.array([6.167, 22.607, 20.046])
+    for i, c in enumerate(atom.iter_coordinates()):
+        eq(expected[i], c)
+
+def test_pdbstructure_3():
+    loc = pdbstructure.Atom.Location(' ', [1,2,3], 1.0, 20.0, "XXX")
+    expected = [1, 2, 3]
+    for i, c in enumerate(loc):
+        eq(expected[i], c)
