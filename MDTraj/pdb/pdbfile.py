@@ -524,6 +524,8 @@ class PDBTrajectoryFile(object):
             element = elem.lithium
         elif upper.startswith('K'):
             element = elem.potassium
+        elif upper.startswith('ZN'):
+            element = elem.zinc
         elif len(residue) == 1 and upper.startswith('CA'):
             element = elem.calcium
 
