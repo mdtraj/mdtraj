@@ -58,8 +58,8 @@ def compute_angles(traj, angle_indices, opt=True):
     """
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     triplets = ensure_type(np.asarray(angle_indices), dtype=np.int32, ndim=2, name='angle_indices', shape=(None, 3), warn_on_cast=False)
-    if not np.all(np.logical_and(triplets < traj.xyz.shape[1], triplets >= 0)):
-        raise ValueError('angle_indices must be between 0 and %d' % traj.xyz.shape[1])
+    if not np.all(np.logical_and(triplets < traj.n_atoms, triplets >= 0)):
+        raise ValueError('angle_indices must be between 0 and %d' % traj.n_atoms)
 
     out = np.zeros((xyz.shape[0], triplets.shape[0]), dtype=np.float32)
     if opt:
