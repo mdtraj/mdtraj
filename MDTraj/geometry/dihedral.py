@@ -97,7 +97,7 @@ def compute_dihedrals(trajectory, indices, opt=True):
     """
     xyz = ensure_type(trajectory.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     quartets = ensure_type(np.asarray(indices), dtype=np.int32, ndim=2, name='indices', shape=(None, 4), warn_on_cast=False)
-    if not np.all(np.logical_and(quartets < trajectory.n_atoms[1], quartets >= 0)):
+    if not np.all(np.logical_and(quartets < trajectory.n_atoms, quartets >= 0)):
         raise ValueError('indices must be between 0 and %d' % trajectory.n_atoms)
 
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
