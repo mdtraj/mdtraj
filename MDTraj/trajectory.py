@@ -1267,7 +1267,7 @@ class Trajectory(object):
         """
         if self._topology is not None:
             self._topology = self._topology.subset(atom_indices)
-        self._xyz = self.xyz[:,atom_indices]
+        self._xyz = np.array(self.xyz[:,atom_indices], order='C')
         return self
 
 
