@@ -29,11 +29,14 @@
 #endif
 #include "ssetools.h"
 #include "msvccompat.h"
-
 #ifdef _MSC_VER
  #include "float.h"
  #define isnan(x) (_isnan(x))
 #endif
+
+// forward declare this function. gcc doesn't seem to mind
+// not having it, but clang gets upset
+__m128 cross(const __m128 a, const __m128 b);
 
 
 /****************************************************************************/
