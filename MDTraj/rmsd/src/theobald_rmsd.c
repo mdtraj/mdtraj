@@ -548,13 +548,13 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
      */
     int niters, k;
 #ifndef ALIGNED
-    static const unsigned int __masks[4][4] = {
-        {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
-        {0xFFFFFFFF, 0, 0, 0},
-        {0xFFFFFFFF, 0xFFFFFFFF, 0, 0},
-        {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0}
+    static const int masks[4][4] = {
+        {1, 1, 1, 1},
+        {1, 0, 0, 0},
+        {1, 1, 0, 0},
+        {1, 1, 1, 0}
     };
-    __m128 mask;
+    int const *mask;
 #endif
     /* Will have 3 garbage elements at the end */
     _ALIGNED(16) float M[12];
@@ -576,7 +576,7 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
     assert(npaddedatoms % 4 == 0);
 #else
     niters = (nrealatoms + 4-1) / 4;
-    mask = _mm_loadu_ps((float*) __masks[nrealatoms%4]);
+    mask = masks[nrealatoms%4];
 #endif
     
     xx = xy = xz = yx = yy = yz = zx = zy = zz = _mm_setzero_ps();
@@ -585,15 +585,23 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
         aos_deinterleaved_load(b,&bx,&by,&bz);
         aos_deinterleaved_load(a,&ax,&ay,&az);
 #else 
-        aos_deinterleaved_loadu(b,&bx,&by,&bz);
-        aos_deinterleaved_loadu(a,&ax,&ay,&az);
         if (k == niters - 1) {
-            ax = _mm_and_ps(ax, mask);
-            ay = _mm_and_ps(ay, mask);
-            az = _mm_and_ps(az, mask);
-            bx = _mm_and_ps(bx, mask);
-            by = _mm_and_ps(by, mask);
-            bz = _mm_and_ps(bz, mask);
+            // x  y  z
+            // 0  1  2
+            // 3  4  5
+            // 6  7  8
+            // 9  10 11
+            ax = _mm_set_ps(mask[0] ? a[0] : 0, mask[1] ? a[3] : 0, mask[2] ? a[6] : 0, mask[3] ? a[9] : 0);
+            ay = _mm_set_ps(mask[0] ? a[1] : 0, mask[1] ? a[4] : 0, mask[2] ? a[7] : 0, mask[3] ? a[10] : 0);
+            az = _mm_set_ps(mask[0] ? a[2] : 0, mask[1] ? a[5] : 0, mask[2] ? a[8] : 0, mask[3] ? a[11] : 0);
+
+            bx = _mm_set_ps(mask[0] ? b[0] : 0, mask[1] ? b[3] : 0, mask[2] ? b[6] : 0, mask[3] ? b[9] : 0);
+            by = _mm_set_ps(mask[0] ? b[1] : 0, mask[1] ? b[4] : 0, mask[2] ? b[7] : 0, mask[3] ? b[10] : 0);
+            bz = _mm_set_ps(mask[0] ? b[2] : 0, mask[1] ? b[5] : 0, mask[2] ? b[8] : 0, mask[3] ? b[11] : 0);
+        } 
+        else {
+            aos_deinterleaved_loadu(b,&bx,&by,&bz);
+            aos_deinterleaved_loadu(a,&ax,&ay,&az);
         }
 #endif
 
