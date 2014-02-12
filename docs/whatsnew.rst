@@ -4,6 +4,16 @@ What's New
 
 These are new features and improvements of note in each release.
 
+v0.6.1 (February 11, 2014)
+--------------------------
+- `Trajectory.join(discard_overlapping_frames=True)` is criterion for detecting overlappign frames is more realistic
+- We now support installation via conda, and are supplying conda binaries
+- `md.load()` is much faster when loading multiple trajectory files
+- Bugfixes for pandas 0.13.0 release, detection of zinc atoms in PDB files
+- Geometry functions are more resiliant to segfaults from bad user parameters
+- Fix intermittent RMSD segfaults from invalid memory access
+- Fix RMSD centering bug with memory alignment after restrict_atoms
+
 v0.6.0 (January 21, 2014)
 -----------------
 - `md.rmsd()` signature changed to be more understandable
