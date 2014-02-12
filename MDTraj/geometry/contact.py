@@ -28,7 +28,8 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-from mdtraj.geometry import _geometry
+import mdtraj as md
+import itertools
 
 def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
     """
@@ -74,8 +75,11 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz',
                       shape=(None, None, 3), warn_on_cast=False)
 
-    if contacts.lower() == 'all':
-        contacts = np.array([[i, j] for i in xrange(traj.n_residues) for j in xrange(i + 3, traj.n_residues, 1)])
+    if isinstance(contacts, str):
+        if contacts.lower() == 'all':
+            contacts = np.array([[i, j] for i in xrange(traj.n_residues) for j in xrange(i + 3, traj.n_residues, 1)])
+        else:
+            raise Exception('(%s) is not a valid contacts specifier' % contacts.lower())
 
     else:
         if len(contacts.shape) != 2 or contacts.shape[1] != 2:
@@ -93,23 +97,27 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
     if not scheme in ['ca', 'closest', 'closest-heavy']:
         raise Exception('scheme must be one of [ca, closest, closest-heavy]')
 
-    if self.scheme == 'ca':
-        res_ind_to_calpha_aind = [[atom.index for atom in residue.atoms if atom.name == 'ca'][0]
-                                  for residue in traj.top.residues]]
+    if scheme == 'ca':
+        res_ind_to_calpha_aind = [[atom.index for atom in residue.atoms if atom.name.lower() == 'ca'][0]
+                                  for residue in traj.top.residues]
         res_ind_to_calpha_aind = np.array(res_ind_to_calpha_aind)
         # ^^^ contains the atom index for each calpha atom in each residue
         atom_pairs = res_ind_to_calpha_aind[contacts]
 
-        distances = _geometry.compute_distances(traj, atom_pairs)
+        ainds = np.unique(atom_pairs).flatten()
+        names = [traj.top.atom(i).name for i in ainds]
+        print(names)
+        distances = md.compute_distances(traj, atom_pairs)
         
 
-    elif self.scheme in ['closest', 'closest-heavy']:
-        if self.scheme == 'closest'
+    elif scheme in ['closest', 'closest-heavy']:
+        if scheme == 'closest':
             residue_membership = [[atom.index for atom in residue.atoms]
                                   for residue in traj.topology.residues]
-        elif self.scheme == 'closest-heavy':
+
+        elif scheme == 'closest-heavy':
             # then remove the hydrogens from the above list
-            residue_membership = [[atom.index for atom in residue.atoms if not atom.element.name == 'H']
+            residue_membership = [[atom.index for atom in residue.atoms if not atom.element.symbol == 'H']
                                   for residue in traj.topology.residues]
 
         residue_lens = [len(ainds) for ainds in residue_membership]
@@ -117,10 +125,10 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
         atom_pairs = []
         n_atom_pairs_per_residue_pair = []
         for pair in contacts:
-            atom_pairs.extend(list(itertools.combination(residue_membership[pair[0]], residue_membership[pair[1]])))
+            atom_pairs.extend(list(itertools.product(residue_membership[pair[0]], residue_membership[pair[1]])))
             n_atom_pairs_per_residue_pair.append(residue_lens[pair[0]] * residue_lens[pair[1]])
 
-        atom_distances = _geometry.compute_distances(traj, atom_pairs)
+        atom_distances = md.compute_distances(traj, atom_pairs)
 
         # now squash the results based on residue membership
         distances = np.zeros((len(traj), len(contacts)))
@@ -128,8 +136,9 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
             index = np.sum(n_atom_pairs_per_residue_pair[:i])
             n = n_atom_pairs_per_residue_pair[i]
             distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
+        print (index + n, atom_distances.shape)
 
-        return distances
-    
     else:
         raise ValueError('This is not supposed to happen!')
+
+    return distances
