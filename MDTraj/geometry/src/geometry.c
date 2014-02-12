@@ -180,9 +180,8 @@ int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
      pairs : array, shape=(n_pairs, 2)
          The specific pairs of atoms whose distance you want to compute. A 2d
          array of pairs, in C order.
-     box_matrix : array, shape=(3,3)
-          The box matrix for a single frame. All of the frames are assumed to
-          use this box vector.
+     box_matrix : array, shape=(n_frames, 3, 3)
+          The box matrix for a each frame in the trjectory, in contigous C order.
      distance_out : array, shape=(n_frames, n_pairs)
          Array where the distances between pairs will be stored, in contiguous
          C order.
