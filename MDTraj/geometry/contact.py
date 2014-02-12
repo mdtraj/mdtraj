@@ -120,7 +120,7 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
 
         elif scheme == 'closest-heavy':
             # then remove the hydrogens from the above list
-            residue_membership = [[atom.index for atom in residue.atoms if not atom.element.symbol == element.hydrogen]
+            residue_membership = [[atom.index for atom in residue.atoms if atom.element != element.hydrogen]
                                   for residue in traj.topology.residues]
 
         residue_lens = [len(ainds) for ainds in residue_membership]

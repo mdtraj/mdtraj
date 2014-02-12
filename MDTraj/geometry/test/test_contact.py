@@ -40,6 +40,10 @@ def test_contact():
     ref_closest = np.loadtxt(get_fn('cc_closest.dat'))
     ref_closest_heavy = np.loadtxt(get_fn('cc_closest-heavy.dat'))
 
+    print ref_ca, ca
+    print ref_closest, closest
+    print ref_closest_heavy, closest_heavy
+
     eq(ref_ca, ca)
     eq(ref_closest, closest)
     eq(ref_closest_heavy, closest_heavy)
