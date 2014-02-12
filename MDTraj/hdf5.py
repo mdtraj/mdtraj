@@ -50,9 +50,10 @@ import numpy as np
 from mdtraj import version
 import mdtraj.pdb.element as elem
 from mdtraj.topology import Topology
-from mdtraj.utils import in_units_of, ensure_type, import_
+from mdtraj.utils import in_units_of, ensure_type, import_, convert, cast_indices
+from mdtraj.registry import _FormatRegistry
 
-__all__ = ['HDF5TrajectoryFile']
+__all__ = ['HDF5TrajectoryFile', 'load_hdf5']
 
 ##############################################################################
 # Utilities
@@ -96,13 +97,77 @@ Frames = namedtuple('Frames', ['coordinates', 'time', 'cell_lengths', 'cell_angl
                                'temperature', 'alchemicalLambda'])
 
 ##############################################################################
-# Classes
+# Code
 ##############################################################################
 
+@_FormatRegistry.register_loader('.h5')
+@_FormatRegistry.register_loader('.hdf5')
+def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
+    """Load an MDTraj hdf5 trajectory file from disk.
 
+    Parameters
+    ----------
+    filename : str
+        String filename of HDF Trajectory file.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
+
+    Examples
+    --------
+    >>> import mdtraj as md
+    >>> traj = md.load_hdf5('output.h5')
+    >>> print traj
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>
+
+    >>> traj2 = md.load_hdf5('output.h5', stride=2, top='topology.pdb')
+    >>> print traj2
+    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>
+
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.HDF5TrajectoryFile :  Low level interface to HDF5 files
+    """
+    from mdtraj.trajectory import _parse_topology, Trajectory
+    atom_indices = cast_indices(atom_indices)
+
+    with HDF5TrajectoryFile(filename) as f:
+        if frame is not None:
+            f.seek(frame)
+            data = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            data = f.read(stride=stride, atom_indices=atom_indices)
+
+        topology = f.topology
+        convert(data.coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        convert(data.cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+        if atom_indices is not None:
+            topology = f.topology.subset(atom_indices)
+
+    trajectory = Trajectory(xyz=data.coordinates, topology=topology,
+                            time=data.time, unitcell_lengths=data.cell_lengths,
+                            unitcell_angles=data.cell_angles)
+    return trajectory
+
+
+@_FormatRegistry.register_fileobject('.h5')
+@_FormatRegistry.register_fileobject('.hdf5')
 class HDF5TrajectoryFile(object):
     """Interface for reading and writing to a MDTraj HDF5 molecular
-    dynanmics trajectory file, whose format is described
+    dynamics trajectory file, whose format is described
     `here <https://github.com/rmcgibbo/mdtraj/issues/36>`_.
 
     This is a file-like object, that both reading or writing depending
@@ -262,7 +327,7 @@ class HDF5TrajectoryFile(object):
                     try:
                         element = elem.get_by_symbol(atom_dict['element'])
                     except KeyError:
-                        raise ValueError('The symbol %s isn\'t a valid element' % atom_dict['element'])
+                        element = None
                     topology.add_atom(atom_dict['name'], element, residue)
 
         atoms = list(topology.atoms)
@@ -277,7 +342,7 @@ class HDF5TrajectoryFile(object):
         """Set the topology in the file
 
         Parameters
-        -------
+        ----------
         topology_object : mdtraj.Topology
             A topology object
         """
@@ -315,10 +380,16 @@ class HDF5TrajectoryFile(object):
                     if not hasattr(atom_iter, '__iter__'):
                         atom_iter = atom_iter()
                     for atom in atom_iter:
+
+                        try:
+                            element_symbol_string = str(atom.element.symbol)
+                        except AttributeError:
+                            element_symbol_string = ""
+
                         residue_dict['atoms'].append({
                             'index': int(atom.index),
                             'name': str(atom.name),
-                            'element': str(atom.element.symbol)
+                            'element': element_symbol_string
                         })
                     chain_dict['residues'].append(residue_dict)
                 topology_dict['chains'].append(chain_dict)
@@ -786,6 +857,39 @@ class HDF5TrajectoryFile(object):
                 atom=self.tables.Float32Atom(), shape=(0,))
             self._get_node('/', name='lambda').attrs['units'] = 'dimensionless'
 
+    @ensure_mode('r')
+    def seek(self, offset, whence=0):
+        """Move to a new file position
+
+        Parameters
+        ----------
+        offset : int
+            A number of frames.
+        whence : {0, 1, 2}
+            0: offset from start of file, offset should be >=0.
+            1: move relative to the current position, positive or negative
+            2: move relative to the end of file, offset should be <= 0.
+            Seeking beyond the end of a file is not supported
+        """
+        if whence == 0 and offset >= 0:
+            self._frame_index = offset
+        elif whence == 1:
+            self._frame_index = self._frame_index + offset
+        elif whence == 2 and offset <= 0:
+            self._frame_index = len(self._handle.root.coordinates) + offset
+        else:
+            raise IOError('Invalid argument')
+
+    def tell(self):
+        """Current file position
+
+        Returns
+        -------
+        offset : int
+            The current frame in the file.
+        """
+        return int(self._frame_index)
+
     def _validate(self):
         raise NotImplemented
 
@@ -843,3 +947,9 @@ class HDF5TrajectoryFile(object):
     def __exit__(self, *exc_info):
         "Support the context manager protocol"
         self.close()
+
+    def __len__(self):
+        "Number of frames in the file"
+        if not self._open:
+            raise ValueError('I/O operation on closed file')
+        return len(self._handle.root.coordinates)

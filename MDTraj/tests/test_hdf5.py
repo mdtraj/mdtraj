@@ -23,6 +23,7 @@
 import numpy as np
 import tempfile
 import os
+import mdtraj as md
 from mdtraj import hdf5
 from mdtraj import HDF5TrajectoryFile
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises, skipif, assert_raises
@@ -118,8 +119,7 @@ def test_write_units_mismatch():
 
 
 def test_topology():
-    from mdtraj import trajectory, topology
-    top = trajectory.load_pdb(get_fn('native.pdb')).topology
+    top = md.load_pdb(get_fn('native.pdb')).topology
 
     with HDF5TrajectoryFile(temp, 'w') as f:
         f.topology = top
@@ -229,6 +229,15 @@ def test_do_overwrite():
 
     with HDF5TrajectoryFile(temp, 'w', force_overwrite=True) as f:
         f.write(np.random.randn(10,5,3))
+
+        
+def test_vsite_elements():
+    #  Test case for issue #265
+    pdb_filename = get_fn('GG-tip4pew.pdb')
+    trj = md.load(pdb_filename)
+    trj.save_hdf5(temp)
+    
+    trj2 = md.load(temp, top=pdb_filename)
 
 @raises(IOError)
 def test_do_overwrite():

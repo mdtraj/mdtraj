@@ -29,9 +29,9 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils.arrays import ensure_type, TypeCastPerformanceWarning
-from mdtraj.utils.unit import in_units_of
-from mdtraj.utils import import_
-from mdtraj.testing import raises
+from mdtraj.utils.unit import in_units_of, _str_to_unit
+from mdtraj.utils import import_, lengths_and_angles_to_box_vectors
+from mdtraj.testing import raises, eq
 import warnings
 
 ##############################################################################
@@ -45,6 +45,11 @@ b = np.ones((10,10), dtype=np.float64, order='F')
 # tests
 ##############################################################################
 
+def test_unitcell_0():
+    result = lengths_and_angles_to_box_vectors(1, 1, 1, 90.0, 90.0, 90.0)
+    expected = (np.array([1, 0, 0]), np.array([ 0.,  1.,  0.]), np.array([ 0.,  0.,  1.]))
+    for (a, b) in zip(result, expected):
+        np.testing.assert_array_almost_equal(a, b)
 
 def test_ensure_type_1():
     ensure_type(a, np.float32, 1, '', length=10)
@@ -133,6 +138,12 @@ def test_unit_2_bytes():
     a = in_units_of(1, b'meter**2/second', b'nanometers**2/picosecond')
     b = 1e-6
     assert abs(a-b) < 1e-10
+    
+def test_unit_3():
+    eq(str(type(_str_to_unit('nanometers**2/meters*gigajoules'))),
+           "<class 'simtk.unit.unit.Unit'>")
+    eq(str(_str_to_unit('nanometers**2/meters*gigajoules')),
+       'nanometer**2*gigajoule/meter')
 
 @raises(ImportError)
 def test_delay_import_fail_1():

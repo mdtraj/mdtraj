@@ -570,28 +570,7 @@ class Residue(object):
         return self.atoms_by_name[atom_name]
 
     def __iter__(self):
-        """
-        >>> pdb_lines = [ \
-                "ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N",\
-                "ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C",\
-                "ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C",\
-                "ATOM    191  O   CYS A  42      41.181  -7.530  13.859  1.00 13.70           O",\
-                "ATOM    192  CB  CYS A  42      38.949  -6.825  12.002  1.00  9.67           C",\
-                "ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S"]
-        >>> res = Residue("CYS", 42)
-        >>> for l in pdb_lines:
-        ...     res._add_atom(Atom(l))
-        ...
-        >>> for atom in res:
-        ...     print(atom)
-        ... # doctest: +NORMALIZE_WHITESPACE
-        ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N
-        ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C
-        ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C
-        ATOM    191  O   CYS A  42      41.181  -7.530  13.859  1.00 13.70           O
-        ATOM    192  CB  CYS A  42      38.949  -6.825  12.002  1.00  9.67           C
-        ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S
-        """
+        "Iterator over atoms"
         for atom in self.iter_atoms():
             yield atom
 
@@ -617,26 +596,7 @@ class Residue(object):
                 yield atom
 
     def iter_positions(self, include_alt_loc=False):
-        """
-        Returns one position per atom, even if an individual atom has multiple positions.
-
-        >>> pdb_lines = [ \
-                         "ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N",\
-                         "ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C",\
-                         "ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C",\
-                         "ATOM    191  O   CYS A  42      41.181  -7.530  13.859  1.00 13.70           O",\
-                         "ATOM    192  CB  CYS A  42      38.949  -6.825  12.002  1.00  9.67           C",\
-                         "ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S"]
-        >>> res = Residue("CYS", 42)
-        >>> for l in pdb_lines: res._add_atom(Atom(l))
-        >>> for c in res.iter_positions():
-        ...     print(c)
-        [ 40.714  -5.292  12.123]
-        [ 39.736  -5.883  12.911]
-        [ 40.339  -6.654  14.087]
-        [ 41.181  -7.53   13.859]
-        [ 38.949  -6.825  12.002]
-        [ 37.557  -7.514  12.922]
+        """Returns one position per atom, even if an individual atom has multiple positions.
         """
         for atom in self:
             if include_alt_loc:
@@ -766,12 +726,6 @@ class Atom(object):
     def iter_locations(self):
         """
         Iterate over Atom.Location objects for this atom, including primary location.
-
-        >>> atom = Atom("ATOM   2209  CB  TYR A 299       6.167  22.607  20.046  1.00  8.12           C")
-        >>> for c in atom.iter_locations():
-        ...     print(c)
-        ...
-        [  6.167  22.607  20.046]
         """
         for alt_loc in self.locations:
             yield self.locations[alt_loc]
@@ -787,14 +741,6 @@ class Atom(object):
     def iter_coordinates(self):
         """
         Iterate over x, y, z values of primary atom position.
-
-        >>> atom = Atom("ATOM   2209  CB  TYR A 299       6.167  22.607  20.046  1.00  8.12           C")
-        >>> for c in atom.iter_coordinates():
-        ...     print(c)
-        ...
-        6.167
-        22.607
-        20.046
         """
         for coord in self.position:
             yield coord
@@ -912,17 +858,6 @@ class Atom(object):
             self.residue_name = residue_name
 
         def __iter__(self):
-            """
-            Examples
-
-            >>> l = Atom.Location(' ', [1,2,3], 1.0, 20.0, "XXX")
-            >>> for c in l:
-            ...     print(c)
-            ...
-            1
-            2
-            3
-            """
             for coord in self.position:
                 yield coord
 

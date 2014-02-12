@@ -29,8 +29,12 @@ from __future__ import print_function, division
 import os
 import itertools
 import numpy as np
-from mdtraj.utils import ensure_type
+from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.registry import _FormatRegistry
 from mdtraj.utils.six.moves import xrange
+
+__all__ = ['MDCRDTrajectoryFile', 'load_mdcrd']
+
 
 ##############################################################################
 # Classes
@@ -39,7 +43,85 @@ from mdtraj.utils.six.moves import xrange
 class _EOF(IOError):
     pass
 
+@_FormatRegistry.register_loader('.mdcrd')
+@_FormatRegistry.register_loader('.crd')
+def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
+    """Load an AMBER mdcrd file.
 
+    Parameters
+    ----------
+    filename : str
+        String filename of AMBER mdcrd file.
+    top : {str, Trajectory, Topology}
+        The BINPOS format does not contain topology information. Pass in either
+        the path to a pdb file, a trajectory, or a topology to supply this
+        information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
+
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.MDCRDTrajectoryFile :  Low level interface to MDCRD files
+    """
+    from mdtraj.trajectory import _parse_topology, Trajectory
+
+    # we make it not required in the signature, but required here. although this
+    # is a little wierd, its good because this function is usually called by a
+    # dispatch from load(), where top comes from **kwargs. So if its not supplied
+    # we want to give the user an informative error message
+    if top is None:
+        raise ValueError('"top" argument is required for load_mdcrd')
+
+    if not isinstance(filename, str):
+        raise TypeError('filename must be of type string for load_mdcrd. '
+            'you supplied %s' % type(filename))
+
+    topology = _parse_topology(top)
+    atom_indices = cast_indices(atom_indices)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
+
+    with MDCRDTrajectoryFile(filename, n_atoms=topology._numAtoms) as f:
+        if frame is not None:
+            f.seek(frame)
+            xyz, cell_lengths = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            xyz, cell_lengths = f.read(stride=stride, atom_indices=atom_indices)
+
+        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        if cell_lengths is not None:
+            convert(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+            # Assume that its a rectilinear box
+            cell_angles = 90.0 * np.ones_like(cell_lengths)
+
+    time = np.arange(len(xyz))
+    if frame is not None:
+        time += frame
+    elif stride is not None:
+        time *= stride
+
+    t = Trajectory(xyz=xyz, topology=topology, time=time)
+    if cell_lengths is not None:
+        t.unitcell_lengths = cell_lengths
+        t.unitcell_angles = cell_angles
+    return t
+
+
+@_FormatRegistry.register_fileobject('.mdcrd')
+@_FormatRegistry.register_fileobject('.crd')
 class MDCRDTrajectoryFile(object):
     """Interface for reading and writing to an AMBER mdcrd files.
     This is a file-like object, that both reading or writing depending
@@ -81,6 +163,7 @@ class MDCRDTrajectoryFile(object):
         self._n_atoms = n_atoms
         self._mode = mode
         self._w_has_box = None
+        self._frame_index = 0
         self._has_box = has_box
         # track which line we're on. this is not essential, but its useful
         # when reporting errors to the user to say what line it occured on.
@@ -236,6 +319,7 @@ class MDCRDTrajectoryFile(object):
                     self._fh.seek(here)
                 break
 
+        self._frame_index += 1
         return coords.reshape(self._n_atoms, 3), box
 
     def write(self, xyz, cell_lengths=None):
@@ -298,3 +382,63 @@ class MDCRDTrajectoryFile(object):
 
             if cell_lengths is not None:
                 self._fh.write("%8.3f %8.3f %8.3f\n" % tuple(cell_lengths[i]))
+
+    def seek(self, offset, whence=0):
+        """Move to a new file position
+
+        Parameters
+        ----------
+        offset : int
+            A number of frames.
+        whence : {0, 1, 2}
+            0: offset from start of file, offset should be >=0.
+            1: move relative to the current position, positive or negative
+            2: move relative to the end of file, offset should be <= 0.
+            Seeking beyond the end of a file is not supported
+        """
+        if self._mode == 'r':
+            advance, absolute = None, None
+            if whence == 0 and offset >= 0:
+                if offset >= self._frame_index:
+                    advance = offset - self._frame_index
+                else:
+                    absolute = offset
+            elif whence == 1 and offset >= 0:
+                advance = offset
+            elif whence == 1 and offset < 0:
+                absolute = offset + self._frame_index
+            elif whence == 2 and offset <= 0:
+                raise NotImplementedError('offsets from the end are not supported yet')
+            else:
+                raise IOError('Invalid argument')
+
+            if advance is not None:
+                for i in range(advance):
+                    self._read()  # advance and throw away these frames
+            elif absolute is not None:
+                self._fh.close()
+                self._fh = open(self._filename, 'r')
+                self._fh.readline()  # read comment
+                self._frame_index = 0
+                self._line_counter = 1
+                for i in range(absolute):
+                    self._read()
+            else:
+                raise RuntimeError()
+
+        else:
+            raise NotImplementedError('offsets in write mode are not supported yet')
+
+    def tell(self):
+        """Current file position
+
+        Returns
+        -------
+        offset : int
+            The current frame in the file.
+        """
+        return int(self._frame_index)
+
+    def __len__(self):
+        "Number of frames in the file"
+        raise NotImplementedError()

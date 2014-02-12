@@ -27,17 +27,21 @@ DCD, AMBER BINPOS, PDB, and HDF5.
 """
 
 from __future__ import print_function, division
-from mdtraj.xtc import XTCTrajectoryFile
-from mdtraj.trr import TRRTrajectoryFile
-from mdtraj.hdf5 import HDF5TrajectoryFile
-from mdtraj.netcdf import NetCDFTrajectoryFile
-from mdtraj.mdcrd import MDCRDTrajectoryFile
-from mdtraj.dcd import DCDTrajectoryFile
-from mdtraj.binpos import BINPOSTrajectoryFile
-from mdtraj.pdb import PDBTrajectoryFile
-from mdtraj.arc import ArcTrajectoryFile
+from mdtraj.registry import _FormatRegistry
+from mdtraj.xtc import XTCTrajectoryFile, load_xtc
+from mdtraj.trr import TRRTrajectoryFile, load_trr
+from mdtraj.hdf5 import HDF5TrajectoryFile, load_hdf5
+from mdtraj.lh5 import LH5TrajectoryFile, load_lh5
+from mdtraj.netcdf import NetCDFTrajectoryFile, load_netcdf
+from mdtraj.mdcrd import MDCRDTrajectoryFile, load_mdcrd
+from mdtraj.dcd import DCDTrajectoryFile, load_dcd
+from mdtraj.binpos import BINPOSTrajectoryFile, load_binpos
+from mdtraj.pdb import PDBTrajectoryFile, load_pdb
+from mdtraj.arc import ArcTrajectoryFile, load_arc
+from mdtraj.openmmxml import load_xml
 
-from mdtraj.rmsd import rmsd_cache
+
+from mdtraj._rmsd import rmsd
 from mdtraj.topology import Topology
 from mdtraj.geometry import *
 from mdtraj.trajectory import *

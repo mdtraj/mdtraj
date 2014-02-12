@@ -33,11 +33,29 @@ from mdtraj.utils import import_
 # Debugging
 # from meta.asttools import print_ast
 
-__all__ = ['in_units_of']
+__all__ = ['in_units_of', 'convert']
 
 ##############################################################################
 # classes and functions
 ##############################################################################
+
+
+def convert(quantity, in_unit, out_unit, inplace=False):
+    """Convert between distance units. Note, inplace==True won't
+    work unless the quantity is a numpy array. This is a simple
+    version that doesn't require any external imports.
+    """
+    if quantity is None:
+        return None
+
+    factor = {('angstroms', 'angstroms'): 1,
+              ('nanometers', 'nanometers'): 1,
+              ('angstroms', 'nanometers'): 0.1,
+              ('nanometers', 'angstroms'): 10}[(in_unit, out_unit)]
+    if not inplace:
+        return quantity * factor
+    quantity *= factor
+
 
 
 class _UnitContext(ast.NodeTransformer):
@@ -123,7 +141,7 @@ def in_units_of(quantity, units_out, units_in=None):
 
     Examples
     --------
-    >>> in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond')  # doctest: +SKIP
+    >>> in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond')
     1000000.0
     """
     units = import_('simtk.unit')

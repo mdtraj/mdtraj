@@ -11,3 +11,4 @@ cdef extern from "include/xdrfile_xtc.h":
     int read_xtc_natoms(char* fn, int* natoms)
     int read_xtc(XDRFILE *xd, int natoms, int *step, float *time, matrix box, rvec *x, float *prec)
     int write_xtc(XDRFILE *xd, int natoms, int step, float time, matrix box, rvec* x, float prec)
+    int read_xtc_nframes(char* fn, unsigned long *nframes)

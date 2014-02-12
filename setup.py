@@ -16,9 +16,17 @@ import shutil
 import tempfile
 import subprocess
 from distutils.ccompiler import new_compiler
-from setuptools import setup, Extension
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils.core import setup, Extension
 
-import numpy
+try:
+    import numpy
+except ImportError:
+    print('building and running mdtraj requires numpy', file=sys.stderr)
+    sys.exit(1)
+
 try:
     from Cython.Distutils import build_ext
     setup_kwargs = {'cmdclass': {'build_ext': build_ext}}
@@ -27,11 +35,18 @@ except ImportError:
     setup_kwargs = {}
     cython_extension = 'c'
 
+if 'setuptools' in sys.modules:
+    setup_kwargs['zip_safe'] = False
+    setup_kwargs['entry_points'] = {'console_scripts':
+              ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
+               'mdinspect = mdtraj.scripts.mdinspect:entry_point']}
+else:
+    setup_kwargs['scripts'] = ['scripts/mdconvert.py', 'scripts/mdinspect.py']
 
 
 ##########################
-VERSION = "0.4.3"
-ISRELEASED = True
+VERSION = "0.6.1"
+ISRELEASED = False
 __version__ = VERSION
 ##########################
 
@@ -40,7 +55,7 @@ CLASSIFIERS = """\
 Development Status :: 3 - Alpha
 Intended Audience :: Science/Research
 Intended Audience :: Developers
-License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)
 Programming Language :: C
 Programming Language :: Python
 Programming Language :: Python :: 3
@@ -232,6 +247,7 @@ def rmsd_extension():
                      sources=[
                          'MDTraj/rmsd/src/theobald_rmsd.c',
                          'MDTraj/rmsd/src/rotation.c',
+                         'MDTraj/rmsd/src/center.c',
                          'MDTraj/rmsd/_rmsd.' + cython_extension],
                      include_dirs=[
                          'MDTraj/rmsd/include', numpy.get_include()],
@@ -272,19 +288,13 @@ setup(name='mdtraj',
       description=DOCLINES[0],
       long_description="\n".join(DOCLINES[2:]),
       version=__version__,
-      license='GPLv3+',
+      license='LGPLv2.1+',
       url='http://rmcgibbo.github.io/mdtraj',
       platforms=['Linux', 'Mac OS-X', 'Unix', 'Windows'],
       classifiers=CLASSIFIERS.splitlines(),
       packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.testing', 'mdtraj.utils',
                 'mdtraj.reporters', 'mdtraj.geometry', 'mdtraj.tests', 'mdtraj.scripts'],
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
-      install_requires=['numpy', 'nose', 'nose-exclude'],
-      zip_safe=False,
-      #scripts=['scripts/mdconvert.py', 'scripts/mdinspect.py'],
-      entry_points={'console_scripts':
-                ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
-                 'mdinspect = mdtraj.scripts.mdinspect:entry_point']},
       ext_modules=extensions,
       package_data={'mdtraj.pdb': ['data/*'],
                     'mdtraj.testing': ['reference/*']},

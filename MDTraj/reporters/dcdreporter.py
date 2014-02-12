@@ -42,9 +42,9 @@ class DCDReporter(_BaseReporter):
 
     Parameters
     ----------
-    file : str, or HDF5Trajectory
-        Either an open HDF5Trajecory object to write to, or a string
-        specifying the filename of a new HDF5 file to save the trajectory to.
+    file : str, or DCDTrajectoryFile
+        Either an open DCDTrajectoryFile object to write to, or a string
+        specifying the filename of a new DCD file to save the trajectory to.
     reportInterval : int
         The interval (in time steps) at which to write frames.
     atomSubset : array_like, default=None
@@ -53,12 +53,12 @@ class DCDReporter(_BaseReporter):
 
     Examples
     --------
-    >>> simulation = Simulation(topology, system, integrator) # doctest: +SKIP
-    >>> dcd_reporter = DCDReporter('traj.dcd', 100)           # doctest: +SKIP
-    >>> simulation.reporters.append(dcd_reporter)             # doctest: +SKIP
-    >>> simulation.step(10000)                                # doctest: +SKIP
+    >>> simulation = Simulation(topology, system, integrator)
+    >>> dcd_reporter = DCDReporter('traj.dcd', 100)
+    >>> simulation.reporters.append(dcd_reporter)
+    >>> simulation.step(10000)
 
-    >>> traj = mdtraj.trajectory.load('traj.dcd')              # doctest: +SKIP
+    >>> traj = mdtraj.trajectory.load('traj.dcd')
     """
     @property
     def backend(self):

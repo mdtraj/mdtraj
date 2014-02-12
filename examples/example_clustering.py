@@ -1,4 +1,4 @@
-"""Clustering with the mdtraj RMSD engine and scipy.cluster.hierarchy.
+"""Clustering with the :func:`md.rmsd` and :class:`scipy.cluster.hierarchy`.
 """
 
 # In this example, we cluster our alanine dipeptide trajectory using
@@ -15,14 +15,12 @@ import scipy.cluster.hierarchy
 # some values for the rmsd computation.
 
 traj = md.load('ala2.h5')
-print traj
-engine = md.rmsd_cache(traj)
 
 # Lets compute all pairwise rmsds between conformations.
 
 distances = np.empty((traj.n_frames, traj.n_frames))
 for i in range(traj.n_frames):
-    distances[i] = engine.rmsds_to(engine, i)
+    distances[i] = md.rmsd(traj, traj, i)
 print 'Max pairwise rmsd: %f nm' % np.max(distances)
 
 # scipy.cluster implements the ward linkage

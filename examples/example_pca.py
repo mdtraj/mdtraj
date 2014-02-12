@@ -1,4 +1,4 @@
-"""Using mdtraj and scikits-learn to run principle components analysis.
+"""Principle components analysis (PCA) with :class:`scikit-learn`
 """
 
 # scikits-learn is a premier machine learning library for python, with
@@ -19,8 +19,7 @@ print traj
 # input to PCA, it's important to start with some kind of alignment.
 
 pca1 = PCA(n_components=2)
-for i in range(traj.n_frames):
-    traj.xyz[i] = md.geometry.alignment.transform(traj.xyz[i], traj.xyz[-1])
+traj.superpose(traj, 0)
 
 reduced_cartesian = pca1.fit_transform(traj.xyz.reshape(traj.n_frames, traj.n_atoms * 3))
 print reduced_cartesian.shape

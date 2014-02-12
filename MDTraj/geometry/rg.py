@@ -30,13 +30,15 @@ trajectory
 from __future__ import print_function, division
 import numpy as np
 
+__all__ = ['compute_rg']
+
 ##############################################################################
 # Functions
 ##############################################################################
 
 
 def _compute_rg_xyz(xyz, masses=None):
-    """Compute the Rg for every frame.
+    """Compute the radius of gyration for every frame.
 
     Parameters
     ----------
@@ -73,7 +75,7 @@ def _compute_rg_xyz(xyz, masses=None):
 
 
 def compute_rg(traj, masses=None):
-    """Compute the Rg for every frame.
+    """Compute the radius of gyration for every frame.
 
     Parameters
     ----------

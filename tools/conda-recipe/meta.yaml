@@ -1,0 +1,62 @@
+package:
+  name: mdtraj
+  version: !!str 0.6.0
+
+#source:
+  #fn: 0.6.0-a.tar.gz
+  #url: https://github.com/rmcgibbo/mdtraj/archive/0.6.0-a.tar.gz
+  #git_url: git@github.com:ilanschnell/bsdiff4.git
+
+#  patches:
+   # List any patch files here
+   # - fix.patch
+
+# build:
+  # entry_points:
+    # Put any entry points (scripts to be generated automatically) here. The
+    # syntax is module:function.  For example
+    #
+    # - mdtraj = mdtraj:main
+    #
+    # Would create an entry point called mdtraj that calls mdtraj.main()
+
+
+  # If this is a new build for the same version, increment the build
+  # number. If you do not include this key, it defaults to 0.
+  # number: 1
+
+requirements:
+  build:
+    - python
+    - cython
+    - numpy
+
+  run:
+    - python
+    - pytables
+    - netcdf4
+    - pandas
+
+test:
+  # Python imports
+  imports:
+    - mdtraj
+
+  commands:
+    # You can put test commands to be run here.  Use this to test that the
+    # entry points work.
+    - python -c 'import mdtraj; mdtraj.test()'
+
+  # You can also put a file called run_test.py in the recipe that will be run
+  # at test time.
+
+  requires:
+    - setuptools
+    - nose
+    - pandas
+    - simtk.unit
+    - scripttest
+
+about:
+  home: http://rmcgibbo.github.io/mdtraj
+  license: GNU Lesser General Public License v2 or later (LGPLv2+)

@@ -29,8 +29,12 @@ from __future__ import print_function, division
 import os
 import itertools
 import numpy as np
-from mdtraj.utils import ensure_type
+from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.registry import _FormatRegistry
 from mdtraj.utils.six.moves import xrange
+
+__all__ = ['ArcTrajectoryFile', 'load_arc']
+
 
 ##############################################################################
 # Classes
@@ -40,6 +44,66 @@ class _EOF(IOError):
     pass
 
 
+@_FormatRegistry.register_loader('.arc')
+def load_arc(filename, top=None, stride=None, atom_indices=None):
+    """Load a TINKER .arc file.
+
+    Parameters
+    ----------
+    filename : str
+        String filename of TINKER .arc file.
+    top : {str, Trajectory, Topology}
+        The .arc format does not contain topology information. Pass in either
+        the path to a pdb file, a trajectory, or a topology to supply this
+        information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file.
+
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.ArcTrajectoryFile :  Low level interface to TINKER .arc files
+    """
+    from mdtraj.trajectory import _parse_topology, Trajectory
+
+    # we make it not required in the signature, but required here. although this
+    # is a little weird, its good because this function is usually called by a
+    # dispatch from load(), where top comes from **kwargs. So if its not supplied
+    # we want to give the user an informative error message
+    if top is None:
+        raise ValueError('"top" argument is required for load_arc')
+
+    if not isinstance(filename, str):
+        raise TypeError('filename must be of type string for load_arc. '
+            'you supplied %s' % type(filename))
+
+    topology = _parse_topology(top)
+    atom_indices = _cast_indices(atom_indices)
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
+
+    with ArcTrajectoryFile(filename) as f:
+        xyz = f.read(stride=stride, atom_indices=atom_indices)
+        _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+    time = np.arange(len(xyz))
+    if stride is not None:
+        # if we loaded with a stride, the Trajectories's time field should
+        # respect that
+        time *= stride
+
+    t = Trajectory(xyz=xyz, topology=topology, time=time)
+    return t
+
+
+@_FormatRegistry.register_fileobject('.arc')
 class ArcTrajectoryFile(object):
     """Interface for reading and writing to an TINKER archive files.
     (Note that the TINKER .xyz format is identical to this.)  This is
@@ -89,6 +153,31 @@ class ArcTrajectoryFile(object):
             raise ValueError('mode must be "r". '
                              'you supplied "%s"' % mode)
 
+    def seek(self, offset, whence=0):
+        """Move to a new file position
+
+        Parameters
+        ----------
+        offset : int
+            A number of frames.
+        whence : {0, 1, 2}
+            0: offset from start of file, offset should be >=0.
+            1: move relative to the current position, positive or negative
+            2: move relative to the end of file, offset should be <= 0.
+            Seeking beyond the end of a file is not supported
+        """
+        raise NotImplementedError()
+
+    def tell(self):
+        """Current file position
+
+        Returns
+        -------
+        offset : int
+            The current frame in the file.
+        """
+        raise NotImplementedError()
+
     def close(self):
         """Close the .arc file"""
         if self._is_open:
@@ -105,6 +194,10 @@ class ArcTrajectoryFile(object):
     def __exit__(self, *exc_info):
         "Support the context manager protocol"
         self.close()
+
+    def __len__(self):
+        "Number of frames in the file"
+        raise NotImplementedError()
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read data from a TINKER .arc file.  Note that only the

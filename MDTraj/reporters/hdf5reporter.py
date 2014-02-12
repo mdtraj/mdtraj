@@ -48,8 +48,8 @@ class HDF5Reporter(_BaseReporter):
 
     Parameters
     ----------
-    file : str, or HDF5Trajectory
-        Either an open HDF5Trajecory object to write to, or a string
+    file : str, or HDF5TrajectoryFile
+        Either an open HDF5TrajecoryFile object to write to, or a string
         specifying the filename of a new HDF5 file to save the trajectory to.
     reportInterval : int
         The interval (in time steps) at which to write frames.
@@ -79,12 +79,12 @@ class HDF5Reporter(_BaseReporter):
 
     Examples
     --------
-    >>> simulation = Simulation(topology, system, integrator) # doctest: +SKIP
-    >>> h5_reporter = HDF5Reporter('traj.h5', 100)            # doctest: +SKIP
-    >>> simulation.reporters.append(h5_reporter)              # doctest: +SKIP
-    >>> simulation.step(10000)                                # doctest: +SKIP
+    >>> simulation = Simulation(topology, system, integrator)
+    >>> h5_reporter = HDF5Reporter('traj.h5', 100)
+    >>> simulation.reporters.append(h5_reporter)
+    >>> simulation.step(10000)
 
-    >>> traj = mdtraj.trajectory.load('traj.lh5')             # doctest: +SKIP
+    >>> traj = mdtraj.trajectory.load('traj.lh5')
     """
     @property
     def backend(self):

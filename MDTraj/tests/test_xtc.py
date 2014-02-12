@@ -196,3 +196,42 @@ def test_xtc_write_wierd_0():
 
     xr = XTCTrajectoryFile(temp).read()[0]
     print(xr.shape)
+
+
+def test_tell():
+    with XTCTrajectoryFile(get_fn('frame0.xtc')) as f:
+        eq(f.tell(), 0)
+
+        f.read(101)
+        eq(f.tell(), 101)
+
+        f.read(3)
+        eq(f.tell(), 104)
+
+
+def test_seek():
+    reference = XTCTrajectoryFile(get_fn('frame0.xtc')).read()[0]
+    with XTCTrajectoryFile(get_fn('frame0.xtc')) as f:
+
+        eq(f.tell(), 0)
+        eq(f.read(1)[0][0], reference[0])
+        eq(f.tell(), 1)
+        
+        xyz = f.read(1)[0][0]
+        eq(xyz, reference[1])
+        eq(f.tell(), 2)
+
+        f.seek(0)
+        eq(f.tell(), 0)
+        xyz = f.read(1)[0][0]
+        eq(f.tell(), 1)
+        eq(xyz, reference[0])
+        
+        f.seek(5)
+        eq(f.read(1)[0][0], reference[5])
+        eq(f.tell(), 6)
+        
+        f.seek(-5, 1)
+        eq(f.tell(), 1)
+        eq(f.read(1)[0][0], reference[1])
+
