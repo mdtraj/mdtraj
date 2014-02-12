@@ -195,6 +195,22 @@ def test_center():
     eq(mu0, mu2)
 
 
+def test_center_aind():
+    traj = md.load(get_fn('traj.h5'))
+    traj.restrict_atoms(np.arange(0, traj.n_atoms, 2))
+    traj.center_coordinates()
+    mu = traj.xyz.mean(1)
+    mu0 = np.zeros(mu.shape)
+    eq(mu0, mu)
+
+    for a in traj.top.atoms:
+        a.element.mass = 1.0  # Set all masses equal so we can compare against unweighted result
+
+    traj.center_coordinates(mass_weighted=True)
+    mu2 = traj.xyz.mean(1)
+    eq(mu0, mu2)
+
+
 def test_float_atom_indices_exception():
     "Is an informative error message given when you supply floats for atom_indices?"
     top = md.load(get_fn('native.pdb')).topology
@@ -425,16 +441,3 @@ def test_length():
         f.description = 'Length of file object: %s' % file
         yield f
 
-def test_center():
-    traj = md.load(fn)
-    traj2 = md.load(fn)
-    aind = np.arange(traj.n_atoms)
-    
-    traj.restrict_atoms(aind)
-
-    traj.center_coordinates()
-    traj2.center_coordinates()
-
-    eq(traj.xyz, traj2.xyz)
-
-    
