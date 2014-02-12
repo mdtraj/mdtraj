@@ -142,3 +142,57 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
         raise ValueError('This is not supposed to happen!')
 
     return distances
+
+
+def make_square(distances, contacts='all', n_residues=None):
+    """
+    make the contact distances a square contact map
+    
+    Parameters
+    ----------
+    distances : np.ndarray
+        result of mdtraj.geometry.compute_contact_distances with frames 
+        in the rows and different contacts in the columns
+    contacts : np.ndarray or 'all', optional
+        contact array used when calculating the distances
+    n_residues : int or None, optional
+        number of residues in the contact map. Will attempt to 
+        figure it out if this is not given.
+
+    Returns
+    -------
+    contact_maps : np.ndarray
+        three dimensional array with shape (n_frames, n_residues, n_residues)
+    """
+    if n_residues is None:
+        num_contacts = distances.shape[1]
+        # try and guess n by solving the equation:
+        # num_contacts = (n - 2) * (n - 3) / 2
+
+        n = (5. + np.sqrt(np.float(1 + 8 * num_contacts))) / 2.
+        if n - int(n) > 1E-4:
+            # then we can't estimate the number of residues
+            if isinstance(contacts, str):
+                raise Exception('Cannot estimate the number of residues')
+            else:
+                n_residues = np.max(contacts) + 1
+
+        else:
+            n_residues = int(n)
+
+
+    if isinstance(contacts, str):
+        if not contacts.lower() == 'all':
+            raise ValueError('Unknown contacts value %s' % contacts)
+    
+        contacts = np.array([[i, j] for i in xrange(n_residues) for j in xrange(i + 3, n_residues, 1)])
+
+    else:
+        contacts = np.array(contacts)
+        if len(contacts.shape) != 2 or contacts.shape[1] != 2:
+            raise ValueError('contacts must be a two dimensional array with pairs of contacts in the rows')    
+
+    contact_maps = np.zeros((distances.shape[0], n_residues, n_residues))
+
+    contact_maps[:, contacts[:, 0], contacts[:, 1]] = distances
+    contact_maps[:, contacts[:, 1], contacts[:, 0]] = distances
