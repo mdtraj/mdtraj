@@ -424,3 +424,17 @@ def test_length():
                 raise SkipTest(e)
         f.description = 'Length of file object: %s' % file
         yield f
+
+def test_center():
+    traj = md.load(fn)
+    traj2 = md.load(fn)
+    aind = np.arange(traj.n_atoms)
+    
+    traj.restrict_atoms(aind)
+
+    traj.center_coordinates()
+    traj2.center_coordinates()
+
+    eq(traj.xyz, traj2.xyz)
+
+    
