@@ -12,6 +12,7 @@ script:
   - $python -V
   - sudo $python setup.py -q install
   - pydir=$(which $python); $precmd $(dirname $pydir)/nosetests --with-coverage --cover-erase -vv
+  - cd tools/c-tests/; make valgrind; cd -
 
 env:
   matrix:
