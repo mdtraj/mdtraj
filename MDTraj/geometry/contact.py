@@ -31,6 +31,7 @@ from mdtraj.utils import ensure_type
 from mdtraj.pdb import element
 import mdtraj as md
 import itertools
+from six.moves import xrange
 
 __all__ = ['compute_contact_distances']
 
@@ -80,7 +81,7 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
 
     if isinstance(contacts, str):
         if contacts.lower() == 'all':
-            contacts = np.array([[i, j] for i in sixrange(traj.n_residues) for j in sixrange(i + 3, traj.n_residues, 1)])
+            contacts = np.array([[i, j] for i in xrange(traj.n_residues) for j in xrange(i + 3, traj.n_residues, 1)])
         else:
             raise ValueError('(%s) is not a valid contacts specifier' % contacts.lower())
 
@@ -134,7 +135,7 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
 
         # now squash the results based on residue membership
         distances = np.zeros((len(traj), len(contacts)), dtype=np.float32)
-        for i in sixrange(len(contacts)):
+        for i in xrange(len(contacts)):
             index = np.sum(n_atom_pairs_per_residue_pair[:i])
             n = n_atom_pairs_per_residue_pair[i]
             distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
@@ -186,7 +187,7 @@ def make_square(distances, contacts='all', n_residues=None):
         if not contacts.lower() == 'all':
             raise ValueError('Unknown contacts value %s' % contacts)
     
-        contacts = np.array([[i, j] for i in sixrange(n_residues) for j in sixrange(i + 3, n_residues, 1)])
+        contacts = np.array([[i, j] for i in xrange(n_residues) for j in xrange(i + 3, n_residues, 1)])
 
     else:
         contacts = ensure_type(contacts, dtype=np.int, ndim=2, name='contacts',
