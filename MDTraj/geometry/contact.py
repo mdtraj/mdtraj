@@ -3,7 +3,7 @@
 #         Molecular Dynamics Trajectories.
 # Copyright 2012-2013 Stanford University and the Authors
 #
-# Authors: Robert McGibbon
+# Authors: Christian Schwantes
 # Contributors:
 #
 # MDTraj is free software: you can redistribute it and/or modify
@@ -28,12 +28,15 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
+from mdtraj.pdb import element
 import mdtraj as md
 import itertools
 
+__all__ = ['compute_contact_distances']
+
 def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
     """
-    Compute the contacts between residues in a trajectory. 
+    Compute the distance between pairs of residues in a trajectory.
 
     Parameters
     ----------
@@ -77,16 +80,16 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
 
     if isinstance(contacts, str):
         if contacts.lower() == 'all':
-            contacts = np.array([[i, j] for i in xrange(traj.n_residues) for j in xrange(i + 3, traj.n_residues, 1)])
+            contacts = np.array([[i, j] for i in sixrange(traj.n_residues) for j in sixrange(i + 3, traj.n_residues, 1)])
         else:
-            raise Exception('(%s) is not a valid contacts specifier' % contacts.lower())
+            raise ValueError('(%s) is not a valid contacts specifier' % contacts.lower())
 
     else:
-        if len(contacts.shape) != 2 or contacts.shape[1] != 2:
-            raise Exception('contacts must be a two dimensional array with pairs of contacts in the rows')
+        contacts = ensure_type(contacts, dtype=np.int, ndim=2, name='contacts',
+                               shape=(None, 2), warn_on_cast=False)
 
-        if contacts.max() >= traj.n_residues:
-            raise Exception('contacts is requesting a residue that is not in the range of traj')
+        if not np.all((contacts >= 0) * (contacts < traj.n_residues)):
+            raise ValueError('contacts requests a residue that is not in the permitted range')
 
         contacts = np.array(contacts, dtype=np.int)
 
@@ -95,7 +98,7 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
     # re-work them in the required scheme to get residue distances
     scheme = scheme.lower()
     if not scheme in ['ca', 'closest', 'closest-heavy']:
-        raise Exception('scheme must be one of [ca, closest, closest-heavy]')
+        raise ValueError('scheme must be one of [ca, closest, closest-heavy]')
 
     if scheme == 'ca':
         res_ind_to_calpha_aind = [[atom.index for atom in residue.atoms if atom.name.lower() == 'ca'][0]
@@ -106,7 +109,6 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
 
         ainds = np.unique(atom_pairs).flatten()
         names = [traj.top.atom(i).name for i in ainds]
-        print(names)
         distances = md.compute_distances(traj, atom_pairs)
         
 
@@ -117,7 +119,7 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
 
         elif scheme == 'closest-heavy':
             # then remove the hydrogens from the above list
-            residue_membership = [[atom.index for atom in residue.atoms if not atom.element.symbol == 'H']
+            residue_membership = [[atom.index for atom in residue.atoms if not atom.element.symbol == element.hydrogen]
                                   for residue in traj.topology.residues]
 
         residue_lens = [len(ainds) for ainds in residue_membership]
@@ -131,12 +133,11 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
         atom_distances = md.compute_distances(traj, atom_pairs)
 
         # now squash the results based on residue membership
-        distances = np.zeros((len(traj), len(contacts)))
-        for i in xrange(len(contacts)):
+        distances = np.zeros((len(traj), len(contacts)), dtype=np.float32)
+        for i in sixrange(len(contacts)):
             index = np.sum(n_atom_pairs_per_residue_pair[:i])
             n = n_atom_pairs_per_residue_pair[i]
             distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
-        print (index + n, atom_distances.shape)
 
     else:
         raise ValueError('This is not supposed to happen!')
@@ -185,14 +186,18 @@ def make_square(distances, contacts='all', n_residues=None):
         if not contacts.lower() == 'all':
             raise ValueError('Unknown contacts value %s' % contacts)
     
-        contacts = np.array([[i, j] for i in xrange(n_residues) for j in xrange(i + 3, n_residues, 1)])
+        contacts = np.array([[i, j] for i in sixrange(n_residues) for j in sixrange(i + 3, n_residues, 1)])
 
     else:
-        contacts = np.array(contacts)
-        if len(contacts.shape) != 2 or contacts.shape[1] != 2:
-            raise ValueError('contacts must be a two dimensional array with pairs of contacts in the rows')    
+        contacts = ensure_type(contacts, dtype=np.int, ndim=2, name='contacts',
+                               shape=(None, 2), warn_on_cast=False)
+
+        if not np.all((contacts >= 0) * (contacts < n_residues)):
+            raise ValueError('contacts references a residue that is not in the permitted range')
 
     contact_maps = np.zeros((distances.shape[0], n_residues, n_residues))
 
     contact_maps[:, contacts[:, 0], contacts[:, 1]] = distances
     contact_maps[:, contacts[:, 1], contacts[:, 0]] = distances
+
+    return contact_maps
