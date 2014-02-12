@@ -3,10 +3,6 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
-             float* distance_out, float* displacement_out,
-             const int n_frames, const int n_atoms, const int n_pairs);
-
 int main(int argc, char** argv) {
     int i, t;
     int n_frames = 10;
