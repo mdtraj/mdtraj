@@ -160,10 +160,10 @@ def load_frame(filename, index, top=None, atom_indices=None):
         
     Examples
     --------
-    >>> import mdtraj as md                                     # doctest: +SKIP
-    >>> first_frame = md.load_frame('traj.h5', 0)               # doctest: +SKIP
-    >>> print first_frame                                       # doctest: +SKIP
-    <mdtraj.Trajectory with 1 frames, 22 atoms>                 # doctest: +SKIP
+    >>> import mdtraj as md
+    >>> first_frame = md.load_frame('traj.h5', 0)
+    >>> print first_frame
+    <mdtraj.Trajectory with 1 frames, 22 atoms>
 
     See Also
     --------
@@ -227,18 +227,18 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     Examples
     --------
-    >>> import mdtraj as md                                        # doctest: +SKIP
-    >>> traj = md.load('output.xtc', top='topology.pdb')           # doctest: +SKIP
-    >>> print traj                                                 # doctest: +SKIP
-    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    >>> import mdtraj as md
+    >>> traj = md.load('output.xtc', top='topology.pdb')
+    >>> print traj
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>
     
-    >>> traj2 = md.load('output.xtc', stride=2, top='topology.pdb')   # doctest: +SKIP
-    >>> print traj2                                                   # doctest: +SKIP
-    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>     # doctest: +SKIP
+    >>> traj2 = md.load('output.xtc', stride=2, top='topology.pdb')
+    >>> print traj2
+    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>
     
-    >>> traj3 = md.load_hdf5('output.xtc', atom_indices=[0,1] top='topology.pdb')  # doctest: +SKIP
-    >>> print traj3                                                                # doctest: +SKIP
-    <mdtraj.Trajectory with 500 frames, 2 atoms at 0x18236e4a0>                    # doctest: +SKIP 
+    >>> traj3 = md.load_hdf5('output.xtc', atom_indices=[0,1] top='topology.pdb')
+    >>> print traj3
+    <mdtraj.Trajectory with 500 frames, 2 atoms at 0x18236e4a0>
     
     Returns
     -------
@@ -260,7 +260,11 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         if len(set(extensions)) != 1:
             raise(TypeError("All filenames must have same extension!"))
         else:
-            return functools.reduce(lambda a, b: a.join(b, discard_overlapping_frames=discard_overlapping_frames), (load(f,**kwargs) for f in filename_or_filenames))
+            t = [load(f, **kwargs) for f in filename_or_filenames]
+            # we know the topology is equal because we sent the same topology kwarg
+            # in, so there's no reason to spend extra time checking
+            return t[0].join(t[1:], discard_overlapping_frames=discard_overlapping_frames,
+                             check_topology=False)
 
     try:
         #loader = _LoaderRegistry[extension][0]
@@ -317,14 +321,14 @@ def iterload(filename, chunk=100, **kwargs):
         
     Examples
     --------
-    >>> import mdtraj as md                                        # doctest: +SKIP
-    >>> for chunk in md.iterload('output.xtc', top='topology.pdb') # doctest: +SKIP
+    >>> import mdtraj as md
+    >>> for chunk in md.iterload('output.xtc', top='topology.pdb')
     ...    print chunk
-    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
-    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
-    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
-    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
-    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
+    <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
     """
     stride = kwargs.get('stride', 1)
     atom_indices = cast_indices(kwargs.get('atom_indices', None))
@@ -431,21 +435,21 @@ class Trajectory(object):
     --------
     >>> # loading a trajectory
     >>> import mdtraj as md
-    >>> md.load('trajectory.xtc', top='native.pdb')           # doctest: +SKIP
+    >>> md.load('trajectory.xtc', top='native.pdb')
     <mdtraj.Trajectory with 1000 frames, 22 atoms at 0x1058a73d0>
 
     >>> # slicing a trajectory
-    >>> t = md.load('trajectory.h5')                          # doctest: +SKIP
-    >>> print(t)                                              # doctest: +SKIP
+    >>> t = md.load('trajectory.h5')
+    >>> print(t)
     <mdtraj.Trajectory with 100 frames, 22 atoms>
-    >>> print(t[::2])                                         # doctest: +SKIP
+    >>> print(t[::2])
     <mdtraj.Trajectory with 50 frames, 22 atoms>
 
     >>> # calculating the average distance between two atoms
     >>> import mdtraj as md
     >>> import numpy as np
-    >>> t = md.load('trajectory.h5')                                              # doctest: +SKIP
-    >>> np.mean(np.sqrt(np.sum((t.xyz[:, 0, :] - t.xyz[:, 21, :])**2, axis=1)))   # doctest: +SKIP
+    >>> t = md.load('trajectory.h5')
+    >>> np.mean(np.sqrt(np.sum((t.xyz[:, 0, :] - t.xyz[:, 21, :])**2, axis=1)))
 
     See Also
     --------
@@ -776,8 +780,9 @@ class Trajectory(object):
 
         Parameters
         ----------
-        other : Trajectory
-            The other trajectory to join
+        other : Trajectory or list of Trajectory
+            One or more trajectories to join with this one. These trajectories
+            are *appended* to the end of this trajectory.
         check_topology : bool
             Ensure that the topology of `self` and `other` are identical before
             joining them. If false, the resulting trajectory will have the
@@ -790,45 +795,43 @@ class Trajectory(object):
         --------
         stack : join two trajectories along the atom axis
         """
-        if not isinstance(other, Trajectory):
-            raise TypeError('You can only add two Trajectory instances')
 
-        if self.n_atoms != other.n_atoms:
-            raise ValueError('Number of atoms in self (%d) is not equal '
-                'to number of atoms in other (%d)' % (self.n_atoms, other.n_atoms))
+        if isinstance(other, Trajectory):
+            other = [other]
+        if isinstance(other, list):
+            if not all(isinstance(o, Trajectory) for o in other):
+                raise TypeError('You can only join Trajectory instances')
+            if not all(self.n_atoms == o.n_atoms for o in other):
+                raise  ValueError('Number of atoms in self (%d) is not equal '
+                          'to number of atoms in other' % (self.n_atoms))
+            if check_topology and not all(self.topology == o.topology for o in other):
+                raise ValueError('The topologies of the Trajectories are not the same')
+            if not all(self._have_unitcell == o._have_unitcell for o in other):
+                raise ValueError('Mixing trajectories with and without unitcell')
+        else:
+            raise TypeError('`other` must be a list of Trajectory. You supplied %d' % type(other))
 
-        if check_topology:
-            if self.topology != other.topology:
-                raise ValueError('The topologies of the two Trajectories are not the same')
 
-        lengths2 = None
-        angles2 = None
-
+        # list containing all of the trajs to merge, including self
+        trajectories = [self] + other
         if discard_overlapping_frames:
-            x0 = self.xyz[-1]
-            x1 = other.xyz[0]
-            start_frame = 1 if np.linalg.norm(x1 - x0) < 1e-8 else 0
-        else:
-            start_frame = 0
+            for i in range(len(trajectories)-1):
+                # last frame of trajectory i
+                x0 = trajectories[i].xyz[-1]
+                # first frame of trajectory i+1
+                x1 = trajectories[i + 1].xyz[0]
 
-        xyz = other.xyz[start_frame:]
-        time = other.time[start_frame:]
-        if other._have_unitcell:
-            lengths2 = other.unitcell_lengths[start_frame:]
-            angles2 = other.unitcell_angles[start_frame:]
+                # check that all atoms are within 2e-3 nm
+                # (this is kind of arbitrary)
+                if np.all(np.abs(x1 - x0) < 2e-3):
+                    trajectories[i] = trajectories[i][:-1]
 
-        xyz = np.concatenate((self.xyz, xyz))
-        time = np.concatenate((self.time, time))
-
-        #if self.unitcell_lengths is None and self.unitcell_angles is None and not other_has_unitcell:
-        if not self._have_unitcell and not other._have_unitcell:
-            lengths, angles = None, None
-        elif self._have_unitcell and other._have_unitcell:
-            lengths = np.concatenate((self.unitcell_lengths, lengths2))
-            angles = np.concatenate((self.unitcell_angles, angles2))
-        else:
-            raise ValueError("One trajectory has box size, other doesn't. "
-                             "I don't know what to do")
+        xyz = np.concatenate([t.xyz for t in trajectories])
+        time = np.concatenate([t.time for t in trajectories])
+        angles = lengths = None
+        if self._have_unitcell:
+            angles = np.concatenate([t.unitcell_angles for t in trajectories])
+            lengths = np.concatenate([t.unitcell_lengths for t in trajectories])
 
         # use this syntax so that if you subclass Trajectory,
         # the subclass's join() will return an instance of the subclass
@@ -849,14 +852,14 @@ class Trajectory(object):
 
         Examples
         --------
-        >>> t1 = md.load('traj1.h5')                            # doctest: +SKIP
-        >>> t2 = md.load('traj2.h5')                            # doctest: +SKIP
+        >>> t1 = md.load('traj1.h5')
+        >>> t2 = md.load('traj2.h5')
         >>> # even when t2 contains no unitcell information
-        >>> t2.unitcell_vectors = None                          # doctest: +SKIP
-        >>> stacked = t1.stack(t2)                              # doctest: +SKIP
+        >>> t2.unitcell_vectors = None
+        >>> stacked = t1.stack(t2)
         >>> # the stacked trajectory inherits the unitcell information
         >>> # from the first trajectory
-        >>> np.all(stacked.unitcell_vectors == t1.unitcell_vectors) # doctest: +SKIP
+        >>> np.all(stacked.unitcell_vectors == t1.unitcell_vectors)
         True
 
         Parameters
@@ -958,8 +961,8 @@ class Trajectory(object):
 
         Examples
         --------
-        >>> t = md.load('trajectory.h5')                      # doctest: +SKIP
-        >>> context.setPositions(t.openmm_positions(0))       # doctest: +SKIP
+        >>> t = md.load('trajectory.h5')
+        >>> context.setPositions(t.openmm_positions(0))
 
         Parameters
         ----------
@@ -987,8 +990,8 @@ class Trajectory(object):
 
         Examples
         --------
-        >>> t = md.load('trajectory.h5')                          # doctest: +SKIP
-        >>> context.setPeriodicBoxVectors(t.openmm_positions(0))  # doctest: +SKIP
+        >>> t = md.load('trajectory.h5')
+        >>> context.setPeriodicBoxVectors(t.openmm_positions(0))
 
         Parameters
         ----------

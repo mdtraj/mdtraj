@@ -53,12 +53,12 @@ class DCDReporter(_BaseReporter):
 
     Examples
     --------
-    >>> simulation = Simulation(topology, system, integrator) # doctest: +SKIP
-    >>> dcd_reporter = DCDReporter('traj.dcd', 100)           # doctest: +SKIP
-    >>> simulation.reporters.append(dcd_reporter)             # doctest: +SKIP
-    >>> simulation.step(10000)                                # doctest: +SKIP
+    >>> simulation = Simulation(topology, system, integrator)
+    >>> dcd_reporter = DCDReporter('traj.dcd', 100)
+    >>> simulation.reporters.append(dcd_reporter)
+    >>> simulation.step(10000)
 
-    >>> traj = mdtraj.trajectory.load('traj.dcd')              # doctest: +SKIP
+    >>> traj = mdtraj.trajectory.load('traj.dcd')
     """
     @property
     def backend(self):

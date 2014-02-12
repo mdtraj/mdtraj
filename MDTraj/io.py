@@ -64,8 +64,8 @@ Examples
 >>> import numpy as np
 >>> from mdtraj import io
 >>> x = np.random.randn(100, 3)
->>> io.saveh('file.hdf5', x=x)                                  # doctest: +SKIP
->>> np.all(x == io.loadh('file.hdf5')['x'])                     # doctest: +SKIP
+>>> io.saveh('file.hdf5', x=x)
+>>> np.all(x == io.loadh('file.hdf5')['x'])
 True
 
 Functions

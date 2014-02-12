@@ -97,6 +97,9 @@ def compute_dihedrals(trajectory, indices, opt=True):
     """
     xyz = ensure_type(trajectory.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     quartets = ensure_type(np.asarray(indices), dtype=np.int32, ndim=2, name='indices', shape=(None, 4), warn_on_cast=False)
+    if not np.all(np.logical_and(quartets < trajectory.n_atoms, quartets >= 0)):
+        raise ValueError('indices must be between 0 and %d' % trajectory.n_atoms)
+
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
     if opt:
         _geometry._dihedral(xyz, quartets, out)
@@ -162,10 +165,10 @@ def _atom_sequence(trajectory, atom_names, residue_offsets=None, chain_id=0):
     atom names and the residue_id offsets (e.g. forward or backward in
     chain) for each atom.
 
-    >>> traj = mdtraj.trajectory.load("native.pdb") # doctest: +SKIP
-    >>> atom_names = ["C" ,"N" , "CA", "C"] # doctest: +SKIP
-    >>> residue_offsets = [-1, 0, 0, 0] # doctest: +SKIP
-    >>> found_residue_ids, indices = _atom_sequence(traj, atom_names, residue_offsets) # doctest: +SKIP
+    >>> traj = mdtraj.trajectory.load("native.pdb")
+    >>> atom_names = ["C" ,"N" , "CA", "C"]
+    >>> residue_offsets = [-1, 0, 0, 0]
+    >>> found_residue_ids, indices = _atom_sequence(traj, atom_names, residue_offsets)
     """
     if residue_offsets is None:
         residue_offsets = parse_offsets(atom_names)

@@ -60,11 +60,12 @@ class NetCDFReporter(_BaseReporter):
 
     Examples
     --------
-    >>> simulation = Simulation(topology, system, integrator) # doctest: +SKIP
-    >>> nc_reporter = NetCDFReporter('traj.h5', 100)          # doctest: +SKIP
-    >>> simulation.reporters.append(nc_reporter)              # doctest: +SKIP
-    >>> simulation.step(10000)                                # doctest: +SKIP
-    >>> traj = mdtraj.trajectory.load('traj.nc')              # doctest: +SKIP
+    >>> simulation = Simulation(topology, system, integrator)
+    >>> nc_reporter = NetCDFReporter('traj.h5', 100)
+    >>> simulation.reporters.append(nc_reporter)
+    >>> simulation.step(10000)
+
+    >>> traj = mdtraj.trajectory.load('traj.nc')
     """
     @property
     def backend(self):

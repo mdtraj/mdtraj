@@ -27,6 +27,7 @@
 
 from __future__ import print_function, division
 import os
+import sys
 import functools
 import numpy as np
 from numpy.testing import (assert_allclose, assert_almost_equal,
@@ -49,6 +50,13 @@ try:
     from scipy.sparse import isspmatrix
 except ImportError:
     isspmatrix = lambda x: False
+
+try:
+    # need special logic to check for equality of pandas DataFrames.
+    # but this is only relevant if the user has pandas installed
+    import pandas as pd
+except ImportError:
+    pass
 
 
 __all__ = ['assert_allclose', 'assert_almost_equal', 'assert_approx_equal',
@@ -141,6 +149,10 @@ def eq(o1, o2, decimal=6, err_msg=''):
         else:
             # compare everything else (ints, bools) for absolute equality
             assert_array_equal(o1, o2, err_msg=err_msg)
+    elif 'pandas' in sys.modules and isinstance(o1, pd.DataFrame):
+        # pandas dataframes are basically like dictionaries of numpy arrayss
+        assert_dict_equal(o1, o2, decimal=decimal)
+
     # probably these are other specialized types
     # that need a special check?
     else:
@@ -160,7 +172,7 @@ def assert_dict_equal(t1, t2, decimal=6):
 
     for key, val in iteritems(t1):
         # compare numpy arrays using numpy.testing
-        if isinstance(val, np.ndarray):
+        if isinstance(val, np.ndarray) or ('pandas' in sys.modules and isinstance(t1, pd.DataFrame)):
             if val.dtype.kind ==  'f':
                 # compare floats for almost equality
                 assert_array_almost_equal(val, t2[key], decimal)

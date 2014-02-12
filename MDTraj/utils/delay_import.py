@@ -96,10 +96,10 @@ MESSAGES = {
 
     simtk.unit is installed with OpenMM, which is available at http://openmm.org
     It's also installable as a separate standalone package from
-    https://github.com/rmcgibbo/simtk.unit, and can be installed with the python
+    https://pypi.python.org/pypi/simtk.unit, and can be installed with the python
     "pip" package mangers using:
 
-    pip install git+git://github.com/rmcgibbo/simtk.unit
+    pip install simtk.unit
     ''',
 
     'scripttest': '''
