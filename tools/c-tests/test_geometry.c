@@ -58,5 +58,7 @@ int main(int argc, char** argv) {
     free(displacement_out);
     free(pairs);
     free(box_matrix);
+
+    return 0;
 }
          
