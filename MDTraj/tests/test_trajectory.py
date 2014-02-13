@@ -31,6 +31,7 @@ import mdtraj.utils
 from mdtraj import topology
 from mdtraj.utils.six import PY3
 from mdtraj.utils.six.moves import xrange
+from mdtraj.pdb import element
 
 TestDocstrings = DocStringFormatTester(mdtraj.trajectory, error_on_none=True)
 
@@ -188,7 +189,8 @@ def test_center():
     eq(mu0, mu)
 
     for a in traj.top.atoms:
-        a.element.mass = 1.0  # Set all masses equal so we can compare against unweighted result
+        #a.element.mass = 1.0  # Set all masses equal so we can compare against unweighted result
+        a.element = element.hydrogen
 
     traj.center_coordinates(mass_weighted=True)
     mu2 = traj.xyz.mean(1)
@@ -204,7 +206,8 @@ def test_center_aind():
     eq(mu0, mu)
 
     for a in traj.top.atoms:
-        a.element.mass = 1.0  # Set all masses equal so we can compare against unweighted result
+        #a.element.mass = 1.0  # Set all masses equal so we can compare against unweighted result
+        a.element = element.hydrogen
 
     traj.center_coordinates(mass_weighted=True)
     mu2 = traj.xyz.mean(1)
