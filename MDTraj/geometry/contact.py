@@ -123,6 +123,11 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
             residue_membership = [[atom.index for atom in residue.atoms if not (atom.element == element.hydrogen)]
                                   for residue in traj.topology.residues]
 
+            res0 = traj.topology.residue(0)
+
+            print ([atom.element.symbol for atom in res0.atoms])
+            print ([atom.element == element.hydrogen for atom in res0.atoms])
+
         residue_lens = [len(ainds) for ainds in residue_membership]
 
         atom_pairs = []

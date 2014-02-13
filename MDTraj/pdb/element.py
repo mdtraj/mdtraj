@@ -52,7 +52,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from __future__ import print_function, division
-
+import numpy as np
 
 class Element:
     """An Element represents a chemical element.
@@ -88,11 +88,31 @@ class Element:
         else:
             Element._elements_by_atomic_number[number] = self
 
+
+    def __eq__(self, other):
+        result = True
+        if self.name != other.name:
+            result = False
+
+        if self.symbol != other.symbol:
+            result = False
+
+        if self.atomic_number != other.atomic_number:
+            result = False
+
+        if np.abs(self.mass - other.mass) > 1E-4:
+            result = False
+
+        return result
+
+
     @staticmethod
     def getBySymbol(symbol):
         """Get the Element with a particular chemical symbol."""
         s = symbol.strip().upper()
         return Element._elements_by_symbol[s]
+
+    
 
 # This is for backward compatibility.
 def get_by_symbol(symbol):
