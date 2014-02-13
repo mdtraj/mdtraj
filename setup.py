@@ -28,6 +28,11 @@ except ImportError:
     sys.exit(1)
 
 try:
+    import Cython
+    if Cython.__version__ < '0.18':
+        import warnings
+        warnings.warn('Cython >= 0.18 is required. Falling back to bunded c files')
+        raise ImportError
     from Cython.Distutils import build_ext
     setup_kwargs = {'cmdclass': {'build_ext': build_ext}}
     cython_extension = 'pyx'
