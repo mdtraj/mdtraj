@@ -126,6 +126,9 @@ class Element(tuple):
     def __str__(self):
         return self.name
 
+    def atomic_number(self):
+        return self.number
+
 # This is for backward compatibility.
 def get_by_symbol(symbol):
     s = symbol.strip().upper()
