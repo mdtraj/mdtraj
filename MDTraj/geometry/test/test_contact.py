@@ -22,7 +22,6 @@
 
 
 import numpy as np
-
 import mdtraj as md
 from mdtraj.testing import get_fn, eq
 from mdtraj import geometry
@@ -47,6 +46,3 @@ def test_contact():
     eq(ref_ca, ca)
     eq(ref_closest, closest)
     eq(ref_closest_heavy, closest_heavy)
-
-    
-

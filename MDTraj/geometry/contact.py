@@ -28,10 +28,10 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
+from mdtraj.utils.six.moves import xrange
 from mdtraj.pdb import element
 import mdtraj as md
 import itertools
-from six.moves import xrange
 
 __all__ = ['compute_contact_distances']
 
@@ -120,7 +120,7 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy'):
 
         elif scheme == 'closest-heavy':
             # then remove the hydrogens from the above list
-            residue_membership = [[atom.index for atom in residue.atoms if atom.element != element.hydrogen]
+            residue_membership = [[atom.index for atom in residue.atoms if not (atom.element == element.hydrogen)]
                                   for residue in traj.topology.residues]
 
         residue_lens = [len(ainds) for ainds in residue_membership]
