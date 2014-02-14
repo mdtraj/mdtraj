@@ -65,8 +65,7 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy', igno
     ignore_nonprotein : bool
         When using `contact==all`, don't compute contacts between
         "residues" which are not protein (i.e. do not contain an alpha
-        carbon). In some topology files for instance, water molecules are
-        denoted as residues.
+        carbon).
 
     Returns
     -------
