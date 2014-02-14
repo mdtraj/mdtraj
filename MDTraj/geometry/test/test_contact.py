@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: Christian Schwantes
-# Contributors:
+# Contributors: Robert McGibbon
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -25,26 +25,59 @@ from __future__ import print_function
 
 import numpy as np
 from mdtraj.testing import get_fn, eq
+import itertools
 from mdtraj import geometry
 import mdtraj as md
 
-def test_contact():
+def test_contact_0():
 
     pdb = md.load(get_fn('bpti.pdb'))
     contacts = np.loadtxt(get_fn('contacts.dat')).astype(int)
 
-    ca = geometry.compute_contact_distances(pdb, contacts, scheme='ca').flatten()
-    closest = geometry.compute_contact_distances(pdb, contacts, scheme='closest').flatten()
-    closest_heavy = geometry.compute_contact_distances(pdb, contacts, scheme='closest-heavy').flatten()
+    ca, ca_pairs = md.compute_contact_distances(pdb, contacts, scheme='ca')
+    closest, closest_pairs = md.compute_contact_distances(pdb, contacts, scheme='closest')
+    closest_heavy, closest_heavy_pairs = md.compute_contact_distances(pdb, contacts, scheme='closest-heavy')
 
     ref_ca = np.loadtxt(get_fn('cc_ca.dat'))
     ref_closest = np.loadtxt(get_fn('cc_closest.dat'))
     ref_closest_heavy = np.loadtxt(get_fn('cc_closest-heavy.dat'))
 
-    eq(ref_ca, ca)
-    eq(ref_closest, closest)
-    eq(ref_closest_heavy, closest_heavy)
+    eq(ref_ca, ca.flatten())
+    eq(ref_closest, closest.flatten())
+    eq(ref_closest_heavy, closest_heavy.flatten())
+    eq(contacts, ca_pairs)
+    eq(contacts, closest_pairs)
+    eq(contacts, closest_heavy_pairs)
 
+def test_contact_1():
+    pdb = md.load(get_fn('bpti.pdb'))
+    dists, pairs = md.compute_contact_distances(pdb)
+    for r0, r1 in pairs:
+        # are these valid residue indices?
+        pdb.topology.residue(r0)
+        pdb.topology.residue(r1)
+
+        assert not (abs(r0 - r1) < 3)
+
+    md.geometry.squareform(dists, pairs)
+
+def test_contact_2():
+    pdb = md.load(get_fn('1vii_sustiva_water.pdb'))
+    dist, pairs = md.compute_contact_distances(pdb, scheme='closest')
+    for r0, r1 in pairs:
+        assert pdb.topology.residue(r0).name != 'HOH'
+        assert pdb.topology.residue(r1).name != 'HOH'
+
+    # spot check one of the pairs
+    r0, r1 = pairs[10]
+    atoms_r0 = [a.index for a in pdb.topology.residue(r0).atoms]
+    atoms_r1 = [a.index for a in pdb.topology.residue(r1).atoms]
+
+    atomdist = md.compute_distances(pdb, list(itertools.product(atoms_r0, atoms_r1)))
+
+    np.testing.assert_array_equal(dist[:, 10], np.min(atomdist, axis=1))
+
+    md.geometry.squareform(dist, pairs)
 
 if __name__ == '__main__':
     test_contact()
