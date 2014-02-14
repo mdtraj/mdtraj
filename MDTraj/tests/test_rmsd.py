@@ -97,6 +97,23 @@ def test_superpose():
     eq(reference_rmsd, displ_rmsd, decimal=5)
 
 
+def test_rmsd_atom_indices():
+    native = md.load(get_fn('native.pdb'))
+    t1 = md.load(get_fn('traj.h5'))
+
+    atom_indices = np.arange(10)
+    dist1 = md.rmsd(t1, native, atom_indices=atom_indices)
+
+    t2 = md.load(get_fn('traj.h5'))
+    t2.restrict_atoms(atom_indices)
+    native.restrict_atoms(atom_indices)
+    dist2 = md.rmsd(t2, native)
+    
+    eq(dist1, dist2)
+
+if __name__ == '__main__':
+    test_rmsd_atom_indices()
+
 # def test_align_displace():
 #     t = md.load(get_fn('traj.h5'))
 #     t.center_coordinates()
