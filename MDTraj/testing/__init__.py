@@ -22,5 +22,5 @@
 
 
 from __future__ import print_function, division
-from .testing import *
-from .docstrings import *
+from mdtraj.testing.testing import *
+from mdtraj.testing.docstrings import *

@@ -28,7 +28,7 @@
 from __future__ import print_function, division
 import warnings
 import numpy as np
-from .six.moves import zip_longest
+from mdtraj.utils.six.moves import zip_longest
 
 ##############################################################################
 # functions / classes

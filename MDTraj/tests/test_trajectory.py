@@ -173,6 +173,7 @@ def test_hdf5_0():
     t2 = md.load(get_fn('native.pdb'))
     t3 = md.load(get_fn('traj.h5'), frame=8)
 
+    print (t.topology, t2.topology)
     assert t.topology == t2.topology
     yield lambda: eq(t.time, 0.002*(1 + np.arange(100)))
     yield lambda: eq(t.time, 0.002*(1 + np.arange(100)))
