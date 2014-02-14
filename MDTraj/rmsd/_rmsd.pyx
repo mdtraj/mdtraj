@@ -124,7 +124,7 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
     if atom_indices is None:
         atom_indices = slice(None)
     else:
-        atom_indices = ensure_type(atom_indices, np.int, ndim=1, name='atom_indices')
+        atom_indices = ensure_type(atom_indices, dtype=np.int, ndim=1, name='atom_indices')
         if not np.all((atom_indices >= 0) * (atom_indices < target.xyz.shape[1]) * (atom_indices < reference.xyz.shape[1])):
             raise ValueError("atom_indices must be valid positive indices")
 
