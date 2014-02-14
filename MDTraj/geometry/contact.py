@@ -207,6 +207,9 @@ def squareform(distances, residue_pairs):
     --------
     compute_contact_distances
     """
+    if not isinstance(distances, np.ndarray) and distances.ndim == 2:
+        raise ValueError('distances must be a 2d array')
+
     residue_pairs = ensure_type(
         residue_pairs, dtype=np.int, ndim=2, name='residue_pars',
         shape=(None, 2), warn_on_cast=False)
@@ -220,7 +223,7 @@ def squareform(distances, residue_pairs):
                          (distances.shape[1], residue_pairs.shape[0]))
 
     n_residues = np.max(residue_pairs) + 1
-    contact_maps = np.zeros((distances.shape[0], n_residues, n_residues))
+    contact_maps = np.zeros((distances.shape[0], n_residues, n_residues), dtype=distances.dtype)
     contact_maps[:, residue_pairs[:, 0], residue_pairs[:, 1]] = distances
     contact_maps[:, residue_pairs[:, 1], residue_pairs[:, 0]] = distances
 

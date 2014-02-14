@@ -59,11 +59,14 @@ def test_contact_1():
 
         assert not (abs(r0 - r1) < 3)
 
-    md.geometry.squareform(dists, pairs)
+    maps = md.geometry.squareform(dists, pairs)
+    for i, (r0, r1) in enumerate(pairs):
+        for t in range(pdb.n_frames):
+            eq(maps[t, r0, r1], dists[t, i])
 
 def test_contact_2():
     pdb = md.load(get_fn('1vii_sustiva_water.pdb'))
-    dist, pairs = md.compute_contact_distances(pdb, scheme='closest')
+    dists, pairs = md.compute_contact_distances(pdb, scheme='closest')
     for r0, r1 in pairs:
         assert pdb.topology.residue(r0).name != 'HOH'
         assert pdb.topology.residue(r1).name != 'HOH'
@@ -75,9 +78,12 @@ def test_contact_2():
 
     atomdist = md.compute_distances(pdb, list(itertools.product(atoms_r0, atoms_r1)))
 
-    np.testing.assert_array_equal(dist[:, 10], np.min(atomdist, axis=1))
+    np.testing.assert_array_equal(dists[:, 10], np.min(atomdist, axis=1))
 
-    md.geometry.squareform(dist, pairs)
+    maps = md.geometry.squareform(dists, pairs)
+    for i, (r0, r1) in enumerate(pairs):
+        for t in range(pdb.n_frames):
+            eq(maps[t, r0, r1], dists[t, i])
 
 if __name__ == '__main__':
     test_contact()
