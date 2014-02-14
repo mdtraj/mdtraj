@@ -30,7 +30,7 @@ import types
 import warnings
 from inspect import (isclass, ismodule, isfunction, ismethod,
                      getmembers, getdoc, getmodule, getargs, isbuiltin)
-from .docscrape import NumpyDocString
+from mdtraj.testing.docscrape import NumpyDocString
 from mdtraj.utils.six import get_function_code, get_function_closure, PY2
 
 __all__ = ['DocStringFormatTester']

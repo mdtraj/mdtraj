@@ -31,6 +31,7 @@ import mdtraj.utils
 from mdtraj import topology
 from mdtraj.utils.six import PY3
 from mdtraj.utils.six.moves import xrange
+from mdtraj.pdb import element
 
 TestDocstrings = DocStringFormatTester(mdtraj.trajectory, error_on_none=True)
 
@@ -172,6 +173,7 @@ def test_hdf5_0():
     t2 = md.load(get_fn('native.pdb'))
     t3 = md.load(get_fn('traj.h5'), frame=8)
 
+    print (t.topology, t2.topology)
     assert t.topology == t2.topology
     yield lambda: eq(t.time, 0.002*(1 + np.arange(100)))
     yield lambda: eq(t.time, 0.002*(1 + np.arange(100)))
@@ -188,7 +190,8 @@ def test_center():
     eq(mu0, mu)
 
     for a in traj.top.atoms:
-        a.element.mass = 1.0  # Set all masses equal so we can compare against unweighted result
+        #a.element.mass = 1.0  # Set all masses equal so we can compare against unweighted result
+        a.element = element.hydrogen
 
     traj.center_coordinates(mass_weighted=True)
     mu2 = traj.xyz.mean(1)
@@ -204,7 +207,8 @@ def test_center_aind():
     eq(mu0, mu)
 
     for a in traj.top.atoms:
-        a.element.mass = 1.0  # Set all masses equal so we can compare against unweighted result
+        #a.element.mass = 1.0  # Set all masses equal so we can compare against unweighted result
+        a.element = element.hydrogen
 
     traj.center_coordinates(mass_weighted=True)
     mu2 = traj.xyz.mean(1)
