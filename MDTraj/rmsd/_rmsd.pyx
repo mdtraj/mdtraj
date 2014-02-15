@@ -3,7 +3,7 @@
 #         Molecular Dynamics Trajectories.
 # Copyright 2012-2013 Stanford University and the Authors
 #
-# Authors: Robert McGibbon
+# Authors: Robert McGibbon, Kyle Beauchamp
 # Contributors:
 #
 # MDTraj is free software: you can redistribute it and/or modify
@@ -21,15 +21,13 @@
 ##############################################################################
 
 
-# This code was written by Kyle Beauchamp with some contributes by
-# Robert McGibbon
-
 ##############################################################################
 # Imports
 ##############################################################################
 
 import cython
 import numpy as np
+from mdtraj.utils import ensure_type
 
 cimport numpy as np
 from cpython cimport bool
@@ -125,6 +123,10 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
     # import time
     if atom_indices is None:
         atom_indices = slice(None)
+    else:
+        atom_indices = ensure_type(atom_indices, dtype=np.int, ndim=1, name='atom_indices')
+        if not np.all((atom_indices >= 0) * (atom_indices < target.xyz.shape[1]) * (atom_indices < reference.xyz.shape[1])):
+            raise ValueError("atom_indices must be valid positive indices")
 
     # Error checks
     assert (target.xyz.ndim == 3) and (reference.xyz.ndim == 3) and (target.xyz.shape[2]) == 3 and (reference.xyz.shape[2] == 3)
@@ -142,16 +144,16 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
     cdef np.ndarray[ndim=2, dtype=np.float32_t] ref_xyz_frame
     cdef np.ndarray[ndim=1, dtype=np.float32_t] target_g
     cdef int target_n_frames = target.xyz.shape[0]
-    cdef int n_atoms = target.xyz.shape[1]
+    cdef int n_atoms = target.xyz.shape[1] if np.all(atom_indices == slice(None)) else len(atom_indices)
 
     # make sure *every* frame in target_xyz is in proper c-major order
-    target_xyz = np.asarray(target.xyz[:, atom_indices, :], order='c', dtype=np.float32)
+    target_xyz = np.asarray(target.xyz[:, atom_indices, :], order='C', dtype=np.float32)
     # only extract the `frame`-th conformation from ref_xyz
-    ref_xyz_frame = np.asarray(reference.xyz[frame, atom_indices, :], order='c', dtype=np.float32)
+    ref_xyz_frame = np.asarray(reference.xyz[frame, atom_indices, :], order='C', dtype=np.float32)
 
     # t0 = time.time()
     if precentered and (reference._rmsd_traces is not None) and (target._rmsd_traces is not None) and atom_indices == slice(None):
-        target_g = np.asarray(target._rmsd_traces, order='c', dtype=np.float32)
+        target_g = np.asarray(target._rmsd_traces, order='C', dtype=np.float32)
         ref_g = reference._rmsd_traces[frame]
     else:
         target_g = np.empty(target_n_frames, dtype=np.float32)
