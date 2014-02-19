@@ -34,9 +34,9 @@ def test_contact_0():
     pdb = md.load(get_fn('bpti.pdb'))
     contacts = np.loadtxt(get_fn('contacts.dat')).astype(int)
 
-    ca, ca_pairs = md.compute_contact_distances(pdb, contacts, scheme='ca')
-    closest, closest_pairs = md.compute_contact_distances(pdb, contacts, scheme='closest')
-    closest_heavy, closest_heavy_pairs = md.compute_contact_distances(pdb, contacts, scheme='closest-heavy')
+    ca, ca_pairs = md.compute_contacts(pdb, contacts, scheme='ca')
+    closest, closest_pairs = md.compute_contacts(pdb, contacts, scheme='closest')
+    closest_heavy, closest_heavy_pairs = md.compute_contacts(pdb, contacts, scheme='closest-heavy')
 
     ref_ca = np.loadtxt(get_fn('cc_ca.dat'))
     ref_closest = np.loadtxt(get_fn('cc_closest.dat'))
@@ -51,7 +51,7 @@ def test_contact_0():
 
 def test_contact_1():
     pdb = md.load(get_fn('bpti.pdb'))
-    dists, pairs = md.compute_contact_distances(pdb)
+    dists, pairs = md.compute_contacts(pdb)
     for r0, r1 in pairs:
         # are these valid residue indices?
         pdb.topology.residue(r0)
@@ -66,7 +66,7 @@ def test_contact_1():
 
 def test_contact_2():
     pdb = md.load(get_fn('1vii_sustiva_water.pdb'))
-    dists, pairs = md.compute_contact_distances(pdb, scheme='closest')
+    dists, pairs = md.compute_contacts(pdb, scheme='closest')
     for r0, r1 in pairs:
         assert pdb.topology.residue(r0).name != 'HOH'
         assert pdb.topology.residue(r1).name != 'HOH'

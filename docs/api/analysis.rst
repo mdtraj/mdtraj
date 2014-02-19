@@ -11,6 +11,9 @@ Trajectory Analysis
     shrake_rupley
 
     compute_distances
+    compute_contacts
+    geometry.squareform
+
     compute_displacements
     compute_angles
     compute_dihedrals

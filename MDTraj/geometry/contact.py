@@ -33,13 +33,13 @@ from mdtraj.pdb import element
 import mdtraj as md
 import itertools
 
-__all__ = ['compute_contact_distances', 'squareform']
+__all__ = ['compute_contacts', 'squareform']
 
 ##############################################################################
 # Code
 ##############################################################################
 
-def compute_contact_distances(traj, contacts='all', scheme='closest-heavy', ignore_nonprotein=True):
+def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonprotein=True):
     """Compute the distance between pairs of residues in a trajectory.
 
     Parameters
@@ -86,7 +86,7 @@ def compute_contact_distances(traj, contacts='all', scheme='closest-heavy', igno
 
     See Also
     --------
-    mdtraj.contact.squareform : turn the result from this function
+    mdtraj.geometry.squareform : turn the result from this function
         into a square "contact map"
     Topology.residue : Get residues from the topology by index
     """
@@ -188,10 +188,10 @@ def squareform(distances, residue_pairs):
     ----------
     distances : np.ndarray, shape=(n_frames, n_pairs)
         Distances between pairs of residues, as computed by
-        `mdtraj.geometry.compute_contact_distances`.
+        `mdtraj.geometry.compute_contacts`.
     residue_pairs : np.ndarray, shape=(n_pairs, 2)
         The indices of the residues involved in each pair, as
-        returned by `mdtraj.geometry.compute_contact_distances`
+        returned by `mdtraj.geometry.compute_contacts`
 
     Returns
     -------
@@ -204,7 +204,7 @@ def squareform(distances, residue_pairs):
 
     See Also
     --------
-    compute_contact_distances
+    compute_contacts
     """
     if not isinstance(distances, np.ndarray) and distances.ndim == 2:
         raise ValueError('distances must be a 2d array')
