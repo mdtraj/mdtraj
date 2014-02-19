@@ -31,7 +31,7 @@ Medical Research, grant U54 GM072970. See https://simtk.org.
 
 Portions copyright (c) 2012 Stanford University and the Authors.
 Authors: Christopher M. Bruns
-Contributors:
+Contributors: Robert T. McGibbon
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -52,31 +52,39 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from __future__ import print_function, division
+import numpy as np
 
-
-class Element:
+class Element(tuple):
     """An Element represents a chemical element.
 
-    The simtk.openmm.app.element module contains objects for all the standard chemical elements,
-    such as element.hydrogen or element.carbon.  You can also call the static method Element.getBySymbol() to
-    look up the Element with a particular chemical symbol."""
-
+    The mdtraj.pdb.element module contains objects for all the standard chemical elements,
+    such as element.hydrogen or element.carbon.  You can also call the static method
+    Element.getBySymbol() to look up the Element with a particular chemical symbol."""
+    __slots__ = []
     _elements_by_symbol = {}
     _elements_by_atomic_number = {}
 
-    def __init__(self, number, name, symbol, mass):
-        ## The atomic number of the element
-        self.atomic_number = number
-        ## The name of the element
-        self.name = name
-        ## The chemical symbol of the element
-        self.symbol = symbol
-        ## The atomic mass of the element
-        self.mass = mass
+    def __new__(cls, number, name, symbol, mass):
+        """Create a new element
+
+        Parameters
+        ----------
+        number : int
+            The atomic number of the element
+        name : str
+            The name of the element
+        symbol : str
+            The chemical symbol of the element
+        mass : float
+            The atomic mass of the element
+        """
+
+        newobj = tuple.__new__(cls, (number, name, symbol, mass))
+
         # Index this element in a global table
         s = symbol.strip().upper()
         assert s not in Element._elements_by_symbol
-        Element._elements_by_symbol[s] = self
+        Element._elements_by_symbol[s] = newobj
         if number in Element._elements_by_atomic_number:
             other_element = Element._elements_by_atomic_number[number]
             if mass < other_element.mass:
@@ -84,15 +92,43 @@ class Element:
                 # probably hydrogen and deuterium, and we want to choose
                 # the lighter one to put in the table by atomic_number,
                 # since it's the "canonical" element.
-                Element._elements_by_atomic_number[number] = self
+                Element._elements_by_atomic_number[number] = newobj
         else:
-            Element._elements_by_atomic_number[number] = self
+            Element._elements_by_atomic_number[number] = newobj
+
+        return newobj
+
 
     @staticmethod
     def getBySymbol(symbol):
         """Get the Element with a particular chemical symbol."""
         s = symbol.strip().upper()
         return Element._elements_by_symbol[s]
+
+    @property
+    def number(self):
+        return tuple.__getitem__(self, 0)
+
+    @property
+    def name(self):
+        return tuple.__getitem__(self, 1)
+
+    @property
+    def symbol(self):
+        return tuple.__getitem__(self, 2)
+
+    @property
+    def mass(self):
+        return tuple.__getitem__(self, 3)
+
+    def __getitem__(self, item):
+        raise TypeError
+    
+    def __str__(self):
+        return self.name
+
+    def atomic_number(self):
+        return self.number
 
 # This is for backward compatibility.
 def get_by_symbol(symbol):

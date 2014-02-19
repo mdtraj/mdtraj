@@ -140,7 +140,7 @@ def test_pdbstructure_0():
         eq(pdb_lines[i], str(atom))
 
 
-def test_pdbstrcture_1():
+def test_pdbstructure_1():
     pdb_lines = [
          "ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N",
          "ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C",
