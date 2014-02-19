@@ -72,6 +72,21 @@ Operating System :: Unix
 Operating System :: MacOS
 """
 
+def find_packages():
+    """Find all of mdtraj's python packages.
+    Adapted from IPython's setupbase.py. Copyright IPython
+    contributors, licensed under the BSD license.
+    """
+    packages = ['mdtraj.scripts']
+    for dir,subdirs,files in os.walk('MDTraj'):
+        package = dir.replace(os.path.sep, '.')
+        if '__init__.py' not in files:
+            # not a package
+            continue
+        packages.append(package.replace('MDTraj', 'mdtraj'))
+    return packages
+
+
 ################################################################################
 # Writing version control information to the module
 ################################################################################
@@ -297,8 +312,7 @@ setup(name='mdtraj',
       url='http://rmcgibbo.github.io/mdtraj',
       platforms=['Linux', 'Mac OS-X', 'Unix', 'Windows'],
       classifiers=CLASSIFIERS.splitlines(),
-      packages=['mdtraj', 'mdtraj.pdb', 'mdtraj.testing', 'mdtraj.utils',
-                'mdtraj.reporters', 'mdtraj.geometry', 'mdtraj.tests', 'mdtraj.scripts'],
+      packages=find_packages(),
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
       ext_modules=extensions,
       package_data={'mdtraj.pdb': ['data/*'],
