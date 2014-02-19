@@ -77,7 +77,7 @@ def find_packages():
     Adapted from IPython's setupbase.py. Copyright IPython
     contributors, licensed under the BSD license.
     """
-    packages = []
+    packages = ['mdtraj.scripts']
     for dir,subdirs,files in os.walk('MDTraj'):
         package = dir.replace(os.path.sep, '.')
         if '__init__.py' not in files:
