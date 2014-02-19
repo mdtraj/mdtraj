@@ -3,7 +3,7 @@
 #         Molecular Dynamics Trajectories.
 # Copyright 2012-2013 Stanford University and the Authors
 #
-# Authors: Robert McGibbon
+# Authors: Christian Schwantes
 # Contributors:
 #
 # MDTraj is free software: you can redistribute it and/or modify
@@ -20,7 +20,31 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
+from __future__ import print_function
 
-from __future__ import print_function, division
-from mdtraj.testing.testing import *
-from mdtraj.testing.docstrings import *
+
+import numpy as np
+from mdtraj.testing import get_fn, eq
+from mdtraj import geometry
+import mdtraj as md
+
+def test_contact():
+
+    pdb = md.load(get_fn('bpti.pdb'))
+    contacts = np.loadtxt(get_fn('contacts.dat')).astype(int)
+
+    ca = geometry.compute_contact_distances(pdb, contacts, scheme='ca').flatten()
+    closest = geometry.compute_contact_distances(pdb, contacts, scheme='closest').flatten()
+    closest_heavy = geometry.compute_contact_distances(pdb, contacts, scheme='closest-heavy').flatten()
+
+    ref_ca = np.loadtxt(get_fn('cc_ca.dat'))
+    ref_closest = np.loadtxt(get_fn('cc_closest.dat'))
+    ref_closest_heavy = np.loadtxt(get_fn('cc_closest-heavy.dat'))
+
+    eq(ref_ca, ca)
+    eq(ref_closest, closest)
+    eq(ref_closest_heavy, closest_heavy)
+
+
+if __name__ == '__main__':
+    test_contact()

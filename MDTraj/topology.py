@@ -438,9 +438,11 @@ class Topology(object):
                     if (a1.index != a2.index)  or (a1.name != a2.name):
                         return False
                     if a1.element is not None and a2.element is not None:
-                        for attr in ['atomic_number', 'name', 'symbol']:
-                            if getattr(a1.element, attr) != getattr(a2.element, attr):
-                                return False
+                        if a1.element != a2.element:
+                            return False
+                        #for attr in ['atomic_number', 'name', 'symbol']:
+                        #    if getattr(a1.element, attr) != getattr(a2.element, attr):
+                        #        return False
 
         if len(self._bonds) != len(other._bonds):
             return False

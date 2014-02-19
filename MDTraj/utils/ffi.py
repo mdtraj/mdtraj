@@ -28,7 +28,7 @@ except ImportError:
     from distutils import sysconfig
 
 import numpy as np
-from .six import iteritems, PY3
+from mdtraj.utils.six import iteritems, PY3
 
 __all__ = ['cpointer', 'find_library']
 

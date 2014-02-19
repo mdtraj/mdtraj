@@ -25,11 +25,13 @@ from __future__ import print_function, division
 __all__ = ['baker_hubbard', 'shrake_rupley', 'kabsch_sander', 'compute_distances',
            'compute_displacements', 'compute_angles', 'compute_dihedrals',
            'compute_phi', 'compute_psi', 'compute_chi1', 'compute_chi2',
-           'compute_chi3', 'compute_chi4', 'compute_omega', 'compute_rg']
+           'compute_chi3', 'compute_chi4', 'compute_omega', 'compute_rg',
+           'compute_contact_distances']
 
-from .rg import *
-from .angle import *
-from .distance import *
-from .dihedral import *
-from .hbond import *
-from .sasa import *
+from mdtraj.geometry.rg import *
+from mdtraj.geometry.angle import *
+from mdtraj.geometry.distance import *
+from mdtraj.geometry.dihedral import *
+from mdtraj.geometry.hbond import *
+from mdtraj.geometry.sasa import *
+from mdtraj.geometry.contact import *
