@@ -87,7 +87,7 @@ def test_hbonds_against_dssp():
     eq(dssp[dssp < -0.6], ours[ours < -0.6], decimal=1)
 
 
-def test_baker_hubbard():
+def test_baker_hubbard_0():
      t = md.load(get_fn('2EQQ.pdb'))
      
      # print('to view the hbonds defined in 2EQQ by baker_hubbard()')
@@ -105,3 +105,16 @@ def test_baker_hubbard():
                       [228, 239, 186], [235, 247, 216], [262, 271, 143],
                       [298, 305, 115], [186, 191, 215], [413, 419, 392]])
      eq(ref, md.geometry.hbond.baker_hubbard(t))
+
+def test_baker_hubbard_1():
+    # no hydrogens in this file -> no hydrogen bonds
+    t = md.load(get_fn('1bpi.pdb'))
+    eq(np.zeros((0, 3), dtype=int), md.baker_hubbard(t))
+
+def test_baker_hubbard_2():
+    t = md.load(get_fn('1vii_sustiva_water.pdb'))
+    triplets = md.baker_hubbard(t)
+    N = 1000
+    rows = triplets[:, 0] * N*N + triplets[:, 1] * N + triplets[:, 2]
+    # ensure that there aren't any repeat rows
+    eq(len(np.unique(rows)), len(rows))

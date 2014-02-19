@@ -131,6 +131,11 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True):
     oh_donors = get_donors('O', 'H')
     xh_donors = np.concatenate((nh_donors, oh_donors))
 
+    if len(xh_donors) == 0:
+        # if there are no hydrogens or protein in the trajectory, we get
+        # no possible pairs and return nothing
+        return np.zeros((0, 3), dtype=int)
+
     if not exclude_water:
         acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O']
     else:
