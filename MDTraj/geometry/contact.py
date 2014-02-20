@@ -204,7 +204,7 @@ def squareform(distances, residue_pairs):
 
     See Also
     --------
-    compute_contacts
+    mdtraj.compute_contacts : Compute the array of contact distances
     """
     if not isinstance(distances, np.ndarray) and distances.ndim == 2:
         raise ValueError('distances must be a 2d array')
