@@ -315,6 +315,7 @@ setup(name='mdtraj',
       packages=find_packages(),
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
       ext_modules=extensions,
+      install_requires=['simtk.unit', 'pandas>=0.9.0'],
       package_data={'mdtraj.pdb': ['data/*'],
                     'mdtraj.testing': ['reference/*']},
       **setup_kwargs)
