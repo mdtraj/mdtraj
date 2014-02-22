@@ -313,6 +313,7 @@ Since it's JSON, the whitespace is optional and just for readability.
                                           'index': 5,
                                           'name': 'O'}],
                                'index': 0,
+                               'resSeq': 1,
                                'name': 'ACE'},
                               {'atoms': [{'element': 'N',
                                           'index': 6,
@@ -345,6 +346,7 @@ Since it's JSON, the whitespace is optional and just for readability.
                                           'index': 15,
                                           'name': 'O'}],
                                'index': 1,
+                               'resSeq': 2,
                                'name': 'ALA'},
                               {'atoms': [{'element': 'N',
                                           'index': 16,
@@ -365,5 +367,6 @@ Since it's JSON, the whitespace is optional and just for readability.
                                           'index': 21,
                                           'name': 'H3'}],
                                'index': 2,
+                               'resSeq':3,
                                'name': 'NME'}]}]}
 
