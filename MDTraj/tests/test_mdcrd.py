@@ -46,6 +46,14 @@ def test_read_0():
         eq(xyz, xyz2)
 
 
+def test_read_1():
+    with MDCRDTrajectoryFile(get_fn('frame0.mdcrd'), n_atoms=22) as f:
+        xyz, _ = f.read()
+    with MDCRDTrajectoryFile(get_fn('frame0.mdcrd'), n_atoms=22) as f:
+        xyz3, _ = f.read(stride=3)
+
+    eq(xyz[::3], xyz3)
+
 def test_read_write_0():
     xyz = 10*np.random.randn(100, 11, 3)
     with MDCRDTrajectoryFile(temp, mode='w') as f:
