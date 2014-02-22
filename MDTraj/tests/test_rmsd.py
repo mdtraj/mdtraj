@@ -84,7 +84,7 @@ def test_precentered_2():
             eq(val1, val2, decimal=4)
 
 
-def test_superpose():
+def test_superpose_0():
     t1 = md.load(get_fn('traj.h5'))
     reference_rmsd = md.rmsd(t1, t1, 0)
 
@@ -95,6 +95,33 @@ def test_superpose():
         displ_rmsd[i] = (delta ** 2.0).sum(1).mean() ** 0.5
 
     eq(reference_rmsd, displ_rmsd, decimal=5)
+
+def test_superpose_1():
+    # make one frame far from the origin
+    reference = md.Trajectory(xyz=np.random.randn(1, 100, 3) + 100, topology=None)
+    reference_xyz = reference.xyz.copy()
+
+    for indices in [None, np.arange(90)]:
+        # make another trajectory in a similar rotational state
+        query = md.Trajectory(xyz=reference.xyz + 0.01*np.random.randn(*reference.xyz.shape), topology=None)
+        query.superpose(reference, 0, atom_indices=indices)
+        yield lambda: eq(reference.xyz, reference_xyz)
+
+        new_centers = np.mean(query.xyz[0], axis=1)
+        assert 80 < new_centers[0] < 120
+        assert 80 < new_centers[1] < 120
+        assert 80 < new_centers[2] < 120
+
+def test_superpose_2():
+    t1 = md.Trajectory(xyz=np.random.randn(1, 100, 3) + 100, topology=None)
+    t2 = md.Trajectory(xyz=np.random.randn(1, 100, 3) + 100, topology=None)
+    t2_copy = t2.xyz.copy()
+
+    t1.superpose(t2)
+    t1.superpose(t2, atom_indices=[1,2,3,4,5,6,7])
+
+    # make sure that superposing doesn't alter the reference traj
+    eq(t2.xyz, t2_copy)
 
 
 def test_rmsd_atom_indices():
