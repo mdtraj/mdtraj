@@ -52,7 +52,7 @@ else:
 
 ##########################
 VERSION = "0.7.0"
-ISRELEASED = True
+ISRELEASED = False
 __version__ = VERSION
 ##########################
 
