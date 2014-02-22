@@ -1,4 +1,4 @@
-## Molecular Dynamics Trajectory: File IO and manipulation
+## MDTraj: Read, write, and analyze MD trajectories with only a few lines of Python code.
 
 [![Build Status](https://travis-ci.org/rmcgibbo/mdtraj.png?branch=master)](https://travis-ci.org/rmcgibbo/mdtraj)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.png)](https://pypi.python.org/pypi/mdtraj)
@@ -17,8 +17,7 @@ speed of the original Theobald code and over 3x as fast as Theobald code modifie
 
 For details, see the [documentation](http://rmcgibbo.github.io/mdtraj/).
 
-License
--------
+### License
 
 ```
 MDtraj is free software; you can redistribute it and/or modify it under the
