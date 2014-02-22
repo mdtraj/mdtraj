@@ -746,12 +746,13 @@ class Trajectory(object):
         n_frames = self.xyz.shape[0]
         self_align_xyz = np.asarray(self.xyz[:, atom_indices, :], order='c')
         self_displace_xyz = np.asarray(self.xyz, order='c')
-        ref_align_xyz = np.asarray(reference.xyz[frame, atom_indices, :], order='c').reshape(1, -1, 3)
+        ref_align_xyz = np.array(reference.xyz[frame, atom_indices, :], copy=True, order='c').reshape(1, -1, 3)
 
         offset = np.mean(self_align_xyz, axis=1, dtype=np.float64).reshape(n_frames, 1, 3)
         self_align_xyz -= offset
         if self_align_xyz.ctypes.data != self_displace_xyz.ctypes.data:
             # when atom_indices is None, these two arrays alias the same memory
+            # so we only need to do the centering once
             self_displace_xyz -= offset
 
         ref_offset = ref_align_xyz[0].astype('float64').mean(0)
@@ -764,7 +765,7 @@ class Trajectory(object):
             ref_align_xyz, self_align_xyz, ref_g, self_g, self_displace_xyz,
             0, parallel=parallel)
 
-        self.xyz = self_displace_xyz
+        self.xyz = self_displace_xyz + ref_offset
         return self
 
     def join(self, other, check_topology=True, discard_overlapping_frames=False):

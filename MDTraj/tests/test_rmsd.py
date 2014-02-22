@@ -112,6 +112,16 @@ def test_superpose_1():
         assert 80 < new_centers[1] < 120
         assert 80 < new_centers[2] < 120
 
+def test_superpose_2():
+    t1 = md.Trajectory(xyz=np.random.randn(1, 100, 3) + 100, topology=None)
+    t2 = md.Trajectory(xyz=np.random.randn(1, 100, 3) + 100, topology=None)
+    t2_copy = t2.xyz.copy()
+
+    t1.superpose(t2)
+    t1.superpose(t2, atom_indices=[1,2,3,4,5,6,7])
+
+    # make sure that superposing doesn't alter the reference traj
+    eq(t2.xyz, t2_copy)
 
 
 # def test_align_displace():
