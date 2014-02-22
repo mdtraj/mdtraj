@@ -322,7 +322,12 @@ class HDF5TrajectoryFile(object):
         for chain_dict in sorted(topology_dict['chains'], key=operator.itemgetter('index')):
             chain = topology.add_chain()
             for residue_dict in sorted(chain_dict['residues'], key=operator.itemgetter('index')):
-                residue = topology.add_residue(residue_dict['name'], chain)
+                try:
+                    resSeq = residue_dict["resSeq"]
+                except KeyError:
+                    resSeq = None
+                    warnings.warn('No resSeq information found in HDF file, defaulting to zero-based indices')
+                residue = topology.add_residue(residue_dict['name'], chain, resSeq=resSeq)
                 for atom_dict in sorted(residue_dict['atoms'], key=operator.itemgetter('index')):
                     try:
                         element = elem.get_by_symbol(atom_dict['element'])
@@ -374,7 +379,8 @@ class HDF5TrajectoryFile(object):
                     residue_dict = {
                         'index': int(residue.index),
                         'name': str(residue.name),
-                        'atoms': []
+                        'atoms': [],
+                        "resSeq": int(residue.resSeq)
                     }
                     atom_iter = residue.atoms
                     if not hasattr(atom_iter, '__iter__'):
@@ -803,7 +809,7 @@ class HDF5TrajectoryFile(object):
         self._n_atoms = n_atoms
 
         self._handle.root._v_attrs.conventions = 'Pande'
-        self._handle.root._v_attrs.conventionVersion = '1.0'
+        self._handle.root._v_attrs.conventionVersion = '1.1'
         self._handle.root._v_attrs.program = 'MDTraj'
         self._handle.root._v_attrs.programVersion = version.short_version
         self._handle.root._v_attrs.title = 'title'

@@ -97,7 +97,7 @@ Global Attributes
    additional variables, dimensions or attributes, but are guaranteed to
    have no incompatible changes to variables, dimensions or attributes
    specified in previous revisions. Creators shall set this attribute to
-   "1.0". If this attribute is present and has a value other than "1.0",
+   "1.1". If this attribute is present and has a value other than "1.1",
    readers may fail or may emit a warning and continue. It is expected
    that the version of this convention will change rarely, if ever.
 -  **application (optional)** If the creator is part of a suite of
@@ -246,7 +246,8 @@ a string and stored in the HDF5 file with an ASCII encoding.
 The topology stores a hierarchical description of the chains, residues,
 and atoms in the system. Each chain is associated with an ``index`` and
 a list of residues. Each residue is associated with a ``name``, an
-``index``, and a list of ``atom``\ s. Each ``atom`` is associated with a
+``index``, a ``resSeq`` index (not zero-indexed), and a list of ``atom``\ s. 
+Each ``atom`` is associated with a
 ``name``, an ``element``, and an ``index``. All of the indicies should
 be zero-based.
 
@@ -312,6 +313,7 @@ Since it's JSON, the whitespace is optional and just for readability.
                                           'index': 5,
                                           'name': 'O'}],
                                'index': 0,
+                               'resSeq': 1,
                                'name': 'ACE'},
                               {'atoms': [{'element': 'N',
                                           'index': 6,
@@ -344,6 +346,7 @@ Since it's JSON, the whitespace is optional and just for readability.
                                           'index': 15,
                                           'name': 'O'}],
                                'index': 1,
+                               'resSeq': 2,
                                'name': 'ALA'},
                               {'atoms': [{'element': 'N',
                                           'index': 16,
@@ -364,5 +367,6 @@ Since it's JSON, the whitespace is optional and just for readability.
                                           'index': 21,
                                           'name': 'H3'}],
                                'index': 2,
+                               'resSeq': 3,
                                'name': 'NME'}]}]}
 
