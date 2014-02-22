@@ -10,12 +10,7 @@ This library supports the reading and writing of molecular dynamics trajectories
 [AMBER mdcrd](http://ambermd.org/formats.html), and [MDTraj HDF5](https://github.com/rmcgibbo/mdtraj/wiki/HDF5-Trajectory-Format).
 There is partial support for the TINKER arc format (only reading).
 
-MDTraj is structured around a convent numpy-based Trajectory object. Its RMSD (optimal cartesian
-root-mean-square deviation) library gives you access to fast parallel SSE3-based structural
-deviations using the quaternion characteristic polynomial (Theobald QCP) method at 4x the
-speed of the original Theobald code and over 3x as fast as Theobald code modified to use GotoBLAS.
-
-For details, see the [documentation](http://rmcgibbo.github.io/mdtraj/).
+For details, see the website at [mdtraj.org](http://mdtraj.org).
 
 ### License
 
