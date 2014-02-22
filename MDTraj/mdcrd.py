@@ -257,7 +257,10 @@ class MDCRDTrajectoryFile(object):
 
             for j in range(stride - 1):
                 # throw away these frames
-                self._read()
+                try:
+                    self._read()
+                except _EOF:
+                    break
 
         coords = np.array(coords)
         if all(b is None for b in boxes):
