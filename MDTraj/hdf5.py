@@ -809,7 +809,7 @@ class HDF5TrajectoryFile(object):
         self._n_atoms = n_atoms
 
         self._handle.root._v_attrs.conventions = 'Pande'
-        self._handle.root._v_attrs.conventionVersion = '1.0'
+        self._handle.root._v_attrs.conventionVersion = '1.1'
         self._handle.root._v_attrs.program = 'MDTraj'
         self._handle.root._v_attrs.programVersion = version.short_version
         self._handle.root._v_attrs.title = 'title'
