@@ -42,6 +42,7 @@ except ImportError:
 
 if 'setuptools' in sys.modules:
     setup_kwargs['zip_safe'] = False
+    setup_kwargs['install_requires'] = ['simtk.unit', 'pandas>=0.9.0']
     setup_kwargs['entry_points'] = {'console_scripts':
               ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
                'mdinspect = mdtraj.scripts.mdinspect:entry_point']}
@@ -50,8 +51,8 @@ else:
 
 
 ##########################
-VERSION = "0.6.1"
-ISRELEASED = False
+VERSION = "0.7.0"
+ISRELEASED = True
 __version__ = VERSION
 ##########################
 
@@ -315,7 +316,6 @@ setup(name='mdtraj',
       packages=find_packages(),
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
       ext_modules=extensions,
-      install_requires=['simtk.unit', 'pandas>=0.9.0'],
       package_data={'mdtraj.pdb': ['data/*'],
                     'mdtraj.testing': ['reference/*']},
       **setup_kwargs)

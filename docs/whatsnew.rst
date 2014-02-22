@@ -4,6 +4,17 @@ What's New
 
 These are new features and improvements of note in each release.
 
+v0.7.0 (February 21, 2014)
+--------------------------
+- New geometry functions `md.compute_contacts` and `md.geometry.squareform` for residue-residue contact maps
+- Fix segfault in `md.rmsd` when using the optional `atom_indices` kwarg
+- `md.compute_phi`, `md.compute_psi`, and `md.compute_omega` now return the correct atom indices, as their docstring always said.
+- Topology `Element` instances are now properly immutable
+- Small bugfixes to `baker_hubbard`, and better docstring
+- Automatic installation of `pandas` and `simtk.unit` via setuptools' `install_requires`.
+- Small bugfix to mdcrd loading with stride
+- `superpose` now correctly translates the final structure, and doesn't recenter the reference structure
+
 v0.6.1 (February 11, 2014)
 --------------------------
 - `Trajectory.join(discard_overlapping_frames=True)` is criterion for detecting overlappign frames is more realistic
