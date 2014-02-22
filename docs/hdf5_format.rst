@@ -367,6 +367,6 @@ Since it's JSON, the whitespace is optional and just for readability.
                                           'index': 21,
                                           'name': 'H3'}],
                                'index': 2,
-                               'resSeq':3,
+                               'resSeq': 3,
                                'name': 'NME'}]}]}
 
