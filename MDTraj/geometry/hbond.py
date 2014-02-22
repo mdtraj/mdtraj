@@ -60,9 +60,24 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True):
     exclude_water : bool, default=True
         Exclude solvent molecules from consideration
 
+    Returns
+    -------
+    hbonds : np.array, shape=[n_hbonds, 3], dtype=int
+        An array containing the indices atoms involved in each of the identified
+        hydrogen bonds. Each row contains three integer indices, `(d_i, h_i,
+        a_i)`, such that `d_i` is the index of the donor atom, `h_i` the index
+        of the hydrogen atom, and `a_i` the index of the acceptor atom involved
+        in a hydrogen bond which occurs (according to the definition above) in
+        proportion greater than `freq` of the trajectory.
+
     Notes
     -----
-    .. [1] Baker, E. N., and R. E. Hubbard. "Hydrogen bonding in globular proteins." Progress in Biophysics and Molecular Biology 44.2 (1984): 97-179.
+    Each hydrogen bond is distinguished for the purpose of this function by the
+    indices of the donor, hydrogen, and acceptor atoms. This means that, for
+    example, when an ARG sidechain makes a hydrogen bond with its NH2 group,
+    you might see what appear like double counting of the h-bonds, since the
+    hydrogen bond formed via the H_1 and H_2 are counted separately, despite
+    their "chemical indistinguishably"
 
     Examples
     --------
@@ -89,15 +104,9 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True):
     --------
     kabsch_sander
 
-    Returns
-    -------
-    hbonds : np.array, shape=[n_hbonds, 3], dtype=int
-        An array containing the indices atoms involved in each of the identified
-        hydrogen bonds. Each row contains three integer indices, `(d_i, h_i,
-        a_i)`, such that `d_i` is the index of the donor atom, `h_i` the index
-        of the hydrogen atom, and `a_i` the index of the acceptor atom involved
-        in a hydrogen bond which occurs (according to the definition above) in
-        proportion greater than `freq` of the trajectory.
+    References
+    ----------
+    .. [1] Baker, E. N., and R. E. Hubbard. "Hydrogen bonding in globular proteins." Progress in Biophysics and Molecular Biology 44.2 (1984): 97-179.
     """
     # Cutoff criteria: these could be exposed as function arguments, or
     # modified if there are better definitions than the this one based only
