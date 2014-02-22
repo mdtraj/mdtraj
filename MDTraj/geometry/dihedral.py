@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: Robert McGibbon
-# Contributors: Kyle A Beauchamp
+# Contributors: Kyle A Beauchamp, Ravi Ramanathan
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -300,7 +300,7 @@ def compute_phi(trajectory, opt=True):
     rid, indices = _get_indices_phi(trajectory)
     if len(indices) == 0:
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
-    return rid, compute_dihedrals(trajectory, indices, opt=opt)
+    return indices, compute_dihedrals(trajectory, indices, opt=opt)
 
 
 def compute_psi(trajectory, opt=True):
@@ -324,7 +324,7 @@ def compute_psi(trajectory, opt=True):
     rid, indices = _get_indices_psi(trajectory)
     if len(indices) == 0:
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
-    return rid, compute_dihedrals(trajectory, indices, opt=opt)
+    return indices, compute_dihedrals(trajectory, indices, opt=opt)
 
 
 def compute_chi1(trajectory, opt=True):
@@ -466,4 +466,4 @@ def compute_omega(trajectory, opt=True):
     rid, indices = _get_indices_omega(trajectory)
     if len(indices) == 0:
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(trajectory), 0), dtype=np.float32)
-    return rid, compute_dihedrals(trajectory, indices, opt=opt)
+    return indices, compute_dihedrals(trajectory, indices, opt=opt)

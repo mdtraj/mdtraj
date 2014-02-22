@@ -113,20 +113,21 @@ def test_dihedral_index_offset_generation():
 def test_dihedral_0():
     """We compared phi and psi angles from pymol to MDTraj output."""
     traj = md.load(get_fn('1bpi.pdb'))[0]
-    rid, phi = mdtraj.geometry.dihedral.compute_phi(traj)
+    indices, phi = mdtraj.geometry.dihedral.compute_phi(traj)
     phi0 = np.array([-34.50956, -50.869690]) * np.pi / 180.  # Pymol
     eq(phi[0,0:2], phi0, decimal=4)
-    eq(int(rid[0]), 1)
+    eq(indices[0], np.array([2,  11,  12,  13]))
 
-    rid, psi = mdtraj.geometry.dihedral.compute_psi(traj)
+
+    indices, psi = mdtraj.geometry.dihedral.compute_psi(traj)
     psi0 = np.array([134.52554, 144.880173]) * np.pi / 180.  # Pymol
     eq(psi[0,0:2], psi0, decimal=4)
-    eq(int(rid[0]), 0)
+    eq(indices[0], np.array([0, 1, 2, 11]))
 
-    rid, chi = mdtraj.geometry.dihedral.compute_chi1(traj)
+    indices, chi = mdtraj.geometry.dihedral.compute_chi1(traj)
     chi0 = np.array([-43.37841, -18.14592]) * np.pi / 180.  # Pymol
     eq(chi[0,0:2], chi0, decimal=4)
-    eq(int(rid[0,0]), 0)
+    eq(indices[0], np.array([0, 1, 4, 5]))
 
 
 def test_dihedral_1():
