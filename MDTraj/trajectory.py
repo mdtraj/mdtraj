@@ -711,6 +711,9 @@ class Trajectory(object):
         self._xyz = value
         self._rmsd_traces = None
 
+    def _string_summary_basic(self):
+        return "mdtraj.Trajectory with %d frames, %d atoms, %d residues" % (self.n_frames, self.n_atoms, self.n_residues)
+
     def __len__(self):
         return self.n_frames
 
@@ -719,10 +722,10 @@ class Trajectory(object):
         return self.join(other)
 
     def __str__(self):
-        return "<mdtraj.Trajectory with %d frames, %d atoms>" % (self.n_frames, self.n_atoms)
+        return "<%s>\n\nContaining topology:\n\n%s" % (self._string_summary_basic(), str(self.top))
 
     def __repr__(self):
-        return "<mdtraj.Trajectory with %d frames, %d atoms at 0x%02x>" % (self.n_frames, self.n_atoms, id(self))
+        return "<%s at 0x%02x>\n\nContaining topology:\n\n%s" % (self._string_summary_basic(), id(self), repr(self.top))    
 
     def superpose(self, reference, frame=0, atom_indices=None, parallel=True):
         """Superpose each conformation in this trajectory upon a reference

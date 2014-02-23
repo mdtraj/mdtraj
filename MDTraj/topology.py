@@ -181,11 +181,27 @@ class Topology(object):
         return not self.__eq__(other)
 
     def __str__(self):
-        return "<mdtraj.Topology with %d chains, %d residues, %d atoms, %d bonds>" % (self.n_chains, self.n_residues, self.n_atoms, len(self._bonds))
+        return "<%s>\n%s" % (self._string_summary_basic(), self._string_summary_detailed())
 
     def __repr__(self):
-        return "<mdtraj.Topology with %d chains, %d residues, %d atoms, %d bonds at 0x%02x>" % (self.n_chains, self.n_residues, self.n_atoms, len(self._bonds), id(self))
+        return "<%s at 0x%02x>\n %s" % (self._string_summary_basic(), id(self), self._string_summary_detailed())    
 
+    def _string_summary_basic(self):
+        return "mdtraj.Topology with %d chains, %d residues, %d atoms, %d bonds" % (self.n_chains, self.n_residues, self.n_atoms, len(self._bonds))
+    
+    def _string_summary_detailed(self, rows_to_print=3):
+        top, bonds = self.to_dataframe()
+        if len(top) <= rows_to_print * 2:
+            detailed_string = str(top)
+        else:
+            detailed_string = "%s\n[...]\n%s" % (
+                     top.iloc[0:rows_to_print].to_string(),
+                     top.iloc[-rows_to_print:].to_string()
+                     )
+                     
+        return detailed_string
+        
+        
     def copy(self):
         """Return a copy of the topology
 
