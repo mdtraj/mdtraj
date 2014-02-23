@@ -35,7 +35,7 @@ import mdtraj.pdb.element
 from mdtraj.utils.six import iteritems, PY3, u
 from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.utils import import_, ensure_type, convert, cast_indices
-from mdtraj.hdf5 import ensure_mode
+from mdtraj.formats.hdf5 import ensure_mode
 
 MAXINT16 = np.iinfo(np.int16).max
 MAXINT32 = np.iinfo(np.int32).max

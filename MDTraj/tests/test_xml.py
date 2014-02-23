@@ -21,7 +21,7 @@
 ##############################################################################
 
 from mdtraj.testing import get_fn, eq
-from mdtraj.trajectory import load
+from mdtraj import load
 
 
 def test_0():

@@ -33,7 +33,8 @@ there are not discovered by nose
 
 import tempfile, os
 import numpy as np
-from mdtraj import DCDTrajectoryFile, io
+from mdtraj.formats import DCDTrajectoryFile
+from mdtraj import io
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
 
 #TestDocstrings = DocStringFormatTester(dcd, error_on_none=True)

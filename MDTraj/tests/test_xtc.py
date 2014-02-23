@@ -31,9 +31,11 @@ there are not discovered by nose
 from __future__ import print_function
 import os, tempfile
 import numpy as np
-from mdtraj import xtc, io, XTCTrajectoryFile
+from mdtraj import io
+from mdtraj.formats import XTCTrajectoryFile
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
 
+from mdtraj.formats import xtc
 TestDocstrings = DocStringFormatTester(xtc, error_on_none=True)
 
 fn_xtc = get_fn('frame0.xtc')

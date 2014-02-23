@@ -111,7 +111,7 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.DCDTrajectoryFile :  Low level interface to DCD files
     """
-    from mdtraj.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology, Trajectory
     
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a

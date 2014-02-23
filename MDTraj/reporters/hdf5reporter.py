@@ -29,7 +29,7 @@ in the HDF5 format.
 ##############################################################################
 
 from __future__ import print_function, division
-from mdtraj.hdf5 import HDF5TrajectoryFile
+from mdtraj.formats.hdf5 import HDF5TrajectoryFile
 from mdtraj.reporters.basereporter import _BaseReporter
 
 ##############################################################################

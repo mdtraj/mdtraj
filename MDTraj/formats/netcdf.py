@@ -81,7 +81,7 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.NetCDFTrajectoryFile :  Low level interface to NetCDF files
     """
-    from mdtraj.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology, Trajectory
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)

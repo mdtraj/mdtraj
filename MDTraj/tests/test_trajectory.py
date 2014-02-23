@@ -26,14 +26,13 @@ import functools
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises, SkipTest
 import numpy as np
 import mdtraj as md
-import mdtraj.trajectory
 import mdtraj.utils
-from mdtraj import topology
 from mdtraj.utils.six import PY3
 from mdtraj.utils.six.moves import xrange
 from mdtraj.pdb import element
 
-TestDocstrings = DocStringFormatTester(mdtraj.trajectory, error_on_none=True)
+import mdtraj.core.trajectory
+TestDocstrings = DocStringFormatTester(mdtraj.core.trajectory, error_on_none=True)
 
 fn = get_fn('traj.h5')
 nat = get_fn('native.pdb')
@@ -254,8 +253,8 @@ def test_array_vs_matrix():
     top = md.load(get_fn('native.pdb')).topology
     xyz = np.random.randn(1, 22, 3)
     xyz_mat = np.matrix(xyz)
-    t1 = mdtraj.trajectory.Trajectory(xyz, top)
-    t2 = mdtraj.trajectory.Trajectory(xyz_mat, top)
+    t1 = md.Trajectory(xyz, top)
+    t2 = md.Trajectory(xyz_mat, top)
 
     eq(t1.xyz, xyz)
     eq(t2.xyz, xyz)
@@ -340,22 +339,21 @@ def test_seek_read_mode():
     segments, keeping track of our location manually and checking with both
     tell() and by checking that the right coordinates are actually returned
     """
-    files = [(md.NetCDFTrajectoryFile, 'frame0.nc'),
-             (md.HDF5TrajectoryFile, 'frame0.h5'),
-             (md.XTCTrajectoryFile, 'frame0.xtc'),
-             (md.TRRTrajectoryFile, 'frame0.trr'),
-             (md.DCDTrajectoryFile, 'frame0.dcd'),
-             (md.MDCRDTrajectoryFile, 'frame0.mdcrd'),
-             (md.BINPOSTrajectoryFile, 'frame0.binpos'),
-             (md.BINPOSTrajectoryFile, 'frame0.binpos'),
-             (md.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'),]
+    files = [(md.formats.NetCDFTrajectoryFile, 'frame0.nc'),
+             (md.formats.HDF5TrajectoryFile, 'frame0.h5'),
+             (md.formats.XTCTrajectoryFile, 'frame0.xtc'),
+             (md.formats.TRRTrajectoryFile, 'frame0.trr'),
+             (md.formats.DCDTrajectoryFile, 'frame0.dcd'),
+             (md.formats.MDCRDTrajectoryFile, 'frame0.mdcrd'),
+             (md.formats.BINPOSTrajectoryFile, 'frame0.binpos'),
+             (md.formats.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'),]
 
     for a, b in files:
         point = 0
         xyz = md.load(get_fn(b), top=get_fn('native.pdb')).xyz
         length = len(xyz)
         kwargs = {}
-        if a is md.MDCRDTrajectoryFile:
+        if a is md.formats.MDCRDTrajectoryFile:
             kwargs = {'n_atoms': 22}
 
         with a(get_fn(b), **kwargs) as f:

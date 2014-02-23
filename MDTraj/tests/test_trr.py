@@ -20,10 +20,11 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-from mdtraj import trr, TRRTrajectoryFile
+from mdtraj.formats import TRRTrajectoryFile
 import os, tempfile
 import numpy as np
 from mdtraj.testing import eq, DocStringFormatTester, get_fn
+from mdtraj.formats import trr
 DocStringFormatTester(trr)
 
 fd, temp = tempfile.mkstemp(suffix='.trr')
