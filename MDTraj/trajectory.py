@@ -549,6 +549,8 @@ class Trajectory(object):
         timestep : float
             The timestep between frames, in picoseconds.
         """
+        if self.n_frames <= 1:
+            raise(ValueError("Cannot calculate timestep if trajectory has one frame."))
         return self._time[1] - self._time[0]
 
     @property
@@ -711,6 +713,17 @@ class Trajectory(object):
         self._xyz = value
         self._rmsd_traces = None
 
+    def _string_summary_basic(self):
+        """Basic summary of traj in string form."""
+        return "mdtraj.Trajectory with %d frames, %d atoms, %d residues" % (self.n_frames, self.n_atoms, self.n_residues)
+
+    def _string_summary_unitcell(self):
+        """unitcell summary of traj in string form."""
+        if self.unitcell_vectors is None:
+            return "%s\nContains no unitcell information.\n\n" % ("*" * 60)
+        else:
+            return "%s\nContains box vectors:\n%s" % ("*" * 60, str(self.unitcell_vectors))
+
     def __len__(self):
         return self.n_frames
 
@@ -719,10 +732,10 @@ class Trajectory(object):
         return self.join(other)
 
     def __str__(self):
-        return "<mdtraj.Trajectory with %d frames, %d atoms>" % (self.n_frames, self.n_atoms)
+        return "<%s>\n%s" % (self._string_summary_basic(), self._string_summary_unitcell())
 
     def __repr__(self):
-        return "<mdtraj.Trajectory with %d frames, %d atoms at 0x%02x>" % (self.n_frames, self.n_atoms, id(self))
+        return "<%s at 0x%02x>\n%s" % (self._string_summary_basic(), id(self), self._string_summary_unitcell())
 
     def superpose(self, reference, frame=0, atom_indices=None, parallel=True):
         """Superpose each conformation in this trajectory upon a reference
