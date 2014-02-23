@@ -371,7 +371,7 @@ def test_seek_read_mode():
                     offset = np.random.randint(1, 10)
                     if point + offset < length:
                         read = f.read(offset)
-                        if a not in [md.BINPOSTrajectoryFile, md.LH5TrajectoryFile]:
+                        if a not in [md.formats.BINPOSTrajectoryFile, md.formats.LH5TrajectoryFile]:
                             read = read[0]
                         readlength = len(read)
                         read = mdtraj.utils.convert(read, f.distance_unit, 'nanometers')

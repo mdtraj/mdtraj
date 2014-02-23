@@ -36,7 +36,7 @@ from argparse import ArgumentParser
 
 import numpy as np
 import mdtraj as md
-from mdtraj.trajectory import convert as _convert
+from mdtraj.core.trajectory import convert as _convert
 from mdtraj.utils.six import iteritems
 
 ###############################################################################
@@ -47,14 +47,14 @@ from mdtraj.utils.six import iteritems
 # Globals
 ###############################################################################
 
-formats = {'.dcd': md.DCDTrajectoryFile,
-           '.xtc': md.XTCTrajectoryFile,
-           '.trr': md.TRRTrajectoryFile,
-           '.binpos': md.BINPOSTrajectoryFile,
-           '.nc': md.NetCDFTrajectoryFile,
-           '.h5': md.HDF5TrajectoryFile,
-           '.lh5': md.LH5TrajectoryFile,
-           '.pdb': md.PDBTrajectoryFile}
+formats = {'.dcd': md.formats.DCDTrajectoryFile,
+           '.xtc': md.formats.XTCTrajectoryFile,
+           '.trr': md.formats.TRRTrajectoryFile,
+           '.binpos': md.formats.BINPOSTrajectoryFile,
+           '.nc': md.formats.NetCDFTrajectoryFile,
+           '.h5': md.formats.HDF5TrajectoryFile,
+           '.lh5': md.formats.LH5TrajectoryFile,
+           '.pdb': md.pdb.PDBTrajectoryFile}
 
 fields = {'.trr': ('xyz', 'time', 'step', 'box', 'lambda'),
           '.xtc': ('xyz', 'time', 'step', 'box'),
@@ -252,7 +252,7 @@ def main(args, verbose=True):
     InFileFormat = formats[in_x]
 
     if args.topology is not None:
-        topology = md.PDBTrajectoryFile(args.topology).topology
+        topology = md.pdb.PDBTrajectoryFile(args.topology).topology
     else:
         topology = None
 
@@ -337,23 +337,23 @@ def write(outfile, data):
     data : dict
         A dict with the data to write in it.
     """
-    if isinstance(outfile, md.XTCTrajectoryFile):
+    if isinstance(outfile, md.formats.XTCTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
                       data.get('step', None), data.get('box', None))
 
-    elif isinstance(outfile, md.TRRTrajectoryFile):
+    elif isinstance(outfile, md.formats.TRRTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
                       data.get('step', None), data.get('box', None),
                       data.get('lambd', None))
 
-    elif isinstance(outfile, md.DCDTrajectoryFile):
+    elif isinstance(outfile, md.formats.DCDTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('cell_lengths', None),
                       data.get('cell_angles', None))
 
-    elif isinstance(outfile, md.BINPOSTrajectoryFile):
+    elif isinstance(outfile, md.formats.BINPOSTrajectoryFile):
         outfile.write(data.get('xyz', None))
 
-    elif isinstance(outfile, md.PDBTrajectoryFile):
+    elif isinstance(outfile, md.pdb.PDBTrajectoryFile):
         lengths, angles = None, None
         for i, frame in enumerate(data.get('xyz')):
             if 'cell_lengths' in data:
@@ -363,11 +363,11 @@ def write(outfile, data):
                 
             outfile.write(frame, data.get('topology', None), i, lengths, angles)
 
-    elif isinstance(outfile, md.NetCDFTrajectoryFile):
+    elif isinstance(outfile, md.formats.NetCDFTrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
                       data.get('cell_lengths', None), data.get('cell_angles', None))
 
-    elif isinstance(outfile, md.HDF5TrajectoryFile):
+    elif isinstance(outfile, md.formats.HDF5TrajectoryFile):
         outfile.write(data.get('xyz', None), data.get('time', None),
                       data.get('cell_lengths', None), data.get('cell_angles', None),
                       data.get('velocities', None), data.get('kineticEnergy', None),
@@ -377,7 +377,7 @@ def write(outfile, data):
             # only want to write the topology once if we're chunking
             outfile.topology = data.get('topology', None)
 
-    elif isinstance(outfile, md.LH5TrajectoryFile):
+    elif isinstance(outfile, md.formats.LH5TrajectoryFile):
         outfile.write(data.get('xyz', None))
         if outfile.topology is None:
             # only want to write the topology once if we're chunking
@@ -393,10 +393,10 @@ def read(infile, chunk, stride, atom_indices):
     that performs the read and then puts the results in a little dict. It also
     returns the distance units that the file uses.
     """
-    if not isinstance(infile, md.PDBTrajectoryFile):
+    if not isinstance(infile, md.pdb.PDBTrajectoryFile):
         _data = infile.read(chunk, stride=stride, atom_indices=atom_indices)
 
-    if isinstance(infile, md.PDBTrajectoryFile):
+    if isinstance(infile, md.pdb.PDBTrajectoryFile):
         if infile.closed:
             # signal that we're done reading this pdb
             return None, None, 0
@@ -415,34 +415,34 @@ def read(infile, chunk, stride, atom_indices):
         in_units = 'angstroms'
         infile.close()
 
-    elif isinstance(infile, md.XTCTrajectoryFile):
+    elif isinstance(infile, md.formats.XTCTrajectoryFile):
         data = dict(zip(fields['.xtc'], _data))
         in_units = 'nanometers'
 
-    elif isinstance(infile, md.TRRTrajectoryFile):
+    elif isinstance(infile, md.formats.TRRTrajectoryFile):
         data = dict(zip(fields['.trr'], _data))
         in_units = 'nanometers'
 
-    elif isinstance(infile, md.DCDTrajectoryFile):
+    elif isinstance(infile, md.formats.DCDTrajectoryFile):
         data = dict(zip(fields['.dcd'], _data))
         in_units = 'angstroms'
 
-    elif isinstance(infile, md.BINPOSTrajectoryFile):
+    elif isinstance(infile, md.formats.BINPOSTrajectoryFile):
         data = {'xyz': _data}
         in_units = 'angstroms'
 
-    elif isinstance(infile, md.NetCDFTrajectoryFile):
+    elif isinstance(infile, md.formats.NetCDFTrajectoryFile):
         data = dict(zip(fields['.nc'], _data))
         in_units = 'angstroms'
 
-    elif isinstance(infile, md.HDF5TrajectoryFile):
+    elif isinstance(infile, md.formats.HDF5TrajectoryFile):
         data = dict(zip(fields['.h5'], _data))
         data['topology'] = infile.topology  # need to hack this one in manually
         if atom_indices is not None:
             data['topology'] = data['topology'].subset(atom_indices)
         in_units = 'nanometers'
 
-    elif isinstance(infile, md.LH5TrajectoryFile):
+    elif isinstance(infile, md.formats.LH5TrajectoryFile):
         data = {'xyz': _data}
         data['topology'] = infile.topology  # need to hack this one in manually
         if atom_indices is not None:
