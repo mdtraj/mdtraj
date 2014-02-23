@@ -181,15 +181,16 @@ class Topology(object):
         return not self.__eq__(other)
 
     def __str__(self):
-        return "<%s>\n%s" % (self._string_summary_basic(), self._string_summary_detailed())
+        return "<%s>" % (self._string_summary_basic())
 
     def __repr__(self):
-        return "<%s at 0x%02x>\n %s" % (self._string_summary_basic(), id(self), self._string_summary_detailed())    
+        return "<%s at 0x%02x>" % (self._string_summary_basic(), id(self))
 
     def _string_summary_basic(self):
         return "mdtraj.Topology with %d chains, %d residues, %d atoms, %d bonds" % (self.n_chains, self.n_residues, self.n_atoms, len(self._bonds))
     
     def _string_summary_detailed(self, rows_to_print=3):
+        raise(Exception("Not Currently Enabled due to optional Pandas dependency."))
         top, bonds = self.to_dataframe()
         if len(top) <= rows_to_print * 2:
             detailed_string = str(top)
