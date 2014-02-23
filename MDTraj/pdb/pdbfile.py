@@ -51,7 +51,7 @@ from copy import copy
 from mdtraj.pdb.pdbstructure import PdbStructure
 from mdtraj.topology import Topology
 from mdtraj.utils import ilen, cast_indices, convert
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.pdb import element as elem
 
 __all__ = ['load_pdb', 'PDBTrajectoryFile']

@@ -27,24 +27,24 @@ DCD, AMBER BINPOS, PDB, and HDF5.
 """
 
 from __future__ import print_function, division
-from mdtraj.registry import _FormatRegistry
-from mdtraj.xtc import XTCTrajectoryFile, load_xtc
-from mdtraj.trr import TRRTrajectoryFile, load_trr
-from mdtraj.hdf5 import HDF5TrajectoryFile, load_hdf5
-from mdtraj.lh5 import LH5TrajectoryFile, load_lh5
-from mdtraj.netcdf import NetCDFTrajectoryFile, load_netcdf
-from mdtraj.mdcrd import MDCRDTrajectoryFile, load_mdcrd
-from mdtraj.dcd import DCDTrajectoryFile, load_dcd
-from mdtraj.binpos import BINPOSTrajectoryFile, load_binpos
-from mdtraj.pdb import PDBTrajectoryFile, load_pdb
-from mdtraj.arc import ArcTrajectoryFile, load_arc
-from mdtraj.openmmxml import load_xml
+from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.xtc import load_xtc
+from mdtraj.formats.trr import load_trr
+from mdtraj.formats.hdf5 import load_hdf5
+from mdtraj.formats.lh5 import load_lh5
+from mdtraj.formats.netcdf import load_netcdf
+from mdtraj.formats.mdcrd import load_mdcrd
+from mdtraj.formats.dcd import load_dcd
+from mdtraj.formats.binpos import load_binpos
+from mdtraj.pdb import load_pdb
+from mdtraj.formats.arc import load_arc
+from mdtraj.formats.openmmxml import load_xml
 
 
 from mdtraj._rmsd import rmsd
-from mdtraj.topology import Topology
+from mdtraj.core.topology import Topology
 from mdtraj.geometry import *
-from mdtraj.trajectory import *
+from mdtraj.core.trajectory import *
 
 def test(label='full', verbose=2):
     """Run tests for mdtraj using nose.

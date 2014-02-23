@@ -224,32 +224,31 @@ def detect_sse41():
 ################################################################################
 
 
-xtc = Extension('mdtraj.xtc',
-                sources=['MDTraj/xtc/src/xdrfile.c',
-                         'MDTraj/xtc/src/xdrfile_xtc.c',
-                         'MDTraj/xtc/xtc.' + cython_extension],
-                include_dirs=['MDTraj/xtc/include/',
-                              'MDTraj/xtc/', numpy.get_include()])
+xtc = Extension('mdtraj.formats.xtc',
+                sources=['MDTraj/formats/xtc/src/xdrfile.c',
+                         'MDTraj/formats/xtc/src/xdrfile_xtc.c',
+                         'MDTraj/formats/xtc/xtc.' + cython_extension],
+                include_dirs=['MDTraj/formats/xtc/include/',
+                              'MDTraj/formats/xtc/', numpy.get_include()])
 
-trr = Extension('mdtraj.trr',
-                sources=['MDTraj/xtc/src/xdrfile.c',
-                         'MDTraj/xtc/src/xdrfile_trr.c',
-                         'MDTraj/xtc/trr.' + cython_extension],
-                include_dirs=['MDTraj/xtc/include/',
-                              'MDTraj/xtc/', numpy.get_include()])
+trr = Extension('mdtraj.formats.trr',
+                sources=['MDTraj/formats/xtc/src/xdrfile.c',
+                         'MDTraj/formats/xtc/src/xdrfile_trr.c',
+                         'MDTraj/formats/xtc/trr.' + cython_extension],
+                include_dirs=['MDTraj/formats/xtc/include/',
+                              'MDTraj/formats/xtc/', numpy.get_include()])
 
-dcd = Extension('mdtraj.dcd',
-                sources=['MDTraj/dcd/src/dcdplugin.c',
-                         'MDTraj/dcd/dcd.' + cython_extension],
-                #libraries=['m'],
-                include_dirs=["MDTraj/dcd/include/",
-                              'MDTraj/dcd/', numpy.get_include()])
+dcd = Extension('mdtraj.formats.dcd',
+                sources=['MDTraj/formats/dcd/src/dcdplugin.c',
+                         'MDTraj/formats/dcd/dcd.' + cython_extension],
+                include_dirs=["MDTraj/formats/dcd/include/",
+                              'MDTraj/formats/dcd/', numpy.get_include()])
 
-binpos = Extension('mdtraj.binpos',
-                   sources=['MDTraj/binpos/src/binposplugin.c',
-                            'MDTraj/binpos/binpos.' + cython_extension],
-                   include_dirs=['MDTraj/binpos/include/',
-                                 'MDTraj/binpos/', numpy.get_include()])
+binpos = Extension('mdtraj.formats.binpos',
+                   sources=['MDTraj/formats/binpos/src/binposplugin.c',
+                            'MDTraj/formats/binpos/binpos.' + cython_extension],
+                   include_dirs=['MDTraj/formats/binpos/include/',
+                                 'MDTraj/formats/binpos/', numpy.get_include()])
 
 
 def rmsd_extension():

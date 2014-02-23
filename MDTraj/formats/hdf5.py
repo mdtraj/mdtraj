@@ -51,7 +51,7 @@ from mdtraj import version
 import mdtraj.pdb.element as elem
 from mdtraj.topology import Topology
 from mdtraj.utils import in_units_of, ensure_type, import_, convert, cast_indices
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 
 __all__ = ['HDF5TrajectoryFile', 'load_hdf5']
 

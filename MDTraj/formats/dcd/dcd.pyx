@@ -33,7 +33,7 @@ import numpy as np
 cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, convert
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 from libc.stdlib cimport malloc, free
 from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep

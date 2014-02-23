@@ -30,7 +30,7 @@ import os
 import itertools
 import numpy as np
 from mdtraj.utils import ensure_type, cast_indices, convert
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.utils.six.moves import xrange
 
 __all__ = ['MDCRDTrajectoryFile', 'load_mdcrd']

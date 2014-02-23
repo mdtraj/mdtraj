@@ -38,7 +38,7 @@ import warnings
 
 import numpy as np
 from mdtraj import version
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.utils import ensure_type, import_, in_units_of, convert, cast_indices
 
 __all__ = ['NetCDFTrajectoryFile', 'load_netcdf']

@@ -33,7 +33,7 @@ import sys
 import numpy as np
 import mdtraj.pdb.element
 from mdtraj.utils.six import iteritems, PY3, u
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.utils import import_, ensure_type, convert, cast_indices
 from mdtraj.hdf5 import ensure_mode
 

@@ -21,7 +21,7 @@
 ##############################################################################
 
 import numpy as np
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 
 __all__ = ['load_xml']
 

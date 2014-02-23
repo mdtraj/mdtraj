@@ -34,10 +34,10 @@ import numpy as np
 cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, convert
-from mdtraj.registry import _FormatRegistry
-cimport xdrlib
+from mdtraj.formats.registry import _FormatRegistry
+cimport trrlib
 
-__all__ = ['load_xtc', 'XTCTrajectoryFile']
+__all__ = ['load_trr', 'TRRTrajectoryFile']
 
 
 ###############################################################################
@@ -72,21 +72,18 @@ if sizeof(float) != sizeof(np.float32_t):
 # Code
 ###############################################################################
 
-@_FormatRegistry.register_loader('.xtc')
-def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
-    """Load an Gromacs XTC file from disk.
-
-    Since the Gromacs XTC format doesn't contain information to specify the
-    topology, you need to supply the topology yourself.
+@_FormatRegistry.register_loader('.trr')
+def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
+    """Load a trr file. Since the trr doesn't contain information
+    to specify the topology, you need to supply the topology yourself
 
     Parameters
     ----------
     filename : str
-        Filename (string) of xtc trajectory.
+        Filename of TRR trajectory file.
     top : {str, Trajectory, Topology}
-        The XTC format does not contain topology information. Pass in either the
-        path to a RCSB PDB file, a trajectory, or a topology to supply this
-        information.
+        The TRR format does not contain topology information. Pass in either the
+        path to a pdb file, a trajectory, or a topology to supply this information.
     stride : int, default=None
         Only read every stride-th frame
     atom_indices : array_like, optional
@@ -100,11 +97,11 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     Examples
     --------
-    >>> import mdtraj as md
-    >>> traj = md.load_xtc('output.xtc', top='topology.pdb')
-    >>> print traj
-    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>
-    
+    >>> import mdtraj as md                                        # doctest: +SKIP
+    >>> traj = md.load_trr('output.trr', top='topology.pdb')       # doctest: +SKIP
+    >>> print traj                                                 # doctest: +SKIP
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+
     Returns
     -------
     trajectory : md.Trajectory
@@ -112,52 +109,49 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     See Also
     --------
-    mdtraj.XTCTrajectoryFile :  Low level interface to XTC files
+    mdtraj.TRRTrajectoryFile :  Low level interface to TRR files
     """
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a
     # dispatch from load(), where top comes from **kwargs. So if its not supplied
     # we want to give the user an informative error message
     from mdtraj.trajectory import _parse_topology, Trajectory
-
     if top is None:
-        raise ValueError('"top" argument is required for load_xtc')
+        raise ValueError('"top" argument is required for load_trr')
 
     if not isinstance(filename, str):
-        raise TypeError('filename must be of type string for load_xtc. '
+        raise TypeError('filename must be of type string for load_trr. '
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
-
     atom_indices = cast_indices(atom_indices)
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
 
-    with XTCTrajectoryFile(filename, 'r') as f:
+    with TRRTrajectoryFile(filename) as f:
         if frame is not None:
             f.seek(frame)
-            xyz, time, step, box = f.read(n_frames=1, atom_indices=atom_indices)
+            xyz, time, step, box, lambd = f.read(n_frames=1, atom_indices=atom_indices)
         else:
-            xyz, time, step, box = f.read(stride=stride, atom_indices=atom_indices)
+            xyz, time, step, box, lambd = f.read(stride=stride, atom_indices=atom_indices)
 
         convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
         convert(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     trajectory.unitcell_vectors = box
-
     return trajectory
 
 
-cdef class XTCTrajectoryFile:
-    """XTCTrajectoryFile(filenamee, mode='r', force_overwrite=True, **kwargs)
+cdef class TRRTrajectoryFile:
+    """TRRTrajectoryFile(filename, mode='r', force_overwrite=True, **kwargs)
 
-    Interface for reading and writing to a GROMACS XTC file.
+    Interface for reading and writing to a GROMACS TRR file.
     This is a file-like objec that supports both reading and writing.
-    It also supports the context manager ptorocol, so you can use it
+    It also supports the context manager protocol, so you can use it
     with the python 'with' statement.
 
-    The conventional units in the XTC file are nanometers and picoseconds.
+    The conventional units in the TRR file are nanometers and picoseconds.
     The format only supports saving coordinates, the time, the md step,
     and the unit cell parametrs (box vectors)
 
@@ -168,7 +162,8 @@ cdef class XTCTrajectoryFile:
     mode : {'r', 'w'}
         The mode in which to open the file, either 'r' for read or 'w' for write.
     force_overwrite : bool
-        If opened in write mode, and a file by the name of `filename` already exists on disk, should we overwrite it?
+        If opened in write mode, and a file by the name of `filename` already
+        exists on disk, should we overwrite it?
 
     Other Parameters
     ----------------
@@ -176,29 +171,26 @@ cdef class XTCTrajectoryFile:
         In read mode, we need to allocate a buffer in which to store the data
         without knowing how many frames are in the file. This parameter is the
         minimum size of the buffer to allocate.
-    chunk_size_multiplier : int, default=1.5
-        In read mode, we need to allocate a buffer in which to store the data without knowing how many frames are in
-        the file. We can *guess* this information based on the size of the file on disk, but it's not perfect. This
-        parameter inflates the guess by a multiplicative factor.
+    chunk_size_multiplier, int, default=1.5
+        In read mode, we need to allocate a buffer in which to store the data
+        without knowing how many frames are in the file. We can *guess* this
+        information based on the size of the file on disk, but it's not perfect.
+        This parameter inflates the guess by a multiplicative factor.
 
     Examples
     --------
-    >>> # read the data from from an XTC file
-    >>> with XTCTrajectoryFile('traj.xtc') as f:
-    >>>    xyz, time, step, box = f.read()
-
-    >>> # write some random coordinates to an XTC file
-    >>> with XTCTrajectoryFile('output.xtc', 'w') as f:
-    >>>     f.write(np.random.randn(10,1,3))
+    >>> # load up the data from a trr
+    >>> with XTCTrajectoryFile('traj.trr') as f:
+    >>>    xyz, time, step, box, lambdas = f.read()
 
     See Also
     --------
-    mdtraj.load_xtc : High-level wrapper that returns a ``md.Trajectory``
+    mdtraj.load_trr : High-level wrapper that returns a ``md.Trajectory``
     """
-    cdef xdrlib.XDRFILE* fh
+    cdef trrlib.XDRFILE* fh
     cdef str filename
     cdef int n_atoms          # number of atoms in the file
-    cdef unsigned long n_frames # number of frames in the file, cached
+    cdef unsigned long n_frames  # numnber of frames in the file, cached
     cdef int frame_counter    # current position in the file, in read mode
     cdef int is_open          # is the file handle currently open?
     cdef int approx_n_frames  # appriximate number of frames in the file, as guessed based on its size
@@ -209,24 +201,24 @@ cdef class XTCTrajectoryFile:
 
 
     def __cinit__(self, char* filename, char* mode='r', force_overwrite=True, **kwargs):
-        """Open a GROMACS XTC file for reading/writing.
+        """Open a GROMACS TRR file for reading/writing.
         """
         self.distance_unit = 'nanometers'
         self.is_open = False
         self.frame_counter = 0
-        self.n_frames = -1  # means unknown
+        self.n_frames = -1
         self.filename = filename
 
         if str(mode) == 'r':
             self.n_atoms = 0
             if not os.path.exists(filename):
                 raise IOError("The file '%s' doesn't exist" % filename)
-            xdrlib.read_xtc_natoms(filename, &self.n_atoms)
+            trrlib.read_trr_natoms(filename, &self.n_atoms)
             if self.n_atoms <= 0:
-                raise IOError('Malformed XTC file. Number of atoms <= 0. '
-                              'Are you sure this is a valid GROMACS xtc file?')
+                raise IOError('Malformed TRR file. Number of atoms <= 0. '
+                              'Are you sure this is a valid GROMACS TRR file?')
 
-            self.fh = xdrlib.xdrfile_open(filename, b'r')
+            self.fh = trrlib.xdrfile_open(filename, b'r')
             if self.fh is NULL:
                 raise IOError('File not found: "%s"' % filename)
             self.approx_n_frames = self._estimate_n_frames_from_filesize(os.stat(filename).st_size)
@@ -239,7 +231,7 @@ cdef class XTCTrajectoryFile:
             if force_overwrite and os.path.exists(filename):
                 os.unlink(filename)
 
-            self.fh = xdrlib.xdrfile_open(filename, 'w')
+            self.fh = trrlib.xdrfile_open(filename, 'w')
             if self.fh is NULL:
                 raise IOError('Unable to open file "%s"' % filename)
         else:
@@ -253,32 +245,24 @@ cdef class XTCTrajectoryFile:
         self.mode = mode
 
     def _estimate_n_frames_from_filesize(self, filesize):
-        # model: size(bytes) = coefs_[0] * n_frames + coefs_[1]*n_atoms
-        #                       + coefs_[2] * n_frames * n_atoms
-        #                       + intercept
-        # fit on a small training set with a few hundred frames
-        coefs_ = [9.93733050e+01,  -6.49891780e-02,   4.74462831e+00]
-        intercept_ = 5
-
-        approx_n_frames = (filesize - intercept_ -
-                           coefs_[1]*self.n_atoms) / (coefs_[2] * self.n_atoms +
-                                                      coefs_[0])
-
+        # this approximation is pretty bad. on 5000/500 frames, 50/100 atoms,
+        # it seems to be about 30%
+        approx_n_frames = filesize / ((self.n_atoms * 2 * + 16) / 2)
         return approx_n_frames
 
     def __dealloc__(self):
         self.close()
 
     def close(self):
-        "Close the XTC file handle"
+        """Close the TRR file"""
         if self.is_open:
-            xdrlib.xdrfile_close(self.fh)
+            trrlib.xdrfile_close(self.fh)
             self.is_open = False
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)
 
-        Read data from an XTC file
+        Read data from a TRR file
 
         Parameters
         ----------
@@ -302,6 +286,14 @@ cdef class XTCTrajectoryFile:
             The step in the simulation corresponding to each frame
         box : np.ndarray, shape=(n_frames, 3, 3), dtype=np.float32
             The box vectors in each frame.
+        lambd : np.ndarray, shape=(n_frames), dtype=np.float32
+            The alchemical lambda value of each frame.
+
+        Note
+        ----
+        The TRR format DOES support saving velocities and forces, but those
+        fields are not read (or written) by the current implementation of this
+        wrapper.
         """
         if not str(self.mode) == 'r':
             raise ValueError('read() is only available when file is opened in mode="r"')
@@ -312,21 +304,20 @@ cdef class XTCTrajectoryFile:
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
-            xyz, time, step, box = self._read(int(n_frames), atom_indices)
-            return xyz[::stride], time[::stride], step[::stride], box[::stride]
+            xyz, time, step, box, lambd = self._read(int(n_frames), atom_indices)
+            return xyz[::stride], time[::stride], step[::stride], box[::stride], lambd[::stride]
 
-        # if they want ALL of the remaining frames, we need to guess at the
-        # chunk size, and then check the exit status to make sure we're really 
-        # at the EOF
-        all_xyz, all_time, all_step, all_box = [], [], [], []
+
+        # if they want ALL of the remaining frames, we need to guess at the chunk
+        # size, and then check the exit status to make sure we're really at the EOF
+        all_xyz, all_time, all_step, all_box, all_lambd = [], [], [], [], []
 
         while True:
             # guess the size of the chunk to read, based on how many frames we think are in the file
             # and how many we've currently read
             chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
                         self.min_chunk_size)
-
-            xyz, time, step, box = self._read(chunk, atom_indices)
+            xyz, time, step, box, lambd = self._read(chunk, atom_indices)
             if len(xyz) <= 0:
                 break
 
@@ -334,16 +325,16 @@ cdef class XTCTrajectoryFile:
             all_time.append(time)
             all_step.append(step)
             all_box.append(box)
+            all_lambd.append(lambd)
 
-        if len(all_xyz) == 0:
-            return np.array([]), np.array([]), np.array([]), np.array([])
         return (np.concatenate(all_xyz)[::stride],
                 np.concatenate(all_time)[::stride],
                 np.concatenate(all_step)[::stride],
-                np.concatenate(all_box)[::stride])
+                np.concatenate(all_box)[::stride],
+                np.concatenate(all_lambd)[::stride])
 
     def _read(self, int n_frames, atom_indices):
-        """Read a specified number of XTC frames from the buffer"""
+        """Read a specified number of TRR frames from the buffer"""
 
         cdef int i = 0
         cdef int status = _EXDROK
@@ -367,25 +358,27 @@ cdef class XTCTrajectoryFile:
             np.empty((n_frames), dtype=np.float32)
         cdef np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step = \
             np.empty((n_frames), dtype=np.int32)
+        cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] lambd = \
+            np.empty((n_frames), dtype=np.float32)
         cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box = \
             np.empty((n_frames, 3, 3), dtype=np.float32)
-        cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] prec = \
-            np.empty((n_frames), dtype=np.float32)
 
         # only used if atom_indices is given
         cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
+
+
         while (i < n_frames) and (status != _EXDRENDOFFILE):
             if atom_indices is None:
-                status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[i],
-                                         &time[i], <xdrlib.matrix>&box[i,0,0], <xdrlib.rvec*>&xyz[i,0,0], &prec[i])
+                status = trrlib.read_trr(self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
+                                         <trrlib.matrix>&box[i,0,0], <trrlib.rvec*>&xyz[i,0,0], NULL, NULL)
             else:
-                status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[i],
-                                         &time[i], <xdrlib.matrix>&box[i,0,0], <xdrlib.rvec*>&framebuffer[0,0], &prec[i])
+                status = trrlib.read_trr(self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
+                                         <trrlib.matrix> &box[i,0,0], <trrlib.rvec*>&framebuffer[0,0], NULL, NULL)
                 xyz[i, :, :] = framebuffer[atom_indices, :]
 
             if status != _EXDRENDOFFILE and status != _EXDROK:
-                raise RuntimeError('XTC read error: %s' % _EXDR_ERROR_MESSAGES.get(status, 'unknown'))
+                raise RuntimeError('TRR read error: %s' % _EXDR_ERROR_MESSAGES.get(status, 'unknown'))
             i += 1
 
         if status == _EXDRENDOFFILE:
@@ -393,16 +386,16 @@ cdef class XTCTrajectoryFile:
             box = box[:i-1]
             time = time[:i-1]
             step = step[:i-1]
+            lambd = lambd[:i-1]
 
         self.frame_counter += i
 
-        return xyz, time, step, box
+        return xyz, time, step, box, lambd
 
+    def write(self, xyz, time=None, step=None, box=None, lambd=None):
+        """write(xyz, time=None, step=None, box=None, lambd=None)
 
-    def write(self, xyz, time=None, step=None, box=None):
-        """write(xyz, time=None, step=None, box=None)
-
-        Write data to an XTC file
+        Write data to a TRR file
 
         Parameters
         ----------
@@ -418,6 +411,9 @@ cdef class XTCTrajectoryFile:
             The periodic box vectors of the simulation in each frame, in nanometers.
             If not supplied, the vectors (1,0,0), (0,1,0) and (0,0,1) will
             be written for each frame.
+        lambd : np.ndarray, dtype=np.float32, shape=(n_frames), optional
+            The alchemical lambda value at each frame. If not supplied, all
+            zeros will be written.
         """
         if str(self.mode) != 'w':
             raise ValueError('write() is only available when the file is opened in mode="w"')
@@ -431,10 +427,13 @@ cdef class XTCTrajectoryFile:
                            warn_on_cast=False)
         step = ensure_type(step, dtype=np.int32, ndim=1, name='step', can_be_none=True,
                            shape=(n_frames,), add_newaxis_on_deficient_ndim=True,
-                            warn_on_cast=False)
+                           warn_on_cast=False)
         box = ensure_type(box, dtype=np.float32, ndim=3, name='box', can_be_none=True,
                           shape=(n_frames, 3, 3), add_newaxis_on_deficient_ndim=True,
                           warn_on_cast=False)
+        lambd = ensure_type(lambd, dtype=np.float32, ndim=1, name='lambd', can_be_none=True,
+                            shape=(n_frames,), add_newaxis_on_deficient_ndim=True,
+                            warn_on_cast=False)
         if time is None:
             time = np.arange(0, n_frames, dtype=np.float32)
         if step is None:
@@ -445,35 +444,35 @@ cdef class XTCTrajectoryFile:
             box[:,0,0] = np.ones(n_frames, dtype=np.float32)
             box[:,1,1] = np.ones(n_frames, dtype=np.float32)
             box[:,2,2] = np.ones(n_frames, dtype=np.float32)
-
-        prec = 1000.0 * np.ones(n_frames, dtype=np.float32)
+        if lambd is None:
+            lambd = np.zeros(n_frames, dtype=np.float32)
 
         if self.frame_counter == 0:
             self.n_atoms = xyz.shape[1]
         else:
             if not self.n_atoms == xyz.shape[1]:
-                raise ValueError("This file has %d atoms, but you're now "
-                    "trying to write %d atoms" % (self.n_atoms, xyz.shape[1]))
+                raise ValueError("This file has %d atoms, but you're now trying to write %d atoms" % (self.n_atoms, xyz.shape[1]))
 
-        self._write(xyz, time, step, box, prec)
-
+        self._write(xyz, time, step, box, lambd)
 
     def _write(self, np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz not None,
                np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time not None,
                np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step not None,
                np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box not None,
-               np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] prec not None):
+               np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] lambd not None):
 
         cdef int n_frames = len(xyz)
         cdef int n_atoms = xyz.shape[1]
         cdef int status, i
 
-        # all same shape
-        assert n_frames == len(box) == len(step) == len(time) == len(prec)
+        # all same length
+        assert n_frames == len(box) == len(step) == len(time) == len(lambd)
+
         for i in range(n_frames):
-            status = xdrlib.write_xtc(self.fh, n_atoms, step[i], time[i], <xdrlib.matrix>&box[i, 0, 0], <xdrlib.rvec*>&xyz[i, 0, 0], prec[i])
+            status = trrlib.write_trr(self.fh, n_atoms, step[i], time[i], lambd[i],
+                <trrlib.matrix>&box[i, 0, 0], <trrlib.rvec*>&xyz[i, 0, 0], NULL, NULL)
             if status != _EXDROK:
-                raise RuntimeError('XTC write error: %s' % status)
+                raise RuntimeError('TRR write error: %s' % status)
 
         self.frame_counter += n_frames
         return status
@@ -492,8 +491,7 @@ cdef class XTCTrajectoryFile:
             Seeking beyond the end of a file is not supported
         """
         cdef int i, status, step
-        cdef float time = 0
-        cdef float prec = 0
+        cdef float time, prec, lambd
         cdef np.ndarray[dtype=np.float_t] box = np.empty(9, dtype=np.float)
         cdef np.ndarray[dtype=np.float_t] xyz = np.empty(self.n_atoms * 3, dtype=np.float)
 
@@ -508,14 +506,14 @@ cdef class XTCTrajectoryFile:
         else:
             raise IOError('Invalid argument')
 
-        xdrlib.xdrfile_close(self.fh)
-        self.fh = xdrlib.xdrfile_open(self.filename, self.mode)
+        trrlib.xdrfile_close(self.fh)
+        self.fh = trrlib.xdrfile_open(self.filename, self.mode)
 
         for i in range(absolute):
-            status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step,
-                                     &time, <xdrlib.matrix>&box[0], <xdrlib.rvec*>&xyz[0], &prec)
+            status = trrlib.read_trr(self.fh, self.n_atoms, &step, &time,
+                &lambd, <trrlib.matrix>&box[0], <trrlib.rvec*>&xyz[0], NULL, NULL)
             if status != _EXDROK:
-                raise RuntimeError('XTC seek error: %s' % status)
+                raise RuntimeError('TRR seek error: %s' % status)
 
         self.frame_counter = absolute
 
@@ -546,6 +544,6 @@ cdef class XTCTrajectoryFile:
         if not self.is_open:
             raise ValueError('I/O operation on closed file')
         if self.n_frames == -1:
-            xdrlib.read_xtc_nframes(self.filename, &self.n_frames)
+            trrlib.read_trr_nframes(self.filename, &self.n_frames)
         return int(self.n_frames)
-_FormatRegistry.register_fileobject('.xtc')(XTCTrajectoryFile)
+_FormatRegistry.register_fileobject('.trr')(TRRTrajectoryFile)

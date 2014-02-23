@@ -35,7 +35,7 @@ import numpy as np
 cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, convert
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 from libc.stdlib cimport malloc, free
 from binposlib cimport molfile_timestep_t
 from binposlib cimport seek_timestep, tell_timestep;

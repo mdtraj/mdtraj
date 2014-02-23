@@ -32,10 +32,17 @@ import functools
 from copy import deepcopy
 import numpy as np
 
-from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
-                    TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
-                    LH5TrajectoryFile, PDBTrajectoryFile, MDCRDTrajectoryFile,
-                    ArcTrajectoryFile, Topology)
+from mdtraj.formats import DCDTrajectoryFile
+from mdtraj.formats import BINPOSTrajectoryFile
+from mdtraj.formats import XTCTrajectoryFile
+from mdtraj.formats import TRRTrajectoryFile
+from mdtraj.formats import HDF5TrajectoryFile
+from mdtraj.formats import NetCDFTrajectoryFile
+from mdtraj.formats import LH5TrajectoryFile
+from mdtraj.pdb import PDBTrajectoryFile
+from mdtraj.formats import MDCRDTrajectoryFile
+from mdtraj.formats import ArcTrajectoryFile
+from mdtraj.core.topology import Topology
 from mdtraj.utils import unitcell, ensure_type, convert, cast_indices
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3
