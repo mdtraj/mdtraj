@@ -27,6 +27,7 @@ DCD, AMBER BINPOS, PDB, and HDF5.
 """
 
 from __future__ import print_function, division
+del print_function, division  # Cleans up mdtraj namespace
 from mdtraj.registry import _FormatRegistry
 from mdtraj.xtc import XTCTrajectoryFile, load_xtc
 from mdtraj.trr import TRRTrajectoryFile, load_trr
