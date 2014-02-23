@@ -188,20 +188,6 @@ class Topology(object):
 
     def _string_summary_basic(self):
         return "mdtraj.Topology with %d chains, %d residues, %d atoms, %d bonds" % (self.n_chains, self.n_residues, self.n_atoms, len(self._bonds))
-    
-    def _string_summary_detailed(self, rows_to_print=3):
-        raise(Exception("Not Currently Enabled due to optional Pandas dependency."))
-        top, bonds = self.to_dataframe()
-        if len(top) <= rows_to_print * 2:
-            detailed_string = str(top)
-        else:
-            detailed_string = "%s\n[...]\n%s" % (
-                     top.iloc[0:rows_to_print].to_string(),
-                     top.iloc[-rows_to_print:].to_string()
-                     )
-                     
-        return detailed_string
-        
         
     def copy(self):
         """Return a copy of the topology
