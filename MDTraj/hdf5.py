@@ -352,40 +352,32 @@ class HDF5TrajectoryFile(object):
             A topology object
         """
 
+        # we want to be able to handle the simtk.openmm Topology object
+        # here too, so if it's not an mdtraj topology we'll just guess
+        # that it's probably an openmm topology and convert
+        if not isinstance(topology_object, Topology):
+            topology_object = Topology.from_openmm(topology_object)
+
         try:
             topology_dict = {
                 'chains': [],
                 'bonds': []
             }
 
-            # we want to be able to handle the simtk.openmm Topology object
-            # here too, for the purpose of having a reporter
-            # it doesnt use decorators on the chains/residues/atoms/bonds
-            # so we need to call the methods explicitly. this adds some
-            # annoying bulk to the code
-            chain_iter = topology_object.chains
-            if not hasattr(chain_iter, '__iter__'):
-                chain_iter = chain_iter()
-
-            for chain in chain_iter:
+            for chain in topology_object.chains:
                 chain_dict = {
                     'residues': [],
                     'index': int(chain.index)
                 }
-                residue_iter = chain.residues
-                if not hasattr(residue_iter, '__iter__'):
-                    residue_iter = residue_iter()
-                for residue in residue_iter:
+                for residue in chain.residues:
                     residue_dict = {
                         'index': int(residue.index),
                         'name': str(residue.name),
                         'atoms': [],
                         "resSeq": int(residue.resSeq)
                     }
-                    atom_iter = residue.atoms
-                    if not hasattr(atom_iter, '__iter__'):
-                        atom_iter = atom_iter()
-                    for atom in atom_iter:
+
+                    for atom in residue.atoms:
 
                         try:
                             element_symbol_string = str(atom.element.symbol)
@@ -400,10 +392,7 @@ class HDF5TrajectoryFile(object):
                     chain_dict['residues'].append(residue_dict)
                 topology_dict['chains'].append(chain_dict)
 
-            bond_iter = topology_object.bonds
-            if not hasattr(bond_iter, '__iter__'):
-                 bond_iter = bond_iter()
-            for atom1, atom2 in bond_iter:
+            for atom1, atom2 in topology_object.bonds:
                 topology_dict['bonds'].append([
                     int(atom1.index),
                     int(atom2.index)
