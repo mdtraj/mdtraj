@@ -98,15 +98,6 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
         convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
         convert(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
-    if isinstance(time, np.ma.masked_array) and np.all(time.mask):
-        # if time is a masked array and all the entries are masked
-        # then we just tread it as if we never found it
-        time = None
-    if isinstance(cell_lengths, np.ma.masked_array) and np.all(cell_lengths.mask):
-        cell_lengths = None
-    if isinstance(cell_angles, np.ma.masked_array) and np.all(cell_angles.mask):
-        cell_angles = None
-
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
                             unitcell_lengths=cell_lengths,
                             unitcell_angles=cell_angles)
@@ -334,7 +325,11 @@ class NetCDFTrajectoryFile(object):
                                 provided, neglected))
 
         if self._needs_initialization:
-            self._initialize_headers(n_atoms)
+            self._initialize_headers(
+                n_atoms=n_atoms,
+                set_coordinates=True,
+                set_time=(time is not None),
+                set_cell=(cell_lengths is not None and cell_angles is not None))
             self._needs_initialization = False
 
         # this slice object says where we're going to put the data in the
@@ -342,13 +337,30 @@ class NetCDFTrajectoryFile(object):
         frame_slice = slice(self._frame_index, self._frame_index + n_frames)
 
         # deposit the data
-        self._handle.variables['coordinates'][frame_slice, :, :] = coordinates
-        if time is not None:
-            self._handle.variables['time'][frame_slice] = time
-        if cell_lengths is not None:
-            self._handle.variables['cell_lengths'][frame_slice, :] = cell_lengths
-        if cell_angles is not None:
-            self._handle.variables['cell_angles'][frame_slice, :] = cell_angles
+        try:
+            self._handle.variables['coordinates'][frame_slice, :, :] = coordinates
+            if time is not None:
+                self._handle.variables['time'][frame_slice] = time
+            if cell_lengths is not None:
+                self._handle.variables['cell_lengths'][frame_slice, :] = cell_lengths
+            if cell_angles is not None:
+                self._handle.variables['cell_angles'][frame_slice, :] = cell_angles
+        except KeyError as e:
+            raise ValueError("The file that you're trying to save to doesn't "
+                "contain the field %s." % str(e))
+
+        # check for missing attributes
+        missing = None
+        if (time is None and 'time' in self._handle.variables):
+            missing = 'time'
+        elif (cell_angles is None and 'cell_angles' in self._handle.variables):
+            missing = 'cell_angles'
+        elif (cell_lengths is None and 'cell_lengths' in self._handle.variables):
+            missing = 'cell_lengths'
+        if missing is not None:
+            raise ValueError("The file that you're saving to expects each frame "
+                "to contain %s information, but you did not supply it."
+                "I don't allow 'ragged' arrays." % missing)
 
         # update the frame index pointers. this should be done at the
         # end so that if anything errors out, we don't actually get here
@@ -359,11 +371,11 @@ class NetCDFTrajectoryFile(object):
         self._validate_open()
         self._handle.sync()
 
-    def _initialize_headers(self, n_atoms):
+    def _initialize_headers(self, set_coordinates, n_atoms, set_time, set_cell):
         """Initialize the NetCDF file according to the AMBER NetCDF Convention,
         Version 1.0, revision B.
 
-        The convention is defined here: http://ambermd.org/netcdf/nctraj.html
+        The convention is defined here: http://ambermd.org/netcdf/nctraj.xhtml
         """
         self._n_atoms = n_atoms
 
@@ -382,35 +394,40 @@ class NetCDFTrajectoryFile(object):
         self._handle.createDimension('spatial', 3)
         # number of atoms
         self._handle.createDimension('atom', n_atoms)
-        # three spatial coordinates for the length of the unit cell
-        self._handle.createDimension('cell_spatial', 3)
-        # three spatial coordinates for the angles that define the shape
-        # of the unit cell
-        self._handle.createDimension('cell_angular', 3)
-        # length of the longest string used for a label
-        self._handle.createDimension('label', 5)
 
-        # Define variables to store unit cell data
-        self._handle.createVariable('cell_spatial', 'c', ('cell_spatial',))
-        cell_angles = self._handle.createVariable('cell_angular', 'c', ('cell_spatial', 'label'))
-        cell_lengths = self._handle.createVariable('cell_lengths', 'd', ('frame', 'cell_spatial'))
-        setattr(cell_lengths, 'units', 'angstrom')
-        cell_angles = self._handle.createVariable('cell_angles', 'd', ('frame', 'cell_angular'))
-        setattr(cell_angles, 'units', 'degree')
+        if set_cell:
+            # three spatial coordinates for the length of the unit cell
+            self._handle.createDimension('cell_spatial', 3)
+            # three spatial coordinates for the angles that define the shape
+            # of the unit cell
+            self._handle.createDimension('cell_angular', 3)
+            # length of the longest string used for a label
+            self._handle.createDimension('label', 5)
 
-        self._handle.variables['cell_spatial'][0] = 'x'
-        self._handle.variables['cell_spatial'][1] = 'y'
-        self._handle.variables['cell_spatial'][2] = 'z'
+            # Define variables to store unit cell data
+            self._handle.createVariable('cell_spatial', 'c', ('cell_spatial',))
+            cell_angles = self._handle.createVariable('cell_angular', 'c', ('cell_spatial', 'label'))
+            cell_lengths = self._handle.createVariable('cell_lengths', 'd', ('frame', 'cell_spatial'))
+            setattr(cell_lengths, 'units', 'angstrom')
+            cell_angles = self._handle.createVariable('cell_angles', 'd', ('frame', 'cell_angular'))
+            setattr(cell_angles, 'units', 'degree')
 
-        self._handle.variables['cell_angular'][0] = 'alpha'
-        self._handle.variables['cell_angular'][1] = 'beta '
-        self._handle.variables['cell_angular'][2] = 'gamma'
+            self._handle.variables['cell_spatial'][0] = 'x'
+            self._handle.variables['cell_spatial'][1] = 'y'
+            self._handle.variables['cell_spatial'][2] = 'z'
 
-        # Define coordinates and snapshot times.
-        frame_times = self._handle.createVariable('time', 'f', ('frame',))
-        setattr(frame_times, 'units', 'picosecond')
-        frame_coordinates = self._handle.createVariable('coordinates', 'f', ('frame', 'atom', 'spatial'))
-        setattr(frame_coordinates, 'units', 'angstrom')
+            self._handle.variables['cell_angular'][0] = 'alpha'
+            self._handle.variables['cell_angular'][1] = 'beta '
+            self._handle.variables['cell_angular'][2] = 'gamma'
+
+        if set_time:
+            # Define coordinates and snapshot times.
+            frame_times = self._handle.createVariable('time', 'f', ('frame',))
+            setattr(frame_times, 'units', 'picosecond')
+
+        if set_coordinates:
+            frame_coordinates = self._handle.createVariable('coordinates', 'f', ('frame', 'atom', 'spatial'))
+            setattr(frame_coordinates, 'units', 'angstrom')
 
     def seek(self, offset, whence=0):
         """Move to a new file position
