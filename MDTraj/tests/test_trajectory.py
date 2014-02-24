@@ -28,7 +28,7 @@ import numpy as np
 import mdtraj as md
 import mdtraj.trajectory
 import mdtraj.utils
-from mdtraj import topology
+from mdtraj import topology, Trajectory
 from mdtraj.utils.six import PY3
 from mdtraj.utils.six.moves import xrange
 from mdtraj.pdb import element
@@ -445,3 +445,16 @@ def test_length():
         f.description = 'Length of file object: %s' % file
         yield f
 
+
+def test_unitcell():
+    # make sure that bogus unitcell vecotrs are not saved
+    top = md.load(get_fn('native.pdb')).restrict_atoms(range(5)).topology
+    t = Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
+
+    #           xtc    dcd   binpos  trr    h5     pdb    nc     lh5
+    for fn in [temp1, temp2, temp3, temp4, temp5, temp6, temp6, temp8]:
+        t.save(fn)
+        f = lambda: eq(md.load(fn, top=top).unitcell_vectors, None)
+        f.description = 'unitcell preservation in %s' % os.path.splitext(fn)[1]
+        yield f
+    

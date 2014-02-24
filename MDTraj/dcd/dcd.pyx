@@ -207,6 +207,9 @@ cdef class DCDTrajectoryFile:
     cdef char* filename
     cdef int is_open, _needs_write_initialization
     cdef molfile_timestep_t* timestep
+    # does this file have unitcell info? set during _initialize_write
+    # for mode='w' to 0 or 1.
+    cdef int with_unitcell
     cdef readonly char* distance_unit
 
     def __cinit__(self, char* filename, char* mode='r', force_overwrite=True):
@@ -245,7 +248,7 @@ cdef class DCDTrajectoryFile:
         free(self.timestep)
         self.close()
 
-    def _initialize_write(self, int n_atoms):
+    def _initialize_write(self, int n_atoms, int with_unitcell):
         """We don't actually want to open the dcd file during write mode
         until we know how many atoms the user wants to save. so this
         is delayed until the first call to write()
@@ -253,7 +256,8 @@ cdef class DCDTrajectoryFile:
         assert not self.is_open and self._needs_write_initialization
 
         self.n_atoms = n_atoms
-        self.fh = open_dcd_write(self.filename, "dcd", self.n_atoms)
+        self.with_unitcell = with_unitcell
+        self.fh = open_dcd_write(self.filename, "dcd", self.n_atoms, with_unitcell)
         if self.fh is NULL:
             raise IOError('There was an error opening the file: %s' % self.filename)
         self.is_open = True
@@ -443,6 +447,15 @@ cdef class DCDTrajectoryFile:
             for j in range(_stride - 1):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
 
+        if np.all(cell_lengths < 1e-10):
+            # in the DCD C code, if there's unitcell information inside the
+            # DCD file, it just sets them to length=0 and angle=90. Other tools
+            # like VMD explicitly write length=0 and angle=90 into their
+            # DCD files. In both cases, we detect that indicate the
+            # information's absense
+            cell_lengths = None
+            cell_angles = None
+
         if status == _DCD_SUCCESS:
             # if we're done either because of we read all of the n_frames
             # requested succcessfully, return
@@ -454,8 +467,9 @@ cdef class DCDTrajectoryFile:
             # to truncate the return arrays -- we don't want to return them
             # a big stack of zeros.
             xyz = xyz[0:i]
-            cell_lengths = cell_lengths[0:i]
-            cell_angles = cell_angles[0:i]
+            if cell_lengths is not None and cell_angles is not None:
+                cell_lengths = cell_lengths[0:i]
+                cell_angles = cell_angles[0:i]
 
             return xyz, cell_lengths, cell_angles
 
@@ -491,24 +505,31 @@ cdef class DCDTrajectoryFile:
                           add_newaxis_on_deficient_ndim=True)
         n_frames = len(xyz)
 
+        # they must be both present or both absent
+        if cell_lengths is None and cell_angles is not None:
+            raise ValueError('cell_lengths were given, but no cell_angles')
+        if cell_lengths is not None and cell_angles is None:
+            raise ValueError('cell_angles were given, but no cell_lengths')
+
         cell_lengths = ensure_type(cell_lengths, dtype=np.float32, ndim=2, name='cell_lengths',
                                    can_be_none=True, shape=(n_frames, 3), add_newaxis_on_deficient_ndim=True,
                                    warn_on_cast=False)
-        if cell_lengths is None:
-            cell_lengths = np.ones((n_frames, 3), dtype=np.float32)
-
         cell_angles = ensure_type(cell_angles, dtype=np.float32, ndim=2, name='cell_angles',
                                   can_be_none=True, shape=(n_frames, 3), add_newaxis_on_deficient_ndim=True,
                                   warn_on_cast=False)
-        if cell_angles is None:
-            cell_angles = 90.0 * np.ones((n_frames, 3), dtype=np.float32)
-
 
         if self._needs_write_initialization:
-            self._initialize_write(xyz.shape[1])
+            self._initialize_write(xyz.shape[1], (cell_lengths is not None) and (cell_angles is not None))
         else:
             if not self.n_atoms == xyz.shape[1]:
                 raise ValueError('Number of atoms doesnt match')
+            if cell_lengths is None and self.with_unitcell:
+                raise ValueError("The file that you're saving to expects each frame "
+                    "to contain unitcell information, but you did not supply it.")
+            if cell_lengths is not None and not self.with_unitcell:
+                raise ValueError("The file that you're saving to was created without "
+                    "unitcell information.")
+
         self._write(xyz, cell_lengths, cell_angles)
 
     cdef _write(self, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz,
@@ -523,12 +544,18 @@ cdef class DCDTrajectoryFile:
 
         for i in range(n_frames):
             self.timestep.coords = &xyz[i, 0, 0]
-            self.timestep.A = cell_lengths[i, 0]
-            self.timestep.B = cell_lengths[i, 1]
-            self.timestep.C = cell_lengths[i, 2]
-            self.timestep.alpha = cell_angles[i, 0]
-            self.timestep.beta  = cell_angles[i, 1]
-            self.timestep.gamma = cell_angles[i, 2]
+            if cell_angles is not None and cell_lengths is not None:
+                self.timestep.A = cell_lengths[i, 0]
+                self.timestep.B = cell_lengths[i, 1]
+                self.timestep.C = cell_lengths[i, 2]
+                self.timestep.alpha = cell_angles[i, 0]
+                self.timestep.beta  = cell_angles[i, 1]
+                self.timestep.gamma = cell_angles[i, 2]
+            # when the dcd handle is opened during initialize_write,
+            # it passes the flag for whether the unitcell information is written
+            # to disk or not. So when we don't have unitcell information being
+            # written, the unitcell fields (A,B,C,alpha,beta,gamma) are ignored
+            # during write_timestep()
 
             status = write_timestep(self.fh, self.timestep)
 

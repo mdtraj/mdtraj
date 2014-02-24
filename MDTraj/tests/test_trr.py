@@ -23,6 +23,7 @@
 from mdtraj import trr, TRRTrajectoryFile
 import os, tempfile
 import numpy as np
+from nose.tools import assert_raises
 from mdtraj.testing import eq, DocStringFormatTester, get_fn
 DocStringFormatTester(trr)
 
@@ -136,3 +137,25 @@ def test_2():
     yield lambda: eq(step, step2)
     yield lambda: eq(lambd, lambd2)
 
+
+
+def test_ragged_1():
+    # try first writing no box vectors,, and then adding some
+    xyz = np.random.randn(100, 5, 3)
+    time = np.random.randn(100)
+    box = np.random.randn(100, 3, 3)
+
+    with TRRTrajectoryFile(temp, 'w', force_overwrite=True) as f:
+        f.write(xyz)
+        assert_raises(ValueError, lambda: f.write(xyz, time, box))
+
+
+def test_ragged_2():
+    # try first writing no box vectors, and then adding some
+    xyz = np.random.randn(100, 5, 3)
+    time = np.random.randn(100)
+    box = np.random.randn(100, 3, 3)
+
+    with TRRTrajectoryFile(temp, 'w', force_overwrite=True) as f:
+        f.write(xyz, time=time, box=box)
+        assert_raises(ValueError, lambda: f.write(xyz))
