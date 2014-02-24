@@ -239,7 +239,7 @@ def test_seek():
 
 def test_ragged_1():
     # try first writing no box vectors,, and then adding some
-    xyz = np.random.randn(100, 3, 3)
+    xyz = np.random.randn(100, 5, 3)
     time = np.random.randn(100)
     box = np.random.randn(100, 3, 3)
 
@@ -250,7 +250,7 @@ def test_ragged_1():
 
 def test_ragged_2():
     # try first writing no box vectors, and then adding some
-    xyz = np.random.randn(100, 3, 3)
+    xyz = np.random.randn(100, 5, 3)
     time = np.random.randn(100)
     box = np.random.randn(100, 3, 3)
 

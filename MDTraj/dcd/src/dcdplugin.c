@@ -1022,7 +1022,7 @@ int write_timestep(dcdhandle *v, const molfile_timestep_t *ts) {
   int i, rc, curstep;
   float *pos = ts->coords;
   double unitcell[6];
-  unitcell[0] = unitcell[2] = unitcell[5] = 1.0f;
+  unitcell[0] = unitcell[2] = unitcell[5] = 0.0f;
   unitcell[1] = unitcell[3] = unitcell[4] = 90.0f;
 
   /* copy atom coords into separate X/Y/Z arrays for writing */

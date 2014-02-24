@@ -551,13 +551,11 @@ cdef class DCDTrajectoryFile:
                 self.timestep.alpha = cell_angles[i, 0]
                 self.timestep.beta  = cell_angles[i, 1]
                 self.timestep.gamma = cell_angles[i, 2]
-            else:
-                 self.timestep.A = 0
-                 self.timestep.B = 0
-                 self.timestep.C = 0
-                 self.timestep.alpha = 0
-                 self.timestep.beta  = 0
-                 self.timestep.gamma = 0
+            # when the dcd handle is opened during initialize_write,
+            # it passes the flag for whether the unitcell information is written
+            # to disk or not. So when we don't have unitcell information being
+            # written, the unitcell fields (A,B,C,alpha,beta,gamma) are ignored
+            # during write_timestep()
 
             status = write_timestep(self.fh, self.timestep)
 
