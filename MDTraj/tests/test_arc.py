@@ -25,7 +25,7 @@ import tempfile, os
 import numpy as np
 import mdtraj as md
 from mdtraj.formats import ArcTrajectoryFile, arc
-from mdtraj.pdb import PDBTrajectoryFile
+from mdtraj.formats import PDBTrajectoryFile
 from mdtraj.testing import get_fn, eq, DocStringFormatTester
 TestDocstrings = DocStringFormatTester(arc, error_on_none=True)
 

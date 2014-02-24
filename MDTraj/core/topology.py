@@ -51,7 +51,7 @@ from __future__ import print_function, division
 import os
 import numpy as np
 import itertools
-from mdtraj.core import element
+from mdtraj.core import element as elem
 import xml.etree.ElementTree as etree
 
 from mdtraj.utils import ilen, import_
@@ -359,7 +359,6 @@ class Topology(object):
         create_standard_bonds
         """
         pd = import_('pandas')
-        from mdtraj import pdb
 
         for col in ["name", "element", "resSeq" , "resName", "chainID"]:
             if col not in atoms.columns:
@@ -392,7 +391,7 @@ class Topology(object):
                     if atom['element'] == "":
                         element = None
                     else:
-                        element = pdb.element.get_by_symbol(atom['element'])
+                        element = elem.get_by_symbol(atom['element'])
                     a = Atom(atom['name'], element, ai, r)
                     out._atoms[ai] = a
                     r._atoms.append(a)
@@ -502,7 +501,7 @@ class Topology(object):
         ----------
         name : str
             The name of the atom to add
-        element : mdtraj.pdb.element.Element
+        element : mdtraj.element.Element
             The element of the atom to add
         residue : mdtraj.topology.Residue
             The Residue to add it to
@@ -850,7 +849,7 @@ class Atom(object):
     ----------
     name : str
         The name of the Atom
-    element : mdtraj.pdb.element.Element
+    element : mdtraj.element.Element
         The element of the Atoms
     index : int
         The index of the Atom within its Topology

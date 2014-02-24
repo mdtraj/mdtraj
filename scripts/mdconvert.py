@@ -54,7 +54,7 @@ formats = {'.dcd': md.formats.DCDTrajectoryFile,
            '.nc': md.formats.NetCDFTrajectoryFile,
            '.h5': md.formats.HDF5TrajectoryFile,
            '.lh5': md.formats.LH5TrajectoryFile,
-           '.pdb': md.pdb.PDBTrajectoryFile}
+           '.pdb': md.formats.PDBTrajectoryFile}
 
 fields = {'.trr': ('xyz', 'time', 'step', 'box', 'lambda'),
           '.xtc': ('xyz', 'time', 'step', 'box'),
@@ -252,7 +252,7 @@ def main(args, verbose=True):
     InFileFormat = formats[in_x]
 
     if args.topology is not None:
-        topology = md.pdb.PDBTrajectoryFile(args.topology).topology
+        topology = md.formats.PDBTrajectoryFile(args.topology).topology
     else:
         topology = None
 
@@ -353,7 +353,7 @@ def write(outfile, data):
     elif isinstance(outfile, md.formats.BINPOSTrajectoryFile):
         outfile.write(data.get('xyz', None))
 
-    elif isinstance(outfile, md.pdb.PDBTrajectoryFile):
+    elif isinstance(outfile, md.formats.PDBTrajectoryFile):
         lengths, angles = None, None
         for i, frame in enumerate(data.get('xyz')):
             if 'cell_lengths' in data:
@@ -393,10 +393,10 @@ def read(infile, chunk, stride, atom_indices):
     that performs the read and then puts the results in a little dict. It also
     returns the distance units that the file uses.
     """
-    if not isinstance(infile, md.pdb.PDBTrajectoryFile):
+    if not isinstance(infile, md.formats.PDBTrajectoryFile):
         _data = infile.read(chunk, stride=stride, atom_indices=atom_indices)
 
-    if isinstance(infile, md.pdb.PDBTrajectoryFile):
+    if isinstance(infile, md.formats.PDBTrajectoryFile):
         if infile.closed:
             # signal that we're done reading this pdb
             return None, None, 0

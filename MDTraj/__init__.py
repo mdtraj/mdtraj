@@ -29,17 +29,17 @@ DCD, AMBER BINPOS, PDB, and HDF5.
 from __future__ import print_function, division
 del print_function, division
 from mdtraj.formats.registry import _FormatRegistry
-from mdtraj.formats import load_xtc
-from mdtraj.formats import load_trr
-from mdtraj.formats import load_hdf5
-from mdtraj.formats import load_lh5
-from mdtraj.formats import load_netcdf
-from mdtraj.formats import load_mdcrd
-from mdtraj.formats import load_dcd
-from mdtraj.formats import load_binpos
-from mdtraj.formats import load_pdb
-from mdtraj.formats import load_arc
-from mdtraj.formats import load_xml
+from mdtraj.formats.xtc import load_xtc
+from mdtraj.formats.trr import load_trr
+from mdtraj.formats.hdf5 import load_hdf5
+from mdtraj.formats.lh5 import load_lh5
+from mdtraj.formats.netcdf import load_netcdf
+from mdtraj.formats.mdcrd import load_mdcrd
+from mdtraj.formats.dcd import load_dcd
+from mdtraj.formats.binpos import load_binpos
+from mdtraj.formats.pdb import load_pdb
+from mdtraj.formats.arc import load_arc
+from mdtraj.formats.openmmxml import load_xml
 
 from mdtraj.core import element
 from mdtraj._rmsd import rmsd
