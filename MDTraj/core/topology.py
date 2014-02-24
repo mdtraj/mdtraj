@@ -51,6 +51,7 @@ from __future__ import print_function, division
 import os
 import numpy as np
 import itertools
+from mdtraj.core import element
 import xml.etree.ElementTree as etree
 
 from mdtraj.utils import ilen, import_
@@ -284,7 +285,6 @@ class Topology(object):
             An OpenMM topology that you wish to convert to a
             mdtraj topology.
         """
-        from mdtraj import pdb
         app = import_('simtk.openmm.app')
 
         if not isinstance(value, app.Topology):
@@ -299,7 +299,7 @@ class Topology(object):
             for residue in chain.residues():
                 r = out.add_residue(residue.name, c)
                 for atom in residue.atoms():
-                    a = out.add_atom(atom.name, pdb.element.get_by_symbol(atom.element.symbol), r)
+                    a = out.add_atom(atom.name, element.get_by_symbol(atom.element.symbol), r)
                     atom_mapping[atom] = a
 
         for a1, a2 in value.bonds():
@@ -633,7 +633,7 @@ class Topology(object):
         if len(Topology._standardBonds) == 0:
             # Load the standard bond defitions.
 
-            tree = etree.parse(os.path.join(os.path.dirname(__file__), '..', 'pdb', 'data', 'residues.xml'))
+            tree = etree.parse(os.path.join(os.path.dirname(__file__), '..', 'formats', 'pdb', 'data', 'residues.xml'))
             for residue in tree.getroot().findall('Residue'):
                 bonds = []
                 Topology._standardBonds[residue.attrib['name']] = bonds

@@ -48,7 +48,7 @@ import numpy as np
 
 # ours
 from mdtraj import version
-import mdtraj.pdb.element as elem
+import mdtraj.core.element as elem
 from mdtraj.core.topology import Topology
 from mdtraj.utils import in_units_of, ensure_type, import_, convert, cast_indices
 from mdtraj.formats.registry import _FormatRegistry

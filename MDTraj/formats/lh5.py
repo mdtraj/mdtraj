@@ -31,7 +31,7 @@ from __future__ import print_function, division
 import os
 import sys
 import numpy as np
-import mdtraj.pdb.element
+from mdtraj.core import element
 from mdtraj.utils.six import iteritems, PY3, u
 from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.utils import import_, ensure_type, convert, cast_indices
@@ -79,7 +79,7 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
         element_symbol = atom_name.lstrip('0123456789')[0]
         
         try:
-            element = mdtraj.pdb.element.get_by_symbol(element_symbol)
+            element = element.get_by_symbol(element_symbol)
         except KeyError:
             element = None
         

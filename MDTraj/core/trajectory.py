@@ -39,7 +39,7 @@ from mdtraj.formats import TRRTrajectoryFile
 from mdtraj.formats import HDF5TrajectoryFile
 from mdtraj.formats import NetCDFTrajectoryFile
 from mdtraj.formats import LH5TrajectoryFile
-from mdtraj.pdb import PDBTrajectoryFile
+from mdtraj.formats import PDBTrajectoryFile
 from mdtraj.formats import MDCRDTrajectoryFile
 from mdtraj.formats import ArcTrajectoryFile
 from mdtraj.core.topology import Topology

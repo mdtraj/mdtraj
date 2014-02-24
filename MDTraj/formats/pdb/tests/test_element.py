@@ -1,5 +1,5 @@
 from mdtraj.testing import get_fn, eq
-from mdtraj.pdb import element
+from mdtraj import element
 import mdtraj as md
 
 def test_element_0():

@@ -315,6 +315,6 @@ setup(name='mdtraj',
       packages=find_packages(),
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
       ext_modules=extensions,
-      package_data={'mdtraj.pdb': ['data/*'],
+      package_data={'mdtraj.formats.pdb': ['data/*'],
                     'mdtraj.testing': ['reference/*']},
       **setup_kwargs)

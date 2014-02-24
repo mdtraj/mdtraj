@@ -1,4 +1,4 @@
-from mdtraj.pdb import element
+from mdtraj import element
 from mdtraj.testing import assert_raises
 
 def test_immutable():

@@ -29,7 +29,7 @@ import mdtraj as md
 import mdtraj.utils
 from mdtraj.utils.six import PY3
 from mdtraj.utils.six.moves import xrange
-from mdtraj.pdb import element
+from mdtraj.core import element
 
 import mdtraj.core.trajectory
 TestDocstrings = DocStringFormatTester(mdtraj.core.trajectory, error_on_none=True)

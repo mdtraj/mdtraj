@@ -29,7 +29,7 @@ from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.utils.six.moves import xrange
-from mdtraj.pdb import element
+from mdtraj.core import element
 import mdtraj as md
 import itertools
 
