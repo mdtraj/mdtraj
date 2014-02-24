@@ -31,6 +31,7 @@ there are not discovered by nose
 from __future__ import print_function
 import os, tempfile
 import numpy as np
+from nose.tools import assert_raises
 from mdtraj import xtc, io, XTCTrajectoryFile
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
 
@@ -235,3 +236,25 @@ def test_seek():
         eq(f.tell(), 1)
         eq(f.read(1)[0][0], reference[1])
 
+
+def test_ragged_1():
+    # try first writing no box vectors,, and then adding some
+    xyz = np.random.randn(100, 3, 3)
+    time = np.random.randn(100)
+    box = np.random.randn(100, 3, 3)
+
+    with XTCTrajectoryFile(temp, 'w', force_overwrite=True) as f:
+        f.write(xyz)
+        assert_raises(ValueError, lambda: f.write(xyz, time, box))
+
+
+def test_ragged_2():
+    # try first writing no box vectors, and then adding some
+    xyz = np.random.randn(100, 3, 3)
+    time = np.random.randn(100)
+    box = np.random.randn(100, 3, 3)
+
+    #from mdtraj.formats import HDF5TrajectoryFile
+    with XTCTrajectoryFile(temp, 'w', force_overwrite=True) as f:
+        f.write(xyz, time=time, box=box)
+        assert_raises(ValueError, lambda: f.write(xyz))
