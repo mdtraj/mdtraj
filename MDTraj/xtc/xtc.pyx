@@ -465,9 +465,6 @@ cdef class XTCTrajectoryFile:
             # make each box[i] be the all zeros, which indicates the lack of
             # a unitcell
             box = np.zeros((n_frames, 3, 3), dtype=np.float32)
-            box[:,0,0] = np.zeros(n_frames, dtype=np.float32)
-            box[:,1,1] = np.zeros(n_frames, dtype=np.float32)
-            box[:,2,2] = np.zeros(n_frames, dtype=np.float32)
 
         prec = 1000.0 * np.ones(n_frames, dtype=np.float32)
         self._write(xyz, time, step, box, prec)
