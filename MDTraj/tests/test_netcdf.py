@@ -122,18 +122,47 @@ def test_read_write_1():
 
 
 def test_read_write_2():
-    xyz = np.random.randn(100, 3, 3)
-    time = np.random.randn(100)
+    xyz = np.random.randn(5, 22, 3)
+    time = np.random.randn(5)
 
     with NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
         f.write(xyz, time)
 
     with NetCDFTrajectoryFile(temp) as f:
-        a, b, c, d = f.read()
-        yield lambda: eq(a, xyz)
-        yield lambda: eq(b, time)
-        yield lambda: eq(c.mask, np.ma.masked_all((100,3)).mask)
-        yield lambda: eq(d.mask, np.ma.masked_all((100,3)).mask)
+        rcoord, rtime, rlengths, rangles = f.read()
+        yield lambda: eq(rcoord, xyz)
+        yield lambda: eq(rtime, time)
+        yield lambda: eq(rlengths, None)
+        yield lambda: eq(rangles, None)
+
+    t = md.load(temp, top=get_fn('native.pdb'))
+    eq(t.unitcell_angles, None)
+    eq(t.unitcell_lengths, None)
+
+
+def test_ragged_1():
+    # try first writing no cell angles/lengths, and then adding some
+    xyz = np.random.randn(100, 3, 3)
+    time = np.random.randn(100)
+    cell_lengths = np.random.randn(100, 3)
+    cell_angles = np.random.randn(100, 3)
+
+    with NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
+        f.write(xyz, time)
+        assert_raises(ValueError, lambda: f.write(xyz, time, cell_lengths, cell_angles))
+
+
+def test_ragged_2():
+    # try first writing no cell angles/lengths, and then adding some
+    xyz = np.random.randn(100, 3, 3)
+    time = np.random.randn(100)
+    cell_lengths = np.random.randn(100, 3)
+    cell_angles = np.random.randn(100, 3)
+
+    #from mdtraj.formats import HDF5TrajectoryFile
+    with NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
+        f.write(xyz, time, cell_lengths, cell_angles)
+        assert_raises(ValueError, lambda: f.write(xyz, time))
 
 
 def test_read_write_25():
@@ -148,13 +177,13 @@ def test_read_write_25():
         a, b, c, d = f.read()
         yield lambda: eq(a[0:100], xyz)
         yield lambda: eq(b[0:100], time)
-        yield lambda: eq(c.mask[0:100], np.ma.masked_all((100,3)).mask)
-        yield lambda: eq(d.mask[0:100], np.ma.masked_all((100,3)).mask)
+        yield lambda: eq(c, None)
+        yield lambda: eq(d, None)
 
         yield lambda: eq(a[100:], xyz)
         yield lambda: eq(b[100:], time)
-        yield lambda: eq(c.mask[100:], np.ma.masked_all((100,3)).mask)
-        yield lambda: eq(d.mask[100:], np.ma.masked_all((100,3)).mask)
+        yield lambda: eq(c, None)
+        yield lambda: eq(d, None)
 
 def test_write_3():
     xyz = np.random.randn(100, 3, 3)
