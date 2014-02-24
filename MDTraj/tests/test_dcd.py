@@ -34,6 +34,7 @@ there are not discovered by nose
 import tempfile, os
 import numpy as np
 from mdtraj import DCDTrajectoryFile, io
+from nose.tools import assert_raises
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
 
 #TestDocstrings = DocStringFormatTester(dcd, error_on_none=True)
@@ -276,3 +277,26 @@ def test_seek():
         eq(f.tell(), 1)
         eq(f.read(1)[0][0], reference[1])
 
+
+def test_ragged_1():
+    # try first writing no cell angles/lengths, and then adding some
+    xyz = np.random.randn(100, 3, 3)
+    cell_lengths = np.random.randn(100, 3)
+    cell_angles = np.random.randn(100, 3)
+
+    with DCDTrajectoryFile(temp, 'w', force_overwrite=True) as f:
+        f.write(xyz)
+        assert_raises(ValueError, lambda: f.write(xyz, cell_lengths, cell_angles))
+
+
+def test_ragged_2():
+    # try first writing no cell angles/lengths, and then adding some
+    xyz = np.random.randn(100, 3, 3)
+    time = np.random.randn(100)
+    cell_lengths = np.random.randn(100, 3)
+    cell_angles = np.random.randn(100, 3)
+
+    #from mdtraj.formats import HDF5TrajectoryFile
+    with DCDTrajectoryFile(temp, 'w', force_overwrite=True) as f:
+        f.write(xyz, cell_lengths, cell_angles)
+        assert_raises(ValueError, lambda: f.write(xyz))
