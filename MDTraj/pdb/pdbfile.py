@@ -44,15 +44,15 @@
 ##############################################################################
 
 from __future__ import print_function, division
-import os
+import os, urllib2
 import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy
-from mdtraj.pdb.pdbstructure import PdbStructure
+from .pdbstructure import PdbStructure
 from mdtraj.topology import Topology
 from mdtraj.utils import ilen, cast_indices, convert
 from mdtraj.registry import _FormatRegistry
-from mdtraj.pdb import element as elem
+from . import element as elem
 
 __all__ = ['load_pdb', 'PDBTrajectoryFile']
 
@@ -185,7 +185,15 @@ class PDBTrajectoryFile(object):
 
         if mode == 'r':
             PDBTrajectoryFile._loadNameReplacementTables()
-            self._file = open(filename, 'r')
+            if filename.lower().startswith('http'):
+                self._file = urllib2.urlopen(filename)
+                if filename.lower().endswith('.gz'):
+                    from StringIO import StringIO
+                    import gzip
+                    buf = StringIO(self._file.read())
+                    self._file = gzip.GzipFile(fileobj=buf)
+            else:
+                self._file = open(filename, 'r')
             self._read_models()
         elif mode == 'w':
             self._header_written = False
