@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: Peter Eastman, Robert McGibbon
-# Contributors:
+# Contributors: Carlos Hernandez
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -53,12 +53,36 @@ from mdtraj.topology import Topology
 from mdtraj.utils import ilen, cast_indices, convert
 from mdtraj.registry import _FormatRegistry
 from . import element as elem
+from mdtraj.utils import six
+if six.PY3:
+    from urllib.request import urlopen
+    from urllib.parse import urlparse
+    from urllib.parse import (uses_relative, uses_netloc, uses_params)
+else:
+    from urllib2 import urlopen
+    from urlparse import urlparse
+    from urlparse import uses_relative, uses_netloc, uses_params
+
+_VALID_URLS = set(uses_relative + uses_netloc + uses_params)
+_VALID_URLS.discard('')
 
 __all__ = ['load_pdb', 'PDBTrajectoryFile']
 
 ##############################################################################
 # Code
 ##############################################################################
+
+
+def _is_url(url):
+    """Check to see if a URL has a valid protocol.
+    from pandas/io.common.py Copyright 2014 Pandas Developers
+    Used under the BSD licence
+    """
+    try:
+        return urlparse(url).scheme in _VALID_URLS
+    except:
+        return False
+
 
 @_FormatRegistry.register_loader('.pdb')
 def load_pdb(filename, stride=None, atom_indices=None, frame=None):
@@ -185,8 +209,8 @@ class PDBTrajectoryFile(object):
 
         if mode == 'r':
             PDBTrajectoryFile._loadNameReplacementTables()
-            if filename.lower().startswith('http'):
-                self._file = urllib.urlopen(filename)
+            if _is_url(filename):
+                self._file = urlopen(filename)
                 if filename.lower().endswith('.gz'):
                     from StringIO import StringIO
                     import gzip

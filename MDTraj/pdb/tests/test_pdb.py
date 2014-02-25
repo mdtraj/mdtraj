@@ -178,9 +178,10 @@ def test_pdbstructure_3():
         eq(expected[i], c)
         
 def test_pdb_from_url():
-    try:
-        t = load_pdb('http://www.rcsb.org/pdb/files/4K6Q.pdb.gz') #example from RCSB
-        eq(t.n_frames, 1)
-        eq(t.n_atoms, 2208)
-    except IOError:
-        print 'FAILED: no such url/file"
+    # load pdb from URL
+    t1 = load_pdb('http://www.rcsb.org/pdb/files/4K6Q.pdb.gz')
+    t2 = load_pdb('http://www.rcsb.org/pdb/files/4K6Q.pdb')
+    eq(t1.n_frames, 1)
+    eq(t2.n_frames, 1)
+    eq(t1.n_atoms, 2208)
+    eq(t2.n_atoms, 2208)
