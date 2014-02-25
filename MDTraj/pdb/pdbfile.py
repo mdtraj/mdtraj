@@ -44,7 +44,7 @@
 ##############################################################################
 
 from __future__ import print_function, division
-import os, urllib2
+import os, urllib
 import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy
@@ -186,7 +186,7 @@ class PDBTrajectoryFile(object):
         if mode == 'r':
             PDBTrajectoryFile._loadNameReplacementTables()
             if filename.lower().startswith('http'):
-                self._file = urllib2.urlopen(filename)
+                self._file = urllib.urlopen(filename)
                 if filename.lower().endswith('.gz'):
                     from StringIO import StringIO
                     import gzip
