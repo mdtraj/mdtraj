@@ -214,7 +214,11 @@ class PDBTrajectoryFile(object):
                 self._file = urlopen(filename)
                 if filename.lower().endswith('.gz'):
                     import gzip
-                    buf = six.StringIO(self._file.read())
+                    if six.PY3:
+                        buf = six.StringIO(
+                            self._file.read().decode('utf-8', 'replace'))
+                    else:
+                        buf = six.StringIO(self._file.read())
                     self._file = gzip.GzipFile(fileobj=buf)
             else:
                 self._file = open(filename, 'r')
