@@ -44,15 +44,15 @@
 ##############################################################################
 
 from __future__ import print_function, division
-import os, urllib
+import os
 import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy
-from .pdbstructure import PdbStructure
+from mdtraj.pdb.pdbstructure import PdbStructure
 from mdtraj.topology import Topology
 from mdtraj.utils import ilen, cast_indices, convert
 from mdtraj.registry import _FormatRegistry
-from . import element as elem
+from mdtraj.pdb import element as elem
 from mdtraj.utils import six
 if six.PY3:
     from urllib.request import urlopen
