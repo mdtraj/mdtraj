@@ -66,6 +66,8 @@ else:
 _VALID_URLS = set(uses_relative + uses_netloc + uses_params)
 _VALID_URLS.discard('')
 
+print(_VALID_URLS)
+
 __all__ = ['load_pdb', 'PDBTrajectoryFile']
 
 ##############################################################################
@@ -91,7 +93,8 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
     Parameters
     ----------
     filename : str
-        Path to the PDB file on disk.
+        Path to the PDB file on disk. The string could be a URL. Valid URL
+        schemes include http and ftp.
     stride : int, default=None
         Only read every stride-th model from the file
     atom_indices : array_like, optional
