@@ -213,9 +213,8 @@ class PDBTrajectoryFile(object):
             if _is_url(filename):
                 self._file = urlopen(filename)
                 if filename.lower().endswith('.gz'):
-                    from StringIO import StringIO
                     import gzip
-                    buf = StringIO(self._file.read())
+                    buf = six.StringIO(self._file.read())
                     self._file = gzip.GzipFile(fileobj=buf)
             else:
                 self._file = open(filename, 'r')
