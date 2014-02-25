@@ -66,8 +66,6 @@ else:
 _VALID_URLS = set(uses_relative + uses_netloc + uses_params)
 _VALID_URLS.discard('')
 
-print(_VALID_URLS)
-
 __all__ = ['load_pdb', 'PDBTrajectoryFile']
 
 ##############################################################################
