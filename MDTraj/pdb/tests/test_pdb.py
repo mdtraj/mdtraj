@@ -27,7 +27,7 @@ import os, tempfile
 from mdtraj import topology
 from mdtraj.pdb import pdbstructure
 from mdtraj.testing import get_fn, eq, raises
-from mdtraj import load
+from mdtraj import load, load_pdb
 from mdtraj.utils import ilen
 
 pdb = get_fn('native.pdb')
@@ -176,3 +176,12 @@ def test_pdbstructure_3():
     expected = [1, 2, 3]
     for i, c in enumerate(loc):
         eq(expected[i], c)
+        
+def test_pdb_from_url():
+    # load pdb from URL
+    t1 = load_pdb('http://www.rcsb.org/pdb/files/4K6Q.pdb.gz')
+    t2 = load_pdb('http://www.rcsb.org/pdb/files/4K6Q.pdb')
+    eq(t1.n_frames, 1)
+    eq(t2.n_frames, 1)
+    eq(t1.n_atoms, 2208)
+    eq(t2.n_atoms, 2208)

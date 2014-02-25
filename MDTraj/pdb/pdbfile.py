@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: Peter Eastman, Robert McGibbon
-# Contributors:
+# Contributors: Carlos Hernandez
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -53,12 +53,36 @@ from mdtraj.topology import Topology
 from mdtraj.utils import ilen, cast_indices, convert
 from mdtraj.registry import _FormatRegistry
 from mdtraj.pdb import element as elem
+from mdtraj.utils import six
+if six.PY3:
+    from urllib.request import urlopen
+    from urllib.parse import urlparse
+    from urllib.parse import (uses_relative, uses_netloc, uses_params)
+else:
+    from urllib2 import urlopen
+    from urlparse import urlparse
+    from urlparse import uses_relative, uses_netloc, uses_params
+
+_VALID_URLS = set(uses_relative + uses_netloc + uses_params)
+_VALID_URLS.discard('')
 
 __all__ = ['load_pdb', 'PDBTrajectoryFile']
 
 ##############################################################################
 # Code
 ##############################################################################
+
+
+def _is_url(url):
+    """Check to see if a URL has a valid protocol.
+    from pandas/io.common.py Copyright 2014 Pandas Developers
+    Used under the BSD licence
+    """
+    try:
+        return urlparse(url).scheme in _VALID_URLS
+    except:
+        return False
+
 
 @_FormatRegistry.register_loader('.pdb')
 def load_pdb(filename, stride=None, atom_indices=None, frame=None):
@@ -67,7 +91,8 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
     Parameters
     ----------
     filename : str
-        Path to the PDB file on disk.
+        Path to the PDB file on disk. The string could be a URL. Valid URL
+        schemes include http and ftp.
     stride : int, default=None
         Only read every stride-th model from the file
     atom_indices : array_like, optional
@@ -185,7 +210,19 @@ class PDBTrajectoryFile(object):
 
         if mode == 'r':
             PDBTrajectoryFile._loadNameReplacementTables()
-            self._file = open(filename, 'r')
+            if _is_url(filename):
+                self._file = urlopen(filename)
+                if filename.lower().endswith('.gz'):
+                    import gzip
+                    if six.PY3:
+                        self._file = gzip.GzipFile(fileobj=self._file)
+                    else:
+                        self._file = gzip.GzipFile(fileobj=six.StringIO(
+                            self._file.read()))
+                if six.PY3:
+                    self._file = six.StringIO(self._file.read().decode('utf-8'))
+            else:
+                self._file = open(filename, 'r')
             self._read_models()
         elif mode == 'w':
             self._header_written = False
