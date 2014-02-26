@@ -912,40 +912,31 @@ def load_prmtop(filename):
     Parameters
     ----------
     filename : str
-        Path to the PDB file on disk.
-    stride : int, default=None
-        Only read every stride-th model from the file
-    atom_indices : array_like, optional
-        If not none, then read only a subset of the atoms coordinates from the
-        file. These indices are zero-based (not 1 based, as used by the PDB
-        format). So if you want to load only the first atom in the file, you
-        would supply ``atom_indices = np.array([0])``.
+        Path to the prmtop file on disk.
 
     Returns
     -------
-    trajectory : md.Trajectory
-        The resulting trajectory, as an md.Trajectory object.
+    top : md.topology.Topology
+        The resulting topology, as an md.Topology object.
 
     Examples
     --------
-    >>> import mdtraj as md
-    >>> top = md.load_prmtop('mysystem.prmtop')
+    >>> from mdtraj import topology
+    >>> top = topology.load_prmtop('mysystem.prmtop')
     """
+    
+    # TJL note to others:
+    # this code was mostly stolen/stripped down from OpenMM code, specifically
+    # the files amber_file_parser.py and amberprmtopfile.py as of 2/25/14
     
     from mdtraj import pdb
     
-    # TJL to do:
-    # 1) fix line indentations
-    # 2) add a shitload of logging statements
-    # 3) try it out on ala2
-    # 4) try it out on a bigger prmtop
-
     FORMAT_RE_PATTERN=re.compile("([0-9]+)([a-zA-Z]+)([0-9]+)\.?([0-9]*)")  
 
     top = Topology()
     elements = []
    
-    # ------------------------ from amber_file_parser.py ------------------------
+    # --- from amber_file_parser.py
    
     def _get_format(flag=None):
         if not flag:
@@ -1012,8 +1003,7 @@ def load_prmtop(filename):
                    
     f.close()
    
-    # ------------------------ from amberprmtopfile.py --------------------------
-
+    # --- from amberprmtopfile.py
 
     # Add atoms to the topology
 
@@ -1102,6 +1092,8 @@ def load_prmtop(filename):
 
     # Set the periodic box size -- this is NOT done in mdtraj's topology class
     # if int(_get_pointer_value('IFBOX')):
-    #     top.setUnitCellDimensions(tuple(x.value_in_unit(unit.nanometer) for x in prmtop.getBoxBetaAndDimensions()[1:4])*unit.nanometer)
+    #     top.setUnitCellDimensions(tuple(x.value_in_unit(unit.nanometer) for \
+    #     x in prmtop.getBoxBetaAndDimensions()[1:4])*unit.nanometer)
 
     return top
+    
