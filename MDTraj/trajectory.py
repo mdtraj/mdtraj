@@ -76,6 +76,9 @@ def _parse_topology(top):
 
     if isinstance(top, str) and (os.path.splitext(top)[1] in ['.pdb', '.h5','.lh5']):
         topology = load_frame(top, 0).topology
+    elif isinstance(top, str) and (os.path.splitext(top)[1] == '.prmtop'):
+        from mdtraj import prmtop
+        topology = prmtop.load(top)
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, Topology):

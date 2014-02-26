@@ -44,3 +44,12 @@ def test_load_prmtop():
     top = prmtop.load(get_fn('alanine-dipeptide-implicit.prmtop'))
     ref_top = md.load(get_fn('alanine.pdb')).topology
     assert top == ref_top
+    
+def test_load_binpos_w_prmtop():
+    traj = md.load(get_fn('alanine.binpos'), top=get_fn('alanine-dipeptide-implicit.prmtop'))
+    ref_traj = md.load(get_fn('alanine.pdb'))
+    assert traj.topology == ref_traj.topology
+    yield lambda: eq(traj.xyz, ref_traj.xyz)
+    
+    
+    
