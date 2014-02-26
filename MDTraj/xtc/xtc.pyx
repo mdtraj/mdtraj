@@ -34,6 +34,7 @@ import numpy as np
 cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.utils.six import string_types
 from mdtraj.registry import _FormatRegistry
 cimport xdrlib
 
@@ -123,7 +124,7 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_xtc')
 
-    if not isinstance(filename, str):
+    if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_xtc. '
             'you supplied %s' % type(filename))
 
