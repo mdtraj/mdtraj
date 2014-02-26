@@ -117,11 +117,5 @@ def test_nonconsective_resSeq():
     t2 = md.load(fname)
     yield lambda : eq(df1[0], t2.top.to_dataframe()[0])
     os.unlink(fname)
-
-def test_load_prmtop():
-    from mdtraj import topology
-    top = topology.load_prmtop(get_fn('alanine-dipeptide-implicit.prmtop'))
-    ref_top = md.load(get_fn('alanine.pdb')).topology
-    assert top == ref_top
     
     
