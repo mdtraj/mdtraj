@@ -29,6 +29,7 @@ import mdtraj as md
 import mdtraj.trajectory
 import mdtraj.utils
 from mdtraj import topology, Trajectory
+from mdtraj.utils import six
 from mdtraj.utils.six import PY3
 from mdtraj.utils.six.moves import xrange
 from mdtraj.pdb import element
@@ -153,7 +154,7 @@ def test_binpos():
 
 def test_load():
     filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos",
-                 "traj.h5", 'legacy_msmbuilder_trj0.lh5', 'frame0.nc', u'traj.h5']
+                 "traj.h5", 'legacy_msmbuilder_trj0.lh5', 'frame0.nc', six.u('traj.h5')]
     num_block = 3
     for filename in filenames:
         t0 = md.load(get_fn(filename), top=nat, discard_overlapping_frames=True)
