@@ -51,6 +51,7 @@ from mdtraj import version
 import mdtraj.pdb.element as elem
 from mdtraj.topology import Topology
 from mdtraj.utils import in_units_of, ensure_type, import_, convert, cast_indices
+from mdtraj.utils.six import string_types
 from mdtraj.registry import _FormatRegistry
 
 __all__ = ['HDF5TrajectoryFile', 'load_hdf5']
@@ -311,7 +312,7 @@ class HDF5TrajectoryFile(object):
         """
         try:
             raw = self._get_node('/', name='topology')[0]
-            if not isinstance(raw, str):
+            if not isinstance(raw, string_types):
                 raw = raw.decode()
             topology_dict = json.loads(raw)
         except self.tables.NoSuchNodeError:
@@ -587,7 +588,7 @@ class HDF5TrajectoryFile(object):
                 node = self._get_node(where='/', name=name)
                 data = node.__getitem__(slice)
                 in_units = node.attrs.units
-                if not isinstance(in_units, str):
+                if not isinstance(in_units, string_types):
                     in_units = in_units.decode()
                 data =  in_units_of(data, out_units, in_units)
                 return data

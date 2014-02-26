@@ -31,6 +31,7 @@ import itertools
 import numpy as np
 from mdtraj.utils import ensure_type, cast_indices, convert
 from mdtraj.registry import _FormatRegistry
+from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
 
 __all__ = ['MDCRDTrajectoryFile', 'load_mdcrd']
@@ -84,7 +85,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_mdcrd')
 
-    if not isinstance(filename, str):
+    if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_mdcrd. '
             'you supplied %s' % type(filename))
 

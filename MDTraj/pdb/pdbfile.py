@@ -122,7 +122,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
     mdtraj.PDBTrajectoryFile : Low level interface to PDB files
     """
     from mdtraj import Trajectory
-    if not isinstance(filename, str):
+    if not isinstance(filename, six.string_types):
         raise TypeError('filename must be of type string for load_pdb. '
             'you supplied %s' % type(filename))
 
@@ -408,7 +408,7 @@ class PDBTrajectoryFile(object):
             cycle through to choose chain names.
         """
         for item in values:
-            if not isinstance(item, str) and len(item) == 1:
+            if not isinstance(item, six.string_types) and len(item) == 1:
                 raise TypeError('Names must be a single character string')
         cls._chain_names = values
 
