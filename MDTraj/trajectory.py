@@ -61,7 +61,7 @@ def _assert_files_exist(filenames):
     filenames : {str, [str]}
         String or list of strings to check
     """
-    if isinstance(filenames, str):
+    if isinstance(filenames, basestring):
         filenames = [filenames]
     for fn in filenames:
         if not (os.path.exists(fn) and os.path.isfile(fn)):
