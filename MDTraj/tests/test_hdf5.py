@@ -91,7 +91,7 @@ def test_write_inconsistent_2():
         assert_raises(ValueError, lambda: f.write(coordinates))
 
 
-@skipif(not HAVE_UNITS, 'No units')
+@skipif(not HAVE_UNITS, 'No simtk.units')
 def test_write_units():
     "simtk.units are automatically converted into MD units for storage on disk"
     coordinates = units.Quantity(np.random.randn(4, 10,3), units.angstroms)
@@ -109,21 +109,23 @@ def test_write_units():
 
 def test_write_units2():
     from mdtraj.utils import unit as units
-    coordinates = units.Quantity(np.random.randn(4, 10,3), units.angstroms)
-    velocities = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.year)
+    coordinates = units.quantity.Quantity(np.random.randn(4, 10,3),
+                    units.unit_definitions.angstroms)
+    velocities = units.quantity.Quantity(np.random.randn(4, 10,3),
+                    units.unit_definitions.angstroms/units.unit_definitions.year)
 
     with HDF5TrajectoryFile(temp, 'w') as f:
         f.write(coordinates, velocities=velocities)
 
     with HDF5TrajectoryFile(temp) as f:
-        yield lambda: eq(f.root.coordinates[:], coordinates.value_in_unit(units.nanometers))
+        yield lambda: eq(f.root.coordinates[:], coordinates.value_in_unit(units.unit_definitions.nanometers))
         yield lambda: eq(str(f.root.coordinates.attrs['units']), 'nanometers')
 
-        yield lambda: eq(f.root.velocities[:], velocities.value_in_unit(units.nanometers/units.picosecond))
+        yield lambda: eq(f.root.velocities[:], velocities.value_in_unit(units.unit_definitions.nanometers/units.unit_definitions.picosecond))
         yield lambda: eq(str(f.root.velocities.attrs['units']), 'nanometers/picosecond')
 
 
-@skipif(not HAVE_UNITS, 'No units')
+@skipif(not HAVE_UNITS, 'No simtk.units')
 def test_write_units_mismatch():
     velocoties = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.picosecond)
 

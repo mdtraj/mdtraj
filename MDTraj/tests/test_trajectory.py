@@ -377,7 +377,7 @@ def test_seek_read_mode():
                         if a not in [md.BINPOSTrajectoryFile, md.LH5TrajectoryFile]:
                             read = read[0]
                         readlength = len(read)
-                        read = mdtraj.utils.convert(read, f.distance_unit, 'nanometers')
+                        read = mdtraj.utils.in_units_of(read, f.distance_unit, 'nanometers')
                         eq(xyz[point:point+offset], read)
                         point += readlength
                 elif r < 0.75:

@@ -39,7 +39,7 @@ import warnings
 import numpy as np
 from mdtraj import version
 from mdtraj.registry import _FormatRegistry
-from mdtraj.utils import ensure_type, import_, in_units_of, in_units_of, cast_indices
+from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices
 
 __all__ = ['NetCDFTrajectoryFile', 'load_netcdf']
 
@@ -297,10 +297,10 @@ class NetCDFTrajectoryFile(object):
         if self._mode not in ['w', 'ws', 'a', 'as']:
             raise IOError('The file was opened in mode=%s. Writing is not allowed.' % self._mode)
 
-        coordinates = in_units_of(coordinates, 'angstroms')
-        time = in_units_of(time, 'picoseconds')
-        cell_lengths = in_units_of(cell_lengths, 'angstroms')
-        cell_angles = in_units_of(cell_angles, 'degrees')
+        coordinates = in_units_of(coordinates, None, 'angstroms')
+        time = in_units_of(time, None, 'picoseconds')
+        cell_lengths = in_units_of(cell_lengths, None, 'angstroms')
+        cell_angles = in_units_of(cell_angles, None, 'degrees')
 
         # typecheck all of the input arguments rigorously
         coordinates = ensure_type(coordinates, np.float32, 3, 'coordinates', length=None,
