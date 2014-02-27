@@ -436,8 +436,6 @@ class Topology(object):
                 if (r1.index != r1.index) or (r1.name != r2.name): # or (r1.resSeq != r2.resSeq):
                     return False
                 if len(r1._atoms) != len(r2._atoms):
-                    print(r1,r2)
-                    print(len(r1._atoms), len(r2._atoms))
                     return False
 
                 for a1, a2 in zip(r1.atoms, r2.atoms):

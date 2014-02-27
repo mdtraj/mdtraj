@@ -3,8 +3,8 @@
 #         Molecular Dynamics Trajectories.
 # Copyright 2012-2013 Stanford University and the Authors
 #
-# Authors: Peter Eastman, Robert McGibbon
-# Contributors: Kyle A. Beauchamp
+# Authors: TJ Lane
+# Contributors: Robert McGibbon
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -80,7 +80,7 @@ def _get_pointer_value(pointer_label, raw_data):
     index = POINTER_LABEL_LIST.index(pointer_label)
     return float(raw_data['POINTERS'][index])
 
-def load(filename):
+def load_prmtop(filename):
     """Load am AMBER prmtop file from disk.
 
     Parameters

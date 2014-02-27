@@ -3,7 +3,7 @@
 #         Molecular Dynamics Trajectories.
 # Copyright 2012-2013 Stanford University and the Authors
 #
-# Authors: Kyle A. Beauchamp
+# Authors: TJ Lane
 # Contributors: Robert McGibbon
 #
 # MDTraj is free software: you can redistribute it and/or modify
@@ -41,13 +41,13 @@ except ImportError:
     HAVE_PANDAS = False
 
 def test_load_prmtop():
-    top = prmtop.load(get_fn('alanine-dipeptide-implicit.prmtop'))
-    ref_top = md.load(get_fn('alanine.pdb')).topology
+    top = prmtop.load_prmtop(get_fn('alanine-dipeptide-implicit.prmtop'))
+    ref_top = md.load(get_fn('native.pdb')).topology
     assert top == ref_top
     
 def test_load_binpos_w_prmtop():
     traj = md.load(get_fn('alanine.binpos'), top=get_fn('alanine-dipeptide-implicit.prmtop'))
-    ref_traj = md.load(get_fn('alanine.pdb'))
+    ref_traj = md.load(get_fn('native.pdb'))
     assert traj.topology == ref_traj.topology
     yield lambda: eq(traj.xyz, ref_traj.xyz)
     
