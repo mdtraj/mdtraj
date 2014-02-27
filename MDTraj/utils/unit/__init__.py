@@ -1,28 +1,47 @@
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
+#
+# Authors: Robert McGibbon
+# Contributors:
+#
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
 """
-Physical quantities with units for dimensional analysis and automatic unit conversion.
+
+Unit processing for MDTraj. This subpackage is a port of simtk.unit from
+OpenMM. Unlike in simtk.openmm, the MDTraj library **does not pass around
+"united quantities"**
+
+The only publicly facing API from this package, for the purpose of MDTraj,
+is "in_units_of", which does unit conversion of numbers or numpy arrays
+where the input and output units are passed as strings.
+
 """
-__docformat__ = "epytext en"
-
-__author__ = "Christopher M. Bruns"
-__copyright__ = "Copyright 2010, Stanford University and Christopher M. Bruns"
-__credits__ = []
-__license__ = "MIT"
-__maintainer__ = "Christopher M. Bruns"
-__email__ = "cmbruns@stanford.edu"
-
 import ast
-from .unit import Unit, is_unit
-from .quantity import Quantity, is_quantity
-from .unit_math import *
+import sys
+from .quantity import Quantity
 import unit_definitions
-from .unit_definitions import *
-from .constants import *
 from mdtraj.utils import import_, six
 UNIT_DEFINITIONS = unit_definitions
 try:
     import simtk.unit as simtk_unit
 except ImportError:
     pass
+
+__all__ = ['in_units_of']
 
 class _UnitContext(ast.NodeTransformer):
     """Node transformer for an AST hack that turns raw strings into
@@ -131,6 +150,7 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
         units_in = _str_to_unit(units_in)
         units_out = _str_to_unit(units_out)
 
+    print type(units_in), type(units_out), quantity
     if not units_in.is_compatible(units_out):
         raise TypeError('Unit "%s" is not compatible with Unit "%s".' % (units_in, units_out))
 
