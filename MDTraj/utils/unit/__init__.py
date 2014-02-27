@@ -131,7 +131,11 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
         units_in = _str_to_unit(units_in)
         units_out = _str_to_unit(units_out)
 
+    print 'in, out', units_in, units_out
+
     factor = units_in.conversion_factor_to(units_out)
+    print 'factor', factor, 'donefactor'
+
     if not inplace:
         return quantity * factor
 
