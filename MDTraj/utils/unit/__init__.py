@@ -32,8 +32,8 @@ where the input and output units are passed as strings.
 """
 import ast
 import sys
-from .quantity import Quantity
-import unit_definitions
+from mdtraj.utils.unit.quantity import Quantity
+from mdtraj.utils.unit import unit_definitions
 from mdtraj.utils import import_, six
 UNIT_DEFINITIONS = unit_definitions
 try:
