@@ -34,7 +34,7 @@ import numpy as np
 import mdtraj.pdb.element
 from mdtraj.utils.six import iteritems, PY3, u
 from mdtraj.registry import _FormatRegistry
-from mdtraj.utils import import_, ensure_type, convert, cast_indices
+from mdtraj.utils import import_, ensure_type, in_units_of, cast_indices
 from mdtraj.hdf5 import ensure_mode
 
 MAXINT16 = np.iinfo(np.int16).max
@@ -153,7 +153,7 @@ def load_lh5(filename, top=None, stride=None, atom_indices=None, frame=None):
             xyz = f.read(stride=stride, atom_indices=atom_indices)
 
         topology = f.topology
-        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
         if atom_indices is not None:
             topology = f.topology.subset(atom_indices)

@@ -34,7 +34,7 @@ import os
 import numpy as np
 cimport numpy as np
 np.import_array()
-from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.registry import _FormatRegistry
 from libc.stdlib cimport malloc, free
@@ -124,7 +124,7 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
         else:
             xyz = f.read(stride=stride, atom_indices=atom_indices)
 
-        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     time = np.arange(len(xyz))
     if frame is not None:

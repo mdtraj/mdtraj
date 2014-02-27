@@ -33,7 +33,7 @@ cimport cython
 import numpy as np
 cimport numpy as np
 np.import_array()
-from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.registry import _FormatRegistry
 cimport trrlib
@@ -136,8 +136,8 @@ def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
         else:
             xyz, time, step, box, lambd = f.read(stride=stride, atom_indices=atom_indices)
 
-        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        convert(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     trajectory.unitcell_vectors = box
