@@ -50,7 +50,7 @@ import xml.etree.ElementTree as etree
 from copy import copy
 from mdtraj.pdb.pdbstructure import PdbStructure
 from mdtraj.topology import Topology
-from mdtraj.utils import ilen, cast_indices, convert
+from mdtraj.utils import ilen, cast_indices, in_units_of
 from mdtraj.registry import _FormatRegistry
 from mdtraj.pdb import element as elem
 from mdtraj.utils import six
@@ -149,8 +149,8 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
             unitcell_lengths = None
             unitcell_angles = None
 
-        convert(coords, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        convert(unitcell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(coords, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(unitcell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     time = np.arange(len(coords))
     if frame is not None:

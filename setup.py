@@ -42,7 +42,7 @@ except ImportError:
 
 if 'setuptools' in sys.modules:
     setup_kwargs['zip_safe'] = False
-    setup_kwargs['install_requires'] = ['simtk.unit', 'pandas>=0.9.0']
+    setup_kwargs['install_requires'] = ['pandas>=0.9.0']
     setup_kwargs['entry_points'] = {'console_scripts':
               ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
                'mdinspect = mdtraj.scripts.mdinspect:entry_point']}

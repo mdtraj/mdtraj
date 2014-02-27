@@ -107,6 +107,21 @@ def test_write_units():
         yield lambda: eq(f.root.velocities[:], velocities.value_in_unit(units.nanometers/units.picosecond))
         yield lambda: eq(str(f.root.velocities.attrs['units']), 'nanometers/picosecond')
 
+def test_write_units2():
+    from mdtraj.utils import unit as units
+    coordinates = units.Quantity(np.random.randn(4, 10,3), units.angstroms)
+    velocities = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.year)
+
+    with HDF5TrajectoryFile(temp, 'w') as f:
+        f.write(coordinates, velocities=velocities)
+
+    with HDF5TrajectoryFile(temp) as f:
+        yield lambda: eq(f.root.coordinates[:], coordinates.value_in_unit(units.nanometers))
+        yield lambda: eq(str(f.root.coordinates.attrs['units']), 'nanometers')
+
+        yield lambda: eq(f.root.velocities[:], velocities.value_in_unit(units.nanometers/units.picosecond))
+        yield lambda: eq(str(f.root.velocities.attrs['units']), 'nanometers/picosecond')
+
 
 @skipif(not HAVE_UNITS, 'No units')
 def test_write_units_mismatch():
