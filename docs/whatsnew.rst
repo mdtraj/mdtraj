@@ -26,7 +26,7 @@ v0.6.1 (February 11, 2014)
 - Fix RMSD centering bug with memory alignment after restrict_atoms
 
 v0.6.0 (January 21, 2014)
------------------
+-------------------------
 - `md.rmsd()` signature changed to be more understandable
 - All file objects now have a `__len__` function.
 - Small bugfixes related to vsites.

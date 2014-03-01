@@ -1,4 +1,4 @@
-Clustering with :code:`md.rmsd(`) and :code:`scipy.cluster.hierarchy`
+Clustering with :func:`md.rmsd(`) and :func:`scipy.cluster.hierarchy`
 =====================================================================
 
 .. notebook:: clustering.ipynb
