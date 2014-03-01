@@ -19,6 +19,7 @@ sudo apt-get install -qq python-matplotlib
 sudo apt-get install -qq python-sklearn
 sudo apt-get install -qq python-sphinx       # for building documentation
 sudo apt-get install -qq python-boto         # for interacting with S3
+sudo apt-get install -qq pandoc              # notebook -> rst
 sudo pip install ipython                     # example notebooks
 sudo pip install runipy                      # example notebooks
 cd docs && make html && cd -
