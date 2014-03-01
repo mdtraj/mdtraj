@@ -23,6 +23,7 @@ files, start an IPython notebook server:
    :maxdepth: 3
    :glob:
 
+   introduction
    *
 
 Let us know if you would like to contribute other example notebooks, or have

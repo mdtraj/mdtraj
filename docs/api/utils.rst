@@ -1,5 +1,5 @@
-Utils
------
+MDTraj Utils
+------------
 
 .. currentmodule:: mdtraj.utils
 .. autosummary::
