@@ -50,7 +50,6 @@ html:	builddir
 builddir:
 	mkdir -p $(BUILDDIR)
 	@echo "Generating reST from examples folder"
-	$(TOOLSPATH)$(EXAMPLEBUILD)
 
 clean:
 	rm -rf $(BUILDDIR)/*
