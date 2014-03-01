@@ -64,3 +64,5 @@ tools/ci/speedpack/.vagrant
 docs/api/generated/
 docs/examples/*.ipynb
 docs/examples/*.py
+docs/examples/.ipynb_checkpoints/
+examples/.ipynb_checkpoints/
