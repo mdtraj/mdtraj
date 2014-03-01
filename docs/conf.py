@@ -38,6 +38,11 @@ autosummary_generate = True
 autodoc_default_flags = ['members', 'inherited-members']
 
 
+import runipy
+import IPython.nbconvert.utils.pandoc
+extensions.append('notebook_sphinxext')
+extensions.append('notebookcell_sphinxext')
+
 _python_doc_base = 'http://docs.python.org/2.7'
 intersphinx_mapping = {
     _python_doc_base: None,
