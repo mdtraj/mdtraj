@@ -56,7 +56,6 @@ nosetests.xml
 MDTraj/version.py
 
 docs/_build
-tools/hash_dict.pickle
 docs/examples/generated/
 tools/ci/speedpack/wheelhouse/*
 tools/ci/speedpack/.vagrant
