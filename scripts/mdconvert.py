@@ -52,6 +52,7 @@ formats = {'.dcd': md.DCDTrajectoryFile,
            '.trr': md.TRRTrajectoryFile,
            '.binpos': md.BINPOSTrajectoryFile,
            '.nc': md.NetCDFTrajectoryFile,
+           '.netcdf': md.NetCDFTrajectoryFile,
            '.h5': md.HDF5TrajectoryFile,
            '.lh5': md.LH5TrajectoryFile,
            '.pdb': md.PDBTrajectoryFile}
@@ -60,6 +61,7 @@ fields = {'.trr': ('xyz', 'time', 'step', 'box', 'lambda'),
           '.xtc': ('xyz', 'time', 'step', 'box'),
           '.dcd': ('xyz', 'cell_lengths', 'cell_angles'),
           '.nc': ('xyz', 'time', 'cell_lengths', 'cell_angles'),
+          '.netcdf': ('xyz', 'time', 'cell_lengths', 'cell_angles'),
           '.binpos': ('xyz',),
           '.lh5': ('xyz', 'topology'),
           '.h5': ('xyz', 'time', 'cell_lengths', 'cell_angles',
@@ -71,6 +73,7 @@ units = {'.xtc': 'nanometers',
          '.trr': 'nanometers',
          '.binpos': 'angstroms',
          '.nc': 'angstroms',
+         '.netcdf': 'angstroms',
          '.dcd': 'angstroms',
          '.h5': 'nanometers',
          '.lh5': 'nanometers',
@@ -432,7 +435,7 @@ def read(infile, chunk, stride, atom_indices):
         in_units = 'angstroms'
 
     elif isinstance(infile, md.NetCDFTrajectoryFile):
-        data = dict(zip(fields['.nc'], _data))
+        data = dict(zip(fields['.nc'], _data))  # this only works when the entries of .nc and .netcdf are identical in 'fields'
         in_units = 'angstroms'
 
     elif isinstance(infile, md.HDF5TrajectoryFile):
