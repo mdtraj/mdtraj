@@ -85,7 +85,7 @@ def load_arc(filename, top=None, stride=None, atom_indices=None):
         raise TypeError('filename must be of type string for load_arc. '
             'you supplied %s' % type(filename))
 
-    topology = _parse_topology(top)
+    topology, unitcell_from_topology = _parse_topology(top)
     atom_indices = _cast_indices(atom_indices)
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
@@ -101,6 +101,9 @@ def load_arc(filename, top=None, stride=None, atom_indices=None):
         time *= stride
 
     t = Trajectory(xyz=xyz, topology=topology, time=time)
+    if unitcell_from_topology is not None:
+        value.unitcell_lengths = unitcell_from_topology[0]
+        value.unitcell_angles = unitcell_from_topology[1]
     return t
 
 

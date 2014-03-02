@@ -60,6 +60,10 @@ import numpy as np
 from mdtraj import topology
 from mdtraj import pdb
 
+FORMAT_RE_PATTERN = re.compile("([0-9]+)([a-zA-Z]+)([0-9]+)\.?([0-9]*)")
+
+__all__ = ['load_prmtop']
+
 ##############################################################################
 # Functions
 ##############################################################################
@@ -80,6 +84,7 @@ def _get_pointer_value(pointer_label, raw_data):
     index = POINTER_LABEL_LIST.index(pointer_label)
     return float(raw_data['POINTERS'][index])
 
+
 def load_prmtop(filename):
     """Load am AMBER prmtop file from disk.
 
@@ -92,71 +97,64 @@ def load_prmtop(filename):
     -------
     top : md.topology.Topology
         The resulting topology, as an md.Topology object.
-    unitcell_lengths : np.array, shape=(3, ), or None
-        The dimensions of the unitcell, 
+    unitcell : tuple
+        Tuple of 2 numpy arrays, each 1D of length 3, with the unitcell
+        lengths, and then the unitcell angles.
 
     Examples
     --------
     >>> from mdtraj import topology
     >>> top = topology.load_prmtop('mysystem.prmtop')
     """
-    
-    FORMAT_RE_PATTERN=re.compile("([0-9]+)([a-zA-Z]+)([0-9]+)\.?([0-9]*)")  
-
     top = topology.Topology()
     elements = []
-   
+
     prmtop_version = None
     flags      = []
     raw_format = {}
     raw_data   = {}
 
-    f = open(filename)
-   
-    for line in f:
-       
-        if line.startswith('%VERSION'):
-            tag, prmtop_version = line.rstrip().split(None, 1)
-           
-        elif line.startswith('%FLAG'):
-            tag, flag = line.rstrip().split(None, 1)
-            flags.append(flag)
-            raw_data[flag] = []
-           
-        elif line.startswith('%FORMAT'):
-            format = line.rstrip()
-            index0=format.index('(')
-            index1=format.index(')')
-            format = format[index0+1:index1]
-            m = FORMAT_RE_PATTERN.search(format)
-            raw_format[flags[-1]] = (format, m.group(1), m.group(2), m.group(3), m.group(4))
-           
-        elif flags \
-             and 'TITLE'==flags[-1] \
-             and not raw_data['TITLE']:
-            raw_data['TITLE'] = line.rstrip()
-           
-        else:
-            flag=flags[-1]
-            (format, numItems, itemType,
-             itemLength, itemPrecision) = raw_format[flag] #_get_format(flag)
-            iLength=int(itemLength)
-            line = line.rstrip()
-            for index in range(0, len(line), iLength):
-                item = line[index:index+iLength]
-                if item:
-                    raw_data[flag].append(item.strip())
-                   
-    f.close()
+    with open(filename, 'r') as f:
+        for line in f:
+            if line.startswith('%VERSION'):
+                tag, prmtop_version = line.rstrip().split(None, 1)
+
+            elif line.startswith('%FLAG'):
+                tag, flag = line.rstrip().split(None, 1)
+                flags.append(flag)
+                raw_data[flag] = []
+
+            elif line.startswith('%FORMAT'):
+                format = line.rstrip()
+                index0=format.index('(')
+                index1=format.index(')')
+                format = format[index0+1:index1]
+                m = FORMAT_RE_PATTERN.search(format)
+                raw_format[flags[-1]] = (format, m.group(1), m.group(2), m.group(3), m.group(4))
+
+            elif flags \
+                 and 'TITLE'==flags[-1] \
+                 and not raw_data['TITLE']:
+                raw_data['TITLE'] = line.rstrip()
+
+            else:
+                flag=flags[-1]
+                format, numItems, itemType, itemLength, itemPrecision = raw_format[flag]
+                iLength=int(itemLength)
+                line = line.rstrip()
+                for index in range(0, len(line), iLength):
+                    item = line[index:index+iLength]
+                    if item:
+                        raw_data[flag].append(item.strip())
 
     # Add atoms to the topology
 
     pdb.PDBTrajectoryFile._loadNameReplacementTables()
     previous_residue = None
     c = top.add_chain()
-   
+
     n_atoms = int(_get_pointer_value('NATOM', raw_data))
-   
+
     # built a dictorary telling us which atom belongs to which residue
     residue_pointer_dict = {}
     res_pointers = raw_data['RESIDUE_POINTER']        
@@ -167,25 +165,26 @@ def load_prmtop(filename):
         while first_atom[res+1] <= i:
             res += 1
         residue_pointer_dict[i] = res
-   
+
     # add each residue/atom to the topology object
     for index in range(n_atoms):
-    
+
         res_number = residue_pointer_dict[index]
         if res_number != previous_residue:
-            
+
             previous_residue = res_number
-        
-            res_name = raw_data['RESIDUE_LABEL'][residue_pointer_dict[index]].strip() # check
+
+            # check
+            res_name = raw_data['RESIDUE_LABEL'][residue_pointer_dict[index]].strip()
             if res_name in pdb.PDBTrajectoryFile._residueNameReplacements:
                 res_name = pdb.PDBTrajectoryFile._residueNameReplacements[res_name]
             r = top.add_residue(res_name, c)
-            
+
             if res_name in pdb.PDBTrajectoryFile._atomNameReplacements:
                 atom_replacements = pdb.PDBTrajectoryFile._atomNameReplacements[res_name]
             else:
                 atom_replacements = {}
-               
+
         atom_name = raw_data['ATOM_NAME'][index].strip()
         if atom_name in atom_replacements:
             atom_name = atom_replacements[atom_name]
@@ -230,7 +229,7 @@ def load_prmtop(filename):
 
         else:
             bond_list.append((int(bond_pointers[ii])//3, int(bond_pointers[ii+1])//3))
-            
+
     for bond in bond_list:
         top.add_bond(atoms[bond[0]], atoms[bond[1]])
 
@@ -239,7 +238,7 @@ def load_prmtop(filename):
         # get the box dimensions, convert to nm
         beta = float(raw_data["BOX_DIMENSIONS"][0])
         if abs(beta - 90.0) > 1e-10:
-            raise NotImplementedError("prmtop.py cannot handle beta != 90.0")
+            raise NotImplementedError("FIXME: prmtop.py cannot handle beta != 90.0")
         x = float(raw_data["BOX_DIMENSIONS"][1]) / 10.0
         y = float(raw_data["BOX_DIMENSIONS"][2]) / 10.0
         z = float(raw_data["BOX_DIMENSIONS"][3]) / 10.0

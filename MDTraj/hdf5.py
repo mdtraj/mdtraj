@@ -141,7 +141,7 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.HDF5TrajectoryFile :  Low level interface to HDF5 files
     """
-    from mdtraj.trajectory import _parse_topology, Trajectory
+    from mdtraj.trajectory import Trajectory
     atom_indices = cast_indices(atom_indices)
 
     with HDF5TrajectoryFile(filename) as f:

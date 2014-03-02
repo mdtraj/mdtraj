@@ -89,7 +89,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
         raise TypeError('filename must be of type string for load_mdcrd. '
             'you supplied %s' % type(filename))
 
-    topology = _parse_topology(top)
+    topology, unitcell_from_topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
@@ -118,6 +118,9 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     if cell_lengths is not None:
         t.unitcell_lengths = cell_lengths
         t.unitcell_angles = cell_angles
+    if (cell_lengths is None) and (unitcell_from_topology is not None):
+        t.unitcell_lengths = unitcell_from_topology[0]
+        t.unitcell_angles = unitcell_from_topology[1]
     return t
 
 

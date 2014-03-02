@@ -132,7 +132,11 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
     elif stride is not None:
         time *= stride
 
-    return Trajectory(xyz=xyz, topology=topology, time=time)
+    value = Trajectory(xyz=xyz, topology=topology, time=time)
+    if unitcell_from_topology is not None:
+        value.unitcell_lengths = unitcell_from_topology[0]
+        value.unitcell_angles = unitcell_from_topology[1]
+    return value
 
 
 cdef class BINPOSTrajectoryFile:

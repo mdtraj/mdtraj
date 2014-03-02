@@ -35,7 +35,7 @@ import numpy as np
 from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
                     TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
                     LH5TrajectoryFile, PDBTrajectoryFile, MDCRDTrajectoryFile,
-                    ArcTrajectoryFile, Topology)
+                    ArcTrajectoryFile, Topology, load_prmtop)
 from mdtraj.utils import (lengths_and_angles_to_box_vectors, box_vectors_to_lengths_and_angles,
                           in_units_of, cast_indices, ensure_type)
 from mdtraj.utils.six.moves import xrange
@@ -62,7 +62,7 @@ def _assert_files_exist(filenames):
     filenames : {str, [str]}
         String or list of strings to check
     """
-    if isinstance(filenames, str):
+    if isinstance(filenames, string_types):
         filenames = [filenames]
     for fn in filenames:
         if not (os.path.exists(fn) and os.path.isfile(fn)):
@@ -73,6 +73,13 @@ def _parse_topology(top):
     """Get the topology from a argument of indeterminate type
     If top is a string, we try loading a pdb, if its a trajectory
     we extract its topology.
+
+    Returns
+    -------
+    topology : md.Topology
+    unitcell : tuple
+        Tuple of 2 numpy arrays, each 1D of length 3, with the unitcell
+        lengths, and then the unitcell angles.
     """
 
     unitcell = None
@@ -80,14 +87,14 @@ def _parse_topology(top):
         ext = os.path.splitext(top)[1]
     except:
         ext = None  # might not be a string
-        
+
     if isinstance(top, string_types) and (ext in ['.pdb', '.h5','.lh5']):
         _traj = load_frame(top, 0)
         topology = _traj.topology
-        unitcell = (_traj.unitcell_lengths, _traj.unitcell_angles)
+        if _traj._have_unitcell:
+            unitcell = (_traj.unitcell_lengths[0], _traj.unitcell_angles[0])
     elif isinstance(top, string_types) and (ext == '.prmtop'):
-        from mdtraj import prmtop
-        topology, unitcell = prmtop.load_prmtop(top)
+        topology, unitcell = load_prmtop(top)
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, Topology):
@@ -196,9 +203,9 @@ def load_frame(filename, index, top=None, atom_indices=None):
                       'was found. I can only load files with extensions in %s'
                       % (filename, extension, _FormatRegistry.loaders.keys()))
 
-    kwargs = {'top': top, 'atom_indices': atom_indices}
-    if loader.__name__ in ['load_hdf5', 'load_pdb']:
-        kwargs.pop('top', None)
+    kwargs = {'atom_indices': atom_indices}
+    if loader.__name__ not in ['load_hdf5', 'load_pdb']:
+        kwargs['top'] = top
 
     return loader(filename, frame=index, **kwargs)
 
@@ -273,8 +280,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             raise(TypeError("All filenames must have same extension!"))
         else:
             t = [load(f, **kwargs) for f in filename_or_filenames]
-            # we know the topology is equal because we sent the same topology kwarg
-            # in, so there's no reason to spend extra time checking
+            # we know the topology is equal because we sent the same topology
+            # kwarg in, so there's no reason to spend extra time checking
             return t[0].join(t[1:], discard_overlapping_frames=discard_overlapping_frames,
                              check_topology=False)
 
@@ -297,15 +304,14 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         kwargs.pop('top', None)
 
     value = loader(filename, **kwargs)
-    if not value._have_unitcell and unitcell_from_topology is not None:
+    if (not value._have_unitcell) and unitcell_from_topology is not None:
         # if the unitcell is specified in the topology file and there is no
         # unitcell in the trajectory file, then we put it in here. This comes
         # for example with prmtop files
         value.unitcell_lengths = unitcell_from_topology[0]
         value.unitcell_angles = unitcell_from_topology[1]
-        
+
     return value
-        
 
 
 def iterload(filename, chunk=100, **kwargs):
