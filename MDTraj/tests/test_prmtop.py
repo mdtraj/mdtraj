@@ -20,36 +20,33 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-import os
-import tempfile
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
+from mdtraj.testing import get_fn, eq, DocStringFormatTester
 from mdtraj import prmtop
-import numpy as np
+doc = DocStringFormatTester(prmtop)
 
-try:
-    from simtk.openmm import app
-    HAVE_OPENMM = True
-except ImportError:
-    HAVE_OPENMM = False
-
-
-try:
-    import pandas as pd
-    HAVE_PANDAS = True
-except ImportError:
-    HAVE_PANDAS = False
 
 def test_load_prmtop():
     top = prmtop.load_prmtop(get_fn('alanine-dipeptide-implicit.prmtop'))
     ref_top = md.load(get_fn('native.pdb')).topology
-    assert top == ref_top
-    
+    eq(top, ref_top)
+
+
 def test_load_binpos_w_prmtop():
     traj = md.load(get_fn('alanine.binpos'), top=get_fn('alanine-dipeptide-implicit.prmtop'))
     ref_traj = md.load(get_fn('native.pdb'))
-    assert traj.topology == ref_traj.topology
+
+    eq(traj.topology, ref_traj.topology)
+    eq(traj.xyz, ref_traj.xyz)
+
+
+def test_load_binpos_w_prmtop_w_unitcell():
+    # this one has box info in the prmtop file
+    traj = md.load(get_fn('alanine-dipeptide-explicit.binpos'),
+                   top=get_fn('alanine-dipeptide-explicit.prmtop'))
+    ref_traj = md.load(get_fn('alanine-dipeptide-explicit.pdb'))
+
+    yield lambda: eq(traj.unitcell_vectors, ref_traj.unitcell_vectors)
+    yield lambda: eq(traj.topology, ref_traj.topology)
     yield lambda: eq(traj.xyz, ref_traj.xyz)
-    
-    
     
