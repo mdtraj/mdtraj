@@ -49,6 +49,7 @@
 
 from __future__ import print_function, division
 import os
+import re
 import numpy as np
 import itertools
 import xml.etree.ElementTree as etree
@@ -449,8 +450,15 @@ class Topology(object):
 
         if len(self._bonds) != len(other._bonds):
             return False
-        for (a1, b1), (a2, b2) in zip(self.bonds, other.bonds):
-            if (a1.index != a2.index) or (b1.index != b2.index):
+            
+        # the bond ordering is somewhat ambiguous, so try and fix it for comparison
+        self_sorted_bonds  = sorted([(a1.index, b1.index) for (a1, b1) in self.bonds])
+        other_sorted_bonds = sorted([(a2.index, b2.index) for (a2, b2) in other.bonds])
+            
+        for i in range(len(self._bonds)):
+            (a1, b1) = self_sorted_bonds[i]
+            (a2, b2) = other_sorted_bonds[i]
+            if (a1 != a2) or (b1 != b2):
                 return False
 
         return True
@@ -528,7 +536,10 @@ class Topology(object):
         atom2 : mdtraj.topology.Atom
             The second Atom connected by the bond
         """
-        self._bonds.append((atom1, atom2))
+        if atom1.index < atom2.index:
+            self._bonds.append((atom1, atom2))
+        else:
+            self._bonds.append((atom2, atom1))
 
     def chain(self, index):
         """Get a specific chain by index.  These indices
@@ -891,3 +902,4 @@ class Atom(object):
 
     def __str__(self):
         return '%s-%s' % (self.residue, self.name)
+    

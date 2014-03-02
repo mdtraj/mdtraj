@@ -35,8 +35,9 @@ import numpy as np
 from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
                     TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
                     LH5TrajectoryFile, PDBTrajectoryFile, MDCRDTrajectoryFile,
-                    ArcTrajectoryFile, Topology)
-from mdtraj.utils import unitcell, ensure_type, in_units_of, cast_indices
+                    ArcTrajectoryFile, Topology, load_prmtop)
+from mdtraj.utils import (lengths_and_angles_to_box_vectors, box_vectors_to_lengths_and_angles,
+                          in_units_of, cast_indices, ensure_type)
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3, string_types
 from mdtraj import _rmsd
@@ -72,18 +73,36 @@ def _parse_topology(top):
     """Get the topology from a argument of indeterminate type
     If top is a string, we try loading a pdb, if its a trajectory
     we extract its topology.
+
+    Returns
+    -------
+    topology : md.Topology
+    unitcell : tuple
+        Tuple of 2 numpy arrays, each 1D of length 3, with the unitcell
+        lengths, and then the unitcell angles.
     """
 
-    if isinstance(top, string_types) and (os.path.splitext(top)[1] in ['.pdb', '.h5','.lh5']):
-        topology = load_frame(top, 0).topology
+    unitcell = None
+    try:
+        ext = os.path.splitext(top)[1]
+    except:
+        ext = None  # might not be a string
+
+    if isinstance(top, string_types) and (ext in ['.pdb', '.h5','.lh5']):
+        _traj = load_frame(top, 0)
+        topology = _traj.topology
+        if _traj._have_unitcell:
+            unitcell = (_traj.unitcell_lengths[0], _traj.unitcell_angles[0])
+    elif isinstance(top, string_types) and (ext == '.prmtop'):
+        topology, unitcell = load_prmtop(top)
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, Topology):
         topology = top
     else:
-        raise TypeError('A topology is required. You supplied top=%s' % top)
+        raise TypeError('A topology is required. You supplied top=%s' % str(top))
 
-    return topology
+    return topology, unitcell
 
 
 
@@ -184,9 +203,9 @@ def load_frame(filename, index, top=None, atom_indices=None):
                       'was found. I can only load files with extensions in %s'
                       % (filename, extension, _FormatRegistry.loaders.keys()))
 
-    kwargs = {'top': top, 'atom_indices': atom_indices}
-    if loader.__name__ in ['load_hdf5', 'load_pdb']:
-        kwargs.pop('top', None)
+    kwargs = {'atom_indices': atom_indices}
+    if loader.__name__ not in ['load_hdf5', 'load_pdb']:
+        kwargs['top'] = top
 
     return loader(filename, frame=index, **kwargs)
 
@@ -245,11 +264,11 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     trajectory : md.Trajectory
         The resulting trajectory, as an md.Trajectory object.
     """
-
+    unitcell_from_topology = None
     _assert_files_exist(filename_or_filenames)
 
     if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
-        kwargs["top"] = _parse_topology(kwargs["top"])
+        kwargs["top"], unitcell_from_topology = _parse_topology(kwargs["top"])
 
     # grab the extension of the filename
     if isinstance(filename_or_filenames, string_types):  # If a single filename
@@ -261,13 +280,12 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             raise(TypeError("All filenames must have same extension!"))
         else:
             t = [load(f, **kwargs) for f in filename_or_filenames]
-            # we know the topology is equal because we sent the same topology kwarg
-            # in, so there's no reason to spend extra time checking
+            # we know the topology is equal because we sent the same topology
+            # kwarg in, so there's no reason to spend extra time checking
             return t[0].join(t[1:], discard_overlapping_frames=discard_overlapping_frames,
                              check_topology=False)
 
     try:
-        #loader = _LoaderRegistry[extension][0]
         loader = _FormatRegistry.loaders[extension]
     except KeyError:
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
@@ -285,7 +303,15 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         # it.
         kwargs.pop('top', None)
 
-    return loader(filename, **kwargs)
+    value = loader(filename, **kwargs)
+    if (not value._have_unitcell) and unitcell_from_topology is not None:
+        # if the unitcell is specified in the topology file and there is no
+        # unitcell in the trajectory file, then we put it in here. This comes
+        # for example with prmtop files
+        value.unitcell_lengths = unitcell_from_topology[0]
+        value.unitcell_angles = unitcell_from_topology[1]
+
+    return value
 
 
 def iterload(filename, chunk=100, **kwargs):
@@ -375,7 +401,7 @@ def iterload(filename, chunk=100, **kwargs):
                 yield Trajectory(xyz=xyz, topology=topology, time=time)
 
     elif filename.endswith('.xtc'):
-        topology = _parse_topology(kwargs.get('top', None))
+        topology, _ = _parse_topology(kwargs.get('top', None))
         with XTCTrajectoryFile(filename) as f:
             while True:
                 xyz, time, step, box = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
@@ -388,7 +414,7 @@ def iterload(filename, chunk=100, **kwargs):
                 yield trajectory
 
     elif filename.endswith('.dcd'):
-        topology = _parse_topology(kwargs.get('top', None))
+        topology, _ = _parse_topology(kwargs.get('top', None))
         with DCDTrajectoryFile(filename) as f:
             ptr = 0
             while True:
@@ -593,7 +619,7 @@ class Trajectory(object):
         if self._unitcell_lengths is None or self._unitcell_angles is None:
             return None
 
-        v1, v2, v3 = unitcell.lengths_and_angles_to_box_vectors(
+        v1, v2, v3 = lengths_and_angles_to_box_vectors(
             self._unitcell_lengths[:, 0],  # a
             self._unitcell_lengths[:, 1],  # b
             self._unitcell_lengths[:, 2],  # c
@@ -621,12 +647,12 @@ class Trajectory(object):
 
         if not len(vectors) == len(self):
             raise TypeError('unitcell_vectors must be the same length as '
-                            'the trajectory. you provided %s' % vectors)
+                            'the trajectory. you provided %s' % str(vectors))
 
         v1 = vectors[:, 0, :]
         v2 = vectors[:, 1, :]
         v3 = vectors[:, 2, :]
-        a, b, c, alpha, beta, gamma = unitcell.box_vectors_to_lengths_and_angles(v1, v2, v3)
+        a, b, c, alpha, beta, gamma = box_vectors_to_lengths_and_angles(v1, v2, v3)
 
         self._unitcell_lengths = np.vstack((a, b, c)).T
         self._unitcell_angles =  np.vstack((alpha, beta, gamma)).T
@@ -1120,7 +1146,6 @@ class Trajectory(object):
 
         with PDBTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             for i in xrange(self.n_frames):
-
                 if self._have_unitcell:
                     f.write(in_units_of(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
                             self.topology,

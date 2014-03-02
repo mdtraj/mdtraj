@@ -39,7 +39,7 @@ from mdtraj.binpos import BINPOSTrajectoryFile, load_binpos
 from mdtraj.pdb import PDBTrajectoryFile, load_pdb
 from mdtraj.arc import ArcTrajectoryFile, load_arc
 from mdtraj.openmmxml import load_xml
-
+from mdtraj.prmtop import load_prmtop
 
 from mdtraj._rmsd import rmsd
 from mdtraj.topology import Topology
