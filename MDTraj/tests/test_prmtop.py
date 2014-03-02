@@ -27,7 +27,7 @@ doc = DocStringFormatTester(prmtop)
 
 
 def test_load_prmtop():
-    top = prmtop.load_prmtop(get_fn('alanine-dipeptide-implicit.prmtop'))
+    top, _ = prmtop.load_prmtop(get_fn('alanine-dipeptide-implicit.prmtop'))
     ref_top = md.load(get_fn('native.pdb')).topology
     eq(top, ref_top)
 
@@ -46,7 +46,7 @@ def test_load_binpos_w_prmtop_w_unitcell():
                    top=get_fn('alanine-dipeptide-explicit.prmtop'))
     ref_traj = md.load(get_fn('alanine-dipeptide-explicit.pdb'))
 
-    yield lambda: eq(traj.unitcell_vectors, ref_traj.unitcell_vectors)
+    yield lambda: eq(traj.unitcell_vectors, ref_traj.unitcell_vectors, decimal=4)
     yield lambda: eq(traj.topology, ref_traj.topology)
     yield lambda: eq(traj.xyz, ref_traj.xyz)
     

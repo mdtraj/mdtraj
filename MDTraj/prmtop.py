@@ -41,14 +41,13 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
-
+"""Load an md.Topology from AMBER PRMTOP files
 """
-Written by: TJ Lane <tjlane@stanford.edu>
-2/25/14
 
-This code was mostly stolen/stripped down from OpenMM code, specifically
-the files amber_file_parser.py and amberprmtopfile.py
-"""
+# Written by: TJ Lane <tjlane@stanford.edu> 2/25/14
+# This code was mostly stolen/stripped down from OpenMM code, specifically
+# the files amber_file_parser.py and amberprmtopfile.py
+
 
 ##############################################################################
 # Imports
@@ -56,6 +55,7 @@ the files amber_file_parser.py and amberprmtopfile.py
 
 from __future__ import print_function, division
 import re
+import numpy as np
 
 from mdtraj import topology
 from mdtraj import pdb
@@ -92,6 +92,8 @@ def load_prmtop(filename):
     -------
     top : md.topology.Topology
         The resulting topology, as an md.Topology object.
+    unitcell_lengths : np.array, shape=(3, ), or None
+        The dimensions of the unitcell, 
 
     Examples
     --------
@@ -232,9 +234,15 @@ def load_prmtop(filename):
     for bond in bond_list:
         top.add_bond(atoms[bond[0]], atoms[bond[1]])
 
-    # Set the periodic box size -- this is NOT done in mdtraj's topology class
-    # if int(_get_pointer_value('IFBOX', raw_data)):
-    #     top.setUnitCellDimensions(tuple(x.value_in_unit(unit.nanometer) for \
-    #     x in prmtop.getBoxBetaAndDimensions()[1:4])*unit.nanometer)
+    unitcell = None
+    if int(_get_pointer_value('IFBOX', raw_data)):
+        # get the box dimensions, convert to nm
+        beta = float(raw_data["BOX_DIMENSIONS"][0])
+        if abs(beta - 90.0) > 1e-10:
+            raise NotImplementedError("prmtop.py cannot handle beta != 90.0")
+        x = float(raw_data["BOX_DIMENSIONS"][1]) / 10.0
+        y = float(raw_data["BOX_DIMENSIONS"][2]) / 10.0
+        z = float(raw_data["BOX_DIMENSIONS"][3]) / 10.0
+        unitcell = (np.array([x, y, z]), np.array([90, 90, 90]))
 
-    return top
+    return top, unitcell
