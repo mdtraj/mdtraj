@@ -29,8 +29,9 @@ from __future__ import print_function, division
 import os
 import itertools
 import numpy as np
-from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.registry import _FormatRegistry
+from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
 
 __all__ = ['ArcTrajectoryFile', 'load_arc']
@@ -80,7 +81,7 @@ def load_arc(filename, top=None, stride=None, atom_indices=None):
     if top is None:
         raise ValueError('"top" argument is required for load_arc')
 
-    if not isinstance(filename, str):
+    if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_arc. '
             'you supplied %s' % type(filename))
 
@@ -91,7 +92,7 @@ def load_arc(filename, top=None, stride=None, atom_indices=None):
 
     with ArcTrajectoryFile(filename) as f:
         xyz = f.read(stride=stride, atom_indices=atom_indices)
-        _convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     time = np.arange(len(xyz))
     if stride is not None:

@@ -28,7 +28,8 @@ import numpy as np
 import mdtraj as md
 import mdtraj.trajectory
 import mdtraj.utils
-from mdtraj import topology
+from mdtraj import topology, Trajectory
+from mdtraj.utils import six
 from mdtraj.utils.six import PY3
 from mdtraj.utils.six.moves import xrange
 from mdtraj.pdb import element
@@ -153,7 +154,7 @@ def test_binpos():
 
 def test_load():
     filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos",
-                 "traj.h5", 'legacy_msmbuilder_trj0.lh5', 'frame0.nc']
+                 "traj.h5", 'legacy_msmbuilder_trj0.lh5', 'frame0.nc', six.u('traj.h5')]
     num_block = 3
     for filename in filenames:
         t0 = md.load(get_fn(filename), top=nat, discard_overlapping_frames=True)
@@ -376,7 +377,7 @@ def test_seek_read_mode():
                         if a not in [md.BINPOSTrajectoryFile, md.LH5TrajectoryFile]:
                             read = read[0]
                         readlength = len(read)
-                        read = mdtraj.utils.convert(read, f.distance_unit, 'nanometers')
+                        read = mdtraj.utils.in_units_of(read, f.distance_unit, 'nanometers')
                         eq(xyz[point:point+offset], read)
                         point += readlength
                 elif r < 0.75:
@@ -445,3 +446,16 @@ def test_length():
         f.description = 'Length of file object: %s' % file
         yield f
 
+
+def test_unitcell():
+    # make sure that bogus unitcell vecotrs are not saved
+    top = md.load(get_fn('native.pdb')).restrict_atoms(range(5)).topology
+    t = Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
+
+    #           xtc    dcd   binpos  trr    h5     pdb    nc     lh5
+    for fn in [temp1, temp2, temp3, temp4, temp5, temp6, temp6, temp8]:
+        t.save(fn)
+        f = lambda: eq(md.load(fn, top=top).unitcell_vectors, None)
+        f.description = 'unitcell preservation in %s' % os.path.splitext(fn)[1]
+        yield f
+    

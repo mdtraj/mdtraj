@@ -29,8 +29,9 @@ from __future__ import print_function, division
 import os
 import itertools
 import numpy as np
-from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.registry import _FormatRegistry
+from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
 
 __all__ = ['MDCRDTrajectoryFile', 'load_mdcrd']
@@ -84,7 +85,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_mdcrd')
 
-    if not isinstance(filename, str):
+    if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_mdcrd. '
             'you supplied %s' % type(filename))
 
@@ -100,9 +101,9 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
         else:
             xyz, cell_lengths = f.read(stride=stride, atom_indices=atom_indices)
 
-        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
         if cell_lengths is not None:
-            convert(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+            in_units_of(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
             # Assume that its a rectilinear box
             cell_angles = 90.0 * np.ones_like(cell_lengths)

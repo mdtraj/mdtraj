@@ -28,6 +28,7 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
+from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
 from mdtraj.pdb import element
 import mdtraj as md
@@ -93,7 +94,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
     if traj.topology is None:
         raise ValueError('contact calculation requires a topology')
 
-    if isinstance(contacts, str):
+    if isinstance(contacts, string_types):
         if contacts.lower() != 'all':
             raise ValueError('(%s) is not a valid contacts specifier' % contacts.lower())
 

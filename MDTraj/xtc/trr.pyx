@@ -33,7 +33,8 @@ cimport cython
 import numpy as np
 cimport numpy as np
 np.import_array()
-from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.utils import ensure_type, cast_indices, in_units_of
+from mdtraj.utils.six import string_types
 from mdtraj.registry import _FormatRegistry
 cimport trrlib
 
@@ -119,7 +120,7 @@ def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_trr')
 
-    if not isinstance(filename, str):
+    if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_trr. '
             'you supplied %s' % type(filename))
 
@@ -135,8 +136,8 @@ def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
         else:
             xyz, time, step, box, lambd = f.read(stride=stride, atom_indices=atom_indices)
 
-        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        convert(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     trajectory.unitcell_vectors = box
@@ -197,6 +198,7 @@ cdef class TRRTrajectoryFile:
     cdef char* mode           # mode in which the file is open, either 'r' or 'w'
     cdef int min_chunk_size
     cdef float chunk_size_multiplier
+    cdef int with_unitcell    # used in mode='w' to know if we're writing unitcells or nor
     cdef readonly char* distance_unit
 
 
@@ -305,16 +307,18 @@ cdef class TRRTrajectoryFile:
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
             xyz, time, step, box, lambd = self._read(int(n_frames), atom_indices)
-            return xyz[::stride], time[::stride], step[::stride], box[::stride], lambd[::stride]
-
+            xyz, time, step, box, lambd = xyz[::stride], time[::stride], step[::stride], box[::stride], lambd[::stride]
+            if np.all(np.logical_and(box < 1e-10, box > -1e-10)):
+                box = None
+            return xyz, time, step, box, lambd
 
         # if they want ALL of the remaining frames, we need to guess at the chunk
         # size, and then check the exit status to make sure we're really at the EOF
         all_xyz, all_time, all_step, all_box, all_lambd = [], [], [], [], []
 
         while True:
-            # guess the size of the chunk to read, based on how many frames we think are in the file
-            # and how many we've currently read
+            # guess the size of the chunk to read, based on how many frames we
+            # think are in the file and how many we've currently read
             chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
                         self.min_chunk_size)
             xyz, time, step, box, lambd = self._read(chunk, atom_indices)
@@ -327,11 +331,14 @@ cdef class TRRTrajectoryFile:
             all_box.append(box)
             all_lambd.append(lambd)
 
-        return (np.concatenate(all_xyz)[::stride],
-                np.concatenate(all_time)[::stride],
-                np.concatenate(all_step)[::stride],
-                np.concatenate(all_box)[::stride],
-                np.concatenate(all_lambd)[::stride])
+        all_xyz = np.concatenate(all_xyz)[::stride]
+        all_time = np.concatenate(all_time)[::stride]
+        all_step = np.concatenate(all_step)[::stride]
+        all_box =  np.concatenate(all_box)[::stride]
+        all_lambd = np.concatenate(all_lambd)[::stride]
+        if np.all(np.logical_and(all_box < 1e-10, all_box > -1e-10)):
+            all_box = None
+        return all_xyz, all_time, all_step, all_box, all_lambd
 
     def _read(self, int n_frames, atom_indices):
         """Read a specified number of TRR frames from the buffer"""
@@ -420,7 +427,7 @@ cdef class TRRTrajectoryFile:
 
         # do typechecking, and then dispatch to the c level function
         xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False,
-                          add_newaxis_on_deficient_ndim=True)
+                          add_newaxis_on_deficient_ndim=True, warn_on_cast=False)
         n_frames = len(xyz)
         time = ensure_type(time, dtype=np.float32, ndim=1, name='time', can_be_none=True,
                            shape=(n_frames,), add_newaxis_on_deficient_ndim=True,
@@ -434,24 +441,30 @@ cdef class TRRTrajectoryFile:
         lambd = ensure_type(lambd, dtype=np.float32, ndim=1, name='lambd', can_be_none=True,
                             shape=(n_frames,), add_newaxis_on_deficient_ndim=True,
                             warn_on_cast=False)
+
+        if self.frame_counter == 0:
+            self.n_atoms = xyz.shape[1]
+            self.with_unitcell = (box is not None)
+        else:
+            if not self.n_atoms == xyz.shape[1]:
+                raise ValueError("This file has %d atoms, but you're now trying to write %d atoms" % (self.n_atoms, xyz.shape[1]))
+            if self.with_unitcell and (box is None):
+                raise ValueError("The file that you're saving to expects each frame "
+                    "to contain unitcell information, but you did not supply it.")
+            if (not self.with_unitcell) and (box is not None):
+                raise ValueError("The file that you're saving to was created without "
+                    "unitcell information.")
+
         if time is None:
             time = np.arange(0, n_frames, dtype=np.float32)
         if step is None:
             step = np.arange(0, n_frames, dtype=np.int32)
         if box is None:
-            # make each box[i] be the identity matrix
+            # make each box[i] be the all zeros, which indicates the lack of
+            # a unitcell
             box = np.zeros((n_frames, 3, 3), dtype=np.float32)
-            box[:,0,0] = np.ones(n_frames, dtype=np.float32)
-            box[:,1,1] = np.ones(n_frames, dtype=np.float32)
-            box[:,2,2] = np.ones(n_frames, dtype=np.float32)
         if lambd is None:
             lambd = np.zeros(n_frames, dtype=np.float32)
-
-        if self.frame_counter == 0:
-            self.n_atoms = xyz.shape[1]
-        else:
-            if not self.n_atoms == xyz.shape[1]:
-                raise ValueError("This file has %d atoms, but you're now trying to write %d atoms" % (self.n_atoms, xyz.shape[1]))
 
         self._write(xyz, time, step, box, lambd)
 

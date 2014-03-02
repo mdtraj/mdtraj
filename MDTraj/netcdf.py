@@ -39,7 +39,7 @@ import warnings
 import numpy as np
 from mdtraj import version
 from mdtraj.registry import _FormatRegistry
-from mdtraj.utils import ensure_type, import_, in_units_of, convert, cast_indices
+from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices
 
 __all__ = ['NetCDFTrajectoryFile', 'load_netcdf']
 
@@ -95,8 +95,8 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
         else:
             xyz, time, cell_lengths, cell_angles = f.read(stride=stride, atom_indices=atom_indices)
 
-        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        convert(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
                             unitcell_lengths=cell_lengths,
@@ -297,10 +297,10 @@ class NetCDFTrajectoryFile(object):
         if self._mode not in ['w', 'ws', 'a', 'as']:
             raise IOError('The file was opened in mode=%s. Writing is not allowed.' % self._mode)
 
-        coordinates = in_units_of(coordinates, 'angstroms')
-        time = in_units_of(time, 'picoseconds')
-        cell_lengths = in_units_of(cell_lengths, 'angstroms')
-        cell_angles = in_units_of(cell_angles, 'degrees')
+        coordinates = in_units_of(coordinates, None, 'angstroms')
+        time = in_units_of(time, None, 'picoseconds')
+        cell_lengths = in_units_of(cell_lengths, None, 'angstroms')
+        cell_angles = in_units_of(cell_angles, None, 'degrees')
 
         # typecheck all of the input arguments rigorously
         coordinates = ensure_type(coordinates, np.float32, 3, 'coordinates', length=None,

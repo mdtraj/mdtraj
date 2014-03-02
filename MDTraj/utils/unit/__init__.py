@@ -19,44 +19,29 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
-
-"""Automatic unit conversion using simtk.units behind the scenes.
 """
-##############################################################################
-# imports
-#############################################################################
 
-from __future__ import print_function, division
+Unit processing for MDTraj. This subpackage is a port of simtk.unit from
+OpenMM. Unlike in simtk.openmm, the MDTraj library **does not pass around
+"united quantities"**
+
+The only publicly facing API from this package, for the purpose of MDTraj,
+is "in_units_of", which does unit conversion of numbers or numpy arrays
+where the input and output units are passed as strings.
+
+"""
 import ast
-from mdtraj.utils import import_
+import sys
+from mdtraj.utils.unit.quantity import Quantity
+from mdtraj.utils.unit import unit_definitions
+from mdtraj.utils import import_, six
+UNIT_DEFINITIONS = unit_definitions
+try:
+    import simtk.unit as simtk_unit
+except ImportError:
+    pass
 
-# Debugging
-# from meta.asttools import print_ast
-
-__all__ = ['in_units_of', 'convert']
-
-##############################################################################
-# classes and functions
-##############################################################################
-
-
-def convert(quantity, in_unit, out_unit, inplace=False):
-    """Convert between distance units. Note, inplace==True won't
-    work unless the quantity is a numpy array. This is a simple
-    version that doesn't require any external imports.
-    """
-    if quantity is None:
-        return None
-
-    factor = {('angstroms', 'angstroms'): 1,
-              ('nanometers', 'nanometers'): 1,
-              ('angstroms', 'nanometers'): 0.1,
-              ('nanometers', 'angstroms'): 10}[(in_unit, out_unit)]
-    if not inplace:
-        return quantity * factor
-    quantity *= factor
-
-
+__all__ = ['in_units_of']
 
 class _UnitContext(ast.NodeTransformer):
     """Node transformer for an AST hack that turns raw strings into
@@ -78,20 +63,19 @@ class _UnitContext(ast.NodeTransformer):
     def visit_Name(self, node):
         # we want to prefix all names to look like unit.nanometers instead
         # of just "nanometers", because I don't want to import * from
-        # units into this module.
-        units = import_('simtk.unit')
-        if not (node.id == 'units' or hasattr(units, node.id)):
+        # units into this module
+        if not hasattr(unit_definitions, node.id):
             # also, let's take this opporunity to check that the node.id
             # (which supposed to be the name of the unit, like "nanometers")
             # is actually an attribute in simtk.unit
             raise ValueError('%s is not a valid unit' % node.id)
 
-        return ast.Attribute(value=ast.Name(id='units', ctx=ast.Load()),
+        return ast.Attribute(value=ast.Name(id='unit_definitions', ctx=ast.Load()),
                              attr=node.id, ctx=ast.Load())
 _unit_context = _UnitContext()  # global instance of the visitor
 
 
-def _str_to_unit(unit_string):
+def _str_to_unit(unit_string, simtk=False):
     """eval() based transformer that extracts a simtk.unit object
     from a string description.
 
@@ -109,21 +93,23 @@ def _str_to_unit(unit_string):
     'nanometer**2*gigajoule/meter'
 
     """
-    units = import_('simtk.unit')
     # parse the string with the ast, and then run out unit context
     # visitor on it, which will basically change bare names like
     # "nanometers" into "unit.nanometers" and simulataniously check that
     # there's no nefarious stuff in the expression.
 
-
-    node = _unit_context.visit(ast.parse(unit_string, mode='eval'))
+    assert isinstance(unit_string, six.string_types)
+    unit_definitions = UNIT_DEFINITIONS
+    if simtk:
+        unit_definitions = import_('simtk.unit').unit_definitions
+    parsed = ast.parse(unit_string, mode='eval')
+    node = _unit_context.visit(parsed)
     fixed_node = ast.fix_missing_locations(node)
-    output = eval(compile(fixed_node, '<string>', mode='eval'))
-
+    output = eval(compile(fixed_node, '<string>', mode='eval'), {}, locals())
     return output
 
 
-def in_units_of(quantity, units_out, units_in=None):
+def in_units_of(quantity, units_in, units_out, inplace=False):
     """Convert a quantity between unit systems
 
     Parameters
@@ -131,28 +117,44 @@ def in_units_of(quantity, units_out, units_in=None):
     quantity : number, np.ndarray, or simtk.unit.Quantity
         quantity can either be a unitted quantity -- i.e. instance of
         simtk.unit.Quantity, or just a bare number or numpy array
-    units_out : str
-        A string description of the units you want out. This should look
-        like "nanometers/picosecondsecond" or "nanometers**3" or whatever
     units_in : str
         If you supply a quantity that's not a simtk.unit.Quantity, you should
         tell me what units it is in. If you don't, i'm just going to echo you
         back your quantity without doing any unit checking.
+    units_out : str
+        A string description of the units you want out. This should look
+        like "nanometers/picosecondsecond" or "nanometers**3" or whatever
+    inplace : bool
+        Do the transformation inplace. This will only work if the quantity
+        is a mutable type, like a numpy array.
 
     Examples
     --------
     >>> in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond')
     1000000.0
     """
-    units = import_('simtk.unit')
-
     if quantity is None:
         return quantity
 
-    if isinstance(quantity, units.Quantity):
-        return quantity.value_in_unit(_str_to_unit(units_out))
+    if 'simtk.unit' in sys.modules and isinstance(quantity, simtk_unit.Quantity):
+        units_in = quantity.unit
+        units_out = _str_to_unit(units_out, simtk=True)
+        quantity = quantity._value
+    elif isinstance(quantity, Quantity):
+        units_in = quantity.unit
+        units_out = _str_to_unit(units_out)
+        quantity = quantity._value
     else:
         if units_in is None:
             return quantity
-        united_quantity = units.Quantity(quantity, _str_to_unit(units_in))
-        return united_quantity.value_in_unit(_str_to_unit(units_out))
+        units_in = _str_to_unit(units_in)
+        units_out = _str_to_unit(units_out)
+
+    if not units_in.is_compatible(units_out):
+        raise TypeError('Unit "%s" is not compatible with Unit "%s".' % (units_in, units_out))
+
+    factor = units_in.conversion_factor_to(units_out)
+    if not inplace:
+        return quantity * factor
+
+    quantity *= factor

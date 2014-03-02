@@ -126,25 +126,6 @@ def test_ensure_type_12():
 def test_ensure_type_13():
     ensure_type(np.zeros((2,2)), np.float32, ndim=2, name='', shape=(None, None, None))
 
-def test_unit_1():
-    assert 1 == in_units_of(100, 'meter', 'centimeter')
-
-def test_unit_2():
-    a = in_units_of(1, 'meter**2/second', 'nanometers**2/picosecond')
-    b = 1e-6
-    assert abs(a-b) < 1e-10
-
-def test_unit_2_bytes():
-    a = in_units_of(1, b'meter**2/second', b'nanometers**2/picosecond')
-    b = 1e-6
-    assert abs(a-b) < 1e-10
-    
-def test_unit_3():
-    eq(str(type(_str_to_unit('nanometers**2/meters*gigajoules'))),
-           "<class 'simtk.unit.unit.Unit'>")
-    eq(str(_str_to_unit('nanometers**2/meters*gigajoules')),
-       'nanometer**2*gigajoule/meter')
-
 @raises(ImportError)
 def test_delay_import_fail_1():
     import_('sdfsdfsfsfdsdf')

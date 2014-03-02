@@ -40,9 +40,16 @@ except ImportError:
     setup_kwargs = {}
     cython_extension = 'c'
 
+try:
+    sys.argv.remove('--no-install-deps')
+    no_install_deps = True
+except ValueError:
+    no_install_deps = False
+
 if 'setuptools' in sys.modules:
     setup_kwargs['zip_safe'] = False
-    setup_kwargs['install_requires'] = ['simtk.unit', 'pandas>=0.9.0']
+    if not no_install_deps:
+        setup_kwargs['install_requires'] = ['pandas>=0.9.0']
     setup_kwargs['entry_points'] = {'console_scripts':
               ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
                'mdinspect = mdtraj.scripts.mdinspect:entry_point']}

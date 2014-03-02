@@ -36,9 +36,9 @@ from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
                     TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
                     LH5TrajectoryFile, PDBTrajectoryFile, MDCRDTrajectoryFile,
                     ArcTrajectoryFile, Topology)
-from mdtraj.utils import unitcell, ensure_type, convert, cast_indices
+from mdtraj.utils import unitcell, ensure_type, in_units_of, cast_indices
 from mdtraj.utils.six.moves import xrange
-from mdtraj.utils.six import PY3
+from mdtraj.utils.six import PY3, string_types
 from mdtraj import _rmsd
 from mdtraj import _FormatRegistry
 
@@ -61,7 +61,7 @@ def _assert_files_exist(filenames):
     filenames : {str, [str]}
         String or list of strings to check
     """
-    if isinstance(filenames, str):
+    if isinstance(filenames, string_types):
         filenames = [filenames]
     for fn in filenames:
         if not (os.path.exists(fn) and os.path.isfile(fn)):
@@ -74,7 +74,7 @@ def _parse_topology(top):
     we extract its topology.
     """
 
-    if isinstance(top, str) and (os.path.splitext(top)[1] in ['.pdb', '.h5','.lh5']):
+    if isinstance(top, string_types) and (os.path.splitext(top)[1] in ['.pdb', '.h5','.lh5']):
         topology = load_frame(top, 0).topology
     elif isinstance(top, str) and (os.path.splitext(top)[1] == '.prmtop'):
         from mdtraj import prmtop
@@ -255,7 +255,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         kwargs["top"] = _parse_topology(kwargs["top"])
 
     # grab the extension of the filename
-    if isinstance(filename_or_filenames, str):  # If a single filename
+    if isinstance(filename_or_filenames, string_types):  # If a single filename
         extension = os.path.splitext(filename_or_filenames)[1]
         filename = filename_or_filenames
     else:  # If multiple filenames, take the first one.
@@ -352,8 +352,8 @@ def iterload(filename, chunk=100, **kwargs):
                 data = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
                 if data == []:
                     raise StopIteration()
-                convert(data.coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                convert(data.cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                in_units_of(data.coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                in_units_of(data.cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
                 yield Trajectory(xyz=data.coordinates, topology=topology,
                                  time=data.time, unitcell_lengths=data.cell_lengths,
                                  unitcell_angles=data.cell_angles)
@@ -372,7 +372,7 @@ def iterload(filename, chunk=100, **kwargs):
                 xyz = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
                 if len(xyz) == 0:
                     raise StopIteration()
-                convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
                 time = np.arange(ptr, ptr+len(xyz)*stride, stride)
                 ptr += len(xyz)*stride
                 yield Trajectory(xyz=xyz, topology=topology, time=time)
@@ -384,8 +384,8 @@ def iterload(filename, chunk=100, **kwargs):
                 xyz, time, step, box = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
                 if len(xyz) == 0:
                     raise StopIteration()
-                convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                convert(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                in_units_of(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
                 trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
                 trajectory.unitcell_vectors = box
                 yield trajectory
@@ -400,8 +400,8 @@ def iterload(filename, chunk=100, **kwargs):
                 xyz, box_length, box_angle = f.read(chunk, stride=stride, atom_indices=atom_indices)
                 if len(xyz) == 0:
                     raise StopIteration()
-                convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                convert(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                in_units_of(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
                 time = np.arange(ptr, ptr+len(xyz)*stride, stride)
                 ptr += len(xyz)*stride
                 yield Trajectory(xyz=xyz, topology=topology, time=time, unitcell_lengths=box_length,
@@ -1124,13 +1124,13 @@ class Trajectory(object):
             for i in xrange(self.n_frames):
 
                 if self._have_unitcell:
-                    f.write(convert(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
+                    f.write(in_units_of(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
                             self.topology,
                             modelIndex=i,
-                            unitcell_lengths=convert(self.unitcell_lengths[i], Trajectory._distance_unit, f.distance_unit),
+                            unitcell_lengths=in_units_of(self.unitcell_lengths[i], Trajectory._distance_unit, f.distance_unit),
                             unitcell_angles=self.unitcell_angles[i])
                 else:
-                    f.write(convert(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
+                    f.write(in_units_of(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
                             self.topology,
                             modelIndex=i)
 
@@ -1177,8 +1177,8 @@ class Trajectory(object):
         """
         self._check_valid_unitcell()
         with DCDTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(convert(self.xyz, Trajectory._distance_unit, f.distance_unit),
-                    cell_lengths=convert(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
+            f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
 
@@ -1193,7 +1193,7 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         with BINPOSTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(convert(self.xyz, Trajectory._distance_unit, f.distance_unit))
+            f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit))
 
 
     def save_mdcrd(self, filename, force_overwrite=True):
@@ -1212,8 +1212,8 @@ class Trajectory(object):
                 raise ValueError('Only rectilinear boxes can be saved to mdcrd files')
 
         with MDCRDTrajectoryFile(filename, mode='w', force_overwrite=force_overwrite) as f:
-            f.write(convert(self.xyz, Trajectory._distance_unit, f.distance_unit),
-                    convert(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit))
+            f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit))
 
 
     def save_netcdf(self, filename, force_overwrite=True):
@@ -1228,9 +1228,9 @@ class Trajectory(object):
         """
         self._check_valid_unitcell()
         with NetCDFTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(coordinates=convert(self._xyz, Trajectory._distance_unit, NetCDFTrajectoryFile.distance_unit),
+            f.write(coordinates=in_units_of(self._xyz, Trajectory._distance_unit, NetCDFTrajectoryFile.distance_unit),
                     time=self.time,
-                    cell_lengths=convert(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
+                    cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
     def save_lh5(self, filename):

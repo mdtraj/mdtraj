@@ -50,7 +50,8 @@ import numpy as np
 from mdtraj import version
 import mdtraj.pdb.element as elem
 from mdtraj.topology import Topology
-from mdtraj.utils import in_units_of, ensure_type, import_, convert, cast_indices
+from mdtraj.utils import in_units_of, ensure_type, import_, cast_indices
+from mdtraj.utils.six import string_types
 from mdtraj.registry import _FormatRegistry
 
 __all__ = ['HDF5TrajectoryFile', 'load_hdf5']
@@ -151,8 +152,8 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
             data = f.read(stride=stride, atom_indices=atom_indices)
 
         topology = f.topology
-        convert(data.coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        convert(data.cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(data.coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(data.cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
         if atom_indices is not None:
             topology = f.topology.subset(atom_indices)
@@ -311,7 +312,7 @@ class HDF5TrajectoryFile(object):
         """
         try:
             raw = self._get_node('/', name='topology')[0]
-            if not isinstance(raw, str):
+            if not isinstance(raw, string_types):
                 raw = raw.decode()
             topology_dict = json.loads(raw)
         except self.tables.NoSuchNodeError:
@@ -587,9 +588,9 @@ class HDF5TrajectoryFile(object):
                 node = self._get_node(where='/', name=name)
                 data = node.__getitem__(slice)
                 in_units = node.attrs.units
-                if not isinstance(in_units, str):
+                if not isinstance(in_units, string_types):
                     in_units = in_units.decode()
-                data =  in_units_of(data, out_units, in_units)
+                data =  in_units_of(data, in_units, out_units)
                 return data
             except self.tables.NoSuchNodeError:
                 if can_be_none:
@@ -680,15 +681,15 @@ class HDF5TrajectoryFile(object):
         # if the input arrays are simtk.unit.Quantities, convert them
         # into md units. Note that this acts as a no-op if the user doesn't
         # have simtk.unit installed (e.g. they didn't install OpenMM)
-        coordinates = in_units_of(coordinates, 'nanometers')
-        time = in_units_of(time, 'picoseconds')
-        cell_lengths = in_units_of(cell_lengths, 'nanometers')
-        cell_angles = in_units_of(cell_angles, 'degrees')
-        velocities = in_units_of(velocities, 'nanometers/picosecond')
-        kineticEnergy = in_units_of(kineticEnergy, 'kilojoules_per_mole')
-        potentialEnergy = in_units_of(potentialEnergy, 'kilojoules_per_mole')
-        temperature = in_units_of(temperature, 'kelvin')
-        alchemicalLambda = in_units_of(alchemicalLambda, 'dimensionless')
+        coordinates = in_units_of(coordinates, None, 'nanometers')
+        time = in_units_of(time, None, 'picoseconds')
+        cell_lengths = in_units_of(cell_lengths, None, 'nanometers')
+        cell_angles = in_units_of(cell_angles, None, 'degrees')
+        velocities = in_units_of(velocities, None, 'nanometers/picosecond')
+        kineticEnergy = in_units_of(kineticEnergy, None, 'kilojoules_per_mole')
+        potentialEnergy = in_units_of(potentialEnergy, None, 'kilojoules_per_mole')
+        temperature = in_units_of(temperature, None, 'kelvin')
+        alchemicalLambda = in_units_of(alchemicalLambda, None, 'dimensionless')
 
         # do typechecking and shapechecking on the arrays
         # this ensure_type method has a lot of options, but basically it lets

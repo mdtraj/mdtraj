@@ -1,8 +1,8 @@
 .. _getting-started:
 
-***************
-Getting Started
-***************
+************
+Get The Code
+************
 
 Installation
 ============
