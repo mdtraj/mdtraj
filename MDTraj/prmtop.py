@@ -95,7 +95,7 @@ def load_prmtop(filename):
 
     Returns
     -------
-    top : md.topology.Topology
+    top : md.Topology
         The resulting topology, as an md.Topology object.
     unitcell : tuple
         Tuple of 2 numpy arrays, each 1D of length 3, with the unitcell
@@ -103,8 +103,9 @@ def load_prmtop(filename):
 
     Examples
     --------
-    >>> from mdtraj import topology
-    >>> top = topology.load_prmtop('mysystem.prmtop')
+    >>> topology, unitcell = md.load_prmtop('mysystem.prmtop')
+    >>> # or
+    >>> trajectory = md.load('trajectory.mdcrd', top='system.prmtop')
     """
     top = topology.Topology()
     elements = []
