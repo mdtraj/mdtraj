@@ -29,3 +29,4 @@ Format-specific loaders
     load_netcdf
     load_trr
     load_xtc
+    load_prmtop
