@@ -1073,6 +1073,7 @@ class Trajectory(object):
                   '.h5': self.save_hdf5,
                   '.binpos': self.save_binpos,
                   '.nc': self.save_netcdf,
+                  '.netcdf': self.save_netcdf,
                   '.crd': self.save_mdcrd,
                   '.mdcrd': self.save_mdcrd,
                   '.ncdf': self.save_netcdf,
