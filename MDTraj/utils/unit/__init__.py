@@ -32,6 +32,7 @@ where the input and output units are passed as strings.
 """
 import ast
 import sys
+import numpy as np
 from mdtraj.utils.unit.quantity import Quantity
 from mdtraj.utils.unit import unit_definitions
 from mdtraj.utils import import_, six
@@ -126,7 +127,12 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
         like "nanometers/picosecondsecond" or "nanometers**3" or whatever
     inplace : bool
         Do the transformation inplace. This will only work if the quantity
-        is a mutable type, like a numpy array.
+        is a writeable numpy array
+
+    Returns
+    -------
+    quantity : {number, np.ndarray}
+        The resulting quantity, in the new unit system
 
     Examples
     --------
@@ -154,7 +160,8 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
         raise TypeError('Unit "%s" is not compatible with Unit "%s".' % (units_in, units_out))
 
     factor = units_in.conversion_factor_to(units_out)
-    if not inplace:
-        return quantity * factor
+    if inplace and (isinstance(quantity, np.ndarray) and quantity.flags['WRITEABLE']):
+        quantity *= factor
+        return quantity
+    return quantity * factor
 
-    quantity *= factor

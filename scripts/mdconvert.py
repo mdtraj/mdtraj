@@ -462,26 +462,26 @@ def read(infile, chunk, stride, atom_indices):
 def convert(data, in_units, out_units, out_fields):
     # do unit conversion
     if 'xyz' in out_fields and 'xyz' in data:
-        in_units_of(data['xyz'], in_units, out_units, inplace=True)
+        data['xyz'] = in_units_of(data['xyz'], in_units, out_units, inplace=True)
     if 'box' in out_fields:
         if 'box' in data:
-            in_units_of(data['box'], in_units, out_units, inplace=True)
+            data['box'] = in_units_of(data['box'], in_units, out_units, inplace=True)
         elif 'cell_angles' in data and 'cell_lengths' in data:
             a, b, c = data['cell_lengths'].T
             alpha, beta, gamma = data['cell_angles'].T
             data['box'] = np.dstack(md.utils.unitcell.lengths_and_angles_to_box_vectors(a, b, c, alpha, beta, gamma))
-            in_units_of(data['box'], in_units, out_units, inplace=True)
+            data['box'] = in_units_of(data['box'], in_units, out_units, inplace=True)
             del data['cell_lengths']
             del data['cell_angles']
 
     if 'cell_lengths' in out_fields:
         if 'cell_lengths' in data:
-            in_units_of(data['cell_lengths'], in_units, out_units, inplace=True)
+            data['cell_lengths'] = in_units_of(data['cell_lengths'], in_units, out_units, inplace=True)
         elif 'box' in data:
             a, b, c, alpha, beta, gamma = md.utils.unitcell.box_vectors_to_lengths_and_angles(data['box'][:, 0], data['box'][:, 1], data['box'][:, 2])
             data['cell_lengths'] = np.vstack((a, b, c)).T
             data['cell_angles'] = np.vstack((alpha, beta, gamma)).T
-            in_units_of(data['cell_lengths'], in_units, out_units, inplace=True)
+            data['cell_lengths'] = in_units_of(data['cell_lengths'], in_units, out_units, inplace=True)
             del data['box']
 
     ignored_keys = ["'%s'" % s for s in set(data) - set(out_fields)]
