@@ -733,19 +733,19 @@ class Trajectory(object):
     def __repr__(self):
         return "<%s at 0x%02x>" % (self._string_summary_basic(), id(self))
 
-    def describe(self):
-        """Diagnostic summary statistics on the trajectory"""
-        # What information do we want to display?
-        # Goals: easy to figure out if a trajectory is blowing up or contains
-        # bad data, easy to diagonose other problems. Generally give a
-        # high-level description of the data in the trajectory.
-        # Possibly show std. dev. of differnt coordinates in the trajectory
-        # or maybe its RMSD drift or something?
-        # Also, check for any NaNs or Infs in the data. Or other common issues
-        # like that?
-        # Note that pandas.DataFrame has a describe() method, which gives
-        # min/max/mean/std.dev./percentiles of each column in a DataFrame.
-        raise NotImplementedError()
+    # def describe(self):
+    #     """Diagnostic summary statistics on the trajectory"""
+    #     # What information do we want to display?
+    #     # Goals: easy to figure out if a trajectory is blowing up or contains
+    #     # bad data, easy to diagonose other problems. Generally give a
+    #     # high-level description of the data in the trajectory.
+    #     # Possibly show std. dev. of differnt coordinates in the trajectory
+    #     # or maybe its RMSD drift or something?
+    #     # Also, check for any NaNs or Infs in the data. Or other common issues
+    #     # like that?
+    #     # Note that pandas.DataFrame has a describe() method, which gives
+    #     # min/max/mean/std.dev./percentiles of each column in a DataFrame.
+    #     raise NotImplementedError()
 
     def superpose(self, reference, frame=0, atom_indices=None, parallel=True):
         """Superpose each conformation in this trajectory upon a reference
