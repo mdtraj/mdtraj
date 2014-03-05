@@ -111,11 +111,11 @@ def _str_to_unit(unit_string, simtk=False):
 
 
 def in_units_of(quantity, units_in, units_out, inplace=False):
-    """Convert a quantity between unit systems
+    """Convert a numerical quantity between unit systems.
 
     Parameters
     ----------
-    quantity : number, np.ndarray, or simtk.unit.Quantity
+    quantity : {number, np.ndarray, simtk.unit.Quantity}
         quantity can either be a unitted quantity -- i.e. instance of
         simtk.unit.Quantity, or just a bare number or numpy array
     units_in : str

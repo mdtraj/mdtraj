@@ -95,7 +95,7 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
 
 
 def box_vectors_to_lengths_and_angles(a, b, c):
-    """Convert box vectors into the lengths and angles definining the box
+    """Convert box vectors into the lengths and angles defining the box.
 
     Parameters
     ----------
@@ -128,7 +128,7 @@ def box_vectors_to_lengths_and_angles(a, b, c):
     True
 
     Returns
-    ----------
+    -------
     a_length : scalar or np.ndarray
         length of Bravais unit vector **a**
     b_length : scalar or np.ndarray
