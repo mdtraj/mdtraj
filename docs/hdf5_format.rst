@@ -232,7 +232,7 @@ Rational
 ~~~~~~~~
 
 It is our experience that not having the topology stored in the same
-file as the the trajectory's coordinate data is a pain -- tt's just really
+file as the the trajectory's coordinate data is a pain -- it's just really
 inconvenient. And generally, the trajectories are long enough that it
 doesn't take up much incremental storage space to store the topology in
 there too. The topology is not that complicated.
