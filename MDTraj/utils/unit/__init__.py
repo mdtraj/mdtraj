@@ -126,17 +126,22 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
         A string description of the units you want out. This should look
         like "nanometers/picosecondsecond" or "nanometers**3" or whatever
     inplace : bool
-        Do the transformation inplace. This will only work if the quantity
-        is a writeable numpy array
+        Attempt to do the transformation inplace, by mutating the `quantity`
+        argument and avoiding a copy. This is only possible if `quantity` is a
+        writable numpy array.
 
     Returns
     -------
-    quantity : {number, np.ndarray}
-        The resulting quantity, in the new unit system
+    rquantity : {number, np.ndarray}
+        The resulting quantity, in the new unit system. If the function was
+        called with `inplace=True` and `quantity` was a writable numpy array,
+        `rquantity` will alias the same memory as the input `quantity`, which
+        will have been changed inplace. Otherwise, if a copy was required,
+        `rquantity` will point to new memory.
 
     Examples
     --------
-    >>> in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond')
+    >>> in_units_of(1, 'meter**2/second', 'nanometers**2/picosecond')
     1000000.0
     """
     if quantity is None:
