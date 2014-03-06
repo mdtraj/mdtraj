@@ -422,7 +422,7 @@ def compute_chi4(traj, opt=True):
 
     Parameters
     ----------
-    trajectory : Trajectory
+    traj : Trajectory
         Trajectory for which you want dihedrals.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
