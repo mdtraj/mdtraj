@@ -97,13 +97,18 @@ def load_prmtop(filename):
     -------
     top : md.Topology
         The resulting topology, as an md.Topology object.
-    unitcell : tuple
-        Tuple of 2 numpy arrays, each 1D of length 3, with the unitcell
-        lengths, and then the unitcell angles.
 
+    Notes
+    -----
+    Deprecated fields in the prmtop file are not loaded. This includes the
+    BOX dimensions, which should be stored in trajectory files instead of the
+    prmtop for systems with periodic boundary conditions. Because '.binpos'
+    files do not store box dimensions, this means that unitcell information
+    will be lost if you use .binpos + .prmtop files with MDTraj.
+    
     Examples
     --------
-    >>> topology, unitcell = md.load_prmtop('mysystem.prmtop')
+    >>> topology = md.load_prmtop('mysystem.prmtop')
     >>> # or
     >>> trajectory = md.load('trajectory.mdcrd', top='system.prmtop')
     """
@@ -234,15 +239,4 @@ def load_prmtop(filename):
     for bond in bond_list:
         top.add_bond(atoms[bond[0]], atoms[bond[1]])
 
-    unitcell = None
-    if int(_get_pointer_value('IFBOX', raw_data)):
-        # get the box dimensions, convert to nm
-        beta = float(raw_data["BOX_DIMENSIONS"][0])
-        if abs(beta - 90.0) > 1e-10:
-            raise NotImplementedError("FIXME: prmtop.py cannot handle beta != 90.0")
-        x = float(raw_data["BOX_DIMENSIONS"][1]) / 10.0
-        y = float(raw_data["BOX_DIMENSIONS"][2]) / 10.0
-        z = float(raw_data["BOX_DIMENSIONS"][3]) / 10.0
-        unitcell = (np.array([x, y, z]), np.array([90, 90, 90]))
-
-    return top, unitcell
+    return top
