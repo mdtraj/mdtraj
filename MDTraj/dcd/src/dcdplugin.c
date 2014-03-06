@@ -769,6 +769,20 @@ int dcd_nsets(dcdhandle* v) {
   return v->nsets;
 }
 
+int dcd_rewind(dcdhandle* dcd) {
+    fio_fseek(dcd->fd, 0, FIO_SEEK_SET);
+    int rc, nsets; // nsets is just throwaway here
+    if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &nsets, &dcd->istart,
+                             &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind,
+                             &dcd->fixedcoords, &dcd->reverse, &dcd->charmm))) {
+        fio_fclose(dcd->fd);
+        free(dcd);
+        return -1;
+    }
+    dcd->setsread = 0;
+    return 0;
+}
+
 dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, int* nsets) {
   dcdhandle *dcd;
   fio_fd fd;
@@ -793,8 +807,8 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, in
   memset(dcd, 0, sizeof(dcdhandle));
   dcd->fd = fd;
 
-  if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &dcd->nsets, &dcd->istart, 
-         &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind, 
+  if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &dcd->nsets, &dcd->istart,
+         &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind,
          &dcd->fixedcoords, &dcd->reverse, &dcd->charmm))) {
     print_dcderror("read_dcdheader", rc);
     fio_fclose(dcd->fd);
