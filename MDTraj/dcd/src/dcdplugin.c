@@ -775,6 +775,8 @@ int dcd_rewind(dcdhandle* dcd) {
     if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &nsets, &dcd->istart,
                              &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind,
                              &dcd->fixedcoords, &dcd->reverse, &dcd->charmm))) {
+        fio_fclose(dcd->fd);
+        free(dcd);
         return -1;
     }
     dcd->setsread = 0;
@@ -785,24 +787,15 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, in
   dcdhandle *dcd;
   fio_fd fd;
   int rc;
-  int i, chr;
   struct stat stbuf;
 
   if (!path) return NULL;
 
   /* See if the file exists, and get its size */
   memset(&stbuf, 0, sizeof(struct stat));
-  // char* ppath = "sfdsdf";
   if (stat(path, &stbuf)) {
-      printf("dcdplugin)");
-      for (i = 0; i < strlen(path); i++) {
-          chr = path[i] - '0';
-          printf("%d ", chr);
-      }
-      printf("\n");
-
-      printf("dcdplugin) Could not access file '%s'.\n", path);
-      return NULL;
+    printf("dcdplugin) Could not access file '%s'.\n", path);
+    return NULL;
   }
 
   if (fio_open(path, FIO_READ, &fd) < 0) {

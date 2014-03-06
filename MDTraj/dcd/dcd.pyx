@@ -323,12 +323,7 @@ cdef class DCDTrajectoryFile:
         elif absolute is not None:
             result = dcd_rewind(self.fh)
             if result != 0:
-                close_file_read(self.fh)
-                self.is_open = False
-                self.fh = open_dcd_read(self.filename, "dcd", &self.n_atoms, &self.n_frames)
-                if self.fh is NULL:
-                    raise IOError("Could not open file: %s" % self.filename)
-                self.is_open = True
+                raise IOError("Error seeking in %s" % self.filename)
 
             for i in range(absolute):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
