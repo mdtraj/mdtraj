@@ -336,11 +336,11 @@ def test_stack_2():
 
 
 def test_seek_read_mode():
-    """Test the seek/tell capacity of the different TrajectoryFile objects in
-    read mode. Basically, we just seek around the files and read different
-    segments, keeping track of our location manually and checking with both
-    tell() and by checking that the right coordinates are actually returned
-    """
+    # Test the seek/tell capacity of the different TrajectoryFile objects in
+    # read mode. Basically, we just seek around the files and read different
+    # segments, keeping track of our location manually and checking with both
+    # tell() and by checking that the right coordinates are actually returned
+
     files = [(md.NetCDFTrajectoryFile, 'frame0.nc'),
              (md.HDF5TrajectoryFile, 'frame0.h5'),
              (md.XTCTrajectoryFile, 'frame0.xtc'),
