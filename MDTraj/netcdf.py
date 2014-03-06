@@ -83,7 +83,7 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
     """
     from mdtraj.trajectory import _parse_topology, Trajectory
 
-    topology, _ = _parse_topology(top)
+    topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
