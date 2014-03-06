@@ -51,7 +51,7 @@ def load_xml(filename, top=None):
     import xml.etree.cElementTree as etree
     from mdtraj.trajectory import _parse_topology, Trajectory
     
-    topology, _ = _parse_topology(top)
+    topology = _parse_topology(top)
 
     tree = etree.parse(filename)
 

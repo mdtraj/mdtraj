@@ -36,7 +36,7 @@ from argparse import ArgumentParser
 
 import numpy as np
 import mdtraj as md
-from mdtraj.trajectory import in_units_of
+from mdtraj.trajectory import in_units_of, _parse_topology
 from mdtraj.utils.six import iteritems
 
 ###############################################################################
@@ -163,10 +163,10 @@ def parse_args():
                         provide a path to file containing a space, tab or
                         newline separated list of the (zero-based) integer
                         indices corresponding to the atoms you wish to keep.''')
-    parser.add_argument('-t', '--topology', type=str, help='''path to a PDB
-                        file. this will be used to parse the topology of the
-                        system. it's optional, but useful. if specified, it
-                        enables you to output the coordinates of your
+    parser.add_argument('-t', '--topology', type=str, help='''path to a
+                        PDB/prmtop file. this will be used to parse the topology
+                        of the system. it's optional, but useful. if specified,
+                        it enables you to output the coordinates of your
                         dcd/xtc/trr/netcdf/binpos as a PDB file. If you\'re
                         converting *to* .h5, the topology will be stored
                         inside the h5 file.''')
@@ -239,7 +239,7 @@ def main(args, verbose=True):
     Parameters
     ----------
     args : argparse.Namespace
-        The collected commandline arguments
+        The collected command line arguments
     """
     if args.atom_indices is not None:
         atom_indices = np.loadtxt(args.atom_indices, int)
@@ -255,7 +255,7 @@ def main(args, verbose=True):
     InFileFormat = formats[in_x]
 
     if args.topology is not None:
-        topology = md.PDBTrajectoryFile(args.topology).topology
+        topology = _parse_topology(args.topology)
     else:
         topology = None
 

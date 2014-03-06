@@ -125,7 +125,7 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
         raise TypeError('filename must be of type string for load_trr. '
             'you supplied %s' % type(filename))
 
-    topology, _ = _parse_topology(top)
+    topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
     if atom_indices is not None:
         topology = topology.subset(atom_indices)

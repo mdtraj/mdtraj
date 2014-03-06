@@ -124,7 +124,7 @@ def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
         raise TypeError('filename must be of type string for load_trr. '
             'you supplied %s' % type(filename))
 
-    topology, _ = _parse_topology(top)
+    topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
@@ -291,8 +291,8 @@ cdef class TRRTrajectoryFile:
         lambd : np.ndarray, shape=(n_frames), dtype=np.float32
             The alchemical lambda value of each frame.
 
-        Note
-        ----
+        Notes
+        -----
         The TRR format DOES support saving velocities and forces, but those
         fields are not read (or written) by the current implementation of this
         wrapper.

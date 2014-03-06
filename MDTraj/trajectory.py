@@ -77,12 +77,8 @@ def _parse_topology(top):
     Returns
     -------
     topology : md.Topology
-    unitcell : tuple
-        Tuple of 2 numpy arrays, each 1D of length 3, with the unitcell
-        lengths, and then the unitcell angles.
     """
 
-    unitcell = None
     try:
         ext = os.path.splitext(top)[1]
     except:
@@ -91,10 +87,8 @@ def _parse_topology(top):
     if isinstance(top, string_types) and (ext in ['.pdb', '.h5','.lh5']):
         _traj = load_frame(top, 0)
         topology = _traj.topology
-        if _traj._have_unitcell:
-            unitcell = (_traj.unitcell_lengths[0], _traj.unitcell_angles[0])
     elif isinstance(top, string_types) and (ext == '.prmtop'):
-        topology, unitcell = load_prmtop(top)
+        topology = load_prmtop(top)
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, Topology):
@@ -102,7 +96,7 @@ def _parse_topology(top):
     else:
         raise TypeError('A topology is required. You supplied top=%s' % str(top))
 
-    return topology, unitcell
+    return topology
 
 
 
@@ -264,11 +258,10 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     trajectory : md.Trajectory
         The resulting trajectory, as an md.Trajectory object.
     """
-    unitcell_from_topology = None
     _assert_files_exist(filename_or_filenames)
 
     if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
-        kwargs["top"], unitcell_from_topology = _parse_topology(kwargs["top"])
+        kwargs["top"] = _parse_topology(kwargs["top"])
 
     # grab the extension of the filename
     if isinstance(filename_or_filenames, string_types):  # If a single filename
@@ -304,13 +297,6 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         kwargs.pop('top', None)
 
     value = loader(filename, **kwargs)
-    if (not value._have_unitcell) and unitcell_from_topology is not None:
-        # if the unitcell is specified in the topology file and there is no
-        # unitcell in the trajectory file, then we put it in here. This comes
-        # for example with prmtop files
-        value.unitcell_lengths = unitcell_from_topology[0]
-        value.unitcell_angles = unitcell_from_topology[1]
-
     return value
 
 
@@ -401,7 +387,7 @@ def iterload(filename, chunk=100, **kwargs):
                 yield Trajectory(xyz=xyz, topology=topology, time=time)
 
     elif filename.endswith('.xtc'):
-        topology, _ = _parse_topology(kwargs.get('top', None))
+        topology = _parse_topology(kwargs.get('top', None))
         with XTCTrajectoryFile(filename) as f:
             while True:
                 xyz, time, step, box = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
@@ -414,7 +400,7 @@ def iterload(filename, chunk=100, **kwargs):
                 yield trajectory
 
     elif filename.endswith('.dcd'):
-        topology, _ = _parse_topology(kwargs.get('top', None))
+        topology = _parse_topology(kwargs.get('top', None))
         with DCDTrajectoryFile(filename) as f:
             ptr = 0
             while True:
