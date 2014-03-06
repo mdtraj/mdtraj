@@ -6,6 +6,7 @@ MDTraj Utils
     :toctree: generated/
     
     import_
+    in_units_of
     ensure_type
     ilen
     timing

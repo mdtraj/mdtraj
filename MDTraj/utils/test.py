@@ -132,3 +132,35 @@ def test_delay_import_fail_1():
 
 def test_delay_import():
     import_('scipy.sparse')
+
+def test_unit_0():
+    a = np.array([1.0])
+    b = in_units_of(a, 'nanometers', 'angstroms', inplace=False)
+    c = in_units_of(a, 'angstroms', 'nanometers', inplace=False)
+    eq(b, np.array([10.0]))
+    eq(c, np.array([0.1]))
+    assert a.ctypes.data != b.ctypes.data
+    assert a.ctypes.data != c.ctypes.data
+
+
+def test_unit_1():
+    a = np.array([1.0])
+    b = in_units_of(a, 'nanometers', 'angstroms', inplace=True)
+    eq(a, np.array([10.0]))
+    eq(b, np.array([10.0]))
+    # a and b point to the same memory
+    assert a.ctypes.data == b.ctypes.data
+
+
+def test_unit_2():
+    a = np.array([1.0])
+    a.flags['WRITEABLE'] = False
+    b = in_units_of(a, 'nanometers', 'angstroms', inplace=True)
+
+    eq(b, np.array([10.0]))
+    # a and b do not point to the same memory, since a isn't writeable
+    assert a.ctypes.data != b.ctypes.data
+
+
+def test_unit_3():
+    eq(1000000.0, in_units_of(1, 'meter**2/second', 'nanometers**2/picosecond'))

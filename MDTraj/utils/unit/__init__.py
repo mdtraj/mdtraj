@@ -32,6 +32,7 @@ where the input and output units are passed as strings.
 """
 import ast
 import sys
+import numpy as np
 from mdtraj.utils.unit.quantity import Quantity
 from mdtraj.utils.unit import unit_definitions
 from mdtraj.utils import import_, six
@@ -110,11 +111,11 @@ def _str_to_unit(unit_string, simtk=False):
 
 
 def in_units_of(quantity, units_in, units_out, inplace=False):
-    """Convert a quantity between unit systems
+    """Convert a numerical quantity between unit systems.
 
     Parameters
     ----------
-    quantity : number, np.ndarray, or simtk.unit.Quantity
+    quantity : {number, np.ndarray, simtk.unit.Quantity}
         quantity can either be a unitted quantity -- i.e. instance of
         simtk.unit.Quantity, or just a bare number or numpy array
     units_in : str
@@ -125,12 +126,22 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
         A string description of the units you want out. This should look
         like "nanometers/picosecondsecond" or "nanometers**3" or whatever
     inplace : bool
-        Do the transformation inplace. This will only work if the quantity
-        is a mutable type, like a numpy array.
+        Attempt to do the transformation inplace, by mutating the `quantity`
+        argument and avoiding a copy. This is only possible if `quantity` is a
+        writable numpy array.
+
+    Returns
+    -------
+    rquantity : {number, np.ndarray}
+        The resulting quantity, in the new unit system. If the function was
+        called with `inplace=True` and `quantity` was a writable numpy array,
+        `rquantity` will alias the same memory as the input `quantity`, which
+        will have been changed inplace. Otherwise, if a copy was required,
+        `rquantity` will point to new memory.
 
     Examples
     --------
-    >>> in_units_of(1*units.meter**2/units.second, 'nanometers**2/picosecond')
+    >>> in_units_of(1, 'meter**2/second', 'nanometers**2/picosecond')
     1000000.0
     """
     if quantity is None:
@@ -154,7 +165,8 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
         raise TypeError('Unit "%s" is not compatible with Unit "%s".' % (units_in, units_out))
 
     factor = units_in.conversion_factor_to(units_out)
-    if not inplace:
-        return quantity * factor
+    if inplace and (isinstance(quantity, np.ndarray) and quantity.flags['WRITEABLE']):
+        quantity *= factor
+        return quantity
+    return quantity * factor
 
-    quantity *= factor
