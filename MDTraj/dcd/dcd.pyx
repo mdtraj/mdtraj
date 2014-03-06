@@ -70,8 +70,13 @@ cdef ERROR_MESSAGES = {
 
 @_FormatRegistry.register_loader('.dcd')
 def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
-    """Load an xtc file. Since the dcd format doesn't contain information
-    to specify the topology, you need to supply a pdb_filename
+    """load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None)
+
+    Load an DCD file from disk.
+
+    The .dcd format is a cross-platform compressed binary trajectory format
+    produced by many software packages, including CHARMM, NAMD, and OpenMM. It
+    stores atomic coordinates, box vectors, and time information.
 
     Parameters
     ----------
@@ -266,7 +271,8 @@ cdef class DCDTrajectoryFile:
         self._needs_write_initialization = False
 
     def close(self):
-        "Close the DCD file handle"
+        """Close the DCD file handle
+        """
         if self.is_open and self.fh is not NULL:
             if str(self.mode) == 'r':
                 close_file_read(self.fh)
@@ -277,7 +283,9 @@ cdef class DCDTrajectoryFile:
         self._needs_write_initialization = False
 
     def seek(self, offset, whence=0):
-        """Move to a new file position
+        """seek(offset, whence=0)
+
+        Move to a new file position
 
         Parameters
         ----------

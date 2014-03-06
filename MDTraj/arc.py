@@ -47,7 +47,7 @@ class _EOF(IOError):
 
 @_FormatRegistry.register_loader('.arc')
 def load_arc(filename, top=None, stride=None, atom_indices=None):
-    """Load a TINKER .arc file.
+    """Load a TINKER .arc file from disk.
 
     Parameters
     ----------
