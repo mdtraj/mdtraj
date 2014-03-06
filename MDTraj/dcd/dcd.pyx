@@ -228,15 +228,13 @@ cdef class DCDTrajectoryFile:
         if str(mode) == 'r':
             self.filename = filename
             self.fh = open_dcd_read(filename, "dcd", &self.n_atoms, &self.n_frames)
-            if self.fh == NULL:
+            if self.fh is NULL:
                 raise IOError("Could not open file: %s" % filename)
             assert self.n_atoms > 0, 'DCD Corruption: n_atoms was not positive'
             assert self.n_frames >= 0, 'DCD corruption: n_frames < 0'
             # we're at the beginning of the file now
             self.frame_counter = 0
             self.is_open = True
-            if self.fh is NULL:
-                raise IOError('There was an error opening the file: %s' % filename)
         elif str(mode) == 'w':
             self.filename = filename
             self._needs_write_initialization = 1

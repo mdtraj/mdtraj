@@ -779,9 +779,17 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, in
 
   /* See if the file exists, and get its size */
   memset(&stbuf, 0, sizeof(struct stat));
+  // char* ppath = "sfdsdf";
   if (stat(path, &stbuf)) {
-    printf("dcdplugin) Could not access file '%s'.\n", path);
-    return NULL;
+      printf("dcdplugin)");
+      for (int i = 0; i < strlen(path); i++) {
+          int chr = path[i] - '0';
+          printf("%d ", chr);
+      }
+      printf("\n");
+
+      printf("dcdplugin) Could not access file '%s'.\n", path);
+      return NULL;
   }
 
   if (fio_open(path, FIO_READ, &fd) < 0) {
@@ -793,8 +801,8 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, in
   memset(dcd, 0, sizeof(dcdhandle));
   dcd->fd = fd;
 
-  if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &dcd->nsets, &dcd->istart, 
-         &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind, 
+  if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &dcd->nsets, &dcd->istart,
+         &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind,
          &dcd->fixedcoords, &dcd->reverse, &dcd->charmm))) {
     print_dcderror("read_dcdheader", rc);
     fio_fclose(dcd->fd);
