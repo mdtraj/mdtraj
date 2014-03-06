@@ -769,10 +769,23 @@ int dcd_nsets(dcdhandle* v) {
   return v->nsets;
 }
 
+int dcd_rewind(dcdhandle* dcd) {
+    fio_fseek(dcd->fd, 0, FIO_SEEK_SET);
+    int rc, nsets; // nsets is just throwaway here
+    if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &nsets, &dcd->istart,
+                             &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind,
+                             &dcd->fixedcoords, &dcd->reverse, &dcd->charmm))) {
+        return -1;
+    }
+    dcd->setsread = 0;
+    return 0;
+}
+
 dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, int* nsets) {
   dcdhandle *dcd;
   fio_fd fd;
   int rc;
+  int i, chr;
   struct stat stbuf;
 
   if (!path) return NULL;
@@ -782,8 +795,8 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, in
   // char* ppath = "sfdsdf";
   if (stat(path, &stbuf)) {
       printf("dcdplugin)");
-      for (int i = 0; i < strlen(path); i++) {
-          int chr = path[i] - '0';
+      for (i = 0; i < strlen(path); i++) {
+          chr = path[i] - '0';
           printf("%d ", chr);
       }
       printf("\n");

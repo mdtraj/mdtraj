@@ -39,7 +39,7 @@ from libc.stdlib cimport malloc, free
 from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
 from dcdlib cimport open_dcd_write, close_file_write, write_timestep
-from dcdlib cimport dcd_nsets
+from dcdlib cimport dcd_nsets, dcd_rewind
 
 
 ##############################################################################
@@ -321,8 +321,15 @@ cdef class DCDTrajectoryFile:
             for i in range(advance):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
         elif absolute is not None:
-            close_file_read(self.fh)
-            self.fh = open_dcd_read(self.filename, "dcd", &self.n_atoms, &self.n_frames)
+            result = dcd_rewind(self.fh)
+            if result != 0:
+                close_file_read(self.fh)
+                self.is_open = False
+                self.fh = open_dcd_read(self.filename, "dcd", &self.n_atoms, &self.n_frames)
+                if self.fh is NULL:
+                    raise IOError("Could not open file: %s" % self.filename)
+                self.is_open = True
+
             for i in range(absolute):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
             self.frame_counter = absolute

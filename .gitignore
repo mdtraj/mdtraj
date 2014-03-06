@@ -65,3 +65,10 @@ docs/examples/*.ipynb
 docs/examples/*.py
 docs/examples/.ipynb_checkpoints/
 examples/.ipynb_checkpoints/
+
+# cythoned files
+MDTraj/dcd/dcd.c
+MDTraj/binpos/binpos.c
+MDTraj/xtc/xtc.c
+MDTraj/xtc/trr.c
+MDTraj/rmsd/_rmsd.c
