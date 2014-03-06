@@ -58,7 +58,13 @@ cdef int _BINPOS_EOF = -1  # end of file (or error)
 
 @_FormatRegistry.register_loader('.binpos')
 def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
-    """Load an AMBER BINPOS file.
+    """load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None)
+
+    Load an AMBER .binpos file from disk.
+
+    The .binpos format is a cross-platform binary trajectory format produced by
+    AMBER software. It stores only the atomic coordinates, and does *not* store
+    any unit cell informations. Its use is discouraged.
 
     Parameters
     ----------
@@ -249,7 +255,7 @@ cdef class BINPOSTrajectoryFile:
         self.is_open = True
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
-        """read(n_frames=None, stride=None, atom_indices=1)
+        """read(n_frames=None, stride=None, atom_indices=None)
 
         Read data from a BINPOS file
 
@@ -367,7 +373,9 @@ cdef class BINPOSTrajectoryFile:
                 raise RuntimeError("BINPOS Error: %s" % status)
 
     def seek(self, int offset, int whence=0):
-        """Move to a new file position
+        """seek(offset, whence=0)
+
+        Move to a new file position
 
         Parameters
         ----------

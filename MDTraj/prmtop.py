@@ -86,7 +86,7 @@ def _get_pointer_value(pointer_label, raw_data):
 
 
 def load_prmtop(filename):
-    """Load am AMBER prmtop file from disk.
+    """Load am AMBER prmtop topology file from disk.
 
     Parameters
     ----------

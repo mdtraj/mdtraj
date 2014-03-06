@@ -75,10 +75,14 @@ if sizeof(float) != sizeof(np.float32_t):
 
 @_FormatRegistry.register_loader('.xtc')
 def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
-    """Load an Gromacs XTC file from disk.
+    """load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None)
 
-    Since the Gromacs XTC format doesn't contain information to specify the
-    topology, you need to supply the topology yourself.
+    Load a Gromacs XTC file from disk.
+
+    The .xtc format is a cross-platform compressed binary trajectory format
+    produced by the gromacs software that stores atomic coordinates, box
+    vectors, and time information. It is lossy (storing coordinates to about
+    1e-3 A) and extremely space-efficient.
 
     Parameters
     ----------
@@ -492,7 +496,9 @@ cdef class XTCTrajectoryFile:
         return status
 
     def seek(self, int offset, int whence=0):
-        """Move to a new file position
+        """seek(offset, whence=0)
+
+        Move to a new file position
 
         Parameters
         ----------

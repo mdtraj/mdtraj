@@ -28,10 +28,9 @@ __all__ = ['load_xml']
 
 @_FormatRegistry.register_loader('.xml')
 def load_xml(filename, top=None):
-    """Load a single conformation from an XML file, such as those
-    produced by OpenMM
+    """Load a single conformation from an OpenMM XML file.
 
-    Note: The OpenMM serialized state XML format contains information that
+    The OpenMM serialized state XML format contains additional information that
     is not read by this method, including forces, energies, and velocities.
     Here, we just read the positions and the box vectors.
 

@@ -75,8 +75,13 @@ if sizeof(float) != sizeof(np.float32_t):
 
 @_FormatRegistry.register_loader('.trr')
 def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
-    """Load a trr file. Since the trr doesn't contain information
-    to specify the topology, you need to supply the topology yourself
+    """load_trr(filename, top=None, stride=None, atom_indices=None, frame=None)
+    
+    Load a Gromacs TRR file from disk.
+
+    The .trr format is a cross-platform compressed binary trajectory format
+    produced by the gromacs software that stores atomic coordinates, box
+    vectors, and time information.
 
     Parameters
     ----------
@@ -491,7 +496,9 @@ cdef class TRRTrajectoryFile:
         return status
 
     def seek(self, int offset, int whence=0):
-        """Move to a new file position
+        """seek(offset, whence=0)
+
+        Move to a new file position
 
         Parameters
         ----------
