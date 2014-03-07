@@ -3,8 +3,8 @@
 #         Molecular Dynamics Trajectories.
 # Copyright 2012-2013 Stanford University and the Authors
 #
-# Authors: Lee-Ping Wang
-# Contributors: Robert McGibbon
+# Authors: Robert McGibbon
+# Contributors:
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -20,26 +20,5 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-
-import tempfile, os
-import numpy as np
-import mdtraj as md
-from mdtraj.formats import ArcTrajectoryFile, arc
-from mdtraj.formats import PDBTrajectoryFile
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
-TestDocstrings = DocStringFormatTester(arc, error_on_none=True)
-
-fd, temp = tempfile.mkstemp(suffix='.arc')
-def teardown_module(module):
-    """remove the temporary file created by tests in this file
-    this gets automatically called by nose"""
-    os.close(fd)
-    os.unlink(temp)
-
-
-def test_read_0():
-    with ArcTrajectoryFile(get_fn('4waters.arc')) as f:
-        xyz = f.read()
-    with PDBTrajectoryFile(get_fn('4waters.pdb')) as f:
-        xyz2 = f.positions
-    eq(xyz, xyz2, decimal=3)
+from __future__ import print_function, division
+from mdtraj.formats.pdb.pdbfile import PDBTrajectoryFile, load_pdb

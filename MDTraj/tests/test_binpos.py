@@ -31,8 +31,8 @@ there are not discovered by nose
 import tempfile, os
 import numpy as np
 
-from mdtraj import io, binpos
-from mdtraj import DCDTrajectoryFile, BINPOSTrajectoryFile
+from mdtraj import io
+from mdtraj.formats import DCDTrajectoryFile, BINPOSTrajectoryFile, binpos
 from mdtraj.testing import get_fn, eq, DocStringFormatTester
 
 TestDocstrings = DocStringFormatTester(binpos, error_on_none=True)

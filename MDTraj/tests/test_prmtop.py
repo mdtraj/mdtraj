@@ -22,7 +22,7 @@
 
 import mdtraj as md
 from mdtraj.testing import get_fn, eq, DocStringFormatTester
-from mdtraj import prmtop
+from mdtraj.formats import prmtop
 doc = DocStringFormatTester(prmtop)
 
 

@@ -39,6 +39,7 @@ import shutil
 import numpy as np
 
 import mdtraj as md
+from mdtraj import element
 from mdtraj.utils import import_
 from mdtraj.testing import skipif, get_fn, eq, slow
 
@@ -71,11 +72,11 @@ def setup_module():
     topology = md.Topology()
     chain = topology.add_chain()
     residue = topology.add_residue('ALA', chain)
-    topology.add_atom('CA', md.pdb.element.carbon, residue)
-    topology.add_atom('HG1', md.pdb.element.hydrogen, residue)
-    topology.add_atom('SG', md.pdb.element.sulfur, residue)
-    topology.add_atom('OD1', md.pdb.element.oxygen, residue)
-    topology.add_atom('NE', md.pdb.element.nitrogen, residue)
+    topology.add_atom('CA', element.carbon, residue)
+    topology.add_atom('HG1', element.hydrogen, residue)
+    topology.add_atom('SG', element.sulfur, residue)
+    topology.add_atom('OD1', element.oxygen, residue)
+    topology.add_atom('NE', element.nitrogen, residue)
 
     time = np.arange(10)**2
     unitcell_lengths = np.array([[1.1,1.2,1.3]] * 10)

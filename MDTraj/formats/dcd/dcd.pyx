@@ -34,7 +34,7 @@ cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 from libc.stdlib cimport malloc, free
 from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
@@ -99,15 +99,15 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     Examples
     --------
-    >>> import mdtraj as md                                        # doctest: +SKIP
-    >>> traj = md.load_dcd('output.dcd', top='topology.pdb')       # doctest: +SKIP
-    >>> print traj                                                 # doctest: +SKIP
-    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    >>> import mdtraj as md
+    >>> traj = md.load_dcd('output.dcd', top='topology.pdb')
+    >>> print traj
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>
 
-    >>> traj2 = md.load_dcd('output.dcd', stride=2, top='topology.pdb')   # doctest: +SKIP
-    >>> print traj2                                                       # doctest: +SKIP
-    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>         # doctest: +SKIP
-    
+    >>> traj2 = md.load_dcd('output.dcd', stride=2, top='topology.pdb')
+    >>> print traj2
+    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>
+
     Returns
     -------
     trajectory : md.Trajectory
@@ -117,8 +117,8 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.DCDTrajectoryFile :  Low level interface to DCD files
     """
-    from mdtraj.trajectory import _parse_topology, Trajectory
-    
+    from mdtraj.core.trajectory import _parse_topology, Trajectory
+
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a
     # dispatch from load(), where top comes from **kwargs. So if its not supplied

@@ -57,8 +57,9 @@ from __future__ import print_function, division
 import re
 import numpy as np
 
-from mdtraj import topology
-from mdtraj import pdb
+from mdtraj.core import topology
+from mdtraj.formats import pdb
+from mdtraj.core import element as elem
 
 FORMAT_RE_PATTERN = re.compile("([0-9]+)([a-zA-Z]+)([0-9]+)\.?([0-9]*)")
 
@@ -206,16 +207,16 @@ def load_prmtop(filename):
 
             upper = atom_name.upper()
             if upper.startswith('CL'):
-                element = pdb.element.chlorine
+                element = elem.chlorine
             elif upper.startswith('NA'):
-                element = pdb.element.sodium
+                element = elem.sodium
             elif upper.startswith('MG'):
-                element = pdb.element.magnesium
+                element = elem.magnesium
             elif upper.startswith('ZN'):
-                element = pdb.element.zinc
+                element = elem.zinc
             else:
                 try:
-                    element = pdb.element.get_by_symbol(atom_name[0])
+                    element = elem.get_by_symbol(atom_name[0])
                 except KeyError:
                     element = None
 

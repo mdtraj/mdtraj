@@ -21,7 +21,7 @@
 ##############################################################################
 
 import numpy as np
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 
 __all__ = ['load_xml']
 
@@ -48,7 +48,7 @@ def load_xml(filename, top=None):
         The resulting trajectory, as an md.Trajectory object.
     """
     import xml.etree.cElementTree as etree
-    from mdtraj.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology, Trajectory
     
     topology = _parse_topology(top)
 

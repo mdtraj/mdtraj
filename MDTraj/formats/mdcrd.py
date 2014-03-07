@@ -30,7 +30,7 @@ import os
 import itertools
 import numpy as np
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
 
@@ -76,7 +76,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.MDCRDTrajectoryFile :  Low level interface to MDCRD files
     """
-    from mdtraj.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology, Trajectory
 
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a

@@ -36,7 +36,7 @@ cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 from libc.stdlib cimport malloc, free
 from binposlib cimport molfile_timestep_t
 from binposlib cimport seek_timestep, tell_timestep;
@@ -105,7 +105,7 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.BINPOSTrajectoryFile :  Low level interface to BINPOS files
     """
-    from mdtraj.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology, Trajectory
     
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a

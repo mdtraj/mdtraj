@@ -35,7 +35,7 @@ cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 cimport xdrlib
 
 __all__ = ['load_xtc', 'XTCTrajectoryFile']
@@ -123,7 +123,7 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     # is a little wierd, its good because this function is usually called by a
     # dispatch from load(), where top comes from **kwargs. So if its not supplied
     # we want to give the user an informative error message
-    from mdtraj.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology, Trajectory
 
     if top is None:
         raise ValueError('"top" argument is required for load_xtc')

@@ -31,11 +31,11 @@ from __future__ import print_function, division
 import os
 import sys
 import numpy as np
-import mdtraj.pdb.element
+from mdtraj.core import element as elem
 from mdtraj.utils.six import iteritems, PY3, u
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.utils import import_, ensure_type, in_units_of, cast_indices
-from mdtraj.hdf5 import ensure_mode
+from mdtraj.formats.hdf5 import ensure_mode
 
 MAXINT16 = np.iinfo(np.int16).max
 MAXINT32 = np.iinfo(np.int32).max
@@ -79,7 +79,7 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
         element_symbol = atom_name.lstrip('0123456789')[0]
         
         try:
-            element = mdtraj.pdb.element.get_by_symbol(element_symbol)
+            element = elem.get_by_symbol(element_symbol)
         except KeyError:
             element = None
         

@@ -25,7 +25,7 @@
 Tests for the AMBER netcdf reader/writer code
 """
 
-from mdtraj import netcdf, NetCDFTrajectoryFile
+from mdtraj.formats import netcdf, NetCDFTrajectoryFile
 import os, tempfile
 from nose.tools import assert_raises
 import numpy as np

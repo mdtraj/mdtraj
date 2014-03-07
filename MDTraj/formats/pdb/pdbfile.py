@@ -48,11 +48,11 @@ import os
 import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy
-from mdtraj.pdb.pdbstructure import PdbStructure
-from mdtraj.topology import Topology
+from mdtraj.formats.pdb.pdbstructure import PdbStructure
+from mdtraj.core.topology import Topology
 from mdtraj.utils import ilen, cast_indices, in_units_of
-from mdtraj.registry import _FormatRegistry
-from mdtraj.pdb import element as elem
+from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.core import element as elem
 from mdtraj.utils import six
 if six.PY3:
     from urllib.request import urlopen
@@ -189,7 +189,7 @@ class PDBTrajectoryFile(object):
     possible. During *reading* however, we try to be more lenient. For instance,
     we will parse common nonstandard atom names during reading, and convert them
     into the standard names. The replacement table used by mdtraj is at
-    {mdtraj_source}/pdb/data/pdbNames.xml.
+    {mdtraj_source}/formats/pdb/data/pdbNames.xml.
 
     See Also
     --------

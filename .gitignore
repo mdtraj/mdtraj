@@ -67,9 +67,9 @@ docs/examples/.ipynb_checkpoints/
 examples/.ipynb_checkpoints/
 
 # cythoned files
-MDTraj/dcd/dcd.c
-MDTraj/binpos/binpos.c
-MDTraj/xtc/xtc.c
-MDTraj/xtc/trr.c
+MDTraj/formats/dcd/dcd.c
+MDTraj/formats/binpos/binpos.c
+MDTraj/formats/xtc/xtc.c
+MDTraj/formats/xtc/trr.c
 MDTraj/rmsd/_rmsd.c
 MDTraj/geometry/src/_geometry.c

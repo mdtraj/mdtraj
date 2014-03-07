@@ -29,7 +29,7 @@ through time in the AMBER NetCDF format
 ##############################################################################
 
 from __future__ import print_function, division
-from mdtraj.netcdf import NetCDFTrajectoryFile
+from mdtraj.formats.netcdf import NetCDFTrajectoryFile
 from mdtraj.reporters.basereporter import _BaseReporter
 
 ##############################################################################

@@ -48,11 +48,11 @@ import numpy as np
 
 # ours
 from mdtraj import version
-import mdtraj.pdb.element as elem
-from mdtraj.topology import Topology
+import mdtraj.core.element as elem
+from mdtraj.core.topology import Topology
 from mdtraj.utils import in_units_of, ensure_type, import_, cast_indices
 from mdtraj.utils.six import string_types
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 
 __all__ = ['HDF5TrajectoryFile', 'load_hdf5']
 
@@ -141,7 +141,7 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.HDF5TrajectoryFile :  Low level interface to HDF5 files
     """
-    from mdtraj.trajectory import Trajectory
+    from mdtraj.core.trajectory import _parse_topology, Trajectory
     atom_indices = cast_indices(atom_indices)
 
     with HDF5TrajectoryFile(filename) as f:

@@ -41,7 +41,7 @@ from distutils.version import StrictVersion
 
 import numpy as np
 from mdtraj import version
-from mdtraj.registry import _FormatRegistry
+from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices
 
 __all__ = ['NetCDFTrajectoryFile', 'load_netcdf']
@@ -84,7 +84,7 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.NetCDFTrajectoryFile :  Low level interface to NetCDF files
     """
-    from mdtraj.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology, Trajectory
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)

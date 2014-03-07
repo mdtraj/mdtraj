@@ -26,15 +26,13 @@ import functools
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises, SkipTest
 import numpy as np
 import mdtraj as md
-import mdtraj.trajectory
 import mdtraj.utils
-from mdtraj import topology, Trajectory
 from mdtraj.utils import six
-from mdtraj.utils.six import PY3
 from mdtraj.utils.six.moves import xrange
-from mdtraj.pdb import element
+from mdtraj.core import element
 
-TestDocstrings = DocStringFormatTester(mdtraj.trajectory, error_on_none=True)
+import mdtraj.core.trajectory
+TestDocstrings = DocStringFormatTester(mdtraj.core.trajectory, error_on_none=True)
 
 fn = get_fn('traj.h5')
 nat = get_fn('native.pdb')
@@ -228,7 +226,7 @@ def test_float_atom_indices_exception():
         try:
             md.load(fn, atom_indices=[0.5, 1.3], top=top)
         except ValueError as e:
-            if PY3:
+            if six.PY3:
                 assert e.args[0] == 'indices must be of an integer type. float64 is not an integer type'
             else:
                 assert e.message == 'indices must be of an integer type. float64 is not an integer type'
@@ -255,8 +253,8 @@ def test_array_vs_matrix():
     top = md.load(get_fn('native.pdb')).topology
     xyz = np.random.randn(1, 22, 3)
     xyz_mat = np.matrix(xyz)
-    t1 = mdtraj.trajectory.Trajectory(xyz, top)
-    t2 = mdtraj.trajectory.Trajectory(xyz_mat, top)
+    t1 = md.Trajectory(xyz, top)
+    t2 = md.Trajectory(xyz_mat, top)
 
     eq(t1.xyz, xyz)
     eq(t2.xyz, xyz)
@@ -340,23 +338,21 @@ def test_seek_read_mode():
     # read mode. Basically, we just seek around the files and read different
     # segments, keeping track of our location manually and checking with both
     # tell() and by checking that the right coordinates are actually returned
-
-    files = [(md.NetCDFTrajectoryFile, 'frame0.nc'),
-             (md.HDF5TrajectoryFile, 'frame0.h5'),
-             (md.XTCTrajectoryFile, 'frame0.xtc'),
-             (md.TRRTrajectoryFile, 'frame0.trr'),
-             (md.DCDTrajectoryFile, 'frame0.dcd'),
-             (md.MDCRDTrajectoryFile, 'frame0.mdcrd'),
-             (md.BINPOSTrajectoryFile, 'frame0.binpos'),
-             (md.BINPOSTrajectoryFile, 'frame0.binpos'),
-             (md.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'),]
+    files = [(md.formats.NetCDFTrajectoryFile, 'frame0.nc'),
+             (md.formats.HDF5TrajectoryFile, 'frame0.h5'),
+             (md.formats.XTCTrajectoryFile, 'frame0.xtc'),
+             (md.formats.TRRTrajectoryFile, 'frame0.trr'),
+             (md.formats.DCDTrajectoryFile, 'frame0.dcd'),
+             (md.formats.MDCRDTrajectoryFile, 'frame0.mdcrd'),
+             (md.formats.BINPOSTrajectoryFile, 'frame0.binpos'),
+             (md.formats.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'),]
 
     for a, b in files:
         point = 0
         xyz = md.load(get_fn(b), top=get_fn('native.pdb')).xyz
         length = len(xyz)
         kwargs = {}
-        if a is md.MDCRDTrajectoryFile:
+        if a is md.formats.MDCRDTrajectoryFile:
             kwargs = {'n_atoms': 22}
 
         with a(get_fn(b), **kwargs) as f:
@@ -374,7 +370,7 @@ def test_seek_read_mode():
                     offset = np.random.randint(1, 10)
                     if point + offset < length:
                         read = f.read(offset)
-                        if a not in [md.BINPOSTrajectoryFile, md.LH5TrajectoryFile]:
+                        if a not in [md.formats.BINPOSTrajectoryFile, md.formats.LH5TrajectoryFile]:
                             read = read[0]
                         readlength = len(read)
                         read = mdtraj.utils.in_units_of(read, f.distance_unit, 'nanometers')
@@ -450,7 +446,7 @@ def test_length():
 def test_unitcell():
     # make sure that bogus unitcell vecotrs are not saved
     top = md.load(get_fn('native.pdb')).restrict_atoms(range(5)).topology
-    t = Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
+    t = md.Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
 
     #           xtc    dcd   binpos  trr    h5     pdb    nc     lh5
     for fn in [temp1, temp2, temp3, temp4, temp5, temp6, temp6, temp8]:

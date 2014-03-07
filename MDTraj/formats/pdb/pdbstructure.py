@@ -46,7 +46,7 @@ from __future__ import print_function, division
 import sys
 import warnings
 import numpy as np
-from . import element
+from mdtraj.core import element
 
 
 class PdbStructure(object):

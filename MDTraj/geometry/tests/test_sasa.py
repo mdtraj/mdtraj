@@ -29,6 +29,7 @@ import numpy as np
 from numpy.testing import *
 
 import mdtraj as md
+from mdtraj import element
 from mdtraj.testing import get_fn
 from mdtraj.geometry.sasa import _ATOMIC_RADII
 
@@ -39,13 +40,13 @@ from mdtraj.geometry.sasa import _ATOMIC_RADII
 
 # set up a mock topology with 1 atom
 topology1 = md.Topology()
-topology1.add_atom('H', md.pdb.element.hydrogen, topology1.add_residue('res', topology1.add_chain()))
+topology1.add_atom('H', element.hydrogen, topology1.add_residue('res', topology1.add_chain()))
 
 # set up a mock topology with two atoms
 topology2 = md.Topology()
 _res2 = topology2.add_residue('res', topology2.add_chain())
-topology2.add_atom('H', md.pdb.element.hydrogen, _res2)
-topology2.add_atom('H', md.pdb.element.hydrogen, _res2)
+topology2.add_atom('H', element.hydrogen, _res2)
+topology2.add_atom('H', element.hydrogen, _res2)
 
 
 ##############################################################################

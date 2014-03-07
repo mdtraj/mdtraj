@@ -32,12 +32,20 @@ import functools
 from copy import deepcopy
 import numpy as np
 
-from mdtraj import (DCDTrajectoryFile, BINPOSTrajectoryFile, XTCTrajectoryFile,
-                    TRRTrajectoryFile, HDF5TrajectoryFile, NetCDFTrajectoryFile,
-                    LH5TrajectoryFile, PDBTrajectoryFile, MDCRDTrajectoryFile,
-                    ArcTrajectoryFile, Topology, load_prmtop)
-from mdtraj.utils import (lengths_and_angles_to_box_vectors, box_vectors_to_lengths_and_angles,
-                          in_units_of, cast_indices, ensure_type)
+from mdtraj.formats import DCDTrajectoryFile
+from mdtraj.formats import BINPOSTrajectoryFile
+from mdtraj.formats import XTCTrajectoryFile
+from mdtraj.formats import TRRTrajectoryFile
+from mdtraj.formats import HDF5TrajectoryFile
+from mdtraj.formats import NetCDFTrajectoryFile
+from mdtraj.formats import LH5TrajectoryFile
+from mdtraj.formats import PDBTrajectoryFile
+from mdtraj.formats import MDCRDTrajectoryFile
+from mdtraj.formats import ArcTrajectoryFile
+from mdtraj.formats.prmtop import load_prmtop
+from mdtraj.core.topology import Topology
+from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_vectors, 
+                          box_vectors_to_lengths_and_angles, cast_indices)
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3, string_types
 from mdtraj import _rmsd
@@ -258,6 +266,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     trajectory : md.Trajectory
         The resulting trajectory, as an md.Trajectory object.
     """
+
     _assert_files_exist(filename_or_filenames)
 
     if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
@@ -279,6 +288,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                              check_topology=False)
 
     try:
+        #loader = _LoaderRegistry[extension][0]
         loader = _FormatRegistry.loaders[extension]
     except KeyError:
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
@@ -1142,6 +1152,7 @@ class Trajectory(object):
 
         with PDBTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             for i in xrange(self.n_frames):
+
                 if self._have_unitcell:
                     f.write(in_units_of(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
                             self.topology,

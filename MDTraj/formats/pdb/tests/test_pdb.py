@@ -24,8 +24,8 @@
 from __future__ import print_function, division
 import numpy as np
 import os, tempfile
-from mdtraj import topology
-from mdtraj.pdb import pdbstructure
+from mdtraj.formats.pdb import pdbstructure
+from mdtraj.formats.pdb.pdbstructure import PdbStructure
 from mdtraj.testing import get_fn, eq, raises
 from mdtraj import load, load_pdb
 from mdtraj.utils import ilen
@@ -52,7 +52,6 @@ def test_pdbwrite():
 
 
 def test_load_multiframe():
-    from mdtraj.pdb.pdbstructure import PdbStructure
     with open(get_fn('multiframe.pdb')) as f:
         pdb = PdbStructure(f)
         yield lambda: eq(len(pdb.models), 2)

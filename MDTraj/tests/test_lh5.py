@@ -24,7 +24,7 @@ import numpy as np
 import tempfile
 import os
 import mdtraj as md
-from mdtraj import LH5TrajectoryFile
+from mdtraj.formats import LH5TrajectoryFile
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises, skipif, assert_raises
 
 
