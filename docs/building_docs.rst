@@ -10,6 +10,11 @@ Although `readthedocs <https://readthedocs.org/>`_ is a great tool, it doesn't h
 If you'd like to build the docs on your machine, you'll first need to install sphinx and numpydoc ::
 
     pip install sphinx numpydoc
+
+You'll also need IPython, pandoc and runipy for the example notebooks ::
+
+    sudo apt-get install pandoc
+    pip install ipython runipy
   
 Now, go back to the docs subdirectory in the main repository. The documentation will be built in the ``docs/_build`` subdirectory ::
 

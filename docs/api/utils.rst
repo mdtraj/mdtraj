@@ -1,11 +1,12 @@
-Utils
------
+MDTraj Utils
+------------
 
 .. currentmodule:: mdtraj.utils
 .. autosummary::
     :toctree: generated/
     
     import_
+    in_units_of
     ensure_type
     ilen
     timing

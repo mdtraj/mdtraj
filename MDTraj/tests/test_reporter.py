@@ -57,6 +57,7 @@ def test_reporter():
 
     pdb = PDBFile(get_fn('native.pdb'))
     forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
+    # NO PERIODIC BOUNARY CONDITIONS
     system = forcefield.createSystem(pdb.topology, nonbondedMethod=CutoffNonPeriodic,
         nonbondedCutoff=1.0*nanometers, constraints=HBonds, rigidWater=True)
     integrator = LangevinIntegrator(300*kelvin, 1.0/picoseconds, 2.0*femtoseconds)
@@ -93,17 +94,15 @@ def test_reporter():
         yield lambda: eq(got.kineticEnergy.shape, (50,))
         yield lambda: eq(got.coordinates.shape, (50, 22, 3))
         yield lambda: eq(got.velocities.shape, (50, 22, 3))
-        # yield lambda: eq(got.cell_lengths, 2 * np.ones((50, 3)))  # 2 nanometers
-        # yield lambda: eq(got.cell_angles, 90*np.ones((50, 3)))
+        yield lambda: eq(got.cell_lengths, None)
+        yield lambda: eq(got.cell_angles, None)
         yield lambda: eq(got.time, 0.002*2*(1+np.arange(50)))
-
         yield lambda: f.topology == md.load(get_fn('native.pdb')).top
 
     with NetCDFTrajectoryFile(ncfile) as f:
         xyz, time, cell_lengths, cell_angles = f.read()
-        print('NETCDF CELL LENGTHS, ANGLES', cell_lengths, cell_angles)
-        #yield lambda: eq(cell_lengths, 20 * np.ones((50, 3)))  # 20 angstroms
-        #yield lambda: eq(cell_angles, 90*np.ones((50, 3)))
+        yield lambda: eq(cell_lengths, None)
+        yield lambda: eq(cell_angles, None)
         yield lambda: eq(time, 0.002*2*(1+np.arange(50)))
 
     hdf5_traj = md.load(hdf5file)
@@ -112,12 +111,13 @@ def test_reporter():
 
     # we don't have to convert units here, because md.load already
     # handles that
+    assert hdf5_traj.unitcell_vectors is None
     yield lambda: eq(hdf5_traj.xyz, netcdf_traj.xyz)
     yield lambda: eq(hdf5_traj.unitcell_vectors, netcdf_traj.unitcell_vectors)
     yield lambda: eq(hdf5_traj.time, netcdf_traj.time)
 
     yield lambda: eq(dcd_traj.xyz, hdf5_traj.xyz)
-    yield lambda: eq(dcd_traj.unitcell_vectors, hdf5_traj.unitcell_vectors)
+    # yield lambda: eq(dcd_traj.unitcell_vectors, hdf5_traj.unitcell_vectors)
 
 
 @skipif(not HAVE_OPENMM, 'No OpenMM')

@@ -1,0 +1,46 @@
+<script>
+// when the user changes their selection in the dropdown menu, navigate
+// to a new set of root documentation
+$(document).ready(function() {
+    $('#versionselector').change(function(){
+        window.location.href = "/" + $('#versionselector').val();
+    });
+});
+
+
+// get all of the releases from github, and use these to populate the
+// dropdown menu of different releases
+$(document).ready(function() {
+    $.get("https://api.github.com/repos/rmcgibbo/mdtraj/releases")
+      .done(function(data) {
+          numItems = data.length;
+          tag_names = [];
+          for (var i = 0; i < numItems; i++) {
+              tag_names.push(data[i].tag_name);
+          }
+          tag_names = tag_names.sort().reverse();
+
+          for (var i = 0; i < numItems; i++) {
+              var key = tag_names[i];
+              $('#versionselector')
+                .append($('<option></option>', { value : key})
+                .text(key)); 
+           }
+      });
+});
+</script>
+
+
+<!-- This is the actual HTML bar at the bottom of the side bar -->
+<!-- It gives a little select menu with all of the versions of the -->
+<!-- documentation that you can switch between -->
+<div class="rst-versions" data-toggle="rst-versions">
+<span class="rst-current-version" data-toggle="rst-current-version">
+  <span class="icon icon-book"> Versions</span>
+  <form><select id="versionselector">
+      <option value="latest">latest</option>
+  </select></form>
+</span>
+</div>
+
+

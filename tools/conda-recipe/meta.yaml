@@ -34,8 +34,8 @@ requirements:
   run:
     - python
     - pytables
-    - netcdf4
     - pandas
+    - scipy
 
 test:
   # Python imports
@@ -54,7 +54,6 @@ test:
     - setuptools
     - nose
     - pandas
-    - simtk.unit
     - scripttest
 
 about:

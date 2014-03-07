@@ -1,5 +1,5 @@
-Programing Style
-================
+MDTraj Programing Style
+=======================
 
 PEP8
 ----

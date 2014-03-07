@@ -126,28 +126,41 @@ def test_ensure_type_12():
 def test_ensure_type_13():
     ensure_type(np.zeros((2,2)), np.float32, ndim=2, name='', shape=(None, None, None))
 
-def test_unit_1():
-    assert 1 == in_units_of(100, 'meter', 'centimeter')
-
-def test_unit_2():
-    a = in_units_of(1, 'meter**2/second', 'nanometers**2/picosecond')
-    b = 1e-6
-    assert abs(a-b) < 1e-10
-
-def test_unit_2_bytes():
-    a = in_units_of(1, b'meter**2/second', b'nanometers**2/picosecond')
-    b = 1e-6
-    assert abs(a-b) < 1e-10
-    
-def test_unit_3():
-    eq(str(type(_str_to_unit('nanometers**2/meters*gigajoules'))),
-           "<class 'simtk.unit.unit.Unit'>")
-    eq(str(_str_to_unit('nanometers**2/meters*gigajoules')),
-       'nanometer**2*gigajoule/meter')
-
 @raises(ImportError)
 def test_delay_import_fail_1():
     import_('sdfsdfsfsfdsdf')
 
 def test_delay_import():
     import_('scipy.sparse')
+
+def test_unit_0():
+    a = np.array([1.0])
+    b = in_units_of(a, 'nanometers', 'angstroms', inplace=False)
+    c = in_units_of(a, 'angstroms', 'nanometers', inplace=False)
+    eq(b, np.array([10.0]))
+    eq(c, np.array([0.1]))
+    assert a.ctypes.data != b.ctypes.data
+    assert a.ctypes.data != c.ctypes.data
+
+
+def test_unit_1():
+    a = np.array([1.0])
+    b = in_units_of(a, 'nanometers', 'angstroms', inplace=True)
+    eq(a, np.array([10.0]))
+    eq(b, np.array([10.0]))
+    # a and b point to the same memory
+    assert a.ctypes.data == b.ctypes.data
+
+
+def test_unit_2():
+    a = np.array([1.0])
+    a.flags['WRITEABLE'] = False
+    b = in_units_of(a, 'nanometers', 'angstroms', inplace=True)
+
+    eq(b, np.array([10.0]))
+    # a and b do not point to the same memory, since a isn't writeable
+    assert a.ctypes.data != b.ctypes.data
+
+
+def test_unit_3():
+    eq(1000000.0, in_units_of(1, 'meter**2/second', 'nanometers**2/picosecond'))

@@ -769,6 +769,20 @@ int dcd_nsets(dcdhandle* v) {
   return v->nsets;
 }
 
+int dcd_rewind(dcdhandle* dcd) {
+    fio_fseek(dcd->fd, 0, FIO_SEEK_SET);
+    int rc, nsets; // nsets is just throwaway here
+    if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &nsets, &dcd->istart,
+                             &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind,
+                             &dcd->fixedcoords, &dcd->reverse, &dcd->charmm))) {
+        fio_fclose(dcd->fd);
+        free(dcd);
+        return -1;
+    }
+    dcd->setsread = 0;
+    return 0;
+}
+
 dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, int* nsets) {
   dcdhandle *dcd;
   fio_fd fd;
@@ -793,8 +807,8 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, in
   memset(dcd, 0, sizeof(dcdhandle));
   dcd->fd = fd;
 
-  if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &dcd->nsets, &dcd->istart, 
-         &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind, 
+  if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &dcd->nsets, &dcd->istart,
+         &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind,
          &dcd->fixedcoords, &dcd->reverse, &dcd->charmm))) {
     print_dcderror("read_dcdheader", rc);
     fio_fclose(dcd->fd);
@@ -879,7 +893,7 @@ int read_next_timestep(dcdhandle *v, int natoms, molfile_timestep_t *ts) {
   dcdhandle *dcd;
   int i, j, rc;
   float unitcell[6];
-  unitcell[0] = unitcell[2] = unitcell[5] = 1.0f;
+  unitcell[0] = unitcell[2] = unitcell[5] = 0.0f;
   unitcell[1] = unitcell[3] = unitcell[4] = 90.0f;
   dcd = (dcdhandle *)v;
 
@@ -967,13 +981,14 @@ void close_file_read(dcdhandle *v) {
 }
 
 
-dcdhandle* open_dcd_write(const char *path, const char *filetype, const int natoms) {
+dcdhandle* open_dcd_write(const char *path, const char *filetype, const int natoms,
+                          const int with_unitcell)
+    {
   dcdhandle *dcd;
   fio_fd fd;
   int rc;
   int istart, nsavc;
   double delta;
-  int with_unitcell;
   int charmm;
 
   if (fio_open(path, FIO_WRITE, &fd) < 0) {
@@ -989,18 +1004,10 @@ dcdhandle* open_dcd_write(const char *path, const char *filetype, const int nato
   nsavc = 1;              /* number of timesteps between written DCD frames */
   delta = 1.0;            /* length of a timestep                           */
 
-  if (getenv("VMDDCDWRITEXPLORFORMAT") != NULL) {
-    with_unitcell = 0;      /* no unit cell info */
-    charmm = DCD_IS_XPLOR;  /* X-PLOR format */
-    printf("dcdplugin) WARNING: Writing DCD file in X-PLOR format, \n");
-    printf("dcdplugin) WARNING: unit cell information will be lost!\n");
-  } else {
-    with_unitcell = 1;      /* contains unit cell infor (Charmm format) */
-    charmm = DCD_IS_CHARMM; /* charmm-formatted DCD file                */ 
-    if (with_unitcell) 
+  charmm = DCD_IS_CHARMM; /* charmm-formatted DCD file                */ 
+  if (with_unitcell) 
       charmm |= DCD_HAS_EXTRA_BLOCK;
-  }
- 
+
   rc = write_dcdheader(dcd->fd, "Created by DCD plugin", natoms, 
                        istart, nsavc, delta, with_unitcell, charmm);
 
@@ -1029,7 +1036,7 @@ int write_timestep(dcdhandle *v, const molfile_timestep_t *ts) {
   int i, rc, curstep;
   float *pos = ts->coords;
   double unitcell[6];
-  unitcell[0] = unitcell[2] = unitcell[5] = 1.0f;
+  unitcell[0] = unitcell[2] = unitcell[5] = 0.0f;
   unitcell[1] = unitcell[3] = unitcell[4] = 90.0f;
 
   /* copy atom coords into separate X/Y/Z arrays for writing */

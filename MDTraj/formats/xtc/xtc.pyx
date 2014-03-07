@@ -33,7 +33,8 @@ cimport cython
 import numpy as np
 cimport numpy as np
 np.import_array()
-from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.utils import ensure_type, cast_indices, in_units_of
+from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import _FormatRegistry
 cimport xdrlib
 
@@ -74,10 +75,14 @@ if sizeof(float) != sizeof(np.float32_t):
 
 @_FormatRegistry.register_loader('.xtc')
 def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
-    """Load an Gromacs XTC file from disk.
+    """load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None)
 
-    Since the Gromacs XTC format doesn't contain information to specify the
-    topology, you need to supply the topology yourself.
+    Load a Gromacs XTC file from disk.
+
+    The .xtc format is a cross-platform compressed binary trajectory format
+    produced by the gromacs software that stores atomic coordinates, box
+    vectors, and time information. It is lossy (storing coordinates to about
+    1e-3 A) and extremely space-efficient.
 
     Parameters
     ----------
@@ -118,12 +123,12 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     # is a little wierd, its good because this function is usually called by a
     # dispatch from load(), where top comes from **kwargs. So if its not supplied
     # we want to give the user an informative error message
-    from mdtraj.core.trajectory import _parse_topology, Trajectory
+    from mdtraj.trajectory import _parse_topology, Trajectory
 
     if top is None:
         raise ValueError('"top" argument is required for load_xtc')
 
-    if not isinstance(filename, str):
+    if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_xtc. '
             'you supplied %s' % type(filename))
 
@@ -140,8 +145,8 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
         else:
             xyz, time, step, box = f.read(stride=stride, atom_indices=atom_indices)
 
-        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        convert(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
     trajectory.unitcell_vectors = box
@@ -205,6 +210,7 @@ cdef class XTCTrajectoryFile:
     cdef char* mode           # mode in which the file is open, either 'r' or 'w'
     cdef int min_chunk_size
     cdef float chunk_size_multiplier
+    cdef int with_unitcell    # used in mode='w' to know if we're writing unitcells or nor
     cdef readonly char* distance_unit
 
 
@@ -313,7 +319,10 @@ cdef class XTCTrajectoryFile:
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
             xyz, time, step, box = self._read(int(n_frames), atom_indices)
-            return xyz[::stride], time[::stride], step[::stride], box[::stride]
+            xyz, time, step, box = xyz[::stride], time[::stride], step[::stride], box[::stride]
+            if np.all(np.logical_and(box < 1e-10, box > -1e-10)):
+                box = None
+            return xyz, time, step, box
 
         # if they want ALL of the remaining frames, we need to guess at the
         # chunk size, and then check the exit status to make sure we're really 
@@ -321,8 +330,8 @@ cdef class XTCTrajectoryFile:
         all_xyz, all_time, all_step, all_box = [], [], [], []
 
         while True:
-            # guess the size of the chunk to read, based on how many frames we think are in the file
-            # and how many we've currently read
+            # guess the size of the chunk to read, based on how many frames we
+            # think are in the file and how many we've currently read
             chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
                         self.min_chunk_size)
 
@@ -337,10 +346,13 @@ cdef class XTCTrajectoryFile:
 
         if len(all_xyz) == 0:
             return np.array([]), np.array([]), np.array([]), np.array([])
-        return (np.concatenate(all_xyz)[::stride],
-                np.concatenate(all_time)[::stride],
-                np.concatenate(all_step)[::stride],
-                np.concatenate(all_box)[::stride])
+        all_xyz = np.concatenate(all_xyz)[::stride]
+        all_time = np.concatenate(all_time)[::stride]
+        all_step = np.concatenate(all_step)[::stride]
+        all_box =  np.concatenate(all_box)[::stride]
+        if np.all(np.logical_and(all_box < 1e-10, all_box > -1e-10)):
+            all_box = None
+        return all_xyz, all_time, all_step, all_box
 
     def _read(self, int n_frames, atom_indices):
         """Read a specified number of XTC frames from the buffer"""
@@ -424,7 +436,7 @@ cdef class XTCTrajectoryFile:
 
         # do typechecking, and then dispatch to the c level function
         xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False,
-                          add_newaxis_on_deficient_ndim=True)
+                          add_newaxis_on_deficient_ndim=True, warn_on_cast=False)
         n_frames = len(xyz)
         time = ensure_type(time, dtype=np.float32, ndim=1, name='time', can_be_none=True,
                            shape=(n_frames,), add_newaxis_on_deficient_ndim=True,
@@ -435,26 +447,31 @@ cdef class XTCTrajectoryFile:
         box = ensure_type(box, dtype=np.float32, ndim=3, name='box', can_be_none=True,
                           shape=(n_frames, 3, 3), add_newaxis_on_deficient_ndim=True,
                           warn_on_cast=False)
+
+        if self.frame_counter == 0:
+            self.n_atoms = xyz.shape[1]
+            self.with_unitcell = (box is not None)
+        else:
+            if not self.n_atoms == xyz.shape[1]:
+                raise ValueError("This file has %d atoms, but you're now "
+                    "trying to write %d atoms" % (self.n_atoms, xyz.shape[1]))
+            if self.with_unitcell and (box is None):
+                raise ValueError("The file that you're saving to expects each frame "
+                    "to contain unitcell information, but you did not supply it.")
+            if (not self.with_unitcell) and (box is not None):
+                raise ValueError("The file that you're saving to was created without "
+                    "unitcell information.")
+
         if time is None:
             time = np.arange(0, n_frames, dtype=np.float32)
         if step is None:
             step = np.arange(0, n_frames, dtype=np.int32)
         if box is None:
-            # make each box[i] be the identity matrix
+            # make each box[i] be the all zeros, which indicates the lack of
+            # a unitcell
             box = np.zeros((n_frames, 3, 3), dtype=np.float32)
-            box[:,0,0] = np.ones(n_frames, dtype=np.float32)
-            box[:,1,1] = np.ones(n_frames, dtype=np.float32)
-            box[:,2,2] = np.ones(n_frames, dtype=np.float32)
 
         prec = 1000.0 * np.ones(n_frames, dtype=np.float32)
-
-        if self.frame_counter == 0:
-            self.n_atoms = xyz.shape[1]
-        else:
-            if not self.n_atoms == xyz.shape[1]:
-                raise ValueError("This file has %d atoms, but you're now "
-                    "trying to write %d atoms" % (self.n_atoms, xyz.shape[1]))
-
         self._write(xyz, time, step, box, prec)
 
 
@@ -479,7 +496,9 @@ cdef class XTCTrajectoryFile:
         return status
 
     def seek(self, int offset, int whence=0):
-        """Move to a new file position
+        """seek(offset, whence=0)
+
+        Move to a new file position
 
         Parameters
         ----------

@@ -24,25 +24,29 @@ except ImportError:
 try:
     import numpy
 except ImportError:
-    print('building and running mdtraj requires numpy', file=sys.stderr)
+    print('Building and running mdtraj requires numpy', file=sys.stderr)
     sys.exit(1)
 
 try:
     import Cython
     if Cython.__version__ < '0.18':
-        import warnings
-        warnings.warn('Cython >= 0.18 is required. Falling back to bunded c files')
         raise ImportError
     from Cython.Distutils import build_ext
     setup_kwargs = {'cmdclass': {'build_ext': build_ext}}
-    cython_extension = 'pyx'
 except ImportError:
-    setup_kwargs = {}
-    cython_extension = 'c'
+    print('Building from source requires cython >= 0.18', file=sys.stderr)
+    exit(1)
+
+try:
+    sys.argv.remove('--no-install-deps')
+    no_install_deps = True
+except ValueError:
+    no_install_deps = False
 
 if 'setuptools' in sys.modules:
     setup_kwargs['zip_safe'] = False
-    setup_kwargs['install_requires'] = ['simtk.unit', 'pandas>=0.9.0']
+    if not no_install_deps:
+        setup_kwargs['install_requires'] = ['pandas>=0.9.0']
     setup_kwargs['entry_points'] = {'console_scripts':
               ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
                'mdinspect = mdtraj.scripts.mdinspect:entry_point']}
@@ -227,26 +231,26 @@ def detect_sse41():
 xtc = Extension('mdtraj.formats.xtc',
                 sources=['MDTraj/formats/xtc/src/xdrfile.c',
                          'MDTraj/formats/xtc/src/xdrfile_xtc.c',
-                         'MDTraj/formats/xtc/xtc.' + cython_extension],
+                         'MDTraj/formats/xtc/xtc.pyx],
                 include_dirs=['MDTraj/formats/xtc/include/',
                               'MDTraj/formats/xtc/', numpy.get_include()])
 
 trr = Extension('mdtraj.formats.trr',
                 sources=['MDTraj/formats/xtc/src/xdrfile.c',
                          'MDTraj/formats/xtc/src/xdrfile_trr.c',
-                         'MDTraj/formats/xtc/trr.' + cython_extension],
+                         'MDTraj/formats/xtc/trr.pyx'],
                 include_dirs=['MDTraj/formats/xtc/include/',
                               'MDTraj/formats/xtc/', numpy.get_include()])
 
 dcd = Extension('mdtraj.formats.dcd',
                 sources=['MDTraj/formats/dcd/src/dcdplugin.c',
-                         'MDTraj/formats/dcd/dcd.' + cython_extension],
+                         'MDTraj/formats/dcd/dcd.pyx'],
                 include_dirs=["MDTraj/formats/dcd/include/",
                               'MDTraj/formats/dcd/', numpy.get_include()])
 
 binpos = Extension('mdtraj.formats.binpos',
                    sources=['MDTraj/formats/binpos/src/binposplugin.c',
-                            'MDTraj/formats/binpos/binpos.' + cython_extension],
+                            'MDTraj/formats/binpos/binpos.pyx'],
                    include_dirs=['MDTraj/formats/binpos/include/',
                                  'MDTraj/formats/binpos/', numpy.get_include()])
 
@@ -268,7 +272,7 @@ def rmsd_extension():
                          'MDTraj/rmsd/src/theobald_rmsd.c',
                          'MDTraj/rmsd/src/rotation.c',
                          'MDTraj/rmsd/src/center.c',
-                         'MDTraj/rmsd/_rmsd.' + cython_extension],
+                         'MDTraj/rmsd/_rmsd.pyx'],
                      include_dirs=[
                          'MDTraj/rmsd/include', numpy.get_include()],
                      extra_compile_args=compiler_args,
@@ -291,7 +295,7 @@ def geometry():
     return Extension('mdtraj.geometry._geometry',
                      sources=['MDTraj/geometry/src/geometry.c',
                               'MDTraj/geometry/src/sasa.c',
-                              'MDTraj/geometry/src/_geometry.' + cython_extension],
+                              'MDTraj/geometry/src/_geometry.pyx'],
                      include_dirs=['MDTraj/geometry/include', numpy.get_include()],
                      define_macros=define_macros,
                      extra_compile_args=extra_compile_args)

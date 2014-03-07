@@ -36,7 +36,8 @@ from argparse import ArgumentParser
 
 import numpy as np
 import mdtraj as md
-from mdtraj.core.trajectory import convert as _convert
+from mdtraj.core.trajectory import_parse_topology
+from mdtraj.utils import in_units_of
 from mdtraj.utils.six import iteritems
 
 ###############################################################################
@@ -52,6 +53,7 @@ formats = {'.dcd': md.formats.DCDTrajectoryFile,
            '.trr': md.formats.TRRTrajectoryFile,
            '.binpos': md.formats.BINPOSTrajectoryFile,
            '.nc': md.formats.NetCDFTrajectoryFile,
+           '.netcdf': md.formats.NetCDFTrajectoryFile,
            '.h5': md.formats.HDF5TrajectoryFile,
            '.lh5': md.formats.LH5TrajectoryFile,
            '.pdb': md.formats.PDBTrajectoryFile}
@@ -60,6 +62,7 @@ fields = {'.trr': ('xyz', 'time', 'step', 'box', 'lambda'),
           '.xtc': ('xyz', 'time', 'step', 'box'),
           '.dcd': ('xyz', 'cell_lengths', 'cell_angles'),
           '.nc': ('xyz', 'time', 'cell_lengths', 'cell_angles'),
+          '.netcdf': ('xyz', 'time', 'cell_lengths', 'cell_angles'),
           '.binpos': ('xyz',),
           '.lh5': ('xyz', 'topology'),
           '.h5': ('xyz', 'time', 'cell_lengths', 'cell_angles',
@@ -71,6 +74,7 @@ units = {'.xtc': 'nanometers',
          '.trr': 'nanometers',
          '.binpos': 'angstroms',
          '.nc': 'angstroms',
+         '.netcdf': 'angstroms',
          '.dcd': 'angstroms',
          '.h5': 'nanometers',
          '.lh5': 'nanometers',
@@ -160,10 +164,10 @@ def parse_args():
                         provide a path to file containing a space, tab or
                         newline separated list of the (zero-based) integer
                         indices corresponding to the atoms you wish to keep.''')
-    parser.add_argument('-t', '--topology', type=str, help='''path to a PDB
-                        file. this will be used to parse the topology of the
-                        system. it's optional, but useful. if specified, it
-                        enables you to output the coordinates of your
+    parser.add_argument('-t', '--topology', type=str, help='''path to a
+                        PDB/prmtop file. this will be used to parse the topology
+                        of the system. it's optional, but useful. if specified,
+                        it enables you to output the coordinates of your
                         dcd/xtc/trr/netcdf/binpos as a PDB file. If you\'re
                         converting *to* .h5, the topology will be stored
                         inside the h5 file.''')
@@ -236,7 +240,7 @@ def main(args, verbose=True):
     Parameters
     ----------
     args : argparse.Namespace
-        The collected commandline arguments
+        The collected command line arguments
     """
     if args.atom_indices is not None:
         atom_indices = np.loadtxt(args.atom_indices, int)
@@ -252,7 +256,7 @@ def main(args, verbose=True):
     InFileFormat = formats[in_x]
 
     if args.topology is not None:
-        topology = md.formats.PDBTrajectoryFile(args.topology).topology
+        topology = _parse_topology(args.topology)
     else:
         topology = None
 
@@ -459,26 +463,26 @@ def read(infile, chunk, stride, atom_indices):
 def convert(data, in_units, out_units, out_fields):
     # do unit conversion
     if 'xyz' in out_fields and 'xyz' in data:
-        _convert(data['xyz'], in_units, out_units, inplace=True)
+        data['xyz'] = in_units_of(data['xyz'], in_units, out_units, inplace=True)
     if 'box' in out_fields:
         if 'box' in data:
-            _convert(data['box'], in_units, out_units, inplace=True)
+            data['box'] = in_units_of(data['box'], in_units, out_units, inplace=True)
         elif 'cell_angles' in data and 'cell_lengths' in data:
             a, b, c = data['cell_lengths'].T
             alpha, beta, gamma = data['cell_angles'].T
             data['box'] = np.dstack(md.utils.unitcell.lengths_and_angles_to_box_vectors(a, b, c, alpha, beta, gamma))
-            _convert(data['box'], in_units, out_units, inplace=True)
+            data['box'] = in_units_of(data['box'], in_units, out_units, inplace=True)
             del data['cell_lengths']
             del data['cell_angles']
 
     if 'cell_lengths' in out_fields:
         if 'cell_lengths' in data:
-            _convert(data['cell_lengths'], in_units, out_units, inplace=True)
+            data['cell_lengths'] = in_units_of(data['cell_lengths'], in_units, out_units, inplace=True)
         elif 'box' in data:
             a, b, c, alpha, beta, gamma = md.utils.unitcell.box_vectors_to_lengths_and_angles(data['box'][:, 0], data['box'][:, 1], data['box'][:, 2])
             data['cell_lengths'] = np.vstack((a, b, c)).T
             data['cell_angles'] = np.vstack((alpha, beta, gamma)).T
-            _convert(data['cell_lengths'], in_units, out_units, inplace=True)
+            data['cell_lengths'] = in_units_of(data['cell_lengths'], in_units, out_units, inplace=True)
             del data['box']
 
     ignored_keys = ["'%s'" % s for s in set(data) - set(out_fields)]

@@ -28,7 +28,7 @@ except ImportError:
     from distutils import sysconfig
 
 import numpy as np
-from mdtraj.utils.six import iteritems, PY3
+from mdtraj.utils.six import iteritems, PY3, string_types
 
 __all__ = ['cpointer', 'find_library']
 
@@ -81,7 +81,7 @@ def find_library(path, name):
     """Find a shared library
     """
     compiler = new_compiler()
-    if isinstance(path, str):
+    if isinstance(path, string_types):
         path = [path]
     names = [name]
 

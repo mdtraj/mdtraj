@@ -34,12 +34,15 @@ The code is heavily based on amber_netcdf_trajectory_tools.py by John Chodera.
 from __future__ import print_function, division
 # stdlib
 import os
+import socket
 import warnings
+from datetime import datetime
+from distutils.version import StrictVersion
 
 import numpy as np
 from mdtraj import version
 from mdtraj.formats.registry import _FormatRegistry
-from mdtraj.utils import ensure_type, import_, in_units_of, convert, cast_indices
+from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices
 
 __all__ = ['NetCDFTrajectoryFile', 'load_netcdf']
 
@@ -95,17 +98,8 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
         else:
             xyz, time, cell_lengths, cell_angles = f.read(stride=stride, atom_indices=atom_indices)
 
-        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        convert(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
-
-    if isinstance(time, np.ma.masked_array) and np.all(time.mask):
-        # if time is a masked array and all the entries are masked
-        # then we just tread it as if we never found it
-        time = None
-    if isinstance(cell_lengths, np.ma.masked_array) and np.all(cell_lengths.mask):
-        cell_lengths = None
-    if isinstance(cell_angles, np.ma.masked_array) and np.all(cell_angles.mask):
-        cell_angles = None
+        xyz = in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        cell_lengths = in_units_of(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
                             unitcell_lengths=cell_lengths,
@@ -138,20 +132,19 @@ class NetCDFTrajectoryFile(object):
     def __init__(self, filename, mode='r', force_overwrite=True):
         self._closed = True   # is the file currently closed?
         self._mode = mode      # what mode were we opened in
-        netcdf = import_('netCDF4')
+        if StrictVersion(import_('scipy.version').short_version) < StrictVersion('0.8.0'):
+            raise ImportError('MDTraj NetCDF support requires scipy>=0.8.0')
+        netcdf = import_('scipy.io').netcdf_file
 
-        if mode not in ['r', 'w', 'a', 'ws', 'as']:
-            raise ValueError(("mode must be one of ['r', 'w', 'a', 'ws', 'as']"
-                " 'r' indicates read, 'w' indicates write, and 'a' indicates"
-                " append. 'a' and 'w' can be appended with 's', which turns "
-                " off buffering"))
+        if mode not in ['r', 'w']:
+            raise ValueError("mode must be one of ['r', 'w']")
 
         if mode in ['w', 'ws'] and not force_overwrite and os.path.exists(filename):
             raise IOError('"%s" already exists')
 
-        # AMBER uses the NetCDF3 format, with 64 bit encodings
-        self._handle = netcdf.Dataset(filename, mode=mode, format='NETCDF3_64BIT',
-                                      clobber=force_overwrite)
+        # AMBER uses the NetCDF3 format, with 64 bit encodings, which
+        # for scipy.io.netcdf_file is "version=2"
+        self._handle = netcdf(filename, mode=mode, version=2)
         self._closed = False
 
         # self._frame_index is the current frame that we're at in the
@@ -159,20 +152,12 @@ class NetCDFTrajectoryFile(object):
         # self._needs_initialization indicates whether we need to set the
         #     global properties of the file. This is required before the first
         #     write operation on a new file
-        # self._n_atoms is the number of atoms in the file
 
-        if mode in ['a', 'as']:
-            self._frame_index = len(self._handle.dimensions['frame'])
-            self._n_atoms = len(self._handle.dimensions['atom'])
-            self._needs_initialization = False
-        elif mode in ['w', 'ws']:
+        if mode == 'w':
             self._frame_index = 0
-            self._n_atoms = None
-            # self._n_atoms will be set during _initialize_headers call
             self._needs_initialization = True
         elif mode == 'r':
             self._frame_index = 0
-            self._n_atoms = len(self._handle.dimensions['atom'])
             self._needs_initialization = False
         else:
             raise RuntimeError()
@@ -180,12 +165,16 @@ class NetCDFTrajectoryFile(object):
     @property
     def n_atoms(self):
         self._validate_open()
-        return len(self._handle.dimensions['atom'])
+        if self._needs_initialization:
+            raise IOError('The file is uninitialized.')
+        return self._handle.dimensions['atom']
 
     @property
     def n_frames(self):
         self._validate_open()
-        return len(self._handle.dimensions['frame'])
+        if not self._needs_initialization:
+            return self._handle.variables['coordinates'].shape[0]
+        return 0
 
     def _validate_open(self):
         if self._closed:
@@ -227,7 +216,7 @@ class NetCDFTrajectoryFile(object):
         if n_frames is None:
             n_frames = np.inf
 
-        total_n_frames = len(self._handle.dimensions['frame'])
+        total_n_frames = self.n_frames
         frame_slice = slice(self._frame_index, self._frame_index + min(n_frames, total_n_frames), stride)
         if self._frame_index >= total_n_frames:
             # just return something that'll look like len(xyz) == 0
@@ -240,10 +229,10 @@ class NetCDFTrajectoryFile(object):
         else:
             atom_slice = ensure_type(atom_indices, dtype=np.int, ndim=1,
                                      name='atom_indices', warn_on_cast=False)
-            if not np.all(atom_slice < self._n_atoms):
+            if not np.all(atom_slice < self.n_atoms):
                 raise ValueError('As a zero-based index, the entries in '
                     'atom_indices must all be less than the number of atoms '
-                    'in the trajectory, %d' % self._n_atoms)
+                    'in the trajectory, %d' % self.n_atoms)
             if not np.all(atom_slice >= 0):
                 raise ValueError('The entries in atom_indices must be greater '
                     'than or equal to zero')
@@ -251,8 +240,9 @@ class NetCDFTrajectoryFile(object):
         if 'coordinates' in self._handle.variables:
             coordinates = self._handle.variables['coordinates'][frame_slice, atom_slice, :]
         else:
-            raise ValueError('No coordinates found in the NetCDF file. The only'
-                            'variables in the file were %s' % self._handle.variables.keys())
+            raise ValueError('No coordinates found in the NetCDF file. The only '
+                             'variables in the file were %s' % 
+                             self._handle.variables.keys())
 
         if 'time' in self._handle.variables:
             time = self._handle.variables['time'][frame_slice]
@@ -276,7 +266,6 @@ class NetCDFTrajectoryFile(object):
             warnings.warn('cell_angles were found, but no cell_lengths')
 
         self._frame_index = self._frame_index + min(n_frames, total_n_frames)
-
         return coordinates, time, cell_lengths, cell_angles
 
     def write(self, coordinates, time=None, cell_lengths=None, cell_angles=None):
@@ -306,10 +295,10 @@ class NetCDFTrajectoryFile(object):
         if self._mode not in ['w', 'ws', 'a', 'as']:
             raise IOError('The file was opened in mode=%s. Writing is not allowed.' % self._mode)
 
-        coordinates = in_units_of(coordinates, 'angstroms')
-        time = in_units_of(time, 'picoseconds')
-        cell_lengths = in_units_of(cell_lengths, 'angstroms')
-        cell_angles = in_units_of(cell_angles, 'degrees')
+        coordinates = in_units_of(coordinates, None, 'angstroms')
+        time = in_units_of(time, None, 'picoseconds')
+        cell_lengths = in_units_of(cell_lengths, None, 'angstroms')
+        cell_angles = in_units_of(cell_angles, None, 'degrees')
 
         # typecheck all of the input arguments rigorously
         coordinates = ensure_type(coordinates, np.float32, 3, 'coordinates', length=None,
@@ -334,7 +323,11 @@ class NetCDFTrajectoryFile(object):
                                 provided, neglected))
 
         if self._needs_initialization:
-            self._initialize_headers(n_atoms)
+            self._initialize_headers(
+                n_atoms=n_atoms,
+                set_coordinates=True,
+                set_time=(time is not None),
+                set_cell=(cell_lengths is not None and cell_angles is not None))
             self._needs_initialization = False
 
         # this slice object says where we're going to put the data in the
@@ -342,13 +335,30 @@ class NetCDFTrajectoryFile(object):
         frame_slice = slice(self._frame_index, self._frame_index + n_frames)
 
         # deposit the data
-        self._handle.variables['coordinates'][frame_slice, :, :] = coordinates
-        if time is not None:
-            self._handle.variables['time'][frame_slice] = time
-        if cell_lengths is not None:
-            self._handle.variables['cell_lengths'][frame_slice, :] = cell_lengths
-        if cell_angles is not None:
-            self._handle.variables['cell_angles'][frame_slice, :] = cell_angles
+        try:
+            self._handle.variables['coordinates'][frame_slice, :, :] = coordinates
+            if time is not None:
+                self._handle.variables['time'][frame_slice] = time
+            if cell_lengths is not None:
+                self._handle.variables['cell_lengths'][frame_slice, :] = cell_lengths
+            if cell_angles is not None:
+                self._handle.variables['cell_angles'][frame_slice, :] = cell_angles
+        except KeyError as e:
+            raise ValueError("The file that you're trying to save to doesn't "
+                "contain the field %s." % str(e))
+
+        # check for missing attributes
+        missing = None
+        if (time is None and 'time' in self._handle.variables):
+            missing = 'time'
+        elif (cell_angles is None and 'cell_angles' in self._handle.variables):
+            missing = 'cell_angles'
+        elif (cell_lengths is None and 'cell_lengths' in self._handle.variables):
+            missing = 'cell_lengths'
+        if missing is not None:
+            raise ValueError("The file that you're saving to expects each frame "
+                "to contain %s information, but you did not supply it."
+                "I don't allow 'ragged' arrays." % missing)
 
         # update the frame index pointers. this should be done at the
         # end so that if anything errors out, we don't actually get here
@@ -359,16 +369,15 @@ class NetCDFTrajectoryFile(object):
         self._validate_open()
         self._handle.sync()
 
-    def _initialize_headers(self, n_atoms):
+    def _initialize_headers(self, set_coordinates, n_atoms, set_time, set_cell):
         """Initialize the NetCDF file according to the AMBER NetCDF Convention,
         Version 1.0, revision B.
 
-        The convention is defined here: http://ambermd.org/netcdf/nctraj.html
+        The convention is defined here: http://ambermd.org/netcdf/nctraj.xhtml
         """
-        self._n_atoms = n_atoms
-
         # Set attributes.
-        setattr(self._handle, 'title', '')
+        setattr(self._handle, 'title', 'CREATED at %s on %s' %
+            (datetime.now(), socket.gethostname()))
         setattr(self._handle, 'application', 'AMBER')
         setattr(self._handle, 'program', 'MDTraj')
         setattr(self._handle, 'programVersion', version.short_version)
@@ -382,35 +391,40 @@ class NetCDFTrajectoryFile(object):
         self._handle.createDimension('spatial', 3)
         # number of atoms
         self._handle.createDimension('atom', n_atoms)
-        # three spatial coordinates for the length of the unit cell
-        self._handle.createDimension('cell_spatial', 3)
-        # three spatial coordinates for the angles that define the shape
-        # of the unit cell
-        self._handle.createDimension('cell_angular', 3)
-        # length of the longest string used for a label
-        self._handle.createDimension('label', 5)
 
-        # Define variables to store unit cell data
-        self._handle.createVariable('cell_spatial', 'c', ('cell_spatial',))
-        cell_angles = self._handle.createVariable('cell_angular', 'c', ('cell_spatial', 'label'))
-        cell_lengths = self._handle.createVariable('cell_lengths', 'd', ('frame', 'cell_spatial'))
-        setattr(cell_lengths, 'units', 'angstrom')
-        cell_angles = self._handle.createVariable('cell_angles', 'd', ('frame', 'cell_angular'))
-        setattr(cell_angles, 'units', 'degree')
+        if set_cell:
+            # three spatial coordinates for the length of the unit cell
+            self._handle.createDimension('cell_spatial', 3)
+            # three spatial coordinates for the angles that define the shape
+            # of the unit cell
+            self._handle.createDimension('cell_angular', 3)
+            # length of the longest string used for a label
+            self._handle.createDimension('label', 5)
 
-        self._handle.variables['cell_spatial'][0] = 'x'
-        self._handle.variables['cell_spatial'][1] = 'y'
-        self._handle.variables['cell_spatial'][2] = 'z'
+            # Define variables to store unit cell data
+            self._handle.createVariable('cell_spatial', 'c', ('cell_spatial',))
+            cell_angles = self._handle.createVariable('cell_angular', 'c', ('cell_spatial', 'label'))
+            cell_lengths = self._handle.createVariable('cell_lengths', 'd', ('frame', 'cell_spatial'))
+            setattr(cell_lengths, 'units', 'angstrom')
+            cell_angles = self._handle.createVariable('cell_angles', 'd', ('frame', 'cell_angular'))
+            setattr(cell_angles, 'units', 'degree')
 
-        self._handle.variables['cell_angular'][0] = 'alpha'
-        self._handle.variables['cell_angular'][1] = 'beta '
-        self._handle.variables['cell_angular'][2] = 'gamma'
+            self._handle.variables['cell_spatial'][0] = 'x'
+            self._handle.variables['cell_spatial'][1] = 'y'
+            self._handle.variables['cell_spatial'][2] = 'z'
 
-        # Define coordinates and snapshot times.
-        frame_times = self._handle.createVariable('time', 'f', ('frame',))
-        setattr(frame_times, 'units', 'picosecond')
-        frame_coordinates = self._handle.createVariable('coordinates', 'f', ('frame', 'atom', 'spatial'))
-        setattr(frame_coordinates, 'units', 'angstrom')
+            self._handle.variables['cell_angular'][0] = 'alpha'
+            self._handle.variables['cell_angular'][1] = 'beta '
+            self._handle.variables['cell_angular'][2] = 'gamma'
+
+        if set_time:
+            # Define coordinates and snapshot times.
+            frame_times = self._handle.createVariable('time', 'f', ('frame',))
+            setattr(frame_times, 'units', 'picosecond')
+
+        if set_coordinates:
+            frame_coordinates = self._handle.createVariable('coordinates', 'f', ('frame', 'atom', 'spatial'))
+            setattr(frame_coordinates, 'units', 'angstrom')
 
     def seek(self, offset, whence=0):
         """Move to a new file position
@@ -430,7 +444,7 @@ class NetCDFTrajectoryFile(object):
         elif whence == 1:
             self._frame_index = self._frame_index + offset
         elif whence == 2 and offset <= 0:
-            self._frame_index = len(self._handle.dimensions['frame']) + offset
+            self._frame_index = self.n_frames + offset
         else:
             raise IOError('Invalid argument')
 
@@ -465,4 +479,4 @@ class NetCDFTrajectoryFile(object):
     def __len__(self):
         if self._closed:
             raise ValueError('I/O operation on closed file')
-        return len(self._handle.dimensions['frame'])
+        return self.n_frames

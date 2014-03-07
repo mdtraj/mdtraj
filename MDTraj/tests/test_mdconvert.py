@@ -137,9 +137,9 @@ def test_mdconvert_0():
     atom_indices_fn = os.path.join(staging_dir, 'atom_indices.dat')
     np.savetxt(atom_indices_fn, atom_indices, fmt='%d')
 
-    # fns = ['traj.xtc', 'traj.dcd', 'traj.binpos', 'traj.trr', 'traj.nc',
-    #        'traj.pdb', 'traj.h5', 'traj.lh5']
-    fns = ['traj.xtc', 'traj.lh5']
+    fns = ['traj.xtc', 'traj.dcd', 'traj.binpos', 'traj.trr', 'traj.nc',
+           'traj.pdb', 'traj.h5', 'traj.lh5', 'traj.netcdf']
+    # fns = ['traj.lh5', 'traj.netcdf']
 
     for fn in fns:
         path = os.path.join(staging_dir, fn)
@@ -185,9 +185,13 @@ def test_mdconvert_0():
                 out2 = md.load(os.path.join(output_dir, 'subset.' + fn2), **load_kwargs_check2)
                 out3 = md.load(os.path.join(output_dir, 'stride.' + fn2), **load_kwargs_check1)
 
-                eq(out1.xyz, TRAJ.xyz)
-                eq(out2.xyz, TRAJ.xyz[:, atom_indices])
-                eq(out3.xyz, TRAJ.xyz[::3])
+                if ext1 in ['.lh5'] or ext2 in ['.lh5']:
+                    decimal = 3
+                else:
+                    decimal = 6
+                eq(out1.xyz, TRAJ.xyz, decimal=decimal)
+                eq(out2.xyz, TRAJ.xyz[:, atom_indices], decimal=decimal)
+                eq(out3.xyz, TRAJ.xyz[::3], decimal=decimal)
 
                 if ext1 not in ['.binpos', '.lh5'] and ext2 not in ['.binpos', '.lh5']:
                     # binpos doesn't save unitcell information
@@ -218,3 +222,19 @@ def test_mdconvert_0():
 
         if not DEBUG_MODE:
             os.unlink(path)
+
+@slow
+@skipif(not HAVE_SCRIPTTEST)
+def test_mdconvert_1():
+    env = scripttest.TestFileEnvironment(output_dir)
+    command = 'mdconvert %s --top %s -o out.dcd' % (
+        get_fn('alanine-dipeptide-explicit.binpos'),
+        get_fn('alanine-dipeptide-explicit.prmtop'))
+    env.run(command, expect_stderr=True)
+    t = md.load(os.path.join(output_dir, 'out.dcd'), top=get_fn('alanine-dipeptide-explicit.prmtop'))
+    t2 = md.load(get_fn('alanine-dipeptide-explicit.binpos'), top=get_fn('alanine-dipeptide-explicit.prmtop'))
+
+    eq(t.xyz, t2.xyz)
+    eq(t.topology, t2.topology)
+
+    

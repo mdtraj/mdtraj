@@ -1,25 +1,21 @@
 language: c
 
 install:
-  - echo "install"
-  - echo "$python"
-  - tools/ci/apt_install.sh
-  - $python -V
-  - tools/ci/py_install.sh
+  - tools/ci/install.sh
+  - export PYTHONUNBUFFERED=true
 
 script:
-  - echo "script"
-  - $python -V
-  - sudo $python setup.py -q install
-  - pydir=$(which $python); $precmd $(dirname $pydir)/nosetests --with-coverage --cover-erase -vv
+  - export PATH=$HOME/miniconda/envs/$python/bin:$PATH
+  - python -V
+  - python setup.py -q install
+  - pydir=$(which python); $precmd $(dirname $pydir)/nosetests --with-coverage --cover-erase -vv
   - cd tools/c-tests/; make valgrind; cd -
 
 env:
   matrix:
-    - python=python2.6  precmd=''
-    - python=python2.7  precmd=''
-    - python=python3.2  precmd='sudo'
-    - python=python3.3  precmd=''
+    - python=2.6
+    - python=2.7
+    - python=3.3
 
   global:
     # encrypted AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to push documentation to S3

@@ -1,17 +1,16 @@
 .. _getting-started:
 
-***************
-Getting Started
-***************
+************
+Get The Code
+************
 
 Installation
 ============
 
-MDTraj is tested (and passes) on python 2.6, 2.7, 3.2 and 3.3. The
-developers generally use python2.7, on both mac and linux platforms. Automated tests on linux are performed on every incremental update to the code, and release tests are performed on mac, linux and windows.
+MDTraj runs on CPython 2.6, 2.7, 3.2 and 3.3. The developers generally use python2.7, on both mac and linux platforms. Automated tests on linux are performed on every incremental update to the code, and release tests are performed on mac, linux and windows.
 
-With Conda
-----------
+Install with Conda
+------------------
 `conda <http://www.continuum.io/blog/conda>`_ is a python package manager built for scientific python. Unlike ``easy_install`` or ``pip``, it handles binaries and binary dependencies, which are critical for most scientific workflows.
 
 If you're a ``conda`` user, you can install MDTraj by adding rmcgibbo's channel. If you're not a conda user, you should look into it ::
@@ -22,26 +21,26 @@ And then installing with ::
 
     conda install mdtraj
 
-.. note:: ``conda`` will automatically all of the tricky dependencies from binary packages automatically! This includes pytables/netCDF4/numpy/scipy.
+.. note:: ``conda`` will automatically all of the tricky dependencies from binary packages automatically! This includes pytables / numpy / scipy! The easiest way to get conda is with the `Anaconda python distribution <https://store.continuum.io/cshop/anaconda/>`_.
 
 
-With Pip
---------
+Install with Pip
+----------------
 
 On a Mac or Linux machine, just run ::
 
-  pip install mdtraj
+  $ pip install mdtraj
   
 Or, if you want the bleeding-edge source code, use ::
 
-  pip install git+git://github.com/rmcgibbo/mdtraj.git
+  $ pip install git+git://github.com/rmcgibbo/mdtraj.git
 
 On windows, you'll probably want to use the prebuilt binary packages
 hosted on PyPi. Choose the one that is appropriate for your
 version of python.
 
-From Source
------------
+Install from Source
+-------------------
 Clone the source code repository from github::
 
   $ git clone git://github.com/rmcgibbo/mdtraj.git
@@ -51,38 +50,38 @@ https://github.com/rmcgibbo/mdtraj/archive/master.zip. Then, in the directory co
 
   $ python setup.py install
 
-Dependencies
-============
+Get the Dependencies (Not Required with Conda)
+==============================================
 
 MDTraj requires a few external libraries to work properly. Some of them are
-optional. You'll definitely need ``numpy``. You'll also need a working C
-compiler and build environment, to compile the C-level extensions that connect
-the python code to the bit-twiddling C libraries that read and  write most of
+optional. You'll definitely need ``numpy``. If you're compiling from source (as
+opposed to getting MDTraj from conda), you'll also need a working C compiler
+and build environment to compile the C-level extensions that connect
+the python code to the bit-twiddling C libraries that read and write most of
 these binary formats.
 
-Prepackaged Dependencies
-------------------------
+Avoid Hassles with Anaconda or Canopy
+-------------------------------------
 
 The easiest way to get all of the dependencies is to install one of the 
 pre-packaged scientific python distributes like `Enthought's Canopy 
 <https://www.enthought.com/products/canopy/>`_ or `Continuum's Anaconda 
 <https://store.continuum.io/>`_. These distributions already contain all of 
 the dependences, and are distributed via 1-click installers for Windows, Mac 
-and Linux. You won't have to install anything except mdtraj, which can be done, as shown above, with ::
+and Linux.
 
-  pip install mdtraj
-  
-.. note:: On python26, two backported packages, ``argparse`` and ``importlib`` are required.
-You can install them with ``pip install argparse`` and ``pip install importlib``.
+.. note:: I (RTM) personally recommend Continuum's Anaconda. It's free, includes the **AWESOME** conda package manager, and quite simple to use.
 
-Getting Dependency Packages
----------------------------
+On python26, two backported packages, ``argparse`` and ``importlib`` are required. You can install them with ``pip install argparse`` and ``pip install importlib``.
+
+Manually Installing the Dependencies
+------------------------------------
 
 Linux
 ++++++
 If you're on ubuntu and have root, you can install everything through your package manager. ::
 
-  $ sudo apt-get install libhdf5-serial-dev python-dev python-numpy python-nose python-setuptools cython python-numexpr python-tables netcdf-bin libnetcdf-dev python-netcdf python-networkx python-netcdf
+    $ sudo apt-get install libhdf5-serial-dev python-dev python-numpy python-scipy python-nose python-setuptools cython python-numexpr python-tables
 
 Mac
 +++
@@ -94,19 +93,16 @@ samueljohn's tap. ::
   $ brew install numpy
   $ brew install scipy
   $ brew install hdf5
-  $ brew install netcdf
 
 Then, you can install the remaining packages with pip. ::
 
   $ pip install nose numexpr cython tables
-  $ pip install netcdf4
   
 Windows
 +++++++
 Chris Gohlke maintains windows binary distributions for an ever-growing
 set of python extensions on `his website <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_.
-Download and install the the installers for setuptools, nose, numpy, scipy, numexpr, tables,
-and netcdf.
+Download and install the the installers for setuptools, nose, numpy, scipy, numexpr, and tables.
 
 Compiling Dependencies from source (no root needed)
 ---------------------------------------------------
@@ -116,13 +112,17 @@ If you don't already have a python installation you want to use, you can compile
   $ wget http://www.python.org/ftp/python/2.7.5/Python-2.7.5.tgz
   $ tar -xzvf Python-2.7.5.tgz
   $ cd Python-2.7.5
-  $ ./configure --prefix=$HOME/local/python
+  $ ./configure --enable-shared --prefix=$HOME/local/python
   $ make
   $ make install
 
   $ export PATH=$HOME/local/python/bin:$PATH
+  $ export LD_LIBRARY_PATH=$HOME/local/python/lib:$LD_LIBRARY_PATH
 
-To compile the dependences from source, you need to get ``libhdf5``, ``libnetcdf``, and ``numpy``, which can have some BLAS issues. I recommend configuring everything with ``--prefix`` so that you don't get your packages mixed up with system packages. NetCDF4 depends on hdf5, so you need to install HDF5 first. ::
+To  compile  the dependences  from  source,  you  need  to get  ``libhdf5``  and
+``numpy``, which can  have some BLAS issues. I  recommend configuring everything
+with  ``--prefix`` so  that you  don't get  your packages  mixed up  with system
+packages. ::
 
   $ wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.11.tar.gz
   $ tar -xzvf hdf5-1.8.11.tar.gz
@@ -133,18 +133,6 @@ To compile the dependences from source, you need to get ``libhdf5``, ``libnetcdf
 
   $ export LD_LIBRARY_PATH=$HOME/opt/hdf5-1.8.11/lib:$LD_LIBRARY_PATH
   $ export PATH=$HOME/opt/hdf5-1.8.11/bin:$PATH
-
-  $ cd ..
-  $ wget http://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-4.3.0.tar.gz
-  $ tar -xzvf netcdf-4.3.0.tar.gz
-  $ cd netcdf-4.3.0
-  $ CFLAGS="-I$HOME/opt/hdf5-1.8.11/include -L$HOME/opt/hdf5-1.8.11/lib"
-  $ ./configure --prefix=$HOME/opt/netcdf-4.3.0
-  $ make
-  $ make install
-
-  $ export LD_LIBRARY_PATH=$HOME/opt/netcdf-4.3.0/lib:$LD_LIBRARY_PATH
-  $ export PATH=$HOME/opt/netcdf-4.3.0/bin:$PATH
 
 You'll probably want to add those ``export`` statements to your bashrc too.
 
@@ -163,7 +151,6 @@ Now you're home free ::
   $ pip install cython
   $ pip install numexpr
   $ pip install tables
-  $ pip install netcdf4
   $ pip install nose
 
 Testing Your Installation

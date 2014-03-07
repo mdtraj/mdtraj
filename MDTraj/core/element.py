@@ -123,12 +123,14 @@ class Element(tuple):
 
     def __getitem__(self, item):
         raise TypeError
-    
+
     def __str__(self):
         return self.name
 
+    @property
     def atomic_number(self):
-        return self.number
+        return tuple.__getitem__(self, 0)
+
 
 # This is for backward compatibility.
 def get_by_symbol(symbol):

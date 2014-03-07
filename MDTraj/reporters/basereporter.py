@@ -234,7 +234,6 @@ class _BaseReporter(object):
         if self._velocities:
             kwargs['velocities'] = state.getVelocities(asNumpy=True)[self._atomSlice, :]
 
-
         self._traj_file.write(*args, **kwargs)
         # flush the file to disk. it might not be necessary to do this every
         # report, but this is the most proactive solution. We don't want to

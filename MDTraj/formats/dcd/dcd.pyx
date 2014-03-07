@@ -32,13 +32,14 @@ import os
 import numpy as np
 cimport numpy as np
 np.import_array()
-from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.utils import ensure_type, cast_indices, in_units_of
+from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import _FormatRegistry
 from libc.stdlib cimport malloc, free
 from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
 from dcdlib cimport open_dcd_write, close_file_write, write_timestep
-from dcdlib cimport dcd_nsets
+from dcdlib cimport dcd_nsets, dcd_rewind
 
 
 ##############################################################################
@@ -69,8 +70,13 @@ cdef ERROR_MESSAGES = {
 
 @_FormatRegistry.register_loader('.dcd')
 def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
-    """Load an xtc file. Since the dcd format doesn't contain information
-    to specify the topology, you need to supply a pdb_filename
+    """load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None)
+
+    Load an DCD file from disk.
+
+    The .dcd format is a cross-platform compressed binary trajectory format
+    produced by many software packages, including CHARMM, NAMD, and OpenMM. It
+    stores atomic coordinates, box vectors, and time information.
 
     Parameters
     ----------
@@ -120,7 +126,7 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_dcd')
 
-    if not isinstance(filename, str):
+    if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_trr. '
             'you supplied %s' % type(filename))
 
@@ -136,8 +142,8 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
         else:
             xyz, box_length, box_angle = f.read(stride=stride, atom_indices=atom_indices)
 
-        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        convert(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     time = np.arange(len(xyz))
     if frame is not None:
@@ -207,6 +213,9 @@ cdef class DCDTrajectoryFile:
     cdef char* filename
     cdef int is_open, _needs_write_initialization
     cdef molfile_timestep_t* timestep
+    # does this file have unitcell info? set during _initialize_write
+    # for mode='w' to 0 or 1.
+    cdef int with_unitcell
     cdef readonly char* distance_unit
 
     def __cinit__(self, char* filename, char* mode='r', force_overwrite=True):
@@ -219,13 +228,13 @@ cdef class DCDTrajectoryFile:
         if str(mode) == 'r':
             self.filename = filename
             self.fh = open_dcd_read(filename, "dcd", &self.n_atoms, &self.n_frames)
+            if self.fh is NULL:
+                raise IOError("Could not open file: %s" % filename)
             assert self.n_atoms > 0, 'DCD Corruption: n_atoms was not positive'
             assert self.n_frames >= 0, 'DCD corruption: n_frames < 0'
             # we're at the beginning of the file now
             self.frame_counter = 0
             self.is_open = True
-            if self.fh is NULL:
-                raise IOError('There was an error opening the file: %s' % filename)
         elif str(mode) == 'w':
             self.filename = filename
             self._needs_write_initialization = 1
@@ -245,7 +254,7 @@ cdef class DCDTrajectoryFile:
         free(self.timestep)
         self.close()
 
-    def _initialize_write(self, int n_atoms):
+    def _initialize_write(self, int n_atoms, int with_unitcell):
         """We don't actually want to open the dcd file during write mode
         until we know how many atoms the user wants to save. so this
         is delayed until the first call to write()
@@ -253,7 +262,8 @@ cdef class DCDTrajectoryFile:
         assert not self.is_open and self._needs_write_initialization
 
         self.n_atoms = n_atoms
-        self.fh = open_dcd_write(self.filename, "dcd", self.n_atoms)
+        self.with_unitcell = with_unitcell
+        self.fh = open_dcd_write(self.filename, "dcd", self.n_atoms, with_unitcell)
         if self.fh is NULL:
             raise IOError('There was an error opening the file: %s' % self.filename)
         self.is_open = True
@@ -261,7 +271,8 @@ cdef class DCDTrajectoryFile:
         self._needs_write_initialization = False
 
     def close(self):
-        "Close the DCD file handle"
+        """Close the DCD file handle
+        """
         if self.is_open and self.fh is not NULL:
             if str(self.mode) == 'r':
                 close_file_read(self.fh)
@@ -272,7 +283,9 @@ cdef class DCDTrajectoryFile:
         self._needs_write_initialization = False
 
     def seek(self, offset, whence=0):
-        """Move to a new file position
+        """seek(offset, whence=0)
+
+        Move to a new file position
 
         Parameters
         ----------
@@ -308,8 +321,10 @@ cdef class DCDTrajectoryFile:
             for i in range(advance):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
         elif absolute is not None:
-            close_file_read(self.fh)
-            self.fh = open_dcd_read(self.filename, "dcd", &self.n_atoms, &self.n_frames)
+            result = dcd_rewind(self.fh)
+            if result != 0:
+                raise IOError("Error seeking in %s" % self.filename)
+
             for i in range(absolute):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
             self.frame_counter = absolute
@@ -443,6 +458,15 @@ cdef class DCDTrajectoryFile:
             for j in range(_stride - 1):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
 
+        if np.all(cell_lengths < 1e-10):
+            # in the DCD C code, if there's unitcell information inside the
+            # DCD file, it just sets them to length=0 and angle=90. Other tools
+            # like VMD explicitly write length=0 and angle=90 into their
+            # DCD files. In both cases, we detect that indicate the
+            # information's absense
+            cell_lengths = None
+            cell_angles = None
+
         if status == _DCD_SUCCESS:
             # if we're done either because of we read all of the n_frames
             # requested succcessfully, return
@@ -454,8 +478,9 @@ cdef class DCDTrajectoryFile:
             # to truncate the return arrays -- we don't want to return them
             # a big stack of zeros.
             xyz = xyz[0:i]
-            cell_lengths = cell_lengths[0:i]
-            cell_angles = cell_angles[0:i]
+            if cell_lengths is not None and cell_angles is not None:
+                cell_lengths = cell_lengths[0:i]
+                cell_angles = cell_angles[0:i]
 
             return xyz, cell_lengths, cell_angles
 
@@ -491,24 +516,31 @@ cdef class DCDTrajectoryFile:
                           add_newaxis_on_deficient_ndim=True)
         n_frames = len(xyz)
 
+        # they must be both present or both absent
+        if cell_lengths is None and cell_angles is not None:
+            raise ValueError('cell_lengths were given, but no cell_angles')
+        if cell_lengths is not None and cell_angles is None:
+            raise ValueError('cell_angles were given, but no cell_lengths')
+
         cell_lengths = ensure_type(cell_lengths, dtype=np.float32, ndim=2, name='cell_lengths',
                                    can_be_none=True, shape=(n_frames, 3), add_newaxis_on_deficient_ndim=True,
                                    warn_on_cast=False)
-        if cell_lengths is None:
-            cell_lengths = np.ones((n_frames, 3), dtype=np.float32)
-
         cell_angles = ensure_type(cell_angles, dtype=np.float32, ndim=2, name='cell_angles',
                                   can_be_none=True, shape=(n_frames, 3), add_newaxis_on_deficient_ndim=True,
                                   warn_on_cast=False)
-        if cell_angles is None:
-            cell_angles = 90.0 * np.ones((n_frames, 3), dtype=np.float32)
-
 
         if self._needs_write_initialization:
-            self._initialize_write(xyz.shape[1])
+            self._initialize_write(xyz.shape[1], (cell_lengths is not None) and (cell_angles is not None))
         else:
             if not self.n_atoms == xyz.shape[1]:
                 raise ValueError('Number of atoms doesnt match')
+            if cell_lengths is None and self.with_unitcell:
+                raise ValueError("The file that you're saving to expects each frame "
+                    "to contain unitcell information, but you did not supply it.")
+            if cell_lengths is not None and not self.with_unitcell:
+                raise ValueError("The file that you're saving to was created without "
+                    "unitcell information.")
+
         self._write(xyz, cell_lengths, cell_angles)
 
     cdef _write(self, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz,
@@ -523,12 +555,18 @@ cdef class DCDTrajectoryFile:
 
         for i in range(n_frames):
             self.timestep.coords = &xyz[i, 0, 0]
-            self.timestep.A = cell_lengths[i, 0]
-            self.timestep.B = cell_lengths[i, 1]
-            self.timestep.C = cell_lengths[i, 2]
-            self.timestep.alpha = cell_angles[i, 0]
-            self.timestep.beta  = cell_angles[i, 1]
-            self.timestep.gamma = cell_angles[i, 2]
+            if cell_angles is not None and cell_lengths is not None:
+                self.timestep.A = cell_lengths[i, 0]
+                self.timestep.B = cell_lengths[i, 1]
+                self.timestep.C = cell_lengths[i, 2]
+                self.timestep.alpha = cell_angles[i, 0]
+                self.timestep.beta  = cell_angles[i, 1]
+                self.timestep.gamma = cell_angles[i, 2]
+            # when the dcd handle is opened during initialize_write,
+            # it passes the flag for whether the unitcell information is written
+            # to disk or not. So when we don't have unitcell information being
+            # written, the unitcell fields (A,B,C,alpha,beta,gamma) are ignored
+            # during write_timestep()
 
             status = write_timestep(self.fh, self.timestep)
 

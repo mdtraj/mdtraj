@@ -117,3 +117,5 @@ def test_nonconsective_resSeq():
     t2 = md.load(fname)
     yield lambda : eq(df1[0], t2.top.to_dataframe()[0])
     os.unlink(fname)
+    
+    

@@ -34,7 +34,8 @@ import os
 import numpy as np
 cimport numpy as np
 np.import_array()
-from mdtraj.utils import ensure_type, cast_indices, convert
+from mdtraj.utils import ensure_type, cast_indices, in_units_of
+from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import _FormatRegistry
 from libc.stdlib cimport malloc, free
 from binposlib cimport molfile_timestep_t
@@ -57,7 +58,13 @@ cdef int _BINPOS_EOF = -1  # end of file (or error)
 
 @_FormatRegistry.register_loader('.binpos')
 def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
-    """Load an AMBER BINPOS file.
+    """load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None)
+
+    Load an AMBER .binpos file from disk.
+
+    The .binpos format is a cross-platform binary trajectory format produced by
+    AMBER software. It stores only the atomic coordinates, and does *not* store
+    any unit cell informations. Its use is discouraged.
 
     Parameters
     ----------
@@ -98,7 +105,7 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.BINPOSTrajectoryFile :  Low level interface to BINPOS files
     """
-    from mdtraj.core.trajectory import _parse_topology, Trajectory
+    from mdtraj.trajectory import _parse_topology, Trajectory
     
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a
@@ -107,7 +114,7 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_binpos')
 
-    if not isinstance(filename, str):
+    if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_binpos. '
             'you supplied %s' % type(filename))
 
@@ -123,7 +130,7 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
         else:
             xyz = f.read(stride=stride, atom_indices=atom_indices)
 
-        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     time = np.arange(len(xyz))
     if frame is not None:
@@ -131,7 +138,8 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
     elif stride is not None:
         time *= stride
 
-    return Trajectory(xyz=xyz, topology=topology, time=time)
+    value = Trajectory(xyz=xyz, topology=topology, time=time)
+    return value
 
 
 cdef class BINPOSTrajectoryFile:
@@ -244,7 +252,7 @@ cdef class BINPOSTrajectoryFile:
         self.is_open = True
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
-        """read(n_frames=None, stride=None, atom_indices=1)
+        """read(n_frames=None, stride=None, atom_indices=None)
 
         Read data from a BINPOS file
 
@@ -362,7 +370,9 @@ cdef class BINPOSTrajectoryFile:
                 raise RuntimeError("BINPOS Error: %s" % status)
 
     def seek(self, int offset, int whence=0):
-        """Move to a new file position
+        """seek(offset, whence=0)
+
+        Move to a new file position
 
         Parameters
         ----------

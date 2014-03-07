@@ -40,6 +40,7 @@ from mdtraj.formats.binpos import load_binpos
 from mdtraj.formats.pdb import load_pdb
 from mdtraj.formats.arc import load_arc
 from mdtraj.formats.openmmxml import load_xml
+from mdtraj.formats.prmtop import load_prmtop
 
 from mdtraj.core import element
 from mdtraj._rmsd import rmsd

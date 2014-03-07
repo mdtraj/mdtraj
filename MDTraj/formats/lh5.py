@@ -34,7 +34,7 @@ import numpy as np
 from mdtraj.core import element as elem
 from mdtraj.utils.six import iteritems, PY3, u
 from mdtraj.formats.registry import _FormatRegistry
-from mdtraj.utils import import_, ensure_type, convert, cast_indices
+from mdtraj.utils import import_, ensure_type, in_units_of, cast_indices
 from mdtraj.formats.hdf5 import ensure_mode
 
 MAXINT16 = np.iinfo(np.int16).max
@@ -79,11 +79,12 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
         element_symbol = atom_name.lstrip('0123456789')[0]
         
         try:
-            element = elem.get_by_symbol(element_symbol)
+            element = mdtraj.pdb.element.get_by_symbol(element_symbol)
         except KeyError:
             element = None
         
-        topology.add_atom(atom_name, element, registered_residues[ResidueID[i]])
+        topology.add_atom(atom_name, element,
+                          registered_residues[ResidueID[i]])
 
     topology.create_standard_bonds()
     return topology
@@ -152,7 +153,7 @@ def load_lh5(filename, top=None, stride=None, atom_indices=None, frame=None):
             xyz = f.read(stride=stride, atom_indices=atom_indices)
 
         topology = f.topology
-        convert(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
         if atom_indices is not None:
             topology = f.topology.subset(atom_indices)
