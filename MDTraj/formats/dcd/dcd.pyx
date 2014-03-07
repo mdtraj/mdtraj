@@ -99,15 +99,15 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     Examples
     --------
-    >>> import mdtraj as md                                        # doctest: +SKIP
-    >>> traj = md.load_dcd('output.dcd', top='topology.pdb')       # doctest: +SKIP
-    >>> print traj                                                 # doctest: +SKIP
-    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>  # doctest: +SKIP
+    >>> import mdtraj as md
+    >>> traj = md.load_dcd('output.dcd', top='topology.pdb')
+    >>> print traj
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>
 
-    >>> traj2 = md.load_dcd('output.dcd', stride=2, top='topology.pdb')   # doctest: +SKIP
-    >>> print traj2                                                       # doctest: +SKIP
-    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>         # doctest: +SKIP
-    
+    >>> traj2 = md.load_dcd('output.dcd', stride=2, top='topology.pdb')
+    >>> print traj2
+    <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>
+
     Returns
     -------
     trajectory : md.Trajectory
@@ -118,7 +118,7 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     mdtraj.DCDTrajectoryFile :  Low level interface to DCD files
     """
     from mdtraj.core.trajectory import _parse_topology, Trajectory
-    
+
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a
     # dispatch from load(), where top comes from **kwargs. So if its not supplied

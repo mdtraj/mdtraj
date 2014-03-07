@@ -36,7 +36,7 @@ from argparse import ArgumentParser
 
 import numpy as np
 import mdtraj as md
-from mdtraj.core.trajectory import_parse_topology
+from mdtraj.core.trajectory import _parse_topology
 from mdtraj.utils import in_units_of
 from mdtraj.utils.six import iteritems
 

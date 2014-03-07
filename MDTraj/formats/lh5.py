@@ -79,7 +79,7 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
         element_symbol = atom_name.lstrip('0123456789')[0]
         
         try:
-            element = mdtraj.pdb.element.get_by_symbol(element_symbol)
+            element = elem.get_by_symbol(element_symbol)
         except KeyError:
             element = None
         

@@ -42,7 +42,10 @@ from mdtraj.formats import LH5TrajectoryFile
 from mdtraj.formats import PDBTrajectoryFile
 from mdtraj.formats import MDCRDTrajectoryFile
 from mdtraj.formats import ArcTrajectoryFile
+from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.core.topology import Topology
+from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_vectors, 
+                          box_vectors_to_lengths_and_angles, cast_indices)
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3, string_types
 from mdtraj import _rmsd

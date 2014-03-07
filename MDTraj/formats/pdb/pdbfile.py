@@ -48,8 +48,8 @@ import os
 import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy
-from mdtraj.pdb.pdbstructure import PdbStructure
-from mdtraj.topology import Topology
+from mdtraj.formats.pdb.pdbstructure import PdbStructure
+from mdtraj.core.topology import Topology
 from mdtraj.utils import ilen, cast_indices, in_units_of
 from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.core import element as elem

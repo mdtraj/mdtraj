@@ -105,7 +105,7 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.BINPOSTrajectoryFile :  Low level interface to BINPOS files
     """
-    from mdtraj.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology, Trajectory
     
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a

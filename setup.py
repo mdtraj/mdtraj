@@ -231,7 +231,7 @@ def detect_sse41():
 xtc = Extension('mdtraj.formats.xtc',
                 sources=['MDTraj/formats/xtc/src/xdrfile.c',
                          'MDTraj/formats/xtc/src/xdrfile_xtc.c',
-                         'MDTraj/formats/xtc/xtc.pyx],
+                         'MDTraj/formats/xtc/xtc.pyx'],
                 include_dirs=['MDTraj/formats/xtc/include/',
                               'MDTraj/formats/xtc/', numpy.get_include()])
 

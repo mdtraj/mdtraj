@@ -1,4 +1,6 @@
+export PATH=$HOME/miniconda/bin:$PATH
 export PATH=$HOME/miniconda/envs/$python/bin:$PATH
+
 PYTHON_VERSION=`python -c 'import sys; print("%d.%d" % sys.version_info[:2])'`
 coveralls
 
@@ -16,7 +18,7 @@ if [[ "$TRAVIS_BRANCH" != "master" ]]; then
 fi
 
 # Create the docs and push them to S3
-conda install --yes matplotlib scikit-learn sphinx boto ipython-notebook
+conda install --yes matplotlib scikit-learn sphinx boto ipython-notebook jinja2
 sudo apt-get install -qq pandoc              # notebook -> rst
 sudo pip install runipy                      # example notebooks
 cd docs && make html && cd -

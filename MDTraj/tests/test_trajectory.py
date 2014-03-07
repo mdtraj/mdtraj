@@ -27,7 +27,7 @@ from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises, Ski
 import numpy as np
 import mdtraj as md
 import mdtraj.utils
-from mdtraj.utils.six import PY3
+from mdtraj.utils import six
 from mdtraj.utils.six.moves import xrange
 from mdtraj.core import element
 
@@ -226,7 +226,7 @@ def test_float_atom_indices_exception():
         try:
             md.load(fn, atom_indices=[0.5, 1.3], top=top)
         except ValueError as e:
-            if PY3:
+            if six.PY3:
                 assert e.args[0] == 'indices must be of an integer type. float64 is not an integer type'
             else:
                 assert e.message == 'indices must be of an integer type. float64 is not an integer type'
@@ -253,8 +253,8 @@ def test_array_vs_matrix():
     top = md.load(get_fn('native.pdb')).topology
     xyz = np.random.randn(1, 22, 3)
     xyz_mat = np.matrix(xyz)
-    t1 = mdtraj.trajectory.Trajectory(xyz, top)
-    t2 = mdtraj.trajectory.Trajectory(xyz_mat, top)
+    t1 = md.Trajectory(xyz, top)
+    t2 = md.Trajectory(xyz_mat, top)
 
     eq(t1.xyz, xyz)
     eq(t2.xyz, xyz)
@@ -446,7 +446,7 @@ def test_length():
 def test_unitcell():
     # make sure that bogus unitcell vecotrs are not saved
     top = md.load(get_fn('native.pdb')).restrict_atoms(range(5)).topology
-    t = Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
+    t = md.Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
 
     #           xtc    dcd   binpos  trr    h5     pdb    nc     lh5
     for fn in [temp1, temp2, temp3, temp4, temp5, temp6, temp6, temp8]:
