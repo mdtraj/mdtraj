@@ -300,7 +300,7 @@ class Topology(object):
             for residue in chain.residues():
                 r = out.add_residue(residue.name, c)
                 for atom in residue.atoms():
-                    a = out.add_atom(atom.name, element.get_by_symbol(atom.element.symbol), r)
+                    a = out.add_atom(atom.name, elem.get_by_symbol(atom.element.symbol), r)
                     atom_mapping[atom] = a
 
         for a1, a2 in value.bonds():
