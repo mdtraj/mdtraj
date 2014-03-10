@@ -4,6 +4,24 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v0.8.0 (March 10, 2014)
+-----------------------
+- New parser for AMBER PRMTOP topology files.
+- Removed dependency on netCDF4 and the c libnetcdf. We're now exclusively using
+the pure python NetCDF3 implementation in ``scipy.io``, which is now a dependency.
+- Removed dependency on ``simtk.unit`` as an external package
+- Fixed a behavior where "default" unit cell dimensions were being saved in trajectories without periodic boundary conditions in XTC, DCD and TRR, which when loaded up later were interpreted as being "real" periodic boundary conditions.
+- Better ResSeq preservation in HDF5 files.
+- More detailed ``repr`` and ``str`` on ``Trajectory``.
+- Load pdb files directly from a URL.
+- Unicode fixes for python3.
+- Bugfixes in OpenMM reporters
+- New theme for the documentation with IPython notebooks for the examples
+- Improvements to ``DCD seek()``
+- Reorganized the internal layout of the code for easier navigation, IPython tab completion.
+
+Thanks to everyone who contributed to this release: Robert T. McGibbon, Kyle A. Beauchamp, Carlos Hernandez, TJ Lane, Gert Kiss, and Matt Harrigan.
+
 v0.7.0 (February 21, 2014)
 --------------------------
 - New geometry functions ``md.compute_contacts`` and ``md.geometry.squareform`` for residue-residue contact maps
