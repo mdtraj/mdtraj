@@ -562,6 +562,12 @@ class Trajectory(object):
         """
         return self._topology
 
+    @top.setter
+    def top(self, value):
+        "Set the topology of the system, describing the organization of atoms into residues, bonds, etc"
+        # todo: more typechecking
+        self._topology = value
+
     @property
     def timestep(self):
         """Timestep between frames, in picoseconds
