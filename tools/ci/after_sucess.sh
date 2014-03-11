@@ -18,8 +18,16 @@ if [[ "$TRAVIS_BRANCH" != "master" ]]; then
 fi
 
 # Create the docs and push them to S3
+# -----------------------------------
+
+# Install stuff for running the example IPython notebooks
 sudo apt-get install -qq pandoc         # notebook -> rst
 conda install --yes matplotlib scikit-learn sphinx boto ipython-notebook jinja2
 pip install runipy                      # example notebooks
+
+# Install OpenMM for a couple of the the examples
+conda config --add channels http://conda.binstar.org/rmcgibbo
+conda install --yes openmm
+
 cd docs && make html && cd -
 python tools/ci/push-docs-to-s3.py
