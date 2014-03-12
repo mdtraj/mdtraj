@@ -63,11 +63,12 @@ def parse_args():
     #parser.add_argument('-n', '--noload', action='store_true', help='''Do not load the coordinate data from the trajectory, for example if the trajectory is too large to load into memory. Only a limited number of checks will be done.''')
     parser.add_argument('--bond-low', type=float, help='''Minimum fraction of sum of covalent radii for bonded atoms. Default=0.4''', default=0.4)
     parser.add_argument('--bond-high', type=float, help='''Maximum fraction of sum of covalent radii for bonded atoms. Default=1.2''', default=1.2)
+    parser.add_argument('--per-err', type=float, help='''Maximum tolerance for percent change in RMSD. Default=1.0''', default=1.0)
     return parser.parse_args(), parser
 
 
 def main(args, parser):
-    inspector = Inspector(args.bond_low, args.bond_high)
+    inspector = Inspector(args.bond_low, args.bond_high,args.per_err)
     for f in sorted(args.files, cmp=cmp_pdb):
         if not os.path.exists(f):
             parser.error("File '%s' does not exist" % f)
@@ -97,7 +98,7 @@ def cmp_pdb(a, b):
 
 
 class Inspector(object):
-    def __init__(self, bond_low, bond_high):
+    def __init__(self, bond_low, bond_high,per_err):
         self._printed_section = False
         self.t = None
         self.fn = None
@@ -105,6 +106,7 @@ class Inspector(object):
 
         self.bond_low = bond_low
         self.bond_high = bond_high
+        self.per_err = per_err
 
     def load(self, fn):
         self.fn = fn
@@ -201,6 +203,11 @@ class Inspector(object):
             names = [q.residue.name + ' ' + q.name for q in self.t.topology.atoms]
             self.log('Frame %d: closest nb dist between '
                      '%d (%s), %d (%s), at d=%.4f nm' % (i, a, names[a], b, names[b], dist[a, b]))
+    def check_imaging(self):
+        if self.t.n_frames>2:
+            r = md.rmsd(target=self.t,reference=self.t.slice(0))
+            if True in np.divide(np.abs(r[2:]-r[1:-1]),r[1:-1])>self.per_err:
+                self.log('Potential imaging issue:' + self.fn)
 
 def entry_point():
     args, parser = parse_args()
