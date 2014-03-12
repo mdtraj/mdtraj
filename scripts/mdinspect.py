@@ -62,7 +62,7 @@ def parse_args():
     parser.add_argument('-t', '--topology', type=str, help='''Topology for the system (.prmtop/.pdb)''')
     parser.add_argument('--bond-low', type=float, help='''Minimum fraction of sum of covalent radii for bonded atoms. Default=0.4''', default=0.4)
     parser.add_argument('--bond-high', type=float, help='''Maximum fraction of sum of covalent radii for bonded atoms. Default=1.2''', default=1.2)
-    parser.add_argument('--rmsd-tolerance', type=float, help='''Maximum tolerance for percent change in RMSD. Default=1.0''', default=1.0)
+    parser.add_argument('--rmsd-tolerance', type=float, help='''Maximum tolerance for percent change in RMSD. Default=100.0''', default=100.0)
     return parser.parse_args(), parser
 
 
