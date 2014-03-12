@@ -200,9 +200,9 @@ class Inspector(object):
             r = md.rmsd(target=self.t, reference=self.t[0])
             percent_change = np.divide(np.abs(r[2:]-r[1:-1]), r[1:-1]) * 100.0
             if np.any(percent_change > self.rmsd_tolerance):
-                self.log('Potential imaging issue:' + self.fn)
+                self.log('Potential imaging issue: %s' % self.fn)
             else:
-                self.log('No imagine issue detected')
+                self.log('No imaging issue detected')
 
 
 def entry_point():
