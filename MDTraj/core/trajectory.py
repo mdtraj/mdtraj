@@ -761,6 +761,18 @@ class Trajectory(object):
     def __repr__(self):
         return "<%s at 0x%02x>" % (self._string_summary_basic(), id(self))
 
+    def _repr_html_(self):
+        import mdtraj.utils
+        import shutil
+        self.save_pdb('.tempfile.pdb')
+        path = os.path.join(mdtraj.utils.__path__[0], 'static', 'JMol_template.html')
+        shutil.copy(path, '.JMol_template.html')
+
+        s = '''<object type="text/html" data="files/.JMol_template.html"
+        style="width:{width}; height:{height}; margin:1%;">
+        </object>'''.format(width='400px', height='400px')
+        return s
+
     # def describe(self):
     #     """Diagnostic summary statistics on the trajectory"""
     #     # What information do we want to display?
