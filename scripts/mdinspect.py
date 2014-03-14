@@ -39,6 +39,7 @@ import numpy as np
 import mdtraj as md
 from mdtraj.utils import import_, ilen
 from mdtraj.geometry.internal import COVALENT_RADII
+from mdtraj.core.trajectory import _parse_topology
 
 spatial = import_('scipy.spatial')
 
@@ -56,81 +57,68 @@ class NoTopologyError(Exception):
 def parse_args():
     parser = ArgumentParser(description=__doc__)
     parser.add_argument('files', nargs='+', help='''Input trajectory file(s),
-        in any supported format. The files are assumed to be different
-        trajectories for the same system. One or more of the trajectory
-        files should contain topology information (i.e. one of the files
-        should be either a PDB or HDF5)''')
-    #parser.add_argument('-n', '--noload', action='store_true', help='''Do not load the coordinate data from the trajectory, for example if the trajectory is too large to load into memory. Only a limited number of checks will be done.''')
+        in any supported format.''')
+    # parser.add_argument('-n', '--noload', action='store_true', help='''Do not load the coordinate data from the trajectory, for example if the trajectory is too large to load into memory. Only a limited number of checks will be done.''')
+    parser.add_argument('-t', '--topology', type=str, help='''Topology for the system (.prmtop/.pdb)''')
     parser.add_argument('--bond-low', type=float, help='''Minimum fraction of sum of covalent radii for bonded atoms. Default=0.4''', default=0.4)
     parser.add_argument('--bond-high', type=float, help='''Maximum fraction of sum of covalent radii for bonded atoms. Default=1.2''', default=1.2)
+    parser.add_argument('--rmsd-tolerance', type=float, help='''Maximum tolerance for percent change in RMSD. Default=100.0''', default=100.0)
     return parser.parse_args(), parser
 
 
 def main(args, parser):
-    inspector = Inspector(args.bond_low, args.bond_high)
-    for f in sorted(args.files, cmp=cmp_pdb):
+    inspector = Inspector(args.bond_low, args.bond_high, args.rmsd_tolerance)
+
+    topology_files = [fn for fn in args.files if os.path.splitext(fn)[1] in ['.pdb', '.prmtop', '.h5']]
+    if args.topology is None and len(topology_files) > 0:
+        args.topology = topology_files[0]
+
+    inspector.load_topology(args.topology)
+
+    for f in args.files:
         if not os.path.exists(f):
             parser.error("File '%s' does not exist" % f)
         if not os.path.isfile(f):
             parser.error("File '%s' is not a file" % f)
 
-        try:
-            inspector.load(f)
-        except NoTopologyError as e:
-            parser.error(str(e))
-
-
-def cmp_pdb(a, b):
-    """String comparision function, for sorting, that puts things
-    ending in .pdb at the beginning"""
-    if a.endswith('.pdb') and b.endswith('.pdb'):
-        return 0
-    if a.endswith('.pdb'):
-        return -1
-    if b.endswith('.pdb'):
-        return 1
-    if a < b:
-        return -1
-    if a > b:
-        return 1
-    return 0
+        inspector.load_trajectory(f)
 
 
 class Inspector(object):
-    def __init__(self, bond_low, bond_high):
+    def __init__(self, bond_low, bond_high, rmsd_tolerance):
         self._printed_section = False
         self.t = None
         self.fn = None
-        self.top = None
 
         self.bond_low = bond_low
         self.bond_high = bond_high
-
-    def load(self, fn):
-        self.fn = fn
-        ext = os.path.splitext(fn)[1]
-
-        if self.top is not None or ext in ['.pdb', '.h5']:
-            self.load_topology(fn)
-        else:
-            self.load_no_topology(fn)
+        self.rmsd_tolerance = rmsd_tolerance
 
     def load_topology(self, fn):
+        self.fn = fn
+        self.topology = _parse_topology(fn)
+        self.check_topology()
+
+    def load_trajectory(self, fn):
+        self.fn = fn
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            self.t = md.load(fn, top=self.top)
-            self.top = self.t.topology
+            self.t = md.load(fn, top=self.topology)
 
+        self.check_shape()
         self.check_unitcell()
-        self.check_topology()
         self.check_bonds()
-        self.check_positions()
+        self.check_nonbonded()
+        self.check_imaging()
 
-    def load_no_topology(self, fn):
-        raise NoTopologyError()
+    def check_shape(self):
+        self.section('Shape')
+        self.log('Number of frames: %d' % self.t.xyz.shape[0])
+        self.log('Number of atoms:  %d' % self.t.xyz.shape[1])
 
     def check_unitcell(self):
-        self.section('unitcell')
+        self.section('Unitcell')
         if not self.t._have_unitcell:
             self.log('No unitcell information')
         else:
@@ -140,36 +128,42 @@ class Inspector(object):
 
     def check_topology(self):
         self.section('topology')
-        self.log('Number of Atoms:    %d' % ilen(self.t.topology.atoms))
-        self.log('Number of Residues: %d' % ilen(self.t.topology.residues))
-        self.log('Number of Chains:   %d' % ilen(self.t.topology.chains))
-        self.log('Residue names:      %s' % str([r.name for r in self.t.topology.residues]))
-        self.log('Unique atom names:  %s' % np.unique([a.name for a in self.t.topology.atoms]))
-
-        # print number of atoms of each element, number of residues of each type?
+        self.log('Number of Atoms:    %d' % ilen(self.topology.atoms))
+        self.log('Number of Residues: %d' % ilen(self.topology.residues))
+        self.log('Number of Chains:   %d' % ilen(self.topology.chains))
+        self.log('Residues:           %s' % ', '.join(['%s (%d atoms)' % (r, ilen(r.atoms)) for r in self.topology.residues]))
+        self.log('Unique atom names:  %s' % ', '.join(np.unique([a.name for a in self.topology.atoms])))
 
     def check_bonds(self):
-        self.section("Bond Check")
-        self.log("Note: PBCs are currently not taken into account during distance check")
-        error = False
+        self.section("Bond Check (without PBCs)")
 
-        for i in range(min(5, self.t.n_frames)):
-            #dist = spatial.distance.squareform(spatial.distance.pdist(self.t.xyz[i]))
-            for (a, b) in self.t.topology.bonds:
-                try:
-                    radsum = COVALENT_RADII[a.element.symbol] + COVALENT_RADII[b.element.symbol]
-                except KeyError:
-                    raise NotImplementedError("I don't have radii information for all of your atoms")
+        radii = []
+        pairs = []
+        for (a, b) in self.topology.bonds:
+            try:
+                radsum = COVALENT_RADII[a.element.symbol] + COVALENT_RADII[b.element.symbol]
+            except KeyError:
+                raise NotImplementedError("I don't have radii information for all of your atoms")
+            radii.append(radsum)
+            pairs.append((a.index, b.index))
 
-                low, high = self.bond_low * radsum, self.bond_high * radsum
-                dist = spatial.distance.euclidean(self.t.xyz[i, a.index], self.t.xyz[i, b.index])
-                if not (low < dist < high):
-                    error = True
-                    self.log('error: atoms %d (%s) and %d (%s) are bonded according '
-                            'to the topology but they are a distance of '
-                            '%.3f nm apart in frame %d' % (a.index, a.name, b.index, b.name, dist, i))
+        radii = np.array(radii)
+        pairs = np.array(pairs)
 
-        self.log("All good.")
+        distances = md.compute_distances(self.t, pairs, periodic=False)
+        low, high = self.bond_low * radii, self.bond_high * radii
+        extreme = np.logical_or(distances < low, distances > high)
+
+        if np.any(extreme):
+            frames, bonds = np.nonzero(extreme)
+            frame, bond = frames[0], bonds[0]
+            a1 = self.topology.atom(pairs[bond][0])
+            a2 = self.topology.atom(pairs[bond][0])
+
+            self.log('error: atoms (%s) and (%s) are bonded according to the topology ' % (a1, a2))
+            self.log('but they are a distance of %.3f nm apart in frame %d' % (distances[frame, bond], frame))
+        else:
+            self.log("All good.")
 
     def section(self, title):
         if self._printed_section:
@@ -180,11 +174,8 @@ class Inspector(object):
     def log(self, msg):
         print(msg)
 
-    def check_positions(self):
-        self.section('Positions')
-        self.log('Number of frames: %d' % self.t.xyz.shape[0])
-        self.log('Number of atoms:  %d' % self.t.xyz.shape[1])
-        self.log("Note: PBCs are currently not taken into account during distance check")
+    def check_nonbonded(self):
+        self.section('Nonbonded Check (without PBCs)')
 
         # which atoms have a nonbonded interaction. exluce atoms interacting
         # with themselves or with atoms they're bonded to.
@@ -202,9 +193,22 @@ class Inspector(object):
             self.log('Frame %d: closest nb dist between '
                      '%d (%s), %d (%s), at d=%.4f nm' % (i, a, names[a], b, names[b], dist[a, b]))
 
+    def check_imaging(self):
+        if self.t.n_frames > 2:
+            self.section('Imaging')
+
+            r = md.rmsd(target=self.t, reference=self.t[0])
+            percent_change = np.divide(np.abs(r[2:]-r[1:-1]), r[1:-1]) * 100.0
+            if np.any(percent_change > self.rmsd_tolerance):
+                self.log('Potential imaging issue: %s' % self.fn)
+            else:
+                self.log('No imaging issue detected')
+
+
 def entry_point():
     args, parser = parse_args()
     main(args, parser)
+
 
 if __name__ == '__main__':
     entry_point()
