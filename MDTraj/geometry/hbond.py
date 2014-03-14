@@ -106,7 +106,9 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True):
 
     References
     ----------
-    .. [1] Baker, E. N., and R. E. Hubbard. "Hydrogen bonding in globular proteins." Progress in Biophysics and Molecular Biology 44.2 (1984): 97-179.
+    .. [1] Baker, E. N., and R. E. Hubbard. "Hydrogen bonding in globular
+        proteins." Progress in Biophysics and Molecular Biology
+        44.2 (1984): 97-179.
     """
     # Cutoff criteria: these could be exposed as function arguments, or
     # modified if there are better definitions than the this one based only

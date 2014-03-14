@@ -72,4 +72,6 @@ MDTraj/formats/binpos/binpos.c
 MDTraj/formats/xtc/xtc.c
 MDTraj/formats/xtc/trr.c
 MDTraj/rmsd/_rmsd.c
+MDTraj/rmsd/_lprmsd.c
+MDTraj/rmsd/_lprmsd.cpp
 MDTraj/geometry/src/_geometry.c

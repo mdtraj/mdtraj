@@ -4,6 +4,8 @@ source $HOME/miniconda/bin/activate $python
 PYTHON_VERSION=`python -c 'import sys; print("%d.%d" % sys.version_info[:2])'`
 coveralls
 
+echo $TRAVIS_PULL_REQUEST $TRAVIS_BRANCH
+
 if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then
     echo "This is a pull request. No deployment will be done."; exit 0
 fi

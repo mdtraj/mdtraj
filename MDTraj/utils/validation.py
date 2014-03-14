@@ -27,6 +27,7 @@
 
 from __future__ import print_function, division
 import warnings
+import numbers
 import numpy as np
 from mdtraj.utils.six.moves import zip_longest
 
@@ -166,3 +167,27 @@ def cast_indices(indices):
         raise ValueError('indices must be of an integer type. %s is not an integer type' % out.dtype)
 
     return out
+
+
+def check_random_state(seed):
+    """Turn seed into a np.random.RandomState instance
+
+    Notes
+    -----
+    If seed is None, return the RandomState singleton used by np.random.
+    If seed is an int, return a new RandomState instance seeded with seed.
+    If seed is already a RandomState instance, return it.
+    Otherwise raise ValueError.
+    """
+    # This code is direcly from the scikit-learn project (sklearn/utils/validation.py)
+    # Authors: Olivier Grisel and Gael Varoquaux and others (please update me)
+    # License: BSD 3 clause
+
+    if seed is None or seed is np.random:
+        return np.random.mtrand._rand
+    if isinstance(seed, (numbers.Integral, np.integer)):
+        return np.random.RandomState(seed)
+    if isinstance(seed, np.random.RandomState):
+        return seed
+    raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
+                     ' instance' % seed)

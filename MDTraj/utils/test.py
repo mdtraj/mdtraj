@@ -28,7 +28,8 @@
 
 from __future__ import print_function, division
 import numpy as np
-from mdtraj.utils.arrays import ensure_type, TypeCastPerformanceWarning
+from mdtraj.utils import ensure_type
+from mdtraj.utils.validation import TypeCastPerformanceWarning
 from mdtraj.utils.unit import in_units_of, _str_to_unit
 from mdtraj.utils import import_, lengths_and_angles_to_box_vectors
 from mdtraj.testing import raises, eq
