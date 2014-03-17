@@ -6,6 +6,8 @@ Trajectory Analysis
     :toctree: generated/
   
     rmsd
+    Trajectory.superpose
+
     baker_hubbard
     kabsch_sander
     shrake_rupley
