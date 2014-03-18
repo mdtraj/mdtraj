@@ -1,0 +1,28 @@
+<html>
+<head>
+
+<script type="text/javascript" src="//modx-test.cloudapp.net/CDN/jsmol/Jmol.js"></script>
+<script type="text/javascript" src="//modx-test.cloudapp.net/CDN/jsmol/JSmolCore.js"></script>
+<script type="text/javascript" src="//modx-test.cloudapp.net/CDN/jsmol/JSmolApplet.js"></script>
+<script type="text/javascript" src="//modx-test.cloudapp.net/CDN/jsmol/JSmolApi.js"></script>
+<script type="text/javascript" src="//modx-test.cloudapp.net/CDN/jsmol/JSmol.min.js"></script>
+
+<script type="text/javascript">
+var Info = {
+  color: "#FFFFFF",
+  height: 300,
+  width: 300,
+  use: "HTML5",         // "HTML5" or "Java"
+  j2sPath: "j2s",           // only used in the HTML5 modality
+  script: "background white; load .tempfile.pdb",
+  src: null,
+  readyFunction: null,
+  addSelectionOptions: false,
+  debug: false
+};
+
+var jmolApplet0 = Jmol.getApplet("JmolApplet", Info);
+// Jmol.script(jmolApplet0, "background white; load .tempfile.pdb")
+    
+</script>
+</html>
