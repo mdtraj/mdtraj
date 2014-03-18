@@ -1,4 +1,4 @@
-/////////////////////////////////////////////////////////////////////////////
+/*////////////////////////////////////////////////////////////////////////////
 // MDTraj: A Python Library for Loading, Saving, and Manipulating
 //         Molecular Dynamics Trajectories.
 // Copyright 2012-2013 Stanford University and the Authors
@@ -18,7 +18,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public
 // License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
-///////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////*/
 
 #include "stdio.h"
 #include <assert.h>
@@ -84,8 +84,8 @@ void rot_atom_major(const int n_atoms, float* a, const float rot[9])
     }
 
 #ifndef ALIGNED
-    // Epilogue to process the last atoms that are past the last multiple of
-    // four
+    /* Epilogue to process the last atoms that are past the last multiple of */
+    /* four */
     for (k = 0; k < n_atoms % 4; k++) {
         x = a[3*k + 0];
         y = a[3*k + 1];

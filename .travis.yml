@@ -5,6 +5,7 @@ install:
   - export PYTHONUNBUFFERED=true
 
 script:
+  - export CC="gcc -std=c89"
   - export PATH=$HOME/miniconda/envs/$python/bin:$PATH
   - python -V
   - python setup.py -q install

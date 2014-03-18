@@ -40,7 +40,7 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
 		      const float* sphere_points, const int n_sphere_points,
 		      int* neighbor_indices, float* centered_sphere_points, float* areas)
 {
-  // Calculate the accessible surface area of each atom in a single snapshot
+  /*// Calculate the accessible surface area of each atom in a single snapshot
   //
   // Parameters
   // ----------
@@ -66,6 +66,7 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
   // areas : 1d array, shape=[n_atoms]
   //     the output buffer to place the results in -- the surface area of each
   //     atom
+  */
 
   int i, j, k, k_prime;
   __m128 r, r_i, r_j, r_ij, atom_radius_i, atom_radius_j, radius_cutoff;
@@ -77,7 +78,7 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
     atom_radius_i = _mm_set1_ps(atom_radii[i]);
     r_i = load_float3(frame+i*3);
 
-    // Get all the atoms close to atom `i`
+    /* Get all the atoms close to atom `i` */
     n_neighbor_indices = 0;
     for (j = 0; j < n_atoms; j++) {
       if (i == j) {
@@ -88,7 +89,7 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
       r_ij = _mm_sub_ps(r_i, r_j);
       atom_radius_j = _mm_set1_ps(atom_radii[j]);
 
-      // Look for atoms `j` that are nearby atom `i`
+      /* Look for atoms `j` that are nearby atom `i` */
       radius_cutoff =  _mm_add_ps(atom_radius_i, atom_radius_j);
       radius_cutoff2 = _mm_mul_ps(radius_cutoff, radius_cutoff);
       r2 = _mm_dp_ps(r_ij, r_ij, 0x7F);
@@ -104,21 +105,21 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
       }
     }
 
-    // Center the sphere points on atom i
+    /* Center the sphere points on atom i */
     for (j = 0; j < n_sphere_points; j++) {
       sp = _mm_add_ps(r_i, _mm_mul_ps(atom_radius_i, load_float3(sphere_points + 3*j)));
       store_float3(centered_sphere_points + 3*j, sp);
     }
 
-    // Check if each of these points is accessible
+    /* Check if each of these points is accessible */
     k_closest_neighbor = 0;
     for (j = 0; j < n_sphere_points; j++) {
       is_accessible = 1;
       r_j = load_float3(centered_sphere_points + 3*j);
 
-      // iterate through the sphere points by cycling through them
-      // in a circle, starting with k_closest_neighbor and then wrapping
-      // around
+      /* iterate through the sphere points by cycling through them */
+      /* in a circle, starting with k_closest_neighbor and then wrapping */
+      /* around */
       for (k = k_closest_neighbor; k < n_neighbor_indices + k_closest_neighbor; k++) {
 	k_prime = k % n_neighbor_indices;
 	r = _mm_set1_ps(atom_radii[neighbor_indices[k_prime]]);
@@ -142,6 +143,7 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
 
 static void generate_sphere_points(float* sphere_points, int n_points)
 {
+  /*
   // Compute the coordinates of points on a sphere using the
   // Golden Section Spiral algorithm.
   //
@@ -154,7 +156,7 @@ static void generate_sphere_points(float* sphere_points, int n_points)
   // n_pts : int
   //     Number of points to generate on the sphere
   //
-  // """
+  */
   int i;
   float y, r, phi;
   float inc = M_PI * (3.0 - sqrt(5));
@@ -175,6 +177,7 @@ static void generate_sphere_points(float* sphere_points, int n_points)
 int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
 	 const float* atom_radii, const int n_sphere_points, float* array_of_areas)
 {
+  /*
   // Calculate the accessible surface area of each atom in each frame of
   // a trajectory
   //
@@ -194,14 +197,15 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   // array_of_areas : 2d array, shape=[n_frames, n_atoms]
   //     the output buffer to place the results in -- the surface area of each
   //     frame (each atom within that frame)
+  */
 
   int i;
 
-  //work buffers that will be thread-local
+  /* work buffers that will be thread-local */
   int* wb1;
   float* wb2;
 
-  //generate the sphere points
+  /* generate the sphere points */
   float* sphere_points = (float*) malloc(n_sphere_points*3*sizeof(float));
   generate_sphere_points(sphere_points, n_sphere_points);
 
@@ -209,7 +213,7 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   #pragma omp parallel private(wb1, wb2) {
 #endif
 
-  // malloc the work buffers for each thread
+  /* malloc the work buffers for each thread */
   wb1 = (int*) malloc(n_atoms*sizeof(int));
   wb2 = (float*) malloc(3*n_sphere_points*sizeof(float));
 
@@ -224,7 +228,7 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   free(wb1);
   free(wb2);
 #ifdef _OPENMP
-  } // close omp parallel private
+  } /* close omp parallel private */
 #endif
 
   free(sphere_points);
