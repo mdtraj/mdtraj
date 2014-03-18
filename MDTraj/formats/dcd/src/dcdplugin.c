@@ -770,8 +770,9 @@ int dcd_nsets(dcdhandle* v) {
 }
 
 int dcd_rewind(dcdhandle* dcd) {
+     /* nsets is just throwaway here */
+    int rc, nsets;
     fio_fseek(dcd->fd, 0, FIO_SEEK_SET);
-    int rc, nsets; // nsets is just throwaway here
     if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &nsets, &dcd->istart,
                              &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind,
                              &dcd->fixedcoords, &dcd->reverse, &dcd->charmm))) {
