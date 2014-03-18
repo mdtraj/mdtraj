@@ -15,7 +15,7 @@ Install with Conda
 
 If you're a ``conda`` user, you can install MDTraj by adding rmcgibbo's channel. If you're not a conda user, you should look into it ::
 
-    conda config --add channels http://conda.binstar.org/rmcgibbo
+    conda config --add channels http://conda.binstar.org/omnia
 
 And then installing with ::
 
