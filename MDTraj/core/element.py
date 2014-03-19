@@ -98,6 +98,15 @@ class Element(tuple):
 
         return newobj
 
+    def __reduce__(self):
+        # __reduce__ is part of the pickle protocol. we need to make sure that
+        # elements still act as singletons after a pickle load/save cycle --
+        # so load() has to *not create* a new object.
+        # see http://docs.python.org/3.3/library/pickle.html#object.__reduce__
+
+        # relevant test:
+        # >>> cPickle.loads(cPickle.dumps(md.load(get_fn('bpti.pdb')).topology))
+        return str(self.name)
 
     @staticmethod
     def getBySymbol(symbol):
