@@ -53,7 +53,6 @@ requires that input data be 16-byte aligned.
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
 #endif
 
-extern float fabsf(float);
 
 /*------------------------------------------------------------------------------
  * The quartic and cubic functions are taken from:
