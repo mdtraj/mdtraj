@@ -34,8 +34,8 @@
  #define isnan(x) (_isnan(x))
 #endif
 
-// forward declare this function. gcc doesn't seem to mind
-// not having it, but clang gets upset
+/* forward declare this function. gcc doesn't seem to mind */
+/* not having it, but clang gets upset */
 __m128 cross(const __m128 a, const __m128 b);
 
 
@@ -51,17 +51,6 @@ static int inverse33(const float M[9], __m128* cols_0, __m128* cols_1, __m128* c
              + M[3] * (M[7] * M[2] - M[8] * M[1])
              + M[6] * (M[1] * M[5] - M[2] * M[4]);
   __m128 inverse_det = _mm_set1_ps((float) (1.0 / det));
-  // cols[0] = _mm_mul_ps(inverse_det, _mm_setr_ps(
-  //       M[4]*M[8] - M[7]*M[5], -(M[1]*M[8] - M[2]*M[7]),
-  //       M[1]*M[5] - M[2]*M[4], 0.0f));
-  // cols[1] = _mm_mul_ps(inverse_det, _mm_setr_ps(
-  //       -(M[3]*M[8] - M[5]*M[6]),  M[0]*M[8] - M[2]*M[6],
-  //       -(M[0]*M[5] - M[3]*M[2]) , 0.0f));
-  // cols[2] = _mm_mul_ps(inverse_det, _mm_setr_ps(
-  //       M[3]*M[7] - M[6]*M[4] , -(M[0]*M[7] - M[6]*M[1]),
-  //       M[0]*M[4] - M[3]*M[1] , 0.0f));
-  //
-  //
   *cols_0 = _mm_mul_ps(inverse_det, _mm_setr_ps(
        M[4]*M[8] - M[7]*M[5], -(M[3]*M[8] - M[5]*M[6]),
        M[3]*M[7] - M[6]*M[4], 0.0f));
@@ -120,42 +109,42 @@ int dist(const float* xyz, const int* pairs, float* distance_out,
 
   for (i = 0; i < n_frames; i++) {
     for (j = 0; j < n_pairs; j++) {
-      // Load the two vectors whos distance we want to compute
-      // x1 = xyz[i, pairs[j,0], 0:3]
-      // x2 = xyz[i, pairs[j,1], 0:3]
+      /* Load the two vectors whos distance we want to compute */
+      /* x1 = xyz[i, pairs[j,0], 0:3] */
+      /* x2 = xyz[i, pairs[j,1], 0:3] */
       x1 = load_float3(xyz + 3*pairs[2*j + 0]);
       x2 = load_float3(xyz + 3*pairs[2*j + 1]);
 
-      // r12 = x2 - x1
+      /* r12 = x2 - x1 */
       r12 = _mm_sub_ps(x2, x1);
-      // r12_2 = r12*r12
+      /* r12_2 = r12*r12 */
       r12_2 = _mm_mul_ps(r12, r12);
 
       if (store_displacement) {
-        // store the two lower entries (x,y) in memory
+        /* store the two lower entries (x,y) in memory */
         _mm_storel_pi((__m64*)(displacement_out), r12);
         displacement_out += 2;
-        // swap high-low and then store the z entry in the memory
+        /* swap high-low and then store the z entry in the memory */
         _mm_store_ss(displacement_out++, _mm_movehl_ps(r12, r12));
       }
       if (store_distance) {
-        // horizontal add the components of d2 with
-        // two instructions. note: it's critical
-        // here that the last entry of x1 and x2 was 0
-        // so that d2.w = 0
+        /* horizontal add the components of d2 with */
+        /* two instructions. note: it's critical */
+        /* here that the last entry of x1 and x2 was 0 */
+        /* so that d2.w = 0 */
         s = _mm_hadd_ps(r12_2, r12_2);
         s = _mm_hadd_ps(s, s);
-        // sqrt our final answer
+        /* sqrt our final answer */
         s = _mm_sqrt_ps(s);
 
-        // s now contains our answer in all four elements, because
-        // of the way the hadd works. we only want to store one
-        // element.
+        /* s now contains our answer in all four elements, because */
+        /* of the way the hadd works. we only want to store one */
+        /* element. */
         _mm_store_ss(distance_out++, s);
       }
     }
 
-    // advance to the next frame
+    /* advance to the next frame */
     xyz += n_atoms*3;
   }
 
@@ -208,29 +197,29 @@ int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
   __m128 h[3];
 
   for (i = 0; i < n_frames; i++) {
-    // Store the columns of the box matrix in three float4s. This format
-    // is fast for matrix * vector product. See, for example, this S.O. question:
-    // http://stackoverflow.com/questions/14967969/efficient-4x4-matrix-vector-multiplication-with-sse-horizontal-add-and-dot-prod
+    /* Store the columns of the box matrix in three float4s. This format */
+    /* is fast for matrix * vector product. See, for example, this S.O. question: */
+    /* http://stackoverflow.com/questions/14967969/efficient-4x4-matrix-vector-multiplication-with-sse-horizontal-add-and-dot-prod */
     h[0] = _mm_setr_ps(box_matrix[0], box_matrix[3], box_matrix[6], 0.0f);
     h[1] = _mm_setr_ps(box_matrix[1], box_matrix[4], box_matrix[7], 0.0f);
     h[2] = _mm_setr_ps(box_matrix[2], box_matrix[5], box_matrix[8], 0.0f);
-    // Calculate the inverse of the box matrix, and also store it in the same
-    // format.
+    /* Calculate the inverse of the box matrix, and also store it in the same */
+    /* format. */
     inverse33(box_matrix, hinv+0, hinv+1, hinv+2);
 
     for (j = 0; j < n_pairs; j++) {
-      // Load the two vectors whos distance we want to compute
+      /* Load the two vectors whos distance we want to compute */
       r1 = load_float3(xyz + 3*pairs[2*j + 0]);
       r2 = load_float3(xyz + 3*pairs[2*j + 1]);
       r12 =  _mm_sub_ps(r2, r1);
 
-      // s12 = INVERSE(H) * r12
+      /* s12 = INVERSE(H) * r12 */
       s12 = _mm_add_ps(_mm_add_ps(
          _mm_mul_ps(hinv[0], _mm_shuffle_ps(r12, r12, _MM_SHUFFLE(0,0,0,0))),
          _mm_mul_ps(hinv[1], _mm_shuffle_ps(r12, r12, _MM_SHUFFLE(1,1,1,1)))),
          _mm_mul_ps(hinv[2], _mm_shuffle_ps(r12, r12, _MM_SHUFFLE(2,2,2,2))));
 
-      // s12 = s12 - NEAREST_INTEGER(s12)
+      /* s12 = s12 - NEAREST_INTEGER(s12) */
 #ifdef __SSE4_1__
       s12 = _mm_sub_ps(s12, _mm_round_ps(s12, _MM_FROUND_TO_NEAREST_INT));
 #else
@@ -243,14 +232,14 @@ int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
           _mm_mul_ps(h[2], _mm_shuffle_ps(s12, s12, _MM_SHUFFLE(2,2,2,2))));
 
       if (store_displacement) {
-        // store the two lower entries (x,y) in memory
+        /* store the two lower entries (x,y) in memory */
         _mm_storel_pi((__m64*)(displacement_out), r12);
         displacement_out += 2;
-        // swap high-low and then store the z entry in the memory
+        /* swap high-low and then store the z entry in the memory */
         _mm_store_ss(displacement_out++, _mm_movehl_ps(r12, r12));
       }
       if (store_distance) {
-        // out = sqrt(sum(r12**2))
+        /* out = sqrt(sum(r12**2)) */
         r12_2 = _mm_mul_ps(r12, r12);
         s = _mm_hadd_ps(r12_2, r12_2);
         s = _mm_hadd_ps(s, s);
@@ -258,7 +247,7 @@ int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
         _mm_store_ss(distance_out++, s);
       }
     }
-    // advance to the next frame
+    /* advance to the next frame */
     xyz += n_atoms*3;
     box_matrix += 9;
   }
@@ -306,14 +295,14 @@ int angle(const float* xyz, const int* triplets, float* out,
       u_prime = _mm_sub_ps(r_m, r_o);
       v_prime = _mm_sub_ps(r_n, r_o);
 
-      // normalize the vectors u_prime and v_prime
+      /* normalize the vectors u_prime and v_prime */
       u = _mm_mul_ps(u_prime, _mm_rsqrt_ps(_mm_dp_ps(u_prime, u_prime, 0x7F)));
       v = _mm_mul_ps(v_prime, _mm_rsqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
 
-      // compute the arccos of the dot product, and store the result.
+      /* compute the arccos of the dot product, and store the result. */
       *(out++) = acos(_mm_cvtss_f32(_mm_dp_ps(u, v, 0x71)));
     }
-    // advance to the next frame
+    /* advance to the next frame */
     xyz += n_atoms*3;
   }
 
@@ -405,16 +394,17 @@ static float ks_donor_acceptor(const float* xyz, const float* hcoords,
   __m128 r_n, r_h, r_c, r_o, r_ho, r_nc, r_hc, r_no, d2_honchcno;
   __m128 coupling;
 
-  // 332 (kcal*A/mol) * 0.42 * 0.2 * (1nm / 10 A)
+  /* 332 (kcal*A/mol) * 0.42 * 0.2 * (1nm / 10 A) */
   coupling = _mm_setr_ps(-2.7888, -2.7888, 2.7888, 2.7888);
   r_n = load_float3(xyz + 3*nco_indices[3*donor]);
   r_h = load_float3(hcoords + 3*donor);
   r_c = load_float3(xyz + 3*nco_indices[3*acceptor + 1]);
   r_o = load_float3(xyz + 3*nco_indices[3*acceptor + 2]);
 
-  //printf("Donor Index %d\n", donor);
-  //printf("Acceptor Index %d\n", acceptor);
-  /*printf("N index %d\n", 3*nco_indices[3*donor + 0]);
+  /*
+  printf("Donor Index %d\n", donor);
+  printf("Acceptor Index %d\n", acceptor);
+  printf("N index %d\n", 3*nco_indices[3*donor + 0]);
   printf("C index %d\n", 3*nco_indices[3*acceptor + 1]);
   printf("O index %d\n", 3*nco_indices[3*acceptor + 2]);
   printf("\nrN ");
@@ -424,21 +414,22 @@ static float ks_donor_acceptor(const float* xyz, const float* hcoords,
   printf("rC ");
   printf_m128(r_c);
   printf("rO ");
-  printf_m128(r_o);*/
+  printf_m128(r_o);
+  */
 
   r_ho = _mm_sub_ps(r_h, r_o);
   r_hc = _mm_sub_ps(r_h, r_c);
   r_nc = _mm_sub_ps(r_n, r_c);
   r_no = _mm_sub_ps(r_n, r_o);
 
-  // compute all four dot products (each of the squared distances), and then
-  // pack them into a single float4 using three shuffles.
+  /* compute all four dot products (each of the squared distances), and then */
+  /* pack them into a single float4 using three shuffles. */
   d2_honchcno = _mm_shuffle_ps(_mm_shuffle_ps(_mm_dp_ps(r_ho, r_ho, 0xF3), _mm_dp_ps(r_nc, r_nc, 0xF3), _MM_SHUFFLE(0,1,0,1)),
                                _mm_shuffle_ps(_mm_dp_ps(r_hc, r_hc, 0xF3), _mm_dp_ps(r_no, r_no, 0xF3), _MM_SHUFFLE(0,1,0,1)),
                                _MM_SHUFFLE(2,0,2,0));
 
   energy = _mm_cvtss_f32(_mm_dp_ps(coupling, _mm_rsqrt_ps(d2_honchcno), 0xFF));
-  //printf("Energy: %f\n\n", energy);
+  /* printf("Energy: %f\n\n", energy); */
   return (energy < -9.9f ? -9.9f : energy);
 }
 
@@ -484,16 +475,16 @@ static INLINE void store_energies(int* hbonds, float* henergies, int donor,
   float existing_e1 = henergies[2*acceptor + 1];
 
   if (isnan(existing_e0) || e < existing_e0) {
-    //copy over any info in #0 hbond to #1
+    /* copy over any info in #0 hbond to #1 */
     hbonds[2*acceptor + 1] = hbonds[acceptor*2 + 0];
     henergies[2*acceptor + 1] = existing_e0;
     hbonds[2*acceptor + 0] = donor;
     henergies[2*acceptor + 0] = e;
-    // printf("hbond being stored from donor=%d to acceptor=%d\n", donor, acceptor);
+    /* printf("hbond being stored from donor=%d to acceptor=%d\n", donor, acceptor); */
   } else if (isnan(existing_e1) || e < henergies[2*acceptor + 1]) {
     hbonds[2*acceptor + 1] = donor;
     henergies[2*acceptor + 1] = e;
-    // printf("hbond being stored from donor=%d to acceptor=%d\n", donor, acceptor);
+    /* printf("hbond being stored from donor=%d to acceptor=%d\n", donor, acceptor); */
   }
 }
 
@@ -545,8 +536,8 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
     ks_assign_hydrogens(xyz, nco_indices, n_residues, hcoords);
 
     for (ri = 0; ri < n_residues; ri++) {
-      // -1 is used to indicate that this residue lacks a this atom type
-      // so just skip it
+      /* -1 is used to indicate that this residue lacks a this atom type */
+      /* so just skip it */
       if (ca_indices[ri] == -1) continue;
       ri_ca = load_float3(xyz + 3*ca_indices[ri]);
 
@@ -554,24 +545,24 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
         if (ca_indices[rj] == -1) continue;
         rj_ca = load_float3(xyz + 3*ca_indices[rj]);
 
-        // check the ca distance before proceding
+        /* check the ca distance before proceding */
         r12 = _mm_sub_ps(ri_ca, rj_ca);
         if(_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(_mm_dp_ps(r12, r12, 0x7F), MINIMAL_CA_DISTANCE2)), 0)) {
           float e = ks_donor_acceptor(xyz, hcoords, nco_indices, ri, rj);
           if (e < HBOND_ENERGY_CUTOFF)
-            // hbond from donor=ri to acceptor=rj
+            /* hbond from donor=ri to acceptor=rj */
             store_energies(hbonds, henergies, ri, rj, e);
 
           if (rj != ri + 1) {
 	    float e = ks_donor_acceptor(xyz, hcoords, nco_indices, rj, ri);
             if (e < HBOND_ENERGY_CUTOFF)
-              // hbond from donor=rj to acceptor=ri
+              /* hbond from donor=rj to acceptor=ri */
               store_energies(hbonds, henergies, rj, ri, e);
           }
         }
       }
     }
-    xyz += n_atoms*3; // advance to the next frame
+    xyz += n_atoms*3; /* advance to the next frame */
     hbonds += n_residues*2;
     henergies += n_residues*2;
   }
