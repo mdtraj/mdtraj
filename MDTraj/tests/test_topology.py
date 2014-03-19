@@ -23,6 +23,7 @@
 import os
 import tempfile
 import mdtraj as md
+from mdtraj.utils.six.moves import cPickle
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
 import numpy as np
 
@@ -117,5 +118,7 @@ def test_nonconsective_resSeq():
     t2 = md.load(fname)
     yield lambda : eq(df1[0], t2.top.to_dataframe()[0])
     os.unlink(fname)
-    
-    
+
+def test_pickle():
+    # test pickling of topology (bug #391)
+    cPickle.loads(cPickle.dumps(md.load(get_fn('bpti.pdb')).topology))
