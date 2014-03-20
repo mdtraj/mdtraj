@@ -18,6 +18,10 @@ Hydrogen Bonding
 .. autosummary::
     :toctree: generated/
 
+=======
+    Trajectory.superpose
+
+>>>>>>> master
     baker_hubbard
     kabsch_sander
 
