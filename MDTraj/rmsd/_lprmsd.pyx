@@ -46,6 +46,7 @@ cdef extern from "include/fancy_index.hpp":
 cdef extern float msd_atom_major(int nrealatoms, int npaddedatoms,  float* a,
     float* b, float G_a, float G_b, int computeRot, float rot[9]) nogil
 cdef extern float rot_atom_major(const int n_atoms, float* a, const float rot[9]) nogil
+cdef extern void sgemm33(const float A[9], const float B[9], float out[9]) nogil
 cdef extern void inplace_center_and_trace_atom_major(float* coords, float* traces,
     const int n_frames, const int n_atoms) nogil
 cdef extern from "include/Munkres.h":
@@ -64,8 +65,8 @@ cdef extern from "math.h":
 ##############################################################################
 
 def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=None,
-           bool parallel=True):
-    """lprmsd(target, reference, frame=0, atom_indices=None, permute_groups=None, bool parallel=True)
+           bool parallel=True, bool superpose=False):
+    """lprmsd(target, reference, frame=0, atom_indices=None, permute_groups=None, bool parallel=True, bool superpose=False)
 
     Compute Linear-Programming Root-Mean-Squared Deviation (LP-RMSD) of all
     conformations in target to a reference conformation. The LP-RMSD is the
@@ -82,8 +83,9 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
     a *pretty good* solution though, using a 3 step procedure. For each frame in
     the target, (1) align the target reference frame using only the
     distinguishable atoms (2) using this fixed rotation matrix, find the optimal
-    mapping for the labels in the permute groups (3) return the msd using this
-    mapping.
+    mapping for the labels in the permute groups (3) using this mapping,
+    recompute a new optimal rotation matrix to align the frame, and get the
+    final RMSD.
 
     Parameters
     ----------
@@ -109,6 +111,9 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
     parallel : bool
         Use OpenMP to calculate each of the RMSDs in parallel over multiple
         cores.
+    superpose : bool
+        Modify the trajectory ``target`` in-place to superpose each frame on
+        reference.
 
     Returns
     -------
@@ -133,7 +138,8 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
 
 
     cdef int n_atoms_total = target.xyz.shape[1]
-    cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] target_xyz = target.xyz
+    cdef int superpose_ = superpose
+    cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] target_xyz = np.asarray(target.xyz, order='c')
     cdef np.ndarray[ndim=1, dtype=np.long_t, mode='c'] atom_indices_ = atom_indices
     cdef np.ndarray[ndim=1, dtype=np.long_t, mode='c'] dis_indices_ = dis_indices
 
@@ -144,10 +150,9 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
     cdef float ref_g, target_g
     cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] target_xyz_frame
     cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] target_xyz_frame2
-    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] ref_xyz_frame
+    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] ref_xyz_frame    
     cdef int target_n_frames = target.xyz.shape[0]
     cdef int n_atoms = len(atom_indices)
-    target_g = np.empty(target_n_frames, dtype=np.float32)
     ref_xyz_frame = np.array(reference.xyz[frame, atom_indices, :], dtype=np.float32, copy=True)    
     target_xyz_frame = np.finfo(np.float32).max * np.ones_like(ref_xyz_frame)
     target_xyz_frame2 = np.empty_like(target_xyz_frame)
@@ -169,10 +174,12 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
 
 
     cdef vector[long] mapping
-    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] rot = np.eye(3, dtype=np.float32)
+    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] rot1 = np.eye(3, dtype=np.float32)
+    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] rot2 = np.eye(3, dtype=np.float32)
+    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] rot3 = np.eye(3, dtype=np.float32)
     cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] distances = np.zeros(target_n_frames, dtype=np.float32)
 
-    # for i in prange(target_n_frames, nogil=True):
+    #for i in prange(target_n_frames, nogil=True):
     for i in range(target_n_frames):
         fancy_index2d(&target_xyz[i,0,0], n_atoms_total, 3, <long*> &atom_indices_[0],
                       n_atoms, NULL, 0, &target_xyz_frame[0, 0])
@@ -187,24 +194,35 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
                           n_atoms_dis, NULL, 0, &target_xyz_frame_dis[0, 0])
             inplace_center_and_trace_atom_major(&target_xyz_frame_dis[0,0], &target_g_dis, 1, n_atoms_dis)
 
-            # get `rot`, the rotation matrix
+            # get `rot1`, the rotation matrix thats optimal for the distinguishable indices
             msd_atom_major(n_atoms_dis, n_atoms_dis,
                 &target_xyz_frame_dis[0, 0], &ref_xyz_frame_dis[0, 0],
-                target_g_dis, ref_g_dis, 1, &rot[0, 0])
+                target_g_dis, ref_g_dis, 1, &rot1[0, 0])
 
-            # apply rot to all the atoms
-            rot_atom_major(n_atoms, &target_xyz_frame[0, 0], &rot[0, 0])
-            # print rot
+            # apply rot1 to all the atom_indices
+            rot_atom_major(n_atoms, &target_xyz_frame[0, 0], &rot1[0, 0])
 
         # compute the optimal remapping of the indices
         mapping = euclidean_permutation(&ref_xyz_frame[0, 0], &target_xyz_frame[0, 0], n_atoms, 3, permute_groups_stl)
         # and remap the indices -- i.e.   target_xyz_frame2 = target_xyz_frame[mapping]
         fancy_index2d(&target_xyz_frame[0, 0], n_atoms, 3, &mapping[0], n_atoms, NULL, 0, &target_xyz_frame2[0, 0])
-        # then using these remapped indices, compute the rmsd, with a new rotation
-        msd = msd_atom_major(n_atoms, n_atoms, &ref_xyz_frame[0, 0], &target_xyz_frame2[0, 0], target_g, ref_g, 0, NULL)
+
         # msd = ((target_xyz_frame2 - ref_xyz_frame)**2).sum(1).mean(0)
+        # then using these remapped indices, compute the rmsd, with a new rotation
+        if superpose_:
+            msd = msd_atom_major(n_atoms, n_atoms, &target_xyz_frame2[0, 0], &ref_xyz_frame[0, 0], target_g, ref_g, 1, &rot2[0, 0])
+            inplace_center_and_trace_atom_major(&target_xyz[i, 0, 0], NULL, 1, n_atoms_total)
+            sgemm33(&rot1[0,0], &rot2[0,0], &rot3[0,0])
+            rot_atom_major(n_atoms_total, &target_xyz[i, 0, 0], &rot3[0, 0])
+        else:
+            msd = msd_atom_major(n_atoms, n_atoms, &ref_xyz_frame[0, 0], &target_xyz_frame2[0, 0], target_g, ref_g, 0, NULL)
+
+
 
         distances[i] = sqrtf(msd)
+
+    if superpose_:
+        target.xyz = target_xyz
 
     return distances
 

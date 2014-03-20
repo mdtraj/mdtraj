@@ -93,3 +93,10 @@ def test_lprmsd_4():
 
 
 
+def test_lprmsd_5():
+    t = md.load(get_fn('frame0.h5'))
+    t1 = md.load(get_fn('frame0.h5'))
+
+    r = md.rmsd(t, t1, 0)
+    a = md.lprmsd(t, t1, 0, permute_groups=[[]], superpose=True)
+    eq(a, r, decimal=3)
