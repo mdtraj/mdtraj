@@ -31,6 +31,20 @@ static INLINE __m128 _mm_add3_ps(__m128 a, __m128 b, __m128 c) {
     return _mm_add_ps(_mm_add_ps(a, b), c);
 }
 
+void sgemm33(const float A[9], const float B[9], float out[9]) {
+    int i, j, k;
+    float o;
+
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j < 3; j++) {
+            o = 0.0f;
+            for (k = 0; k < 3; k++)
+                o += A[i*3 + k] * B[k*3 + j];
+            out[i*3 + j] = o;
+        }
+    }
+}
+
 void rot_atom_major(const int n_atoms, float* a, const float rot[9])
 {
     /* Apply rotation matrix `rot` to conformation `a`. If this file

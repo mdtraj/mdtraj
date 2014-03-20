@@ -255,7 +255,7 @@ binpos = Extension('mdtraj.formats.binpos',
                                  'MDTraj/formats/binpos/', numpy.get_include()])
 
 
-def rmsd_extension():
+def rmsd_extensions():
     openmp_enabled, needs_gomp = detect_openmp()
     compiler_args = ['-msse2' if not detect_sse3() else '-mssse3',
                      '-O3', '-funroll-loops']
@@ -265,7 +265,6 @@ def rmsd_extension():
     if openmp_enabled:
         compiler_args.append('-fopenmp')
     compiler_libraries = ['gomp'] if needs_gomp else []
-    #compiler_defs = [('USE_OPENMP', None)] if openmp_enabled else []
 
     rmsd = Extension('mdtraj._rmsd',
                      sources=[
@@ -276,9 +275,23 @@ def rmsd_extension():
                      include_dirs=[
                          'MDTraj/rmsd/include', numpy.get_include()],
                      extra_compile_args=compiler_args,
-                     #define_macros=compiler_defs,
                      libraries=compiler_libraries)
-    return rmsd
+
+    lprmsd = Extension('mdtraj._lprmsd',
+                       sources=[
+                           'MDTraj/rmsd/src/theobald_rmsd.c',
+                           'MDTraj/rmsd/src/rotation.c',
+                           'MDTraj/rmsd/src/center.c',
+                           'MDTraj/rmsd/src/fancy_index.cpp',
+                           'MDTraj/rmsd/src/Munkres.cpp',
+                           'MDTraj/rmsd/src/euclidean_permutation.cpp',
+                           'MDTraj/rmsd/_lprmsd.pyx'],
+                       language='c++',
+                       include_dirs=[
+                           'MDTraj/rmsd/include', numpy.get_include()],
+                       extra_compile_args=compiler_args,
+                       libraries=compiler_libraries)
+    return rmsd, lprmsd
 
 
 def geometry():
@@ -300,7 +313,8 @@ def geometry():
                      define_macros=define_macros,
                      extra_compile_args=extra_compile_args)
 
-extensions = [xtc, trr, dcd, binpos, rmsd_extension()]
+extensions = [xtc, trr, dcd, binpos]
+extensions.extend(rmsd_extensions())
 ext = geometry()
 if ext is not None:
     extensions.append(ext)
