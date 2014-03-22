@@ -29,12 +29,11 @@ except ImportError:
 
 try:
     import Cython
-    if Cython.__version__ < '0.18':
+    if Cython.__version__ < '0.19':
         raise ImportError
-    from Cython.Distutils import build_ext
-    setup_kwargs = {'cmdclass': {'build_ext': build_ext}}
+    from Cython.Build import cythonize
 except ImportError:
-    print('Building from source requires cython >= 0.18', file=sys.stderr)
+    print('Building from source requires cython >= 0.19', file=sys.stderr)
     exit(1)
 
 try:
@@ -43,6 +42,7 @@ try:
 except ValueError:
     no_install_deps = False
 
+setup_kwargs = {}
 if 'setuptools' in sys.modules:
     setup_kwargs['zip_safe'] = False
     if not no_install_deps:
@@ -50,6 +50,11 @@ if 'setuptools' in sys.modules:
     setup_kwargs['entry_points'] = {'console_scripts':
               ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
                'mdinspect = mdtraj.scripts.mdinspect:entry_point']}
+
+    if sys.version_info[0] == 2:
+        # required to fix cythoninze() for old versions of setuptools
+        m = sys.modules['setuptools.extension']
+        m.Extension.__dict__ = m._Extension.__dict__
 else:
     setup_kwargs['scripts'] = ['scripts/mdconvert.py', 'scripts/mdinspect.py']
 
@@ -332,7 +337,7 @@ setup(name='mdtraj',
       classifiers=CLASSIFIERS.splitlines(),
       packages=find_packages(),
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
-      ext_modules=extensions,
+      ext_modules=cythonize(extensions),
       package_data={'mdtraj.formats.pdb': ['data/*'],
                     'mdtraj.testing': ['reference/*']},
       **setup_kwargs)
