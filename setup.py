@@ -51,9 +51,10 @@ if 'setuptools' in sys.modules:
               ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
                'mdinspect = mdtraj.scripts.mdinspect:entry_point']}
 
-    # required to fix cythoninze() for old versions of setuptools
-    m = sys.modules['setuptools.extension']
-    m.Extension.__dict__ = m._Extension.__dict__
+    if sys.version_info[0] == 2:
+        # required to fix cythoninze() for old versions of setuptools
+        m = sys.modules['setuptools.extension']
+        m.Extension.__dict__ = m._Extension.__dict__
 else:
     setup_kwargs['scripts'] = ['scripts/mdconvert.py', 'scripts/mdinspect.py']
 
