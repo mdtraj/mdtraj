@@ -45,6 +45,7 @@ from mdtraj._rmsd import rmsd
 from mdtraj.core.topology import Topology
 from mdtraj.geometry import *
 from mdtraj.core.trajectory import *
+from mdtraj.nmr import *
 
 def test(label='full', verbose=2):
     """Run tests for mdtraj using nose.
