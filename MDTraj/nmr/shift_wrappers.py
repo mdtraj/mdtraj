@@ -253,7 +253,7 @@ def chemical_shifts_spartaplus(trj):
 
 
 def reindex_dataframe_by_atoms(trj, frame):
-    """Predict chemical shifts of a trajectory using SPARTA+.
+    """Reindex chemical shift output to use atom number (serial) indexing.
 
     Parameters
     ----------
