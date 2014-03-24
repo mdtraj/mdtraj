@@ -1,8 +1,9 @@
 from __future__ import print_function, division
+import os
 import time
-import contextlib
-import tempfile
 import shutil
+import tempfile
+import contextlib
 
 __all__ = ["timing", "enter_temp_directory"]
 

@@ -42,6 +42,7 @@ from mdtraj.formats.prmtop import load_prmtop
 
 from mdtraj.core import element
 from mdtraj._rmsd import rmsd
+from mdtraj._lprmsd import lprmsd
 from mdtraj.core.topology import Topology
 from mdtraj.geometry import *
 from mdtraj.core.trajectory import *

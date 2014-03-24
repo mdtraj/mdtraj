@@ -47,7 +47,7 @@
 Using #define ALIGNED enables aligned loads. Slight speed boost, but
 requires that input data be 16-byte aligned.
 */
-// #define ALIGNED
+/* #define ALIGNED */
 
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
@@ -591,11 +591,11 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
         aos_deinterleaved_load(a,&ax,&ay,&az);
 #else 
         if (k == niters - 1) {
-            // x  y  z
-            // 0  1  2
-            // 3  4  5
-            // 6  7  8
-            // 9  10 11
+            /* x  y  z  */
+            /* 0  1  2  */
+            /* 3  4  5  */
+            /* 6  7  8  */
+            /* 9  10 11 */
             ax = _mm_set_ps(mask[0] ? a[0] : 0, mask[1] ? a[3] : 0, mask[2] ? a[6] : 0, mask[3] ? a[9] : 0);
             ay = _mm_set_ps(mask[0] ? a[1] : 0, mask[1] ? a[4] : 0, mask[2] ? a[7] : 0, mask[3] ? a[10] : 0);
             az = _mm_set_ps(mask[0] ? a[2] : 0, mask[1] ? a[5] : 0, mask[2] ? a[8] : 0, mask[3] ? a[11] : 0);

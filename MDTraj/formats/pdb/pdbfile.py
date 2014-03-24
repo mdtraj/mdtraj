@@ -300,7 +300,7 @@ class PDBTrajectoryFile(object):
                     posIndex += 1
                     atomIndex += 1
                 if resIndex == len(residues)-1:
-                    print("TER   %5d      %3s %s%4d" % (atomIndex, resName, chainName, resIndex+1), file=self._file)
+                    print("TER   %5d      %3s %s%4d" % (atomIndex, resName, chainName, res.resSeq), file=self._file)
                     atomIndex += 1
 
         if modelIndex is not None:

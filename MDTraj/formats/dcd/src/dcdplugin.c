@@ -146,7 +146,7 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
       if (input_integer[0] == 84 && input_integer[1] == dcdcordmagic) {
         *reverseEndian=1;
         rec_scale=RECSCALE32BIT;
-        //printf("dcdplugin) detected standard 32-bit DCD file of opposite endianness\n");
+        /* printf("dcdplugin) detected standard 32-bit DCD file of opposite endianness\n"); */
       } else {
         /* not simply reversed endianism or -i8, something rather more evil */
         printf("dcdplugin) unrecognized DCD header:\n");
@@ -162,7 +162,7 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
   if (rec_scale == RECSCALE64BIT) { 
     ret_val = READ(fd, input_integer, sizeof(unsigned int));
     if (input_integer[0] != dcdcordmagic) {
-      //printf("dcdplugin) failed to find CORD magic in CHARMM -i8 64-bit DCD file\n");
+        /* printf("dcdplugin) failed to find CORD magic in CHARMM -i8 64-bit DCD file\n"); */
       return DCD_BADFORMAT;
     }
   }
@@ -193,10 +193,10 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
 
   if (*charmm & DCD_IS_CHARMM) {
     /* CHARMM and NAMD versions 2.1b1 and later */
-    //printf("dcdplugin) CHARMM format DCD file (also NAMD 2.1 and later)\n");
+    /* printf("dcdplugin) CHARMM format DCD file (also NAMD 2.1 and later)\n"); */
   } else {
     /* CHARMM and NAMD versions prior to 2.1b1  */
-    //printf("dcdplugin) X-PLOR format DCD file (also NAMD 2.0 and earlier)\n");
+    /* printf("dcdplugin) X-PLOR format DCD file (also NAMD 2.0 and earlier)\n"); */
   }
 
   /* Store the number of sets of coordinates (NSET) */
@@ -737,11 +737,11 @@ static int write_dcdheader(fio_fd fd, const char *remarks, int N,
 
   cur_time=time(NULL);
   tmbuf=localtime(&cur_time);
-  // This line segfaults under MSVC 2008. I don't know why. Replacing
-  // it with a sprintf and asctime seems to acomplish the same goal
-  // and solve the problem. The final length of time_str will not buffer
-  // overflow in sprintf -- I checked the asctime docs make sure. RTM10/13/13
-  //strftime(time_str, 80, "REMARKS Created %d %B, %Y at %R", tmbuf);
+  /* This line segfaults under MSVC 2008. I don't know why. Replacinge */
+  /* it with a sprintf and asctime seems to acomplish the same goal */
+  /* and solve the problem. The final length of time_str will not buffer */
+  /* overflow in sprintf -- I checked the asctime docs make sure. RTM10/13/13 */
+  /*strftime(time_str, 80, "REMARKS Created %d %B, %Y at %R", tmbuf); */
   sprintf(time_str, "REMARKS Created %s", asctime(tmbuf));
   WRITE(fd, time_str, 80);
 
@@ -770,8 +770,9 @@ int dcd_nsets(dcdhandle* v) {
 }
 
 int dcd_rewind(dcdhandle* dcd) {
+     /* nsets is just throwaway here */
+    int rc, nsets;
     fio_fseek(dcd->fd, 0, FIO_SEEK_SET);
-    int rc, nsets; // nsets is just throwaway here
     if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &nsets, &dcd->istart,
                              &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind,
                              &dcd->fixedcoords, &dcd->reverse, &dcd->charmm))) {

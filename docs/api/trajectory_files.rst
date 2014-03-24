@@ -1,7 +1,7 @@
 File Objects
 ------------
 
-.. currentmodule:: mdtraj
+.. currentmodule:: mdtraj.formats
 .. autosummary::
     :toctree: generated/
     

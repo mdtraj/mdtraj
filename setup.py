@@ -29,12 +29,11 @@ except ImportError:
 
 try:
     import Cython
-    if Cython.__version__ < '0.18':
+    if Cython.__version__ < '0.19':
         raise ImportError
-    from Cython.Distutils import build_ext
-    setup_kwargs = {'cmdclass': {'build_ext': build_ext}}
+    from Cython.Build import cythonize
 except ImportError:
-    print('Building from source requires cython >= 0.18', file=sys.stderr)
+    print('Building from source requires cython >= 0.19', file=sys.stderr)
     exit(1)
 
 try:
@@ -43,6 +42,7 @@ try:
 except ValueError:
     no_install_deps = False
 
+setup_kwargs = {}
 if 'setuptools' in sys.modules:
     setup_kwargs['zip_safe'] = False
     if not no_install_deps:
@@ -50,6 +50,11 @@ if 'setuptools' in sys.modules:
     setup_kwargs['entry_points'] = {'console_scripts':
               ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
                'mdinspect = mdtraj.scripts.mdinspect:entry_point']}
+
+    if sys.version_info[0] == 2:
+        # required to fix cythoninze() for old versions of setuptools
+        m = sys.modules['setuptools.extension']
+        m.Extension.__dict__ = m._Extension.__dict__
 else:
     setup_kwargs['scripts'] = ['scripts/mdconvert.py', 'scripts/mdinspect.py']
 
@@ -255,7 +260,7 @@ binpos = Extension('mdtraj.formats.binpos',
                                  'MDTraj/formats/binpos/', numpy.get_include()])
 
 
-def rmsd_extension():
+def rmsd_extensions():
     openmp_enabled, needs_gomp = detect_openmp()
     compiler_args = ['-msse2' if not detect_sse3() else '-mssse3',
                      '-O3', '-funroll-loops']
@@ -265,7 +270,6 @@ def rmsd_extension():
     if openmp_enabled:
         compiler_args.append('-fopenmp')
     compiler_libraries = ['gomp'] if needs_gomp else []
-    #compiler_defs = [('USE_OPENMP', None)] if openmp_enabled else []
 
     rmsd = Extension('mdtraj._rmsd',
                      sources=[
@@ -276,9 +280,23 @@ def rmsd_extension():
                      include_dirs=[
                          'MDTraj/rmsd/include', numpy.get_include()],
                      extra_compile_args=compiler_args,
-                     #define_macros=compiler_defs,
                      libraries=compiler_libraries)
-    return rmsd
+
+    lprmsd = Extension('mdtraj._lprmsd',
+                       sources=[
+                           'MDTraj/rmsd/src/theobald_rmsd.c',
+                           'MDTraj/rmsd/src/rotation.c',
+                           'MDTraj/rmsd/src/center.c',
+                           'MDTraj/rmsd/src/fancy_index.cpp',
+                           'MDTraj/rmsd/src/Munkres.cpp',
+                           'MDTraj/rmsd/src/euclidean_permutation.cpp',
+                           'MDTraj/rmsd/_lprmsd.pyx'],
+                       language='c++',
+                       include_dirs=[
+                           'MDTraj/rmsd/include', numpy.get_include()],
+                       extra_compile_args=compiler_args,
+                       libraries=compiler_libraries)
+    return rmsd, lprmsd
 
 
 def geometry():
@@ -300,7 +318,8 @@ def geometry():
                      define_macros=define_macros,
                      extra_compile_args=extra_compile_args)
 
-extensions = [xtc, trr, dcd, binpos, rmsd_extension()]
+extensions = [xtc, trr, dcd, binpos]
+extensions.extend(rmsd_extensions())
 ext = geometry()
 if ext is not None:
     extensions.append(ext)
@@ -318,7 +337,7 @@ setup(name='mdtraj',
       classifiers=CLASSIFIERS.splitlines(),
       packages=find_packages(),
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
-      ext_modules=extensions,
+      ext_modules=cythonize(extensions),
       package_data={'mdtraj.formats.pdb': ['data/*'],
                     'mdtraj.testing': ['reference/*']},
       **setup_kwargs)

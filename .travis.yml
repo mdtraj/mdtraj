@@ -1,11 +1,11 @@
 language: c
 
 install:
-  - tools/ci/install.sh
+  - source tools/ci/install.sh
   - export PYTHONUNBUFFERED=true
 
 script:
-  - export PATH=$HOME/miniconda/envs/$python/bin:$PATH
+  - export CC="gcc -std=c89"
   - python -V
   - python setup.py -q install
   - pydir=$(which python); $precmd $(dirname $pydir)/nosetests --with-coverage --cover-erase -vv
@@ -24,4 +24,4 @@ env:
 
 after_success:
   - echo "after_success"
-  - tools/ci/after_sucess.sh
+  - source tools/ci/after_sucess.sh
