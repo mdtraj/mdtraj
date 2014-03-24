@@ -5,10 +5,11 @@ from mdtraj.utils.arrays import ensure_type, cast_indices
 from mdtraj.utils.unit import in_units_of
 from mdtraj.utils.unitcell import (lengths_and_angles_to_box_vectors,
                        box_vectors_to_lengths_and_angles)
+from mdtraj.utils.contextmanagers import timing, enter_temp_directory
 
 __all__ = ["ensure_type", "import_", "in_units_of",
     "lengths_and_angles_to_box_vectors", "box_vectors_to_lengths_and_angles",
-    "ilen", "timing", "cast_indices"]
+    "ilen", "timing", "cast_indices", "enter_temp_directory", "timing"]
 
 
 def ilen(iterable):
@@ -26,29 +27,3 @@ def ilen(iterable):
     """
     return sum(1 for _ in iterable)
 
-
-class timing(object):
-    """A timing context manager
-
-    Example
-    -------
-    >>> long_function = lambda : None
-    >>> with timing('long_function'):
-    ...     long_function()
-    long_function: 0.000 seconds
-    """
-    def __init__(self, name='block'):
-        self.name = name
-        self.time = 0
-        self.start = None
-        self.end = None
-    
-    def __enter__(self):
-        self.start = time.time()
-        return self
-    
-    def __exit__(self, ty, val, tb):
-        self.end = time.time()
-        self.time = self.end - self.start
-        print("%s: %0.3f seconds" % (self.name, self.time))
-        return False
