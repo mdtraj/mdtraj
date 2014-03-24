@@ -273,11 +273,9 @@ def reindex_dataframe_by_atoms(trj, frame):
         
     Notes
     -----
-    
     Be aware that this function may DROP predictions if the atom naming
     is different between the input trajectory and the output of various
     chemical shift prediction tools.
-    
     """
 
     top, bonds = trj.top.to_dataframe()
