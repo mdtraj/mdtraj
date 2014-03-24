@@ -55,3 +55,17 @@ Bond Angles and Dihedrals
     compute_chi3
     compute_chi4
     compute_omega
+
+
+
+NMR Observables
+---------------
+.. autosummary::
+    :toctree: generated/
+
+    chemical_shifts_shiftx2
+    chemical_shifts_ppm
+    chemical_shifts_spartaplus
+    reindex_dataframe_by_atoms
+
+
