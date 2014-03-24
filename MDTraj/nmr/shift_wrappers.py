@@ -41,7 +41,7 @@ SHIFTX2 = ['shiftx2.py']
 SPARTA_PLUS = ['sparta+', 'SPARTA+', 'SPARTA+.linux']
 PPM = ['ppm_linux_64.exe']
 
-__all__ = ['chemical_shifts_shiftx2', 'chemical_shifts_ppm', 'chemical_shifts_spartaplus']
+__all__ = ['chemical_shifts_shiftx2', 'chemical_shifts_ppm', 'chemical_shifts_spartaplus', "reindex_dataframe_by_atoms"]
 
 
 def find_executable(names):
@@ -107,9 +107,11 @@ def chemical_shifts_shiftx2(trj):
             d = pd.read_csv("./trj%d.pdb.cs" % i)
             d.rename(columns={"NUM": "resSeq", "RES": "resName", "ATOMNAME": "name"}, inplace=True)
             d["frame"] = trj.time[i]
+            print(d)
             results.append(d)
 
     results = pd.concat(results)
+    print(results)
     results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
     return results
 
@@ -248,3 +250,34 @@ def chemical_shifts_spartaplus(trj):
     results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
 
     return results
+
+
+def reindex_dataframe_by_atoms(trj, frame):
+    """Predict chemical shifts of a trajectory using SPARTA+.
+
+    Parameters
+    ----------
+    trj : Trajectory
+        Trajectory to predict shifts for.
+    results : pandas.DataFrame
+        Dataframe containing results, with index consisting of
+        (resSeq, atom_name) pairs and columns for each frame in trj.
+
+    Returns
+    -------
+    new_frame : pandas.DataFrame
+        Dataframe containing results, with index consisting of atom 
+        indices (AKA the 'serial' entry in a PDB).  Columns correspond to
+        each frame in trj.
+    """
+
+    top, bonds = trj.top.to_dataframe()
+    top["serial"] = top.index
+    top = top.set_index(["resSeq", "name"])
+    
+    new_frame = frame.copy()
+    
+    new_frame["serial"] = top.ix[new_frame.index].serial
+    new_frame = new_frame.dropna().reset_index().set_index("serial").drop(["resSeq", "name"], axis=1)
+    
+    return new_frame
