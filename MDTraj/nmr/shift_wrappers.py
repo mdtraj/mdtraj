@@ -133,7 +133,7 @@ def chemical_shifts_ppm(trj):
     Notes
     -----
     You must have ppm available on your path; see
-    (http://spinportal.magnet.fsu.edu/ppm/ppm.html).
+    (http://spin.ccic.ohio-state.edu/index.php/download/index).
 
     Chemical shift prediction is for PROTEIN atoms; trajectory objects
     with ligands, solvent, ions, or other non-protein components may give
@@ -151,7 +151,7 @@ def chemical_shifts_ppm(trj):
 
     binary = find_executable(PPM)
     if binary is None:
-        raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_ppm` requires the external program PPM, available at http://spinportal.magnet.fsu.edu/ppm/ppm.html' % ', '.join(PPM))
+        raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_ppm` requires the external program PPM, available at http://spin.ccic.ohio-state.edu/index.php/download/index' % ', '.join(PPM))
 
     with enter_temp_directory():
         trj.save("./trj.pdb")
