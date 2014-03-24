@@ -269,6 +269,14 @@ def reindex_dataframe_by_atoms(trj, frame):
         Dataframe containing results, with index consisting of atom 
         indices (AKA the 'serial' entry in a PDB).  Columns correspond to
         each frame in trj.
+        
+    Notes
+    -----
+    
+    Be aware that this function may DROP predictions if the atom naming
+    is different between the input trajectory and the output of various
+    chemical shift prediction tools.
+    
     """
 
     top, bonds = trj.top.to_dataframe()
