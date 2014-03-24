@@ -1,6 +1,3 @@
-export PATH=$HOME/miniconda/bin:$PATH
-source $HOME/miniconda/bin/activate $python
-
 PYTHON_VERSION=`python -c 'import sys; print("%d.%d" % sys.version_info[:2])'`
 coveralls
 

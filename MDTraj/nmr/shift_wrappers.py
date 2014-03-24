@@ -89,7 +89,7 @@ def chemical_shifts_shiftx2(trj):
 
     binary = find_executable(SHIFTX2)
     if binary is None:
-        raise OSError('External command not found. Looked for %s in PATH. \nchemical_shifts_shiftx2 requires the external program SHIFTX2, available at http://www.shiftx2.ca/' % ', '.join(SHIFTX2))
+        raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_shiftx2` requires the external program SHIFTX2, available at http://www.shiftx2.ca/' % ', '.join(SHIFTX2))
 
     results = []
     with enter_temp_directory():
@@ -145,7 +145,7 @@ def chemical_shifts_ppm(trj):
 
     binary = find_executable(PPM)
     if binary is None:
-        raise OSError('External command not found. Looked for %s in PATH. \nchemical_shifts_ppm requires the external program PPM, available at http://spinportal.magnet.fsu.edu/ppm/ppm.html' % ', '.join(PPM))
+        raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_ppm` requires the external program PPM, available at http://spinportal.magnet.fsu.edu/ppm/ppm.html' % ', '.join(PPM))
 
     with enter_temp_directory():
         trj.save("./trj.pdb")
@@ -214,7 +214,7 @@ def chemical_shifts_spartaplus(trj):
 
     binary = find_executable(SPARTA_PLUS)
     if binary is None:
-        raise OSError('External command not found. Looked for %s in PATH. \nchemical_shifts_spartaplus requires the external program SPARTA+, available at http://spin.niddk.nih.gov/bax/software/SPARTA+/' % ', '.join(SPARTA_PLUS))
+        raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_spartaplus` requires the external program SPARTA+, available at http://spin.niddk.nih.gov/bax/software/SPARTA+/' % ', '.join(SPARTA_PLUS))
 
     names = ["VARS", "resSeq", "resName", "name", "SS_SHIFT", "SHIFT", "RC_SHIFT", "HM_SHIFT", "EF_SHIFT", "SIGMA"]
 
