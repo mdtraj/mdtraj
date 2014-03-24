@@ -27,6 +27,7 @@
 
 import os
 from distutils.spawn import find_executable as _find_executable
+import numpy as np
 import pandas as pd
 
 from mdtraj.utils import enter_temp_directory
@@ -106,7 +107,7 @@ def chemical_shifts_shiftx2(trj):
         for i in range(trj.n_frames):
             d = pd.read_csv("./trj%d.pdb.cs" % i)
             d.rename(columns={"NUM": "resSeq", "RES": "resName", "ATOMNAME": "name"}, inplace=True)
-            d["frame"] = trj.time[i]
+            d["frame"] = i
             print(d)
             results.append(d)
 
@@ -170,7 +171,7 @@ def chemical_shifts_ppm(trj):
         d["resSeq"] += first_resSeq - 1  # Fix bug in PPM that reindexes to 1
         d = d.drop("resName", axis=1)
         d = d.set_index(["resSeq", "name"])
-        d.columns = trj.time
+        d.columns = np.arange(trj.n_frames)
         d.columns.name = "frame"
 
     return d
@@ -243,7 +244,7 @@ def chemical_shifts_spartaplus(trj):
         results = []
         for i in range(trj.n_frames):
             d = pd.read_csv("./trj%d_pred.tab" % i, skiprows=lines_to_skip, delim_whitespace=True, header=None, names=names)
-            d["frame"] = trj.time[i]
+            d["frame"] = i
             results.append(d)
 
     results = pd.concat(results)
