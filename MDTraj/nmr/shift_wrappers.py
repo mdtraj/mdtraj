@@ -120,6 +120,7 @@ def chemical_shifts_ppm(trj):
         d = d.drop("resName", axis=1)
         d = d.set_index(["resSeq", "name"])
         d.columns = trj.time
+        d.columns.name = "frame"
     
     return d
 
