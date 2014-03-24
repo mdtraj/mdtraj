@@ -26,7 +26,6 @@
 ##############################################################################
 
 import os
-import string
 from distutils.spawn import find_executable as _find_executable
 import pandas as pd
 
@@ -69,8 +68,8 @@ def chemical_shifts_shiftx2(trj):
     Returns
     -------
     results : pandas DataFrame
-        Dataframe containing results, with index consisting of (resSeq, atom_name) pairs
-        and columns for each frame in trj.
+        Dataframe containing results, with index consisting of
+        (resSeq, atom_name) pairs and columns for each frame in trj.
 
     Notes
     -----
@@ -84,7 +83,9 @@ def chemical_shifts_shiftx2(trj):
 
     References
     ----------
-    .. [1] Beomsoo Han, Yifeng Liu, Simon Ginzinger, and David Wishart. "SHIFTX2: significantly improved protein chemical shift prediction." J. Biomol. NMR, 50, 1 43-57 (2011)
+    .. [1] Beomsoo Han, Yifeng Liu, Simon Ginzinger, and David Wishart.
+       "SHIFTX2: significantly improved protein chemical shift
+       prediction." J. Biomol. NMR, 50, 1 43-57 (2011)
     """
 
     binary = find_executable(SHIFTX2)
@@ -124,12 +125,13 @@ def chemical_shifts_ppm(trj):
     Returns
     -------
     results : pandas.DataFrame
-        Dataframe containing results, with index consisting of (resSeq, atom_name) pairs
-        and columns for each frame in trj.
+        Dataframe containing results, with index consisting of
+        (resSeq, atom_name) pairs and columns for each frame in trj.
 
     Notes
     -----
-    You must have ppm available on your path; see (http://spinportal.magnet.fsu.edu/ppm/ppm.html).
+    You must have ppm available on your path; see
+    (http://spinportal.magnet.fsu.edu/ppm/ppm.html).
 
     Chemical shift prediction is for PROTEIN atoms; trajectory objects
     with ligands, solvent, ions, or other non-protein components may give
@@ -139,7 +141,9 @@ def chemical_shifts_ppm(trj):
 
     References
     ----------
-    .. [1] Li, DW, and Bruschweiler, R. "PPM: a side-chain and backbone chemical shift predictor for the assessment of protein conformational ensembles." J Biomol NMR. 2012 Nov;54(3):257-65.
+    .. [1] Li, DW, and Bruschweiler, R. "PPM: a side-chain and backbone chemical
+       shift predictor for the assessment of protein conformational ensembles."
+       J Biomol NMR. 2012 Nov;54(3):257-65.
     """
     first_resSeq = trj.top.residue(0).resSeq
 
@@ -192,14 +196,15 @@ def chemical_shifts_spartaplus(trj):
     Returns
     -------
     results : pandas.DataFrame
-        Dataframe containing results, with index consisting of (resSeq, atom_name) pairs
-        and columns for each frame in trj.
+        Dataframe containing results, with index consisting of
+        (resSeq, atom_name) pairs and columns for each frame in trj.
 
     Notes
     -----
-    You must have ppm available on your path; see (http://spin.niddk.nih.gov/bax/software/SPARTA+/).
-    Also, the SPARTAP_DIR environment variable must be set so that SPARTA+
-    knows where to find its database files.
+    You must have SPARTA+ available on your path; see
+    (http://spin.niddk.nih.gov/bax/software/SPARTA+/). Also, the SPARTAP_DIR
+    environment variable must be set so that SPARTA+ knows where to find
+    its database files.
 
     Chemical shift prediction is for PROTEIN atoms; trajectory objects
     with ligands, solvent, ions, or other non-protein components may give
@@ -209,7 +214,9 @@ def chemical_shifts_spartaplus(trj):
 
     References
     ----------
-    .. [1] Shen, Y., and Bax, Ad. "SPARTA+: a modest improvement in empirical NMR chemical shift prediction by means of an artificial neural network." J. Biomol. NMR, 48, 13-22 (2010)
+    .. [1] Shen, Y., and Bax, Ad. "SPARTA+: a modest improvement in empirical
+       NMR chemical shift prediction by means of an artificial neural network."
+       J. Biomol. NMR, 48, 13-22 (2010)
     """
 
     binary = find_executable(SPARTA_PLUS)
@@ -222,7 +229,7 @@ def chemical_shifts_spartaplus(trj):
         for i in range(trj.n_frames):
             trj[i].save("./trj%d.pdb" % i)
 
-        cmd = "%s -in %s" % (binary, string.join(["trj%d.pdb" % i for i in range(trj.n_frames)]))
+        cmd = "%s -in %s" % (binary, ' '.join("trj%d.pdb" % i for i in range(trj.n_frames)))
 
         return_flag = os.system(cmd)
 
