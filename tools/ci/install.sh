@@ -1,6 +1,5 @@
 sudo apt-get install -qq -y g++ gfortran valgrind csh
 sudo apt-get install -qq -y g++-multilib gcc-multilib
-sudo apt-get install -qq -y ia32-libs-multiarch
 wget http://repo.continuum.io/miniconda/Miniconda-3.0.5-Linux-x86_64.sh
 bash Miniconda-3.0.5-Linux-x86_64.sh -b
 
