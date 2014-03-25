@@ -613,7 +613,7 @@ class Trajectory(object):
         Returns
         -------
         vectors : np.ndarray, shape(n_frames, 3, 3)
-            Vectors definiing the shape of the unit cell in each frame.
+            Vectors defining the shape of the unit cell in each frame.
             The semantics of this array are that the shape of the unit cell
             in frame ``i`` are given by the three vectors, ``value[i, 0, :]``,
             ``value[i, 1, :]``, and ``value[i, 2, :]``.
@@ -1063,7 +1063,7 @@ class Trajectory(object):
         if vectors is None:
             raise ValueError("this trajectory does not contain box size information")
 
-        v1, v2, v3 = vectors
+        v1, v2, v3 = (vectors[0,i,:] for i in range(3))
         return (Vec3(*v1), Vec3(*v2), Vec3(*v3)) * nanometer
 
     @staticmethod
