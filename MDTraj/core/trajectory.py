@@ -1059,11 +1059,11 @@ class Trajectory(object):
         from simtk.openmm import Vec3
         from simtk.unit import nanometer
 
-        vectors = self[frame].unitcell_vectors
+        vectors = self.unitcell_vectors[frame]
         if vectors is None:
             raise ValueError("this trajectory does not contain box size information")
 
-        v1, v2, v3 = vectors[0]
+        v1, v2, v3 = vectors
         return (Vec3(*v1), Vec3(*v2), Vec3(*v3)) * nanometer
 
     @staticmethod
