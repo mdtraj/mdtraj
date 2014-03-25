@@ -613,7 +613,7 @@ class Trajectory(object):
         Returns
         -------
         vectors : np.ndarray, shape(n_frames, 3, 3)
-            Vectors definiing the shape of the unit cell in each frame.
+            Vectors defining the shape of the unit cell in each frame.
             The semantics of this array are that the shape of the unit cell
             in frame ``i`` are given by the three vectors, ``value[i, 0, :]``,
             ``value[i, 1, :]``, and ``value[i, 2, :]``.
@@ -1059,7 +1059,7 @@ class Trajectory(object):
         from simtk.openmm import Vec3
         from simtk.unit import nanometer
 
-        vectors = self[frame].unitcell_vectors
+        vectors = self.unitcell_vectors[frame]
         if vectors is None:
             raise ValueError("this trajectory does not contain box size information")
 
