@@ -1063,7 +1063,7 @@ class Trajectory(object):
         if vectors is None:
             raise ValueError("this trajectory does not contain box size information")
 
-        v1, v2, v3 = (vectors[0,i,:] for i in range(3))
+        v1, v2, v3 = vectors[0]
         return (Vec3(*v1), Vec3(*v2), Vec3(*v3)) * nanometer
 
     @staticmethod
