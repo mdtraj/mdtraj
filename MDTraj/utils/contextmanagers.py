@@ -11,8 +11,8 @@ __all__ = ["timing", "enter_temp_directory"]
 class timing(object):
     """A timing context manager
 
-    Example
-    -------
+    Examples
+    --------
     >>> long_function = lambda : None
     >>> with timing('long_function'):
     ...     long_function()

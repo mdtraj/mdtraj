@@ -9,8 +9,8 @@ import os.path
 class _FormatRegistry(object):
     """Registry for trajectory file objects.
     
-    Example
-    -------
+    Examples
+    --------
     >>> @_FormatRegistry.register_loader('.xyz')
     >>> def load_xyz(filename):
         return Trajectory(...)
