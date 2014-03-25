@@ -24,7 +24,7 @@ If I'm interest in only a subset of the frames of the trajectory, I can slice it
 
 There's a lot of information in the trajectory object. The most obvious is the
 cartesian coordinates. They're stored as a numpy array under ``xyz``. All of
-the distances in the :ref:`Trajectory` are stored in nanometers. The time unit
+the distances in the `Trajectory` are stored in nanometers. The time unit
 is picoseconds. Angles are stored in degrees (not radians). ::
 
   >>> print t.xyz.shape
