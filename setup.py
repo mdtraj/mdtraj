@@ -1,10 +1,11 @@
-"""MDTraj: a python library for loading, saving, and manipulating molecular dynamics trajectories.
+"""MDTraj: Read, write and analyze MD trajectories with only a few lines of Python code.
 
-MDTraj provides an easy to use python interface for manipulating MD trajectories.
-It supports the reading and writing of molecular dynamics trajectories
-in a variety of formats, including full support for PDB, DCD, XTC, TRR, binpos,
-AMBER NetCDF, AMBER mdcrd and MDTraj HDF5. The package also provides a command line script
-for converting trajectories between supported formats.
+MDTraj is a python library that allows users to manipulate molecular dynamics
+(MD) trajectories and perform a variety of analyses, including fast RMSD,
+solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj 
+is the wide variety of molecular dynamics trajectory file formats which are
+supported, including RCSB pdb, GROMACS xtc and trr, CHARMM / NAMD dcd, AMBER
+binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 """
 
 from __future__ import print_function
@@ -332,7 +333,8 @@ setup(name='mdtraj',
       long_description="\n".join(DOCLINES[2:]),
       version=__version__,
       license='LGPLv2.1+',
-      url='http://rmcgibbo.github.io/mdtraj',
+      url='http://mdtraj.org',
+      download_url = "https://github.com/rmcgibbo/mdtraj/releases/latest",
       platforms=['Linux', 'Mac OS-X', 'Unix', 'Windows'],
       classifiers=CLASSIFIERS.splitlines(),
       packages=find_packages(),
