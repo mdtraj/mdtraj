@@ -25,7 +25,7 @@ conda install --yes matplotlib scikit-learn sphinx boto ipython-notebook jinja2
 pip install runipy==0.0.4                      # example notebooks
 
 # Install OpenMM for a couple of the the examples
-conda config --add channels http://conda.binstar.org/rmcgibbo
+conda config --add channels http://conda.binstar.org/omnia
 conda install --yes openmm
 
 cd docs && make html && cd -
