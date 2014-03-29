@@ -2741,6 +2741,10 @@ a.wy-text-neutral:hover {
     background:#fff;
     margin:1px 0 0 0
 }
+.codeblock,div[class^='highlight-python'] {
+    margin-bottom: 24px;
+}
+
 .codeblock div[class^='highlight'],div[class^='highlight'] div[class^='highlight'] {
     border:none;
     background:none;
