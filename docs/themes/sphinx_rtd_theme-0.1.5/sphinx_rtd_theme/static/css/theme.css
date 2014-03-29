@@ -27,8 +27,9 @@ audio:not([controls]) {
 html {
     font-size:100%;
     -webkit-text-size-adjust:100%;
-    -ms-text-size-adjust:100%
+    -ms-text-size-adjust:100%;
     background: #343131;
+    min-height: 100%;
 }
 body {
     margin:0
@@ -3074,7 +3075,8 @@ pre.literal-block {
     white-space:nowrap
 }
 .wy-menu-vertical ul {
-    margin-bottom:0
+    margin-bottom:0;
+    margin-left:0
 }
 .wy-menu-vertical li.divide-top {
     border-top:solid 1px #404040
