@@ -38,6 +38,8 @@ except ImportError:
     exit(1)
 
 try:
+    # add an optional command line flag --no-install-deps to setup.py
+    # to turn off setuptools automatic downloading of dependencies
     sys.argv.remove('--no-install-deps')
     no_install_deps = True
 except ValueError:
@@ -53,7 +55,8 @@ if 'setuptools' in sys.modules:
                'mdinspect = mdtraj.scripts.mdinspect:entry_point']}
 
     if sys.version_info[0] == 2:
-        # required to fix cythoninze() for old versions of setuptools
+        # required to fix cythoninze() for old versions of setuptools on
+        # python 2
         m = sys.modules['setuptools.extension']
         m.Extension.__dict__ = m._Extension.__dict__
 else:
@@ -165,69 +168,111 @@ if not release:
 # Detection of compiler capabilities
 ################################################################################
 
-def hasfunction(cc, funcname, include=None, extra_postargs=None):
-    # From http://stackoverflow.com/questions/
-    #            7018879/disabling-output-when-compiling-with-distutils
-    tmpdir = tempfile.mkdtemp(prefix='hasfunction-')
-    devnull = oldstderr = None
-    try:
+class CompilerDetection(object):
+    def __init__(self):
+        self.msvc = new_compiler().compiler_type == 'msvc'
+
+        self.openmp_enabled, openmp_needs_gomp = self._detect_openmp()
+        self.sse3_enabled = self._detect_sse3()
+        self.sse41_enabled = self._detect_sse41()
+        
+        self.compiler_args_sse2  = ['-msse2'] if not self.msvc else ['/arch:SSE2']
+        self.compiler_args_sse3  = ['-mssse3'] if (self.sse3_enabled and not self.msvc) else []
+        if self.sse41_enabled and not self.msvc:
+            self.compiler_args_sse41 = ['-msse4']
+            self.define_macros_sse41 = [('__SSE4__', 1), ('__SSE4_1__', 1)]
+        else:
+            self.compiler_args_sse41 = []
+            self.define_macros_sse41 = []
+
+        if self.openmp_enabled:
+            self.compiler_libraries_openmp = ['gomp'] if openmp_needs_gomp else []
+
+            if self.msvc:
+                self.compiler_args_openmp = ['/openmp']
+            else:
+                self.compiler_args_openmp = ['-fopenmp']
+        else:
+            self.compiler_libraries_openmp = []
+            self.compiler_args_openmp = []
+
+        if self.msvc:
+            self.compiler_args_opt = ['/O2']
+        else:
+            self.compiler_args_opt = ['-O3', '-funroll-loops']
+
+    def hasfunction(self, cc, funcname, include=None, extra_postargs=None):
+        # From http://stackoverflow.com/questions/
+        #            7018879/disabling-output-when-compiling-with-distutils
+        tmpdir = tempfile.mkdtemp(prefix='hasfunction-')
+        devnull = oldstderr = None
         try:
-            fname = os.path.join(tmpdir, 'funcname.c')
-            f = open(fname, 'w')
-            if include is not None:
-                f.write('#include %s\n' % include)
-            f.write('int main(void) {\n')
-            f.write('    %s;\n' % funcname)
-            f.write('}\n')
-            f.close()
-            devnull = open(os.devnull, 'w')
-            oldstderr = os.dup(sys.stderr.fileno())
-            os.dup2(devnull.fileno(), sys.stderr.fileno())
-            objects = cc.compile([fname], output_dir=tmpdir,
-                                 extra_postargs=extra_postargs)
-            cc.link_executable(objects, os.path.join(tmpdir, 'a.out'))
-        except Exception as e:
-            return False
-        return True
-    finally:
-        if oldstderr is not None:
-            os.dup2(oldstderr, sys.stderr.fileno())
-        if devnull is not None:
-            devnull.close()
-        shutil.rmtree(tmpdir)
+            try:
+                fname = os.path.join(tmpdir, 'funcname.c')
+                f = open(fname, 'w')
+                if include is not None:
+                    f.write('#include %s\n' % include)
+                f.write('int main(void) {\n')
+                f.write('    %s;\n' % funcname)
+                f.write('}\n')
+                f.close()
+                devnull = open(os.devnull, 'w')
+                oldstderr = os.dup(sys.stderr.fileno())
+                os.dup2(devnull.fileno(), sys.stderr.fileno())
+                objects = cc.compile([fname], output_dir=tmpdir,
+                                     extra_postargs=extra_postargs)
+                cc.link_executable(objects, os.path.join(tmpdir, 'a.out'))
+            except Exception as e:
+                return False
+            return True
+        finally:
+            if oldstderr is not None:
+                os.dup2(oldstderr, sys.stderr.fileno())
+            if devnull is not None:
+                devnull.close()
+            shutil.rmtree(tmpdir)
 
+    def _print_support_start(self, feature):
+        print('Attempting to autodetect {} support...'.format(feature), end=' ')
 
-def detect_openmp():
-    "Does this compiler support OpenMP parallelization?"
-    compiler = new_compiler()
-    print('Attempting to autodetect OpenMP support...', end=' ')
-    hasopenmp = hasfunction(compiler, 'omp_get_num_threads()')
-    needs_gomp = hasopenmp
-    if not hasopenmp:
-        compiler.add_library('gomp')
-        hasopenmp = hasfunction(compiler, 'omp_get_num_threads()')
+    def _print_support_end(self, feature, status):
+        if status is True:
+            print('Compiler supports {}'.format(feature))
+        else:
+            print('Did not detect {} support'.format(feature))
+            
+    def _detect_openmp(self):
+        self._print_support_start('OpenMP')
+        compiler = new_compiler()
+        hasopenmp = self.hasfunction(compiler, 'omp_get_num_threads()', extra_postargs=['-fopenmp', '/openmp'])
         needs_gomp = hasopenmp
-    print
-    if hasopenmp:
-        print('Compiler supports OpenMP')
-    else:
-        print('Did not detect OpenMP support; parallel RMSD disabled')
-    return hasopenmp, needs_gomp
+        if not hasopenmp:
+            compiler.add_library('gomp')
+            hasopenmp = self.hasfunction(compiler, 'omp_get_num_threads()')
+            needs_gomp = hasopenmp
+        self._print_support_end('OpenMP', hasopenmp)
+        return hasopenmp, needs_gomp
+    
+    def _detect_sse3(self):
+        "Does this compiler support SSE3 intrinsics?"
+        compiler = new_compiler()
+        self._print_support_start('SSE3')
+        result = self.hasfunction(compiler, '__m128 v; _mm_hadd_ps(v,v)',
+                           include='<pmmintrin.h>',
+                           extra_postargs=['-msse3'])
+        self._print_support_end('SSE3', result)
+        return result
 
-
-def detect_sse3():
-    "Does this compiler support SSE3 intrinsics?"
-    compiler = new_compiler()
-    return hasfunction(compiler, '__m128 v; _mm_hadd_ps(v,v)',
-                       include='<pmmintrin.h>',
-                       extra_postargs=['-msse3'])
-
-def detect_sse41():
-    "Does this compiler support SSE4.1 intrinsics?"
-    compiler = new_compiler()
-    return hasfunction(compiler, '__m128 v; _mm_round_ps(v,0x00)',
-                       include='<smmintrin.h>',
-                       extra_postargs=['-msse4'])
+    def _detect_sse41(self):
+        "Does this compiler support SSE4.1 intrinsics?"
+        compiler = new_compiler()
+        self._print_support_start('SSE4.1')
+        result = self.hasfunction(compiler, '__m128 v; _mm_round_ps(v,0x00)',
+                           include='<smmintrin.h>',
+                           extra_postargs=['-msse4'])
+        self._print_support_end('SSE4.1', result)
+        return result
+compiler = CompilerDetection()
 
 ################################################################################
 # Declaration of the compiled extension modules (cython + c)
@@ -262,16 +307,9 @@ binpos = Extension('mdtraj.formats.binpos',
 
 
 def rmsd_extensions():
-    openmp_enabled, needs_gomp = detect_openmp()
-    compiler_args = ['-msse2' if not detect_sse3() else '-mssse3',
-                     '-O3', '-funroll-loops']
-    if new_compiler().compiler_type == 'msvc':
-        compiler_args.append('/arch:SSE2')
-
-    if openmp_enabled:
-        compiler_args.append('-fopenmp')
-    compiler_libraries = ['gomp'] if needs_gomp else []
-
+    compiler_args = (compiler.compiler_args_openmp + compiler.compiler_args_sse2 +
+                     compiler.compiler_args_sse3 + compiler.compiler_args_opt)
+    compiler_libraries = compiler.compiler_libraries_openmp
     rmsd = Extension('mdtraj._rmsd',
                      sources=[
                          'MDTraj/rmsd/src/theobald_rmsd.c',
@@ -301,15 +339,14 @@ def rmsd_extensions():
 
 
 def geometry():
-    if not detect_sse3():
-        return None
-
-    extra_compile_args = ['-mssse3']
+    if not compiler.sse3_enabled:
+        print('SSE3 not enabled. Skipping geometry')
+        return
+    compiler_args = compiler.compiler_args_sse3
     define_macros = []
-    if detect_sse41():
-        define_macros.append(('__SSE4__', 1))
-        define_macros.append(('__SSE4_1__', 1))
-        extra_compile_args.append('-msse4')
+    if compiler.sse41_enabled:
+        compiler_args += compiler.compiler_args_sse41
+        define_macros += compiler.define_macros_sse41
 
     return Extension('mdtraj.geometry._geometry',
                      sources=['MDTraj/geometry/src/geometry.c',
@@ -317,7 +354,7 @@ def geometry():
                               'MDTraj/geometry/src/_geometry.pyx'],
                      include_dirs=['MDTraj/geometry/include', numpy.get_include()],
                      define_macros=define_macros,
-                     extra_compile_args=extra_compile_args)
+                     extra_compile_args=compiler_args)
 
 extensions = [xtc, trr, dcd, binpos]
 extensions.extend(rmsd_extensions())
