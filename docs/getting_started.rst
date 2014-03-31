@@ -13,7 +13,7 @@ Install with Conda
 ------------------
 `conda <http://www.continuum.io/blog/conda>`_ is a python package manager built for scientific python. Unlike ``easy_install`` or ``pip``, it handles binaries and binary dependencies, which are critical for most scientific workflows.
 
-If you're a ``conda`` user, you can install MDTraj by adding rmcgibbo's channel. If you're not a conda user, you should look into it ::
+If you're a ``conda`` user, you can install MDTraj by adding the omnia channel. If you're not a conda user, you should look into it ::
 
     conda config --add channels http://conda.binstar.org/omnia
 
@@ -35,10 +35,6 @@ Or, if you want the bleeding-edge source code, use ::
 
   $ pip install git+git://github.com/rmcgibbo/mdtraj.git
 
-On windows, you'll probably want to use the prebuilt binary packages
-hosted on PyPi. Choose the one that is appropriate for your
-version of python.
-
 Install from Source
 -------------------
 Clone the source code repository from github::
@@ -53,7 +49,7 @@ https://github.com/rmcgibbo/mdtraj/archive/master.zip. Then, in the directory co
 Get the Dependencies (Not Required with Conda)
 ==============================================
 
-MDTraj requires a few external libraries to work properly. Some of them are
+MDTraj requires a few external python libraries to work properly. Some of them are
 optional. You'll definitely need ``numpy``. If you're compiling from source (as
 opposed to getting MDTraj from conda), you'll also need a working C compiler
 and build environment to compile the C-level extensions that connect
@@ -81,14 +77,13 @@ Linux
 ++++++
 If you're on ubuntu and have root, you can install everything through your package manager. ::
 
-    $ sudo apt-get install libhdf5-serial-dev python-dev python-numpy python-scipy python-nose python-setuptools cython python-numexpr python-tables
+    $ sudo apt-get install libhdf5-serial-dev python-dev python-numpy python-scipy python-nose python-setuptools cython python-numexpr python-tables python-pandas
 
 Mac
 +++
-If you're on mac and want a package manager, you should be using `homebrew <http://mxcl.github.io/homebrew/>`_ and ``brews``'s python (see `this page <https://github.com/mxcl/homebrew/wiki/Homebrew-and-Python>`_ for details). The best way to install numpy and scipy with ``brew`` is to use
-samueljohn's tap. ::
+If you're on mac and want a package manager, you should be using `homebrew <http://mxcl.github.io/homebrew/>`_ and ``brews``'s python (see `this page <https://github.com/mxcl/homebrew/wiki/Homebrew-and-Python>`_ for details). The best way to install numpy and scipy with ``brew`` is:
 
-  $ brew tap samueljohn/python
+  $ brew tap Homebrew/python
   $ brew install python
   $ brew install numpy
   $ brew install scipy
@@ -96,13 +91,13 @@ samueljohn's tap. ::
 
 Then, you can install the remaining packages with pip. ::
 
-  $ pip install nose numexpr cython tables
-  
+  $ pip install nose numexpr cython tables pandas
+
 Windows
 +++++++
 Chris Gohlke maintains windows binary distributions for an ever-growing
 set of python extensions on `his website <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_.
-Download and install the the installers for setuptools, nose, numpy, scipy, numexpr, and tables.
+Download and install the the installers for setuptools, nose, numpy, scipy, numexpr, pandas and tables.
 
 Compiling Dependencies from source (no root needed)
 ---------------------------------------------------
