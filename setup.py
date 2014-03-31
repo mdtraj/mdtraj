@@ -272,6 +272,8 @@ class CompilerDetection(object):
                            extra_postargs=['-msse4'])
         self._print_support_end('SSE4.1', result)
         return result
+
+# Global info about compiler
 compiler = CompilerDetection()
 
 ################################################################################
@@ -342,7 +344,7 @@ def geometry():
     if not compiler.sse3_enabled:
         print('SSE3 not enabled. Skipping geometry')
         return
-    compiler_args = compiler.compiler_args_sse3
+    compiler_args = (compiler.compiler_args_sse2 + compiler.compiler_args_sse3 + compiler.compiler_args_opt)
     define_macros = []
     if compiler.sse41_enabled:
         compiler_args += compiler.compiler_args_sse41
