@@ -233,13 +233,13 @@ class CompilerDetection(object):
             shutil.rmtree(tmpdir)
 
     def _print_support_start(self, feature):
-        print('Attempting to autodetect {} support...'.format(feature), end=' ')
+        print('Attempting to autodetect {0} support...'.format(feature), end=' ')
 
     def _print_support_end(self, feature, status):
         if status is True:
-            print('Compiler supports {}'.format(feature))
+            print('Compiler supports {0}'.format(feature))
         else:
-            print('Did not detect {} support'.format(feature))
+            print('Did not detect {0} support'.format(feature))
             
     def _detect_openmp(self):
         self._print_support_start('OpenMP')
