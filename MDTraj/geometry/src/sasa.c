@@ -25,9 +25,7 @@
 #include <math.h>
 
 #include <pmmintrin.h>
-#ifdef __SSE4_1__
 #include <smmintrin.h>
-#endif
 
 #include "msvccompat.h"
 #include "ssetools.h"

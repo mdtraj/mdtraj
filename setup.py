@@ -173,8 +173,8 @@ class CompilerDetection(object):
         self.msvc = new_compiler().compiler_type == 'msvc'
 
         self.openmp_enabled, openmp_needs_gomp = self._detect_openmp()
-        self.sse3_enabled = self._detect_sse3()
-        self.sse41_enabled = self._detect_sse41()
+        self.sse3_enabled = self._detect_sse3() if not self.msvc else True
+        self.sse41_enabled = self._detect_sse41() if not self.msvc else True
         
         self.compiler_args_sse2  = ['-msse2'] if not self.msvc else ['/arch:SSE2']
         self.compiler_args_sse3  = ['-mssse3'] if (self.sse3_enabled and not self.msvc) else []
@@ -341,15 +341,12 @@ def rmsd_extensions():
 
 
 def geometry():
-    if not compiler.sse3_enabled:
-        print('SSE3 not enabled. Skipping geometry')
+    if not (compiler.sse3_enabled and compiler.sse41_enabled):
+        print('SSE3 and SSE4.1 not enabled. Skipping geometry')
         return
     compiler_args = (compiler.compiler_args_sse2 + compiler.compiler_args_sse3 + compiler.compiler_args_sse41 +
-                     compiler.compiler_args_opt)
-    define_macros = []
-    if compiler.sse41_enabled:
-        compiler_args += compiler.compiler_args_sse41
-        define_macros += compiler.define_macros_sse41
+                     compiler.compiler_args_opt + compiler.compiler_args_sse41)
+    define_macros = [compiler.define_macros_sse41]
 
     return Extension('mdtraj.geometry._geometry',
                      sources=['MDTraj/geometry/src/geometry.c',

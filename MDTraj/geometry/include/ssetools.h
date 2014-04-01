@@ -1,12 +1,10 @@
-#ifndef _SSE_TOOLS_H
-#define _SSE_TOOLS_H
+#ifndef _SSE_TOOLS_H_
+#define _SSE_TOOLS_H_
 
 #include "msvccompat.h"
 #include <stdio.h>
 #include <pmmintrin.h>
-#ifdef __SSE4_1__
 #include <smmintrin.h>
-#endif
 
 /****************************************************************************/
 /* Utilities                                                                */
@@ -39,16 +37,5 @@ static int printf_m128(__m128 v) {
   printf("%f %f %f %f\n", p[0], p[1], p[2], p[3]);
   return 1;
 }
-
-#ifndef __SSE4_1__
-static INLINE __m128 _mm_dp_ps(__m128 a, __m128 b, int mask) {
-    /* Replacement for _mm_dp_ps without SSE 4.1. */
-  if ((mask & 0x70) != 0x70) exit(1);
-  __m128 s = _mm_mul_ps(a, b);
-  s = _mm_hadd_ps(s, s);
-  return _mm_hadd_ps(s, s);
-}
-#endif
-
 
 #endif /* _SSE_TOOLS_H */
