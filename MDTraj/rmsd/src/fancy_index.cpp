@@ -8,11 +8,11 @@
  * of the memory, which must be `free`d.
  *
  **/
-static long*
-range(long n)
+static int*
+range(int n)
 {
-    long i;
-    long* r = (long*) malloc(n * sizeof(long));
+    int i;
+    int* r = (int*) malloc(n * sizeof(int));
     if (r == NULL) { fprintf(stderr, "malloc failure in file '%s' in line %i\n", __FILE__, __LINE__); exit(1); }
 
     for (i = 0; i < n; i++) {
@@ -40,13 +40,13 @@ range(long n)
  * can't be used inside a prange construct
  **/
 void
-fancy_index2d(const float* A, long nx, long ny,
-              const long* indx, long nindx, const long* indy, long nindy,
+fancy_index2d(const float* A, int nx, int ny,
+              const int* indx, int nindx, const int* indy, int nindy,
               float* out)
 {
-    long i, ii, j, jj;
-    long* indx_ = (long*) indx;
-    long* indy_ = (long*) indy;
+    int i, ii, j, jj;
+    int* indx_ = (int*) indx;
+    int* indy_ = (int*) indy;
 
     if (indx == NULL) { indx_ = range(nx); nindx = nx; }
     if (indy == NULL) { indy_ = range(ny); nindy = ny; }
