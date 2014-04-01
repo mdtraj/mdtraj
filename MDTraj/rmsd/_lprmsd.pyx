@@ -35,6 +35,7 @@ from libc.stdio cimport printf
 from cpython cimport bool
 from cython.parallel cimport prange
 np.import_array()
+assert sizeof(np.long_t) == sizeof(long)
 
 
 ##############################################################################
@@ -140,8 +141,8 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
     cdef int n_atoms_total = target.xyz.shape[1]
     cdef int superpose_ = superpose
     cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] target_xyz = np.asarray(target.xyz, order='c')
-    cdef np.ndarray[ndim=1, dtype=np.long_t, mode='c'] atom_indices_ = atom_indices
-    cdef np.ndarray[ndim=1, dtype=np.long_t, mode='c'] dis_indices_ = dis_indices
+    cdef np.ndarray[ndim=1, dtype=long, mode='c'] atom_indices_ = atom_indices
+    cdef np.ndarray[ndim=1, dtype=long, mode='c'] dis_indices_ = dis_indices
 
     # get the all the coords in atom_indices in target and ref.
     # center them and compute the g values
