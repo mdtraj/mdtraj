@@ -43,7 +43,7 @@
    #include <sys/sysctl.h>
    #include <dlfcn.h>
 #else
-   #ifdef WIN32
+   #ifdef _WIN32
       #define NOMINMAX
       #include <windows.h>
    #else
