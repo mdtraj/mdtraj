@@ -346,7 +346,7 @@ def geometry():
         return
     compiler_args = (compiler.compiler_args_sse2 + compiler.compiler_args_sse3 + compiler.compiler_args_sse41 +
                      compiler.compiler_args_opt + compiler.compiler_args_sse41)
-    define_macros = [compiler.define_macros_sse41]
+    define_macros = compiler.define_macros_sse41
 
     return Extension('mdtraj.geometry._geometry',
                      sources=['MDTraj/geometry/src/geometry.c',
