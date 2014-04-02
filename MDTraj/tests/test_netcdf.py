@@ -30,6 +30,7 @@ import os, tempfile
 from nose.tools import assert_raises
 import numpy as np
 import mdtraj as md
+from mdtraj.utils import enter_temp_directory as td:
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
 
 TestDocstrings = DocStringFormatTester(netcdf, error_on_none=True)
@@ -125,19 +126,20 @@ def test_read_write_2():
     xyz = np.random.randn(5, 22, 3)
     time = np.random.randn(5)
 
-    with NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
-        f.write(xyz, time)
+    with td():
+        with NetCDFTrajectoryFile('temp.nc', 'w', force_overwrite=True) as f:
+            f.write(xyz, time)
 
-    with NetCDFTrajectoryFile(temp) as f:
-        rcoord, rtime, rlengths, rangles = f.read()
-        yield lambda: eq(rcoord, xyz)
-        yield lambda: eq(rtime, time)
-        yield lambda: eq(rlengths, None)
-        yield lambda: eq(rangles, None)
+        with NetCDFTrajectoryFile('temp.nc') as f:
+            rcoord, rtime, rlengths, rangles = f.read()
+            yield lambda: eq(rcoord, xyz)
+            yield lambda: eq(rtime, time)
+            yield lambda: eq(rlengths, None)
+            yield lambda: eq(rangles, None)
 
-    t = md.load(temp, top=get_fn('native.pdb'))
-    eq(t.unitcell_angles, None)
-    eq(t.unitcell_lengths, None)
+        t = md.load('temp.nc', top=get_fn('native.pdb'))
+        eq(t.unitcell_angles, None)
+        eq(t.unitcell_lengths, None)
 
 
 def test_ragged_1():
@@ -147,9 +149,10 @@ def test_ragged_1():
     cell_lengths = np.random.randn(100, 3)
     cell_angles = np.random.randn(100, 3)
 
-    with NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
-        f.write(xyz, time)
-        assert_raises(ValueError, lambda: f.write(xyz, time, cell_lengths, cell_angles))
+    with td():
+        with NetCDFTrajectoryFile('temp.nc', 'w', force_overwrite=True) as f:
+            f.write(xyz, time)
+            assert_raises(ValueError, lambda: f.write(xyz, time, cell_lengths, cell_angles))
 
 
 def test_ragged_2():
@@ -159,31 +162,32 @@ def test_ragged_2():
     cell_lengths = np.random.randn(100, 3)
     cell_angles = np.random.randn(100, 3)
 
-    #from mdtraj.formats import HDF5TrajectoryFile
-    with NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
-        f.write(xyz, time, cell_lengths, cell_angles)
-        assert_raises(ValueError, lambda: f.write(xyz, time))
+    with td():
+        with NetCDFTrajectoryFile('temp.nc', 'w', force_overwrite=True) as f:
+            f.write(xyz, time, cell_lengths, cell_angles)
+            assert_raises(ValueError, lambda: f.write(xyz, time))
 
 
 def test_read_write_25():
     xyz = np.random.randn(100, 3, 3)
     time = np.random.randn(100)
 
-    with NetCDFTrajectoryFile(temp, 'w', force_overwrite=True) as f:
-        f.write(xyz, time)
-        f.write(xyz, time)
+    with td():
+        with NetCDFTrajectoryFile('temp.nc', 'w', force_overwrite=True) as f:
+            f.write(xyz, time)
+            f.write(xyz, time)
 
-    with NetCDFTrajectoryFile(temp) as f:
-        a, b, c, d = f.read()
-        yield lambda: eq(a[0:100], xyz)
-        yield lambda: eq(b[0:100], time)
-        yield lambda: eq(c, None)
-        yield lambda: eq(d, None)
-
-        yield lambda: eq(a[100:], xyz)
-        yield lambda: eq(b[100:], time)
-        yield lambda: eq(c, None)
-        yield lambda: eq(d, None)
+        with NetCDFTrajectoryFile('temp.nc') as f:
+            a, b, c, d = f.read()
+            yield lambda: eq(a[0:100], xyz)
+            yield lambda: eq(b[0:100], time)
+            yield lambda: eq(c, None)
+            yield lambda: eq(d, None)
+            
+            yield lambda: eq(a[100:], xyz)
+            yield lambda: eq(b[100:], time)
+            yield lambda: eq(c, None)
+            yield lambda: eq(d, None)
 
 def test_write_3():
     xyz = np.random.randn(100, 3, 3)

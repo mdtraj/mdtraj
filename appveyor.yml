@@ -1,11 +1,16 @@
 # Configuration file for AppVeyor continuous integration on Windows
-# https://ci.appveyor.com/project/RobertMcGibbon/mdtraj
+# https://ci.appveyor.com/project/rmcgibbo/mdtraj
+
+# These tests currently run with python3 on a 32 bit windows. Running
+# the tests on python2 is substatially difficult because the AppVeyor
+# cloud doesn't have Visual Studio 2008 installed, which is the
+# required compiler for python2 extension modules on windows.
 
 os: Windows Server 2012
 
 install:
   - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
-  - C:\Python27\python.exe c:\get-pip.py
+  - C:\Python27\python.exe c:\get-pip.pyg
   - C:\Python27\Scripts\pip.exe install pyyaml
   - C:\Python27\Scripts\pip.exe install pycosat
   - C:\Python27\Scripts\pip.exe install conda
