@@ -67,7 +67,6 @@ def test_contact_1():
             eq(maps[t, r0, r1], dists[t, i])
 
 
-@skipif(os.environ['CI'], 'Skipping on CI')
 def test_contact_2():
     pdb = md.load(get_fn('1vii_sustiva_water.pdb'))
     dists, pairs = md.compute_contacts(pdb, scheme='closest')
