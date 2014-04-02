@@ -113,7 +113,7 @@ static void cpuid(int cpuInfo[4], int infoType){
 
 
 static int processorSupportsSSE41(void) {
-    // Make sure the CPU supports SSE 4.1.
+    /* Make sure the CPU supports SSE 4.1. */
     int cpuInfo[4];
     cpuid(cpuInfo, 0);
     if (cpuInfo[0] >= 1) {
@@ -123,4 +123,4 @@ static int processorSupportsSSE41(void) {
     return 0;
 }
 
-#endif // OPENMM_HARDWARE_H_
+#endif /* OPENMM_HARDWARE_H_ */
