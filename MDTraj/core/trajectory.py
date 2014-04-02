@@ -820,7 +820,8 @@ class Trajectory(object):
             ref_align_xyz, self_align_xyz, ref_g, self_g, self_displace_xyz,
             0, parallel=parallel)
 
-        self.xyz = self_displace_xyz + ref_offset
+        self_displace_xyz += ref_offset
+        self.xyz = self_displace_xyz
         return self
 
     def join(self, other, check_topology=True, discard_overlapping_frames=False):
