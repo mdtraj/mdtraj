@@ -35,14 +35,15 @@ from libc.stdio cimport printf
 from cpython cimport bool
 from cython.parallel cimport prange
 np.import_array()
+assert sizeof(np.int32_t) == sizeof(int)
 
 
 ##############################################################################
 # External c/cpp function declarations
 ##############################################################################
 cdef extern from "include/fancy_index.hpp":
-    cdef extern void fancy_index2d(const float* A, long nx, long ny,
-        const long* indx, long nindx, const long* indy, long nindy, float* out) nogil
+    cdef extern void fancy_index2d(const float* A, int nx, int ny,
+        const int* indx, int nindx, const int* indy, int nindy, float* out) nogil
 cdef extern float msd_atom_major(int nrealatoms, int npaddedatoms,  float* a,
     float* b, float G_a, float G_b, int computeRot, float rot[9]) nogil
 cdef extern float rot_atom_major(const int n_atoms, float* a, const float rot[9]) nogil
@@ -54,8 +55,8 @@ cdef extern from "include/Munkres.h":
         Munkres()
         void solve(double* icost, int* answer, int m, int n)
 cdef extern from "include/euclidean_permutation.hpp":
-   vector[long] euclidean_permutation(float* target, float* reference,
-       long n_atoms, long n_dims, vector[vector[long]]& permute_groups) nogil
+   vector[int] euclidean_permutation(float* target, float* reference,
+       int n_atoms, int n_dims, vector[vector[int]]& permute_groups) nogil
 cdef extern from "math.h":
     float sqrtf(float x) nogil
 
@@ -129,19 +130,18 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
     # these are the indices of the permute atoms inside the coords array after
     # selecting only the atom indices.
     # i.e. [xyz[atom_indices][i] for in permute_groups_rel]
-    cdef vector[vector[long]] permute_groups_stl
+    cdef vector[vector[int]] permute_groups_stl
     for pgroup in permute_groups:
          permute_groups_stl.push_back(np.searchsorted(atom_indices, pgroup))
     dis_indices = np.setdiff1d(
             np.arange(len(atom_indices)), np.concatenate(permute_groups_stl))
     # print('dis indices', dis_indices)
 
-
     cdef int n_atoms_total = target.xyz.shape[1]
     cdef int superpose_ = superpose
     cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] target_xyz = np.asarray(target.xyz, order='c')
-    cdef np.ndarray[ndim=1, dtype=np.long_t, mode='c'] atom_indices_ = atom_indices
-    cdef np.ndarray[ndim=1, dtype=np.long_t, mode='c'] dis_indices_ = dis_indices
+    cdef np.ndarray[ndim=1, dtype=int, mode='c'] atom_indices_ = np.asarray(atom_indices, dtype=np.int32)
+    cdef np.ndarray[ndim=1, dtype=int, mode='c'] dis_indices_ =  np.asarray(dis_indices, dtype=np.int32)
 
     # get the all the coords in atom_indices in target and ref.
     # center them and compute the g values
@@ -150,10 +150,10 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
     cdef float ref_g, target_g
     cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] target_xyz_frame
     cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] target_xyz_frame2
-    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] ref_xyz_frame    
+    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] ref_xyz_frame
     cdef int target_n_frames = target.xyz.shape[0]
     cdef int n_atoms = len(atom_indices)
-    ref_xyz_frame = np.array(reference.xyz[frame, atom_indices, :], dtype=np.float32, copy=True)    
+    ref_xyz_frame = np.array(reference.xyz[frame, atom_indices, :], dtype=np.float32, copy=True)
     target_xyz_frame = np.finfo(np.float32).max * np.ones_like(ref_xyz_frame)
     target_xyz_frame2 = np.empty_like(target_xyz_frame)
     inplace_center_and_trace_atom_major(&ref_xyz_frame[0, 0], &ref_g, 1, n_atoms)
@@ -173,7 +173,7 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
         inplace_center_and_trace_atom_major(&ref_xyz_frame_dis[0, 0], &ref_g_dis, 1, n_atoms_dis)
 
 
-    cdef vector[long] mapping
+    cdef vector[int] mapping
     cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] rot1 = np.eye(3, dtype=np.float32)
     cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] rot2 = np.eye(3, dtype=np.float32)
     cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] rot3 = np.eye(3, dtype=np.float32)
@@ -181,7 +181,7 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
 
     #for i in prange(target_n_frames, nogil=True):
     for i in range(target_n_frames):
-        fancy_index2d(&target_xyz[i,0,0], n_atoms_total, 3, <long*> &atom_indices_[0],
+        fancy_index2d(&target_xyz[i,0,0], n_atoms_total, 3, <int*> &atom_indices_[0],
                       n_atoms, NULL, 0, &target_xyz_frame[0, 0])
         inplace_center_and_trace_atom_major(&target_xyz_frame[0, 0], &target_g, 1, n_atoms)
 
@@ -190,7 +190,7 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
             # subsample the target_xyz_frame to get just the distinguishable atoms
             # target_xyz_frame has already been "sampled down" by atom_indices, so we
             # can now apply dis_indices
-            fancy_index2d(&target_xyz_frame[0,0], n_atoms, 3, <long*> &dis_indices_[0],
+            fancy_index2d(&target_xyz_frame[0,0], n_atoms, 3, <int*> &dis_indices_[0],
                           n_atoms_dis, NULL, 0, &target_xyz_frame_dis[0, 0])
             inplace_center_and_trace_atom_major(&target_xyz_frame_dis[0,0], &target_g_dis, 1, n_atoms_dis)
 

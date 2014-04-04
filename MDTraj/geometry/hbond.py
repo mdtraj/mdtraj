@@ -207,6 +207,9 @@ def kabsch_sander(traj):
     """
     if traj.topology is None:
         raise ValueError('kabsch_sander requires topology')
+    if not _geometry._processor_supports_sse41():
+        raise RuntimeError('This CPU does not support the required instruction set (SSE4.1)')
+
     import scipy.sparse
 
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz',

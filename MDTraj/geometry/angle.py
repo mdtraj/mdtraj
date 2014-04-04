@@ -62,7 +62,7 @@ def compute_angles(traj, angle_indices, opt=True):
         raise ValueError('angle_indices must be between 0 and %d' % traj.n_atoms)
 
     out = np.zeros((xyz.shape[0], triplets.shape[0]), dtype=np.float32)
-    if opt:
+    if opt and _geometry._processor_supports_sse41():
         _geometry._angle(xyz, triplets, out)
     else:
         _angle(xyz, triplets, out)
