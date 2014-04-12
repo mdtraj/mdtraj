@@ -321,7 +321,7 @@ def iterload(filename, chunk=100, **kwargs):
     filename : str
         Path to the trajectory file on disk
     chunk : int
-        Number of frames to load at once from disk per iteration.
+        Number of frames to load at once from disk per iteration.  If 0, load all.
 
     Other Parameters
     ----------------
@@ -357,7 +357,9 @@ def iterload(filename, chunk=100, **kwargs):
     if chunk % stride != 0:
         raise ValueError('Stride must be a divisor of chunk. stride=%d does not go '
                          'evenly into chunk=%d' % (stride, chunk))
-
+    if chunk == 0:
+        yield load(filename, **kwargs)
+    
     if filename.endswith('.h5'):
         if 'top' in kwargs:
             warnings.warn('top= kwarg ignored since file contains topology information')
