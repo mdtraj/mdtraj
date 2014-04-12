@@ -359,7 +359,6 @@ def iterload(filename, chunk=100, **kwargs):
                          'evenly into chunk=%d' % (stride, chunk))
     if chunk == 0:
         yield load(filename, **kwargs)
-        print("Between load and return")
         return
     
     if filename.endswith('.h5'):
