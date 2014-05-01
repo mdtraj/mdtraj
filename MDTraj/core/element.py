@@ -114,6 +114,11 @@ class Element(tuple):
         s = symbol.strip().upper()
         return Element._elements_by_symbol[s]
 
+    @staticmethod
+    def getByAtomicNumber(number):
+        """ Get the element with a particular atomic number """
+        return Element._elements_by_atomic_number[number]
+
     @property
     def number(self):
         return tuple.__getitem__(self, 0)
