@@ -95,7 +95,7 @@ def _parse_topology(top):
     if isinstance(top, string_types) and (ext in ['.pdb', '.h5','.lh5']):
         _traj = load_frame(top, 0)
         topology = _traj.topology
-    elif isinstance(top, string_types) and (ext == '.prmtop'):
+    elif isinstance(top, string_types) and (ext in ['.prmtop', '.parm7']):
         topology = load_prmtop(top)
     elif isinstance(top, Trajectory):
         topology = top.topology
