@@ -72,7 +72,7 @@ def load_arc(filename, top=None, stride=None, atom_indices=None):
     --------
     mdtraj.ArcTrajectoryFile :  Low level interface to TINKER .arc files
     """
-    from mdtraj.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology, Trajectory
 
     # we make it not required in the signature, but required here. although this
     # is a little weird, its good because this function is usually called by a
@@ -86,7 +86,7 @@ def load_arc(filename, top=None, stride=None, atom_indices=None):
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
-    atom_indices = _cast_indices(atom_indices)
+    atom_indices = cast_indices(atom_indices)
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
 
