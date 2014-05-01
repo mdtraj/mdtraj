@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: Lee-Ping Wang
-# Contributors: Robert McGibbon
+# Contributors: Robert McGibbon and Jason Swails
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -91,8 +91,9 @@ def load_arc(filename, top=None, stride=None, atom_indices=None):
         topology = topology.subset(atom_indices)
 
     with ArcTrajectoryFile(filename) as f:
-        xyz = f.read(stride=stride, atom_indices=atom_indices)
+        xyz, abc, ang = f.read(stride=stride, atom_indices=atom_indices)
         in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(abc, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     time = np.arange(len(xyz))
     if stride is not None:
@@ -100,7 +101,9 @@ def load_arc(filename, top=None, stride=None, atom_indices=None):
         # respect that
         time *= stride
 
-    t = Trajectory(xyz=xyz, topology=topology, time=time)
+    t = Trajectory(xyz=xyz, topology=topology, time=time,
+                   unitcell_lengths=abc,
+                   unitcell_angles=ang)
     return t
 
 
@@ -235,23 +238,32 @@ class ArcTrajectoryFile(object):
             stride = 1
 
         coords = []
+        lengths = []
+        angles = []
         for i in frame_counter:
             try:
-                coord = self._read()
+                coord, length, angle = self._read()
                 if atom_indices is not None:
                     coord = coord[atom_indices, :]
             except _EOF:
                 break
 
             coords.append(coord)
+            lengths.append(length)
+            angles.append(angle)
 
             for j in range(stride - 1):
                 # throw away these frames
                 self._read()
 
         coords = np.array(coords)
+        if None in lengths:
+            lengths = angles = None
+        else:
+            lengths = np.array(lengths)
+            angles = np.array(angles)
 
-        return coords
+        return coords, lengths, angles
 
     def _read(self):
         "Read a single frame"
@@ -266,13 +278,32 @@ class ArcTrajectoryFile(object):
         self._line_counter += 1
 
         coords = np.empty((self._n_atoms, 3), dtype=np.float32)
-        while i < self._n_atoms:
-            line = self._fh.readline()
+        line = self._fh.readline()
+        s = line.split()
+        self._line_counter += 1
+        # See if we have box info on this line or not
+        cell_lengths = cell_angles = None
+        if len(s) == 6:
+            try:
+                cell_lengths = np.asarray(
+                                [float(s[0]), float(s[1]), float(s[2])]
+                )
+                cell_angles = np.asarray(
+                                [float(s[3]), float(s[4]), float(s[5])]
+                )
+                line = self._fh.readline()
+                self._line_counter += 1
+            except ValueError:
+                pass
+        while i < self._n_atoms - 1:
             s = line.split()
             coords[i,:] = [float(s[pos]) for pos in [2, 3, 4]]
             i += 1
+            line = self._fh.readline()
             self._line_counter += 1
-        return coords
+        # Now do the last atom
+        coords[i,:] = [float(s[pos]) for pos in [2, 3, 4]]
+        return coords, cell_lengths, cell_angles
 
     def write(self, xyz):
         """ The ArcTrajectoryFile does not have a write method,
