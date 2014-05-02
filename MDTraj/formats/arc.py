@@ -29,7 +29,7 @@ from __future__ import print_function, division
 import os
 import itertools
 import numpy as np
-from mdtraj.utils import ensure_type, cast_indices, in_units_of
+from mdtraj.utils import cast_indices, in_units_of
 from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
@@ -46,6 +46,7 @@ class _EOF(IOError):
 
 
 @_FormatRegistry.register_loader('.arc')
+@_FormatRegistry.register_loader('.xyz')
 def load_arc(filename, top=None, stride=None, atom_indices=None):
     """Load a TINKER .arc file from disk.
 
@@ -78,22 +79,26 @@ def load_arc(filename, top=None, stride=None, atom_indices=None):
     # is a little weird, its good because this function is usually called by a
     # dispatch from load(), where top comes from **kwargs. So if its not supplied
     # we want to give the user an informative error message
-    if top is None:
-        raise ValueError('"top" argument is required for load_arc')
+#   if top is None:
+#       raise ValueError('"top" argument is required for load_arc')
 
     if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_arc. '
             'you supplied %s' % type(filename))
 
-    topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-    if atom_indices is not None:
-        topology = topology.subset(atom_indices)
 
     with ArcTrajectoryFile(filename) as f:
         xyz, abc, ang = f.read(stride=stride, atom_indices=atom_indices)
         in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
         in_units_of(abc, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        if top is None:
+            topology = f.topology
+        else:
+            topology = _parse_topology(top)
+
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
 
     time = np.arange(len(xyz))
     if stride is not None:
@@ -108,6 +113,7 @@ def load_arc(filename, top=None, stride=None, atom_indices=None):
 
 
 @_FormatRegistry.register_fileobject('.arc')
+@_FormatRegistry.register_fileobject('.xyz')
 class ArcTrajectoryFile(object):
     """Interface for reading and writing to an TINKER archive files.
     (Note that the TINKER .xyz format is identical to this.)  This is
@@ -117,6 +123,13 @@ class ArcTrajectoryFile(object):
 
     The conventional units in the arc file is angstrom. The format only
     supports storing the cartesian coordinates and box lengths.
+
+    Attributes
+    ----------
+    topology : Topology
+        A single-chain, single-residue topology generated from the atom and bond
+        information found in the TINKER archive/xyz file. It is only generated
+        from the first member of the archive
 
     Parameters
     ----------
@@ -137,6 +150,7 @@ class ArcTrajectoryFile(object):
         self._is_open = False
         self._filename = filename
         self._mode = mode
+        self.topology = None
 
         if mode == 'w':
             raise ValueError('Writing TINKER .arc files is not supported at this time')
@@ -267,8 +281,8 @@ class ArcTrajectoryFile(object):
 
     def _read(self):
         "Read a single frame"
-        i = 0
-
+        from mdtraj.core.topology import Topology
+        from mdtraj.core.element import Element
         # Read in the number of atoms.
         line = self._fh.readline()
         if line == '':
@@ -278,6 +292,8 @@ class ArcTrajectoryFile(object):
         self._line_counter += 1
 
         coords = np.empty((self._n_atoms, 3), dtype=np.float32)
+        bond_partners = [[] for i in xrange(self._n_atoms)]
+        atom_names = ['' for i in xrange(self._n_atoms)]
         line = self._fh.readline()
         s = line.split()
         self._line_counter += 1
@@ -295,14 +311,45 @@ class ArcTrajectoryFile(object):
                 self._line_counter += 1
             except ValueError:
                 pass
+        i = 0
         while i < self._n_atoms - 1:
-            s = line.split()
+            atom_names[i] = s[1]
+            bond_partners[i] = [int(x) for x in s[6:]]
             coords[i,:] = [float(s[pos]) for pos in [2, 3, 4]]
             i += 1
             line = self._fh.readline()
+            s = line.split()
             self._line_counter += 1
         # Now do the last atom
+        atom_names[i] = s[1]
+        bond_partners[i] = [int(x) for x in s[6:]]
         coords[i,:] = [float(s[pos]) for pos in [2, 3, 4]]
+        # Now see if we have to build a topology
+        if self.topology is None:
+            self.topology = top = Topology()
+            chain = top.add_chain()                # only 1 chain
+            res = top.add_residue('RES', chain, 1) # only 1 residue
+            for at in atom_names:
+                # First get the element. Try for common 2-letter elements, then
+                # use the first letter only (default to None if I can't find it)
+                if at[:2].upper() in ('NA', 'CL', 'MG'):
+                    elem = Element.getBySymbol(at[:2])
+                else:
+                    try:
+                        elem = Element.getBySymbol(at[0])
+                    except KeyError:
+                        elem = None
+                top.add_atom(at, elem, res)
+            # Now add the bonds
+            atoms = list(top.atoms)
+            for i, bonds in enumerate(bond_partners):
+                me = atoms[i]
+                for b in bonds:
+                    b -= 1
+                    if b < i: continue
+                    it = atoms[b]
+                    top.add_bond(me, it)
+
         return coords, cell_lengths, cell_angles
 
     def write(self, xyz):

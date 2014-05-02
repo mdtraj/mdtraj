@@ -43,3 +43,8 @@ def test_read_0():
     with PDBTrajectoryFile(get_fn('4waters.pdb')) as f:
         xyz2 = f.positions
     eq(xyz, xyz2, decimal=3)
+
+def test_read_arctraj():
+    traj = md.load(get_fn('nitrogen.arc'), top=get_fn('nitrogen.pdb'))
+    owntop = md.load(get_fn('nitrogen.arc'))
+    eq(traj.xyz, owntop.xyz)
