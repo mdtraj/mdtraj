@@ -39,7 +39,7 @@ def teardown_module(module):
 
 def test_read_0():
     with ArcTrajectoryFile(get_fn('4waters.arc')) as f:
-        xyz = f.read()
+        xyz, leng, ang = f.read()
     with PDBTrajectoryFile(get_fn('4waters.pdb')) as f:
         xyz2 = f.positions
     eq(xyz, xyz2, decimal=3)
