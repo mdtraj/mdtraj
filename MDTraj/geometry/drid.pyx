@@ -29,6 +29,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 from mdtraj.utils import ensure_type
 cimport numpy as np
+cimport cython
 
 __all__ = ['compute_drid']
 
@@ -58,7 +59,7 @@ def compute_drid(traj, atom_indices=None):
 
     Returns
     -------
-    X : np.ndarray, shape=(n_frames, n_atom_indices*3)
+    X : np.ndarray, shape=(n_frames, n_atom_indices*3), dtype=np.double
 
     References
     ----------
@@ -105,6 +106,9 @@ def compute_drid(traj, atom_indices=None):
     return _drid(traj.xyz, atom_indices, partners, n_partners)
 
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
 def _drid(np.ndarray[ndim=3, mode='c', dtype=np.float32_t] xyz not None,
           np.ndarray[ndim=1, mode='c', dtype=np.int32_t] atom_indices not None,
           np.ndarray[ndim=2, mode='c', dtype=np.int32_t] partners not None,
