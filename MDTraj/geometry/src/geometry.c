@@ -71,7 +71,6 @@ INLINE __m128 cross(const __m128 a, const __m128 b) {
    );
 }
 
-
 /****************************************************************************/
 /* Distances Kernels                                                        */
 /****************************************************************************/
@@ -182,12 +181,8 @@ int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
 
      All of the arrays are assumed to be contiguous. This code will
      segfault if they're not.
-  */
-#ifndef __SSE4_1__
-   _MM_SET_ROUNDING_MODE(_MM_ROUND_NEAREST);
-   int rounding_mode = _MM_GET_ROUNDING_MODE();
-#endif
 
+  */ 
   int i, j;
   int store_displacement = displacement_out == NULL ? 0 : 1;
   int store_distance = distance_out == NULL ? 0 : 1;
@@ -252,9 +247,6 @@ int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
     box_matrix += 9;
   }
 
-#ifndef __SSE4_1__
-   _MM_SET_ROUNDING_MODE(rounding_mode);
-#endif
   return 1;
 }
 

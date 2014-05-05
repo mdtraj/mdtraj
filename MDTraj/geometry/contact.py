@@ -172,7 +172,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         n_residue_pairs = len(residue_pairs)
         distances = np.zeros((len(traj), n_residue_pairs), dtype=np.float32)
         for i in xrange(n_residue_pairs):
-            index = np.sum(n_atom_pairs_per_residue_pair[:i])
+            index = int(np.sum(n_atom_pairs_per_residue_pair[:i]))
             n = n_atom_pairs_per_residue_pair[i]
             distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
 

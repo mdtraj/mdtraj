@@ -101,7 +101,7 @@ def compute_dihedrals(traj, indices, opt=True):
         raise ValueError('indices must be between 0 and %d' % traj.n_atoms)
 
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
-    if opt:
+    if opt and _geometry._processor_supports_sse41():
         _geometry._dihedral(xyz, quartets, out)
     else:
         _dihedral(xyz, quartets, out)

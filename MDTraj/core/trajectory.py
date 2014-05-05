@@ -95,7 +95,7 @@ def _parse_topology(top):
     if isinstance(top, string_types) and (ext in ['.pdb', '.h5','.lh5']):
         _traj = load_frame(top, 0)
         topology = _traj.topology
-    elif isinstance(top, string_types) and (ext == '.prmtop'):
+    elif isinstance(top, string_types) and (ext in ['.prmtop', '.parm7']):
         topology = load_prmtop(top)
     elif isinstance(top, Trajectory):
         topology = top.topology
@@ -321,7 +321,7 @@ def iterload(filename, chunk=100, **kwargs):
     filename : str
         Path to the trajectory file on disk
     chunk : int
-        Number of frames to load at once from disk per iteration.
+        Number of frames to load at once from disk per iteration.  If 0, load all.
 
     Other Parameters
     ----------------
@@ -357,79 +357,81 @@ def iterload(filename, chunk=100, **kwargs):
     if chunk % stride != 0:
         raise ValueError('Stride must be a divisor of chunk. stride=%d does not go '
                          'evenly into chunk=%d' % (stride, chunk))
+    if chunk == 0:
+        yield load(filename, **kwargs)
+    else:  # If chunk was 0 then we want to avoid filetype-specific code in case of undefined behavior in various file parsers.
+        if filename.endswith('.h5'):
+            if 'top' in kwargs:
+                warnings.warn('top= kwarg ignored since file contains topology information')
+            with HDF5TrajectoryFile(filename) as f:
+                if atom_indices is None:
+                    topology = f.topology
+                else:
+                    topology = f.topology.subset(atom_indices)
 
-    if filename.endswith('.h5'):
-        if 'top' in kwargs:
-            warnings.warn('top= kwarg ignored since file contains topology information')
-        with HDF5TrajectoryFile(filename) as f:
-            if atom_indices is None:
-                topology = f.topology
-            else:
-                topology = f.topology.subset(atom_indices)
+                while True:
+                    data = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
+                    if data == []:
+                        raise StopIteration()
+                    in_units_of(data.coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                    in_units_of(data.cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                    yield Trajectory(xyz=data.coordinates, topology=topology,
+                                     time=data.time, unitcell_lengths=data.cell_lengths,
+                                     unitcell_angles=data.cell_angles)
 
-            while True:
-                data = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
-                if data == []:
-                    raise StopIteration()
-                in_units_of(data.coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                in_units_of(data.cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                yield Trajectory(xyz=data.coordinates, topology=topology,
-                                 time=data.time, unitcell_lengths=data.cell_lengths,
-                                 unitcell_angles=data.cell_angles)
+        if filename.endswith('.lh5'):
+            if 'top' in kwargs:
+                warnings.warn('top= kwarg ignored since file contains topology information')
+            with LH5TrajectoryFile(filename) as f:
+                if atom_indices is None:
+                    topology = f.topology
+                else:
+                    topology = f.topology.subset(atom_indices)
 
-    if filename.endswith('.lh5'):
-        if 'top' in kwargs:
-            warnings.warn('top= kwarg ignored since file contains topology information')
-        with LH5TrajectoryFile(filename) as f:
-            if atom_indices is None:
-                topology = f.topology
-            else:
-                topology = f.topology.subset(atom_indices)
+                ptr = 0
+                while True:
+                    xyz = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
+                    if len(xyz) == 0:
+                        raise StopIteration()
+                    in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                    time = np.arange(ptr, ptr+len(xyz)*stride, stride)
+                    ptr += len(xyz)*stride
+                    yield Trajectory(xyz=xyz, topology=topology, time=time)
 
-            ptr = 0
-            while True:
-                xyz = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
-                if len(xyz) == 0:
-                    raise StopIteration()
-                in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                time = np.arange(ptr, ptr+len(xyz)*stride, stride)
-                ptr += len(xyz)*stride
-                yield Trajectory(xyz=xyz, topology=topology, time=time)
+        elif filename.endswith('.xtc'):
+            topology = _parse_topology(kwargs.get('top', None))
+            with XTCTrajectoryFile(filename) as f:
+                while True:
+                    xyz, time, step, box = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
+                    if len(xyz) == 0:
+                        raise StopIteration()
+                    in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                    in_units_of(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                    trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
+                    trajectory.unitcell_vectors = box
+                    yield trajectory
 
-    elif filename.endswith('.xtc'):
-        topology = _parse_topology(kwargs.get('top', None))
-        with XTCTrajectoryFile(filename) as f:
-            while True:
-                xyz, time, step, box = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
-                if len(xyz) == 0:
-                    raise StopIteration()
-                in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                in_units_of(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
-                trajectory.unitcell_vectors = box
-                yield trajectory
+        elif filename.endswith('.dcd'):
+            topology = _parse_topology(kwargs.get('top', None))
+            with DCDTrajectoryFile(filename) as f:
+                ptr = 0
+                while True:
+                    # for reasons that I have not investigated, dcdtrajectory file chunk and stride
+                    # together work like this method, but HDF5/XTC do not.
+                    xyz, box_length, box_angle = f.read(chunk, stride=stride, atom_indices=atom_indices)
+                    if len(xyz) == 0:
+                        raise StopIteration()
+                    in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                    in_units_of(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
+                    time = np.arange(ptr, ptr+len(xyz)*stride, stride)
+                    ptr += len(xyz)*stride
+                    yield Trajectory(xyz=xyz, topology=topology, time=time, unitcell_lengths=box_length,
+                                     unitcell_angles=box_angle)
 
-    elif filename.endswith('.dcd'):
-        topology = _parse_topology(kwargs.get('top', None))
-        with DCDTrajectoryFile(filename) as f:
-            ptr = 0
-            while True:
-                # for reasons that I have not investigated, dcdtrajectory file chunk and stride
-                # together work like this method, but HDF5/XTC do not.
-                xyz, box_length, box_angle = f.read(chunk, stride=stride, atom_indices=atom_indices)
-                if len(xyz) == 0:
-                    raise StopIteration()
-                in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                in_units_of(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                time = np.arange(ptr, ptr+len(xyz)*stride, stride)
-                ptr += len(xyz)*stride
-                yield Trajectory(xyz=xyz, topology=topology, time=time, unitcell_lengths=box_length,
-                                 unitcell_angles=box_angle)
-
-    else:
-        t = load(filename, **kwargs)
-        for i in range(0, len(t), chunk):
-            yield t[i:i+chunk]
+        else:
+            t = load(filename, **kwargs)
+            for i in range(0, len(t), chunk):
+                yield t[i:i+chunk]
 
 
 class Trajectory(object):
@@ -820,7 +822,8 @@ class Trajectory(object):
             ref_align_xyz, self_align_xyz, ref_g, self_g, self_displace_xyz,
             0, parallel=parallel)
 
-        self.xyz = self_displace_xyz + ref_offset
+        self_displace_xyz += ref_offset
+        self.xyz = self_displace_xyz
         return self
 
     def join(self, other, check_topology=True, discard_overlapping_frames=False):

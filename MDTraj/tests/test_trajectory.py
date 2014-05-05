@@ -455,3 +455,12 @@ def test_unitcell():
         f.description = 'unitcell preservation in %s' % os.path.splitext(fn)[1]
         yield f
     
+def test_chunk0_iterload():
+    filename = 'frame0.h5'
+    
+    trj0 = md.load(get_fn(filename))
+
+    for trj in md.iterload(get_fn(filename), chunk=0):
+        pass
+    
+    eq(trj0.n_frames, trj.n_frames)

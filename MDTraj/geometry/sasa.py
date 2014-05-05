@@ -91,6 +91,9 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960):
     ----------
     .. [1] Shrake, A; Rupley, JA. (1973) J Mol Biol 79 (2): 351--71.
     """
+    if not _geometry._processor_supports_sse41():
+        raise RuntimeError('This CPU does not support the required instruction set (SSE4.1)')
+
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     out = np.zeros((xyz.shape[0], xyz.shape[1]), dtype=np.float32)
     atom_radii = [_ATOMIC_RADII[atom.element.symbol] for atom in traj.topology.atoms]

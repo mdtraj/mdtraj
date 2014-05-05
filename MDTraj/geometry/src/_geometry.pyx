@@ -52,10 +52,17 @@ cdef extern int kabsch_sander(float* xyz, int* nco_indices, int* ca_indices,
 cdef extern int sasa(int n_frames, int n_atoms, float* xyzlist,
                      float* atom_radii, int n_sphere_points,
                      float* array_of_areas) nogil
+cdef extern from "hardware.h":
+    int processorSupportsSSE41()
+
 
 ##############################################################################
 # Wrappers
 ##############################################################################
+
+def _processor_supports_sse41():
+    """Does the current processor support SSE4.1 instructions?"""
+    return processorSupportsSSE41()
 
 def _dist(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
           np.ndarray[np.int32_t, ndim=2, mode='c'] pairs not None,

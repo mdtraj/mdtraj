@@ -227,14 +227,12 @@ def test_mdconvert_0():
 @skipif(not HAVE_SCRIPTTEST)
 def test_mdconvert_1():
     env = scripttest.TestFileEnvironment(output_dir)
-    command = 'mdconvert %s --top %s -o out.dcd' % (
-        get_fn('alanine-dipeptide-explicit.binpos'),
-        get_fn('alanine-dipeptide-explicit.prmtop'))
-    env.run(command, expect_stderr=True)
+    command = ['mdconvert', get_fn('alanine-dipeptide-explicit.binpos'), '--top',
+                get_fn('alanine-dipeptide-explicit.prmtop'), '-o', 'out.dcd']
+    env.run(*command, expect_stderr=True)
     t = md.load(os.path.join(output_dir, 'out.dcd'), top=get_fn('alanine-dipeptide-explicit.prmtop'))
     t2 = md.load(get_fn('alanine-dipeptide-explicit.binpos'), top=get_fn('alanine-dipeptide-explicit.prmtop'))
 
     eq(t.xyz, t2.xyz)
     eq(t.topology, t2.topology)
 
-    

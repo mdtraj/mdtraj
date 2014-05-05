@@ -90,7 +90,7 @@ def get_fn(name):
     >>> eq(t.n_frames, 20)    # this runs the assert, using the eq() func.
     """
 
-    fn = resource_filename('mdtraj', os.path.join('testing/reference', name))
+    fn = resource_filename('mdtraj', os.path.join('testing', 'reference', name))
 
     if not os.path.exists(fn):
         raise ValueError('Sorry! %s does not exists. If you just '

@@ -22,12 +22,13 @@
 
 from __future__ import print_function
 
-
+import os
 import numpy as np
-from mdtraj.testing import get_fn, eq
+from mdtraj.testing import get_fn, eq, skipif
 import itertools
 from mdtraj import geometry
 import mdtraj as md
+
 
 def test_contact_0():
 
@@ -49,6 +50,7 @@ def test_contact_0():
     eq(contacts, closest_pairs)
     eq(contacts, closest_heavy_pairs)
 
+
 def test_contact_1():
     pdb = md.load(get_fn('bpti.pdb'))
     dists, pairs = md.compute_contacts(pdb)
@@ -63,6 +65,7 @@ def test_contact_1():
     for i, (r0, r1) in enumerate(pairs):
         for t in range(pdb.n_frames):
             eq(maps[t, r0, r1], dists[t, i])
+
 
 def test_contact_2():
     pdb = md.load(get_fn('1vii_sustiva_water.pdb'))

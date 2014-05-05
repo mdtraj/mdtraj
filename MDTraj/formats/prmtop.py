@@ -199,7 +199,7 @@ def load_prmtop(filename):
         # Get the element from the prmtop file if available
         if 'ATOMIC_NUMBER' in raw_data:
             try:
-                element = elem.Element.get_by_atomic_number(int(raw_data['ATOMIC_NUMBER'][index]))
+                element = elem.Element.getByAtomicNumber(int(raw_data['ATOMIC_NUMBER'][index]))
             except KeyError:
                 element = None
         else:

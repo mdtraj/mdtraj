@@ -290,18 +290,19 @@ class MDCRDTrajectoryFile(object):
             if line == '':
                 raise _EOF()
             try:
-                items = [float(elem) for elem in line.split()]
-                assert len(items) != 0  # trigger the exception below too
+                items = [float(line[j:j+8])
+                         for j in range(0, len(line.rstrip()), 8)]
+                assert 0 < len(items) <= 10
             except Exception:
                 raise IOError('mdcrd parse error on line %d of "%s". This file '
-                              'does not apear to be a valid mdcrd file.' % \
+                              'does not appear to be a valid mdcrd file.' % \
                               (self._line_counter,  self._filename))
 
             length = len(items)
 
             if i + length > len(coords):
                 raise IOError('mdcrd parse error: specified n_atoms (%d) is '
-                              'likely incorrect. Incorrct buffer size '
+                              'likely incorrect. Incorrect buffer size '
                               'encountered. ' % self._n_atoms)
 
             coords[i:i+length] = items
