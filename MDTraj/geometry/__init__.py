@@ -37,6 +37,36 @@ from mdtraj.geometry.sasa import *
 from mdtraj.geometry.contact import *
 try:
     from mdtraj.geometry.drid import compute_drid
+    if not _geometry._processor_supports_sse41():
+        raise ImportError()
 except ImportError:
     def compute_drid(traj, atom_indices=None):
+        """compute_drid(traj, atom_indices=None)
+
+        Distribution of reciprocal interatomic distances (DRID) representation
+        of an MD trajectory
+
+        Parameters
+        ----------
+        traj : md.Trajectory
+            A trajectory
+        atom_indices : np.ndarray, dtype=int, shape=(n_atom_indices,) or None
+            The indices (zero-based) of the atoms to use in the DRID representation.
+            If None, all atoms will be used.
+
+        Returns
+        -------
+        X : np.ndarray, shape=(n_frames, n_atom_indices*3)
+
+        Notes
+        -----
+        This function is stub for the actual function, and indicates a failure
+        to compile or import the DRID function, due to the fact that the CPU
+        does not support the required instruction set (SSE4.1).
+
+        References
+        ----------
+        ..[1] Zhou, Caflisch; Distribution of Reciprocal of Interatomic Distances:
+        A Fast Structural Metric. JCTC 2012 doi:10.1021/ct3003145
+        """
         raise NotImplementedError
