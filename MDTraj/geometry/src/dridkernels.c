@@ -20,9 +20,8 @@
 /* License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.*/
 /*=======================================================================*/
 
-#include "stdio.h"
-#include "stdlib.h"
 #include "math.h"
+#include "stdlib.h"
 #include "dridkernels.h"
 #include "ssetools.h"
 #include "moments.h"
@@ -43,7 +42,6 @@ drid_moments(float* coords, int index, int* partners, int n_partners, double* mo
     __m128 x, y, r, r2, s;
     x = load_float3(&coords[3 * index]);
 
-    
     for (i = 0; i < n_partners; i++) {
         y = load_float3(&coords[3 * partners[i]]);
         r = _mm_sub_ps(x, y);     /* x - y       */
@@ -63,7 +61,7 @@ drid_moments(float* coords, int index, int* partners, int n_partners, double* mo
 
     moments[0] = moments_mean(&onlinemoments);
     moments[1] = sqrt(moments_second(&onlinemoments));
-    moments[2] = cuberoot_sse_22bits(moments_third(&onlinemoments));
+    moments[2] = cbrt(moments_third(&onlinemoments));
 
     return 1;
 }

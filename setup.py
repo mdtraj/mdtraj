@@ -360,8 +360,12 @@ def geometry_extensions():
         Extension('mdtraj.geometry.drid',
             sources=["MDTraj/geometry/drid.pyx",
                      "MDTraj/geometry/src/dridkernels.c",
+                     "MDTraj/geometry/src/cephes/cbrt.c",
+                     "MDTraj/geometry/src/cephes/isnan.c",
                      "MDTraj/geometry/src/moments.c"],
-            include_dirs=["MDTraj/geometry/include", numpy.get_include()],
+            include_dirs=["MDTraj/geometry/include",
+                          "MDTraj/geometry/include/cephes",
+                          numpy.get_include()],
             define_macros=define_macros,
             extra_compile_args=compiler_args)
         ]
