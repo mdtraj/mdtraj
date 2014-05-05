@@ -75,3 +75,4 @@ MDTraj/rmsd/_rmsd.c
 MDTraj/rmsd/_lprmsd.c
 MDTraj/rmsd/_lprmsd.cpp
 MDTraj/geometry/src/_geometry.c
+MDTraj/geometry/drid.c

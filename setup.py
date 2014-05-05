@@ -300,9 +300,9 @@ def rmsd_extensions():
     return rmsd, lprmsd
 
 
-def geometry():
+def geometry_extensions():
     if not detect_sse3():
-        return None
+        return []
 
     extra_compile_args = ['-mssse3']
     define_macros = []
@@ -311,19 +311,27 @@ def geometry():
         define_macros.append(('__SSE4_1__', 1))
         extra_compile_args.append('-msse4')
 
-    return Extension('mdtraj.geometry._geometry',
-                     sources=['MDTraj/geometry/src/geometry.c',
-                              'MDTraj/geometry/src/sasa.c',
-                              'MDTraj/geometry/src/_geometry.pyx'],
-                     include_dirs=['MDTraj/geometry/include', numpy.get_include()],
-                     define_macros=define_macros,
-                     extra_compile_args=extra_compile_args)
+    return [
+        Extension('mdtraj.geometry._geometry',
+            sources=['MDTraj/geometry/src/geometry.c',
+                     'MDTraj/geometry/src/sasa.c',
+                     'MDTraj/geometry/src/_geometry.pyx'],
+            include_dirs=['MDTraj/geometry/include', numpy.get_include()],
+            define_macros=define_macros,
+            extra_compile_args=extra_compile_args),
+        Extension('mdtraj.geometry.drid',
+            sources=["MDTraj/geometry/drid.pyx",
+                     "MDTraj/geometry/src/dridkernels.c",
+                     "MDTraj/geometry/src/moments.c"],
+            include_dirs=["MDTraj/geometry/include", numpy.get_include()],
+            define_macros=define_macros,
+            extra_compile_args=extra_compile_args)
+        ]
+
 
 extensions = [xtc, trr, dcd, binpos]
 extensions.extend(rmsd_extensions())
-ext = geometry()
-if ext is not None:
-    extensions.append(ext)
+extensions.extend(geometry_extensions())
 
 write_version_py()
 setup(name='mdtraj',
