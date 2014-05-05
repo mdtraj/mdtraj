@@ -1,7 +1,7 @@
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
-# Copyright 2012-2013 Stanford University and the Authors
+# Copyright 2014- Stanford University and the Authors
 #
 # Authors: Robert McGibbon
 # Contributors:
@@ -30,7 +30,7 @@ import numpy as np
 from mdtraj.utils import ensure_type
 cimport numpy as np
 
-__all__ = ['drid']
+__all__ = ['compute_drid']
 
 cdef extern from "dridkernels.h":
     int drid_moments(float* coords, np.int32_t index, np.int32_t * partners,
@@ -42,8 +42,10 @@ cdef extern from "dridkernels.h":
 ##############################################################################
 
 
-def drid(traj, atom_indices=None):
-    """Distribution of reciprocal interatomic distances (DRID) representation
+def compute_drid(traj, atom_indices=None):
+    """compute_drid(traj, atom_indices=None)
+
+    Distribution of reciprocal interatomic distances (DRID) representation
     of an MD trajectory
 
     Parameters

@@ -2,7 +2,7 @@ from __future__ import print_function
 import numpy as np
 import mdtraj as md
 from mdtraj.testing import get_fn, eq
-from mdtraj.geometry import drid
+from mdtraj.geometry import compute_drid
 from scipy.spatial.distance import euclidean, pdist, squareform
 
 
@@ -18,7 +18,7 @@ def test_drid_1():
     t = md.Trajectory(xyz=np.random.RandomState(0).randn(n_frames, n_atoms, 3),
                       topology=top)
     # t contains no bonds
-    got = drid.drid(t).reshape(n_frames, n_atoms, 3)
+    got = compute_drid(t).reshape(n_frames, n_atoms, 3)
 
     for i in range(n_atoms):
         others = set(range(n_atoms)) - set([i])
@@ -33,7 +33,7 @@ def test_drid_1():
 
 
 def test_drid_2():
-    n_frames = 3    
+    n_frames = 3
     n_atoms = 11
     n_bonds = 5
     top = md.Topology()
@@ -48,7 +48,7 @@ def test_drid_2():
         top.add_bond(top.atom(a), top.atom(b))
 
     t = md.Trajectory(xyz=random.randn(n_frames, n_atoms, 3), topology=top)
-    got = drid.drid(t).reshape(n_frames, n_atoms, 3)
+    got = compute_drid(t).reshape(n_frames, n_atoms, 3)
 
     for i in range(n_frames):
         recip = 1 / squareform(pdist(t.xyz[i]))

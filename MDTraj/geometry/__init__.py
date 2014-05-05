@@ -26,7 +26,7 @@ __all__ = ['baker_hubbard', 'shrake_rupley', 'kabsch_sander', 'compute_distances
            'compute_displacements', 'compute_angles', 'compute_dihedrals',
            'compute_phi', 'compute_psi', 'compute_chi1', 'compute_chi2',
            'compute_chi3', 'compute_chi4', 'compute_omega', 'compute_rg',
-           'compute_contacts']
+           'compute_contacts', 'compute_drid']
 
 from mdtraj.geometry.rg import *
 from mdtraj.geometry.angle import *
@@ -35,3 +35,8 @@ from mdtraj.geometry.dihedral import *
 from mdtraj.geometry.hbond import *
 from mdtraj.geometry.sasa import *
 from mdtraj.geometry.contact import *
+try:
+    from mdtraj.geometry.drid import compute_drid
+except ImportError:
+    def compute_drid(traj, atom_indices=None):
+        raise NotImplementedError

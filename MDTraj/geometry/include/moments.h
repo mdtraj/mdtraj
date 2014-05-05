@@ -49,26 +49,26 @@ typedef struct {
     double _u;
     double _M2;
     double _M3;
-/*    double _M4; */
+    /* double _M4; */
 } moments_t;
 
-//Push a number or a set of numbers onto the RunningMoments
+/* Push a number onto the object */
 void moments_push(moments_t *cls, double x);
 
-//Clear the object, and forget all data previously seen
+/* Clear the object, and forget all data previously seen */
 void moments_clear(moments_t *cls);
 
-//Mean of the numbers which have been pushed onto the stack
+/* Mean of the numbers which have been pushed onto the stack */
 double moments_mean(moments_t *cls);
 
-//Second centralmoment of the numbers which have been pushed onto the stack
+/* Second centralmoment of the numbers which have been pushed onto the stack */
 double moments_second(moments_t *cls);
 
-//third central moment of the numbers which have been pushed onto the stack
+/* Third central moment of the numbers which have been pushed onto the stack */
 double moments_third(moments_t *cls);
 
 /*
-//Fourth central moment of the numbers which have been pushed onto the stack
+// Fourth central moment of the numbers which have been pushed onto the stack
 double moments_fourth(moments_t *cls);
 */
 
