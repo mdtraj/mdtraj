@@ -39,6 +39,7 @@ Distances
     compute_distances
     compute_displacements
     compute_contacts
+    compute_drid
     geometry.squareform
 
 Bond Angles and Dihedrals

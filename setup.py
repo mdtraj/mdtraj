@@ -340,27 +340,39 @@ def rmsd_extensions():
     return rmsd, lprmsd
 
 
-def geometry():
+
+def geometry_extensions():
     if not (compiler.sse3_enabled and compiler.sse41_enabled):
-        print('SSE3 and SSE4.1 not enabled. Skipping geometry')
-        return
+        print('SSE3 and SSE4.1 not enabled. Skipping geometry modules')
+        return []
     compiler_args = (compiler.compiler_args_sse2 + compiler.compiler_args_sse3 + compiler.compiler_args_sse41 +
                      compiler.compiler_args_opt + compiler.compiler_args_sse41)
     define_macros = compiler.define_macros_sse41
 
-    return Extension('mdtraj.geometry._geometry',
-                     sources=['MDTraj/geometry/src/geometry.c',
-                              'MDTraj/geometry/src/sasa.c',
-                              'MDTraj/geometry/src/_geometry.pyx'],
-                     include_dirs=['MDTraj/geometry/include', numpy.get_include()],
-                     define_macros=define_macros,
-                     extra_compile_args=compiler_args)
+    return [
+        Extension('mdtraj.geometry._geometry',
+            sources=['MDTraj/geometry/src/geometry.c',
+                     'MDTraj/geometry/src/sasa.c',
+                     'MDTraj/geometry/src/_geometry.pyx'],
+            include_dirs=['MDTraj/geometry/include', numpy.get_include()],
+            define_macros=define_macros,
+            extra_compile_args=compiler_args),
+        Extension('mdtraj.geometry.drid',
+            sources=["MDTraj/geometry/drid.pyx",
+                     "MDTraj/geometry/src/dridkernels.c",
+                     "MDTraj/geometry/src/cephes/cbrt.c",
+                     "MDTraj/geometry/src/cephes/isnan.c",
+                     "MDTraj/geometry/src/moments.c"],
+            include_dirs=["MDTraj/geometry/include",
+                          "MDTraj/geometry/include/cephes",
+                          numpy.get_include()],
+            define_macros=define_macros,
+            extra_compile_args=compiler_args)
+        ]
 
 extensions = [xtc, trr, dcd, binpos]
 extensions.extend(rmsd_extensions())
-ext = geometry()
-if ext is not None:
-    extensions.append(ext)
+extensions.extend(geometry_extensions())
 
 write_version_py()
 setup(name='mdtraj',
