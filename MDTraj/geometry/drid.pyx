@@ -71,7 +71,7 @@ def drid(traj, atom_indices=None):
         atom_indices = ensure_type(np.asarray(atom_indices), dtype=np.int32,ndim=1, name='atom_indices', warn_on_cast=False)
         if not np.all((atom_indices >= 0) * (atom_indices < traj.xyz.shape[1]) * (atom_indices < traj.xyz.shape[1])):
             raise ValueError("atom_indices must be valid positive indices")
-        
+
     # atom_indices[i] = j implies that inverse_atom_indices[j] = i
     inverse_atom_indices = dict((j,i) for i, j in enumerate(atom_indices))
 
@@ -95,12 +95,12 @@ def drid(traj, atom_indices=None):
     partners.fill(-1)
     for i in range(len(atom_indices)):
         partners[i,:n_partners[i]] = np.array(sorted(partners_l[i]))
-    
+
     # DEBUG
     # print(atom_indices)
     # print(n_partners)
     # print(partners)
-    
+
     return _drid(traj.xyz, atom_indices, partners, n_partners)
 
 
