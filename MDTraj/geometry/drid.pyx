@@ -62,8 +62,7 @@ def compute_drid(traj, atom_indices=None):
 
     References
     ----------
-    ..[1] Zhou, Caflisch; Distribution of Reciprocal of Interatomic Distances:
-    A Fast Structural Metric. JCTC 2012 doi:10.1021/ct3003145
+    .. [1] Zhou, Caflisch; Distribution of Reciprocal of Interatomic Distances: A Fast Structural Metric. JCTC 2012 doi:10.1021/ct3003145
     """
     if traj.topology is None:
         raise ValueError('traj must have a topology defined')
