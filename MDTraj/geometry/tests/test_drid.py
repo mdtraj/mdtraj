@@ -3,9 +3,13 @@ import numpy as np
 import mdtraj as md
 from mdtraj.testing import get_fn, eq
 from mdtraj.geometry import compute_drid
+from mdtraj.geometry._geometry import _processor_supports_sse41
+import scipy.special
 from scipy.spatial.distance import euclidean, pdist, squareform
+from mdtraj.testing import skipif
 
 
+@skipif(not _processor_supports_sse41(), 'processor doesnt support SSE4.1')
 def test_drid_1():
     n_frames = 1
     n_atoms = 20
@@ -26,12 +30,12 @@ def test_drid_1():
         
         mean = np.mean(rd)
         second = np.mean((rd - mean)**2)**(0.5)
-        third =  np.mean((rd - mean)**3)**(1.0 / 3.0)
+        third =  scipy.special.cbrt(np.mean((rd - mean)**3))
 
         ref = np.array([mean, second, third])
         np.testing.assert_array_almost_equal(got[0, i], ref, decimal=5)
 
-
+@skipif(not _processor_supports_sse41(), 'processor doesnt support SSE4.1')
 def test_drid_2():
     n_frames = 3
     n_atoms = 11
@@ -58,12 +62,8 @@ def test_drid_2():
 
         mean = np.nanmean(recip, axis=0)
         second = np.nanmean((recip - mean)**2, axis=0)**(0.5)
-        third =  np.nanmean((recip - mean)**3, axis=0)**(1.0 / 3.0)
+        third =  scipy.special.cbrt(np.nanmean((recip - mean)**3, axis=0))
         
         np.testing.assert_array_almost_equal(got[i, :, 0], mean, decimal=5)
         np.testing.assert_array_almost_equal(got[i, :, 1], second, decimal=5)
-        
-        # cbrt() in C handles negative numbers, but pow (above) doesn't. so
-        # if the c code returns a negative third moment, the numpy code will
-        # give nan
-        np.testing.assert_array_almost_equal(np.maximum(got[i, :, 2], 0), np.nan_to_num(third), decimal=5)
+        np.testing.assert_array_almost_equal(got[i, :, 2], third, decimal=5)
