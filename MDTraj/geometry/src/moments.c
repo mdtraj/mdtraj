@@ -64,7 +64,7 @@ void moments_push(moments_t *self, double x) {
     self->_n += 1;
     delta = x - self->_u;
     delta_n = delta / self->_n;
-    delta_n2 = delta_n*delta_n;
+    /* delta_n2 = delta_n*delta_n; */
     term1 = delta * delta_n * n1;
     self->_u += delta_n;
     /*
