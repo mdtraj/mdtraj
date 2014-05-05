@@ -39,7 +39,6 @@ try:
     from mdtraj.geometry.drid import compute_drid
     from mdtraj.geometry._geometry import _processor_supports_sse41
     if not _processor_supports_sse41():
-        print('a')
         raise ImportError()
 except ImportError:
     def compute_drid(traj, atom_indices=None):
