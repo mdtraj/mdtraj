@@ -26,6 +26,11 @@
 #include "dridkernels.h"
 #include "ssetools.h"
 #include "moments.h"
+#include <pmmintrin.h>
+#ifdef __SSE4_1__
+#include <smmintrin.h>
+#endif
+#include "cbrt.h"
 
 int
 drid_moments(float* coords, int index, int* partners, int n_partners, double* moments)
@@ -58,7 +63,7 @@ drid_moments(float* coords, int index, int* partners, int n_partners, double* mo
 
     moments[0] = moments_mean(&onlinemoments);
     moments[1] = sqrt(moments_second(&onlinemoments));
-    moments[2] = cbrt(moments_third(&onlinemoments));
+    moments[2] = cuberoot_sse_22bits(moments_third(&onlinemoments));
 
     return 1;
 }
