@@ -38,9 +38,9 @@ drid_moments(float* coords, int index, int* partners, int n_partners, double* mo
     int i;
     float d;
     moments_t onlinemoments;
-    moments_clear(&onlinemoments);
-
     __m128 x, y, r, r2, s;
+    
+    moments_clear(&onlinemoments);
     x = load_float3(&coords[3 * index]);
 
     for (i = 0; i < n_partners; i++) {
