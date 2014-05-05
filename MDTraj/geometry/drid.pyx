@@ -60,6 +60,10 @@ def compute_drid(traj, atom_indices=None):
     Returns
     -------
     X : np.ndarray, shape=(n_frames, n_atom_indices*3), dtype=np.double
+        A rotationally invariant vector representation of each frame in the
+        simulation. The DRID vector contains the mean, second, and third
+        central moments of the reciprocal interatomic distances (with 1-2
+        interactions excluded).
 
     References
     ----------
