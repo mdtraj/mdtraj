@@ -44,7 +44,7 @@ http://people.xiph.org/~tterribe/notes/homs.html
 #include "moments.h"
 
 
-//Clear the object, and forget all data previously seen
+/* Clear the object, and forget all data previously seen */
 void moments_clear(moments_t *self) {
     self->_n = 0;
     self->_u = 0.0;
@@ -55,7 +55,7 @@ void moments_clear(moments_t *self) {
 */
 }
 
-//Push a number or a set of numbers onto the RunningMoments
+/* Push a number or a set of numbers onto the RunningMoments */
 void moments_push(moments_t *self, double x) {
     int n1;
     double delta, term1, delta_n, delta_n2;
@@ -75,23 +75,23 @@ void moments_push(moments_t *self, double x) {
     self->_M2 += term1;
 }
 
-//Mean of the numbers which have been pushed onto the stack
+/* Mean of the numbers which have been pushed onto the stack */
 double moments_mean(moments_t *self) {
     return self->_u;
 }
 
-//Second centralmoment of the numbers which have been pushed onto the stack
+/* Second centralmoment of the numbers which have been pushed onto the stack */
 double moments_second(moments_t *self) {
     return self->_M2 / self->_n;
 }
 
-//third central moment of the numbers which have been pushed onto the stack
+/* third central moment of the numbers which have been pushed onto the stack */
 double moments_third(moments_t *self) {
     return self->_M3 / self->_n;
 }
 
 /*
-//Fourth central moment of the numbers which have been pushed onto the stack
+// Fourth central moment of the numbers which have been pushed onto the stack
 double moments_fourth(moments_t *cls) {
     return cls->_M4 / cls->_n;
 }
