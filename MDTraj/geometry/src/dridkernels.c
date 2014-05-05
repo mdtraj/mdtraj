@@ -24,6 +24,7 @@
 #include "stdlib.h"
 #include "dridkernels.h"
 #include "ssetools.h"
+#include "msvccompat.h"
 #include "moments.h"
 #include <pmmintrin.h>
 #ifdef __SSE4_1__
