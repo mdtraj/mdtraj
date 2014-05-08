@@ -144,7 +144,8 @@ class NetCDFTrajectoryFile(object):
 
         # AMBER uses the NetCDF3 format, with 64 bit encodings, which
         # for scipy.io.netcdf_file is "version=2"
-        self._handle = netcdf(filename, mode=mode, version=2)
+        # mmap=False added as a workaround for an apparent scipy bug
+        self._handle = netcdf(filename, mode=mode, version=2, mmap=False)
         self._closed = False
 
         # self._frame_index is the current frame that we're at in the
