@@ -73,11 +73,13 @@ def test_read_chunk_1():
         yield lambda: eq(len(e), 101-10)
         yield lambda: eq(len(f), 101-10)
 
-    xyz = NetCDFTrajectoryFile(get_fn('mdcrd.nc')).read()[0]
+    with NetCDFTrajectoryFile(get_fn('mdcrd.nc')) as f:
+        xyz = f.read()[0]
+    print('a')
 
     yield lambda: eq(a, xyz[0:10])
     yield lambda: eq(e, xyz[10:])
-
+    print('b')
 
 def test_read_chunk_2():
     with NetCDFTrajectoryFile(get_fn('mdcrd.nc')) as f:
