@@ -2,7 +2,7 @@
 
 MDTraj is a python library that allows users to manipulate molecular dynamics
 (MD) trajectories and perform a variety of analyses, including fast RMSD,
-solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj 
+solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj
 is the wide variety of molecular dynamics trajectory file formats which are
 supported, including RCSB pdb, GROMACS xtc and trr, CHARMM / NAMD dcd, AMBER
 binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
@@ -38,12 +38,20 @@ except ImportError:
     exit(1)
 
 try:
+    # add an optional --disable-openmp to disable OpenMP support
+    sys.argv.remove('--disable-openmp')
+    disable_openmp = True
+except ValueError:
+    disable_openmp = False
+
+try:
     # add an optional command line flag --no-install-deps to setup.py
     # to turn off setuptools automatic downloading of dependencies
     sys.argv.remove('--no-install-deps')
     no_install_deps = True
 except ValueError:
     no_install_deps = False
+
 
 setup_kwargs = {}
 if 'setuptools' in sys.modules:
@@ -169,13 +177,16 @@ if not release:
 ################################################################################
 
 class CompilerDetection(object):
-    def __init__(self):
+    def __init__(self, disable_openmp):
         self.msvc = new_compiler().compiler_type == 'msvc'
 
-        self.openmp_enabled, openmp_needs_gomp = self._detect_openmp()
+        if disable_openmp:
+            self.openmp_enabled = False
+        else:
+            self.openmp_enabled, openmp_needs_gomp = self._detect_openmp()
         self.sse3_enabled = self._detect_sse3() if not self.msvc else True
         self.sse41_enabled = self._detect_sse41() if not self.msvc else True
-        
+
         self.compiler_args_sse2  = ['-msse2'] if not self.msvc else ['/arch:SSE2']
         self.compiler_args_sse3  = ['-mssse3'] if (self.sse3_enabled and not self.msvc) else []
 
@@ -240,7 +251,7 @@ class CompilerDetection(object):
             print('Compiler supports {0}'.format(feature))
         else:
             print('Did not detect {0} support'.format(feature))
-            
+
     def _detect_openmp(self):
         self._print_support_start('OpenMP')
         compiler = new_compiler()
@@ -252,7 +263,7 @@ class CompilerDetection(object):
             needs_gomp = hasopenmp
         self._print_support_end('OpenMP', hasopenmp)
         return hasopenmp, needs_gomp
-    
+
     def _detect_sse3(self):
         "Does this compiler support SSE3 intrinsics?"
         compiler = new_compiler()
@@ -274,7 +285,7 @@ class CompilerDetection(object):
         return result
 
 # Global info about compiler
-compiler = CompilerDetection()
+compiler = CompilerDetection(disable_openmp)
 
 ################################################################################
 # Declaration of the compiled extension modules (cython + c)
