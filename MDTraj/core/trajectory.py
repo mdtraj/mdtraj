@@ -50,6 +50,7 @@ from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3, string_types
 from mdtraj import _rmsd
 from mdtraj import _FormatRegistry
+from mdtraj.geometry import distance
 
 ##############################################################################
 # Globals
@@ -1301,10 +1302,7 @@ class Trajectory(object):
         self
         """
         if mass_weighted and self.top is not None:
-            masses = np.array([a.element.mass for a in self.top.atoms])
-            masses /= masses.sum()
-            for x in self._xyz:
-                x -= (x.astype('float64').T.dot(masses))
+            self.xyz -= distance.compute_center_of_mass(self)[:, np.newaxis, :]
         else:
             self._rmsd_traces = _rmsd._center_inplace_atom_major(self._xyz)
 
