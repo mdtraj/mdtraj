@@ -131,7 +131,7 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
 
 
 def compute_center_of_mass(traj):
-    """Compute the center of mass for each frame
+    """Compute the center of mass for each frame.
 
     Parameters
     ----------
