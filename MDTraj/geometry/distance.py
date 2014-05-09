@@ -31,7 +31,8 @@ from mdtraj.utils import ensure_type
 from mdtraj.geometry import _geometry
 
 
-__all__ = ['compute_distances', 'compute_displacements']
+__all__ = ['compute_distances', 'compute_displacements',
+           'compute_center_of_mass']
 
 ##############################################################################
 # Functions
