@@ -157,6 +157,8 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
         ref_g = reference._rmsd_traces[frame]
     else:
         target_g = np.empty(target_n_frames, dtype=np.float32)
+        if not target_xyz.flags.writeable:
+            raise ValueError('target_xyz is not writeable')
         inplace_center_and_trace_atom_major(&target_xyz[0,0,0], &target_g[0], target_n_frames, n_atoms)
         inplace_center_and_trace_atom_major(&ref_xyz_frame[0, 0], &ref_g, 1, n_atoms)
 
@@ -179,6 +181,8 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
 
 def _center_inplace_atom_major(np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz not None):
     assert xyz.shape[2] == 3
+    if not xyz.flags.writeable:
+        raise ValueError('xyz is not writeable')
     cdef np.ndarray[ndim=1, dtype=np.float32_t] traces = np.empty(xyz.shape[0], dtype=np.float32)
     inplace_center_and_trace_atom_major(&xyz[0,0,0], &traces[0], xyz.shape[0], xyz.shape[1])
     return traces
@@ -464,3 +468,4 @@ bool parallel=True):
             distances[i] = sqrtf(msd)
 
     return distances, rot
+
