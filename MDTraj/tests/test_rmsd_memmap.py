@@ -14,8 +14,7 @@ def test_1():
         # since traj isn't precentered, this requires centering
         # the coordinates which is done inplace. but that's not possible
         # with mmap_mode = 'r'
-        with assert_raises(ValueError):
-            md.rmsd(traj, traj, 0)
+        assert_raises(ValueError, lambda: md.rmsd(traj, traj, 0))
 
         # this should work
         traj.xyz = np.load('temp.npy', mmap_mode='c')
