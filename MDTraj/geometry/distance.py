@@ -31,7 +31,8 @@ from mdtraj.utils import ensure_type
 from mdtraj.geometry import _geometry
 
 
-__all__ = ['compute_distances', 'compute_displacements']
+__all__ = ['compute_distances', 'compute_displacements',
+           'compute_center_of_mass']
 
 ##############################################################################
 # Functions
@@ -127,6 +128,29 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
         _geometry._dist_displacement(xyz, pairs, out)
         return out
     return _displacement(xyz, pairs)
+
+
+def compute_center_of_mass(traj):
+    """Compute the center of mass for each frame.
+
+    Parameters
+    ----------
+    traj : Trajectory
+        Trajectory to compute center of mass for
+
+    Returns
+    -------
+    com : np.ndarray, shape=(n_frames, 3)
+         Coordinates of the center of mass for each frame
+    """
+
+    com = np.zeros((traj.n_frames, 3))
+    masses = np.array([a.element.mass for a in traj.top.atoms])
+    masses /= masses.sum()
+
+    for i, x in enumerate(traj.xyz):
+        com[i, :] = x.astype('float64').T.dot(masses)
+    return com
 
 
 ##############################################################################

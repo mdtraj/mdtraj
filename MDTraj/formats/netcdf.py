@@ -266,6 +266,22 @@ class NetCDFTrajectoryFile(object):
             warnings.warn('cell_angles were found, but no cell_lengths')
 
         self._frame_index = self._frame_index + min(n_frames, total_n_frames)
+
+        # scipy.io.netcdf variables are mem-mapped, and are only backed
+        # by valid memory while the file handle is open. This is _bad_.
+        # because we need to support the user opening the file, reading
+        # the coordinates, and then closing it, and still having the
+        # coordinates be a valid memory segment.
+        # https://github.com/rmcgibbo/mdtraj/issues/440
+        if coordinates is not None and not coordinates.flags['WRITEABLE']:
+            coordinates = np.array(coordinates, copy=True)
+        if time is not None and not time.flags['WRITEABLE']:
+            time = np.array(time, copy=True)
+        if cell_lengths is not None and not cell_lengths.flags['WRITEABLE']:
+            cell_lengths = np.array(cell_lengths, copy=True)
+        if cell_angles is not None and not cell_angles.flags['WRITEABLE']:
+            cell_angles = np.array(cell_angles, copy=True)
+
         return coordinates, time, cell_lengths, cell_angles
 
     def write(self, coordinates, time=None, cell_lengths=None, cell_angles=None):

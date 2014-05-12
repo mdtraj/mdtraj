@@ -76,6 +76,35 @@ np.savetxt("atom_distances_frame0_ref.dat", distances)
 """
 
 
+def test_center_of_mass():
+    top = md.Topology()
+    chain = top.add_chain()
+    resi = top.add_residue("NA", chain)
+    top.add_atom('H1', md.element.hydrogen, resi)
+    top.add_atom('H2', md.element.hydrogen, resi)
+    top.add_atom('O', md.element.oxygen, resi)
+
+    xyz = np.array([
+        [
+            # Frame 1 - Right triangle
+            [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]
+        ],
+        [
+            # Frame 2
+            [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.5, 0.5, 0.0]
+        ]
+    ])
+    traj = md.Trajectory(xyz, top)
+    com_test = mdtraj.geometry.distance.compute_center_of_mass(traj)
+
+    com_actual = (1 / 18.015324) * np.array([
+        [1.007947, 1.007947, 0.0],
+        [1.007947 + 0.5 * 15.99943, 1.007947 + 0.5 * 15.99943, 0.0],
+    ])
+
+    eq(com_actual, com_test, decimal=4)
+
+
 def test_dihedral_indices():
     traj = md.load(get_fn('1bpi.pdb'))
     # Manually compare generated indices to known answers.

@@ -40,6 +40,7 @@ Distances
     compute_displacements
     compute_contacts
     compute_drid
+    compute_center_of_mass
     geometry.squareform
 
 Bond Angles and Dihedrals
