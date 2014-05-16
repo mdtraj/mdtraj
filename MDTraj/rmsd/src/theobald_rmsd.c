@@ -285,7 +285,7 @@ float msdFromMandG(const float M[9], const float G_x, const float G_y,
         qsqr = q0*q0 + q1*q1 + q2*q2 + q3*q3;
 
         if (qsqr < 1e-11f) {
-            fprintf(stderr, "%s UNCONVEGED ROTATION MATRIX. RETURNING IDENTITY=%d\n", __FILE__, __LINE__);
+            fprintf(stderr, "%s UNCONVERGED ROTATION MATRIX. RETURNING IDENTITY=%d\n", __FILE__, __LINE__);
             rot[0] = rot[4] = rot[8] = 1.0;
             rot[1] = rot[2] = rot[3] = rot[5] = rot[6] = rot[7] = 0.0;
         } else {
