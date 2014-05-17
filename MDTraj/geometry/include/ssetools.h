@@ -4,7 +4,6 @@
 #include "msvccompat.h"
 #include <stdio.h>
 #include <pmmintrin.h>
-#include <smmintrin.h>
 
 /****************************************************************************/
 /* Utilities                                                                */

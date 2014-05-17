@@ -27,9 +27,9 @@
 #include "msvccompat.h"
 #include "moments.h"
 #include <pmmintrin.h>
-#ifdef __SSE4_1__
-#include <smmintrin.h>
-#endif
+// #ifdef __SSE4_1__
+// #include <smmintrin.h>
+// #endif
 #include "cbrt.h"
 
 int
@@ -52,8 +52,8 @@ drid_moments(float* coords, int index, int* partners, int n_partners, double* mo
         /* two instructions. note: it's critical */
         /* here that the last entry of x1 and x2 was 0 */
         /* so that d2.w = 0 */
-        s = _mm_hadd_ps(r2, r2);
-        s = _mm_hadd_ps(s, s);
+	s = _mm_add_ps(r2, _mm_movehl_ps(r2, r2));
+        s = _mm_add_ss(s, _mm_shuffle_ps(s, s, 1));
         /* store into a regular float. I tried using _mm_rsqrt_ps, but it's not
            accurate to pass the tests */
         _mm_store_ss(&d, s);

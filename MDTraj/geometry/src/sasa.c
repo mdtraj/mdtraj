@@ -20,10 +20,13 @@
 /* License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.*/
 /*=======================================================================*/
 
-#include <stdio.h>
 #include <stdlib.h>
+/* Only compile this file if you have SSE4.1 */
+#ifndef __SSE4_1__
+int sasa(void) {exit(EXIT_FAILURE);}
+#else
+#include <stdio.h>
 #include <math.h>
-
 #include <pmmintrin.h>
 #include <smmintrin.h>
 
@@ -232,3 +235,5 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   free(sphere_points);
   return 1;
 }
+
+#endif /* SSE 4.1 */
