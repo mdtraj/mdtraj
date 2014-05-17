@@ -108,11 +108,9 @@ def chemical_shifts_shiftx2(trj):
             d = pd.read_csv("./trj%d.pdb.cs" % i)
             d.rename(columns={"NUM": "resSeq", "RES": "resName", "ATOMNAME": "name"}, inplace=True)
             d["frame"] = i
-            print(d)
             results.append(d)
 
     results = pd.concat(results)
-    print(results)
     results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
     return results
 
