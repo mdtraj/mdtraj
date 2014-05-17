@@ -27,9 +27,6 @@
 #include "msvccompat.h"
 #include "moments.h"
 #include <pmmintrin.h>
-// #ifdef __SSE4_1__
-// #include <smmintrin.h>
-// #endif
 #include "cbrt.h"
 
 int
