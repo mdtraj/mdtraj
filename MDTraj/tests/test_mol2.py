@@ -31,4 +31,8 @@ def test_load_mol2():
     trj = md.load(get_fn('imatinib.mol2'))
     ref_trj = md.load(get_fn('imatinib.mol2'))
     eq(trj.xyz, ref_trj.xyz)
+    
+    ref_top, ref_bonds = ref_trj.top.to_dataframe()
+    top, bonds = trj.top.to_dataframe()
+    eq(bonds, ref_bonds)
 

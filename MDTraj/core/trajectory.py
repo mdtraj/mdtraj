@@ -43,6 +43,7 @@ from mdtraj.formats import PDBTrajectoryFile
 from mdtraj.formats import MDCRDTrajectoryFile
 from mdtraj.formats import ArcTrajectoryFile
 from mdtraj.formats.prmtop import load_prmtop
+from mdtraj.formats.mol2 import load_mol2
 from mdtraj.core.topology import Topology
 from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_vectors, 
                           box_vectors_to_lengths_and_angles, cast_indices)
@@ -98,6 +99,8 @@ def _parse_topology(top):
         topology = _traj.topology
     elif isinstance(top, string_types) and (ext in ['.prmtop', '.parm7']):
         topology = load_prmtop(top)
+    elif isinstance(top, string_types) and (ext in ['.mol2']):
+        topology = load_mol2(top).topology
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, Topology):
