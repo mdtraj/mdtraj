@@ -353,9 +353,6 @@ def rmsd_extensions():
 
 
 def geometry_extensions():
-    if not (compiler.sse3_enabled and compiler.sse41_enabled):
-        print('SSE3 and SSE4.1 not enabled. Skipping geometry modules')
-        return []
     compiler_args = (compiler.compiler_args_sse2 + compiler.compiler_args_sse3 + compiler.compiler_args_sse41 +
                      compiler.compiler_args_opt + compiler.compiler_args_sse41)
     define_macros = compiler.define_macros_sse41

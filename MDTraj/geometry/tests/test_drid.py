@@ -3,13 +3,10 @@ import numpy as np
 import mdtraj as md
 from mdtraj.testing import get_fn, eq
 from mdtraj.geometry import compute_drid
-from mdtraj.geometry._geometry import _processor_supports_sse41
 import scipy.special
 from scipy.spatial.distance import euclidean, pdist, squareform
-from mdtraj.testing import skipif
 
 
-@skipif(not _processor_supports_sse41(), 'processor doesnt support SSE4.1')
 def test_drid_1():
     n_frames = 1
     n_atoms = 20
@@ -35,7 +32,7 @@ def test_drid_1():
         ref = np.array([mean, second, third])
         np.testing.assert_array_almost_equal(got[0, i], ref, decimal=5)
 
-@skipif(not _processor_supports_sse41(), 'processor doesnt support SSE4.1')
+
 def test_drid_2():
     n_frames = 3
     n_atoms = 11

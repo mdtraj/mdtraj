@@ -32,6 +32,12 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.                                     *
  * -------------------------------------------------------------------------- */
 
+#ifndef __SSE4_1__
+static int processorSupportsSSE41(void) {
+  return 0;
+}
+#else
+
 /**
  * This file defines a collection of functions for querying the specific hardware being used.
  */
@@ -123,4 +129,5 @@ static int processorSupportsSSE41(void) {
     return 0;
 }
 
+#endif /* SSE 4.1 */
 #endif /* OPENMM_HARDWARE_H_ */

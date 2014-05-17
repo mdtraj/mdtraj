@@ -23,10 +23,18 @@
 
 #include <stdlib.h>
 #include <math.h>
+/* Only compile this file if you have SSE4.1 */
+#ifndef __SSE4_1__
+
+int dist(void) { exit(EXIT_FAILURE); }
+int dist_mic(void) { exit(EXIT_FAILURE); }
+int angle(void) { exit(EXIT_FAILURE); }
+int dihedral(void) { exit(EXIT_FAILURE); }
+int kabsch_sander(void) { exit(EXIT_FAILURE); }
+
+#else
 #include <pmmintrin.h>
-#ifdef __SSE4_1__
 #include <smmintrin.h>
-#endif
 #include "ssetools.h"
 #include "msvccompat.h"
 #ifdef _MSC_VER
@@ -561,3 +569,4 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
   free(hcoords);
   return 1;
 }
+#endif
