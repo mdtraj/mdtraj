@@ -51,9 +51,9 @@
 from __future__ import print_function, division
 import numpy as np
 import itertools
-import cStringIO
 import pandas as pd
 
+from mdtraj.utils.six.moves import cStringIO
 from mdtraj.formats import pdb
 from mdtraj.core import element as elem
 from mdtraj.formats.registry import _FormatRegistry
