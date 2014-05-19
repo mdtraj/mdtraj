@@ -58,7 +58,7 @@ from mdtraj.formats import pdb
 from mdtraj.core import element as elem
 from mdtraj.formats.registry import _FormatRegistry
 
-__all__ = ['load_mol2']
+__all__ = ['load_mol2', "mol2_to_dataframes"]
 
 @_FormatRegistry.register_loader('.mol2')
 def load_mol2(filename):

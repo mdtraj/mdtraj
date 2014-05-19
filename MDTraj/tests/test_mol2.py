@@ -26,10 +26,9 @@ from mdtraj.formats import mol2
 doc = DocStringFormatTester(mol2)
 
 
-
 def test_load_mol2():
     trj = md.load(get_fn('imatinib.mol2'))
-    ref_trj = md.load(get_fn('imatinib.mol2'))
+    ref_trj = md.load(get_fn('imatinib.pdb'))
     eq(trj.xyz, ref_trj.xyz)
     
     ref_top, ref_bonds = ref_trj.top.to_dataframe()
