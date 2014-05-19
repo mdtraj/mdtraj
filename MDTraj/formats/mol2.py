@@ -94,7 +94,7 @@ def load_mol2(filename):
     atoms_mdtraj["chainID"] = np.ones(len(atoms), 'int')
 
     bonds_mdtraj = bonds[["id0", "id1"]].values
-    offset = bonds_mdtraj.min()
+    offset = bonds_mdtraj.min()  # Should this just be 1???
     bonds_mdtraj -= offset
 
     top = Topology.from_dataframe(atoms_mdtraj, bonds_mdtraj)
