@@ -90,8 +90,8 @@ def load_mol2(filename):
     atoms_mdtraj = atoms[["name", "resName"]]
     atoms_mdtraj["serial"] = atoms.index
     atoms_mdtraj["element"] = atoms.atype.map(gaff_elements)
-    atoms_mdtraj["resSeq"] = np.ones(len(atoms))
-    atoms_mdtraj["chainID"] = np.ones(len(atoms))
+    atoms_mdtraj["resSeq"] = np.ones(len(atoms), 'int')
+    atoms_mdtraj["chainID"] = np.ones(len(atoms), 'int')
 
     bonds_mdtraj = bonds[["id0", "id1"]].values
     offset = bonds_mdtraj.min()
