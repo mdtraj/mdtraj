@@ -147,7 +147,6 @@ def mol2_to_dataframes(filename):
     csv.writelines(data["@<TRIPOS>ATOM\n"][1:])
     csv.seek(0)
     atoms_frame = pd.read_csv(csv, delim_whitespace=True, names=["serial", "name", "x", "y", "z", "atype", "code", "resName", "charge"], header=None, usecols=range(1, 10))
-
     return atoms_frame, bonds_frame
 
 
