@@ -25,6 +25,7 @@ import tempfile
 import mdtraj as md
 from mdtraj.utils.six.moves import cPickle
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
+from nose.tools import assert_raises
 import numpy as np
 
 try:
@@ -122,3 +123,17 @@ def test_nonconsective_resSeq():
 def test_pickle():
     # test pickling of topology (bug #391)
     cPickle.loads(cPickle.dumps(md.load(get_fn('bpti.pdb')).topology))
+
+def test_atoms_by_name():
+    top = md.load(get_fn('bpti.pdb')).topology
+
+    atoms = list(top.atoms)
+    for atom1, atom2 in zip(top.atoms_by_name('CA'), top.chain(0).atoms_by_name('CA')):
+        assert atom1 == atom2
+        assert atom1 in atoms
+        assert atom1.name == 'CA'
+
+    assert len(list(top.atoms_by_name('CA'))) == sum(1 for _ in atoms if _.name == 'CA')
+    assert top.residue(15).atom('CA') == [a for a in top.residue(15).atoms if a.name == 'CA'][0]
+
+    assert_raises(KeyError, lambda: top.residue(15).atom('sdfsdsdf'))
