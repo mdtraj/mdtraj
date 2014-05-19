@@ -76,6 +76,7 @@ def load_mol2(filename):
 
     Notes
     -----
+    The elements are guessed using GAFF atom types.
     
     Examples
     --------
