@@ -190,7 +190,7 @@ class Topology(object):
 
     def _string_summary_basic(self):
         return "mdtraj.Topology with %d chains, %d residues, %d atoms, %d bonds" % (self.n_chains, self.n_residues, self.n_atoms, len(self._bonds))
-        
+
     def copy(self):
         """Return a copy of the topology
 
@@ -449,11 +449,11 @@ class Topology(object):
 
         if len(self._bonds) != len(other._bonds):
             return False
-            
+
         # the bond ordering is somewhat ambiguous, so try and fix it for comparison
         self_sorted_bonds  = sorted([(a1.index, b1.index) for (a1, b1) in self.bonds])
         other_sorted_bonds = sorted([(a2.index, b2.index) for (a2, b2) in other.bonds])
-            
+
         for i in range(len(self._bonds)):
             (a1, b1) = self_sorted_bonds[i]
             (a2, b2) = other_sorted_bonds[i]
@@ -621,6 +621,22 @@ class Topology(object):
                 for atom in residue._atoms:
                     yield atom
 
+    def atoms_by_name(self, name):
+        """Iterator over all Atoms in the Topology with a specified name
+
+        Example
+        -------
+        >>> for atom in topology.atoms_by_name('CA'):
+        ...     print(atom)
+
+        Returns
+        -------
+        atomiter : generator
+        """
+        for atom in self.atoms:
+            if atom.name == name:
+                yield atom
+
     @property
     def n_atoms(self):
         """Get the number of atoms in the Topology"""
@@ -787,6 +803,22 @@ class Chain(object):
             for atom in residue._atoms:
                 yield atom
 
+    def atoms_by_name(self, name):
+        """Iterator over all Atoms in the Chain with a specified name
+
+        Example
+        -------
+        >>> for atom in chain.atoms_by_name('CA'):
+        ...     print(atom)
+
+        Returns
+        -------
+        atomiter : generator
+        """
+        for atom in self.atoms:
+            if atom.name == name:
+                yield atom
+
     def atom(self, index):
         """Get a specific atom in this Chain
 
@@ -836,14 +868,43 @@ class Residue(object):
         """
         return iter(self._atoms)
 
-    def atom(self, index):
+    def atoms_by_name(self, name):
+        """Iterator over all Atoms in the Residue with a specified name
+
+        Example
+        -------
+        >>> for atom in residue.atoms_by_name('CA'):
+        ...     print(atom)
+
+        Returns
+        -------
+        atomiter : generator
+        """
+        for atom in self.atoms:
+            if atom.name == name:
+                yield atom
+
+    def atom(self, index_or_name):
         """Get a specific atom in this Residue.
+
+        Parameters
+        ----------
+        index_or_name : {int, str}
+            Either a (zero-based) index, or the name of the atom. If a string
+            is passed in, the first atom -- in index order -- with a matching
+            name wil be returned.
 
         Returns
         -------
         atom : Atom
         """
-        return self._atoms[index]
+        try:
+            return self._atoms[index_or_name]
+        except TypeError:
+            try:
+                return next(self.atoms_by_name(index_or_name))
+            except StopIteration:
+                raise KeyError('no matching atom found')
 
     @property
     def n_atoms(self):
@@ -852,6 +913,10 @@ class Residue(object):
 
     def  __str__(self):
         return '%s%s' % (self.name, self.resSeq)
+
+    def __repr__(self):
+        return str(self)
+
 
 class Atom(object):
     """An Atom object represents a residue within a Topology.
@@ -901,4 +966,6 @@ class Atom(object):
 
     def __str__(self):
         return '%s-%s' % (self.residue, self.name)
-    
+
+    def __repr__(self):
+        return str(self)
