@@ -76,7 +76,9 @@ def load_mol2(filename):
 
     Notes
     -----
-    This function should work on GAFF and sybyl style MOL2 files.
+    This function should work on GAFF and sybyl style MOL2 files, but has
+    been primarily tested on GAFF mol2 files. 
+    This function does NOT accept multi-structure MOL2 files!!!
     The elements are guessed using GAFF atom types or via the atype string.
     
     Examples
@@ -137,7 +139,8 @@ def mol2_to_dataframes(filename):
     These dataframes may contain force field information as well as the
     information necessary for constructing the coordinates and molecular
     topology.  This function has been tested for GAFF and sybyl-style 
-    mol2 files.
+    mol2 files but has been primarily tested on GAFF mol2 files. 
+    This function does NOT accept multi-structure MOL2 files!!!    
     
     See Also
     --------
