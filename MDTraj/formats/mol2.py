@@ -51,14 +51,14 @@
 from __future__ import print_function, division
 import numpy as np
 import itertools
-import cStringIO
 import pandas as pd
 
+from mdtraj.utils.six.moves import cStringIO as StringIO
 from mdtraj.formats import pdb
 from mdtraj.core import element as elem
 from mdtraj.formats.registry import _FormatRegistry
 
-__all__ = ['load_mol2']
+__all__ = ['load_mol2', "mol2_to_dataframes"]
 
 @_FormatRegistry.register_loader('.mol2')
 def load_mol2(filename):
@@ -76,6 +76,7 @@ def load_mol2(filename):
 
     Notes
     -----
+    The elements are guessed using GAFF atom types.
     
     Examples
     --------
@@ -95,11 +96,11 @@ def load_mol2(filename):
     if atoms_mdtraj.element.isnull().any():  # If this is a sybyl mol2, there should be NAN (null) values
         atoms_mdtraj["element"] = atoms.atype.apply(lambda x: x.strip(".")[0])  # If this is a sybyl mol2, I think this works generally.
 
-    atoms_mdtraj["resSeq"] = np.ones(len(atoms))
-    atoms_mdtraj["chainID"] = np.ones(len(atoms))
+    atoms_mdtraj["resSeq"] = np.ones(len(atoms), 'int')
+    atoms_mdtraj["chainID"] = np.ones(len(atoms), 'int')
 
     bonds_mdtraj = bonds[["id0", "id1"]].values
-    offset = bonds_mdtraj.min()
+    offset = bonds_mdtraj.min()  # Should this just be 1???
     bonds_mdtraj -= offset
 
     top = Topology.from_dataframe(atoms_mdtraj, bonds_mdtraj)
@@ -144,16 +145,15 @@ def mol2_to_dataframes(filename):
     with open(filename) as f:
         data = dict((key, list(grp)) for key, grp in itertools.groupby(f, _parse_mol2_sections))
 
-    csv = cStringIO.StringIO()
+    csv = StringIO()
     csv.writelines(data["@<TRIPOS>BOND\n"][1:])
-    csv.reset()
+    csv.seek(0)
     bonds_frame = pd.read_table(csv, delim_whitespace=True, names=["bond_id", "id0", "id1", "bond_type"], index_col=0, header=None, sep="\s*")
 
-    csv = cStringIO.StringIO()
+    csv = StringIO()
     csv.writelines(data["@<TRIPOS>ATOM\n"][1:])
-    csv.reset()
+    csv.seek(0)
     atoms_frame = pd.read_csv(csv, delim_whitespace=True, names=["serial", "name", "x", "y", "z", "atype", "code", "resName", "charge"], header=None, usecols=range(1, 10))
-
     return atoms_frame, bonds_frame
 
 
