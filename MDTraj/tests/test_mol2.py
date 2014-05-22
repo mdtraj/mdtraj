@@ -24,6 +24,7 @@ import numpy as np
 import mdtraj as md
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
 from mdtraj.formats import mol2
+from distutils.spawn import find_executable
 from mdtraj.utils import enter_temp_directory
 import tarfile
 import pickle
@@ -43,6 +44,7 @@ def test_load_mol2():
     top, bonds = trj.top.to_dataframe()
     eq(bonds, ref_bonds)
 
+@skipif(find_executable('obabel') is None, 'You need obabel installed to run this test')
 @skipif(os.environ.get("TRAVIS", None) == 'true', "Skip testing of entire FreeSolv database on Travis.")
 def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb():
     with enter_temp_directory():        
@@ -60,7 +62,7 @@ def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb():
             sybyl_filename = "./v0.3/mol2files_sybyl/%s.mol2" % key
             
             cmd = "obabel -imol2 %s -opdb > %s 2>/dev/null" % (sybyl_filename, pdb_filename)
-            os.system(cmd)
+            assert os.system(cmd) == 0
 
             t_pdb = md.load(pdb_filename)
             t_gaff = md.load(gaff_filename)
