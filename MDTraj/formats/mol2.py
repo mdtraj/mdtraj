@@ -88,7 +88,13 @@ def load_mol2(filename):
     
     atoms_mdtraj = atoms[["name", "resName"]]
     atoms_mdtraj["serial"] = atoms.index
-    atoms_mdtraj["element"] = atoms.atype.map(gaff_elements)
+    
+    #Figure out 1 letter element names
+    
+    atoms_mdtraj["element"] = atoms.atype.map(gaff_elements)  # IF this is a GAFF mol2, this line should work without issues
+    if atoms_mdtraj.element.isnull().any():  # If this is a sybyl mol2, there should be NAN (null) values
+        atoms_mdtraj["element"] = atoms.atype.apply(lambda x: x.strip(".")[0])  # If this is a sybyl mol2, I think this works generally.
+
     atoms_mdtraj["resSeq"] = np.ones(len(atoms))
     atoms_mdtraj["chainID"] = np.ones(len(atoms))
 

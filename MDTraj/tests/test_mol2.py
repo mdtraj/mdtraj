@@ -21,10 +21,16 @@
 ##############################################################################
 
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
+from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
 from mdtraj.formats import mol2
+from mdtraj.utils import enter_temp_directory
+import tarfile
+import pickle
+import os
+import numpy as np
+import scipy.sparse
+import subprocess
 doc = DocStringFormatTester(mol2)
-
 
 
 def test_load_mol2():
@@ -36,3 +42,58 @@ def test_load_mol2():
     top, bonds = trj.top.to_dataframe()
     eq(bonds, ref_bonds)
 
+@skipif(os.environ.get("TRAVIS", None) == 'true', "Skip testing of entire FreeSolv database on Travis.")
+def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb():
+    with enter_temp_directory():        
+        
+        tar_filename = "freesolve_v0.3.tar.bz2"
+        tar = tarfile.open(get_fn(tar_filename), mode="r:bz2")
+        tar.extractall()
+        tar.close()
+        
+        database = pickle.load(open("./v0.3/database.pickle"))
+        
+        for key in database:
+            gaff_filename = "./v0.3/mol2files_gaff/%s.mol2" % key
+            pdb_filename = "./v0.3/mol2files_gaff/%s.pdb" % key
+            sybyl_filename = "./v0.3/mol2files_sybyl/%s.mol2" % key
+            
+            cmd = "obabel -imol2 %s -opdb > %s 2>/dev/null" % (sybyl_filename, pdb_filename)
+            os.system(cmd)
+            #with open(os.devnull, 'wb') as devnull:
+            #    subprocess.check_call(['obabel', '-imol2', sybyl_filename, '-opdb', pdb_filename], stderr=subprocess.STDOUT)
+            
+            
+            t_pdb = md.load(pdb_filename)
+            t_gaff = md.load(gaff_filename)
+            t_sybyl = md.load(sybyl_filename)
+            
+            eq(t_pdb.n_atoms, t_gaff.n_atoms)
+            eq(t_pdb.n_atoms, t_sybyl.n_atoms)
+            
+            eq(t_pdb.n_frames, t_gaff.n_frames)
+            eq(t_pdb.n_frames, t_gaff.n_frames)
+            
+            eq(t_pdb.xyz, t_gaff.xyz, decimal=4)
+            eq(t_pdb.xyz, t_sybyl.xyz, decimal=4)
+
+            top_pdb, bonds_pdb = t_pdb.top.to_dataframe()
+            top_gaff, bonds_gaff = t_gaff.top.to_dataframe()
+            top_sybyl, bonds_sybyl = t_sybyl.top.to_dataframe()
+            
+            eq(top_sybyl.name.values, top_pdb.name.values)
+            # eq(top_gaff.name.values, top_sybyl.name.values)  # THEY CAN HAVE DIFFERENT NAMES, so this isn't TRUE!
+            def make_bonds_comparable(bond_array):
+                n_bonds = len(bond_array)
+                data = np.ones(n_bonds)
+                i = bond_array[:, 0]
+                j = bond_array[:, 1]
+                matrix = scipy.sparse.coo_matrix((data, (i, j)), shape=(t_pdb.n_atoms, t_pdb.n_atoms)).toarray()
+                return matrix + matrix.T  # Symmetrize to account for (a ~ b) versus (b ~ a)
+            
+            bond_matrix_pdb = make_bonds_comparable(bonds_pdb)
+            bond_matrix_gaff = make_bonds_comparable(bonds_gaff)
+            bond_matrix_sybyl = make_bonds_comparable(bonds_sybyl)
+            
+            eq(bond_matrix_pdb, bond_matrix_gaff)
+            eq(bond_matrix_pdb, bond_matrix_sybyl)
