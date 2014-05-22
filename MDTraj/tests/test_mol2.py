@@ -61,10 +61,7 @@ def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb():
             
             cmd = "obabel -imol2 %s -opdb > %s 2>/dev/null" % (sybyl_filename, pdb_filename)
             os.system(cmd)
-            #with open(os.devnull, 'wb') as devnull:
-            #    subprocess.check_call(['obabel', '-imol2', sybyl_filename, '-opdb', pdb_filename], stderr=subprocess.STDOUT)
-            
-            
+
             t_pdb = md.load(pdb_filename)
             t_gaff = md.load(gaff_filename)
             t_sybyl = md.load(sybyl_filename)
@@ -84,6 +81,7 @@ def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb():
             
             eq(top_sybyl.name.values, top_pdb.name.values)
             # eq(top_gaff.name.values, top_sybyl.name.values)  # THEY CAN HAVE DIFFERENT NAMES, so this isn't TRUE!
+
             def make_bonds_comparable(bond_array):
                 n_bonds = len(bond_array)
                 data = np.ones(n_bonds)
