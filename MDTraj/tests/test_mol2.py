@@ -83,6 +83,7 @@ def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb():
             # eq(top_gaff.name.values, top_sybyl.name.values)  # THEY CAN HAVE DIFFERENT NAMES, so this isn't TRUE!
 
             def make_bonds_comparable(bond_array):
+                """Create a bond connectivity matrix from a numpy array of atom pairs.  Avoids having to compare the order in which bonds are listed."""
                 n_bonds = len(bond_array)
                 data = np.ones(n_bonds)
                 i = bond_array[:, 0]
