@@ -1,0 +1,5 @@
+pyflakes
+scripttest
+nose
+coverage
+coveralls
