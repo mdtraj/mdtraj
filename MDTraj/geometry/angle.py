@@ -40,6 +40,10 @@ __all__ = ['compute_angles']
 def compute_angles(traj, angle_indices, opt=True):
     """Compute the bond angles between the supplied triplets of indices in each frame of a trajectory.
 
+    This function does not take into account periodic boundary conditions (it
+    will give spurious results if the three atoms which make up any angle jump
+    across a PBC (are not "wholed"))
+
     Parameters
     ----------
     traj : Trajectory

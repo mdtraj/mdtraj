@@ -76,6 +76,10 @@ def _dihedral(xyz, indices, out=None):
 def compute_dihedrals(traj, indices, opt=True):
     """Compute the dihedral angles between the supplied quartets of atoms in each frame in a trajectory.
 
+    This function does not take into account periodic boundary conditions (it
+    will give spurious results if the four atoms which make up any dihedral jump
+    across a PBC (are not "wholed"))
+
     Parameters
     ----------
     traj : Trajectory
@@ -282,6 +286,10 @@ _get_indices_psi = lambda traj: _atom_sequence(traj, PSI_ATOMS)
 def compute_phi(traj, opt=True):
     """Calculate the phi torsions of a trajectory.
 
+    This function does not take into account periodic boundary conditions (it
+    will give spurious results if the four atoms which make up any dihedral jump
+    across a PBC (are not "wholed"))
+
     Parameters
     ----------
     traj : Trajectory
@@ -305,6 +313,10 @@ def compute_phi(traj, opt=True):
 
 def compute_psi(traj, opt=True):
     """Calculate the psi torsions of a trajectory.
+
+    This function does not take into account periodic boundary conditions (it
+    will give spurious results if the four atoms which make up any dihedral jump
+    across a PBC (are not "wholed"))
 
     Parameters
     ----------
@@ -331,6 +343,9 @@ def compute_chi1(traj, opt=True):
     """Calculate the chi1 torsions of a trajectory. chi1 is the first side chain torsion angle 
     formed between the 4 atoms over the CA-CB axis. 
 
+    This function does not take into account periodic boundary conditions (it
+    will give spurious results if the four atoms which make up any dihedral jump
+    across a PBC (are not "wholed"))
 
     Parameters
     ----------
@@ -359,6 +374,10 @@ def compute_chi1(traj, opt=True):
 def compute_chi2(traj, opt=True):
     """Calculate the chi2 torsions of a trajectory. chi2 is the second side chain torsion angle 
     formed between the corresponding 4 atoms  over the CB-CG axis.
+
+    This function does not take into account periodic boundary conditions (it
+    will give spurious results if the four atoms which make up any dihedral jump
+    across a PBC (are not "wholed"))
 
     Parameters
     ----------
@@ -390,6 +409,10 @@ def compute_chi3(traj, opt=True):
     formed between the corresponding 4 atoms over the CG-CD axis 
     (only the residues ARG, GLN, GLU, LYS & MET have these atoms)
 
+    This function does not take into account periodic boundary conditions (it
+    will give spurious results if the four atoms which make up any dihedral jump
+    across a PBC (are not "wholed"))
+
     Parameters
     ----------
     traj : Trajectory
@@ -420,6 +443,10 @@ def compute_chi4(traj, opt=True):
     formed between the corresponding 4 atoms over the CD-CE or CD-NE axis 
     (only ARG & LYS residues have these atoms)
 
+    This function does not take into account periodic boundary conditions (it
+    will give spurious results if the four atoms which make up any dihedral jump
+    across a PBC (are not "wholed"))
+
     Parameters
     ----------
     traj : Trajectory
@@ -447,6 +474,10 @@ def compute_chi4(traj, opt=True):
 
 def compute_omega(traj, opt=True):
     """Calculate the omega torsions of a trajectory.
+
+    This function does not take into account periodic boundary conditions (it
+    will give spurious results if the four atoms which make up any dihedral jump
+    across a PBC (are not "wholed"))
 
     Parameters
     ----------
