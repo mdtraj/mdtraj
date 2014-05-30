@@ -1,2 +1,3 @@
 from __future__ import absolute_import
 from .shift_wrappers import chemical_shifts_shiftx2, chemical_shifts_ppm, chemical_shifts_spartaplus, reindex_dataframe_by_atoms
+from .scalar_couplings import J3_HN_HA_from_phi, J3_HN_HA_from_trajectory
