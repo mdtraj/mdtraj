@@ -34,9 +34,9 @@ from mdtraj.geometry import compute_phi
 
 
 J3_HN_HA_coefficients = {
-"Ruterjans1999": dict(phi0=-60 * np.pi/180., A=7.09, B=-1.42, C=1.55),
-"Bax2007": dict(phi0=-60 * np.pi/180., A=7.09, B=-1.42, C=1.55),
-"Bax1997": dict(phi0=-60 * np.pi/180., A=7.09, B=-1.42, C=1.55),
+"Ruterjans1999": dict(phi0=-60 * np.pi/180., A=7.90, B=-1.05, C=0.65),  # From Table 1. in paper
+"Bax2007": dict(phi0=-60 * np.pi/180., A=8.4, B=-1.36, C=0.33),  # From Table 1. in paper
+"Bax1997": dict(phi0=-60 * np.pi/180., A=7.09, B=-1.42, C=1.55),  # From Table 2. in paper
 }
 
 J3_HN_HA_uncertainties = pd.Series({  # Values in [Hz]
