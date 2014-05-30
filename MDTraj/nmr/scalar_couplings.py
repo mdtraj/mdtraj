@@ -101,6 +101,10 @@ def J3_HN_HA_from_phi(phi, model="Bax2007"):
 def J3_HN_HA_from_trajectory(traj, model="Bax2007"):
     """Calculate the scalar coupling between HN and H_alpha.
     
+    This function does not take into account periodic boundary conditions (it
+    will give spurious results if the three atoms which make up any angle jump
+    across a PBC (are not "wholed"))    
+    
     Parameters
     ----------
     traj : mdtraj.Trajectory
