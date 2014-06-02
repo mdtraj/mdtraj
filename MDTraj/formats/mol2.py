@@ -153,12 +153,12 @@ def mol2_to_dataframes(filename):
     csv = StringIO()
     csv.writelines(data["@<TRIPOS>BOND\n"][1:])
     csv.seek(0)
-    bonds_frame = pd.read_table(csv, delim_whitespace=True, names=["bond_id", "id0", "id1", "bond_type"], index_col=0, header=None, sep="\s*")
+    bonds_frame = pd.read_table(csv, names=["bond_id", "id0", "id1", "bond_type"], index_col=0, header=None, sep="\s*")
 
     csv = StringIO()
     csv.writelines(data["@<TRIPOS>ATOM\n"][1:])
     csv.seek(0)
-    atoms_frame = pd.read_csv(csv, delim_whitespace=True, names=["serial", "name", "x", "y", "z", "atype", "code", "resName", "charge"], header=None, usecols=range(1, 10))
+    atoms_frame = pd.read_csv(csv, sep="\s*", names=["serial", "name", "x", "y", "z", "atype", "code", "resName", "charge"], header=None, usecols=range(1, 10))
     return atoms_frame, bonds_frame
 
 
