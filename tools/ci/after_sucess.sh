@@ -7,10 +7,13 @@ if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then
     echo "This is a pull request. No deployment will be done."; exit 0
 fi
 
-conda install binstar
-binstar -t $BINSTAR_TOKEN  upload -u omnia -p mdtraj-dev $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
 
-if [[ `python -c "import sys; print(sys.version_info[:2])"` != "(2, 7)" ]]; then
+if [[ "2.7 3.3 3.4" =~ "$PYTHON_VERSION" ]]; then
+    conda install binstar
+    binstar -t $BINSTAR_TOKEN  upload -u omnia -p mdtraj-dev $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
+fi
+
+if [[ "$PYTHON_VERSION" != "2.7" ]]; then
     echo "No deploy on PYTHON_VERSION=${PYTHON_VERSION}"; exit 0
 fi
 
