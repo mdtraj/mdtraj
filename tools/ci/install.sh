@@ -7,7 +7,7 @@ export PATH=$HOME/miniconda/bin:$PATH
 
 conda create --yes -n ${python} --file tools/ci/requirements-conda-${python}.txt
 source activate $python
-pip install $PIP_ARGS -r tools/ci/requirements-${python}.txt
+$HOME/miniconda/envs/${python}/bin/pip install $PIP_ARGS -r tools/ci/requirements-${python}.txt
 
 
 # Install SPARTA+ for NMR chemical shift predicition
