@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: latin-1 -*-
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
@@ -33,8 +35,8 @@ import pandas as pd
 from mdtraj.geometry import compute_phi
 
 
-J3_HN_HA_coefficients = {
-"Ruterjans1999": dict(phi0=-60 * np.pi/180., A=7.90, B=-1.05, C=0.65),  # From Table 1. in paper
+J3_HN_HA_coefficients = {  # See full citations below in docstring references.
+"Ruterjans1999": dict(phi0=-60 * np.pi/180., A=7.90, B=-1.05, C=0.65),  # From Table 1. in paper.  
 "Bax2007": dict(phi0=-60 * np.pi/180., A=8.4, B=-1.36, C=0.33),  # From Table 1. in paper
 "Bax1997": dict(phi0=-60 * np.pi/180., A=7.09, B=-1.42, C=1.55),  # From Table 2. in paper
 }
@@ -45,12 +47,12 @@ J3_HN_HA_uncertainties = pd.Series({  # Values in [Hz]
 
 
 
-def _J3_lambda_function(A, B, C, phi0):
-    """Return a lambda function that calculates scalar couplings with a given choice of karplus coefficients.  USES RADIANS!"""
-    return lambda phi: A * np.cos(phi + phi0) ** 2. + B * np.cos(phi + phi0) + C
+def _J3_function(phi, A, B, C, phi0):
+    """Return a scalar couplings with a given choice of karplus coefficients.  USES RADIANS!"""
+    return A * np.cos(phi + phi0) ** 2. + B * np.cos(phi + phi0) + C
 
 
-def J3_HN_HA_from_phi(phi, model="Bax2007"):
+def _J3_HN_HA_from_phi(phi, model="Bax2007"):
     """Calculate the scalar coupling between HN and H_alpha.
     
     Parameters
@@ -63,12 +65,11 @@ def J3_HN_HA_from_phi(phi, model="Bax2007"):
 
     Returns
     -------
-    J : np.ndarray
+    J : np.ndarray, dtype=float, shape=(n_phi, n_frames)
         Scalar couplings (J3_HN_HA, in [Hz]) of this trajectory
 
     Notes
     -----
-    
     The coefficients are taken from the references below--please cite them.  
     
     References
@@ -94,11 +95,10 @@ def J3_HN_HA_from_phi(phi, model="Bax2007"):
     if model not in J3_HN_HA_coefficients:
         raise(KeyError("model must be one of %s" % J3_HN_HA_coefficients.keys()))
     
-    calculator = _J3_lambda_function(**J3_HN_HA_coefficients[model])
-    return calculator(phi)
+    return _J3_function(phi, **J3_HN_HA_coefficients[model])
 
 
-def J3_HN_HA_from_trajectory(traj, model="Bax2007"):
+def compute_J3_HN_HA(traj, model="Bax2007"):
     """Calculate the scalar coupling between HN and H_alpha.
     
     This function does not take into account periodic boundary conditions (it
@@ -148,5 +148,5 @@ def J3_HN_HA_from_trajectory(traj, model="Bax2007"):
    
     """
     indices, phi = compute_phi(traj)
-    J = J3_HN_HA_from_phi(phi, model=model)
+    J = _J3_HN_HA_from_phi(phi, model=model)
     return indices, J

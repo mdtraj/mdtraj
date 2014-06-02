@@ -12,7 +12,7 @@ def test_1():
 def test_2_scalar_couplings():
     t = md.load(get_fn('frame0.h5'))  # This is Alanine dipeptide
     for model in ["Ruterjans1999", "Bax2007", "Bax1997"]:
-        indices, J = md.J3_HN_HA_from_trajectory(t)
+        indices, J = md.compute_J3_HN_HA(t)
         eq(indices.shape, (1, 4))
         eq(J.shape, (501, 1))
         J = J.mean()
@@ -27,4 +27,4 @@ def test_2_scalar_couplings():
 def test_3_scalar_couplings():
     t = md.load(get_fn('1bpi.pdb'))
     for model in ["Ruterjans1999", "Bax2007", "Bax1997"]:
-        indices, J = md.J3_HN_HA_from_trajectory(t)
+        indices, J = md.compute_J3_HN_HA(t)
