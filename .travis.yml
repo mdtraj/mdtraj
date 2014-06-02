@@ -7,7 +7,9 @@ install:
 script:
   - export CC="gcc -std=c89"
   - python -V
-  - python setup.py -q install
+  - conda install --yes conda-build
+  - conda build tools/conda-recipe
+  - conda install $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
   - pydir=$(which python); $precmd $(dirname $pydir)/nosetests --with-coverage --cover-erase -vv
   - cd tools/c-tests/; make valgrind; cd -
 
@@ -22,6 +24,8 @@ env:
     # encrypted AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to push documentation to S3
     - secure: "fB9S4+Ok+5RO6OobqhfWzjnjxWSbJxPrtHNcciKX5/yE+IC4WjkXhGkIKY1FLVNDStoerdYKN7wHdi98QAArQBunYxruuALxifyDPo2HZNTnK2Wvq6+eMjqHKuHMyJgE+ZJ2TuQGjM3WNOT1dv+awOsGr5tNw6KJa4YAtC6a4oo="
     - secure: "d3xpZOaixS6TyYTjOSPvIdwUYrTfuEM9sN8AxZKp/92sfcHj3EP7qyCMj/cuf1Gl7mT2nZJj4daOgMam4/sZD6MUnXokDwEgIMes2rrVjQX0i0MvXFU1LN8KbUcK+6QQyXc8AwxJJ603L9YxLnBdPfYTQNrd3zP7BzWYP00Nch4="
+    # encrypted BINSTAR_TOKEN for push of dev package to binstar
+    - secure: "UrRBa1B9zPUe4R3GKie4LcEz66AS33185D+EfWJw1YJ5BF3479qK0d31lS79UdhiUw6i0Ayopofdz3JMmboXBmviOII5myviVLPY5iTeDQY+oExf6osTK5JdtXuDlUV3YcdeOBC5DzA3Ec6oYkvG0U2zv0MdR+cy5T/Yu4Nw0rQ="
 
 after_success:
   - echo "after_success"
