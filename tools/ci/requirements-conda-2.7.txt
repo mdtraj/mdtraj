@@ -1,0 +1,9 @@
+python==2.7
+numpy==1.6
+scipy==0.10
+pytables==3.0
+cython==0.20
+pandas==0.12
+pyyaml
+pip
+nose

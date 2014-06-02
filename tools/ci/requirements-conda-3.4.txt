@@ -1,0 +1,9 @@
+python
+numpy
+scipy
+pytables
+cython
+pandas
+pyyaml
+pip
+nose
