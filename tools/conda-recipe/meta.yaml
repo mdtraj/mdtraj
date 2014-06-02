@@ -14,11 +14,6 @@ requirements:
     - pandas
     - scipy
 
-test:
-  # Python imports
-  imports:
-    - mdtraj
-
 about:
   home: http://mdtraj.org
   license: GNU Lesser General Public License v2 or later (LGPLv2+)
