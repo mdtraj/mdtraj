@@ -5,7 +5,7 @@ bash Miniconda-3.0.5-Linux-x86_64.sh -b
 
 export PATH=$HOME/miniconda/bin:$PATH
 
-conda update conda
+conda update --yes conda
 conda create --yes -n ${python} --file tools/ci/requirements-conda-${python}.txt
 source activate $python
 $HOME/miniconda/envs/${python}/bin/pip install $PIP_ARGS -r tools/ci/requirements-${python}.txt
