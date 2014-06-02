@@ -3,7 +3,7 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
-cython=0.19.2=py26_0
+cython=0.20=py26_0
 dateutil=2.1=py26_2
 hdf5=1.8.9=1
 nose=1.3.3=py26_0
