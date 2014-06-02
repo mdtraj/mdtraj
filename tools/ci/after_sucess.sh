@@ -1,4 +1,3 @@
-PYTHON_VERSION=`python -c 'import sys; print("%d.%d" % sys.version_info[:2])'`
 coveralls
 
 echo $TRAVIS_PULL_REQUEST $TRAVIS_BRANCH
@@ -8,13 +7,13 @@ if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then
 fi
 
 
-if [[ "2.7 3.3 3.4" =~ "$PYTHON_VERSION" ]]; then
+if [[ "2.7 3.3 3.4" =~ "$python" ]]; then
     conda install binstar
     binstar -t $BINSTAR_TOKEN  upload -u omnia -p mdtraj-dev $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
 fi
 
-if [[ "$PYTHON_VERSION" != "2.7" ]]; then
-    echo "No deploy on PYTHON_VERSION=${PYTHON_VERSION}"; exit 0
+if [[ "$python" != "2.7" ]]; then
+    echo "No deploy on PYTHON_VERSION=${python}"; exit 0
 fi
 
 

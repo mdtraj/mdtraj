@@ -7,9 +7,8 @@ install:
 script:
   - export CC="gcc -std=c89"
   - python -V
-  - conda install --yes conda-build
-  - conda build tools/conda-recipe
-  - conda install $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
+  - [[ "2.7 3.3 3.4" =~ $python ]] && conda install --yes conda-build && conda build tools/conda-recipe && conda install $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
+  - [[ "2.6" =~ $python ]] && python setup.py -q install
   - pydir=$(which python); $precmd $(dirname $pydir)/nosetests --with-coverage --cover-erase -vv
   - cd tools/c-tests/; make valgrind; cd -
 
