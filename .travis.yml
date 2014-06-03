@@ -13,6 +13,7 @@ script:
   - conda build tools/conda-recipe
   - source activate $python
   - conda install $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
+  - conda list -e
   - pydir=$(which python); $precmd $(dirname $pydir)/nosetests --with-coverage --cover-erase -vv
   - cd tools/c-tests/; make valgrind; cd -
 
