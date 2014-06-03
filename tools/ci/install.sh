@@ -6,7 +6,7 @@ bash Miniconda-3.0.5-Linux-x86_64.sh -b
 export PATH=$HOME/miniconda/bin:$PATH
 
 conda create --yes -n ${python} python=${python} numpy scipy pytables cython \
-    scipy pandas pip netcdf4 pyyaml nose
+    scipy pandas pip netcdf4 pyyaml nose jinja2 requests
 source activate $python
 
 PYTHON_VERSION=`python -c 'import sys; print("%d.%d" % sys.version_info[:2])'`
