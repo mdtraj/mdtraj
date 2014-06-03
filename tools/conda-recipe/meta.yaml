@@ -2,15 +2,21 @@ package:
   name: mdtraj
   version: !!str dev
 
+build:
+  entry_points:
+    - mdconvert = mdtraj.scripts.mdconvert:entry_point
+    - mdinspect = mdtraj.scripts.mdinspect:entry_point
+
 requirements:
   build:
     - python
     - cython
     - numpy
+    - pandas
+    - setuptools
 
   run:
     - python
-    - pytables
     - pandas
     - scipy
 
