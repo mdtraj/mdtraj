@@ -45,7 +45,7 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
     Parameters
     ----------
     traj : Trajectory
-        An mtraj trajectory.
+        An mdtraj trajectory.
     atom_pairs : np.ndarray, shape=(num_pairs, 2), dtype=int
         Each row gives the indices of two atoms involved in the interaction.
     periodic : bool, default=True
