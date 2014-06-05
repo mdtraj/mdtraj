@@ -1,8 +1,8 @@
 .. _getting-started:
 
-************
-Get The Code
-************
+***************
+Getting Started
+***************
 
 Installation
 ============
@@ -14,14 +14,11 @@ performed on mac, linux and windows.
 
 Install with Conda
 ------------------
-`conda <http://www.continuum.io/blog/conda>`_ is a python package manager built for scientific python. Unlike ``easy_install`` or ``pip``, it handles binaries and binary dependencies, which are critical for most scientific workflows.
+`conda <http://www.continuum.io/blog/conda>`_ is a python package manager built for scientific python. Unlike ``easy_install`` or ``pip``, it handles binaries and binary dependencies, which are critical for most scientific workflows. If you're a ``conda`` user, you can install MDTraj by adding the omnia channel. If you're not a conda user, you should look into it. ::
 
-If you're a ``conda`` user, you can install MDTraj by adding the omnia channel. If you're not a conda user, you should look into it ::
+To install MDTraj with conda, use the following commands
 
     conda config --add channels http://conda.binstar.org/omnia
-
-And then installing with ::
-
     conda install mdtraj
 
 .. note:: ``conda`` will automatically all of the tricky dependencies from binary packages automatically! This includes pytables / numpy / scipy! The easiest way to get conda is with the `Anaconda python distribution <https://store.continuum.io/cshop/anaconda/>`_.
@@ -49,15 +46,41 @@ https://github.com/rmcgibbo/mdtraj/archive/master.zip. Then, in the directory co
 
   $ python setup.py install
 
-Get the Dependencies (Not Required with Conda)
-==============================================
+Dependencies
+============
 
-MDTraj requires a few external python libraries to work properly. Some of them are
-optional. You'll definitely need ``numpy``. If you're compiling from source (as
-opposed to getting MDTraj from conda), you'll also need a working C compiler
-and build environment to compile the C-level extensions that connect
-the python code to the bit-twiddling C libraries that read and write most of
-these binary formats.
+To use mdtraj, the following libraries and software will need to be installed.
+
+    Linux, Mac OS X or Windows operating system
+        We develop mainly on 64-bit Linux and Mac machines. Windows is not
+        well supported.
+
+    `Python <http://python.org>`_ >= 2.6
+        The development package (``python-dev`` or ``python-devel``
+        on most Linux distributions) is recommended.
+
+    `NumPy <http://numpy.scipy.org/>`_ >= 1.6.0
+        Numpy is the base package for numerical computing in python.
+
+Optional packages:
+
+    `SciPy <http://scipy.org>`_ >= 0.12.0
+        We use scipy for loading and saving AMBER netcdf formatted
+	trajectories. Note that due to a `serious bug
+	<https://github.com/rmcgibbo/mdtraj/pull/466>` in the NetCDF
+	support in scipy 0.11.0, a relatively modern version (0.12.0)
+	or greater is required.
+
+    `Pandas <http://pandas.pydata.org>`_ >= 0.9.0
+        Some functionality, including mol2 parsing,  requires pandas.
+
+    `cython <http://cython.org>`_ >= 0.19.0
+        Compiling MDTraj from source requires cython, and a working
+	C / C++ compiler.
+
+    `PyTables <http://www.pytables.org/>`_ >= 2.4.0
+        Working with HDF5 formatted trajectories requires the PyTables
+	package.
 
 Avoid Hassles with Anaconda or Canopy
 -------------------------------------
