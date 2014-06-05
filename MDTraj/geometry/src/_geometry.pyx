@@ -48,6 +48,10 @@ cdef extern int angle_mic(const float* xyz, const int* triplets, const float* bo
 cdef extern int dihedral(const float* xyz, const int* quartets, float* out,
                          int n_frames, int n_atoms,  int n_quartets) nogil
 
+cdef extern int dihedral_mic(const float* xyz, const int* quartets, float* out,
+                             const float* box_matrix, int n_frames, int n_atoms, 
+                             int n_quartets) nogil
+
 cdef extern int kabsch_sander(float* xyz, int* nco_indices, int* ca_indices,
                               int n_frames, int n_atoms, int n_residues,
                               int* hbonds, float* henergies) nogil
@@ -132,6 +136,16 @@ def _dihedral(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
     cdef int n_atoms = xyz.shape[1]
     cdef int n_quartets = quartets.shape[0]
     dihedral(&xyz[0,0,0], <int*> &quartets[0,0], &out[0,0], n_frames, n_atoms, n_quartets)
+
+
+def _dihedral_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
+                  np.ndarray[np.int32_t, ndim=2, mode='c'] quartets not None,
+                  np.ndarray[np.float32_t, ndim=3, mode='c'] box_matrix not None,
+                  np.ndarray[np.float32_t, ndim=2, mode='c'] out not None):
+    cdef int n_frames = xyz.shape[0]
+    cdef int n_atoms = xyz.shape[1]
+    cdef int n_quartets = quartets.shape[0]
+    dihedral_mic(&xyz[0,0,0], <int*> &quartets[0,0], &box_matrix[0,0,0], &out[0,0], n_frames, n_atoms, n_quartets)
 
 
 def _kabsch_sander(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,

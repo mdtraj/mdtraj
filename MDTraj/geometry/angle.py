@@ -72,19 +72,22 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
             _geometry._angle_mic(xyz, triplets, box, out)
             return out
         else:
-            raise NotImplementedError()
+            _angle(traj, triplets, periodic, out)
+            return out
 
     if opt and _geometry._processor_supports_sse41():
         _geometry._angle(xyz, triplets, out)
     else:
-        _angle(xyz, triplets, out)
+        _angle(traj, triplets, periodic, out)
     return out
 
 
-def _angle(xyz, angle_indices, out):
-    #for j, (m, o, n) in enumerate(angle_indices):
-    u_prime = xyz[:, angle_indices[:, 0], :] - xyz[:, angle_indices[:, 1], :]
-    v_prime = xyz[:, angle_indices[:, 2], :] - xyz[:, angle_indices[:, 1], :]
+def _angle(traj, angle_indices, periodic, out):
+    ix01 = angle_indices[:, [0,1]]
+    ix21 = angle_indices[:, [2,1]]
+
+    u_prime = distance.compute_displacements(traj, ix01, periodic=periodic, opt=opt)
+    v_prime = distance.compute_displacements(traj, ix21, periodic=periodic, opt=opt)
     u_norm = np.sqrt((u_prime**2).sum(-1))
     v_norm = np.sqrt((v_prime**2).sum(-1))
 
@@ -93,4 +96,4 @@ def _angle(xyz, angle_indices, out):
     u = u_prime / (u_norm[..., np.newaxis])
     v = v_prime / (v_norm[..., np.newaxis])
 
-    out = np.arccos((u * v).sum(-1), out=out)
+    return np.arccos((u * v).sum(-1), out=out)
