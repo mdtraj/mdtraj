@@ -72,7 +72,7 @@ def _dihedral(xyz, indices, out=None):
 
     return np.arctan2(p1, p2, out)
 
-def _dihedral_periodic(traj, indices, out=None, opt=True):
+def _dihedral_periodic(traj, indices, out=None, opt=False):
     """Compute the dihedral angles of traj for the atom indices in indices,
     taking periodic boundary conditions into account.
 
@@ -107,14 +107,14 @@ def _dihedral_periodic(traj, indices, out=None, opt=True):
 
     return np.arctan2(p1, p2, out)
 
-def compute_dihedrals(traj, indices, periodic=False, opt=True):
+def compute_dihedrals(traj, indices, periodic=True, opt=True):
     """Compute the dihedral angles between the supplied quartets of atoms in each frame in a trajectory.
 
     Parameters
     ----------
     traj : Trajectory
         An mtraj trajectory.
-    periodic: bool, default=False
+    periodic: bool, default=True
        If `periodic` is True and the trajectory contains unitcell
        information, we will compute dihedrals under the minimum image
        convention.
@@ -139,10 +139,19 @@ def compute_dihedrals(traj, indices, periodic=False, opt=True):
         raise ValueError('indices must be between 0 and %d' % traj.n_atoms)
 
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
-    if periodic:
-        _dihedral_periodic(traj, quartets, out, opt=(opt and _geometry._processor_supports_sse41()))
+
+    if periodic is True and traj._have_unitcell:
+        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
+        if opt and _geometry._processor_supports_sse41():
+            _geometry._dihedral_mic(xyz, quartets, box, out)
+        elif opt:
+            raise NotImplementedError()
+        else:
+            _dihedral_periodic(traj, quartets, out)
     elif opt and _geometry._processor_supports_sse41():
         _geometry._dihedral(xyz, quartets, out)
+    elif opt:
+        raise NotImplementedError()
     else:
         _dihedral(xyz, quartets, out)
     return out
@@ -319,14 +328,14 @@ _get_indices_phi = lambda traj: _atom_sequence(traj, PHI_ATOMS)
 _get_indices_psi = lambda traj: _atom_sequence(traj, PSI_ATOMS)
 
 
-def compute_phi(traj, periodic=False, opt=True):
+def compute_phi(traj, periodic=True, opt=True):
     """Calculate the phi torsions of a trajectory.
 
     Parameters
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
-    periodic: bool, default=False
+    periodic: bool, default=True
        If `periodic` is True and the trajectory contains unitcell
        information, we will compute dihedrals under the minimum image
        convention.
@@ -347,14 +356,14 @@ def compute_phi(traj, periodic=False, opt=True):
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
 
 
-def compute_psi(traj, periodic=False, opt=True):
+def compute_psi(traj, periodic=True, opt=True):
     """Calculate the psi torsions of a trajectory.
 
     Parameters
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
-    periodic: bool, default=False
+    periodic: bool, default=True
        If `periodic` is True and the trajectory contains unitcell
        information, we will compute dihedrals under the minimum image
        convention.
@@ -375,7 +384,7 @@ def compute_psi(traj, periodic=False, opt=True):
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
 
 
-def compute_chi1(traj, periodic=False, opt=True):
+def compute_chi1(traj, periodic=True, opt=True):
     """Calculate the chi1 torsions of a trajectory. chi1 is the first side chain torsion angle 
     formed between the 4 atoms over the CA-CB axis. 
 
@@ -383,7 +392,7 @@ def compute_chi1(traj, periodic=False, opt=True):
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
-    periodic: bool, default=False
+    periodic: bool, default=True
        If `periodic` is True and the trajectory contains unitcell
        information, we will compute dihedrals under the minimum image
        convention.
@@ -407,7 +416,7 @@ def compute_chi1(traj, periodic=False, opt=True):
     all_chi1 = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
     return indices, all_chi1
 
-def compute_chi2(traj, periodic=False, opt=True):
+def compute_chi2(traj, periodic=True, opt=True):
     """Calculate the chi2 torsions of a trajectory. chi2 is the second side chain torsion angle 
     formed between the corresponding 4 atoms  over the CB-CG axis.
 
@@ -415,7 +424,7 @@ def compute_chi2(traj, periodic=False, opt=True):
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
-    periodic: bool, default=False
+    periodic: bool, default=True
        If `periodic` is True and the trajectory contains unitcell
        information, we will compute dihedrals under the minimum image
        convention.
@@ -440,7 +449,7 @@ def compute_chi2(traj, periodic=False, opt=True):
     return indices, all_chi1
 
 
-def compute_chi3(traj, periodic=False, opt=True):
+def compute_chi3(traj, periodic=True, opt=True):
     """Calculate the chi3 torsions of a trajectory. chi3 is the third side chain torsion angle
     formed between the corresponding 4 atoms over the CG-CD axis 
     (only the residues ARG, GLN, GLU, LYS & MET have these atoms)
@@ -449,7 +458,7 @@ def compute_chi3(traj, periodic=False, opt=True):
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
-    periodic: bool, default=False
+    periodic: bool, default=True
        If `periodic` is True and the trajectory contains unitcell
        information, we will compute dihedrals under the minimum image
        convention.
@@ -473,7 +482,7 @@ def compute_chi3(traj, periodic=False, opt=True):
     all_chi1 = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
     return indices, all_chi1
 
-def compute_chi4(traj, periodic=False, opt=True):
+def compute_chi4(traj, periodic=True, opt=True):
     """Calculate the chi4 torsions of a trajectory. chi4 is the fourth side chain torsion angle
     formed between the corresponding 4 atoms over the CD-CE or CD-NE axis 
     (only ARG & LYS residues have these atoms)
@@ -482,7 +491,7 @@ def compute_chi4(traj, periodic=False, opt=True):
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
-    periodic: bool, default=False
+    periodic: bool, default=True
        If `periodic` is True and the trajectory contains unitcell
        information, we will compute dihedrals under the minimum image
        convention.
@@ -507,14 +516,14 @@ def compute_chi4(traj, periodic=False, opt=True):
     return indices, all_chi1
 
 
-def compute_omega(traj, periodic=False, opt=True):
+def compute_omega(traj, periodic=True, opt=True):
     """Calculate the omega torsions of a trajectory.
 
     Parameters
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
-    periodic: bool, default=False
+    periodic: bool, default=True
        If `periodic` is True and the trajectory contains unitcell
        information, we will compute dihedrals under the minimum image
        convention.

@@ -77,6 +77,8 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
             _angle_periodic(traj, triplets, out)
     elif opt and _geometry._processor_supports_sse41():
         _geometry._angle(xyz, triplets, out)
+    elif opt:
+        raise NotImplementedError()
     else:
         _angle(xyz, triplets, out)
     return out
