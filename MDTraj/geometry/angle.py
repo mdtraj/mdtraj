@@ -28,7 +28,7 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-from mdtraj.geometry import _geometry
+from mdtraj.geometry import _geometry, distance
 
 __all__ = ['compute_angles']
 
@@ -83,11 +83,11 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
 
 
 def _angle(traj, angle_indices, periodic, out):
-    ix01 = angle_indices[:, [0,1]]
-    ix21 = angle_indices[:, [2,1]]
+    ix01 = angle_indices[:, [0, 1]]
+    ix21 = angle_indices[:, [2, 1]]
 
-    u_prime = distance.compute_displacements(traj, ix01, periodic=periodic, opt=opt)
-    v_prime = distance.compute_displacements(traj, ix21, periodic=periodic, opt=opt)
+    u_prime = distance.compute_displacements(traj, ix01, periodic=periodic)
+    v_prime = distance.compute_displacements(traj, ix21, periodic=periodic)
     u_norm = np.sqrt((u_prime**2).sum(-1))
     v_norm = np.sqrt((v_prime**2).sum(-1))
 
