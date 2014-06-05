@@ -70,19 +70,18 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
         if opt and _geometry._processor_supports_sse41():
             _geometry._angle_mic(xyz, triplets, box, out)
-            return out
+            # _angle_periodic(traj, triplets, out)
         elif opt:
             raise NotImplementedError()
         else:
             _angle_periodic(traj, triplets, out)
-
-    if opt and _geometry._processor_supports_sse41():
+    elif opt and _geometry._processor_supports_sse41():
         _geometry._angle(xyz, triplets, out)
     else:
         _angle(xyz, triplets, out)
     return out
 
-def _angle_periodic(traj, angle_indices, out, opt=True):
+def _angle_periodic(traj, angle_indices, out, opt=False):
 
     ix01 = np.hstack((angle_indices[:, 0].reshape(-1,1),angle_indices[:, 1].reshape(-1,1)))
     ix21 = np.hstack((angle_indices[:, 2].reshape(-1,1),angle_indices[:, 1].reshape(-1,1)))
