@@ -38,7 +38,7 @@ __all__ = ['cone_wpn', 'cone_wpn_traj', 'baker_hubbard', 'kabsch_sander']
 # Functions
 ##############################################################################
 
-def cone_wpn_(traj, freq=0.1, exclude_water=True):
+def cone_wpn_(traj, exclude_water=True):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle according to the criterion outlined in [1].  
     As opposed to Baker-Hubbard, this is a "cone" criterion where the
@@ -56,9 +56,6 @@ def cone_wpn_(traj, freq=0.1, exclude_water=True):
     ----------
     traj : md.Trajectory
         An mdtraj trajectory. It must contain topology information.
-    freq : float, default=0.1
-        Return only hydrogen bonds that occur in greater this fraction of the
-        frames in the trajectory.
     exclude_water : bool, default=True
         Exclude solvent molecules from consideration.  Defaults to True 
         for consistency with baker_hubbard, but for all of our applications 
@@ -161,7 +158,7 @@ def cone_wpn_(traj, freq=0.1, exclude_water=True):
     angle_triplets = np.array([(e[0][1], e[0][0], e[1]) for e in product(xh_donors, acceptors) if e[0][0] != e[1]])
     distance_pairs = angle_triplets[:, [1,2]]  # possible O..acceptor pairs
 
-    angles = compute_angles(traj, angle_triplets, periodic=True, opt=True) * 180.0 / np.pi # degrees
+    angles = compute_angles(traj, angle_triplets, periodic=True, opt=False) * 180.0 / np.pi # degrees
     distances = compute_distances(traj, distance_pairs, periodic=True)
     cutoffs = distance_cutoff - angle_const * angles ** 2
 
@@ -173,7 +170,31 @@ def cone_wpn_(traj, freq=0.1, exclude_water=True):
     return angle_triplets2, mask
 
 def cone_wpn(traj, freq=0.1, exclude_water=True):
-    """ Returns a list of hydrogen bonds for the trajectory filtered by frequency. """
+    """ Returns a list of hydrogen bonds for the trajectory filtered by frequency. 
+    See further documentation in cone_wpn_ .
+
+    Parameters
+    ----------
+    traj : md.Trajectory
+        An mdtraj trajectory. It must contain topology information.
+    freq : float, default=0.1
+        Return only hydrogen bonds that occur in greater this fraction of the
+        frames in the trajectory.
+    exclude_water : bool, default=True
+        Exclude solvent molecules from consideration.  Defaults to True 
+        for consistency with baker_hubbard, but for all of our applications 
+        it should be set to False
+
+    Returns
+    -------
+    hbonds : np.array, shape=[n_hbonds, 3], dtype=int
+        An array containing the indices atoms involved in each of the identified
+        hydrogen bonds. Each row contains three integer indices, `(d_i, h_i,
+        a_i)`, such that `d_i` is the index of the donor atom, `h_i` the index
+        of the hydrogen atom, and `a_i` the index of the acceptor atom involved
+        in a hydrogen bond which occurs (according to the definition above) in
+        proportion greater than `freq` of the trajectory.
+    """
 
     angle_triplets, mask = cone_wpn_(traj, exclude_water=exclude_water)
 
@@ -183,11 +204,31 @@ def cone_wpn(traj, freq=0.1, exclude_water=True):
     return angle_triplets[occurance > freq]
 
 def cone_wpn_traj(traj, exclude_water=True):
-    """ Returns a list of hydrogen bonds for each frame in the trajectory. """
+    """ Returns a list of hydrogen bonds for each frame in the trajectory.
+    See further documentation in cone_wpn_ .
+
+    Parameters
+    ----------
+    traj : md.Trajectory
+        An mdtraj trajectory. It must contain topology information.
+    exclude_water : bool, default=True
+        Exclude solvent molecules from consideration.  Defaults to True 
+        for consistency with baker_hubbard, but for all of our applications 
+        it should be set to False
+
+    Returns
+    -------
+    hbonds : list, len=n_frames
+        A list containing the atom indices involved in each of the identified
+        hydrogen bonds at each frame. Each element in the list is an array
+        where each row contains three integer indices, `(d_i, h_i, a_i)`, 
+        such that `d_i` is the index of the donor atom, `h_i` the index
+        of the hydrogen atom, and `a_i` the index of the acceptor atom involved
+        in a hydrogen bond which occurs in that frame.
+    """
 
     angle_triplets, mask = cone_wpn_(traj, exclude_water=exclude_water)
-
-    return np.array([angle_triplets[i] for i in mask])
+    return [angle_triplets[i] for i in mask]
 
 def baker_hubbard(traj, freq=0.1, exclude_water=True):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor

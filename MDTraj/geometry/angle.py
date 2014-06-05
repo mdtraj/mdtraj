@@ -82,7 +82,7 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
         _angle(xyz, triplets, out)
     return out
 
-def _angle_periodic(traj, angle_indices, out, opt=False):
+def _angle_periodic(traj, angle_indices, out, opt=True):
 
     ix01 = np.hstack((angle_indices[:, 0].reshape(-1,1),angle_indices[:, 1].reshape(-1,1)))
     ix21 = np.hstack((angle_indices[:, 2].reshape(-1,1),angle_indices[:, 1].reshape(-1,1)))
