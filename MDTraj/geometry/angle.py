@@ -70,7 +70,7 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
         if opt and _geometry._processor_supports_sse41():
             _geometry._angle_mic(xyz, triplets, box, out)
-            # _angle_periodic(traj, triplets, out)
+            # _angle_periodic(traj, triplets, out, opt=True)
         elif opt:
             raise NotImplementedError()
         else:
