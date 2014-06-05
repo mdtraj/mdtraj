@@ -32,8 +32,11 @@ This file contains scripts for calculating scalar (J) Couplings from backbone di
 
 import numpy as np
 
-from mdtraj.utils import import_
 from mdtraj.geometry import compute_phi
+
+##############################################################################
+# Globals
+##############################################################################
 
 
 J3_HN_HA_coefficients = {  # See full citations below in docstring references.
@@ -49,6 +52,9 @@ J3_HN_HA_uncertainties = {
     "Bax1997": 0.39
 }
 
+##############################################################################
+# Functions
+##############################################################################
 
 def _J3_function(phi, A, B, C, phi0):
     """Return a scalar couplings with a given choice of karplus coefficients.  USES RADIANS!"""
