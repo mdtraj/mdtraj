@@ -169,7 +169,7 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
     if n_atoms_dis > 0:
         # note: the indexing here is subtpe -- we're using atom_indices[dis_indices] since
         # dis_indices have different semantics from atom_indices
-        ref_xyz_frame_dis = np.copy(reference.xyz[frame, atom_indices[dis_indices], :], order='c')
+        ref_xyz_frame_dis = np.array(reference.xyz[frame, atom_indices[dis_indices], :], copy=True, order='c')
         inplace_center_and_trace_atom_major(&ref_xyz_frame_dis[0, 0], &ref_g_dis, 1, n_atoms_dis)
 
 

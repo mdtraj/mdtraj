@@ -1,0 +1,27 @@
+# conda create --yes -n 2.6 python=2.6 numpy=1.6 scipy=0.12 pytables=2.4 \
+#     cython=0.19 pandas=0.11 pyyaml pip nose
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+cython=0.19.2=py26_0
+dateutil=2.1=py26_2
+hdf5=1.8.9=1
+nose=1.3.3=py26_0
+numexpr=2.0.1=np16py26_3
+numpy=1.6.2=py26_4
+openssl=1.0.1g=0
+pandas=0.11.0=np16py26_1
+pip=1.5.6=py26_0
+pytables=2.4.0=np16py26_0
+python=2.6.9=0
+pytz=2014.3=py26_0
+pyyaml=3.11=py26_0
+readline=6.2=2
+scipy=0.12.0=np16py26_0
+setuptools=3.6=py26_0
+six=1.6.1=py26_0
+sqlite=3.8.4.1=0
+system=5.8=1
+tk=8.5.15=0
+yaml=0.1.4=0
+zlib=1.2.7=0
