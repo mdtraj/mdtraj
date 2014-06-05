@@ -1,4 +1,4 @@
-# conda create --yes -n 2.7 python=2.7 numpy=1.6 scipy=0.12 pytables=3.0 \
+# conda create --yes -n 2.7 python=2.7 numpy=1.7 scipy=0.12 pytables=3.0 \
 #     cython=0.20 pandas=0.12 pyyaml pip nose
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
