@@ -31,7 +31,8 @@ This file contains scripts for calculating scalar (J) Couplings from backbone di
 ##############################################################################
 
 import numpy as np
-import pandas as pd
+
+from mdtraj.utils import import_
 from mdtraj.geometry import compute_phi
 
 
@@ -41,9 +42,12 @@ J3_HN_HA_coefficients = {  # See full citations below in docstring references.
     "Bax1997": dict(phi0=-60 * np.pi/180., A=7.09, B=-1.42, C=1.55),  # From Table 2. in paper
     }
 
-J3_HN_HA_uncertainties = pd.Series({  # Values in [Hz]
-    "Ruterjans1999": 0.25, "Bax2007": 0.36, "Bax1997": 0.39
-    })
+J3_HN_HA_uncertainties = {
+    # Values in [Hz]
+    "Ruterjans1999": 0.25,
+    "Bax2007": 0.36,
+    "Bax1997": 0.39
+}
 
 
 def _J3_function(phi, A, B, C, phi0):

@@ -51,8 +51,8 @@
 from __future__ import print_function, division
 import numpy as np
 import itertools
-import pandas as pd
 
+from mdtraj.utils import import_
 from mdtraj.utils.six.moves import cStringIO as StringIO
 from mdtraj.formats import pdb
 from mdtraj.core import element as elem
@@ -147,6 +147,7 @@ def mol2_to_dataframes(filename):
     If you just need the coordinates and bonds, use load_mol2(filename)
     to get a Trajectory object.
     """
+    pd = import_('pandas')
     with open(filename) as f:
         data = dict((key, list(grp)) for key, grp in itertools.groupby(f, _parse_mol2_sections))
 
