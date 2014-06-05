@@ -228,6 +228,7 @@ def test_dihedral_performance():
     print('numpy:   %f s' % (t2 - t1))
     print('opt sse: %f s' % (t3 - t2))
 
+
 @skipif(not RUN_PERFOMANCE_TESTS, 'Not doing performance testing')
 def test_angle_performance():
     n_atoms = 20
@@ -244,3 +245,13 @@ def test_angle_performance():
     print('\nangle performance:')
     print('numpy:   %f s' % (t2 - t1))
     print('opt sse: %f s' % (t3 - t2))
+
+
+def test_angle_nan():
+    t = md.Trajectory(topology=None, xyz=np.array([
+        [0, 0, 0.2],
+        [0, 0, 0.3],
+        [0, 0, 0.0]
+    ]))
+    angles = md.compute_angles(t, [[0, 1, 2]], opt=True)
+    np.testing.assert_array_almost_equal(angles, [[0]])

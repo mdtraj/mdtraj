@@ -28,8 +28,8 @@
 import os
 from distutils.spawn import find_executable as _find_executable
 import numpy as np
-import pandas as pd
 
+from mdtraj.utils import import_
 from mdtraj.utils import enter_temp_directory
 
 ##############################################################################
@@ -88,7 +88,7 @@ def chemical_shifts_shiftx2(trj):
        "SHIFTX2: significantly improved protein chemical shift
        prediction." J. Biomol. NMR, 50, 1 43-57 (2011)
     """
-
+    pd = import_('pandas')
     binary = find_executable(SHIFTX2)
     if binary is None:
         raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_shiftx2` requires the external program SHIFTX2, available at http://www.shiftx2.ca/' % ', '.join(SHIFTX2))
@@ -146,9 +146,11 @@ def chemical_shifts_ppm(trj):
        shift predictor for the assessment of protein conformational ensembles."
        J Biomol NMR. 2012 Nov;54(3):257-65.
     """
+    pd = import_('pandas')
+    binary = find_executable(PPM)
+
     first_resSeq = trj.top.residue(0).resSeq
 
-    binary = find_executable(PPM)
     if binary is None:
         raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_ppm` requires the external program PPM, available at http://spin.ccic.ohio-state.edu/index.php/download/index' % ', '.join(PPM))
 
@@ -219,7 +221,7 @@ def chemical_shifts_spartaplus(trj):
        NMR chemical shift prediction by means of an artificial neural network."
        J. Biomol. NMR, 48, 13-22 (2010)
     """
-
+    pd = import_('pandas')
     binary = find_executable(SPARTA_PLUS)
     if binary is None:
         raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_spartaplus` requires the external program SPARTA+, available at http://spin.niddk.nih.gov/bax/software/SPARTA+/' % ', '.join(SPARTA_PLUS))
@@ -265,10 +267,10 @@ def reindex_dataframe_by_atoms(trj, frame):
     Returns
     -------
     new_frame : pandas.DataFrame
-        Dataframe containing results, with index consisting of atom 
+        Dataframe containing results, with index consisting of atom
         indices (AKA the 'serial' entry in a PDB).  Columns correspond to
         each frame in trj.
-        
+
     Notes
     -----
     Be aware that this function may DROP predictions if the atom naming
@@ -279,10 +281,10 @@ def reindex_dataframe_by_atoms(trj, frame):
     top, bonds = trj.top.to_dataframe()
     top["serial"] = top.index
     top = top.set_index(["resSeq", "name"])
-    
+
     new_frame = frame.copy()
-    
+
     new_frame["serial"] = top.ix[new_frame.index].serial
     new_frame = new_frame.dropna().reset_index().set_index("serial").drop(["resSeq", "name"], axis=1)
-    
+
     return new_frame

@@ -6,8 +6,6 @@ install:
 
 script:
   - export CC="gcc -std=c89"
-  - python -V
-  - export CONDA_PY=$(echo $python | sed -e 's/[.]//')
   - source deactivate
   - conda install --yes conda-build
   - conda build tools/conda-recipe
@@ -19,10 +17,10 @@ script:
 
 env:
   matrix:
-    - python=2.6
-    - python=2.7
-    - python=3.3
-    - python=3.4
+    - python=2.6  CONDA_PY=26  CONDA_NPY=16
+    - python=2.7  CONDA_PY=27  CONDA_NPY=16
+    - python=3.3  CONDA_PY=33  CONDA_NPY=17
+    - python=3.4  CONDA_PY=34  CONDA_NPY=18
 
   global:
     # encrypted AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to push documentation to S3

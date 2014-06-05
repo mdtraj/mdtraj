@@ -132,8 +132,8 @@ class NetCDFTrajectoryFile(object):
     def __init__(self, filename, mode='r', force_overwrite=True):
         self._closed = True   # is the file currently closed?
         self._mode = mode      # what mode were we opened in
-        if StrictVersion(import_('scipy.version').short_version) < StrictVersion('0.8.0'):
-            raise ImportError('MDTraj NetCDF support requires scipy>=0.8.0')
+        if StrictVersion(import_('scipy.version').short_version) < StrictVersion('0.12.0'):
+            raise ImportError('MDTraj NetCDF support requires scipy>=0.12.0')
         netcdf = import_('scipy.io').netcdf_file
 
         if mode not in ['r', 'w']:

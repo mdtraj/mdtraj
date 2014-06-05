@@ -6,12 +6,10 @@ PIP_ARGS="-U"
 
 export PATH=$HOME/miniconda/bin:$PATH
 
-conda create --yes -n ${python} python=${python} numpy scipy pytables cython \
-    scipy pandas pip netcdf4 pyyaml nose jinja2 requests
+conda update --yes conda
+conda create --yes -n ${python} --file tools/ci/requirements-conda-${python}.txt
 source activate $python
-
-PYTHON_VERSION=`python -c 'import sys; print("%d.%d" % sys.version_info[:2])'`
-pip install $PIP_ARGS -r tools/ci/requirements-${PYTHON_VERSION}.txt
+$HOME/miniconda/envs/${python}/bin/pip install $PIP_ARGS -r tools/ci/requirements-${python}.txt
 
 
 # Install SPARTA+ for NMR chemical shift predicition

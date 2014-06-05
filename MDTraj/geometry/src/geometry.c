@@ -23,6 +23,10 @@
 
 #include <stdlib.h>
 #include <math.h>
+#define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
+#define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
+#define CLIP(X, X_min, X_max) (MIN(MAX(X, X_min), X_max))
+
 /* Only compile this file if you have SSE4.1 */
 #ifndef __SSE4_1__
 
@@ -321,7 +325,7 @@ int angle(const float* xyz, const int* triplets, float* out,
       v = _mm_mul_ps(v_prime, _mm_rsqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
 
       /* compute the arccos of the dot product, and store the result. */
-      *(out++) = acos(_mm_cvtss_f32(_mm_dp_ps(u, v, 0x71)));
+      *(out++) = acos(CLIP(_mm_cvtss_f32(_mm_dp_ps(u, v, 0x71)), -1, 1));
     }
     /* advance to the next frame */
     xyz += n_atoms*3;
