@@ -37,12 +37,8 @@ __all__ = ['compute_angles']
 ##############################################################################
 
 
-def compute_angles(traj, angle_indices, opt=True):
+def compute_angles(traj, angle_indices, periodic=True, opt=True):
     """Compute the bond angles between the supplied triplets of indices in each frame of a trajectory.
-
-    This function does not take into account periodic boundary conditions (it
-    will give spurious results if the three atoms which make up any angle jump
-    across a PBC (are not "wholed"))
 
     Parameters
     ----------
@@ -50,6 +46,10 @@ def compute_angles(traj, angle_indices, opt=True):
         An mtraj trajectory.
     angle_indices : np.ndarray, shape=(num_pairs, 2), dtype=int
        Each row gives the indices of three atoms which together make an angle.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will treat angles that cross periodic images using
+        the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate distances. Our optimized
         SSE angle calculation implementation is 10-20x faster than the
@@ -66,6 +66,14 @@ def compute_angles(traj, angle_indices, opt=True):
         raise ValueError('angle_indices must be between 0 and %d' % traj.n_atoms)
 
     out = np.zeros((xyz.shape[0], triplets.shape[0]), dtype=np.float32)
+    if periodic is True and traj._have_unitcell:
+        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
+        if opt and _geometry._processor_supports_sse41():
+            _geometry._angle_mic(xyz, triplets, box, out)
+            return out
+        else:
+            raise NotImplementedError()
+
     if opt and _geometry._processor_supports_sse41():
         _geometry._angle(xyz, triplets, out)
     else:

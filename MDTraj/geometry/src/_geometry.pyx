@@ -31,26 +31,29 @@ assert sizeof(float) == sizeof(np.float32_t)
 # Headers
 ##############################################################################
 
-cdef extern int dist(float* xyz, int* pairs, float* distance_out,
+cdef extern int dist(const float* xyz, const int* pairs, float* distance_out,
                      float* displacement_out, int n_frames,  int n_atoms,
                      int n_pairs) nogil
 
-cdef extern int dist_mic(float* xyz, int* pairs, float* box_matrix,
+cdef extern int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
                          float* distance_out, float* displacement_out,
                          int n_frames, int n_atoms, int n_pairs) nogil
 
-cdef extern int angle(float* xyz, int* triplets, float* out,
+cdef extern int angle(const float* xyz, const int* triplets, float* out,
                       int n_frames, int n_atoms, int n_angles) nogil
 
-cdef extern int dihedral(float* xyz, int* quartets, float* out,
+cdef extern int angle_mic(const float* xyz, const int* triplets, const float* box_matrix,
+                          float* out, int n_frames, int n_atoms, int n_angles) nogil
+
+cdef extern int dihedral(const float* xyz, const int* quartets, float* out,
                          int n_frames, int n_atoms,  int n_quartets) nogil
 
 cdef extern int kabsch_sander(float* xyz, int* nco_indices, int* ca_indices,
                               int n_frames, int n_atoms, int n_residues,
                               int* hbonds, float* henergies) nogil
 
-cdef extern int sasa(int n_frames, int n_atoms, float* xyzlist,
-                     float* atom_radii, int n_sphere_points,
+cdef extern int sasa(int n_frames, int n_atoms, const float* xyzlist,
+                     const float* atom_radii, int n_sphere_points,
                      float* array_of_areas) nogil
 cdef extern from "hardware.h":
     int processorSupportsSSE41()
@@ -110,6 +113,16 @@ def _angle(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
     cdef int n_atoms = xyz.shape[1]
     cdef int n_angles = triplets.shape[0]
     angle(&xyz[0,0,0], <int*> &triplets[0,0], &out[0,0], n_frames, n_atoms, n_angles)
+
+
+def _angle_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
+               np.ndarray[np.int32_t, ndim=2, mode='c'] triplets not None,
+               np.ndarray[np.float32_t, ndim=3, mode='c'] box_matrix not None,
+               np.ndarray[np.float32_t, ndim=2, mode='c'] out not None):
+    cdef int n_frames = xyz.shape[0]
+    cdef int n_atoms = xyz.shape[1]
+    cdef int n_angles = triplets.shape[0]
+    angle_mic(&xyz[0,0,0], <int*> &triplets[0,0], &box_matrix[0,0,0], &out[0,0], n_frames, n_atoms, n_angles)
 
 
 def _dihedral(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,

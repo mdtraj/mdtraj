@@ -180,6 +180,18 @@ def test_angle_0():
     yield lambda: eq(result, md.geometry.compute_angles(t, [[0,1,2]], opt=True))
 
 
+def test_angle_periodic_0():
+    xyz = np.array([[[0, 0, 0],
+                    [0, 1, 0],
+                    [1, 1, 0]]])
+    t = md.Trajectory(xyz=xyz, topology=None,
+        unitcell_lengths=np.array([10, 10, 10]),
+        unitcell_angles=np.array([90, 90, 90]))
+    result = np.array(np.pi/2).reshape(1, 1)
+    yield lambda: eq(result, md.geometry.compute_angles(t, [[0,1,2]], opt=False))
+    yield lambda: eq(result, md.geometry.compute_angles(t, [[0,1,2]], opt=True))
+
+
 def test_angle_1():
     # the two routines sometimes give slightly different answers for
     # wierd angles really close to 0 or 180. I suspect this is because
