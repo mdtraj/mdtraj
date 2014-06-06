@@ -405,7 +405,7 @@ class Topology(object):
         return out
 
     def to_bondgraph(self):
-        """Create a NetworkX graph from the bonds in this topology
+        """Create a NetworkX graph from the atoms and bonds in this topology
 
         Returns
         -------
