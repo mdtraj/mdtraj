@@ -156,7 +156,7 @@ def cone_wpn_(traj, exclude_water=True):
 
     # This is used to compute the angles
     angle_triplets = np.array([(e[0][1], e[0][0], e[1]) for e in product(xh_donors, acceptors) if e[0][0] != e[1]])
-    distance_pairs = angle_triplets[:, [1,2]]  # possible O..acceptor pairs
+    distance_pairs = angle_triplets[:, [0,2]]  # possible O..acceptor pairs
 
     angles = compute_angles(traj, angle_triplets, periodic=True) * 180.0 / np.pi # degrees
     distances = compute_distances(traj, distance_pairs, periodic=True, opt=True)
