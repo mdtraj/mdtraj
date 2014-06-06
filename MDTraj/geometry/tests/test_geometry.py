@@ -255,3 +255,15 @@ def test_angle_nan():
     ]))
     angles = md.compute_angles(t, [[0, 1, 2]], opt=True)
     np.testing.assert_array_almost_equal(angles, [[0]])
+
+
+def test_angle_pbc():
+    traj = md.load(get_fn('1am7_uncorrected.xtc'), top=get_fn('1am7_protein.pdb'))
+    indices = list(itertools.combinations(range(traj.n_atoms)[::100], 3))
+    r1 = md.geometry.compute_angles(traj, indices, opt=False, periodic=True)
+    
+    traj = md.load(get_fn('1am7_corrected.xtc'), top=get_fn('1am7_protein.pdb'))
+    r2 = md.geometry.compute_angles(traj, indices, opt=False, periodic=False)
+    assert np.nanmax(np.abs(r1 - r2)) < 1.0
+    assert np.nansum(np.abs(r1 - r2)) / r1.size < 5e-4
+    # Compare the gromacs PBC correction to the angle code path with explicit PBC correction
