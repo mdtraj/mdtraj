@@ -284,8 +284,12 @@ def test_angle_pbc():
     ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=False, periodic=False)
     assert np.nanmax(np.abs(ang1 - ang2)) < epsilon
     
-    ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=True, periodic=True)
-    ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=False, periodic=False)
+    ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=False, periodic=True)
+    ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=True, periodic=False)
+    assert np.nanmax(np.abs(ang1 - ang2)) < epsilon
+
+    ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=False, periodic=True)
+    ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=True, periodic=True)
     assert np.nanmax(np.abs(ang1 - ang2)) < epsilon
 
 
@@ -318,6 +322,10 @@ def test_dihedral_pbc():
     ang1 = md.geometry.compute_phi(traj_uncorrected, opt=False, periodic=True)[1]
     ang2 = md.geometry.compute_phi(traj_corrected, opt=True, periodic=True)[1]
     assert np.nanmax(np.abs(ang1 - ang2)) < epsilon
+    
+    ang1 = md.geometry.compute_phi(traj_uncorrected, opt=False, periodic=True)[1]
+    ang2 = md.geometry.compute_phi(traj_corrected, opt=True, periodic=False)[1]
+    assert np.nanmax(np.abs(ang1 - ang2)) < epsilon    
     
 
 @raises(AssertionError)
