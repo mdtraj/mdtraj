@@ -319,7 +319,7 @@ def test_dihedral_pbc():
     
 
 @raises(AssertionError)
-def test_dihedral_pbc_fails():
+def test_dihedral_pbc_fails1():
     traj_uncorrected = md.load(get_fn('1am7_uncorrected.xtc'), top=get_fn('1am7_protein.pdb'))
     traj_corrected = md.load(get_fn('1am7_corrected.xtc'), top=get_fn('1am7_protein.pdb'))
         
@@ -328,7 +328,7 @@ def test_dihedral_pbc_fails():
     assert np.nanmax(np.abs(ang1 - ang2)) < 1E-2
     
 @raises(AssertionError)
-def test_dihedral_pbc_fails():
+def test_dihedral_pbc_fails2():
     traj_uncorrected = md.load(get_fn('1am7_uncorrected.xtc'), top=get_fn('1am7_protein.pdb'))
     traj_corrected = md.load(get_fn('1am7_corrected.xtc'), top=get_fn('1am7_protein.pdb'))
         
@@ -336,3 +336,12 @@ def test_dihedral_pbc_fails():
     ang2 = md.geometry.compute_phi(traj_corrected, opt=True, periodic=False)[1]
     assert np.nanmax(np.abs(ang1 - ang2)) < 1E-2
     
+@raises(AssertionError)
+def test_angle_pbc_fails1():
+    traj_uncorrected = md.load(get_fn('1am7_uncorrected.xtc'), top=get_fn('1am7_protein.pdb'))
+    indices = list(itertools.combinations(range(traj_uncorrected.n_atoms)[::100], 3))
+    traj_corrected = md.load(get_fn('1am7_corrected.xtc'), top=get_fn('1am7_protein.pdb'))
+        
+    ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=False, periodic=False)
+    ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=False, periodic=False)
+    assert np.nanmax(np.abs(ang1 - ang2)) < 1E-2
