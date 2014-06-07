@@ -38,7 +38,7 @@ __all__ = ['cone_wpn', 'cone_wpn_traj', 'baker_hubbard', 'kabsch_sander']
 # Functions
 ##############################################################################
 
-def cone_wpn_(traj, exclude_water=True):
+def cone_wpn_(traj, exclude_water=True, distance_cutoff = 0.33, angle_const = 0.000044, angle_cutoff = 45):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle according to the criterion outlined in [1].  
     As opposed to Baker-Hubbard, this is a "cone" criterion where the
@@ -60,6 +60,13 @@ def cone_wpn_(traj, exclude_water=True):
         Exclude solvent molecules from consideration.  Defaults to True 
         for consistency with baker_hubbard, but for all of our applications 
         it should be set to False
+    distance_cutoff: float, default=0.33
+        Maximum distance cutoff between heavy atoms in nanometers.
+    angle_const: float, default = 0.000044
+        Controls how the distance cutoff is reduced (i.e. made more strict)
+        when the hydrogen bond is bent.
+    angle_cutoff: float, default=45
+        Any H-D-A angle greater than this number is not considered.
 
     Returns
     -------
@@ -111,12 +118,6 @@ def cone_wpn_(traj, exclude_water=True):
     "The Structure of the First Coordination Shell in Liquid Water." (2004) 
     Science 304, 995-999.
     """
-    # Cutoff criteria: these could be exposed as function arguments, or
-    # modified if there are better definitions than the this one based only
-    # on distances and angles
-    distance_cutoff = 0.33            # nanometers
-    angle_const = 0.000044            # nanometers / deg^2
-    angle_cutoff = 45                 # degrees
 
     if traj.topology is None:
         raise ValueError('cone_wpn requires that traj contain topology '
@@ -169,7 +170,7 @@ def cone_wpn_(traj, exclude_water=True):
 
     return angle_triplets2, mask
 
-def cone_wpn(traj, freq=0.1, exclude_water=True):
+def cone_wpn(traj, freq=0.1, exclude_water=True, distance_cutoff = 0.33, angle_const = 0.000044, angle_cutoff = 45):
     """ Returns a list of hydrogen bonds for the trajectory filtered by frequency. 
     See further documentation in cone_wpn_ .
 
@@ -196,14 +197,14 @@ def cone_wpn(traj, freq=0.1, exclude_water=True):
         proportion greater than `freq` of the trajectory.
     """
 
-    angle_triplets, mask = cone_wpn_(traj, exclude_water=exclude_water)
+    angle_triplets, mask = cone_wpn_(traj, exclude_water=exclude_water, distance_cutoff=distance_cutoff, angle_const=angle_const, angle_cutoff=angle_cutoff)
 
     # frequency of occurance of each hydrogen bond in the trajectory
     occurance = np.sum(mask, axis=0).astype(np.double) / traj.n_frames
 
     return angle_triplets[occurance > freq]
 
-def cone_wpn_traj(traj, exclude_water=True):
+def cone_wpn_traj(traj, exclude_water=True, distance_cutoff = 0.33, angle_const = 0.000044, angle_cutoff = 45):
     """ Returns a list of hydrogen bonds for each frame in the trajectory.
     See further documentation in cone_wpn_ .
 
@@ -227,7 +228,7 @@ def cone_wpn_traj(traj, exclude_water=True):
         in a hydrogen bond which occurs in that frame.
     """
 
-    angle_triplets, mask = cone_wpn_(traj, exclude_water=exclude_water)
+    angle_triplets, mask = cone_wpn_(traj, exclude_water=exclude_water, distance_cutoff=distance_cutoff, angle_const=angle_const, angle_cutoff=angle_cutoff)
     return [angle_triplets[i] for i in mask]
 
 def baker_hubbard(traj, freq=0.1, exclude_water=True):
