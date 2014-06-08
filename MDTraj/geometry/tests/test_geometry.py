@@ -160,9 +160,9 @@ def test_dihedral_0():
 
 
 def test_dihedral_1():
-    n_atoms = 10
+    n_atoms = 4
     np.random.seed(42)
-    xyz = np.random.randn(500, n_atoms, 3)
+    xyz = np.random.randn(5, n_atoms, 3)
     t = md.Trajectory(xyz=xyz, topology=None)
     indices = list(itertools.combinations(range(n_atoms), 4))
     r1 = md.geometry.compute_dihedrals(t, indices, opt=False)

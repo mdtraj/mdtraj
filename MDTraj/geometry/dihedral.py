@@ -58,9 +58,9 @@ def _dihedral(traj, indices, periodic, out=None):
         dih[i,j] gives the dihedral angle at traj[i] correponding to indices[j].
 
     """
-    ix10 = indices[:, [1,0]]
-    ix21 = indices[:, [2,1]]
-    ix32 = indices[:, [3,2]]
+    ix10 = indices[:, [0, 1]]
+    ix21 = indices[:, [1, 2]]
+    ix32 = indices[:, [2, 3]]
 
     b1 = distance.compute_displacements(traj, ix10, periodic=periodic)
     b2 = distance.compute_displacements(traj, ix21, periodic=periodic)
@@ -116,9 +116,11 @@ def compute_dihedrals(traj, indices, periodic=True, opt=True):
         else:
             _dihedral(traj, quartets, periodic, out)
             return out
+
     if opt and _geometry._processor_supports_sse41():
         _geometry._dihedral(xyz, quartets, out)
     else:
+        _geometry._dihedral(xyz, quartets, out)
         _dihedral(traj, quartets, periodic, out)
     return out
 

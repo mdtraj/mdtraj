@@ -83,8 +83,8 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
 
 
 def _angle(traj, angle_indices, periodic, out):
-    ix01 = angle_indices[:, [0, 1]]
-    ix21 = angle_indices[:, [2, 1]]
+    ix01 = angle_indices[:, [1, 0]]
+    ix21 = angle_indices[:, [1, 2]]
 
     u_prime = distance.compute_displacements(traj, ix01, periodic=periodic)
     v_prime = distance.compute_displacements(traj, ix21, periodic=periodic)
