@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: Robert McGibbon
-# Contributors: Kyle A Beauchamp, Ravi Ramanathan
+# Contributors: Kyle A Beauchamp, Ravi Ramanathan, Lee-Ping Wang
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -28,7 +28,7 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
-from mdtraj.geometry import _geometry
+from mdtraj.geometry import _geometry, distance
 
 __all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega',
            'compute_chi1','compute_chi2','compute_chi3','compute_chi4']
@@ -38,7 +38,7 @@ __all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega',
 ##############################################################################
 
 
-def _dihedral(xyz, indices, out=None):
+def _dihedral(traj, indices, periodic, out=None):
     """Compute the dihedral angles of traj for the atom indices in indices.
 
     Parameters
@@ -47,6 +47,10 @@ def _dihedral(xyz, indices, out=None):
         The XYZ coordinates of a trajectory
     indices : np.ndarray, shape=(num_dihedrals, 4), dtype=int
         Atom indices to compute dihedrals.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will treat dihedrals that cross periodic images
+        using the minimum image convention.
 
     Returns
     -------
@@ -54,14 +58,13 @@ def _dihedral(xyz, indices, out=None):
         dih[i,j] gives the dihedral angle at traj[i] correponding to indices[j].
 
     """
-    x0 = xyz[:, indices[:, 0]]
-    x1 = xyz[:, indices[:, 1]]
-    x2 = xyz[:, indices[:, 2]]
-    x3 = xyz[:, indices[:, 3]]
+    ix10 = indices[:, [0, 1]]
+    ix21 = indices[:, [1, 2]]
+    ix32 = indices[:, [2, 3]]
 
-    b1 = x1 - x0
-    b2 = x2 - x1
-    b3 = x3 - x2
+    b1 = distance.compute_displacements(traj, ix10, periodic=periodic)
+    b2 = distance.compute_displacements(traj, ix21, periodic=periodic)
+    b3 = distance.compute_displacements(traj, ix32, periodic=periodic)
 
     c1 = np.cross(b2, b3)
     c2 = np.cross(b1, b2)
@@ -73,12 +76,8 @@ def _dihedral(xyz, indices, out=None):
     return np.arctan2(p1, p2, out)
 
 
-def compute_dihedrals(traj, indices, opt=True):
+def compute_dihedrals(traj, indices, periodic=True, opt=True):
     """Compute the dihedral angles between the supplied quartets of atoms in each frame in a trajectory.
-
-    This function does not take into account periodic boundary conditions (it
-    will give spurious results if the four atoms which make up any dihedral jump
-    across a PBC (are not "wholed"))
 
     Parameters
     ----------
@@ -89,6 +88,10 @@ def compute_dihedrals(traj, indices, opt=True):
         dihedral angle. The angle is between the planes spanned by the first
         three atoms and the last three atoms, a torsion around the bond
         between the middle two atoms.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will treat dihedrals that cross periodic images
+        using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
 
@@ -105,10 +108,19 @@ def compute_dihedrals(traj, indices, opt=True):
         raise ValueError('indices must be between 0 and %d' % traj.n_atoms)
 
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
+    if periodic is True and traj._have_unitcell:
+        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
+        if opt and _geometry._processor_supports_sse41():
+            _geometry._dihedral_mic(xyz, quartets, box, out)
+            return out
+        else:
+            _dihedral(traj, quartets, periodic, out)
+            return out
+
     if opt and _geometry._processor_supports_sse41():
         _geometry._dihedral(xyz, quartets, out)
     else:
-        _dihedral(xyz, quartets, out)
+        _dihedral(traj, quartets, periodic, out)
     return out
 
 
@@ -283,17 +295,17 @@ _get_indices_phi = lambda traj: _atom_sequence(traj, PHI_ATOMS)
 _get_indices_psi = lambda traj: _atom_sequence(traj, PSI_ATOMS)
 
 
-def compute_phi(traj, opt=True):
+def compute_phi(traj, periodic=True, opt=True):
     """Calculate the phi torsions of a trajectory.
-
-    This function does not take into account periodic boundary conditions (it
-    will give spurious results if the four atoms which make up any dihedral jump
-    across a PBC (are not "wholed"))
 
     Parameters
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will treat dihedrals that cross periodic images
+        using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
 
@@ -308,20 +320,20 @@ def compute_phi(traj, opt=True):
     rid, indices = _get_indices_phi(traj)
     if len(indices) == 0:
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
-    return indices, compute_dihedrals(traj, indices, opt=opt)
+    return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
 
 
-def compute_psi(traj, opt=True):
+def compute_psi(traj, periodic=True, opt=True):
     """Calculate the psi torsions of a trajectory.
-
-    This function does not take into account periodic boundary conditions (it
-    will give spurious results if the four atoms which make up any dihedral jump
-    across a PBC (are not "wholed"))
 
     Parameters
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will treat dihedrals that cross periodic images
+        using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
 
@@ -336,21 +348,21 @@ def compute_psi(traj, opt=True):
     rid, indices = _get_indices_psi(traj)
     if len(indices) == 0:
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
-    return indices, compute_dihedrals(traj, indices, opt=opt)
+    return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
 
 
-def compute_chi1(traj, opt=True):
+def compute_chi1(traj, periodic=True, opt=True):
     """Calculate the chi1 torsions of a trajectory. chi1 is the first side chain torsion angle 
     formed between the 4 atoms over the CA-CB axis. 
-
-    This function does not take into account periodic boundary conditions (it
-    will give spurious results if the four atoms which make up any dihedral jump
-    across a PBC (are not "wholed"))
 
     Parameters
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will treat dihedrals that cross periodic images
+        using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
 
@@ -368,21 +380,21 @@ def compute_chi1(traj, opt=True):
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
 
     indices = np.vstack(x for x in indices if x.size)[id_sort]
-    all_chi1 = compute_dihedrals(traj, indices, opt=opt)
+    all_chi1 = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
     return indices, all_chi1
 
-def compute_chi2(traj, opt=True):
+def compute_chi2(traj, periodic=True, opt=True):
     """Calculate the chi2 torsions of a trajectory. chi2 is the second side chain torsion angle 
     formed between the corresponding 4 atoms  over the CB-CG axis.
-
-    This function does not take into account periodic boundary conditions (it
-    will give spurious results if the four atoms which make up any dihedral jump
-    across a PBC (are not "wholed"))
 
     Parameters
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will treat dihedrals that cross periodic images
+        using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
 
@@ -400,23 +412,23 @@ def compute_chi2(traj, opt=True):
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
 
     indices = np.vstack(x for x in indices if x.size)[id_sort]
-    all_chi1 = compute_dihedrals(traj, indices, opt=opt)
+    all_chi1 = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
     return indices, all_chi1
 
 
-def compute_chi3(traj, opt=True):
+def compute_chi3(traj, periodic=True, opt=True):
     """Calculate the chi3 torsions of a trajectory. chi3 is the third side chain torsion angle
     formed between the corresponding 4 atoms over the CG-CD axis 
     (only the residues ARG, GLN, GLU, LYS & MET have these atoms)
-
-    This function does not take into account periodic boundary conditions (it
-    will give spurious results if the four atoms which make up any dihedral jump
-    across a PBC (are not "wholed"))
 
     Parameters
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will treat dihedrals that cross periodic images
+        using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
 
@@ -434,23 +446,23 @@ def compute_chi3(traj, opt=True):
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
 
     indices = np.vstack(x for x in indices if x.size)[id_sort]
-    all_chi1 = compute_dihedrals(traj, indices, opt=opt)
+    all_chi1 = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
     return indices, all_chi1
 
 
-def compute_chi4(traj, opt=True):
+def compute_chi4(traj, periodic=True, opt=True):
     """Calculate the chi4 torsions of a trajectory. chi4 is the fourth side chain torsion angle
     formed between the corresponding 4 atoms over the CD-CE or CD-NE axis 
     (only ARG & LYS residues have these atoms)
-
-    This function does not take into account periodic boundary conditions (it
-    will give spurious results if the four atoms which make up any dihedral jump
-    across a PBC (are not "wholed"))
 
     Parameters
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will treat dihedrals that cross periodic images
+        using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
 
@@ -468,21 +480,21 @@ def compute_chi4(traj, opt=True):
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
 
     indices = np.vstack(x for x in indices if x.size)[id_sort]
-    all_chi1 = compute_dihedrals(traj, indices, opt=opt)
+    all_chi1 = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
     return indices, all_chi1
 
 
-def compute_omega(traj, opt=True):
+def compute_omega(traj, periodic=True, opt=True):
     """Calculate the omega torsions of a trajectory.
-
-    This function does not take into account periodic boundary conditions (it
-    will give spurious results if the four atoms which make up any dihedral jump
-    across a PBC (are not "wholed"))
 
     Parameters
     ----------
     traj : Trajectory
         Trajectory for which you want dihedrals.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will treat dihedrals that cross periodic images
+        using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
 
@@ -497,4 +509,4 @@ def compute_omega(traj, opt=True):
     rid, indices = _get_indices_omega(traj)
     if len(indices) == 0:
         return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
-    return indices, compute_dihedrals(traj, indices, opt=opt)
+    return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)

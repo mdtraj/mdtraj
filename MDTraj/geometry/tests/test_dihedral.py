@@ -6,6 +6,7 @@ import tempfile
 
 import mdtraj as md
 import numpy as np
+from mdtraj.utils import enter_temp_directory
 from mdtraj.testing import get_fn, eq, SkipTest
 from mdtraj.geometry.dihedral import (compute_chi1, compute_chi2, compute_chi3,
     compute_chi4, compute_omega, compute_phi, compute_psi)
@@ -126,6 +127,7 @@ def test_compute_omega():
     eq(rx, ry)
     eq(x, y)
 
+
 def test_shape_when_none():
     t = md.load(get_fn('frame0.h5'))
     np.hstack((md.compute_phi(t)[1],
@@ -135,3 +137,36 @@ def test_shape_when_none():
                md.compute_chi3(t)[1],
                md.compute_chi1(t)[1],
                md.compute_omega(t)[1]))
+
+
+def test_dihedral_1():
+    pymol = find_executable('pymol')
+    if pymol is None:
+        raise SkipTest("pymol executable not found")
+    
+    xyz = '''MODEL        0
+ATOM      1    A ACE     1       4.300  13.100   8.600  1.00  0.00
+ATOM      2    B ACE     1       5.200  13.600   8.800  1.00  0.00
+ATOM      3    C ACE     1       4.900  14.300   9.600  1.00  0.00
+ATOM      4    D ACE     1       5.600  14.200   7.900  1.00  0.00
+    '''
+    script = '''
+with open('output.txt', 'w') as f:
+    f.write('%f' % cmd.get_dihedral('1/A', '1/B', '1/C', '1/D'))
+'''
+    
+    with enter_temp_directory():
+        with open('xyz.pdb', 'w') as f:
+            f.write(xyz)
+        with open('pymolscript.py', 'w') as f:
+            f.write(script)
+
+        os.system('%s %s -cr %s' % (pymol, 'xyz.pdb', 'pymolscript.py'))
+        with open('output.txt') as f:
+            pymol_value = np.deg2rad(float(f.read()))
+        t = md.load('xyz.pdb')
+
+    mdtraj_value = md.compute_dihedrals(t, [[0,1,2,3]])[0,0]
+    
+    np.testing.assert_array_almost_equal(pymol_value, mdtraj_value)
+

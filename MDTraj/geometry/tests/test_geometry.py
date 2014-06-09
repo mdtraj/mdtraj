@@ -27,7 +27,7 @@ import numpy as np
 
 import mdtraj as md
 import mdtraj.geometry
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
+from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif, raises
 
 RgDocStringTester = DocStringFormatTester(mdtraj.geometry.rg)
 DistanceDocStringTester = DocStringFormatTester(mdtraj.geometry.distance)
@@ -160,9 +160,9 @@ def test_dihedral_0():
 
 
 def test_dihedral_1():
-    n_atoms = 10
+    n_atoms = 4
     np.random.seed(42)
-    xyz = np.random.randn(500, n_atoms, 3)
+    xyz = np.random.randn(5, n_atoms, 3)
     t = md.Trajectory(xyz=xyz, topology=None)
     indices = list(itertools.combinations(range(n_atoms), 4))
     r1 = md.geometry.compute_dihedrals(t, indices, opt=False)
@@ -176,6 +176,18 @@ def test_angle_0():
                     [1, 1, 0]]])
     t = md.Trajectory(xyz=xyz, topology=None)
     result = np.array(np.pi/2).reshape(1,1)
+    yield lambda: eq(result, md.geometry.compute_angles(t, [[0,1,2]], opt=False))
+    yield lambda: eq(result, md.geometry.compute_angles(t, [[0,1,2]], opt=True))
+
+
+def test_angle_periodic_0():
+    xyz = np.array([[[0, 0, 0],
+                    [0, 1, 0],
+                    [1, 1, 0]]])
+    t = md.Trajectory(xyz=xyz, topology=None,
+        unitcell_lengths=np.array([10, 10, 10]),
+        unitcell_angles=np.array([90, 90, 90]))
+    result = np.array(np.pi/2).reshape(1, 1)
     yield lambda: eq(result, md.geometry.compute_angles(t, [[0,1,2]], opt=False))
     yield lambda: eq(result, md.geometry.compute_angles(t, [[0,1,2]], opt=True))
 
@@ -195,7 +207,7 @@ def test_angle_1():
     indices = list(itertools.combinations(range(n_atoms), 3))
     r1 = md.geometry.compute_angles(t, indices, opt=False)
     r2 = md.geometry.compute_angles(t, indices, opt=True)
-    assert np.nanmax(np.abs(r1 - r2)) < 1e-2
+    assert np.max(np.abs(r1 - r2)) < 1e-2
     assert np.nansum(np.abs(r1 - r2)) / r1.size < 5e-4
 
 
@@ -243,3 +255,116 @@ def test_angle_nan():
     ]))
     angles = md.compute_angles(t, [[0, 1, 2]], opt=True)
     np.testing.assert_array_almost_equal(angles, [[0]])
+
+
+def test_angle_pbc():
+    traj_uncorrected = md.load(get_fn('1am7_uncorrected.xtc'), top=get_fn('1am7_protein.pdb'))
+    traj_corrected = md.load(get_fn('1am7_corrected.xtc'), top=get_fn('1am7_protein.pdb'))
+
+    indices = []
+    for i in range(traj_uncorrected.n_residues):
+        r = traj_uncorrected.topology.residue(i)
+        indices.append((r.atom(0).index, r.atom(1).index, r.atom(2).index))
+
+    epsilon = 6e-3
+
+    ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=False, periodic=True)
+    ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=False, periodic=True)
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+    
+    ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=True, periodic=True)
+    ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=True, periodic=True)
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+
+    ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=True, periodic=True)
+    ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=True, periodic=False)
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+
+    ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=False, periodic=True)
+    ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=False, periodic=False)
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+    
+    ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=True, periodic=True)
+    ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=False, periodic=False)
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+    
+    ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=False, periodic=True)
+    ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=True, periodic=False)
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+
+    ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=False, periodic=True)
+    ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=True, periodic=True)
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+
+
+def test_dihedral_pbc():
+    traj_uncorrected = md.load(get_fn('1am7_uncorrected.xtc'), top=get_fn('1am7_protein.pdb'))
+    traj_corrected = md.load(get_fn('1am7_corrected.xtc'), top=get_fn('1am7_protein.pdb'))
+
+    epsilon = 6E-3
+
+    ang1 = md.geometry.compute_phi(traj_uncorrected, opt=False, periodic=True)[1]
+    ang2 = md.geometry.compute_phi(traj_corrected, opt=False, periodic=True)[1]
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+    
+    ang1 = md.geometry.compute_phi(traj_uncorrected, opt=True, periodic=True)[1]
+    ang2 = md.geometry.compute_phi(traj_corrected, opt=True, periodic=True)[1]
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+
+    ang1 = md.geometry.compute_phi(traj_uncorrected, opt=True, periodic=True)[1]
+    ang2 = md.geometry.compute_phi(traj_corrected, opt=True, periodic=False)[1]
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+
+    ang1 = md.geometry.compute_phi(traj_uncorrected, opt=False, periodic=True)[1]
+    ang2 = md.geometry.compute_phi(traj_corrected, opt=False, periodic=False)[1]
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+
+    ang1 = md.geometry.compute_phi(traj_uncorrected, opt=True, periodic=True)[1]
+    ang2 = md.geometry.compute_phi(traj_corrected, opt=False, periodic=False)[1]
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+
+    ang1 = md.geometry.compute_phi(traj_uncorrected, opt=False, periodic=True)[1]
+    ang2 = md.geometry.compute_phi(traj_corrected, opt=True, periodic=True)[1]
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+    
+    ang1 = md.geometry.compute_phi(traj_uncorrected, opt=False, periodic=True)[1]
+    ang2 = md.geometry.compute_phi(traj_corrected, opt=True, periodic=False)[1]
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+    
+
+@raises(AssertionError)
+def test_dihedral_pbc_fails1():
+    traj_uncorrected = md.load(get_fn('1am7_uncorrected.xtc'), top=get_fn('1am7_protein.pdb'))
+    traj_corrected = md.load(get_fn('1am7_corrected.xtc'), top=get_fn('1am7_protein.pdb'))
+    
+    epsilon = 1E-2
+    
+    ang1 = md.geometry.compute_phi(traj_uncorrected, opt=False, periodic=False)[1]
+    ang2 = md.geometry.compute_phi(traj_corrected, opt=False, periodic=False)[1]
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+    
+@raises(AssertionError)
+def test_dihedral_pbc_fails2():
+    traj_uncorrected = md.load(get_fn('1am7_uncorrected.xtc'), top=get_fn('1am7_protein.pdb'))
+    traj_corrected = md.load(get_fn('1am7_corrected.xtc'), top=get_fn('1am7_protein.pdb'))
+        
+    epsilon = 1E-2
+        
+    ang1 = md.geometry.compute_phi(traj_uncorrected, opt=True, periodic=False)[1]
+    ang2 = md.geometry.compute_phi(traj_corrected, opt=True, periodic=False)[1]
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
+    
+@raises(AssertionError)
+def test_angle_pbc_fails1():
+    traj_uncorrected = md.load(get_fn('1am7_uncorrected.xtc'), top=get_fn('1am7_protein.pdb'))
+    indices = []
+    for i in range(traj_uncorrected.n_residues):
+        r = traj_uncorrected.topology.residue(i)
+        indices.append((r.atom(0).index, r.atom(1).index, r.atom(2).index))
+    traj_corrected = md.load(get_fn('1am7_corrected.xtc'), top=get_fn('1am7_protein.pdb'))
+    
+    epsilon = 1E-2
+        
+    ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=False, periodic=False)
+    ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=False, periodic=False)
+    assert np.max(np.abs(ang1 - ang2)) < epsilon
