@@ -156,7 +156,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True):
     distance_pairs = angle_triplets[:, [1,2]]  # possible H..acceptor pairs
 
     angles = compute_angles(traj, angle_triplets)
-    distances = compute_distances(traj, distance_pairs, periodic=False)
+    distances = compute_distances(traj, distance_pairs)
 
     mask = np.logical_and(distances < distance_cutoff, angles > angle_cutoff)
     # frequency of occurance of each hydrogen bond in the trajectory

@@ -321,8 +321,8 @@ int angle(const float* xyz, const int* triplets, float* out,
       v_prime = _mm_sub_ps(r_n, r_o);
 
       /* normalize the vectors u_prime and v_prime */
-      u = _mm_mul_ps(u_prime, _mm_rsqrt_ps(_mm_dp_ps(u_prime, u_prime, 0x7F)));
-      v = _mm_mul_ps(v_prime, _mm_rsqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
+      u = _mm_div_ps(u_prime, _mm_sqrt_ps(_mm_dp_ps(u_prime, u_prime, 0x7F)));
+      v = _mm_div_ps(v_prime, _mm_sqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
 
       /* compute the arccos of the dot product, and store the result. */
       *(out++) = acos(CLIP(_mm_cvtss_f32(_mm_dp_ps(u, v, 0x71)), -1, 1));
@@ -381,8 +381,8 @@ int angle_mic(const float* xyz, const int* triplets,
             v_prime = minimum_image(v_prime, h, hinv);
 
             /* normalize the vectors u_prime and v_prime */
-            u = _mm_mul_ps(u_prime, _mm_rsqrt_ps(_mm_dp_ps(u_prime, u_prime, 0x7F)));
-            v = _mm_mul_ps(v_prime, _mm_rsqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
+            u = _mm_div_ps(u_prime, _mm_sqrt_ps(_mm_dp_ps(u_prime, u_prime, 0x7F)));
+            v = _mm_div_ps(v_prime, _mm_sqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
 
             /* compute the arccos of the dot product, and store the result. */
             *(out++) = acos(_mm_cvtss_f32(_mm_dp_ps(u, v, 0x71)));
