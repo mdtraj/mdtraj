@@ -114,6 +114,10 @@ def cone_wpn(traj, exclude_water=True, periodic=True):
     Science 304, 995-999.
     """
 
+    distance_cutoff = 0.33
+    angle_const = 0.000044
+    angle_cutoff = 45
+
     if traj.topology is None:
         raise ValueError('cone_wpn requires that traj contain topology '
                          'information')
