@@ -357,7 +357,10 @@ def test_dihedral_pbc_fails2():
 @raises(AssertionError)
 def test_angle_pbc_fails1():
     traj_uncorrected = md.load(get_fn('1am7_uncorrected.xtc'), top=get_fn('1am7_protein.pdb'))
-    indices = list(itertools.combinations(range(traj_uncorrected.n_atoms)[::100], 3))
+    indices = []
+    for i in range(traj_uncorrected.n_residues):
+        r = traj_uncorrected.topology.residue(i)
+        indices.append((r.atom(0).index, r.atom(1).index, r.atom(2).index))
     traj_corrected = md.load(get_fn('1am7_corrected.xtc'), top=get_fn('1am7_protein.pdb'))
     
     epsilon = 1E-2
