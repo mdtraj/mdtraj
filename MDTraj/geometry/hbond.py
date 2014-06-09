@@ -32,7 +32,7 @@ from mdtraj.utils import ensure_type
 from mdtraj.geometry import compute_distances, compute_angles
 from mdtraj.geometry import _geometry
 
-__all__ = ['cone_wpn', 'cone_wpn_traj', 'baker_hubbard', 'kabsch_sander']
+__all__ = ['cone_wpn', 'baker_hubbard', 'kabsch_sander']
 
 ##############################################################################
 # Functions
