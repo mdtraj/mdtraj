@@ -89,7 +89,6 @@ def test_hbonds_against_dssp():
 
 def test_baker_hubbard_0():
      t = md.load(get_fn('2EQQ.pdb'))
-     t.unitcell_vectors = None
      
      # print('to view the hbonds defined in 2EQQ by baker_hubbard()')
      # print('put these commands into pymol on top of the pdb:\n')
