@@ -404,6 +404,30 @@ class Topology(object):
         out._numAtoms = out.n_atoms
         return out
 
+    def to_bondgraph(self):
+        """Create a NetworkX graph from the atoms and bonds in this topology
+
+        Returns
+        -------
+        g : nx.Graph
+            A graph whose nodes are the Atoms in this topology, and
+            whose edges are the bonds
+
+        See Also
+        --------
+        atoms
+        bonds
+
+        Notes
+        -----
+        This method requires the NetworkX python package.
+        """
+        nx = import_('networkx')
+        g = nx.Graph()
+        g.add_nodes_from(self.atoms)
+        g.add_edges_from(self.bonds)
+        return g
+
     def __eq__(self, other):
         """Are two topologies equal?
 
