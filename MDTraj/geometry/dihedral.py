@@ -120,7 +120,6 @@ def compute_dihedrals(traj, indices, periodic=True, opt=True):
     if opt and _geometry._processor_supports_sse41():
         _geometry._dihedral(xyz, quartets, out)
     else:
-        _geometry._dihedral(xyz, quartets, out)
         _dihedral(traj, quartets, periodic, out)
     return out
 

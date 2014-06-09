@@ -31,30 +31,30 @@ assert sizeof(float) == sizeof(np.float32_t)
 # Headers
 ##############################################################################
 
-cdef extern int dist(const float* xyz, const int* pairs, float* distance_out,
+cdef extern from "geometry.h":
+    int dist(const float* xyz, const int* pairs, float* distance_out,
                      float* displacement_out, int n_frames,  int n_atoms,
                      int n_pairs) nogil
-
-cdef extern int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
+    int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
                          float* distance_out, float* displacement_out,
                          int n_frames, int n_atoms, int n_pairs) nogil
 
-cdef extern int angle(const float* xyz, const int* triplets, float* out,
-                      int n_frames, int n_atoms, int n_angles) nogil
+    int angle(const float* xyz, const int* triplets, float* out,
+              int n_frames, int n_atoms, int n_angles) nogil
 
-cdef extern int angle_mic(const float* xyz, const int* triplets, const float* box_matrix,
-                          float* out, int n_frames, int n_atoms, int n_angles) nogil
+    int angle_mic(const float* xyz, const int* triplets, const float* box_matrix,
+                  float* out, int n_frames, int n_atoms, int n_angles) nogil
 
-cdef extern int dihedral(const float* xyz, const int* quartets, float* out,
-                         int n_frames, int n_atoms,  int n_quartets) nogil
+    int dihedral(const float* xyz, const int* quartets, float* out,
+                 int n_frames, int n_atoms,  int n_quartets) nogil
 
-cdef extern int dihedral_mic(const float* xyz, const int* quartets, float* out,
-                             const float* box_matrix, int n_frames, int n_atoms, 
-                             int n_quartets) nogil
+    int dihedral_mic(const float* xyz, const int* quartets, float* out,
+                     const float* box_matrix, int n_frames, int n_atoms, 
+                     int n_quartets) nogil
 
-cdef extern int kabsch_sander(float* xyz, int* nco_indices, int* ca_indices,
-                              int n_frames, int n_atoms, int n_residues,
-                              int* hbonds, float* henergies) nogil
+    int kabsch_sander(float* xyz, int* nco_indices, int* ca_indices,
+                      int n_frames, int n_atoms, int n_residues,
+                      int* hbonds, float* henergies) nogil
 
 cdef extern int sasa(int n_frames, int n_atoms, const float* xyzlist,
                      const float* atom_radii, int n_sphere_points,
