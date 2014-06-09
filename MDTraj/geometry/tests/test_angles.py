@@ -1,7 +1,5 @@
 import mdtraj as md
 import numpy as np
-import matplotlib.pyplot as pp
-import scipy.spatial
 
 def test_angle_pbc_0():
     # Check that angles are calculated correctly accross periodic boxes
@@ -26,14 +24,6 @@ def test_angle_pbc_0():
     r2 = md.compute_angles(t0, [[0,1,2]], opt=True).reshape(-1)
     r3 = md.compute_angles(t1, [[0,1,2]], opt=True).reshape(-1)
     
-    print np.max(np.abs(r0-r1))
-    print np.max(np.abs(r2-r3))    
-
-    i = 458
-    print r0[i], r1[i], r2[i], r3[i]
-    print X[i]
-    print X_cell[i]
-
     np.testing.assert_array_almost_equal(r0, r1, decimal=4)
     np.testing.assert_array_almost_equal(r2, r3, decimal=4)
     np.testing.assert_array_almost_equal(r0, r3, decimal=4)
