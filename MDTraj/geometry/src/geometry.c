@@ -30,10 +30,18 @@
 /* Only compile this file if you have SSE4.1 */
 #ifndef __SSE4_1__
 
+/* These declarations are necessary to get the
+proper error on machines that don't support SSE4.1.
+Without them, you get a linker error which is
+cryptic, since the real definitions are online
+compiled inside #ifdef __SSE4_1__
+*/
 int dist(void) { exit(EXIT_FAILURE); }
 int dist_mic(void) { exit(EXIT_FAILURE); }
 int angle(void) { exit(EXIT_FAILURE); }
+int angle_mic(void) { exit(EXIT_FAILURE); }
 int dihedral(void) { exit(EXIT_FAILURE); }
+int dihedral_mic(void) { exit(EXIT_FAILURE); }
 int kabsch_sander(void) { exit(EXIT_FAILURE); }
 
 #else
@@ -74,6 +82,23 @@ static int inverse33(const float M[9], __m128* cols_0, __m128* cols_1, __m128* c
       M[0]*M[4] - M[3]*M[1] , 0.0f));
 
   return 1;
+}
+
+static INLINE __m128 minimum_image(__m128 r, const __m128 h[3], const __m128 hinv[3]) {
+    __m128 s;
+    s = _mm_add_ps(_mm_add_ps(
+       _mm_mul_ps(hinv[0], _mm_shuffle_ps(r, r, _MM_SHUFFLE(0,0,0,0))),
+       _mm_mul_ps(hinv[1], _mm_shuffle_ps(r, r, _MM_SHUFFLE(1,1,1,1)))),
+       _mm_mul_ps(hinv[2], _mm_shuffle_ps(r, r, _MM_SHUFFLE(2,2,2,2))));
+
+    /* s = s - NEAREST_INTEGER(s) */
+    s = _mm_sub_ps(s, _mm_round_ps(s, _MM_FROUND_TO_NEAREST_INT));
+
+    r = _mm_add_ps(_mm_add_ps(
+        _mm_mul_ps(h[0], _mm_shuffle_ps(s, s, _MM_SHUFFLE(0,0,0,0))),
+        _mm_mul_ps(h[1], _mm_shuffle_ps(s, s, _MM_SHUFFLE(1,1,1,1)))),
+        _mm_mul_ps(h[2], _mm_shuffle_ps(s, s, _MM_SHUFFLE(2,2,2,2))));
+    return r;
 }
 
 INLINE __m128 cross(const __m128 a, const __m128 b) {
@@ -227,11 +252,7 @@ int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
          _mm_mul_ps(hinv[2], _mm_shuffle_ps(r12, r12, _MM_SHUFFLE(2,2,2,2))));
 
       /* s12 = s12 - NEAREST_INTEGER(s12) */
-#ifdef __SSE4_1__
       s12 = _mm_sub_ps(s12, _mm_round_ps(s12, _MM_FROUND_TO_NEAREST_INT));
-#else
-      s12 = _mm_sub_ps(s12, _mm_cvtepi32_ps(_mm_cvtps_epi32(s12)));
-#endif
 
       r12 = _mm_add_ps(_mm_add_ps(
           _mm_mul_ps(h[0], _mm_shuffle_ps(s12, s12, _MM_SHUFFLE(0,0,0,0))),
@@ -313,6 +334,67 @@ int angle(const float* xyz, const int* triplets, float* out,
   return 1;
 }
 
+int angle_mic(const float* xyz, const int* triplets,
+              const float* box_matrix, float* out,
+              const int n_frames, const int n_atoms, const int n_angles)
+/*  Compute the angle between trippes of atoms in every frame of
+    xyz. This kernel uses distances inside a periodic box, computed
+    with the minimim image convention. For distances in non-periodic
+    systems, use angle()
+
+    Parameters
+    ----------
+    xyz : array, shape=(n_frames, n_atoms, 3)
+        Cartesian coordinates of the atoms in every frame, in contiguous C order.
+    triplets : array, shape=(n_angles, 3)
+        The specific tripple of atoms whose angle you want to compute. The
+        angle computed will be centered around the middle element (i.e aABC).
+        A 2d array of indices, in C order.
+    box_matrix : array, shape=(n_frames, 3, 3)
+        The box matrix for a each frame in the trjectory, in contigous C order.
+    out : array, shape=(n_frames, n_pairs)
+        Array where the angles will be stored, in contiguous C order.
+
+    All of the arrays are assumed to be contiguous. This code will
+    segfault if they're not.
+*/
+{
+    int i, j;
+    __m128 r_m, r_n, r_o, u_prime, u, v_prime, v;
+    __m128 hinv[3];
+    __m128 h[3];
+
+    for (i = 0; i < n_frames; i++) {
+        h[0] = _mm_setr_ps(box_matrix[0], box_matrix[3], box_matrix[6], 0.0f);
+        h[1] = _mm_setr_ps(box_matrix[1], box_matrix[4], box_matrix[7], 0.0f);
+        h[2] = _mm_setr_ps(box_matrix[2], box_matrix[5], box_matrix[8], 0.0f);
+        inverse33(box_matrix, hinv+0, hinv+1, hinv+2);
+
+        for (j = 0; j < n_angles; j++) {
+            r_m = load_float3(xyz + 3*triplets[3*j + 0]);
+            r_o = load_float3(xyz + 3*triplets[3*j + 1]);
+            r_n = load_float3(xyz + 3*triplets[3*j + 2]);
+
+            u_prime = _mm_sub_ps(r_m, r_o);
+            v_prime = _mm_sub_ps(r_n, r_o);
+            u_prime = minimum_image(u_prime, h, hinv);
+            v_prime = minimum_image(v_prime, h, hinv);
+
+            /* normalize the vectors u_prime and v_prime */
+            u = _mm_mul_ps(u_prime, _mm_rsqrt_ps(_mm_dp_ps(u_prime, u_prime, 0x7F)));
+            v = _mm_mul_ps(v_prime, _mm_rsqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
+
+            /* compute the arccos of the dot product, and store the result. */
+            *(out++) = acos(CLIP(_mm_cvtss_f32(_mm_dp_ps(u, v, 0x71)), -1, 1));
+        }
+
+        /* advance to the next frame */
+        xyz += n_atoms*3;
+        box_matrix += 9;
+    }
+
+    return 1;
+}
 
 /****************************************************************************/
 /* Dihedral Kernels                                                         */
@@ -363,6 +445,73 @@ int dihedral(const float* xyz, const int* quartets, float* out,
     xyz += n_atoms*3;
   }
   return 1;
+}
+
+int dihedral_mic(const float* xyz, const int* quartets,
+              const float* box_matrix, float* out,
+              const int n_frames, const int n_atoms, const int n_quartets)
+/*  Compute the dihedral angle between quartets of atoms in every frame of
+    xyz. This kernel uses distances inside a periodic box, computed
+    with the minimum image convention. For distances in non-periodic
+    systems, use dihedral()
+
+    Parameters
+    ----------
+    xyz : array, shape=(n_frames, n_atoms, 3)
+        Cartesian coordinates of the atoms in every frame, in contiguous C order.
+    quartets : array, shape=(n_quartets, 3)
+        The specific quartet of atoms whose angle you want to compute. The
+        angle computed will be the torsion around the bound between the
+        middle two elements (i.e aABCD). A 2d array of indices, in C order.
+    box_matrix : array, shape=(n_frames, 3, 3)
+        The box matrix for a each frame in the trjectory, in contigous C order.
+    out : array, shape=(n_frames, n_pairs)
+        Array where the angles will be stored, in contiguous C order.
+
+    All of the arrays are assumed to be contiguous. This code will
+    segfault if they're not.
+*/
+{
+    int i, j;
+    __m128 x0, x1, x2, x3, b1, b2, b3, c1, c2, p1, p2;
+    __m128 hinv[3];
+    __m128 h[3];
+
+    for (i = 0; i < n_frames; i++) {
+        h[0] = _mm_setr_ps(box_matrix[0], box_matrix[3], box_matrix[6], 0.0f);
+        h[1] = _mm_setr_ps(box_matrix[1], box_matrix[4], box_matrix[7], 0.0f);
+        h[2] = _mm_setr_ps(box_matrix[2], box_matrix[5], box_matrix[8], 0.0f);
+        inverse33(box_matrix, hinv+0, hinv+1, hinv+2);
+
+        for (j = 0; j < n_quartets; j++) {
+          x0 = load_float3(xyz + 3*quartets[4*j + 0]);
+          x1 = load_float3(xyz + 3*quartets[4*j + 1]);
+          x2 = load_float3(xyz + 3*quartets[4*j + 2]);
+          x3 = load_float3(xyz + 3*quartets[4*j + 3]);
+    
+          b1 = _mm_sub_ps(x1, x0);
+          b2 = _mm_sub_ps(x2, x1);
+          b3 = _mm_sub_ps(x3, x2);
+    
+          b1 = minimum_image(b1, h, hinv);
+          b2 = minimum_image(b2, h, hinv);
+          b3 = minimum_image(b3, h, hinv);
+    
+          c1 = cross(b2, b3);
+          c2 = cross(b1, b2);
+    
+          p1 = _mm_mul_ps(_mm_dp_ps(b1, c1, 0x71), _mm_sqrt_ps(_mm_dp_ps(b2, b2, 0x71)));
+          p2 = _mm_dp_ps(c1, c2, 0x71);
+    
+          *(out++) = atan2(_mm_cvtss_f32(p1), _mm_cvtss_f32(p2));
+        };
+
+        /* advance to the next frame */
+        xyz += n_atoms*3;
+        box_matrix += 9;
+    }
+
+    return 1;
 }
 
 
