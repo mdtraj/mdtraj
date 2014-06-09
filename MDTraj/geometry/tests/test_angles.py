@@ -9,7 +9,7 @@ def test_angle_pbc_0():
 
     X = np.cumsum(0.1 * random.randn(N*3, 3), axis=0).reshape(N, 3, 3)
 
-    center = X.mean(axis=1, keepdims=True)
+    center = X.mean(axis=1).reshape(N, 1, 3)
     cell = np.floor(center / boxLengths)
     X_cell = X - (cell * boxLengths)
 
