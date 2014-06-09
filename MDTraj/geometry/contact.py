@@ -47,14 +47,11 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
     ----------
     traj : md.Trajectory
         An mdtraj trajectory. It must contain topology information.
-    contacts : np.ndarray or 'all'
-        numpy array containing (0-indexed) residues to compute the
-        contacts for. (e.g. np.array([[0, 10], [0, 11]]) would compute
-        the contact between residue 0 and residue 10 as well as
-        the contact between residue 0 and residue 11.) [NOTE: if no
-        array is passed then 'all' contacts are calculated. This means
-        that the result will contain all contacts between residues
-        separated by at least 3 residues.]
+    contacts : array-like, ndim=2 or 'all'
+        An array containing pairs of indices (0-indexed) of residues to
+        compute the contacts between, or 'all'. The string 'all' will
+        select all pairs of residues separated by two or more residues
+        (i.e. the i to i+1 and i to i+2 pairs will be excluded).
     scheme : {'ca', 'closest', 'closest-heavy'}
         scheme to determine the distance between two residues:
             'ca' : distance between two residues is given by the distance
@@ -78,12 +75,26 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         involved in the contact. This argument mirrors the `contacts` input
         parameter. When `all` is specified as input, this return value
         gives the actual residue pairs resolved from `all`. Furthermore,
-        when scheme=='ca', any contact pair suplied as input corresponding
+        when scheme=='ca', any contact pair supplied as input corresponding
         to a residue without an alpha carbon (e.g. HOH) is ignored from the
         input contacts list, meanings that the indexing of the
         output `distances` may not match up with the indexing of the input
         `contacts`. But the indexing of `distance` *will* match up with
         the indexing of `residue_pairs`
+
+    Examples
+    --------
+    >>> # To compute the contact distance between residue 0 and 10 and
+    >>> # residues 0 and 11
+    >>> md.compute_contacts(t, [[0, 10], [0, 11]])
+
+    >>> # the itertools library can be useful to generate the arrays of indices
+    >>> group_1 = [0, 1, 2]
+    >>> group_2 = [10, 11]
+    >>> pairs = list(itertools.product(group_1, group_2))
+    >>> print(pairs)
+    [(0, 10), (0, 11), (1, 10), (1, 11), (2, 10), (2, 11)]
+    >>> md.compute_contacts(t, pairs)
 
     See Also
     --------
@@ -115,7 +126,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
             raise ValueError('No acceptable residue pairs found')
 
     else:
-        residue_pairs = ensure_type(contacts, dtype=np.int, ndim=2, name='contacts',
+        residue_pairs = ensure_type(np.asarray(contacts), dtype=np.int, ndim=2, name='contacts',
                                shape=(None, 2), warn_on_cast=False)
         if not np.all((residue_pairs >= 0) * (residue_pairs < traj.n_residues)):
             raise ValueError('contacts requests a residue that is not in the permitted range')
