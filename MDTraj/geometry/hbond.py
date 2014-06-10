@@ -32,13 +32,13 @@ from mdtraj.utils import ensure_type
 from mdtraj.geometry import compute_distances, compute_angles
 from mdtraj.geometry import _geometry
 
-__all__ = ['cone_wpn', 'baker_hubbard', 'kabsch_sander']
+__all__ = ['wernet_nilsson', 'baker_hubbard', 'kabsch_sander']
 
 ##############################################################################
 # Functions
 ##############################################################################
 
-def cone_wpn(traj, exclude_water=True, periodic=True):
+def wernet_nilsson(traj, exclude_water=True, periodic=True):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle according to the criterion outlined in [1].  
     As opposed to Baker-Hubbard, this is a "cone" criterion where the
@@ -84,7 +84,7 @@ def cone_wpn(traj, exclude_water=True, periodic=True):
 
     Examples
     --------
-    >>> md.cone_wpn(t)
+    >>> md.wernet_nilsson(t)
     array([[  0,  10,   8],
            [  0,  11,   7],
            [ 69,  73,  54],
@@ -119,7 +119,7 @@ def cone_wpn(traj, exclude_water=True, periodic=True):
     angle_cutoff = 45
 
     if traj.topology is None:
-        raise ValueError('cone_wpn requires that traj contain topology '
+        raise ValueError('wernet_nilsson requires that traj contain topology '
                          'information')
 
     def get_donors(e0, e1):
@@ -331,7 +331,7 @@ def kabsch_sander(traj):
 
     See Also
     --------
-    cone_wpn, baker_hubbard
+    wernet_nilsson, baker_hubbard
 
     References
     ----------
