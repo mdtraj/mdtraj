@@ -368,3 +368,12 @@ def test_angle_pbc_fails1():
     ang1 = md.geometry.compute_angles(traj_uncorrected, indices, opt=False, periodic=False)
     ang2 = md.geometry.compute_angles(traj_corrected, indices, opt=False, periodic=False)
     assert np.max(np.abs(ang1 - ang2)) < epsilon
+
+
+def test_no_indices():
+    for fn in ['2EQQ.pdb', '1bpi.pdb']:
+        for opt in [True, False]:
+            t = md.load(get_fn(fn))
+            assert md.compute_distances(t, np.zeros((0,2), dtype=int), opt=opt).shape == (t.n_frames, 0)
+            assert md.compute_angles(t, np.zeros((0,3), dtype=int), opt=opt).shape == (t.n_frames, 0)
+            assert md.compute_dihedrals(t, np.zeros((0,4), dtype=int), opt=opt).shape == (t.n_frames, 0)

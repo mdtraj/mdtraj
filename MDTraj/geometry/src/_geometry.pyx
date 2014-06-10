@@ -71,6 +71,8 @@ def _processor_supports_sse41():
     """Does the current processor support SSE4.1 instructions?"""
     return processorSupportsSSE41()
 
+
+@cython.boundscheck(False)
 def _dist(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
           np.ndarray[np.int32_t, ndim=2, mode='c'] pairs not None,
           np.ndarray[np.float32_t, ndim=2, mode='c'] out not None):
@@ -80,6 +82,7 @@ def _dist(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
     dist(&xyz[0,0,0], <int*> &pairs[0,0], &out[0,0], NULL, n_frames, n_atoms, n_pairs)
 
 
+@cython.boundscheck(False)
 def _dist_displacement(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
           np.ndarray[np.int32_t, ndim=2, mode='c'] pairs not None,
           np.ndarray[np.float32_t, ndim=3, mode='c'] out not None):
@@ -89,6 +92,7 @@ def _dist_displacement(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
     dist(&xyz[0,0,0], <int*> &pairs[0,0], NULL, &out[0,0,0], n_frames, n_atoms, n_pairs)
 
 
+@cython.boundscheck(False)
 def _dist_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
               np.ndarray[np.int32_t, ndim=2, mode='c'] pairs not None,
               np.ndarray[np.float32_t, ndim=3, mode='c'] box_matrix not None,
@@ -100,6 +104,7 @@ def _dist_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
     dist_mic(&xyz[0,0,0], <int*> &pairs[0,0], &box_matrix[0,0,0], &out[0,0], NULL, n_frames, n_atoms, n_pairs)
 
 
+@cython.boundscheck(False)
 def _dist_mic_displacement(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
               np.ndarray[np.int32_t, ndim=2, mode='c'] pairs not None,
               np.ndarray[np.float32_t, ndim=3, mode='c'] box_matrix not None,
@@ -110,6 +115,7 @@ def _dist_mic_displacement(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not No
     dist_mic(&xyz[0,0,0], <int*> &pairs[0,0], &box_matrix[0,0,0], NULL, &out[0,0, 0], n_frames, n_atoms, n_pairs)
 
 
+@cython.boundscheck(False)
 def _angle(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
            np.ndarray[np.int32_t, ndim=2, mode='c'] triplets not None,
            np.ndarray[np.float32_t, ndim=2, mode='c'] out not None):
@@ -119,6 +125,7 @@ def _angle(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
     angle(&xyz[0,0,0], <int*> &triplets[0,0], &out[0,0], n_frames, n_atoms, n_angles)
 
 
+@cython.boundscheck(False)
 def _angle_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
                np.ndarray[np.int32_t, ndim=2, mode='c'] triplets not None,
                np.ndarray[np.float32_t, ndim=3, mode='c'] box_matrix not None,
@@ -129,6 +136,7 @@ def _angle_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
     angle_mic(&xyz[0,0,0], <int*> &triplets[0,0], &box_matrix[0,0,0], &out[0,0], n_frames, n_atoms, n_angles)
 
 
+@cython.boundscheck(False)
 def _dihedral(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
               np.ndarray[np.int32_t, ndim=2, mode='c'] quartets not None,
               np.ndarray[np.float32_t, ndim=2, mode='c'] out not None):
@@ -138,6 +146,7 @@ def _dihedral(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
     dihedral(&xyz[0,0,0], <int*> &quartets[0,0], &out[0,0], n_frames, n_atoms, n_quartets)
 
 
+@cython.boundscheck(False)
 def _dihedral_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
                   np.ndarray[np.int32_t, ndim=2, mode='c'] quartets not None,
                   np.ndarray[np.float32_t, ndim=3, mode='c'] box_matrix not None,
@@ -148,6 +157,7 @@ def _dihedral_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
     dihedral_mic(&xyz[0,0,0], <int*> &quartets[0,0], &box_matrix[0,0,0], &out[0,0], n_frames, n_atoms, n_quartets)
 
 
+@cython.boundscheck(False)
 def _kabsch_sander(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
                    np.ndarray[np.int32_t, ndim=2, mode='c'] nco_indices not None,
                    np.ndarray[np.int32_t, ndim=1, mode='c'] ca_indices not None,
@@ -160,6 +170,7 @@ def _kabsch_sander(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
                   n_frames, n_atoms, n_residues, <int*> &hbonds[0,0,0], &henergies[0,0,0])
 
 
+@cython.boundscheck(False)
 def _sasa(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
           np.ndarray[np.float32_t, ndim=1, mode='c'] atom_radii not None,
           int n_sphere_points,
