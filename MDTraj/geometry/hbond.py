@@ -44,8 +44,10 @@ def cone_wpn(traj, exclude_water=True, periodic=True):
     As opposed to Baker-Hubbard, this is a "cone" criterion where the
     distance cutoff depends on the angle.
 
-    The criterion employed is :math:`r_\\text{DA} < 3.3 A - 0.00044*\\delta_{DHA}*\\delta_{DHA}`,
-    where :math:`r_\\text{DA}` is t.
+    The criterion employed is :math:`r_\\text{DA} < 3.3 A - 0.00044*\\delta_{HDA}*\\delta_{HDA}`,
+    where :math:`r_\\text{DA}` is the distance between donor and acceptor heavy atoms, 
+    and :math:`\\delta_{HDA}` is the angle made by the hydrogen atom, donor, and acceptor atoms,
+    measured in degrees (zero in the case of a perfectly straight bond: D-H ... A).
 
     When donor the donor is 'O' and the acceptor is 'O', this corresponds to
     the definition established in [1]_. The donors considered by this method
@@ -164,7 +166,7 @@ def cone_wpn(traj, exclude_water=True, periodic=True):
 
     # The triplets that are returned are O-H ... O, different
     # from what's used to compute the angles.
-    angle_triplets2 = np.array([(e[0][0], e[0][1], e[1]) for e in product(xh_donors, acceptors) if e[0][0] != e[1]])
+    angle_triplets2 = angle_triplets[:, [1,0,2]]
 
     return [angle_triplets2[i] for i in mask]
 
