@@ -14,7 +14,7 @@ fi
 
 if [[ "2.7 3.3 3.4" =~ "$python" ]]; then
     conda install --yes binstar
-    binstar -t $BINSTAR_TOKEN  upload -u omnia -p mdtraj-dev $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
+    binstar -t $BINSTAR_TOKEN  upload --force -u omnia -p mdtraj-dev $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
 fi
 
 if [[ "$python" != "2.7" ]]; then
