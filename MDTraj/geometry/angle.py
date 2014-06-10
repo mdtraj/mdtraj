@@ -86,8 +86,8 @@ def _angle(traj, angle_indices, periodic, out):
     ix01 = angle_indices[:, [1, 0]]
     ix21 = angle_indices[:, [1, 2]]
 
-    u_prime = distance.compute_displacements(traj, ix01, periodic=periodic)
-    v_prime = distance.compute_displacements(traj, ix21, periodic=periodic)
+    u_prime = distance.compute_displacements(traj, ix01, periodic=periodic, opt=False)
+    v_prime = distance.compute_displacements(traj, ix21, periodic=periodic, opt=False)
     u_norm = np.sqrt((u_prime**2).sum(-1))
     v_norm = np.sqrt((v_prime**2).sum(-1))
 

@@ -62,9 +62,9 @@ def _dihedral(traj, indices, periodic, out=None):
     ix21 = indices[:, [1, 2]]
     ix32 = indices[:, [2, 3]]
 
-    b1 = distance.compute_displacements(traj, ix10, periodic=periodic)
-    b2 = distance.compute_displacements(traj, ix21, periodic=periodic)
-    b3 = distance.compute_displacements(traj, ix32, periodic=periodic)
+    b1 = distance.compute_displacements(traj, ix10, periodic=periodic, opt=False)
+    b2 = distance.compute_displacements(traj, ix21, periodic=periodic, opt=False)
+    b3 = distance.compute_displacements(traj, ix32, periodic=periodic, opt=False)
 
     c1 = np.cross(b2, b3)
     c2 = np.cross(b1, b2)
