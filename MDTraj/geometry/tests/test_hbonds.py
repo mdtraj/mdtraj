@@ -118,3 +118,31 @@ def test_baker_hubbard_2():
     rows = triplets[:, 0] * N*N + triplets[:, 1] * N + triplets[:, 2]
     # ensure that there aren't any repeat rows
     eq(len(np.unique(rows)), len(rows))
+
+
+def test_wernet_nilsson_0():
+    # no hydrogens in this file -> no hydrogen bonds
+    t0 = md.load(get_fn('1bpi.pdb'))
+    assert len(md.wernet_nilsson(t0)) == len(t0)
+    eq(np.zeros((0, 3), dtype=int), md.wernet_nilsson(t0)[0])
+
+
+def test_wernet_nilsson_1():
+    # one of these files has PBCs and the other doesnt
+    for fn in ['2EQQ.pdb', '4K6Q.pdb']:
+        t = md.load(get_fn(fn))
+
+        result = md.wernet_nilsson(t)
+        assert len(result) == len(t)
+        assert isinstance(result, list)
+        assert all(isinstance(elem, np.ndarray) for elem in result)
+        assert all(elem.shape[1] == 3 for elem in result)
+        for frame, hbonds in enumerate(result):
+            for d_i, h_i, a_i in hbonds:
+                assert t.topology.atom(d_i).element.symbol in ['O', 'N']
+                assert t.topology.atom(h_i).element.symbol == 'H'
+                assert t.topology.atom(a_i).element.symbol == 'O'
+            # assert that the donor-acceptor distance is less than 0.5 nm, just
+            # to make sure the criterion is giving back totally implausible stuff
+            if len(hbonds) > 0:
+                assert np.all(md.compute_distances(t[frame], hbonds[:, [0,2]]) < 0.5)

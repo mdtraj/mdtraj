@@ -147,7 +147,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
     if len(xh_donors) == 0:
         # if there are no hydrogens or protein in the trajectory, we get
         # no possible pairs and return nothing
-        return np.zeros((0, 3), dtype=int)
+        return [np.zeros((0, 3), dtype=int) for _ in range(traj.n_frames)]
 
     if not exclude_water:
         acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O']
@@ -167,7 +167,6 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
     # The triplets that are returned are O-H ... O, different
     # from what's used to compute the angles.
     angle_triplets2 = angle_triplets[:, [1,0,2]]
-
     return [angle_triplets2[i] for i in mask]
 
 def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
