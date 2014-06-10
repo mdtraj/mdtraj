@@ -6,7 +6,7 @@ from mdtraj.nmr.shift_wrappers import find_executable, SPARTA_PLUS
 @skipif(not find_executable(SPARTA_PLUS), 'SPARTA+ binary not found')
 def test_1():
     t = md.load(get_fn('2EQQ.pdb'))
-    result = nmr.chemical_shifts_spartaplus(t)
+    result = md.chemical_shifts_spartaplus(t)
 
     print(result)
 
