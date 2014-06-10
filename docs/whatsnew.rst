@@ -10,14 +10,14 @@ v0.9.0 (June 10, 2014)
   SHIFTX2, PPM and SPARTA+ for chemical shifts, as a library for scalar
   couplings (J) using the Karplus relation.
 - New ``lprmsd`` distance metric for linear-programming root mean square
-  deviations which optimizes over the label correspondance between
-  exchangable atoms in the two conformations.
+  deviations which optimizes over the label correspondence between
+  exchangeable atoms in the two conformations.
 - New ``wernet_nilsson`` function for hydrogen bond identification.
 - New parser for ``mol2`` format files.
 - Many new convenience methods on ``md.Topology``, including ``to_bondgraph``
   to create a NetworkX graph from a topology.
 - New ``compute_drid`` function for calculation of distribution of
-  reciprical interatomic distances (DRID) distance metric
+  reciprocal inter-atomic distances (DRID) distance metric
 - Core geometry routines ``compute_angles`` and ``compute_dihedrals`` now
   respect periodic boundary conditions via a substantial internal refactoring
   of the geometry library. They also have significantly improved numerical
