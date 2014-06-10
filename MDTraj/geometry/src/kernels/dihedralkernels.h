@@ -41,7 +41,7 @@ int dihedral(const float* xyz, const int* quartets, float* out,
 
   for (i = 0; i < n_frames; i++) {
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-    loadBoxMatrix(box_matrix, h, hinv);
+    loadBoxMatrix(box_matrix, &h, &hinv);
 #endif
 
     for (j = 0; j < n_quartets; j++) {
@@ -55,9 +55,9 @@ int dihedral(const float* xyz, const int* quartets, float* out,
       b3 = _mm_sub_ps(x3, x2);
 
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-      b1 = minimum_image(b1, h, hinv);
-      b2 = minimum_image(b2, h, hinv);
-      b3 = minimum_image(b3, h, hinv);
+      b1 = minimum_image(b1, &h, &hinv);
+      b2 = minimum_image(b2, &h, &hinv);
+      b3 = minimum_image(b3, &h, &hinv);
 #endif
 
       c1 = cross(b2, b3);
@@ -66,7 +66,7 @@ int dihedral(const float* xyz, const int* quartets, float* out,
       p1 = _mm_mul_ps(_mm_dp_ps(b1, c1, 0x71), _mm_sqrt_ps(_mm_dp_ps(b2, b2, 0x71)));
       p2 = _mm_dp_ps(c1, c2, 0x71);
 
-      *(out++) = atan2(_mm_cvtss_f32(p1), _mm_cvtss_f32(p2));
+      *(out++) = (float) atan2(_mm_cvtss_f32(p1), _mm_cvtss_f32(p2));
     };
     xyz += n_atoms*3;
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS

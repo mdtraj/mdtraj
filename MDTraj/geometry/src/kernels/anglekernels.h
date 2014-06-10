@@ -41,7 +41,7 @@ int angle(const float* xyz, const int* triplets, float* out,
 
   for (i = 0; i < n_frames; i++) {
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-    loadBoxMatrix(box_matrix, h, hinv);
+    loadBoxMatrix(box_matrix, &h, &hinv);
 #endif
 
     for (j = 0; j < n_angles; j++) {
@@ -53,8 +53,8 @@ int angle(const float* xyz, const int* triplets, float* out,
       v_prime = _mm_sub_ps(r_n, r_o);
 
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-      u_prime = minimum_image(u_prime, h, hinv);
-      v_prime = minimum_image(v_prime, h, hinv);
+      u_prime = minimum_image(u_prime, &h, &hinv);
+      v_prime = minimum_image(v_prime, &h, &hinv);
 #endif
 
       /* normalize the vectors u_prime and v_prime */
@@ -62,7 +62,7 @@ int angle(const float* xyz, const int* triplets, float* out,
       v = _mm_div_ps(v_prime, _mm_sqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
 
       /* compute the arccos of the dot product, and store the result. */
-      *(out++) = acos(CLIP(_mm_cvtss_f32(_mm_dp_ps(u, v, 0x71)), -1, 1));
+      *(out++) = (float) acos(CLIP(_mm_cvtss_f32(_mm_dp_ps(u, v, 0x71)), -1, 1));
     }
     /* advance to the next frame */
     xyz += n_atoms*3;
