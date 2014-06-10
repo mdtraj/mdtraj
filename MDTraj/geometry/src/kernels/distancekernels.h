@@ -49,7 +49,7 @@ int dist(const float* xyz, const int* pairs, float* distance_out,
 
   for (i = 0; i < n_frames; i++) {
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-    loadBoxMatrix(box_matrix, h, hinv);
+    loadBoxMatrix(box_matrix, &h, &hinv);
 #endif
 
     for (j = 0; j < n_pairs; j++) {
@@ -63,7 +63,7 @@ int dist(const float* xyz, const int* pairs, float* distance_out,
       r12 = _mm_sub_ps(x2, x1);
 
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-      r12 = minimum_image(r12, h, hinv);
+      r12 = minimum_image(r12, &h, &hinv);
 #endif
 
       if (store_displacement) {
