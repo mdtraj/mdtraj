@@ -1,5 +1,5 @@
 # Configuration file for AppVeyor continuous integration on Windows
-# https://ci.appveyor.com/project/RobertMcGibbon/mdtraj
+# https://ci.appveyor.com/project/rmcgibbo/mdtraj
 
 os: Windows Server 2012
 
@@ -18,4 +18,4 @@ build_script:
 
 test_script:
   - SET PATH=%PATH%;C:\Python27\envs\py3\Scripts
-  - C:\Python27\envs\py3\Scripts\nosetests.bat -v
+  - C:\Python27\envs\py3\Scripts\nosetests -v
