@@ -1,6 +1,7 @@
 ## MDTraj: Read, write, and analyze MD trajectories with only a few lines of Python code.
 
-[![Build Status](https://travis-ci.org/rmcgibbo/mdtraj.png?branch=master)](https://travis-ci.org/rmcgibbo/mdtraj)
+[![Travis Build Status](https://travis-ci.org/rmcgibbo/mdtraj.png?branch=master)](https://travis-ci.org/rmcgibbo/mdtraj)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/01vpwbceulj4jix3)](https://ci.appveyor.com/project/rmcgibbo/mdtraj)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.png)](https://pypi.python.org/pypi/mdtraj)
 [![Downloads](https://pypip.in/d/mdtraj/badge.png)](https://pypi.python.org/pypi/mdtraj)
 
