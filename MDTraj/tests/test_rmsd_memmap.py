@@ -9,18 +9,20 @@ def test_1():
     try:
         traj = md.load(get_fn('frame0.h5'))
         np.save('temp.npy', traj.xyz)
+
         traj.xyz = np.load('temp.npy', mmap_mode='r')
 
         # since traj isn't precentered, this requires centering
         # the coordinates which is done inplace. but that's not possible
         # with mmap_mode = 'r'
-        assert_raises(ValueError, lambda: md.rmsd(traj, traj, 0))
+        assert_raises(ValueError, md.rmsd, traj, traj, 0)
 
         # this should work
         traj.xyz = np.load('temp.npy', mmap_mode='c')
         md.rmsd(traj, traj, 0)
 
     finally:
+        del traj
         os.unlink('temp.npy')
 
 
@@ -40,4 +42,5 @@ def test_2():
         md.rmsd(traj, traj, 0, precentered=True)
 
     finally:
+        del traj
         os.unlink('temp.npy')

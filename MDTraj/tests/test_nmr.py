@@ -1,8 +1,9 @@
 from __future__ import print_function
 import mdtraj as md
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
-from mdtraj import nmr
+from mdtraj.nmr.shift_wrappers import find_executable, SPARTA_PLUS
 
+@skipif(not find_executable(SPARTA_PLUS), 'SPARTA+ binary not found')
 def test_1():
     t = md.load(get_fn('2EQQ.pdb'))
     result = nmr.chemical_shifts_spartaplus(t)

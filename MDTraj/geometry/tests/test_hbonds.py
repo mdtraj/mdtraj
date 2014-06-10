@@ -28,6 +28,7 @@ import subprocess
 from distutils.spawn import find_executable
 
 import mdtraj as md
+from mdtraj.geometry._geometry import _processor_supports_sse41
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
 
 import numpy as np
@@ -48,6 +49,7 @@ def setup():
 def teardown():
     shutil.rmtree(tmpdir)
 
+@skipif(not _processor_supports_sse41(), "This CPU does not support the required instructions")
 def test_hbonds():
     t = md.load(get_fn('2EQQ.pdb'))
     ours = md.geometry.hbond.kabsch_sander(t)
