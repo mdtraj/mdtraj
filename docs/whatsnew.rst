@@ -4,6 +4,37 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v0.9.0 (June 10, 2014)
+-----------------------
+- Brand new ``nmr`` library that includes transparent python interfaces to
+  SHIFTX2, PPM and SPARTA+ for chemical shifts, as a library for scalar
+  couplings (J) using the Karplus relation.
+- New ``lprmsd`` distance metric for linear-programming root mean square
+  deviations which optimizes over the label correspondance between
+  exchangable atoms in the two conformations.
+- New ``wernet_nilsson`` function for hydrogen bond identification.
+- New parser for ``mol2`` format files.
+- Many new convenience methods on ``md.Topology``, including ``to_bondgraph``
+  to create a NetworkX graph from a topology.
+- New ``compute_drid`` function for calculation of distribution of
+  reciprical interatomic distances (DRID) distance metric
+- Core geometry routines ``compute_angles`` and ``compute_dihedrals`` now
+  respect periodic boundary conditions via a substantial internal refactoring
+  of the geometry library. They also have significantly improved numerical
+  stability.
+- Numerous bugfixes, including fixing potential segfaults with ``md.rmsd`` and
+  the NetCDF parser as well as increased compliance for AMBER .prmtop and
+  TINKER .arc parsers.
+- Many internal changes to hardware detection code, ensuring that compiled
+  binaries run appropriately on any platform, including those that don't support
+  modern CPU features like SSE4.
+- Major improvements to our automated testing framework. Every pull request
+  and commit to MDTraj is now being tested across a matrix of 4 different
+  python versions on linux as well as python3 on Windows.
+- A number of brand new example IPython notebooks on the website demonstrating
+  all of these new features!
+
+
 v0.8.0 (March 10, 2014)
 -----------------------
 - New parser for AMBER PRMTOP topology files.
