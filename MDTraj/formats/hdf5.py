@@ -248,7 +248,7 @@ class HDF5TrajectoryFile(object):
                 self._needs_initialization = False
             except self.tables.NoSuchNodeError:
                 self._frame_index = 0
-                self._needs_initialization = False
+                self._needs_initialization = True
         elif mode == 'r':
             self._frame_index = 0
             self._needs_initialization = False
