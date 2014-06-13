@@ -69,7 +69,7 @@ def concatenate_core17(path, top, output_filename):
     Parameters
     ----------
     path : str
-        Path to directory containing "results-*.tar.bz2"
+        Path to directory containing "results-*.tar.bz2".  E.g. a single CLONE directory.
     top : mdtraj.Topology
         Topology for system
     output_filename : str
@@ -91,6 +91,7 @@ def concatenate_core17(path, top, output_filename):
     
     try:
         trj_file._create_earray(where='/', name='processed_filenames',atom=trj_file.tables.StringAtom(1024), shape=(0,))
+        trj_file.topology = top.topology
     except trj_file.tables.NodeError:
         pass
     
