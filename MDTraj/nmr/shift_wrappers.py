@@ -64,6 +64,9 @@ def compute_chemical_shifts(trj, model="shiftx2", **kwargs):
     ----------
     trj : Trajectory
         Trajectory to predict shifts for.
+    model : str, optional, default="shiftx2"
+        The program to use for calculating chemical shifts.  Must be one
+        of shiftx2, ppm, or sparta+
 
     Returns
     -------
