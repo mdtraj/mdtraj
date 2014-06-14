@@ -73,7 +73,8 @@ def compute_chemical_shifts(trj, model="shiftx2", **kwargs):
 
     Notes
     -----
-    You must have ShiftX2 available on your path; see (http://www.shiftx2.ca/).
+    You must have the appropriate chemical soft programs installed
+    and in your executable path.
 
     Chemical shift prediction is for PROTEIN atoms; trajectory objects
     with ligands, solvent, ions, or other non-protein components may give
