@@ -268,7 +268,7 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
     if binary is None:
         raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_spartaplus` requires the external program SPARTA+, available at http://spin.niddk.nih.gov/bax/software/SPARTA+/' % ', '.join(SPARTA_PLUS))
 
-    names = ["VARS", "resSeq", "resName", "name", "SS_SHIFT", "SHIFT", "RC_SHIFT", "HM_SHIFT", "EF_SHIFT", "SIGMA"]
+    names = ["resSeq", "resName", "name", "SS_SHIFT", "SHIFT", "RC_SHIFT", "HM_SHIFT", "EF_SHIFT", "SIGMA"]
 
     with enter_temp_directory():
         for i in range(trj.n_frames):
@@ -285,7 +285,7 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
 
         results = []
         for i in range(trj.n_frames):
-            d = pd.read_csv("./trj%d_pred.tab" % i, skiprows=lines_to_skip, delim_whitespace=True, header=None, names=names)
+            d = pd.read_table("./trj%d_pred.tab" % i, names=names, header=None, sep="\s*", skiprows=lines_to_skip)
             d["frame"] = i
             results.append(d)
 
