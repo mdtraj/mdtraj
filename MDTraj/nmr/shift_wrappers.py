@@ -57,6 +57,40 @@ def find_executable(names):
 # Code
 ##############################################################################
 
+def compute_chemical_shifts(trj, model="shiftx2", **kwargs):
+    """Predict chemical shifts of a trajectory using ShiftX2.
+
+    Parameters
+    ----------
+    trj : Trajectory
+        Trajectory to predict shifts for.
+
+    Returns
+    -------
+    results : pandas DataFrame
+        Dataframe containing results, with index consisting of
+        (resSeq, atom_name) pairs and columns for each frame in trj.
+
+    Notes
+    -----
+    You must have ShiftX2 available on your path; see (http://www.shiftx2.ca/).
+
+    Chemical shift prediction is for PROTEIN atoms; trajectory objects
+    with ligands, solvent, ions, or other non-protein components may give
+    UNKNOWN RESULTS.
+
+    Please cite the appropriate reference, see docstrings for chemical_shifts_*
+    for the various possible models.
+    """
+    if model == "shiftx2":
+        return chemical_shifts_shiftx2(trj, **kwargs)
+    elif model == "ppm":
+        return chemical_shifts_ppm(trj, **kwargs)
+    elif model == "sparta+":
+        return chemical_shifts_spartaplus(trj, **kwargs)
+    else:
+        raise(ValueError("model must be one of shiftx2, ppm, or sparta+"))
+
 
 def chemical_shifts_shiftx2(trj):
     """Predict chemical shifts of a trajectory using ShiftX2.
@@ -188,13 +222,17 @@ def _get_lines_to_skip(filename):
     raise(Exception("No format string found in SPARTA+ file!"))
 
 
-def chemical_shifts_spartaplus(trj):
+def chemical_shifts_spartaplus(trj, rename_HN=True):
     """Predict chemical shifts of a trajectory using SPARTA+.
 
     Parameters
     ----------
     trj : Trajectory
         Trajectory to predict shifts for.
+    rename_HN : bool, optional, default=True
+        SPARTA+ calls the amide proton "HN" instead of the standard "H".  
+        When True, this option renames the output as "H" to match the PDB
+        and BMRB nomenclature.
 
     Returns
     -------
@@ -248,6 +286,10 @@ def chemical_shifts_spartaplus(trj):
             results.append(d)
 
     results = pd.concat(results)
+    
+    if rename_HN:
+        results.name[results.name == "HN"] = "H"
+    
     results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
 
     return results
