@@ -9,6 +9,10 @@ def test_1():
     result = md.chemical_shifts_spartaplus(t)
 
     print(result)
+    
+    eq(float(result.ix[(1, "HA")][0]), 4.378, decimal=4)
+    # 4.378 taken from first entry in pred.tab, which looks like the following:
+    #  1    E   HA     0.000     4.378     4.350     0.047     0.000     0.291
 
 def test_2_scalar_couplings():
     t = md.load(get_fn('frame0.h5'))  # This is Alanine dipeptide
