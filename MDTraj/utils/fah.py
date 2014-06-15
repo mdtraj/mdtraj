@@ -83,9 +83,13 @@ def concatenate_core17(path, top, output_filename):
     
     from mdtraj.formats.hdf5 import HDF5TrajectoryFile
     import mdtraj as md
+    
     glob_input = os.path.join(path, "results-*.tar.bz2")
     filenames = glob.glob(glob_input)
     filenames = sorted(filenames, key=keynat)
+    
+    if len(filenames) <= 0:
+        return
     
     trj_file = HDF5TrajectoryFile(output_filename, mode='a')
     
