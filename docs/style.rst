@@ -18,7 +18,7 @@ There are a few stupid flake8 errors that you can overlook, but most of them sho
 Properties
 ----------
 
-This is not java. Don't write ``get_myattribute`` and ``set_myattribute`` methods. Use the ``@property`` decorator. See the `atropy coding guidelines <http://docs.astropy.org/en/latest/development/codeguide.html#properties-vs-get-set>`_ for details.
+This is not java. Don't write ``get_myattribute`` and ``set_myattribute`` methods. Use the ``@property`` decorator. See the `astropy coding guidelines <http://docs.astropy.org/en/latest/development/codeguide.html#properties-vs-get-set>`_ for details.
 
 
 Writing Tests
