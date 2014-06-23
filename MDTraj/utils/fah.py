@@ -108,7 +108,59 @@ def concatenate_core17(path, top, output_filename):
             archive = tarfile.open(filename, mode='r:bz2')
             archive.extract("positions.xtc")
             trj = md.load("positions.xtc", top=top)
+            
             for frame in trj:
                 trj_file.write(coordinates=frame.xyz, cell_lengths=frame.unitcell_lengths, cell_angles=frame.unitcell_angles)
+            
             trj_file._handle.root.processed_filenames.append([filename])
+            
+
+def concatenate_ocore(path, top, output_filename):
+    """Concatenate XTC files created by Siegetank OCore.
+    
+    Parameters
+    ----------
+    path : str
+        Path to stream directory containing frame directories /0, /1, /2
+        etc.
+    top : mdtraj.Topology
+        Topology for system
+    output_filename : str
+        Filename of output HDF5 file to generate.
+    
+    Notes
+    -----
+    We use HDF5 because it provides an easy way to store the metadata associated
+    with which files have already been processed.
+    """
+    
+    from mdtraj.formats.hdf5 import HDF5TrajectoryFile
+    import mdtraj as md
+    
+    sorted_folders = sorted(os.listdir(path), key=lambda value: int(value))
+    sorted_folders = [os.path.join(path, folder) for folder in sorted_folders]
+    
+    if len(sorted_folders) <= 0:
+        return
+    
+    trj_file = HDF5TrajectoryFile(output_filename, mode='a')
+    
+    try:
+        trj_file._create_earray(where='/', name='processed_folders',atom=trj_file.tables.StringAtom(1024), shape=(0,))
+        trj_file.topology = top.topology
+    except trj_file.tables.NodeError:
+        pass
+    
+    for folder in sorted_folders:
+        if folder in trj_file._handle.root.processed_folders:
+            print("Already processed %s" % folder)
+            continue
+        print("Processing %s" % folder)
+        xtc_filename = os.path.join(folder, "frames.xtc")
+        trj = md.load(xtc_filename, top=top)
+        
+        for frame in trj:
+            trj_file.write(coordinates=frame.xyz, cell_lengths=frame.unitcell_lengths, cell_angles=frame.unitcell_angles)
+        
+        trj_file._handle.root.processed_folders.append([folder])
             
