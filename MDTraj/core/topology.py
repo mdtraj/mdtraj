@@ -803,19 +803,19 @@ class Topology(object):
         elif selection == 'alpha':
             atom_indices = [a.index for a in self.atoms if
                             a.name == 'CA'
-                            and a.residue.name in PROTEIN_RESIDUES]
+                            and a.residue.is_protein]
         elif selection == 'minimal':
             atom_indices = [a.index for a in self.atoms if
                             a.name in ['CA', 'CB', 'C', 'N', 'O']
-                            and a.residue.name in PROTEIN_RESIDUES]
+                            and a.residue.is_protein]
         elif selection == 'heavy':
             atom_indices = [a.index for a in self.atoms if
                             a.element != elem.hydrogen
-                            and a.residue.name in PROTEIN_RESIDUES]
+                            and a.residue.is_protein]
         elif selection == 'water':
             atom_indices = [a.index for a in self.atoms if
                             a.name in ['O', 'OW']
-                            and a.residue.name in ['HOH', 'SOL']]
+                            and a.residue.is_solvent]
         else:
             raise RuntimeError()
 
@@ -1000,6 +1000,17 @@ class Residue(object):
     def n_atoms(self):
         """Get the number of atoms in this Residue"""
         return len(self._atoms)
+
+    @property
+    def is_protein(self):
+        """Whether this residue is found in proteins."""
+        return self.name in PROTEIN_RESIDUES
+
+    @property
+    def is_solvent(self):
+        """Whether this residue is solvent."""
+        return self.name in ['HOH', 'SOL']
+
 
     def  __str__(self):
         return '%s%s' % (self.name, self.resSeq)
