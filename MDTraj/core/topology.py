@@ -49,7 +49,6 @@
 
 from __future__ import print_function, division
 import os
-import re
 import numpy as np
 import itertools
 from mdtraj.core import element as elem
@@ -60,6 +59,11 @@ from mdtraj.utils import ilen, import_
 ##############################################################################
 # Utilities
 ##############################################################################
+
+PROTEIN_RESIDUES = set([
+    'ACE', 'AIB', 'ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'FOR', 'GLN', 'GLU',
+    'GLY', 'HIS', 'ILE', 'LEU', 'LYS', 'MET', 'NH2', 'NME', 'ORN', 'PCA',
+    'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'UNK', 'VAL'])
 
 
 def _topology_from_subset(topology, atom_indices):
@@ -765,6 +769,67 @@ class Topology(object):
             like to retain.
         """
         return _topology_from_subset(self, atom_indices)
+
+    def select_atom_indices(self, selection, pairs=False):
+        """Get the indices of biologically-relevant groups by name
+
+        Attributes
+        ----------
+        topology : md.Topology
+            Topology object
+        selection : string
+            What types of atoms to select.
+            - all:      All atoms
+            - alpha :   Alpha carbons
+            - minimal:  Keep the atoms in protein residues with names
+                        CA, CB, C, N, O, (recommended).
+            - heavy:    All non-hydrogen atoms that are not symmetry equivalent.
+                        By symmetry equivalent, we mean atoms identical under an
+                        exchange of labels. For example, heavy will exclude the
+                        two pairs of equivalent carbons (CD, CE) in a PHE ring.
+            - water:    Water oxygen atoms
+        pairs : bool
+            Whether to return pairs of atom indices
+
+        Returns
+        ----------
+        indices : np.ndarray (N,) or (N, 2)
+            An array of the selected indices. If pairs are requested,
+            a two-dimensional array is returned.
+        """
+        selection = selection.lower()
+        if selection == 'all':
+            atom_indices = np.arange(self.n_atoms)
+        elif selection == 'alpha':
+            atom_indices = [a.index for a in self.atoms if
+                            a.name == 'CA']
+        elif selection == 'minimal':
+            atom_indices = [a.index for a in self.atoms if
+                            a.name in ['CA', 'CB', 'C', 'N', 'O']
+                            and a.residue.name in PROTEIN_RESIDUES]
+        elif selection == 'heavy':
+            atom_indices = [a.index for a in self.atoms if
+                            a.element != elem.hydrogen
+                            and a.residue.name in PROTEIN_RESIDUES]
+        elif selection == 'water':
+            atom_indices = [a.index for a in self.atoms if
+                            a.name in ['O', 'OW']
+                            and a.residue.name in ['HOH', 'SOL']]
+        else:
+            raise RuntimeError()
+
+        n_atoms = len(atom_indices)
+        n_residues = len(np.unique([self.atom(i).residue.index
+                                    for i in atom_indices]))
+        print('Selected (%d) atoms from (%d) unique residues.'
+              % (n_atoms, n_residues))
+
+        if pairs:
+            indices = np.array(list(itertools.combinations(atom_indices, 2)))
+        else:
+            indices = np.array(atom_indices)
+
+        return indices
 
 
 class Chain(object):
