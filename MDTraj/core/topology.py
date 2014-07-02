@@ -802,7 +802,8 @@ class Topology(object):
             atom_indices = np.arange(self.n_atoms)
         elif selection == 'alpha':
             atom_indices = [a.index for a in self.atoms if
-                            a.name == 'CA']
+                            a.name == 'CA'
+                            and a.residue.name in PROTEIN_RESIDUES]
         elif selection == 'minimal':
             atom_indices = [a.index for a in self.atoms if
                             a.name in ['CA', 'CB', 'C', 'N', 'O']
