@@ -10,4 +10,9 @@ binstar auth -n mdtraj-travis -o omnia --max-age 22896000 -c --scopes api:write
 
 and then saved in the environment variable BINSTAR_TOKEN.
 
+You can set up travis to store an encrypted token via
 
+gem install travis
+travis encrypt BINSTAR_TOKEN=xx
+
+where xx is the token output by binstar.  The final command should print a line (containing 'secure') for inclusion in your .travis.yml file.
