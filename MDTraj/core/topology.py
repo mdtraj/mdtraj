@@ -815,7 +815,7 @@ class Topology(object):
         elif selection == 'water':
             atom_indices = [a.index for a in self.atoms if
                             a.name in ['O', 'OW']
-                            and a.residue.is_solvent]
+                            and a.residue.is_water]
         else:
             raise RuntimeError()
 
@@ -1007,9 +1007,17 @@ class Residue(object):
         return self.name in PROTEIN_RESIDUES
 
     @property
-    def is_solvent(self):
-        """Whether this residue is solvent."""
-        return self.name in ['HOH', 'SOL']
+    def is_water(self):
+        """Whether this residue is water.
+
+        Residue names according to VMD
+
+        References
+        ----------
+        http://www.ks.uiuc.edu/Research/vmd/vmd-1.3/ug/node133.html
+        """
+        return self.name in ['H2O', 'HHO', 'OHH', 'HOH', 'OH2', 'SOL',
+                             'WAT', 'TIP', 'TIP2', 'TIP3', 'TIP4']
 
 
     def  __str__(self):
