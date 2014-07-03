@@ -2,6 +2,7 @@ from __future__ import print_function
 import mdtraj as md
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
 from mdtraj.nmr.shift_wrappers import find_executable, SPARTA_PLUS, PPM, SHIFTX2
+from mdtraj.utils import six
 
 @skipif(not find_executable(SPARTA_PLUS), 'SPARTA+ binary not found')
 def test_spartaplus():
@@ -28,7 +29,7 @@ def test_ppm():
     #       2     ASN   CA    999.000  53.004  51.168  51.802  53.081  54.098  52.820  52.379  51.856  53.034  52.754  54.134  54.222  51.210  52.207  50.824  54.459  53.605  54.211  53.688  52.344  53.004  51.168  51.802  53.081  54.098  52.820  52.379  51.856  53.034  52.754  54.134  54.222  51.210  52.207  50.824  54.459  53.605  54.211  53.688  52.344
 
 
-@skipif(not find_executable(SHIFTX2), 'SHIFTX2 binary not found')
+@skipif(not (find_executable(SHIFTX2) and six.PY2), 'SHIFTX2 binary not found or python2.X not found.')
 def test_shiftx2():
     t = md.load(get_fn('2EQQ.pdb'))
     result = md.chemical_shifts_shiftx2(t)
