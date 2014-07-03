@@ -37,7 +37,7 @@ def test_shiftx2():
     
     eq(result.shape[1], 20)  # 2EQQ is NMR structure with 20 frames
     eq(float(result.ix[(1, "C")][0]), 175.2570, decimal=4)
-    # taken from first entry in bb_details.dat, which looks like the following:
+    # taken from first entry in trj.pdb.cs, which looks like the following:
     #  NUM,RES,ATOMNAME,SHIFT
     #  1,E,C,175.2570
 
