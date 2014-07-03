@@ -48,6 +48,6 @@ fi
 tar -xzvf shiftx2-v107-linux-20120106.tgz
 cd shiftx2-v107-linux/
 make
-export PATH=`pwd`/bin:$PATH
+export PATH=`pwd`:$PATH
 # go back to the original directory we were in
 cd $MDTRAJ_DIR
