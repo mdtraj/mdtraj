@@ -770,19 +770,19 @@ class Topology(object):
         """
         return _topology_from_subset(self, atom_indices)
 
-    def select_atom_indices(self, selection, pairs=False):
+    def select_atom_indices(self, selection='minimal'):
         """Get the indices of biologically-relevant groups by name
 
         Attributes
         ----------
         topology : md.Topology
             Topology object
-        selection : string
+        selection : {'all', 'alpha', 'minimal', 'heavy', 'water'}
             What types of atoms to select.
             - all:      All atoms
             - alpha :   Alpha carbons
             - minimal:  Keep the atoms in protein residues with names
-                        CA, CB, C, N, O, (recommended).
+                        CA, CB, C, N, O,
             - heavy:    All non-hydrogen atoms that are not symmetry equivalent.
                         By symmetry equivalent, we mean atoms identical under an
                         exchange of labels. For example, heavy will exclude the
@@ -793,11 +793,11 @@ class Topology(object):
 
         Returns
         ----------
-        indices : np.ndarray (N,) or (N, 2)
-            An array of the selected indices. If pairs are requested,
-            a two-dimensional array is returned.
+        indices : np.ndarray (N,)
+            An array of the selected indices.
         """
         selection = selection.lower()
+        options = ['all', 'alpha', 'minimal', 'heavy', 'water']
         if selection == 'all':
             atom_indices = np.arange(self.n_atoms)
         elif selection == 'alpha':
@@ -817,19 +817,11 @@ class Topology(object):
                             a.name in ['O', 'OW']
                             and a.residue.is_water]
         else:
-            raise RuntimeError()
+            raise ValueError(
+                '%s is not a valid option. Selection must be one of %s' % (
+                    selection, ', '.join(options)))
 
-        n_atoms = len(atom_indices)
-        n_residues = len(np.unique([self.atom(i).residue.index
-                                    for i in atom_indices]))
-        print('Selected (%d) atoms from (%d) unique residues.'
-              % (n_atoms, n_residues))
-
-        if pairs:
-            indices = np.array(list(itertools.combinations(atom_indices, 2)))
-        else:
-            indices = np.array(atom_indices)
-
+        indices = np.array(atom_indices)
         return indices
 
 
