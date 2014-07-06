@@ -143,7 +143,7 @@ def test_select_atom_indices():
 
     yield lambda: eq(top.select_atom_indices('alpha'), np.array([8]))
     yield lambda: eq(top.select_atom_indices('minimal'),
-                     np.array([4, 5, 6, 8, 10, 14, 15, 16]))
+                     np.array([4, 5, 6, 8, 10, 14, 15, 16, 18]))
 
     assert_raises(ValueError, lambda: top.select_atom_indices('sdfsdfsdf'))
 
