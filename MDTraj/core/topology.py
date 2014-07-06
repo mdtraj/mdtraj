@@ -1,10 +1,10 @@
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
-# Copyright 2012-2013 Stanford University and the Authors
+# Copyright 2012-2014 Stanford University and the Authors
 #
 # Authors: Peter Eastman, Robert McGibbon
-# Contributors: Kyle A. Beauchamp
+# Contributors: Kyle A. Beauchamp, Matthew Harrigan
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -49,7 +49,6 @@
 
 from __future__ import print_function, division
 import os
-import re
 import numpy as np
 import itertools
 from mdtraj.core import element as elem
@@ -60,6 +59,11 @@ from mdtraj.utils import ilen, import_
 ##############################################################################
 # Utilities
 ##############################################################################
+
+PROTEIN_RESIDUES = set([
+    'ACE', 'AIB', 'ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'FOR', 'GLN', 'GLU',
+    'GLY', 'HIS', 'ILE', 'LEU', 'LYS', 'MET', 'NH2', 'NME', 'ORN', 'PCA',
+    'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'UNK', 'VAL'])
 
 
 def _topology_from_subset(topology, atom_indices):
@@ -766,6 +770,58 @@ class Topology(object):
         """
         return _topology_from_subset(self, atom_indices)
 
+    def select_atom_indices(self, selection='minimal'):
+        """Get the indices of biologically-relevant groups by name.
+
+        Attributes
+        ----------
+        topology : md.Topology
+            Topology object
+        selection : {'all', 'alpha', 'minimal', 'heavy', 'water'}
+            What types of atoms to select.
+            - all:      All atoms
+            - alpha :   Alpha carbons
+            - minimal:  Keep the atoms in protein residues with names
+                        CA, CB, C, N, O,
+            - heavy:    All non-hydrogen atoms that are not symmetry equivalent.
+                        By symmetry equivalent, we mean atoms identical under an
+                        exchange of labels. For example, heavy will exclude the
+                        two pairs of equivalent carbons (CD, CE) in a PHE ring.
+            - water:    Water oxygen atoms
+
+        Returns
+        ----------
+        indices : np.ndarray (N,)
+            An array of the selected indices.
+        """
+        selection = selection.lower()
+        options = ['all', 'alpha', 'minimal', 'heavy', 'water']
+        if selection == 'all':
+            atom_indices = np.arange(self.n_atoms)
+        elif selection == 'alpha':
+            atom_indices = [a.index for a in self.atoms if
+                            a.name == 'CA'
+                            and a.residue.is_protein]
+        elif selection == 'minimal':
+            atom_indices = [a.index for a in self.atoms if
+                            a.name in ['CA', 'CB', 'C', 'N', 'O']
+                            and a.residue.is_protein]
+        elif selection == 'heavy':
+            atom_indices = [a.index for a in self.atoms if
+                            a.element != elem.hydrogen
+                            and a.residue.is_protein]
+        elif selection == 'water':
+            atom_indices = [a.index for a in self.atoms if
+                            a.name in ['O', 'OW']
+                            and a.residue.is_water]
+        else:
+            raise ValueError(
+                '%s is not a valid option. Selection must be one of %s' % (
+                    selection, ', '.join(options)))
+
+        indices = np.array(atom_indices)
+        return indices
+
 
 class Chain(object):
     """A Chain object represents a chain within a Topology.
@@ -934,6 +990,25 @@ class Residue(object):
     def n_atoms(self):
         """Get the number of atoms in this Residue"""
         return len(self._atoms)
+
+    @property
+    def is_protein(self):
+        """Whether this residue is found in proteins."""
+        return self.name in PROTEIN_RESIDUES
+
+    @property
+    def is_water(self):
+        """Whether this residue is water.
+
+        Residue names according to VMD
+
+        References
+        ----------
+        http://www.ks.uiuc.edu/Research/vmd/vmd-1.3/ug/node133.html
+        """
+        return self.name in ['H2O', 'HHO', 'OHH', 'HOH', 'OH2', 'SOL',
+                             'WAT', 'TIP', 'TIP2', 'TIP3', 'TIP4']
+
 
     def  __str__(self):
         return '%s%s' % (self.name, self.resSeq)
