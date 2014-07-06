@@ -771,7 +771,7 @@ class Topology(object):
         return _topology_from_subset(self, atom_indices)
 
     def select_atom_indices(self, selection='minimal'):
-        """Get the indices of biologically-relevant groups by name
+        """Get the indices of biologically-relevant groups by name.
 
         Attributes
         ----------
