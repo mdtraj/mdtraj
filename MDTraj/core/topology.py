@@ -788,8 +788,6 @@ class Topology(object):
                         exchange of labels. For example, heavy will exclude the
                         two pairs of equivalent carbons (CD, CE) in a PHE ring.
             - water:    Water oxygen atoms
-        pairs : bool
-            Whether to return pairs of atom indices
 
         Returns
         ----------
