@@ -37,7 +37,9 @@ cd $MDTRAJ_DIR
 MDTRAJ_DIR=`pwd`
 mkdir $HOME/external
 cd $HOME/external
-wget http://www.shiftx2.ca/download/shiftx2-v107-linux-20120106.tgz
+#wget http://www.shiftx2.ca/download/shiftx2-v107-linux-20120106.tgz
+#Use Stanford cached version because shiftx2 servers are super slow.
+wget http://stanford.edu/%7Ermcgibbo/files/shiftx2-v107-linux-20120106.tgz
 REFERENCE_MD5="4d3b23d77e773aa321af2a01ed04199a"
 RECEIVED_MD5=$(md5sum shiftx2-v107-linux-20120106.tgz | cut -d " " -f 1)
 if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
