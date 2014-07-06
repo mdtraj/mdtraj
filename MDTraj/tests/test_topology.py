@@ -1,10 +1,10 @@
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
-# Copyright 2012-2013 Stanford University and the Authors
+# Copyright 2012-2014 Stanford University and the Authors
 #
 # Authors: Kyle A. Beauchamp
-# Contributors: Robert McGibbon
+# Contributors: Robert McGibbon, Matthew Harrigan
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -137,3 +137,13 @@ def test_atoms_by_name():
     assert top.residue(15).atom('CA') == [a for a in top.residue(15).atoms if a.name == 'CA'][0]
 
     assert_raises(KeyError, lambda: top.residue(15).atom('sdfsdsdf'))
+
+def test_select_atom_indices():
+    top = md.load(get_fn('native.pdb')).topology
+
+    yield lambda: eq(top.select_atom_indices('alpha'), np.array([8]))
+    yield lambda: eq(top.select_atom_indices('minimal'),
+                     np.array([4, 5, 6, 8, 10, 14, 15, 16]))
+
+    assert_raises(ValueError, lambda: top.select_atom_indices('sdfsdfsdf'))
+
