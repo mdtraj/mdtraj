@@ -29,7 +29,7 @@ import os
 from distutils.spawn import find_executable as _find_executable
 import numpy as np
 
-from mdtraj.utils import import_, six
+from mdtraj.utils import import_
 from mdtraj.utils import enter_temp_directory
 
 ##############################################################################
@@ -130,9 +130,6 @@ def chemical_shifts_shiftx2(trj):
     binary = find_executable(SHIFTX2)
     if binary is None:
         raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_shiftx2` requires the external program SHIFTX2, available at http://www.shiftx2.ca/' % ', '.join(SHIFTX2))
-
-    if six.PY3:
-        raise(OSError("Cannot run shiftx2.py on Python 3.X"))
 
     results = []
     with enter_temp_directory():
