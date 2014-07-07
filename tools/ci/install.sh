@@ -67,6 +67,6 @@ if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
     exit 1
 fi
 
-export PATH=`pwd`/bin:$PATH
+export PATH=`pwd`:$PATH
 # go back to the original directory we were in
 cd $MDTRAJ_DIR
