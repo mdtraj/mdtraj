@@ -59,7 +59,7 @@ cd $MDTRAJ_DIR
 MDTRAJ_DIR=`pwd`
 mkdir $HOME/external
 cd $HOME/external
-http:// stanford.edu/~rmcgibbo/files/ppm_linux_64.exe
+wget http:// stanford.edu/~rmcgibbo/files/ppm_linux_64.exe
 REFERENCE_MD5="f3cb5681bd2769cdcfc77fe17c563ee4"
 RECEIVED_MD5=$(md5sum ppm_linux_64.exe | cut -d " " -f 1)
 if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
