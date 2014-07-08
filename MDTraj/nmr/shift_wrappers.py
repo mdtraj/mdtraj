@@ -201,11 +201,9 @@ def chemical_shifts_ppm(trj):
         if return_flag != 0:
             raise(IOError("Could not successfully execute command '%s', check your PPM installation or your input trajectory." % cmd))
 
-        d = pd.read_csv("./bb_details.dat", delim_whitespace=True)
-        columns = ["resSeq", "resName", "name", "expt", "other"]
+        d = pd.read_table("./bb_details.dat", index_col=False, header=None, sep="\s*").drop([3], axis=1)
 
-        d = pd.read_csv("./bb_details.dat", delim_whitespace=True, header=None).drop([0, 4], axis=1)
-        d = d.rename(columns={1: "resSeq", 2: "resName", 3: "name"})
+        d = d.rename(columns={0: "resSeq", 1: "resName", 2: "name"})
         d["resSeq"] += first_resSeq - 1  # Fix bug in PPM that reindexes to 1
         d = d.drop("resName", axis=1)
         d = d.set_index(["resSeq", "name"])

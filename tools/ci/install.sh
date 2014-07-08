@@ -32,3 +32,42 @@ export SPARTA_DIR=`pwd`
 export PATH=`pwd`/bin:$PATH
 # go back to the original directory we were in
 cd $MDTRAJ_DIR
+
+# Install shiftx2 for NMR chemical shift predicition
+MDTRAJ_DIR=`pwd`
+mkdir $HOME/external
+cd $HOME/external
+#wget http://www.shiftx2.ca/download/shiftx2-v107-linux-20120106.tgz
+#Use Stanford cached version because shiftx2 servers are super slow.
+wget http://stanford.edu/%7Ermcgibbo/files/shiftx2-v107-linux-20120106.tgz
+REFERENCE_MD5="4d3b23d77e773aa321af2a01ed04199a"
+RECEIVED_MD5=$(md5sum shiftx2-v107-linux-20120106.tgz | cut -d " " -f 1)
+if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
+    echo "shiftx2-v107-linux-20120106.tgz md5 mismatch"
+    exit 1
+fi
+
+tar -xzvf shiftx2-v107-linux-20120106.tgz
+cd shiftx2-v107-linux/
+make
+export PATH=`pwd`:$PATH
+# go back to the original directory we were in
+cd $MDTRAJ_DIR
+
+
+# Install ppm for NMR chemical shift predicition
+MDTRAJ_DIR=`pwd`
+mkdir $HOME/external
+cd $HOME/external
+wget http:// stanford.edu/~rmcgibbo/files/ppm_linux_64.exe
+chmod a+x ppm_linux_64.exe
+REFERENCE_MD5="f3cb5681bd2769cdcfc77fe17c563ee4"
+RECEIVED_MD5=$(md5sum ppm_linux_64.exe | cut -d " " -f 1)
+if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
+    echo "ppm_linux_64.exe md5 mismatch"
+    exit 1
+fi
+
+export PATH=`pwd`:$PATH
+# go back to the original directory we were in
+cd $MDTRAJ_DIR
