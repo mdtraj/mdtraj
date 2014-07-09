@@ -223,6 +223,10 @@ float msdFromMandG(const float M[9], const float G_x, const float G_y,
     float k23 =  M[1+2*m ] + M[2+1*m];                  /* [2, 3] */
     float k33 = -M[0+0*m ] - M[1+1*m] + M[2+2*m];       /* [3, 3] */
 
+    float k10 = k01, k20 = k02, k30 = k03;
+    float k21 = k12, k31 = k13;
+    float k32 = k23;
+
     /* declarations required for rotation code */
     float k2233_2323, k1233_1323, k1223_1322, k0223_0322, k0233_0323, k0213_0312;
     float q0, q1, q2, q3, qsqr, normq, a2, x2, y2, z2, xy, az, zx, ay, yz, ax;
@@ -230,6 +234,9 @@ float msdFromMandG(const float M[9], const float G_x, const float G_y,
     /* float C_4 = 1.0, C_3 = 0.0; */
     float detM = 0.0f, detK = 0.0f;
     float C_2, C_1, C_0;
+
+    // this parameter is used for converting the quaternion to a rotation matrix
+    double evecprec = 1e-11f;
 
     float lambda = (G_x + G_y) / 2.0f;
 
@@ -284,39 +291,78 @@ float msdFromMandG(const float M[9], const float G_x, const float G_y,
         q3 = -k01*k1223_1322 + k11*k0223_0322 - k12*k0213_0312;
         qsqr = q0*q0 + q1*q1 + q2*q2 + q3*q3;
 
-        if (qsqr < 1e-11f) {
-            fprintf(stderr, "%s UNCONVERGED ROTATION MATRIX. RETURNING IDENTITY=%d\n", __FILE__, __LINE__);
-            rot[0] = rot[4] = rot[8] = 1.0;
-            rot[1] = rot[2] = rot[3] = rot[5] = rot[6] = rot[7] = 0.0;
-        } else {
-            normq = sqrt(qsqr);
-            q0 /= normq;
-            q1 /= normq;
-            q2 /= normq;
-            q3 /= normq;
+        if (qsqr < evecprec)
+        {
+            double k2133_3123 = k1233_1323, k2132_3122 = k1223_1322;
+            double k2033_3023 = k0233_0323, k2032_3022 = k0223_0322;
+            double k2233_3223 = k2233_2323, k2031_3021 = k0213_0312;
 
-            a2 = q0 * q0;
-            x2 = q1 * q1;
-            y2 = q2 * q2;
-            z2 = q3 * q3;
+            q0 =  k01*k2233_3223 - k02*k2133_3123 + k03*k2132_3122;
+            q1 = -k00*k2233_3223 + k02*k2033_3023 - k03*k2032_3022;
+            q2 =  k00*k2133_3123 - k01*k2033_3023 + k03*k2031_3021;
+            q3 = -k00*k2132_3122 + k01*k2032_3022 - k02*k2031_3021;
+            qsqr = q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3;
 
-            xy = q1 * q2;
-            az = q0 * q3;
-            zx = q3 * q1;
-            ay = q0 * q2;
-            yz = q2 * q3;
-            ax = q0 * q1;
+            if (qsqr < evecprec)
+            {
+                double k0213_0312 = k02 * k13 - k03 * k12, k0113_0311 = k01 * k13 - k03 * k11;
+                double k0112_0211 = k01 * k12 - k02 * k11, k0013_0310 = k00 * k13 - k03 * k10;
+                double k0012_0210 = k00 * k12 - k02 * k10, k0011_0110 = k00 * k11 - k01 * k10;
 
-            rot[0] = a2 + x2 - y2 - z2;
-            rot[3] = 2 * (xy + az);
-            rot[6] = 2 * (zx - ay);
-            rot[1] = 2 * (xy - az);
-            rot[4] = a2 - x2 + y2 - z2;
-            rot[7] = 2 * (yz + ax);
-            rot[2] = 2 * (zx + ay);
-            rot[5] = 2 * (yz - ax);
-            rot[8] = a2 - x2 - y2 + z2;
+                q0 =  k31 * k0213_0312 - k32 * k0113_0311 + k33 * k0112_0211;
+                q1 = -k30 * k0213_0312 + k32 * k0013_0310 - k33 * k0012_0210;
+                q2 =  k30 * k0113_0311 - k31 * k0013_0310 + k33 * k0011_0110;
+                q3 = -k30 * k0112_0211 + k31 * k0012_0210 - k32 * k0011_0110;
+                qsqr = q0*q0 + q1 *q1 + q2*q2+q3*q3;
+
+                if (qsqr < evecprec)
+                {
+                    q0 =  k21 * k0213_0312 - k22 * k0113_0311 + k23 * k0112_0211;
+                    q1 = -k20 * k0213_0312 + k22 * k0013_0310 - k23 * k0012_0210;
+                    q2 =  k20 * k0113_0311 - k21 * k0013_0310 + k23 * k0011_0110;
+                    q3 = -k20 * k0112_0211 + k21 * k0012_0210 - k22 * k0011_0110;
+                    qsqr = q0*q0 + q1 *q1 + q2*q2 + q3*q3;
+                    
+                    if (qsqr < evecprec)
+                    {
+                        /* if qsqr is still too small, return the identity matrix. */
+                        fprintf(stderr, "%s UNCONVERGED ROTATION MATRIX. RETURNING IDENTITY=%d\n", __FILE__, __LINE__);
+                        rot[0] = rot[4] = rot[8] = 1.0;
+                        rot[1] = rot[2] = rot[3] = rot[5] = rot[6] = rot[7] = 0.0;
+
+                        return ls_rmsd2;
+                    }
+                }
+            }
         }
+
+        normq = sqrt(qsqr);
+        q0 /= normq;
+        q1 /= normq;
+        q2 /= normq;
+        q3 /= normq;
+
+        a2 = q0 * q0;
+        x2 = q1 * q1;
+        y2 = q2 * q2;
+        z2 = q3 * q3;
+
+        xy = q1 * q2;
+        az = q0 * q3;
+        zx = q3 * q1;
+        ay = q0 * q2;
+        yz = q2 * q3;
+        ax = q0 * q1;
+
+        rot[0] = a2 + x2 - y2 - z2;
+        rot[3] = 2 * (xy + az);
+        rot[6] = 2 * (zx - ay);
+        rot[1] = 2 * (xy - az);
+        rot[4] = a2 - x2 + y2 - z2;
+        rot[7] = 2 * (yz + ax);
+        rot[2] = 2 * (zx + ay);
+        rot[5] = 2 * (yz - ax);
+        rot[8] = a2 - x2 - y2 + z2;
     }
     return ls_rmsd2;
 }
