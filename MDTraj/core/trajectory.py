@@ -787,8 +787,7 @@ class Trajectory(object):
         Parameters
         ----------
         reference : md.Trajectory
-            For each conformation in this trajectory, aligned to a particular
-            reference conformation in another trajectory object.
+            Align self to a particular frame in `reference`
         frame : int
             The index of the conformation in `reference` to align to.
         atom_indices : array_like, or None
