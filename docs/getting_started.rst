@@ -18,8 +18,8 @@ Install with Conda
 
 To install MDTraj with conda, use the following commands
 
-    conda config --add channels http://conda.binstar.org/omnia
-    conda install mdtraj
+  $ conda config --add channels http://conda.binstar.org/omnia
+  $ conda install mdtraj
 
 .. note:: ``conda`` will automatically all of the tricky dependencies from binary packages automatically! This includes pytables / numpy / scipy! The easiest way to get conda is with the `Anaconda python distribution <https://store.continuum.io/cshop/anaconda/>`_.
 
