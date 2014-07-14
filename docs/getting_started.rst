@@ -16,7 +16,7 @@ Install with Conda
 ------------------
 `conda <http://www.continuum.io/blog/conda>`_ is a python package manager built for scientific python. Unlike ``easy_install`` or ``pip``, it handles binaries and binary dependencies, which are critical for most scientific workflows. If you're a ``conda`` user, you can install MDTraj by adding the omnia channel. If you're not a conda user, you should look into it. ::
 
-To install MDTraj with conda, use the following commands
+To install MDTraj with conda, use the following commands ::
 
   $ conda config --add channels http://conda.binstar.org/omnia
   $ conda install mdtraj
