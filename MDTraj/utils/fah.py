@@ -21,7 +21,7 @@
 ##############################################################################
 
 """
-Code for merging trajectories from FAH datasets.
+Code for merging and munging trajectories from FAH datasets.
 """
 ##############################################################################
 # imports
