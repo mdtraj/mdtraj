@@ -13,8 +13,8 @@ def test_fah_core17_1():
     tar_filename = os.path.join(tempdir, "results-000.tar.bz2")
     archive = tarfile.open(tar_filename, mode='w:bz2')    
     
-    with tarfile.open(tar_filename, "w:bz2") as tar:
-        tar.add(filename, arcname="positions.xtc")
+    tar = tarfile.open(tar_filename, "w:bz2")
+    tar.add(filename, arcname="positions.xtc")
     tar.close()
     
     shutil.copy(tar_filename, os.path.join(tempdir, "results-001.tar.bz2"))
