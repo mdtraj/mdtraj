@@ -153,7 +153,7 @@ def concatenate_ocore(path, top, output_filename):
         pass
     
     for folder in sorted_folders:
-        if folder in trj_file._handle.root.processed_folders:
+        if six.b(folder) in trj_file._handle.root.processed_folders:  # On Py3, the pytables list of filenames has type byte (e.g. b"hey"), so we need to deal with this via six.
             print("Already processed %s" % folder)
             continue
         print("Processing %s" % folder)
