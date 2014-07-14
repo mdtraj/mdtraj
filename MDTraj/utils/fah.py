@@ -33,6 +33,7 @@ import sys
 import glob
 import tarfile
 from mdtraj.utils.contextmanagers import enter_temp_directory
+from mdtraj.utils import six
 
 __all__ = ['import_']
 
@@ -98,9 +99,9 @@ def concatenate_core17(path, top, output_filename):
         trj_file.topology = top.topology
     except trj_file.tables.NodeError:
         pass
-    
+
     for filename in filenames:
-        if filename in trj_file._handle.root.processed_filenames:
+        if six.b(filename) in trj_file._handle.root.processed_filenames:  # On Py3, the pytables list of filenames has type byte (e.g. b"hey"), so we need to deal with this via six.
             print("Already processed %s" % filename)
             continue
         with enter_temp_directory():
