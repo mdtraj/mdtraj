@@ -173,7 +173,8 @@ with open('output.txt', 'w') as f:
 
 
 def test_dihedral_2chains():
-    from mdtraj.utils.six.moves import urllib
+    # make sure that comput_phi is finding dihedrals from all of the chains
+    # in a multi-chain topology
     t = md.load_pdb('http://www.rcsb.org/pdb/files/4OH9.pdb')
 
     # remove the water
