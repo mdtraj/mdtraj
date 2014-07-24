@@ -171,7 +171,6 @@ with open('output.txt', 'w') as f:
     np.testing.assert_array_almost_equal(pymol_value, mdtraj_value)
 
 
-
 def test_dihedral_2chains():
     # make sure that comput_phi is finding dihedrals from all of the chains
     # in a multi-chain topology
