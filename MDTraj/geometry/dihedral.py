@@ -124,33 +124,35 @@ def compute_dihedrals(traj, indices, periodic=True, opt=True):
     return out
 
 
-def _construct_atom_dict(topology, chain_id=0):
-    """Create dictionary to lookup indices by atom name and residue_id.
+def _construct_atom_dict(topology):
+    """Create dictionary to lookup indices by atom name, residue_id, and chain
+    index.
 
     Parameters
     ----------
     topology : Topology
         The topology to parse
-    chain_id : int
-        The index of the chain to sequence
 
-    Notes
-    -----
-    By default, we assume you are interested in the first chain.
+    Returns
+    -------
+    atom_dict : dict
+        Tree of nested dictionaries such that
+        `atom_dict[chain_index][residue_index][atom_name] = atom_index`
     """
     atom_dict = {}
     for chain in topology.chains:
-        if chain.index == chain_id:
-            for residue in chain.residues:
-                local_dict = {}
-                for atom in residue.atoms:
-                    local_dict[atom.name] = atom.index
-                atom_dict[residue.index] = local_dict
-            break
+        residue_dict = {}
+        for residue in chain.residues:
+            local_dict = {}
+            for atom in residue.atoms:
+                local_dict[atom.name] = atom.index
+            residue_dict[residue.index] = local_dict
+        atom_dict[chain.index] = residue_dict
+
     return atom_dict
 
 
-def _atom_sequence(traj, atom_names, residue_offsets=None, chain_id=0):
+def _atom_sequence(traj, atom_names, residue_offsets=None):
     """Find sequences of atom indices corresponding to desired atoms.
 
     This method can be used to find sets of atoms corresponding to specific
@@ -167,8 +169,6 @@ def _atom_sequence(traj, atom_names, residue_offsets=None, chain_id=0):
         Array of integer offsets for each atom. These are used to refer
         to atoms forward or backward in the chain relative to the current
         residue
-    chain_id : int
-        The index of the chain to sequence.
 
     Notes
     -----
@@ -190,21 +190,24 @@ def _atom_sequence(traj, atom_names, residue_offsets=None, chain_id=0):
         residue_offsets = parse_offsets(atom_names)
     atom_names = _strip_offsets(atom_names)
 
-    atom_dict = _construct_atom_dict(traj.top, chain_id=chain_id)
+    atom_dict = _construct_atom_dict(traj.top)
+
     atom_indices = []
     found_residue_ids = []
     # py3k criticial list(zip(, not just zip(, since we iterate multiple
     # times through it
     atoms_and_offsets = list(zip(atom_names, residue_offsets))
     for chain in traj.top.chains:
-        if chain.index == chain_id:
-            for residue in chain.residues:
-                rid = residue.index
-                if all([rid + offset in atom_dict for offset in residue_offsets]):  # Check that desired residue_IDs are in dict
-                    if all([atom in atom_dict[rid + offset] for atom, offset in atoms_and_offsets]):  # Check that we find all atom names in dict
-                        atom_indices.append([atom_dict[rid + offset][atom] for atom, offset in atoms_and_offsets])  # Lookup desired atom indices and and add to list.
-                        found_residue_ids.append(rid)
-
+        cid = chain.index
+        for residue in chain.residues:
+            rid = residue.index
+            # Check that desired residue_IDs are in dict
+            if all([rid + offset in atom_dict[cid] for offset in residue_offsets]):
+                # Check that we find all atom names in dict
+                if all([atom in atom_dict[cid][rid + offset] for atom, offset in atoms_and_offsets]):
+                    # Lookup desired atom indices and and add to list.
+                    atom_indices.append([atom_dict[cid][rid + offset][atom] for atom, offset in atoms_and_offsets])
+                    found_residue_ids.append(rid)
 
     atom_indices = np.array(atom_indices)
     found_residue_ids = np.array(found_residue_ids)

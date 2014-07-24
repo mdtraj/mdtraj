@@ -170,3 +170,24 @@ with open('output.txt', 'w') as f:
     
     np.testing.assert_array_almost_equal(pymol_value, mdtraj_value)
 
+
+def test_dihedral_2chains():
+    # make sure that comput_phi is finding dihedrals from all of the chains
+    # in a multi-chain topology
+    t = md.load_pdb('http://www.rcsb.org/pdb/files/4OH9.pdb')
+
+    # remove the water
+    water_indices = [a.index for a in t.top.atoms if a.residue.name != 'HOH']
+    t.restrict_atoms(water_indices)
+
+    # okay we've got two protein chains
+    assert t.top.n_chains == 2
+    phi_indices, angles = md.compute_phi(t)
+
+    for chain in t.top.chains:
+        chain_indices = [a.index for a in chain.atoms]
+
+        # assert that at least one of the phi_indices involves atoms in this
+        # chain
+        assert any(i in chain_indices for i in np.concatenate(phi_indices))
+
