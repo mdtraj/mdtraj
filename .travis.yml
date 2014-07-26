@@ -1,19 +1,19 @@
 language: c
 
 install:
-  - source tools/ci/install.sh
+  - source devtools/ci/install.sh
   - export PYTHONUNBUFFERED=true
 
 script:
   - export CC="gcc -std=c89"
   - source deactivate
   - conda install --yes conda-build
-  - conda build tools/conda-recipe
+  - conda build devtools/conda-recipe
   - source activate $python
   - conda install $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
   - conda list -e
   - pydir=$(which python); $precmd $(dirname $pydir)/nosetests --with-coverage --cover-erase -vv
-  - cd tools/c-tests/; make valgrind; cd -
+  - cd devtools/c-tests/; make valgrind; cd -
 
 env:
   matrix:
@@ -31,4 +31,4 @@ env:
 
 after_success:
   - echo "after_success"
-  - source tools/ci/after_sucess.sh
+  - source devtools/ci/after_sucess.sh

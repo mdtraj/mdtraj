@@ -57,8 +57,6 @@ MDTraj/version.py
 
 docs/_build
 docs/examples/generated/
-tools/ci/speedpack/wheelhouse/*
-tools/ci/speedpack/.vagrant
 
 docs/api/generated/
 docs/examples/*.ipynb

@@ -35,4 +35,4 @@ conda config --add channels http://conda.binstar.org/omnia
 conda install --yes openmm
 
 cd docs && make html && cd -
-python tools/ci/push-docs-to-s3.py
+python devtools/ci/push-docs-to-s3.py
