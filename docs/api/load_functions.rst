@@ -1,5 +1,23 @@
-Load Functions
---------------
+.. _loading:
+Loading Trajectories
+--------------------
+
+
+Loading molecular dynamics trajectories is easy with MDTraj. ::
+
+    >>> import mdtraj as md
+    >>> t = md.load('trajectory.pdb')
+
+The function :func:`mdtraj.load` will automatically detect the appropriate format
+based on the filename extension. The supported formats are all listed below in
+the format-specific loaders. The return value of :func:`mdtraj.load` is an
+:class:`mdtraj.Trajectory` object.
+
+While :func:`mdtraj.load` will read an entire trajectory into memory, other
+functions like :func:`mdtraj.load` and :func:`mdtraj.open` are available for
+working with trajectories in chunks, without loading them entirely into memory
+all at once.
+
 
 Cross-format support
 ********************

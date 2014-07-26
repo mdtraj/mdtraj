@@ -8,9 +8,9 @@ Installation
 ============
 
 MDTraj runs on CPython 2.6, 2.7, and 3.2+. The developers generally use
-CPython2.7 or 3.3, on both mac and linux platforms. Automated tests on linux
-are performed on every incremental update to the code, and release tests are
-performed on mac, linux and windows.
+CPython2.7 or 3.3, on both Mac and Linux platforms. Automated tests on Linux
+and Windows are performed on every incremental update to the code, and release
+tests are performed on Mac, Linux and Windows platforms.
 
 Install with Conda
 ------------------
