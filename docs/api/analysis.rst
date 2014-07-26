@@ -3,6 +3,14 @@
 Trajectory Analysis
 ===================
 
+Trajectory analysis is the heart of MDTraj. These functions can be used to run
+a variety of analyses on :class:`mdtraj.Trajectory` objects.
+It's usually as simple as ::
+
+    >>> import mdtraj as md
+    >>> t = md.load('trajectory.pdb)
+    >>> print(md.compute_phi(t))
+
 Root-mean-square deviation (RMSD)
 ---------------------------------
 .. autosummary::

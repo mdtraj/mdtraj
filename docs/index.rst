@@ -52,10 +52,10 @@ API Reference
    :maxdepth: 1
    
    api/load_functions
-   api/trajectory_files
-   api/classes
    api/analysis
+   api/trajectory_files
    api/reporters
+   api/classes
    api/utils
 
 
