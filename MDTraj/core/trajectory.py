@@ -1319,7 +1319,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        atom_indices : array-lke, dtype=int, shape=(n_atoms)
+        atom_indices : array-like, dtype=int, shape=(n_atoms)
             List of atom indices to keep.
         inplace : bool, default=True
             If ``True``, the operation is done inplace, modifying ``self``.
