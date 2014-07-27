@@ -1339,7 +1339,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        atom_indices : array-lke, dtype=int, shape=(n_atoms)
+        atom_indices : array-like, dtype=int, shape=(n_atoms)
             List of indices of atoms to retain in the new trajectory.
         inplace : bool, default=False
             If ``True``, the operation is done inplace, modifying ``self``.
