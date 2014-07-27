@@ -96,13 +96,17 @@ def compute_chemical_shifts(trj, model="shiftx2", **kwargs):
         raise(ValueError("model must be one of shiftx2, ppm, or sparta+"))
 
 
-def chemical_shifts_shiftx2(trj):
+def chemical_shifts_shiftx2(trj, pH=5.0, temperature=298.00):
     """Predict chemical shifts of a trajectory using ShiftX2.
 
     Parameters
     ----------
     trj : Trajectory
         Trajectory to predict shifts for.
+    pH : float, optional, default=5.0
+        pH value which gets passed to the ShiftX2 predictor.
+    temperature : float, optional, default=298.00
+        Temperature which gets passed to the ShiftX2 predictor.
 
     Returns
     -------
@@ -135,7 +139,7 @@ def chemical_shifts_shiftx2(trj):
     with enter_temp_directory():
         for i in range(trj.n_frames):
             trj[i].save("./trj%d.pdb" % i)
-        cmd = "%s -b 'trj*.pdb'" % binary
+        cmd = "%s -b 'trj*.pdb' -p %.1f -t %.2f" % (binary, pH, temperature)
 
         return_flag = os.system(cmd)
 
