@@ -46,7 +46,8 @@ from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.mol2 import load_mol2
 from mdtraj.core.topology import Topology
 from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_vectors, 
-                          box_vectors_to_lengths_and_angles, cast_indices)
+                          box_vectors_to_lengths_and_angles, cast_indices,
+                          deprecated)
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3, string_types
 from mdtraj import _rmsd
@@ -1310,6 +1311,7 @@ class Trajectory(object):
 
         return self
 
+    @deprecated('restrict_atoms was renamed atom_slice and will be removed in 1.0')
     def restrict_atoms(self, atom_indices, inplace=True):
         """Retain only a subset of the atoms in a trajectory
 
@@ -1330,7 +1332,31 @@ class Trajectory(object):
             The return value is either ``self``, or the new trajectory,
             depending on the value of ``inplace``.
         """
-        xyz = np.array(self.xyz[:,atom_indices], order='C')
+        return self.atom_slice(atom_indices, inplace=inplace)
+
+    def atom_slice(self, atom_indices, inplace=True):
+        """Create a new trajectory from a subset of atoms
+
+        Parameters
+        ----------
+        atom_indices : array-lke, dtype=int, shape=(n_atoms)
+            List of indices of atoms to retain in the new trajectory.
+        inplace : bool, default=False
+            If ``True``, the operation is done inplace, modifying ``self``.
+            Otherwise, a copy is returned with the sliced atoms, and
+            ``self`` is not modified.
+
+        Returns
+        -------
+        traj : md.Trajectory
+            The return value is either ``self``, or the new trajectory,
+            depending on the value of ``inplace``.
+
+        See Also
+        --------
+        stack : stack multiple trajectories along the atom axis
+        """
+        xyz = np.array(self.xyz[:, atom_indices], order='C')
         topology = None
         if self._topology is not None:
             topology = self._topology.subset(atom_indices)
