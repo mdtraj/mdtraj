@@ -265,7 +265,7 @@ def test_restrict_atoms_not_inplace():
     eq(traj.xyz,  traj_backup.xyz)
     eq(traj.topology, traj_backup.topology)
 
-    eq(range(4), [a.index for a in sliced.top.atoms])
+    eq(list(range(4)), [a.index for a in sliced.top.atoms])
     eq(sliced.xyz.shape[1], 4)
     eq(sliced.n_atoms, 4)
     eq(sliced.n_residues, 1)
