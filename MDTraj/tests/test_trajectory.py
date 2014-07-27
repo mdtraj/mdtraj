@@ -236,6 +236,8 @@ def test_float_atom_indices_exception():
 
 def test_restrict_atoms():
     traj = md.load(get_fn('traj.h5'))
+    time_address = traj.time.ctypes.data
+
     desired_atom_indices = [0,1,2,5]
     traj.restrict_atoms(desired_atom_indices)
     atom_indices = [a.index for a in traj.top.atoms]
@@ -247,6 +249,35 @@ def test_restrict_atoms():
     eq(traj.n_residues, traj.topology._numResidues)
     eq(traj.n_atoms, traj.topology._numAtoms)
     eq(np.array([a.index for a in traj.topology.atoms]), np.arange(traj.n_atoms))
+
+    # assert that the time field was not copied
+    assert traj.time.ctypes.data == time_address
+
+
+def test_restrict_atoms_not_inplace():
+    traj = md.load(get_fn('traj.h5'))
+    traj_backup = md.load(get_fn('traj.h5'))
+    desired_atom_indices = [0,1,2,5]
+
+    sliced = traj.restrict_atoms(desired_atom_indices, inplace=False)
+
+    # make sure the original one was not modified
+    eq(traj.xyz,  traj_backup.xyz)
+    eq(traj.topology, traj_backup.topology)
+
+    eq(range(4), [a.index for a in sliced.top.atoms])
+    eq(sliced.xyz.shape[1], 4)
+    eq(sliced.n_atoms, 4)
+    eq(sliced.n_residues, 1)
+    eq(len(sliced.top._bonds), 2)
+    eq(sliced.n_residues, sliced.topology._numResidues)
+    eq(sliced.n_atoms, sliced.topology._numAtoms)
+    eq(np.array([a.index for a in sliced.topology.atoms]), np.arange(sliced.n_atoms))
+
+    # make sure the two don't alias the same memory
+    assert traj.time.ctypes.data != sliced.time.ctypes.data
+    assert traj.unitcell_angles.ctypes.data != sliced.unitcell_angles.ctypes.data
+    assert traj.unitcell_lengths.ctypes.data != sliced.unitcell_lengths.ctypes.data
 
 
 def test_array_vs_matrix():
