@@ -75,7 +75,7 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
     http://pythonhosted.org/gyroid/_modules/gyroid/unitcell.html
     """
     if np.all(alpha < 2*np.pi) and np.all(beta < 2*np.pi) and np.all(gamma < 2*np.pi):
-        warnings.warn('All your angles were less than 2*pi. Did you accidently give me radians?')
+        warnings.warn('All your angles were less than 2*pi. Did you accidentally give me radians?')
 
     alpha = alpha * np.pi / 180
     beta = beta * np.pi / 180
@@ -90,6 +90,15 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
 
     if not a.shape == b.shape == c.shape:
         raise TypeError('Shape is messed up.')
+
+    # Make sure that all vector components that are _almost_ 0 are set exactly
+    # to 0
+    for i, val in enumerate(a):
+        if val < 1e-6: a[i] = 0.0
+    for i, val in enumerate(b):
+        if val < 1e-6: b[i] = 0.0
+    for i, val in enumerate(c):
+        if val < 1e-6: c[i] = 0.0
 
     return a.T, b.T, c.T
 
