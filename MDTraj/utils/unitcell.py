@@ -93,12 +93,10 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
 
     # Make sure that all vector components that are _almost_ 0 are set exactly
     # to 0
-    for i, val in enumerate(a):
-        if val < 1e-6: a[i] = 0.0
-    for i, val in enumerate(b):
-        if val < 1e-6: b[i] = 0.0
-    for i, val in enumerate(c):
-        if val < 1e-6: c[i] = 0.0
+    tol = 1e-6
+    a[np.logical_and(a>-tol, a<tol)] = 0.0
+    b[np.logical_and(b>-tol, b<tol)] = 0.0
+    c[np.logical_and(c>-tol, c<tol)] = 0.0
 
     return a.T, b.T, c.T
 
