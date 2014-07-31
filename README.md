@@ -3,6 +3,7 @@
 [![Travis Build Status](https://travis-ci.org/rmcgibbo/mdtraj.png?branch=master)](https://travis-ci.org/rmcgibbo/mdtraj)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/01vpwbceulj4jix3)](https://ci.appveyor.com/project/rmcgibbo/mdtraj)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.png)](https://pypi.python.org/pypi/mdtraj)
+[![Binstar Badge](https://binstar.org/omnia/mdtraj/badges/version.svg)](https://binstar.org/omnia/mdtraj)
 [![Downloads](https://pypip.in/d/mdtraj/badge.png)](https://pypi.python.org/pypi/mdtraj)
 
 This library supports the reading and writing of molecular dynamics trajectories in a variety of formats. Currently, there is full support for [PDB](http://deposit.rcsb.org/adit/docs/pdb_atom_format.html), [DCD](https://www-s.ks.uiuc.edu/Research/vmd/plugins/molfile/dcdplugin.html),
