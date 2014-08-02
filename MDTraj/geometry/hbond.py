@@ -308,7 +308,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, get_list=Fa
     occurance = np.sum(mask, axis=0).astype(np.double) / traj.n_frames
     
     if get_list:
-        return [angle_triplets2[i] for i in mask]
+        return [angle_triplets[i] for i in mask]
     else:
         return angle_triplets[occurance > freq]
 
