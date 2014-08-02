@@ -37,13 +37,32 @@ Without them, you get a linker error which is
 cryptic, since the real definitions are online
 compiled inside #ifdef __SSE4_1__
 */
-int dist(void) { exit(EXIT_FAILURE); }
-int dist_mic(void) { exit(EXIT_FAILURE); }
-int angle(void) { exit(EXIT_FAILURE); }
-int angle_mic(void) { exit(EXIT_FAILURE); }
-int dihedral(void) { exit(EXIT_FAILURE); }
-int dihedral_mic(void) { exit(EXIT_FAILURE); }
-int kabsch_sander(void) { exit(EXIT_FAILURE); }
+int dist(const float* xyz, const int* pairs, float* distance_out,
+         float* displacement_out, const int n_frames, const int n_atoms,
+         const int n_pairs)
+{ exit(EXIT_FAILURE); }
+int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
+             float* distance_out, float* displacement_out,
+             const int n_frames, const int n_atoms, const int n_pairs)
+{ exit(EXIT_FAILURE); }
+int angle(const float* xyz, const int* triplets, float* out,
+          const int n_frames, const int n_atoms, const int n_angles)
+{ exit(EXIT_FAILURE); }
+int angle_mic(const float* xyz, const int* triplets,
+              const float* box_matrix, float* out,
+              const int n_frames, const int n_atoms, const int n_angles)
+{ exit(EXIT_FAILURE); }
+int dihedral(const float* xyz, const int* quartets, float* out,
+           const int n_frames, const int n_atoms, const int n_quartets)
+{ exit(EXIT_FAILURE); }
+int dihedral_mic(const float* xyz, const int* quartets,
+                 const float* box_matrix, float* out,
+                 const int n_frames, const int n_atoms, const int n_quartets)
+{ exit(EXIT_FAILURE); }
+int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indices,
+                  const int n_frames, const int n_atoms, const int n_residues,
+                  int* hbonds, float* henergies)
+{ exit(EXIT_FAILURE); }
 
 #else
 #include <pmmintrin.h>
