@@ -1,11 +1,11 @@
-"""MDTraj: Read, write and analyze MD trajectories with only a few lines of Python code.
+"""mdtraj: Read, write and analyze MD trajectories with only a few lines of Python code.
 
-MDTraj is a python library that allows users to manipulate molecular dynamics
+mdtraj is a python library that allows users to manipulate molecular dynamics
 (MD) trajectories and perform a variety of analyses, including fast RMSD,
-solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj
+solvent accessible surface area, hydrogen bonding, etc. A highlight of mdtraj
 is the wide variety of molecular dynamics trajectory file formats which are
 supported, including RCSB pdb, GROMACS xtc and trr, CHARMM / NAMD dcd, AMBER
-binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
+binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and mdtraj HDF5.
 """
 
 from __future__ import print_function
@@ -98,12 +98,12 @@ def find_packages():
     contributors, licensed under the BSD license.
     """
     packages = ['mdtraj.scripts']
-    for dir,subdirs,files in os.walk('MDTraj'):
+    for dir,subdirs,files in os.walk('mdtraj'):
         package = dir.replace(os.path.sep, '.')
         if '__init__.py' not in files:
             # not a package
             continue
-        packages.append(package.replace('MDTraj', 'mdtraj'))
+        packages.append(package.replace('mdtraj', 'mdtraj'))
     return packages
 
 
@@ -138,7 +138,7 @@ def git_version():
     return GIT_REVISION
 
 
-def write_version_py(filename='MDTraj/version.py'):
+def write_version_py(filename='mdtraj/version.py'):
     cnt = """
 # THIS FILE IS GENERATED FROM MDTRAJ SETUP.PY
 short_version = '%(version)s'
@@ -291,30 +291,30 @@ compiler = CompilerDetection(disable_openmp)
 
 
 xtc = Extension('mdtraj.formats.xtc',
-                sources=['MDTraj/formats/xtc/src/xdrfile.c',
-                         'MDTraj/formats/xtc/src/xdrfile_xtc.c',
-                         'MDTraj/formats/xtc/xtc.pyx'],
-                include_dirs=['MDTraj/formats/xtc/include/',
-                              'MDTraj/formats/xtc/', numpy.get_include()])
+                sources=['mdtraj/formats/xtc/src/xdrfile.c',
+                         'mdtraj/formats/xtc/src/xdrfile_xtc.c',
+                         'mdtraj/formats/xtc/xtc.pyx'],
+                include_dirs=['mdtraj/formats/xtc/include/',
+                              'mdtraj/formats/xtc/', numpy.get_include()])
 
 trr = Extension('mdtraj.formats.trr',
-                sources=['MDTraj/formats/xtc/src/xdrfile.c',
-                         'MDTraj/formats/xtc/src/xdrfile_trr.c',
-                         'MDTraj/formats/xtc/trr.pyx'],
-                include_dirs=['MDTraj/formats/xtc/include/',
-                              'MDTraj/formats/xtc/', numpy.get_include()])
+                sources=['mdtraj/formats/xtc/src/xdrfile.c',
+                         'mdtraj/formats/xtc/src/xdrfile_trr.c',
+                         'mdtraj/formats/xtc/trr.pyx'],
+                include_dirs=['mdtraj/formats/xtc/include/',
+                              'mdtraj/formats/xtc/', numpy.get_include()])
 
 dcd = Extension('mdtraj.formats.dcd',
-                sources=['MDTraj/formats/dcd/src/dcdplugin.c',
-                         'MDTraj/formats/dcd/dcd.pyx'],
-                include_dirs=["MDTraj/formats/dcd/include/",
-                              'MDTraj/formats/dcd/', numpy.get_include()])
+                sources=['mdtraj/formats/dcd/src/dcdplugin.c',
+                         'mdtraj/formats/dcd/dcd.pyx'],
+                include_dirs=["mdtraj/formats/dcd/include/",
+                              'mdtraj/formats/dcd/', numpy.get_include()])
 
 binpos = Extension('mdtraj.formats.binpos',
-                   sources=['MDTraj/formats/binpos/src/binposplugin.c',
-                            'MDTraj/formats/binpos/binpos.pyx'],
-                   include_dirs=['MDTraj/formats/binpos/include/',
-                                 'MDTraj/formats/binpos/', numpy.get_include()])
+                   sources=['mdtraj/formats/binpos/src/binposplugin.c',
+                            'mdtraj/formats/binpos/binpos.pyx'],
+                   include_dirs=['mdtraj/formats/binpos/include/',
+                                 'mdtraj/formats/binpos/', numpy.get_include()])
 
 
 def rmsd_extensions():
@@ -323,27 +323,27 @@ def rmsd_extensions():
     compiler_libraries = compiler.compiler_libraries_openmp
     rmsd = Extension('mdtraj._rmsd',
                      sources=[
-                         'MDTraj/rmsd/src/theobald_rmsd.c',
-                         'MDTraj/rmsd/src/rotation.c',
-                         'MDTraj/rmsd/src/center.c',
-                         'MDTraj/rmsd/_rmsd.pyx'],
+                         'mdtraj/rmsd/src/theobald_rmsd.c',
+                         'mdtraj/rmsd/src/rotation.c',
+                         'mdtraj/rmsd/src/center.c',
+                         'mdtraj/rmsd/_rmsd.pyx'],
                      include_dirs=[
-                         'MDTraj/rmsd/include', numpy.get_include()],
+                         'mdtraj/rmsd/include', numpy.get_include()],
                      extra_compile_args=compiler_args,
                      libraries=compiler_libraries)
 
     lprmsd = Extension('mdtraj._lprmsd',
                        sources=[
-                           'MDTraj/rmsd/src/theobald_rmsd.c',
-                           'MDTraj/rmsd/src/rotation.c',
-                           'MDTraj/rmsd/src/center.c',
-                           'MDTraj/rmsd/src/fancy_index.cpp',
-                           'MDTraj/rmsd/src/Munkres.cpp',
-                           'MDTraj/rmsd/src/euclidean_permutation.cpp',
-                           'MDTraj/rmsd/_lprmsd.pyx'],
+                           'mdtraj/rmsd/src/theobald_rmsd.c',
+                           'mdtraj/rmsd/src/rotation.c',
+                           'mdtraj/rmsd/src/center.c',
+                           'mdtraj/rmsd/src/fancy_index.cpp',
+                           'mdtraj/rmsd/src/Munkres.cpp',
+                           'mdtraj/rmsd/src/euclidean_permutation.cpp',
+                           'mdtraj/rmsd/_lprmsd.pyx'],
                        language='c++',
                        include_dirs=[
-                           'MDTraj/rmsd/include', numpy.get_include()],
+                           'mdtraj/rmsd/include', numpy.get_include()],
                        extra_compile_args=compiler_args,
                        libraries=compiler_libraries)
     return rmsd, lprmsd
@@ -357,22 +357,22 @@ def geometry_extensions():
 
     return [
         Extension('mdtraj.geometry._geometry',
-            sources=['MDTraj/geometry/src/geometry.c',
-                     'MDTraj/geometry/src/sasa.c',
-                     'MDTraj/geometry/src/_geometry.pyx'],
-            include_dirs=['MDTraj/geometry/include',
-                          'MDTraj/geometry/src/kernels',
+            sources=['mdtraj/geometry/src/geometry.c',
+                     'mdtraj/geometry/src/sasa.c',
+                     'mdtraj/geometry/src/_geometry.pyx'],
+            include_dirs=['mdtraj/geometry/include',
+                          'mdtraj/geometry/src/kernels',
                           numpy.get_include()],
             define_macros=define_macros,
             extra_compile_args=compiler_args),
         Extension('mdtraj.geometry.drid',
-            sources=["MDTraj/geometry/drid.pyx",
-                     "MDTraj/geometry/src/dridkernels.c",
-                     "MDTraj/geometry/src/cephes/cbrt.c",
-                     "MDTraj/geometry/src/cephes/isnan.c",
-                     "MDTraj/geometry/src/moments.c"],
-            include_dirs=["MDTraj/geometry/include",
-                          "MDTraj/geometry/include/cephes",
+            sources=["mdtraj/geometry/drid.pyx",
+                     "mdtraj/geometry/src/dridkernels.c",
+                     "mdtraj/geometry/src/cephes/cbrt.c",
+                     "mdtraj/geometry/src/cephes/isnan.c",
+                     "mdtraj/geometry/src/moments.c"],
+            include_dirs=["mdtraj/geometry/include",
+                          "mdtraj/geometry/include/cephes",
                           numpy.get_include()],
             define_macros=define_macros,
             extra_compile_args=compiler_args)
@@ -395,7 +395,7 @@ setup(name='mdtraj',
       platforms=['Linux', 'Mac OS-X', 'Unix', 'Windows'],
       classifiers=CLASSIFIERS.splitlines(),
       packages=find_packages(),
-      package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
+      package_dir={'mdtraj': 'mdtraj', 'mdtraj.scripts': 'scripts'},
       ext_modules=cythonize(extensions),
       package_data={'mdtraj.formats.pdb': ['data/*'],
                     'mdtraj.testing': ['reference/*']},
