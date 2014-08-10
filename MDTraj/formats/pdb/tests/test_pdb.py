@@ -184,3 +184,19 @@ def test_pdb_from_url():
     eq(t2.n_frames, 1)
     eq(t1.n_atoms, 2208)
     eq(t2.n_atoms, 2208)
+
+def test_3nch_conect():
+    # This has conect entries that use all available digits, good failure case.
+    t1 = load_pdb('http://www.rcsb.org/pdb/files/3nch.pdb.gz')
+    t2 = load_pdb('http://www.rcsb.org/pdb/files/3nch.pdb')
+    eq(t1.n_frames, t2.n_frames)
+    eq(t1.n_atoms, t2.n_atoms)
+    top, bonds = t1.top.to_dataframe()
+    bonds = dict(((a, b), 1) for (a, b) in bonds)
+    eq(bonds[19782, 19783], 1)  # Check that last SO4 molecule has right bonds
+    eq(bonds[19782, 19784], 1)  # Check that last SO4 molecule has right bonds
+    eq(bonds[19782, 19785], 1)  # Check that last SO4 molecule has right bonds
+    eq(bonds[19782, 19786], 1)  # Check that last SO4 molecule has right bonds
+
+def test_1ncw():
+    t1 = load_pdb('http://www.rcsb.org/pdb/files/1ncw.pdb.gz')

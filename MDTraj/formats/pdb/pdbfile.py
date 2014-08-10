@@ -488,6 +488,10 @@ class PDBTrajectoryFile(object):
                     for atom in residue.atoms:
                         coords.append(atom.get_position())
             _positions.append(coords)
+
+        if not all(len(f) == len(_positions[0]) for f in _positions):
+            raise ValueError('PDB Error: All MODELs must contain the same number of ATOMs')
+
         self._positions = np.array(_positions)
 
         ## The atom positions read from the PDB file
@@ -501,7 +505,8 @@ class PDBTrajectoryFile(object):
         for connect in pdb.models[0].connects:
             i = connect[0]
             for j in connect[1:]:
-                connectBonds.append((atomByNumber[i], atomByNumber[j]))
+                if i in atomByNumber and j in atomByNumber:
+                    connectBonds.append((atomByNumber[i], atomByNumber[j]))
         if len(connectBonds) > 0:
             # Only add bonds that don't already exist.
             existingBonds = set(self._topology.bonds)
