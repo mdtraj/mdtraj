@@ -488,6 +488,10 @@ class PDBTrajectoryFile(object):
                     for atom in residue.atoms:
                         coords.append(atom.get_position())
             _positions.append(coords)
+
+        if not all(len(f) == len(_positions[0]) for f in _positions):
+            raise ValueError('PDB Error: All MODELs must contain the same number of ATOMs')
+
         self._positions = np.array(_positions)
 
         ## The atom positions read from the PDB file
