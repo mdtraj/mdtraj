@@ -197,3 +197,6 @@ def test_3nch_conect():
     eq(bonds[19782, 19784], 1)  # Check that last SO4 molecule has right bonds
     eq(bonds[19782, 19785], 1)  # Check that last SO4 molecule has right bonds
     eq(bonds[19782, 19786], 1)  # Check that last SO4 molecule has right bonds
+
+def test_1ncw():
+    t1 = load_pdb('http://www.rcsb.org/pdb/files/1ncw.pdb.gz')

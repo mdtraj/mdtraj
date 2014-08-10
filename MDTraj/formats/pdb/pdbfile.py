@@ -501,7 +501,8 @@ class PDBTrajectoryFile(object):
         for connect in pdb.models[0].connects:
             i = connect[0]
             for j in connect[1:]:
-                connectBonds.append((atomByNumber[i], atomByNumber[j]))
+                if i in atomByNumber and j in atomByNumber:
+                    connectBonds.append((atomByNumber[i], atomByNumber[j]))
         if len(connectBonds) > 0:
             # Only add bonds that don't already exist.
             existingBonds = set(self._topology.bonds)
