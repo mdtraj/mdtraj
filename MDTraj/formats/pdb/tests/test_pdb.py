@@ -185,8 +185,8 @@ def test_pdb_from_url():
     eq(t1.n_atoms, 2208)
     eq(t2.n_atoms, 2208)
 
-def test_pdb_from_url():
-    # load pdb from URL
+def test_3nch_conect():
+    # This has conect entries that use all available digits, good failure case.
     t1 = load_pdb('http://www.rcsb.org/pdb/files/3nch.pdb.gz')
     t2 = load_pdb('http://www.rcsb.org/pdb/files/3nch.pdb')
     eq(t1.n_frames, t2.n_frames)
