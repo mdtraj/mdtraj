@@ -45,6 +45,7 @@
 
 from __future__ import print_function, division
 import os
+from datetime import date
 import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy
@@ -54,6 +55,7 @@ from mdtraj.utils import ilen, cast_indices, in_units_of
 from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.core import element as elem
 from mdtraj.utils import six
+from mdtraj import version
 if six.PY3:
     from urllib.request import urlopen
     from urllib.parse import urlparse
@@ -306,7 +308,7 @@ class PDBTrajectoryFile(object):
         if modelIndex is not None:
             print("ENDMDL", file=self._file)
 
-    def _write_header(self, unitcell_lengths, unitcell_angles):
+    def _write_header(self, unitcell_lengths, unitcell_angles, write_metadata=True):
         """Write out the header for a PDB file.
 
         Parameters
@@ -334,6 +336,8 @@ class PDBTrajectoryFile(object):
         box = list(unitcell_lengths) + list(unitcell_angles)
         assert len(box) == 6
 
+        if write_metadata:
+            print("REMARK   1 CREATED WITH MDTraj %s, %s" % (version.version, str(date.today())), file=self._file)
         print("CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f P 1           1 " % tuple(box), file=self._file)
 
     def _write_footer(self):
