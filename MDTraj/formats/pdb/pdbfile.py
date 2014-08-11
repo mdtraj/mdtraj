@@ -216,18 +216,20 @@ class PDBTrajectoryFile(object):
 
             if _is_url(filename):
                 self._file = urlopen(filename)
-            else:
-                self._file = open(filename, 'r')
-
-            if filename.lower().endswith('.gz'):
+                if filename.lower().endswith('.gz'):
+                    if six.PY3:
+                        self._file = gzip.GzipFile(fileobj=self._file)
+                    else:
+                        self._file = gzip.GzipFile(fileobj=six.StringIO(
+                            self._file.read()))
                 if six.PY3:
-                    self._file = gzip.GzipFile(fileobj=self._file)
+                    self._file = six.StringIO(self._file.read().decode('utf-8'))
+            else:
+                if filename.lower().endswith('.gz'):
+                    self._file = gzip.open(filename, 'r')
+                    self._file = six.StringIO(self._file.read().decode('utf-8'))                    
                 else:
-                    self._file = gzip.GzipFile(fileobj=six.StringIO(
-                        self._file.read()))
-
-            if _is_url(filename) and six.PY3:
-                self._file = six.StringIO(self._file.read().decode('utf-8'))
+                    self._file = open(filename, 'r')
 
             self._read_models()
         elif mode == 'w':
