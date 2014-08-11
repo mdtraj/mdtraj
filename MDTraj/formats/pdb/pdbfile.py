@@ -46,6 +46,7 @@
 from __future__ import print_function, division
 import os
 from datetime import date
+import gzip
 import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy
@@ -212,10 +213,10 @@ class PDBTrajectoryFile(object):
 
         if mode == 'r':
             PDBTrajectoryFile._loadNameReplacementTables()
+
             if _is_url(filename):
                 self._file = urlopen(filename)
                 if filename.lower().endswith('.gz'):
-                    import gzip
                     if six.PY3:
                         self._file = gzip.GzipFile(fileobj=self._file)
                     else:
@@ -224,7 +225,12 @@ class PDBTrajectoryFile(object):
                 if six.PY3:
                     self._file = six.StringIO(self._file.read().decode('utf-8'))
             else:
-                self._file = open(filename, 'r')
+                if filename.lower().endswith('.gz'):
+                    self._file = gzip.open(filename, 'r')
+                    self._file = six.StringIO(self._file.read().decode('utf-8'))                    
+                else:
+                    self._file = open(filename, 'r')
+
             self._read_models()
         elif mode == 'w':
             self._header_written = False
