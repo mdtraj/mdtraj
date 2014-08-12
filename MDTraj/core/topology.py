@@ -155,20 +155,20 @@ class Topology(object):
     >>> table, bonds = topology.to_dataframe()
     >>> print(table.head())
        serial name element  resSeq resName  chainID
-    0       0   H1       H       0     CYS        0
-    1       1  CH3       C       0     CYS        0
-    2       2   H2       H       0     CYS        0
-    3       3   H3       H       0     CYS        0
-    4       4    C       C       0     CYS        0
+    0       0   H1       H       1     CYS        0
+    1       1  CH3       C       1     CYS        0
+    2       2   H2       H       1     CYS        0
+    3       3   H3       H       1     CYS        0
+    4       4    C       C       1     CYS        0
     >>> # rename residue "CYS" to "CYSS"
     >>> table[table['residue'] == 'CYS']['residue'] = 'CYSS'
     >>> print(table.head())
        serial name element  resSeq resName   chainID
-    0       0   H1       H       0     CYSS        0
-    1       1  CH3       C       0     CYSS        0
-    2       2   H2       H       0     CYSS        0
-    3       3   H3       H       0     CYSS        0
-    4       4    C       C       0     CYSS        0
+    0       0   H1       H       1     CYSS        0
+    1       1  CH3       C       1     CYSS        0
+    2       2   H2       H       1     CYSS        0
+    3       3   H3       H       1     CYSS        0
+    4       4    C       C       1     CYSS        0
     >>> t2 = md.Topology.from_dataframe(table, bonds)
     """
 
