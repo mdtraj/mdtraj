@@ -116,6 +116,7 @@ def uniform_quaternion(size=None, random_state=None):
     ----------
     .. [1] K. Shoemake. Uniform random rotations. In D. Kirk, editor, Graphics
        Gems III, pages 124-132. Academic, New York, 1992.
+    .. [2] http://planning.cs.uiuc.edu/node198.html
     """
     random = check_random_state(random_state)
     if size is None:
