@@ -773,26 +773,29 @@ class Topology(object):
     def select_atom_indices(self, selection='minimal'):
         """Get the indices of biologically-relevant groups by name.
 
-        Attributes
+        Parameters
         ----------
-        topology : md.Topology
-            Topology object
         selection : {'all', 'alpha', 'minimal', 'heavy', 'water'}
             What types of atoms to select.
-            - all:      All atoms
-            - alpha :   Alpha carbons
-            - minimal:  Keep the atoms in protein residues with names
-                        CA, CB, C, N, O,
-            - heavy:    All non-hydrogen atoms that are not symmetry equivalent.
-                        By symmetry equivalent, we mean atoms identical under an
-                        exchange of labels. For example, heavy will exclude the
-                        two pairs of equivalent carbons (CD, CE) in a PHE ring.
-            - water:    Water oxygen atoms
+
+            ``all``
+                All atoms
+            ``alpha``
+                Protein residue alpha carbons
+            ``minimal``
+                Keep the atoms in protein residues with names in {CA, CB, C, N, O}
+            ``heavy``
+                All non-hydrogen atoms that are not symmetry equivalent. By
+                symmetry equivalent, we mean atoms identical under an exchange
+                of labels. For example, heavy will exclude the two pairs of
+                equivalent carbons (CD, CE) in a PHE ring.
+            ``water``
+                Water oxygen atoms
 
         Returns
         ----------
         indices : np.ndarray (N,)
-            An array of the selected indices.
+            An array of the indices of the selected atoms.
         """
         selection = selection.lower()
         options = ['all', 'alpha', 'minimal', 'heavy', 'water']
