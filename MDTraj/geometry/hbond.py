@@ -40,12 +40,12 @@ __all__ = ['wernet_nilsson', 'baker_hubbard', 'kabsch_sander']
 
 def wernet_nilsson(traj, exclude_water=True, periodic=True):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
-    distance and angle according to the criterion outlined in [1].  
+    distance and angle according to the criterion outlined in [1].
     As opposed to Baker-Hubbard, this is a "cone" criterion where the
     distance cutoff depends on the angle.
 
     The criterion employed is :math:`r_\\text{DA} < 3.3 A - 0.00044*\\delta_{HDA}*\\delta_{HDA}`,
-    where :math:`r_\\text{DA}` is the distance between donor and acceptor heavy atoms, 
+    where :math:`r_\\text{DA}` is the distance between donor and acceptor heavy atoms,
     and :math:`\\delta_{HDA}` is the angle made by the hydrogen atom, donor, and acceptor atoms,
     measured in degrees (zero in the case of a perfectly straight bond: D-H ... A).
 
@@ -68,7 +68,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
     hbonds : list, len=n_frames
         A list containing the atom indices involved in each of the identified
         hydrogen bonds at each frame. Each element in the list is an array
-        where each row contains three integer indices, `(d_i, h_i, a_i)`, 
+        where each row contains three integer indices, `(d_i, h_i, a_i)`,
         such that `d_i` is the index of the donor atom, `h_i` the index
         of the hydrogen atom, and `a_i` the index of the acceptor atom involved
         in a hydrogen bond which occurs in that frame.
@@ -96,7 +96,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
     >>> label = lambda hbond : '%s -- %s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
     >>> for hbond in hbonds:
     >>>     print label(hbond)
-    GLU1-N -- GLU1-OE2 
+    GLU1-N -- GLU1-OE2
     GLU1-N -- GLU1-OE1
     GLY6-N -- SER4-O
     CYS7-N -- GLY5-O
@@ -109,8 +109,8 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
 
     References
     ----------
-    .. [1] Wernet, Ph., L.G.M. Pettersson, and A. Nilsson, et al.  
-    "The Structure of the First Coordination Shell in Liquid Water." (2004) 
+    .. [1] Wernet, Ph., L.G.M. Pettersson, and A. Nilsson, et al.
+    "The Structure of the First Coordination Shell in Liquid Water." (2004)
     Science 304, 995-999.
     """
 
@@ -225,7 +225,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
     >>> label = lambda hbond : '%s -- %s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
     >>> for hbond in hbonds:
     >>>     print label(hbond)
-    GLU1-N -- GLU1-OE2 
+    GLU1-N -- GLU1-OE2
     GLU1-N -- GLU1-OE1
     GLY6-N -- SER4-O
     CYS7-N -- GLY5-O
@@ -296,6 +296,8 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
 
     return angle_triplets[occurance > freq]
 
+
+
 def kabsch_sander(traj):
     """Compute the Kabsch-Sander hydrogen bond energy between each pair
     of residues in every frame.
@@ -342,31 +344,16 @@ def kabsch_sander(traj):
         raise RuntimeError('This CPU does not support the required instruction set (SSE4.1)')
 
     import scipy.sparse
-
-    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz',
-                      shape=(None, None, 3), warn_on_cast=False)
-
-    ca_indices, nco_indices = [], []
-    for residue in traj.topology.residues:
-        if residue.name == 'PRO':
-            ca_indices.append(-1)
-        else:
-            ca_indices.append([a.index for a in residue.atoms if a.name == 'CA'][0])
-
-        n = [a.index for a in residue.atoms if a.name == 'N'][0]
-        c = [a.index for a in residue.atoms if a.name == 'C'][0]
-        o = [a.index for a in residue.atoms if a.name == 'O'][0]
-        nco_indices.append([n, c, o])
-
-    nco_indices = np.array(nco_indices, np.int32)
-    ca_indices = np.array(ca_indices, np.int32)
+    xyz, nco_indices, ca_indices, proline_indices = _prep_kabsch_sander_arrays(traj)
     n_residues = len(ca_indices)
+
     hbonds = np.empty((xyz.shape[0], n_residues, 2), np.int32)
     henergies = np.empty((xyz.shape[0], n_residues, 2), np.float32)
     hbonds.fill(-1)
     henergies.fill(np.nan)
 
-    _geometry._kabsch_sander(xyz, nco_indices, ca_indices, hbonds, henergies)
+    _geometry._kabsch_sander(xyz, nco_indices, ca_indices, proline_indices,
+                             hbonds, henergies)
 
     # The C code returns its info in a pretty inconvenient format.
     # Let's change it to a list of scipy CSR matrices.
@@ -388,3 +375,24 @@ def kabsch_sander(traj):
         matrices.append(scipy.sparse.csr_matrix((data, indices, indptr), shape=(n_residues, n_residues)))
 
     return matrices
+
+
+def _prep_kabsch_sander_arrays(traj):
+    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz',
+                      shape=(None, None, 3), warn_on_cast=False)
+
+    ca_indices, nco_indices, is_proline = [], [], []
+    for residue in traj.topology.residues:
+        ca_indices.append([a.index for a in residue.atoms if a.name == 'CA'][0])
+        is_proline.append(residue.name == 'PRO')
+
+        n = [a.index for a in residue.atoms if a.name == 'N'][0]
+        c = [a.index for a in residue.atoms if a.name == 'C'][0]
+        o = [a.index for a in residue.atoms if a.name == 'O'][0]
+        nco_indices.append([n, c, o])
+
+    nco_indices = np.array(nco_indices, np.int32)
+    ca_indices = np.array(ca_indices, np.int32)
+    proline_indices = np.array(is_proline, np.int32)
+
+    return xyz, nco_indices, ca_indices, proline_indices

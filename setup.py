@@ -359,6 +359,7 @@ def geometry_extensions():
         Extension('mdtraj.geometry._geometry',
             sources=['MDTraj/geometry/src/geometry.c',
                      'MDTraj/geometry/src/sasa.c',
+                     'MDTraj/geometry/src/dssp.cpp',
                      'MDTraj/geometry/src/_geometry.pyx'],
             include_dirs=['MDTraj/geometry/include',
                           'MDTraj/geometry/src/kernels',

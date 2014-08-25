@@ -53,8 +53,12 @@ cdef extern from "geometry.h":
                      int n_quartets) nogil
 
     int kabsch_sander(float* xyz, int* nco_indices, int* ca_indices,
-                      int n_frames, int n_atoms, int n_residues,
-                      int* hbonds, float* henergies) nogil
+                      const int* is_proline, int n_frames, int n_atoms,
+                      int n_residues, int* hbonds, float* henergies) nogil
+    
+    int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
+             const int* is_proline, const int* chains_ids, const int n_frames,
+             const int n_atoms, const int n_residues) nogil
 
 cdef extern int sasa(int n_frames, int n_atoms, const float* xyzlist,
                      const float* atom_radii, int n_sphere_points,
@@ -161,13 +165,15 @@ def _dihedral_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
 def _kabsch_sander(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
                    np.ndarray[np.int32_t, ndim=2, mode='c'] nco_indices not None,
                    np.ndarray[np.int32_t, ndim=1, mode='c'] ca_indices not None,
+                   np.ndarray[np.int32_t, ndim=1, mode='c'] is_proline not None,
                    np.ndarray[np.int32_t, ndim=3, mode='c'] hbonds not None,
                    np.ndarray[np.float32_t, ndim=3, mode='c'] henergies not None):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_residues = ca_indices.shape[0]
     kabsch_sander(&xyz[0,0,0], <int*> &nco_indices[0,0], <int*> &ca_indices[0],
-                  n_frames, n_atoms, n_residues, <int*> &hbonds[0,0,0], &henergies[0,0,0])
+                  <int*> &is_proline[0], n_frames, n_atoms, n_residues,
+                  <int*> &hbonds[0,0,0], &henergies[0,0,0])
 
 
 @cython.boundscheck(False)
@@ -178,3 +184,17 @@ def _sasa(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     sasa(n_frames, n_atoms, &xyz[0,0,0], &atom_radii[0], n_sphere_points, &array_of_areas[0,0])
+
+
+@cython.boundscheck(False)
+def _dssp(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
+          np.ndarray[np.int32_t, ndim=2, mode='c'] nco_indices not None,
+          np.ndarray[np.int32_t, ndim=1, mode='c'] ca_indices not None,
+          np.ndarray[np.int32_t, ndim=1, mode='c'] is_proline not None,
+          np.ndarray[np.int32_t, ndim=1, mode='c'] chain_ids not None):
+    cdef int n_frames = xyz.shape[0]
+    cdef int n_atoms = xyz.shape[1]
+    cdef int n_residues = ca_indices.shape[0]
+    dssp(&xyz[0,0,0], <int*> &nco_indices[0,0], <int*> &ca_indices[0],
+         <int*> &is_proline[0], <int*> &chain_ids[0], n_frames, n_atoms,
+         n_residues)

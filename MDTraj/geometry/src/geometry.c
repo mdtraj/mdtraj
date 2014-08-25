@@ -60,8 +60,8 @@ int dihedral_mic(const float* xyz, const int* quartets,
                  const int n_frames, const int n_atoms, const int n_quartets)
 { exit(EXIT_FAILURE); }
 int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indices,
-                  const int n_frames, const int n_atoms, const int n_residues,
-                  int* hbonds, float* henergies)
+                  const int* is_proline, const int n_frames, const int n_atoms,
+                  const int n_residues, int* hbonds, float* henergies)
 { exit(EXIT_FAILURE); }
 
 #else
@@ -134,7 +134,8 @@ static float ks_donor_acceptor(const float* xyz, const float* hcoords,
   */
   float energy;
   __m128 r_n, r_h, r_c, r_o, r_ho, r_nc, r_hc, r_no, d2_honchcno;
-  __m128 coupling;
+  __m128 coupling, recip_sqrt, one;
+  one = _mm_set1_ps(1.0);
 
   /* 332 (kcal*A/mol) * 0.42 * 0.2 * (1nm / 10 A) */
   coupling = _mm_setr_ps(-2.7888, -2.7888, 2.7888, 2.7888);
@@ -170,8 +171,10 @@ static float ks_donor_acceptor(const float* xyz, const float* hcoords,
                                _mm_shuffle_ps(_mm_dp_ps(r_hc, r_hc, 0xF3), _mm_dp_ps(r_no, r_no, 0xF3), _MM_SHUFFLE(0,1,0,1)),
                                _MM_SHUFFLE(2,0,2,0));
 
-  energy = _mm_cvtss_f32(_mm_dp_ps(coupling, _mm_rsqrt_ps(d2_honchcno), 0xFF));
-  /* printf("Energy: %f\n\n", energy); */
+  /* rsqrt_ps is really not that accurate... */                    
+  recip_sqrt = _mm_div_ps(one, _mm_sqrt_ps(d2_honchcno));
+  energy = _mm_cvtss_f32(_mm_dp_ps(coupling, recip_sqrt, 0xFF));
+  // energy = _mm_cvtss_f32(_mm_dp_ps(coupling, _mm_rsqrt_ps(d2_honchcno), 0xFF));
   return (energy < -9.9f ? -9.9f : energy);
 }
 
@@ -231,8 +234,8 @@ static INLINE void store_energies(int* hbonds, float* henergies, int donor,
 }
 
 int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indices,
-                  const int n_frames, const int n_atoms, const int n_residues,
-                  int* hbonds, float* henergies) {
+                  const int* is_proline, const int n_frames, const int n_atoms,
+                  const int n_residues, int* hbonds, float* henergies) {
   /* Find all of backbone hydrogen bonds between residues in each frame of a
      trajectory.
 
@@ -243,9 +246,10 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
     nco_indices : array, shape=(n_residues, 3)
         The indices of the backbone N, C, and O atoms for each residue.
     ca_indices : array, shape=(n_residues,)
-        The index of the CA atom of each residue. If a residue does not contain
-        a CA atom, or you want to skip the residue for another reason, the
-	value should be -1
+        The index of the CA atom of each residue.
+    is_proline : array, shape=(n_residue,)
+        If a particular residue does not contain a CA atom, or you want to skip
+        the residue for another reason, this value should evaluate to True.
 
     Returns
     -------
@@ -280,7 +284,8 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
     for (ri = 0; ri < n_residues; ri++) {
       /* -1 is used to indicate that this residue lacks a this atom type */
       /* so just skip it */
-      if (ca_indices[ri] == -1) continue;
+      if (is_proline[ri])
+          continue;
       ri_ca = load_float3(xyz + 3*ca_indices[ri]);
 
       for (rj = ri + 1; rj < n_residues; rj++) {
