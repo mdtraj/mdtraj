@@ -72,19 +72,17 @@ static void calculate_beta_sheets(const float* xyz, const int* nco_indices,
     const int* ca_indices, const int* chain_ids, const int* hbonds,
     const int n_atoms, const int n_residues, std::vector<ss_t>& secondary)
 {
-    int i, j;
     std::vector<MBridge> bridges;
 
     // Calculate bridges
-    for (i = 1; i < n_residues - 4; i++) {
-        for (j = i+3; j < n_residues - 1; j++) {
+    for (int i = 1; i < n_residues - 4; i++) {
+        for (int j = i+3; j < n_residues - 1; j++) {
             bridge_t type = _residue_test_bridge(j, i, n_residues, chain_ids, hbonds);
             if (type == BRIDGE_NONE) {
                 continue;
             }
 
-            // printf("Initial bridge between %d && %d\n", i, j);
-
+            // printf("Initial bridge between %d and %d\n", i, j);
             bool found = false;
             for (std::vector<MBridge>::iterator bridge = bridges.begin();
                  bridge != bridges.end(); ++bridge) {
@@ -120,8 +118,8 @@ static void calculate_beta_sheets(const float* xyz, const int* nco_indices,
 
     // Extend ladders
     sort(bridges.begin(), bridges.end());
-    for (int i = 0; i < bridges.size(); ++i) {
-        for (int j = i + 1; j < bridges.size(); ++j) {
+    for (unsigned int i = 0; i < bridges.size(); ++i) {
+        for (unsigned int j = i + 1; j < bridges.size(); ++j) {
             int ibi = bridges[i].i.front();
             int iei = bridges[i].i.back();
             int jbi = bridges[i].j.front();
@@ -188,7 +186,7 @@ static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
             next_ca = load_float3(xyz + 3*ca_indices[i+2]);
             u_prime = _mm_sub_ps(prev_ca, this_ca);
             v_prime = _mm_sub_ps(this_ca, next_ca);
-            /* normalize the vectors u_prime && v_prime */
+            /* normalize the vectors u_prime and v_prime */
             u = _mm_div_ps(u_prime, _mm_sqrt_ps(_mm_dp_ps(u_prime, u_prime, 0x7F)));
             v = _mm_div_ps(v_prime, _mm_sqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
             /* compute the arccos of the dot product, && store the result. */
@@ -209,12 +207,12 @@ static void calculate_alpha_helicies(const float* xyz, const int* nco_indices,
         chains[chain_ids[i]].push_back(i);
     std::vector< std::vector< helix_flag_t> > helix_flags(n_residues, std::vector<helix_flag_t>(6, HELIX_NONE));
 
-    // Helix && Turn
+    // Helix and Turn
     for (std::map<int, std::vector<int> >::iterator it = chains.begin(); it != chains.end(); it++) {
         std::vector<int> residues = it->second;
 
         for (int stride = 3; stride <= 5; stride++) {
-            for (int ii = 0; ii < residues.size(); ii++) {
+            for (unsigned int ii = 0; ii < residues.size(); ii++) {
                 int i = residues[ii];
 
                 if ((i+stride) < n_residues && _test_bond(i, i+stride, hbonds) && (chain_ids[i] == chain_ids[i+stride])) {
@@ -324,7 +322,7 @@ int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
             framehbonds, n_atoms, n_residues, framesecondary);
 
         for (int j = 0; j < n_residues; j++) {
-            char ss;
+            char ss = ' ';
             switch (framesecondary[j]) {
                 case SS_ALPHAHELIX:  ss='H'; break;
                 case SS_BETABRIDGE:  ss='B'; break;
