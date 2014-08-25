@@ -25,28 +25,6 @@ enum bridge_t {BRIDGE_NONE, BRIDGE_PARALLEL, BRIDGE_ANTIPARALLEL};
 enum ss_t {SS_LOOP, SS_ALPHAHELIX, SS_BETABRIDGE, SS_STRAND, SS_HELIX_3, SS_HELIX_5,
           SS_TURN, SS_BEND};
 
-
-
-static void print_secondary(const std::vector<ss_t> & framesecondary)
-{
-  printf("\"");
-  for (int j = 0; j < framesecondary.size(); j++) {
-      char ss;
-      switch (framesecondary[j]) {
-          case SS_ALPHAHELIX:  ss='H'; break;
-          case SS_BETABRIDGE:  ss='B'; break;
-          case SS_STRAND:      ss='E'; break;
-          case SS_HELIX_3:     ss='G'; break;
-          case SS_HELIX_5:     ss='I'; break;
-          case SS_TURN:        ss='T'; break;
-          case SS_BEND:        ss='S'; break;
-          case SS_LOOP:        ss=' '; break;
-      }
-      printf("%c", ss);
-  }
-  printf("\"\n");
-}
-
 struct MBridge {
 	bridge_t type;
 	int sheet, ladder;
@@ -90,7 +68,7 @@ static bridge_t _residue_test_bridge(int i, int j, int n_residues,
 }
 
 
-static int calculate_beta_sheets(const float* xyz, const int* nco_indices,
+static void calculate_beta_sheets(const float* xyz, const int* nco_indices,
     const int* ca_indices, const int* chain_ids, const int* hbonds,
     const int n_atoms, const int n_residues, std::vector<ss_t>& secondary)
 {
@@ -221,7 +199,7 @@ static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
     return is_bend;
 }
 
-static int calculate_alpha_helicies(const float* xyz, const int* nco_indices,
+static void calculate_alpha_helicies(const float* xyz, const int* nco_indices,
     const int* ca_indices, const int* chain_ids,
     const int* hbonds, const int n_atoms, const int n_residues,
     std::vector<ss_t>& secondary)

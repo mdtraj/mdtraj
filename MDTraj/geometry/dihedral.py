@@ -107,6 +107,9 @@ def compute_dihedrals(traj, indices, periodic=True, opt=True):
     if not np.all(np.logical_and(quartets < traj.n_atoms, quartets >= 0)):
         raise ValueError('indices must be between 0 and %d' % traj.n_atoms)
 
+    if len(quartets) == 0:
+        return np.zeros((len(xyz), 0), dtype=np.float32)
+
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
     if periodic is True and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
