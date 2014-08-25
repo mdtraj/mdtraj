@@ -26,14 +26,14 @@ enum ss_t {SS_LOOP, SS_ALPHAHELIX, SS_BETABRIDGE, SS_STRAND, SS_HELIX_3, SS_HELI
           SS_TURN, SS_BEND};
 
 struct MBridge {
-	bridge_t type;
-	int sheet, ladder;
-	std::set<MBridge*> link;
-	std::deque<int> i, j;
-	int chain_i, chain_j;
+    bridge_t type;
+    int sheet, ladder;
+    std::set<MBridge*> link;
+    std::deque<int> i, j;
+    int chain_i, chain_j;
 
-	bool operator<(const MBridge& b) const {
-	    return chain_i < b.chain_i || (chain_i == b.chain_i and i.front() < b.i.front());
+    bool operator<(const MBridge& b) const {
+        return chain_i < b.chain_i || (chain_i == b.chain_i and i.front() < b.i.front());
     }
 };
 
@@ -89,47 +89,47 @@ static void calculate_beta_sheets(const float* xyz, const int* nco_indices,
             for (std::vector<MBridge>::iterator bridge = bridges.begin();
                  bridge != bridges.end(); ++bridge) {
 
-    			if (type != bridge->type or i != bridge->i.back() + 1)
-    				continue;
+                if (type != bridge->type or i != bridge->i.back() + 1)
+                    continue;
 
-				if (type == BRIDGE_PARALLEL and bridge->j.back() + 1 == j) {
-					bridge->i.push_back(i);
-					bridge->j.push_back(j);
-					found = true;
-					break;
-				}
+                if (type == BRIDGE_PARALLEL and bridge->j.back() + 1 == j) {
+                    bridge->i.push_back(i);
+                    bridge->j.push_back(j);
+                    found = true;
+                    break;
+                }
 
-				if (type == BRIDGE_ANTIPARALLEL and bridge->j.front() - 1 == j) {
-					bridge->i.push_back(i);
-					bridge->j.push_front(j);
-					found = true;
-					break;
-				}
+                if (type == BRIDGE_ANTIPARALLEL and bridge->j.front() - 1 == j) {
+                    bridge->i.push_back(i);
+                    bridge->j.push_front(j);
+                    found = true;
+                    break;
+                }
             }
             if (!found) {
-				MBridge bridge = {};
-				bridge.type = type;
-				bridge.i.push_back(i);
-				bridge.chain_i = chain_ids[i];
-				bridge.j.push_back(j);
-				bridge.chain_i = chain_ids[j];
-				bridges.push_back(bridge);
-			}
+                MBridge bridge = {};
+                bridge.type = type;
+                bridge.i.push_back(i);
+                bridge.chain_i = chain_ids[i];
+                bridge.j.push_back(j);
+                bridge.chain_i = chain_ids[j];
+                bridges.push_back(bridge);
+            }
         }
     }
 
     // Extend ladders
-	sort(bridges.begin(), bridges.end());
-	for (int i = 0; i < bridges.size(); ++i) {
-		for (int j = i + 1; j < bridges.size(); ++j) {
-			int ibi = bridges[i].i.front();
-			int iei = bridges[i].i.back();
-			int jbi = bridges[i].j.front();
-			int jei = bridges[i].j.back();
-			int ibj = bridges[j].i.front();
-			int iej = bridges[j].i.back();
-			int jbj = bridges[j].j.front();
-			int jej = bridges[j].j.back();
+    sort(bridges.begin(), bridges.end());
+    for (int i = 0; i < bridges.size(); ++i) {
+        for (int j = i + 1; j < bridges.size(); ++j) {
+            int ibi = bridges[i].i.front();
+            int iei = bridges[i].i.back();
+            int jbi = bridges[i].j.front();
+            int jei = bridges[i].j.back();
+            int ibj = bridges[j].i.front();
+            int iej = bridges[j].i.back();
+            int jbj = bridges[j].j.front();
+            int jej = bridges[j].j.back();
 
             if ((bridges[i].type != bridges[j].type) ||
                 chain_ids[std::min(ibi, ibj)] != chain_ids[std::max(iei, iej)] ||
@@ -137,40 +137,40 @@ static void calculate_beta_sheets(const float* xyz, const int* nco_indices,
                 ibj - iei >= 6 || (iei >= ibj and ibi <= iej))
                     continue;
 
-			bool bulge;
-			if (bridges[i].type == BRIDGE_PARALLEL)
-				bulge = ((jbj - jei < 6 and ibj - iei < 3) or (jbj - jei < 3));
-			else
-				bulge = ((jbi - jej < 6 and ibj - iei < 3) or (jbi - jej < 3));
+            bool bulge;
+            if (bridges[i].type == BRIDGE_PARALLEL)
+                bulge = ((jbj - jei < 6 and ibj - iei < 3) or (jbj - jei < 3));
+            else
+                bulge = ((jbi - jej < 6 and ibj - iei < 3) or (jbi - jej < 3));
 
-			if (bulge) {
-				bridges[i].i.insert(bridges[i].i.end(), bridges[j].i.begin(), bridges[j].i.end());
-				if (bridges[i].type == BRIDGE_PARALLEL)
-					bridges[i].j.insert(bridges[i].j.end(), bridges[j].j.begin(), bridges[j].j.end());
-				else
-					bridges[i].j.insert(bridges[i].j.begin(), bridges[j].j.begin(), bridges[j].j.end());
-				bridges.erase(bridges.begin() + j);
-				--j;
-			}
-		}
-	}
+            if (bulge) {
+                bridges[i].i.insert(bridges[i].i.end(), bridges[j].i.begin(), bridges[j].i.end());
+                if (bridges[i].type == BRIDGE_PARALLEL)
+                    bridges[i].j.insert(bridges[i].j.end(), bridges[j].j.begin(), bridges[j].j.end());
+                else
+                    bridges[i].j.insert(bridges[i].j.begin(), bridges[j].j.begin(), bridges[j].j.end());
+                bridges.erase(bridges.begin() + j);
+                --j;
+            }
+        }
+    }
 
     for (std::vector<MBridge>::iterator bridge = bridges.begin();
          bridge != bridges.end(); ++bridge) {
 
         ss_t ss = SS_BETABRIDGE;
- 		if (bridge->i.size() > 1)
- 			ss = SS_STRAND;
+        if (bridge->i.size() > 1)
+            ss = SS_STRAND;
 
- 		for (int i = bridge->i.front(); i <= bridge->i.back(); ++i) {
+        for (int i = bridge->i.front(); i <= bridge->i.back(); ++i) {
             if (secondary[i] != SS_STRAND)
                 secondary[i] = ss;
-     	}
+         }
 
- 		for (int i = bridge->j.front(); i <= bridge->j.back(); ++i) {
+        for (int i = bridge->j.front(); i <= bridge->j.back(); ++i) {
             if (secondary[i] != SS_STRAND)
                 secondary[i] = ss;
-     	}
+        }
     }
 
 }
@@ -279,14 +279,14 @@ static void calculate_alpha_helicies(const float* xyz, const int* nco_indices,
     const std::vector<int> is_bend = calculate_bends(xyz, ca_indices, chain_ids, n_residues);
     for (int i = 1; i < n_residues-1; i++)
         if (secondary[i] == SS_LOOP) {
-			bool isTurn = false;
-			for (int stride = 3; stride <= 5 and not isTurn; ++stride)
-				for (int k = 1; k < stride and not isTurn; ++k)
-					isTurn = (i >= k) && (helix_flags[i-k][stride] == HELIX_START || helix_flags[i-k][stride] == HELIX_START_AND_END);
+            bool isTurn = false;
+            for (int stride = 3; stride <= 5 and not isTurn; ++stride)
+                for (int k = 1; k < stride and not isTurn; ++k)
+                    isTurn = (i >= k) && (helix_flags[i-k][stride] == HELIX_START || helix_flags[i-k][stride] == HELIX_START_AND_END);
 
-			if (isTurn)
+            if (isTurn)
                 secondary[i] = SS_TURN;
-			else if (is_bend[i])
+            else if (is_bend[i])
                 secondary[i] = SS_BEND;
         }
 }
