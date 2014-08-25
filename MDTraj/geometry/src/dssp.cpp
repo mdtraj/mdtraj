@@ -47,9 +47,8 @@ static void print_secondary(const std::vector<ss_t> & framesecondary)
   printf("\"\n");
 }
 
-struct MBridge
-{
-	char type;
+static struct MBridge {
+	bridge_t type;
 	int sheet, ladder;
 	std::set<MBridge*> link;
 	std::deque<int> i, j;
@@ -161,14 +160,14 @@ static int calculate_beta_sheets(const float* xyz, const int* nco_indices,
                     continue;
 
 			bool bulge;
-			if (bridges[i].type == 'P')
+			if (bridges[i].type == BRIDGE_PARALLEL)
 				bulge = ((jbj - jei < 6 and ibj - iei < 3) or (jbj - jei < 3));
 			else
 				bulge = ((jbi - jej < 6 and ibj - iei < 3) or (jbi - jej < 3));
 
 			if (bulge) {
 				bridges[i].i.insert(bridges[i].i.end(), bridges[j].i.begin(), bridges[j].i.end());
-				if (bridges[i].type == 'P')
+				if (bridges[i].type == BRIDGE_PARALLEL)
 					bridges[i].j.insert(bridges[i].j.end(), bridges[j].j.begin(), bridges[j].j.end());
 				else
 					bridges[i].j.insert(bridges[i].j.begin(), bridges[j].j.begin(), bridges[j].j.end());
