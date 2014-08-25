@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <vector>
 #include <deque>
 #include <set>
@@ -19,6 +18,7 @@
 #include <smmintrin.h>
 #include "ssetools.h"
 #include "msvccompat.h"
+#include <math.h>
 
 enum helix_flag_t {HELIX_NONE, HELIX_START, HELIX_END, HELIX_START_AND_END, HELIX_MIDDLE};
 enum bridge_t {BRIDGE_NONE, BRIDGE_PARALLEL, BRIDGE_ANTIPARALLEL};
@@ -33,7 +33,7 @@ struct MBridge {
     int chain_i, chain_j;
 
     bool operator<(const MBridge& b) const {
-        return chain_i < b.chain_i || (chain_i == b.chain_i and i.front() < b.i.front());
+        return chain_i < b.chain_i || (chain_i == b.chain_i && i.front() < b.i.front());
     }
 };
 
@@ -83,23 +83,23 @@ static void calculate_beta_sheets(const float* xyz, const int* nco_indices,
                 continue;
             }
 
-            // printf("Initial bridge between %d and %d\n", i, j);
+            // printf("Initial bridge between %d && %d\n", i, j);
 
             bool found = false;
             for (std::vector<MBridge>::iterator bridge = bridges.begin();
                  bridge != bridges.end(); ++bridge) {
 
-                if (type != bridge->type or i != bridge->i.back() + 1)
+                if (type != bridge->type || i != bridge->i.back() + 1)
                     continue;
 
-                if (type == BRIDGE_PARALLEL and bridge->j.back() + 1 == j) {
+                if (type == BRIDGE_PARALLEL && bridge->j.back() + 1 == j) {
                     bridge->i.push_back(i);
                     bridge->j.push_back(j);
                     found = true;
                     break;
                 }
 
-                if (type == BRIDGE_ANTIPARALLEL and bridge->j.front() - 1 == j) {
+                if (type == BRIDGE_ANTIPARALLEL && bridge->j.front() - 1 == j) {
                     bridge->i.push_back(i);
                     bridge->j.push_front(j);
                     found = true;
@@ -134,14 +134,14 @@ static void calculate_beta_sheets(const float* xyz, const int* nco_indices,
             if ((bridges[i].type != bridges[j].type) ||
                 chain_ids[std::min(ibi, ibj)] != chain_ids[std::max(iei, iej)] ||
                 chain_ids[std::min(jbi, jbj)] != chain_ids[std::max(jei, jej)] ||
-                ibj - iei >= 6 || (iei >= ibj and ibi <= iej))
+                ibj - iei >= 6 || (iei >= ibj && ibi <= iej))
                     continue;
 
             bool bulge;
             if (bridges[i].type == BRIDGE_PARALLEL)
-                bulge = ((jbj - jei < 6 and ibj - iei < 3) or (jbj - jei < 3));
+                bulge = ((jbj - jei < 6 && ibj - iei < 3) || (jbj - jei < 3));
             else
-                bulge = ((jbi - jej < 6 and ibj - iei < 3) or (jbi - jej < 3));
+                bulge = ((jbi - jej < 6 && ibj - iei < 3) || (jbi - jej < 3));
 
             if (bulge) {
                 bridges[i].i.insert(bridges[i].i.end(), bridges[j].i.begin(), bridges[j].i.end());
@@ -188,10 +188,10 @@ static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
             next_ca = load_float3(xyz + 3*ca_indices[i+2]);
             u_prime = _mm_sub_ps(prev_ca, this_ca);
             v_prime = _mm_sub_ps(this_ca, next_ca);
-            /* normalize the vectors u_prime and v_prime */
+            /* normalize the vectors u_prime && v_prime */
             u = _mm_div_ps(u_prime, _mm_sqrt_ps(_mm_dp_ps(u_prime, u_prime, 0x7F)));
             v = _mm_div_ps(v_prime, _mm_sqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
-            /* compute the arccos of the dot product, and store the result. */
+            /* compute the arccos of the dot product, && store the result. */
             kappa = (float) acos(CLIP(_mm_cvtss_f32(_mm_dp_ps(u, v, 0x71)), -1, 1));
             is_bend[i] = kappa > (70 * (M_PI / 180.0));
         }
@@ -209,7 +209,7 @@ static void calculate_alpha_helicies(const float* xyz, const int* nco_indices,
         chains[chain_ids[i]].push_back(i);
     std::vector< std::vector< helix_flag_t> > helix_flags(n_residues, std::vector<helix_flag_t>(6, HELIX_NONE));
 
-    // Helix and Turn
+    // Helix && Turn
     for (std::map<int, std::vector<int> >::iterator it = chains.begin(); it != chains.end(); it++) {
         std::vector<int> residues = it->second;
 
@@ -257,7 +257,7 @@ static void calculate_alpha_helicies(const float* xyz, const int* nco_indices,
             (helix_flags[i-1][3] == HELIX_START || helix_flags[i-1][3] == HELIX_START_AND_END)) {
 
             bool empty = true;
-            for (int j = i; empty and j <= i + 2; ++j)
+            for (int j = i; empty && j <= i + 2; ++j)
                 empty = (secondary[j] == SS_LOOP || secondary[j] == SS_HELIX_3);
             if (empty)
                 for (int j = i; j <= i + 2; ++j)
@@ -269,7 +269,7 @@ static void calculate_alpha_helicies(const float* xyz, const int* nco_indices,
             (helix_flags[i-1][5] == HELIX_START || helix_flags[i-1][5] == HELIX_START_AND_END)) {
 
             bool empty = true;
-            for (int j = i; empty and j <= i + 4; ++j)
+            for (int j = i; empty && j <= i + 4; ++j)
                 empty = (secondary[j] == SS_LOOP || secondary[j] == SS_HELIX_5 || secondary[j] == SS_ALPHAHELIX);
             if (empty)
                 for (int j = i; j <= i + 4; ++j)
@@ -280,8 +280,8 @@ static void calculate_alpha_helicies(const float* xyz, const int* nco_indices,
     for (int i = 1; i < n_residues-1; i++)
         if (secondary[i] == SS_LOOP) {
             bool isTurn = false;
-            for (int stride = 3; stride <= 5 and not isTurn; ++stride)
-                for (int k = 1; k < stride and not isTurn; ++k)
+            for (int stride = 3; stride <= 5 && !isTurn; ++stride)
+                for (int k = 1; k < stride && !isTurn; ++k)
                     isTurn = (i >= k) && (helix_flags[i-k][stride] == HELIX_START || helix_flags[i-k][stride] == HELIX_START_AND_END);
 
             if (isTurn)

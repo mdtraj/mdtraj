@@ -52,6 +52,7 @@ static int processorSupportsSSE41(void) {
    #ifdef _WIN32
       #define NOMINMAX
       #include <windows.h>
+      #include <intrin.h>
    #else
       #include <dlfcn.h>
       #include <unistd.h>

@@ -49,6 +49,13 @@
 #endif
 
 /**
+ * Defines M_PI
+ **/
+#ifdef _WIN32
+ #define _USE_MATH_DEFINES
+#endif
+
+/**
  * Alignment of stack variables
  * http://stackoverflow.com/questions/7895869/cross-platform-alignx-macro
  **/
