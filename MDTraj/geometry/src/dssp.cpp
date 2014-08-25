@@ -1,9 +1,12 @@
 /**
  * DSSP secondary structure assignment
  * Copyright [2014] Stanford University and the Authors
- *
- * Authors: Robert T. McGibbon
- *
+ * Authors: Robert T. McGibbon, Maarten L. Hekkelman
+ * 
+ * This code is adapted from DSSP-2.2.0, written by Maarten L. Hekkelman,
+ * and ported to MDTraj by Robert T. McGibbon. DSSP-2.2.0 is distributed
+ * under the Boost Software License, Version 1.0. This code, as part of
+ * MDTraj, is distributed under the GNU LGPL.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,8 +67,6 @@ static bridge_t _residue_test_bridge(int i, int j, int n_residues,
         if ((_test_bond(c, e, hbonds) && _test_bond(a, e, hbonds)) ||
             (_test_bond(f, b, hbonds) && _test_bond(b, d, hbonds)))
                 return BRIDGE_PARALLEL;
-
-        // printf("cd: %d, fa:%d, eb:%d, be:%d\n", _test_bond(c, d, hbonds), _test_bond(f, a, hbonds), _test_bond(e, b, hbonds), _test_bond(b, e, hbonds));
         if ((_test_bond(d, c, hbonds) && _test_bond(a, f, hbonds)) ||
             (_test_bond(e, b, hbonds) && _test_bond(b, e, hbonds)))
                 return BRIDGE_ANTIPARALLEL;
@@ -239,14 +240,6 @@ static void calculate_alpha_helicies(const float* xyz,
         }
     }
 
-    // printf("HelixFlags\n");
-    // for (int stride = 3; stride <= 5; stride++) {
-    //     printf("%d: ", stride);
-    //     for (int i = 0; i < n_residues; i++)
-    //         printf("%d", helix_flags[i][stride]);
-    //     printf("\n");
-    // }
-
     for (int i = 0; i < n_residues-4; i++)
         if ((helix_flags[i][4] == HELIX_START || helix_flags[i][4] == HELIX_START_AND_END) &&
             (helix_flags[i-1][4] == HELIX_START || helix_flags[i-1][4] == HELIX_START_AND_END)) {
@@ -295,8 +288,26 @@ static void calculate_alpha_helicies(const float* xyz,
 }
 
 /**
+ * Calculate DSSP secondary structure assignments
  *
+ * Parameters
+ * ----------
+ * xyz : array, shape=(n_frames, n_atoms, 3)
+ *     The cartesian coordinates of all of the atoms in each frame.
+ * nco_indices : array, shape=(n_residues, 3)
+ *     The indices of the backbone N, C, and O atoms for each residue.
+ * ca_indices : array, shape=(n_residues,)
+ *     The index of the CA atom of each residue.
+ * is_proline : array, shape=(n_residue,)
+ *     If a particular residue does not contain a CA atom, or you want to skip
+ *     the residue for another reason, this value should evaluate to True.
+ * chain_ids : array, shape=(n_residue,)
+ *     The index of the chain each residue is in
  *
+ * Returns
+ * -------
+ * secondary : array, shape=(n_frames, n_residues)
+ *     The DSSP assignment codes for each residue, in each frame.
  */
 int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
          const int* is_proline, const int* chain_ids, const int n_frames,
