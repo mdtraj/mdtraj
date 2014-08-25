@@ -88,11 +88,11 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
  * the parts of the two functions which are different using #ifdefs. So we
  * just include these files _twice_ here, toggling the variable that controls
  * the ifdef.
- * 
+ *
  * Note that these kernel files are really not capable of being compiled
  * independently -- they're not header files at all -- and they're really just
  * meant to be #included here.
- **/ 
+ **/
 #undef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
 #include "distancekernels.h"
 #include "anglekernels.h"
@@ -171,7 +171,7 @@ static float ks_donor_acceptor(const float* xyz, const float* hcoords,
                                _mm_shuffle_ps(_mm_dp_ps(r_hc, r_hc, 0xF3), _mm_dp_ps(r_no, r_no, 0xF3), _MM_SHUFFLE(0,1,0,1)),
                                _MM_SHUFFLE(2,0,2,0));
 
-  /* rsqrt_ps is really not that accurate... */                    
+  /* rsqrt_ps is really not that accurate... */
   recip_sqrt = _mm_div_ps(one, _mm_sqrt_ps(d2_honchcno));
   energy = _mm_cvtss_f32(_mm_dp_ps(coupling, recip_sqrt, 0xFF));
   // energy = _mm_cvtss_f32(_mm_dp_ps(coupling, _mm_rsqrt_ps(d2_honchcno), 0xFF));
@@ -282,10 +282,6 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
     ks_assign_hydrogens(xyz, nco_indices, n_residues, hcoords);
 
     for (ri = 0; ri < n_residues; ri++) {
-      /* -1 is used to indicate that this residue lacks a this atom type */
-      /* so just skip it */
-      if (is_proline[ri])
-          continue;
       ri_ca = load_float3(xyz + 3*ca_indices[ri]);
 
       for (rj = ri + 1; rj < n_residues; rj++) {
@@ -296,13 +292,13 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
         r12 = _mm_sub_ps(ri_ca, rj_ca);
         if(_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(_mm_dp_ps(r12, r12, 0x7F), MINIMAL_CA_DISTANCE2)), 0)) {
           float e = ks_donor_acceptor(xyz, hcoords, nco_indices, ri, rj);
-          if (e < HBOND_ENERGY_CUTOFF)
+          if (e < HBOND_ENERGY_CUTOFF && !is_proline[ri])
             /* hbond from donor=ri to acceptor=rj */
             store_energies(hbonds, henergies, ri, rj, e);
 
           if (rj != ri + 1) {
-	    float e = ks_donor_acceptor(xyz, hcoords, nco_indices, rj, ri);
-            if (e < HBOND_ENERGY_CUTOFF)
+            float e = ks_donor_acceptor(xyz, hcoords, nco_indices, rj, ri);
+            if (e < HBOND_ENERGY_CUTOFF && !is_proline[rj])
               /* hbond from donor=rj to acceptor=ri */
               store_energies(hbonds, henergies, rj, ri, e);
           }
