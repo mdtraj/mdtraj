@@ -20,6 +20,7 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
+import sys
 import cython
 import numpy as np
 cimport numpy as np
@@ -58,7 +59,7 @@ cdef extern from "geometry.h":
     
     int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
              const int* is_proline, const int* chains_ids, const int n_frames,
-             const int n_atoms, const int n_residues) nogil
+             const int n_atoms, const int n_residues, char* secondary) nogil
 
 cdef extern int sasa(int n_frames, int n_atoms, const float* xyzlist,
                      const float* atom_radii, int n_sphere_points,
@@ -195,6 +196,12 @@ def _dssp(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_residues = ca_indices.shape[0]
+    cdef char[:] secondary = bytearray(n_frames*n_residues)
     dssp(&xyz[0,0,0], <int*> &nco_indices[0,0], <int*> &ca_indices[0],
          <int*> &is_proline[0], <int*> &chain_ids[0], n_frames, n_atoms,
-         n_residues)
+         n_residues, <char*> &secondary[0])
+
+    PY2 = sys.version_info.major
+    value = str(secondary.base) if PY2 else secondary.base.decode('ascii')
+    return [value[i*n_residues:(i+1)*n_residues] for i in range(n_frames)]
+
