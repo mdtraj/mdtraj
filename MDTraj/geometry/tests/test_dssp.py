@@ -37,4 +37,8 @@ def call_dssp(traj, frame=0):
 @skipif(not HAVE_DSSP, "This tests required mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/")
 def test_1():
     t = md.load(get_fn('1bpi.pdb'))
-    assert call_dssp(t) ==  md.compute_dssp(t)[0]
+    a = call_dssp(t)
+    b = md.compute_dssp(t)[0]
+    print('ref: "%s"' % a)
+    print('md:  "%s"' % b)
+    assert a == b
