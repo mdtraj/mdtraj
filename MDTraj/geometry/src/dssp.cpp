@@ -1,3 +1,10 @@
+/**
+ * DSSP secondary structure assignment
+ * Copyright [2014] Stanford University and the Authors
+ *
+ * Authors: Robert T. McGibbon
+ *
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
@@ -7,8 +14,8 @@
 #include <algorithm>
 #include "geometry.h"
 
-#define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
-#define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
+#define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
+#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 #define CLIP(X, X_min, X_max) (MIN(MAX(X, X_min), X_max))
 
 #ifndef __SSE4_1__
@@ -195,6 +202,7 @@ static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
     return is_bend;
 }
 
+
 static void calculate_alpha_helicies(const float* xyz,
     const int* ca_indices, const int* chain_ids,
     const int* hbonds, const int n_atoms, const int n_residues,
@@ -238,7 +246,6 @@ static void calculate_alpha_helicies(const float* xyz,
     //         printf("%d", helix_flags[i][stride]);
     //     printf("\n");
     // }
-
 
     for (int i = 0; i < n_residues-4; i++)
         if ((helix_flags[i][4] == HELIX_START || helix_flags[i][4] == HELIX_START_AND_END) &&
