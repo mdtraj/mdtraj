@@ -47,7 +47,7 @@ static void print_secondary(const std::vector<ss_t> & framesecondary)
   printf("\"\n");
 }
 
-static struct MBridge {
+struct MBridge {
 	bridge_t type;
 	int sheet, ladder;
 	std::set<MBridge*> link;
