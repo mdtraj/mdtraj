@@ -67,10 +67,8 @@ static bridge_t _residue_test_bridge(int i, int j, int n_residues,
     return BRIDGE_NONE;
 }
 
-
-static void calculate_beta_sheets(const float* xyz, const int* nco_indices,
-    const int* ca_indices, const int* chain_ids, const int* hbonds,
-    const int n_atoms, const int n_residues, std::vector<ss_t>& secondary)
+static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
+    const int n_residues, std::vector<ss_t>& secondary)
 {
     std::vector<MBridge> bridges;
 
@@ -197,7 +195,7 @@ static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
     return is_bend;
 }
 
-static void calculate_alpha_helicies(const float* xyz, const int* nco_indices,
+static void calculate_alpha_helicies(const float* xyz,
     const int* ca_indices, const int* chain_ids,
     const int* hbonds, const int n_atoms, const int n_residues,
     std::vector<ss_t>& secondary)
@@ -289,37 +287,27 @@ static void calculate_alpha_helicies(const float* xyz, const int* nco_indices,
         }
 }
 
-
-
+/**
+ *
+ *
+ */
 int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
          const int* is_proline, const int* chain_ids, const int n_frames,
          const int n_atoms, const int n_residues, char* secondary)
 {
-    const float *framexyz;
-    const int *framehbonds;
-
-    int* hbonds = (int*) malloc(n_frames*n_residues*2*sizeof(int));
-    float* henergies = (float*) calloc(n_frames*n_residues*2, sizeof(float));
-    if ((hbonds == NULL) || (henergies == NULL)) {
-        fprintf(stderr, "Memory Error\n");
-        exit(1);
-    }
-    for (int i = 0; i < n_frames*n_residues*2; i++)
-        hbonds[i] = -1;
-
-    // call kabsch_sander to calculate the hydrogen bonds
-    kabsch_sander(xyz, nco_indices, ca_indices, is_proline, n_frames, n_atoms,
-                  n_residues, hbonds, henergies);
-
     for (int i = 0; i < n_frames; i++) {
-        framexyz = xyz + (i * n_atoms * 3);
-        framehbonds = hbonds + (i * n_residues * 2);
+        const float* framexyz = xyz + (i * n_atoms * 3);
+        std::vector<int> hbonds(n_residues*2, -1);
+        std::vector<float> henergies(n_residues*2, 0);
         std::vector<ss_t> framesecondary(n_residues, SS_LOOP);
 
-        calculate_beta_sheets(framexyz, nco_indices, ca_indices, chain_ids,
-            framehbonds, n_atoms, n_residues, framesecondary);
-        calculate_alpha_helicies(framexyz, nco_indices, ca_indices, chain_ids,
-            framehbonds, n_atoms, n_residues, framesecondary);
+        // call kabsch_sander to calculate the hydrogen bonds
+        kabsch_sander(framexyz, nco_indices, ca_indices,
+                      is_proline, 1, n_atoms, n_residues, &hbonds[0], &henergies[0]);
+
+        calculate_beta_sheets(chain_ids, &hbonds[0], n_residues, framesecondary);
+        calculate_alpha_helicies(framexyz, ca_indices, chain_ids,
+            &hbonds[0], n_atoms, n_residues, framesecondary);
 
         for (int j = 0; j < n_residues; j++) {
             char ss = ' ';
