@@ -179,7 +179,7 @@ static float ks_donor_acceptor(const float* xyz, const float* hcoords,
 }
 
 
-static int ks_assign_hydrogens(const float* xyz, const int* nco_indices, const int n_residues, float *hcoords)
+static int ks_assign_hydrogens(const float* xyz, const int* nco_indices, const int n_residues, float *hcoords, int* skip)
 /* Assign hydrogen atom coordinates
  */
 {
@@ -192,19 +192,20 @@ static int ks_assign_hydrogens(const float* xyz, const int* nco_indices, const i
   hcoords += 3;
 
   for (ri = 1; ri < n_residues; ri++) {
-    pc_index = nco_indices[3*(ri-1) + 1];
-    po_index = nco_indices[3*(ri-1) + 2];
+      if (!skip[ri]) {
+          pc_index = nco_indices[3*(ri-1) + 1];
+          po_index = nco_indices[3*(ri-1) + 2];
 
-    pc = load_float3(xyz + 3*pc_index);
-    po = load_float3(xyz + 3*po_index);
-    r_co = _mm_sub_ps(pc, po);
-    r_n = load_float3(xyz + 3*nco_indices[3*ri + 0]);
-    norm_r_co = _mm_mul_ps(r_co, _mm_rsqrt_ps(_mm_dp_ps(r_co, r_co, 0xFF)));
-    r_h = _mm_add_ps(r_n, _mm_mul_ps(tenth, norm_r_co));
-    store_float3(hcoords, r_h);
-    hcoords += 3;
+          pc = load_float3(xyz + 3*pc_index);
+          po = load_float3(xyz + 3*po_index);
+          r_co = _mm_sub_ps(pc, po);
+          r_n = load_float3(xyz + 3*nco_indices[3*ri + 0]);
+          norm_r_co = _mm_mul_ps(r_co, _mm_rsqrt_ps(_mm_dp_ps(r_co, r_co, 0xFF)));
+          r_h = _mm_add_ps(r_n, _mm_mul_ps(tenth, norm_r_co));
+          store_float3(hcoords, r_h);
+      }
+      hcoords += 3;
   }
-
   return 1;
 }
 
@@ -277,15 +278,20 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
     fprintf(stderr, "Memory Error\n");
     exit(1);
   }
+  int* skip = (int*) calloc(n_residues, sizeof(int));
+  for (int i = 0; i < n_residues; i++)
+      if ((nco_indices[i*3] == -1) || (nco_indices[i*3+1] == -1) || (nco_indices[i*3+2] == -1) || ca_indices[i] == -1)
+          skip[i] = 1;
 
   for (i = 0; i < n_frames; i++) {
-    ks_assign_hydrogens(xyz, nco_indices, n_residues, hcoords);
+    ks_assign_hydrogens(xyz, nco_indices, n_residues, hcoords, skip);
 
     for (ri = 0; ri < n_residues; ri++) {
+      if (skip[ri]) continue;
       ri_ca = load_float3(xyz + 3*ca_indices[ri]);
 
       for (rj = ri + 1; rj < n_residues; rj++) {
-        if (ca_indices[rj] == -1) continue;
+        if (skip[rj]) continue;
         rj_ca = load_float3(xyz + 3*ca_indices[rj]);
 
         /* check the ca distance before proceding */
@@ -310,6 +316,7 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
     henergies += n_residues*2;
   }
   free(hcoords);
+  free(skip);
   return 1;
 }
 #endif

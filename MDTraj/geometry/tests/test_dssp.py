@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import shutil
 import itertools
@@ -36,15 +37,19 @@ def assert_(a, b):
     try:
         assert a == b
     except AssertionError:
-        print('a', a)
-        print('b', b)
+        print('\na: "%s"' % a)
+        print('b: "%s"' % b)
         raise
 
 
 @skipif(not HAVE_DSSP, DSSP_MSG)
 def test_1():
-    t = md.load(get_fn('1bpi.pdb'))
-    assert_(call_dssp(t), md.compute_dssp(t)[0])
+    for fn in ['4K6Q.pdb']: # ['1bpi.pdb', '1vii.pdb', '4K6Q.pdb']:
+        t = md.load(get_fn(fn))
+        t = t.atom_slice(t.top.select_atom_indices('minimal'))
+        f = lambda : assert_(call_dssp(t), md.compute_dssp(t)[0])
+        f.description = 'test_1: %s' % fn
+        yield f
 
 @skipif(not HAVE_DSSP, DSSP_MSG)
 def test_2():

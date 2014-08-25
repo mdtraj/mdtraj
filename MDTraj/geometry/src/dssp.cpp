@@ -76,7 +76,7 @@ static bridge_t _residue_test_bridge(int i, int j, int n_residues,
 }
 
 static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
-    const int n_residues, std::vector<ss_t>& secondary)
+    const std::vector<int>& skip, const int n_residues, std::vector<ss_t>& secondary)
 {
     std::vector<MBridge> bridges;
 
@@ -84,7 +84,7 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
     for (int i = 1; i < n_residues - 4; i++) {
         for (int j = i+3; j < n_residues - 1; j++) {
             bridge_t type = _residue_test_bridge(j, i, n_residues, chain_ids, hbonds);
-            if (type == BRIDGE_NONE) {
+            if (type == BRIDGE_NONE || skip[i] || skip[j]) {
                 continue;
             }
 
@@ -180,13 +180,13 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
 }
 
 static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
-    const int* chain_ids, const int n_residues)
+    const int* chain_ids, const int n_residues, std::vector<int>& skip)
 {
     __m128 prev_ca, this_ca, next_ca, u_prime, v_prime, u, v;
     float kappa;
     std::vector<int> is_bend(n_residues, 0);
     for (int i = 2; i < n_residues-2; i++) {
-        if (chain_ids[i-2] == chain_ids[i+2]) {
+        if (chain_ids[i-2] == chain_ids[i+2] && !skip[i-2] && !skip[i+2]) {
             prev_ca = load_float3(xyz + 3*ca_indices[i-2]);
             this_ca = load_float3(xyz + 3*ca_indices[i]);
             next_ca = load_float3(xyz + 3*ca_indices[i+2]);
@@ -206,7 +206,7 @@ static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
 
 static void calculate_alpha_helicies(const float* xyz,
     const int* ca_indices, const int* chain_ids,
-    const int* hbonds, const int n_atoms, const int n_residues,
+    const int* hbonds, std::vector<int>& skip, const int n_atoms, const int n_residues,
     std::vector<ss_t>& secondary)
 {
     std::map<int, std::vector<int> > chains;
@@ -272,9 +272,9 @@ static void calculate_alpha_helicies(const float* xyz,
                     secondary[j] = SS_HELIX_5;
         }
 
-    const std::vector<int> is_bend = calculate_bends(xyz, ca_indices, chain_ids, n_residues);
+    const std::vector<int> is_bend = calculate_bends(xyz, ca_indices, chain_ids, n_residues, skip);
     for (int i = 1; i < n_residues-1; i++)
-        if (secondary[i] == SS_LOOP) {
+        if (secondary[i] == SS_LOOP && !skip[i]) {
             bool isTurn = false;
             for (int stride = 3; stride <= 5 && !isTurn; ++stride)
                 for (int k = 1; k < stride && !isTurn; ++k)
@@ -313,6 +313,11 @@ int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
          const int* is_proline, const int* chain_ids, const int n_frames,
          const int n_atoms, const int n_residues, char* secondary)
 {
+    std::vector<int> skip(n_residues, 0);
+    for (int i = 0; i < n_residues; i++)
+      if ((nco_indices[i*3] == -1) || (nco_indices[i*3+1] == -1) || (nco_indices[i*3+2] == -1) || ca_indices[i] == -1)
+          skip[i] = 1;
+
     for (int i = 0; i < n_frames; i++) {
         const float* framexyz = xyz + (i * n_atoms * 3);
         std::vector<int> hbonds(n_residues*2, -1);
@@ -320,12 +325,12 @@ int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
         std::vector<ss_t> framesecondary(n_residues, SS_LOOP);
 
         // call kabsch_sander to calculate the hydrogen bonds
-        kabsch_sander(framexyz, nco_indices, ca_indices,
-                      is_proline, 1, n_atoms, n_residues, &hbonds[0], &henergies[0]);
+        kabsch_sander(framexyz, nco_indices, ca_indices, is_proline,
+                      1, n_atoms, n_residues, &hbonds[0], &henergies[0]);
 
-        calculate_beta_sheets(chain_ids, &hbonds[0], n_residues, framesecondary);
+        calculate_beta_sheets(chain_ids, &hbonds[0], skip, n_residues, framesecondary);
         calculate_alpha_helicies(framexyz, ca_indices, chain_ids,
-            &hbonds[0], n_atoms, n_residues, framesecondary);
+            &hbonds[0], skip, n_atoms, n_residues, framesecondary);
 
         for (int j = 0; j < n_residues; j++) {
             char ss = ' ';
