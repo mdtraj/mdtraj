@@ -242,7 +242,7 @@ static void calculate_alpha_helicies(const float* xyz,
         }
     }
 
-    for (int i = 0; i < n_residues-4; i++)
+    for (int i = 1; i < n_residues-4; i++)
         if ((helix_flags[i][4] == HELIX_START || helix_flags[i][4] == HELIX_START_AND_END) &&
             (helix_flags[i-1][4] == HELIX_START || helix_flags[i-1][4] == HELIX_START_AND_END)) {
 
