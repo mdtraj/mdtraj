@@ -35,12 +35,13 @@ enum bridge_t {BRIDGE_NONE, BRIDGE_PARALLEL, BRIDGE_ANTIPARALLEL};
 enum ss_t {SS_LOOP, SS_ALPHAHELIX, SS_BETABRIDGE, SS_STRAND, SS_HELIX_3, SS_HELIX_5,
           SS_TURN, SS_BEND};
 
-struct MBridge {
+/* This struct tracks information about beta bridges and sheets */
+struct Bridge {
     bridge_t type;
     std::deque<int> i, j;
     int chain_i, chain_j;
 
-    MBridge(bridge_t type, int chain_i, int chain_j, int first_i, int first_j):
+    Bridge(bridge_t type, int chain_i, int chain_j, int first_i, int first_j):
         type(type),
         chain_i(chain_i),
         chain_j(chain_j)
@@ -49,7 +50,7 @@ struct MBridge {
         j.push_back(first_j);
     };
 
-    bool operator<(const MBridge& b) const {
+    bool operator<(const Bridge& b) const {
         return chain_i < b.chain_i || (chain_i == b.chain_i && i.front() < b.i.front());
     }
 };
@@ -68,7 +69,7 @@ static bool _test_bond(int donor, int acceptor, const int* hbonds)
  * Test whether two residues are engaged in a beta-bridge
  *
  * Equivalent to MBridgeType MResidue::TestBridge(MResidue* test)
- * from dssp-2.2.0/strucrure.cpp:687
+ * from dssp-2.2.0/structure.cpp:687
  */
 static bridge_t _residue_test_bridge(int i, int j, int n_residues,
     const int* chain_ids, const int* hbonds)
@@ -103,7 +104,7 @@ static bridge_t _residue_test_bridge(int i, int j, int n_residues,
 static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
     const std::vector<int>& skip, const int n_residues, std::vector<ss_t>& secondary)
 {
-    std::vector<MBridge> bridges;
+    std::vector<Bridge> bridges;
 
     // Calculate bridges
     for (int i = 1; i < n_residues - 4; i++) {
@@ -115,7 +116,7 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
 
             // printf("Initial bridge between %d and %d\n", i, j);
             bool found = false;
-            for (std::vector<MBridge>::iterator bridge = bridges.begin();
+            for (std::vector<Bridge>::iterator bridge = bridges.begin();
                  bridge != bridges.end(); ++bridge) {
 
                 if (type != bridge->type || i != bridge->i.back() + 1)
@@ -136,7 +137,7 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
                 }
             }
             if (!found) {
-                MBridge bridge(type, chain_ids[i], chain_ids[j], i, j);
+	        Bridge bridge(type, chain_ids[i], chain_ids[j], i, j);
                 bridges.push_back(bridge);
             }
         }
@@ -180,7 +181,7 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
         }
     }
 
-    for (std::vector<MBridge>::iterator bridge = bridges.begin();
+    for (std::vector<Bridge>::iterator bridge = bridges.begin();
          bridge != bridges.end(); ++bridge) {
          // printf("Bridge from i in (%d, %d)    j in (%d, %d)\n", bridge->i.front(), bridge->i.back(), bridge->j.front(), bridge->j.back());
 
@@ -238,7 +239,7 @@ static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
  * Corresponds to MProtein::CalculateAlphaHelices(const vector<MResidue*>& inResidues, bool inPreferPiHelices)
  * dssp-2.2.0/structure.cpp:1693. Note that `inPreferHelices` is set to true, in this code.
  */
-static void calculate_alpha_helicies(const float* xyz,
+static void calculate_alpha_helices(const float* xyz,
     const int* ca_indices, const int* chain_ids,
     const int* hbonds, std::vector<int>& skip, const int n_atoms, const int n_residues,
     std::vector<ss_t>& secondary)
@@ -373,7 +374,7 @@ int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
                       1, n_atoms, n_residues, &hbonds[0], &henergies[0]);
         // identify the secndary structure elements
         calculate_beta_sheets(chain_ids, &hbonds[0], skip, n_residues, framesecondary);
-        calculate_alpha_helicies(framexyz, ca_indices, chain_ids,
+        calculate_alpha_helices(framexyz, ca_indices, chain_ids,
             &hbonds[0], skip, n_atoms, n_residues, framesecondary);
 
         // replace the enums with the character codes

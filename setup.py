@@ -284,6 +284,10 @@ class CompilerDetection(object):
 
 # Global info about compiler
 compiler = CompilerDetection(disable_openmp)
+extra_cpp_libraries = []
+if sys.platform == 'darwin':
+    extra_cpp_libraries.append('stdc++')
+
 
 ################################################################################
 # Declaration of the compiled extension modules (cython + c)
@@ -321,6 +325,7 @@ def rmsd_extensions():
     compiler_args = (compiler.compiler_args_openmp + compiler.compiler_args_sse2 +
                      compiler.compiler_args_sse3 + compiler.compiler_args_opt)
     compiler_libraries = compiler.compiler_libraries_openmp
+
     rmsd = Extension('mdtraj._rmsd',
                      sources=[
                          'MDTraj/rmsd/src/theobald_rmsd.c',
@@ -345,7 +350,7 @@ def rmsd_extensions():
                        include_dirs=[
                            'MDTraj/rmsd/include', numpy.get_include()],
                        extra_compile_args=compiler_args,
-                       libraries=compiler_libraries + ['stdc++'])
+                       libraries=compiler_libraries + extra_cpp_libraries)
     return rmsd, lprmsd
 
 
@@ -366,7 +371,7 @@ def geometry_extensions():
                           numpy.get_include()],
             define_macros=define_macros,
             extra_compile_args=compiler_args,
-            libraries=['stdc++'],
+            libraries=extra_cpp_libraries,
             language='c++'),
         Extension('mdtraj.geometry.drid',
             sources=["MDTraj/geometry/drid.pyx",
