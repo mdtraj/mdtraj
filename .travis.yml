@@ -5,7 +5,6 @@ install:
   - export PYTHONUNBUFFERED=true
 
 script:
-  - export CC="gcc -std=c89"
   - source deactivate
   - conda install --yes conda-build
   - conda build devtools/conda-recipe

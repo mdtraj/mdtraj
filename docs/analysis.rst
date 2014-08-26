@@ -1,7 +1,9 @@
+.. _analysis:
+
 .. currentmodule:: mdtraj
 
-Trajectory Analysis
-===================
+Analysis Functions
+==================
 
 Trajectory analysis is the heart of MDTraj. These functions can be used to run
 a variety of analyses on :class:`mdtraj.Trajectory` objects.
@@ -14,7 +16,7 @@ It's usually as simple as ::
 Root-mean-square deviation (RMSD)
 ---------------------------------
 .. autosummary::
-    :toctree: generated/
+    :toctree: api/generated/
 
     rmsd
     lprmsd
@@ -24,17 +26,25 @@ Root-mean-square deviation (RMSD)
 Hydrogen Bonding
 ----------------
 .. autosummary::
-    :toctree: generated/
+    :toctree: api/generated/
 
     baker_hubbard
     kabsch_sander
     wernet_nilsson
 
 
+Secondary Structure
+-------------------
+.. autosummary::
+    :toctree: api/generated/
+
+    compute_dssp
+
+
 Surface Area and Radius of Gyration
 -----------------------------------
 .. autosummary::
-    :toctree: generated/
+    :toctree: api/generated/
 
     shrake_rupley
     compute_rg
@@ -43,7 +53,7 @@ Surface Area and Radius of Gyration
 Distances
 ---------
 .. autosummary::
-    :toctree: generated/
+    :toctree: api/generated/
 
     compute_distances
     compute_displacements
@@ -52,10 +62,11 @@ Distances
     compute_center_of_mass
     geometry.squareform
 
+
 Bond Angles and Dihedrals
 -------------------------
 .. autosummary::
-    :toctree: generated/
+    :toctree: api/generated/
 
     compute_angles
     compute_dihedrals
@@ -72,7 +83,7 @@ Bond Angles and Dihedrals
 NMR Observables
 ---------------
 .. autosummary::
-    :toctree: generated/
+    :toctree: api/generated/
 
     chemical_shifts_shiftx2
     chemical_shifts_ppm

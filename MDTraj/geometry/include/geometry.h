@@ -1,5 +1,8 @@
 #ifndef _GEOMETRY_H_
 #define _GEOMETRY_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
              float* distance_out, float* displacement_out,
@@ -24,6 +27,14 @@ int dihedral_mic(const float* xyz, const int* quartets,
                  const int n_frames, const int n_atoms, const int n_quartets);
 
 int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indices,
-                  const int n_frames, const int n_atoms, const int n_residues,
-                  int* hbonds, float* henergies);
+                  const int* is_proline, const int n_frames, const int n_atoms,
+                  const int n_residues, int* hbonds, float* henergies);
+
+int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
+         const int* is_proline, const int* chains_ids, const int n_frames,
+         const int n_atoms, const int n_residues, char* secondary);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

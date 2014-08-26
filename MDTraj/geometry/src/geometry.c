@@ -60,8 +60,8 @@ int dihedral_mic(const float* xyz, const int* quartets,
                  const int n_frames, const int n_atoms, const int n_quartets)
 { exit(EXIT_FAILURE); }
 int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indices,
-                  const int n_frames, const int n_atoms, const int n_residues,
-                  int* hbonds, float* henergies)
+                  const int* is_proline, const int n_frames, const int n_atoms,
+                  const int n_residues, int* hbonds, float* henergies)
 { exit(EXIT_FAILURE); }
 
 #else
@@ -88,11 +88,11 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
  * the parts of the two functions which are different using #ifdefs. So we
  * just include these files _twice_ here, toggling the variable that controls
  * the ifdef.
- * 
+ *
  * Note that these kernel files are really not capable of being compiled
  * independently -- they're not header files at all -- and they're really just
  * meant to be #included here.
- **/ 
+ **/
 #undef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
 #include "distancekernels.h"
 #include "anglekernels.h"
@@ -134,7 +134,8 @@ static float ks_donor_acceptor(const float* xyz, const float* hcoords,
   */
   float energy;
   __m128 r_n, r_h, r_c, r_o, r_ho, r_nc, r_hc, r_no, d2_honchcno;
-  __m128 coupling;
+  __m128 coupling, recip_sqrt, one;
+  one = _mm_set1_ps(1.0);
 
   /* 332 (kcal*A/mol) * 0.42 * 0.2 * (1nm / 10 A) */
   coupling = _mm_setr_ps(-2.7888, -2.7888, 2.7888, 2.7888);
@@ -170,13 +171,15 @@ static float ks_donor_acceptor(const float* xyz, const float* hcoords,
                                _mm_shuffle_ps(_mm_dp_ps(r_hc, r_hc, 0xF3), _mm_dp_ps(r_no, r_no, 0xF3), _MM_SHUFFLE(0,1,0,1)),
                                _MM_SHUFFLE(2,0,2,0));
 
-  energy = _mm_cvtss_f32(_mm_dp_ps(coupling, _mm_rsqrt_ps(d2_honchcno), 0xFF));
-  /* printf("Energy: %f\n\n", energy); */
+  /* rsqrt_ps is really not that accurate... */
+  recip_sqrt = _mm_div_ps(one, _mm_sqrt_ps(d2_honchcno));
+  energy = _mm_cvtss_f32(_mm_dp_ps(coupling, recip_sqrt, 0xFF));
+  // energy = _mm_cvtss_f32(_mm_dp_ps(coupling, _mm_rsqrt_ps(d2_honchcno), 0xFF));
   return (energy < -9.9f ? -9.9f : energy);
 }
 
 
-static int ks_assign_hydrogens(const float* xyz, const int* nco_indices, const int n_residues, float *hcoords)
+static int ks_assign_hydrogens(const float* xyz, const int* nco_indices, const int n_residues, float *hcoords, int* skip)
 /* Assign hydrogen atom coordinates
  */
 {
@@ -189,19 +192,20 @@ static int ks_assign_hydrogens(const float* xyz, const int* nco_indices, const i
   hcoords += 3;
 
   for (ri = 1; ri < n_residues; ri++) {
-    pc_index = nco_indices[3*(ri-1) + 1];
-    po_index = nco_indices[3*(ri-1) + 2];
+      if (!skip[ri]) {
+          pc_index = nco_indices[3*(ri-1) + 1];
+          po_index = nco_indices[3*(ri-1) + 2];
 
-    pc = load_float3(xyz + 3*pc_index);
-    po = load_float3(xyz + 3*po_index);
-    r_co = _mm_sub_ps(pc, po);
-    r_n = load_float3(xyz + 3*nco_indices[3*ri + 0]);
-    norm_r_co = _mm_mul_ps(r_co, _mm_rsqrt_ps(_mm_dp_ps(r_co, r_co, 0xFF)));
-    r_h = _mm_add_ps(r_n, _mm_mul_ps(tenth, norm_r_co));
-    store_float3(hcoords, r_h);
-    hcoords += 3;
+          pc = load_float3(xyz + 3*pc_index);
+          po = load_float3(xyz + 3*po_index);
+          r_co = _mm_sub_ps(pc, po);
+          r_n = load_float3(xyz + 3*nco_indices[3*ri + 0]);
+          norm_r_co = _mm_mul_ps(r_co, _mm_rsqrt_ps(_mm_dp_ps(r_co, r_co, 0xFF)));
+          r_h = _mm_add_ps(r_n, _mm_mul_ps(tenth, norm_r_co));
+          store_float3(hcoords, r_h);
+      }
+      hcoords += 3;
   }
-
   return 1;
 }
 
@@ -212,27 +216,29 @@ static INLINE void store_energies(int* hbonds, float* henergies, int donor,
      in the output arrays. This function is called twice by kabsch_sander,
      so it seemed appropriate to factor it out.
   */
+  // if (donor == 1 && acceptor == 48)
+  // printf("storing donor=1, acceptor=48: energy=%f\n", e);
 
-  float existing_e0 = henergies[2*acceptor + 0];
-  float existing_e1 = henergies[2*acceptor + 1];
+  float existing_e0 = henergies[2*donor + 0];
+  float existing_e1 = henergies[2*donor + 1];
 
   if (isnan(existing_e0) || e < existing_e0) {
     /* copy over any info in #0 hbond to #1 */
-    hbonds[2*acceptor + 1] = hbonds[acceptor*2 + 0];
-    henergies[2*acceptor + 1] = existing_e0;
-    hbonds[2*acceptor + 0] = donor;
-    henergies[2*acceptor + 0] = e;
+    hbonds[2*donor + 1] = hbonds[donor*2 + 0];
+    henergies[2*donor + 1] = existing_e0;
+    hbonds[2*donor + 0] = acceptor;
+    henergies[2*donor + 0] = e;
     /* printf("hbond being stored from donor=%d to acceptor=%d\n", donor, acceptor); */
-  } else if (isnan(existing_e1) || e < henergies[2*acceptor + 1]) {
-    hbonds[2*acceptor + 1] = donor;
-    henergies[2*acceptor + 1] = e;
+  } else if (isnan(existing_e1) || e < henergies[2*donor + 1]) {
+    hbonds[2*donor + 1] = acceptor;
+    henergies[2*donor + 1] = e;
     /* printf("hbond being stored from donor=%d to acceptor=%d\n", donor, acceptor); */
   }
 }
 
 int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indices,
-                  const int n_frames, const int n_atoms, const int n_residues,
-                  int* hbonds, float* henergies) {
+                  const int* is_proline, const int n_frames, const int n_atoms,
+                  const int n_residues, int* hbonds, float* henergies) {
   /* Find all of backbone hydrogen bonds between residues in each frame of a
      trajectory.
 
@@ -243,18 +249,19 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
     nco_indices : array, shape=(n_residues, 3)
         The indices of the backbone N, C, and O atoms for each residue.
     ca_indices : array, shape=(n_residues,)
-        The index of the CA atom of each residue. If a residue does not contain
-        a CA atom, or you want to skip the residue for another reason, the
-	value should be -1
+        The index of the CA atom of each residue.
+    is_proline : array, shape=(n_residue,)
+        If a particular residue does not contain a CA atom, or you want to skip
+        the residue for another reason, this value should evaluate to True.
 
     Returns
     -------
     hbonds : array, shape=(n_frames, n_residues, 2)
         This is a little tricky, so bear with me. This array gives the indices
-        of the residues that each backbone hbond *acceptor* is engaged in an hbond
+        of the residues that each backbone hbond *donor* is engaged in an hbond
         with. For instance, the equality `bonds[i, j, 0] == k` is interpreted as
-        "in frame i, residue j is accepting its first hydrogen bond from residue
-        k". `bonds[i, j, 1] == k` means that residue j is accepting its second
+        "in frame i, residue j is donating its first hydrogen bond from residue
+        k". `bonds[i, j, 1] == k` means that residue j is donating its second
         hydrogen bond from residue k. A negative value indicates that no such
         hbond exists.
     henergies : array, shape=(n_frames, n_residues, 2)
@@ -269,35 +276,39 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
   __m128 ri_ca, rj_ca, r12;
   __m128 MINIMAL_CA_DISTANCE2 = _mm_set1_ps(0.81);
   float* hcoords = (float*) malloc(n_residues*3 * sizeof(float));
-  if (hcoords == NULL) {
+  int* skip = (int*) calloc(n_residues, sizeof(int));
+  if (hcoords == NULL || skip == NULL) {
     fprintf(stderr, "Memory Error\n");
     exit(1);
   }
+  for (i = 0; i < n_residues; i++)
+      if ((nco_indices[i*3] == -1) || (nco_indices[i*3+1] == -1) ||
+          (nco_indices[i*3+2] == -1) || ca_indices[i] == -1)
+          skip[i] = 1;
 
   for (i = 0; i < n_frames; i++) {
-    ks_assign_hydrogens(xyz, nco_indices, n_residues, hcoords);
+    ks_assign_hydrogens(xyz, nco_indices, n_residues, hcoords, skip);
 
     for (ri = 0; ri < n_residues; ri++) {
-      /* -1 is used to indicate that this residue lacks a this atom type */
-      /* so just skip it */
-      if (ca_indices[ri] == -1) continue;
+      if (skip[ri]) continue;
       ri_ca = load_float3(xyz + 3*ca_indices[ri]);
 
       for (rj = ri + 1; rj < n_residues; rj++) {
-        if (ca_indices[rj] == -1) continue;
+        if (skip[rj]) continue;
         rj_ca = load_float3(xyz + 3*ca_indices[rj]);
 
         /* check the ca distance before proceding */
         r12 = _mm_sub_ps(ri_ca, rj_ca);
+
         if(_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(_mm_dp_ps(r12, r12, 0x7F), MINIMAL_CA_DISTANCE2)), 0)) {
           float e = ks_donor_acceptor(xyz, hcoords, nco_indices, ri, rj);
-          if (e < HBOND_ENERGY_CUTOFF)
+          if (e < HBOND_ENERGY_CUTOFF && !is_proline[ri])
             /* hbond from donor=ri to acceptor=rj */
             store_energies(hbonds, henergies, ri, rj, e);
 
           if (rj != ri + 1) {
-	    float e = ks_donor_acceptor(xyz, hcoords, nco_indices, rj, ri);
-            if (e < HBOND_ENERGY_CUTOFF)
+            float e = ks_donor_acceptor(xyz, hcoords, nco_indices, rj, ri);
+            if (e < HBOND_ENERGY_CUTOFF && !is_proline[rj])
               /* hbond from donor=rj to acceptor=ri */
               store_energies(hbonds, henergies, rj, ri, e);
           }
@@ -309,6 +320,8 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
     henergies += n_residues*2;
   }
   free(hcoords);
+  free(skip);
+
   return 1;
 }
 #endif

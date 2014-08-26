@@ -1,11 +1,11 @@
 .. _getting-started:
 
-***************
-Getting Started
-***************
-
+************
 Installation
-============
+************
+
+Platforms
+=========
 
 MDTraj runs on CPython 2.6, 2.7, and 3.2+. The developers generally use
 CPython2.7 or 3.3, on both Mac and Linux platforms. Automated tests on Linux
