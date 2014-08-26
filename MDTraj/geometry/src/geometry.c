@@ -281,8 +281,9 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
     fprintf(stderr, "Memory Error\n");
     exit(1);
   }
-  for (int i = 0; i < n_residues; i++)
-      if ((nco_indices[i*3] == -1) || (nco_indices[i*3+1] == -1) || (nco_indices[i*3+2] == -1) || ca_indices[i] == -1)
+  for (i = 0; i < n_residues; i++)
+      if ((nco_indices[i*3] == -1) || (nco_indices[i*3+1] == -1) ||
+          (nco_indices[i*3+2] == -1) || ca_indices[i] == -1)
           skip[i] = 1;
 
   for (i = 0; i < n_frames; i++) {
