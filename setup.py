@@ -345,7 +345,7 @@ def rmsd_extensions():
                        include_dirs=[
                            'MDTraj/rmsd/include', numpy.get_include()],
                        extra_compile_args=compiler_args,
-                       libraries=compiler_libraries)
+                       libraries=compiler_libraries + ['stdc++'])
     return rmsd, lprmsd
 
 

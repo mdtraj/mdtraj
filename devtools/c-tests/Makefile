@@ -1,7 +1,7 @@
 all: valgrind clang-run
 
 test-geom-gcc: test_geometry.c
-	gcc -g -O0 test_geometry.c ../../MDTraj/geometry/src/geometry.c ../../MDTraj/geometry/src/sasa.c -I../../MDTraj/geometry/include -mssse3 -msse4 -lm -o test-geom-gcc
+	gcc -g -O0 test_geometry.c ../../MDTraj/geometry/src/geometry.c ../../MDTraj/geometry/src/sasa.c -I../../MDTraj/geometry/include -I../../MDTraj/geometry/src/kernels -mssse3 -msse4 -lm -o test-geom-gcc
 
 test-rmsd-gcc: test_rmsd.c
 	gcc -g -O0 test_rmsd.c ../../MDTraj/rmsd/src/theobald_rmsd.c  -I../../MDTraj/rmsd/include/ -lm -mssse3 -msse4 -lm -o test-rmsd-gcc
