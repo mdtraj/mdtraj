@@ -372,7 +372,7 @@ def kabsch_sander(traj):
         indices = hbonds_frame[mask].flatten()
         data = henergies_frame[mask].flatten()
 
-        matrices.append(scipy.sparse.csr_matrix((data, indices, indptr), shape=(n_residues, n_residues)))
+        matrices.append(scipy.sparse.csr_matrix((data, indices, indptr), shape=(n_residues, n_residues)).T)
 
     return matrices
 

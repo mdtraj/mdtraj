@@ -1,3 +1,13 @@
+/**
+ * DSSP secondary structure assignment
+ * Copyright [2014] Stanford University and the Authors
+ * Authors: Robert T. McGibbon, Maarten L. Hekkelman
+ *
+ * This code is adapted from DSSP-2.2.0, written by Maarten L. Hekkelman,
+ * and ported to MDTraj by Robert T. McGibbon. DSSP-2.2.0 is distributed
+ * under the Boost Software License, Version 1.0. This code, as part of
+ * MDTraj, is distributed under the GNU LGPL.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
@@ -40,27 +50,28 @@ struct MBridge {
 
 static bool _test_bond(int i, int j, const int* hbonds)
 {
-    return (hbonds[i*2 + 0] == j) || (hbonds[i*2 + 1] == j);
+    return (hbonds[j*2 + 0] == i) || (hbonds[j*2+1] == i);
 }
 
 
 static bridge_t _residue_test_bridge(int i, int j, int n_residues,
     const int* chain_ids, const int* hbonds)
 {
+    // printf("testing bridge %d, %d\n", i, j);
     const int a=i-1, b=i, c=i+1;
     const int d=j-1, e=j, f=j+1;
-    // printf("Testing bridge from %d to %d\n", i, j);
+    // printf("e=%d, b=%d: %d\n", e, b, _test_bond(e, b, hbonds));
 
     if (a >= 0 && c < n_residues && chain_ids[a] == chain_ids[c] &&
         d >= 0 && f < n_residues && chain_ids[d] == chain_ids[f]) {
 
-        if ((_test_bond(c, e, hbonds) && _test_bond(a, e, hbonds)) ||
-            (_test_bond(f, b, hbonds) && _test_bond(b, d, hbonds)))
+        if ((_test_bond(e, c, hbonds) && _test_bond(a, e, hbonds)) ||
+            (_test_bond(b, f, hbonds) && _test_bond(d, b, hbonds)))
                 return BRIDGE_PARALLEL;
 
         // printf("cd: %d, fa:%d, eb:%d, be:%d\n", _test_bond(c, d, hbonds), _test_bond(f, a, hbonds), _test_bond(e, b, hbonds), _test_bond(b, e, hbonds));
         if ((_test_bond(d, c, hbonds) && _test_bond(a, f, hbonds)) ||
-            (_test_bond(e, b, hbonds) && _test_bond(b, e, hbonds)))
+            (_test_bond(b, e, hbonds) && _test_bond(e, b, hbonds)))
                 return BRIDGE_ANTIPARALLEL;
     }
 
@@ -298,6 +309,13 @@ int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
          const int* is_proline, const int* chain_ids, const int n_frames,
          const int n_atoms, const int n_residues, char* secondary)
 {
+    std::vector<int> skip(n_residues, 0);
+    for (int i = 0; i < n_residues; i++)
+        if ((nco_indices[i*3] == -1) || (nco_indices[i*3+1] == -1) ||
+             (nco_indices[i*3+2] == -1) || ca_indices[i] == -1) {
+             skip[i] = 1;
+        }
+
     for (int i = 0; i < n_frames; i++) {
         // call kabsch_sander to calculate the hydrogen bonds
         std::vector<int> hbonds(n_residues*2, -1);

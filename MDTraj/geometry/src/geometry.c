@@ -215,20 +215,22 @@ static INLINE void store_energies(int* hbonds, float* henergies, int donor,
      in the output arrays. This function is called twice by kabsch_sander,
      so it seemed appropriate to factor it out.
   */
+  // if (donor == 1 && acceptor == 48)
+  // printf("storing donor=1, acceptor=48: energy=%f\n", e);
 
-  float existing_e0 = henergies[2*acceptor + 0];
-  float existing_e1 = henergies[2*acceptor + 1];
+  float existing_e0 = henergies[2*donor + 0];
+  float existing_e1 = henergies[2*donor + 1];
 
   if (isnan(existing_e0) || e < existing_e0) {
     /* copy over any info in #0 hbond to #1 */
-    hbonds[2*acceptor + 1] = hbonds[acceptor*2 + 0];
-    henergies[2*acceptor + 1] = existing_e0;
-    hbonds[2*acceptor + 0] = donor;
-    henergies[2*acceptor + 0] = e;
+    hbonds[2*donor + 1] = hbonds[donor*2 + 0];
+    henergies[2*donor + 1] = existing_e0;
+    hbonds[2*donor + 0] = acceptor;
+    henergies[2*donor + 0] = e;
     /* printf("hbond being stored from donor=%d to acceptor=%d\n", donor, acceptor); */
-  } else if (isnan(existing_e1) || e < henergies[2*acceptor + 1]) {
-    hbonds[2*acceptor + 1] = donor;
-    henergies[2*acceptor + 1] = e;
+  } else if (isnan(existing_e1) || e < henergies[2*donor + 1]) {
+    hbonds[2*donor + 1] = acceptor;
+    henergies[2*donor + 1] = e;
     /* printf("hbond being stored from donor=%d to acceptor=%d\n", donor, acceptor); */
   }
 }
@@ -255,10 +257,10 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
     -------
     hbonds : array, shape=(n_frames, n_residues, 2)
         This is a little tricky, so bear with me. This array gives the indices
-        of the residues that each backbone hbond *acceptor* is engaged in an hbond
+        of the residues that each backbone hbond *donor* is engaged in an hbond
         with. For instance, the equality `bonds[i, j, 0] == k` is interpreted as
-        "in frame i, residue j is accepting its first hydrogen bond from residue
-        k". `bonds[i, j, 1] == k` means that residue j is accepting its second
+        "in frame i, residue j is donating its first hydrogen bond from residue
+        k". `bonds[i, j, 1] == k` means that residue j is donating its second
         hydrogen bond from residue k. A negative value indicates that no such
         hbond exists.
     henergies : array, shape=(n_frames, n_residues, 2)
@@ -273,10 +275,15 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
   __m128 ri_ca, rj_ca, r12;
   __m128 MINIMAL_CA_DISTANCE2 = _mm_set1_ps(0.81);
   float* hcoords = (float*) malloc(n_residues*3 * sizeof(float));
-  if (hcoords == NULL) {
+  int* skip = (int*) calloc(n_residues, sizeof(int));
+  if (hcoords == NULL || skip == NULL) {
     fprintf(stderr, "Memory Error\n");
     exit(1);
   }
+
+  for (int i = 0; i < n_residues; i++)
+      if ((nco_indices[i*3] == -1) || (nco_indices[i*3+1] == -1) || (nco_indices[i*3+2] == -1) || ca_indices[i] == -1)
+          skip[i] = 1;
 
   for (i = 0; i < n_frames; i++) {
     ks_assign_hydrogens(xyz, nco_indices, n_residues, hcoords);
@@ -290,6 +297,7 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
 
         /* check the ca distance before proceding */
         r12 = _mm_sub_ps(ri_ca, rj_ca);
+
         if(_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(_mm_dp_ps(r12, r12, 0x7F), MINIMAL_CA_DISTANCE2)), 0)) {
           float e = ks_donor_acceptor(xyz, hcoords, nco_indices, ri, rj);
           if (e < HBOND_ENERGY_CUTOFF && !is_proline[ri])
@@ -310,6 +318,11 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
     henergies += n_residues*2;
   }
   free(hcoords);
+<<<<<<< HEAD
+=======
+  free(skip);
+
+>>>>>>> a89a7f3... Now working for 1bpi, 1vii, 4K6Q, but failing for 1am7
   return 1;
 }
 #endif

@@ -36,9 +36,15 @@ def call_dssp(traj, frame=0):
 
 @skipif(not HAVE_DSSP, "This tests required mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/")
 def test_1():
-    t = md.load(get_fn('1bpi.pdb'))
-    a = call_dssp(t)
-    b = md.compute_dssp(t)[0]
-    print('ref: "%s"' % a)
-    print('md:  "%s"' % b)
-    assert a == b
+    for fn in ['1bpi.pdb', '1vii.pdb', '4K6Q.pdb', '1am7_protein.pdb']:
+        t = md.load(get_fn(fn))
+        t = t.atom_slice(t.top.select_atom_indices('minimal'))
+        f = lambda : assert_(call_dssp(t), md.compute_dssp(t)[0])
+        f.description = 'test_1: %s' % fn
+        yield f
+
+@skipif(not HAVE_DSSP, DSSP_MSG)
+def test_2():
+    t = md.load(get_fn('2EQQ.pdb'))
+    for i in range(len(t)):
+        yield lambda: assert_(call_dssp(t[i]), md.compute_dssp(t[i])[0])
