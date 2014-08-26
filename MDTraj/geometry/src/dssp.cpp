@@ -2,11 +2,7 @@
  * DSSP secondary structure assignment
  * Copyright [2014] Stanford University and the Authors
  * Authors: Robert T. McGibbon, Maarten L. Hekkelman
-<<<<<<< HEAD
  *
-=======
- * 
->>>>>>> bc0920cd44886717e7a6b398e1ff0015a32c41f6
  * This code is adapted from DSSP-2.2.0, written by Maarten L. Hekkelman,
  * and ported to MDTraj by Robert T. McGibbon. DSSP-2.2.0 is distributed
  * under the Boost Software License, Version 1.0. This code, as part of
