@@ -131,20 +131,21 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
     sort(bridges.begin(), bridges.end());
     for (unsigned int i = 0; i < bridges.size(); ++i) {
         for (unsigned int j = i + 1; j < bridges.size(); ++j) {
-            int ibi = bridges[i].i.front();
-            int iei = bridges[i].i.back();
-            int jbi = bridges[i].j.front();
-            int jei = bridges[i].j.back();
-            int ibj = bridges[j].i.front();
-            int iej = bridges[j].i.back();
-            int jbj = bridges[j].j.front();
-            int jej = bridges[j].j.back();
+            unsigned int ibi = bridges[i].i.front();
+            unsigned int iei = bridges[i].i.back();
+            unsigned int jbi = bridges[i].j.front();
+            unsigned int jei = bridges[i].j.back();
+            unsigned int ibj = bridges[j].i.front();
+            unsigned int iej = bridges[j].i.back();
+            unsigned int jbj = bridges[j].j.front();
+            unsigned int jej = bridges[j].j.back();
 
             if ((bridges[i].type != bridges[j].type) ||
                 chain_ids[std::min(ibi, ibj)] != chain_ids[std::max(iei, iej)] ||
                 chain_ids[std::min(jbi, jbj)] != chain_ids[std::max(jei, jej)] ||
-                ibj - iei >= 6 || (iei >= ibj && ibi <= iej))
+                ibj - iei >= 6 || (iei >= ibj && ibi <= iej)) {
                     continue;
+            }
 
             bool bulge;
             if (bridges[i].type == BRIDGE_PARALLEL)
@@ -166,6 +167,7 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
 
     for (std::vector<MBridge>::iterator bridge = bridges.begin();
          bridge != bridges.end(); ++bridge) {
+         // printf("Bridge from i in (%d, %d)    j in (%d, %d)\n", bridge->i.front(), bridge->i.back(), bridge->j.front(), bridge->j.back());
 
         ss_t ss = SS_BETABRIDGE;
         if (bridge->i.size() > 1)
@@ -181,7 +183,6 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
                 secondary[i] = ss;
         }
     }
-
 }
 
 static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
