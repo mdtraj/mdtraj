@@ -1,16 +1,33 @@
+##############################################################################
+# Imports
+##############################################################################
+
 import numpy as np
-import sys; sys.path.insert(0, '/Users/rmcgibbo/projects/mdtraj/build/lib.macosx-10.5-x86_64-2.7/')
 
 import mdtraj as md
 from mdtraj.utils.six import PY2
 from mdtraj.utils import ensure_type
 from mdtraj.geometry.hbond import _prep_kabsch_sander_arrays
 from mdtraj.geometry import _geometry
+if PY2:
+    from string import maketrans
+else:
+    maketrans = str.maketrans
 
+##############################################################################
+# GLOBALS
+##############################################################################
+
+SIMPLIFIED_CODE_TRANSLATION = maketrans('HGIEBTS ', 'HHHEECCC')
 __all__ = ['compute_dssp']
 
 
-def compute_dssp(traj):
+##############################################################################
+# CODE
+##############################################################################
+
+
+def compute_dssp(traj, simplified=True):
     """Compute Dictionary of protein secondary structure (DSSP) secondary structure assignments
     
     Parameters
@@ -24,11 +41,13 @@ def compute_dssp(traj):
         The return value is a list of strings, of length n_frames. Each string
         is of length n_residues, and contains the secondary-structure code of
         each residue.
+    simplified  : bool, default=True.
+        Use the simplified 3-category assignment scheme. Otherwise the original
+        8-category scheme is used.
 
     Notes
     -----
     The DSSP assignment codes are:
-
        - 'H' : Alpha helix
        - 'B' : Residue in isolated beta-bridge
        - 'E' : Extended strand, participates in beta ladder
@@ -37,6 +56,11 @@ def compute_dssp(traj):
        - 'T' : hydrogen bonded turn
        - 'S' : bend
        - ' ' : Loops and irregular elements
+
+    The simplified DSSP codes are:
+       - 'H' : Helix. Either of the 'H', 'G', or 'I' codes.
+       - 'E' : Strand. Either of the 'E', or 'B' codes.
+       - 'C' : Coil. Either of the 'T', 'S' or ' ' codes.
 
     Our implementation is based on DSSP-2.2.0, written by Maarten L. Hekkelman
     and distributed under the Boost Software license.
@@ -54,5 +78,7 @@ def compute_dssp(traj):
     
     xyz, nco_indices, ca_indices, proline_indices = _prep_kabsch_sander_arrays(traj)
     chain_ids = np.array([r.chain.index for r in traj.top.residues], dtype=np.int32)
-
-    return _geometry._dssp(xyz, nco_indices, ca_indices, proline_indices, chain_ids)
+    value = _geometry._dssp(xyz, nco_indices, ca_indices, proline_indices, chain_ids)
+    if simplified:
+        value = [v.translate(SIMPLIFIED_CODE_TRANSLATION) for v in value]
+    return value

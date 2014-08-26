@@ -6,6 +6,7 @@ import tempfile
 import subprocess
 from distutils.spawn import find_executable
 
+import numpy as np
 import mdtraj as md
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
 
@@ -54,7 +55,7 @@ def test_1():
     for fn in ['1bpi.pdb', '1vii.pdb', '4K6Q.pdb', '1am7_protein.pdb']:
         t = md.load_pdb(get_fn(fn))
         t = t.atom_slice(t.top.select_atom_indices('minimal'))
-        f = lambda : assert_(call_dssp(t), md.compute_dssp(t)[0])
+        f = lambda : assert_(call_dssp(t), md.compute_dssp(t, simplified=False)[0])
         f.description = 'test_1: %s' % fn
         yield f
 
@@ -63,7 +64,7 @@ def test_1():
 def test_2():
     t = md.load(get_fn('2EQQ.pdb'))
     for i in range(len(t)):
-        yield lambda: assert_(call_dssp(t[i]), md.compute_dssp(t[i])[0])
+        yield lambda: assert_(call_dssp(t[i]), md.compute_dssp(t[i], simplified=False)[0])
 
 
 @skipif(not HAVE_DSSP, DSSP_MSG)
@@ -73,6 +74,15 @@ def test_3():
     for pdbid in pdbids:
         t = md.load_pdb('http://www.rcsb.org/pdb/files/%s.pdb' % pdbid)
         t = t.atom_slice(t.top.select_atom_indices('minimal'))
-        f = lambda : assert_(call_dssp(t), md.compute_dssp(t)[0])
+        f = lambda : assert_(call_dssp(t), md.compute_dssp(t, simplified=False)[0])
         f.description = 'test_1: %s' % pdbid
         yield f
+
+
+def test_4():
+    t = md.load_pdb(get_fn('1am7_protein.pdb'))
+    a = md.compute_dssp(t, simplified=True)
+    b = md.compute_dssp(t, simplified=False)
+    assert len(a) == len(b)
+    assert len(a[0]) == len(b[0])
+    assert np.all(np.unique(a[0]) == np.array(['C', 'E', 'H']))
