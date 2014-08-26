@@ -188,7 +188,7 @@ static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
     float kappa;
     std::vector<int> is_bend(n_residues, 0);
     for (int i = 2; i < n_residues-2; i++) {
-        if (chain_ids[i-2] == chain_ids[i+2] && !skip[i-2] && !skip[i+2]) {
+        if (chain_ids[i-2] == chain_ids[i+2] && !skip[i-2] && !skip[i] && !skip[i+2]) {
             prev_ca = load_float3(xyz + 3*ca_indices[i-2]);
             this_ca = load_float3(xyz + 3*ca_indices[i]);
             next_ca = load_float3(xyz + 3*ca_indices[i+2]);
@@ -275,7 +275,7 @@ static void calculate_alpha_helicies(const float* xyz,
         }
 
     const std::vector<int> is_bend = calculate_bends(xyz, ca_indices, chain_ids, n_residues, skip);
-    for (int i = 1; i < n_residues-1; i++)
+    for (unsigned i = 1; i < n_residues-1; i++)
         if (secondary[i] == SS_LOOP && !skip[i]) {
             bool isTurn = false;
             for (int stride = 3; stride <= 5 && !isTurn; ++stride)

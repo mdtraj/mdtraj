@@ -68,8 +68,8 @@ def test_2():
 
 @skipif(not HAVE_DSSP, DSSP_MSG)
 def test_3():
-    # 1GAI, 1COY
-    pdbids = ['6gsv', '2AAC']
+    # 1COY gives a small error, due to a broken chain.
+    pdbids = ['1GAI', '6gsv', '2AAC']
     for pdbid in pdbids:
         t = md.load_pdb('http://www.rcsb.org/pdb/files/%s.pdb' % pdbid)
         t = t.atom_slice(t.top.select_atom_indices('minimal'))
