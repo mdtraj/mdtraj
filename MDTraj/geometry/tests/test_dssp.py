@@ -32,11 +32,11 @@ def call_dssp(traj, frame=0):
     with open(out) as f:
         # exaust the first entries
         max(itertools.takewhile(lambda l: not l.startswith(KEY_LINE), f))
-        return ''.join([line[16] for line in f if line[13] != '!'])
+        return np.array([line[16] for line in f if line[13] != '!'])
 
 def assert_(a, b):
     try:
-        assert a == b
+        assert np.all(a == b)
     except AssertionError:
         if len(a) != len(b):
             print('Not the same length: %d vs %s' % (len(a), len(b)))

@@ -200,5 +200,4 @@ def _dssp(float[:, :, ::1] xyz,
 
     PY2 = sys.version_info.major
     value = str(secondary.base) if PY2 else secondary.base.decode('ascii')
-    return [value[i*n_residues:(i+1)*n_residues] for i in range(n_frames)]
-
+    return value

@@ -37,10 +37,9 @@ def compute_dssp(traj, simplified=True):
 
     Returns
     -------
-    assignments : list of str
-        The return value is a list of strings, of length n_frames. Each string
-        is of length n_residues, and contains the secondary-structure code of
-        each residue.
+    assignments : np.ndarray, shape=(n_frames, n_residues), dtype=S1
+        The assignments is a 2D array of character codes (see below), giving
+        the secondary structure of each residue in each frame.
     simplified  : bool, default=True.
         Use the simplified 3-category assignment scheme. Otherwise the original
         8-category scheme is used.
@@ -80,7 +79,12 @@ def compute_dssp(traj, simplified=True):
     
     xyz, nco_indices, ca_indices, proline_indices = _prep_kabsch_sander_arrays(traj)
     chain_ids = np.array([r.chain.index for r in traj.top.residues], dtype=np.int32)
+
     value = _geometry._dssp(xyz, nco_indices, ca_indices, proline_indices, chain_ids)
     if simplified:
-        value = [v.translate(SIMPLIFIED_CODE_TRANSLATION) for v in value]
-    return value
+        value = value.translate(SIMPLIFIED_CODE_TRANSLATION)
+
+    n_frames = xyz.shape[0]
+    n_residues = nco_indices.shape[0]
+    as2darray = np.fromstring(value, dtype=np.dtype('S1')).reshape(n_frames, n_residues)
+    return as2darray
