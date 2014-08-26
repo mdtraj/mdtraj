@@ -9,6 +9,7 @@ import mdtraj as md
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
 
 HAVE_DSSP = find_executable('mkdssp')
+DSSP_MSG =  "This tests required mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
 tmpdir = None
 
 def setup():
@@ -31,10 +32,15 @@ def call_dssp(traj, frame=0):
         max(itertools.takewhile(lambda l: not l.startswith(KEY_LINE), f))
         return ''.join([line[16] for line in f])
         
+def assert_(a, b):
+    try:
+        assert a == b
+    except AssertionError:
+        print('a: "%s"', a)
+        print('b: "%s"', b)
+        raise
 
-    
-
-@skipif(not HAVE_DSSP, "This tests required mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/")
+@skipif(not HAVE_DSSP, DSSP_MSG)
 def test_1():
     for fn in ['1bpi.pdb', '1vii.pdb', '4K6Q.pdb', '1am7_protein.pdb']:
         t = md.load(get_fn(fn))

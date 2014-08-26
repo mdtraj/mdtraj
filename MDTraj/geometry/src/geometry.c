@@ -318,11 +318,8 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
     henergies += n_residues*2;
   }
   free(hcoords);
-<<<<<<< HEAD
-=======
   free(skip);
 
->>>>>>> a89a7f3... Now working for 1bpi, 1vii, 4K6Q, but failing for 1am7
   return 1;
 }
 #endif
