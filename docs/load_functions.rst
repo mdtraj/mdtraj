@@ -1,7 +1,6 @@
 .. _loading:
-Loading Trajectories
---------------------
-
+Trajectories
+------------
 
 Loading molecular dynamics trajectories is easy with MDTraj. ::
 
@@ -18,13 +17,22 @@ functions like :func:`mdtraj.load` and :func:`mdtraj.open` are available for
 working with trajectories in chunks, without loading them entirely into memory
 all at once.
 
+The trajectory object
+*********************
 
-Cross-format support
+.. currentmodule:: mdtraj
+.. autosummary::
+    :toctree: api/generated/
+
+    Trajectory
+    Topology
+
+Cross-format loaders
 ********************
 
 .. currentmodule:: mdtraj
 .. autosummary::
-    :toctree: generated/
+    :toctree: api/generated/
 
     load
     iterload
@@ -35,7 +43,7 @@ Format-specific loaders
 ***********************
 
 .. autosummary::
-    :toctree: generated/
+    :toctree: api/generated/
 
     load_binpos
     load_lh5

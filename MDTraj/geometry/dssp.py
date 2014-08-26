@@ -48,6 +48,7 @@ def compute_dssp(traj, simplified=True):
     Notes
     -----
     The DSSP assignment codes are:
+
        - 'H' : Alpha helix
        - 'B' : Residue in isolated beta-bridge
        - 'E' : Extended strand, participates in beta ladder
@@ -58,6 +59,7 @@ def compute_dssp(traj, simplified=True):
        - ' ' : Loops and irregular elements
 
     The simplified DSSP codes are:
+
        - 'H' : Helix. Either of the 'H', 'G', or 'I' codes.
        - 'E' : Strand. Either of the 'E', or 'B' codes.
        - 'C' : Coil. Either of the 'T', 'S' or ' ' codes.
