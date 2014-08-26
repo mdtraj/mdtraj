@@ -37,10 +37,17 @@ enum ss_t {SS_LOOP, SS_ALPHAHELIX, SS_BETABRIDGE, SS_STRAND, SS_HELIX_3, SS_HELI
 
 struct MBridge {
     bridge_t type;
-    int sheet, ladder;
-    std::set<MBridge*> link;
     std::deque<int> i, j;
     int chain_i, chain_j;
+
+    MBridge(bridge_t type, int chain_i, int chain_j, int first_i, int first_j):
+        type(type),
+        chain_i(chain_i),
+        chain_j(chain_j)
+    {
+        i.push_back(first_i);
+        j.push_back(first_j);
+    };
 
     bool operator<(const MBridge& b) const {
         return chain_i < b.chain_i || (chain_i == b.chain_i && i.front() < b.i.front());
@@ -48,12 +55,21 @@ struct MBridge {
 };
 
 
-static bool _test_bond(int i, int j, const int* hbonds)
+/**
+ * Is there an h-bond from donor to acceptor
+ */
+static bool _test_bond(int donor, int acceptor, const int* hbonds)
 {
-    return (hbonds[j*2 + 0] == i) || (hbonds[j*2+1] == i);
+    return (hbonds[donor*2 + 0] == acceptor) || (hbonds[donor*2+1] == acceptor);
 }
 
 
+/**
+ * Test whether two residues are engaged in a beta-bridge
+ *
+ * Equivalent to MBridgeType MResidue::TestBridge(MResidue* test)
+ * from dssp-2.2.0/strucrure.cpp:687
+ */
 static bridge_t _residue_test_bridge(int i, int j, int n_residues,
     const int* chain_ids, const int* hbonds)
 {
@@ -65,17 +81,25 @@ static bridge_t _residue_test_bridge(int i, int j, int n_residues,
     if (a >= 0 && c < n_residues && chain_ids[a] == chain_ids[c] &&
         d >= 0 && f < n_residues && chain_ids[d] == chain_ids[f]) {
 
-        if ((_test_bond(e, c, hbonds) && _test_bond(a, e, hbonds)) ||
-            (_test_bond(b, f, hbonds) && _test_bond(d, b, hbonds)))
+        if ((_test_bond(c, e, hbonds) && _test_bond(e, a, hbonds)) ||
+            (_test_bond(f, b, hbonds) && _test_bond(b, d, hbonds)))
                 return BRIDGE_PARALLEL;
-        if ((_test_bond(d, c, hbonds) && _test_bond(a, f, hbonds)) ||
-            (_test_bond(b, e, hbonds) && _test_bond(e, b, hbonds)))
+        if ((_test_bond(c, d, hbonds) && _test_bond(f, a, hbonds)) ||
+            (_test_bond(e, b, hbonds) && _test_bond(b, e, hbonds)))
                 return BRIDGE_ANTIPARALLEL;
     }
 
     return BRIDGE_NONE;
 }
 
+
+/**
+ * Identify the beta secondary structure elements. This modifies the
+ * vector `secondary` in place.
+ *
+ * Equivalent to MProtein::CalculateBetaSheets(const vector<MResidue*>& inResidues)
+ * from dssp-2.2.0/structure.cpp:1793
+ */
 static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
     const std::vector<int>& skip, const int n_residues, std::vector<ss_t>& secondary)
 {
@@ -112,12 +136,7 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
                 }
             }
             if (!found) {
-                MBridge bridge = {};
-                bridge.type = type;
-                bridge.i.push_back(i);
-                bridge.chain_i = chain_ids[i];
-                bridge.j.push_back(j);
-                bridge.chain_i = chain_ids[j];
+                MBridge bridge(type, chain_ids[i], chain_ids[j], i, j);
                 bridges.push_back(bridge);
             }
         }
@@ -181,6 +200,12 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
     }
 }
 
+
+/**
+ * Identify bends in the chain, where the kappa angle (virtual bond angle from
+ * c-alpha i-2, to i, to i+2) is greater than 70 degrees
+ * dssp-2.2.0/structure.cpp:1729
+ */
 static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
     const int* chain_ids, const int n_residues, std::vector<int>& skip)
 {
@@ -197,7 +222,7 @@ static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
             /* normalize the vectors u_prime and v_prime */
             u = _mm_div_ps(u_prime, _mm_sqrt_ps(_mm_dp_ps(u_prime, u_prime, 0x7F)));
             v = _mm_div_ps(v_prime, _mm_sqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
-            /* compute the arccos of the dot product, && store the result. */
+            /* compute the arccos of the dot product. this gives the angle */
             kappa = (float) acos(CLIP(_mm_cvtss_f32(_mm_dp_ps(u, v, 0x71)), -1, 1));
             is_bend[i] = kappa > (70 * (M_PI / 180.0));
         }
@@ -206,6 +231,13 @@ static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
 }
 
 
+/**
+ * Identify the helical secondary structure elements. This modifies the `secondary`
+ * vector inplace.
+ *
+ * Corresponds to MProtein::CalculateAlphaHelices(const vector<MResidue*>& inResidues, bool inPreferPiHelices)
+ * dssp-2.2.0/structure.cpp:1693. Note that `inPreferHelices` is set to true, in this code.
+ */
 static void calculate_alpha_helicies(const float* xyz,
     const int* ca_indices, const int* chain_ids,
     const int* hbonds, std::vector<int>& skip, const int n_atoms, const int n_residues,
@@ -224,7 +256,7 @@ static void calculate_alpha_helicies(const float* xyz,
             for (unsigned int ii = 0; ii < residues.size(); ii++) {
                 int i = residues[ii];
 
-                if ((i+stride) < n_residues && _test_bond(i, i+stride, hbonds) && (chain_ids[i] == chain_ids[i+stride])) {
+                if ((i+stride) < n_residues && _test_bond(i+stride, i, hbonds) && (chain_ids[i] == chain_ids[i+stride])) {
                     // printf("%d->%d\n", i+stride, i);
 
                     helix_flags[i+stride][stride] = HELIX_END;
@@ -297,19 +329,25 @@ static void calculate_alpha_helicies(const float* xyz,
  * xyz : array, shape=(n_frames, n_atoms, 3)
  *     The cartesian coordinates of all of the atoms in each frame.
  * nco_indices : array, shape=(n_residues, 3)
- *     The indices of the backbone N, C, and O atoms for each residue.
+ *     The indices of the backbone N, C, and O atoms for each residue. The value
+ *     should be -1 for any missing residues.
  * ca_indices : array, shape=(n_residues,)
- *     The index of the CA atom of each residue.
+ *     The index of the CA atom of each residue. Should be -1 for any missing
+ *     residues
  * is_proline : array, shape=(n_residue,)
- *     If a particular residue does not contain a CA atom, or you want to skip
- *     the residue for another reason, this value should evaluate to True.
+ *     Is the residue a proline. These need to be handled slightly differently.
  * chain_ids : array, shape=(n_residue,)
- *     The index of the chain each residue is in
+ *     The index of the chain each residue is in. Various parts of this code
+ *     require continuity of different secondary structure elements along a chain.
  *
  * Returns
  * -------
  * secondary : array, shape=(n_frames, n_residues)
- *     The DSSP assignment codes for each residue, in each frame.
+ *     The DSSP assignment codes for each residue, in each frame. These are
+ *     chars, with one of the 8 DSSP codes per residue. Note that the char
+ *     array is _not_ null-terminated (at least, this function doesn't add any
+ *     null bytes) so you should be careful using it a input to libc string
+ *     functions.
  */
 int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
          const int* is_proline, const int* chain_ids, const int n_frames,
@@ -322,21 +360,23 @@ int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
              skip[i] = 1;
         }
 
-
     for (int i = 0; i < n_frames; i++) {
         const float* framexyz = xyz + (i * n_atoms * 3);
         std::vector<int> hbonds(n_residues*2, -1);
         std::vector<float> henergies(n_residues*2, 0);
+        // loop is the 'default' secondary structure, which applies
+        // when nothing else matches.
         std::vector<ss_t> framesecondary(n_residues, SS_LOOP);
 
         // call kabsch_sander to calculate the hydrogen bonds
         kabsch_sander(framexyz, nco_indices, ca_indices, is_proline,
                       1, n_atoms, n_residues, &hbonds[0], &henergies[0]);
-
+        // identify the secndary structure elements
         calculate_beta_sheets(chain_ids, &hbonds[0], skip, n_residues, framesecondary);
         calculate_alpha_helicies(framexyz, ca_indices, chain_ids,
             &hbonds[0], skip, n_atoms, n_residues, framesecondary);
 
+        // replace the enums with the character codes
         for (int j = 0; j < n_residues; j++) {
             char ss = ' ';
             switch (framesecondary[j]) {
