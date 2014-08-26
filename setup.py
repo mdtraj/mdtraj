@@ -366,6 +366,7 @@ def geometry_extensions():
                           numpy.get_include()],
             define_macros=define_macros,
             extra_compile_args=compiler_args,
+            libraries=['stdc++'],
             language='c++'),
         Extension('mdtraj.geometry.drid',
             sources=["MDTraj/geometry/drid.pyx",
