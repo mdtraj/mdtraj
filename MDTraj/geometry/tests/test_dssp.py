@@ -85,4 +85,4 @@ def test_4():
     b = md.compute_dssp(t, simplified=False)
     assert len(a) == len(b)
     assert len(a[0]) == len(b[0])
-    assert np.all(np.unique(a[0]) == np.array(['C', 'E', 'H']))
+    assert list(np.unique(a[0])) == ['C', 'E', 'H']
