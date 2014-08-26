@@ -9,11 +9,9 @@ from mdtraj.geometry import _geometry
 
 __all__ = ['compute_dssp']
 
-def compute_dssp(traj):
-    """compute_drid(traj)
 
-    Compute Dictionary of protein secondary structure (DSSP) secondary
-    structure assignments for each frame of this trajectory
+def compute_dssp(traj):
+    """Compute Dictionary of protein secondary structure (DSSP) secondary structure assignments
     
     Parameters
     ----------
@@ -40,9 +38,14 @@ def compute_dssp(traj):
        - 'S' : bend
        - ' ' : Loops and irregular elements
 
+    Our implementation is based on DSSP-2.2.0, written by Maarten L. Hekkelman
+    and distributed under the Boost Software license.
+
     References
     ----------
-    .. [1] Kabsch W, Sander C (1983). "Dictionary of protein secondary structure: pattern recognition of hydrogen-bonded and geometrical features". Biopolymers 22 (12): 2577-637. dio:10.1002/bip.360221211
+    .. [1] Kabsch W, Sander C (1983). "Dictionary of protein secondary
+       structure: pattern recognition of hydrogen-bonded and geometrical
+       features". Biopolymers 22 (12): 2577-637. dio:10.1002/bip.360221211
     """
     if traj.topology is None:
         raise ValueError('kabsch_sander requires topology')

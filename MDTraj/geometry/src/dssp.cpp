@@ -2,7 +2,11 @@
  * DSSP secondary structure assignment
  * Copyright [2014] Stanford University and the Authors
  * Authors: Robert T. McGibbon, Maarten L. Hekkelman
+<<<<<<< HEAD
  *
+=======
+ * 
+>>>>>>> bc0920cd44886717e7a6b398e1ff0015a32c41f6
  * This code is adapted from DSSP-2.2.0, written by Maarten L. Hekkelman,
  * and ported to MDTraj by Robert T. McGibbon. DSSP-2.2.0 is distributed
  * under the Boost Software License, Version 1.0. This code, as part of
@@ -17,8 +21,8 @@
 #include <algorithm>
 #include "geometry.h"
 
-#define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
-#define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
+#define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
+#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 #define CLIP(X, X_min, X_max) (MIN(MAX(X, X_min), X_max))
 
 #ifndef __SSE4_1__
@@ -68,8 +72,6 @@ static bridge_t _residue_test_bridge(int i, int j, int n_residues,
         if ((_test_bond(e, c, hbonds) && _test_bond(a, e, hbonds)) ||
             (_test_bond(b, f, hbonds) && _test_bond(d, b, hbonds)))
                 return BRIDGE_PARALLEL;
-
-        // printf("cd: %d, fa:%d, eb:%d, be:%d\n", _test_bond(c, d, hbonds), _test_bond(f, a, hbonds), _test_bond(e, b, hbonds), _test_bond(b, e, hbonds));
         if ((_test_bond(d, c, hbonds) && _test_bond(a, f, hbonds)) ||
             (_test_bond(b, e, hbonds) && _test_bond(e, b, hbonds)))
                 return BRIDGE_ANTIPARALLEL;
@@ -78,9 +80,8 @@ static bridge_t _residue_test_bridge(int i, int j, int n_residues,
     return BRIDGE_NONE;
 }
 
-
 static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
-    const int n_residues, std::vector<ss_t>& secondary)
+    const std::vector<int>& skip, const int n_residues, std::vector<ss_t>& secondary)
 {
     std::vector<MBridge> bridges;
 
@@ -88,7 +89,7 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
     for (int i = 1; i < n_residues - 4; i++) {
         for (int j = i+3; j < n_residues - 1; j++) {
             bridge_t type = _residue_test_bridge(j, i, n_residues, chain_ids, hbonds);
-            if (type == BRIDGE_NONE) {
+            if (type == BRIDGE_NONE || skip[i] || skip[j]) {
                 continue;
             }
 
@@ -184,13 +185,13 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
 }
 
 static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
-    const int* chain_ids, const int n_residues)
+    const int* chain_ids, const int n_residues, std::vector<int>& skip)
 {
     __m128 prev_ca, this_ca, next_ca, u_prime, v_prime, u, v;
     float kappa;
     std::vector<int> is_bend(n_residues, 0);
     for (int i = 2; i < n_residues-2; i++) {
-        if (chain_ids[i-2] == chain_ids[i+2]) {
+        if (chain_ids[i-2] == chain_ids[i+2] && !skip[i-2] && !skip[i+2]) {
             prev_ca = load_float3(xyz + 3*ca_indices[i-2]);
             this_ca = load_float3(xyz + 3*ca_indices[i]);
             next_ca = load_float3(xyz + 3*ca_indices[i+2]);
@@ -207,9 +208,10 @@ static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
     return is_bend;
 }
 
+
 static void calculate_alpha_helicies(const float* xyz,
     const int* ca_indices, const int* chain_ids,
-    const int* hbonds, const int n_atoms, const int n_residues,
+    const int* hbonds, std::vector<int>& skip, const int n_atoms, const int n_residues,
     std::vector<ss_t>& secondary)
 {
     std::map<int, std::vector<int> > chains;
@@ -243,15 +245,6 @@ static void calculate_alpha_helicies(const float* xyz,
         }
     }
 
-    // printf("HelixFlags\n");
-    // for (int stride = 3; stride <= 5; stride++) {
-    //     printf("%d: ", stride);
-    //     for (int i = 0; i < n_residues; i++)
-    //         printf("%d", helix_flags[i][stride]);
-    //     printf("\n");
-    // }
-
-
     for (int i = 0; i < n_residues-4; i++)
         if ((helix_flags[i][4] == HELIX_START || helix_flags[i][4] == HELIX_START_AND_END) &&
             (helix_flags[i-1][4] == HELIX_START || helix_flags[i-1][4] == HELIX_START_AND_END)) {
@@ -284,9 +277,9 @@ static void calculate_alpha_helicies(const float* xyz,
                     secondary[j] = SS_HELIX_5;
         }
 
-    const std::vector<int> is_bend = calculate_bends(xyz, ca_indices, chain_ids, n_residues);
+    const std::vector<int> is_bend = calculate_bends(xyz, ca_indices, chain_ids, n_residues, skip);
     for (int i = 1; i < n_residues-1; i++)
-        if (secondary[i] == SS_LOOP) {
+        if (secondary[i] == SS_LOOP && !skip[i]) {
             bool isTurn = false;
             for (int stride = 3; stride <= 5 && !isTurn; ++stride)
                 for (int k = 1; k < stride && !isTurn; ++k)
@@ -299,11 +292,27 @@ static void calculate_alpha_helicies(const float* xyz,
         }
 }
 
-
-
 /**
+ * Calculate DSSP secondary structure assignments
  *
+ * Parameters
+ * ----------
+ * xyz : array, shape=(n_frames, n_atoms, 3)
+ *     The cartesian coordinates of all of the atoms in each frame.
+ * nco_indices : array, shape=(n_residues, 3)
+ *     The indices of the backbone N, C, and O atoms for each residue.
+ * ca_indices : array, shape=(n_residues,)
+ *     The index of the CA atom of each residue.
+ * is_proline : array, shape=(n_residue,)
+ *     If a particular residue does not contain a CA atom, or you want to skip
+ *     the residue for another reason, this value should evaluate to True.
+ * chain_ids : array, shape=(n_residue,)
+ *     The index of the chain each residue is in
  *
+ * Returns
+ * -------
+ * secondary : array, shape=(n_frames, n_residues)
+ *     The DSSP assignment codes for each residue, in each frame.
  */
 int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
          const int* is_proline, const int* chain_ids, const int n_frames,
@@ -316,19 +325,20 @@ int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
              skip[i] = 1;
         }
 
+
     for (int i = 0; i < n_frames; i++) {
-        // call kabsch_sander to calculate the hydrogen bonds
+        const float* framexyz = xyz + (i * n_atoms * 3);
         std::vector<int> hbonds(n_residues*2, -1);
-        std::vector<float> henergies(n_residues*2, -1);
+        std::vector<float> henergies(n_residues*2, 0);
         std::vector<ss_t> framesecondary(n_residues, SS_LOOP);
-        const float* framexyz = xyz + (i*n_atoms*3);
 
-        kabsch_sander(framexyz, nco_indices, ca_indices,
-                      is_proline, 1, n_atoms, n_residues, &hbonds[0], &henergies[0]);
+        // call kabsch_sander to calculate the hydrogen bonds
+        kabsch_sander(framexyz, nco_indices, ca_indices, is_proline,
+                      1, n_atoms, n_residues, &hbonds[0], &henergies[0]);
 
-        calculate_beta_sheets(chain_ids, &hbonds[0], n_residues, framesecondary);
+        calculate_beta_sheets(chain_ids, &hbonds[0], skip, n_residues, framesecondary);
         calculate_alpha_helicies(framexyz, ca_indices, chain_ids,
-            &hbonds[0], n_atoms, n_residues, framesecondary);
+            &hbonds[0], skip, n_atoms, n_residues, framesecondary);
 
         for (int j = 0; j < n_residues; j++) {
             char ss = ' ';

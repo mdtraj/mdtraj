@@ -377,18 +377,25 @@ def kabsch_sander(traj):
     return matrices
 
 
+def _get_or_minus1(f):
+    try:
+        return f()
+    except IndexError:
+        return -1
+
 def _prep_kabsch_sander_arrays(traj):
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz',
                       shape=(None, None, 3), warn_on_cast=False)
 
     ca_indices, nco_indices, is_proline = [], [], []
     for residue in traj.topology.residues:
-        ca_indices.append([a.index for a in residue.atoms if a.name == 'CA'][0])
-        is_proline.append(residue.name == 'PRO')
+        ca = _get_or_minus1(lambda : [a.index for a in residue.atoms if a.name == 'CA'][0])
+        n = _get_or_minus1(lambda : [a.index for a in residue.atoms if a.name == 'N'][0])
+        c = _get_or_minus1(lambda : [a.index for a in residue.atoms if a.name == 'C'][0])
+        o = _get_or_minus1(lambda : [a.index for a in residue.atoms if a.name == 'O'][0])
 
-        n = [a.index for a in residue.atoms if a.name == 'N'][0]
-        c = [a.index for a in residue.atoms if a.name == 'C'][0]
-        o = [a.index for a in residue.atoms if a.name == 'O'][0]
+        ca_indices.append(ca)
+        is_proline.append(residue.name == 'PRO')
         nco_indices.append([n, c, o])
 
     nco_indices = np.array(nco_indices, np.int32)

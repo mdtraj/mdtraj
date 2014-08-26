@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import shutil
 import itertools
@@ -18,14 +19,14 @@ def setup():
 
 def teardown():
     shutil.rmtree(tmpdir)
-    
+
 def call_dssp(traj, frame=0):
     inp = os.path.join(tmpdir, 'temp.pdb')
     out = os.path.join(tmpdir, 'temp.pdb.dssp')
     traj[frame].save(inp)
     cmd = ['mkdssp', '-i', inp, '-o', out]
     subprocess.check_output(' '.join(cmd), shell=True)
-    
+
     KEY_LINE = '  #  RESIDUE AA STRUCTURE BP1 BP2  ACC     N-H-->O    O-->H-N    N-H-->O    O-->H-N    TCO  KAPPA ALPHA  PHI   PSI    X-CA   Y-CA   Z-CA'
     with open(out) as f:
         # exaust the first entries
@@ -36,9 +37,10 @@ def assert_(a, b):
     try:
         assert a == b
     except AssertionError:
-        print('a: "%s"', a)
-        print('b: "%s"', b)
+        print('a: "%s"' % a)
+        print('b: "%s"' % b)
         raise
+
 
 @skipif(not HAVE_DSSP, DSSP_MSG)
 def test_1():
