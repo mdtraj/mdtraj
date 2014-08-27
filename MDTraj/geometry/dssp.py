@@ -86,5 +86,8 @@ def compute_dssp(traj, simplified=True):
 
     n_frames = xyz.shape[0]
     n_residues = nco_indices.shape[0]
-    as2darray = np.fromstring(value, dtype=np.dtype('S1')).reshape(n_frames, n_residues)
-    return as2darray
+    if PY2:
+        array = np.fromstring(value, dtype=np.dtype('S1'))
+    else:
+        array = np.fromiter(value, dtype=np.dtype('U1'))
+    return array.reshape(n_frames, n_residues)

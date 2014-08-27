@@ -198,6 +198,6 @@ def _dssp(float[:, :, ::1] xyz,
          &is_proline[0], &chain_ids[0], n_frames, n_atoms,
          n_residues, &secondary[0])
 
-    PY2 = sys.version_info.major
+    PY2 = sys.version_info[0] == 2
     value = str(secondary.base) if PY2 else secondary.base.decode('ascii')
     return value
