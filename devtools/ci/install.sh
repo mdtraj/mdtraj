@@ -26,7 +26,7 @@ if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
     exit 1
 fi
 
-tar -xzvf sparta+.tar.Z
+tar -xzf sparta+.tar.Z
 cd SPARTA+
 csh ./install.com
 export SPARTAP_DIR=`pwd`
@@ -48,7 +48,7 @@ if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
     exit 1
 fi
 
-tar -xzvf shiftx2-v107-linux-20120106.tgz
+tar -xzf shiftx2-v107-linux-20120106.tgz
 cd shiftx2-v107-linux/
 make
 export PATH=`pwd`:$PATH
