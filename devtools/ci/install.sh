@@ -18,7 +18,7 @@ MDTRAJ_DIR=`pwd`
 mkdir $HOME/external
 cd $HOME/external
 wget http://spin.niddk.nih.gov/bax/software/SPARTA+/sparta+.tar.Z
-REFERENCE_MD5="12a04ec45d9bd9e7974b218fe2353765"
+REFERENCE_MD5="d4293336254f5696221db0edcc57cfed"
 RECEIVED_MD5=$(md5sum sparta+.tar.Z | cut -d " " -f 1)
 if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
     echo "sparta+.tar.Z md5 mismatch"

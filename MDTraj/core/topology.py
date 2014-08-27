@@ -393,6 +393,7 @@ class Topology(object):
                 r = out.add_residue(residue_name, c, ri)
 
                 for ai, atom in residue_atoms.iterrows():
+                    ai = int(ai)  # Fixes bizarre hashing issue on Py3K.  See #545
                     if atom['element'] == "":
                         element = None
                     else:
