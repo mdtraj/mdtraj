@@ -17,7 +17,8 @@ $HOME/miniconda/envs/${python}/bin/pip install $PIP_ARGS -r devtools/ci/requirem
 MDTRAJ_DIR=`pwd`
 mkdir $HOME/external
 cd $HOME/external
-wget http://spin.niddk.nih.gov/bax/software/SPARTA+/sparta+.tar.Z
+# wget http://spin.niddk.nih.gov/bax/software/SPARTA+/sparta+.tar.Z
+wget https://s3-us-west-1.amazonaws.com/mdtraj-travis-ci-cached-files/sparta%2B.tar.Z
 REFERENCE_MD5="d4293336254f5696221db0edcc57cfed"
 RECEIVED_MD5=$(md5sum sparta+.tar.Z | cut -d " " -f 1)
 if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
@@ -39,8 +40,7 @@ MDTRAJ_DIR=`pwd`
 mkdir $HOME/external
 cd $HOME/external
 #wget http://www.shiftx2.ca/download/shiftx2-v107-linux-20120106.tgz
-#Use Stanford cached version because shiftx2 servers are super slow.
-wget http://stanford.edu/%7Ermcgibbo/files/shiftx2-v107-linux-20120106.tgz
+wget https://s3-us-west-1.amazonaws.com/mdtraj-travis-ci-cached-files/shiftx2-v107-linux-20120106.tgz
 REFERENCE_MD5="4d3b23d77e773aa321af2a01ed04199a"
 RECEIVED_MD5=$(md5sum shiftx2-v107-linux-20120106.tgz | cut -d " " -f 1)
 if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
@@ -60,7 +60,7 @@ cd $MDTRAJ_DIR
 MDTRAJ_DIR=`pwd`
 mkdir $HOME/external
 cd $HOME/external
-wget http:// stanford.edu/~rmcgibbo/files/ppm_linux_64.exe
+https://s3-us-west-1.amazonaws.com/mdtraj-travis-ci-cached-files/ppm_linux_64.exe
 chmod a+x ppm_linux_64.exe
 REFERENCE_MD5="f3cb5681bd2769cdcfc77fe17c563ee4"
 RECEIVED_MD5=$(md5sum ppm_linux_64.exe | cut -d " " -f 1)
