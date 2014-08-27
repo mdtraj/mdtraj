@@ -147,6 +147,7 @@ def test_select_atom_indices():
 
     assert_raises(ValueError, lambda: top.select_atom_indices('sdfsdfsdf'))
 
+@skipif(not HAVE_OPENMM)
 def test_top_dataframe_openmm_roundtrip():
     t = md.load(get_fn('2EQQ.pdb'))
     top, bonds = t.top.to_dataframe()

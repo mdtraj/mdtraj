@@ -273,6 +273,7 @@ class Topology(object):
                 r = out.addResidue(residue.name, c)
                 for atom in residue.atoms:
                     a = out.addAtom(atom.name, app.Element.getBySymbol(atom.element.symbol), r)
+                    atom.index = int(atom.index)  # Fixes bizarre hashing issue on Py3K.  See #545
                     atom_mapping[atom] = a
 
         for a1, a2 in self.bonds:
