@@ -7,7 +7,7 @@ define([], function() {
         this.create($el);
         return true;
     }
-    
+
 /**
  * Constructor
  */
@@ -25,7 +25,7 @@ RMol.prototype.create = function($el) {
     this.camera = new THREE.PerspectiveCamera(20, this.ASPECT, this.NEAR, this.FAR);
     this.camera.position.set(0, 0, this.CAMERA_Z);
     this.camera.lookAt(new TV3(0, 0, 0));
-    
+
     /* set up the renderer */
     this.renderer = new THREE.WebGLRenderer({antialiased: true});
     this.renderer.setClearColor(0xffffff, 1 );
@@ -34,13 +34,13 @@ RMol.prototype.create = function($el) {
     this.renderer.domElement.style.height = "100%";
     this.renderer.setClearColor( 0xffffff, 1 );
     this.renderer.setSize(this.WIDTH, this.HEIGHT);
-    
+
     this.initializeScene();
     this.initializeLights();
     this.initializeDefaultValues();
     this.scene.add(this.camera);
     this.enableMouse();
-    
+
     this.$el.append(this.renderer.domElement);
 };
 
@@ -48,7 +48,7 @@ RMol.prototype.render = function() {
     this.renderer.render(this.scene, this.camera);
 }
 
-/** 
+/**
  * Initialization of the core elements
  */
 RMol.prototype.initializeScene = function() {
@@ -59,7 +59,7 @@ RMol.prototype.initializeScene = function() {
     this.modelGroup = new THREE.Object3D();
     this.rotationGroup = new THREE.Object3D();
     this.rotationGroup.add(this.modelGroup);
-        
+
     this.scene.add(this.rotationGroup);
 };
 
@@ -76,7 +76,7 @@ RMol.prototype.initializeLights = function() {
 
 
 RMol.prototype.initializeDefaultValues = function() {
-    this.sphereRadius = 1.5; 
+    this.sphereRadius = 1.5;
     this.cylinderRadius = 0.4;
     this.lineWidth = 1.5 * this.aaScale;
     this.curveWidth = 10 * this.aaScale;
@@ -91,7 +91,7 @@ RMol.prototype.initializeDefaultValues = function() {
     this.helixSheetWidth = 1.3;
     this.nucleicAcidWidth = 0.8;
     this.thickness = 0.4;
-    
+
     this.ElementColors = {
         "H": 0xCCCCCC, "C": 0xAAAAAA, "O": 0xCC0000,
         "N": 0x0000CC, "S": 0xCCCC00, "P": 0x6622CC,
@@ -107,16 +107,14 @@ RMol.prototype.initializeDefaultValues = function() {
  * Set the system topology
  */
 RMol.prototype.setTopology = function(topology) {
-    var chains = topology.chains;
-    var bonds = topology.bonds;
     var atoms = [];
-    
-    for (var i = 0; i < chains.length; i++) {
-        var chain = chains[i];
+
+    for (var i = 0; i < topology.chains.length; i++) {
+        var chain = topology.chains[i];
         for (var j = 0; j < chain.residues.length; j++) {
             var residue = chain.residues[j];
             for (var k = 0; k < residue.atoms.length; k++) {
-                var atom = chains[i].residues[j].atoms[k];
+                var atom = residue.atoms[k];
                 atoms[atom.index] = {
                     'resn': residue.name,
                     'elem': atom.element,
@@ -126,11 +124,19 @@ RMol.prototype.setTopology = function(topology) {
                     'serial': atom.index,
                     'atom': atom.name,
                     'ss': 's',
+                    'bonds': [],
                     'color': 0xFFFFFF,
                 };
             }
         }
     }
+
+    for (var i = 0; i < topology.bonds.length; i++) {
+        atoms[topology.bonds[i][0]].bonds.push(topology.bonds[i][1]);
+        atoms[topology.bonds[i][1]].bonds.push(topology.bonds[i][0]);
+    }
+
+
     this.atoms = atoms;
 };
 
@@ -144,10 +150,10 @@ RMol.prototype.setXYZ = function(xyz) {
 }
 
 
-/** 
+/**
  * Create all of the geometry elements based on a particular set
  * of representationOptions
- */ 
+ */
 RMol.prototype.setRepresentation = function(representationOptions) {
     var all = this.getAllAtoms();
     // var hetatm = this.removeSolvents(this.getHetatms(all));
@@ -182,7 +188,7 @@ RMol.prototype.setRepresentation = function(representationOptions) {
         // this.drawCartoonNucleicAcid(asu, all, null, this.thickness);
     } else if (mainchainMode == 'strand') {
         this.drawStrand(asu, all, null, null, null, null, null, doNotSmoothen);
-        this.drawStrandNucleicAcid(asu, all);
+        // this.drawStrandNucleicAcid(asu, all);
     } else if (mainchainMode == 'chain') {
         this.drawMainchainCurve(asu, all, this.curveWidth, 'CA', 1);
         this.drawMainchainCurve(asu, all, this.curveWidth, 'O3\'', 1);
@@ -210,12 +216,9 @@ RMol.prototype.setRepresentation = function(representationOptions) {
    //     this.drawBondsAsStick(target, hetatm, this.cylinderRadius / 2.0, this.cylinderRadius, true, true, 0.3);
    // }
    //
-   // if (sideChains == 'line') {
-   //     this.drawBondsAsLine(this.modelGroup, this.getSidechains(all), this.lineWidth);
-   // }
-   
-   // this.drawAtomsAsSphere(this.modelGroup, this.getAllAtoms(), this.sphereRadius);
-   
+   if (sideChains == 'line') {
+       this.drawBondsAsLine(this.modelGroup, this.getSidechains(all), this.lineWidth);
+   }
 
    // if (projectionMode == 'perspective') {
    //     this.camera = this.perspectiveCamera;
@@ -260,6 +263,18 @@ RMol.prototype.getAllAtoms = function() {
    return ret;
 };
 
+RMol.prototype.getSidechains = function(atomlist) {
+   var ret = [];
+   for (var i in atomlist) {
+      var atom = this.atoms[atomlist[i]]; if (atom == undefined) continue;
+
+      if (atom.hetflag) continue;
+      if (atom.atom == 'C' || atom.atom == 'O' || (atom.atom == 'N' && atom.resn != "PRO")) continue;
+      ret.push(atom.serial);
+   }
+   return ret;
+};
+
 RMol.prototype.getExtent = function(atomlist) {
     var xmin = 9999, ymin = 9999, zmin = 9999;
     var xmax = -9999, ymax = -9999, zmax = -9999;
@@ -281,10 +296,10 @@ RMol.prototype.getExtent = function(atomlist) {
 };
 
 
-/** 
+/**
  * Color the atoms. These routines modifty the color attribute of each
  * atom in the topology.
- */ 
+ */
 RMol.prototype.colorByAtom = function(atomlist, colors) {
    for (var i in atomlist) {
       var atom = this.atoms[atomlist[i]]; if (atom == undefined) continue;
@@ -337,7 +352,7 @@ RMol.prototype.drawStrand = function(group, atomlist, num, div, fill, coilWidth,
    helixSheetWidth = helixSheetWidth || this.helixSheetWidth;
    var points = [];
    for (var k = 0; k < num; k++)
-       points[k] = [];       
+       points[k] = [];
    var colors = [];
    var currentChain, currentResi, currentCA;
    var prevCO = null, ss=null, ssborder = false;
@@ -365,16 +380,16 @@ RMol.prototype.drawStrand = function(group, atomlist, num, div, fill, coilWidth,
             var O = new TV3(atom.x, atom.y, atom.z);
             O.sub(currentCA);
             O.normalize(); // can be omitted for performance
-            O.multiplyScalar((ss == 'c') ? coilWidth : helixSheetWidth); 
+            O.multiplyScalar((ss == 'c') ? coilWidth : helixSheetWidth);
             if (prevCO != undefined && O.dot(prevCO) < 0) O.negate();
             prevCO = O;
             for (var j = 0; j < num; j++) {
                var delta = -1 + 2 / (num - 1) * j;
-               var v = new TV3(currentCA.x + prevCO.x * delta, 
+               var v = new TV3(currentCA.x + prevCO.x * delta,
                                currentCA.y + prevCO.y * delta, currentCA.z + prevCO.z * delta);
                if (!doNotSmoothen && ss == 's') v.smoothen = true;
                points[j].push(v);
-            }                         
+            }
          }
       }
    }
@@ -443,6 +458,120 @@ RMol.prototype.drawStrip = function(group, p1, p2, colors, div, thickness) {
    group.add(mesh);
 };
 
+
+RMol.prototype.isConnected = function(atom1, atom2) {
+   var s = atom1.bonds.indexOf(atom2.serial);
+   if (s != -1)
+       return 1;
+   return 0;
+};
+
+RMol.prototype.calcBondDelta = function(atom1, atom2, sep) {
+   var dot;
+   var axis = new TV3(atom1.x - atom2.x, atom1.y - atom2.y, atom1.z - atom2.z).normalize();
+   var found = null;
+   for (var i = 0; i < atom1.bonds.length && !found; i++) {
+      var atom = this.atoms[atom1.bonds[i]]; if (!atom) continue;
+      if (atom.serial != atom2.serial && atom.elem != 'H') found = atom;
+   }
+   for (var i = 0; i < atom2.bonds.length && !found; i++) {
+      var atom = this.atoms[atom2.bonds[i]]; if (!atom) continue;
+      if (atom.serial != atom1.serial && atom.elem != 'H') found = atom;
+   }
+   if (found) {
+      var tmp = new TV3(atom1.x - found.x, atom1.y - found.y, atom1.z - found.z).normalize();
+      dot = tmp.dot(axis);
+      delta = new TV3(tmp.x - axis.x * dot, tmp.y - axis.y * dot, tmp.z - axis.z * dot);
+   }
+   if (!found || Math.abs(dot - 1) < 0.001 || Math.abs(dot + 1) < 0.001) {
+      if (axis.x < 0.01 && axis.y < 0.01) {
+         delta = new TV3(0, -axis.z, axis.y);
+      } else {
+         delta = new TV3(-axis.y, axis.x, 0);
+      }
+   }
+   delta.normalize().multiplyScalar(sep);
+   return delta;
+};
+
+RMol.prototype.drawBondsAsLineSub = function(geo, atom1, atom2, order) {
+   var delta, tmp, vs = geo.vertices, cs = geo.colors;
+   if (order > 1) delta = this.calcBondDelta(atom1, atom2, 0.15);
+   var p1 = new TV3(atom1.x, atom1.y, atom1.z);
+   var p2 = new TV3(atom2.x, atom2.y, atom2.z);
+   var mp = p1.clone().add(p2).multiplyScalar(0.5);
+
+   var c1 = new TCo(atom1.color), c2 = new TCo(atom2.color);
+   if (order == 1 || order == 3) {
+      vs.push(p1); cs.push(c1); vs.push(mp); cs.push(c1);
+      vs.push(p2); cs.push(c2); vs.push(mp); cs.push(c2);
+   }
+   if (order > 1) {
+      vs.push(p1.clone().add(delta)); cs.push(c1);
+      vs.push(tmp = mp.clone().add(delta)); cs.push(c1);
+      vs.push(p2.clone().add(delta)); cs.push(c2);
+      vs.push(tmp); cs.push(c2);
+      vs.push(p1.clone().sub(delta)); cs.push(c1);
+      vs.push(tmp = mp.clone().sub(delta)); cs.push(c1);
+      vs.push(p2.clone().sub(delta)); cs.push(c2);
+      vs.push(tmp); cs.push(c2);
+   }
+};
+
+RMol.prototype.drawBondsAsLine = function(group, atomlist, lineWidth) {
+   var geo = new THREE.Geometry();
+   var nAtoms = atomlist.length;
+
+   for (var _i = 0; _i < nAtoms; _i++) {
+      var i = atomlist[_i];
+      var  atom1 = this.atoms[i];
+      if (atom1 == undefined) continue;
+      for (var _j = _i + 1; _j < _i + 30 && _j < nAtoms; _j++) {
+         var j = atomlist[_j];
+         var atom2 = this.atoms[j];
+         if (atom2 == undefined) continue;
+         var order = this.isConnected(atom1, atom2);
+         if (order == 0) continue;
+
+         this.drawBondsAsLineSub(geo, atom1, atom2, order);
+      }
+      for (var _j = 0; _j < atom1.bonds.length; _j++) {
+          var j = atom1.bonds[_j];
+          if (j < i + 30) continue; // be conservative!
+          if (atomlist.indexOf(j) == -1) continue;
+          var atom2 = this.atoms[j];
+          if (atom2 == undefined) continue;
+          this.drawBondsAsLineSub(geo, atom1, atom2, atom1.bondOrder[_j]);
+      }
+    }
+   var lineMaterial = new THREE.LineBasicMaterial({linewidth: lineWidth});
+   lineMaterial.vertexColors = true;
+
+   var line = new THREE.Line(geo, lineMaterial);
+   line.type = THREE.LinePieces;
+   group.add(line);
+};
+
+RMol.prototype.drawSmoothCurve = function(group, _points, width, colors, div) {
+   if (_points.length == 0) return;
+
+   div = (div == undefined) ? 5 : div;
+
+   var geo = new THREE.Geometry();
+   var points = this.subdivide(_points, div);
+
+   for (var i = 0; i < points.length; i++) {
+      geo.vertices.push(points[i]);
+      geo.colors.push(new TCo(colors[(i == 0) ? 0 : Math.round((i - 1) / div)]));
+  }
+  var lineMaterial = new THREE.LineBasicMaterial({linewidth: width});
+  lineMaterial.vertexColors = true;
+  var line = new THREE.Line(geo, lineMaterial);
+  line.type = THREE.LineStrip;
+  group.add(line);
+};
+
+
 RMol.prototype.drawAtomsAsSphere = function(group, atomlist, defaultRadius, forceDefault, scale) {
 
    var sphereGeometry = new THREE.SphereGeometry(1, this.sphereQuality, this.sphereQuality); // r, seg, ring
@@ -461,9 +590,42 @@ RMol.prototype.drawAtomsAsSphere = function(group, atomlist, defaultRadius, forc
       sphere.position.y = atom.y;
       sphere.position.z = atom.z;
       // console.log(sphere.position);
-      
+
    }
 };
+
+RMol.prototype.drawBondsAsStick = function(group, atomlist, bondR, atomR, ignoreNonbonded, multipleBonds, scale) {
+   var sphereGeometry = new THREE.SphereGeometry(1, this.sphereQuality, this.sphereQuality);
+   var nAtoms = atomlist.length, mp;
+   var forSpheres = [];
+   if (!!multipleBonds) bondR /= 2.5;
+   for (var _i = 0; _i < nAtoms; _i++) {
+      var i = atomlist[_i];
+      var atom1 = this.atoms[i];
+      if (atom1 == undefined) continue;
+      for (var _j = _i + 1; _j < _i + 30 && _j < nAtoms; _j++) {
+         var j = atomlist[_j];
+         var atom2 = this.atoms[j];
+         if (atom2 == undefined) continue;
+         var order = this.isConnected(atom1, atom2);
+         if (order == 0) continue;
+         atom1.connected = atom2.connected = true;
+         this.drawBondAsStickSub(group, atom1, atom2, bondR, (!!multipleBonds) ? order : 1);
+      }
+      for (var _j = 0; _j < atom1.bonds.length; _j++) {
+         var j = atom1.bonds[_j];
+         if (j < i + 30) continue; // be conservative!
+         if (atomlist.indexOf(j) == -1) continue;
+         var atom2 = this.atoms[j];
+         if (atom2 == undefined) continue;
+         atom1.connected = atom2.connected = true;
+         this.drawBondAsStickSub(group, atom1, atom2, bondR, (!!multipleBonds) ? atom1.bondOrder[_j] : 1);
+      }
+      if (atom1.connected) forSpheres.push(i);
+   }
+   this.drawAtomsAsSphere(group, forSpheres, atomR, !scale, scale);
+};
+
 
 
 
@@ -488,13 +650,13 @@ RMol.prototype.subdivide = function(_points, DIV) { // points as Vector3
       var v1 = new TV3().subVectors(p3, p1).multiplyScalar(0.5);
       for (var j = 0; j < DIV; j++) {
          var t = 1.0 / DIV * j;
-         var x = p1.x + t * v0.x 
+         var x = p1.x + t * v0.x
                   + t * t * (-3 * p1.x + 3 * p2.x - 2 * v0.x - v1.x)
                   + t * t * t * (2 * p1.x - 2 * p2.x + v0.x + v1.x);
-         var y = p1.y + t * v0.y 
+         var y = p1.y + t * v0.y
                   + t * t * (-3 * p1.y + 3 * p2.y - 2 * v0.y - v1.y)
                   + t * t * t * (2 * p1.y - 2 * p2.y + v0.y + v1.y);
-         var z = p1.z + t * v0.z 
+         var z = p1.z + t * v0.z
                   + t * t * (-3 * p1.z + 3 * p2.z - 2 * v0.z - v1.z)
                   + t * t * t * (2 * p1.z - 2 * p2.z + v0.z + v1.z);
          ret.push(new TV3(x, y, z));
@@ -521,7 +683,7 @@ RMol.prototype.enableMouse = function() {
 
 	controls.keys = [ 65, 83, 68 ];
     this.controls = controls;
-    
+
     self = this;
     function animate() {
         setTimeout(function() {
@@ -531,8 +693,8 @@ RMol.prototype.enableMouse = function() {
         self.render();
     }
     animate();
-    
-    
+
+
 };
 
 
