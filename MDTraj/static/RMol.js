@@ -38,7 +38,7 @@ RMol.prototype.create = function($el) {
     this.scene.add(this.camera);
 
     this.renderer.render(this.scene, this.camera);
-    $el.append(this.renderer.domElement);
+    this.$el.append(this.renderer.domElement);
 };
 
 RMol.prototype.initializeScene = function() {
