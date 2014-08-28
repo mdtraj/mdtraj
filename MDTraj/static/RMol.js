@@ -39,9 +39,9 @@ RMol.prototype.create = function($el) {
     this.initializeLights();
     this.initializeDefaultValues();
     this.scene.add(this.camera);
+    this.enableMouse();
     
     this.$el.append(this.renderer.domElement);
-    this.enableMouse();
 };
 
 RMol.prototype.render = function() {
@@ -59,17 +59,14 @@ RMol.prototype.initializeScene = function() {
     this.modelGroup = new THREE.Object3D();
     this.rotationGroup = new THREE.Object3D();
     this.rotationGroup.add(this.modelGroup);
-    
-    // var axes = new THREE.AxisHelper(10);
-    // this.rotationGroup.add(axes);
-    
+        
     this.scene.add(this.rotationGroup);
 };
 
 RMol.prototype.initializeLights = function() {
     var directionalLight =  new THREE.DirectionalLight(0xFFFFFF);
     directionalLight.position.set(0.2, 0.2, -1);
-    directionalLight.intensity = 1.2;
+    directionalLight.intensity = 1.0;
 
     var ambientLight = new THREE.AmbientLight(0x202020);
 
@@ -128,7 +125,7 @@ RMol.prototype.setTopology = function(topology) {
                     'resi': residue.index,
                     'serial': atom.index,
                     'atom': atom.name,
-                    'ss': 'c',
+                    'ss': 's',
                     'color': 0xFFFFFF,
                 };
             }
@@ -177,27 +174,27 @@ RMol.prototype.setRepresentation = function(representationOptions) {
         this.colorByPolarity(all, 0xcc0000, 0xcccccc);
     }
 
-   //  if (mainchainMode == 'ribbon') {
-   //      this.drawCartoon(asu, all, doNotSmoothen);
-   //      this.drawCartoonNucleicAcid(asu, all);
-   //  } else if (mainchainMode == 'thickRibbon') {
-   //      this.drawCartoon(asu, all, doNotSmoothen, this.thickness);
-   //      // this.drawCartoonNucleicAcid(asu, all, null, this.thickness);
-   //  } else if (mainchainMode == 'strand') {
-   //      this.drawStrand(asu, all, null, null, null, null, null, doNotSmoothen);
-   //      this.drawStrandNucleicAcid(asu, all);
-   //  } else if (mainchainMode == 'chain') {
-   //      this.drawMainchainCurve(asu, all, this.curveWidth, 'CA', 1);
-   //      this.drawMainchainCurve(asu, all, this.curveWidth, 'O3\'', 1);
-   //  } else if (mainchainMode == 'cylinderHelix') {
-   //      this.drawHelixAsCylinder(asu, all, 1.6);
-   //      this.drawCartoonNucleicAcid(asu, all);
-   //  } else if (mainchainMode == 'tube') {
-   //      this.drawMainchainTube(asu, all, 'CA');
-   //      this.drawMainchainTube(asu, all, 'O3\''); // FIXME: 5' end problem!
-   //  } else if (mainchainMode == 'bonds') {
-   //      this.drawBondsAsLine(asu, all, this.lineWidth);
-   //  }
+    if (mainchainMode == 'ribbon') {
+        this.drawCartoon(asu, all, doNotSmoothen);
+        this.drawCartoonNucleicAcid(asu, all);
+    } else if (mainchainMode == 'thickRibbon') {
+        this.drawCartoon(asu, all, doNotSmoothen, this.thickness);
+        // this.drawCartoonNucleicAcid(asu, all, null, this.thickness);
+    } else if (mainchainMode == 'strand') {
+        this.drawStrand(asu, all, null, null, null, null, null, doNotSmoothen);
+        this.drawStrandNucleicAcid(asu, all);
+    } else if (mainchainMode == 'chain') {
+        this.drawMainchainCurve(asu, all, this.curveWidth, 'CA', 1);
+        this.drawMainchainCurve(asu, all, this.curveWidth, 'O3\'', 1);
+    } else if (mainchainMode == 'cylinderHelix') {
+        this.drawHelixAsCylinder(asu, all, 1.6);
+        this.drawCartoonNucleicAcid(asu, all);
+    } else if (mainchainMode == 'tube') {
+        this.drawMainchainTube(asu, all, 'CA');
+        this.drawMainchainTube(asu, all, 'O3\''); // FIXME: 5' end problem!
+    } else if (mainchainMode == 'bonds') {
+        this.drawBondsAsLine(asu, all, this.lineWidth);
+    }
    //
    // if (hetatmMode == 'stick') {
    //    this.drawBondsAsStick(target, hetatm, this.cylinderRadius, this.cylinderRadius, true);
@@ -217,7 +214,7 @@ RMol.prototype.setRepresentation = function(representationOptions) {
    //     this.drawBondsAsLine(this.modelGroup, this.getSidechains(all), this.lineWidth);
    // }
    
-   this.drawAtomsAsSphere(this.modelGroup, this.getAllAtoms(), this.sphereRadius);
+   // this.drawAtomsAsSphere(this.modelGroup, this.getAllAtoms(), this.sphereRadius);
    
 
    // if (projectionMode == 'perspective') {
@@ -338,7 +335,9 @@ RMol.prototype.drawStrand = function(group, atomlist, num, div, fill, coilWidth,
    coilWidth = coilWidth || this.coilWidth;
    doNotSmoothen == (doNotSmoothen == undefined) ? false : doNotSmoothen;
    helixSheetWidth = helixSheetWidth || this.helixSheetWidth;
-   var points = []; for (var k = 0; k < num; k++) points[k] = [];
+   var points = [];
+   for (var k = 0; k < num; k++)
+       points[k] = [];       
    var colors = [];
    var currentChain, currentResi, currentCA;
    var prevCO = null, ss=null, ssborder = false;
@@ -381,7 +380,8 @@ RMol.prototype.drawStrand = function(group, atomlist, num, div, fill, coilWidth,
    }
    for (var j = 0; !thickness && j < num; j++)
       this.drawSmoothCurve(group, points[j], 1 ,colors, div);
-   if (fill) this.drawStrip(group, points[0], points[num - 1], colors, div, thickness);
+   if (fill)
+       this.drawStrip(group, points[0], points[num - 1], colors, div, thickness);
 };
 
 
@@ -415,15 +415,25 @@ RMol.prototype.drawStrip = function(group, p1, p2, colors, div, thickness) {
    for (var i = 1, lim = p1.length; i < lim; i++) {
       var offset = 8 * i, color = new TCo(colors[Math.round((i - 1)/ div)]);
       for (var j = 0; j < 4; j++) {
-         var f = new THREE.Face4(offset + faces[j][0], offset + faces[j][1], offset + faces[j][2], offset + faces[j][3], undefined, color);
-         fs.push(f);
+         var f1 = new THREE.Face3(offset + faces[j][0], offset + faces[j][1], offset + faces[j][2],
+                                 undefined, color);
+         var f2 = new THREE.Face3(offset + faces[j][0], offset + faces[j][2], offset + faces[j][3],
+                                 undefined, color);
+         fs.push(f1);
+         fs.push(f2);
       }
    }
    var vsize = vs.length - 8; // Cap
-   for (var i = 0; i < 4; i++) {vs.push(vs[i * 2]); vs.push(vs[vsize + i * 2])};
+   for (var i = 0; i < 4; i++) {
+       vs.push(vs[i * 2]); vs.push(vs[vsize + i * 2])
+   };
    vsize += 8;
-   fs.push(new THREE.Face4(vsize, vsize + 2, vsize + 6, vsize + 4, undefined, fs[0].color));
-   fs.push(new THREE.Face4(vsize + 1, vsize + 5, vsize + 7, vsize + 3, undefined, fs[fs.length - 3].color));
+
+   fs.push( new THREE.Face3(vsize, vsize + 2, vsize + 6, undefined, fs[0].color));
+   fs.push( new THREE.Face3(vsize, vsize + 6, vsize + 4, undefined, fs[0].color));
+   fs.push(new THREE.Face3(vsize + 1, vsize + 5, vsize + 7, undefined, fs[fs.length - 3].color));
+   fs.push(new THREE.Face3(vsize + 1, vsize + 7, vsize + 3, undefined, fs[fs.length - 3].color));
+
    geo.computeFaceNormals();
    geo.computeVertexNormals(false);
    var material =  new THREE.MeshLambertMaterial();
@@ -496,6 +506,7 @@ RMol.prototype.subdivide = function(_points, DIV) { // points as Vector3
 
 
 RMol.prototype.enableMouse = function() {
+
 	var controls = new THREE.TrackballControls(this.camera);
 
 	controls.rotateSpeed = 1.0;
@@ -510,7 +521,17 @@ RMol.prototype.enableMouse = function() {
 
 	controls.keys = [ 65, 83, 68 ];
     this.controls = controls;
-    this.controls.addEventListener('change', this.render);
+    
+    self = this;
+    function animate() {
+        setTimeout(function() {
+            requestAnimationFrame(animate);
+        }, 10);
+        self.controls.update();
+        self.render();
+    }
+    animate();
+    
     
 };
 
