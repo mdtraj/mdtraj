@@ -5,12 +5,13 @@ from IPython.html.widgets import DOMWidget
 from IPython.utils.traitlets import Unicode, CUnicode, Bool, Bytes, CInt, Any, List, Dict
 
 # Global. Inject JS into notebook
-display(Javascript('''
+WIDGET_JS = Javascript(filename='static/widget_trajectory.js')
+REQUIRE_CONFIG = Javascript('''
 require.config({
     paths: {
         'three': '//cdnjs.cloudflare.com/ajax/libs/three.js/r68/three.min',
         'three/trackball' : 'http://mrdoob.github.io/three.js/examples/js/controls/TrackballControls',
-        'rmol' : 'libs/RMol',
+        'rmol' : 'http://rawgit.com/rmcgibbo/mdtraj/notebook/MDTraj/html/libs/RMol',
     },
     shim: {
         'three': {
@@ -23,8 +24,11 @@ require.config({
     },
 });
 console.log("setting shims");
-'''))
-display(Javascript(filename='static/widget_trajectory.js'))
+''')
+
+def enable_notebook():
+    display(WIDGET_JS)
+    display(REQUIRE_CONFIG)
 
 class TrajectoryWidget(DOMWidget):
     disabled = Bool(False, help="Enable or disable user changes.", sync=True)
@@ -45,7 +49,7 @@ class TrajectoryWidget(DOMWidget):
 
     def _trajectory_changed(self, name, old, new):
         self._xyz = new.xyz[self.frame].tolist()
-        self._toplogy = new.topology.to_dict()
+        self._topology = new.topology.to_dict()
 
     
 

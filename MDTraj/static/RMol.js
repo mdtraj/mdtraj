@@ -57,8 +57,6 @@ RMol.prototype.create = function($el) {
     this.initializeLights();
     this.initializeDefaultValues();
     this.scene.add(this.camera);
-    this.enableMouse();
-
     this.$el.append(this.renderer.domElement);
 };
 
