@@ -410,7 +410,14 @@ class Topology(object):
         out._numAtoms = out.n_atoms
         return out
 
-    def to_json(self):
+    def to_dict(self):
+        """Convert this topology into a dictionary, suitable for JSON serialization
+
+        Returns
+        -------
+        top : dict
+            TODO(rmcgibbo): describe me
+        """
         topology_dict = {
              'chains': [],
              'bonds': []
@@ -448,7 +455,7 @@ class Topology(object):
                 int(atom1.index),
                 int(atom2.index)
             ])
-        return json.dumps(topology_dict)
+        return topology_dict
 
     def to_bondgraph(self):
         """Create a NetworkX graph from the atoms and bonds in this topology
