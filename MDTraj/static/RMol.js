@@ -12,55 +12,42 @@ define(["three"], function(THREE) {
 RMol.prototype.create = function($el) {
     this.$el = $el;
     this.aaScale = 1;
-    // this.WIDTH = this.$el.width() * this.aaScale;
-    // this.HEIGHT = this.$el.height() * this.aaScale;   
-    this.WIDTH = 300;
-    this.HEIGHT = 300;
+    this.WIDTH = this.$el.width() * this.aaScale;
+    this.HEIGHT = this.$el.height() * this.aaScale;
     this.ASPECT = this.WIDTH / this.HEIGHT;
     this.NEAR = 1;
     this.FAR = 800;
+    this.CAMERA_Z = 500;
 
-    /* set up the camera */
+    /* setup the camera */
     this.camera = new THREE.PerspectiveCamera(50, this.ASPECT, 1, 10000);
-    this.CAMERA_Z = -150;
-    this.camera.position = new TV3(0, 0, this.CAMERA_Z);
+    this.camera.position.z = this.CAMERA_Z;
     this.camera.lookAt(new TV3(0, 0, 0));
-
+    
     /* set up the renderer */
-    // this.renderer = new THREE.WebGLRenderer({antialias: true});
-    this.renderer = new THREE.WebGLRenderer();
+    this.renderer = new THREE.WebGLRenderer({antialiased: true});
     this.renderer.setClearColor(0xffffff, 1 );
     this.renderer.domElement.style.width = "100%";
     this.renderer.domElement.style.height = "100%";
+    this.renderer.setClearColor( 0xffffff, 1 );
     this.renderer.setSize(this.WIDTH, this.HEIGHT);
-
-    /* */
-    this.scene = new THREE.Scene();
-    var geometry = new THREE.BoxGeometry(200, 200, 200);
-    var material = new THREE.MeshNormalMaterial();
-    var mesh = new THREE.Mesh(geometry, material);
-    mesh.rotation.x += 0.5;
-    mesh.rotation.y += 0.5;
-    this.scene.add(mesh);
     
-    // this.initializeScene();
-    // // this.initializeLights();
-    // this.initializeMesh();
+    this.initializeScene();
+    this.initializeLights();
+    this.initializeMesh();
+    this.scene.add(this.camera);
 
     this.renderer.render(this.scene, this.camera);
-    this.$el.append(this.renderer.domElement);
+    $el.append(this.renderer.domElement);
 };
 
-
 RMol.prototype.initializeScene = function() {
-   // CHECK: Should I explicitly call scene.deallocateObject?
-   this.scene = new THREE.Scene();
-   // this.scene.fog = new THREE.Fog(this.bgColor, 100, 200);
-   //
-   // this.modelGroup = new THREE.Object3D();
-   // this.rotationGroup = new THREE.Object3D();
-   // this.rotationGroup.add(this.modelGroup);
-   // this.scene.add(this.rotationGroup);
+    // CHECK: Should I explicitly call scene.deallocateObject?
+    this.scene = new THREE.Scene();
+    this.scene.fog = new THREE.Fog(this.bgColor, 100, 200);
+    this.modelGroup = new THREE.Object3D();
+    this.rotationGroup = new THREE.Object3D();
+    this.rotationGroup.add(this.modelGroup);
 };
 
 RMol.prototype.initializeLights = function() {
@@ -81,34 +68,7 @@ RMol.prototype.initializeMesh = function() {
     this.scene.add(mesh);
 };
 
-/* export the newly created object */
-console.log("RMol loaded");
+/* Return */
+console.log("Loaded RMol");
 return RMol;
 });
-
-
-//
-// require(["widgets/js/widget",
-//          "RMol.js",
-//          "three"],
-// function(WidgetManager, RMol, THREE){
-//     var ThreeWidgetView = IPython.DOMWidgetView.extend({
-//         render : function(){
-//             var $el = $("<div>").css({
-//                 width: '302px',
-//                 height: '302px', border:'1px solid #ccc',
-//                 margin: 'auto'}).append(
-//                     $('<div id="inner">').css({
-//                         position: 'absolute',
-//                         width: '300px',
-//                         height: '300px',
-//                     })
-//             );
-//             this.setElement($el);
-//             this.rmol = new RMol($el);
-//         }
-//     });
-//
-//     // Register the DatePickerView with the widget manager.
-//     WidgetManager.register_widget_view('ThreeWidgetView', ThreeWidgetView);
-// });
