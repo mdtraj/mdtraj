@@ -1,7 +1,6 @@
 // define(["three", "three/trackball"], function(THREE) {
 define([], function() {
-    "use strict";
-    
+
     var TV3 = THREE.Vector3, TF3 = THREE.Face3, TCo = THREE.Color;
 
     function RMol ($el) {
@@ -20,12 +19,10 @@ RMol.prototype.create = function($el) {
     this.ASPECT = this.WIDTH / this.HEIGHT;
     this.NEAR = 1;
     this.FAR = 800;
-    this.CAMERA_Z = -500;
-
-    this.topology = null;
+    this.CAMERA_Z = -150;
 
     /* setup the camera */
-    this.camera = new THREE.PerspectiveCamera(50, this.ASPECT, this.NEAR, this.FAR);
+    this.camera = new THREE.PerspectiveCamera(20, this.ASPECT, this.NEAR, this.FAR);
     this.camera.position.set(0, 0, this.CAMERA_Z);
     this.camera.lookAt(new TV3(0, 0, 0));
     
@@ -40,7 +37,6 @@ RMol.prototype.create = function($el) {
     
     this.initializeScene();
     this.initializeLights();
-    this.initializeMesh();
     this.initializeDefaultValues();
     this.scene.add(this.camera);
     
@@ -64,8 +60,10 @@ RMol.prototype.initializeScene = function() {
     this.rotationGroup = new THREE.Object3D();
     this.rotationGroup.add(this.modelGroup);
     
-	var axes = new THREE.AxisHelper(100);
-	this.scene.add( axes );
+    // var axes = new THREE.AxisHelper(10);
+    // this.rotationGroup.add(axes);
+    
+    this.scene.add(this.rotationGroup);
 };
 
 RMol.prototype.initializeLights = function() {
@@ -75,53 +73,10 @@ RMol.prototype.initializeLights = function() {
 
     var ambientLight = new THREE.AmbientLight(0x202020);
 
-    var pointLight = new THREE.PointLight(0xffffff);
-    pointLight.position.set(0,250,0);
-
     this.scene.add(directionalLight);
-    this.scene.add(pointLight);
     this.scene.add(ambientLight);
 };
 
-RMol.prototype.initializeMesh = function() {
-    this.modelGroup = new THREE.Object3D();
-    this.rotationGroup = new THREE.Object3D();
-    
-    var geometry = new THREE.BoxGeometry(50, 50, 50);
-    var material = new THREE.MeshNormalMaterial();
-    // var material = new THREE.MeshLambertMaterial({color: 0x8888ff});
-    
-    var mesh = new THREE.Mesh(geometry, material);
-    mesh.rotation.x += 1;
-    mesh.rotation.y += 0.5;
-    mesh.position.x = 100;
-    mesh.position.y = 100;
-    
-    this.modelGroup.add(mesh);
-    
-    this.rotationGroup.add(this.modelGroup);
-    this.scene.add(this.rotationGroup);
-    
-};
-
-
-RMol.prototype.rtmDrawAtoms = function () {
-    var sphereGeometry = new THREE.SphereGeometry(10, this.sphereQuality, this.sphereQuality); // r, seg, ring
-
-    var atom = this.atoms[0];
-    var sphereMaterial = new THREE.MeshLambertMaterial({color: atom.color});
-    var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    // group.add(sphere);
-    var r = this.vdwRadii[atom.elem];
-
-    sphere.scale.x = sphere.scale.y = sphere.scale.z = r;
-    sphere.position.x = atom.x;
-    sphere.position.y = atom.y;
-    sphere.position.z = atom.z;
-    console.log(sphere.position);
-    
-    this.modelGroup.add(sphere);
-};
 
 RMol.prototype.initializeDefaultValues = function() {
     this.sphereRadius = 1.5; 
@@ -185,9 +140,9 @@ RMol.prototype.setTopology = function(topology) {
 RMol.prototype.setXYZ = function(xyz) {
     var natoms = xyz.length;
     for (var i = 0; i < natoms; i++) {
-        this.atoms[i].x = 10*xyz[i][0];
-        this.atoms[i].y = 10*xyz[i][1];
-        this.atoms[i].z = 10*xyz[i][2];
+        this.atoms[i].x = 10 * xyz[i][0];
+        this.atoms[i].y = 10 * xyz[i][1];
+        this.atoms[i].z = 10 * xyz[i][2];
     }
 }
 
@@ -222,45 +177,48 @@ RMol.prototype.setRepresentation = function(representationOptions) {
         this.colorByPolarity(all, 0xcc0000, 0xcccccc);
     }
 
-    if (mainchainMode == 'ribbon') {
-        this.drawCartoon(asu, all, doNotSmoothen);
-        this.drawCartoonNucleicAcid(asu, all);
-    } else if (mainchainMode == 'thickRibbon') {
-        this.drawCartoon(asu, all, doNotSmoothen, this.thickness);
-        // this.drawCartoonNucleicAcid(asu, all, null, this.thickness);
-    } else if (mainchainMode == 'strand') {
-        this.drawStrand(asu, all, null, null, null, null, null, doNotSmoothen);
-        this.drawStrandNucleicAcid(asu, all);
-    } else if (mainchainMode == 'chain') {
-        this.drawMainchainCurve(asu, all, this.curveWidth, 'CA', 1);
-        this.drawMainchainCurve(asu, all, this.curveWidth, 'O3\'', 1);
-    } else if (mainchainMode == 'cylinderHelix') {
-        this.drawHelixAsCylinder(asu, all, 1.6);
-        this.drawCartoonNucleicAcid(asu, all);
-    } else if (mainchainMode == 'tube') {
-        this.drawMainchainTube(asu, all, 'CA');
-        this.drawMainchainTube(asu, all, 'O3\''); // FIXME: 5' end problem!
-    } else if (mainchainMode == 'bonds') {
-        this.drawBondsAsLine(asu, all, this.lineWidth);
-    }
-
-   if (hetatmMode == 'stick') {
-      this.drawBondsAsStick(target, hetatm, this.cylinderRadius, this.cylinderRadius, true);
-   } else if (hetatmMode == 'sphere') {
-       this.drawAtomsAsSphere(target, hetatm, this.sphereRadius);
-   } else if (hetatmMode == 'line') {
-       this.drawBondsAsLine(target, hetatm, this.curveWidth);
-   } else if (hetatmMode == 'icosahedron') {
-       this.drawAtomsAsIcosahedron(target, hetatm, this.sphereRadius);
-   } else if (hetatmMode == 'ballAndStick') {
-       this.drawBondsAsStick(target, hetatm, this.cylinderRadius / 2.0, this.cylinderRadius, true, false, 0.3);
-   } else if (hetatmMode == 'ballAndStick2') {
-       this.drawBondsAsStick(target, hetatm, this.cylinderRadius / 2.0, this.cylinderRadius, true, true, 0.3);
-   }
-
-   if (sideChains == 'line') {
-       this.drawBondsAsLine(this.modelGroup, this.getSidechains(all), this.lineWidth);
-   }
+   //  if (mainchainMode == 'ribbon') {
+   //      this.drawCartoon(asu, all, doNotSmoothen);
+   //      this.drawCartoonNucleicAcid(asu, all);
+   //  } else if (mainchainMode == 'thickRibbon') {
+   //      this.drawCartoon(asu, all, doNotSmoothen, this.thickness);
+   //      // this.drawCartoonNucleicAcid(asu, all, null, this.thickness);
+   //  } else if (mainchainMode == 'strand') {
+   //      this.drawStrand(asu, all, null, null, null, null, null, doNotSmoothen);
+   //      this.drawStrandNucleicAcid(asu, all);
+   //  } else if (mainchainMode == 'chain') {
+   //      this.drawMainchainCurve(asu, all, this.curveWidth, 'CA', 1);
+   //      this.drawMainchainCurve(asu, all, this.curveWidth, 'O3\'', 1);
+   //  } else if (mainchainMode == 'cylinderHelix') {
+   //      this.drawHelixAsCylinder(asu, all, 1.6);
+   //      this.drawCartoonNucleicAcid(asu, all);
+   //  } else if (mainchainMode == 'tube') {
+   //      this.drawMainchainTube(asu, all, 'CA');
+   //      this.drawMainchainTube(asu, all, 'O3\''); // FIXME: 5' end problem!
+   //  } else if (mainchainMode == 'bonds') {
+   //      this.drawBondsAsLine(asu, all, this.lineWidth);
+   //  }
+   //
+   // if (hetatmMode == 'stick') {
+   //    this.drawBondsAsStick(target, hetatm, this.cylinderRadius, this.cylinderRadius, true);
+   // } else if (hetatmMode == 'sphere') {
+   //     this.drawAtomsAsSphere(target, hetatm, this.sphereRadius);
+   // } else if (hetatmMode == 'line') {
+   //     this.drawBondsAsLine(target, hetatm, this.curveWidth);
+   // } else if (hetatmMode == 'icosahedron') {
+   //     this.drawAtomsAsIcosahedron(target, hetatm, this.sphereRadius);
+   // } else if (hetatmMode == 'ballAndStick') {
+   //     this.drawBondsAsStick(target, hetatm, this.cylinderRadius / 2.0, this.cylinderRadius, true, false, 0.3);
+   // } else if (hetatmMode == 'ballAndStick2') {
+   //     this.drawBondsAsStick(target, hetatm, this.cylinderRadius / 2.0, this.cylinderRadius, true, true, 0.3);
+   // }
+   //
+   // if (sideChains == 'line') {
+   //     this.drawBondsAsLine(this.modelGroup, this.getSidechains(all), this.lineWidth);
+   // }
+   
+   this.drawAtomsAsSphere(this.modelGroup, this.getAllAtoms(), this.sphereRadius);
+   
 
    // if (projectionMode == 'perspective') {
    //     this.camera = this.perspectiveCamera;
@@ -273,22 +231,25 @@ RMol.prototype.setRepresentation = function(representationOptions) {
 
 
 RMol.prototype.zoomInto = function(atomlist, keepSlab) {
-   var tmp = this.getExtent(atomlist);
-   var center = new TV3(tmp[2][0], tmp[2][1], tmp[2][2]);//(tmp[0][0] + tmp[1][0]) / 2, (tmp[0][1] + tmp[1][1]) / 2, (tmp[0][2] + tmp[1][2]) / 2);
-   if (this.appliedMatrix) {center = this.appliedMatrix.multiplyVector3(center);}
-   this.modelGroup.position.set(center.multiplyScalar(-1));
-   var x = tmp[1][0] - tmp[0][0], y = tmp[1][1] - tmp[0][1], z = tmp[1][2] - tmp[0][2];
+    var tmp = this.getExtent(atomlist);
+    var center = new TV3(tmp[2][0], tmp[2][1], tmp[2][2]);
+    this.modelGroup.position = center.multiplyScalar(-1);
 
-   var maxD = Math.sqrt(x * x + y * y + z * z);
-   if (maxD < 25) maxD = 25;
+    var x = tmp[1][0] - tmp[0][0];
+    var y = tmp[1][1] - tmp[0][1];
+    var z = tmp[1][2] - tmp[0][2];
 
-   if (!keepSlab) {
+    var maxD = Math.sqrt(x * x + y * y + z * z);
+    if (maxD < 25) maxD = 25;
+
+    if (!keepSlab) {
       this.slabNear = -maxD / 1.9;
       this.slabFar = maxD / 3;
-   }
+    }
 
-   this.rotationGroup.position.z = maxD * 0.35 / Math.tan(Math.PI / 180.0 * this.camera.fov / 2) - 150;
-   this.rotationGroup.quaternion.set(THREE.Quaternion(1, 0, 0, 0));
+    this.rotationGroup.position.z = maxD * 0.35 / Math.tan(Math.PI / 180.0 * this.camera.fov / 2) - 150;
+    this.rotationGroup.quaternion = new THREE.Quaternion(1, 0, 0, 0);
+
 };
 
 /* ----------------------------------------------------------- */
@@ -474,7 +435,7 @@ RMol.prototype.drawStrip = function(group, p1, p2, colors, div, thickness) {
 
 RMol.prototype.drawAtomsAsSphere = function(group, atomlist, defaultRadius, forceDefault, scale) {
 
-   var sphereGeometry = new THREE.SphereGeometry(100, this.sphereQuality, this.sphereQuality); // r, seg, ring
+   var sphereGeometry = new THREE.SphereGeometry(1, this.sphereQuality, this.sphereQuality); // r, seg, ring
 
    for (var i = 0; i < atomlist.length; i++) {
       var atom = this.atoms[atomlist[i]];
@@ -489,7 +450,7 @@ RMol.prototype.drawAtomsAsSphere = function(group, atomlist, defaultRadius, forc
       sphere.position.x = atom.x;
       sphere.position.y = atom.y;
       sphere.position.z = atom.z;
-      console.log(sphere.position);
+      // console.log(sphere.position);
       
    }
 };
