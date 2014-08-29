@@ -770,7 +770,8 @@ xdrfile_decompress_coord_float(float     *ptr,
 	int k, *buf1, *buf2, lsize, flag;
 	int smallnum, smaller, larger, i, is_smaller, run;
 	float *lfp, inv_precision;
-	int tmp, *thiscoord,  prevcoord[3];
+	int tmp, *thiscoord;
+	int prevcoord[3] = {0,0,0};
 	unsigned int bitsize;
   
     bitsizeint[0] = 0;
@@ -983,7 +984,8 @@ xdrfile_compress_coord_float(float   *ptr,
 	int k, *buf1, *buf2;
 	int smallnum, smaller, larger, i, j, is_small, is_smaller, run, prevrun;
 	float *lfp, lf;
-	int tmp, tmpsum, *thiscoord,  prevcoord[3];
+	int tmp, tmpsum, *thiscoord;
+	int prevcoord[3] = {0,0,0};
 	unsigned int tmpcoord[30];
 	int errval=1;
 	unsigned int bitsize;
@@ -1277,7 +1279,8 @@ xdrfile_decompress_coord_double(double     *ptr,
 	int smallnum, smaller, larger, i, is_smaller, run;
 	double *lfp, inv_precision;
 	float float_prec, tmpdata[30];
-	int tmp, *thiscoord,  prevcoord[3];
+	int tmp, *thiscoord;
+	int prevcoord[3] = {0,0,0};
 	unsigned int bitsize;
   
     bitsizeint[0] = 0;
@@ -1476,7 +1479,8 @@ xdrfile_compress_coord_double(double   *ptr,
 	int smallnum, smaller, larger, i, j, is_small, is_smaller, run, prevrun;
 	double *lfp;
 	float float_prec, lf,tmpdata[30];
-	int tmp, tmpsum, *thiscoord,  prevcoord[3];
+	int tmp, tmpsum, *thiscoord;
+	int prevcoord[3] = {0,0,0};
 	unsigned int tmpcoord[30];
 	int errval=1;
 	unsigned int bitsize;
@@ -2319,8 +2323,8 @@ static int
 xdr_string (XDR *xdrs, char **cpp, unsigned int maxsize)
 {
 	char *sp = *cpp;	/* sp is the actual string pointer */
-	unsigned int size;
-	unsigned int nodesize;
+	unsigned int size = 0;
+	unsigned int nodesize = 0;
 
 	/*
 	 * first deal with the length since xdr strings are counted-strings
