@@ -16,10 +16,11 @@
  */
 
 
-define(["three", "three/trackball"], function(THREE) {
+// define(["three", "three/trackball"], function(THREE) {
+// define([], function() {
 
-var TV3 = THREE.Vector3,
-    TCo = THREE.Color;
+// var TV3 = THREE.Vector3,
+//     TCo = THREE.Color;
 
 function RMol ($el) {
     this.create($el);
@@ -42,7 +43,7 @@ RMol.prototype.create = function($el) {
     /* setup the camera */
     this.camera = new THREE.PerspectiveCamera(20, this.ASPECT, this.NEAR, this.FAR);
     this.camera.position.set(0, 0, this.CAMERA_Z);
-    this.camera.lookAt(new TV3(0, 0, 0));
+    this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
     /* set up the renderer */
     this.renderer = new THREE.WebGLRenderer({antialiased: true});
@@ -57,7 +58,7 @@ RMol.prototype.create = function($el) {
     this.initializeLights();
     this.initializeDefaultValues();
     this.scene.add(this.camera);
-    this.enableMouse();
+    // this.enableMouse();
 
     this.$el.append(this.renderer.domElement);
 };
@@ -182,7 +183,11 @@ RMol.prototype.setRepresentation = function(representationOptions) {
 
     this.colorByAtom(all, {});
 
+    this.rotationGroup.remove(this.modelGroup);
+    this.modelGroup = new THREE.Object3D();
+    this.rotationGroup.add(this.modelGroup);
     var asu = this.modelGroup;
+    
     var colorMode = representationOptions.color;
     var mainchainMode = representationOptions.mainChain;
     var hetatmMode = representationOptions.heteroAtomsOptions;
@@ -258,7 +263,7 @@ RMol.prototype.setRepresentation = function(representationOptions) {
 
 RMol.prototype.zoomInto = function(atomlist, keepSlab) {
     var tmp = this.getExtent(atomlist);
-    var center = new TV3(tmp[2][0], tmp[2][1], tmp[2][2]);
+    var center = new THREE.Vector3(tmp[2][0], tmp[2][1], tmp[2][2]);
     this.modelGroup.position = center.multiplyScalar(-1);
 
     var x = tmp[1][0] - tmp[0][0];
@@ -279,8 +284,8 @@ RMol.prototype.zoomInto = function(atomlist, keepSlab) {
 };
 
 RMol.prototype.enableMouse = function() {
-
-	var controls = new THREE.TrackballControls(this.camera);
+    TrackballControls.prototype = Object.create( THREE.EventDispatcher.prototype );    
+	var controls = new TrackballControls(this.camera, this.$el[0]);
 
 	controls.rotateSpeed = 1.0;
 	controls.zoomSpeed = 1.2;
@@ -381,7 +386,7 @@ RMol.prototype.colorChainbow = function(atomlist, colorSidechains) {
       atom = this.atoms[atomlist[i]]; if (atom == undefined) continue;
 
       if ((colorSidechains || atom.atom != 'CA' || atom.atom != 'O3\'') && !atom.hetflag) {
-         var color = new TCo(0);
+         var color = new THREE.Color(0);
          color.setHSL(240.0 / 360 * (1 - cnt / total), 1, 0.9);
          atom.color = color.getHex();
          cnt++;
@@ -406,7 +411,7 @@ RMol.prototype.colorByChain = function(atomlist, colorSidechains) {
 
       if (atom.hetflag) continue;
       if (colorSidechains || atom.atom == 'CA' || atom.atom == 'O3\'') {
-         var color = new TCo(0);
+         var color = new THREE.Color(0);
          color.setHSL((atom.chain * 5) % 17 / 17.0, 1, 0.9);
          atom.color = color.getHex();
       }
@@ -467,13 +472,13 @@ RMol.prototype.drawStrand = function(group, atomlist, num, div, fill, coilWidth,
                colors = [];
                prevCO = null; ss = null; ssborder = false;
             }
-            currentCA = new TV3(atom.x, atom.y, atom.z);
+            currentCA = new THREE.Vector3(atom.x, atom.y, atom.z);
             currentChain = atom.chain;
             currentResi = atom.resi;
             ss = atom.ss; ssborder = atom.ssstart || atom.ssend;
             colors.push(atom.color);
          } else { // O
-            var O = new TV3(atom.x, atom.y, atom.z);
+            var O = new THREE.Vector3(atom.x, atom.y, atom.z);
             O.sub(currentCA);
             O.normalize(); // can be omitted for performance
             O.multiplyScalar((ss == 'c') ? coilWidth : helixSheetWidth);
@@ -481,7 +486,7 @@ RMol.prototype.drawStrand = function(group, atomlist, num, div, fill, coilWidth,
             prevCO = O;
             for (var j = 0; j < num; j++) {
                var delta = -1 + 2 / (num - 1) * j;
-               var v = new TV3(currentCA.x + prevCO.x * delta,
+               var v = new THREE.Vector3(currentCA.x + prevCO.x * delta,
                                currentCA.y + prevCO.y * delta, currentCA.z + prevCO.z * delta);
                if (!doNotSmoothen && ss == 's') v.smoothen = true;
                points[j].push(v);
@@ -510,7 +515,7 @@ RMol.prototype.drawMainchainCurve = function(group, atomlist, curveWidth, atomNa
             points = [];
             colors = [];
          }
-         points.push(new TV3(atom.x, atom.y, atom.z));
+         points.push(new THREE.Vector3(atom.x, atom.y, atom.z));
          colors.push(atom.color);
          currentChain = atom.chain;
          currentResi = atom.resi;
@@ -531,7 +536,7 @@ RMol.prototype.drawMainchainTube = function(group, atomlist, atomName, radius) {
             this.drawSmoothTube(group, points, colors, radii);
             points = []; colors = []; radii = [];
          }
-         points.push(new TV3(atom.x, atom.y, atom.z));
+         points.push(new THREE.Vector3(atom.x, atom.y, atom.z));
          if (radius == undefined) {
             radii.push((atom.b > 0) ? atom.b / 100 : 0.3);
          } else {
@@ -573,7 +578,7 @@ RMol.prototype.drawStrip = function(group, p1, p2, colors, div, thickness) {
    }
    var faces = [[0, 2, -6, -8], [-4, -2, 6, 4], [7, 3, -5, -1], [-3, -7, 1, 5]];
    for (var i = 1, lim = p1.length; i < lim; i++) {
-      var offset = 8 * i, color = new TCo(colors[Math.round((i - 1)/ div)]);
+      var offset = 8 * i, color = new THREE.Color(colors[Math.round((i - 1)/ div)]);
       for (var j = 0; j < 4; j++) {
          var f1 = new THREE.Face3(offset + faces[j][0], offset + faces[j][1], offset + faces[j][2],
                                  undefined, color);
@@ -610,7 +615,7 @@ RMol.prototype.drawThinStrip = function(group, p1, p2, colors, div) {
        geo.vertices.push(p2[i]); // 2i + 1
     }
     for (var i = 1, lim = p1.length; i < lim; i++) {
-       var color = new TCo(colors[Math.round((i - 1)/ div)]);
+       var color = new THREE.Color(colors[Math.round((i - 1)/ div)]);
        geo.faces.push(new THREE.Face3(2*i, 2*i+1, 2*i-1, undefined, color));
        geo.faces.push(new THREE.Face3(2*i, 2*i-1, 2*i-2, undefined, color));
     }
@@ -626,11 +631,11 @@ RMol.prototype.drawThinStrip = function(group, p1, p2, colors, div) {
 RMol.prototype.drawBondsAsLineSub = function(geo, atom1, atom2, order) {
    var delta, tmp, vs = geo.vertices, cs = geo.colors;
    if (order > 1) delta = this.calcBondDelta(atom1, atom2, 0.15);
-   var p1 = new TV3(atom1.x, atom1.y, atom1.z);
-   var p2 = new TV3(atom2.x, atom2.y, atom2.z);
+   var p1 = new THREE.Vector3(atom1.x, atom1.y, atom1.z);
+   var p2 = new THREE.Vector3(atom2.x, atom2.y, atom2.z);
    var mp = p1.clone().add(p2).multiplyScalar(0.5);
 
-   var c1 = new TCo(atom1.color), c2 = new TCo(atom2.color);
+   var c1 = new THREE.Color(atom1.color), c2 = new THREE.Color(atom2.color);
    if (order == 1 || order == 3) {
       vs.push(p1); cs.push(c1); vs.push(mp); cs.push(c1);
       vs.push(p2); cs.push(c2); vs.push(mp); cs.push(c2);
@@ -691,7 +696,7 @@ RMol.prototype.drawSmoothCurve = function(group, _points, width, colors, div) {
 
    for (var i = 0; i < points.length; i++) {
       geo.vertices.push(points[i]);
-      geo.colors.push(new TCo(colors[(i == 0) ? 0 : Math.round((i - 1) / div)]));
+      geo.colors.push(new THREE.Color(colors[(i == 0) ? 0 : Math.round((i - 1) / div)]));
   }
   var lineMaterial = new THREE.LineBasicMaterial({linewidth: width});
   lineMaterial.vertexColors = true;
@@ -724,11 +729,11 @@ RMol.prototype.drawAtomsAsSphere = function(group, atomlist, defaultRadius, forc
 RMol.prototype.drawBondAsStickSub = function(group, atom1, atom2, bondR, order) {
    var delta, tmp;
    if (order > 1) delta = this.calcBondDelta(atom1, atom2, bondR * 2.3);
-   var p1 = new TV3(atom1.x, atom1.y, atom1.z);
-   var p2 = new TV3(atom2.x, atom2.y, atom2.z);
+   var p1 = new THREE.Vector3(atom1.x, atom1.y, atom1.z);
+   var p2 = new THREE.Vector3(atom2.x, atom2.y, atom2.z);
    var mp = p1.clone().add(p2).multiplyScalar(0.5);
 
-   var c1 = new TCo(atom1.color), c2 = new TCo(atom2.color);
+   var c1 = new THREE.Color(atom1.color), c2 = new THREE.Color(atom2.color);
    if (order == 1 || order == 3) {
       this.drawCylinder(group, p1, mp, bondR, atom1.color);
       this.drawCylinder(group, p2, mp, bondR, atom2.color);
@@ -802,7 +807,7 @@ RMol.prototype.drawSmoothCurve = function(group, _points, width, colors, div) {
 
    for (var i = 0; i < points.length; i++) {
       geo.vertices.push(points[i]);
-      geo.colors.push(new TCo(colors[(i == 0) ? 0 : Math.round((i - 1) / div)]));
+      geo.colors.push(new THREE.Color(colors[(i == 0) ? 0 : Math.round((i - 1) / div)]));
   }
   var lineMaterial = new THREE.LineBasicMaterial({linewidth: width});
   lineMaterial.vertexColors = true;
@@ -818,9 +823,9 @@ RMol.prototype.drawAsCross = function(group, atomlist, delta) {
    for (var i = 0, lim = atomlist.length; i < lim; i++) {
       var atom = this.atoms[atomlist[i]]; if (atom == undefined) continue;
 
-      var c = new TCo(atom.color);
+      var c = new THREE.Color(atom.color);
       for (var j = 0; j < 6; j++) {
-         geo.vertices.push(new TV3(atom.x + points[j][0], atom.y + points[j][1], atom.z + points[j][2]));
+         geo.vertices.push(new THREE.Vector3(atom.x + points[j][0], atom.y + points[j][1], atom.z + points[j][2]));
          geo.colors.push(c);
       }
   }
@@ -837,7 +842,7 @@ RMol.prototype.drawSmoothTube = function(group, _points, colors, radii) {
    var circleDiv = this.tubeDIV, axisDiv = this.axisDIV;
    var geo = new THREE.Geometry();
    var points = this.subdivide(_points, axisDiv);
-   var prevAxis1 = new TV3(), prevAxis2;
+   var prevAxis1 = new THREE.Vector3(), prevAxis2;
 
    for (var i = 0, lim = points.length; i < lim; i++) {
       var r, idx = (i - 1) / axisDiv;
@@ -853,9 +858,9 @@ RMol.prototype.drawSmoothTube = function(group, _points, colors, radii) {
       var delta, axis1, axis2;
 
       if (i < lim - 1) {
-         delta = new TV3().subVectors(points[i], points[i + 1]);
-         axis1 = new TV3(0, - delta.z, delta.y).normalize().multiplyScalar(r);
-         axis2 = new TV3().crossVectors(delta, axis1).normalize().multiplyScalar(r);
+         delta = new THREE.Vector3().subVectors(points[i], points[i + 1]);
+         axis1 = new THREE.Vector3(0, - delta.z, delta.y).normalize().multiplyScalar(r);
+         axis2 = new THREE.Vector3().crossVectors(delta, axis1).normalize().multiplyScalar(r);
 //      var dir = 1, offset = 0;
          if (prevAxis1.dot(axis1) < 0) {
                  axis1.negate(); axis2.negate();  //dir = -1;//offset = 2 * Math.PI / axisDiv;
@@ -868,7 +873,7 @@ RMol.prototype.drawSmoothTube = function(group, _points, colors, radii) {
       for (var j = 0; j < circleDiv; j++) {
          var angle = 2 * Math.PI / circleDiv * j; //* dir  + offset;
          var c = Math.cos(angle), s = Math.sin(angle);
-         geo.vertices.push(new TV3(
+         geo.vertices.push(new THREE.Vector3(
          points[i].x + c * axis1.x + s * axis2.x,
          points[i].y + c * axis1.y + s * axis2.y, 
          points[i].z + c * axis1.z + s * axis2.z));
@@ -877,11 +882,11 @@ RMol.prototype.drawSmoothTube = function(group, _points, colors, radii) {
 
    var offset = 0;
    for (var i = 0, lim = points.length - 1; i < lim; i++) {
-      var c =  new TCo(colors[Math.round((i - 1)/ axisDiv)]);
+      var c =  new THREE.Color(colors[Math.round((i - 1)/ axisDiv)]);
 
       var reg = 0;
-      var r1 = new TV3().subVectors(geo.vertices[offset], geo.vertices[offset + circleDiv]).lengthSq();
-      var r2 = new TV3().subVectors(geo.vertices[offset], geo.vertices[offset + circleDiv + 1]).lengthSq();
+      var r1 = new THREE.Vector3().subVectors(geo.vertices[offset], geo.vertices[offset + circleDiv]).lengthSq();
+      var r2 = new THREE.Vector3().subVectors(geo.vertices[offset], geo.vertices[offset + circleDiv + 1]).lengthSq();
       if (r1 > r2) {r1 = r2; reg = 1;};
       for (var j = 0; j < circleDiv; j++) {
           geo.faces.push(new THREE.Face3(offset + j, offset + (j + reg) % circleDiv + circleDiv, offset + (j + 1) % circleDiv));
@@ -903,8 +908,8 @@ RMol.prototype.drawSmoothTube = function(group, _points, colors, radii) {
 RMol.prototype.drawCylinder = function(group, from, to, radius, color, cap) {
    if (!from || !to) return;
 
-   var midpoint = new TV3().add(from, to).multiplyScalar(0.5);
-   var color = new TCo(color);
+   var midpoint = new THREE.Vector3().add(from, to).multiplyScalar(0.5);
+   var color = new THREE.Color(color);
 
    if (!this.cylinderGeometry) {
       this.cylinderGeometry = new THREE.CylinderGeometry(1, 1, 1, this.cylinderQuality, 1, !cap);
@@ -938,14 +943,22 @@ RMol.prototype.drawHelixAsCylinder = function(group, atomlist, radius) {
       if (atom.atom != 'CA') continue;
 
       if (atom.ss == 'h' && atom.ssend) {
-         if (start != null) this.drawCylinder(group, new TV3(start.x, start.y, start.z), new TV3(atom.x, atom.y, atom.z), radius, atom.color, true);
+         if (start != null) {
+             this.drawCylinder(
+                 group, new THREE.Vector3(start.x, start.y, start.z),
+                 new THREE.Vector3(atom.x, atom.y, atom.z), radius, atom.color, true);
+         }
          start = null;
       }
       currentChain = atom.chain;
       currentResi = atom.resi;
       if (start == null && atom.ss == 'h' && atom.ssbegin) start = atom;
    }
-   if (start != null) this.drawCylinder(group, new TV3(start.x, start.y, start.z), new TV3(atom.x, atom.y, atom.z), radius, atom.color);
+   if (start != null) {
+       this.drawCylinder(
+           group, new THREE.Vector3(start.x, start.y, start.z),
+           new THREE.Vector3(atom.x, atom.y, atom.z), radius, atom.color);
+   }
    this.drawMainchainTube(group, others, "CA", 0.3);
    this.drawStrand(group, beta, undefined, undefined, true,  0, this.helixSheetWidth, false, this.thickness * 2);
 };
@@ -961,7 +974,7 @@ RMol.prototype.drawDottedLines = function(group, points, color) {
         delta.normalize().multiplyScalar(step);
         var jlim =  Math.floor(dist / step);
         for (var j = 0; j < jlim; j++) {
-           var p = new TV3(p1.x + delta.x * j, p1.y + delta.y * j, p1.z + delta.z * j);
+           var p = new THREE.Vector3(p1.x + delta.x * j, p1.y + delta.y * j, p1.z + delta.z * j);
            geo.vertices.push(p);
         }
         if (jlim % 2 == 1) geo.vertices.push(p2);
@@ -986,7 +999,7 @@ RMol.prototype.subdivide = function(_points, DIV) {
    points.push(_points[0]);
    for (var i = 1, lim = _points.length - 1; i < lim; i++) {
       var p1 = _points[i], p2 = _points[i + 1];
-      if (p1.smoothen) points.push(new TV3((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2));
+      if (p1.smoothen) points.push(new THREE.Vector3((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2));
       else points.push(p1);
    }
    points.push(_points[_points.length - 1]);
@@ -995,8 +1008,8 @@ RMol.prototype.subdivide = function(_points, DIV) {
       var p0 = points[(i == -1) ? 0 : i];
       var p1 = points[i + 1], p2 = points[i + 2];
       var p3 = points[(i == size - 3) ? size - 1 : i + 3];
-      var v0 = new TV3().subVectors(p2, p0).multiplyScalar(0.5);
-      var v1 = new TV3().subVectors(p3, p1).multiplyScalar(0.5);
+      var v0 = new THREE.Vector3().subVectors(p2, p0).multiplyScalar(0.5);
+      var v1 = new THREE.Vector3().subVectors(p3, p1).multiplyScalar(0.5);
       for (var j = 0; j < DIV; j++) {
          var t = 1.0 / DIV * j;
          var x = p1.x + t * v0.x
@@ -1008,7 +1021,7 @@ RMol.prototype.subdivide = function(_points, DIV) {
          var z = p1.z + t * v0.z
                   + t * t * (-3 * p1.z + 3 * p2.z - 2 * v0.z - v1.z)
                   + t * t * t * (2 * p1.z - 2 * p2.z + v0.z + v1.z);
-         ret.push(new TV3(x, y, z));
+         ret.push(new THREE.Vector3(x, y, z));
       }
    }
    ret.push(points[points.length - 1]);
@@ -1043,7 +1056,7 @@ RMol.prototype.drawUnitcell = function(group) {
 
     var geo = new THREE.Geometry();
     for (var i = 0; i < edges.length; i++) {
-       geo.vertices.push(new TV3(vertices[edges[i]][0], vertices[edges[i]][1], vertices[edges[i]][2]));
+       geo.vertices.push(new THREE.Vector3(vertices[edges[i]][0], vertices[edges[i]][1], vertices[edges[i]][2]));
     }
    var lineMaterial = new THREE.LineBasicMaterial({linewidth: 1, color: 0xcccccc});
    var line = new THREE.Line(geo, lineMaterial);
@@ -1060,7 +1073,7 @@ RMol.prototype.isConnected = function(atom1, atom2) {
 
 RMol.prototype.calcBondDelta = function(atom1, atom2, sep) {
    var dot;
-   var axis = new TV3(atom1.x - atom2.x, atom1.y - atom2.y, atom1.z - atom2.z).normalize();
+   var axis = new THREE.Vector3(atom1.x - atom2.x, atom1.y - atom2.y, atom1.z - atom2.z).normalize();
    var found = null;
    for (var i = 0; i < atom1.bonds.length && !found; i++) {
       var atom = this.atoms[atom1.bonds[i]]; if (!atom) continue;
@@ -1071,15 +1084,15 @@ RMol.prototype.calcBondDelta = function(atom1, atom2, sep) {
       if (atom.serial != atom1.serial && atom.elem != 'H') found = atom;
    }
    if (found) {
-      var tmp = new TV3(atom1.x - found.x, atom1.y - found.y, atom1.z - found.z).normalize();
+      var tmp = new THREE.Vector3(atom1.x - found.x, atom1.y - found.y, atom1.z - found.z).normalize();
       dot = tmp.dot(axis);
-      delta = new TV3(tmp.x - axis.x * dot, tmp.y - axis.y * dot, tmp.z - axis.z * dot);
+      delta = new THREE.Vector3(tmp.x - axis.x * dot, tmp.y - axis.y * dot, tmp.z - axis.z * dot);
    }
    if (!found || Math.abs(dot - 1) < 0.001 || Math.abs(dot + 1) < 0.001) {
       if (axis.x < 0.01 && axis.y < 0.01) {
-         delta = new TV3(0, -axis.z, axis.y);
+         delta = new THREE.Vector3(0, -axis.z, axis.y);
       } else {
-         delta = new TV3(-axis.y, axis.x, 0);
+         delta = new THREE.Vector3(-axis.y, axis.x, 0);
       }
    }
    delta.normalize().multiplyScalar(sep);
@@ -1093,5 +1106,5 @@ RMol.prototype.IcosahedronGeometry = function() {
 
 /* Return */
 console.log("Loaded RMol!");
-return RMol;
-});
+// return RMol;
+// });
