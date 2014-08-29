@@ -211,7 +211,8 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   generate_sphere_points(sphere_points, n_sphere_points);
 
 #ifdef _OPENMP
-  #pragma omp parallel private(wb1, wb2) {
+  #pragma omp parallel private(wb1, wb2)
+  {
 #endif
 
   /* malloc the work buffers for each thread */
