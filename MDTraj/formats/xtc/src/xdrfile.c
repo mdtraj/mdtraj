@@ -765,10 +765,12 @@ xdrfile_decompress_coord_float(float     *ptr,
 							   XDRFILE*   xfp)
 {
 	int minint[3], maxint[3], *lip;
-	int smallidx, minidx, maxidx;
+	int smallidx;
+	/* int minidx, maxidx; */
 	unsigned sizeint[3], sizesmall[3], bitsizeint[3], size3;
 	int k, *buf1, *buf2, lsize, flag;
-	int smallnum, smaller, larger, i, is_smaller, run;
+	int smallnum, smaller, i, is_smaller, run;
+	/* int larger; */
 	float *lfp, inv_precision;
 	int tmp, *thiscoord;
 	int prevcoord[3] = {0,0,0};
@@ -849,14 +851,14 @@ xdrfile_decompress_coord_float(float     *ptr,
 		return 0; /* not sure what has happened here or why we return... */
 	}
 	tmp=smallidx+8;
-	maxidx = (LASTIDX<tmp) ? LASTIDX : tmp;
-	minidx = maxidx - 8; /* often this equal smallidx */
+	/* maxidx = (LASTIDX<tmp) ? LASTIDX : tmp; */
+	/* minidx = maxidx - 8; // often this equal smallidx */
 	tmp = smallidx-1;
 	tmp = (FIRSTIDX>tmp) ? FIRSTIDX : tmp;
 	smaller = magicints[tmp] / 2;
 	smallnum = magicints[smallidx] / 2;
 	sizesmall[0] = sizesmall[1] = sizesmall[2] = magicints[smallidx] ;
-	larger = magicints[maxidx];
+	/* larger = magicints[maxidx]; */
 
 	/* buf2[0] holds the length in bytes */
   
@@ -987,7 +989,7 @@ xdrfile_compress_coord_float(float   *ptr,
 	int tmp, tmpsum, *thiscoord;
 	int prevcoord[3] = {0,0,0};
 	unsigned int tmpcoord[30];
-	int errval=1;
+	/* int errval=1; */
 	unsigned int bitsize;
   
 	if(xfp==NULL)
@@ -1048,7 +1050,7 @@ xdrfile_compress_coord_float(float   *ptr,
         {
 			/* scaling would cause overflow */
 			fprintf(stderr, "(xdrfile error) Internal overflow compressing coordinates.\n");
-			errval=0;
+			/* errval=0; */
 		}
 		lint1 = lf;
 		if (lint1 < minint[0]) minint[0] = lint1;
@@ -1063,7 +1065,7 @@ xdrfile_compress_coord_float(float   *ptr,
         {
 			/* scaling would cause overflow */
 			fprintf(stderr, "(xdrfile error) Internal overflow compressing coordinates.\n");
-			errval=0;
+			/* errval=0; */
 		}
 		lint2 = lf;
 		if (lint2 < minint[1]) minint[1] = lint2;
@@ -1076,7 +1078,7 @@ xdrfile_compress_coord_float(float   *ptr,
 			lf = *lfp * precision - 0.5;
 		if (fabs(lf) > INT_MAX-2) 
         {
-			errval=0;      
+			/* errval=0; */
 		}
 		lint3 = lf;
 		if (lint3 < minint[2]) minint[2] = lint3;
@@ -1100,7 +1102,7 @@ xdrfile_compress_coord_float(float   *ptr,
 		 * would cause overflow
 		 */
 		fprintf(stderr, "(xdrfile error) Internal overflow compressing coordinates.\n");
-		errval=0;
+		/* errval=0; */
 	}
 	sizeint[0] = maxint[0] - minint[0]+1;
 	sizeint[1] = maxint[1] - minint[1]+1;
@@ -1273,10 +1275,12 @@ xdrfile_decompress_coord_double(double     *ptr,
 								XDRFILE*   xfp)
 {
 	int minint[3], maxint[3], *lip;
-	int smallidx, minidx, maxidx;
+	int smallidx;
+	/* int minidx, maxidx; */
 	unsigned sizeint[3], sizesmall[3], bitsizeint[3], size3;
 	int k, *buf1, *buf2, lsize, flag;
-	int smallnum, smaller, larger, i, is_smaller, run;
+	int smallnum, smaller, i, is_smaller, run;
+	/* int larger; */
 	double *lfp, inv_precision;
 	float float_prec, tmpdata[30];
 	int tmp, *thiscoord;
@@ -1355,14 +1359,14 @@ xdrfile_decompress_coord_double(double     *ptr,
 	if (xdrfile_read_int(&smallidx,1,xfp) == 0)	
 		return 0;
 	tmp=smallidx+8;
-	maxidx = (LASTIDX<tmp) ? LASTIDX : tmp;
-	minidx = maxidx - 8; /* often this equal smallidx */
+	/* maxidx = (LASTIDX<tmp) ? LASTIDX : tmp; */
+	/* minidx = maxidx - 8; // often this equal smallidx */
 	tmp = smallidx-1;
 	tmp = (FIRSTIDX>tmp) ? FIRSTIDX : tmp;
 	smaller = magicints[tmp] / 2;
 	smallnum = magicints[smallidx] / 2;
 	sizesmall[0] = sizesmall[1] = sizesmall[2] = magicints[smallidx] ;
-	larger = magicints[maxidx];
+	/* larger = magicints[maxidx]; */
 
 	/* buf2[0] holds the length in bytes */
   
@@ -1482,7 +1486,7 @@ xdrfile_compress_coord_double(double   *ptr,
 	int tmp, tmpsum, *thiscoord;
 	int prevcoord[3] = {0,0,0};
 	unsigned int tmpcoord[30];
-	int errval=1;
+	/* int errval=1; */
 	unsigned int bitsize;
   
     bitsizeint[0] = 0;
@@ -1539,7 +1543,7 @@ xdrfile_compress_coord_double(double   *ptr,
 		if (fabs(lf) > INT_MAX-2) {
 			/* scaling would cause overflow */
 			fprintf(stderr, "(xdrfile error) Internal overflow compressing coordinates.\n");
-			errval=0;
+			/* errval=0; */
 		}
 		lint1 = lf;
 		if (lint1 < minint[0]) minint[0] = lint1;
@@ -1553,7 +1557,7 @@ xdrfile_compress_coord_double(double   *ptr,
 		if (fabs(lf) > INT_MAX-2) {
 			/* scaling would cause overflow */
 			fprintf(stderr, "(xdrfile error) Internal overflow compressing coordinates.\n");
-			errval=0;
+			/* errval=0; */
 		}
 		lint2 = lf;
 		if (lint2 < minint[1]) minint[1] = lint2;
@@ -1565,7 +1569,7 @@ xdrfile_compress_coord_double(double   *ptr,
 		else
 			lf = (float)*lfp * float_prec - 0.5;
 		if (fabs(lf) > INT_MAX-2) {
-			errval=0;      
+			/* errval=0; */
 		}
 		lint3 = lf;
 		if (lint3 < minint[2]) minint[2] = lint3;
@@ -1589,7 +1593,7 @@ xdrfile_compress_coord_double(double   *ptr,
 		 * would cause overflow
 		 */
 		fprintf(stderr, "(xdrfile error) Internal overflow compressing coordinates.\n");
-		errval=0;
+		/* errval=0; */
 	}
 	sizeint[0] = maxint[0] - minint[0]+1;
 	sizeint[1] = maxint[1] - minint[1]+1;

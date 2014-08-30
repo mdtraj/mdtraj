@@ -26,11 +26,11 @@ std::vector<std::vector<int> >& permute_groups)
 
     // fill in the cost matrix with the distance between all pairs that are in
     // the same permute group
-    for (int g = 0; g < permute_groups.size(); g++) {
-        for (int i = 0; i < permute_groups[g].size(); i++) {
+    for (unsigned int g = 0; g < permute_groups.size(); g++) {
+        for (unsigned int i = 0; i < permute_groups[g].size(); i++) {
             const int ii = permute_groups[g][i];
             in_permute_group[ii] = 1;
-            for (int j = 0; j < permute_groups[g].size(); j++) {
+            for (unsigned int j = 0; j < permute_groups[g].size(); j++) {
                 const int jj = permute_groups[g][j];
                 double sq_euclidean_ii_jj = 0;
                 for (int d = 0; d < n_dims; d++)

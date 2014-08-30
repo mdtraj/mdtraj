@@ -58,8 +58,7 @@ double frexp(), ldexp();
 int isnan(), isfinite();
 #endif
 
-double cbrt(x)
-double x;
+double cbrt(double x)
 {
 int e, rem, sign;
 double z;
