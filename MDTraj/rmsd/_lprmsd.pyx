@@ -33,8 +33,6 @@ from libcpp.vector cimport vector
 from libc.stdio cimport printf
 from cpython cimport bool
 from cython.parallel cimport prange
-assert sizeof(np.int32_t) == sizeof(int)
-
 
 ##############################################################################
 # External c/cpp function declarations

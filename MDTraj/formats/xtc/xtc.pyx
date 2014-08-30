@@ -31,8 +31,6 @@ import warnings
 import cython
 cimport cython
 import numpy as np
-cimport numpy as np
-np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import _FormatRegistry
@@ -61,13 +59,6 @@ _EXDR_ERROR_MESSAGES = {
     12: "File not found"
 }
 
-# numpy variable types include the specific numpy of bytes of each, but the c
-# variables in our interface file don't. this could get bad if we're on a wierd
-# machine, so lets make sure first
-if sizeof(int) != sizeof(np.int32_t):
-    raise RuntimeError('Integers on your compiler are not 32 bits. This is not good.')
-if sizeof(float) != sizeof(np.float32_t):
-    raise RuntimeError('Floats on your compiler are not 32 bits. This is not good')
 
 ###############################################################################
 # Code
@@ -109,7 +100,7 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     >>> traj = md.load_xtc('output.xtc', top='topology.pdb')
     >>> print traj
     <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>
-    
+
     Returns
     -------
     trajectory : md.Trajectory
@@ -325,7 +316,7 @@ cdef class XTCTrajectoryFile:
             return xyz, time, step, box
 
         # if they want ALL of the remaining frames, we need to guess at the
-        # chunk size, and then check the exit status to make sure we're really 
+        # chunk size, and then check the exit status to make sure we're really
         # at the EOF
         all_xyz, all_time, all_step, all_box = [], [], [], []
 
@@ -373,19 +364,14 @@ cdef class XTCTrajectoryFile:
                 raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
             n_atoms_to_read = len(atom_indices)
 
-        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz = \
-            np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
-        cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time = \
-            np.empty((n_frames), dtype=np.float32)
-        cdef np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step = \
-            np.empty((n_frames), dtype=np.int32)
-        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box = \
-            np.empty((n_frames, 3, 3), dtype=np.float32)
-        cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] prec = \
-            np.empty((n_frames), dtype=np.float32)
+        cdef float[:, :, ::1] xyz = np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
+        cdef float[::1] time = np.empty((n_frames), dtype=np.float32)
+        cdef int[::1] step = np.empty((n_frames), dtype=np.int32)
+        cdef float[:, :, ::1] box = np.empty((n_frames, 3, 3), dtype=np.float32)
+        cdef float[::1] prec = np.empty((n_frames), dtype=np.float32)
 
         # only used if atom_indices is given
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
+        cdef float[:, ::1] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
         while (i < n_frames) and (status != _EXDRENDOFFILE):
             if atom_indices is None:
@@ -394,7 +380,7 @@ cdef class XTCTrajectoryFile:
             else:
                 status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[i],
                                          &time[i], <xdrlib.matrix>&box[i,0,0], <xdrlib.rvec*>&framebuffer[0,0], &prec[i])
-                xyz[i, :, :] = framebuffer[atom_indices, :]
+                xyz.base[i, :, :] = framebuffer.base[atom_indices, :]
 
             if status != _EXDRENDOFFILE and status != _EXDROK:
                 raise RuntimeError('XTC read error: %s' % _EXDR_ERROR_MESSAGES.get(status, 'unknown'))
@@ -408,7 +394,7 @@ cdef class XTCTrajectoryFile:
 
         self.frame_counter += i
 
-        return xyz, time, step, box
+        return xyz.base, time.base, step.base, box.base
 
 
     def write(self, xyz, time=None, step=None, box=None):
@@ -475,11 +461,11 @@ cdef class XTCTrajectoryFile:
         self._write(xyz, time, step, box, prec)
 
 
-    def _write(self, np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz not None,
-               np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time not None,
-               np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step not None,
-               np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box not None,
-               np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] prec not None):
+    def _write(self, float[:, :, ::1] xyz not None,
+               float[::1] time not None,
+               int[::1] step not None,
+               float[:, :, ::1] box not None,
+               float[::1] prec not None):
 
         cdef int n_frames = len(xyz)
         cdef int n_atoms = xyz.shape[1]
@@ -513,8 +499,8 @@ cdef class XTCTrajectoryFile:
         cdef int i, status, step
         cdef float time = 0
         cdef float prec = 0
-        cdef np.ndarray[dtype=np.float_t] box = np.empty(9, dtype=np.float)
-        cdef np.ndarray[dtype=np.float_t] xyz = np.empty(self.n_atoms * 3, dtype=np.float)
+        cdef float[::1] box = np.empty(9, dtype=np.float32)
+        cdef float[::1] xyz = np.empty(self.n_atoms * 3, dtype=np.float32)
 
         if str(self.mode) != 'r':
             raise NotImplementedError('seek() only available in mode="r" currently')
