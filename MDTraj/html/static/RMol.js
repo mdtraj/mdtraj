@@ -79,7 +79,7 @@ RMol.prototype.initializeScene = function() {
     this.modelGroup = new THREE.Object3D();
     this.rotationGroup = new THREE.Object3D();
     this.rotationGroup.add(this.modelGroup);
-    this.rotationGroup.add(new THREE.AxisHelper(100));
+    // this.rotationGroup.add(new THREE.AxisHelper(100));
 
     this.scene.add(this.rotationGroup);
 };

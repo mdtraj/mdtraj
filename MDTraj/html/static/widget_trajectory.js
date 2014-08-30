@@ -6,36 +6,32 @@ function(WidgetManager, RMol) {
     var TrajectoryView = IPython.DOMWidgetView.extend({
         render : function() {
             var container = $("<div/>").css({
-                            width: '302px',
-                            height: '302px', border:'1px solid #ccc',
+                            width: (this.model.attributes.width + 2) + 'px',
+                            height: (this.model.attributes.height + 2) + 'px',
+                            border:'1px solid #ccc',
                             margin: 'auto'}).append(
                                 $('<div id="inner">').css({
                                     position: 'absolute',
-                                    width: '300px',
-                                    height: '300px',
+                                    width: this.model.attributes.width + 'px',
+                                    height: this.model.attributes.height + 'px',
                                 })
                         );
             this.setElement(container);
-            
-            console.log(container);
-            this.setElement(container);
-            console.log("Creating RMol");
             this.rmol = new RMol(container);
             this.rmol.enableMouse();
             this.update();            
         },
         
         update : function () {
-            console.log('update, xyz[0]=', this.model.attributes._xyz[0]);
-
-            this.rmol.setTopology(this.model.attributes._topology);        
-            this.rmol.setXYZ(this.model.attributes._xyz);
+            this.rmol.setTopology(this.model.attributes.topology);        
+            this.rmol.setXYZ(this.model.attributes.coordinates);
             
             var representation = {
-                color: 'chainbow',
-                mainChain: 'thickRibbon',
-                sideChains: 'line'
+                color: this.model.attributes.color,
+                mainChain: this.model.attributes.mainChain,
+                sideChains: this.model.attributes.sideChains,
             };
+            console.log('representation', representation);
 
             this.rmol.setRepresentation(representation);
             this.rmol.zoomInto(this.rmol.getAllAtoms());
