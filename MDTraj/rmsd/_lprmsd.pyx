@@ -29,12 +29,10 @@ import numpy as np
 from mdtraj.utils import ensure_type
 import scipy.spatial.distance
 
-cimport numpy as np
 from libcpp.vector cimport vector
 from libc.stdio cimport printf
 from cpython cimport bool
 from cython.parallel cimport prange
-np.import_array()
 assert sizeof(np.int32_t) == sizeof(int)
 
 
@@ -139,18 +137,18 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
 
     cdef int n_atoms_total = target.xyz.shape[1]
     cdef int superpose_ = superpose
-    cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] target_xyz = np.asarray(target.xyz, order='c')
-    cdef np.ndarray[ndim=1, dtype=int, mode='c'] atom_indices_ = np.asarray(atom_indices, dtype=np.int32)
-    cdef np.ndarray[ndim=1, dtype=int, mode='c'] dis_indices_ =  np.asarray(dis_indices, dtype=np.int32)
+    cdef float[:, :, ::1] target_xyz = np.asarray(target.xyz, order='c')
+    cdef int[::1] atom_indices_ = np.asarray(atom_indices, dtype=np.int32)
+    cdef int[::1] dis_indices_ =  np.asarray(dis_indices, dtype=np.int32)
 
     # get the all the coords in atom_indices in target and ref.
     # center them and compute the g values
     cdef int i
     cdef double msd
     cdef float ref_g, target_g
-    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] target_xyz_frame
-    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] target_xyz_frame2
-    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] ref_xyz_frame
+    cdef float[:, ::1] target_xyz_frame
+    cdef float[:, ::1] target_xyz_frame2
+    cdef float[:, ::1] ref_xyz_frame
     cdef int target_n_frames = target.xyz.shape[0]
     cdef int n_atoms = len(atom_indices)
     ref_xyz_frame = np.array(reference.xyz[frame, atom_indices, :], dtype=np.float32, copy=True)
@@ -162,8 +160,8 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
     # get only the distinguishable atoms in target and ref, center them
     # and compute the g values
     cdef float ref_g_dis, target_g_dis
-    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] target_xyz_frame_dis
-    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] ref_xyz_frame_dis
+    cdef float[:, ::1] target_xyz_frame_dis
+    cdef float[:, ::1] ref_xyz_frame_dis
     cdef int n_atoms_dis = len(dis_indices)
     target_xyz_frame_dis = np.empty((n_atoms_dis, 3), dtype=np.float32)
     if n_atoms_dis > 0:
@@ -174,10 +172,10 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
 
 
     cdef vector[int] mapping
-    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] rot1 = np.eye(3, dtype=np.float32)
-    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] rot2 = np.eye(3, dtype=np.float32)
-    cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] rot3 = np.eye(3, dtype=np.float32)
-    cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] distances = np.zeros(target_n_frames, dtype=np.float32)
+    cdef float[:, ::1] rot1 = np.eye(3, dtype=np.float32)
+    cdef float[:, ::1] rot2 = np.eye(3, dtype=np.float32)
+    cdef float[:, ::1] rot3 = np.eye(3, dtype=np.float32)
+    cdef float[::1] distances = np.zeros(target_n_frames, dtype=np.float32)
 
     #for i in prange(target_n_frames, nogil=True):
     for i in range(target_n_frames):
@@ -224,7 +222,7 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
     if superpose_:
         target.xyz = target_xyz
 
-    return distances
+    return np.array(distances)
 
 
 def _validate_atom_indices(atom_indices, n_atoms):
@@ -268,7 +266,7 @@ def _validate_permute_groups(permute_groups, atom_indices):
 
 
 @cython.boundscheck(False)
-def _munkres(np.ndarray[np.double_t, ndim=2, mode="c"] A not None):
+def _munkres(double[:, ::1] A not None):
     """_munkres(A)
 
     Calculate the minimum cost assignment of a cost matrix, A
@@ -292,11 +290,11 @@ def _munkres(np.ndarray[np.double_t, ndim=2, mode="c"] A not None):
     """
     cdef int x = A.shape[0]
     cdef int y = A.shape[1]
-    cdef np.ndarray[ndim=2, dtype=np.int32_t, mode='c'] rslt
+    cdef int[:, ::1] rslt
 
     rslt = np.zeros(shape=(x,y), dtype=np.int32, order='c')
     cdef Munkres* munk = new Munkres()
-    munk.solve(<double *> A.data, <int *> rslt.data, x, y)
+    munk.solve(&A[0,0], &rslt[0, 0], x, y)
     del munk
 
-    return rslt
+    return np.array(rslt)
