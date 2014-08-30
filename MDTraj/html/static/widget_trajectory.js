@@ -1,12 +1,8 @@
-// require([
-//     "widgets/js/widget",
-//     "rmol",
-//     ],
-// function(WidgetManager, RMol) {
 require([
     "widgets/js/widget",
+    "rmol",
     ],
-function(WidgetManager) {
+function(WidgetManager, RMol) {
     var TrajectoryView = IPython.DOMWidgetView.extend({
         render : function() {
             var container = $("<div/>").css({

@@ -16,7 +16,7 @@
  */
 
 
-// define(["three", "three/trackball"], function(THREE) {
+define(["three", "three/trackball"], function(THREE) {
 // define([], function() {
 
 // var TV3 = THREE.Vector3,
@@ -284,8 +284,8 @@ RMol.prototype.zoomInto = function(atomlist, keepSlab) {
 };
 
 RMol.prototype.enableMouse = function() {
-    TrackballControls.prototype = Object.create( THREE.EventDispatcher.prototype );    
-	var controls = new TrackballControls(this.camera, this.$el[0]);
+    // TrackballControls.prototype = Object.create( THREE.EventDispatcher.prototype );
+	var controls = new THREE.TrackballControls(this.camera, this.$el[0]);
 
 	controls.rotateSpeed = 1.0;
 	controls.zoomSpeed = 1.2;
@@ -1106,5 +1106,5 @@ RMol.prototype.IcosahedronGeometry = function() {
 
 /* Return */
 console.log("Loaded RMol!");
-// return RMol;
-// });
+return RMol;
+});
