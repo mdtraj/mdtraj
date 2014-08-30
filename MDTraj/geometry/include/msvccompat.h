@@ -14,7 +14,7 @@
 #   endif
 #  endif
 # elif defined(_M_AMD64)
-// If the target is x86_64 then SSE2 is guaranteed
+/* If the target is x86_64 then SSE2 is guaranteed */
 #  ifndef __SSE__
 #   define __SSE__ 1
 #  endif
