@@ -17,10 +17,6 @@
 
 
 define(["three", "three/trackball"], function(THREE) {
-// define([], function() {
-
-// var TV3 = THREE.Vector3,
-//     TCo = THREE.Color;
 
 function RMol ($el) {
     this.create($el);
@@ -28,7 +24,9 @@ function RMol ($el) {
 }
 
 /**
- * Constructor
+ * Constructor.
+ * $el : jquery DOM element
+ *    The place in the DOM to attach the canvas
  */
 RMol.prototype.create = function($el) {
     this.$el = $el;
@@ -47,6 +45,8 @@ RMol.prototype.create = function($el) {
 
     /* set up the renderer */
     this.renderer = new THREE.WebGLRenderer({antialiased: true});
+    /* TODO(rmcgibbo): we could make the background color configurable in
+      setRepresentation. Black might look nice */
     this.renderer.setClearColor(0xffffff, 1 );
     // this.renderer.setClearColor(0x000000, 1 );
     this.renderer.domElement.style.width = "100%";
@@ -69,7 +69,7 @@ RMol.prototype.render = function() {
 }
 
 /**
- * Initialization of the core elements
+ * Initialization of the core elements in the scene.
  */
 RMol.prototype.initializeScene = function() {
 
@@ -84,6 +84,12 @@ RMol.prototype.initializeScene = function() {
     this.scene.add(this.rotationGroup);
 };
 
+/**
+ * Set up the lights
+ * TODO(rmcgibbo): make the lights look better. Currently, they seem to be
+ * fine from one camera angle, but they get very washed out when you move the
+ * camera.
+ */
 RMol.prototype.initializeLights = function() {
     var directionalLight1 =  new THREE.DirectionalLight(0xFFFFFF, 0.75);
     directionalLight1.position.set(0.2, 0.2, -1);
@@ -97,6 +103,9 @@ RMol.prototype.initializeLights = function() {
     this.scene.add(ambientLight);
 };
 
+/**
+ * All of these attributes could be changed, to tweak the look.
+ */
 RMol.prototype.initializeDefaultValues = function() {
     this.sphereRadius = 1.5;
     this.cylinderRadius = 0.4;
@@ -126,11 +135,17 @@ RMol.prototype.initializeDefaultValues = function() {
 };
 
 /**
- * Set the system topology
+ * Set the system topology. This function takes a topology JSON object, whose
+ * schema should match the output (in python) of MDTraj.core.Topology.to_json.
  */
 RMol.prototype.setTopology = function(topology) {
     var atoms = [];
-
+    
+    /**
+     * The rest of this code base uses a different data format for
+     * topology-related information, which is basically just a flat list of atoms,
+     * so we'll convert it to that.
+     */
     for (var i = 0; i < topology.chains.length; i++) {
         var chain = topology.chains[i];
         for (var j = 0; j < chain.residues.length; j++) {
@@ -146,7 +161,7 @@ RMol.prototype.setTopology = function(topology) {
                     'serial': atom.index,
                     'atom': atom.name,
                     'ss': 's',
-                    'bonds': [],
+                    'bonds': [],  // set below
                     'color': 0xFFFFFF,
                 };
             }
@@ -158,10 +173,13 @@ RMol.prototype.setTopology = function(topology) {
         atoms[topology.bonds[i][1]].bonds.push(topology.bonds[i][0]);
     }
 
-
     this.atoms = atoms;
 };
 
+/**
+ * Set the coordinates of the atoms. Currently, this needs to be called 
+ * before setRepresentation, but it would be nice if that wasn't the case.
+ */
 RMol.prototype.setXYZ = function(xyz) {
     var natoms = xyz.length;
     for (var i = 0; i < natoms; i++) {
@@ -183,6 +201,9 @@ RMol.prototype.setRepresentation = function(representationOptions) {
 
     this.colorByAtom(all, {});
 
+    // reinitialize the modelGroup object. This basically throws away all of
+    // the models added to the scene from the last time this function was
+    // called.
     this.rotationGroup.remove(this.modelGroup);
     this.modelGroup = new THREE.Object3D();
     this.rotationGroup.add(this.modelGroup);
@@ -284,7 +305,6 @@ RMol.prototype.zoomInto = function(atomlist, keepSlab) {
 };
 
 RMol.prototype.enableMouse = function() {
-    // TrackballControls.prototype = Object.create( THREE.EventDispatcher.prototype );
 	var controls = new THREE.TrackballControls(this.camera, this.$el[0]);
 
 	controls.rotateSpeed = 1.0;
@@ -312,7 +332,6 @@ RMol.prototype.enableMouse = function() {
 };
 
 /* ----------------------------------------------------------- */
-
 
 RMol.prototype.getAllAtoms = function() {
    var ret = [];

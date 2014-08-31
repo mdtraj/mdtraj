@@ -55,6 +55,13 @@ class TrajectoryWidget(DOMWidget):
 
     frame = CInt(0, help='Which frame from the trajectory to display')
     trajectory = Any()
+
+    # The essence of the IPython interactive widget API on the python side is
+    # that by declaring traitlets with sync=True, these variables are
+    # automatically synced by the IPython runtime between this class in Python
+    # and the browser-side model. Changes to these attributes are propagated
+    # automatically to the browser (and changes on the browser side can trigger
+    # events on this class too, although we're not using that feature).
     topology = Dict(sync=True)
     coordinates = List(sync=True)
     

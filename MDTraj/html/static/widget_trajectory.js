@@ -1,3 +1,10 @@
+/*
+This script creates and registers the TrajectoryView widget on the
+browser side. Basically, it's a small div, with the RMol viewer (WebGL-based
+protein visualization) hooked in. Changes to the class on the python side
+propagate here and modify `this.model.attributes`, and re-call `update`.
+*/
+
 require([
     "widgets/js/widget",
     "rmol",
@@ -23,6 +30,12 @@ function(WidgetManager, RMol) {
         },
         
         update : function () {
+            /* This could definitely be done more efficiently. Right now we're
+            just recreating and redrawing everything. For the (presumably)
+            common use case where you just want to update the positions to the
+            next frame in a trajectory, there's no real need to redefine the
+            topology and representation.
+            */
             this.rmol.setTopology(this.model.attributes.topology);        
             this.rmol.setXYZ(this.model.attributes.coordinates);
             
@@ -31,8 +44,6 @@ function(WidgetManager, RMol) {
                 mainChain: this.model.attributes.mainChain,
                 sideChains: this.model.attributes.sideChains,
             };
-            console.log('representation', representation);
-
             this.rmol.setRepresentation(representation);
             this.rmol.zoomInto(this.rmol.getAllAtoms());
             this.rmol.render();
