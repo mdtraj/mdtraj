@@ -6,10 +6,54 @@ from IPython.utils.traitlets import Unicode, Bool, Bytes, CInt, Any, List, Dict,
 
 
 class TrajectoryWidget(DOMWidget):
+    """IPython notebook widget for displaying trajectories in the browser with WebGL
+
+    Example
+    -------
+    # if the final line occurs at the end of an IPython notebook cell, the
+    # resulting interactive widget will be displayed
+    >>> t = md.load('trajectory.pdb')
+    >>> from mdtraj.html import enable_notebook, TrajectoryWidget
+    >>> enable_notebook()
+    >>> widget = TrajectoryWidget(t)
+    >>> widget
+
+    Attributes
+    ----------
+    frame : int
+        Index of the frame to display.
+    height : int
+        Height, in pixels, of the display window
+    width : int
+        Width, in pixels, of the display window
+    color : {'chainbow', 'ss', 'chain', 'polarity'}
+        Color scheme used for the protein display
+    mainChain : {'ribbon', 'thickRibbon', 'strand', 'chain', 'cylinderHelix', 'tube', 'bonds'}
+        Drawing scheme for the main protein chain
+    sideChains : {'line', None}
+        Drawing scheme for the sidechains
+
+    Notes
+    -----
+    All of the attributes listed above are synced with the browser's widget.
+    Modifying these attributes, after the widget is constructed, will cause
+    the widget to update *live*. They can also be set at widget construction
+    time as keyword arguments to ``__init__``.
+
+    See Also
+    --------
+    enable_notebook() : Executing this function before using the widget is
+        required to load the required browser-side libraries
+    """
     disabled = Bool(False, help="Enable or disable user changes.", sync=True)
+
+    # Name of the javascript class which this widget syncs against on the
+    # browser side. To work correctly, this javascript class has to be
+    # registered and loaded in the browser before this widget is constructed
+    # (that's what enable_notebook() does)
     _view_name = Unicode('TrajectoryView', sync=True)
 
-    frame = CInt()
+    frame = CInt(0, help='Which frame from the trajectory to display')
     trajectory = Any()
     topology = Dict(sync=True)
     coordinates = List(sync=True)
