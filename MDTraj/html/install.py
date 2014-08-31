@@ -13,7 +13,7 @@ require.config({
     paths: {
         'three': '//cdnjs.cloudflare.com/ajax/libs/three.js/r68/three.min',
         'three/trackball' : '/nbextensions/TrackballControls',
-        'rmol' : '/nbextensions/rmol',
+        'rmol' : '/nbextensions/RMol',
     },
     shim: {
         'three': {
@@ -24,6 +24,10 @@ require.config({
 ''')
 
 def enable_notebook():
+    """Enable IPython notebook widgets to be displayed.
+
+    This function should be called before using TrajectoryWidget.
+    """
     libs = ['RMol.js', 'TrackballControls.js']
     fns = [resource_filename('mdtraj', os.path.join('html', 'static', f)) for f in libs]
     install_nbextension(fns, verbose=0)
