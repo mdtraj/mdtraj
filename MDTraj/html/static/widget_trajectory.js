@@ -7,9 +7,9 @@ propagate here and modify `this.model.attributes`, and re-call `update`.
 
 require([
     "widgets/js/widget",
-    "rmol",
+    "iview",
     ],
-function(WidgetManager, RMol) {
+function(WidgetManager, iview) {
     var TrajectoryView = IPython.DOMWidgetView.extend({
         render : function() {
             var container = $("<div/>").css({
@@ -23,9 +23,12 @@ function(WidgetManager, RMol) {
                                     height: this.model.attributes.height + 'px',
                                 })
                         );
+            // set the id attribute to something random
+            var s4 = Math.floor((1 + Math.random()) * 0x10000).toString(16); 
+            container.attr('id', s4);
+
             this.setElement(container);
-            this.rmol = new RMol(container);
-            this.rmol.enableMouse();
+            this.iview = new iview(container);
             this.update();            
         },
         

@@ -12,12 +12,15 @@ _REQUIRE_CONFIG = Javascript('''
 require.config({
     paths: {
         'three': '//cdnjs.cloudflare.com/ajax/libs/three.js/r68/three.min',
-        'three/trackball' : '/nbextensions/TrackballControls',
-        'rmol' : '/nbextensions/RMol',
+        'iview' : '/nbextensions/iview',
     },
     shim: {
         'three': {
             exports: 'THREE'
+        },
+        'iview': {
+            deps: ['three'],
+            exports: 'iview'
         },
     },
 });
@@ -28,7 +31,7 @@ def enable_notebook():
 
     This function should be called before using TrajectoryWidget.
     """
-    libs = ['RMol.js', 'TrackballControls.js']
+    libs = ['iview.js']
     fns = [resource_filename('mdtraj', os.path.join('html', 'static', f)) for f in libs]
     install_nbextension(fns, verbose=0)
     display(_REQUIRE_CONFIG)
