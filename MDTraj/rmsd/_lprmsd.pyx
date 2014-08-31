@@ -220,7 +220,7 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
     if superpose_:
         target.xyz = target_xyz
 
-    return np.array(distances)
+    return distances.base
 
 
 def _validate_atom_indices(atom_indices, n_atoms):
@@ -295,4 +295,4 @@ def _munkres(double[:, ::1] A not None):
     munk.solve(&A[0,0], &rslt[0, 0], x, y)
     del munk
 
-    return np.array(rslt)
+    return rslt.base
