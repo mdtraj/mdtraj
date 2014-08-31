@@ -7,3 +7,4 @@ pandas
 pyyaml
 pip
 nose
+ipython=2.1.0=py27_2
