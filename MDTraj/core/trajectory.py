@@ -1151,7 +1151,7 @@ class Trajectory(object):
                     cell_lengths=self.unitcell_lengths)
             f.topology = self.topology
 
-    def save_pdb(self, filename, force_overwrite=True):
+    def save_pdb(self, filename, force_overwrite=True, bfactors=None):
         """Save trajectory to RCSB PDB format
 
         Parameters
@@ -1160,22 +1160,41 @@ class Trajectory(object):
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
+        bfactors : array_like, default=None
+            save bfactors with pdb file
         """
         self._check_valid_unitcell()
+
+        if not bfactors is None:
+            if len(np.array(bfactors).shape) == 1:
+                if len(bfactors) != self.n_atoms:
+                    raise Exception("should give me one b-factor per atom")
+
+                bfactors = [bfactors] * self.n_frames
+
+            else:
+                if np.array(bfactors).shape != (self.n_frames, self.n_atoms):
+                    raise Exception("bfactors should be shaped like: (n_frames, n_atoms) or (n_atoms,)")
+
+        else:
+            bfactors = [None] * self.n_frames
+                
 
         with PDBTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             for i in xrange(self.n_frames):
 
                 if self._have_unitcell:
                     f.write(in_units_of(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
-                            self.topology,
+                            self.topology, 
                             modelIndex=i,
+                            bfactors=bfactors[i],
                             unitcell_lengths=in_units_of(self.unitcell_lengths[i], Trajectory._distance_unit, f.distance_unit),
                             unitcell_angles=self.unitcell_angles[i])
                 else:
                     f.write(in_units_of(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
                             self.topology,
-                            modelIndex=i)
+                            modelIndex=i,
+                            bfactors=bfactors[i])
 
     def save_xtc(self, filename, force_overwrite=True):
         """Save trajectory to Gromacs XTC format

@@ -243,7 +243,7 @@ class PDBTrajectoryFile(object):
 
         self._open = True
 
-    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, unitcell_angles=None):
+    def write(self, positions, topology, bfactors=None, modelIndex=None, unitcell_lengths=None, unitcell_angles=None):
         """Write a PDB file to disk
 
         Parameters
@@ -252,6 +252,10 @@ class PDBTrajectoryFile(object):
             The list of atomic positions to write.
         topology : mdtraj.Topology
             The Topology defining the model to write.
+        bfactors : {array_like, None}
+            bfactors to save to the pdb file. Should be shaped like (n_frames, n_atoms)
+            or (n_atoms,) In the latter case, the b-factors will be broadcasted to
+            all frames in the trajectory
         modelIndex : {int, None}
             If not None, the model will be surrounded by MODEL/ENDMDL records
             with this index
@@ -274,6 +278,14 @@ class PDBTrajectoryFile(object):
             raise ValueError('Particle position is infinite')
         
         self._last_topology = topology  # Hack to save the topology of the last frame written, allows us to output CONECT entries in write_footer()
+
+        if bfactors is None:
+            bfactors = ['{0:5.2f}'.format(0.0)] * len(positions)
+        else:
+            if (np.max(bfactors) >= 100) or (np.min(bfactors) <= -10):
+                raise Exception("formatting will get screwy with b-factors > 100")
+
+            bfactors = ['{0:5.2f}'.format(b) for b in bfactors]
         
         atomIndex = 1
         posIndex = 0
@@ -299,10 +311,11 @@ class PDBTrajectoryFile(object):
                         symbol = atom.element.symbol
                     else:
                         symbol = ' '
-                    line = "ATOM  %5d %-4s %3s %s%4d    %s%s%s  1.00  0.00          %2s  " % (
+                    line = "ATOM  %5d %-4s %3s %s%4d    %s%s%s  1.00 %s          %2s  " % (
                         atomIndex % 100000, atomName, resName, chainName,
                         (res.resSeq) % 10000, _format_83(coords[0]),
-                        _format_83(coords[1]), _format_83(coords[2]), symbol)
+                        _format_83(coords[1]), _format_83(coords[2]),
+                        bfactors[posIndex], symbol)
                     assert len(line) == 80, 'Fixed width overflow detected'
                     print(line, file=self._file)
                     posIndex += 1
