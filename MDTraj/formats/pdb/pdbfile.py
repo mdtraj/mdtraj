@@ -243,7 +243,7 @@ class PDBTrajectoryFile(object):
 
         self._open = True
 
-    def write(self, positions, topology, bfactors=None, modelIndex=None, unitcell_lengths=None, unitcell_angles=None):
+    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, unitcell_angles=None, bfactors=None):
         """Write a PDB file to disk
 
         Parameters
@@ -252,10 +252,6 @@ class PDBTrajectoryFile(object):
             The list of atomic positions to write.
         topology : mdtraj.Topology
             The Topology defining the model to write.
-        bfactors : {array_like, None}
-            bfactors to save to the pdb file. Should be shaped like (n_frames, n_atoms)
-            or (n_atoms,) In the latter case, the b-factors will be broadcasted to
-            all frames in the trajectory
         modelIndex : {int, None}
             If not None, the model will be surrounded by MODEL/ENDMDL records
             with this index
@@ -263,6 +259,10 @@ class PDBTrajectoryFile(object):
             Lengths of the three unit cell vectors, or None for a non-periodic system
         unitcell_angles : {tuple, None}
             Angles between the three unit cell vectors, or None for a non-periodic system
+        bfactors : {array_like, None}
+            bfactors to save to the pdb file. Should be shaped like (n_frames, n_atoms)
+            or (n_atoms,) In the latter case, the b-factors will be broadcasted to
+            all frames in the trajectory
         """
         if not self._mode == 'w':
             raise ValueError('file not opened for writing')
