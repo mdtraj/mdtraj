@@ -406,5 +406,6 @@ setup(name='mdtraj',
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
       ext_modules=cythonize(extensions),
       package_data={'mdtraj.formats.pdb': ['data/*'],
-                    'mdtraj.testing': ['reference/*']},
+                    'mdtraj.testing': ['reference/*'],
+                    'mdtraj.html': ['static/*']},
       **setup_kwargs)
