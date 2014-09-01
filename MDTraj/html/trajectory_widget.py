@@ -3,14 +3,16 @@ import base64
 from itertools import groupby
 
 import mdtraj as md
-from mdtraj.core.topology import PROTEIN_RESIDUES
 
 from IPython.display import display, Javascript
 from IPython.html.widgets import DOMWidget, IntSliderWidget, ContainerWidget
-from IPython.utils.traitlets import Unicode, Bool, Bytes, CInt, Any, List, Dict, Enum
+from IPython.utils.traitlets import (Unicode, Bool, Bytes, CInt, Any,
+                                     Dict, Enum)
+
+__all__ = ['TrajectoryView']
 
 
-class TrajectoryWidget(DOMWidget):
+class TrajectoryView(DOMWidget):
     """IPython notebook widget for displaying trajectories in the browser with WebGL
 
     Example
@@ -20,7 +22,7 @@ class TrajectoryWidget(DOMWidget):
     >>> t = md.load('trajectory.pdb')
     >>> from mdtraj.html import enable_notebook, TrajectoryWidget
     >>> enable_notebook()
-    >>> widget = TrajectoryWidget(t)
+    >>> widget = TrajectoryView(t)
     >>> widget
 
     Attributes
@@ -43,6 +45,13 @@ class TrajectoryWidget(DOMWidget):
     Modifying these attributes, after the widget is constructed, will cause
     the widget to update *live*. They can also be set at widget construction
     time as keyword arguments to ``__init__``.
+
+    The viewer WebGL viewer used, iview, is documented in [1].
+
+    References
+    ----------
+    ..[1] Li, Hongjian, et al. "iview: an interactive WebGL visualizer for
+          protein-ligand complex." BMC Bioinformatics 15.1 (2014): 56.
 
     See Also
     --------
@@ -81,7 +90,7 @@ class TrajectoryWidget(DOMWidget):
                                sync=True)
 
     def __init__(self, trajectory, frame=0, **kwargs):
-        super(TrajectoryWidget, self).__init__(**kwargs)
+        super(TrajectoryView, self).__init__(**kwargs)
         self.trajectory = trajectory
         self.frame = frame
 
