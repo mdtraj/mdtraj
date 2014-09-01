@@ -56,6 +56,18 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/*
+Adapted from
+https://github.com/HongjianLi/istar/blob/master/public/iview/iview.js
+version : 27b5c4905f9d9269ace950933e05c050ca3df9cb
+We've made a couple small modifications
+ - Added methods for setting the topology / coordinates without a PDB file.
+   Instead, we want a closer connection to the parsed formats inside the mdtraj
+   Trajectory and Topology objects.
+ - Also, I changed the constructor to take a jQuery element instead of the id
+   tag.
+*/
+
 if (typeof jQuery === 'undefined') { throw new Error('iview requires jQuery') }
 
 var iview = function ($el) {
@@ -673,152 +685,157 @@ void main()\n\
 		return atom0.coord.distanceToSquared(atom1.coord) < 1.3 * r * r;
 	},
 
-    // loadPDB: function (src) {
-    //     var helices = [], sheets = [];
-    //     this.atoms = {};
-    //     var lines = src.split('\n');
-    //     for (var i in lines) {
-    //         var line = lines[i];
-    //         var record = line.substr(0, 6);
-    //         if (record === 'HELIX ') {
-    //             helices.push({
-    //                 chain: line.substr(19, 1),
-    //                 initialResidue: parseInt(line.substr(21, 4)),
-    //                 initialInscode: line.substr(25, 1),
-    //                 terminalResidue: parseInt(line.substr(33, 4)),
-    //                 terminalInscode: line.substr(37, 1),
-    //             });
-    //         } else if (record === 'SHEET ') {
-    //             sheets.push({
-    //                 chain: line.substr(21, 1),
-    //                 initialResidue: parseInt(line.substr(22, 4)),
-    //                 initialInscode: line.substr(26, 1),
-    //                 terminalResidue: parseInt(line.substr(33, 4)),
-    //                 terminalInscode: line.substr(37, 1),
-    //             });
-    //         } else if (record === 'ATOM  ' || record === 'HETATM') {
-    //             var serial = parseInt(line.substr(6, 5));
-    //             this.atoms[serial] = {
-    //                 het: record[0] === 'H',
-    //                 serial: serial,
-    //                 name: line.substr(12, 4).replace(/ /g, ''),
-    //                 alt: line.substr(16, 1),
-    //                 resn: line.substr(17, 3),
-    //                 chain: line.substr(21, 1),
-    //                 resi: parseInt(line.substr(22, 4)),
-    //                 insc: line.substr(26, 1),
-    //                 coord: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
-    //                 b: parseFloat(line.substr(60, 8)),
-    //                 elem: line.substr(76, 2).replace(/ /g, ''),
-    //                 bonds: [],
-    //                 ss: 'coil',
-    //             };
-    //         } else if (record === 'CONECT') {
-    //             var from = parseInt(line.substr(6, 5));
-    //             for (var j = 0; j < 4; ++j) {
-    //                 var to = parseInt(line.substr([11, 16, 21, 26][j], 5));
-    //                 if (isNaN(to)) continue;
-    //                 this.atoms[from].bonds.push(this.atoms[to]);
-    //             }
-    //         } else if (record === 'TER   ') {
-    //             this.lastTerSerial = parseInt(line.substr(6, 5));
-    //         }
-    //     }
-    //     this.peptides = {};
-    //     this.ligands = {};
-    //     this.ions = {};
-    //     this.waters = {};
-    //     this.calphas = {};
-    //     var curChain, curResi, curInsc, curResAtoms = [], me = this;
-    //     var refreshBonds = function (f) {
-    //         var n = curResAtoms.length;
-    //         for (var j = 0; j < n; ++j) {
-    //             var atom0 = curResAtoms[j];
-    //             for (var k = j + 1; k < n; ++k) {
-    //                 var atom1 = curResAtoms[k];
-    //                 if (atom0.alt === atom1.alt && me.hasCovalentBond(atom0, atom1)) {
-    //                     atom0.bonds.push(atom1);
-    //                     atom1.bonds.push(atom0);
-    //                 }
-    //             }
-    //             f && f(atom0);
-    //         }
-    //     };
-    //     var pmin = new THREE.Vector3( 9999, 9999, 9999);
-    //     var pmax = new THREE.Vector3(-9999,-9999,-9999);
-    //     var psum = new THREE.Vector3();
-    //     var cnt = 0;
-    //     for (var i in this.atoms) {
-    //         var atom = this.atoms[i];
-    //         var coord = atom.coord;
-    //         psum.add(coord);
-    //         pmin.min(coord);
-    //         pmax.max(coord);
-    //         ++cnt;
-    //         if (atom.serial <= this.lastTerSerial) {
-    //             this.peptides[atom.serial] = atom;
-    //             if (atom.name === 'CA') this.calphas[atom.serial] = atom;
-    //             for (var j in helices) {
-    //                 var helix = helices[j];
-    //                 if (atom.chain == helix.chain && (atom.resi > helix.initialResidue || (atom.resi == helix.initialResidue && atom.insc >= helix.initialInscode)) && (atom.resi < helix.terminalResidue || (atom.resi == helix.terminalResidue && atom.insc <= helix.terminalInscode))) {
-    //                     atom.ss = 'helix';
-    //                     if (atom.resi == helix.initialResidue && atom.insc == helix.initialInscode) atom.ssbegin = true;
-    //                     if (atom.resi == helix.terminalResidue && atom.insc == helix.terminalInscode) atom.ssend = true;
-    //                 }
-    //             }
-    //             for (var j in sheets) {
-    //                 var sheet = sheets[j];
-    //                 if (atom.chain == sheet.chain && (atom.resi > sheet.initialResidue || (atom.resi == sheet.initialResidue && atom.insc >= sheet.initialInscode)) && (atom.resi < sheet.terminalResidue || (atom.resi == sheet.terminalResidue && atom.insc <= sheet.terminalInscode))) {
-    //                     atom.ss = 'sheet';
-    //                     if (atom.resi == sheet.initialResidue && atom.insc == sheet.initialInscode) atom.ssbegin = true;
-    //                     if (atom.resi == sheet.terminalResidue && atom.insc == sheet.terminalInscode) atom.ssend = true;
-    //                 }
-    //             }
-    //             if (atom.het) continue;
-    //             if (!(curChain == atom.chain && curResi == atom.resi && curInsc == atom.insc)) {
-    //                 refreshBonds(function (atom0) {
-    //                     if (((atom0.name === 'C' && atom.name === 'N') || (atom0.name === 'O3\'' && atom.name === 'P')) && me.hasCovalentBond(atom0, atom)) {
-    //                         atom0.bonds.push(atom);
-    //                         atom.bonds.push(atom0);
-    //                     }
-    //                 });
-    //                 curChain = atom.chain;
-    //                 curResi = atom.resi;
-    //                 curInsc = atom.insc;
-    //                 curResAtoms.length = 0;
-    //             }
-    //             curResAtoms.push(atom);
-    //         } else if ((this.atoms[atom.serial - 1] === undefined || this.atoms[atom.serial - 1].resi !== atom.resi) && (this.atoms[atom.serial + 1] === undefined || this.atoms[atom.serial + 1].resi !== atom.resi)) {
-    //             if (atom.elem === 'O') {
-    //                 this.waters[atom.serial] = atom;
-    //             } else {
-    //                 this.ions[atom.serial] = atom;
-    //             }
-    //         } else {
-    //             this.ligands[atom.serial] = atom;
-    //         }
-    //     }
-    //     refreshBonds();
-    //     this.pmin = pmin;
-    //     this.pmax = pmax;
-    //     this.surfaces = {
-    //         1: undefined,
-    //         2: undefined,
-    //         3: undefined,
-    //         4: undefined,
-    //     };
-    //     this.rebuildScene();
-    //     this.mdl.position.copy(psum).multiplyScalar(-1 / cnt);
-    //     var maxD = pmax.distanceTo(pmin);
-    //     if (maxD < 25) maxD = 25;
-    //     this.slabNear = -maxD * 0.50;
-    //     this.slabFar  =  maxD * 0.25;
-    //     this.rot.position.z = maxD * 0.35 / Math.tan(Math.PI / 180.0 * 10) - 150;
-    //     this.rot.quaternion.set(1, 0, 0, 0);
-    //     this.render();
-    // },
+    loadPDB: function (src) {
+        var helices = [], sheets = [];
+        this.atoms = {};
+        var lines = src.split('\n');
+        for (var i in lines) {
+            var line = lines[i];
+            var record = line.substr(0, 6);
+            if (record === 'HELIX ') {
+                helices.push({
+                    chain: line.substr(19, 1),
+                    initialResidue: parseInt(line.substr(21, 4)),
+                    initialInscode: line.substr(25, 1),
+                    terminalResidue: parseInt(line.substr(33, 4)),
+                    terminalInscode: line.substr(37, 1),
+                });
+            } else if (record === 'SHEET ') {
+                sheets.push({
+                    chain: line.substr(21, 1),
+                    initialResidue: parseInt(line.substr(22, 4)),
+                    initialInscode: line.substr(26, 1),
+                    terminalResidue: parseInt(line.substr(33, 4)),
+                    terminalInscode: line.substr(37, 1),
+                });
+            } else if (record === 'ATOM  ' || record === 'HETATM') {
+                var serial = parseInt(line.substr(6, 5));
+                this.atoms[serial] = {
+                    het: record[0] === 'H',
+                    serial: serial,
+                    name: line.substr(12, 4).replace(/ /g, ''),
+                    alt: line.substr(16, 1),
+                    resn: line.substr(17, 3),
+                    chain: line.substr(21, 1),
+                    resi: parseInt(line.substr(22, 4)),
+                    insc: line.substr(26, 1),
+                    coord: new THREE.Vector3(parseFloat(line.substr(30, 8)), parseFloat(line.substr(38, 8)), parseFloat(line.substr(46, 8))),
+                    b: parseFloat(line.substr(60, 8)),
+                    elem: line.substr(76, 2).replace(/ /g, ''),
+                    bonds: [],
+                    ss: 'coil',
+                };
+            } else if (record === 'CONECT') {
+                var from = parseInt(line.substr(6, 5));
+                for (var j = 0; j < 4; ++j) {
+                    var to = parseInt(line.substr([11, 16, 21, 26][j], 5));
+                    if (isNaN(to)) continue;
+                    this.atoms[from].bonds.push(this.atoms[to]);
+                }
+            } else if (record === 'TER   ') {
+                this.lastTerSerial = parseInt(line.substr(6, 5));
+            }
+        }
+        this.peptides = {};
+        this.ligands = {};
+        this.ions = {};
+        this.waters = {};
+        this.calphas = {};
+        var curChain, curResi, curInsc, curResAtoms = [], me = this;
+        var refreshBonds = function (f) {
+            var n = curResAtoms.length;
+            for (var j = 0; j < n; ++j) {
+                var atom0 = curResAtoms[j];
+                for (var k = j + 1; k < n; ++k) {
+                    var atom1 = curResAtoms[k];
+                    if (atom0.alt === atom1.alt && me.hasCovalentBond(atom0, atom1)) {
+                        atom0.bonds.push(atom1);
+                        atom1.bonds.push(atom0);
+                    }
+                }
+                f && f(atom0);
+            }
+        };
+        var pmin = new THREE.Vector3( 9999, 9999, 9999);
+        var pmax = new THREE.Vector3(-9999,-9999,-9999);
+        var psum = new THREE.Vector3();
+        var cnt = 0;
+        for (var i in this.atoms) {
+            var atom = this.atoms[i];
+            var coord = atom.coord;
+            psum.add(coord);
+            pmin.min(coord);
+            pmax.max(coord);
+            ++cnt;
+            if (atom.serial <= this.lastTerSerial) {
+                this.peptides[atom.serial] = atom;
+                if (atom.name === 'CA') this.calphas[atom.serial] = atom;
+                for (var j in helices) {
+                    var helix = helices[j];
+                    if (atom.chain == helix.chain && (atom.resi > helix.initialResidue || (atom.resi == helix.initialResidue && atom.insc >= helix.initialInscode)) && (atom.resi < helix.terminalResidue || (atom.resi == helix.terminalResidue && atom.insc <= helix.terminalInscode))) {
+                        atom.ss = 'helix';
+                        if (atom.resi == helix.initialResidue && atom.insc == helix.initialInscode) atom.ssbegin = true;
+                        if (atom.resi == helix.terminalResidue && atom.insc == helix.terminalInscode) atom.ssend = true;
+                    }
+                }
+                for (var j in sheets) {
+                    var sheet = sheets[j];
+                    if (atom.chain == sheet.chain && (atom.resi > sheet.initialResidue || (atom.resi == sheet.initialResidue && atom.insc >= sheet.initialInscode)) && (atom.resi < sheet.terminalResidue || (atom.resi == sheet.terminalResidue && atom.insc <= sheet.terminalInscode))) {
+                        atom.ss = 'sheet';
+                        if (atom.resi == sheet.initialResidue && atom.insc == sheet.initialInscode) atom.ssbegin = true;
+                        if (atom.resi == sheet.terminalResidue && atom.insc == sheet.terminalInscode) atom.ssend = true;
+                    }
+                }
+                if (atom.het) continue;
+                if (!(curChain == atom.chain && curResi == atom.resi && curInsc == atom.insc)) {
+                    refreshBonds(function (atom0) {
+                        if (((atom0.name === 'C' && atom.name === 'N') || (atom0.name === 'O3\'' && atom.name === 'P')) && me.hasCovalentBond(atom0, atom)) {
+                            atom0.bonds.push(atom);
+                            atom.bonds.push(atom0);
+                        }
+                    });
+                    curChain = atom.chain;
+                    curResi = atom.resi;
+                    curInsc = atom.insc;
+                    curResAtoms.length = 0;
+                }
+                curResAtoms.push(atom);
+            } else if ((this.atoms[atom.serial - 1] === undefined || this.atoms[atom.serial - 1].resi !== atom.resi) && (this.atoms[atom.serial + 1] === undefined || this.atoms[atom.serial + 1].resi !== atom.resi)) {
+                if (atom.elem === 'O') {
+                    this.waters[atom.serial] = atom;
+                } else {
+                    this.ions[atom.serial] = atom;
+                }
+            } else {
+                this.ligands[atom.serial] = atom;
+            }
+        }
+        refreshBonds();
+        this.pmin = pmin;
+        this.pmax = pmax;
+        this.surfaces = {
+            1: undefined,
+            2: undefined,
+            3: undefined,
+            4: undefined,
+        };
+        this.rebuildScene();
+        this.mdl.position.copy(psum).multiplyScalar(-1 / cnt);
+        var maxD = pmax.distanceTo(pmin);
+        if (maxD < 25) maxD = 25;
+        this.slabNear = -maxD * 0.50;
+        this.slabFar  =  maxD * 0.25;
+        this.rot.position.z = maxD * 0.35 / Math.tan(Math.PI / 180.0 * 10) - 150;
+        this.rot.quaternion.set(1, 0, 0, 0);
+        this.render();
+    },
 
+    /*************************************************************************/
 
+    /**
+     * RTM added.
+     * Zoom in, rebuildScene, and render.
+     */
     zoomInto : function (options) {
 		var pmin = new THREE.Vector3( 9999, 9999, 9999);
 		var pmax = new THREE.Vector3(-9999,-9999,-9999);
@@ -851,6 +868,10 @@ void main()\n\
 		this.render();
     },
 
+    /**
+     * RTM added.
+     * load a topology. TOOD(rmcgibbo) document the schema
+     */
     loadTopology : function (src) {
         this.atoms = src.atoms;
         this.peptides = {};
@@ -883,17 +904,30 @@ void main()\n\
         }
     },
 
-    loadSecondaryStructure : function (src) {
+    /**
+     * RTM added.
+     * Add attributes to the self.atoms dict. Look at the loadPDB method
+     * to see the keys in the atoms dict.
+     * `src` should be a dict whose keys are the atom index.
+     */
+    loadAtomAttributes : function (src) {
         $.extend(true, this.atoms, src);
     },
 
+    /**
+     * RTM added
+     * Set the xyz coordinates. src should be a list 
+     */
     loadCoordinates : function (src) {
         var natoms = src.length;
         for (var i = 0; i < natoms; i++) {
             // convert nanometers to angstroms
-            this.atoms[i].coord = (new THREE.Vector3).fromArray(src[i]).multiplyScalar(10);
+            this.atoms[i].coord = (new THREE.Vector3).fromArray(src[i])
+                .multiplyScalar(10);
         }
     },
+
+    /*************************************************************************/
 
 	createSphere: function (atom, defaultRadius, forceDefault, scale) {
 		var mesh = new THREE.Mesh(this.sphereGeometry, new THREE.MeshLambertMaterial({ color: atom.color }));

@@ -52,7 +52,7 @@ function($, WidgetManager, iview) {
 
             this.iv.loadTopology(this.model.attributes._topology);
             this.iv.loadCoordinates(this.model.attributes._frameData.coordinates);
-            this.iv.loadSecondaryStructure(this.model.attributes._frameData.secondaryStructure);
+            this.iv.loadAtomAttributes(this.model.attributes._frameData.secondaryStructure);
 
             var options = {
                 'camera': this.model.attributes.camera,
@@ -61,8 +61,6 @@ function($, WidgetManager, iview) {
                 'primaryStructure': this.model.attributes.primaryStructure,
                 'secondaryStructure': this.model.attributes.secondaryStructure
             };
-            console.log(options);
-
             this.iv.zoomInto(options);
             return TrajectoryView.__super__.update.apply(this);
         },

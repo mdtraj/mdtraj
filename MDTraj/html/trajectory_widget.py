@@ -20,7 +20,7 @@ class TrajectoryView(DOMWidget):
     # if the final line occurs at the end of an IPython notebook cell, the
     # resulting interactive widget will be displayed
     >>> t = md.load('trajectory.pdb')
-    >>> from mdtraj.html import enable_notebook, TrajectoryWidget
+    >>> from mdtraj.html import enable_notebook, TrajectoryView
     >>> enable_notebook()
     >>> widget = TrajectoryView(t)
     >>> widget
@@ -142,6 +142,10 @@ class TrajectoryView(DOMWidget):
         for simplicity and hack-ability the best place to do the
         conversion is here in python.
         """
+        # TODO(rmcgibbo). Document this schema. It needs to match with what's
+        # going on inside iview.loadTopology on the browser side.
+
+        
         atoms = {}
 
         # these should be mutually exclusive. you're only in one of
