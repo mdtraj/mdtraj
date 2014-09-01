@@ -13,14 +13,18 @@ require.config({
     paths: {
         'three': '//cdnjs.cloudflare.com/ajax/libs/three.js/r68/three.min',
         'iview' : '/nbextensions/iview',
+        'jqueryui': '//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min',
     },
     shim: {
-        'three': {
+        three: {
             exports: 'THREE'
         },
-        'iview': {
+        iview: {
             deps: ['three'],
             exports: 'iview'
+        },
+        jqueryui: {
+            exports: "$"
         },
     },
 });

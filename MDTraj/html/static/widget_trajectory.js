@@ -6,19 +6,33 @@ propagate here and modify `this.model.attributes`, and re-call `update`.
 */
 
 require([
+    "jquery",
     "widgets/js/widget",
     "iview",
+    // only loaded, not used
+    'jqueryui',
     ],
-function(WidgetManager, iview) {
+function($, WidgetManager, iview) {
+    var HEIGHT = 300,
+        WIDTH = 300,
+        HEIGHT_PX = '300px',
+        WIDTH_PX = '300px';
+
     var TrajectoryView = IPython.DOMWidgetView.extend({
         render : function() {
-            console.log('TrajectoryView.render');
-            var $el = $("<canvas/>").css({
-                            width: this.model.attributes.width + 'px',
-                            height: this.model.attributes.height + 'px',
-                        });
-            this.setElement($el);
-            this.iv = new iview($el);
+            var canvas = $("<canvas/>").height(HEIGHT).width(WIDTH);
+            var iv = new iview(canvas);
+            var container = $('<div/>').css({width: HEIGHT_PX, height: WIDTH_PX})
+                .resizable({
+                    aspectRatio: 1,
+                    resize: function(event, ui) {
+                        iv.renderer.setSize(ui.size.width, ui.size.height);
+                    }
+                });
+            container.append(canvas);
+            this.setElement(container);
+            this.iv = iv;
+            this.setupFullScreen(canvas, container);
             this.update();
         },
 
@@ -34,11 +48,34 @@ function(WidgetManager, iview) {
             window.iv = this.iv;
             window.model = this.model;
             this.iv.loadTopology(this.model.attributes._topology);
-            this.iv.loadCoordinates(this.model.attributes._coordinates);
-            this.iv.loadSecondaryStructure(this.model.attributes._secondaryStructure);
+            this.iv.loadCoordinates(this.model.attributes._frameData.coordinates);
+            this.iv.loadSecondaryStructure(this.model.attributes._frameData.secondaryStructure);
             this.iv.zoomInto();
             return TrajectoryView.__super__.update.apply(this);
-        }
+        },
+
+        setupFullScreen : function(canvas, container) {
+            // currently only works in chrome. need other prefixes for firefox
+            var iv = this.iv;
+            canvas.dblclick(function () {
+            	if ('webkitCancelFullScreen' in document) {
+                    if (!document.webkitIsFullScreen) {
+                        var minHW = Math.min(screen.width, screen.height);
+                		canvas[0].webkitRequestFullScreen();
+                        iv.renderer.setSize(minHW, minHW);
+                        iv.render();
+                    }
+                }
+            });
+
+            document.addEventListener("webkitfullscreenchange", function() {
+                if (!document.webkitIsFullScreen) {
+                    iv.renderer.setSize(WIDTH, HEIGHT);
+                    iv.render();
+                    container.css({width: HEIGHT_PX, height: WIDTH_PX});
+                }
+            });
+        },
     });
     WidgetManager.register_widget_view('TrajectoryView', TrajectoryView);
 });

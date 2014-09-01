@@ -852,55 +852,34 @@ void main()\n\
     },
 
     loadTopology : function (src) {
-		this.atoms = {};
-		this.peptides = {};
-		this.ligands = {};
-		this.ions = {};
-		this.waters = {};
-		this.calphas = {};
-        this.lastTerSerial = 0;
+        this.atoms = src.atoms;
+        this.peptides = {};
+        this.ligands = {};
+        this.ions = {};
+        this.waters = {};
+        this.calphas = {};
+        this.lastTerSerial = src.peptideIndices.length;
 
-        for (var i = 0; i < src.chains.length; i++) {
-            var chain = src.chains[i];
-            for (var j = 0; j < chain.residues.length; j++) {
-                var residue = chain.residues[j];
-                for (var k = 0; k < residue.atoms.length; k++) {
-                    var inputAtom = residue.atoms[k];
-                    var atom = {
-                        'alt': ' ',
-                        'b': 0,  // b factor
-                        'bonds': [],  // set below
-                        'chain': 'A',
-                        'elem': inputAtom.element,
-                        'het': false,
-                        'insc': ' ',
-                        'name': inputAtom.name,
-                        'resi': residue.index,
-                        'resn': residue.name,
-                        'serial': inputAtom.index,
-                        'ss': 'coil', // [coil, helix, sheet]
-                        'coord' : undefined,
-                    };
-                    this.atoms[inputAtom.index] = atom;
-                    this.lastTerSerial = Math.max(this.lastTerSerial, atom.serial);
+        this.top = src;
 
-                }
+        var keys = [['peptideIndices', 'peptides'],
+                    ['ligandIndices', 'ligands'],
+                    ['ionIndices', 'ions',],
+                    ['calphaIndices', 'calphas']];
+        for (var key_i = 0; key_i < keys.length; key_i++) {
+            var key = keys[key_i][0];
+            var dest = keys[key_i][1];
+            for (var ii = 0; ii < src[key].length; ii++) {
+                var i = src[key][ii];
+                this[dest][this.atoms[i].serial] = this.atoms[i];
             }
         }
 
-        for (var i = 0; i < src.bonds.length; i++) {
-            var a0 = src.bonds[i][0];
-            var a1 = src.bonds[i][1];
-            this.atoms[a0].bonds.push(a1);
-            this.atoms[a1].bonds.push(a0);
-        }
-
-        // just make everything a peptide for now
-		for (var i in this.atoms) {
-			var atom = this.atoms[i];
-			this.peptides[atom.serial] = atom;
-			if (atom.name === 'CA')
-                this.calphas[atom.serial] = atom;
+        for (var ii = 0; i < src.bondIndices.length; i++) {
+            var ai = src.bondIndices[i][0];
+            var aj = src.bondIndices[i][1];
+            this.atoms[ai].bonds.push(this.atoms[aj]);
+            this.atoms[aj].bonds.push(this.atoms[ai]);
         }
     },
 

@@ -3,6 +3,7 @@ import base64
 from itertools import groupby
 
 import mdtraj as md
+from mdtraj.core.topology import PROTEIN_RESIDUES
 
 from IPython.display import display, Javascript
 from IPython.html.widgets import DOMWidget, IntSliderWidget, ContainerWidget
@@ -67,12 +68,9 @@ class TrajectoryWidget(DOMWidget):
     # automatically to the browser (and changes on the browser side can trigger
     # events on this class too, although we're not using that feature).
     _topology = Dict(sync=True)
-    _secondaryStructure = Dict(sync=True)
-    _coordinates = List(sync=True)
+    _frameData = Dict(sync=True)
 
     # Display options
-    height = CInt('300', help='Height in pixels', sync=True)
-    width = CInt('300', help='Width in pixles', sync=True)
     color = Enum(['chainbow', 'ss', 'chain', 'polarity'], 'chainbow', sync=True)
     mainChain = Enum(['ribbon', 'thickRibbon', 'strand', 'chain',
                       'cylinderHelix', 'tube', 'bonds'],
@@ -85,15 +83,25 @@ class TrajectoryWidget(DOMWidget):
         self.frame = frame
 
     def _frame_changed(self, name, old, new):
-        self._coordinates = self.trajectory.xyz[new].tolist()
-        self._secondaryStructure = self._computeSecondaryStructure()
+        """Automatically called by the traitlet system when self.frame is modified"""
+        self._update_frame_data()
 
     def _trajectory_changed(self, name, old, new):
-        self._coordinates = new.xyz[self.frame].tolist()
-        self._topology = new.topology.to_dict()
-        self._secondaryStructure = self._computeSecondaryStructure()
+        """Automatically called by the traitlet system when self.trajectory is modified"""
+        self._topology = self._computeTopology()
+        self._update_frame_data()
+
+
+    def _update_frame_data(self):
+        self._frameData = {
+            'coordinates' : self.trajectory.xyz[self.frame].tolist(),
+            'secondaryStructure' : self._computeSecondaryStructure()
+        }
 
     def _computeSecondaryStructure(self):
+        """Compute the secondary structure of the selected frame and
+        format it for the browser
+        """
         SS_MAP = {'C': 'coil', 'H': 'helix', 'E': 'sheet'}
 
         top = self.trajectory.topology
@@ -115,3 +123,60 @@ class TrajectoryWidget(DOMWidget):
                         'ssbegin': (r==rindxs[0] and ss in {'H', 'E'}),
                         'ssend': (r==rindxs[-1] and ss in {'H', 'E'})}
         return result
+
+    def _computeTopology(self):
+        """Extract the topology and format it for the browser. iview has a
+        particular format for storing topology-based information, and
+        for simplicity and hack-ability the best place to do the
+        conversion is here in python.
+        """
+        atoms = {}
+
+        # these should be mutually exclusive. you're only in one of
+        # these categories
+        peptideIndices = []
+        waterIndices = []
+        ionIndices = []
+        ligandIndices = []
+
+        bondIndices = []
+        calphaIndices = []
+
+        hetIndices = []
+
+        for atom in self.trajectory.topology.atoms:
+            atoms[atom.index] = {
+                'alt': ' ',
+                'b' : 0,
+                'chain' : atom.residue.chain.index,
+                'elem': atom.element.symbol if atom.element is not None else 'X',
+                'insc' : ' ',
+                'name' : atom.name,
+                'resi' : atom.residue.index,
+                'resn' : atom.residue.name,
+                'serial' : atom.index,
+                'ss' : None,
+                'coord' : None,
+                'bonds' : [],
+            }
+            if atom.name == 'CA':
+                calphaIndices.append(atom.index)
+
+            if atom.residue.is_water:
+                waterIndices.append(atom.index)
+            elif not atom.residue.is_protein:
+                ligandIndices.append(atom.index)
+            else:
+                peptideIndices.append(atom.index)
+
+        for ai, aj in self.trajectory.topology.bonds:
+            bondIndices.append((ai.index, aj.index))
+
+        return {'atoms': atoms,
+                'bondIndices' : bondIndices,
+                'ionIndices': ionIndices,
+                'calphaIndices': calphaIndices,
+                'hetIndices': hetIndices,
+                'peptideIndices': peptideIndices,
+                'ligandIndices' : ligandIndices,
+                'waterIndices' : waterIndices}
