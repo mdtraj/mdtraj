@@ -1,5 +1,9 @@
 from __future__ import absolute_import
 import base64
+from itertools import groupby
+
+import mdtraj as md
+
 from IPython.display import display, Javascript
 from IPython.html.widgets import DOMWidget, IntSliderWidget, ContainerWidget
 from IPython.utils.traitlets import Unicode, Bool, Bytes, CInt, Any, List, Dict, Enum
@@ -62,9 +66,10 @@ class TrajectoryWidget(DOMWidget):
     # and the browser-side model. Changes to these attributes are propagated
     # automatically to the browser (and changes on the browser side can trigger
     # events on this class too, although we're not using that feature).
-    topology = Dict(sync=True)
-    coordinates = List(sync=True)
-    
+    _topology = Dict(sync=True)
+    _secondaryStructure = Dict(sync=True)
+    _coordinates = List(sync=True)
+
     # Display options
     height = CInt('300', help='Height in pixels', sync=True)
     width = CInt('300', help='Width in pixles', sync=True)
@@ -74,14 +79,39 @@ class TrajectoryWidget(DOMWidget):
                      'thickRibbon', sync=True)
     sideChains = Enum(['line', None], None, sync=True)
 
-    def __init__(self, trajectory, frame=0, **kwargs):        
+    def __init__(self, trajectory, frame=0, **kwargs):
         super(TrajectoryWidget, self).__init__(**kwargs)
         self.trajectory = trajectory
         self.frame = frame
 
     def _frame_changed(self, name, old, new):
         self.coordinates = self.trajectory.xyz[new].tolist()
+        self._secondaryStructure = self._computeSecondaryStructure()
 
     def _trajectory_changed(self, name, old, new):
-        self.coordinates = new.xyz[self.frame].tolist()
-        self.topology = new.topology.to_dict()
+        self._coordinates = new.xyz[self.frame].tolist()
+        self._topology = new.topology.to_dict()
+        self._secondaryStructure = self._computeSecondaryStructure()
+
+    def _computeSecondaryStructure(self):
+        SS_MAP = {'C': 'coil', 'H': 'helix', 'E': 'sheet'}
+
+        top = self.trajectory.topology
+        dssp = md.compute_dssp(self.trajectory[self.frame])[0]
+        result = {}
+
+        # iterate over the (rindx, ss) pairs in enumerate(dssp),
+        # and use itertools to group them into streaks by contiguous
+        # chain and ss.
+        keyfunc = lambda ir : (top.residue(ir[0]).chain, ir[1])
+        for (chain, ss), grouper in groupby(enumerate(dssp), keyfunc):
+            # rindxs is a list of residue indices in this contiguous run
+            rindxs = [g[0] for g in grouper]
+            for r in rindxs:
+                # add entry for each atom in the residue
+                for a in top.residue(r).atoms:
+                    result[a.index] = {
+                        'ss': SS_MAP[ss],
+                        'ssbegin': (r==rindxs[0] and ss in {'H', 'E'}),
+                        'ssend': (r==rindxs[-1] and ss in {'H', 'E'})}
+        return result

@@ -818,7 +818,7 @@ void main()\n\
     //     this.render();
     // },
 
-    
+
     zoomInto : function (src) {
 		var pmin = new THREE.Vector3( 9999, 9999, 9999);
 		var pmax = new THREE.Vector3(-9999,-9999,-9999);
@@ -850,7 +850,7 @@ void main()\n\
 		this.rot.quaternion.set(1, 0, 0, 0);
 		this.render();
     },
-    
+
     loadTopology : function (src) {
 		this.atoms = {};
 		this.peptides = {};
@@ -883,16 +883,18 @@ void main()\n\
                     };
                     this.atoms[inputAtom.index] = atom;
                     this.lastTerSerial = Math.max(this.lastTerSerial, atom.serial);
-                    
+
                 }
             }
         }
 
         for (var i = 0; i < src.bonds.length; i++) {
-            this.atoms[src.bonds[i][0]].bonds.push(src.bonds[i][1]);
-            this.atoms[src.bonds[i][1]].bonds.push(src.bonds[i][0]);
+            var a0 = src.bonds[i][0];
+            var a1 = src.bonds[i][1];
+            this.atoms[a0].bonds.push(a1);
+            this.atoms[a1].bonds.push(a0);
         }
-        
+
         // just make everything a peptide for now
 		for (var i in this.atoms) {
 			var atom = this.atoms[i];
@@ -901,11 +903,11 @@ void main()\n\
                 this.calphas[atom.serial] = atom;
         }
     },
-    
-    loadProteinSecondaryStructure : function (src) {
-        // pass
+
+    loadSecondaryStructure : function (src) {
+        $.extend(true, this.atoms, src);
     },
-    
+
     loadCoordinates : function (src) {
         var natoms = src.length;
         for (var i = 0; i < natoms; i++) {
