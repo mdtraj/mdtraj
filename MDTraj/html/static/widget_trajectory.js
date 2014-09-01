@@ -12,26 +12,16 @@ require([
 function(WidgetManager, iview) {
     var TrajectoryView = IPython.DOMWidgetView.extend({
         render : function() {
-            var container = $("<div/>").css({
-                            width: (this.model.attributes.width + 2) + 'px',
-                            height: (this.model.attributes.height + 2) + 'px',
-                            border:'1px solid #ccc',
-                            margin: 'auto'}).append(
-                                $('<div id="inner">').css({
-                                    position: 'absolute',
-                                    width: this.model.attributes.width + 'px',
-                                    height: this.model.attributes.height + 'px',
-                                })
-                        );
-            // set the id attribute to something random
-            var s4 = Math.floor((1 + Math.random()) * 0x10000).toString(16); 
-            container.attr('id', s4);
-
-            this.setElement(container);
-            this.iview = new iview(container);
+            console.log('TrajectoryView.render');
+            var $el = $("<canvas/>").css({
+                            width: this.model.attributes.width + 'px',
+                            height: this.model.attributes.height + 'px',
+                        });
+            this.setElement($el);
+            this.iv = new iview($el);
             this.update();            
         },
-        
+    
         update : function () {
             /* This could definitely be done more efficiently. Right now we're
             just recreating and redrawing everything. For the (presumably)
@@ -39,20 +29,59 @@ function(WidgetManager, iview) {
             next frame in a trajectory, there's no real need to redefine the
             topology and representation.
             */
-            this.rmol.setTopology(this.model.attributes.topology);        
-            this.rmol.setXYZ(this.model.attributes.coordinates);
-            
-            var representation = {
-                color: this.model.attributes.color,
-                mainChain: this.model.attributes.mainChain,
-                sideChains: this.model.attributes.sideChains,
-            };
-            this.rmol.setRepresentation(representation);
-            this.rmol.zoomInto(this.rmol.getAllAtoms());
-            this.rmol.render();
-            
+        
+            console.log('TrajectoryView.update');
+            window.iv = this.iv;
+            window.model = this.model;
+            this.iv.loadTopology(this.model.attributes.topology);
+            this.iv.loadCoordinates(this.model.attributes.coordinates);
+            this.iv.zoomInto();
             return TrajectoryView.__super__.update.apply(this);
         }
     });
     WidgetManager.register_widget_view('TrajectoryView', TrajectoryView);
 });
+
+//
+// function(WidgetManager, iview) {
+//     var TrajectoryView = IPython.DOMWidgetView.extend({
+//         render : function() {
+//             var $el = $("<canvas/>").css({
+//                           width: this.model.attributes.width + 'px',
+//                           height: this.model.attributes.height + 'px',
+//                        });
+//             this.setElement(container);
+//             this.iv = new iview($el);
+//             this.update();
+//         },
+//
+//         update : function () {
+//             /* This could definitely be done more efficiently. Right now we're
+//             just recreating and redrawing everything. For the (presumably)
+//             common use case where you just want to update the positions to the
+//             next frame in a trajectory, there's no real need to redefine the
+//             topology and representation.
+//             */
+//
+//             console.log('update');
+//             window.iv = this.iv;
+//             window.model = this.model;
+//
+//             $.get('http://www.rcsb.org/pdb/files/2SRC.pdb', function (p) {
+//                 console.log('rendering');
+//                 window.iv.loadPDB(p);
+//                 window.iv.rebuildScene({});
+//                 window.iv.render();
+//             });
+//
+//             //             this.iv.loadProteinTopology(this.model.attributes.topology);
+//             //             this.iv.loadProteinCoordinates(this.model.attributes.coordinates);
+//             // this.iv.rebuildScene();
+//             // this.iv.resetView();
+//             return TrajectoryView.__super__.update.apply(this);
+//
+//
+//         }
+//     });
+//     WidgetManager.register_widget_view('TrajectoryView', TrajectoryView);
+// });
