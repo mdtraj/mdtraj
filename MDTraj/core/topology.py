@@ -49,7 +49,6 @@
 
 from __future__ import print_function, division
 import os
-import json
 import numpy as np
 import itertools
 from mdtraj.core import element as elem
