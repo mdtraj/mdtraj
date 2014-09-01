@@ -27,7 +27,10 @@ function($, WidgetManager, iview) {
                     aspectRatio: 1,
                     resize: function(event, ui) {
                         iv.renderer.setSize(ui.size.width, ui.size.height);
-                    }
+                    },
+		    stop : function(event, ui) {
+			iv.render()
+		    },
                 });
             container.append(canvas);
             this.setElement(container);
@@ -72,22 +75,42 @@ function($, WidgetManager, iview) {
             canvas.dblclick(function () {
             	if ('webkitCancelFullScreen' in document) {
                     if (!document.webkitIsFullScreen) {
-                        var minHW = Math.min(screen.width, screen.height);
-                		canvas[0].webkitRequestFullScreen();
+			var minHW = Math.min(screen.width, screen.height);
+                	canvas[0].webkitRequestFullScreen();
                         iv.renderer.setSize(minHW, minHW);
                         iv.render();
                     }
-                }
+                } else if ('mozCancelFullScreen' in document) {
+                    if (!document.mozIsFullScreen) {
+                        var minHW = Math.min(screen.width, screen.height);
+                	canvas[0].mozRequestFullScreen();
+                        iv.renderer.setSize(minHW, minHW);
+                        iv.render();
+                    }
+		}
             });
 
-            document.addEventListener("webkitfullscreenchange", function() {
-                if (!document.webkitIsFullScreen) {
-                    iv.renderer.setSize(WIDTH, HEIGHT);
-                    iv.render();
-                    container.css({width: HEIGHT_PX, height: WIDTH_PX});
-                }
-            });
+            if ('webkitCancelFullScreen' in document) {
+		document.addEventListener("webkitfullscreenchange", function() {
+                    if (!document.webkitIsFullScreen) {
+			container.css({width: HEIGHT_PX, height: WIDTH_PX});
+			iv.renderer.setSize(WIDTH, HEIGHT);
+			iv.render();
+                    }
+		});
+	    } else if ('mozCancelFullScreen' in document) {
+		document.addEventListener("mozfullscreenchange", function() {
+                    if (!document.mozIsFullScreen) {
+			iv.renderer.setSize(WIDTH, HEIGHT);
+			container.css({width: HEIGHT_PX, height: WIDTH_PX});
+			iv.render();
+
+                    }
+		});
+	    }
         },
     });
+
+
     WidgetManager.register_widget_view('TrajectoryView', TrajectoryView);
 });
