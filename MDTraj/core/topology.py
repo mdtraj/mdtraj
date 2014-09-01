@@ -409,6 +409,53 @@ class Topology(object):
         out._numAtoms = out.n_atoms
         return out
 
+    def to_dict(self):
+        """Convert this topology into a dictionary, suitable for JSON serialization
+
+        Returns
+        -------
+        top : dict
+            TODO(rmcgibbo): describe me
+        """
+        topology_dict = {
+             'chains': [],
+             'bonds': []
+        }
+
+        for chain in self.chains:
+            chain_dict = {
+                'residues': [],
+                'index': int(chain.index)
+            }
+            for residue in chain.residues:
+                residue_dict = {
+                    'index': int(residue.index),
+                    'name': str(residue.name),
+                    'atoms': [],
+                    "resSeq": int(residue.resSeq)
+                }
+
+                for atom in residue.atoms:
+                    try:
+                        element_symbol_string = str(atom.element.symbol)
+                    except AttributeError:
+                        element_symbol_string = ""
+
+                    residue_dict['atoms'].append({
+                        'index': int(atom.index),
+                        'name': str(atom.name),
+                        'element': element_symbol_string
+                    })
+                chain_dict['residues'].append(residue_dict)
+            topology_dict['chains'].append(chain_dict)
+
+        for atom1, atom2 in self.bonds:
+            topology_dict['bonds'].append([
+                int(atom1.index),
+                int(atom2.index)
+            ])
+        return topology_dict
+
     def to_bondgraph(self):
         """Create a NetworkX graph from the atoms and bonds in this topology
 
