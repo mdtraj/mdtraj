@@ -85,7 +85,7 @@ class TrajectoryWidget(DOMWidget):
         self.frame = frame
 
     def _frame_changed(self, name, old, new):
-        self.coordinates = self.trajectory.xyz[new].tolist()
+        self._coordinates = self.trajectory.xyz[new].tolist()
         self._secondaryStructure = self._computeSecondaryStructure()
 
     def _trajectory_changed(self, name, old, new):
