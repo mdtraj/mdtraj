@@ -25,18 +25,17 @@ class TrajectoryWidget(DOMWidget):
 
     Attributes
     ----------
-    frame : int
-        Index of the frame to display.
-    height : int
-        Height, in pixels, of the display window
-    width : int
-        Width, in pixels, of the display window
-    color : {'chainbow', 'ss', 'chain', 'polarity'}
-        Color scheme used for the protein display
-    mainChain : {'ribbon', 'thickRibbon', 'strand', 'chain', 'cylinderHelix', 'tube', 'bonds'}
-        Drawing scheme for the main protein chain
-    sideChains : {'line', None}
-        Drawing scheme for the sidechains
+    camera : {'perspective', 'orthographic'}
+        Camera mode (default='perspective')
+    background : {'black', 'grey', 'white'}
+        Background color (default='black')
+    colorBy : {'spectrum', 'chain', 'secondary structure', 'residue',
+               'polarity', 'atom'}
+        Color scheme (default='white')
+    primaryStructure : {'lines', 'stick', 'ball & stick','sphere', 'nothing'}
+        Drawing method for the primary structure (default='nothing')
+    secondaryStructure = Enum(['ribbon', 'strand', 'cylinder & plate', 'C alpha trace', 'nothing'}
+        Drawing method for secondary structure. (default='cylinder & plate')
 
     Notes
     -----
@@ -71,11 +70,15 @@ class TrajectoryWidget(DOMWidget):
     _frameData = Dict(sync=True)
 
     # Display options
-    color = Enum(['chainbow', 'ss', 'chain', 'polarity'], 'chainbow', sync=True)
-    mainChain = Enum(['ribbon', 'thickRibbon', 'strand', 'chain',
-                      'cylinderHelix', 'tube', 'bonds'],
-                     'thickRibbon', sync=True)
-    sideChains = Enum(['line', None], None, sync=True)
+    camera = Enum(['perspective', 'orthographic'], 'perspective', sync=True)
+    background = Enum(['black', 'grey', 'white'], 'white', sync=True)
+    colorBy = Enum(['spectrum', 'chain', 'secondary structure', 'residue',
+                    'polarity', 'atom'], 'spectrum', sync=True)
+    primaryStructure = Enum(['lines', 'stick', 'ball & stick', 'sphere',
+                             'nothing'], 'nothing', sync=True)
+    secondaryStructure = Enum(['ribbon', 'strand', 'cylinder & plate',
+                               'C alpha trace', 'nothing'], 'cylinder & plate',
+                               sync=True)
 
     def __init__(self, trajectory, frame=0, **kwargs):
         super(TrajectoryWidget, self).__init__(**kwargs)

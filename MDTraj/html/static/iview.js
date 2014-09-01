@@ -819,7 +819,7 @@ void main()\n\
     // },
 
 
-    zoomInto : function (src) {
+    zoomInto : function (options) {
 		var pmin = new THREE.Vector3( 9999, 9999, 9999);
 		var pmax = new THREE.Vector3(-9999,-9999,-9999);
 		var psum = new THREE.Vector3();
@@ -840,7 +840,7 @@ void main()\n\
 			3: undefined,
 			4: undefined,
 		};
-		this.rebuildScene();
+		this.rebuildScene(options);
 		this.mdl.position.copy(psum).multiplyScalar(-1 / cnt);
 		var maxD = pmax.distanceTo(pmin);
 		if (maxD < 25) maxD = 25;
@@ -875,9 +875,9 @@ void main()\n\
             }
         }
 
-        for (var ii = 0; i < src.bondIndices.length; i++) {
-            var ai = src.bondIndices[i][0];
-            var aj = src.bondIndices[i][1];
+        for (var ii = 0; ii < src.bondIndices.length; ii++) {
+            var ai = src.bondIndices[ii][0];
+            var aj = src.bondIndices[ii][1];
             this.atoms[ai].bonds.push(this.atoms[aj]);
             this.atoms[aj].bonds.push(this.atoms[ai]);
         }
