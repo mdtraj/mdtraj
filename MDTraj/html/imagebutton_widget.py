@@ -1,4 +1,5 @@
 import base64
+import matplotlib.pyplot as pp
 from six.moves import StringIO
 from IPython.utils.traitlets import Any
 from IPython.html.widgets import DOMWidget, CallbackDispatcher
