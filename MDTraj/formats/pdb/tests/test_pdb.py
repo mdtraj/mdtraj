@@ -23,7 +23,7 @@
 
 from __future__ import print_function, division
 import numpy as np
-import os, tempfile
+import re, os, tempfile
 from mdtraj.formats.pdb import pdbstructure
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
 from mdtraj.testing import get_fn, eq, raises
@@ -211,3 +211,23 @@ def test_1vii_url_and_gz():
     eq(t1.n_atoms, t2.n_atoms)
     eq(t1.n_atoms, t3.n_atoms)
     eq(t1.n_atoms, t4.n_atoms)
+
+def test_bfactors():
+    pdb = load_pdb(get_fn('native.pdb'))
+    bfactors0 = np.arange(pdb.n_atoms) / 2.0 - 4.0 # (Get some decimals..)
+
+    pdb.save_pdb(temp, bfactors=bfactors0)
+
+    with open(temp, 'r') as fh:
+        atom_lines = [line for line in fh.readlines() if re.search(r'^ATOM', line)]
+
+    str_bfactors1 = [l[60:66] for l in atom_lines]
+    flt_bfactors1 = np.array([float(i) for i in str_bfactors1])
+
+    # check formatting has a space at the beginning and not at the end
+    frmt = np.array([(s[0] == ' ') and (s[-1] != ' ') for s in str_bfactors1])
+    assert np.all(frmt)
+    
+    # make sure the numbers are actually the same
+    eq(bfactors0, flt_bfactors1)
+
