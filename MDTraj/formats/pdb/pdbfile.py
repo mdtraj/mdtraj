@@ -243,7 +243,8 @@ class PDBTrajectoryFile(object):
 
         self._open = True
 
-    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, unitcell_angles=None, bfactors=None):
+    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, 
+              unitcell_angles=None, bfactors=None):
         """Write a PDB file to disk
 
         Parameters
@@ -259,10 +260,9 @@ class PDBTrajectoryFile(object):
             Lengths of the three unit cell vectors, or None for a non-periodic system
         unitcell_angles : {tuple, None}
             Angles between the three unit cell vectors, or None for a non-periodic system
-        bfactors : {array_like, None}
-            bfactors to save to the pdb file. Should be shaped like (n_frames, n_atoms)
-            or (n_atoms,) In the latter case, the b-factors will be broadcasted to
-            all frames in the trajectory
+        bfactors : array_like, default=None, shape=(n_atoms,)
+            Save bfactors with pdb file. Should contain a single number for
+            each atom in the topology
         """
         if not self._mode == 'w':
             raise ValueError('file not opened for writing')
@@ -283,7 +283,7 @@ class PDBTrajectoryFile(object):
             bfactors = ['{0:5.2f}'.format(0.0)] * len(positions)
         else:
             if (np.max(bfactors) >= 100) or (np.min(bfactors) <= -10):
-                raise Exception("formatting will get screwy with b-factors > 100")
+                raise ValueError("bfactors must be in (-10, 100)")
 
             bfactors = ['{0:5.2f}'.format(b) for b in bfactors]
         
