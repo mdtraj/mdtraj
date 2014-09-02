@@ -132,8 +132,8 @@ class TrajectoryView(DOMWidget):
                 for a in top.residue(r).atoms:
                     result[a.index] = {
                         'ss': SS_MAP[ss],
-                        'ssbegin': (r==rindxs[0] and ss in {'H', 'E'}),
-                        'ssend': (r==rindxs[-1] and ss in {'H', 'E'})}
+                        'ssbegin': (r==rindxs[0] and ss in set(['H', 'E'])),
+                        'ssend': (r==rindxs[-1] and ss in set(['H', 'E']))}
         return result
 
     def _computeTopology(self):
