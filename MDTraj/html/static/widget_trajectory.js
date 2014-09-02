@@ -9,6 +9,7 @@ require([
     "jquery",
     "widgets/js/widget",
     "iview",
+    "surface",
     // only loaded, not used
     'jqueryui',
     ],
@@ -59,7 +60,8 @@ function($, WidgetManager, iview) {
                 'background': this.model.attributes.background,
                 'colorBy': this.model.attributes.colorBy,
                 'primaryStructure': this.model.attributes.primaryStructure,
-                'secondaryStructure': this.model.attributes.secondaryStructure
+                'secondaryStructure': this.model.attributes.secondaryStructure,
+                'surface': this.model.attributes.surfaceRepresentation
             };
             this.iv.zoomInto(options);
             return TrajectoryView.__super__.update.apply(this);

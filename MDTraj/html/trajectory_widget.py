@@ -88,6 +88,9 @@ class TrajectoryView(DOMWidget):
     secondaryStructure = Enum(['ribbon', 'strand', 'cylinder & plate',
                                'C alpha trace', 'nothing'], 'cylinder & plate',
                                sync=True)
+    surfaceRepresentation = Enum(['Van der Waals surface','solvent excluded surface', 
+                    'solvent accessible surface', 'molecular surface',
+                    'nothing'],'nothing',sync=True)
 
     def __init__(self, trajectory, frame=0, **kwargs):
         super(TrajectoryView, self).__init__(**kwargs)
