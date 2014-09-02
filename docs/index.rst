@@ -30,6 +30,10 @@ installed under the name ``mdconvert``.
   <div style="display:block; text-align:center;"><h2 style="display:inline;"><a href="https://github.com/rmcgibbo/mdtraj/issues">Get Involved</a></h2></div>
   </div>
   <br/>
+  <iframe id="player" type="text/html" width="500" height="300" style="display:block; margin:auto"
+  src="http://www.youtube.com/embed/Lwy2Hdsr518"/>
+  frameborder="0"></iframe>
+
 
 
 Feedback

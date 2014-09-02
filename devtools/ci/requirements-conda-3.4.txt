@@ -8,3 +8,4 @@ pyyaml
 pip
 nose
 ipython-notebook
+matplotlib
