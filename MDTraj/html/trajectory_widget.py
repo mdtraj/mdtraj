@@ -36,8 +36,13 @@ class TrajectoryView(DOMWidget):
         Color scheme (default='white')
     primaryStructure : {'lines', 'stick', 'ball & stick','sphere', 'nothing'}
         Drawing method for the primary structure (default='nothing')
-    secondaryStructure = Enum(['ribbon', 'strand', 'cylinder & plate', 'C alpha trace', 'nothing'}
+    secondaryStructure = {'ribbon', 'strand', 'cylinder & plate', 'C alpha trace', 'nothing'}
         Drawing method for secondary structure. (default='cylinder & plate')
+    surfaceRepresentation = {'Van der Waals surface', 'solvent excluded surface',
+                                'solvent accessible surface', 'molecular surface', 'nothing'}
+        Drawing method for surface representation. (default='nothing')
+    exportToOBJ = {True, False}
+        Export scene to a 3D object file. (default=False)
 
     Notes
     -----
