@@ -14,6 +14,8 @@ require.config({
         'three': '//cdnjs.cloudflare.com/ajax/libs/three.js/r68/three.min',
         'iview' : '/nbextensions/iview',
         'surface' : '/nbextensions/surface.min',
+        'exporter' : '/nbextensions/objexporter',
+        'filesaver' : '/nbextensions/filesaver',
         'jqueryui': '//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min',
     },
     shim: {
@@ -27,6 +29,10 @@ require.config({
         surface: {
             exports: 'ProteinSurface'
         },
+        exporter: {
+            deps: ['three'],
+            exports: 'THREE.OBJExporter'
+        },
         jqueryui: {
             exports: "$"
         },
@@ -39,7 +45,7 @@ def enable_notebook():
 
     This function should be called before using TrajectoryWidget.
     """
-    libs = ['iview.js','surface.min.js']
+    libs = ['iview.js','surface.min.js','objexporter.js','filesaver.js']
     fns = [resource_filename('mdtraj', os.path.join('html', 'static', f)) for f in libs]
     install_nbextension(fns, verbose=0)
     display(_REQUIRE_CONFIG)

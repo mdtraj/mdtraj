@@ -90,8 +90,10 @@ class TrajectoryView(DOMWidget):
                                sync=True)
     surfaceRepresentation = Enum(['Van der Waals surface','solvent excluded surface', 
                     'solvent accessible surface', 'molecular surface',
-                    'nothing'],'nothing',sync=True)
-
+                    'nothing'], 'nothing', sync=True)
+    exportToOBJ = Enum([True,False], False,
+                            sync=True)
+    
     def __init__(self, trajectory, frame=0, **kwargs):
         super(TrajectoryView, self).__init__(**kwargs)
         self.trajectory = trajectory

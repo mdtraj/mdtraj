@@ -1,6 +1,6 @@
 /*
 This script creates and registers the TrajectoryView widget on the
-browser side. Basically, it's a small div, with the RMol viewer (WebGL-based
+browser side. Basically, it's a small div, with the iview molecule viewer (WebGL-based
 protein visualization) hooked in. Changes to the class on the python side
 propagate here and modify `this.model.attributes`, and re-call `update`.
 */
@@ -10,6 +10,8 @@ require([
     "widgets/js/widget",
     "iview",
     "surface",
+    "exporter",
+    "filesaver",
     // only loaded, not used
     'jqueryui',
     ],
@@ -64,6 +66,17 @@ function($, WidgetManager, iview) {
                 'surface': this.model.attributes.surfaceRepresentation
             };
             this.iv.zoomInto(options);
+
+            if  (this.model.attributes.exportToOBJ) {
+                var obj = '';
+                var exporter = new THREE.OBJExporter();
+                this.iv.mdl.children.forEach( function (object) {
+                    obj = obj + String(exporter.parse(object.geometry)); 
+                });
+                var blob = new Blob([obj], { type : "text/obj;charset=utf-8"});
+                saveAs(blob, "mol.obj");
+            }
+
             return TrajectoryView.__super__.update.apply(this);
         },
 
