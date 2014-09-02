@@ -26,3 +26,4 @@ tk=8.5.15=0
 yaml=0.1.4=0
 zlib=1.2.7=0
 ipython-notebook
+matplotlib
