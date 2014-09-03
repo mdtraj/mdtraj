@@ -1,6 +1,6 @@
 pyflakes
 scripttest
-nose
+nose-exclude
 argparse
 importlib
 ordereddict

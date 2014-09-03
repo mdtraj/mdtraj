@@ -1,5 +1,5 @@
 pyflakes
 scripttest
-nose
+nose-exclude
 coverage
 coveralls
