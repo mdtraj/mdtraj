@@ -41,8 +41,6 @@ class TrajectoryView(DOMWidget):
     surfaceRepresentation = {'Van der Waals surface', 'solvent excluded surface',
                                 'solvent accessible surface', 'molecular surface', 'nothing'}
         Drawing method for surface representation. (default='nothing')
-    exportToOBJ = {True, False}
-        Export scene to a 3D object file. (default=False)
 
     Notes
     -----
@@ -96,8 +94,6 @@ class TrajectoryView(DOMWidget):
     surfaceRepresentation = Enum(['Van der Waals surface','solvent excluded surface', 
                     'solvent accessible surface', 'molecular surface',
                     'nothing'], 'nothing', sync=True)
-    exportToOBJ = Enum([True,False], False,
-                            sync=True)
     
     def __init__(self, trajectory, frame=0, **kwargs):
         super(TrajectoryView, self).__init__(**kwargs)

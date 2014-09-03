@@ -12,9 +12,11 @@ require([
     "surface",
     "exporter",
     "filesaver",
+    "contextmenu",
     // only loaded, not used
     'jqueryui',
     ],
+
 function($, WidgetManager, iview) {
     var HEIGHT = 300,
         WIDTH = 300,
@@ -37,6 +39,35 @@ function($, WidgetManager, iview) {
             this.iv = iv;
             this.setupFullScreen(canvas, container);
             this.update();
+            
+            // contextMenu
+            context.init({preventDoubleContext: false});
+            var menu = [{
+                    text: 'Export to PNG',
+                    action: function () {
+                        var dataURL = iv.renderer.domElement.toDataURL('image/png');
+                        var data = atob( dataURL.substring( "data:image/png;base64,".length ) ),
+                                asArray = new Uint8Array(data.length);
+                        for( var i = 0, len = data.length; i < len; ++i ) {
+                                asArray[i] = data.charCodeAt(i);    
+                        }
+                        var blob = new Blob( [ asArray.buffer ], {type: "image/png"} );
+                        saveAs(blob,"mol.png")
+                    }
+                }, { 
+                    text: 'Export to Object File',
+                    action: function () {
+                       var obj = '';
+                       var exporter = new THREE.OBJExporter();
+                       iv.mdl.children.forEach( function (object) {
+                           obj = obj + String(exporter.parse(object.geometry));
+                       });
+                       var blob = new Blob([obj], { type : "text/obj;charset=utf-8"});
+                       saveAs(blob, "mol.obj");
+                    }
+                }];
+            //canvas.contextMenu(menu, { mouseClick : 'left' });
+            context.attach(canvas,menu)
 
             // debugging
             window.iv = this.iv;
@@ -66,16 +97,6 @@ function($, WidgetManager, iview) {
                 'surface': this.model.attributes.surfaceRepresentation
             };
             this.iv.zoomInto(options);
-
-            if  (this.model.attributes.exportToOBJ) {
-                var obj = '';
-                var exporter = new THREE.OBJExporter();
-                this.iv.mdl.children.forEach( function (object) {
-                    obj = obj + String(exporter.parse(object.geometry)); 
-                });
-                var blob = new Blob([obj], { type : "text/obj;charset=utf-8"});
-                saveAs(blob, "mol.obj");
-            }
 
             return TrajectoryView.__super__.update.apply(this);
         },

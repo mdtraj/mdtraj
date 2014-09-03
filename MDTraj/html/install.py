@@ -17,6 +17,7 @@ require.config({
         'exporter' : '/nbextensions/objexporter',
         'filesaver' : '/nbextensions/filesaver',
         'jqueryui': '//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min',
+        'contextmenu': '/nbextensions/context',
     },
     shim: {
         three: {
@@ -38,14 +39,16 @@ require.config({
         },
     },
 });
-''')
+''',
+css  = ['//lab.jakiestfu.com/contextjs/context.standalone.css']
+)
 
 def enable_notebook():
     """Enable IPython notebook widgets to be displayed.
 
     This function should be called before using TrajectoryWidget.
     """
-    libs = ['iview.js','surface.min.js','objexporter.js','filesaver.js']
+    libs = ['iview.js','surface.min.js','objexporter.js','filesaver.js','context.js']
     fns = [resource_filename('mdtraj', os.path.join('html', 'static', f)) for f in libs]
     install_nbextension(fns, verbose=0)
     display(_REQUIRE_CONFIG)

@@ -79,6 +79,7 @@ var iview = function ($el) {
 	this.renderer = new THREE.WebGLRenderer({
 		canvas: this.container.get(0),
 		antialias: true,
+                preserveDrawingBuffer: true,
 	});
 	this.effects = {
         // 'anaglyph': new THREE.AnaglyphEffect(this.renderer),
