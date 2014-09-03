@@ -216,7 +216,7 @@ class CompilerDetection(object):
     def _print_compiler_version(self, cc):
         print("C compiler:")
         if self.msvc:
-            cc.spawn(cc.compiler)
+            cc.spawn(cc.cc)
         else:
             cc.spawn(cc.compiler + ['-v'])
 
