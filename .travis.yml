@@ -3,6 +3,8 @@ language: c
 install:
   - source devtools/ci/install.sh
   - export PYTHONUNBUFFERED=true
+  - export CC=gcc
+  - export CXX=g++
 
 script:
   - source deactivate
@@ -11,7 +13,7 @@ script:
   - source activate $python
   - conda install $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
   - conda list -e
-  - pydir=$(which python); $precmd $(dirname $pydir)/nosetests --with-coverage --cover-erase -vv
+  - pydir=$(which python); $precmd $(dirname $pydir)/nosetests --exclude-dir=MDTraj/html --with-coverage --cover-erase -vv
   - cd devtools/c-tests/; make valgrind; cd -
 
 env:
