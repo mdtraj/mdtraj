@@ -145,6 +145,8 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
     cdef int n_atoms = target.xyz.shape[1] if np.all(atom_indices == slice(None)) else len(atom_indices)
 
     # make sure *every* frame in target_xyz is in proper c-major order
+    if not target.xyz.flags.writeable:
+        target.xyz = np.array(target.xyz, copy=True)
     target_xyz = np.asarray(target.xyz[:, atom_indices, :], order='C', dtype=np.float32)
     # only extract the `frame`-th conformation from ref_xyz
     ref_xyz_frame = np.asarray(reference.xyz[frame, atom_indices, :], order='C', dtype=np.float32)
