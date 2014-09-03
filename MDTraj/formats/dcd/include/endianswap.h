@@ -29,6 +29,7 @@
 #define ENDIAN_SWAP_H
 
 /* works on unaligned 2-byte quantities */
+/*
 static void swap2_unaligned(void *v, long ndata) {
   long i;
   char * dataptr = (char *) v;
@@ -40,6 +41,7 @@ static void swap2_unaligned(void *v, long ndata) {
     dataptr[i+1] = tmp;
   }
 }
+*/
 
 
 /* works on unaligned 4-byte quantities */
@@ -93,6 +95,7 @@ static void swap8_unaligned(void *v, long ndata) {
 
 /* Only works with aligned 2-byte quantities, will cause a bus error */
 /* on some platforms if used on unaligned data.                      */
+/*
 static void swap2_aligned(void *v, long ndata) {
   short *data = (short *) v;
   long i;
@@ -103,7 +106,7 @@ static void swap2_aligned(void *v, long ndata) {
     *N=(((*N>>8)&0xff) | ((*N&0xff)<<8));  
   }
 }
-
+*/
 
 /* Only works with aligned 4-byte quantities, will cause a bus error */
 /* on some platforms if used on unaligned data.                      */
