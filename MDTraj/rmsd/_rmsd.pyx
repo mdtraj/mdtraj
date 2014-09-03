@@ -179,8 +179,8 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
 
 def _center_inplace_atom_major(float[:, :, ::1] xyz not None):
     assert xyz.shape[2] == 3
-    if not xyz.flags.writeable:
-        raise ValueError('xyz is not writeable')
+    #if not xyz.flags.writeable:
+    #    raise ValueError('xyz is not writeable')
     cdef float[::1] traces = np.empty(xyz.shape[0], dtype=np.float32)
     inplace_center_and_trace_atom_major(&xyz[0,0,0], &traces[0], xyz.shape[0], xyz.shape[1])
     return np.array(traces)

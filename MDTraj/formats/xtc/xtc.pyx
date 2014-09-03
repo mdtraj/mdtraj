@@ -313,7 +313,8 @@ cdef class XTCTrajectoryFile:
             xyz, time, step, box = xyz[::stride], time[::stride], step[::stride], box[::stride]
             if np.all(np.logical_and(box < 1e-10, box > -1e-10)):
                 box = None
-            return xyz, time, step, box
+            return (np.array(xyz, copy=False), np.array(time, copy=False),
+                    np.array(step, copy=False), np.array(box, copy=False))
 
         # if they want ALL of the remaining frames, we need to guess at the
         # chunk size, and then check the exit status to make sure we're really
@@ -375,11 +376,15 @@ cdef class XTCTrajectoryFile:
 
         while (i < n_frames) and (status != _EXDRENDOFFILE):
             if atom_indices is None:
-                status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[i],
-                                         &time[i], <xdrlib.matrix>&box[i,0,0], <xdrlib.rvec*>&xyz[i,0,0], &prec[i])
+                status = xdrlib.read_xtc(
+                    self.fh, self.n_atoms, <int*> &step[i], &time[i],
+                    <xdrlib.matrix>&box[i,0,0], <xdrlib.rvec*>&xyz[i,0,0],
+                    &prec[i])
             else:
-                status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[i],
-                                         &time[i], <xdrlib.matrix>&box[i,0,0], <xdrlib.rvec*>&framebuffer[0,0], &prec[i])
+                status = xdrlib.read_xtc(
+                    self.fh, self.n_atoms, <int*> &step[i], &time[i],
+                    <xdrlib.matrix>&box[i,0,0], <xdrlib.rvec*>&framebuffer[0,0],
+                    &prec[i])
                 xyz.base[i, :, :] = framebuffer.base[atom_indices, :]
 
             if status != _EXDRENDOFFILE and status != _EXDROK:
@@ -394,7 +399,7 @@ cdef class XTCTrajectoryFile:
 
         self.frame_counter += i
 
-        return xyz.base, time.base, step.base, box.base
+        return xyz, time, step, box
 
 
     def write(self, xyz, time=None, step=None, box=None):
