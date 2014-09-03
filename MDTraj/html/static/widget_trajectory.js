@@ -1,6 +1,6 @@
 /*
 This script creates and registers the TrajectoryView widget on the
-browser side. Basically, it's a small div, with the RMol viewer (WebGL-based
+browser side. Basically, it's a small div, with the iview molecule viewer (WebGL-based
 protein visualization) hooked in. Changes to the class on the python side
 propagate here and modify `this.model.attributes`, and re-call `update`.
 */
@@ -9,9 +9,13 @@ require([
     "jquery",
     "widgets/js/widget",
     "iview",
+    "exporter",
+    "filesaver",
+    "contextmenu",
     // only loaded, not used
     'jqueryui',
     ],
+
 function($, WidgetManager, iview) {
     var HEIGHT = 300,
         WIDTH = 300,
@@ -35,9 +39,10 @@ function($, WidgetManager, iview) {
             container.append(canvas);
             this.setElement(container);
             this.iv = iv;
+            this.setupContextMenu(iv);
             this.setupFullScreen(canvas, container);
             this.update();
-
+            
             // debugging
             window.iv = this.iv;
             window.model = this.model;
@@ -62,12 +67,43 @@ function($, WidgetManager, iview) {
                 'background': this.model.attributes.background,
                 'colorBy': this.model.attributes.colorBy,
                 'primaryStructure': this.model.attributes.primaryStructure,
-                'secondaryStructure': this.model.attributes.secondaryStructure
+                'secondaryStructure': this.model.attributes.secondaryStructure,
+                'surface': this.model.attributes.surfaceRepresentation
             };
             this.iv.zoomInto(options);
+
             return TrajectoryView.__super__.update.apply(this);
         },
-
+        
+        setupContextMenu : function(iv) {
+            context.init({preventDoubleContext: true});
+            var menu = [{header: 'Export as...'},
+                    {text: 'PNG',
+                    action: function () {
+                        var dataURL = iv.renderer.domElement.toDataURL('image/png');
+                        var data = atob( dataURL.substring( "data:image/png;base64,".length ) ),
+                                asArray = new Uint8Array(data.length);
+                        for( var i = 0, len = data.length; i < len; ++i ) {
+                                asArray[i] = data.charCodeAt(i);    
+                        }
+                        var blob = new Blob( [ asArray.buffer ], {type: "image/png"} );
+                        saveAs(blob,"mol.png")
+                    }
+                }, { 
+                    text: 'OBJ',
+                    action: function () {
+                       var obj = '';
+                       var exporter = new THREE.OBJExporter();
+                       iv.mdl.children.forEach( function (object) {
+                           obj = obj + String(exporter.parse(object.geometry));
+                       });
+                       var blob = new Blob([obj], { type : "text/obj;charset=utf-8"});
+                       saveAs(blob, "mol.obj");
+                    }
+                }];
+            context.attach('canvas',menu)
+            
+        },
 
         setupFullScreen : function(canvas, container) {
             // currently only works in chrome. need other prefixes for firefox
