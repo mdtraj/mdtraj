@@ -41,7 +41,7 @@ function($, WidgetManager, iview) {
             this.update();
             
             // contextMenu
-            context.init({preventDoubleContext: false});
+            context.init({preventDoubleContext: true});
             var menu = [{header: 'Export as...'},
                     {text: 'PNG',
                     action: function () {
@@ -66,7 +66,7 @@ function($, WidgetManager, iview) {
                        saveAs(blob, "mol.obj");
                     }
                 }];
-            context.attach(canvas,menu)
+            context.attach(canvas[0],menu)
 
             // debugging
             window.iv = this.iv;
