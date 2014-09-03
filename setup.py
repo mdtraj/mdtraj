@@ -218,7 +218,7 @@ class CompilerDetection(object):
         if self.msvc:
             if not cc.initialized:
                 cc.initialize()
-            cc.spawn(cc.cc)
+            cc.spawn([cc.cc])
         else:
             cc.spawn(cc.compiler + ['-v'])
 
