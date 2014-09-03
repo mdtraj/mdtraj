@@ -42,8 +42,8 @@ function($, WidgetManager, iview) {
             
             // contextMenu
             context.init({preventDoubleContext: false});
-            var menu = [{
-                    text: 'Export to PNG',
+            var menu = [{header: 'Export as...'},
+                    {text: 'PNG',
                     action: function () {
                         var dataURL = iv.renderer.domElement.toDataURL('image/png');
                         var data = atob( dataURL.substring( "data:image/png;base64,".length ) ),
@@ -55,7 +55,7 @@ function($, WidgetManager, iview) {
                         saveAs(blob,"mol.png")
                     }
                 }, { 
-                    text: 'Export to Object File',
+                    text: 'OBJ',
                     action: function () {
                        var obj = '';
                        var exporter = new THREE.OBJExporter();
@@ -66,7 +66,6 @@ function($, WidgetManager, iview) {
                        saveAs(blob, "mol.obj");
                     }
                 }];
-            //canvas.contextMenu(menu, { mouseClick : 'left' });
             context.attach(canvas,menu)
 
             // debugging
