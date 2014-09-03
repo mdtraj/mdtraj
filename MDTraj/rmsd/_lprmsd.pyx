@@ -218,7 +218,7 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
         distances[i] = sqrtf(msd)
 
     if superpose_:
-        target.xyz = target_xyz
+        target.xyz = target_xyz.base
 
     return distances.base
 
