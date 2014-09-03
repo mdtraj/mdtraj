@@ -66,7 +66,7 @@ function($, WidgetManager, iview) {
                        saveAs(blob, "mol.obj");
                     }
                 }];
-            context.attach(canvas[0],menu)
+            context.attach('canvas',menu)
 
             // debugging
             window.iv = this.iv;
