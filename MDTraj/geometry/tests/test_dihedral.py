@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import itertools
 from distutils.spawn import find_executable
 import tempfile
 
@@ -191,3 +192,14 @@ def test_dihedral_2chains():
         # chain
         assert any(i in chain_indices for i in np.concatenate(phi_indices))
 
+def test_generator():
+    N_FRAMES = 2
+    N_ATOMS = 5
+    xyz = np.asarray(np.random.randn(N_FRAMES, N_ATOMS, 3), dtype=np.float32)
+    ptraj = md.Trajectory(xyz=xyz, topology=None)
+
+    quartets = np.array(list(itertools.combinations(range(N_ATOMS), 4)), dtype=np.int32)
+    quartets2 = itertools.combinations(range(N_ATOMS), 4)
+    a = md.compute_dihedrals(ptraj, quartets)
+    b = md.compute_dihedrals(ptraj, quartets2)
+    eq(a, b)
