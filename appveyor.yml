@@ -12,7 +12,7 @@ install:
   - C:\Python27\Scripts\conda.exe init
   - C:\Python27\Scripts\conda.exe config --add channels http://conda.binstar.org/omnia
   - C:\Python27\Scripts\conda.exe create -n py3 --yes --quiet python=3 numpy pytables cython pandas pip netcdf4 pyyaml nose scripttest scipy
-  - C:\Python27\Scripts\pip.exe install nose-exclude
+  - C:\Python27\envs\py3\Scripts\pip.exe install nose-exclude
 
 build_script:
   - C:\Python27\envs\py3\python.exe setup.py install
