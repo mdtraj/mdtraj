@@ -7,7 +7,7 @@ Frequently Asked Questions
 
      RuntimeError: This CPU does not support the required instruction set (SSE4.1)
     
-   Let me guess -- you're using a Linux cluster running CentOS 5?f Your system
+   Let me guess -- you're using a Linux cluster running CentOS 5? Your system
    compiler is gcc 4.1? Some functions in MDTraj require specific CPU features
    (and compiler support for them) to enable faster performance.
    
