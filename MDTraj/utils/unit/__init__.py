@@ -166,7 +166,7 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
 
     factor = units_in.conversion_factor_to(units_out)
     if inplace and (isinstance(quantity, np.ndarray) and quantity.flags['WRITEABLE']):
-        quantity *= factor
+        np.multiply(quantity, factor, out=quantity)
         return quantity
     return quantity * factor
 

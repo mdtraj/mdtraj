@@ -461,11 +461,12 @@ static fio_size_t fio_ftell(fio_fd fd) {
 
 
 /* higher level routines that are OS independent */
-/*
+
 static int fio_write_int32(fio_fd fd, int i) {
   return (fio_fwrite(&i, 4, 1, fd) != 1);
 }
 
+/*
 static int fio_read_int32(fio_fd fd, int *i) {
   return (fio_fread(i, 4, 1, fd) != 1);
 }
