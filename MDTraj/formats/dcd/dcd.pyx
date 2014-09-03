@@ -454,18 +454,16 @@ cdef class DCDTrajectoryFile:
             for j in range(_stride - 1):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
 
-        if np.all(cell_lengths.base < 1e-10):
-            # in the DCD C code, if there's unitcell information inside the
-            # DCD file, it just sets them to length=0 and angle=90. Other tools
-            # like VMD explicitly write length=0 and angle=90 into their
-            # DCD files. In both cases, we detect that indicate the
-            # information's absense
-            cell_lengths = None
-            cell_angles = None
-
         if status == _DCD_SUCCESS:
             # if we're done either because of we read all of the n_frames
             # requested succcessfully, return
+            if np.all(cell_lengths.base < 1e-10):
+                # in the DCD C code, if there's unitcell information inside the
+                # DCD file, it just sets them to length=0 and angle=90. Other
+                # tools like VMD explicitly write length=0 and angle=90 into
+                # their  DCD files. In both cases, we detect that indicate the
+                # information's absense
+                return (np.array(xyz, copy=False), None, None)
             return (np.array(xyz, copy=False),
                     np.array(cell_lengths, copy=False),
                     np.array(cell_angles, copy=False))
@@ -475,14 +473,11 @@ cdef class DCDTrajectoryFile:
             # user asked to read more frames than were in the file, we need
             # to truncate the return arrays -- we don't want to return them
             # a big stack of zeros.
-            xyz = xyz[0:i]
-            if cell_lengths is not None and cell_angles is not None:
-                cell_lengths = cell_lengths[0:i]
-                cell_angles = cell_angles[0:i]
-
-            return (np.array(xyz, copy=False),
-                    np.array(cell_lengths, copy=False),
-                    np.array(cell_angles, copy=False))
+            if cell_lengths is None and cell_angles is None:
+                return (np.array(xyz[:i], copy=False), None, None)
+            return (np.array(xyz[:i], copy=False),
+                    np.array(cell_lengths[:i], copy=False),
+                    np.array(cell_angles[:i], copy=False))
 
         # If we got some other status, thats a "real" error.
         raise IOError("Error: %s", ERROR_MESSAGES(status))
