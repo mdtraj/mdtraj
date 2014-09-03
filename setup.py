@@ -176,7 +176,9 @@ if not release:
 
 class CompilerDetection(object):
     def __init__(self, disable_openmp):
-        self.msvc = new_compiler().compiler_type == 'msvc'
+        cc = new_compiler()
+        self.msvc = cc.compiler_type == 'msvc'
+        self._print_compiler_version(cc)
 
         if disable_openmp:
             self.openmp_enabled = False
@@ -209,6 +211,16 @@ class CompilerDetection(object):
             self.compiler_args_opt = ['/O2']
         else:
             self.compiler_args_opt = ['-O3', '-funroll-loops']
+        print()
+
+    def _print_compiler_version(self, cc):
+        print("C compiler:")
+        if self.msvc:
+            if not cc.initialized:
+                cc.initialize()
+            cc.spawn([cc.cc])
+        else:
+            cc.spawn(cc.compiler + ['-v'])
 
     def hasfunction(self, cc, funcname, include=None, extra_postargs=None):
         # From http://stackoverflow.com/questions/
@@ -242,7 +254,7 @@ class CompilerDetection(object):
             shutil.rmtree(tmpdir)
 
     def _print_support_start(self, feature):
-        print('Attempting to autodetect {0} support...'.format(feature), end=' ')
+        print('Attempting to autodetect {0:6} support...'.format(feature), end=' ')
 
     def _print_support_end(self, feature, status):
         if status is True:

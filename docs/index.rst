@@ -55,6 +55,7 @@ Documentation
    examples/index
    mdconvert
    whatsnew
+   faq
 
 API Reference
 -------------
