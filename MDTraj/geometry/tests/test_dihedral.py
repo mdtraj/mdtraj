@@ -50,7 +50,8 @@ CHI2_ATOMS = [["CA", "CB", "CG", "CD"],
             ["CA", "CB", "CG", "CD1"],
             ["CA", "CB", "CG1", "CD1"],
             ["CA", "CB", "CG", "OD1"],
-            ["CA", "CB", "CG", "ND1"]]
+            ["CA", "CB", "CG", "ND1"],
+            ["CA", "CB", "CG", "SD"]]
 CHI3_ATOMS = [["CB", "CG", "CD", "NE"],
             ["CB", "CG", "CD", "CE"],
             ["CB", "CG", "CD", "OE1"],
