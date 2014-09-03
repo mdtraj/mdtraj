@@ -31,8 +31,6 @@ import warnings
 import cython
 cimport cython
 import numpy as np
-cimport numpy as np
-np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import _FormatRegistry
@@ -60,14 +58,6 @@ _EXDR_ERROR_MESSAGES = {
     10: 'Not enough memory',
     12: "File not found"
 }
-
-# numpy variable types include the specific numpy of bytes of each, but the c
-# variables in our interface file don't. this could get bad if we're on a wierd
-# machine, so lets make sure first
-if sizeof(int) != sizeof(np.int32_t):
-    raise RuntimeError('Integers on your compiler are not 32 bits. This is not good.')
-if sizeof(float) != sizeof(np.float32_t):
-    raise RuntimeError('Floats on your compiler are not 32 bits. This is not good')
 
 ###############################################################################
 # Code
@@ -315,7 +305,9 @@ cdef class TRRTrajectoryFile:
             xyz, time, step, box, lambd = xyz[::stride], time[::stride], step[::stride], box[::stride], lambd[::stride]
             if np.all(np.logical_and(box < 1e-10, box > -1e-10)):
                 box = None
-            return xyz, time, step, box, lambd
+            return (np.array(xyz, copy=False), np.array(time, copy=False),
+                    np.array(step, copy=False), np.array(box, copy=False),
+                    np.array(lambd, copy=False))
 
         # if they want ALL of the remaining frames, we need to guess at the chunk
         # size, and then check the exit status to make sure we're really at the EOF
@@ -364,30 +356,26 @@ cdef class TRRTrajectoryFile:
                 raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
             n_atoms_to_read = len(atom_indices)
 
-        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz = \
-            np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
-        cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time = \
-            np.empty((n_frames), dtype=np.float32)
-        cdef np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step = \
-            np.empty((n_frames), dtype=np.int32)
-        cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] lambd = \
-            np.empty((n_frames), dtype=np.float32)
-        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box = \
-            np.empty((n_frames, 3, 3), dtype=np.float32)
+        cdef float[:, :, ::1] xyz = np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
+        cdef float[::1] time = np.empty((n_frames), dtype=np.float32)
+        cdef int[::1] step = np.empty((n_frames), dtype=np.int32)
+        cdef float[::1] lambd = np.empty((n_frames), dtype=np.float32)
+        cdef float[:, :, ::1] box = np.empty((n_frames, 3, 3), dtype=np.float32)
 
         # only used if atom_indices is given
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
-
-
+        cdef float[:, ::1] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
         while (i < n_frames) and (status != _EXDRENDOFFILE):
             if atom_indices is None:
-                status = trrlib.read_trr(self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
-                                         <trrlib.matrix>&box[i,0,0], <trrlib.rvec*>&xyz[i,0,0], NULL, NULL)
+                status = trrlib.read_trr(
+                    self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
+                    <trrlib.matrix>&box[i,0,0], <trrlib.rvec*>&xyz[i,0,0], NULL, NULL)
             else:
-                status = trrlib.read_trr(self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
-                                         <trrlib.matrix> &box[i,0,0], <trrlib.rvec*>&framebuffer[0,0], NULL, NULL)
-                xyz[i, :, :] = framebuffer[atom_indices, :]
+                status = trrlib.read_trr(
+                    self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
+                    <trrlib.matrix> &box[i,0,0], <trrlib.rvec*>&framebuffer[0,0],
+                    NULL, NULL)
+                xyz.base[i, :, :] = framebuffer.base[atom_indices, :]
 
             if status != _EXDRENDOFFILE and status != _EXDROK:
                 raise RuntimeError('TRR read error: %s' % _EXDR_ERROR_MESSAGES.get(status, 'unknown'))
@@ -473,11 +461,11 @@ cdef class TRRTrajectoryFile:
 
         self._write(xyz, time, step, box, lambd)
 
-    def _write(self, np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz not None,
-               np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time not None,
-               np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step not None,
-               np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box not None,
-               np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] lambd not None):
+    def _write(self, float[:, :, ::1] xyz not None,
+               float[::1] time not None,
+               int[::1] step not None,
+               float[:, :, ::1] box not None,
+               float[::1] lambd not None):
 
         cdef int n_frames = len(xyz)
         cdef int n_atoms = xyz.shape[1]
@@ -512,8 +500,8 @@ cdef class TRRTrajectoryFile:
         """
         cdef int i, status, step
         cdef float time, prec, lambd
-        cdef np.ndarray[dtype=np.float_t] box = np.empty(9, dtype=np.float)
-        cdef np.ndarray[dtype=np.float_t] xyz = np.empty(self.n_atoms * 3, dtype=np.float)
+        cdef float[::1] box = np.empty(9, dtype=np.float32)
+        cdef float[::1] xyz = np.empty(self.n_atoms * 3, dtype=np.float32)
 
         if str(self.mode) != 'r':
             raise NotImplementedError('seek() only available in mode="r" currently')

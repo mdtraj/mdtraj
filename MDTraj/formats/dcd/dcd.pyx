@@ -41,7 +41,6 @@ from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
 from dcdlib cimport open_dcd_write, close_file_write, write_timestep
 from dcdlib cimport dcd_nsets, dcd_rewind
 
-
 ##############################################################################
 # Globals
 ##############################################################################
