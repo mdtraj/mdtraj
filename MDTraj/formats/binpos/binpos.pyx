@@ -32,8 +32,6 @@ cimport cython
 from libc.stdio cimport SEEK_SET, SEEK_CUR, SEEK_END
 import os
 import numpy as np
-cimport numpy as np
-np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import _FormatRegistry
@@ -280,7 +278,8 @@ cdef class BINPOSTrajectoryFile:
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
-            return self._read(int(n_frames), atom_indices)[::stride]
+            xyz = self._read(int(n_frames), atom_indices)[::stride]
+            return np.asarray(xyz)
 
         else:
             all_xyz = []
@@ -313,9 +312,8 @@ cdef class BINPOSTrajectoryFile:
             n_atoms_to_read = len(atom_indices)
 
         # only used if atom_indices is given
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
-
-        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((n_frames, n_atoms_to_read, 3), dtype=np.float32)
+        cdef float[:, ::1] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
+        cdef float[:, :, ::1] xyz = np.zeros((n_frames, n_atoms_to_read, 3), dtype=np.float32)
 
         for i in range(n_frames):
             if atom_indices is None:
@@ -324,7 +322,7 @@ cdef class BINPOSTrajectoryFile:
             else:
                 self.timestep.coords = &framebuffer[0, 0]
                 status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
-                xyz[i, :, :] = framebuffer[atom_indices, :]
+                xyz.base[i, :, :] = framebuffer.base[atom_indices, :]
 
             self.frame_counter += 1
 
@@ -358,7 +356,7 @@ cdef class BINPOSTrajectoryFile:
 
         self._write(xyz)
 
-    def _write(self, np.ndarray[dtype=np.float32_t, ndim=3] xyz not None):
+    def _write(self, float[:, :, ::1] xyz not None):
         cdef int i, status
         cdef int n_frames = len(xyz)
 
