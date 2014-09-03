@@ -282,9 +282,13 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         extension = os.path.splitext(filename_or_filenames)[1]
         filename = filename_or_filenames
     else:  # If multiple filenames, take the first one.
-        extensions = [os.path.splitext(filename_i)[1] for filename_i in filename_or_filenames]
-        if len(set(extensions)) != 1:
-            raise(TypeError("All filenames must have same extension!"))
+        extensions = [os.path.splitext(f)[1] for f in filename_or_filenames]
+        if len(set(extensions)) == 0:
+            raise ValueError('No trajectories specified. '
+                             'filename_or_filenames was an empty list')
+        elif len(set(extensions)) > 1:
+            raise TypeError("Each filename must have the same extension. "
+                            "Received: %s" % ', '.join(set(extensions)))
         else:
             t = [load(f, **kwargs) for f in filename_or_filenames]
             # we know the topology is equal because we sent the same topology
