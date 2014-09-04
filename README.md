@@ -1,7 +1,7 @@
 ## MDTraj: Molecular dynamics trajectory analysis in python
 
 [![Travis Build Status](https://travis-ci.org/simtk/mdtraj.png?branch=master)](https://travis-ci.org/simtk/mdtraj)
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/01vpwbceulj4jix3)](https://ci.appveyor.com/project/simtk/mdtraj)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/80ov9tdffg5jkr7i)](https://ci.appveyor.com/project/rmcgibbo/mdtraj-813)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.png)](https://pypi.python.org/pypi/mdtraj)
 [![Binstar Badge](https://binstar.org/omnia/mdtraj/badges/version.svg)](https://binstar.org/omnia/mdtraj)
 [![Downloads](https://pypip.in/d/mdtraj/badge.png)](https://pypi.python.org/pypi/mdtraj)
