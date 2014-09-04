@@ -11,9 +11,12 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import sys
+import os
+
 import mdtraj
 import mdtraj.version
+
 sys.path.insert(0, os.path.abspath('sphinxext'))
 sys.path.insert(0, os.path.abspath('themes/sphinx_rtd_theme-0.1.5'))
 import sphinx_rtd_theme
@@ -42,8 +45,6 @@ autosummary_generate = True
 autodoc_default_flags = ['members', 'inherited-members']
 
 
-import runipy
-import IPython.nbconvert.utils.pandoc
 extensions.append('notebook_sphinxext')
 extensions.append('notebookcell_sphinxext')
 
@@ -119,7 +120,6 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'mdtraj'
 html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -129,7 +129,6 @@ html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
-html_theme_path = ['themes']
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 
