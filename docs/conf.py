@@ -273,4 +273,6 @@ texinfo_documents = [
 #texinfo_show_urls = 'footnote'
 
 autodoc_member_order = 'bysource'
+
+# stackoverflow.com/questions/12206334
 numpydoc_show_class_members = False
