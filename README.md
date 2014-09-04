@@ -15,6 +15,6 @@ With MDTraj, you can
 - Use tons of analysis functions like bonds/angles/dihedrals, hydrogen bonding identification, secondary structure assignment, NMR observables.
 - Use a **lightweight API**, with a focus on **speed** and vectorized operations.
 
-For details, see the website at [mdtraj.org](http://mdtraj.org). To get involed, take a look at the github issue tracker and/or the user forums [discourse.mdtraj.org](http://discourse.mdtraj.org).
+For details, see the website at [mdtraj.org](http://mdtraj.org). To get involed, take a look at the [github issue tracker](https://github.com/rmcgibbo/mdtraj/issues) and/or the user forums [discourse.mdtraj.org](http://discourse.mdtraj.org).
 
 License: LGPL 2.1+ Various sub-portions of this library may be individually distributed under different licenses. See those files for their specific terms.
