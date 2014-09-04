@@ -32,7 +32,7 @@ import sphinx_rtd_theme
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.autosummary',
-              'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'numpy_ext.numpydoc',
+              'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'numpydoc',
               'sphinx.ext.intersphinx', 'sphinx.ext.viewcode',
               'ipython_console_highlighting', 'ipython_directive',
               'matplotlib.sphinxext.plot_directive']
