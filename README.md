@@ -6,28 +6,20 @@
 [![Binstar Badge](https://binstar.org/omnia/mdtraj/badges/version.svg)](https://binstar.org/omnia/mdtraj)
 [![Downloads](https://pypip.in/d/mdtraj/badge.png)](https://pypi.python.org/pypi/mdtraj)
 
-This library supports the reading and writing of molecular dynamics trajectories in a variety of formats. Currently, there is full support for [PDB](http://deposit.rcsb.org/adit/docs/pdb_atom_format.html), [DCD](https://www-s.ks.uiuc.edu/Research/vmd/plugins/molfile/dcdplugin.html),
-[XTC](http://manual.gromacs.org/online/xtc.html), [TRR](http://www.gromacs.org/Documentation/File_Formats/.trr_File),
-[binpos](https://www-s.ks.uiuc.edu/Research/vmd/plugins/molfile/binposplugin.html), [AMBER NetCDF](http://ambermd.org/netcdf/nctraj.html),
-[AMBER mdcrd](http://ambermd.org/formats.html), and [MDTraj HDF5](https://github.com/rmcgibbo/mdtraj/wiki/HDF5-Trajectory-Format).
-There is partial support for the TINKER arc format (only reading).
+Read, write and analyze MD trajectories with only a few lines of Python code.
 
-For details, see the website at [mdtraj.org](http://mdtraj.org).
+With MDTraj, you can
 
-### License
+- Read and write from every MD format imaginable (pdb, xtc, trr, dcd, binpos, netcff, mdcrd, prmtop, ...)
+- Run blazingly fast RMSD calculations (4x the speed of the original Theobald QCP).
+- Use tons of analysis functions like bonds/angles/dihedrals, hydrogen bonding identification, secondary structure assignment, NMR observables.
+- Use lightweight API, with a focus on speed and vectorized operations.
 
-```
-MDtraj is free software; you can redistribute it and/or modify it under the
-terms of the GNU Lesser General Public License as published by the Free
-Software Foundation; either version 2.1 of the License, or (at your option)
-any later version.
+For details, see the website at [mdtraj.org](http://mdtraj.org). To get involed, take a look at the github issue tracker and/or the user forums [discourse.mdtraj.org](http://discourse.mdtraj.org).
 
-This library is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
-details. You should have received a copy of the GNU Lesser General Public
-License along with this Module; if not, see <http://www.gnu.org/licenses/>.
-```
 
+
+
+License: LGPL 2.1+
 Various sub-portions of this library may be individually distributed under
 different licenses. See those files for their specific terms.
