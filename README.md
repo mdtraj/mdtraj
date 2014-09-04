@@ -1,4 +1,4 @@
-## MDTraj: Read, write, and analyze MD trajectories with only a few lines of Python code.
+## MDTraj: Molecular dynamics trajectory analysis in python
 
 [![Travis Build Status](https://travis-ci.org/rmcgibbo/mdtraj.png?branch=master)](https://travis-ci.org/rmcgibbo/mdtraj)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/01vpwbceulj4jix3)](https://ci.appveyor.com/project/rmcgibbo/mdtraj)
