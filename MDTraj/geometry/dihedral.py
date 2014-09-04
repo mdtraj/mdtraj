@@ -103,7 +103,7 @@ def compute_dihedrals(traj, indices, periodic=True, opt=True):
 
     """
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
-    quartets = ensure_type(np.asarray(indices), dtype=np.int32, ndim=2, name='indices', shape=(None, 4), warn_on_cast=False)
+    quartets = ensure_type(indices, dtype=np.int32, ndim=2, name='indices', shape=(None, 4), warn_on_cast=False)
     if not np.all(np.logical_and(quartets < traj.n_atoms, quartets >= 0)):
         raise ValueError('indices must be between 0 and %d' % traj.n_atoms)
 

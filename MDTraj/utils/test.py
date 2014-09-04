@@ -34,6 +34,7 @@ from mdtraj.utils.unit import in_units_of, _str_to_unit
 from mdtraj.utils import import_, lengths_and_angles_to_box_vectors
 from mdtraj.testing import raises, eq
 import warnings
+from itertools import combinations
 
 ##############################################################################
 # globals
@@ -111,7 +112,7 @@ def test_ensure_type_8():
 def test_ensure_type_9():
     c = ensure_type(np.zeros((5,11)), np.float32, ndim=2, name='', shape=(None, 10))
 
-@raises(TypeError)
+@raises(ValueError)
 def test_ensure_type_10():
     c = ensure_type([0,1], np.float32, ndim=2, name='')
 
@@ -126,6 +127,20 @@ def test_ensure_type_12():
 @raises(ValueError)
 def test_ensure_type_13():
     ensure_type(np.zeros((2,2)), np.float32, ndim=2, name='', shape=(None, None, None))
+
+def test_ensure_type_14():
+    # test that the generators work
+    value = ensure_type(combinations(range(10), 2), int, ndim=2, name='')
+    assert isinstance(value, np.ndarray)
+    ref = np.array(list(combinations(range(10), 2)))
+    eq(value, ref)
+
+def test_ensure_type_15():
+    # test that lists
+    x = [1, 2, 3]
+    value = ensure_type(x, int, ndim=1, name='')
+    ref = np.array(x)
+    eq(value, ref)
 
 @raises(ImportError)
 def test_delay_import_fail_1():
