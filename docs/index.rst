@@ -50,12 +50,7 @@ installed under the name ``mdconvert``.
 .. raw:: html
 
    <div style="display:none">
-   <script type="text/javascript">
-   $(document).ready(function() {
-       $('a.reference.external[href$="http://discourse.mdtraj.org"]')
-           .text('Discussion Forums');
-   });
-   </script>
+
 
 --------------------------------------------------------------------------------
 
