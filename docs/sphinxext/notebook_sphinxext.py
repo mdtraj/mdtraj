@@ -1,4 +1,4 @@
-import os, shutil, string, glob
+import os, shutil, glob
 from sphinx.util.compat import Directive
 from docutils import nodes
 from docutils.parsers.rst import directives
