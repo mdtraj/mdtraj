@@ -1,7 +1,7 @@
 ## MDTraj: Molecular dynamics trajectory analysis in python
 
-[![Travis Build Status](https://travis-ci.org/rmcgibbo/mdtraj.png?branch=master)](https://travis-ci.org/rmcgibbo/mdtraj)
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/01vpwbceulj4jix3)](https://ci.appveyor.com/project/rmcgibbo/mdtraj)
+[![Travis Build Status](https://travis-ci.org/simtk/mdtraj.png?branch=master)](https://travis-ci.org/simtk/mdtraj)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/01vpwbceulj4jix3)](https://ci.appveyor.com/project/simtk/mdtraj)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.png)](https://pypi.python.org/pypi/mdtraj)
 [![Binstar Badge](https://binstar.org/omnia/mdtraj/badges/version.svg)](https://binstar.org/omnia/mdtraj)
 [![Downloads](https://pypip.in/d/mdtraj/badge.png)](https://pypi.python.org/pypi/mdtraj)
@@ -15,6 +15,6 @@ With MDTraj, you can
 - Use tons of analysis functions like bonds/angles/dihedrals, hydrogen bonding identification, secondary structure assignment, NMR observables.
 - Use a **lightweight API**, with a focus on **speed** and vectorized operations.
 
-For details, see the website at [mdtraj.org](http://mdtraj.org). To get involed, take a look at the [github issue tracker](https://github.com/rmcgibbo/mdtraj/issues) and/or the user forums [discourse.mdtraj.org](http://discourse.mdtraj.org).
+For details, see the website at [mdtraj.org](http://mdtraj.org). To get involed, take a look at the [github issue tracker](https://github.com/simtk/mdtraj/issues) and/or the user forums [discourse.mdtraj.org](http://discourse.mdtraj.org).
 
 License: LGPL 2.1+ Various sub-portions of this library may be individually distributed under different licenses. See those files for their specific terms.
