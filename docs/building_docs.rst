@@ -1,7 +1,7 @@
 .. _building-docs:
 
 Building the documentation
---------------------------
+==========================
 
 The MDTraj documentation is built using `sphinx <http://sphinx-doc.org/>`_ and requires a few dependencies like `ipython <http://ipython.org/>`_ and `matplotlib <http://matplotlib.org/>`_ that you probably already have installed. We use `travis-ci <https://travis-ci.org/>`_ for continuous integration (running the tests), and also for building the documentation, which is built and pushed directly to Amazon S3 after every successful build.
 
@@ -21,7 +21,9 @@ Now, go back to the docs subdirectory in the main repository. The documentation 
     cd docs
     make html
 
-## Building the documentation on Python 3
+
+Building the documentation on Python 3
+---------------------------------------
 
 Numpydoc 0.5 is not compatible with Python 3. At the time of writing, v0.6 is unreleased, but the development version can be used to build the MDTraj documentation.
 
