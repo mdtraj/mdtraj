@@ -34,7 +34,8 @@ import sphinx_rtd_theme
 extensions = ['sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.autosummary',
               'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'numpydoc',
               'sphinx.ext.intersphinx', 'sphinx.ext.viewcode',
-              'ipython_console_highlighting', 'ipython_directive',
+              'IPython.sphinxext.ipython_console_highlighting',
+              'IPython.sphinxext.ipython_directive',
               'matplotlib.sphinxext.plot_directive']
 
 autosummary_generate = True
