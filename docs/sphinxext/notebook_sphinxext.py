@@ -1,9 +1,14 @@
-import os, shutil, string, glob
+import os
+import shutil
+import glob
+
 from sphinx.util.compat import Directive
 from docutils import nodes
 from docutils.parsers.rst import directives
 from IPython.nbconvert import html, python
+
 from runipy.notebook_runner import NotebookRunner
+
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 IPYTHON_NOTEBOOK_DIR = "%s/../../examples" % HERE
