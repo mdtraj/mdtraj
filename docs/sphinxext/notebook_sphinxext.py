@@ -46,15 +46,15 @@ class NotebookDirective(Directive):
         except IOError:
             raise RuntimeError("Unable to copy notebook to build destination. %s -> %s" % (nb_abs_path, dest_path))
 
-        dest_path_eval = string.replace(dest_path, '.ipynb', '_evaluated.ipynb')
-        dest_path_script = string.replace(dest_path, '.ipynb', '.py')
-        rel_path_eval = string.replace(nb_basename, '.ipynb', '_evaluated.ipynb')
-        rel_path_script = string.replace(nb_basename, '.ipynb', '.py')
+        dest_path_eval = dest_path.replace('.ipynb', '_evaluated.ipynb')
+        dest_path_script = dest_path.replace('.ipynb', '.py')
+        rel_path_eval = nb_basename.replace('.ipynb', '_evaluated.ipynb')
+        rel_path_script = nb_basename.replace('.ipynb', '.py')
 
         # Create python script vesion
         unevaluated_text = nb_to_html(nb_abs_path)
         script_text = nb_to_python(nb_abs_path)
-        f = open(dest_path_script, 'w')
+        f = open(dest_path_script, 'wb')
         f.write(script_text.encode('utf8'))
         f.close()
 
