@@ -273,3 +273,4 @@ texinfo_documents = [
 #texinfo_show_urls = 'footnote'
 
 autodoc_member_order = 'bysource'
+numpydoc_show_class_members = False
