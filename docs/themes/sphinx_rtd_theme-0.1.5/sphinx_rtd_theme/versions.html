@@ -11,7 +11,7 @@ $(document).ready(function() {
 // get all of the releases from github, and use these to populate the
 // dropdown menu of different releases
 $(document).ready(function() {
-    $.get("https://api.github.com/repos/rmcgibbo/mdtraj/releases")
+    $.get("https://api.github.com/repos/SimTk/mdtraj/releases")
       .done(function(data) {
           numItems = data.length;
           tag_names = [];
