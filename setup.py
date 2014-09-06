@@ -17,7 +17,7 @@ import shutil
 import tempfile
 import subprocess
 from distutils.ccompiler import new_compiler
-from distutils.sysconfig import customize_compiler
+from distutils.sysconfig import customize_compiler, get_config_vars
 try:
     from setuptools import setup, Extension
 except ImportError:
@@ -176,6 +176,16 @@ if not release:
 ################################################################################
 
 class CompilerDetection(object):
+    # Necessary for OSX. See https://github.com/SimTk/mdtraj/issues/576
+    # The problem is that distutils.sysconfig.customize_compiler()
+    # is necessary to properly invoke the correct compiler for this class
+    # (otherwise the CC env variable isn't respected). Unfortunately,
+    # distutils.sysconfig.customize_compiler() DIES on OSX unless some
+    # appropriate initialization routines have been called. This line
+    # has a side effect of calling those initialzation routes, and is therefor
+    # necessary for OSX, even though we don't use the result.
+    _DONT_REMOVE_ME = get_config_vars()
+
     def __init__(self, disable_openmp):
         cc = new_compiler()
         customize_compiler(cc)
@@ -223,7 +233,7 @@ class CompilerDetection(object):
                 cc.initialize()
             cc.spawn([cc.cc])
         else:
-            cc.spawn(cc.compiler + ['-v'])
+            cc.spawn([cc.compiler[0]] + ['-v'])
 
     def hasfunction(self, cc, funcname, include=None, extra_postargs=None):
         # From http://stackoverflow.com/questions/
