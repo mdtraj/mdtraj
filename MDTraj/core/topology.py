@@ -377,8 +377,8 @@ class Topology(object):
             raise TypeError('bonds must be an instance of numpy.ndarray. '
                             'You supplied a %s' % type(bonds))
 
-        if not np.all(np.arange(len(atoms)) == atoms.index):
-            raise ValueError('atoms must be uniquely numbered starting from zero.')
+        #if not np.all(np.arange(len(atoms)) == atoms.index):  # This is no longer the case, as the serial entry is used as the index.
+            #raise ValueError('atoms must be uniquely numbered starting from zero.')
         out._atoms = [None for i in range(len(atoms))]
         for ci in np.unique(atoms['chainID']):
             chain_atoms = atoms[atoms['chainID'] == ci]
@@ -392,18 +392,22 @@ class Topology(object):
                     raise ValueError('All of the atoms with residue index %d do not share the same residue name' % ri)
                 r = out.add_residue(residue_name, c, ri)
 
-                for ai, atom in residue_atoms.iterrows():
-                    ai = int(ai)  # Fixes bizarre hashing issue on Py3K.  See #545
+                for atom_index, (serial, atom) in enumerate(residue_atoms.iterrows()):
+                    print(atom_index, serial)
+                    print(atom)
+                    serial = int(serial)  # Fixes bizarre hashing issue on Py3K.  See #545
                     if atom['element'] == "":
                         element = None
                     else:
                         element = elem.get_by_symbol(atom['element'])
-                    a = Atom(atom['name'], element, ai, r, serial=atom["serial"])
-                    out._atoms[ai] = a
+                    a = Atom(atom['name'], element, atom_index, r, serial=serial)
+                    out._atoms[atom_index] = a
                     r._atoms.append(a)
 
         if bonds is not None:
             for ai1, ai2 in bonds:
+                print(ai1, ai2)
+                print(out.atom(ai1), out.atom(ai2))
                 out.add_bond(out.atom(ai1), out.atom(ai2))
 
         out._numAtoms = out.n_atoms
