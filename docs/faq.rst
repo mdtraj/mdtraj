@@ -21,10 +21,10 @@ Frequently Asked Questions
    compiler.)
 
    .. note::
-   
-   For pande lab members on vsp-compute, set the environment variable ``CC`` to
-   ``gcc44``, and then recompile from source ::
 
-       export CC=gcc44
+   For Pande lab members on ``vsp-compute``, set the environment variable
+   ``CC`` to ``gcc44``, and then recompile from source ::
 
-    
+       $ cd path-to-mdtraj/
+       $ export CC=gcc44
+       $ python setup.py install
