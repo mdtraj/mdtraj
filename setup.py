@@ -17,6 +17,7 @@ import shutil
 import tempfile
 import subprocess
 from distutils.ccompiler import new_compiler
+from distutils.sysconfig import customize_compiler
 try:
     from setuptools import setup, Extension
 except ImportError:
@@ -177,6 +178,8 @@ if not release:
 class CompilerDetection(object):
     def __init__(self, disable_openmp):
         cc = new_compiler()
+        customize_compiler(cc)
+
         self.msvc = cc.compiler_type == 'msvc'
         self._print_compiler_version(cc)
 
@@ -265,6 +268,7 @@ class CompilerDetection(object):
     def _detect_openmp(self):
         self._print_support_start('OpenMP')
         compiler = new_compiler()
+        customize_compiler(compiler)
         hasopenmp = self.hasfunction(compiler, 'omp_get_num_threads()', extra_postargs=['-fopenmp', '/openmp'])
         needs_gomp = hasopenmp
         if not hasopenmp:
@@ -277,6 +281,7 @@ class CompilerDetection(object):
     def _detect_sse3(self):
         "Does this compiler support SSE3 intrinsics?"
         compiler = new_compiler()
+        customize_compiler(compiler)
         self._print_support_start('SSE3')
         result = self.hasfunction(compiler, '__m128 v; _mm_hadd_ps(v,v)',
                            include='<pmmintrin.h>',
@@ -287,6 +292,7 @@ class CompilerDetection(object):
     def _detect_sse41(self):
         "Does this compiler support SSE4.1 intrinsics?"
         compiler = new_compiler()
+        customize_compiler(compiler)
         self._print_support_start('SSE4.1')
         result = self.hasfunction(compiler, '__m128 v; _mm_round_ps(v,0x00)',
                            include='<smmintrin.h>',

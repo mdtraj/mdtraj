@@ -19,4 +19,12 @@ Frequently Asked Questions
    packages, or getting a more modern compiler. (When building MDTraj from
    source, you can set the ``CC`` environment variable to point to a different
    compiler.)
+
+   .. note::
    
+   For pande lab members on vsp-compute, set the environment variable ``CC`` to
+   ``gcc44``, and then recompile from source ::
+
+       export CC=gcc44
+
+    
