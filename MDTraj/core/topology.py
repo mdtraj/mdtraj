@@ -93,7 +93,7 @@ def _topology_from_subset(topology, atom_indices):
             newResidue = newTopology.add_residue(residue.name, newChain, resSeq)
             for atom in residue._atoms:
                 if atom.index in atom_indices:
-                    newAtom = newTopology.add_atom(atom.name, atom.element, newResidue)
+                    newAtom = newTopology.add_atom(atom.name, atom.element, newResidue, serial=atom.serial)
                     old_atom_to_new_atom[atom] = newAtom
 
     bondsiter = topology.bonds
@@ -209,7 +209,7 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq)
                 for atom in residue.atoms:
-                    out.add_atom(atom.name, atom.element, r)
+                    out.add_atom(atom.name, atom.element, r, serial=atom.serial)
 
         for a1, a2 in self.bonds:
             out.add_bond(a1, a2)
@@ -246,7 +246,7 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq)
                 for atom in residue.atoms:
-                    a = out.add_atom(atom.name, atom.element, r)
+                    a = out.add_atom(atom.name, atom.element, r, serial=atom.serial)
                     atom_mapping[atom] = a
 
         for a1, a2 in other.bonds:
@@ -272,7 +272,7 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.addResidue(residue.name, c)
                 for atom in residue.atoms:
-                    a = out.addAtom(atom.name, app.Element.getBySymbol(atom.element.symbol), r)
+                    a = out.addAtom(atom.name, app.Element.getBySymbol(atom.element.symbol), r, serial=atom.serial)
                     atom_mapping[atom] = a
 
         for a1, a2 in self.bonds:
@@ -304,7 +304,7 @@ class Topology(object):
             for residue in chain.residues():
                 r = out.add_residue(residue.name, c)
                 for atom in residue.atoms():
-                    a = out.add_atom(atom.name, elem.get_by_symbol(atom.element.symbol), r)
+                    a = out.add_atom(atom.name, elem.get_by_symbol(atom.element.symbol), r, serial=atom.serial)
                     atom_mapping[atom] = a
 
         for a1, a2 in value.bonds():
@@ -330,7 +330,7 @@ class Topology(object):
                 element_symbol = ""
             else:
                 element_symbol = atom.element.symbol
-            data.append((atom.index, atom.name, element_symbol,
+            data.append((atom.serial, atom.name, element_symbol,
                          atom.residue.resSeq, atom.residue.name,
                          atom.residue.chain.index))
 
@@ -398,7 +398,7 @@ class Topology(object):
                         element = None
                     else:
                         element = elem.get_by_symbol(atom['element'])
-                    a = Atom(atom['name'], element, ai, r)
+                    a = Atom(atom['name'], element, ai, r, serial=atom["serial"])
                     out._atoms[ai] = a
                     r._atoms.append(a)
 
@@ -531,7 +531,7 @@ class Topology(object):
         chain._residues.append(residue)
         return residue
 
-    def add_atom(self, name, element, residue):
+    def add_atom(self, name, element, residue, serial=None):
         """Create a new Atom and add it to the Topology.
 
         Parameters
@@ -548,7 +548,7 @@ class Topology(object):
         atom : mdtraj.topology.Atom
             the newly created Atom
         """
-        atom = Atom(name, element, self._numAtoms, residue)
+        atom = Atom(name, element, self._numAtoms, residue, serial=serial)
         self._atoms.append(atom)
         self._numAtoms += 1
         residue._atoms.append(atom)
@@ -1036,7 +1036,7 @@ class Atom(object):
         The Residue this Atom belongs to
     """
 
-    def __init__(self, name, element, index, residue):
+    def __init__(self, name, element, index, residue, serial=None):
         """Construct a new Atom.  You should call add_atom() on the Topology instead of calling this directly."""
         ## The name of the Atom
         self.name = name
@@ -1046,6 +1046,11 @@ class Atom(object):
         self.index = index
         ## The Residue this Atom belongs to
         self.residue = residue
+        
+        if serial:
+            self.serial = serial
+        else:
+            self.serial = self.index
 
     def __eq__(self, other):
         """ Check whether two Atom objects are equal. """

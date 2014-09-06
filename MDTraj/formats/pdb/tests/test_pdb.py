@@ -195,6 +195,24 @@ def test_3nch_conect():
     eq(bonds[19782, 19785], 1)  # Check that last SO4 molecule has right bonds
     eq(bonds[19782, 19786], 1)  # Check that last SO4 molecule has right bonds
 
+
+def test_3nch_serial_resSeq():
+    # If you use zero-based indexing, this PDB has quite large gaps in residue and atom numbering, so it's a good test case.  See #528
+    # Gold standard values obtained via
+    # cat 3nch.pdb |grep ATM|tail -n 5
+    # HETATM19787  S   SO4 D 804      -4.788  -9.395  22.515  1.00121.87           S  
+    # HETATM19788  O1  SO4 D 804      -3.815  -9.511  21.425  1.00105.97           O  
+    # HETATM19789  O2  SO4 D 804      -5.989  -8.733  21.999  1.00116.13           O  
+    # HETATM19790  O3  SO4 D 804      -5.130 -10.726  23.043  1.00108.74           O  
+    # HETATM19791  O4  SO4 D 804      -4.210  -8.560  23.575  1.00112.54           O  
+    t1 = load_pdb(get_fn('3nch.pdb.gz'))
+    top, bonds = t1.top.to_dataframe()
+    eq(str(top.ix[19791]["name"]), "O4")
+    eq(str(top.ix[19787]["name"]), "S")
+    eq(str(top.ix[19787]["resName"]), "SO4")
+    eq(int(top.ix[19787]["resSeq"]), 804)
+
+
 def test_1ncw():
     t1 = load_pdb(get_fn('1ncw.pdb.gz'))
 
