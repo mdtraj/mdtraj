@@ -826,8 +826,8 @@ void main()\n\
         if (maxD < 25) maxD = 25;
         this.slabNear = -maxD * 0.50;
         this.slabFar  =  maxD * 0.25;
-        this.rot.position.z = maxD * 0.35 / Math.tan(Math.PI / 180.0 * 10) - 150;
-        this.rot.quaternion.set(1, 0, 0, 0);
+        //this.rot.position.z = maxD * 0.35 / Math.tan(Math.PI / 180.0 * 10) - 150;
+        //this.rot.quaternion.set(1, 0, 0, 0);
         this.render();
     },
 
@@ -862,10 +862,10 @@ void main()\n\
 		this.mdl.position.copy(psum).multiplyScalar(-1 / cnt);
 		var maxD = pmax.distanceTo(pmin);
 		if (maxD < 25) maxD = 25;
-		this.slabNear = -maxD * 0.50;
-		this.slabFar  =  maxD * 0.25;
-		this.rot.position.z = maxD * 0.35 / Math.tan(Math.PI / 180.0 * 10) - 150;
-		this.rot.quaternion.set(1, 0, 0, 0);
+		//this.slabNear = -maxD * 0.50;
+		//this.slabFar  =  maxD * 0.25;
+		//this.rot.position.z = maxD * 0.35 / Math.tan(Math.PI / 180.0 * 10) - 150;
+		//this.rot.quaternion.set(1, 0, 0, 0);
 		this.render();
     },
 
