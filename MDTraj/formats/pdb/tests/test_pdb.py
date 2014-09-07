@@ -207,6 +207,7 @@ def test_3nch_serial_resSeq():
     # HETATM19791  O4  SO4 D 804      -4.210  -8.560  23.575  1.00112.54           O  
     t1 = load_pdb(get_fn('3nch.pdb.gz'))
     top, bonds = t1.top.to_dataframe()
+    top = top.set_index('serial')  # Index by the actual data in the PDB
     eq(str(top.ix[19791]["name"]), "O4")
     eq(str(top.ix[19787]["name"]), "S")
     eq(str(top.ix[19787]["resName"]), "SO4")

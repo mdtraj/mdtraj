@@ -340,7 +340,7 @@ class Topology(object):
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
                                             "resSeq", "resName", "chainID"])
-        atoms = atoms.set_index("serial")
+
         bonds = np.array([(a.index, b.index) for (a, b) in self.bonds])
         return atoms, bonds
 
@@ -385,8 +385,6 @@ class Topology(object):
             #raise ValueError('atoms must be uniquely numbered starting from zero.')
         out._atoms = [None for i in range(len(atoms))]
 
-        atom_index = 0
-
         for ci in np.unique(atoms['chainID']):
             chain_atoms = atoms[atoms['chainID'] == ci]
             c = out.add_chain()
@@ -399,8 +397,9 @@ class Topology(object):
                     raise ValueError('All of the atoms with residue index %d do not share the same residue name' % ri)
                 r = out.add_residue(residue_name, c, ri)
 
-                for serial, atom in residue_atoms.iterrows():
-                    serial = int(serial)  # Fixes bizarre hashing issue on Py3K.  See #545
+                for atom_index, atom in residue_atoms.iterrows():
+                    atom_index = int(atom_index)  # Fixes bizarre hashing issue on Py3K.  See #545
+                    serial = atom["serial"]
                     if atom['element'] == "":
                         element = None
                     else:
@@ -408,7 +407,6 @@ class Topology(object):
                     a = Atom(atom['name'], element, atom_index, r, serial=serial)
                     out._atoms[atom_index] = a
                     r._atoms.append(a)
-                    atom_index += 1
 
         if bonds is not None:
             for ai1, ai2 in bonds:
