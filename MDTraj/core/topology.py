@@ -381,8 +381,8 @@ class Topology(object):
             raise TypeError('bonds must be an instance of numpy.ndarray. '
                             'You supplied a %s' % type(bonds))
 
-        #if not np.all(np.arange(len(atoms)) == atoms.index):  # This is no longer the case, as the serial entry is used as the index.
-            #raise ValueError('atoms must be uniquely numbered starting from zero.')
+        if not np.all(np.arange(len(atoms)) == atoms.index):
+            raise ValueError('atoms must be uniquely numbered starting from zero.')
         out._atoms = [None for i in range(len(atoms))]
 
         for ci in np.unique(atoms['chainID']):
