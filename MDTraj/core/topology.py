@@ -93,7 +93,7 @@ def _topology_from_subset(topology, atom_indices):
             newResidue = newTopology.add_residue(residue.name, newChain, resSeq)
             for atom in residue._atoms:
                 if atom.index in atom_indices:
-                    try:
+                    try:  # OpenMM Topology objects don't have serial attributes, so we have to check first.
                         serial = atom.serial
                     except AttributeError:
                         serial = None
