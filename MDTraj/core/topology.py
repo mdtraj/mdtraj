@@ -93,7 +93,11 @@ def _topology_from_subset(topology, atom_indices):
             newResidue = newTopology.add_residue(residue.name, newChain, resSeq)
             for atom in residue._atoms:
                 if atom.index in atom_indices:
-                    newAtom = newTopology.add_atom(atom.name, atom.element, newResidue, serial=atom.serial)
+                    try:
+                        serial = atom.serial
+                    except AttributeError:
+                        serial = None
+                    newAtom = newTopology.add_atom(atom.name, atom.element, newResidue, serial=serial)
                     old_atom_to_new_atom[atom] = newAtom
 
     bondsiter = topology.bonds
@@ -272,7 +276,7 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.addResidue(residue.name, c)
                 for atom in residue.atoms:
-                    a = out.addAtom(atom.name, app.Element.getBySymbol(atom.element.symbol), r, serial=atom.serial)
+                    a = out.addAtom(atom.name, app.Element.getBySymbol(atom.element.symbol), r)
                     atom_mapping[atom] = a
 
         for a1, a2 in self.bonds:
@@ -304,7 +308,7 @@ class Topology(object):
             for residue in chain.residues():
                 r = out.add_residue(residue.name, c)
                 for atom in residue.atoms():
-                    a = out.add_atom(atom.name, elem.get_by_symbol(atom.element.symbol), r, serial=atom.serial)
+                    a = out.add_atom(atom.name, elem.get_by_symbol(atom.element.symbol), r)
                     atom_mapping[atom] = a
 
         for a1, a2 in value.bonds():
@@ -380,6 +384,9 @@ class Topology(object):
         #if not np.all(np.arange(len(atoms)) == atoms.index):  # This is no longer the case, as the serial entry is used as the index.
             #raise ValueError('atoms must be uniquely numbered starting from zero.')
         out._atoms = [None for i in range(len(atoms))]
+
+        atom_index = 0
+
         for ci in np.unique(atoms['chainID']):
             chain_atoms = atoms[atoms['chainID'] == ci]
             c = out.add_chain()
@@ -392,9 +399,7 @@ class Topology(object):
                     raise ValueError('All of the atoms with residue index %d do not share the same residue name' % ri)
                 r = out.add_residue(residue_name, c, ri)
 
-                for atom_index, (serial, atom) in enumerate(residue_atoms.iterrows()):
-                    print(atom_index, serial)
-                    print(atom)
+                for serial, atom in residue_atoms.iterrows():
                     serial = int(serial)  # Fixes bizarre hashing issue on Py3K.  See #545
                     if atom['element'] == "":
                         element = None
@@ -403,11 +408,10 @@ class Topology(object):
                     a = Atom(atom['name'], element, atom_index, r, serial=serial)
                     out._atoms[atom_index] = a
                     r._atoms.append(a)
+                    atom_index += 1
 
         if bonds is not None:
             for ai1, ai2 in bonds:
-                print(ai1, ai2)
-                print(out.atom(ai1), out.atom(ai2))
                 out.add_bond(out.atom(ai1), out.atom(ai2))
 
         out._numAtoms = out.n_atoms
