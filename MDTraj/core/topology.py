@@ -1052,11 +1052,7 @@ class Atom(object):
         self.index = index
         ## The Residue this Atom belongs to
         self.residue = residue
-        
-        if serial:
-            self.serial = serial
-        else:
-            self.serial = self.index
+        self.serial = serial
 
     def __eq__(self, other):
         """ Check whether two Atom objects are equal. """
