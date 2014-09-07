@@ -30,8 +30,8 @@ def test_lprmsd_0():
 
 def test_lprmsd_1():
     # resolve a random rotation with no permutation
-    ref = random.randn(1, 20, 3).astype(np.float32)
-    mapping = np.arange(20)
+    ref = random.randn(1, 50, 3).astype(np.float32)
+    mapping = np.arange(50)
     rot = rotation_matrix_from_quaternion(uniform_quaternion())
     new = ref[:, mapping].dot(rot)
     
@@ -77,7 +77,7 @@ def test_lprmsd_3():
     t1.xyz[:, h2o_o_indices] += random.randn(len(h2o_o_indices), 3)
 
     print('final value', value)
-    assert value[0] < 1e-3
+    assert value[0] < 1e-2
 
 
 def test_lprmsd_4():
