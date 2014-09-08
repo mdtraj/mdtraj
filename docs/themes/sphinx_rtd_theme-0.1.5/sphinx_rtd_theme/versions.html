@@ -28,8 +28,8 @@ $(document).ready(function() {
            }
     });
 
-    if (!_.contains(tag_names, DOCUMENTATION_OPTIONS.VERSION)) {
-        // development
+    if (tag_names.indexOf(DOCUMENTATION_OPTIONS.VERSION) == -1) {
+        // current version not a tag -> development
         index = $('#versionselector').find('[value="latest"]').index();
     } else {
         index = $('#versionselector').find('[value="' + DOCUMENTATION_OPTIONS.VERSION + '"]').index();
