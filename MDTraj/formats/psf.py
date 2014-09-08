@@ -55,7 +55,7 @@ from __future__ import print_function, division
 
 from mdtraj.core import topology, element as elem
 from mdtraj.formats import pdb
-from mdtraj.utils import unit as u
+from mdtraj.utils.unit import unit_definitions as u
 
 __all__ = ['load_psf']
 
@@ -128,7 +128,7 @@ def _parse_psf_section(psf):
             line = psf.readline()
     if '!' in line:
         words = line[:line.index('!')].split()
-        title = line[line.index('!'):].strip().upper()
+        title = line[line.index('!')+1:].strip().upper()
         # Strip out the description
         if ':' in title:
             title = title[:title.index(':')]
@@ -253,14 +253,14 @@ def load_psf(fname):
         elif mass == 0:
             element = None
         else:
-            element = elem.getByMass(mass*u.dalton)
+            element = elem.Element.getByMass(mass*u.dalton)
         top.add_atom(name, element, r)
 
     # Add bonds to the topology
     atoms = list(top.atoms)
     bond_data = psfsections['NBOND'][1]
     nbond = _convert(psfsections['NBOND'][0], int, 'number of bonds')
-    if nbond != len(bond_data) * 2:
+    if len(bond_data) != nbond * 2:
         raise PSFError('Got %d indexes for %d bonds' % (len(bond_data), nbond))
 
     for i in range(nbond):

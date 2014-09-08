@@ -53,7 +53,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from __future__ import print_function, division
 import numpy as np
-from mdtraj.utils.unit import is_quantity, daltons
+from mdtraj.utils.unit.quantity import is_quantity
+from mdtraj.utils.unit.unit_definitions import daltons
 
 class Element(tuple):
     """An Element represents a chemical element.
@@ -126,9 +127,9 @@ class Element(tuple):
         Get the element whose mass is CLOSEST to the requested mass. This method
         should not be used for repartitioned masses
         """
-        # Assume masses are in daltons if they are not units
-        if not is_quantity(mass):
-            mass = mass * daltons
+        # Convert any masses to daltons
+        if is_quantity(mass):
+            mass = mass.value_in_unit(daltons)
         diff = mass
         best_guess = None
 
