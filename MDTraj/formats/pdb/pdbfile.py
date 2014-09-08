@@ -499,7 +499,7 @@ class PDBTrajectoryFile(object):
                     if element is None:
                         element = self._guess_element(atomName, residue)
 
-                    newAtom = self._topology.add_atom(atomName, element, r)
+                    newAtom = self._topology.add_atom(atomName, element, r, serial=atom.serial_number)
                     atomByNumber[atom.serial_number] = newAtom
 
         # load all of the positions (from every model)
