@@ -1336,7 +1336,7 @@ class Trajectory(object):
 
         return self
 
-    @deprecated('restrict_atoms was replaced by atom_slice and will be removed in 1.0')
+    @deprecated('restrict_atoms was replaced by atom_slice and will be removed in 2.0')
     def restrict_atoms(self, atom_indices, inplace=True):
         """Retain only a subset of the atoms in a trajectory
 

@@ -71,14 +71,14 @@ else:
 
 
 ##########################
-VERSION = "0.9.1"
-ISRELEASED = False
+VERSION = "1.0.0"
+ISRELEASED = True
 __version__ = VERSION
 ##########################
 
 
 CLASSIFIERS = """\
-Development Status :: 3 - Alpha
+Development Status :: 5 - Production/Stable
 Intended Audience :: Science/Research
 Intended Audience :: Developers
 License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)
