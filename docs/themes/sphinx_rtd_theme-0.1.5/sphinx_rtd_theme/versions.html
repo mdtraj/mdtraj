@@ -30,7 +30,7 @@ $(document).ready(function() {
 
     if (!_.contains(tag_names, DOCUMENTATION_OPTIONS.VERSION)) {
         // development
-        index = 0;
+        index = $('#versionselector').find('[value="latest"]').index();
     } else {
         index = $('#versionselector').find('[value="' + DOCUMENTATION_OPTIONS.VERSION + '"]').index();
     }
