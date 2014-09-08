@@ -53,6 +53,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from __future__ import print_function, division
 import numpy as np
+from mdtraj.utils.unit import is_quantity, daltons
 
 class Element(tuple):
     """An Element represents a chemical element.
@@ -118,6 +119,27 @@ class Element(tuple):
     def getByAtomicNumber(number):
         """ Get the element with a particular atomic number """
         return Element._elements_by_atomic_number[number]
+
+    @staticmethod
+    def getByMass(mass):
+        """
+        Get the element whose mass is CLOSEST to the requested mass. This method
+        should not be used for repartitioned masses
+        """
+        # Assume masses are in daltons if they are not units
+        if not is_quantity(mass):
+            mass = mass * daltons
+        diff = mass
+        best_guess = None
+
+        for key in Element._elements_by_atomic_number:
+            element = Element._elements_by_atomic_number[key]
+            massdiff = abs(element.mass - mass)
+            if massdiff < diff:
+                best_guess = element
+                diff = massdiff
+
+        return best_guess
 
     @property
     def number(self):

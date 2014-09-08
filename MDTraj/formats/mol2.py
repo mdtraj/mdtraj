@@ -54,8 +54,6 @@ import itertools
 
 from mdtraj.utils import import_
 from mdtraj.utils.six.moves import cStringIO as StringIO
-from mdtraj.formats import pdb
-from mdtraj.core import element as elem
 from mdtraj.formats.registry import _FormatRegistry
 
 __all__ = ['load_mol2', "mol2_to_dataframes"]
