@@ -42,7 +42,17 @@ function($, WidgetManager, iview) {
             this.setupContextMenu(iv);
             this.setupFullScreen(canvas, container);
             this.update();
-            
+            var options = {
+                'camera': this.model.attributes.camera,
+                'background': this.model.attributes.background,
+                'colorBy': this.model.attributes.colorBy,
+                'primaryStructure': this.model.attributes.primaryStructure,
+                'secondaryStructure': this.model.attributes.secondaryStructure,
+                'surface': this.model.attributes.surfaceRepresentation
+            };
+            this.iv.zoomInto(options);
+
+
             // debugging
             window.iv = this.iv;
             window.model = this.model;
@@ -70,7 +80,9 @@ function($, WidgetManager, iview) {
                 'secondaryStructure': this.model.attributes.secondaryStructure,
                 'surface': this.model.attributes.surfaceRepresentation
             };
-            this.iv.zoomInto(options);
+            
+            this.iv.rebuildScene(options)
+            this.iv.render()
 
             return TrajectoryView.__super__.update.apply(this);
         },
