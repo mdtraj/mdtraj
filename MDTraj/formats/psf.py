@@ -19,7 +19,11 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 #
-# Portions of this code originate from the OpenMM molecular simulation
+# Portions of this module originate from the ParmEd program, copyright (c) 2014
+# Jason Swails, which is also distributed under the GNU Lesser General Public
+# License
+#
+# Other portions of this code originate from the OpenMM molecular simulation
 # toolkit, copyright (c) 2012 Stanford University and Peter Eastman. Those
 # portions are distributed under the following terms:
 #
