@@ -29,6 +29,7 @@ from mdtraj.formats.pdb.pdbstructure import PdbStructure
 from mdtraj.testing import get_fn, eq, raises
 from mdtraj import load, load_pdb
 from mdtraj.utils import ilen
+from mdtraj import Topology
 
 pdb = get_fn('native.pdb')
 fd, temp = tempfile.mkstemp(suffix='.pdb')
@@ -207,12 +208,15 @@ def test_3nch_serial_resSeq():
     # HETATM19791  O4  SO4 D 804      -4.210  -8.560  23.575  1.00112.54           O  
     t1 = load_pdb(get_fn('3nch.pdb.gz'))
     top, bonds = t1.top.to_dataframe()
+    
+    top2 = Topology.from_dataframe(top, bonds)
+    eq(t1.top, top2)
+    
     top = top.set_index('serial')  # Index by the actual data in the PDB
     eq(str(top.ix[19791]["name"]), "O4")
     eq(str(top.ix[19787]["name"]), "S")
     eq(str(top.ix[19787]["resName"]), "SO4")
     eq(int(top.ix[19787]["resSeq"]), 804)
-
 
 def test_1ncw():
     t1 = load_pdb(get_fn('1ncw.pdb.gz'))
