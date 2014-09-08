@@ -1,20 +1,9 @@
 <script>
-// when the user changes their selection in the dropdown menu, navigate
-// to a new set of root documentation
-$(document).ready(function() {
-    $('#versionselector').change(function(){
-        window.location.href = "/" + $('#versionselector').val();
-    });
-});
-
-
-// get all of the releases from github, and use these to populate the
-// dropdown menu of different releases
 $(document).ready(function() {
     $.get("https://api.github.com/repos/SimTk/mdtraj/releases")
       .done(function(data) {
-          numItems = data.length;
           tag_names = [];
+          numItems = data.length;
           for (var i = 0; i < numItems; i++) {
               tag_names.push(data[i].tag_name);
           }
@@ -24,9 +13,24 @@ $(document).ready(function() {
               var key = tag_names[i];
               $('#versionselector')
                 .append($('<option></option>', { value : key})
-                .text(key)); 
+                .text(key));
            }
-      });
+       if (tag_names.indexOf(DOCUMENTATION_OPTIONS.VERSION) == -1) {
+           // current version not a tag -> development
+           index = $('#versionselector').find('[value="latest"]').index();
+       } else {
+           index = $('#versionselector').find('[value="' + DOCUMENTATION_OPTIONS.VERSION + '"]').index();
+       }
+
+       // set the default vaue of the dropdown
+       $('#versionselector').prop('selectedIndex', index);
+
+       // when the user changes their selection in the dropdown menu, navigate
+       // to a new set of root documentation
+       $('#versionselector').change(function(){
+           window.location.href = "/" + $('#versionselector').val();
+       });
+    });
 });
 </script>
 
@@ -38,9 +42,7 @@ $(document).ready(function() {
 <span class="rst-current-version" data-toggle="rst-current-version">
   <span class="icon icon-book"> Versions</span>
   <form><select id="versionselector">
-      <option value="latest">latest</option>
+      <option value="latest">development</option>
   </select></form>
 </span>
 </div>
-
-
