@@ -42,7 +42,10 @@ function($, WidgetManager, iview) {
             this.setupContextMenu(iv);
             this.setupFullScreen(canvas, container);
             this.update();
-            
+            var options = this.getOptions() 
+            this.iv.zoomInto(options);
+
+
             // debugging
             window.iv = this.iv;
             window.model = this.model;
@@ -61,16 +64,10 @@ function($, WidgetManager, iview) {
             this.iv.loadTopology(this.model.attributes._topology);
             this.iv.loadCoordinates(this.model.attributes._frameData.coordinates);
             this.iv.loadAtomAttributes(this.model.attributes._frameData.secondaryStructure);
-
-            var options = {
-                'camera': this.model.attributes.camera,
-                'background': this.model.attributes.background,
-                'colorBy': this.model.attributes.colorBy,
-                'primaryStructure': this.model.attributes.primaryStructure,
-                'secondaryStructure': this.model.attributes.secondaryStructure,
-                'surface': this.model.attributes.surfaceRepresentation
-            };
-            this.iv.zoomInto(options);
+           
+            var options = this.getOptions() 
+            this.iv.rebuildScene(options)
+            this.iv.render()
 
             return TrajectoryView.__super__.update.apply(this);
         },
@@ -103,6 +100,20 @@ function($, WidgetManager, iview) {
                 }];
             context.attach('canvas',menu)
             
+        },
+
+        getOptions : function() {
+
+             var options = {
+                'camera': this.model.attributes.camera,
+                'background': this.model.attributes.background,
+                'colorBy': this.model.attributes.colorBy,
+                'primaryStructure': this.model.attributes.primaryStructure,
+                'secondaryStructure': this.model.attributes.secondaryStructure,
+                'surface': this.model.attributes.surfaceRepresentation
+             };
+        
+             return options
         },
 
         setupFullScreen : function(canvas, container) {
