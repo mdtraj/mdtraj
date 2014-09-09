@@ -115,6 +115,7 @@ function($, WidgetManager, iview) {
         
              return options
         },
+
         setupFullScreen : function(canvas, container) {
             // currently only works in chrome. need other prefixes for firefox
             var iv = this.iv;
