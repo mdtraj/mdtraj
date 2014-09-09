@@ -25,7 +25,6 @@ import mdtraj as md
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
 from mdtraj.formats import psf
 from mdtraj.utils import enter_temp_directory
-from subprocess import check_output
 from distutils.spawn import find_executable
 
 doc = DocStringFormatTester(psf)
@@ -55,9 +54,14 @@ def test_vmd_psf():
 
 
 def _test_against_vmd(pdb):
-    top = os.path.join(os.path.dirname(VMD), '..', 'lib', 'plugins', 'noarch',
-                       'tcl', 'readcharmmtop1.0', 'top_all27_prot_lipid_na.inp')
-    assert os.path.exists(top)
+    # this is probably not cross-platform compatible. I assume that the exact
+    # path to this CHARMM topology that is included with VMD depends on
+    # the install mechanism, especially for bundled mac or windows installers
+    VMD_ROOT = os.path.join(os.path.dirname(VMD), '..')
+    top_paths = [os.path.join(r, f) for (r, _, fs) in os.walk(VMD_ROOT) for f in fs
+         if 'top_all27_prot_lipid_na.inp' in f]
+    assert len(top_paths) >= 0
+    top = top_paths[0]
 
     TEMPLATE = '''
 package require psfgen
@@ -75,7 +79,7 @@ exit
     with enter_temp_directory():
         with open('script.tcl', 'w') as f:
             f.write(TEMPLATE)
-        check_output([VMD, '-e', 'script.tcl', '-dispdev', 'none'])
+        os.system(' '.join([VMD, '-e', 'script.tcl', '-dispdev', 'none']))
         out_pdb = md.load('out.pdb')
         out_psf = md.load_psf('out.psf')
 
