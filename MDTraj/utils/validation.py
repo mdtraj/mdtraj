@@ -29,6 +29,7 @@ from __future__ import print_function, division
 import warnings
 import numbers
 import numpy as np
+import collections
 from mdtraj.utils.six.moves import zip_longest
 
 ##############################################################################
@@ -93,10 +94,18 @@ def ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=No
         return None
 
     if not isinstance(val, np.ndarray):
-        # special case: if the user is looking for a 1d array, and
-        # they request newaxis upconversion, and provided a scalar
-        # then we should reshape the scalar to be a 1d length-1 array
-        if add_newaxis_on_deficient_ndim and ndim == 1 and np.isscalar(val):
+        if isinstance(val, collections.Iterable):
+            # If they give us an iterator, let's try...
+            if isinstance(val, collections.Sequence):
+                # sequences are easy. these are like lists and stuff
+                val = np.array(val, dtype=dtype)
+            else:
+                # this is a generator...
+                val = np.array(list(val), dtype=dtype)
+        elif np.isscalar(val) and add_newaxis_on_deficient_ndim and ndim == 1:
+            # special case: if the user is looking for a 1d array, and
+            # they request newaxis upconversion, and provided a scalar
+            # then we should reshape the scalar to be a 1d length-1 array
             val = np.array([val])
         else:
             raise TypeError(("%s must be numpy array. "
