@@ -22,7 +22,15 @@
 #define CLIP(X, X_min, X_max) (MIN(MAX(X, X_min), X_max))
 
 #ifndef __SSE4_1__
-#error
+/* If we don't have the required instruction set, we just want to compile
+   a stub. This function will never be called (hopefully), because from the
+   python wrappers we always call processorSupportsSSE41 before trying
+   to call this function.
+*/
+int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
+         const int* is_proline, const int* chain_ids, const int n_frames,
+         const int n_atoms, const int n_residues, char* secondary)
+{exit(EXIT_FAILURE);}
 #else
 #include <pmmintrin.h>
 #include <smmintrin.h>

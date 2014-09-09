@@ -38,6 +38,12 @@ pairs = np.array(list(itertools.combinations(range(N_ATOMS), 2)), dtype=np.int32
 ptraj = md.Trajectory(xyz=xyz, topology=None)
 ptraj.unitcell_vectors = np.ascontiguousarray(np.random.randn(N_FRAMES, 3, 3) + 2*np.eye(3,3), dtype=np.float32)
 
+def test_generator():
+    pairs2 = itertools.combinations(range(N_ATOMS), 2)
+    a = compute_distances(ptraj, pairs)
+    b = compute_distances(ptraj, pairs2)
+    eq(a, b)
+
 def test_0():
     a = compute_distances(ptraj, pairs, periodic=False, opt=True)
     b = compute_distances(ptraj, pairs, periodic=False, opt=False)

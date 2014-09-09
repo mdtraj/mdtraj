@@ -243,7 +243,8 @@ class PDBTrajectoryFile(object):
 
         self._open = True
 
-    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, unitcell_angles=None):
+    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, 
+              unitcell_angles=None, bfactors=None):
         """Write a PDB file to disk
 
         Parameters
@@ -259,6 +260,9 @@ class PDBTrajectoryFile(object):
             Lengths of the three unit cell vectors, or None for a non-periodic system
         unitcell_angles : {tuple, None}
             Angles between the three unit cell vectors, or None for a non-periodic system
+        bfactors : array_like, default=None, shape=(n_atoms,)
+            Save bfactors with pdb file. Should contain a single number for
+            each atom in the topology
         """
         if not self._mode == 'w':
             raise ValueError('file not opened for writing')
@@ -274,6 +278,14 @@ class PDBTrajectoryFile(object):
             raise ValueError('Particle position is infinite')
         
         self._last_topology = topology  # Hack to save the topology of the last frame written, allows us to output CONECT entries in write_footer()
+
+        if bfactors is None:
+            bfactors = ['{0:5.2f}'.format(0.0)] * len(positions)
+        else:
+            if (np.max(bfactors) >= 100) or (np.min(bfactors) <= -10):
+                raise ValueError("bfactors must be in (-10, 100)")
+
+            bfactors = ['{0:5.2f}'.format(b) for b in bfactors]
         
         atomIndex = 1
         posIndex = 0
@@ -299,10 +311,11 @@ class PDBTrajectoryFile(object):
                         symbol = atom.element.symbol
                     else:
                         symbol = ' '
-                    line = "ATOM  %5d %-4s %3s %s%4d    %s%s%s  1.00  0.00          %2s  " % (
+                    line = "ATOM  %5d %-4s %3s %s%4d    %s%s%s  1.00 %s          %2s  " % (
                         atomIndex % 100000, atomName, resName, chainName,
                         (res.resSeq) % 10000, _format_83(coords[0]),
-                        _format_83(coords[1]), _format_83(coords[2]), symbol)
+                        _format_83(coords[1]), _format_83(coords[2]),
+                        bfactors[posIndex], symbol)
                     assert len(line) == 80, 'Fixed width overflow detected'
                     print(line, file=self._file)
                     posIndex += 1
@@ -486,7 +499,7 @@ class PDBTrajectoryFile(object):
                     if element is None:
                         element = self._guess_element(atomName, residue)
 
-                    newAtom = self._topology.add_atom(atomName, element, r)
+                    newAtom = self._topology.add_atom(atomName, element, r, serial=atom.serial_number)
                     atomByNumber[atom.serial_number] = newAtom
 
         # load all of the positions (from every model)

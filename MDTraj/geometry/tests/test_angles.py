@@ -1,4 +1,6 @@
+import itertools
 import mdtraj as md
+from mdtraj.testing import eq
 import numpy as np
 
 def test_angle_pbc_0():
@@ -27,3 +29,15 @@ def test_angle_pbc_0():
     np.testing.assert_array_almost_equal(r0, r1, decimal=4)
     np.testing.assert_array_almost_equal(r2, r3, decimal=4)
     np.testing.assert_array_almost_equal(r0, r3, decimal=4)
+
+def test_generator():
+    N_FRAMES = 2
+    N_ATOMS = 5
+    xyz = np.asarray(np.random.randn(N_FRAMES, N_ATOMS, 3), dtype=np.float32)
+    ptraj = md.Trajectory(xyz=xyz, topology=None)
+
+    triplets = np.array(list(itertools.combinations(range(N_ATOMS), 3)), dtype=np.int32)
+    triplets2 = itertools.combinations(range(N_ATOMS), 3)
+    a = md.compute_angles(ptraj, triplets)
+    b = md.compute_angles(ptraj, triplets2)
+    eq(a, b)

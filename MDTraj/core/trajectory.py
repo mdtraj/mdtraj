@@ -282,9 +282,13 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         extension = os.path.splitext(filename_or_filenames)[1]
         filename = filename_or_filenames
     else:  # If multiple filenames, take the first one.
-        extensions = [os.path.splitext(filename_i)[1] for filename_i in filename_or_filenames]
-        if len(set(extensions)) != 1:
-            raise(TypeError("All filenames must have same extension!"))
+        extensions = [os.path.splitext(f)[1] for f in filename_or_filenames]
+        if len(set(extensions)) == 0:
+            raise ValueError('No trajectories specified. '
+                             'filename_or_filenames was an empty list')
+        elif len(set(extensions)) > 1:
+            raise TypeError("Each filename must have the same extension. "
+                            "Received: %s" % ', '.join(set(extensions)))
         else:
             t = [load(f, **kwargs) for f in filename_or_filenames]
             # we know the topology is equal because we sent the same topology
@@ -1151,7 +1155,7 @@ class Trajectory(object):
                     cell_lengths=self.unitcell_lengths)
             f.topology = self.topology
 
-    def save_pdb(self, filename, force_overwrite=True):
+    def save_pdb(self, filename, force_overwrite=True, bfactors=None):
         """Save trajectory to RCSB PDB format
 
         Parameters
@@ -1160,8 +1164,27 @@ class Trajectory(object):
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
+        bfactors : array_like, default=None, shape=(n_frames, n_atoms) or (n_atoms,)
+            Save bfactors with pdb file. If the array is two dimensional it should 
+            contain a bfactor for each atom in each frame of the trajectory. 
+            Otherwise, the same bfactor will be saved in each frame.
         """
         self._check_valid_unitcell()
+
+        if not bfactors is None:
+            if len(np.array(bfactors).shape) == 1:
+                if len(bfactors) != self.n_atoms:
+                    raise ValueError("bfactors %s should be shaped as (n_frames, n_atoms) or (n_atoms,)" % str(np.array(bfactors).shape))
+
+                bfactors = [bfactors] * self.n_frames
+
+            else:
+                if np.array(bfactors).shape != (self.n_frames, self.n_atoms):
+                    raise ValueError("bfactors %s should be shaped as (n_frames, n_atoms) or (n_atoms,)" % str(np.array(bfactors).shape))
+
+        else:
+            bfactors = [None] * self.n_frames
+                
 
         with PDBTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             for i in xrange(self.n_frames):
@@ -1170,12 +1193,14 @@ class Trajectory(object):
                     f.write(in_units_of(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
                             self.topology,
                             modelIndex=i,
+                            bfactors=bfactors[i],
                             unitcell_lengths=in_units_of(self.unitcell_lengths[i], Trajectory._distance_unit, f.distance_unit),
                             unitcell_angles=self.unitcell_angles[i])
                 else:
                     f.write(in_units_of(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
                             self.topology,
-                            modelIndex=i)
+                            modelIndex=i,
+                            bfactors=bfactors[i])
 
     def save_xtc(self, filename, force_overwrite=True):
         """Save trajectory to Gromacs XTC format
@@ -1311,7 +1336,7 @@ class Trajectory(object):
 
         return self
 
-    @deprecated('restrict_atoms was replaced by atom_slice and will be removed in 1.0')
+    @deprecated('restrict_atoms was replaced by atom_slice and will be removed in 2.0')
     def restrict_atoms(self, atom_indices, inplace=True):
         """Retain only a subset of the atoms in a trajectory
 

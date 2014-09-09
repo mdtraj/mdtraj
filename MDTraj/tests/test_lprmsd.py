@@ -36,19 +36,19 @@ def test_lprmsd_1():
     new = ref[:, mapping].dot(rot)
     
     value = lprmsd(Trajectory(xyz=new, topology=None), Trajectory(xyz=ref, topology=None), permute_groups=[[]])
-    assert value[0] < 1e-3
+    assert value[0] < 1e-2
 
 
 def test_lprmsd_2():
     # resolve a random rotation with some permutation
-    ref = random.randn(1, 20, 3).astype(np.float32)
+    ref = random.randn(1, 50, 3).astype(np.float32)
     # first half of the atoms can permute, last 10 are fixed permutation
-    mapping = np.concatenate((random.permutation(10), 10 + np.arange(10)))
+    mapping = np.concatenate((random.permutation(10), 10 + np.arange(40)))
     rot = rotation_matrix_from_quaternion(uniform_quaternion())
     new = ref[:, mapping].dot(rot)
     
     value = lprmsd(Trajectory(xyz=new, topology=None), Trajectory(xyz=ref, topology=None), permute_groups=[np.arange(10)])
-    assert value[0] < 1e-3
+    assert value[0] < 1e-2
 
 
 def test_lprmsd_3():

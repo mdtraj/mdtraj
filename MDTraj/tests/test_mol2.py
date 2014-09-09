@@ -109,3 +109,6 @@ def test_mol2_dataframe():
     eq(top.atype[2], "n3")
     eq(top.resName[2], "LIG")
     eq(float(top.charge[2]), -0.732600)
+
+def test_mol2_warnings():
+    trj = md.load_mol2(get_fn('lysozyme-ligand-tripos.mol2'))

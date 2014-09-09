@@ -17,6 +17,7 @@ import shutil
 import tempfile
 import subprocess
 from distutils.ccompiler import new_compiler
+from distutils.sysconfig import customize_compiler, get_config_vars
 try:
     from setuptools import setup, Extension
 except ImportError:
@@ -70,14 +71,14 @@ else:
 
 
 ##########################
-VERSION = "0.9.1"
+VERSION = "1.X.0"
 ISRELEASED = False
 __version__ = VERSION
 ##########################
 
 
 CLASSIFIERS = """\
-Development Status :: 3 - Alpha
+Development Status :: 5 - Production/Stable
 Intended Audience :: Science/Research
 Intended Audience :: Developers
 License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)
@@ -175,8 +176,22 @@ if not release:
 ################################################################################
 
 class CompilerDetection(object):
+    # Necessary for OSX. See https://github.com/SimTk/mdtraj/issues/576
+    # The problem is that distutils.sysconfig.customize_compiler()
+    # is necessary to properly invoke the correct compiler for this class
+    # (otherwise the CC env variable isn't respected). Unfortunately,
+    # distutils.sysconfig.customize_compiler() DIES on OSX unless some
+    # appropriate initialization routines have been called. This line
+    # has a side effect of calling those initialzation routes, and is therefor
+    # necessary for OSX, even though we don't use the result.
+    _DONT_REMOVE_ME = get_config_vars()
+
     def __init__(self, disable_openmp):
-        self.msvc = new_compiler().compiler_type == 'msvc'
+        cc = new_compiler()
+        customize_compiler(cc)
+
+        self.msvc = cc.compiler_type == 'msvc'
+        self._print_compiler_version(cc)
 
         if disable_openmp:
             self.openmp_enabled = False
@@ -209,6 +224,16 @@ class CompilerDetection(object):
             self.compiler_args_opt = ['/O2']
         else:
             self.compiler_args_opt = ['-O3', '-funroll-loops']
+        print()
+
+    def _print_compiler_version(self, cc):
+        print("C compiler:")
+        if self.msvc:
+            if not cc.initialized:
+                cc.initialize()
+            cc.spawn([cc.cc])
+        else:
+            cc.spawn([cc.compiler[0]] + ['-v'])
 
     def hasfunction(self, cc, funcname, include=None, extra_postargs=None):
         # From http://stackoverflow.com/questions/
@@ -242,7 +267,7 @@ class CompilerDetection(object):
             shutil.rmtree(tmpdir)
 
     def _print_support_start(self, feature):
-        print('Attempting to autodetect {0} support...'.format(feature), end=' ')
+        print('Attempting to autodetect {0:6} support...'.format(feature), end=' ')
 
     def _print_support_end(self, feature, status):
         if status is True:
@@ -253,6 +278,7 @@ class CompilerDetection(object):
     def _detect_openmp(self):
         self._print_support_start('OpenMP')
         compiler = new_compiler()
+        customize_compiler(compiler)
         hasopenmp = self.hasfunction(compiler, 'omp_get_num_threads()', extra_postargs=['-fopenmp', '/openmp'])
         needs_gomp = hasopenmp
         if not hasopenmp:
@@ -265,6 +291,7 @@ class CompilerDetection(object):
     def _detect_sse3(self):
         "Does this compiler support SSE3 intrinsics?"
         compiler = new_compiler()
+        customize_compiler(compiler)
         self._print_support_start('SSE3')
         result = self.hasfunction(compiler, '__m128 v; _mm_hadd_ps(v,v)',
                            include='<pmmintrin.h>',
@@ -275,6 +302,7 @@ class CompilerDetection(object):
     def _detect_sse41(self):
         "Does this compiler support SSE4.1 intrinsics?"
         compiler = new_compiler()
+        customize_compiler(compiler)
         self._print_support_start('SSE4.1')
         result = self.hasfunction(compiler, '__m128 v; _mm_round_ps(v,0x00)',
                            include='<smmintrin.h>',
@@ -406,5 +434,6 @@ setup(name='mdtraj',
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
       ext_modules=cythonize(extensions),
       package_data={'mdtraj.formats.pdb': ['data/*'],
-                    'mdtraj.testing': ['reference/*']},
+                    'mdtraj.testing': ['reference/*'],
+                    'mdtraj.html': ['static/*']},
       **setup_kwargs)
