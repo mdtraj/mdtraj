@@ -55,7 +55,7 @@ def test_vmd_psf():
 
 def _test_against_vmd(pdb):
     # this is probably not cross-platform compatible. I assume that the exact
-    # path to this CHARMM topology that is inclued with VMD depends on
+    # path to this CHARMM topology that is included with VMD depends on
     # the install mechanism, especially for bundled mac or windows installers
     VMD_ROOT = os.path.join(os.path.dirname(VMD), '..')
     top_paths = [os.path.join(r, f) for (r, _, fs) in os.walk(VMD_ROOT) for f in fs
