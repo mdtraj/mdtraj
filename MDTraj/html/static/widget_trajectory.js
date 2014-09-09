@@ -42,14 +42,7 @@ function($, WidgetManager, iview) {
             this.setupContextMenu(iv);
             this.setupFullScreen(canvas, container);
             this.update();
-            var options = {
-                'camera': this.model.attributes.camera,
-                'background': this.model.attributes.background,
-                'colorBy': this.model.attributes.colorBy,
-                'primaryStructure': this.model.attributes.primaryStructure,
-                'secondaryStructure': this.model.attributes.secondaryStructure,
-                'surface': this.model.attributes.surfaceRepresentation
-            };
+            var options = this.getOptions() 
             this.iv.zoomInto(options);
 
 
@@ -71,16 +64,8 @@ function($, WidgetManager, iview) {
             this.iv.loadTopology(this.model.attributes._topology);
             this.iv.loadCoordinates(this.model.attributes._frameData.coordinates);
             this.iv.loadAtomAttributes(this.model.attributes._frameData.secondaryStructure);
-
-            var options = {
-                'camera': this.model.attributes.camera,
-                'background': this.model.attributes.background,
-                'colorBy': this.model.attributes.colorBy,
-                'primaryStructure': this.model.attributes.primaryStructure,
-                'secondaryStructure': this.model.attributes.secondaryStructure,
-                'surface': this.model.attributes.surfaceRepresentation
-            };
-            
+           
+            var options = this.getOptions() 
             this.iv.rebuildScene(options)
             this.iv.render()
 
@@ -117,6 +102,19 @@ function($, WidgetManager, iview) {
             
         },
 
+        getOptions : function() {
+
+             var options = {
+                'camera': this.model.attributes.camera,
+                'background': this.model.attributes.background,
+                'colorBy': this.model.attributes.colorBy,
+                'primaryStructure': this.model.attributes.primaryStructure,
+                'secondaryStructure': this.model.attributes.secondaryStructure,
+                'surface': this.model.attributes.surfaceRepresentation
+             };
+        
+             return options
+        },
         setupFullScreen : function(canvas, container) {
             // currently only works in chrome. need other prefixes for firefox
             var iv = this.iv;
