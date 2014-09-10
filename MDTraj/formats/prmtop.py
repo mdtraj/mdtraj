@@ -55,7 +55,6 @@
 
 from __future__ import print_function, division
 import re
-import numpy as np
 
 from mdtraj.core import topology
 from mdtraj.formats import pdb
@@ -114,7 +113,6 @@ def load_prmtop(filename):
     >>> trajectory = md.load('trajectory.mdcrd', top='system.prmtop')
     """
     top = topology.Topology()
-    elements = []
 
     prmtop_version = None
     flags      = []
@@ -162,7 +160,7 @@ def load_prmtop(filename):
 
     n_atoms = int(_get_pointer_value('NATOM', raw_data))
 
-    # built a dictorary telling us which atom belongs to which residue
+    # built a dictionary telling us which atom belongs to which residue
     residue_pointer_dict = {}
     res_pointers = raw_data['RESIDUE_POINTER']        
     first_atom = [int(p)-1 for p in res_pointers] # minus 1 necessary
@@ -221,7 +219,6 @@ def load_prmtop(filename):
                     element = None
 
         top.add_atom(atom_name, element, r)
-        elements.append(element)
 
     # Add bonds to the topology
     bond_pointers = raw_data["BONDS_INC_HYDROGEN"] + raw_data["BONDS_WITHOUT_HYDROGEN"]

@@ -545,10 +545,7 @@ class Quantity(object):
             pass
         if factor_is_identity:
             # No multiplication required
-            if (self.unit is new_unit):
-                result = self
-            else:
-                result = Quantity(self._value, new_unit)
+            result = Quantity(copy.deepcopy(self._value), new_unit)
         else:
             try:
                 # multiply operator, if it exists, is preferred
@@ -558,18 +555,7 @@ class Quantity(object):
                     value = factor * self._value # works for number, numpy.array, or vec3, e.g.                    
                 result = Quantity(value, new_unit)
             except TypeError:
-                # list * float fails with TypeError
-                # Presumably a list type
-                # deep copy
-                value = self._value[:] # deep copy
-                # convert tuple to list
-                try:
-                    value[0] = value[0] # tuple is immutable
-                except TypeError:
-                    # convert immutable tuple to list
-                    value = []
-                    for i in self._value:
-                        value.append(i)
+                value = copy.deepcopy(self._value)
                 result = Quantity(self._scale_sequence(value, factor, post_multiply), new_unit)
         if (new_unit.is_dimensionless()):
             return result._value

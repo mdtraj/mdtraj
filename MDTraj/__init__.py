@@ -39,6 +39,7 @@ from mdtraj.formats.pdb import load_pdb
 from mdtraj.formats.arc import load_arc
 from mdtraj.formats.openmmxml import load_xml
 from mdtraj.formats.prmtop import load_prmtop
+from mdtraj.formats.psf import load_psf
 from mdtraj.formats.mol2 import load_mol2
 
 from mdtraj.core import element
