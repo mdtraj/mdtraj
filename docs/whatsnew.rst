@@ -4,6 +4,11 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.X (development)
+------------------
+- New loader for CHARMM topology files: ``md.load_psf`` (Jason M. Swails)
+
+
 v1.0.0 (September 7, 2014)
 --------------------------
 We're pleased to announce the 1.0 release of MDTraj! Our 1.0 release indicates
