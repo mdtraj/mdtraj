@@ -52,6 +52,7 @@ import os
 import numpy as np
 import itertools
 from mdtraj.core import element as elem
+from mdtraj.core.residue_names import _PROTEIN_RESIDUES
 import xml.etree.ElementTree as etree
 
 from mdtraj.utils import ilen, import_
@@ -59,12 +60,6 @@ from mdtraj.utils import ilen, import_
 ##############################################################################
 # Utilities
 ##############################################################################
-
-PROTEIN_RESIDUES = set([
-    'ACE', 'AIB', 'ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'FOR', 'GLN', 'GLU',
-    'GLY', 'HIS', 'ILE', 'LEU', 'LYS', 'MET', 'NH2', 'NME', 'ORN', 'PCA',
-    'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'UNK', 'VAL'])
-
 
 def _topology_from_subset(topology, atom_indices):
     """Create a new topology that only contains the supplied indices
@@ -1004,7 +999,7 @@ class Residue(object):
     @property
     def is_protein(self):
         """Whether this residue is found in proteins."""
-        return self.name in PROTEIN_RESIDUES
+        return self.name in _PROTEIN_RESIDUES
 
     @property
     def is_water(self):
