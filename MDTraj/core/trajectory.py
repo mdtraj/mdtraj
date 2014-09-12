@@ -30,6 +30,7 @@ import os
 import warnings
 import functools
 from copy import deepcopy
+from collections import Iterable
 import numpy as np
 
 from mdtraj.formats import DCDTrajectoryFile
@@ -46,6 +47,7 @@ from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.mol2 import load_mol2
 from mdtraj.core.topology import Topology
+from mdtraj.core.residue_names import _SOLVENT_TYPES
 from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_vectors, 
                           box_vectors_to_lengths_and_angles, cast_indices,
                           deprecated)
@@ -1405,6 +1407,43 @@ class Trajectory(object):
         return Trajectory(xyz=xyz, topology=topology, time=time,
                           unitcell_lengths=unitcell_lengths,
                           unitcell_angles=unitcell_angles)
+
+    def remove_solvent(self, exclude=None, inplace=False):
+        """
+        Create a new trajectory without solvent atoms
+
+        Parameters
+        ----------
+        exclude : array-like, dtype=str, shape=(n_solvent_types)
+            List of solvent residue names to retain in the new trajectory.
+        inplace : bool, default=False
+            The return value is either ``self``, or the new trajectory,
+            depending on the value of ``inplace``.
+        
+        Returns
+        -------
+        traj : md.Trajectory
+            The return value is either ``self``, or the new trajectory,
+            depending on the value of ``inplace``.
+        """
+        solvent_types = list(_SOLVENT_TYPES)
+
+        if exclude is not None:
+
+            if isinstance(exclude, str):
+                raise TypeError('exclude must be array-like')
+            if not isinstance(exclude, Iterable):
+                raise TypeError('exclude is not iterable')
+        
+            for type in exclude:
+                if type not in solvent_types:
+                    raise ValueError(type + 'is not a valid solvent type')
+                solvent_types.remove(type)
+        
+        atom_indices = [atom.index for atom in self.topology.atoms if
+                atom.residue.name not in solvent_types]
+        
+        return self.atom_slice(atom_indices, inplace = inplace)
 
     def _check_valid_unitcell(self):
         """Do some sanity checking on self.unitcell_lengths and self.unitcell_angles
