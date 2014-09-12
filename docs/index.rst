@@ -7,8 +7,8 @@ MDTraj is a python library that allows users to manipulate `molecular dynamics (
 Extensive :ref:`trajectory analysis <analysis>` routines are implemented. With MDTraj,
 you can
 
- - Read and write from **every MD format imaginable** (pdb, xtc, trr, dcd, binpos,
-   netcff, mdcrd, prmtop, ...)
+ - Read and write from **every MD format imaginable** (``pdb``, ``xtc``, ``trr``,
+   ``dcd``, ``binpos``, ``netcdf``, ``mdcrd``, ``prmtop``, ...)
  - Run **blazingly fast** RMSD calculations (4x the speed of the original
    `Theobald QCP <http://theobald.brandeis.edu/qcp/>`_).
  - Use tons of :ref:`analysis <analysis>` functions like bonds/angles/dihedrals,
@@ -20,14 +20,25 @@ trajectories between formats. When you install MDTraj, the script will be
 installed under the name ``mdconvert``.
 
 .. raw:: html
- 
+
   <div>
-  <h2 style="display: inline; float:left; margin-left:5em"><a href="https://github.com/rmcgibbo/mdtraj/releases/latest">
-  Download the Code</a></h2>
-  <h2 style="display: inline; float:right; margin-right:5em"> <a href="examples/index.html"> See it in Action
-  </a></h2>
-  <div style="clear:both"></div>
-  <div style="display:block; text-align:center;"><h2 style="display:inline;"><a href="https://github.com/rmcgibbo/mdtraj/issues">Get Involved</a></h2></div>
+      <h2 style="display: inline; float:left; margin-left:5em">
+          <a href="https://github.com/simtk/mdtraj/releases/latest">
+          Download the Code</a>
+      </h2>
+      <h2 style="display: inline; float:right; margin-right:5em">
+          <a href="examples/index.html">
+          See it in Action</a>
+      </h2>
+      <div style="clear:both"></div>
+      <h2 style="display: inline; float:left; margin-left:7em">
+          <a href="http://discourse.mdtraj.org/">
+          Get Help</a>
+      </h2>
+      <h2 style="display: inline; float:right; margin-right:7em">
+          <a href="https://github.com/simtk/mdtraj/issues">
+          Get Involved</a>
+      </h2>
   </div>
   <br/>
   <iframe id="player" type="text/html" width="500" height="300" style="display:block; margin:auto"
@@ -36,11 +47,9 @@ installed under the name ``mdconvert``.
 
 
 
-Feedback
---------
-The best way to report a bug or request a new feature is to make an issue
-on github. Don't hesitate to fork the repository, make some changes, and 
-submit a pull request!
+.. raw:: html
+
+   <div style="display:none">
 
 
 --------------------------------------------------------------------------------
@@ -50,29 +59,31 @@ Documentation
 
 .. toctree::
    :maxdepth: 1
-   
+
    getting_started
    examples/index
-   mdconvert
    whatsnew
+   faq
+   Discussion Forums <http://discourse.mdtraj.org>
 
 API Reference
 -------------
 
-.. toctree:: 
+.. toctree::
    :maxdepth: 1
-   
+
    load_functions
    analysis
    api/trajectory_files
    api/reporters
    api/utils
+   mdconvert
 
 
 Developing
 ----------
 
-.. toctree:: 
+.. toctree::
    :maxdepth: 1
 
    hdf5_format
@@ -81,6 +92,10 @@ Developing
 
 
 --------------------------------------------------------------------------------
+
+.. raw:: html
+
+   </div>
 
 License
 -------

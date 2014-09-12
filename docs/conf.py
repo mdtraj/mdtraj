@@ -11,9 +11,12 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import sys
+import os
+
 import mdtraj
 import mdtraj.version
+
 sys.path.insert(0, os.path.abspath('sphinxext'))
 sys.path.insert(0, os.path.abspath('themes/sphinx_rtd_theme-0.1.5'))
 import sphinx_rtd_theme
@@ -32,17 +35,16 @@ import sphinx_rtd_theme
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.autosummary',
-              'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'numpy_ext.numpydoc',
+              'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'numpydoc',
               'sphinx.ext.intersphinx', 'sphinx.ext.viewcode',
-              'ipython_console_highlighting', 'ipython_directive',
+              'IPython.sphinxext.ipython_console_highlighting',
+              'IPython.sphinxext.ipython_directive',
               'matplotlib.sphinxext.plot_directive']
 
 autosummary_generate = True
 autodoc_default_flags = ['members', 'inherited-members']
 
 
-import runipy
-import IPython.nbconvert.utils.pandoc
 extensions.append('notebook_sphinxext')
 extensions.append('notebookcell_sphinxext')
 
@@ -118,7 +120,6 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'mdtraj'
 html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -128,7 +129,6 @@ html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
-html_theme_path = ['themes']
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 
@@ -273,3 +273,6 @@ texinfo_documents = [
 #texinfo_show_urls = 'footnote'
 
 autodoc_member_order = 'bysource'
+
+# stackoverflow.com/questions/12206334
+numpydoc_show_class_members = False

@@ -93,7 +93,11 @@ def _topology_from_subset(topology, atom_indices):
             newResidue = newTopology.add_residue(residue.name, newChain, resSeq)
             for atom in residue._atoms:
                 if atom.index in atom_indices:
-                    newAtom = newTopology.add_atom(atom.name, atom.element, newResidue)
+                    try:  # OpenMM Topology objects don't have serial attributes, so we have to check first.
+                        serial = atom.serial
+                    except AttributeError:
+                        serial = None
+                    newAtom = newTopology.add_atom(atom.name, atom.element, newResidue, serial=serial)
                     old_atom_to_new_atom[atom] = newAtom
 
     bondsiter = topology.bonds
@@ -209,7 +213,7 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq)
                 for atom in residue.atoms:
-                    out.add_atom(atom.name, atom.element, r)
+                    out.add_atom(atom.name, atom.element, r, serial=atom.serial)
 
         for a1, a2 in self.bonds:
             out.add_bond(a1, a2)
@@ -246,7 +250,7 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq)
                 for atom in residue.atoms:
-                    a = out.add_atom(atom.name, atom.element, r)
+                    a = out.add_atom(atom.name, atom.element, r, serial=atom.serial)
                     atom_mapping[atom] = a
 
         for a1, a2 in other.bonds:
@@ -330,13 +334,13 @@ class Topology(object):
                 element_symbol = ""
             else:
                 element_symbol = atom.element.symbol
-            data.append((atom.index, atom.name, element_symbol,
+            data.append((atom.serial, atom.name, element_symbol,
                          atom.residue.resSeq, atom.residue.name,
                          atom.residue.chain.index))
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
                                             "resSeq", "resName", "chainID"])
-        atoms = atoms.set_index("serial")
+
         bonds = np.array([(a.index, b.index) for (a, b) in self.bonds])
         return atoms, bonds
 
@@ -380,6 +384,7 @@ class Topology(object):
         if not np.all(np.arange(len(atoms)) == atoms.index):
             raise ValueError('atoms must be uniquely numbered starting from zero.')
         out._atoms = [None for i in range(len(atoms))]
+
         for ci in np.unique(atoms['chainID']):
             chain_atoms = atoms[atoms['chainID'] == ci]
             c = out.add_chain()
@@ -392,14 +397,15 @@ class Topology(object):
                     raise ValueError('All of the atoms with residue index %d do not share the same residue name' % ri)
                 r = out.add_residue(residue_name, c, ri)
 
-                for ai, atom in residue_atoms.iterrows():
-                    ai = int(ai)  # Fixes bizarre hashing issue on Py3K.  See #545
+                for atom_index, atom in residue_atoms.iterrows():
+                    atom_index = int(atom_index)  # Fixes bizarre hashing issue on Py3K.  See #545
+                    serial = atom["serial"]
                     if atom['element'] == "":
                         element = None
                     else:
                         element = elem.get_by_symbol(atom['element'])
-                    a = Atom(atom['name'], element, ai, r)
-                    out._atoms[ai] = a
+                    a = Atom(atom['name'], element, atom_index, r, serial=serial)
+                    out._atoms[atom_index] = a
                     r._atoms.append(a)
 
         if bonds is not None:
@@ -531,7 +537,7 @@ class Topology(object):
         chain._residues.append(residue)
         return residue
 
-    def add_atom(self, name, element, residue):
+    def add_atom(self, name, element, residue, serial=None):
         """Create a new Atom and add it to the Topology.
 
         Parameters
@@ -548,7 +554,7 @@ class Topology(object):
         atom : mdtraj.topology.Atom
             the newly created Atom
         """
-        atom = Atom(name, element, self._numAtoms, residue)
+        atom = Atom(name, element, self._numAtoms, residue, serial=serial)
         self._atoms.append(atom)
         self._numAtoms += 1
         residue._atoms.append(atom)
@@ -1036,7 +1042,7 @@ class Atom(object):
         The Residue this Atom belongs to
     """
 
-    def __init__(self, name, element, index, residue):
+    def __init__(self, name, element, index, residue, serial=None):
         """Construct a new Atom.  You should call add_atom() on the Topology instead of calling this directly."""
         ## The name of the Atom
         self.name = name
@@ -1046,6 +1052,7 @@ class Atom(object):
         self.index = index
         ## The Residue this Atom belongs to
         self.residue = residue
+        self.serial = serial
 
     def __eq__(self, other):
         """ Check whether two Atom objects are equal. """
