@@ -30,6 +30,7 @@ import os
 import warnings
 import functools
 from copy import deepcopy
+from collections import Iterable
 import numpy as np
 
 from mdtraj.formats import DCDTrajectoryFile
@@ -1424,14 +1425,14 @@ class Trajectory(object):
                           unitcell_lengths=unitcell_lengths,
                           unitcell_angles=unitcell_angles)
 
-    def remove_solvent(self, exclude = [], inplace = False):
+    def remove_solvent(self, exclude=[], inplace=False):
         """
         Create a new trajectory without solvent atoms
 
         Parameters
         ----------
-        exclude : array-like, dtype=str, shape=(n_atom_types)
-            List of atom types to retain in the new trajectory.
+        exclude : array-like, dtype=str, shape=(n_solvent_types)
+            List of solvent residue names to retain in the new trajectory.
         inplace : bool, default=False
             The return value is either ``self``, or the new trajectory,
             depending on the value of ``inplace``.
@@ -1442,8 +1443,16 @@ class Trajectory(object):
             The return value is either ``self``, or the new trajectory,
             depending on the value of ``inplace``.
         """
+        if isinstance(exclude, str):
+            raise TypeError('exclude must be array-like')
+        if not isinstance(exclude, Iterable):
+            raise TypeError('exclude is not iterable')
+        
         solvent_types = _SOLVENT_TYPES
+
         for type in exclude:
+            if type not in solvent_types:
+                raise ValueError(type + 'is not a valid solvent type')
             solvent_types.remove(type)
         
         atom_indices = [atom.index for atom in self.topology.atoms if
