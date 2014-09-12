@@ -1425,7 +1425,7 @@ class Trajectory(object):
                           unitcell_lengths=unitcell_lengths,
                           unitcell_angles=unitcell_angles)
 
-    def remove_solvent(self, exclude=[], inplace=False):
+    def remove_solvent(self, exclude=None, inplace=False):
         """
         Create a new trajectory without solvent atoms
 
@@ -1450,10 +1450,11 @@ class Trajectory(object):
         
         solvent_types = _SOLVENT_TYPES
 
-        for type in exclude:
-            if type not in solvent_types:
-                raise ValueError(type + 'is not a valid solvent type')
-            solvent_types.remove(type)
+        if exclude is not None:
+            for type in exclude:
+                if type not in solvent_types:
+                    raise ValueError(type + 'is not a valid solvent type')
+                solvent_types.remove(type)
         
         atom_indices = [atom.index for atom in self.topology.atoms if
                 atom.residue.name not in solvent_types]
