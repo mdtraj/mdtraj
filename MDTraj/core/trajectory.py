@@ -1442,12 +1442,12 @@ class Trajectory(object):
             The return value is either ``self``, or the new trajectory,
             depending on the value of ``inplace``.
         """
-        
+        solvent_types = _SOLVENT_TYPES
         for type in exclude:
-            _SOLVENT_TYPES.remove(type)
+            solvent_types.remove(type)
         
         atom_indices = [atom.index for atom in self.topology.atoms if
-                atom.residue.name not in _SOLVENT_TYPES]
+                atom.residue.name not in solvent_types]
         
         return self.atom_slice(atom_indices, inplace = inplace)
 
