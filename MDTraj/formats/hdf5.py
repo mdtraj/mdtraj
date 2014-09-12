@@ -254,7 +254,7 @@ class HDF5TrajectoryFile(object):
             self._needs_initialization = False
 
     @property
-    @ensure_mode('r')
+    @ensure_mode('r', 'a')
     def root(self):
         """Direct access to the root group of the underlying Tables HDF5 file handle.
 
