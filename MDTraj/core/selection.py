@@ -3,17 +3,36 @@ from pyparsing import (Word, alphas, nums, oneOf, Group, infixNotation, opAssoc,
                        Optional)
 
 
-class UnaryOperand:
+class Operand:
+    _keywords = []
+
+    @classmethod
+    def get_keywords(cls):
+        return MatchFirst([Keyword(kw) for kw in cls._keywords])
+
+
+class UnaryOperand(Operand):
     """Single keyword selection identifier."""
 
     def __init__(self, tokes):
         tokes = tokes[0]
         self.value = tokes
+        self.top_type = ''
 
     def __str__(self):
         return "{top_type}_{value}".format(**self.__dict__)
 
     __repr__ = __str__
+
+
+class AtomUnaryOperand(UnaryOperand):
+    def __init__(self, tokes):
+        super().__init__(tokes)
+        self.top_type = 'atom'
+
+    _keywords = [
+        'all', 'none'
+    ]
 
 
 class ResidueUnaryOperand(UnaryOperand):
@@ -23,8 +42,13 @@ class ResidueUnaryOperand(UnaryOperand):
         super().__init__(tokes)
         self.top_type = 'residue'
 
+    _keywords = [
+        'protein', 'nucleic', 'backbone', 'sidechain',
+        'water'
+    ]
 
-class BinaryOperand:
+
+class BinaryOperand(Operand):
     """Selection of the form: field operator value"""
 
     def __init__(self, tokes):
@@ -42,12 +66,27 @@ class BinaryOperand:
     __repr__ = __str__
 
 
+class AtomBinaryOperand(BinaryOperand):
+    def __init__(self, tokes):
+        super().__init__(tokes)
+        self.top_type = 'atom'
+
+    _keywords = [
+        'name', 'type', 'index', 'numbonds', 'radius', 'mass', 'within'
+    ]
+
+
 class ResidueBinaryOperand(BinaryOperand):
     """Selections that specify residues."""
 
     def __init__(self, tokes):
         super().__init__(tokes)
         self.top_type = 'residue'
+
+
+    _keywords = [
+        'residue', 'resname', 'resid'
+    ]
 
 
 class RangeOperand:
@@ -119,36 +158,44 @@ class NotInfix(UnaryInfix):
     pass
 
 
-def _get_parser():
-    # Support for numeric ranges
+def _make_parser():
+    # Single Keyword
+    # - Atom
+    single_atom = AtomUnaryOperand.get_keywords()
+    single_atom.setParseAction(AtomUnaryOperand)
+    # - Residue
+    single_resi = ResidueUnaryOperand.get_keywords()
+    single_resi.setParseAction(ResidueUnaryOperand)
+
+    # Key Value Keywords
+    # - A value is a number, word, or range
     numrange = Group(Word(nums) + "to" + Word(nums))
     numrange.setParseAction(RangeOperand)
-    numeric = numrange | Word(nums)
+    value = Word(alphas) | Word(nums) | numrange
 
-    # Single keyword selections
-    single_keyword = MatchFirst([
-        Keyword('protein'), Keyword('solvent'), Keyword('water')
-    ])
-    single_keyword.setParseAction(ResidueUnaryOperand)
-
-    # Key value keywords
-    residue_keyword = MatchFirst([
-        Keyword('resname'), Keyword('resid'), Keyword('within')
-    ])
-
-    # Comparison operators
+    # - Operators
     comparison_op = oneOf("< == > <= >= != eq gt lt ne")
-    comparison_expr = Group(residue_keyword + Optional(comparison_op, '==') + (
-        Word(alphas) | numeric))
-    comparison_expr.setParseAction(ResidueBinaryOperand)
+    comparison_op = Optional(comparison_op, '==')
 
-    tot_expr = single_keyword | comparison_expr
+    # - Atom
+    binary_atom = Group(
+        AtomBinaryOperand.get_keywords() + comparison_op + value)
+    binary_atom.setParseAction(AtomBinaryOperand)
+    # - Residue
+    binary_resi = Group(
+        ResidueBinaryOperand.get_keywords() + comparison_op + value)
+    binary_resi.setParseAction(ResidueBinaryOperand)
 
-    logicalExpr = infixNotation(tot_expr,
-                                [
-                                    ('not', 1, opAssoc.RIGHT, NotInfix),
-                                    ('and', 2, opAssoc.LEFT, AndInfix),
-                                    ('or', 2, opAssoc.LEFT, OrInfix),
-                                    ('of', 2, opAssoc.LEFT, OfInfix)
-                                ])
-    return logicalExpr
+    # Put it together
+    expression = MatchFirst([
+        single_atom, single_resi, binary_atom, binary_resi
+    ])
+
+    # And deal with logical expressions
+    logical_expr = infixNotation(expression, [
+        ('not', 1, opAssoc.RIGHT, NotInfix),
+        ('and', 2, opAssoc.LEFT, AndInfix),
+        ('or', 2, opAssoc.LEFT, OrInfix),
+        ('of', 2, opAssoc.LEFT, OfInfix)
+    ])
+    return logical_expr
