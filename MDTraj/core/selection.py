@@ -4,11 +4,26 @@ from pyparsing import (Word, alphas, nums, oneOf, Group, infixNotation, opAssoc,
 
 
 class Operand:
-    _keywords = []
+    keywords = []
 
     @classmethod
     def get_keywords(cls):
-        return MatchFirst([Keyword(kw) for kw in cls._keywords])
+        return MatchFirst([Keyword(kw) for kw in cls.keywords])
+
+    def mdtraj_condition(self):
+        """Build an mdtraj-compatible piece of python code."""
+        raise NotImplementedError
+
+    def get_top_item(self):
+        """Get the name of the appropriate topology field for mdtraj.
+
+        E.g.: for atoms it is a.whatever and for residues it
+        is a.residue.whatever
+        """
+        raise NotImplementedError
+
+    def get_top_name(self):
+        raise NotImplementedError
 
 
 class UnaryOperand(Operand):
@@ -17,76 +32,128 @@ class UnaryOperand(Operand):
     def __init__(self, tokes):
         tokes = tokes[0]
         self.value = tokes
-        self.top_type = ''
 
     def __str__(self):
-        return "{top_type}_{value}".format(**self.__dict__)
+        return "{top_type}_{value}".format(top_type=self.get_top_name(),
+                                           value=self.value)
 
     __repr__ = __str__
 
 
 class AtomUnaryOperand(UnaryOperand):
-    def __init__(self, tokes):
-        super().__init__(tokes)
-        self.top_type = 'atom'
-
-    _keywords = [
-        'all', 'none'
+    keywords = [
+        'all', 'none', 'everything', 'nothing'
     ]
+
+    keyword_aliases = {'all': True, 'everything': True,
+                       'none': False, 'nothing': False}
+
+    def mdtraj_condition(self):
+        return "{}".format(self.keyword_aliases[self.value])
+
+    def get_top_item(self):
+        return 'a'
+
+    def get_top_name(self):
+        return 'atom'
 
 
 class ResidueUnaryOperand(UnaryOperand):
     """Single keyword selections that specify residues"""
 
-    def __init__(self, tokes):
-        super().__init__(tokes)
-        self.top_type = 'residue'
-
-    _keywords = [
+    keywords = [
         'protein', 'nucleic', 'backbone', 'sidechain',
-        'water'
+        'water', 'waters'
     ]
+
+    keyword_aliases = dict([(v, v) for v in keywords])
+    keyword_aliases.update(waters='water')
+
+    def mdtraj_condition(self):
+        return "a.residue.is_{}".format(self.keyword_aliases[self.value])
+
+    def get_top_item(self):
+        return 'a.residue'
+
+    def get_top_name(self):
+        return 'residue'
 
 
 class BinaryOperand(Operand):
     """Selection of the form: field operator value"""
 
+    operators = ['<', '==', '<=', '!=', '>', '>=', 'eq', 'gt', 'lt', 'ne']
+    operator_aliases = dict([(v, v) for v in operators])
+    operator_aliases.update(eq='==', gt='>', lt='<', ne='!=')
+
+    # Override in subclasses:
+    keyword_aliases = []
+
     def __init__(self, tokes):
         tokes = tokes[0]
         if len(tokes) == 3:
-            self.key, self.operator, self.value = tokes
+            self.key, self.in_op, self.value = tokes
         else:
             raise ParseException(
                 "Binary selectors take 3 values. You gave {}".format(
                     len(tokes)))
 
+    @property
+    def operator(self):
+        """Return an unambiguous operator."""
+        return self.operator_aliases[self.in_op]
+
     def __str__(self):
-        return "{top_type}_{key} {operator} {value}".format(**self.__dict__)
+        fmt_dict = dict(self.__dict__)
+        fmt_dict.update(operator=self.operator, top_type=self.get_top_name())
+        return "{top_type}_{key} {operator} {value}".format(**fmt_dict)
+
+    def mdtraj_condition(self):
+        field = self.keyword_aliases[self.key]
+        if isinstance(self.value, RangeOperand):
+            full_field = "{top}.{field}".format(top=self.get_top_item(),
+                                                field=field)
+            return self.value.range_condition(full_field, self.operator)
+
+        else:
+            return "{top}.{field} {op} {value}".format(
+                top=self.get_top_item(), field=field, op=self.operator,
+                value=self.value)
+
 
     __repr__ = __str__
 
 
 class AtomBinaryOperand(BinaryOperand):
-    def __init__(self, tokes):
-        super().__init__(tokes)
-        self.top_type = 'atom'
-
-    _keywords = [
-        'name', 'type', 'index', 'numbonds', 'radius', 'mass', 'within'
+    keywords = [
+        'name', 'type', 'index', 'id', 'numbonds', 'radius', 'mass', 'within',
+        'element.symbol', 'element.mass', 'element.name', 'element.number'
     ]
+    keyword_aliases = dict([(v, v) for v in keywords])
+    keyword_aliases.update(id='index', type='element.symbol',
+                           radius='element.radius', mass='element.mass')
+
+    def get_top_name(self):
+        return 'atom'
+
+    def get_top_item(self):
+        return 'a'
 
 
 class ResidueBinaryOperand(BinaryOperand):
     """Selections that specify residues."""
 
-    def __init__(self, tokes):
-        super().__init__(tokes)
-        self.top_type = 'residue'
-
-
-    _keywords = [
+    keywords = [
         'residue', 'resname', 'resid'
     ]
+    keyword_aliases = dict([(v, v) for v in keywords])
+    keyword_aliases.update(residue='resid')  # TODO: What is this in vmd?
+
+    def get_top_name(self):
+        return 'residue'
+
+    def get_top_item(self):
+        return 'a.residue'
 
 
 class RangeOperand:
@@ -95,12 +162,24 @@ class RangeOperand:
     def __init__(self, tokes):
         tokes = tokes[0]
         if len(tokes) == 3:
-            self.first, self.operator, self.last = tokes
+            self.first, self.to, self.last = tokes
 
     def __str__(self):
-        return "range({first} {operator} {last})".format(**self.__dict__)
+        return "range({first} {to} {last})".format(**self.__dict__)
 
     __repr__ = __str__
+
+    def range_condition(self, field, op):
+        if self.to == 'to' and op == '==':
+            pass
+            return "{first} <= {field} <= {last}".format(
+                first=self.first, field=field, last=self.last
+            )
+        else:
+            # We may want to be able to do more fancy things later on
+            # For example: "mass > 5 to 10" could be parsed (even though
+            # it's kinda stupid)
+            raise ParseException("Incorect use of ranged value")
 
 
 class BinaryInfix:
@@ -171,10 +250,10 @@ def _make_parser():
     # - A value is a number, word, or range
     numrange = Group(Word(nums) + "to" + Word(nums))
     numrange.setParseAction(RangeOperand)
-    value = Word(alphas) | Word(nums) | numrange
+    value = numrange | Word(nums) | Word(alphas)
 
     # - Operators
-    comparison_op = oneOf("< == > <= >= != eq gt lt ne")
+    comparison_op = oneOf(BinaryOperand.operators)
     comparison_op = Optional(comparison_op, '==')
 
     # - Atom
