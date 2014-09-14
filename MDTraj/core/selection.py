@@ -7,7 +7,7 @@ class Operand(object):
     keywords = []
     keyword_aliases = {}
 
-    def mdtraj_expression(self):
+    def mdtraj_condition(self):
         """Build an mdtraj-compatible piece of python code."""
         raise NotImplementedError
 
@@ -57,7 +57,7 @@ class AtomUnaryOperand(UnaryOperand):
     keyword_aliases = {'all': True, 'everything': True,
                        'none': False, 'nothing': False}
 
-    def mdtraj_expression(self):
+    def mdtraj_condition(self):
         return "{}".format(self.keyword_aliases[self.value])
 
     def get_top_item(self):
@@ -78,7 +78,7 @@ class ResidueUnaryOperand(UnaryOperand):
     keyword_aliases = dict([(v, v) for v in keywords])
     keyword_aliases.update(waters='water')
 
-    def mdtraj_expression(self):
+    def mdtraj_condition(self):
         return "a.residue.is_{}".format(self.keyword_aliases[self.value])
 
     def get_top_item(self):
@@ -118,7 +118,7 @@ class BinaryOperand(SelectionOperand):
                         operator=self.operator, value=self.value)
         return "{top_type}_{key} {operator} {value}".format(**fmt_dict)
 
-    def mdtraj_expression(self):
+    def mdtraj_condition(self):
         field = self.keyword_aliases[self.key]
         if isinstance(self.value, RangeOperand):
             full_field = "{top}.{field}".format(top=self.get_top_item(),
@@ -230,11 +230,11 @@ class BinaryInfix(InfixOperand):
 
     __repr__ = __str__
 
-    def mdtraj_expression(self):
+    def mdtraj_condition(self):
 
         # Join all the parts
         middle = " {} ".format(self.operator).join(
-            [p.mdtraj_expression() for p in self.parts])
+            [p.mdtraj_condition() for p in self.parts])
 
         # Put parenthesis around it
         return "({})".format(middle)
@@ -282,8 +282,8 @@ class NotInfix(InfixOperand):
 
     __repr__ = __str__
 
-    def mdtraj_expression(self):
-        return "({} {})".format(self.operator, self.value.mdtraj_expression())
+    def mdtraj_condition(self):
+        return "({} {})".format(self.operator, self.value.mdtraj_condition())
 
     @property
     def operator(self):
@@ -310,8 +310,8 @@ class SelectionParser(object):
         return self
 
     @property
-    def mdtraj_expression(self):
-        return self.last_parse.mdtraj_expression()
+    def mdtraj_condition(self):
+        return self.last_parse.mdtraj_condition()
 
     @property
     def unambiguous(self):
