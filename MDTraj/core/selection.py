@@ -231,7 +231,13 @@ class BinaryInfix(InfixOperand):
     __repr__ = __str__
 
     def mdtraj_expression(self):
-        pass
+
+        # Join all the parts
+        middle = " {} ".format(self.operator).join(
+            [p.mdtraj_expression() for p in self.parts])
+
+        # Put parenthesis around it
+        return "({})".format(middle)
 
     @property
     def operator(self):
@@ -276,6 +282,9 @@ class NotInfix(InfixOperand):
 
     __repr__ = __str__
 
+    def mdtraj_expression(self):
+        return "({} {})".format(self.operator, self.value.mdtraj_expression())
+
     @property
     def operator(self):
         return self.keyword_aliases[self.in_op]
@@ -293,6 +302,10 @@ class SelectionParser(object):
 
 
     def parse(self, select_string):
+        """Parse a selection string."""
+
+        # We need to select element zero of the result of parseString
+        # I don't know what would ever go in the rest of the list.
         self.last_parse = self.parser.parseString(select_string)[0]
         return self
 
@@ -306,6 +319,8 @@ class SelectionParser(object):
 
 
 def _make_parser():
+    """Build an expression that can parse atom selection strings."""
+
     # Single Keyword
     # - Atom
     single_atom = AtomUnaryOperand.get_keywords()
