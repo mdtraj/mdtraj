@@ -37,6 +37,9 @@ def test_select_bool():
     eq(sp.unambiguous, "(residue_protein and residue_backbone)")
     # TODO: eq(sp.mdtraj_expression, "(a.residue.is_protein and a.residue.is_backbone)")
 
+    sp.parse("protein && backbone")
+    eq(sp.unambiguous, "(residue_protein and residue_backbone)")
+
 
 def test_select_nested_bool():
     sp = SelectionParser("protein and water or nucleic")
@@ -68,4 +71,7 @@ def test_select_not():
 
     sp.parse("not not protein")
     eq(sp.unambiguous, "(not (not residue_protein))")
+
+    sp.parse('!protein')
+    eq(sp.unambiguous, '(not residue_protein)')
 

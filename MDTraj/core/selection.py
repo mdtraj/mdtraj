@@ -3,17 +3,24 @@ from pyparsing import (Word, alphas, nums, oneOf, Group, infixNotation, opAssoc,
                        Optional)
 
 
-class Operand:
+class Operand(object):
     keywords = []
     keyword_aliases = {}
 
+    def mdtraj_expression(self):
+        """Build an mdtraj-compatible piece of python code."""
+        raise NotImplementedError
+
+    @classmethod
+    def get_keywords(cls):
+        raise NotImplementedError
+
+
+class SelectionOperand(Operand):
     @classmethod
     def get_keywords(cls):
         return MatchFirst([Keyword(kw) for kw in cls.keywords])
 
-    def mdtraj_condition(self):
-        """Build an mdtraj-compatible piece of python code."""
-        raise NotImplementedError
 
     def get_top_item(self):
         """Get the name of the appropriate topology field for mdtraj.
@@ -27,7 +34,7 @@ class Operand:
         raise NotImplementedError
 
 
-class UnaryOperand(Operand):
+class UnaryOperand(SelectionOperand):
     """Single keyword selection identifier."""
 
     def __init__(self, tokes):
@@ -50,7 +57,7 @@ class AtomUnaryOperand(UnaryOperand):
     keyword_aliases = {'all': True, 'everything': True,
                        'none': False, 'nothing': False}
 
-    def mdtraj_condition(self):
+    def mdtraj_expression(self):
         return "{}".format(self.keyword_aliases[self.value])
 
     def get_top_item(self):
@@ -71,7 +78,7 @@ class ResidueUnaryOperand(UnaryOperand):
     keyword_aliases = dict([(v, v) for v in keywords])
     keyword_aliases.update(waters='water')
 
-    def mdtraj_condition(self):
+    def mdtraj_expression(self):
         return "a.residue.is_{}".format(self.keyword_aliases[self.value])
 
     def get_top_item(self):
@@ -81,7 +88,7 @@ class ResidueUnaryOperand(UnaryOperand):
         return 'residue'
 
 
-class BinaryOperand(Operand):
+class BinaryOperand(SelectionOperand):
     """Selection of the form: field operator value"""
 
     operators = ['<', '==', '<=', '!=', '>', '>=', 'eq', 'gt', 'lt', 'ne']
@@ -111,7 +118,7 @@ class BinaryOperand(Operand):
                         operator=self.operator, value=self.value)
         return "{top_type}_{key} {operator} {value}".format(**fmt_dict)
 
-    def mdtraj_condition(self):
+    def mdtraj_expression(self):
         field = self.keyword_aliases[self.key]
         if isinstance(self.value, RangeOperand):
             full_field = "{top}.{field}".format(top=self.get_top_item(),
@@ -186,13 +193,27 @@ class RangeOperand:
             raise ParseException("Incorect use of ranged value")
 
 
-class BinaryInfix:
+class InfixOperand(Operand):
+    # Overwrite the following in base classes.
+    num_terms = -1
+    assoc = None
+
+    @classmethod
+    def get_keywords(cls):
+        # Prepare tuples for pyparsing.infixNotation
+        return [(kw, cls.num_terms, cls.assoc, cls) for kw in cls.keywords]
+
+
+class BinaryInfix(InfixOperand):
     """Deal with binary infix operators: and, or, etc"""
+
+    num_terms = 2
+    assoc = opAssoc.LEFT
 
     def __init__(self, tokes):
         tokes = tokes[0]
         if len(tokes) % 2 == 1:
-            self.operator = tokes[1]
+            self.in_op = tokes[1]
             self.parts = tokes[::2]
         else:
             raise ParseException(
@@ -200,32 +221,51 @@ class BinaryInfix:
 
 
     def __str__(self):
+        # Join all the parts
         middle = " {} ".format(self.operator).join(
             ["{}".format(p) for p in self.parts])
+
+        # And put parenthesis around it
         return "({})".format(middle)
 
     __repr__ = __str__
 
+    def mdtraj_expression(self):
+        pass
+
+    @property
+    def operator(self):
+        return self.keyword_aliases[self.in_op]
+
 
 class AndInfix(BinaryInfix):
-    pass
+    keywords = ['and', '&&']
+    keyword_aliases = dict([(kw, 'and') for kw in keywords])
 
 
 class OrInfix(BinaryInfix):
-    pass
+    keywords = ['or', '||']
+    keyword_aliases = dict([(kw, 'or') for kw in keywords])
 
 
 class OfInfix(BinaryInfix):
-    pass
+    keywords = ['of']
+    keyword_aliases = dict([(kw, 'of') for kw in keywords])
 
 
-class UnaryInfix:
+class NotInfix(InfixOperand):
     """Deal with unary infix operators: not"""
+
+    num_terms = 1
+    assoc = opAssoc.RIGHT
+
+    keywords = ['not', '!']
+    keyword_aliases = dict([(kw, 'not') for kw in keywords])
 
     def __init__(self, tokes):
         tokes = tokes[0]
         if len(tokes) == 2:
-            self.operator, self.value = tokes
+            self.in_op, self.value = tokes
         else:
             raise ParseException(
                 "Invalid number of expressions for unary operation: {}".format(
@@ -236,9 +276,9 @@ class UnaryInfix:
 
     __repr__ = __str__
 
-
-class NotInfix(UnaryInfix):
-    pass
+    @property
+    def operator(self):
+        return self.keyword_aliases[self.in_op]
 
 
 class SelectionParser(object):
@@ -258,7 +298,7 @@ class SelectionParser(object):
 
     @property
     def mdtraj_expression(self):
-        return self.last_parse.mdtraj_condition()
+        return self.last_parse.mdtraj_expression()
 
     @property
     def unambiguous(self):
@@ -299,10 +339,8 @@ def _make_parser():
     ])
 
     # And deal with logical expressions
-    logical_expr = infixNotation(expression, [
-        ('not', 1, opAssoc.RIGHT, NotInfix),
-        ('and', 2, opAssoc.LEFT, AndInfix),
-        ('or', 2, opAssoc.LEFT, OrInfix),
-        ('of', 2, opAssoc.LEFT, OfInfix)
-    ])
+    logical_expr = infixNotation(expression, (
+        AndInfix.get_keywords() + OrInfix.get_keywords() +
+        NotInfix.get_keywords() + OfInfix.get_keywords()
+    ))
     return logical_expr
