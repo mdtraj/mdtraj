@@ -2,14 +2,18 @@ __author__ = 'harrigan'
 
 
 # TODO: Expose this better
+import mdtraj
+import numpy as np
 from mdtraj.core.selection import SelectionParser
-from mdtraj.testing import eq
+from mdtraj.testing import eq, get_fn
 
 import logging
 
 # Conda v2.0.1 build py34_0 spews a bunch of DeprecationWarnings
 # from pyparsing internal code
 logging.captureWarnings(True)
+
+ala = mdtraj.load(get_fn("alanine-dipeptide-explicit.pdb"))
 
 
 def test_simple():
@@ -93,3 +97,11 @@ def test_within():
     sp = SelectionParser("within 5 of backbone or sidechain")
     eq(sp.unambiguous,
        "(atom_within == 5 of (residue_backbone or residue_sidechain))")
+
+
+def test_top():
+    prot = ala.topology.select("protein")
+    eq(np.asarray(prot), np.arange(22))
+
+    wat = ala.topology.select("water")
+    eq(np.asarray(wat), np.arange(22, 2269))

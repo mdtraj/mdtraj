@@ -53,6 +53,7 @@ import numpy as np
 import itertools
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import _PROTEIN_RESIDUES
+from mdtraj.core.selection import SelectionParser
 import xml.etree.ElementTree as etree
 
 from mdtraj.utils import ilen, import_
@@ -181,6 +182,8 @@ class Topology(object):
         self._bonds = []
         self._atoms = []
         self._residues = []
+
+        self._parser = None
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -364,7 +367,7 @@ class Topology(object):
         """
         pd = import_('pandas')
 
-        for col in ["name", "element", "resSeq" , "resName", "chainID"]:
+        for col in ["name", "element", "resSeq", "resName", "chainID"]:
             if col not in atoms.columns:
                 raise ValueError('dataframe must have column %s' % col)
 
@@ -740,6 +743,7 @@ class Topology(object):
         positions : list
             The list of atomic positions based on which to identify bonded atoms
         """
+
         def isCyx(res):
             names = [atom.name for atom in res._atoms]
             return 'SG' in names and 'HG' not in names
@@ -771,6 +775,26 @@ class Topology(object):
             like to retain.
         """
         return _topology_from_subset(self, atom_indices)
+
+
+    @property
+    def selection_parser(self):
+        if self._parser is None:
+            self._parser = SelectionParser()
+        return self._parser
+
+    def select_expression(self, select_string, top_name='top'):
+        sp = self.selection_parser
+        condition = sp.parse(select_string).mdtraj_condition
+
+        fmt_string = "[a.index for a in {top_name}.atoms if {condition}]"
+        fmt_dict = dict(top_name=top_name, condition=condition)
+        return fmt_string.format(**fmt_dict)
+
+    def select(self, select_string):
+        expr = self.select_expression(select_string, top_name='self')
+        return eval(expr)
+
 
     def select_atom_indices(self, selection='minimal'):
         """Get the indices of biologically-relevant groups by name.
@@ -842,6 +866,7 @@ class Chain(object):
     atoms : generator
         Iterator over all Atoms in the Chain.
     """
+
     def __init__(self, index, topology):
         """Construct a new Chain.  You should call add_chain() on the Topology instead of calling this directly."""
         ## The index of the Chain within its Topology
@@ -913,7 +938,7 @@ class Chain(object):
         """
         # this could be made faster by caching the list
         # of atoms internally if necessary
-        return next(itertools.islice(self.atoms, index, index+1))
+        return next(itertools.islice(self.atoms, index, index + 1))
 
     @property
     def n_atoms(self):
@@ -933,6 +958,7 @@ class Residue(object):
     chain : int
         The residue sequence number
     """
+
     def __init__(self, name, index, chain, resSeq):
         """Construct a new Residue.  You should call add_residue()
         on the Topology instead of calling this directly."""
@@ -1015,7 +1041,7 @@ class Residue(object):
                              'WAT', 'TIP', 'TIP2', 'TIP3', 'TIP4']
 
 
-    def  __str__(self):
+    def __str__(self):
         return '%s%s' % (self.name, self.resSeq)
 
     def __repr__(self):
