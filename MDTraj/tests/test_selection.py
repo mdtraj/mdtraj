@@ -88,3 +88,8 @@ def test_not():
     eq(sp.unambiguous, '(not residue_protein)')
     eq(sp.mdtraj_condition, "(not a.residue.is_protein)")
 
+
+def test_within():
+    sp = SelectionParser("within 5 of backbone or sidechain")
+    eq(sp.unambiguous,
+       "(atom_within == 5 of (residue_backbone or residue_sidechain))")
