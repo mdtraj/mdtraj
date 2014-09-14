@@ -5,6 +5,7 @@ from pyparsing import (Word, alphas, nums, oneOf, Group, infixNotation, opAssoc,
 
 class Operand:
     keywords = []
+    keyword_aliases = {}
 
     @classmethod
     def get_keywords(cls):
@@ -35,7 +36,8 @@ class UnaryOperand(Operand):
 
     def __str__(self):
         return "{top_type}_{value}".format(top_type=self.get_top_name(),
-                                           value=self.value)
+                                           value=self.keyword_aliases[
+                                               self.value])
 
     __repr__ = __str__
 
@@ -104,8 +106,9 @@ class BinaryOperand(Operand):
         return self.operator_aliases[self.in_op]
 
     def __str__(self):
-        fmt_dict = dict(self.__dict__)
-        fmt_dict.update(operator=self.operator, top_type=self.get_top_name())
+        fmt_dict = dict(top_type=self.get_top_name(),
+                        key=self.keyword_aliases[self.key],
+                        operator=self.operator, value=self.value)
         return "{top_type}_{key} {operator} {value}".format(**fmt_dict)
 
     def mdtraj_condition(self):
@@ -147,7 +150,8 @@ class ResidueBinaryOperand(BinaryOperand):
         'residue', 'resname', 'resid'
     ]
     keyword_aliases = dict([(v, v) for v in keywords])
-    keyword_aliases.update(residue='resid')  # TODO: What is this in vmd?
+    keyword_aliases.update(residue='resSeq', resid='index',
+                           resname='name')  # TODO: Are these correct?
 
     def get_top_name(self):
         return 'residue'
@@ -235,6 +239,30 @@ class UnaryInfix:
 
 class NotInfix(UnaryInfix):
     pass
+
+
+class SelectionParser(object):
+    def __init__(self, select_string=None):
+        self.parser = _make_parser()
+
+        if select_string is not None:
+            self.last_parse = self.parser.parseString(select_string)[0]
+        else:
+            # Default to all atoms
+            self.last_parse = self.parser.parseString("all")[0]
+
+
+    def parse(self, select_string):
+        self.last_parse = self.parser.parseString(select_string)[0]
+        return self
+
+    @property
+    def mdtraj_expression(self):
+        return self.last_parse.mdtraj_condition()
+
+    @property
+    def unambiguous(self):
+        return str(self.last_parse)
 
 
 def _make_parser():
