@@ -99,9 +99,28 @@ def test_within():
        "(atom_within == 5 of (residue_backbone or residue_sidechain))")
 
 
+def test_quotes():
+    should_be = "(a.name == 'O' and a.residue.name == 'ALA')"
+
+    sp = SelectionParser("name O and resname ALA")
+    eq(sp.mdtraj_condition, should_be)
+
+    sp.parse('name "O" and resname ALA')
+    eq(sp.mdtraj_condition, should_be)
+
+    sp.parse("name 'O' and resname ALA")
+    eq(sp.mdtraj_condition, should_be)
+
+
 def test_top():
     prot = ala.topology.select("protein")
     eq(np.asarray(prot), np.arange(22))
 
     wat = ala.topology.select("water")
     eq(np.asarray(wat), np.arange(22, 2269))
+
+
+def test_top_2():
+    expr = ala.topology.select_expression("name O and water")
+    eq(expr,
+       "[a.index for a in top.atoms if (a.name == 'O' and a.residue.is_water)]")

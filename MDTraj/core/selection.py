@@ -1,6 +1,6 @@
 from pyparsing import (Word, alphas, nums, oneOf, Group, infixNotation, opAssoc,
                        Keyword, MatchFirst, ParseException,
-                       Optional)
+                       Optional, quotedString)
 
 
 class Operand(object):
@@ -88,6 +88,26 @@ class ResidueUnaryOperand(UnaryOperand):
         return 'residue'
 
 
+def _quote_value(value):
+    """Put quotes around something if it's not a number"""
+    try:
+        # Is it an int?
+        val = int(value)
+    except ValueError:
+        # Not an int. What about a float?
+        try:
+            val = float(value)
+        except ValueError:
+            # Not a float. What about a complex?
+            try:
+                val = complex(value)
+            except ValueError:
+                # Not any sort of number. Let's put quotes around it.
+                val = value.strip("\"'")
+                val = "'{}'".format(val)
+    return val
+
+
 class BinaryOperand(SelectionOperand):
     """Selection of the form: field operator value"""
 
@@ -121,15 +141,17 @@ class BinaryOperand(SelectionOperand):
     def mdtraj_condition(self):
         field = self.keyword_aliases[self.key]
         if isinstance(self.value, RangeOperand):
+            # Special case for dealing with a range
             full_field = "{top}.{field}".format(top=self.get_top_item(),
                                                 field=field)
             return self.value.range_condition(full_field, self.operator)
 
         else:
-            return "{top}.{field} {op} {value}".format(
-                top=self.get_top_item(), field=field, op=self.operator,
-                value=self.value)
-
+            fmt_string = "{top}.{field} {op} {value}"
+            fmt_dict = dict(top=self.get_top_item(), field=field,
+                            op=self.operator,
+                            value=_quote_value(str(self.value)))
+            return fmt_string.format(**fmt_dict)
 
     __repr__ = __str__
 
@@ -333,7 +355,7 @@ def _make_parser():
     # - A value is a number, word, or range
     numrange = Group(Word(nums) + "to" + Word(nums))
     numrange.setParseAction(RangeOperand)
-    value = numrange | Word(nums) | Word(alphas)
+    value = numrange | Word(nums) | quotedString | Word(alphas)
 
     # - Operators
     comparison_op = oneOf(BinaryOperand.operators)
