@@ -192,7 +192,7 @@ class NetCDFTrajectoryFile(object):
         stride : int, optional
             If stride is not None, read only every stride-th frame from disk.
         atom_indices : np.ndarray, dtype=int, optional
-            The specific indices of the atoms you'd like to retreive. If not
+            The specific indices of the atoms you'd like to retrieve. If not
             supplied, all of the atoms will be retrieved.
 
         Returns
