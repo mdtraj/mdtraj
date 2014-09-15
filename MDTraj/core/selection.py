@@ -91,8 +91,8 @@ class UnaryOperand(SelectionOperand):
 
 class AtomUnaryOperand(UnaryOperand):
     keyword_aliases = _kw(
-        (['all', 'everything'], True),
-        (['none', 'nothing'], False)
+        (['all', 'everything'], 'all'),
+        (['none', 'nothing'], 'none')
     )
 
     def mdtraj_condition(self):

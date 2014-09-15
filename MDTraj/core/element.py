@@ -173,6 +173,11 @@ class Element(tuple):
         """Atomic number"""
         return tuple.__getitem__(self, 0)
 
+    @property
+    def radius(self):
+        """Element atomic radius"""
+        raise NotImplementedError
+
 
 # This is for backward compatibility.
 def get_by_symbol(symbol):

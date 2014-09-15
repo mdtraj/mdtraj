@@ -1025,12 +1025,12 @@ class Residue(object):
 
     @property
     def is_protein(self):
-        """Whether this residue is found in proteins."""
+        """Whether the residue is one found in proteins."""
         return self.name in _PROTEIN_RESIDUES
 
     @property
     def is_water(self):
-        """Whether this residue is water.
+        """Whether the residue is water.
 
         Residue names according to VMD
 
@@ -1040,6 +1040,11 @@ class Residue(object):
         """
         return self.name in ['H2O', 'HHO', 'OHH', 'HOH', 'OH2', 'SOL',
                              'WAT', 'TIP', 'TIP2', 'TIP3', 'TIP4']
+
+    @property
+    def is_nucleic(self):
+        """Whether the residue is one found in nucleic acids."""
+        raise NotImplementedError
 
 
     def __str__(self):
@@ -1075,6 +1080,27 @@ class Atom(object):
         ## The Residue this Atom belongs to
         self.residue = residue
         self.serial = serial
+
+    @property
+    def all(self):
+        """All atoms.
+
+        Included for completeness of the atom selection language.
+        """
+        return True
+
+    @property
+    def none(self):
+        """No atoms
+
+        Included for completeness of the atom selection language.
+        """
+        return False
+
+    @property
+    def num_bonds(self):
+        """Number of bonds in which the atom participates."""
+        raise NotImplementedError
 
     def __eq__(self, other):
         """ Check whether two Atom objects are equal. """
