@@ -67,7 +67,7 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
     stride : int, default=None
         Only read every stride-th frame
     atom_indices : array_like, optional
-        If not none, then read only a subset of the atoms coordinates from the
+        If not None, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
     frame : int, optional
@@ -111,7 +111,7 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
 @_FormatRegistry.register_fileobject('.netcdf')
 class NetCDFTrajectoryFile(object):
     """Interface for reading and writing to AMBER NetCDF files. This is a
-    file-like object, that both reading or writing depending
+    file-like object, that supports both reading or writing depending
     on the `mode` flag. It implements the context manager protocol,
     so you can also use it with the python 'with' statement.
 
@@ -119,10 +119,9 @@ class NetCDFTrajectoryFile(object):
     ----------
     filename : str
         The name of the file to open
-    mode : {'r', 'w', 'a', 'ws', 'as'}, default='r'
-        The mode in which to open the file. Valid options are 'r', 'w',
-        and 'a' for 'read', 'write', and 'append' respectively. The modes
-        'w' and 'a' may also be prefixed with 's' which turns off buffering.
+    mode : {'r', 'w'}, default='r'
+        The mode in which to open the file. Valid options are 'r' and 'w' for
+        'read' and 'write', respectively.
     force_overwrite : bool, default=False
         In write mode, if a file named `filename` already exists, clobber
         it and overwrite it.
@@ -140,7 +139,7 @@ class NetCDFTrajectoryFile(object):
         if mode not in ['r', 'w']:
             raise ValueError("mode must be one of ['r', 'w']")
 
-        if mode in ['w', 'ws'] and not force_overwrite and os.path.exists(filename):
+        if mode == 'w' and not force_overwrite and os.path.exists(filename):
             raise IOError('"%s" already exists')
 
         # AMBER uses the NetCDF3 format, with 64 bit encodings, which
