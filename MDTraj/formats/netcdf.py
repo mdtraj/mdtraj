@@ -140,7 +140,7 @@ class NetCDFTrajectoryFile(object):
             raise ValueError("mode must be one of ['r', 'w']")
 
         if mode == 'w' and not force_overwrite and os.path.exists(filename):
-            raise IOError('"%s" already exists')
+            raise IOError('"%s" already exists' % filename)
 
         # AMBER uses the NetCDF3 format, with 64 bit encodings, which
         # for scipy.io.netcdf_file is "version=2"
