@@ -54,6 +54,7 @@ import itertools
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import _PROTEIN_RESIDUES
 from mdtraj.core.selection import SelectionParser
+from mdtraj.core.element import Element # Necessary for atom_select docs
 import xml.etree.ElementTree as etree
 
 from mdtraj.utils import ilen, import_

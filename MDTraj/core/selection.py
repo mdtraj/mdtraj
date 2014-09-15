@@ -25,6 +25,10 @@ from pyparsing import (Word, alphas, nums, oneOf, Group, infixNotation, opAssoc,
                        Optional, quotedString)
 
 
+# Allow decimal numbers
+nums += '.'
+
+
 def _kw(*tuples):
     """Create a many-to-one dictionary.
 
@@ -198,14 +202,27 @@ class BinaryOperand(SelectionOperand):
     __repr__ = __str__
 
 
+class ElementBinaryOperand(BinaryOperand):
+    keyword_aliases = _kw(
+        (['type', 'element'], 'symbol'),
+        (['radius'], 'radius'),
+        (['mass'], 'mass')
+    )
+
+    @classmethod
+    def get_top_name(cls):
+        return "Element"
+
+    @classmethod
+    def get_top_item(cls):
+        return "a.element"
+
+
 class AtomBinaryOperand(BinaryOperand):
     keyword_aliases = _kw(
         (['name'], 'name'),
-        (['type', 'element'], 'element.symbol'),
         (['index', 'id'], 'index'),
         (['numbonds'], 'num_bonds'),
-        (['radius'], 'element.radius'),
-        (['mass'], 'element.mass'),
         (['within'], 'within')
     )
 
@@ -422,10 +439,14 @@ def _make_parser():
     binary_resi = Group(
         ResidueBinaryOperand.get_keywords() + comparison_op + value)
     binary_resi.setParseAction(ResidueBinaryOperand)
+    # - Element
+    elem_resi = Group(
+        ElementBinaryOperand.get_keywords() + comparison_op + value)
+    elem_resi.setParseAction(ElementBinaryOperand)
 
     # Put it together
     expression = MatchFirst([
-        single_atom, single_resi, binary_atom, binary_resi
+        single_atom, single_resi, binary_atom, binary_resi, elem_resi
     ])
 
     # And deal with logical expressions

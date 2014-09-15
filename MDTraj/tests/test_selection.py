@@ -95,6 +95,16 @@ def test_values():
     eq(sp.mdtraj_condition, "5 <= a.residue.index <= 8")
 
 
+def test_element():
+    sp = SelectionParser()
+
+    sp.parse("element 'O'")
+    eq(sp.mdtraj_condition, "a.element.symbol == 'O'")
+
+    sp.parse("mass 5.5 to 12.3")
+    eq(sp.mdtraj_condition, "5.5 <= a.element.mass <= 12.3")
+
+
 def test_not():
     sp = SelectionParser("not protein")
     eq(sp.unambiguous, "(not Residue_is_protein)")

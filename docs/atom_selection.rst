@@ -13,6 +13,8 @@ Per-Atom fields
 
 .. atom_select_table:: AtomBinaryOperand
 
+.. atom_select_table:: ElementBinaryOperand
+
 
 Per-Residue flags
 -----------------
