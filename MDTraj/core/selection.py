@@ -281,9 +281,7 @@ class parse_selection(object):
             self._initialize()
 
         parse_result = self.expression.parseString(selection)
-
         astnode = self.transformer.visit(parse_result[0].ast())
-
 
         func = ast.Expression(body=ast.Lambda(
             args=ast.arguments(args=[ast.Name(id=ATOM_NAME, ctx=ast.Param())],

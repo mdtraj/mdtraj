@@ -41,8 +41,8 @@ ala = mdtraj.load(get_fn("alanine-dipeptide-explicit.pdb"))
 def test_unary_1():
     eq(parse_selection('all').astnode, pnode('True'))
     eq(parse_selection('everything').astnode, pnode('True'))
-    eq(parse_selection('none').astnode, pnode('False'))    
-    eq(parse_selection('nothing').astnode, pnode('False'))    
+    eq(parse_selection('none').astnode, pnode('False'))
+    eq(parse_selection('nothing').astnode, pnode('False'))
 
     eq(parse_selection('protein').astnode, pnode('atom.residue.is_protein'))
     eq(parse_selection('is_protein').astnode, pnode('atom.residue.is_protein'))
@@ -66,7 +66,7 @@ def test_binary_selection_operator():
     eq(parse_selection('name ge 1').astnode, pnode('atom.name >= 1'))
     eq(parse_selection('name <= 1').astnode, pnode('atom.name <= 1'))
     eq(parse_selection('name le 1').astnode, pnode('atom.name <= 1'))
-    
+
 
 
 def test_bool():
