@@ -183,8 +183,6 @@ class Topology(object):
         self._atoms = []
         self._residues = []
 
-        self._parser = None
-
     def __ne__(self, other):
         return not self.__eq__(other)
 
