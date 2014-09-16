@@ -101,8 +101,7 @@ class AtomSelectDirective(Table):
         aliases = cls.keyword_aliases
 
         # Get topology class (Residue, Atom, ...)
-        top_name = cls.get_top_name()
-        top_class = getattr(topology, top_name)
+        top_class = cls.get_top_cls()
 
         return [make_table(aliases, top_class)]
 

@@ -25,6 +25,8 @@ from pyparsing import (Word, alphas, nums, oneOf, Group, infixNotation, opAssoc,
                        Optional, quotedString)
 
 
+from mdtraj.core.topology import Atom, Residue, Chain
+from mdtraj.core.element import Element
 
 # Allow decimal numbers
 nums += '.'
@@ -102,15 +104,19 @@ class SelectionOperand(Operand):
         return MatchFirst([Keyword(kw) for kw in keywords])
 
     @classmethod
-    def get_top_item(cls):
+    def accessor_str(cls):
+        """Given an atom a, return a string that accesses the right attribute.
+        """
         raise NotImplementedError
 
     @classmethod
-    def get_top_name(cls):
+    def get_top_cls(cls):
+        """Get the topology class to which the fields belong."""
         raise NotImplementedError
 
     @classmethod
     def accessor(cls):
+        """Return a lambda expression that accesses the correct attribute."""
         raise NotImplementedError
 
 
@@ -127,7 +133,7 @@ class UnaryOperand(SelectionOperand):
 
     def mdtraj_condition(self):
         fmt_string = "{pre}.{value}"
-        fmt_dict = dict(pre=self.get_top_item(),
+        fmt_dict = dict(pre=self.accessor_str(),
                         value=self.keyword_aliases[self.value])
         return fmt_string.format(**fmt_dict)
 
@@ -143,12 +149,12 @@ class AtomUnaryOperand(UnaryOperand):
     )
 
     @classmethod
-    def get_top_item(cls):
+    def accessor_str(cls):
         return 'a'
 
     @classmethod
-    def get_top_name(cls):
-        return 'Atom'
+    def get_top_cls(cls):
+        return Atom
 
     @classmethod
     def accessor(cls):
@@ -167,12 +173,12 @@ class ResidueUnaryOperand(UnaryOperand):
     )
 
     @classmethod
-    def get_top_item(cls):
+    def accessor_str(cls):
         return 'a.residue'
 
     @classmethod
-    def get_top_name(cls):
-        return 'Residue'
+    def get_top_cls(cls):
+        return Residue
 
     @classmethod
     def accessor(cls):
@@ -214,7 +220,7 @@ class BinaryOperand(SelectionOperand):
         """Use special logic for constructing a range condition."""
         field = self.keyword_aliases[self.key]
         fmt_string = "{first} <= {top}.{field} <= {last}"
-        fmt_dict = dict(top=self.get_top_item(), field=field,
+        fmt_dict = dict(top=self.accessor_str(), field=field,
                         first=self.value.first, last=self.value.last)
         return fmt_string.format(**fmt_dict)
 
@@ -222,7 +228,7 @@ class BinaryOperand(SelectionOperand):
         """Normal condition for comparing to one value."""
         field = self.keyword_aliases[self.key]
         fmt_string = "{top}.{field} {op} {value}"
-        fmt_dict = dict(top=self.get_top_item(), field=field,
+        fmt_dict = dict(top=self.accessor_str(), field=field,
                         op=self.operator_str,
                         value=_cast(self.value, add_quotes=True))
         return fmt_string.format(**fmt_dict)
@@ -255,11 +261,11 @@ class ElementBinaryOperand(BinaryOperand):
     )
 
     @classmethod
-    def get_top_name(cls):
-        return "Element"
+    def get_top_cls(cls):
+        return Element
 
     @classmethod
-    def get_top_item(cls):
+    def accessor_str(cls):
         return "a.element"
 
     @classmethod
@@ -276,11 +282,11 @@ class AtomBinaryOperand(BinaryOperand):
     )
 
     @classmethod
-    def get_top_name(cls):
-        return 'Atom'
+    def get_top_cls(cls):
+        return Atom
 
     @classmethod
-    def get_top_item(cls):
+    def accessor_str(cls):
         return 'a'
 
     @classmethod
@@ -298,11 +304,11 @@ class ResidueBinaryOperand(BinaryOperand):
     )
 
     @classmethod
-    def get_top_name(cls):
-        return 'Residue'
+    def get_top_cls(cls):
+        return Residue
 
     @classmethod
-    def get_top_item(cls):
+    def accessor_str(cls):
         return 'a.residue'
 
     @classmethod
