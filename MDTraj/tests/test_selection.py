@@ -55,6 +55,21 @@ def make_test_topology():
 tt = make_test_topology()
 
 
+def test_range():
+    sp = SelectionParser('resSeq 5 to 6')
+    for a in tt.atoms:
+        assert sp.filter(a)
+
+    sp.parse('resSeq 7 to 8')
+    for a in tt.atoms:
+        assert not sp.filter(a)
+
+    sp.parse('mass 0.8 to 1.1')
+    assert sp.filter(tt.atom(1))
+    assert not sp.filter(tt.atom(2))
+    assert sp.filter(tt.atom(3))
+
+
 def test_unary_2():
     sp = SelectionParser('all')
     for a in tt.atoms:
@@ -96,6 +111,7 @@ def test_binary_1():
     sp.parse('name ne O')
     assert sp.filter(tt.atom(0))
     assert not sp.filter(tt.atom(2))
+
 
 def test_binary_2():
     sp = SelectionParser('name O and mass > 2')
@@ -166,6 +182,9 @@ def test_element():
 
     sp.parse("mass 5.5 to 12.3")
     eq(sp.mdtraj_condition, "5.5 <= a.element.mass <= 12.3")
+
+    sp.parse("atomnum 6")
+    assert sp.filter(tt.atom(0))
 
 
 def test_not():

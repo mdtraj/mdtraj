@@ -213,10 +213,10 @@ class BinaryOperand(SelectionOperand):
     def mdtraj_range_condition(self):
         """Use special logic for constructing a range condition."""
         field = self.keyword_aliases[self.key]
-        fmt_string = "{top}.{field}"
-        fmt_dict = dict(top=self.get_top_item(), field=field)
-        full_field = fmt_string.format(**fmt_dict)
-        return self.value.range_condition(full_field, self.operator_str)
+        fmt_string = "{first} <= {top}.{field} <= {last}"
+        fmt_dict = dict(top=self.get_top_item(), field=field,
+                        first=self.value.first, last=self.value.last)
+        return fmt_string.format(**fmt_dict)
 
     def mdtraj_singleval_condition(self):
         """Normal condition for comparing to one value."""
@@ -236,19 +236,22 @@ class BinaryOperand(SelectionOperand):
     def filter(self):
         field = self.keyword_aliases[self.key]
         field_attr = lambda x: getattr(self.accessor()(x), field)
-        val = _cast(self.value)
 
-        return lambda a: self.operator(field_attr(a))(val)
-
-    __str__ = mdtraj_condition
-    __repr__ = __str__
+        if isinstance(self.value, RangeOperand):
+            first = _cast(self.value.first)
+            last = _cast(self.value.last)
+            return lambda a: first <= field_attr(a) <= last
+        else:
+            val = _cast(self.value)
+            return lambda a: self.operator(field_attr(a))(val)
 
 
 class ElementBinaryOperand(BinaryOperand):
     keyword_aliases = _kw(
         (['type', 'element'], 'symbol'),
         (['radius'], 'radius'),
-        (['mass'], 'mass')
+        (['mass'], 'mass'),
+        (['atomnum'], 'atomic_number')
     )
 
     @classmethod
@@ -314,23 +317,6 @@ class RangeOperand(object):
         tokes = tokes[0]
         if len(tokes) == 3:
             self.first, self.to, self.last = tokes
-
-    def __str__(self):
-        return "range({first} {to} {last})".format(**self.__dict__)
-
-    __repr__ = __str__
-
-    def range_condition(self, field, op):
-        if self.to == 'to' and op == '==':
-            pass
-            return "{first} <= {field} <= {last}".format(
-                first=self.first, field=field, last=self.last
-            )
-        else:
-            # We may want to be able to do more fancy things later on
-            # For example: "mass > 5 to 10" could be parsed (even though
-            # it's kinda stupid)
-            raise ParseException("Incorrect use of ranged value")
 
 
 class InfixOperand(Operand):
