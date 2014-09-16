@@ -1,12 +1,8 @@
-__author__ = 'harrigan'
-
-from docutils import nodes
-from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives.tables import Table
 from mdtraj.core import selection, topology
 
-from docutils.nodes import tbody, entry, paragraph, row, table, tgroup, colspec, \
-    thead
+from docutils.nodes import (tbody, entry, paragraph, row, table, tgroup,
+                            colspec, thead)
 
 
 def rev_dic(dic, value):
