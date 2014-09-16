@@ -4,7 +4,7 @@
 # Copyright 2012-2014 Stanford University and the Authors
 #
 # Authors: Matthew Harrigan
-# Contributors:
+# Contributors: Robert T. McGibbon
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -20,14 +20,29 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 # #############################################################################
 
-from pyparsing import (Word, alphas, nums, oneOf, Group, infixNotation, opAssoc,
-                       Keyword, MatchFirst, ParseException,
-                       Optional, quotedString)
 
+import ast
+from mdtraj.utils import import_
+from collections import namedtuple
 
-# Allow decimal numbers
-nums += '.'
+NUMS = '.0123456789'
+ATOM_NAME = '__ATOM__'
 
+class _RewriteNames(ast.NodeTransformer):
+    def visit_Name(self, node):
+        if node.id == ATOM_NAME:
+            # when we're building the AST, we refer to the current atom using
+            # ATOM_NAME, but then before returning the ast to the user, we
+            # rewrite the name as just 'atom'.
+            return ast.Name(id='atom', ctx=ast.Load())
+        # all other bare names are taken to be string literals. Thus something
+        # like parse_selection('name CA') properly resolves CA as a string
+        # literal, not a barename to be loaded from the global scope!
+        return ast.Str(s=node.id)
+
+_ParsedSelection = namedtuple('_ParsedSelection', ['expr', 'source', 'astnode'])
+
+__all__ = ['parse_selection']
 
 def _kw(*tuples):
     """Create a many-to-one dictionary.
@@ -42,416 +57,234 @@ def _kw(*tuples):
     return dic
 
 
-class Operand(object):
-    keyword_aliases = {}
-
-    def mdtraj_condition(self):
-        """Build an mdtraj-compatible piece of python code."""
-        raise NotImplementedError
-
-    @classmethod
-    def get_keywords(cls):
-        raise NotImplementedError
+def _check_n_tokens(tokens, n_tokens, name):
+    if not len(tokens) == n_tokens:
+        err = "{} take 3 values. You gave {}"
+        err = err.format(name, len(tokens))
+        ParseException = import_('pyparsing').ParseException
+        raise ParseException(err)
 
 
-class SelectionOperand(Operand):
-    @classmethod
-    def get_keywords(cls):
-        return MatchFirst([Keyword(kw) for kw in cls.keyword_aliases.keys()])
+class UnarySelectionOperand(object):
+    """Unary selections
 
-    @classmethod
-    def get_top_item(cls):
-        """Get the name of the appropriate topology field for mdtraj.
-
-        E.g.: for atoms it is a.whatever and for residues it
-        is a.residue.whatever
-        """
-        raise NotImplementedError
-
-    @classmethod
-    def get_top_name(cls):
-        raise NotImplementedError
-
-
-class UnaryOperand(SelectionOperand):
-    """Single keyword selection identifier."""
-
-    def __init__(self, tokes):
-        tokes = tokes[0]
-        self.value = tokes
-
-    def __str__(self):
-        fmt_string = "{top_type}_{value}"
-        fmt_dict = dict(top_type=self.get_top_name(),
-                        value=self.keyword_aliases[self.value])
-        return fmt_string.format(**fmt_dict)
-
-    __repr__ = __str__
-
-
-class AtomUnaryOperand(UnaryOperand):
-    keyword_aliases = _kw(
-        (['all', 'everything'], 'all'),
-        (['none', 'nothing'], 'none')
-    )
-
-    def mdtraj_condition(self):
-        return "{}".format(self.keyword_aliases[self.value])
-
-    @classmethod
-    def get_top_item(cls):
-        return 'a'
-
-    @classmethod
-    def get_top_name(cls):
-        return 'Atom'
-
-
-class ResidueUnaryOperand(UnaryOperand):
-    """Single keyword selections that specify residues"""
+    Examples
+    --------
+    'all' -> lambda atom: True
+    'none' -> lambda atom: False
+    'protein' -> lambda atom: atom.residue.is_protein()
+    'water' -> lambda atom: atom.residue.is_water()
+    """
 
     keyword_aliases = _kw(
-        (['protein', 'is_protein'], 'is_protein'),
-        (['nucleic', 'is_nucleic'], 'is_nucleic'),
-        (['backbone', 'is_backbone'], 'is_backbone'),
-        (['sidechain', 'is_sidechain'], 'is_sidechain'),
-        (['water', 'waters', 'is_water'], 'is_water')
+        # Atom.<attribute>
+        (['all', 'everything'], ast.Name(id='True', ctx=ast.Load())),
+        (['none', 'nothing'], ast.Name(id='False', ctx=ast.Load())),
+        # Atom.residue.<attribute>
+        (['protein', 'is_protein'], ('residue', 'is_protein')),
+        (['nucleic', 'is_nucleic'], ('residue', 'is_nucleic')),
+        (['water', 'waters', 'is_water'], ('residue', 'is_water')),
     )
 
-    def mdtraj_condition(self):
-        return "a.residue.{}".format(self.keyword_aliases[self.value])
-
-    @classmethod
-    def get_top_item(cls):
-        return 'a.residue'
-
-    @classmethod
-    def get_top_name(cls):
-        return 'Residue'
+    def __init__(self, tokens):
+        self._tokens = tokens
+        _check_n_tokens(tokens, 1, 'Unary selectors')
 
 
-def _quote_value(value):
-    """Put quotes around something if it's not a number"""
-    try:
-        # Is it an int?
-        val = int(value)
-    except ValueError:
-        # Not an int. What about a float?
-        try:
-            val = float(value)
-        except ValueError:
-            # Not a float. What about a complex?
-            try:
-                val = complex(value)
-            except ValueError:
-                # Not any sort of number. Let's put quotes around it.
-                val = value.strip("\"'")
-                val = "'{}'".format(val)
-    return val
+    def ast(self):
+        rhs = self.keyword_aliases[self._tokens[0]]
+        if isinstance(rhs, ast.AST):
+            return rhs
+
+        # we structure the rhs to be an iterable, which we recursively
+        # apply ast.Attribute() on. This transforms ('residue', 'is_protein'),
+        # for example, into
+        # Attribute(value=Attribute(value=Name(id=ATOM_NAME, ctx=Load()),
+        #  attr='residue', ctx=Load()), attr='is_protein', ctx=Load())
+        left = ast.Name(id=ATOM_NAME, ctx=ast.Load())
+        for attr in rhs:
+            left = ast.Attribute(value=left, attr=attr, ctx=ast.Load())
+
+        return left
 
 
-class BinaryOperand(SelectionOperand):
-    """Selection of the form: field operator value"""
+class BinarySelectionOperand(object):
+    """Binary selections
+
+    Examples
+    --------
+    'name CA' -> lambda atom: atom.name == 'CA'
+    'index > 1' -> lambda atom: atom.index > 1
+    'resname != TYR' -> lambda atom: atom.residue.name != 'TYR'
+    """
 
     operator_aliases = _kw(
-        (['<', 'lt'], '<'),
-        (['==', 'eq'], '=='),
-        (['<=', 'le'], '<='),
-        (['!=', 'ne'], '!='),
-        (['>=', 'ge'], '>='),
-        (['>', 'gt'], '>')
+        (['<', 'lt'], ast.Lt),
+        (['==', 'eq'], ast.Eq),
+        (['<=', 'le'], ast.LtE),
+        (['!=', 'ne'], ast.NotEq),
+        (['>=', 'ge'], ast.GtE),
+        (['>', 'gt'], ast.Gt),
     )
-
-    def __init__(self, tokes):
-        tokes = tokes[0]
-        if len(tokes) == 3:
-            self.key, self.in_op, self.value = tokes
-        else:
-            err = "Binary selectors take 3 values. You gave {}"
-            err = err.format(len(tokes))
-            raise ParseException(err)
-
-    @property
-    def operator(self):
-        """Return an unambiguous operator."""
-        return self.operator_aliases[self.in_op]
-
-    def __str__(self):
-        fmt_string = "{top_type}_{key} {operator} {value}"
-        fmt_dict = dict(top_type=self.get_top_name(),
-                        key=self.keyword_aliases[self.key],
-                        operator=self.operator, value=self.value)
-        return fmt_string.format(**fmt_dict)
-
-    def mdtraj_condition(self):
-        field = self.keyword_aliases[self.key]
-        if isinstance(self.value, RangeOperand):
-            # Special case for dealing with a range
-            fmt_string = "{top}.{field}"
-            fmt_dict = dict(top=self.get_top_item(), field=field)
-            full_field = fmt_string.format(**fmt_dict)
-            return self.value.range_condition(full_field, self.operator)
-
-        else:
-            fmt_string = "{top}.{field} {op} {value}"
-            fmt_dict = dict(top=self.get_top_item(), field=field,
-                            op=self.operator,
-                            value=_quote_value(str(self.value)))
-            return fmt_string.format(**fmt_dict)
-
-    __repr__ = __str__
-
-
-class ElementBinaryOperand(BinaryOperand):
-    keyword_aliases = _kw(
-        (['type', 'element'], 'symbol'),
-        (['radius'], 'radius'),
-        (['mass'], 'mass')
-    )
-
-    @classmethod
-    def get_top_name(cls):
-        return "Element"
-
-    @classmethod
-    def get_top_item(cls):
-        return "a.element"
-
-
-class AtomBinaryOperand(BinaryOperand):
-    keyword_aliases = _kw(
-        (['name'], 'name'),
-        (['index', 'id'], 'index'),
-        (['numbonds'], 'num_bonds'),
-        (['within'], 'within')
-    )
-
-    @classmethod
-    def get_top_name(cls):
-        return 'Atom'
-
-    @classmethod
-    def get_top_item(cls):
-        return 'a'
-
-
-class ResidueBinaryOperand(BinaryOperand):
-    """Selections that specify residues."""
 
     keyword_aliases = _kw(
-        (['residue', 'resSeq'], 'resSeq'),
-        (['resname'], 'name'),
-        (['resid'], 'index')
+        (('name',),             ('name',)),
+        (('index',),            ('index',)),
+        (('numbonds',),         ('numbonds',)),
+        (('type', 'element'),   ('element', 'symbol')),
+        (('radius',),           ('element', 'radius')),
+        (('mass',),             ('element', 'mass')),
+        (('residue', 'resSeq'), ('residue', 'resSeq')),
+        (('resname',),          ('residue', 'name')),
+        (('resid',),            ('residue', 'index')),
     )
 
-    @classmethod
-    def get_top_name(cls):
-        return 'Residue'
+    def __init__(self, tokens):
+        tokens = tokens[0]
+        self._tokens = tokens
+        _check_n_tokens(tokens, 3, 'Binary selectors')
 
-    @classmethod
-    def get_top_item(cls):
-        return 'a.residue'
+    def ast(self):
+        left = ast.Name(id=ATOM_NAME, ctx=ast.Load())
+        for attr in self.keyword_aliases[self._tokens[0]]:
+            left = ast.Attribute(value=left, attr=attr, ctx=ast.Load())
 
+        ops = [self.operator_aliases[self._tokens[1]]()]
+        comparators = [ast.parse(self._tokens[2], mode='eval').body]
 
-class RangeOperand:
-    """Values of the form: first to last"""
-
-    def __init__(self, tokes):
-        tokes = tokes[0]
-        if len(tokes) == 3:
-            self.first, self.to, self.last = tokes
-
-    def __str__(self):
-        return "range({first} {to} {last})".format(**self.__dict__)
-
-    __repr__ = __str__
-
-    def range_condition(self, field, op):
-        if self.to == 'to' and op == '==':
-            pass
-            return "{first} <= {field} <= {last}".format(
-                first=self.first, field=field, last=self.last
-            )
-        else:
-            # We may want to be able to do more fancy things later on
-            # For example: "mass > 5 to 10" could be parsed (even though
-            # it's kinda stupid)
-            raise ParseException("Incorrect use of ranged value")
+        return ast.Compare(left=left, ops=ops, comparators=comparators)
 
 
-class InfixOperand(Operand):
-    # Overwrite the following in base classes.
-    num_terms = -1
-    assoc = None
+class UnaryInfixOperand(object):
+    n_terms = 1
+    assoc = 'RIGHT'
 
-    @classmethod
-    def get_keywords(cls):
-        # Prepare tuples for pyparsing.infixNotation
-        return [(kw, cls.num_terms, cls.assoc, cls)
-                for kw in cls.keyword_aliases.keys()]
+    keyword_aliases = _kw(
+        (['not', '!'], ast.Not()),
+    )
+
+    def __init__(self, tokens):
+        tokens = tokens[0]
+        _check_n_tokens(tokens, 2, 'Unary infix operators')
+        self._op, self._value = tokens
+
+    def ast(self):
+        return ast.UnaryOp(op=self.keyword_aliases[self._op],
+                           operand=self._value.ast())
 
 
-class BinaryInfix(InfixOperand):
-    """Deal with binary infix operators: and, or, etc"""
+class BinaryInfixOperand(object):
+    n_terms = 2
+    assoc = 'LEFT'
 
-    num_terms = 2
-    assoc = opAssoc.LEFT
+    keyword_aliases = _kw(
+        (['and', '&&'], ast.And()),
+        (['or', '||'], ast.Or()),
+    )
 
-    def __init__(self, tokes):
-        tokes = tokes[0]
-        if len(tokes) % 2 == 1:
-            self.in_op = tokes[1]
-            self.parts = tokes[::2]
+    def __init__(self, tokens):
+        tokes = tokens[0]
+        if len(tokens) % 2 == 1:
+            self._op = tokes[1]
+            self._parts = tokes[::2]
         else:
             err = "Invalid number of infix expressions: {}"
-            err = err.format(len(tokes))
+            err = err.format(len(tokens))
+            ParseException = import_('pyparsing').ParseException
             raise ParseException(err)
 
-
-    def __str__(self):
-        # Join all the parts
-        middle = " {} ".format(self.operator).join(
-            ["{}".format(p) for p in self.parts])
-
-        # And put parenthesis around it
-        return "({})".format(middle)
-
-    __repr__ = __str__
-
-    def mdtraj_condition(self):
-
-        # Join all the parts
-        middle = " {} ".format(self.operator).join(
-            [p.mdtraj_condition() for p in self.parts])
-
-        # Put parenthesis around it
-        return "({})".format(middle)
-
-    @property
-    def operator(self):
-        return self.keyword_aliases[self.in_op]
+    def ast(self):
+        return ast.BoolOp(op=self.keyword_aliases[self._op],
+                          values=[e.ast() for e in self._parts])
 
 
-class AndInfix(BinaryInfix):
-    keyword_aliases = _kw(
-        (['and', '&&'], 'and')
-    )
+class parse_selection(object):
+    """Parse an atom selection expression
+
+    Parameters
+    ----------
+    selection_string : str
+        Selection string, a string in the MDTraj atom selection grammer.
+
+    Returns
+    -------
+    expr : callable (atom -> bool)
+        A callable object which accepts an MDTraj.core.topology.Atom object and
+        returns a boolean value giving whether or not that particular atom
+        satisfies the selection string.
+    source : str
+        Python source code corresponding to the expression ``expr``.
+    astnode : ast.AST
+        Python abstract syntax tree node containing the parsed expression
+
+    Examples
+    --------
+    >>> expr, source, astnode = parse_selection('protein and type CA')
+    >>> expr
+    <function __main__.<lambda>>
+    >>> source
+    '(atom.residue.is_protein and (atom.element.symbol == CA))'
+    >>> <_ast.BoolOp at 0x103969d50>
+    """
+    def __init__(self):
+        self.is_initialized = False
+        self.expression = None
+
+    def _initialize(self):
+        pp = import_('pyparsing')
+
+        def keywords(klass):
+            return pp.MatchFirst([pp.Keyword(kw) for kw in klass.keyword_aliases.keys()])
+
+        def infix(klass):
+            return [(kw, klass.n_terms, getattr(pp.opAssoc, klass.assoc), klass)
+                for kw in klass.keyword_aliases.keys()]
+
+        comparison_op = pp.oneOf(list(BinarySelectionOperand.operator_aliases.keys()))
+        comparison_op = pp.Optional(comparison_op, '==')
+        value = pp.Word(NUMS) | pp.quotedString | pp.Word(pp.alphas)
+
+        unary = keywords(UnarySelectionOperand)
+        unary.setParseAction(UnarySelectionOperand)
+
+        binary = pp.Group(
+            keywords(BinarySelectionOperand) + comparison_op + value)
+        binary.setParseAction(BinarySelectionOperand)
+        expression = pp.MatchFirst([unary, binary])
+
+        logical_expr = pp.infixNotation(expression,
+            infix(BinaryInfixOperand) + infix(UnaryInfixOperand))
+
+        self.expression = logical_expr
+        self.is_initialized = True
+
+        self.transformer = _RewriteNames()
+
+    def __call__(self, selection):
+        if not self.is_initialized:
+            self._initialize()
+
+        parse_result = self.expression.parseString(selection)
+
+        astnode = self.transformer.visit(parse_result[0].ast())
 
 
-class OrInfix(BinaryInfix):
-    keyword_aliases = _kw(
-        (['or', '||'], 'or')
-    )
+        func = ast.Expression(body=ast.Lambda(
+            args=ast.arguments(args=[ast.Name(id=ATOM_NAME, ctx=ast.Param())],
+                              vararg=None, kwarg=None, defaults=[]),
+            body=astnode))
+        expr = eval(
+            compile(ast.fix_missing_locations(func), '<string>', mode='eval'))
 
+        try:
+            codegen = import_('codegen')
+            source = codegen.to_source(astnode)
+        except ImportError:
+            source = None
 
-class OfInfix(BinaryInfix):
-    keyword_aliases = _kw(
-        (['of'], 'of')
-    )
+        return _ParsedSelection(expr, source, astnode)
 
-
-class NotInfix(InfixOperand):
-    """Deal with unary infix operators: not"""
-
-    num_terms = 1
-    assoc = opAssoc.RIGHT
-
-    keyword_aliases = _kw(
-        (['not', '!'], 'not')
-    )
-
-    def __init__(self, tokes):
-        tokes = tokes[0]
-        if len(tokes) == 2:
-            self.in_op, self.value = tokes
-        else:
-            err = "Invalid number of expressions for not operation: {}"
-            err = err.format(len(tokes))
-            raise ParseException(err)
-
-    def __str__(self):
-        return "({} {})".format(self.operator, self.value)
-
-    __repr__ = __str__
-
-    def mdtraj_condition(self):
-        return "({} {})".format(self.operator, self.value.mdtraj_condition())
-
-    @property
-    def operator(self):
-        return self.keyword_aliases[self.in_op]
-
-
-class SelectionParser(object):
-    def __init__(self, select_string=None):
-        self.parser = _make_parser()
-
-        if select_string is not None:
-            self.last_parse = self.parser.parseString(select_string)[0]
-        else:
-            # Default to all atoms
-            self.last_parse = self.parser.parseString("all")[0]
-
-
-    def parse(self, select_string):
-        """Parse a selection string."""
-
-        # We need to select element zero of the result of parseString
-        # I don't know what would ever go in the rest of the list.
-        self.last_parse = self.parser.parseString(select_string)[0]
-        return self
-
-    @property
-    def mdtraj_condition(self):
-        return self.last_parse.mdtraj_condition()
-
-    @property
-    def unambiguous(self):
-        return str(self.last_parse)
-
-
-def _make_parser():
-    """Build an expression that can parse atom selection strings."""
-
-    # Single Keyword
-    # - Atom
-    single_atom = AtomUnaryOperand.get_keywords()
-    single_atom.setParseAction(AtomUnaryOperand)
-    # - Residue
-    single_resi = ResidueUnaryOperand.get_keywords()
-    single_resi.setParseAction(ResidueUnaryOperand)
-
-    # Key Value Keywords
-    # - A value is a number, word, or range
-    numrange = Group(Word(nums) + "to" + Word(nums))
-    numrange.setParseAction(RangeOperand)
-    value = numrange | Word(nums) | quotedString | Word(alphas)
-
-    # - Operators
-    comparison_op = oneOf(list(BinaryOperand.operator_aliases.keys()))
-    comparison_op = Optional(comparison_op, '==')
-
-    # - Atom
-    binary_atom = Group(
-        AtomBinaryOperand.get_keywords() + comparison_op + value)
-    binary_atom.setParseAction(AtomBinaryOperand)
-    # - Residue
-    binary_resi = Group(
-        ResidueBinaryOperand.get_keywords() + comparison_op + value)
-    binary_resi.setParseAction(ResidueBinaryOperand)
-    # - Element
-    elem_resi = Group(
-        ElementBinaryOperand.get_keywords() + comparison_op + value)
-    elem_resi.setParseAction(ElementBinaryOperand)
-
-    # Put it together
-    expression = MatchFirst([
-        single_atom, single_resi, binary_atom, binary_resi, elem_resi
-    ])
-
-    # And deal with logical expressions
-    logical_expr = infixNotation(expression, (
-        AndInfix.get_keywords() + OrInfix.get_keywords() +
-        NotInfix.get_keywords() + OfInfix.get_keywords()
-    ))
-    return logical_expr
+# Create the callable, and use it to overshadow the class. this way there's
+# basically just one global instance of the "function", even thought its
+# a callable class.
+parse_selection = parse_selection()
