@@ -23,8 +23,10 @@
 
 import ast
 from copy import deepcopy
-from mdtraj.utils import import_
 from collections import namedtuple
+from mdtraj.utils.six import PY2
+from mdtraj.utils import import_
+
 
 __all__ = ['parse_selection']
 
@@ -289,19 +291,24 @@ class parse_selection(object):
         parse_result = self.expression.parseString(selection)
         astnode = self.transformer.visit(parse_result[0].ast())
 
-        func = ast.Expression(
-            body=ast.Lambda(
-                args=ast.arguments(
-                    args=[ast.Name(id=ATOM_NAME, ctx=ast.Param())],
-                    vararg=None, kwarg=None, defaults=[]),
-                body=astnode
-            )
-        )
+        if PY2:
+            args = [ast.Name(id=ATOM_NAME, ctx=ast.Param())]
+            signature = ast.arguments(args=args, vararg=None, kwarg=None,
+                                      defaults=[])
+        else:
+            args =[ast.arg(arg=ATOM_NAME, annotation=None)]
+            signature = ast.arguments(args=args, vararg=None, kwarg=None,
+                                      kwonlyargs=[], defaults=[], kw_defaults=[])
+
+
+
+        func = ast.Expression(body=ast.Lambda(signature, astnode))
+
         expr = eval(
             compile(ast.fix_missing_locations(func), '<string>', mode='eval'))
 
         try:
-            codegen = import_('codegen')
+            codegen = import_('astor.codegen')
             source = codegen.to_source(astnode)
         except ImportError:
             source = None
