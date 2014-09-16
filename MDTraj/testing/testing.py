@@ -26,6 +26,7 @@
 ##############################################################################
 
 from __future__ import print_function, division
+import ast
 import os
 import sys
 import functools
@@ -152,6 +153,8 @@ def eq(o1, o2, decimal=6, err_msg=''):
     elif 'pandas' in sys.modules and isinstance(o1, pd.DataFrame):
         # pandas dataframes are basically like dictionaries of numpy arrayss
         assert_dict_equal(o1, o2, decimal=decimal)
+    elif isinstance(o1, ast.AST) and isinstance(o2, ast.AST):
+        eq_(ast.dump(o1), ast.dump(o2))
 
     # probably these are other specialized types
     # that need a special check?

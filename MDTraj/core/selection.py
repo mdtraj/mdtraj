@@ -22,6 +22,7 @@
 
 
 import ast
+from copy import deepcopy
 from mdtraj.utils import import_
 from collections import namedtuple
 
@@ -104,12 +105,12 @@ class UnarySelectionOperand(object):
 
     keyword_aliases = _kw(
         # Atom.<attribute>
-        (['all', 'everything'], ast.Name(id='True', ctx=ast.Load())),
-        (['none', 'nothing'], ast.Name(id='False', ctx=ast.Load())),
+        (('all', 'everything'), ast.Name(id='True', ctx=ast.Load())),
+        (('none', 'nothing'), ast.Name(id='False', ctx=ast.Load())),
         # Atom.residue.<attribute>
-        (['protein', 'is_protein'], _chained_atom_attr('residue', 'is_protein')),
-        (['nucleic', 'is_nucleic'], _chained_atom_attr('residue', 'is_nucleic')),
-        (['water', 'waters', 'is_water'], _chained_atom_attr('residue', 'is_water')),
+        (('protein', 'is_protein'), _chained_atom_attr('residue', 'is_protein')),
+        (('nucleic', 'is_nucleic'), _chained_atom_attr('residue', 'is_nucleic')),
+        (('water', 'waters', 'is_water'), _chained_atom_attr('residue', 'is_water')),
     )
 
     def __init__(self, tokens):
@@ -120,7 +121,7 @@ class UnarySelectionOperand(object):
         assert tokens[0] in self.keyword_aliases
 
     def ast(self):
-        return self.keyword_aliases[self._tokens[0]]
+        return deepcopy(self.keyword_aliases[self._tokens[0]])
 
 
 class BinarySelectionOperand(object):
@@ -165,7 +166,7 @@ class BinarySelectionOperand(object):
         left = self.keyword_aliases[self.keyword_token]
         ops = [self.operator_aliases[self.op_token]]
         comparators = [ast.parse(self.comparator_token, mode='eval').body]
-        return ast.Compare(left=left, ops=ops, comparators=comparators)
+        return deepcopy(ast.Compare(left=left, ops=ops, comparators=comparators))
 
 
 class UnaryInfixOperand(object):
@@ -183,8 +184,8 @@ class UnaryInfixOperand(object):
         assert self.op_token in self.keyword_aliases
 
     def ast(self):
-        return ast.UnaryOp(op=self.keyword_aliases[self.op_token],
-                           operand=self.value_token.ast())
+        return deepcopy(ast.UnaryOp(op=self.keyword_aliases[self.op_token],
+                           operand=self.value_token.ast()))
 
 
 class BinaryInfixOperand(object):
@@ -209,8 +210,8 @@ class BinaryInfixOperand(object):
         assert self.op_token in self.keyword_aliases
 
     def ast(self):
-        return ast.BoolOp(op=self.keyword_aliases[self.op_token],
-                          values=[e.ast() for e in self.comparators])
+        return deepcopy(ast.BoolOp(op=self.keyword_aliases[self.op_token],
+                                   values=[e.ast() for e in self.comparators]))
 
 
 class parse_selection(object):

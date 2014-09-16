@@ -20,12 +20,15 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 # #############################################################################
 
+import ast
 import logging
 
 import mdtraj
 import numpy as np
-from mdtraj.core.selection import SelectionParser
+from mdtraj.core.selection import parse_selection
 from mdtraj.testing import eq, get_fn
+
+pnode = lambda str: ast.parse(str, mode='eval').body
 
 
 # Conda v2.0.1 build py34_0 spews a bunch of DeprecationWarnings
@@ -35,16 +38,35 @@ logging.captureWarnings(True)
 ala = mdtraj.load(get_fn("alanine-dipeptide-explicit.pdb"))
 
 
-def test_simple():
-    sp = SelectionParser("protein")
-    eq(sp.unambiguous, 'Residue_is_protein')
-    eq(sp.mdtraj_condition, "a.residue.is_protein")
+def test_unary_1():
+    eq(parse_selection('all').astnode, pnode('True'))
+    eq(parse_selection('everything').astnode, pnode('True'))
+    eq(parse_selection('none').astnode, pnode('False'))    
+    eq(parse_selection('nothing').astnode, pnode('False'))    
+
+    eq(parse_selection('protein').astnode, pnode('atom.residue.is_protein'))
+    eq(parse_selection('is_protein').astnode, pnode('atom.residue.is_protein'))
+    eq(parse_selection('nucleic').astnode, pnode('atom.residue.is_nucleic'))
+    eq(parse_selection('is_nucleic').astnode, pnode('atom.residue.is_nucleic'))
+    eq(parse_selection('water').astnode, pnode('atom.residue.is_water'))
+    eq(parse_selection('is_water').astnode, pnode('atom.residue.is_water'))
+    eq(parse_selection('waters').astnode, pnode('atom.residue.is_water'))
 
 
-def test_alias():
-    sp = SelectionParser("waters")
-    eq(sp.unambiguous, "Residue_is_water")
-    eq(sp.mdtraj_condition, "a.residue.is_water")
+def test_binary_selection_operator():
+    eq(parse_selection('name < 1').astnode, pnode('atom.name < 1'))
+    eq(parse_selection('name lt 1').astnode, pnode('atom.name < 1'))
+    eq(parse_selection('name > 1').astnode, pnode('atom.name > 1'))
+    eq(parse_selection('name gt 1').astnode, pnode('atom.name > 1'))
+    eq(parse_selection('name == 1').astnode, pnode('atom.name == 1'))
+    eq(parse_selection('name eq 1').astnode, pnode('atom.name == 1'))
+    eq(parse_selection('name != 1').astnode, pnode('atom.name != 1'))
+    eq(parse_selection('name ne 1').astnode, pnode('atom.name != 1'))
+    eq(parse_selection('name >= 1').astnode, pnode('atom.name >= 1'))
+    eq(parse_selection('name ge 1').astnode, pnode('atom.name >= 1'))
+    eq(parse_selection('name <= 1').astnode, pnode('atom.name <= 1'))
+    eq(parse_selection('name le 1').astnode, pnode('atom.name <= 1'))
+    
 
 
 def test_bool():
