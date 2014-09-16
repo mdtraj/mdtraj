@@ -25,6 +25,7 @@ from pyparsing import (Word, alphas, nums, oneOf, Group, infixNotation, opAssoc,
                        Optional, quotedString)
 
 
+
 # Allow decimal numbers
 nums += '.'
 
@@ -42,11 +43,35 @@ def _kw(*tuples):
     return dic
 
 
+def _cast(value, add_quotes=False):
+    """Try to cast values into a number. Return string otherwise."""
+    try:
+        # Is it an int?
+        val = int(value)
+    except ValueError:
+        # Not an int. What about a float?
+        try:
+            val = float(value)
+        except ValueError:
+            # Not a float. What about a complex?
+            try:
+                val = complex(value)
+            except ValueError:
+                # Not any sort of number. Let's strip quotes though
+                val = value.strip("\"'")
+                if add_quotes:
+                    val = "'{}'".format(val)
+    return val
+
+
 class Operand(object):
     keyword_aliases = {}
 
     def mdtraj_condition(self):
         """Build an mdtraj-compatible piece of python code."""
+        raise NotImplementedError
+
+    def filter(self):
         raise NotImplementedError
 
     @classmethod
@@ -57,19 +82,24 @@ class Operand(object):
 class SelectionOperand(Operand):
     @classmethod
     def get_keywords(cls):
-        return MatchFirst([Keyword(kw) for kw in cls.keyword_aliases.keys()])
+        keywords = sorted(cls.keyword_aliases.keys())
+        return MatchFirst([Keyword(kw) for kw in keywords])
 
     @classmethod
     def get_top_item(cls):
         """Get the name of the appropriate topology field for mdtraj.
 
         E.g.: for atoms it is a.whatever and for residues it
-        is a.residue.whatever
+        is a.residue
         """
         raise NotImplementedError
 
     @classmethod
     def get_top_name(cls):
+        raise NotImplementedError
+
+    @classmethod
+    def accessor(cls):
         raise NotImplementedError
 
 
@@ -80,12 +110,17 @@ class UnaryOperand(SelectionOperand):
         tokes = tokes[0]
         self.value = tokes
 
-    def __str__(self):
-        fmt_string = "{top_type}_{value}"
-        fmt_dict = dict(top_type=self.get_top_name(),
+    def mdtraj_condition(self):
+        fmt_string = "{pre}.{value}"
+        fmt_dict = dict(pre=self.get_top_item(),
                         value=self.keyword_aliases[self.value])
         return fmt_string.format(**fmt_dict)
 
+    def filter(self):
+        field = self.keyword_aliases[self.value]
+        return lambda a: getattr(self.accessor()(a), field)
+
+    __str__ = mdtraj_condition
     __repr__ = __str__
 
 
@@ -95,9 +130,6 @@ class AtomUnaryOperand(UnaryOperand):
         (['none', 'nothing'], 'none')
     )
 
-    def mdtraj_condition(self):
-        return "{}".format(self.keyword_aliases[self.value])
-
     @classmethod
     def get_top_item(cls):
         return 'a'
@@ -105,6 +137,10 @@ class AtomUnaryOperand(UnaryOperand):
     @classmethod
     def get_top_name(cls):
         return 'Atom'
+
+    @classmethod
+    def accessor(cls):
+        return lambda a: a
 
 
 class ResidueUnaryOperand(UnaryOperand):
@@ -118,9 +154,6 @@ class ResidueUnaryOperand(UnaryOperand):
         (['water', 'waters', 'is_water'], 'is_water')
     )
 
-    def mdtraj_condition(self):
-        return "a.residue.{}".format(self.keyword_aliases[self.value])
-
     @classmethod
     def get_top_item(cls):
         return 'a.residue'
@@ -129,37 +162,21 @@ class ResidueUnaryOperand(UnaryOperand):
     def get_top_name(cls):
         return 'Residue'
 
-
-def _quote_value(value):
-    """Put quotes around something if it's not a number"""
-    try:
-        # Is it an int?
-        val = int(value)
-    except ValueError:
-        # Not an int. What about a float?
-        try:
-            val = float(value)
-        except ValueError:
-            # Not a float. What about a complex?
-            try:
-                val = complex(value)
-            except ValueError:
-                # Not any sort of number. Let's put quotes around it.
-                val = value.strip("\"'")
-                val = "'{}'".format(val)
-    return val
+    @classmethod
+    def accessor(cls):
+        return lambda a: a.residue
 
 
 class BinaryOperand(SelectionOperand):
     """Selection of the form: field operator value"""
 
     operator_aliases = _kw(
-        (['<', 'lt'], '<'),
-        (['==', 'eq'], '=='),
-        (['<=', 'le'], '<='),
-        (['!=', 'ne'], '!='),
-        (['>=', 'ge'], '>='),
-        (['>', 'gt'], '>')
+        (['<', 'lt'], ('<', '__lt__')),
+        (['==', 'eq'], ('==', '__eq__')),
+        (['<=', 'le'], ('<=', '__le__')),
+        (['!=', 'ne'], ('!=', '__ne__')),
+        (['>=', 'ge'], ('>=', '__ge__')),
+        (['>', 'gt'], ('>', '__gt__'))
     )
 
     def __init__(self, tokes):
@@ -173,32 +190,45 @@ class BinaryOperand(SelectionOperand):
 
     @property
     def operator(self):
-        """Return an unambiguous operator."""
-        return self.operator_aliases[self.in_op]
+        """Return an operator lambda"""
+        return lambda x: getattr(x, self.operator_aliases[self.in_op][1])
 
-    def __str__(self):
-        fmt_string = "{top_type}_{key} {operator} {value}"
-        fmt_dict = dict(top_type=self.get_top_name(),
-                        key=self.keyword_aliases[self.key],
-                        operator=self.operator, value=self.value)
+    @property
+    def operator_str(self):
+        """Return an operator string"""
+        return self.operator_aliases[self.in_op][0]
+
+    def mdtraj_range_condition(self):
+        """Use special logic for constructing a range condition."""
+        field = self.keyword_aliases[self.key]
+        fmt_string = "{top}.{field}"
+        fmt_dict = dict(top=self.get_top_item(), field=field)
+        full_field = fmt_string.format(**fmt_dict)
+        return self.value.range_condition(full_field, self.operator_str)
+
+    def mdtraj_singleval_condition(self):
+        """Normal condition for comparing to one value."""
+        field = self.keyword_aliases[self.key]
+        fmt_string = "{top}.{field} {op} {value}"
+        fmt_dict = dict(top=self.get_top_item(), field=field,
+                        op=self.operator_str,
+                        value=_cast(self.value, add_quotes=True))
         return fmt_string.format(**fmt_dict)
 
     def mdtraj_condition(self):
-        field = self.keyword_aliases[self.key]
         if isinstance(self.value, RangeOperand):
-            # Special case for dealing with a range
-            fmt_string = "{top}.{field}"
-            fmt_dict = dict(top=self.get_top_item(), field=field)
-            full_field = fmt_string.format(**fmt_dict)
-            return self.value.range_condition(full_field, self.operator)
-
+            return self.mdtraj_range_condition()
         else:
-            fmt_string = "{top}.{field} {op} {value}"
-            fmt_dict = dict(top=self.get_top_item(), field=field,
-                            op=self.operator,
-                            value=_quote_value(str(self.value)))
-            return fmt_string.format(**fmt_dict)
+            return self.mdtraj_singleval_condition()
 
+    def filter(self):
+        field = self.keyword_aliases[self.key]
+        field_attr = lambda x: getattr(self.accessor()(x), field)
+        val = _cast(self.value)
+
+        return lambda a: self.operator(field_attr(a))(val)
+
+    __str__ = mdtraj_condition
     __repr__ = __str__
 
 
@@ -217,6 +247,10 @@ class ElementBinaryOperand(BinaryOperand):
     def get_top_item(cls):
         return "a.element"
 
+    @classmethod
+    def accessor(cls):
+        return lambda a: a.element
+
 
 class AtomBinaryOperand(BinaryOperand):
     keyword_aliases = _kw(
@@ -233,6 +267,10 @@ class AtomBinaryOperand(BinaryOperand):
     @classmethod
     def get_top_item(cls):
         return 'a'
+
+    @classmethod
+    def accessor(cls):
+        return lambda a: a
 
 
 class ResidueBinaryOperand(BinaryOperand):
@@ -251,6 +289,10 @@ class ResidueBinaryOperand(BinaryOperand):
     @classmethod
     def get_top_item(cls):
         return 'a.residue'
+
+    @classmethod
+    def accessor(cls):
+        return lambda a: a.residue
 
 
 class RangeOperand:
@@ -287,8 +329,8 @@ class InfixOperand(Operand):
     @classmethod
     def get_keywords(cls):
         # Prepare tuples for pyparsing.infixNotation
-        return [(kw, cls.num_terms, cls.assoc, cls)
-                for kw in cls.keyword_aliases.keys()]
+        keywords = sorted(cls.keyword_aliases.keys())
+        return [(kw, cls.num_terms, cls.assoc, cls) for kw in keywords]
 
 
 class BinaryInfix(InfixOperand):
@@ -296,6 +338,21 @@ class BinaryInfix(InfixOperand):
 
     num_terms = 2
     assoc = opAssoc.LEFT
+
+    keyword_aliases = _kw(
+        (['or', '||'], ('or', 'any')),
+        (['and', '&&'], ('and', 'all')),
+        (['of'], ('of', 'NotImplementedError'))
+    )
+
+    @property
+    def operator(self):
+        builtin = self.keyword_aliases[self.in_op][1]
+        return lambda x: __builtins__[builtin](x)
+
+    @property
+    def operator_str(self):
+        return self.keyword_aliases[self.in_op][0]
 
     def __init__(self, tokes):
         tokes = tokes[0]
@@ -307,47 +364,20 @@ class BinaryInfix(InfixOperand):
             err = err.format(len(tokes))
             raise ParseException(err)
 
-
-    def __str__(self):
-        # Join all the parts
-        middle = " {} ".format(self.operator).join(
-            ["{}".format(p) for p in self.parts])
-
-        # And put parenthesis around it
-        return "({})".format(middle)
-
-    __repr__ = __str__
+    def filter(self):
+        return lambda a: self.operator([p.filter()(a) for p in self.parts])
 
     def mdtraj_condition(self):
 
         # Join all the parts
-        middle = " {} ".format(self.operator).join(
+        middle = " {} ".format(self.operator_str).join(
             [p.mdtraj_condition() for p in self.parts])
 
         # Put parenthesis around it
         return "({})".format(middle)
 
-    @property
-    def operator(self):
-        return self.keyword_aliases[self.in_op]
-
-
-class AndInfix(BinaryInfix):
-    keyword_aliases = _kw(
-        (['and', '&&'], 'and')
-    )
-
-
-class OrInfix(BinaryInfix):
-    keyword_aliases = _kw(
-        (['or', '||'], 'or')
-    )
-
-
-class OfInfix(BinaryInfix):
-    keyword_aliases = _kw(
-        (['of'], 'of')
-    )
+    __str__ = mdtraj_condition
+    __repr__ = __str__
 
 
 class NotInfix(InfixOperand):
@@ -369,17 +399,20 @@ class NotInfix(InfixOperand):
             err = err.format(len(tokes))
             raise ParseException(err)
 
-    def __str__(self):
-        return "({} {})".format(self.operator, self.value)
-
-    __repr__ = __str__
 
     def mdtraj_condition(self):
-        return "({} {})".format(self.operator, self.value.mdtraj_condition())
+        return "({} {})".format(self.operator_str,
+                                self.value.mdtraj_condition())
 
     @property
-    def operator(self):
+    def operator_str(self):
         return self.keyword_aliases[self.in_op]
+
+    def filter(self):
+        return lambda a: not self.value.filter()(a)
+
+    __str__ = mdtraj_condition
+    __repr__ = __str__
 
 
 class SelectionParser(object):
@@ -406,8 +439,8 @@ class SelectionParser(object):
         return self.last_parse.mdtraj_condition()
 
     @property
-    def unambiguous(self):
-        return str(self.last_parse)
+    def filter(self):
+        return self.last_parse.filter()
 
 
 def _make_parser():
@@ -451,7 +484,6 @@ def _make_parser():
 
     # And deal with logical expressions
     logical_expr = infixNotation(expression, (
-        AndInfix.get_keywords() + OrInfix.get_keywords() +
-        NotInfix.get_keywords() + OfInfix.get_keywords()
+        BinaryInfix.get_keywords() + NotInfix.get_keywords()
     ))
     return logical_expr

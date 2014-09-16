@@ -35,35 +35,102 @@ logging.captureWarnings(True)
 ala = mdtraj.load(get_fn("alanine-dipeptide-explicit.pdb"))
 
 
+def make_test_topology():
+    t = mdtraj.Topology()
+    c = t.add_chain()
+
+    r1 = t.add_residue("ALA", c, resSeq=5)
+    r2 = t.add_residue("HOH", c, resSeq=6)
+
+    t.add_atom("CA", mdtraj.element.carbon, r1)
+    t.add_atom("H", mdtraj.element.hydrogen, r1)
+
+    t.add_atom("O", mdtraj.element.oxygen, r2)
+    t.add_atom("H1", mdtraj.element.hydrogen, r2)
+    t.add_atom("H2", mdtraj.element.hydrogen, r2)
+
+    return t
+
+
+tt = make_test_topology()
+
+
+def test_unary_2():
+    sp = SelectionParser('all')
+    for a in tt.atoms:
+        assert sp.filter(a)
+
+    sp.parse('none')
+    for a in tt.atoms:
+        assert not sp.filter(a)
+
+
+def test_unary_3():
+    sp = SelectionParser('protein or water')
+    for a in tt.atoms:
+        assert sp.filter(a)
+
+    sp.parse('protein and water')
+    for a in tt.atoms:
+        assert not sp.filter(a)
+
+    sp.parse('not (protein and water)')
+    for a in tt.atoms:
+        assert sp.filter(a)
+
+    sp.parse('not not (protein and water)')
+    for a in tt.atoms:
+        assert not sp.filter(a)
+
+
+def test_binary_1():
+    sp = SelectionParser('resname "ALA"')
+    assert sp.filter(tt.atom(0))
+    assert sp.filter(tt.atom(1))
+
+    sp.parse('mass > 2')
+    assert sp.filter(tt.atom(0))
+    assert not sp.filter(tt.atom(1))
+    assert sp.filter(tt.atom(2))
+
+    sp.parse('name ne O')
+    assert sp.filter(tt.atom(0))
+    assert not sp.filter(tt.atom(2))
+
+def test_binary_2():
+    sp = SelectionParser('name O and mass > 2')
+    assert sp.filter(tt.atom(2))
+    assert not sp.filter(tt.atom(3))
+
+
 def test_simple():
     sp = SelectionParser("protein")
-    eq(sp.unambiguous, 'Residue_is_protein')
     eq(sp.mdtraj_condition, "a.residue.is_protein")
+    assert sp.filter(tt.atom(0))
+    assert sp.filter(tt.atom(1))
+    assert not sp.filter(tt.atom(2))
 
 
 def test_alias():
     sp = SelectionParser("waters")
-    eq(sp.unambiguous, "Residue_is_water")
     eq(sp.mdtraj_condition, "a.residue.is_water")
+    assert sp.filter(tt.atom(3))
+    assert sp.filter(tt.atom(4))
+    assert not sp.filter(tt.atom(0))
 
 
 def test_bool():
     sp = SelectionParser("protein or water")
-    eq(sp.unambiguous, "(Residue_is_protein or Residue_is_water)")
     eq(sp.mdtraj_condition, "(a.residue.is_protein or a.residue.is_water)")
 
     sp.parse("protein or water or nucleic")
-    eq(sp.unambiguous,
-       "(Residue_is_protein or Residue_is_water or Residue_is_nucleic)")
     eq(sp.mdtraj_condition,
        "(a.residue.is_protein or a.residue.is_water or a.residue.is_nucleic)")
 
     sp.parse("protein and backbone")
-    eq(sp.unambiguous, "(Residue_is_protein and Residue_is_backbone)")
     eq(sp.mdtraj_condition, "(a.residue.is_protein and a.residue.is_backbone)")
 
     sp.parse("protein && backbone")
-    eq(sp.unambiguous, "(Residue_is_protein and Residue_is_backbone)")
     eq(sp.mdtraj_condition, "(a.residue.is_protein and a.residue.is_backbone)")
 
 
@@ -79,19 +146,15 @@ def test_nested_bool():
 
 def test_values():
     sp = SelectionParser("resid 4")
-    eq(sp.unambiguous, "Residue_index == 4")
     eq(sp.mdtraj_condition, "a.residue.index == 4")
 
     sp.parse("resid > 4")
-    eq(sp.unambiguous, "Residue_index > 4")
     eq(sp.mdtraj_condition, "a.residue.index > 4")
 
     sp.parse("resid gt 4")
-    eq(sp.unambiguous, "Residue_index > 4")
     eq(sp.mdtraj_condition, "a.residue.index > 4")
 
     sp.parse("resid 5 to 8")
-    eq(sp.unambiguous, "Residue_index == range(5 to 8)")
     eq(sp.mdtraj_condition, "5 <= a.residue.index <= 8")
 
 
@@ -107,35 +170,35 @@ def test_element():
 
 def test_not():
     sp = SelectionParser("not protein")
-    eq(sp.unambiguous, "(not Residue_is_protein)")
     eq(sp.mdtraj_condition, "(not a.residue.is_protein)")
 
     sp.parse("not not protein")
-    eq(sp.unambiguous, "(not (not Residue_is_protein))")
     eq(sp.mdtraj_condition, "(not (not a.residue.is_protein))")
 
     sp.parse('!protein')
-    eq(sp.unambiguous, '(not Residue_is_protein)')
     eq(sp.mdtraj_condition, "(not a.residue.is_protein)")
 
 
 def test_within():
-    sp = SelectionParser("within 5 of backbone or sidechain")
-    eq(sp.unambiguous,
-       "(Atom_within == 5 of (Residue_is_backbone or Residue_is_sidechain))")
+    sp = SelectionParser("within 5 of (backbone or sidechain)")
+    eq(sp.mdtraj_condition,
+       "(a.within == 5 of (a.residue.is_backbone or a.residue.is_sidechain))")
 
 
 def test_quotes():
-    should_be = "(a.name == 'O' and a.residue.name == 'ALA')"
+    should_be = "(a.name == 'CA' and a.residue.name == 'ALA')"
 
-    sp = SelectionParser("name O and resname ALA")
+    sp = SelectionParser("name CA and resname ALA")
     eq(sp.mdtraj_condition, should_be)
+    assert sp.filter(tt.atom(0))
 
-    sp.parse('name "O" and resname ALA')
+    sp.parse('name "CA" and resname ALA')
     eq(sp.mdtraj_condition, should_be)
+    assert sp.filter(tt.atom(0))
 
-    sp.parse("name 'O' and resname ALA")
+    sp.parse("name 'CA' and resname ALA")
     eq(sp.mdtraj_condition, should_be)
+    assert sp.filter(tt.atom(0))
 
 
 def test_top():
