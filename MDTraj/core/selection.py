@@ -46,6 +46,8 @@ class _RewriteNames(ast.NodeTransformer):
     def visit_Name(self, node):
         _safe_names = {'None': None, 'True': True, 'False': False}
         if node.id in _safe_names:
+            if not PY2:
+                return ast.NameConstant(value=_safe_names[node.id])
             return node
 
         if node.id == ATOM_NAME:
@@ -57,7 +59,6 @@ class _RewriteNames(ast.NodeTransformer):
         # like parse_selection('name CA') properly resolves CA as a string
         # literal, not a barename to be loaded from the global scope!
         return ast.Str(s=node.id)
-
 
 
 def _chain(*attrs):
@@ -299,10 +300,10 @@ class parse_selection(object):
             signature = ast.arguments(args=args, vararg=None, kwarg=None,
                                       defaults=[])
         else:
-            args =[ast.arg(arg='atom', annotation=None)]
+            args = [ast.arg(arg='atom', annotation=None)]
             signature = ast.arguments(args=args, vararg=None, kwarg=None,
-                                      kwonlyargs=[], defaults=[], kw_defaults=[])
-
+                                      kwonlyargs=[], defaults=[],
+                                      kw_defaults=[])
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
 

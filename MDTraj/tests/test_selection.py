@@ -27,6 +27,7 @@ import mdtraj
 import numpy as np
 from mdtraj.core.selection import parse_selection
 from mdtraj.testing import eq, get_fn, skipif
+
 skip = lambda f: skipif(True, 'NotImplemented')
 pnode = lambda s: ast.parse(s, mode='eval').body
 
@@ -58,6 +59,7 @@ def make_test_topology():
 tt = make_test_topology()
 
 
+@skip
 def test_range():
     sp = parse_selection('resSeq 5 to 6')
     for a in tt.atoms:
@@ -87,6 +89,7 @@ def test_unary_3():
     sp = parse_selection('protein or water')
     print(sp.source)
     import ast
+
     print(ast.dump(sp.astnode))
     for a in tt.atoms:
         assert sp.expr(a)
@@ -127,7 +130,7 @@ def test_binary_2():
 
 def test_simple():
     sp = parse_selection("protein")
-    eq(sp.mdtraj_condition, "a.residue.is_protein")
+    eq(sp.source, "atom.residue.is_protein")
     assert sp.expr(tt.atom(0))
     assert sp.expr(tt.atom(1))
     assert not sp.expr(tt.atom(2))
@@ -135,13 +138,14 @@ def test_simple():
 
 def test_alias():
     sp = parse_selection("waters")
-    eq(sp.mdtraj_condition, "a.residue.is_water")
+    eq(sp.source, "atom.residue.is_water")
     assert sp.expr(tt.atom(3))
     assert sp.expr(tt.atom(4))
     assert not sp.expr(tt.atom(0))
 
 
 def test_unary_1():
+    print(parse_selection('all').astnode, ast.dump(pnode('True')))
     eq(parse_selection('all').astnode, pnode('True'))
     eq(parse_selection('everything').astnode, pnode('True'))
     eq(parse_selection('none').astnode, pnode('False'))
@@ -173,55 +177,55 @@ def test_binary_selection_operator():
 
 @skip
 def test_bool():
-    sp = SelectionParser("protein or water")
-    eq(sp.mdtraj_condition, "(a.residue.is_protein or a.residue.is_water)")
+    sp = parse_selection("protein or water")
+    eq(sp.source, "(a.residue.is_protein or a.residue.is_water)")
 
     sp.parse("protein or water or nucleic")
-    eq(sp.mdtraj_condition,
+    eq(sp.source,
        "(a.residue.is_protein or a.residue.is_water or a.residue.is_nucleic)")
 
     sp.parse("protein and backbone")
-    eq(sp.mdtraj_condition, "(a.residue.is_protein and a.residue.is_backbone)")
+    eq(sp.source, "(a.residue.is_protein and a.residue.is_backbone)")
 
     sp.parse("protein && backbone")
-    eq(sp.mdtraj_condition, "(a.residue.is_protein and a.residue.is_backbone)")
+    eq(sp.source, "(a.residue.is_protein and a.residue.is_backbone)")
 
 
 @skip
 def test_nested_bool():
-    sp = SelectionParser("protein and water or nucleic")
-    eq(sp.mdtraj_condition,
+    sp = parse_selection("protein and water or nucleic")
+    eq(sp.source,
        "((a.residue.is_protein and a.residue.is_water) or a.residue.is_nucleic)")
 
     sp.parse("protein and (water or nucleic)")
-    eq(sp.mdtraj_condition,
+    eq(sp.source,
        "(a.residue.is_protein and (a.residue.is_water or a.residue.is_nucleic))")
 
 
 @skip
 def test_values():
-    sp = SelectionParser("resid 4")
-    eq(sp.mdtraj_condition, "a.residue.index == 4")
+    sp = parse_selection("resid 4")
+    eq(sp.source, "a.residue.index == 4")
 
     sp.parse("resid > 4")
-    eq(sp.mdtraj_condition, "a.residue.index > 4")
+    eq(sp.source, "a.residue.index > 4")
 
     sp.parse("resid gt 4")
-    eq(sp.mdtraj_condition, "a.residue.index > 4")
+    eq(sp.source, "a.residue.index > 4")
 
     sp.parse("resid 5 to 8")
-    eq(sp.mdtraj_condition, "5 <= a.residue.index <= 8")
+    eq(sp.source, "5 <= a.residue.index <= 8")
 
 
 @skip
 def test_element():
-    sp = SelectionParser()
+    sp = parse_selection()
 
     sp.parse("element 'O'")
-    eq(sp.mdtraj_condition, "a.element.symbol == 'O'")
+    eq(sp.source, "a.element.symbol == 'O'")
 
     sp.parse("mass 5.5 to 12.3")
-    eq(sp.mdtraj_condition, "5.5 <= a.element.mass <= 12.3")
+    eq(sp.source, "5.5 <= a.element.mass <= 12.3")
 
     sp.parse("atomnum 6")
     assert sp.expr(tt.atom(0))
@@ -229,20 +233,20 @@ def test_element():
 
 @skip
 def test_not():
-    sp = SelectionParser("not protein")
-    eq(sp.mdtraj_condition, "(not a.residue.is_protein)")
+    sp = parse_selection("not protein")
+    eq(sp.source, "(not a.residue.is_protein)")
 
     sp.parse("not not protein")
-    eq(sp.mdtraj_condition, "(not (not a.residue.is_protein))")
+    eq(sp.source, "(not (not a.residue.is_protein))")
 
     sp.parse('!protein')
-    eq(sp.mdtraj_condition, "(not a.residue.is_protein)")
+    eq(sp.source, "(not a.residue.is_protein)")
 
 
 @skip
 def test_within():
-    sp = SelectionParser("within 5 of (backbone or sidechain)")
-    eq(sp.mdtraj_condition,
+    sp = parse_selection("within 5 of (backbone or sidechain)")
+    eq(sp.source,
        "(a.within == 5 of (a.residue.is_backbone or a.residue.is_sidechain))")
 
 
@@ -250,16 +254,16 @@ def test_within():
 def test_quotes():
     should_be = "(a.name == 'CA' and a.residue.name == 'ALA')"
 
-    sp = SelectionParser("name CA and resname ALA")
-    eq(sp.mdtraj_condition, should_be)
+    sp = parse_selection("name CA and resname ALA")
+    eq(sp.source, should_be)
     assert sp.expr(tt.atom(0))
 
     sp.parse('name "CA" and resname ALA')
-    eq(sp.mdtraj_condition, should_be)
+    eq(sp.source, should_be)
     assert sp.expr(tt.atom(0))
 
     sp.parse("name 'CA' and resname ALA")
-    eq(sp.mdtraj_condition, should_be)
+    eq(sp.source, should_be)
     assert sp.expr(tt.atom(0))
 
 
@@ -274,4 +278,4 @@ def test_top():
 def test_top_2():
     expr = ala.topology.select_expression("name O and water")
     eq(expr,
-       "[a.index for a in top.atoms if (a.name == 'O' and a.residue.is_water)]")
+       "[atom.index for atom in top.atoms if ((atom.name == 'O') and atom.residue.is_water)]")

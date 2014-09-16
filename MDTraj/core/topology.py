@@ -774,10 +774,11 @@ class Topology(object):
         """
         return _topology_from_subset(self, atom_indices)
 
-
     def select_expression(self, select_string, top_name='top'):
-        return parse_selection(select_string).source
-
+        condition = parse_selection(select_string).source
+        fmt_string = "[atom.index for atom in {top_name}.atoms if {condition}]"
+        fmt_dict = dict(top_name=top_name, condition=condition)
+        return fmt_string.format(**fmt_dict)
 
     def select(self, selection_string):
         filter_func = parse_selection(selection_string).expr
