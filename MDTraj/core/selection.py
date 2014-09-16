@@ -25,11 +25,26 @@ import ast
 from mdtraj.utils import import_
 from collections import namedtuple
 
+__all__ = ['parse_selection']
+
+#############################################################################
+# Globals
+#############################################################################
+
 NUMS = '.0123456789'
 ATOM_NAME = '__ATOM__'
+_ParsedSelection = namedtuple('_ParsedSelection', ['expr', 'source', 'astnode'])
+
+#############################################################################
+# Utils
+#############################################################################
 
 class _RewriteNames(ast.NodeTransformer):
     def visit_Name(self, node):
+        _safe_names = {'None': None, 'True': True, 'False': False}
+        if node.id in _safe_names:
+            return node
+
         if node.id == ATOM_NAME:
             # when we're building the AST, we refer to the current atom using
             # ATOM_NAME, but then before returning the ast to the user, we
@@ -40,9 +55,17 @@ class _RewriteNames(ast.NodeTransformer):
         # literal, not a barename to be loaded from the global scope!
         return ast.Str(s=node.id)
 
-_ParsedSelection = namedtuple('_ParsedSelection', ['expr', 'source', 'astnode'])
 
-__all__ = ['parse_selection']
+def _chained_atom_attr(*attrs):
+    # This transforms, for example, ('residue', 'is_protein'),
+    # into
+    # Attribute(value=Attribute(value=Name(id=ATOM_NAME, ctx=Load()),
+    #  attr='residue', ctx=Load()), attr='is_protein', ctx=Load())
+    left = ast.Name(id=ATOM_NAME, ctx=ast.Load())
+    for attr in attrs:
+        left = ast.Attribute(value=left, attr=attr, ctx=ast.Load())
+    return left
+
 
 def _kw(*tuples):
     """Create a many-to-one dictionary.
@@ -68,6 +91,9 @@ def _check_n_tokens(tokens, n_tokens, name):
 class UnarySelectionOperand(object):
     """Unary selections
 
+    This class implements one simplest component of the selection grammar,
+    unary selections, enabling expressions like 'all', or 'protein'.
+
     Examples
     --------
     'all' -> lambda atom: True
@@ -81,31 +107,20 @@ class UnarySelectionOperand(object):
         (['all', 'everything'], ast.Name(id='True', ctx=ast.Load())),
         (['none', 'nothing'], ast.Name(id='False', ctx=ast.Load())),
         # Atom.residue.<attribute>
-        (['protein', 'is_protein'], ('residue', 'is_protein')),
-        (['nucleic', 'is_nucleic'], ('residue', 'is_nucleic')),
-        (['water', 'waters', 'is_water'], ('residue', 'is_water')),
+        (['protein', 'is_protein'], _chained_atom_attr('residue', 'is_protein')),
+        (['nucleic', 'is_nucleic'], _chained_atom_attr('residue', 'is_nucleic')),
+        (['water', 'waters', 'is_water'], _chained_atom_attr('residue', 'is_water')),
     )
 
     def __init__(self, tokens):
+        # pyparsing constructs the instance while building the parse tree,
+        # and gives us the set tokens. In this case, the tokens are
         self._tokens = tokens
         _check_n_tokens(tokens, 1, 'Unary selectors')
-
+        assert tokens[0] in self.keyword_aliases
 
     def ast(self):
-        rhs = self.keyword_aliases[self._tokens[0]]
-        if isinstance(rhs, ast.AST):
-            return rhs
-
-        # we structure the rhs to be an iterable, which we recursively
-        # apply ast.Attribute() on. This transforms ('residue', 'is_protein'),
-        # for example, into
-        # Attribute(value=Attribute(value=Name(id=ATOM_NAME, ctx=Load()),
-        #  attr='residue', ctx=Load()), attr='is_protein', ctx=Load())
-        left = ast.Name(id=ATOM_NAME, ctx=ast.Load())
-        for attr in rhs:
-            left = ast.Attribute(value=left, attr=attr, ctx=ast.Load())
-
-        return left
+        return self.keyword_aliases[self._tokens[0]]
 
 
 class BinarySelectionOperand(object):
@@ -119,39 +134,37 @@ class BinarySelectionOperand(object):
     """
 
     operator_aliases = _kw(
-        (['<', 'lt'], ast.Lt),
-        (['==', 'eq'], ast.Eq),
-        (['<=', 'le'], ast.LtE),
-        (['!=', 'ne'], ast.NotEq),
-        (['>=', 'ge'], ast.GtE),
-        (['>', 'gt'], ast.Gt),
+        (['<', 'lt'], ast.Lt()),
+        (['==', 'eq'], ast.Eq()),
+        (['<=', 'le'], ast.LtE()),
+        (['!=', 'ne'], ast.NotEq()),
+        (['>=', 'ge'], ast.GtE()),
+        (['>', 'gt'], ast.Gt()),
     )
 
     keyword_aliases = _kw(
-        (('name',),             ('name',)),
-        (('index',),            ('index',)),
-        (('numbonds',),         ('numbonds',)),
-        (('type', 'element'),   ('element', 'symbol')),
-        (('radius',),           ('element', 'radius')),
-        (('mass',),             ('element', 'mass')),
-        (('residue', 'resSeq'), ('residue', 'resSeq')),
-        (('resname',),          ('residue', 'name')),
-        (('resid',),            ('residue', 'index')),
+        (('name',),             _chained_atom_attr('name',)),
+        (('index',),            _chained_atom_attr('index',)),
+        (('numbonds',),         _chained_atom_attr('numbonds',)),
+        (('type', 'element'),   _chained_atom_attr('element', 'symbol')),
+        (('radius',),           _chained_atom_attr('element', 'radius')),
+        (('mass',),             _chained_atom_attr('element', 'mass')),
+        (('residue', 'resSeq'), _chained_atom_attr('residue', 'resSeq')),
+        (('resname',),          _chained_atom_attr('residue', 'name')),
+        (('resid',),            _chained_atom_attr('residue', 'index')),
     )
 
     def __init__(self, tokens):
         tokens = tokens[0]
-        self._tokens = tokens
         _check_n_tokens(tokens, 3, 'Binary selectors')
+        self.keyword_token, self.op_token, self.comparator_token = tokens
+        assert self.keyword_token in self.keyword_aliases
+        assert self.op_token in self.operator_aliases
 
     def ast(self):
-        left = ast.Name(id=ATOM_NAME, ctx=ast.Load())
-        for attr in self.keyword_aliases[self._tokens[0]]:
-            left = ast.Attribute(value=left, attr=attr, ctx=ast.Load())
-
-        ops = [self.operator_aliases[self._tokens[1]]()]
-        comparators = [ast.parse(self._tokens[2], mode='eval').body]
-
+        left = self.keyword_aliases[self.keyword_token]
+        ops = [self.operator_aliases[self.op_token]]
+        comparators = [ast.parse(self.comparator_token, mode='eval').body]
         return ast.Compare(left=left, ops=ops, comparators=comparators)
 
 
@@ -166,11 +179,12 @@ class UnaryInfixOperand(object):
     def __init__(self, tokens):
         tokens = tokens[0]
         _check_n_tokens(tokens, 2, 'Unary infix operators')
-        self._op, self._value = tokens
+        self.op_token, self.value_token = tokens
+        assert self.op_token in self.keyword_aliases
 
     def ast(self):
-        return ast.UnaryOp(op=self.keyword_aliases[self._op],
-                           operand=self._value.ast())
+        return ast.UnaryOp(op=self.keyword_aliases[self.op_token],
+                           operand=self.value_token.ast())
 
 
 class BinaryInfixOperand(object):
@@ -185,17 +199,18 @@ class BinaryInfixOperand(object):
     def __init__(self, tokens):
         tokes = tokens[0]
         if len(tokens) % 2 == 1:
-            self._op = tokes[1]
-            self._parts = tokes[::2]
+            self.op_token = tokes[1]
+            self.comparators = tokes[::2]
         else:
             err = "Invalid number of infix expressions: {}"
             err = err.format(len(tokens))
             ParseException = import_('pyparsing').ParseException
             raise ParseException(err)
+        assert self.op_token in self.keyword_aliases
 
     def ast(self):
-        return ast.BoolOp(op=self.keyword_aliases[self._op],
-                          values=[e.ast() for e in self._parts])
+        return ast.BoolOp(op=self.keyword_aliases[self.op_token],
+                          values=[e.ast() for e in self.comparators])
 
 
 class parse_selection(object):
