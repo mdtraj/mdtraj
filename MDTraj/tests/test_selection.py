@@ -61,81 +61,84 @@ tt = make_test_topology()
 def test_range():
     sp = parse_selection('resSeq 5 to 6')
     for a in tt.atoms:
-        assert sp.filter(a)
+        assert sp.expr(a)
 
     sp.parse('resSeq 7 to 8')
     for a in tt.atoms:
-        assert not sp.filter(a)
+        assert not sp.expr(a)
 
     sp.parse('mass 0.8 to 1.1')
-    assert sp.filter(tt.atom(1))
-    assert not sp.filter(tt.atom(2))
-    assert sp.filter(tt.atom(3))
+    assert sp.expr(tt.atom(1))
+    assert not sp.expr(tt.atom(2))
+    assert sp.expr(tt.atom(3))
 
 
 def test_unary_2():
     sp = parse_selection('all')
     for a in tt.atoms:
-        assert sp.filter(a)
+        assert sp.expr(a)
 
     sp = parse_selection('none')
     for a in tt.atoms:
-        assert not sp.filter(a)
+        assert not sp.expr(a)
 
 
 def test_unary_3():
     sp = parse_selection('protein or water')
+    print(sp.source)
+    import ast
+    print(ast.dump(sp.astnode))
     for a in tt.atoms:
-        assert sp.filter(a)
+        assert sp.expr(a)
 
     sp = parse_selection('protein and water')
     for a in tt.atoms:
-        assert not sp.filter(a)
+        assert not sp.expr(a)
 
     sp = parse_selection('not (protein and water)')
     for a in tt.atoms:
-        assert sp.filter(a)
+        assert sp.expr(a)
 
     sp = parse_selection('not not (protein and water)')
     for a in tt.atoms:
-        assert not sp.filter(a)
+        assert not sp.expr(a)
 
 
 def test_binary_1():
     sp = parse_selection('resname "ALA"')
-    assert sp.filter(tt.atom(0))
-    assert sp.filter(tt.atom(1))
+    assert sp.expr(tt.atom(0))
+    assert sp.expr(tt.atom(1))
 
     sp = parse_selection('mass > 2')
-    assert sp.filter(tt.atom(0))
-    assert not sp.filter(tt.atom(1))
-    assert sp.filter(tt.atom(2))
+    assert sp.expr(tt.atom(0))
+    assert not sp.expr(tt.atom(1))
+    assert sp.expr(tt.atom(2))
 
     sp = parse_selection('name ne O')
-    assert sp.filter(tt.atom(0))
-    assert not sp.filter(tt.atom(2))
+    assert sp.expr(tt.atom(0))
+    assert not sp.expr(tt.atom(2))
 
 
 def test_binary_2():
     sp = parse_selection('name O and mass > 2')
-    assert sp.filter(tt.atom(2))
-    assert not sp.filter(tt.atom(3))
+    assert sp.expr(tt.atom(2))
+    assert not sp.expr(tt.atom(3))
 
 
 def test_simple():
     sp = parse_selection("protein")
     eq(sp.mdtraj_condition, "a.residue.is_protein")
-    assert sp.filter(tt.atom(0))
-    assert sp.filter(tt.atom(1))
-    assert not sp.filter(tt.atom(2))
+    assert sp.expr(tt.atom(0))
+    assert sp.expr(tt.atom(1))
+    assert not sp.expr(tt.atom(2))
 
 
 def test_alias():
     sp = parse_selection("waters")
     eq(sp.mdtraj_condition, "a.residue.is_water")
-    assert sp.filter(tt.atom(3))
-    assert sp.filter(tt.atom(4))
-    assert not sp.filter(tt.atom(0))
+    assert sp.expr(tt.atom(3))
+    assert sp.expr(tt.atom(4))
+    assert not sp.expr(tt.atom(0))
 
 
 def test_unary_1():
@@ -221,7 +224,7 @@ def test_element():
     eq(sp.mdtraj_condition, "5.5 <= a.element.mass <= 12.3")
 
     sp.parse("atomnum 6")
-    assert sp.filter(tt.atom(0))
+    assert sp.expr(tt.atom(0))
 
 
 @skip
@@ -249,15 +252,15 @@ def test_quotes():
 
     sp = SelectionParser("name CA and resname ALA")
     eq(sp.mdtraj_condition, should_be)
-    assert sp.filter(tt.atom(0))
+    assert sp.expr(tt.atom(0))
 
     sp.parse('name "CA" and resname ALA')
     eq(sp.mdtraj_condition, should_be)
-    assert sp.filter(tt.atom(0))
+    assert sp.expr(tt.atom(0))
 
     sp.parse("name 'CA' and resname ALA")
     eq(sp.mdtraj_condition, should_be)
-    assert sp.filter(tt.atom(0))
+    assert sp.expr(tt.atom(0))
 
 
 def test_top():

@@ -59,6 +59,7 @@ class _RewriteNames(ast.NodeTransformer):
         return ast.Str(s=node.id)
 
 
+
 def _chain(*attrs):
     """This transforms, for example, ('residue', 'is_protein'), into
      Attribute(value=Attribute(value=Name(id=ATOM_NAME, ctx=Load()),
@@ -289,17 +290,18 @@ class parse_selection(object):
             self._initialize()
 
         parse_result = self.expression.parseString(selection)
+        # Change __ATOM__ in function bodies. It must bind to the arg
+        # name specified below (i.e. 'atom')
         astnode = self.transformer.visit(parse_result[0].ast())
 
         if PY2:
-            args = [ast.Name(id=ATOM_NAME, ctx=ast.Param())]
+            args = [ast.Name(id='atom', ctx=ast.Param())]
             signature = ast.arguments(args=args, vararg=None, kwarg=None,
                                       defaults=[])
         else:
-            args =[ast.arg(arg=ATOM_NAME, annotation=None)]
+            args =[ast.arg(arg='atom', annotation=None)]
             signature = ast.arguments(args=args, vararg=None, kwarg=None,
                                       kwonlyargs=[], defaults=[], kw_defaults=[])
-
 
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
