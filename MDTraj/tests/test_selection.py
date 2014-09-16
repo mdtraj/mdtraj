@@ -20,12 +20,16 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 # #############################################################################
 
+import ast
 import logging
 
 import mdtraj
 import numpy as np
-from mdtraj.core.selection import SelectionParser
-from mdtraj.testing import eq, get_fn
+from mdtraj.core.selection import parse_selection
+from mdtraj.testing import eq, get_fn, skip
+
+
+pnode = lambda s: ast.parse(s, mode='eval').body
 
 
 # Conda v2.0.1 build py34_0 spews a bunch of DeprecationWarnings
@@ -56,7 +60,7 @@ tt = make_test_topology()
 
 
 def test_range():
-    sp = SelectionParser('resSeq 5 to 6')
+    sp = parse_selection('resSeq 5 to 6')
     for a in tt.atoms:
         assert sp.filter(a)
 
@@ -71,56 +75,56 @@ def test_range():
 
 
 def test_unary_2():
-    sp = SelectionParser('all')
+    sp = parse_selection('all')
     for a in tt.atoms:
         assert sp.filter(a)
 
-    sp.parse('none')
+    sp = parse_selection('none')
     for a in tt.atoms:
         assert not sp.filter(a)
 
 
 def test_unary_3():
-    sp = SelectionParser('protein or water')
+    sp = parse_selection('protein or water')
     for a in tt.atoms:
         assert sp.filter(a)
 
-    sp.parse('protein and water')
+    sp = parse_selection('protein and water')
     for a in tt.atoms:
         assert not sp.filter(a)
 
-    sp.parse('not (protein and water)')
+    sp = parse_selection('not (protein and water)')
     for a in tt.atoms:
         assert sp.filter(a)
 
-    sp.parse('not not (protein and water)')
+    sp = parse_selection('not not (protein and water)')
     for a in tt.atoms:
         assert not sp.filter(a)
 
 
 def test_binary_1():
-    sp = SelectionParser('resname "ALA"')
+    sp = parse_selection('resname "ALA"')
     assert sp.filter(tt.atom(0))
     assert sp.filter(tt.atom(1))
 
-    sp.parse('mass > 2')
+    sp = parse_selection('mass > 2')
     assert sp.filter(tt.atom(0))
     assert not sp.filter(tt.atom(1))
     assert sp.filter(tt.atom(2))
 
-    sp.parse('name ne O')
+    sp = parse_selection('name ne O')
     assert sp.filter(tt.atom(0))
     assert not sp.filter(tt.atom(2))
 
 
 def test_binary_2():
-    sp = SelectionParser('name O and mass > 2')
+    sp = parse_selection('name O and mass > 2')
     assert sp.filter(tt.atom(2))
     assert not sp.filter(tt.atom(3))
 
 
 def test_simple():
-    sp = SelectionParser("protein")
+    sp = parse_selection("protein")
     eq(sp.mdtraj_condition, "a.residue.is_protein")
     assert sp.filter(tt.atom(0))
     assert sp.filter(tt.atom(1))
@@ -128,13 +132,44 @@ def test_simple():
 
 
 def test_alias():
-    sp = SelectionParser("waters")
+    sp = parse_selection("waters")
     eq(sp.mdtraj_condition, "a.residue.is_water")
     assert sp.filter(tt.atom(3))
     assert sp.filter(tt.atom(4))
     assert not sp.filter(tt.atom(0))
 
 
+def test_unary_1():
+    eq(parse_selection('all').astnode, pnode('True'))
+    eq(parse_selection('everything').astnode, pnode('True'))
+    eq(parse_selection('none').astnode, pnode('False'))
+    eq(parse_selection('nothing').astnode, pnode('False'))
+
+    eq(parse_selection('protein').astnode, pnode('atom.residue.is_protein'))
+    eq(parse_selection('is_protein').astnode, pnode('atom.residue.is_protein'))
+    eq(parse_selection('nucleic').astnode, pnode('atom.residue.is_nucleic'))
+    eq(parse_selection('is_nucleic').astnode, pnode('atom.residue.is_nucleic'))
+    eq(parse_selection('water').astnode, pnode('atom.residue.is_water'))
+    eq(parse_selection('is_water').astnode, pnode('atom.residue.is_water'))
+    eq(parse_selection('waters').astnode, pnode('atom.residue.is_water'))
+
+
+def test_binary_selection_operator():
+    eq(parse_selection('name < 1').astnode, pnode('atom.name < 1'))
+    eq(parse_selection('name lt 1').astnode, pnode('atom.name < 1'))
+    eq(parse_selection('name > 1').astnode, pnode('atom.name > 1'))
+    eq(parse_selection('name gt 1').astnode, pnode('atom.name > 1'))
+    eq(parse_selection('name == 1').astnode, pnode('atom.name == 1'))
+    eq(parse_selection('name eq 1').astnode, pnode('atom.name == 1'))
+    eq(parse_selection('name != 1').astnode, pnode('atom.name != 1'))
+    eq(parse_selection('name ne 1').astnode, pnode('atom.name != 1'))
+    eq(parse_selection('name >= 1').astnode, pnode('atom.name >= 1'))
+    eq(parse_selection('name ge 1').astnode, pnode('atom.name >= 1'))
+    eq(parse_selection('name <= 1').astnode, pnode('atom.name <= 1'))
+    eq(parse_selection('name le 1').astnode, pnode('atom.name <= 1'))
+
+
+@skip
 def test_bool():
     sp = SelectionParser("protein or water")
     eq(sp.mdtraj_condition, "(a.residue.is_protein or a.residue.is_water)")
@@ -150,6 +185,7 @@ def test_bool():
     eq(sp.mdtraj_condition, "(a.residue.is_protein and a.residue.is_backbone)")
 
 
+@skip
 def test_nested_bool():
     sp = SelectionParser("protein and water or nucleic")
     eq(sp.mdtraj_condition,
@@ -160,6 +196,7 @@ def test_nested_bool():
        "(a.residue.is_protein and (a.residue.is_water or a.residue.is_nucleic))")
 
 
+@skip
 def test_values():
     sp = SelectionParser("resid 4")
     eq(sp.mdtraj_condition, "a.residue.index == 4")
@@ -174,6 +211,7 @@ def test_values():
     eq(sp.mdtraj_condition, "5 <= a.residue.index <= 8")
 
 
+@skip
 def test_element():
     sp = SelectionParser()
 
@@ -187,6 +225,7 @@ def test_element():
     assert sp.filter(tt.atom(0))
 
 
+@skip
 def test_not():
     sp = SelectionParser("not protein")
     eq(sp.mdtraj_condition, "(not a.residue.is_protein)")
@@ -198,12 +237,14 @@ def test_not():
     eq(sp.mdtraj_condition, "(not a.residue.is_protein)")
 
 
+@skip
 def test_within():
     sp = SelectionParser("within 5 of (backbone or sidechain)")
     eq(sp.mdtraj_condition,
        "(a.within == 5 of (a.residue.is_backbone or a.residue.is_sidechain))")
 
 
+@skip
 def test_quotes():
     should_be = "(a.name == 'CA' and a.residue.name == 'ALA')"
 

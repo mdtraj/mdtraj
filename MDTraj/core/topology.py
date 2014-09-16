@@ -53,6 +53,7 @@ import numpy as np
 import itertools
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import _PROTEIN_RESIDUES
+from mdtraj.core.selection import parse_selection
 import xml.etree.ElementTree as etree
 
 from mdtraj.utils import ilen, import_
@@ -776,25 +777,14 @@ class Topology(object):
         return _topology_from_subset(self, atom_indices)
 
 
-    @property
-    def selection_parser(self):
-        if self._parser is None:
-            from mdtraj.core.selection import SelectionParser
-            self._parser = SelectionParser()
-        return self._parser
-
     def select_expression(self, select_string, top_name='top'):
-        sp = self.selection_parser
-        condition = sp.parse(select_string).mdtraj_condition
+        return parse_selection(select_string).source
 
-        fmt_string = "[a.index for a in {top_name}.atoms if {condition}]"
-        fmt_dict = dict(top_name=top_name, condition=condition)
-        return fmt_string.format(**fmt_dict)
 
-    def select(self, select_string):
-        expr = self.select_expression(select_string, top_name='self')
-        return eval(expr)
-
+    def select(self, selection_string):
+        filter_func = parse_selection(selection_string).expr
+        indices = np.array([a.index for a in self.atoms if filter_func(a)])
+        return indices
 
     def select_atom_indices(self, selection='minimal'):
         """Get the indices of biologically-relevant groups by name.
@@ -1079,22 +1069,6 @@ class Atom(object):
         ## The Residue this Atom belongs to
         self.residue = residue
         self.serial = serial
-
-    @property
-    def all(self):
-        """All atoms.
-
-        Included for completeness of the atom selection language.
-        """
-        return True
-
-    @property
-    def none(self):
-        """No atoms
-
-        Included for completeness of the atom selection language.
-        """
-        return False
 
     @property
     def num_bonds(self):
