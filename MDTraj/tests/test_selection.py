@@ -26,9 +26,8 @@ import logging
 import mdtraj
 import numpy as np
 from mdtraj.core.selection import parse_selection
-from mdtraj.testing import eq, get_fn, skip
-
-
+from mdtraj.testing import eq, get_fn, skipif
+skip = lambda f: skipif(True, 'NotImplemented')
 pnode = lambda s: ast.parse(s, mode='eval').body
 
 
