@@ -23,6 +23,7 @@
 from __future__ import print_function
 import re
 import ast
+import sys
 from copy import deepcopy
 from collections import namedtuple
 from mdtraj.utils.six import PY2
@@ -55,7 +56,7 @@ class _RewriteNames(ast.NodeTransformer):
 
         _safe_names = {'None': None, 'True': True, 'False': False}
         if node.id in _safe_names:
-            if not PY2:
+            if sys.version_info >= (3, 4):
                 return ast.NameConstant(value=_safe_names[node.id])
             return node
 
