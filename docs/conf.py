@@ -47,7 +47,6 @@ autodoc_default_flags = ['members', 'inherited-members']
 
 extensions.append('notebook_sphinxext')
 extensions.append('notebookcell_sphinxext')
-extensions.append('atomselect_docs')
 
 _python_doc_base = 'http://docs.python.org/2.7'
 intersphinx_mapping = {

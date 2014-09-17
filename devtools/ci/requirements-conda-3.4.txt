@@ -7,4 +7,3 @@ pandas
 pyyaml
 pip
 nose
-pyparsing

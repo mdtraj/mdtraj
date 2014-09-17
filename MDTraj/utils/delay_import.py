@@ -139,25 +139,6 @@ MESSAGES = {
 
     The code at {filename}:{line_number} requires the scipy package
     ''',
-    'pyparsing': '''
-    The code at {filename}:{line_number} requires the pyparsing package,
-    an open source, MIT-licensed package for parsing simple grammers.
-
-    pyparsing can be downloaded from https://pypi.python.org/pypi/pyparsing,
-    or installed with the python pip package manager using
-
-    $ pip install pyparsing
-    ''',
-
-    'astor': '''
-    The code at {filename}:{line_number} requires the astor package,
-    an open source, BSD-licensed package for manipulating the python AST
-
-    astor can be downloaded from https://pypi.python.org/pypi/astor
-    or installed with the python pip package manager using
-
-    $ pip install astor
-    '''
 }
 
 ##############################################################################

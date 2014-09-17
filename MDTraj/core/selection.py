@@ -26,8 +26,11 @@ import ast
 from copy import deepcopy
 from collections import namedtuple
 from mdtraj.utils.six import PY2
-from mdtraj.utils import import_
-
+from mdtraj.utils.external.pyparsing import (Word, ParserElement, MatchFirst,
+    Keyword, opAssoc, quotedString, alphas, infixNotation, Group, Optional,
+    ParseException)
+from mdtraj.utils.external.astor import codegen
+ParserElement.enablePackrat()
 
 __all__ = ['parse_selection']
 
@@ -95,7 +98,6 @@ def _check_n_tokens(tokens, n_tokens, name):
     if not len(tokens) == n_tokens:
         err = "{} take 3 values. You gave {}"
         err = err.format(name, len(tokens))
-        ParseException = import_('pyparsing').ParseException
         raise ParseException(err)
 
 
@@ -205,7 +207,6 @@ class BinaryInfixOperand(object):
         else:
             err = "Invalid number of infix expressions: {}"
             err = err.format(len(tokens))
-            ParseException = import_('pyparsing').ParseException
             raise ParseException(err)
         assert self.op_token in self.keyword_aliases
 
@@ -268,41 +269,39 @@ class parse_selection(object):
         self.expression = None
 
     def _initialize(self):
-        pp = import_('pyparsing')
-        pp.ParserElement.enablePackrat()
 
         def keywords(klass):
             kws = sorted(klass.keyword_aliases.keys())
-            return pp.MatchFirst([pp.Keyword(kw) for kw in kws])
+            return MatchFirst([Keyword(kw) for kw in kws])
 
         def infix(klass):
             kws = sorted(klass.keyword_aliases.keys())
-            return [(kw, klass.n_terms, getattr(pp.opAssoc, klass.assoc), klass)
+            return [(kw, klass.n_terms, getattr(opAssoc, klass.assoc), klass)
                     for kw in kws]
 
         # literals include words made of alphanumerics, numbers, or quoted strings
         # but we exclude any of the logical operands (e.g. 'or') from being
         # parsed literals
         literal = ~(keywords(BinaryInfixOperand) | keywords(UnaryInfixOperand)) + \
-                  (pp.Word(NUMS) | pp.quotedString | pp.Word(pp.alphas))
+                  (Word(NUMS) | quotedString | Word(alphas))
         literal.setParseAction(Literal)
 
         # these are the other 'root' expressions, the selection keywords (resname, resid, mass, etc)
         selection_keyword = keywords(SelectionKeyword)
         selection_keyword.setParseAction(SelectionKeyword)
-        base_expression = pp.MatchFirst([selection_keyword, literal])
+        base_expression = MatchFirst([selection_keyword, literal])
 
         # the grammer includes implicit equality comparisons between adjacent expressions:
         # i.e. 'name CA' -> 'name == CA'
-        implicit_equality = pp.Group(base_expression + pp.Optional(pp.Keyword('=='), '==') + base_expression)
+        implicit_equality = Group(base_expression + Optional(Keyword('=='), '==') + base_expression)
         implicit_equality.setParseAction(BinaryInfixOperand)
 
         # range condition matches expresssions such as 'mass 1 to 20'
-        range_condition = pp.Group(base_expression + literal + pp.Keyword('to') + literal)
+        range_condition = Group(base_expression + literal + Keyword('to') + literal)
         range_condition.setParseAction(RangeCondition)
 
         expression = range_condition | implicit_equality | base_expression
-        logical_expr = pp.infixNotation(expression,
+        logical_expr = infixNotation(expression,
                                         infix(UnaryInfixOperand) +
                                         infix(BinaryInfixOperand) +
                                         infix(RegexInfixOperand))
@@ -332,12 +331,7 @@ class parse_selection(object):
                                       kw_defaults=[])
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
-
-        try:
-            codegen = import_('astor.codegen')
-            source = codegen.to_source(astnode)
-        except ImportError:
-            source = None
+        source = codegen.to_source(astnode)
 
         expr = eval(
             compile(ast.fix_missing_locations(func), '<string>', mode='eval'),
@@ -350,7 +344,7 @@ class parse_selection(object):
 parse_selection = parse_selection()
 
 if __name__ == '__main__':
-    import sys, argparse
+    import sys
     exp = parse_selection(sys.argv[1])
 
     print(exp.source)
