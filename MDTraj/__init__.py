@@ -41,6 +41,7 @@ from mdtraj.formats.openmmxml import load_xml
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.mol2 import load_mol2
+from mdtraj.formats.amberrst import load_restrt, load_ncrestrt
 
 from mdtraj.core import element
 from mdtraj._rmsd import rmsd
