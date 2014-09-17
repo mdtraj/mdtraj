@@ -155,6 +155,8 @@ def test_binary_selection_operator():
     eq(parse_selection('name <= 1').astnode, pnode('atom.name <= 1'))
     eq(parse_selection('name le 1').astnode, pnode('atom.name <= 1'))
 
+    eq(parse_selection('1 == name').astnode, pnode('1 == atom.name'))
+    eq(parse_selection('1 eq name').astnode, pnode('1 == atom.name'))
 
 
 def test_bool():
