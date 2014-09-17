@@ -115,6 +115,11 @@ class AmberRestartFile(object):
     force_overwrite : bool, default=False
         In write mode, if a file named `filename` already exists, clobber it and
         overwrite it
+
+    See Also
+    --------
+    md.AmberNetCDFRestartFile : Low level interface to AMBER NetCDF-format
+    restart files
     """
     distance_unit = 'angstroms'
 
@@ -215,7 +220,7 @@ class AmberRestartFile(object):
             raise TypeError('Badly formatted restart file. Has %d lines for '
                             '%d atoms' % (len(lines), natom))
 
-        coordinates = np.zeros((1, 3, natom))
+        coordinates = np.zeros((1, natom, 3))
         if time is None:
             time = np.zeros(1)
         else:
@@ -223,7 +228,7 @@ class AmberRestartFile(object):
 
         # Fill the coordinates
         for i in xrange(lines_per_frame):
-            line = lines[i]
+            line = lines[i+2]  # Skip first two lines
             i2 = i * 2
             coordinates[0,i2,:] = [float(line[j:j+12]) for j in xrange(0,36,12)]
             i2 += 1
