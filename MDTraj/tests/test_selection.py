@@ -21,7 +21,6 @@
 # #############################################################################
 
 import ast
-import logging
 
 import mdtraj
 import numpy as np
@@ -29,13 +28,7 @@ from mdtraj.core.selection import parse_selection
 from mdtraj.testing import eq, get_fn
 pnode = lambda s: ast.parse(s, mode='eval').body
 
-
-# Conda v2.0.1 build py34_0 spews a bunch of DeprecationWarnings
-# from pyparsing internal code
-logging.captureWarnings(True)
-
 ala = mdtraj.load(get_fn("alanine-dipeptide-explicit.pdb"))
-
 
 def make_test_topology():
     t = mdtraj.Topology()
