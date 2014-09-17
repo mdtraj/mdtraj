@@ -342,7 +342,7 @@ class AmberRestartFile(object):
                                    length=1, can_be_none=True,
                                    warn_on_cast=False,
                                    add_newaxis_on_deficient_ndim=True)
-        cell_angles = ensure_type(cell_lengths, np.float64, 2, 'cell_angles',
+        cell_angles = ensure_type(cell_angles, np.float64, 2, 'cell_angles',
                                   length=1, can_be_none=True,
                                   warn_on_cast=False,
                                   add_newaxis_on_deficient_ndim=True)
@@ -369,7 +369,7 @@ class AmberRestartFile(object):
             self._handle.write(fmt % (cell_lengths[0,0], cell_lengths[0,1],
                                       cell_lengths[0,2]))
             self._handle.write(fmt % (cell_angles[0,0], cell_angles[0,1],
-                                      cell_angles[0,2]))
+                                      cell_angles[0,2]) + '\n')
         self._handle.flush()
 
     def __enter__(self):
@@ -632,7 +632,7 @@ class AmberNetCDFRestartFile(object):
                                    length=1, can_be_none=True,
                                    warn_on_cast=False,
                                    add_newaxis_on_deficient_ndim=True)
-        cell_angles = ensure_type(cell_lengths, np.float64, 2, 'cell_angles',
+        cell_angles = ensure_type(cell_angles, np.float64, 2, 'cell_angles',
                                   length=1, can_be_none=True,
                                   warn_on_cast=False,
                                   add_newaxis_on_deficient_ndim=True)
