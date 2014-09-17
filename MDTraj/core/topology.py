@@ -1111,7 +1111,9 @@ class Atom(object):
     @property
     def n_bonds(self):
         """Number of bonds in which the atom participates."""
-        raise NotImplementedError
+        # TODO: this info could be cached.
+        return ilen(bond for bond in self.residue.chain.topology.bonds
+                    if self in bond)
 
     def is_backbone(self):
         """Whether the atom is in the backbone of a protein residue"""

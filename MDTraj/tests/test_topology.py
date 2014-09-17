@@ -153,3 +153,14 @@ def test_top_dataframe_openmm_roundtrip():
     top, bonds = t.top.to_dataframe()
     t.topology = md.Topology.from_dataframe(top, bonds)
     omm_top = t.top.to_openmm()
+
+
+def test_n_bonds():
+    t = md.load(get_fn('2EQQ.pdb'))
+    for atom in t.top.atoms:
+        if atom.element.symbol == 'H':
+            assert atom.n_bonds == 1
+        elif atom.element.symbol == 'C':
+            assert atom.n_bonds in [3, 4]
+        elif atom.element.symbol == 'O':
+            assert atom.n_bonds in [1, 2]
