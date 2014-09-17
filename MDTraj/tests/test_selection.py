@@ -25,7 +25,7 @@ import ast
 import mdtraj
 import numpy as np
 from mdtraj.core.selection import parse_selection
-from mdtraj.testing import eq, get_fn
+from mdtraj.testing import eq, get_fn, assert_raises
 pnode = lambda s: ast.parse(s, mode='eval').body
 
 ala = mdtraj.load(get_fn("alanine-dipeptide-explicit.pdb"))
@@ -157,6 +157,11 @@ def test_binary_selection_operator():
 
     eq(parse_selection('1 == name').astnode, pnode('1 == atom.name'))
     eq(parse_selection('1 eq name').astnode, pnode('1 == atom.name'))
+
+
+def test_raises():
+    assert_raises(ValueError, lambda: parse_selection('or'))
+    assert_raises(ValueError, lambda: parse_selection('a <'))
 
 
 def test_bool():

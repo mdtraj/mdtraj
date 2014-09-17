@@ -310,7 +310,15 @@ class parse_selection(object):
         if not self.is_initialized:
             self._initialize()
 
-        parse_result = self.expression.parseString(selection)
+        try:
+            parse_result = self.expression.parseString(selection, parseAll=True)
+        except ParseException as e:
+            msg = str(e)
+            lines = ["%s: %s" % (msg, selection),
+                     " " * (12 + len("%s: " % msg) + (e.loc)) + "^^^"]
+            raise ValueError('\n'.join(lines))
+
+
         # Change __ATOM__ in function bodies. It must bind to the arg
         # name specified below (i.e. 'atom')
         astnode = self.transformer.visit(deepcopy(parse_result[0].ast()))
