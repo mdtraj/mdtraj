@@ -169,7 +169,7 @@ class RegexInfixOperand(object):
         self.tokens = tokens[0]
         _check_n_tokens(self.tokens, 3, 'regex operator')
         assert self.tokens[1] == '=~'
-    
+
     def ast(self):
         pattern = self.tokens[2].ast()
         string = self.tokens[0].ast()
@@ -177,7 +177,7 @@ class RegexInfixOperand(object):
                                   args=[pattern, string], keywords=[], starargs=None, kwargs=None),
                     ops=[ast.IsNot()], comparators=[ast.Name(id='None', ctx=ast.Load())])
 
-    
+
 
 class BinaryInfixOperand(object):
     n_terms = 2
@@ -212,12 +212,12 @@ class BinaryInfixOperand(object):
         if isinstance(op, ast.boolop):
             # and and or use one type of AST node
             value = ast.BoolOp(op=op, values=[e.ast() for e in self.comparators])
-        else: 
+        else:
             # remaining operators use another
             value = ast.Compare(left=self.comparators[0].ast(), ops=[op],
                                 comparators=[e.ast() for e in self.comparators[1:]])
         return deepcopy(value)
-        
+
 
 class RangeCondition(object):
     def __init__(self, tokens):
@@ -229,8 +229,6 @@ class RangeCondition(object):
     def ast(self):
         return ast.Compare(left=self._center.ast(), ops=[ast.LtE(), ast.LtE()],
                            comparators=[self._from.ast(), self._to.ast()])
-        
-
 
 
 class parse_selection(object):
@@ -300,7 +298,7 @@ class parse_selection(object):
         range_condition = pp.Group(base_expression + literal + pp.Keyword('to') + literal)
         range_condition.setParseAction(RangeCondition)
 
-        expression = range_condition | implicit_equality | base_expression        
+        expression = range_condition | implicit_equality | base_expression
         logical_expr = pp.infixNotation(expression,
                                         infix(UnaryInfixOperand) +
                                         infix(BinaryInfixOperand) +
