@@ -39,9 +39,9 @@ __all__ = ['parse_selection']
 # ############################################################################
 
 NUMS = '.0123456789'
-ATOM_NAME = '__ATOM__'
-RE_MODULE = ast.Name(id='re', ctx=ast.Load())
-SELECTION_GLOBALS = {RE_MODULE: re}
+THIS_ATOM = ast.Name(id='atom', ctx=ast.Load(), SINGLETON=True)
+RE_MODULE = ast.Name(id='re', ctx=ast.Load(), SINGLETON=True)
+SELECTION_GLOBALS = {'re': re}
 _ParsedSelection = namedtuple('_ParsedSelection', ['expr', 'source', 'astnode'])
 
 # ############################################################################
@@ -50,7 +50,7 @@ _ParsedSelection = namedtuple('_ParsedSelection', ['expr', 'source', 'astnode'])
 
 class _RewriteNames(ast.NodeTransformer):
     def visit_Name(self, node):
-        if node in SELECTION_GLOBALS:
+        if hasattr(node, 'SINGLETON'):
             return node
 
         _safe_names = {'None': None, 'True': True, 'False': False}
@@ -59,11 +59,6 @@ class _RewriteNames(ast.NodeTransformer):
                 return ast.NameConstant(value=_safe_names[node.id])
             return node
 
-        if node.id == ATOM_NAME:
-            # when we're building the AST, we refer to the current atom using
-            # ATOM_NAME, but then before returning the ast to the user, we
-            # rewrite the name as just 'atom'.
-            return ast.Name(id='atom', ctx=ast.Load())
         # all other bare names are taken to be string literals. Thus something
         # like parse_selection('name CA') properly resolves CA as a string
         # literal, not a barename to be loaded from the global scope!
@@ -72,10 +67,10 @@ class _RewriteNames(ast.NodeTransformer):
 
 def _chain(*attrs):
     """This transforms, for example, ('residue', 'is_protein'), into
-     Attribute(value=Attribute(value=Name(id=ATOM_NAME, ctx=Load()),
+     Attribute(value=Attribute(value=THIS_ATOM,
       attr='residue', ctx=Load()), attr='is_protein', ctx=Load())
     """
-    left = ast.Name(id=ATOM_NAME, ctx=ast.Load())
+    left = THIS_ATOM
     for attr in attrs:
         left = ast.Attribute(value=left, attr=attr, ctx=ast.Load())
     return left
@@ -96,8 +91,8 @@ def _kw(*tuples):
 
 def _check_n_tokens(tokens, n_tokens, name):
     if not len(tokens) == n_tokens:
-        err = "{} take 3 values. You gave {}"
-        err = err.format(name, len(tokens))
+        err = "{} take {} values. You gave {}"
+        err = err.format(name, n_tokens, len(tokens))
         raise ParseException(err)
 
 
@@ -135,7 +130,7 @@ class SelectionKeyword(object):
         assert tokens[0] in self.keyword_aliases
 
     def ast(self):
-        return deepcopy(self.keyword_aliases[self._tokens[0]])
+        return self.keyword_aliases[self._tokens[0]]
 
 
 class Literal(object):
@@ -162,8 +157,8 @@ class UnaryInfixOperand(object):
         assert self.op_token in self.keyword_aliases
 
     def ast(self):
-        return deepcopy(ast.UnaryOp(op=self.keyword_aliases[self.op_token],
-                                    operand=self.value_token.ast()))
+        return ast.UnaryOp(op=self.keyword_aliases[self.op_token],
+                                    operand=self.value_token.ast())
 
 
 class RegexInfixOperand(object):
@@ -220,7 +215,7 @@ class BinaryInfixOperand(object):
             # remaining operators use another
             value = ast.Compare(left=self.comparators[0].ast(), ops=[op],
                                 comparators=[e.ast() for e in self.comparators[1:]])
-        return deepcopy(value)
+        return value
 
 
 class RangeCondition(object):
@@ -318,7 +313,7 @@ class parse_selection(object):
         parse_result = self.expression.parseString(selection)
         # Change __ATOM__ in function bodies. It must bind to the arg
         # name specified below (i.e. 'atom')
-        astnode = self.transformer.visit(parse_result[0].ast())
+        astnode = self.transformer.visit(deepcopy(parse_result[0].ast()))
 
         if PY2:
             args = [ast.Name(id='atom', ctx=ast.Param())]
@@ -335,7 +330,7 @@ class parse_selection(object):
 
         expr = eval(
             compile(ast.fix_missing_locations(func), '<string>', mode='eval'),
-            dict((k.id, v) for k, v in SELECTION_GLOBALS.items()))
+            SELECTION_GLOBALS)
         return _ParsedSelection(expr, source, astnode)
 
 # Create the callable, and use it to overshadow the class. this way there's
@@ -346,6 +341,5 @@ parse_selection = parse_selection()
 if __name__ == '__main__':
     import sys
     exp = parse_selection(sys.argv[1])
-
     print(exp.source)
     print(ast.dump(exp.astnode))

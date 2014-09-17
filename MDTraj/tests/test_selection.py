@@ -208,7 +208,12 @@ def test_not():
     sp = parse_selection('!protein')
     eq(sp.source, "(not atom.residue.is_protein)")
 
+def test_re():
+    sp = parse_selection("name =~ 'C.*'")
+    eq(sp.source, "(re.match('C.*', atom.name) is not None)")
 
+    sp = parse_selection("(name =~ 'C.*') and all")
+    eq(sp.source, "((re.match('C.*', atom.name) is not None) and True)")
 
 # def test_within():
 #     sp = parse_selection("within 5 of (backbone or sidechain)")
