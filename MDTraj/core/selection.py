@@ -20,6 +20,7 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 # #############################################################################
 
+from __future__ import print_function
 import re
 import ast
 from copy import deepcopy
@@ -144,7 +145,7 @@ class UnaryInfixOperand(object):
     assoc = 'RIGHT'
 
     keyword_aliases = _kw(
-        (['not', '!'], ast.Not()),
+        (['not ', '!'], ast.Not()),
     )
 
     def __init__(self, tokens):
@@ -219,7 +220,6 @@ class BinaryInfixOperand(object):
 class RangeCondition(object):
     def __init__(self, tokens):
         tokens = tokens[0]
-        print tokens
         _check_n_tokens(tokens, 4, 'range condition')
         assert tokens[2] == 'to'
         self._from, self._center, self._to = tokens[0], tokens[1], tokens[3]
@@ -350,6 +350,5 @@ if __name__ == '__main__':
     import sys, argparse
     exp = parse_selection(sys.argv[1])
 
-    print exp.source
-    print ast.dump(exp.astnode)
-    print exp.expr(argparse.Namespace(name='CA'))
+    print(exp.source)
+    print(ast.dump(exp.astnode))
