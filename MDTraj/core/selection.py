@@ -20,7 +20,7 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 # #############################################################################
 
-
+import re
 import ast
 from copy import deepcopy
 from collections import namedtuple
@@ -36,6 +36,8 @@ __all__ = ['parse_selection']
 
 NUMS = '.0123456789'
 ATOM_NAME = '__ATOM__'
+RE_MODULE = ast.Name(id='re', ctx=ast.Load())
+SELECTION_GLOBALS = {RE_MODULE: re}
 _ParsedSelection = namedtuple('_ParsedSelection', ['expr', 'source', 'astnode'])
 
 # ############################################################################
@@ -44,6 +46,9 @@ _ParsedSelection = namedtuple('_ParsedSelection', ['expr', 'source', 'astnode'])
 
 class _RewriteNames(ast.NodeTransformer):
     def visit_Name(self, node):
+        if node in SELECTION_GLOBALS:
+            return node
+
         _safe_names = {'None': None, 'True': True, 'False': False}
         if node.id in _safe_names:
             if not PY2:
@@ -93,19 +98,7 @@ def _check_n_tokens(tokens, n_tokens, name):
         raise ParseException(err)
 
 
-class UnarySelectionOperand(object):
-    """Unary selections
-
-    This class implements one simplest component of the selection grammar,
-    unary selections, enabling expressions like 'all', or 'protein'.
-
-    Examples
-    --------
-    'all' -> lambda atom: True
-    'none' -> lambda atom: False
-    'protein' -> lambda atom: atom.residue.is_protein()
-    'water' -> lambda atom: atom.residue.is_water()
-    """
+class SelectionKeyword(object):
 
     keyword_aliases = _kw(
         # Atom.<attribute>
@@ -115,6 +108,15 @@ class UnarySelectionOperand(object):
         (('protein', 'is_protein'), _chain('residue', 'is_protein')),
         (('nucleic', 'is_nucleic'), _chain('residue', 'is_nucleic')),
         (('water', 'waters', 'is_water'), _chain('residue', 'is_water')),
+        (('name',), _chain('name', )),
+        (('index',), _chain('index', )),
+        (('numbonds',), _chain('numbonds', )),
+        (('type', 'element'), _chain('element', 'symbol')),
+        (('radius',), _chain('element', 'radius')),
+        (('mass',), _chain('element', 'mass')),
+        (('residue', 'resSeq'), _chain('residue', 'resSeq')),
+        (('resname',), _chain('residue', 'name')),
+        (('resid',), _chain('residue', 'index')),
     )
 
     def __init__(self, tokens):
@@ -128,50 +130,13 @@ class UnarySelectionOperand(object):
         return deepcopy(self.keyword_aliases[self._tokens[0]])
 
 
-class BinarySelectionOperand(object):
-    """Binary selections
-
-    Examples
-    --------
-    'name CA' -> lambda atom: atom.name == 'CA'
-    'index > 1' -> lambda atom: atom.index > 1
-    'resname != TYR' -> lambda atom: atom.residue.name != 'TYR'
-    """
-
-    operator_aliases = _kw(
-        (['<', 'lt'], ast.Lt()),
-        (['==', 'eq'], ast.Eq()),
-        (['<=', 'le'], ast.LtE()),
-        (['!=', 'ne'], ast.NotEq()),
-        (['>=', 'ge'], ast.GtE()),
-        (['>', 'gt'], ast.Gt()),
-    )
-
-    keyword_aliases = _kw(
-        (('name',), _chain('name', )),
-        (('index',), _chain('index', )),
-        (('numbonds',), _chain('numbonds', )),
-        (('type', 'element'), _chain('element', 'symbol')),
-        (('radius',), _chain('element', 'radius')),
-        (('mass',), _chain('element', 'mass')),
-        (('residue', 'resSeq'), _chain('residue', 'resSeq')),
-        (('resname',), _chain('residue', 'name')),
-        (('resid',), _chain('residue', 'index')),
-    )
-
+class Literal(object):
     def __init__(self, tokens):
-        tokens = tokens[0]
-        _check_n_tokens(tokens, 3, 'Binary selectors')
-        self.keyword_token, self.op_token, self.comparator_token = tokens
-        assert self.keyword_token in self.keyword_aliases
-        assert self.op_token in self.operator_aliases
+        self.token = tokens[0]
+        _check_n_tokens(tokens, 1, 'literal')
 
     def ast(self):
-        left = self.keyword_aliases[self.keyword_token]
-        ops = [self.operator_aliases[self.op_token]]
-        comparators = [ast.parse(self.comparator_token, mode='eval').body]
-        return deepcopy(
-            ast.Compare(left=left, ops=ops, comparators=comparators))
+        return ast.parse(self.token, mode='eval').body
 
 
 class UnaryInfixOperand(object):
@@ -193,6 +158,24 @@ class UnaryInfixOperand(object):
                                     operand=self.value_token.ast()))
 
 
+class RegexInfixOperand(object):
+    n_terms = 2
+    assoc = 'LEFT'
+    keyword_aliases = {'=~': '=~'}
+    def __init__(self, tokens):
+        self.tokens = tokens[0]
+        _check_n_tokens(self.tokens, 3, 'regex operator')
+        assert self.tokens[1] == '=~'
+    
+    def ast(self):
+        pattern = self.tokens[2].ast()
+        string = self.tokens[0].ast()
+        return ast.Compare(left=ast.Call(func=ast.Attribute(value=RE_MODULE, attr='match', ctx=ast.Load()),
+                                  args=[pattern, string], keywords=[], starargs=None, kwargs=None),
+                    ops=[ast.IsNot()], comparators=[ast.Name(id='None', ctx=ast.Load())])
+
+    
+
 class BinaryInfixOperand(object):
     n_terms = 2
     assoc = 'LEFT'
@@ -200,13 +183,19 @@ class BinaryInfixOperand(object):
     keyword_aliases = _kw(
         (['and', '&&'], ast.And()),
         (['or', '||'], ast.Or()),
+        (['<', 'lt'], ast.Lt()),
+        (['==', 'eq'], ast.Eq()),
+        (['<=', 'le'], ast.LtE()),
+        (['!=', 'ne'], ast.NotEq()),
+        (['>=', 'ge'], ast.GtE()),
+        (['>',  'gt'], ast.Gt()),
     )
 
     def __init__(self, tokens):
-        tokes = tokens[0]
+        tokens = tokens[0]
         if len(tokens) % 2 == 1:
-            self.op_token = tokes[1]
-            self.comparators = tokes[::2]
+            self.op_token = tokens[1]
+            self.comparators = tokens[::2]
         else:
             err = "Invalid number of infix expressions: {}"
             err = err.format(len(tokens))
@@ -215,8 +204,31 @@ class BinaryInfixOperand(object):
         assert self.op_token in self.keyword_aliases
 
     def ast(self):
-        return deepcopy(ast.BoolOp(op=self.keyword_aliases[self.op_token],
-                                   values=[e.ast() for e in self.comparators]))
+        op = self.keyword_aliases[self.op_token]
+
+        if isinstance(op, ast.boolop):
+            # and and or use one type of AST node
+            value = ast.BoolOp(op=op, values=[e.ast() for e in self.comparators])
+        else: 
+            # remaining operators use another
+            value = ast.Compare(left=self.comparators[0].ast(), ops=[op],
+                                comparators=[e.ast() for e in self.comparators[1:]])
+        return deepcopy(value)
+        
+
+class RangeCondition(object):
+    def __init__(self, tokens):
+        tokens = tokens[0]
+        print tokens
+        _check_n_tokens(tokens, 4, 'range condition')
+        assert tokens[2] == 'to'
+        self._from, self._center, self._to = tokens[0], tokens[1], tokens[3]
+
+    def ast(self):
+        return ast.Compare(left=self._center.ast(), ops=[ast.LtE(), ast.LtE()],
+                           comparators=[self._from.ast(), self._to.ast()])
+        
+
 
 
 class parse_selection(object):
@@ -254,6 +266,7 @@ class parse_selection(object):
 
     def _initialize(self):
         pp = import_('pyparsing')
+        pp.ParserElement.enablePackrat()
 
         def keywords(klass):
             kws = sorted(klass.keyword_aliases.keys())
@@ -264,22 +277,32 @@ class parse_selection(object):
             return [(kw, klass.n_terms, getattr(pp.opAssoc, klass.assoc), klass)
                     for kw in kws]
 
-        comparison_op = sorted(BinarySelectionOperand.operator_aliases.keys())
-        comparison_op = pp.oneOf(list(comparison_op))
-        comparison_op = pp.Optional(comparison_op, '==')
-        value = pp.Word(NUMS) | pp.quotedString | pp.Word(pp.alphas)
+        # literals include words made of alphanumerics, numbers, or quoted strings
+        # but we exclude any of the logical operands (e.g. 'or') from being
+        # parsed literals
+        literal = ~(keywords(BinaryInfixOperand) | keywords(UnaryInfixOperand)) + \
+                  (pp.Word(NUMS) | pp.quotedString | pp.Word(pp.alphas))
+        literal.setParseAction(Literal)
 
-        unary = keywords(UnarySelectionOperand)
-        unary.setParseAction(UnarySelectionOperand)
+        # these are the other 'root' expressions, the selection keywords (resname, resid, mass, etc)
+        selection_keyword = keywords(SelectionKeyword)
+        selection_keyword.setParseAction(SelectionKeyword)
+        base_expression = pp.MatchFirst([selection_keyword, literal])
 
-        binary = pp.Group(
-            keywords(BinarySelectionOperand) + comparison_op + value)
-        binary.setParseAction(BinarySelectionOperand)
-        expression = pp.MatchFirst([unary, binary])
+        # the grammer includes implicit equality comparisons between adjacent expressions:
+        # i.e. 'name CA' -> 'name == CA'
+        implicit_equality = pp.Group(base_expression + pp.Optional(pp.Keyword('=='), '==') + base_expression)
+        implicit_equality.setParseAction(BinaryInfixOperand)
 
+        # range condition matches expresssions such as 'mass 1 to 20'
+        range_condition = pp.Group(base_expression + literal + pp.Keyword('to') + literal)
+        range_condition.setParseAction(RangeCondition)
+
+        expression = range_condition | implicit_equality | base_expression        
         logical_expr = pp.infixNotation(expression,
+                                        infix(UnaryInfixOperand) +
                                         infix(BinaryInfixOperand) +
-                                        infix(UnaryInfixOperand))
+                                        infix(RegexInfixOperand))
 
         self.expression = logical_expr
         self.is_initialized = True
@@ -307,18 +330,26 @@ class parse_selection(object):
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
 
-        expr = eval(
-            compile(ast.fix_missing_locations(func), '<string>', mode='eval'))
-
         try:
             codegen = import_('astor.codegen')
             source = codegen.to_source(astnode)
         except ImportError:
             source = None
 
+        expr = eval(
+            compile(ast.fix_missing_locations(func), '<string>', mode='eval'),
+            dict((k.id, v) for k, v in SELECTION_GLOBALS.items()))
         return _ParsedSelection(expr, source, astnode)
 
 # Create the callable, and use it to overshadow the class. this way there's
 # basically just one global instance of the "function", even thought its
 # a callable class.
 parse_selection = parse_selection()
+
+if __name__ == '__main__':
+    import sys, argparse
+    exp = parse_selection(sys.argv[1])
+
+    print exp.source
+    print ast.dump(exp.astnode)
+    print exp.expr(argparse.Namespace(name='CA'))
