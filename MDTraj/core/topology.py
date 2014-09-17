@@ -774,13 +774,52 @@ class Topology(object):
         """
         return _topology_from_subset(self, atom_indices)
 
-    def select_expression(self, select_string, top_name='top'):
-        condition = parse_selection(select_string).source
-        fmt_string = "[atom.index for atom in {top_name}.atoms if {condition}]"
-        fmt_dict = dict(top_name=top_name, condition=condition)
-        return fmt_string.format(**fmt_dict)
+    def select_expression(self, selection_string):
+        """Translate a atom selection expression into a pure python expression.
+
+        Parameters
+        ----------
+        selection_string : str
+            An expression in the MDTraj atom selection DSL
+
+        Examples
+        --------
+        >>> topology.select_expression('name O and water')
+        "[atom.index for atom in topology.atoms if ((atom.name == 'O') and atom.residue.is_water)]")
+
+        Returns
+        -------
+        python_string : str
+            A string containing a pure python expression, equivalent to the
+            selection expression.
+        """
+        condition = parse_selection(selection_string).source
+        fmt_string = "[atom.index for atom in topology.atoms if {condition}]"
+        return fmt_string.format(condition=condition)
 
     def select(self, selection_string):
+        """Execute a selection against the topology
+
+        Parameters
+        ----------
+        selection_string : str
+            An expression in the MDTraj atom selection DSL
+
+        Examples
+        --------
+        >>> topology.select('name O and water')
+        array([1, 3, 5, 10, ...])
+
+        Returns
+        -------
+        indices : np.ndarray, dtype=int, ndim=1
+            Array of the indices of the atoms matching the selection expression.
+
+        See Also
+        --------
+        select_expression, mdtraj.core.selection.parse_selection
+        """
+
         filter_func = parse_selection(selection_string).expr
         indices = np.array([a.index for a in self.atoms if filter_func(a)])
         return indices

@@ -7,21 +7,21 @@ Introduction
 MDTaj's :ref:`trajectory analysis <analysis>` functions use 0-based arrays
 of "atom indices" to refer to subsets or groups of atoms in trajectories. To
 generate these index arrays, MDTraj includes a powerful text-based atom
-selection domain-specific language. The following are all valid selection
-queries::
+selection domain-specific language operating on the ``Topology``. The
+following are all valid selection queries::
 
-    traj.select("water")
-    traj.select("resSeq 35")
-    traj.select("water and name O")
-    traj.select("mass 5.5 to 20")
-    traj.select("resname =~ 'C.*'")
-    traj.select("protein and (backbone or resname ALA)")
+    top.select("water")
+    top.select("resSeq 35")
+    top.select("water and name O")
+    top.select("mass 5.5 to 20")
+    top.select("resname =~ 'C.*'")
+    top.select("protein and (backbone or resname ALA)")
 
 These queries return a numpy array of integers containing the indices of the
 matching residues. Equivalent python code for every selection expression
-can be generated using ``Trajectory.select_expression``. ::
+can be generated using ``Topology.select_expression``. ::
 
-    >>> traj.select_expression("water and name O")
+    >>> top.select_expression("water and name O")
     "[atom.index for atom in topology.atoms if (atom.residue.is_water and (atom.name == 'O'))]"
 
 Keywords and Grammar
@@ -61,9 +61,9 @@ strings, double-quoted strings, and bare words are also parsed as string
 literals. ::
 
     # The following queries are equivalent
-    traj.select("symbol == O")
-    traj.select("symbol == 'O'")
-    traj.select('symbol == "O"')
+    top.select("symbol == O")
+    top.select("symbol == 'O'")
+    top.select('symbol == "O"')
 
 Operators
 ~~~~~~~~~
@@ -79,13 +79,13 @@ match any of the names ``'C1'``, ``'C2'``, ``'C3'``, ``'C4'``, you can use the
 following query. The regular expression syntax is just the `native python Regex
 syntax <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_ ::
 
-    traj.select("name =~ 'C[1-4]'")
+    top.select("name =~ 'C[1-4]'")
 
 An implicit equality relation is implied between adjacent expressions ::
 
     # The following queries are equivalent
-    traj.select("resid 35")
-    traj.select("resid == 35")
+    top.select("resid 35")
+    top.select("resid == 35")
 
 Range queries
 ~~~~~~~~~~~~~
@@ -95,8 +95,8 @@ form ``<expression> <low> to <high>``, which resolves to ``<low> <= <expression>
 For example ::
 
     # The following queries are equivalent
-    traj.select("resid 10 to 30")
-    traj.select("(10 <= resid) and (resid <= 30)")
+    top.select("resid 10 to 30")
+    top.select("(10 <= resid) and (resid <= 30)")
 
 
 Implementation
@@ -112,5 +112,5 @@ This is done in two steps: first, query strings are parsed according to a
 grammar defined using `PyParsing <http://pyparsing.wikispaces.com/>`_. The
 parse tree is traversed, and used to construct an `abstract syntax tree <https://docs.python.org/3/library/ast.html>`_
 corresponding to the equivalent Python atom selection expression
-(e.g. ``Trajectory.select_expression``).
+(e.g. ``Topology.select_expression``).
 

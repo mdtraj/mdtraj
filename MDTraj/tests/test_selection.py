@@ -244,4 +244,4 @@ def test_top():
 def test_top_2():
     expr = ala.topology.select_expression("name O and water")
     eq(expr,
-       "[atom.index for atom in top.atoms if ((atom.name == 'O') and atom.residue.is_water)]")
+       "[atom.index for atom in topology.atoms if ((atom.name == 'O') and atom.residue.is_water)]")
