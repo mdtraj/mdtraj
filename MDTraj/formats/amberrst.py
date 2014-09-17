@@ -511,9 +511,6 @@ class AmberNetCDFRestartFile(object):
             raise IOError('The file was opened in mode=%s. Reading is not '
                           'allowed.' % self._mode)
 
-        with open(self._filename, 'r') as f:
-            lines = f.readlines()
-
         if 'coordinates' not in self._handle.variables:
             raise ValueError('No coordinates found in the NetCDF file.')
         
@@ -546,6 +543,19 @@ class AmberNetCDFRestartFile(object):
         else:
             warnings.warn('No time found in NetCDF file.')
             time = None
+
+        # scipy.io.netcdf variables are mem-mapped, and are only backed by valid
+        # memory while the file handle is open. This is _bad_ because we need to
+        # support the user opening the file, reading the coordinates, and then
+        # closing it, and still having the coordinates be a valid memory
+        # segment.
+        # https://github.com/simtk/mdtraj/issues/440
+        if coordinates is not None and not coordinates.flags['WRITEABLE']:
+            coordinates = np.array(coordinates, copy=True)
+        if cell_lengths is not None and not cell_lengths.flags['WRITEABLE']:
+            cell_lengths = np.array(cell_lengths, copy=True)
+        if cell_angles is not None and not cell_angles.flags['WRITEABLE']:
+            cell_angles = np.array(cell_angles, copy=True)
 
         return coordinates, time, cell_lengths, cell_angles
 
