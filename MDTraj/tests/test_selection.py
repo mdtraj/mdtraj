@@ -203,7 +203,7 @@ def test_element():
     eq(sp.source, "(atom.element.symbol == 'O')")
 
     sp = parse_selection("mass 5.5 to 12.3")
-    eq(sp.source, "(5.5 <= atom.element.mass <= 12.3)")
+    eq(sp.astnode, pnode("(5.5 <= atom.element.mass <= 12.3)"))
 
 def test_not():
     sp = parse_selection("not protein")
