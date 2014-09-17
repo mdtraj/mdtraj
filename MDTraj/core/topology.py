@@ -1070,9 +1070,17 @@ class Atom(object):
         self.serial = serial
 
     @property
-    def num_bonds(self):
+    def n_bonds(self):
         """Number of bonds in which the atom participates."""
         raise NotImplementedError
+
+    def is_backbone(self):
+        """Whether the atom is in the backbone of a protein residue"""
+        return self.name in set(['C', 'CA', 'N', 'O']) and self.residue.is_protein
+
+    def is_sidechain(self):
+        """Whether the atom is in the sidechain of a protein residue"""
+        return self.name not in set(['C', 'CA', 'N', 'O']) and self.residue.is_protein
 
     def __eq__(self, other):
         """ Check whether two Atom objects are equal. """
