@@ -132,11 +132,10 @@ def test_unary_1():
     eq(parse_selection('everything').astnode, pnode('True'))
     eq(parse_selection('none').astnode, pnode('False'))
     eq(parse_selection('nothing').astnode, pnode('False'))
-
+    # eq(parse_selection('nucleic').astnode, pnode('atom.residue.is_nucleic'))
+    # eq(parse_selection('is_nucleic').astnode, pnode('atom.residue.is_nucleic'))
     eq(parse_selection('protein').astnode, pnode('atom.residue.is_protein'))
     eq(parse_selection('is_protein').astnode, pnode('atom.residue.is_protein'))
-    eq(parse_selection('nucleic').astnode, pnode('atom.residue.is_nucleic'))
-    eq(parse_selection('is_nucleic').astnode, pnode('atom.residue.is_nucleic'))
     eq(parse_selection('water').astnode, pnode('atom.residue.is_water'))
     eq(parse_selection('is_water').astnode, pnode('atom.residue.is_water'))
     eq(parse_selection('waters').astnode, pnode('atom.residue.is_water'))
@@ -162,20 +161,20 @@ def test_bool():
     sp = parse_selection("protein or water")
     eq(sp.source, "(atom.residue.is_protein or atom.residue.is_water)")
 
-    sp = parse_selection("protein or water or nucleic")
+    sp = parse_selection("protein or water or all")
     eq(sp.source,
-       "(atom.residue.is_protein or atom.residue.is_water or atom.residue.is_nucleic)")
+       "(atom.residue.is_protein or atom.residue.is_water or True)")
 
 
 
 def test_nested_bool():
-    sp = parse_selection("protein and water or nucleic")
+    sp = parse_selection("nothing and water or all")
     eq(sp.source,
-       "((atom.residue.is_protein and atom.residue.is_water) or atom.residue.is_nucleic)")
+       "((False and atom.residue.is_water) or True)")
 
-    sp = parse_selection("protein and (water or nucleic)")
+    sp = parse_selection("nothing and (water or all)")
     eq(sp.source,
-       "(atom.residue.is_protein and (atom.residue.is_water or atom.residue.is_nucleic))")
+       "(False and (atom.residue.is_water or True))")
 
 
 def test_values():
