@@ -158,6 +158,10 @@ class AmberRestartFile(object):
             raise IOError('The file is uninitialized')
         return self._n_atoms
 
+    @property
+    def n_frames(self):
+        return 1 # always 1 frame
+
     def _validate_open(self):
         if self._closed:
             raise IOError('The file is closed.')
@@ -172,7 +176,7 @@ class AmberRestartFile(object):
             raise TypeError('not a recognized Amber restart')
 
         time = None
-        if len(words) > 2:
+        if len(words) >= 2:
             time = float(words[1])
 
         lines_per_frame = int(ceil(natom / 2))
@@ -479,6 +483,10 @@ class AmberNetCDFRestartFile(object):
             raise IOError('The file is uninitialized')
         return self._handle.dimensions['atom']
 
+    @property
+    def n_frames(self):
+        return 1 # always 1 frame
+
     def _validate_open(self):
         if self._closed:
             raise IOError('The file is closed.')
@@ -556,6 +564,17 @@ class AmberNetCDFRestartFile(object):
             cell_lengths = np.array(cell_lengths, copy=True)
         if cell_angles is not None and not cell_angles.flags['WRITEABLE']:
             cell_angles = np.array(cell_angles, copy=True)
+
+        # The leading frame dimension is missing on all of these arrays since
+        # restart files have only one frame. Reshape them to add this extra
+        # dimension
+        coordinates = coordinates.reshape([1]+list(coordinates.shape))
+        if cell_lengths is not None:
+            cell_lengths = cell_lengths.reshape([1]+list(cell_lengths.shape))
+        if cell_angles is not None:
+            cell_angles = cell_angles.reshape([1]+list(cell_angles.shape))
+        if time is not None:
+            time = np.asarray([time,])
 
         return coordinates, time, cell_lengths, cell_angles
 
