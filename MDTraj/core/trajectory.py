@@ -96,6 +96,9 @@ def _parse_topology(top):
     except:
         ext = None  # might not be a string
 
+    # supported extensions for constructing topologies
+    extensions = ['.pdb', '.h5','.lh5', '.prmtop', '.parm7', '.psf', '.mol2']
+
     if isinstance(top, string_types) and (ext in ['.pdb', '.h5','.lh5']):
         _traj = load_frame(top, 0)
         topology = _traj.topology
@@ -109,6 +112,12 @@ def _parse_topology(top):
         topology = top.topology
     elif isinstance(top, Topology):
         topology = top
+    elif isinstance(top, string_types):
+        raise IOError('The topology is loaded by filename extension, and the '
+                        'detected "%s" format is not supported. Supported topology '
+                        'formats include %s and "%s".' % (ext,
+                        ', '.join(['"%s"' % e for e in extensions[:-1]]),
+                        extensions[-1]))
     else:
         raise TypeError('A topology is required. You supplied top=%s' % str(top))
 
