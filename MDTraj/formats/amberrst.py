@@ -38,15 +38,12 @@ import warnings
 import numpy as np
 from mdtraj import version
 from mdtraj.formats.registry import _FormatRegistry
-from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices
+from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices, six
 
 __all__ = ['AmberRestartFile', 'load_restrt', 'AmberNetCDFRestartFile',
            'load_ncrestrt']
 
-try:
-    xrange
-except NameError:
-    xrange = range
+range = six.moves.range
 
 @_FormatRegistry.register_loader('.rst7')
 @_FormatRegistry.register_loader('.restrt')
@@ -100,10 +97,10 @@ def load_restrt(filename, top=None, atom_indices=None):
 @_FormatRegistry.register_fileobject('.restrt')
 @_FormatRegistry.register_fileobject('.inpcrd')
 class AmberRestartFile(object):
-    """Interface for reading and writing AMBER NetCDF files. This is a file-like
-    object, that supports both reading and writing depending on the `mode` flag.
-    It implements the context manager protocol, so you can also use it with the
-    python 'with' statement.
+    """Interface for reading and writing AMBER ASCII restart files. This is a
+    file-like object, that supports both reading and writing depending on the
+    `mode` flag.  It implements the context manager protocol, so you can also
+    use it with the python 'with' statement.
 
     Parameters
     ----------
@@ -231,20 +228,20 @@ class AmberRestartFile(object):
             time = np.asarray((time,))
 
         # Fill the coordinates
-        for i in xrange(lines_per_frame):
+        for i in range(lines_per_frame):
             line = lines[i+2]  # Skip first two lines
             i2 = i * 2
-            coordinates[0,i2,:] = [float(line[j:j+12]) for j in xrange(0,36,12)]
+            coordinates[0,i2,:] = [float(line[j:j+12]) for j in range(0,36,12)]
             i2 += 1
             if i2 < natom:
                 coordinates[0,i2,:] = [float(line[j:j+12]) for j in
-                                       xrange(36,72,12)]
+                                       range(36,72,12)]
         if hasbox:
             cell_lengths = np.zeros((1,3))
             cell_angles = np.zeros((1,3))
             line = lines[-1]
-            cell_lengths[0,:] = [float(line[i:i+12]) for i in xrange(0,36,12)]
-            cell_angles[0,:] = [float(line[i:i+12]) for i in xrange(36,72,12)]
+            cell_lengths[0,:] = [float(line[i:i+12]) for i in range(0,36,12)]
+            cell_angles[0,:] = [float(line[i:i+12]) for i in range(36,72,12)]
         else:
             cell_lengths = cell_angles = None
 
@@ -360,7 +357,7 @@ class AmberRestartFile(object):
                            'MDTraj\n')
         self._handle.write('%5d%15.7e\n' % (self._n_atoms, time))
         fmt = '%12.7f%12.7f%12.7f'
-        for i in xrange(self._n_atoms):
+        for i in range(self._n_atoms):
             acor = coordinates[0, i, :]
             self._handle.write(fmt % (acor[0], acor[1], acor[2]))
             if i % 2 == 1: self._handle.write('\n')
@@ -492,7 +489,7 @@ class AmberNetCDFRestartFile(object):
             raise IOError('The file is closed.')
 
     def read(self, atom_indices=None):
-        """Read data from an AMBER ASCII restart file
+        """Read data from an AMBER NetCDF restart file
 
         Parameters
         ----------
@@ -568,11 +565,11 @@ class AmberNetCDFRestartFile(object):
         # The leading frame dimension is missing on all of these arrays since
         # restart files have only one frame. Reshape them to add this extra
         # dimension
-        coordinates = coordinates.reshape([1]+list(coordinates.shape))
+        coordinates = coordinates[np.newaxis,:]
         if cell_lengths is not None:
-            cell_lengths = cell_lengths.reshape([1]+list(cell_lengths.shape))
+            cell_lengths = cell_lengths[np.newaxis,:]
         if cell_angles is not None:
-            cell_angles = cell_angles.reshape([1]+list(cell_angles.shape))
+            cell_angles = cell_angles[np.newaxis,:]
         if time is not None:
             time = np.asarray([time,])
 
@@ -580,8 +577,8 @@ class AmberNetCDFRestartFile(object):
 
     def write(self, coordinates, time=None, cell_lengths=None,
               cell_angles=None):
-        """Write one frame of a MD trajectory to disk in the AMBER ASCII restart
-        file format.
+        """Write one frame of a MD trajectory to disk in the AMBER NetCDF
+        restart file format.
 
         Parameters
         ----------
