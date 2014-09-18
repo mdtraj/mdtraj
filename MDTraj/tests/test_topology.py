@@ -23,10 +23,10 @@
 import os
 import tempfile
 import mdtraj as md
-from mdtraj.utils.six.moves import cPickle
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
-from nose.tools import assert_raises
 import numpy as np
+from mdtraj.utils.six.moves import cPickle
+from mdtraj.testing import (get_fn, eq, DocStringFormatTester, skipif,
+                            assert_raises)
 
 try:
     from simtk.openmm import app
@@ -153,3 +153,14 @@ def test_top_dataframe_openmm_roundtrip():
     top, bonds = t.top.to_dataframe()
     t.topology = md.Topology.from_dataframe(top, bonds)
     omm_top = t.top.to_openmm()
+
+
+def test_load_unknown_topology():
+    try:
+        md.load(get_fn('frame0.dcd'), top=get_fn('frame0.dcd'))
+    except IOError as e:
+        # we want to make sure there's a nice error message than includes
+        # a list of the supported topology formats.
+        assert all(s in str(e) for s in ('.pdb', '.psf', '.prmtop'))
+    else:
+        assert False  # fail
