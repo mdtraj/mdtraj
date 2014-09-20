@@ -411,7 +411,14 @@ def geometry_extensions():
                           "MDTraj/geometry/include/cephes",
                           numpy.get_include()],
             define_macros=define_macros,
-            extra_compile_args=compiler_args)
+            extra_compile_args=compiler_args),
+        Extension('mdtraj.geometry.neighbors',
+            sources=["MDTraj/geometry/neighbors.pyx",
+                     "MDTraj/geometry/src/neighbors.cpp"],
+            include_dirs=["MDTraj/geometry/include",],
+            define_macros=define_macros,
+            extra_compile_args=compiler_args,
+            language='c++'),
         ]
 
 extensions = [xtc, trr, dcd, binpos]
