@@ -673,7 +673,7 @@ class AmberNetCDFRestartFile(object):
         if cell_lengths is not None:
             self._handle.variables['cell_angles'][:] = cell_angles[0,:]
             self._handle.variables['cell_lengths'][:] = cell_lengths[0,:]
-        self._handle.flush()
+        self.flush()
 
     def _initialize_headers(self, n_atoms, set_coordinates, set_time, set_cell):
         """Initialize the headers and convention properties of the NetCDF
@@ -715,6 +715,7 @@ class AmberNetCDFRestartFile(object):
         if set_time:
             v = ncfile.createVariable('time', 'd', ('time',))
             v.units = 'picoseconds'
+        self.flush()
 
     def __enter__(self):
         return self
@@ -728,3 +729,8 @@ class AmberNetCDFRestartFile(object):
         self.close()
     def __len__(self):
         return 1 # All restarts have only 1 frame
+    def flush(self):
+        self._validate_open()
+        if self._mode != 'w':
+            raise IOError('Cannot flush a file opened for reading')
+        self._handle.flush()
