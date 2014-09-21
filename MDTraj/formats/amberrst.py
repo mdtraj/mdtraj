@@ -511,6 +511,13 @@ class AmberNetCDFRestartFile(object):
         cell_angles : np.ndarray, None
             The angles (\alpha, \beta, \gamma) defining the unit cell for each
             frame, or None if the information is not present in the file.
+
+        Notes
+        -----
+        If the file is not a NetCDF file with the appropriate convention, a
+        TypeError is raised. If variables that are needed do not exist or if
+        illegal values are passed in for parameters, ValueError is raised. If
+        I/O errors occur, IOError is raised.
         """
         if self._mode != 'r':
             raise IOError('The file was opened in mode=%s. Reading is not '
@@ -518,7 +525,17 @@ class AmberNetCDFRestartFile(object):
 
         if 'coordinates' not in self._handle.variables:
             raise ValueError('No coordinates found in the NetCDF file.')
-        
+
+        # Check that conventions are correct
+        if (not hasattr(self._handle, 'Conventions') or
+            self._handle.Conventions != 'AMBERRESTART'):
+            raise TypeError('NetCDF file does not have correct Conventions')
+        if not hasattr(self._handle, 'ConventionVersion'):
+            raise TypeError('NetCDF file does not have ConventionVersion')
+        if self._handle.ConventionVersion != '1.0':
+            raise ValueError('NetCDF restart has ConventionVersion %s. Only '
+                             'Version 1.0 is supported.' %
+                             self._handle.ConventionVersion)
         if atom_indices is not None:
             atom_slice = ensure_type(atom_indices, dtype=np.int, ndim=1,
                                      name='atom_indices', warn_on_cast=False)
