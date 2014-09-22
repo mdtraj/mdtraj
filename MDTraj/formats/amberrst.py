@@ -527,15 +527,22 @@ class AmberNetCDFRestartFile(object):
             raise ValueError('No coordinates found in the NetCDF file.')
 
         # Check that conventions are correct
-        if (not hasattr(self._handle, 'Conventions') or
-            self._handle.Conventions != 'AMBERRESTART'):
+        try:
+            conventions = self._handle.Conventions.decode('ascii')
+        except UnicodeDecodeError:
             raise TypeError('NetCDF file does not have correct Conventions')
-        if not hasattr(self._handle, 'ConventionVersion'):
+        try:
+            convention_version = self._handle.ConventionVersion.decode('ascii')
+        except UnicodeDecodeError:
+            raise ValueError('NetCDF file does not have correct ConventionVersion')
+        except AttributeError:
             raise TypeError('NetCDF file does not have ConventionVersion')
-        if self._handle.ConventionVersion != '1.0':
+        if (not hasattr(self._handle, 'Conventions') or
+                conventions != 'AMBERRESTART'):
+            raise TypeError('NetCDF file does not have correct Conventions')
+        if convention_version != '1.0':
             raise ValueError('NetCDF restart has ConventionVersion %s. Only '
-                             'Version 1.0 is supported.' %
-                             self._handle.ConventionVersion)
+                             'Version 1.0 is supported.' % convention_version)
         if atom_indices is not None:
             atom_slice = ensure_type(atom_indices, dtype=np.int, ndim=1,
                                      name='atom_indices', warn_on_cast=False)
