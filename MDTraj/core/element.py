@@ -144,18 +144,22 @@ class Element(tuple):
 
     @property
     def number(self):
+        """Atomic number."""
         return tuple.__getitem__(self, 0)
 
     @property
     def name(self):
+        """Element name"""
         return tuple.__getitem__(self, 1)
 
     @property
     def symbol(self):
+        """Element symbol"""
         return tuple.__getitem__(self, 2)
 
     @property
     def mass(self):
+        """Element mass"""
         return tuple.__getitem__(self, 3)
 
     def __getitem__(self, item):
@@ -166,7 +170,13 @@ class Element(tuple):
 
     @property
     def atomic_number(self):
+        """Atomic number"""
         return tuple.__getitem__(self, 0)
+
+    @property
+    def radius(self):
+        """Element atomic radius"""
+        raise NotImplementedError
 
 
 # This is for backward compatibility.

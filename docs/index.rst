@@ -73,6 +73,7 @@ API Reference
    :maxdepth: 1
 
    load_functions
+   atom_selection
    analysis
    api/trajectory_files
    api/reporters
