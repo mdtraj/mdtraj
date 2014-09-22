@@ -6,3 +6,9 @@ freesolve_v0.3.tar.bz2 is a modified version of David Mobley's FreeSolve databas
 
 1am7_protein.pdb, 1am7_corrected.xtc, and 1am7_uncorrected.xtc are Gromacs trajectories of lambda phage lysozyme (PDB: 1AM7).  The uncorrected xtc file has the protein drifting across the periodic box.  The
 corrected xtc file has been corrected with trjconv -pbc mol.  This are useful as a sanity check for PBC issues.
+
+`inpcrd` is an AMBER restart/inpcrd file for a solvated alanine dipeptide. It
+was taken from the AmberTools test suite found in `$AMBERHOME/test/netcdf/`.
+
+`ncinpcrd.rst7` is an AMBER NetCDF restart/inpcrd file for the same system as
+`inpcrd` (see above)
