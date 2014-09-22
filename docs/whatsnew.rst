@@ -7,6 +7,7 @@ These are new features and improvements of note in each release.
 v1.X (development)
 ------------------
 - New loader for CHARMM topology files: ``md.load_psf`` (Jason M. Swails)
+- New atom selection DSL
 
 
 v1.0.0 (September 7, 2014)
