@@ -16,6 +16,7 @@ import sys
 import shutil
 import tempfile
 import subprocess
+from distutils.errors import DistutilsExecError
 from distutils.ccompiler import new_compiler
 from distutils.sysconfig import customize_compiler, get_config_vars
 try:
@@ -230,12 +231,15 @@ class CompilerDetection(object):
 
     def _print_compiler_version(self, cc):
         print("C compiler:")
-        if self.msvc:
-            if not cc.initialized:
-                cc.initialize()
-            cc.spawn([cc.cc])
-        else:
-            cc.spawn([cc.compiler[0]] + ['-v'])
+        try:
+            if self.msvc:
+                if not cc.initialized:
+                    cc.initialize()
+                cc.spawn([cc.cc])
+            else:
+                cc.spawn([cc.compiler[0]] + ['-v'])
+        except DistutilsExecError:
+            pass
 
     def hasfunction(self, cc, funcname, include=None, extra_postargs=None):
         # From http://stackoverflow.com/questions/
