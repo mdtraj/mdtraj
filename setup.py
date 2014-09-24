@@ -210,12 +210,14 @@ class CompilerDetection(object):
                 self.compiler_args_sse41 = ['-msse4']
 
         if self.openmp_enabled:
-            self.compiler_libraries_openmp = ['gomp'] if openmp_needs_gomp else []
+            self.compiler_libraries_openmp = []
 
             if self.msvc:
                 self.compiler_args_openmp = ['/openmp']
             else:
                 self.compiler_args_openmp = ['-fopenmp']
+                if openmp_needs_gomp:
+                    self.compiler_libraries_openmp = ['gomp']
         else:
             self.compiler_libraries_openmp = []
             self.compiler_args_openmp = []
