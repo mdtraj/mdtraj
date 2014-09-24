@@ -394,7 +394,7 @@ class NetCDFTrajectoryFile(object):
         # Set attributes.
         setattr(self._handle, 'title', 'CREATED at %s on %s' %
             (datetime.now(), socket.gethostname()))
-        setattr(self._handle, 'application', 'AMBER')
+        setattr(self._handle, 'application', 'Omnia')
         setattr(self._handle, 'program', 'MDTraj')
         setattr(self._handle, 'programVersion', version.short_version)
         setattr(self._handle, 'Conventions', 'AMBER')

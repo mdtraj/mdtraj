@@ -155,6 +155,17 @@ def test_top_dataframe_openmm_roundtrip():
     omm_top = t.top.to_openmm()
 
 
+def test_n_bonds():
+    t = md.load(get_fn('2EQQ.pdb'))
+    for atom in t.top.atoms:
+        if atom.element.symbol == 'H':
+            assert atom.n_bonds == 1
+        elif atom.element.symbol == 'C':
+            assert atom.n_bonds in [3, 4]
+        elif atom.element.symbol == 'O':
+            assert atom.n_bonds in [1, 2]
+
+
 def test_load_unknown_topology():
     try:
         md.load(get_fn('frame0.dcd'), top=get_fn('frame0.dcd'))
@@ -164,3 +175,4 @@ def test_load_unknown_topology():
         assert all(s in str(e) for s in ('.pdb', '.psf', '.prmtop'))
     else:
         assert False  # fail
+

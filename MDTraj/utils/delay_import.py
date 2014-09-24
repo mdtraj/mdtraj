@@ -128,16 +128,17 @@ MESSAGES = {
     data structures and data analysis tools for the Python programming language.
 
     pandas can be downloaded from https://pypi.python.org/pypi/pandas or installed
-    with the python "easy_install" or "pip" package managers sing:
+    with the python "easy_install" or "pip" package managers using:
 
     # easy_install pandas
     or
     # pip install pandas
     ''',
 
-    'scipy': '''
+    'scipy': ''',
+
     The code at {filename}:{line_number} requires the scipy package
-    '''
+    ''',
 }
 
 ##############################################################################
