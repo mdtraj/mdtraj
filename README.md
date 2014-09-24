@@ -1,4 +1,4 @@
-## MDTraj: Molecular dynamics trajectory analysis in python
+## MDTraj: a modern, open library for the analysis of molecular dynamics trajectories
 
 [![Travis Build Status](https://travis-ci.org/SimTk/mdtraj.png?branch=master)](https://travis-ci.org/SimTk/mdtraj)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/80ov9tdffg5jkr7i)](https://ci.appveyor.com/project/rmcgibbo/mdtraj-813)
