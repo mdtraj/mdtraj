@@ -12,6 +12,8 @@ v1.X (development)
   python code for embedding in scripts or applications
   (Matthew P. Harrigan, Robert T. McGibbon)
 - Support reading and writing Amber restart files (Jason M. Swails)
+- ``md.shrake_rupley`` supports a new option to accumulate total SASA by residue
+  (Robert T. McGibbon)
 
 
 v1.0.0 (September 7, 2014)
