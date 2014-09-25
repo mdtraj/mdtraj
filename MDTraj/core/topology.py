@@ -287,6 +287,11 @@ class Topology(object):
             out.addBond(atom_mapping[a1], atom_mapping[a2])
         
         if traj is not None:
+            angles = traj.unitcell_angles[0]
+            
+            if np.linalg.norm(angles - 90.0) > 1E-4:
+                raise(ValueError("Unitcell angles must be 90.0 to use in OpenMM topology."))
+
             box_vectors = mm.Vec3(*traj.unitcell_lengths[0]) * u.nanometer
             out.setUnitCellDimensions(box_vectors)
 
