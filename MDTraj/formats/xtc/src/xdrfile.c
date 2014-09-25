@@ -908,7 +908,7 @@ xdrfile_decompress_coord_float(float     *ptr,
 			run -= is_smaller;
 			is_smaller--;
 		}
-		if ((lfp-ptrstart)+3*run > size3)
+		if ((lfp-ptrstart)+run > size3)
 		{
 			fprintf(stderr, "(xdrfile error) Buffer overrun during decompression.\n");
 			return 0;
