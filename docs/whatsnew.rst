@@ -12,6 +12,7 @@ v1.X (development)
   python code for embedding in scripts or applications
   (Matthew P. Harrigan, Robert T. McGibbon)
 - Support reading and writing Amber restart files (Jason M. Swails)
+- Fix potential segmentation fault when reading corrupted XTC files. (Robert T. McGibbon)
 
 
 v1.0.0 (September 7, 2014)
