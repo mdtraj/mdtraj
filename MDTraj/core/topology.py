@@ -254,8 +254,14 @@ class Topology(object):
 
         return out
 
-    def to_openmm(self):
+    def to_openmm(self, traj=None):
         """Convert this topology into OpenMM topology
+        
+        Parameters
+        ----------
+        traj : MDTraj.Trajectory, optional, default=None
+            If specified, use the first frame from this trajectory to
+            set the unitcell information in the openmm topology.
 
         Returns
         -------
@@ -277,6 +283,10 @@ class Topology(object):
 
         for a1, a2 in self.bonds:
             out.addBond(atom_mapping[a1], atom_mapping[a2])
+        
+        if traj is not None:
+            box_vectors = traj.openmm_boxes(0)
+            out.setUnitCellDimensions(box_vectors)
 
         return out
 
