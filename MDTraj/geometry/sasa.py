@@ -64,7 +64,7 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom'):
     areas : np.array, shape=(n_frames, n_features)
         The accessible surface area of each atom or residue in every frame.
         If mode == 'atom', the second dimension will index the atoms in
-        the trajectory, whereas if mode == 'residue'm the second
+        the trajectory, whereas if mode == 'residue', the second
         dimension will index the residues.
 
     Notes
