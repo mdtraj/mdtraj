@@ -63,9 +63,7 @@ def test_topology_openmm_boxes():
     u = import_('simtk.unit')
     traj = md.load(get_fn('1vii_sustiva_water.pdb'))
     mmtop = traj.topology.to_openmm(traj=traj)
-    box1 = traj.openmm_boxes(0) / u.nanometer
-    box2 = mmtop.getUnitCellDimensions() / u.nanometer
-    eq(box1, box2)
+    box = mmtop.getUnitCellDimensions() / u.nanometer
 
 
 @skipif(not HAVE_PANDAS)

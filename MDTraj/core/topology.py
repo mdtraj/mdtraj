@@ -269,6 +269,8 @@ class Topology(object):
            This topology, as an OpenMM topology
         """
         app = import_('simtk.openmm.app')
+        mm = import_('simtk.openmm')
+        u = import_('simtk.unit')
 
         out = app.Topology()
         atom_mapping = {}
@@ -285,7 +287,7 @@ class Topology(object):
             out.addBond(atom_mapping[a1], atom_mapping[a2])
         
         if traj is not None:
-            box_vectors = traj.openmm_boxes(0)
+            box_vectors = mm.Vec3(*traj.unitcell_lengths[0]) * u.nanometer
             out.setUnitCellDimensions(box_vectors)
 
         return out
