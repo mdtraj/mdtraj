@@ -30,6 +30,7 @@ int sasa(void) {exit(EXIT_FAILURE);}
 #include <pmmintrin.h>
 #include <smmintrin.h>
 
+#include "sasa.h"
 #include "msvccompat.h"
 #include "ssetools.h"
 #ifndef M_PI
@@ -176,7 +177,8 @@ static void generate_sphere_points(float* sphere_points, int n_points)
 
 
 int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
-         const float* atom_radii, const int n_sphere_points, float* array_of_areas)
+         const float* atom_radii, const int n_sphere_points,
+         const int* atom_mapping, const int n_groups, float* out)
 {
   /*
   // Calculate the accessible surface area of each atom in each frame of
@@ -195,40 +197,54 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   // n_sphere_points : int
   //     number of points to generate sampling the unit sphere. higher is
   //     better (more accurate) but more expensive
-  // array_of_areas : 2d array, shape=[n_frames, n_atoms]
-  //     the output buffer to place the results in -- the surface area of each
-  //     frame (each atom within that frame)
+  // atom_mapping : 1d array, shape=[n_atoms]
+  //     mapping from atoms onto groups, over which to accumulate the sasa.
+  //     If `atom_mapping[i] = j`, that means that the ith atom is in group
+  //     j. The groups must be contiguous integers starting from 0 to n_groups-1.
+  // out : 2d array, shape=[n_frames, n_groups]
+  //     the output buffer to place the results in. this array must be
+  //     initialized with all zeros. out[i*n_groups + j] gives, in the `i`th frame
+  //     of the trajectory, the total SASA of all of the atoms in group `j`.
+  //
   */
 
-  int i;
+  int i, j;
 
   /* work buffers that will be thread-local */
   int* wb1;
   float* wb2;
+  float* outframe;
+  float* outframebuffer;
 
   /* generate the sphere points */
   float* sphere_points = (float*) malloc(n_sphere_points*3*sizeof(float));
   generate_sphere_points(sphere_points, n_sphere_points);
 
 #ifdef _OPENMP
-  #pragma omp parallel private(wb1, wb2)
+  #pragma omp parallel private(wb1, wb2, outframebuffer, outframe)
   {
 #endif
 
   /* malloc the work buffers for each thread */
   wb1 = (int*) malloc(n_atoms*sizeof(int));
   wb2 = (float*) malloc(3*n_sphere_points*sizeof(float));
+  outframebuffer = (float*) calloc(n_atoms, sizeof(float));
 
 #ifdef _OPENMP
   #pragma omp for
 #endif
   for (i = 0; i < n_frames; i++) {
     asa_frame(xyzlist + i*n_atoms*3, n_atoms, atom_radii, sphere_points,
-	      n_sphere_points, wb1, wb2, array_of_areas + i*n_atoms);
+	      n_sphere_points, wb1, wb2, outframebuffer);
+    outframe = out + (n_groups * i);
+    for (j = 0; j < n_atoms; j++) {
+        outframe[atom_mapping[j]] += outframebuffer[j];
+    }
   }
 
   free(wb1);
   free(wb2);
+  free(outframebuffer);
 #ifdef _OPENMP
   } /* close omp parallel private */
 #endif
