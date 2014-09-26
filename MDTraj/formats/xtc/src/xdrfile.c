@@ -772,6 +772,7 @@ xdrfile_decompress_coord_float(float     *ptr,
 	float *lfp, inv_precision;
 	int tmp, *thiscoord,  prevcoord[3];
 	unsigned int bitsize;
+	const float* ptrstart = ptr;
   
     bitsizeint[0] = 0;
     bitsizeint[1] = 0;
@@ -906,6 +907,11 @@ xdrfile_decompress_coord_float(float     *ptr,
 			is_smaller = run % 3;
 			run -= is_smaller;
 			is_smaller--;
+		}
+		if ((lfp-ptrstart)+run > size3)
+		{
+			fprintf(stderr, "(xdrfile error) Buffer overrun during decompression.\n");
+			return 0;
 		}
 		if (run > 0)
         {

@@ -14,6 +14,9 @@ v1.X (development)
 - Support reading and writing Amber restart files (Jason M. Swails)
 - ``md.shrake_rupley`` supports a new option to accumulate total SASA by residue
   (Robert T. McGibbon)
+- Fix potential segmentation fault when reading corrupted XTC files.
+  (Robert T. McGibbon)
+
 
 
 v1.0.0 (September 7, 2014)
