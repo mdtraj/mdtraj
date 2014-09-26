@@ -1,14 +1,30 @@
-/* -*- mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- 
+ /* -*- mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*-
  *
- * $Id: xdrfile_trr.c,v 1.7 2009/05/18 09:06:38 spoel Exp $
+ * $Id$
  *
- * Copyright (c) Erik Lindahl, David van der Spoel 2003,2004.
- * Coordinate compression (c) by Frans van Hoesel. 
+ * Copyright (c) 2009-2014, Erik Lindahl & David van der Spoel
+ * All rights reserved.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public License
- * as published by the Free Software Foundation; either version 3
- * of the License, or (at your option) any later version.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <stdlib.h>
@@ -86,6 +102,8 @@ static int do_trnheader(XDRFILE *xd,mybool bRead,t_trnheader *sh)
         else
 		    return exdrINT;
     }
+	if (magic != GROMACS_MAGIC)
+		return exdrMAGIC;
 	if (bRead) 
     {
         if (xdrfile_read_int(&slen,1,xd) != 1)
@@ -204,7 +222,7 @@ static int do_htrn(XDRFILE *xd,mybool bRead,t_trnheader *sh,
         }
 		
 		if ((sh->x_size != 0) || (sh->v_size != 0) || (sh->f_size != 0)) {
-			dx = calloc(sh->natoms*DIM,sizeof(dx[0]));
+			dx = (double *)calloc(sh->natoms*DIM,sizeof(dx[0]));
 			if (NULL == dx)
 				return exdrNOMEM;
 		}
@@ -332,7 +350,7 @@ static int do_htrn(XDRFILE *xd,mybool bRead,t_trnheader *sh,
         }
 		
 		if ((sh->x_size != 0) || (sh->v_size != 0) || (sh->f_size != 0)) {
-			fx = calloc(sh->natoms*DIM,sizeof(fx[0]));
+			fx = (float *)calloc(sh->natoms*DIM,sizeof(fx[0]));
 			if (NULL == fx)
 				return exdrNOMEM;
 		}
@@ -415,7 +433,7 @@ static int do_trn(XDRFILE *xd,mybool bRead,int *step,float *t,float *lambda,
     t_trnheader *sh;
     int result;
   
-    sh = calloc(1,sizeof(*sh));
+    sh = (t_trnheader *)calloc(1,sizeof(*sh));
   
     if (!bRead) {
         sh->box_size = (NULL != box) ? sizeof(matrix):0;
