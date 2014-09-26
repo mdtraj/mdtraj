@@ -31,7 +31,7 @@ from numpy.testing import *
 from mdtraj.geometry._geometry import _processor_supports_sse41
 import mdtraj as md
 from mdtraj import element
-from mdtraj.testing import get_fn, skipif
+from mdtraj.testing import get_fn, skipif, eq
 from mdtraj.geometry.sasa import _ATOMIC_RADII
 
 ##############################################################################
@@ -112,3 +112,30 @@ def test_sasa_3():
     # the algorithm used by gromacs' g_sas is slightly different than the one
     # used here, so the results are not exactly the same
     assert_array_almost_equal(traj_sasa, traj_ref, decimal=2)
+
+
+@skipif(not _processor_supports_sse41(), "This CPU does not support the required instructions")
+def test_sasa_4():
+    def _test_atom_group(t, value):
+        sasa = md.shrake_rupley(t, mode='atom')
+        rids = np.array([a.residue.index for a in t.top.atoms])
+
+        for i, rid in enumerate(np.unique(rids)):
+            mask = (rids == rid)
+            eq(value[:, i], np.sum(sasa[:, mask], axis=1))
+
+    t = md.load(get_fn('frame0.h5'))
+    value = md.shrake_rupley(t, mode='residue')
+    assert value.shape == (t.n_frames, t.n_residues)
+    yield lambda: _test_atom_group(t, value)
+
+    # scramle the order of the atoms, and which residue each is a
+    # member of
+    df, bonds = t.top.to_dataframe()
+    df['resSeq'] = np.random.permutation(df['resSeq'])
+    df['resName'] = df['resSeq']
+    t.top = md.Topology.from_dataframe(df, bonds)
+
+    value = md.shrake_rupley(t, mode='residue')
+    yield lambda: _test_atom_group(t, value)
+
