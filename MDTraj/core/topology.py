@@ -254,8 +254,14 @@ class Topology(object):
 
         return out
 
-    def to_openmm(self):
+    def to_openmm(self, traj=None):
         """Convert this topology into OpenMM topology
+        
+        Parameters
+        ----------
+        traj : MDTraj.Trajectory, optional, default=None
+            If specified, use the first frame from this trajectory to
+            set the unitcell information in the openmm topology.
 
         Returns
         -------
@@ -263,6 +269,8 @@ class Topology(object):
            This topology, as an OpenMM topology
         """
         app = import_('simtk.openmm.app')
+        mm = import_('simtk.openmm')
+        u = import_('simtk.unit')
 
         out = app.Topology()
         atom_mapping = {}
@@ -277,6 +285,15 @@ class Topology(object):
 
         for a1, a2 in self.bonds:
             out.addBond(atom_mapping[a1], atom_mapping[a2])
+        
+        if traj is not None:
+            angles = traj.unitcell_angles[0]
+            
+            if np.linalg.norm(angles - 90.0) > 1E-4:
+                raise(ValueError("Unitcell angles must be 90.0 to use in OpenMM topology."))
+
+            box_vectors = mm.Vec3(*traj.unitcell_lengths[0]) * u.nanometer
+            out.setUnitCellDimensions(box_vectors)
 
         return out
 

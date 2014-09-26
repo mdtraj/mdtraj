@@ -25,6 +25,7 @@ import tempfile
 import mdtraj as md
 import numpy as np
 from mdtraj.utils.six.moves import cPickle
+from mdtraj.utils import import_
 from mdtraj.testing import (get_fn, eq, DocStringFormatTester, skipif,
                             assert_raises)
 
@@ -55,6 +56,14 @@ def test_topology_openmm():
     assert isinstance(mm, app.Topology)
     topology2 = md.Topology.from_openmm(mm)
     eq(topology, topology2)
+
+
+@skipif(not HAVE_OPENMM)
+def test_topology_openmm_boxes():
+    u = import_('simtk.unit')
+    traj = md.load(get_fn('1vii_sustiva_water.pdb'))
+    mmtop = traj.topology.to_openmm(traj=traj)
+    box = mmtop.getUnitCellDimensions() / u.nanometer
 
 
 @skipif(not HAVE_PANDAS)
