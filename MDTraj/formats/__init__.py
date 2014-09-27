@@ -1,3 +1,4 @@
+import mdtraj.formats.openmmxml
 from mdtraj.formats.arc import ArcTrajectoryFile
 from mdtraj.formats.dcd import DCDTrajectoryFile
 from mdtraj.formats.binpos import BINPOSTrajectoryFile
