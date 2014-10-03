@@ -988,7 +988,12 @@ xdrfile_decompress_coord_float(float     *ptr,
 			smaller = smallnum;
 			smallnum = magicints[smallidx] / 2;
 		}
-		sizesmall[0] = sizesmall[1] = sizesmall[2] = magicints[smallidx] ;
+		sizesmall[0] = sizesmall[1] = sizesmall[2] = magicints[smallidx];
+		if (sizesmall==0 || sizesmall==0 || sizesmall[2]==0)
+		{
+			fprintf(stderr, "(xdrfile error) Undefined error.\n");
+			return 0;
+		}
 	}
 	return *size;
 }
