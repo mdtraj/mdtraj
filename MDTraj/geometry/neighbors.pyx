@@ -45,7 +45,9 @@ cdef extern from "neighbors.hpp":
 
 def compute_neighbors(traj, cutoff, query_indices, haystack_indices=None,
                       periodic=True):
-    """Find (spatially) neighboring atoms in a trajectory.
+    """compute_neighbors(traj, cutoff, query_indices, haystack_indices=None, periodic=True)
+
+    Find (spatially) neighboring atoms in a trajectory.
 
     Given a set of query_indices representing and a distance cutoff, compute
     the indices of all atoms whose distance to 1 or more of the query points
