@@ -7,6 +7,16 @@ These are new features and improvements of note in each release.
 v1.X (development)
 ------------------
 - New loader for CHARMM topology files: ``md.load_psf`` (Jason M. Swails)
+- New text-based :doc:`atom selection domain-specific language <atom_selection>`
+  allowing natural querying of atoms as well as generation of equivalent
+  python code for embedding in scripts or applications
+  (Matthew P. Harrigan, Robert T. McGibbon)
+- Support reading and writing Amber restart files (Jason M. Swails)
+- ``md.shrake_rupley`` supports a new option to accumulate total SASA by residue
+  (Robert T. McGibbon)
+- Fix potential segmentation fault when reading corrupted XTC files.
+  (Robert T. McGibbon)
+
 
 
 v1.0.0 (September 7, 2014)

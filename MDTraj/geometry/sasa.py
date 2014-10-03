@@ -42,8 +42,8 @@ _ATOMIC_RADII = {'C': 0.15,  'F': 0.12,  'H': 0.04,
 ##############################################################################
 
 
-def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960):
-    """Compute the solvent accessible surface area of each atom in each simulation frame.
+def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom'):
+    """Compute the solvent accessible surface area of each atom or residue in each simulation frame.
 
     Parameters
     ----------
@@ -54,11 +54,18 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960):
     n_sphere_pts : int, optional
         The number of points representing the surface of each atom, higher
         values leads to more accuracy.
+    mode : {'atom', 'residue'}
+        In mode == 'atom', the extracted areas are resolved per-atom
+        In mode == 'residue', this is consolidated down to the
+        per-residue SASA by summing over the atoms in each residue.
 
     Returns
     -------
-    areas : np.array, shape=(n_frames, n_atoms)
-        The accessible surface area of each atom in every frame
+    areas : np.array, shape=(n_frames, n_features)
+        The accessible surface area of each atom or residue in every frame.
+        If mode == 'atom', the second dimension will index the atoms in
+        the trajectory, whereas if mode == 'residue', the second
+        dimension will index the residues.
 
     Notes
     -----
@@ -95,10 +102,25 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960):
         raise RuntimeError('This CPU does not support the required instruction set (SSE4.1)')
 
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
-    out = np.zeros((xyz.shape[0], xyz.shape[1]), dtype=np.float32)
+    if mode == 'atom':
+        dim1 = xyz.shape[1]
+        atom_mapping = np.arange(dim1, dtype=np.int32)
+    elif mode == 'residue':
+        dim1 = traj.n_residues
+        atom_mapping = np.array(
+            [a.residue.index for a in traj.top.atoms], dtype=np.int32)
+        if not np.all(np.unique(atom_mapping) ==
+                      np.arange(1 + np.max(atom_mapping))):
+            raise ValueError('residues must have contiguous integer indices '
+                             'starting from zero')
+    else:
+        raise ValueError('mode must be one of "residue", "atom". "%s" supplied' %
+                         mode)
+
+    out = np.zeros((xyz.shape[0], dim1), dtype=np.float32)
     atom_radii = [_ATOMIC_RADII[atom.element.symbol] for atom in traj.topology.atoms]
     radii = np.array(atom_radii, np.float32) + probe_radius
 
-    _geometry._sasa(xyz, radii, int(n_sphere_points), out)
+    _geometry._sasa(xyz, radii, int(n_sphere_points), atom_mapping, out)
 
     return out
