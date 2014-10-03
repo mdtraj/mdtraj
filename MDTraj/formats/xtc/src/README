@@ -13,3 +13,4 @@ Changes from upsteam's xdrfile-1.1.4 include:
  - Addition of read_xtc_nframes function in xdrfile_xtc.c
  - Addition of read_trr_nframes function in xdrfile_trr.c
  - Bugfix in do_trnheader to return the appropriate error code when reading magic, and properly check the value of the magic in xdrfile_trr.c
+ - Bugfix of float exception (divide by zero) in xdrfile.c, see https://github.com/SimTk/mdtraj/issues/616
