@@ -921,7 +921,7 @@ class Chain(object):
         -------
         residue : Residue
         """
-        return self._residue[index]
+        return self._residues[index]
 
     @property
     def n_residues(self):
