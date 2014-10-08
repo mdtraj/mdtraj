@@ -9,3 +9,4 @@ from mdtraj.formats.pdb import PDBTrajectoryFile
 from mdtraj.formats.lh5 import LH5TrajectoryFile
 from mdtraj.formats.mdcrd import MDCRDTrajectoryFile
 from mdtraj.formats.amberrst import AmberRestartFile, AmberNetCDFRestartFile
+from mdtraj.formats.dtr import DTRTrajectoryFile

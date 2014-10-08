@@ -354,6 +354,14 @@ binpos = Extension('mdtraj.formats.binpos',
                    include_dirs=['MDTraj/formats/binpos/include/',
                                  'MDTraj/formats/binpos/', numpy.get_include()])
 
+dtr = Extension('mdtraj.formats.dtr',
+                   sources=['MDTraj/formats/dtr/src/dtrplugin.cxx',
+                            'MDTraj/formats/dtr/dtr.pyx'],
+                   include_dirs=['MDTraj/formats/dtr/include/',
+                                 'MDTraj/formats/dtr/', numpy.get_include()],
+                   define_macros = [('DESRES_READ_TIMESTEP2', 1)],
+                   language='c++')
+
 
 def rmsd_extensions():
     compiler_args = (compiler.compiler_args_openmp + compiler.compiler_args_sse2 +
@@ -420,7 +428,7 @@ def geometry_extensions():
             extra_compile_args=compiler_args)
         ]
 
-extensions = [xtc, trr, dcd, binpos]
+extensions = [xtc, trr, dcd, binpos, dtr]
 extensions.extend(rmsd_extensions())
 extensions.extend(geometry_extensions())
 
@@ -440,6 +448,10 @@ setup(name='mdtraj',
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
       ext_modules=cythonize(extensions),
       package_data={'mdtraj.formats.pdb': ['data/*'],
-                    'mdtraj.testing': ['reference/*'],
+                    'mdtraj.testing': ['reference/*',
+                                       'reference/ala_dipeptide_trj/*',
+                                       'reference/ala_dipeptide_trj/not_hashed/*'],
                     'mdtraj.html': ['static/*']},
+      exclude_package_data={'mdtraj.testing': ['reference/ala_dipeptide_trj',
+                                               'reference/ala_dipeptide_trj/not_hashed']},
       **setup_kwargs)

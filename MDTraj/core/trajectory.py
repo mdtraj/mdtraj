@@ -43,6 +43,8 @@ from mdtraj.formats import LH5TrajectoryFile
 from mdtraj.formats import PDBTrajectoryFile
 from mdtraj.formats import MDCRDTrajectoryFile
 from mdtraj.formats import ArcTrajectoryFile
+from mdtraj.formats import DTRTrajectoryFile
+
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.mol2 import load_mol2
@@ -1263,6 +1265,22 @@ class Trajectory(object):
                     cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
+    def save_dtr(self, filename, force_overwrite=True):
+        """Save trajectory to DESMOND DTR format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filenames, if its already there
+        """
+        self._check_valid_unitcell()
+        with DTRTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
+                    cell_angles=self.unitcell_angles,
+                    times=self.time)
 
     def save_binpos(self, filename, force_overwrite=True):
         """Save trajectory to AMBER BINPOS format

@@ -138,6 +138,15 @@ def test_dcd():
             eq(t.time, t2.time, err_msg=e)
         yield f
 
+def test_dtr():
+    t = md.load(get_fn('ala_dipeptide_trj/clickme.dtr'), top=get_fn('ala_dipeptide.pdb'))
+    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
+        def f():
+            t.save(e)
+            t2 = md.load(e, top=nat)
+            eq(t.xyz, t2.xyz, err_msg=e)
+            eq(t.time, t2.time, err_msg=e)
+        yield f
 
 def test_binpos():
     t = md.load(get_fn('frame0.binpos'), top=nat)
