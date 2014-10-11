@@ -24,7 +24,7 @@
 # Portions of this code originate from the OpenMM molecular simulation
 # toolkit, copyright (c) 2012 Stanford University and the Authors. Those
 # portions are distributed under the following terms:
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
 # to deal in the Software without restriction, including without limitation
@@ -57,6 +57,7 @@ from re import sub, match
 import numpy as np
 
 from mdtraj import Topology
+from mdtraj.utils import cast_indices
 from mdtraj.formats import pdb
 from mdtraj.core import element as elem
 from mdtraj.formats.registry import _FormatRegistry
@@ -69,7 +70,7 @@ from mdtraj.formats.registry import _FormatRegistry
 @_FormatRegistry.register_loader('.gro')
 def load_gro(filename, stride=None, atom_indices=None, frame=None):
     """Load a GROMACS GRO file.
-    
+
     Parameters
     ----------
     filename : str
@@ -84,7 +85,18 @@ def load_gro(filename, stride=None, atom_indices=None, frame=None):
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
     """
-    raise NotImplementedError()
+    with GroTrajectoryFile(filename, 'r') as f:
+        topology = f.topology
+        if frame is not None:
+            f.seek(frame)
+            coordinates, time, unitcell_vectors = f.read(n_frames=1, atom_indices=atom_indices)
+        else:
+            coordinates, time, unitcell_vectors = f.read(stride=stride, atom_indices=atom_indices)
+
+        coordinates = in_units_of(coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        unitcell_vectors = in_units_of(unitcell_vectors, f.distance_unit, Trajectory._distance_unit, inplace=True)
+
+    return Trajectory(xyz=xyz, topology=topology, time=time, unitcell_vectors=unitcell_vectors)
 
 
 @_FormatRegistry.register_fileobject('.gro')
@@ -105,18 +117,23 @@ class GroTrajectoryFile(object):
     --------
     load_gro : High-level wrapper that returns a ``md.Trajectory``
     """
+    distance_unit = 'nanometers'
 
     def __init__(self, filename, mode='r', force_overwrite=True):
         self._open = False
         self._file = None
-        self.n_atoms = 0
-        
+        self._mode = mode
+
         if mode == 'r':
-            pdb.PDBTrajectoryFile._loadNameReplacementTables()
+            self._open = True
             self._frame_index = 0
             self._file = open(filename, 'r')
-            self._initialize_read()
+            try:
+                self.n_atoms, self.topology = self._read_topology()
+            finally:
+                self._file.seek(0)
         elif mode == 'w':
+            self._open = True
             if os.path.exists(filename) and not force_overwrite:
                 raise IOError('"%s" already exists' % filename)
             self._frame_index = 0
@@ -124,17 +141,34 @@ class GroTrajectoryFile(object):
         else:
             raise ValueError("invalid mode: %s" % mode)
 
-        self._open = True
-    
-    def _initialize_read(self):
-        line0, line1 = [self._file.readline() for i in range(2)]
-        self.n_atoms = int(line1.strip())
-        self._file.seek(0)
+
+    def write(self, coordinates, topology, time=None, unitcell_vectors=None):
+        """Write one or more frames of a molecular dynamics trajectory to disk
+        in the GROMACS GRO format.
+
+        Parameters
+        ----------
+        coordinates : np.ndarray, dtype=np.float32, shape=(n_frames, n_atoms, 3)
+            The cartesian coordinates of each atom, in units of nanometers.
+        topology : mdtraj.Topology
+            The Topology defining the model to write.
+        time : np.ndarray, dtype=float32, shape=(n_frames), optional
+            The simulation time corresponding to each frame, in picoseconds.
+            If not supplied, the numbers 0..n_frames will be written.
+        box : np.ndarray, dtype=float32, shape=(n_frames, 3, 3), optional
+            The periodic box vectors of the simulation in each frame, in nanometers.
+        """
+        if not self._open:
+            raise ValueError('I/O operation on closed file')
+        if not self._mode == 'w':
+            raise ValueError('file not opened for writing')
+
+        raise NotImplementedError()
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read data from a molecular dynamics trajectory in the GROMACS GRO
         format.
-        
+
         Parameters
         ----------
         n_frames : int, optional
@@ -145,30 +179,106 @@ class GroTrajectoryFile(object):
         atom_indices : np.ndarray, dtype=int, optional
             The specific indices of the atoms you'd like to retrieve. If not
             supplied, all of the atoms will be retrieved.
-            
+
         Returns
         -------
         coordinates : np.ndarray, shape=(n_frames, n_atoms, 3)
-            The cartesian coordinates of the atoms, in units of angstroms.
+            The cartesian coordinates of the atoms, in units of nanometers.
         time : np.ndarray, None
             The time corresponding to each frame, in units of picoseconds, or
             None if no time information is present in the trajectory.
-        cell_vectors : np.ndarray
+        unitcell_vectors : np.ndarray, shape=(n_frames, 3, 3)
+            The box vectors in each frame, in units of nanometers
         """
-        if self._frame_index == 0:
-            xyz, unitcell_vectors, time, topology = self._read_frame(True)
-            print xyz
+        if not self._open:
+            raise ValueError('I/O operation on closed file')
+        if not self._mode == 'r':
+            raise ValueError('file not opened for reading')
 
-    def _read_frame(self, parse_topology):
+        coordinates = []
+        unitcell_vectors = []
+        time = []
+        contains_time = True
+
+        atom_indices = cast_indices(atom_indices)
+        atom_slice = slice(None) if atom_indices is None else atom_indices
+
+        if n_frames is None:
+            frameiter = itertools.count()
+        else:
+            frameiter = range(n_frames)
+
+        for i in frameiter:
+            try:
+                frame_xyz, frame_box, frame_time = self._read_frame()
+                contains_time = contains_time and (frame_time is not None)
+                coordinates.append(frame_xyz[atom_slice])
+                unitcell_vectors.append(frame_box)
+                time.append(frame_time)
+            except StopIteration:
+                break
+
+        coordinates, unitcell_vectors, time = map(np.array, (coordinates, unitcell_vectors, time))
+        if not contains_time:
+            time = None
+        return coordinates[::stride], unitcell_vectors[::stride], time[::stride]
+
+    def _read_topology(self):
+        if not self._open:
+            raise ValueError('I/O operation on closed file')
+        if not self._mode == 'r':
+            raise ValueError('file not opened for reading')
+        pdb.PDBTrajectoryFile._loadNameReplacementTables()
+
+        n_atoms = None
+        topology = Topology()
+        chain = topology.add_chain()
+        residue = None
+        atomReplacements = {}
+
+        for ln, line in enumerate(self._file):
+            if ln == 1:
+                n_atoms = int(line.strip())
+            elif ln > 1 and ln < n_atoms + 2:
+                (thisresnum, thisresname, thisatomname, thisatomnum) = \
+                    [line[i*5:i*5+5].strip() for i in range(4)]
+                thisresnum, thisatomnum = map(int, (thisresnum, thisatomnum))
+                if residue is None or residue.resSeq != thisresnum:
+                    if thisresname in pdb.PDBTrajectoryFile._residueNameReplacements:
+                        thisresname = pdb.PDBTrajectoryFile._residueNameReplacements[thisresname]
+                    residue = topology.add_residue(thisresname, chain, resSeq=thisresnum)
+                    if thisresname in pdb.PDBTrajectoryFile._atomNameReplacements:
+                        atomReplacements = pdb.PDBTrajectoryFile._atomNameReplacements[thisresname]
+                    else:
+                        atomReplacements = {}
+
+                thiselem = thisatomname
+                if len(thiselem) > 1:
+                    thiselem = thiselem[0] + sub('[A-Z0-9]','',thiselem[1:])
+                    try:
+                        element = elem.get_by_symbol(thiselem)
+                    except KeyError:
+                        element = None
+                if thisatomname in atomReplacements:
+                    thisatomname = atomReplacements[thisatomname]
+
+                topology.add_atom(thisatomname, element=element, residue=residue,
+                                  serial=thisatomnum)
+
+        return n_atoms, topology
+
+    def _read_frame(self):
+        if not self._open:
+            raise ValueError('I/O operation on closed file')
+        if not self._mode == 'r':
+            raise ValueError('file not opened for reading')
+
         atomcounter = itertools.count()
         comment = None
         boxvectors = None
         topology = None
         xyz = np.zeros((self.n_atoms, 3), dtype=np.float32)
-        if parse_topology:
-            topology = Topology()
-            chain = topology.add_chain()
-            residue = None
+
 
         for ln, line in enumerate(self._file):
             if ln == 0:
@@ -177,23 +287,6 @@ class GroTrajectoryFile(object):
                 assert self.n_atoms == int(line.strip())
             elif _is_gro_coord(line):
                 atomindex = next(atomcounter)
-                if parse_topology:
-                    (thisresnum, thisresname, thisatomname, thisatomnum) = \
-                        [line[i*5:i*5+5].strip() for i in range(4)]
-                    thisresnum, thisatomnum = map(int, (thisresnum, thisatomnum))
-                    if residue is None or residue.resSeq != thisresnum:
-                        residue = topology.add_residue(thisresname, chain, resSeq=thisresnum)
-
-                    thiselem = thisatomname
-                    if len(thiselem) > 1:
-                        thiselem = thiselem[0] + sub('[A-Z0-9]','',thiselem[1:])
-                        try:
-                            element = elem.get_by_symbol(thiselem)
-                        except KeyError:
-                            element = None
-
-                    topology.add_atom(thisatomname, element=element, residue=residue,
-                                      serial=thisatomnum)
 
                 firstDecimalPos = line.index('.', 20)
                 secondDecimalPos = line.index('.', firstDecimalPos+1)
@@ -207,7 +300,9 @@ class GroTrajectoryFile(object):
                 break
             else:
                 raise Exception("Unexpected line in .gro file: "+line)
-        
+        else:
+            raise StopIteration()
+
         time = None
         if 't=' in comment:
             # title string (free format string, optional time in ps after 't=')
@@ -222,8 +317,26 @@ class GroTrajectoryFile(object):
             [box[1], box[5], box[6]],
             [box[2], box[7], box[8]]])
 
-        return xyz, unitcell_vectors, time, topology
+        return xyz, unitcell_vectors, time
 
+    def seek(self):
+        raise NotImplementedError()
+
+    def tell(self):
+        raise NotImplementedError()
+
+    def close(self):
+        if self._open:
+            self._file.close()
+            self._open = False
+
+    def __enter__(self):
+        "Support the context manager protocol"
+        return self
+
+    def __exit__(self, *exc_info):
+        "Support the context manager protocol"
+        self.close()
 
 ##############################################################################
 # Utilities
