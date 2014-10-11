@@ -51,115 +51,178 @@
 
 import os
 import sys
+import itertools
 from re import sub, match
 # import element as elem
 import numpy as np
 
-##############################################################################
-# Classes
-##############################################################################
+from mdtraj import Topology
+from mdtraj.formats import pdb
+from mdtraj.core import element as elem
+from mdtraj.formats.registry import _FormatRegistry
 
 
+##############################################################################
+# Code
+##############################################################################
+
+@_FormatRegistry.register_loader('.gro')
+def load_gro(filename, stride=None, atom_indices=None, frame=None):
+    """Load a GROMACS GRO file.
+    
+    Parameters
+    ----------
+    filename : str
+        Path to the GRO file on disk.
+    stride : int, default=None
+        Only read every stride-th model from the file
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. These indices are zero-based.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
+    """
+    raise NotImplementedError()
+
+
+@_FormatRegistry.register_fileobject('.gro')
 class GroTrajectoryFile(object):
-    """Interface for reading and writing to GROMACS Gro files. This is a
-    file-like object, that supports both reading or writing depending
-    on the `mode` flag. It implements the context manager protocol,
-    so you can also use it with the python 'with' statement.
+    """Interface for reading and writing to GROMACS GRO files.
+
+    Parameters
+    ----------
+    filename : str
+        The filename to open. A path to a file on disk.
+    mode : {'r', 'w'}
+        The mode in which to open the file, either 'r' for read or 'w' for write.
+    force_overwrite : bool
+        If opened in write mode, and a file by the name of `filename` already
+        exists on disk, should we overwrite it?
+
+    See Also
+    --------
+    load_gro : High-level wrapper that returns a ``md.Trajectory``
     """
 
-    def __init__(self, file):
-        """Load a .gro file.
+    def __init__(self, filename, mode='r', force_overwrite=True):
+        self._open = False
+        self._file = None
+        self.n_atoms = 0
+        
+        if mode == 'r':
+            pdb.PDBTrajectoryFile._loadNameReplacementTables()
+            self._frame_index = 0
+            self._file = open(filename, 'r')
+            self._initialize_read()
+        elif mode == 'w':
+            if os.path.exists(filename) and not force_overwrite:
+                raise IOError('"%s" already exists' % filename)
+            self._frame_index = 0
+            self._file = open(filename, 'w')
+        else:
+            raise ValueError("invalid mode: %s" % mode)
 
-        The atom positions can be retrieved by calling getPositions().
+        self._open = True
+    
+    def _initialize_read(self):
+        line0, line1 = [self._file.readline() for i in range(2)]
+        self.n_atoms = int(line1.strip())
+        self._file.seek(0)
 
-        Parameters:
-         - file (string) the name of the file to load
+    def read(self, n_frames=None, stride=None, atom_indices=None):
+        """Read data from a molecular dynamics trajectory in the GROMACS GRO
+        format.
+        
+        Parameters
+        ----------
+        n_frames : int, optional
+            If n_frames is not None, the next n_frames of data from the file
+            will be read. Otherwise, all of the frames in the file will be read.
+        stride : int, optional
+            If stride is not None, read only every stride-th frame from disk.
+        atom_indices : np.ndarray, dtype=int, optional
+            The specific indices of the atoms you'd like to retrieve. If not
+            supplied, all of the atoms will be retrieved.
+            
+        Returns
+        -------
+        coordinates : np.ndarray, shape=(n_frames, n_atoms, 3)
+            The cartesian coordinates of the atoms, in units of angstroms.
+        time : np.ndarray, None
+            The time corresponding to each frame, in units of picoseconds, or
+            None if no time information is present in the trajectory.
+        cell_vectors : np.ndarray
         """
+        if self._frame_index == 0:
+            xyz, unitcell_vectors, time, topology = self._read_frame(True)
+            print xyz
 
-        xyzs     = []
-        elements = [] # The element, most useful for quantum chemistry calculations
-        atomname = [] # The atom name, for instance 'HW1'
-        comms    = []
-        resid    = []
-        resname  = []
-        boxes    = []
-        xyz      = []
-        ln       = 0
-        frame    = 0
-        for line in open(file):
+    def _read_frame(self, parse_topology):
+        atomcounter = itertools.count()
+        comment = None
+        boxvectors = None
+        topology = None
+        xyz = np.zeros((self.n_atoms, 3), dtype=np.float32)
+        if parse_topology:
+            topology = Topology()
+            chain = topology.add_chain()
+            residue = None
+
+        for ln, line in enumerate(self._file):
             if ln == 0:
-                comms.append(line.strip())
+                comment = line.strip()
             elif ln == 1:
-                na = int(line.strip())
+                assert self.n_atoms == int(line.strip())
             elif _is_gro_coord(line):
-                if frame == 0: # Create the list of residues, atom names etc. only if it's the first frame.
-                    (thisresnum, thisresname, thisatomname) = [line[i*5:i*5+5].strip() for i in range(3)]
-                    resname.append(thisresname)
-                    resid.append(int(thisresnum))
-                    atomname.append(thisatomname)
+                atomindex = next(atomcounter)
+                if parse_topology:
+                    (thisresnum, thisresname, thisatomname, thisatomnum) = \
+                        [line[i*5:i*5+5].strip() for i in range(4)]
+                    thisresnum, thisatomnum = map(int, (thisresnum, thisatomnum))
+                    if residue is None or residue.resSeq != thisresnum:
+                        residue = topology.add_residue(thisresname, chain, resSeq=thisresnum)
+
                     thiselem = thisatomname
                     if len(thiselem) > 1:
                         thiselem = thiselem[0] + sub('[A-Z0-9]','',thiselem[1:])
                         try:
-                            elements.append(elem.get_by_symbol(thiselem))
+                            element = elem.get_by_symbol(thiselem)
                         except KeyError:
-                            elements.append(None)
+                            element = None
+
+                    topology.add_atom(thisatomname, element=element, residue=residue,
+                                      serial=thisatomnum)
+
                 firstDecimalPos = line.index('.', 20)
                 secondDecimalPos = line.index('.', firstDecimalPos+1)
                 digits = secondDecimalPos-firstDecimalPos
                 pos = [float(line[20+i*digits:20+(i+1)*digits]) for i in range(3)]
-                xyz.append(Vec3(pos[0], pos[1], pos[2]))
-            elif _is_gro_box(line) and ln == na + 2:
+                xyz[atomindex, :] = (pos[0], pos[1], pos[2])
+            elif _is_gro_box(line) and ln == self.n_atoms + 2:
                 sline = line.split()
-                boxes.append(tuple([float(i) for i in sline])*nanometers)
-                xyzs.append(xyz*nanometers)
-                xyz = []
-                ln = -1
-                frame += 1
+                boxvectors = tuple([float(i) for i in sline])
+                # the gro_box line comes at the end of the record
+                break
             else:
                 raise Exception("Unexpected line in .gro file: "+line)
-            ln += 1
+        
+        time = None
+        if 't=' in comment:
+            # title string (free format string, optional time in ps after 't=')
+            time = float(comment[comment.index('t=')+2:].strip())
 
-        ## The atom positions read from the file.  If the file contains multiple frames, these are the positions in the first frame.
-        self.positions = xyzs[0]
-        ## A list containing the element of each atom stored in the file
-        self.elements = elements
-        ## A list containing the name of each atom stored in the file
-        self.atomNames = atomname
-        ## A list containing the ID of the residue that each atom belongs to
-        self.residueIds = resid
-        ## A list containing the name of the residue that each atom belongs to
-        self.residueNames = resname
-        self._positions = xyzs
-        self._unitCellDimensions = boxes
-        self._numpyPositions = None
+        # box vectors (free format, space separated reals), values: v1(x) v2(y)
+        # v3(z) v1(y) v1(z) v2(x) v2(z) v3(x) v3(y), the last 6 values may be
+        # omitted (they will be set to zero).
+        box = [boxvectors[i] if i < len(boxvectors) else 0 for i in range(9)]
+        unitcell_vectors = np.array([
+            [box[0], box[3], box[4]],
+            [box[1], box[5], box[6]],
+            [box[2], box[7], box[8]]])
 
-    def getNumFrames(self):
-        """Get the number of frames stored in the file."""
-        return len(self._positions)
-
-    def getPositions(self, asNumpy=False, frame=0):
-        """Get the atomic positions.
-
-        Parameters:
-         - asNumpy (boolean=False) if true, the values are returned as a numpy array instead of a list of Vec3s
-         - frame (int=0) the index of the frame for which to get positions
-         """
-        if asNumpy:
-            if self._numpyPositions is None:
-                self._numpyPositions = [None]*len(self._positions)
-            if self._numpyPositions[frame] is None:
-                self._numpyPositions[frame] = Quantity(numpy.array(self._positions[frame].value_in_unit(nanometers)), nanometers)
-            return self._numpyPositions[frame]
-        return self._positions[frame]
-
-    def getUnitCellDimensions(self, frame=0):
-        """Get the dimensions of the crystallographic unit cell.
-
-        Parameters:
-         - frame (int=0) the index of the frame for which to get the unit cell dimensions
-        """
-        return self._unitCellDimensions[frame]
+        return xyz, unitcell_vectors, time, topology
 
 
 ##############################################################################
