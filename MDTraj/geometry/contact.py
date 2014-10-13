@@ -39,8 +39,12 @@ __all__ = ['compute_contacts', 'squareform']
 ##############################################################################
 # Code
 ##############################################################################
+def _apply_cutoff(pairs, cutoff):
+    
+    return filtered_pairs
 
-def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonprotein=True):
+
+def compute_contacts(traj, contacts='all', cutoff=None, scheme='closest-heavy', ignore_nonprotein=True):
     """Compute the distance between pairs of residues in a trajectory.
 
     Parameters
@@ -52,6 +56,9 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         compute the contacts between, or 'all'. The string 'all' will
         select all pairs of residues separated by two or more residues
         (i.e. the i to i+1 and i to i+2 pairs will be excluded).
+    cutoff : float
+        Distance cutoff to define 'contact'. If `cutoff==None`, all relevant
+        residue-residue distances will be computed. (Default: None)
     scheme : {'ca', 'closest', 'closest-heavy'}
         scheme to determine the distance between two residues:
             'ca' : distance between two residues is given by the distance
