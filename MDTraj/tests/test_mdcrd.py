@@ -131,3 +131,5 @@ def test_atom_indices_1():
     top = md.load(get_fn('native.pdb'))
     t0 = md.load(get_fn('frame0.mdcrd'), top=top)
     t1 = md.load(get_fn('frame0.mdcrd'), top=top, atom_indices=atom_indices)
+
+    eq(t0.xyz[:, atom_indices], t1.xyz)
