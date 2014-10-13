@@ -116,13 +116,13 @@ def compute_neighbors(traj, cutoff, query_indices, haystack_indices=None,
         # I can't find any great cython docs on this...
         # first, convert to a memoryview by casting the pointer to the memory
         # block. this implements the python buffer protocol...
-        if frame_neighbors.size()>0:
+        if frame_neighbors.size() > 0:
             frame_neighbors_mview = <int[:frame_neighbors.size()]> (<int*> (&frame_neighbors[0]))
+        # so then we can copy it into numpy-managed memory. copy is necessary,
+        # because once we exit this scope, C++ will clean up the vector.
             results.append(np.array(frame_neighbors_mview, dtype=np.int, copy=True))
         else:
             results.append(np.empty(0, dtype=np.int))
-        # so then we can copy it into numpy-managed memory. copy is necessary,
-        # because once we exit this scope, C++ will clean up the vector.
 
     return results
 
