@@ -8,7 +8,7 @@ def compute_neighbors_reference(traj, cutoff, query_indices, haystack_indices=No
         haystack_indices = range(traj.n_atoms)
     # explicitly enumerate the pairs of query-haystack indices we need to
     # check
-    pairs = np.array([(q, i) for i in haystack_indices for q in query_indices])
+    pairs = np.array([(q, i) for i in haystack_indices for q in query_indices if i != q])
     dists = md.compute_distances(traj, pairs)
     # some of the haystack might be within cutoff of more than one of the
     # query atoms, so we need unique
