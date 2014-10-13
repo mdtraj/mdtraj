@@ -52,6 +52,8 @@ import os
 import numpy as np
 import itertools
 from mdtraj.core import element as elem
+from mdtraj.core.residue_names import _PROTEIN_RESIDUES
+from mdtraj.core.selection import parse_selection
 import xml.etree.ElementTree as etree
 
 from mdtraj.utils import ilen, import_
@@ -59,12 +61,6 @@ from mdtraj.utils import ilen, import_
 ##############################################################################
 # Utilities
 ##############################################################################
-
-PROTEIN_RESIDUES = set([
-    'ACE', 'AIB', 'ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'FOR', 'GLN', 'GLU',
-    'GLY', 'HIS', 'ILE', 'LEU', 'LYS', 'MET', 'NH2', 'NME', 'ORN', 'PCA',
-    'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'UNK', 'VAL'])
-
 
 def _topology_from_subset(topology, atom_indices):
     """Create a new topology that only contains the supplied indices
@@ -258,8 +254,14 @@ class Topology(object):
 
         return out
 
-    def to_openmm(self):
+    def to_openmm(self, traj=None):
         """Convert this topology into OpenMM topology
+        
+        Parameters
+        ----------
+        traj : MDTraj.Trajectory, optional, default=None
+            If specified, use the first frame from this trajectory to
+            set the unitcell information in the openmm topology.
 
         Returns
         -------
@@ -267,6 +269,8 @@ class Topology(object):
            This topology, as an OpenMM topology
         """
         app = import_('simtk.openmm.app')
+        mm = import_('simtk.openmm')
+        u = import_('simtk.unit')
 
         out = app.Topology()
         atom_mapping = {}
@@ -281,6 +285,15 @@ class Topology(object):
 
         for a1, a2 in self.bonds:
             out.addBond(atom_mapping[a1], atom_mapping[a2])
+        
+        if traj is not None:
+            angles = traj.unitcell_angles[0]
+            
+            if np.linalg.norm(angles - 90.0) > 1E-4:
+                raise(ValueError("Unitcell angles must be 90.0 to use in OpenMM topology."))
+
+            box_vectors = mm.Vec3(*traj.unitcell_lengths[0]) * u.nanometer
+            out.setUnitCellDimensions(box_vectors)
 
         return out
 
@@ -369,7 +382,7 @@ class Topology(object):
         """
         pd = import_('pandas')
 
-        for col in ["name", "element", "resSeq" , "resName", "chainID"]:
+        for col in ["name", "element", "resSeq", "resName", "chainID"]:
             if col not in atoms.columns:
                 raise ValueError('dataframe must have column %s' % col)
 
@@ -745,6 +758,7 @@ class Topology(object):
         positions : list
             The list of atomic positions based on which to identify bonded atoms
         """
+
         def isCyx(res):
             names = [atom.name for atom in res._atoms]
             return 'SG' in names and 'HG' not in names
@@ -776,6 +790,56 @@ class Topology(object):
             like to retain.
         """
         return _topology_from_subset(self, atom_indices)
+
+    def select_expression(self, selection_string):
+        """Translate a atom selection expression into a pure python expression.
+
+        Parameters
+        ----------
+        selection_string : str
+            An expression in the MDTraj atom selection DSL
+
+        Examples
+        --------
+        >>> topology.select_expression('name O and water')
+        "[atom.index for atom in topology.atoms if ((atom.name == 'O') and atom.residue.is_water)]")
+
+        Returns
+        -------
+        python_string : str
+            A string containing a pure python expression, equivalent to the
+            selection expression.
+        """
+        condition = parse_selection(selection_string).source
+        fmt_string = "[atom.index for atom in topology.atoms if {condition}]"
+        return fmt_string.format(condition=condition)
+
+    def select(self, selection_string):
+        """Execute a selection against the topology
+
+        Parameters
+        ----------
+        selection_string : str
+            An expression in the MDTraj atom selection DSL
+
+        Examples
+        --------
+        >>> topology.select('name O and water')
+        array([1, 3, 5, 10, ...])
+
+        Returns
+        -------
+        indices : np.ndarray, dtype=int, ndim=1
+            Array of the indices of the atoms matching the selection expression.
+
+        See Also
+        --------
+        select_expression, mdtraj.core.selection.parse_selection
+        """
+
+        filter_func = parse_selection(selection_string).expr
+        indices = np.array([a.index for a in self.atoms if filter_func(a)])
+        return indices
 
     def select_atom_indices(self, selection='minimal'):
         """Get the indices of biologically-relevant groups by name.
@@ -847,6 +911,7 @@ class Chain(object):
     atoms : generator
         Iterator over all Atoms in the Chain.
     """
+
     def __init__(self, index, topology):
         """Construct a new Chain.  You should call add_chain() on the Topology instead of calling this directly."""
         ## The index of the Chain within its Topology
@@ -873,7 +938,7 @@ class Chain(object):
         -------
         residue : Residue
         """
-        return self._residue[index]
+        return self._residues[index]
 
     @property
     def n_residues(self):
@@ -918,7 +983,7 @@ class Chain(object):
         """
         # this could be made faster by caching the list
         # of atoms internally if necessary
-        return next(itertools.islice(self.atoms, index, index+1))
+        return next(itertools.islice(self.atoms, index, index + 1))
 
     @property
     def n_atoms(self):
@@ -938,6 +1003,7 @@ class Residue(object):
     chain : int
         The residue sequence number
     """
+
     def __init__(self, name, index, chain, resSeq):
         """Construct a new Residue.  You should call add_residue()
         on the Topology instead of calling this directly."""
@@ -1003,12 +1069,12 @@ class Residue(object):
 
     @property
     def is_protein(self):
-        """Whether this residue is found in proteins."""
-        return self.name in PROTEIN_RESIDUES
+        """Whether the residue is one found in proteins."""
+        return self.name in _PROTEIN_RESIDUES
 
     @property
     def is_water(self):
-        """Whether this residue is water.
+        """Whether the residue is water.
 
         Residue names according to VMD
 
@@ -1019,8 +1085,13 @@ class Residue(object):
         return self.name in ['H2O', 'HHO', 'OHH', 'HOH', 'OH2', 'SOL',
                              'WAT', 'TIP', 'TIP2', 'TIP3', 'TIP4']
 
+    @property
+    def is_nucleic(self):
+        """Whether the residue is one found in nucleic acids."""
+        raise NotImplementedError
 
-    def  __str__(self):
+
+    def __str__(self):
         return '%s%s' % (self.name, self.resSeq)
 
     def __repr__(self):
@@ -1053,6 +1124,21 @@ class Atom(object):
         ## The Residue this Atom belongs to
         self.residue = residue
         self.serial = serial
+
+    @property
+    def n_bonds(self):
+        """Number of bonds in which the atom participates."""
+        # TODO: this info could be cached.
+        return ilen(bond for bond in self.residue.chain.topology.bonds
+                    if self in bond)
+
+    def is_backbone(self):
+        """Whether the atom is in the backbone of a protein residue"""
+        return self.name in set(['C', 'CA', 'N', 'O']) and self.residue.is_protein
+
+    def is_sidechain(self):
+        """Whether the atom is in the sidechain of a protein residue"""
+        return self.name not in set(['C', 'CA', 'N', 'O']) and self.residue.is_protein
 
     def __eq__(self, other):
         """ Check whether two Atom objects are equal. """

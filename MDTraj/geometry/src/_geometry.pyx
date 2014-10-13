@@ -57,9 +57,10 @@ cdef extern from "geometry.h":
              const int* is_proline, const int* chains_ids, const int n_frames,
              const int n_atoms, const int n_residues, char* secondary) nogil
 
-cdef extern int sasa(int n_frames, int n_atoms, const float* xyzlist,
-                     const float* atom_radii, int n_sphere_points,
-                     float* array_of_areas) nogil
+cdef extern from "sasa.h":
+    int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
+             const float* atom_radii, const int n_sphere_points,
+             const int* atom_mapping, const int n_groups, float* out) nogil
 
 cdef extern from "hardware.h":
     int processorSupportsSSE41()
@@ -177,11 +178,12 @@ def _kabsch_sander(float[:, :, ::1] xyz,
 def _sasa(float[:, :, ::1] xyz,
           float[::1] atom_radii,
           int n_sphere_points,
-          float[:, ::1] array_of_areas):
+          int[::1] atom_outmapping,
+          float[:, ::1] out):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     sasa(n_frames, n_atoms, &xyz[0,0,0], &atom_radii[0], n_sphere_points,
-         &array_of_areas[0,0])
+         &atom_outmapping[0], out.shape[1], &out[0,0])
 
 
 @cython.boundscheck(False)
