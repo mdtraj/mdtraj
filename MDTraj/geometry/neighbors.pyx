@@ -64,7 +64,7 @@ def compute_neighbors(traj, cutoff, query_indices, haystack_indices=None,
         of the atoms with indices in `query_indices`.
     haystack_indices : np.ndarray, shape=(n_query_indices,), dtype=int, optional
         If supplied, restrict the search to only those atoms in
-        `haystack_indies`.
+        `haystack_indices`.
     periodic : bool
         If `periodic` is True and the trajectory contains unitcell
         information, we will compute distances under the minimum image
