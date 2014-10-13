@@ -116,3 +116,18 @@ def test_seek():
         f.seek(4, 1)
         xyz8, box8 = f.read(n_frames=1)
         eq(reference.xyz[8], xyz8[0]/10)
+
+def test_atom_indices_0():
+    atom_indices = np.arange(10)
+    with MDCRDTrajectoryFile(get_fn('frame0.mdcrd'), n_atoms=22) as f:
+        xyz0, box0 = f.read(n_frames=1)
+    with MDCRDTrajectoryFile(get_fn('frame0.mdcrd'), n_atoms=22) as f:
+        xyz1, box1 = f.read(n_frames=1, atom_indices=atom_indices)
+
+    eq(xyz0[:, atom_indices], xyz1)
+
+def test_atom_indices_1():
+    atom_indices = np.arange(10)
+    top = md.load(get_fn('native.pdb'))
+    t0 = md.load(get_fn('frame0.mdcrd'), top=top)
+    t1 = md.load(get_fn('frame0.mdcrd'), top=top, atom_indices=atom_indices)
