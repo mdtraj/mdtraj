@@ -388,7 +388,8 @@ def test_seek_read_mode():
              (md.formats.DCDTrajectoryFile, 'frame0.dcd'),
              (md.formats.MDCRDTrajectoryFile, 'frame0.mdcrd'),
              (md.formats.BINPOSTrajectoryFile, 'frame0.binpos'),
-             (md.formats.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'),]
+             (md.formats.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'),
+             (md.formats.DTRTrajectoryFile,'frame0.dtr/clickme.dtr'),]
 
     for a, b in files:
         point = 0

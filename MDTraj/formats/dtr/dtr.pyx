@@ -388,7 +388,7 @@ cdef class DTRTrajectoryFile:
         elif whence == 1 and offset < 0:
             absolute = offset + self.frame_counter
         elif whence == 2 and offset <= 0:
-            absolute = self.n_frames + offset - 1
+            absolute = self.n_frames + offset
         else:
             raise IOError('Invalid argument')
 
@@ -490,7 +490,7 @@ cdef class DTRTrajectoryFile:
             _stride = stride
 
         _start = self.frame_counter
-        _last = _start + _n_frames
+        _last = _start + _n_frames*_stride
 
         if _last > self.n_frames:
             _last = self.n_frames
@@ -531,8 +531,6 @@ cdef class DTRTrajectoryFile:
         cdef int i, j
         cdef int status = _DTR_SUCCESS
 
-        j = 0
-        #for i in range(_start_frame, _last_frame, _stride):
         for j in range(_n_frames):
             i = j*_stride + _start
 
@@ -555,7 +553,6 @@ cdef class DTRTrajectoryFile:
             cell_angles[j, 1] = self.timestep.beta
             cell_angles[j, 2] = self.timestep.gamma
 
-            j += 1
             self.frame_counter += 1
 
             if status != _DTR_SUCCESS:

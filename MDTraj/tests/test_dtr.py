@@ -40,9 +40,10 @@ from shutil import rmtree
 
 #TestDocstrings = DocStringFormatTester(dtr, error_on_none=True)
 
-fn_dtr = get_fn('ala_dipeptide_trj/clickme.dtr')
-fn_pdb = get_fn('ala_dipeptide.pdb')
-fn_dcd =  get_fn('ala_dipeptide.dcd')
+fn_dtr = get_fn('frame0.dtr')
+fn_dcd = get_fn('frame0.dcd')
+fn_pdb = get_fn('native.pdb')
+
 fd, temp = tempfile.mkstemp(suffix='.dtr')
 os.close(fd)
 def teardown_module(module):
@@ -60,7 +61,7 @@ def test_read():
     test the default read and compare against reference trajectory in dcd format
     """
     dtr_traj = DTRTrajectoryFile(fn_dtr)
-    eq(len(dtr_traj), 3)
+    eq(len(dtr_traj), 501)
     xyz, times, cell_lens, cell_angles  = dtr_traj.read()
     xyz2, cell_lens2, cell_angles2 = DCDTrajectoryFile(fn_dcd).read()
     eq(xyz, xyz2)
@@ -70,7 +71,7 @@ def test_read():
 def test_read_1():
     """ test read with n_frame"""
     xyz, times, cell_lens, cell_angles = DTRTrajectoryFile(fn_dtr).read()
-    xyz2, times2, cell_lens2, cell_angles2 = DTRTrajectoryFile(fn_dtr).read(n_frames=3)
+    xyz2, times2, cell_lens2, cell_angles2 = DTRTrajectoryFile(fn_dtr).read(n_frames=501)
     eq(xyz, xyz2)
     eq(times, times2)
     eq(cell_lens, cell_lens2)
@@ -90,8 +91,8 @@ def test_read_3():
     """test read with n_frames"""
     dtr_traj = DTRTrajectoryFile(fn_dtr)
     dtr_traj.seek(1)
-    xyz, times, cell_lens, cell_angles = dtr_traj.read(n_frames=5)
-    eq(len(xyz), 2)
+    xyz, times, cell_lens, cell_angles = dtr_traj.read(n_frames=900)
+    eq(len(xyz), 500)
 
 def test_read_stride():
     "Read dtr with stride"
@@ -107,10 +108,19 @@ def test_read_stride():
 
 def test_read_4():
     """Read dtr with stride and n_frames"""
-    dtr_traj = DTRTrajectoryFile(fn_dtr)
-    dtr_traj.seek(1)
-    xyz, times, cell_lens, cell_angles = dtr_traj.read(n_frames=5, stride=2)
-    eq(len(xyz), 1)
+    # dtr_traj = DTRTrajectoryFile(fn_dtr)
+    # dtr_traj.seek(1)
+    # xyz, times, cell_lens, cell_angles = dtr_traj.read(n_frames=300, stride=2)
+    # eq(len(xyz), 251)
+    with DTRTrajectoryFile(fn_dtr) as f:
+        xyz1, times1, box_lengths1, box_angles1 = f.read()
+    with DTRTrajectoryFile(fn_dtr) as f:
+        xyz2, times2, box_lengths2, box_angles2 = f.read(n_frames=300, stride=2)
+
+    yield lambda: eq(xyz1[::2], xyz2)
+    yield lambda: eq(times1[::2], times2)
+    yield lambda: eq(box_lengths1[::2], box_lengths2)
+    yield lambda: eq(box_angles1[::2], box_angles2)
 
 def test_read_5():
     "check streaming read of frames 1 at a time"
@@ -154,6 +164,14 @@ def test_read_7():
     eq(len(cell_lens), 0)
     eq(len(cell_angles), 0)
 
+
+def test_read_8():
+    with DTRTrajectoryFile(fn_dtr) as f:
+        xyz_ref, times_ref, box_lengths_ref, box_angles_ref = f.read()
+    with DTRTrajectoryFile(fn_dtr) as f:
+        xyz, times, box_lengths, box_angles = f.read(atom_indices=slice(None, None, 2))
+
+    yield lambda: eq(xyz_ref[:, ::2, :], xyz)
 
 def test_write_1():
     "test write"
@@ -262,21 +280,36 @@ def test_seek():
         eq(f.tell(), 1)
         eq(xyz, reference[0])
 
-        f.seek(-1, 1)
-        eq(f.tell(), 0)
-        eq(f.read(1)[0][0], reference[0])
-        eq(f.tell(), 1)
+        f.seek(5)
+        eq(f.read(1)[0][0], reference[5])
+        eq(f.tell(), 6)
 
-        f.seek(-1, 2)
+        f.seek(-5, 1)
         eq(f.tell(), 1)
         eq(f.read(1)[0][0], reference[1])
-        eq(f.tell(), 2)
 
 @raises(IOError)
 def test_read_closed():
     f = DTRTrajectoryFile(fn_dtr)
     f.close()
     f.read()
+
+
+# @raises(IOError)
+# def test_write_closed():
+#     f = DTRTrajectoryFile(fn_dtr, 'w')
+#     f.close()
+#     xyz = np.array(np.random.uniform(low=-50, high=-50, size=(3, 17, 3)), dtype=np.float32)
+#     times = np.array([1, 23.0, 48.0], dtype=np.float64)
+#     cell_lengths=np.array(np.random.uniform(low=100, high=200, size=(3, 3)), dtype=np.float32)
+#     cell_angles=np.array([[90, 90, 90],
+#                         [80, 100, 120],
+#                         [120, 90, 80]],
+#                         dtype=np.float32)
+#
+#     f.write(xyz, cell_lengths=cell_lengths,
+#                  cell_angles=cell_angles,
+#                  times=times)
 
 def test_tell():
     with DTRTrajectoryFile(fn_dtr) as f:
@@ -287,9 +320,9 @@ def test_tell():
         eq(f.tell(), 2)
 
         f.read(100)
-        eq(f.tell(), last)
+        eq(f.tell(), 102)
 
-        f.seek(6)
+        f.seek(600)
         eq(f.tell(), last)
 
 

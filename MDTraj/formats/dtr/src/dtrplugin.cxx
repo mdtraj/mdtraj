@@ -1942,6 +1942,13 @@ bool DtrWriter::init(const std::string &path) {
     recursivelyRemove(m_directory);
     ::DDmkdir(m_directory,0777,0, 0);
 
+    // craft an empty clickme.dtr
+    {
+      std::string clickme_file = m_directory + s_sep + "clickme.dtr";
+      FILE *fd = fopen(clickme_file.c_str(), "wb");
+      fclose(fd);
+    }
+
     // craft an empty metadata frame
     std::vector<meta_t> meta;
     std::vector<char> bytes;

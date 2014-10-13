@@ -85,6 +85,21 @@ def _assert_files_exist(filenames):
             raise IOError('No such file: %s' % fn)
 
 
+def _assert_files_or_dirs_exist(names):
+    """Throw an IO error if files don't exist
+
+    Parameters
+    ----------
+    filenames : {str, [str]}
+        String or list of strings to check
+    """
+    if isinstance(names, string_types):
+        names = [names]
+    for fn in names:
+        if not (os.path.exists(fn) and \
+                        (os.path.isfile(fn) or os.path.isdir(fn))):
+            raise IOError('No such file: %s' % fn)
+
 def _parse_topology(top):
     """Get the topology from a argument of indeterminate type
     If top is a string, we try loading a pdb, if its a trajectory
@@ -217,7 +232,7 @@ def load_frame(filename, index, top=None, atom_indices=None):
         The resulting conformation, as an md.Trajectory object containing
         a single frame.
     """
-    _assert_files_exist(filename)
+
     extension = os.path.splitext(filename)[1]
     try:
         loader = _FormatRegistry.loaders[extension]
@@ -229,6 +244,11 @@ def load_frame(filename, index, top=None, atom_indices=None):
     kwargs = {'atom_indices': atom_indices}
     if loader.__name__ not in ['load_hdf5', 'load_pdb']:
         kwargs['top'] = top
+
+    if loader.__name__ not in ['load_dtr']:
+        _assert_files_exist(filename)
+    else:
+        _assert_files_or_dirs_exist(filename)
 
     return loader(filename, frame=index, **kwargs)
 
@@ -288,8 +308,6 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         The resulting trajectory, as an md.Trajectory object.
     """
 
-    _assert_files_exist(filename_or_filenames)
-
     if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
         kwargs["top"] = _parse_topology(kwargs["top"])
 
@@ -330,6 +348,12 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         # there would be a signature binding error. it's easier just to ignore
         # it.
         kwargs.pop('top', None)
+
+    if loader.__name__ not in ['load_dtr']:
+        _assert_files_exist(filename_or_filenames)
+    else:
+        _assert_files_or_dirs_exist(filename_or_filenames)
+
 
     value = loader(filename, **kwargs)
     return value
