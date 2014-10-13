@@ -360,7 +360,8 @@ dtr = Extension('mdtraj.formats.dtr',
                    include_dirs=['MDTraj/formats/dtr/include/',
                                  'MDTraj/formats/dtr/', numpy.get_include()],
                    define_macros = [('DESRES_READ_TIMESTEP2', 1)],
-                   language='c++')
+                   language='c++',
+                   libraries=extra_cpp_libraries)
 
 
 def rmsd_extensions():
