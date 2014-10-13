@@ -144,6 +144,17 @@ def test_read_6():
 
     yield lambda: len(xyz_ref) == i + len(xyz_rest)
 
+def test_read_7():
+    'test two full read'
+    reader = DTRTrajectoryFile(fn_dtr)
+    xyz, times, cell_lens, cell_angles = reader.read()
+    xyz, times, cell_lens, cell_angles = reader.read()
+    eq(len(xyz), 0)
+    eq(len(times), 0)
+    eq(len(cell_lens), 0)
+    eq(len(cell_angles), 0)
+
+
 def test_write_1():
     "test write"
     xyz, times, cell_lens, cell_angles  = DTRTrajectoryFile(fn_dtr).read()
@@ -280,3 +291,6 @@ def test_tell():
 
         f.seek(6)
         eq(f.tell(), last)
+
+
+test_read_7()
