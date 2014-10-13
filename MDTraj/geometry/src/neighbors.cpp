@@ -68,7 +68,9 @@ std::vector<int> _compute_neighbors(
         std::vector<int>::const_iterator qit;
         for (qit = query_indices.begin(); qit != query_indices.end(); ++qit) {
             // compute distance from haystack atom *hit to query atom *qit
-
+            if (hit == qit) {
+                continue;
+            }
             float dist = 0;
             if (box_matrix == NULL) {
                 dist = get_dist<false>(frame_xyz, *hit, *qit, box_matrix);
