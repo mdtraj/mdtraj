@@ -62,7 +62,7 @@ def compute_neighbors(traj, cutoff, query_indices, haystack_indices=None,
     query_indices : np.ndarray, shape=(n_query_indices,), dtype=int
         The matching atoms are those that are within `cutoff` of one or more
         of the atoms with indices in `query_indices`.
-    haystack_indies : np.ndarray, shape=(n_query_indices,), dtype=int, optional
+    haystack_indices : np.ndarray, shape=(n_query_indices,), dtype=int, optional
         If supplied, restrict the search to only those atoms in
         `haystack_indies`.
     periodic : bool
