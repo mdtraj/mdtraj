@@ -13,14 +13,8 @@ cdef extern from "include/molfile_plugin.h":
       int has_velocities
 
 cdef extern from "include/dtrplugin.hxx":
-    ctypedef struct molfile_timestep_metadata:
-      unsigned int count
-      unsigned int avg_bytes_per_timestep
-      int has_velocities;
-
 
     void* open_file_read(const char *path, const char *filetype, int *natoms)
-    int read_next_timestep(void *v, int natoms, molfile_timestep_t *ts)
     int read_timestep2(void *v, molfile_ssize_t n, molfile_timestep_t *ts)
     molfile_ssize_t read_times(void *v, molfile_ssize_t start, molfile_ssize_t count, double *times)
     void close_file_read(void *v)

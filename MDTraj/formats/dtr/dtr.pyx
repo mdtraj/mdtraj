@@ -316,7 +316,7 @@ cdef class DTRTrajectoryFile:
         self.close()
 
     def _initialize_write(self, int n_atoms):
-        """We don't actually want to open the dcd file during write mode
+        """We don't actually want to open the dtr file during write mode
         until we know how many atoms the user wants to save. so this
         is delayed until the first call to write()
         """
@@ -331,6 +331,14 @@ cdef class DTRTrajectoryFile:
         self._needs_write_initialization = False
 
     def get_times(self):
+        """
+        Reading chemical times associated with all frames.
+
+        Returns
+        -------
+        times : np.ndarray, shape=(n_frames), dtype=float64
+            The chemical time for each frame.
+        """
         cdef np.ndarray[dtype=np.float64_t, ndim=1] times = np.zeros((self.n_frames), dtype=np.float64)
         count = read_times(self.fh, 0, self.n_frames, &times[0])
         if count != self.n_frames:
@@ -381,7 +389,6 @@ cdef class DTRTrajectoryFile:
             absolute = offset + self.frame_counter
         elif whence == 2 and offset <= 0:
             absolute = self.n_frames + offset - 1
-            #raise NotImplementedError('offsets from the end are not supported yet')
         else:
             raise IOError('Invalid argument')
 
