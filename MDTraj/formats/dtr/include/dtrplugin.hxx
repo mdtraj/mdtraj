@@ -42,41 +42,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MOLFILE_DTRPLUGIN_HXX
 #define MOLFILE_DTRPLUGIN_HXX
 
-#if defined(_MSC_VER)
-#ifndef DESRES_WIN32
-#define DESRES_WIN32
-#endif
-#endif
-
-#include <math.h>
-#include <stdio.h>
-#ifdef DESRES_WIN32
-#include <io.h>
-#include <direct.h>
-#include <fcntl.h>
-#include <windows.h>
-
-typedef int int32_t;
-typedef unsigned char uint8_t;
-typedef unsigned int uint32_t;
-#if 1
-typedef unsigned __int64 uint64_t;    // This also works with MVSC6
-#else
-typedef unsigned long long uint64_t;
-#endif
-typedef unsigned short uint16_t;
-//typedef unsigned int ssize_t;
-typedef int mode_t;
-#define mkdir(a,b) _mkdir(a)
-#define rmdir(a)   _rmdir(a)
-#define ftello(a)  ftell(a)
-#else
-#define O_BINARY 0
-#include <inttypes.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#endif
 
 #include <molfile_plugin.h>
 
