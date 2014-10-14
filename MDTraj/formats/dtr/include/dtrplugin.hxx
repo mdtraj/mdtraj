@@ -65,7 +65,7 @@ typedef unsigned __int64 uint64_t;    // This also works with MVSC6
 typedef unsigned long long uint64_t;
 #endif
 typedef unsigned short uint16_t;
-typedef unsigned int ssize_t;
+//typedef unsigned int ssize_t;
 typedef int mode_t;
 #define mkdir(a,b) _mkdir(a)
 #define rmdir(a)   _rmdir(a)
