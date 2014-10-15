@@ -321,6 +321,8 @@ compiler = CompilerDetection(disable_openmp)
 extra_cpp_libraries = []
 if sys.platform == 'darwin':
     extra_cpp_libraries.append('stdc++')
+if sys.platform == 'win32':
+    extra_cpp_libraries.append('Ws2_32')
 
 
 ################################################################################

@@ -130,7 +130,7 @@ namespace desres { namespace molfile {
     virtual bool init(const std::string &path, int * changed = NULL) = 0;
 
     // number of frames
-    virtual ssize_t size() const = 0;
+    virtual size_t size() const = 0;
 
     // read the next frame.  If ts is NULL, skip it.  If there are no more
     // frames to read, return MOLFILE_EOF.  Otherwise, fill in coordinates
@@ -140,20 +140,20 @@ namespace desres { namespace molfile {
 
     // Get the DtrReader component corresponding to frame n.  Change
     // n to the local index within the returned dtr.
-    virtual const DtrReader * component(ssize_t &n) const = 0;
+    virtual const DtrReader * component(size_t &n) const = 0;
 
     // number of framesets
-    virtual ssize_t nframesets() const = 0;
+    virtual size_t nframesets() const = 0;
 
     // nth frameset 
-    virtual const DtrReader * frameset(ssize_t n) const = 0;
+    virtual const DtrReader * frameset(size_t n) const = 0;
 
     // read a specified frame.
-    virtual int frame(ssize_t n, molfile_timestep_t *ts) const = 0;
+    virtual int frame(size_t n, molfile_timestep_t *ts) const = 0;
 
     // read up to count times beginning at index start into the provided space;
     // return the number of times actually read.
-    virtual ssize_t times(ssize_t start, ssize_t count, double * times) const = 0;
+    virtual size_t times(size_t start, size_t count, double * times) const = 0;
 
     virtual std::ostream& dump(std::ostream &out) const = 0;
     virtual std::istream& load(std::istream &in) = 0;
@@ -166,12 +166,12 @@ namespace desres { namespace molfile {
   class DtrReader : public FrameSetReader {
     mutable int m_ndir1;
     mutable int m_ndir2;
-    ssize_t m_curframe;
+    size_t m_curframe;
 
     metadata_t * meta;
     bool owns_meta;
 
-    bool eof() const { return m_curframe >= (ssize_t)keys.size(); }
+    bool eof() const { return m_curframe >= (size_t)keys.size(); }
 
   public:
     DtrReader() 
@@ -212,31 +212,31 @@ namespace desres { namespace molfile {
       }
     }
 
-    ssize_t curframe() const { return m_curframe; }
+    size_t curframe() const { return m_curframe; }
 
     uint32_t framesperfile() const { return keys.framesperfile(); }
 
     virtual bool init(const std::string &path, int * changed=NULL);
-    virtual ssize_t size() const { return keys.size(); }
-    virtual ssize_t times(ssize_t start, ssize_t count, double * times) const;
+    virtual size_t size() const { return keys.size(); }
+    virtual size_t times(size_t start, size_t count, double * times) const;
 
     virtual int next(molfile_timestep_t *ts);
 
-    virtual const DtrReader * component(ssize_t &n) const {
+    virtual const DtrReader * component(size_t &n) const {
       return this;
     }
 
-    virtual ssize_t nframesets() const { return 1; }
-    virtual const DtrReader * frameset(ssize_t n) const {
+    virtual size_t nframesets() const { return 1; }
+    virtual const DtrReader * frameset(size_t n) const {
         if (n!=0) throw std::runtime_error("bad index");
         return this;
     }
 
-    virtual int frame(ssize_t n, molfile_timestep_t *ts) const;
+    virtual int frame(size_t n, molfile_timestep_t *ts) const;
 
 
     // path for frame at index.  Empty string on not found.
-    std::string framefile(ssize_t n) const;
+    std::string framefile(size_t n) const;
 
     // read a frame from supplied bytes
     int frame_from_bytes( const void *buf, uint64_t len,
@@ -280,14 +280,14 @@ namespace desres { namespace molfile {
     StkReader(DtrReader *reader);
     ~StkReader();
     virtual bool init(const std::string &path, int * changed=NULL);
-    virtual ssize_t size() const;
-    virtual ssize_t times(ssize_t start, ssize_t count, double * times) const;
+    virtual size_t size() const;
+    virtual size_t times(size_t start, size_t count, double * times) const;
     virtual int next(molfile_timestep_t *ts);
-    virtual int frame(ssize_t n, molfile_timestep_t *ts) const;
-    virtual const DtrReader * component(ssize_t &n) const;
+    virtual int frame(size_t n, molfile_timestep_t *ts) const;
+    virtual const DtrReader * component(size_t &n) const;
 
-    virtual ssize_t nframesets() const { return framesets.size(); }
-    virtual const DtrReader * frameset(ssize_t n) const {
+    virtual size_t nframesets() const { return framesets.size(); }
+    virtual const DtrReader * frameset(size_t n) const {
         return framesets.at(n);
     }
 

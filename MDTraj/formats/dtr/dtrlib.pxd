@@ -5,7 +5,7 @@ cdef extern from "include/molfile_plugin.h":
       float A, B, C, alpha, beta, gamma
       double physical_time
 
-    ctypedef ssize_t molfile_ssize_t
+    ctypedef size_t molfile_ssize_t
 
     ctypedef struct molfile_timestep_metadata:
       unsigned int count                  # total # timesteps; -1 if unknown

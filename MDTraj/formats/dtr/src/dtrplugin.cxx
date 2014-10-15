@@ -384,7 +384,7 @@ namespace {
   } 
 
   int32_t cksum(const std::string &s) {
-    ssize_t len = s.size();
+    size_t len = s.size();
     int32_t result = processBytes( s.c_str(), len );
   
     for ( ; len; len >>= 8) {
@@ -869,7 +869,7 @@ static BlobMap read_frame( const void *mapping, uint64_t len ) {
     return blobs;
 }
 
-static void *read_file( int fd, off_t offset, ssize_t &framesize ) {
+static void *read_file( int fd, off_t offset, size_t &framesize ) {
   if (fd<=0) {
     fprintf(stderr, "read_file: bad file descriptor\n");
     return NULL;
@@ -890,7 +890,7 @@ static void *read_file( int fd, off_t offset, ssize_t &framesize ) {
       return NULL;
   }
 
-  ssize_t rc = read(fd, mapping, framesize);
+  size_t rc = read(fd, mapping, framesize);
   if (rc==0) {
       free(mapping);
       return NULL;
@@ -923,7 +923,7 @@ static metadata_t * read_meta( const std::string& metafile, unsigned natoms,
 
   metadata_t * meta = NULL;
   int meta_fd = open(metafile.c_str(), O_RDONLY|O_BINARY);
-  ssize_t framesize=0;
+  size_t framesize=0;
   void *meta_mapping = read_file( meta_fd, 0, framesize );
   if (meta_mapping==NULL) {
     close(meta_fd);
@@ -1062,8 +1062,8 @@ bool StkReader::init(const std::string &path, int * changed) {
   return true;
 }
 
-ssize_t StkReader::size() const {
-  ssize_t result=0;
+size_t StkReader::size() const {
+  size_t result=0;
   for (size_t i=0; i<framesets.size(); i++) 
     result += framesets[i]->keys.size();
   return result;
@@ -1078,16 +1078,16 @@ int StkReader::next(molfile_timestep_t *ts) {
   return rc;
 }
 
-const DtrReader * StkReader::component(ssize_t &n) const {
+const DtrReader * StkReader::component(size_t &n) const {
   for (size_t i=0; i<framesets.size(); i++) {
-    ssize_t size = framesets[i]->size();
+    size_t size = framesets[i]->size();
     if (n < size) return framesets[i];
     n -= size;
   }
   return NULL;
 }
 
-int StkReader::frame(ssize_t n, molfile_timestep_t *ts) const {
+int StkReader::frame(size_t n, molfile_timestep_t *ts) const {
   const DtrReader *comp = component(n);
   if (!comp) return MOLFILE_EOF;
   return comp->frame(n, ts);
@@ -1098,7 +1098,7 @@ StkReader::~StkReader() {
     delete framesets[i];
 }
 
-std::string DtrReader::framefile(ssize_t n) const {
+std::string DtrReader::framefile(size_t n) const {
   return ::framefile( dtr, n, framesperfile(), ndir1(), ndir2() );
 }
 
@@ -1118,7 +1118,7 @@ bool DtrReader::init(const std::string &path, int * changed) {
     std::string fname=::framefile(dtr, 0, keys.framesperfile(), 
             ndir1(), ndir2());
     int fd = open(fname.c_str(), O_RDONLY|O_BINARY);
-    ssize_t framesize=0;
+    size_t framesize=0;
     unsigned i;
     void *mapping = read_file( fd, 0, framesize );
     if (mapping==NULL)  {
@@ -1169,30 +1169,30 @@ bool DtrReader::init(const std::string &path, int * changed) {
 
 }
 
-ssize_t DtrReader::times(ssize_t start, ssize_t count, double *t) const {
-    ssize_t remaining = keys.size()-start;
+size_t DtrReader::times(size_t start, size_t count, double *t) const {
+    size_t remaining = keys.size()-start;
     count = (count < remaining) ? count : remaining;
-    for (ssize_t j=0; j<count; j++) {
+    for (size_t j=0; j<count; j++) {
         t[j]=keys[start++].time();
     }
     return count;
 }
 
-ssize_t StkReader::times(ssize_t start, ssize_t count, double *t) const {
-    ssize_t nread=0;
+size_t StkReader::times(size_t start, size_t count, double *t) const {
+    size_t nread=0;
     size_t i=0,n=framesets.size();
     if (start<0) return 0;
     if (count<=0) return 0;
     /* Find the first frameset containing frames in the desired range */
     /* FIXME: could do this using a binary search... */
     for (; i<n; i++) {
-        ssize_t sz = framesets[i]->size();
+        size_t sz = framesets[i]->size();
         if (start<sz) break;
         start -= sz;
     }
     /* Read times from framesets until count times are read. */
     for (; i<n; i++) {
-        ssize_t sz = framesets[i]->times(start, count, t+nread);
+        size_t sz = framesets[i]->times(start, count, t+nread);
         nread += sz;
         count -= sz;
         start=0;
@@ -1667,7 +1667,7 @@ int DtrReader::next(molfile_timestep_t *ts) {
     ++m_curframe;
     return MOLFILE_SUCCESS;
   }
-  ssize_t iframe = m_curframe;
+  size_t iframe = m_curframe;
   ++m_curframe;
   return frame(iframe, ts);
 }
@@ -1682,11 +1682,11 @@ int DtrReader::ndir2() const {
   return m_ndir2;
 }
 
-int DtrReader::frame(ssize_t iframe, molfile_timestep_t *ts) const {
+int DtrReader::frame(size_t iframe, molfile_timestep_t *ts) const {
   int rc = MOLFILE_SUCCESS;
   {
     off_t offset=0;
-    ssize_t framesize=0;
+    size_t framesize=0;
     if (framesperfile() != 1) {
       offset = assemble64( ntohl(keys[iframe].offset_lo), 
                            ntohl(keys[iframe].offset_hi) );
@@ -1909,9 +1909,9 @@ namespace {
   }
 }
 
-void write_all( int fd, const char * buf, ssize_t count ) {
+void write_all( int fd, const char * buf, size_t count ) {
     while (count) {
-        ssize_t n = ::write(fd, buf, count);
+        size_t n = ::write(fd, buf, count);
         if (n<0) {
             if (errno==EINTR) continue;
             throw std::runtime_error(strerror(errno));

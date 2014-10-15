@@ -25,7 +25,7 @@
 
 #include "vmdplugin.h"
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #ifndef DESRES_WIN32
 #define DESRES_WIN32
 #endif
@@ -48,7 +48,7 @@ typedef unsigned __int64 uint64_t;    // This also works with MVSC6
 typedef unsigned long long uint64_t;
 #endif
 typedef unsigned short uint16_t;
-//typedef unsigned int ssize_t;
+
 typedef int mode_t;
 #define mkdir(a,b) _mkdir(a)
 #define rmdir(a)   _rmdir(a)
@@ -61,11 +61,7 @@ typedef int mode_t;
 #include <string.h>
 #endif
 
-#if defined(DESRES_READ_TIMESTEP2)
-/* includes needed for large integer types used for frame counts */
-#include <sys/types.h>
-typedef ssize_t molfile_ssize_t;      /**< for frame counts */
-#endif
+typedef size_t molfile_ssize_t;      /**< for frame counts */
 
 /**
  * Define a common plugin type to be used when registering the plugin.
