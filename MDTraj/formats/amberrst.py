@@ -578,7 +578,7 @@ class AmberNetCDFRestartFile(object):
         # support the user opening the file, reading the coordinates, and then
         # closing it, and still having the coordinates be a valid memory
         # segment.
-        # https://github.com/simtk/mdtraj/issues/440
+        # https://github.com/pandegroup/mdtraj/issues/440
         if coordinates is not None and not coordinates.flags['WRITEABLE']:
             coordinates = np.array(coordinates, copy=True)
         if cell_lengths is not None and not cell_lengths.flags['WRITEABLE']:
