@@ -1,5 +1,5 @@
 Atom Selection
 ==========================================
 
-.. notebook:: hbonds.ipynb
+.. notebook:: atom-selection.ipynb
    :skip_exceptions:
