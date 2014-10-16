@@ -56,8 +56,8 @@ from re import sub, match
 # import element as elem
 import numpy as np
 
-from mdtraj import Topology
-from mdtraj.utils import cast_indices
+import mdtraj as md
+from mdtraj.utils import cast_indices, ensure_type
 from mdtraj.formats import pdb
 from mdtraj.core import element as elem
 from mdtraj.formats.registry import _FormatRegistry
@@ -113,6 +113,13 @@ class GroTrajectoryFile(object):
         If opened in write mode, and a file by the name of `filename` already
         exists on disk, should we overwrite it?
 
+    Attributes
+    ----------
+    n_atoms : int
+        The number of atoms in the file
+    topology : md.Topology
+        The topology. TODO(rmcgibbo) note about chain
+
     See Also
     --------
     load_gro : High-level wrapper that returns a ``md.Trajectory``
@@ -155,7 +162,7 @@ class GroTrajectoryFile(object):
         time : np.ndarray, dtype=float32, shape=(n_frames), optional
             The simulation time corresponding to each frame, in picoseconds.
             If not supplied, the numbers 0..n_frames will be written.
-        box : np.ndarray, dtype=float32, shape=(n_frames, 3, 3), optional
+        unitcell_vectors : np.ndarray, dtype=float32, shape=(n_frames, 3, 3), optional
             The periodic box vectors of the simulation in each frame, in nanometers.
         """
         if not self._open:
@@ -163,7 +170,15 @@ class GroTrajectoryFile(object):
         if not self._mode == 'w':
             raise ValueError('file not opened for writing')
 
-        raise NotImplementedError()
+        coordinates = ensure_type(coordinates, dtype=np.float32, ndim=3, name='coordinates', can_be_none=False, warn_on_cast=False)
+        time = ensure_type(time, dtype=float, ndim=1, name='time', can_be_none=True, shape=(len(coordinates),), warn_on_cast=False)
+        unitcell_vectors = ensure_type(unitcell_vectors, dtype=float, ndim=3, name='unitcell_vectors',
+            can_be_none=True, shape=(len(coordinates), 3, 3), warn_on_cast=False)
+
+        for i in range(coordinates.shape[0]):
+            frame_time = None if time is None else time[i]
+            frame_box = None if unitcell_vectors is None else unitcell_vectors[i]
+            self._write_frame(coordinates[i], topology, frame_time, frame_box)
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read data from a molecular dynamics trajectory in the GROMACS GRO
@@ -231,7 +246,7 @@ class GroTrajectoryFile(object):
         pdb.PDBTrajectoryFile._loadNameReplacementTables()
 
         n_atoms = None
-        topology = Topology()
+        topology = md.Topology()
         chain = topology.add_chain()
         residue = None
         atomReplacements = {}
@@ -253,12 +268,13 @@ class GroTrajectoryFile(object):
                         atomReplacements = {}
 
                 thiselem = thisatomname
+                element = None
                 if len(thiselem) > 1:
                     thiselem = thiselem[0] + sub('[A-Z0-9]','',thiselem[1:])
                     try:
                         element = elem.get_by_symbol(thiselem)
                     except KeyError:
-                        element = None
+                        pass
                 if thisatomname in atomReplacements:
                     thisatomname = atomReplacements[thisatomname]
 
@@ -319,13 +335,58 @@ class GroTrajectoryFile(object):
 
         return xyz, unitcell_vectors, time
 
-    def seek(self):
+    def _write_frame(self, coordinates, topology, time, box):
+        comment = 'Generated with MDTraj'
+        if time is not None:
+            comment += ', t= %s' % time
+
+        assert topology.n_atoms == coordinates.shape[0]
+        lines = [comment, '  %d' % topology.n_atoms]
+
+        for i in range(topology.n_atoms):
+            atom = topology.atom(i)
+            residue = atom.residue
+            serial = atom.serial
+            if serial is None:
+                serial = atom.index
+            lines.append("%5d%-5s%5s%5d%8.3f%8.3f%8.3f" % (
+                residue.resSeq, residue.name, atom.name, serial,
+                coordinates[i, 0], coordinates[i, 1], coordinates[i, 2]))
+        if box is not None:
+            lines.append('%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f' % (
+                box[0,0], box[1,1], box[2,2],
+                box[0,1], box[0,2], box[1,0],
+                box[1,2], box[2,0], box[2,1]))
+
+        self._file.write('\n'.join(lines))
+
+    def seek(self, offset, whence=0):
+        """Move to a new file position
+
+        Parameters
+        ----------
+        offset : int
+            A number of frames.
+        whence : {0, 1, 2}
+            0: offset from start of file, offset should be >=0.
+            1: move relative to the current position, positive or negative
+            2: move relative to the end of file, offset should be <= 0.
+            Seeking beyond the end of a file is not supported
+        """
         raise NotImplementedError()
 
     def tell(self):
-        raise NotImplementedError()
+        """Current file position
+
+        Returns
+        -------
+        offset : int
+            The current frame in the file.
+        """
+        return self._frame_index
 
     def close(self):
+        "Close the file"
         if self._open:
             self._file.close()
             self._open = False
