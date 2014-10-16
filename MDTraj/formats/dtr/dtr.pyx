@@ -30,6 +30,7 @@ import cython
 cimport cython
 import os
 import numpy as np
+import shutil
 cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
@@ -299,8 +300,11 @@ cdef class DTRTrajectoryFile:
         elif str(mode) == 'w':
             self.filename = filename
             self._needs_write_initialization = 1
-            if not force_overwrite and os.path.exists(filename):
-                raise IOError('"%s" already exists' % filename)
+            if os.path.exists(filename):
+                if force_overwrite:
+                    shutil.rmtree(filename)
+                else:
+                    raise IOError('"%s" already exists' % filename)
         else:
             raise ValueError("The only supported mode is 'r' ")
 

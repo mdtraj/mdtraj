@@ -323,6 +323,8 @@ if sys.platform == 'darwin':
     extra_cpp_libraries.append('stdc++')
 if sys.platform == 'win32':
     extra_cpp_libraries.append('Ws2_32')
+    # For determining if a path is relative (for dtr)
+    extra_cpp_libraries.append('Shlwapi')
 
 
 ################################################################################

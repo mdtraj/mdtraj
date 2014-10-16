@@ -92,6 +92,8 @@ static const char s_sep = '/';
 #include <fcntl.h>
 #endif
 
+#define PathIsRelative(x) (x[0] != '/')
+
 #else
 /// windows version
 
@@ -107,6 +109,8 @@ static const char s_sep = '/';
 #endif
 
 static const char s_sep = '\\';
+
+#include "Shlwapi.h"
 
 #endif
 
@@ -1932,7 +1936,7 @@ bool DtrWriter::init(const std::string &path) {
       m_directory.erase(m_directory.size()-1);
     }
 
-    if ( m_directory[0] != s_sep) {
+    if (PathIsRelative(m_directory.c_str())) {
       if (! ::getcwd(cwd,sizeof(cwd))) {
         throw std::runtime_error(strerror(errno));
       }

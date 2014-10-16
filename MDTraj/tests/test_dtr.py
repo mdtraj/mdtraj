@@ -44,8 +44,8 @@ fn_dtr = get_fn('frame0.dtr')
 fn_dcd = get_fn('frame0.dcd')
 fn_pdb = get_fn('native.pdb')
 
-fd, temp = tempfile.mkstemp(suffix='.dtr')
-os.close(fd)
+temp = tempfile.mkdtemp(suffix='.dtr')
+
 def teardown_module(module):
     """
     Remove the temporary trajectory directory created by tests
