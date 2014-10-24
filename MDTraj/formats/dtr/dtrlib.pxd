@@ -25,6 +25,3 @@ cdef extern from "include/dtrplugin.hxx":
     int read_timestep_metadata(void *v, molfile_timestep_metadata *m)
     ssize_t dtr_curframe(void* v)
 
-
-
-
