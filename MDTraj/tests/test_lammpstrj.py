@@ -2,8 +2,8 @@
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
 # Copyright 2012-2013 Stanford University and the Authors
-#
-# Authors: Robert McGibbon
+
+# Authors: Christoph Klein
 # Contributors:
 #
 # MDTraj is free software: you can redistribute it and/or modify
