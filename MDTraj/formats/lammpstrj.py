@@ -103,7 +103,7 @@ def load_lammpstrj(filename, top=None, stride=None, atom_indices=None,
         if unit_set == 'real':
             f.distance_unit == 'angstroms'
         else:
-            raise ValueError('Unsupported unit set specified: {}.'.format(unit_set))
+            raise ValueError('Unsupported unit set specified: {0}.'.format(unit_set))
         if frame is not None:
             f.seek(frame)
             xyz, cell_lengths = f.read(n_frames=1, atom_indices=atom_indices)
@@ -171,7 +171,7 @@ class LAMMPSTrajectoryFile(object):
             self._is_open = True
         else:
             raise ValueError('mode must be one of "r" or "w". '
-                             'you supplied "{}"'.format(mode))
+                             'you supplied "{0}"'.format(mode))
 
     def close(self):
         """Close the lammpstrj file. """
@@ -332,27 +332,27 @@ class LAMMPSTrajectoryFile(object):
         if unit_set == 'real':
             self.distance_unit == 'angstroms'
         else:
-            raise ValueError('Unsupported unit set specified: {}.'.format(unit_set))
+            raise ValueError('Unsupported unit set specified: {0}.'.format(unit_set))
         xyz = in_units_of(xyz, 'nanometers', self.distance_unit)
         cell_lengths= in_units_of(cell_lengths, 'nanometers', self.distance_unit)
 
         for i in range(xyz.shape[0]):
             # --- begin header ---
             self._fh.write('ITEM: TIMESTEP\n')
-            self._fh.write('{}\n'.format(i))  # TODO: Write actual time if known.
+            self._fh.write('{0}\n'.format(i))  # TODO: Write actual time if known.
             self._fh.write('ITEM: NUMBER OF ATOMS\n')
-            self._fh.write('{}\n'.format(xyz.shape[1]))
+            self._fh.write('{0}\n'.format(xyz.shape[1]))
             self._fh.write('ITEM: BOX BOUNDS pp pp pp\n')
             mins = xyz[0].min(axis=1)
-            self._fh.write('{} {}\n'.format(mins[0], mins[0] + cell_lengths[0][0]))
-            self._fh.write('{} {}\n'.format(mins[1], mins[1] + cell_lengths[0][1]))
-            self._fh.write('{} {}\n'.format(mins[2], mins[2] + cell_lengths[0][2]))
+            self._fh.write('{0} {1}\n'.format(mins[0], mins[0] + cell_lengths[0][0]))
+            self._fh.write('{0} {1}\n'.format(mins[1], mins[1] + cell_lengths[0][1]))
+            self._fh.write('{0} {1}\n'.format(mins[2], mins[2] + cell_lengths[0][2]))
             # --- end header ---
 
             # --- begin body ---
             self._fh.write('ITEM: ATOMS id type xu yu zu\n')
             for j, coord in enumerate(xyz[i]):
-                self._fh.write('{:d} {:d} {:8.3f} {:8.3f} {:8.3f}\n'.format(
+                self._fh.write('{0:d} {1:d} {2:8.3f} {3:8.3f} {4:8.3f}\n'.format(
                     j+1, types[j], coord[0], coord[1], coord[2]))
             # --- end body ---
 
