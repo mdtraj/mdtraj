@@ -82,10 +82,10 @@ def load_lammpstrj(filename, top=None, stride=None, atom_indices=None,
     """
     from mdtraj.core.trajectory import _parse_topology, Trajectory
 
-    # we make it not required in the signature, but required here. although this
-    # is a little weird, its good because this function is usually called by a
-    # dispatch from load(), where top comes from **kwargs. So if its not supplied
-    # we want to give the user an informative error message
+    # We make `top` required. Although this is a little weird, its good because
+    # this function is usually called by a dispatch from load(), where top comes
+    # from **kwargs. So if its not supplied, we want to give the user an
+    # informative error message.
     if top is None:
         raise ValueError('"top" argument is required for load_lammpstrj')
 
@@ -106,14 +106,12 @@ def load_lammpstrj(filename, top=None, stride=None, atom_indices=None,
             raise ValueError('Unsupported unit set specified: {0}.'.format(unit_set))
         if frame is not None:
             f.seek(frame)
-            xyz, cell_lengths = f.read(n_frames=1, atom_indices=atom_indices)
+            xyz, cell_lengths, cell_angles = f.read(n_frames=1, atom_indices=atom_indices)
         else:
-            xyz, cell_lengths = f.read(stride=stride, atom_indices=atom_indices)
+            xyz, cell_lengths, cell_angles = f.read(stride=stride, atom_indices=atom_indices)
 
         in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
         in_units_of(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        # TODO: Don't assume that its a rectilinear box.
-        cell_angles = 90.0 * np.ones_like(cell_lengths)
 
     time = np.arange(len(xyz))
     if frame is not None:
@@ -224,17 +222,18 @@ class LAMMPSTrajectoryFile(object):
         if stride is None:
             stride = 1
 
-        coords, boxes = [], []
+        coords, lengths, angles = [], [], []
         for _ in frame_counter:
             try:
-                coord, box = self._read()
+                coord, length, angle = self._read()
                 if atom_indices is not None:
                     coord = coord[atom_indices, :]
             except _EOF:
                 break
 
             coords.append(coord)
-            boxes.append(box)
+            lengths.append(length)
+            angles.append(angle)
 
             for j in range(stride - 1):
                 # throw away these frames
@@ -244,29 +243,84 @@ class LAMMPSTrajectoryFile(object):
                     break
 
         coords = np.array(coords)
-        #coords = in_units_of(coords, self.distance_unit, 'nanometers')
-        boxes = np.array(boxes, dtype=np.float32)
-        #boxes = in_units_of(boxes, self.distance_unit, 'nanometers')
-        return coords, boxes
+        lengths = np.array(lengths, dtype=np.float32)
+        angles = np.array(angles, dtype=np.float32)
+        return coords, lengths, angles
+
+    def parse_box(self, style):
+        """Extract lengths and angles from a frame.
+
+        Parameters
+        ----------
+        style : str
+            Type of box, 'triclinic' or 'orthogonal'.
+
+        Returns
+        -------
+            lengths : ndarray
+            angles : ndarray
+
+        Notes
+        -----
+        For more info on how LAMMPS defines boxes:
+        http://lammps.sandia.gov/doc/Section_howto.html#howto_12
+        """
+        box = np.empty(shape=(3, 2))
+        if style == 'triclinic':
+            factors = np.empty(3)
+            for i in range(3):
+                line = self._fh.readline().split()
+                box[i] = line[:2]
+                factors[i] = line[2]
+
+            xy, xz, yz = factors
+            lx = ((box[0, 1] - np.max(0.0, xy, xz, xy+xz))
+                 - (box[0, 0] - np.min(0.0, xy, xz, xy+xz)))
+            ly = ((box[1, 1] - np.max(0.0, yz))
+                 - (box[1, 0] - np.min(0.0, yz)))
+            lz = box[2, 1] - box[2, 0]
+            lengths = np.array([lx, ly, lz])
+
+            b = np.sqrt(ly**2 + xy**2)
+            c = np.sqrt(lz**2 + xz**2 + yz**2)
+            alpha = np.arccos((xy*xz + ly*yz) / (b*c))
+            beta = np.arccos(xz / c)
+            gamma = np.arccos(xy / b)
+            angles = np.array([alpha, beta, gamma])
+        elif style == 'orthogonal':
+            box[0] = self._fh.readline().split()  # x-dim of box
+            box[1] = self._fh.readline().split()  # y-dim of box
+            box[2] = self._fh.readline().split()  # z-dim of box
+            lengths = np.diff(box, axis=1).reshape(1, 3)[0]  # box lengths
+            angles = np.empty(3)
+            angles.fill(90.0)
+        return lengths, angles
 
     def _read(self):
         """Read a single frame. """
-        box = np.empty(shape=(3, 2))
 
         # --- begin header ---
-        self._fh.readline()  # ITEM: TIMESTEP
-        step = self._fh.readline()  # timestep
-        if step == '':
+        first = self._fh.readline()  # ITEM: TIMESTEP
+        if first == '':
             raise _EOF()
+        self._fh.readline()  # timestep
         self._fh.readline()  # ITEM: NUMBER OF ATOMS
         self._n_atoms = int(self._fh.readline())  # num atoms
-        self._fh.readline()  # ITEM: BOX BOUNDS xx xx xx
-        box[0] = self._fh.readline().split()  # x-dim of box
-        box[1] = self._fh.readline().split()  # y-dim of box
-        box[2] = self._fh.readline().split()  # z-dim of box
-        box = np.diff(box, axis=1).reshape(1, 3)[0]  # box lengths
+
+        box_header = self._fh.readline().split()  # ITEM: BOX BOUNDS
+        self._line_counter += 5
+        if len(box_header) == 9:
+            lengths, angles = self.parse_box('triclinic')
+        elif len(box_header) == 6:
+            lengths, angles = self.parse_box('orthogonal')
+        else:
+            raise IOError('lammpstrj parse error on line {0:d} of "{1:s}". '
+                          'This file does not appear to be a valid '
+                          'lammpstrj file.'.format(
+                    self._line_counter,  self._filename))
+
         self._fh.readline()  # ITEM: ATOMS ...
-        self._line_counter += 9
+        self._line_counter += 4
         # --- end header ---
 
         xyz = np.empty(shape=(self._n_atoms, 3))
@@ -283,7 +337,7 @@ class LAMMPSTrajectoryFile(object):
                 types[atom_index - 1] = int(temp[1])
                 xyz[atom_index - 1] = [float(x) for x in temp[2:5]]
             except Exception:
-                raise IOError('lammpstrj parse error on line {:d} of "{:s}". '
+                raise IOError('lammpstrj parse error on line {0:d} of "{1:s}". '
                               'This file does not appear to be a valid '
                               'lammpstrj file.'.format(
                         self._line_counter,  self._filename))
@@ -291,7 +345,7 @@ class LAMMPSTrajectoryFile(object):
         # --- end body ---
 
         self._frame_index += 1
-        return xyz, box
+        return xyz, lengths, angles
 
     def write(self, xyz, cell_lengths, types=None, unit_set='real'):
         """Write one or more frames of data to a lammpstrj file

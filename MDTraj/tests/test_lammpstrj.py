@@ -37,9 +37,9 @@ def teardown_module(module):
 
 def test_read_0():
     with LAMMPSTrajectoryFile(get_fn('frame0.lammpstrj')) as f:
-        xyz, _ = f.read()
+        xyz, _, _ = f.read()
     with LAMMPSTrajectoryFile(get_fn('frame0.lammpstrj')) as f:
-        xyz3, _ = f.read(stride=3)
+        xyz3, _, _ = f.read(stride=3)
     eq(xyz[::3], xyz3)
 
 def test_read_1():
@@ -54,16 +54,15 @@ def test_read_write_0():
     with LAMMPSTrajectoryFile(temp, mode='w') as f:
         f.write(xyz, cell_lengths)
     with LAMMPSTrajectoryFile(temp) as f:
-        xyz2, box = f.read()
+        xyz2, lengths, angles = f.read()
 
-    eq(cell_lengths, box/10)
     eq(xyz, xyz2/10, decimal=3)
 
 def test_multiread():
     reference = md.load(get_fn('frame0.lammpstrj'), top=get_fn('native.pdb'))
     with LAMMPSTrajectoryFile(get_fn('frame0.lammpstrj')) as f:
-        xyz0, box0 = f.read(n_frames=1)
-        xyz1, box1 = f.read(n_frames=1)
+        xyz0, _, _ = f.read(n_frames=1)
+        xyz1, _, _ = f.read(n_frames=1)
 
     eq(reference.xyz[0], xyz0[0]/10)
     eq(reference.xyz[1], xyz1[0]/10)
@@ -73,21 +72,21 @@ def test_seek():
     with LAMMPSTrajectoryFile(get_fn('frame0.lammpstrj')) as f:
         f.seek(1)
         eq(1, f.tell())
-        xyz1, box1 = f.read(n_frames=1)
+        xyz1, _, _ = f.read(n_frames=1)
         eq(reference.xyz[1], xyz1[0]/10)
 
         f.seek(10)
         eq(10, f.tell())
-        xyz10, box10 = f.read(n_frames=1)
+        xyz10, _, _ = f.read(n_frames=1)
         eq(reference.xyz[10], xyz10[0]/10)
         eq(11, f.tell())
 
         f.seek(-8, 1)
-        xyz3, box3 = f.read(n_frames=1)
+        xyz3, _, _ = f.read(n_frames=1)
         eq(reference.xyz[3], xyz3[0]/10)
 
         f.seek(4, 1)
-        xyz8, box8 = f.read(n_frames=1)
+        xyz8, _, _ = f.read(n_frames=1)
         eq(reference.xyz[8], xyz8[0]/10)
 
 if __name__ == "__main__":
