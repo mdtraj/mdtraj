@@ -75,6 +75,7 @@ MDTraj/rmsd/_lprmsd.cpp
 MDTraj/geometry/src/_geometry.cpp
 MDTraj/geometry/drid.c
 MDTraj/formats/dtr/dtr.cpp
+MDTraj/geometry/neighbors.cpp
 
 # vim
 *.swp
