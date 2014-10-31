@@ -40,17 +40,10 @@ def test_read_write():
     t = md.load(get_fn('4waters.pdb'))
     with GroTrajectoryFile(temp, 'w') as f:
         f.write(t.xyz, t.topology)
-    
-    with open(temp) as f:
-        print f.read()
-    
+
     with GroTrajectoryFile(temp) as f:
         xyz, time, unitcell = f.read()
         top = f.topology
-        
-    eq(xyz, t.xyz)
-    eq(top, t.top)
 
-
-
-    
+    eq(xyz, t.xyz, decimal=3)
+    eq(list(top.atoms), list(t.top.atoms))

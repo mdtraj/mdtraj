@@ -234,9 +234,12 @@ class GroTrajectoryFile(object):
                 break
 
         coordinates, unitcell_vectors, time = map(np.array, (coordinates, unitcell_vectors, time))
+
         if not contains_time:
             time = None
-        return coordinates[::stride], unitcell_vectors[::stride], time[::stride]
+        else:
+            time = time[::stride]
+        return coordinates[::stride], unitcell_vectors[::stride], time
 
     def _read_topology(self):
         if not self._open:
@@ -271,10 +274,10 @@ class GroTrajectoryFile(object):
                 element = None
                 if len(thiselem) > 1:
                     thiselem = thiselem[0] + sub('[A-Z0-9]','',thiselem[1:])
-                    try:
-                        element = elem.get_by_symbol(thiselem)
-                    except KeyError:
-                        pass
+                try:
+                    element = elem.get_by_symbol(thiselem)
+                except KeyError:
+                    pass
                 if thisatomname in atomReplacements:
                     thisatomname = atomReplacements[thisatomname]
 
@@ -295,8 +298,9 @@ class GroTrajectoryFile(object):
         topology = None
         xyz = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
-
+        got_line = False
         for ln, line in enumerate(self._file):
+            got_line = True
             if ln == 0:
                 comment = line.strip()
             elif ln == 1:
@@ -316,7 +320,8 @@ class GroTrajectoryFile(object):
                 break
             else:
                 raise Exception("Unexpected line in .gro file: "+line)
-        else:
+
+        if not got_line:
             raise StopIteration()
 
         time = None
@@ -342,6 +347,8 @@ class GroTrajectoryFile(object):
 
         assert topology.n_atoms == coordinates.shape[0]
         lines = [comment, '  %d' % topology.n_atoms]
+        if box is None:
+            box = np.zeros((3,3))
 
         for i in range(topology.n_atoms):
             atom = topology.atom(i)
@@ -352,11 +359,11 @@ class GroTrajectoryFile(object):
             lines.append("%5d%-5s%5s%5d%8.3f%8.3f%8.3f" % (
                 residue.resSeq, residue.name, atom.name, serial,
                 coordinates[i, 0], coordinates[i, 1], coordinates[i, 2]))
-        if box is not None:
-            lines.append('%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f' % (
-                box[0,0], box[1,1], box[2,2],
-                box[0,1], box[0,2], box[1,0],
-                box[1,2], box[2,0], box[2,1]))
+
+        lines.append('%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f' % (
+            box[0,0], box[1,1], box[2,2],
+            box[0,1], box[0,2], box[1,0],
+            box[1,2], box[2,0], box[2,1]))
 
         self._file.write('\n'.join(lines))
 
