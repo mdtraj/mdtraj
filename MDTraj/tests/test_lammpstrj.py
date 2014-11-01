@@ -23,6 +23,8 @@
 
 import tempfile, os
 import numpy as np
+from mdtraj.utils import (lengths_and_angles_to_box_vectors,
+                          box_vectors_to_lengths_and_angles)
 import mdtraj as md
 from mdtraj.formats import LAMMPSTrajectoryFile, lammpstrj
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
@@ -50,12 +52,17 @@ def test_read_1():
 
 def test_read_write_0():
     xyz = 10 * np.random.randn(100, 11, 3)
-    cell_lengths = np.ones(shape=(100, 3))
-    with LAMMPSTrajectoryFile(temp, mode='w') as f:
-        f.write(xyz, cell_lengths)
-    with LAMMPSTrajectoryFile(temp) as f:
-        xyz2, lengths, angles = f.read()
+    lengths = np.ones(shape=(100, 3))
+    angles = np.empty(shape=(100, 3))
+    angles.fill(45)
 
+    with LAMMPSTrajectoryFile(temp, mode='w') as f:
+        f.write(xyz, lengths, angles)
+    with LAMMPSTrajectoryFile(temp) as f:
+        xyz2, new_lengths, new_angles = f.read()
+
+    eq(lengths, new_lengths)
+    eq(angles, new_angles)
     eq(xyz, xyz2/10, decimal=3)
 
 def test_multiread():
@@ -69,6 +76,7 @@ def test_multiread():
 
 def test_seek():
     reference = md.load(get_fn('frame0.lammpstrj'), top=get_fn('native.pdb'))
+
     with LAMMPSTrajectoryFile(get_fn('frame0.lammpstrj')) as f:
         f.seek(1)
         eq(1, f.tell())
@@ -88,10 +96,3 @@ def test_seek():
         f.seek(4, 1)
         xyz8, _, _ = f.read(n_frames=1)
         eq(reference.xyz[8], xyz8[0]/10)
-
-if __name__ == "__main__":
-    test_read_0()
-    test_read_1()
-    test_read_write_0()
-    test_multiread()
-    test_seek()

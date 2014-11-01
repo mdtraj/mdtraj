@@ -32,7 +32,8 @@ import itertools
 
 import numpy as np
 
-from mdtraj.utils import ensure_type, cast_indices, in_units_of
+from mdtraj.utils import (ensure_type, cast_indices, in_units_of,
+                          lengths_and_angles_to_box_vectors)
 from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
@@ -111,7 +112,6 @@ def load_lammpstrj(filename, top=None, stride=None, atom_indices=None,
             xyz, cell_lengths, cell_angles = f.read(stride=stride, atom_indices=atom_indices)
 
         in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        in_units_of(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     time = np.arange(len(xyz))
     if frame is not None:
@@ -222,18 +222,18 @@ class LAMMPSTrajectoryFile(object):
         if stride is None:
             stride = 1
 
-        coords, lengths, angles = [], [], []
-        for _ in frame_counter:
+        all_coords, all_lengths, all_angles = [], [], []
+        for i in frame_counter:
             try:
-                coord, length, angle = self._read()
+                frame_coords, frame_lengths, frame_angles = self._read()
                 if atom_indices is not None:
-                    coord = coord[atom_indices, :]
+                    frame_coords = frame_coords[atom_indices, :]
             except _EOF:
                 break
 
-            coords.append(coord)
-            lengths.append(length)
-            angles.append(angle)
+            all_coords.append(frame_coords)
+            all_lengths.append(frame_lengths)
+            all_angles.append(frame_angles)
 
             for j in range(stride - 1):
                 # throw away these frames
@@ -242,10 +242,10 @@ class LAMMPSTrajectoryFile(object):
                 except _EOF:
                     break
 
-        coords = np.array(coords)
-        lengths = np.array(lengths, dtype=np.float32)
-        angles = np.array(angles, dtype=np.float32)
-        return coords, lengths, angles
+        all_coords = np.array(all_coords)
+        all_lengths = np.array(all_lengths, dtype=np.float32)
+        all_angles = np.array(all_angles, dtype=np.float32)
+        return all_coords, all_lengths, all_angles
 
     def parse_box(self, style):
         """Extract lengths and angles from a frame.
@@ -272,26 +272,35 @@ class LAMMPSTrajectoryFile(object):
                 line = self._fh.readline().split()
                 box[i] = line[:2]
                 factors[i] = line[2]
-
             xy, xz, yz = factors
-            lx = ((box[0, 1] - np.max(0.0, xy, xz, xy+xz))
-                 - (box[0, 0] - np.min(0.0, xy, xz, xy+xz)))
-            ly = ((box[1, 1] - np.max(0.0, yz))
-                 - (box[1, 0] - np.min(0.0, yz)))
-            lz = box[2, 1] - box[2, 0]
-            lengths = np.array([lx, ly, lz])
 
+            xlo = box[0, 0] - np.min([0.0, xy, xz, xy+xz])
+            xhi = box[0, 1] - np.max([0.0, xy, xz, xy+xz])
+            ylo = box[1, 0] - np.min([0.0, yz])
+            yhi = box[1, 1] - np.max([0.0, yz])
+            zlo = box[2, 0]
+            zhi = box[2, 1]
+
+            lx = xhi - xlo
+            ly = yhi - ylo
+            lz = zhi - zlo
+
+            a = lx
             b = np.sqrt(ly**2 + xy**2)
             c = np.sqrt(lz**2 + xz**2 + yz**2)
             alpha = np.arccos((xy*xz + ly*yz) / (b*c))
             beta = np.arccos(xz / c)
             gamma = np.arccos(xy / b)
-            angles = np.array([alpha, beta, gamma])
+
+            lengths = np.array([a, b, c])
+            in_units_of(lengths, self.distance_unit, 'nanometers', inplace=True)
+            angles = np.degrees(np.array([alpha, beta, gamma]))
         elif style == 'orthogonal':
             box[0] = self._fh.readline().split()  # x-dim of box
             box[1] = self._fh.readline().split()  # y-dim of box
             box[2] = self._fh.readline().split()  # z-dim of box
             lengths = np.diff(box, axis=1).reshape(1, 3)[0]  # box lengths
+            in_units_of(lengths, self.distance_unit, 'nanometers', inplace=True)
             angles = np.empty(3)
             angles.fill(90.0)
         return lengths, angles
@@ -347,16 +356,65 @@ class LAMMPSTrajectoryFile(object):
         self._frame_index += 1
         return xyz, lengths, angles
 
-    def write(self, xyz, cell_lengths, types=None, unit_set='real'):
+    def write_box(self, lengths, angles, mins):
+        """Write the box lines in the header of a frame.
+
+        Parameters
+        ----------
+        lengths : np.ndarray, dtype=np.double, shape=(3, )
+            The lengths (a,b,c) of the unit cell for each frame.
+        angles : np.ndarray, dtype=np.double, shape=(3, )
+            The angles (\alpha, \beta, \gamma) defining the unit cell for
+            each frame.
+        mins : np.ndarray, dtype=np.double, shape=(3, )
+            The minimum coordinates in the x-, y- and z-directions.
+        """
+        if np.allclose(angles, np.array([90, 90, 90])):
+            self._fh.write('ITEM: BOX BOUNDS pp pp pp\n')
+            self._fh.write('{0} {1}\n'.format(mins[0], mins[0] + lengths[0]))
+            self._fh.write('{0} {1}\n'.format(mins[1], mins[1] + lengths[1]))
+            self._fh.write('{0} {1}\n'.format(mins[2], mins[2] + lengths[2]))
+        else:
+            a, b, c = lengths
+            alpha, beta, gamma = np.radians(angles)
+
+            lx = a
+            xy = b * np.cos(gamma)
+            xz = c * np.cos(beta)
+            ly = np.sqrt(b**2 - xy**2)
+            yz = (b*c*np.cos(alpha) - xy*xz) / ly
+            lz = np.sqrt(c**2 - xz**2 - yz**2)
+
+            xlo = mins[0]
+            xhi = xlo + lx
+            ylo = mins[1]
+            yhi = ylo + ly
+            zlo = mins[2]
+            zhi = zlo + lz
+
+            xlo_bound = xlo + np.min([0.0, xy, xz, xy+xz])
+            xhi_bound = xhi + np.max([0.0, xy, xz, xy+xz])
+            ylo_bound = ylo + np.min([0.0, yz])
+            yhi_bound = yhi + np.max([0.0, yz])
+            zlo_bound = zlo
+            zhi_bound = zhi
+            self._fh.write('ITEM: BOX BOUNDS xy xz yz pp pp pp\n')
+            self._fh.write('{0} {1} {2}\n'.format(xlo_bound, xhi_bound, xy))
+            self._fh.write('{0} {1} {2}\n'.format(ylo_bound, yhi_bound, xz))
+            self._fh.write('{0} {1} {2}\n'.format(zlo_bound, zhi_bound, yz))
+
+    def write(self, xyz, cell_lengths, cell_angles=None, types=None, unit_set='real'):
         """Write one or more frames of data to a lammpstrj file
 
         Parameters
         ----------
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
             The cartesian coordinates of the atoms to write.
-        cell_lengths : np.ndarray, shape=(n_frames, 3), dtype=float32
-            The length of the periodic box in each frame, in each direction,
-            `a`, `b`, `c`.
+        cell_lengths : np.ndarray, dtype=np.double, shape=(n_frames, 3)
+            The lengths (a,b,c) of the unit cell for each frame.
+        cell_angles : np.ndarray, dtype=np.double, shape=(n_frames, 3)
+            The angles (\alpha, \beta, \gamma) defining the unit cell for
+            each frame.
         types : np.ndarray, shape(3, ), dtype=int
             The numeric type of each particle.
         unit_set : str, optional
@@ -368,11 +426,16 @@ class LAMMPSTrajectoryFile(object):
             raise ValueError('write() is only available when file is opened '
                              'in mode="w"')
 
-
         xyz = ensure_type(xyz, np.float32, 3, 'xyz', can_be_none=False,
                 shape=(None, None, 3), warn_on_cast=False,
                 add_newaxis_on_deficient_ndim=True)
         cell_lengths = ensure_type(cell_lengths, np.float32, 2, 'cell_lengths',
+                can_be_none=False, shape=(len(xyz), 3), warn_on_cast=False,
+                add_newaxis_on_deficient_ndim=True)
+        if cell_angles is None:
+            cell_angles = np.empty_like(cell_lengths)
+            cell_angles.fill(90)
+        cell_angles = ensure_type(cell_angles, np.float32, 2, 'cell_angles',
                 can_be_none=False, shape=(len(xyz), 3), warn_on_cast=False,
                 add_newaxis_on_deficient_ndim=True)
         if not types:
@@ -387,8 +450,8 @@ class LAMMPSTrajectoryFile(object):
             self.distance_unit == 'angstroms'
         else:
             raise ValueError('Unsupported unit set specified: {0}.'.format(unit_set))
-        xyz = in_units_of(xyz, 'nanometers', self.distance_unit)
-        cell_lengths= in_units_of(cell_lengths, 'nanometers', self.distance_unit)
+        in_units_of(xyz, 'nanometers', self.distance_unit, inplace=True)
+        in_units_of(cell_lengths, 'nanometers', self.distance_unit, inplace=True)
 
         for i in range(xyz.shape[0]):
             # --- begin header ---
@@ -396,11 +459,7 @@ class LAMMPSTrajectoryFile(object):
             self._fh.write('{0}\n'.format(i))  # TODO: Write actual time if known.
             self._fh.write('ITEM: NUMBER OF ATOMS\n')
             self._fh.write('{0}\n'.format(xyz.shape[1]))
-            self._fh.write('ITEM: BOX BOUNDS pp pp pp\n')
-            mins = xyz[0].min(axis=1)
-            self._fh.write('{0} {1}\n'.format(mins[0], mins[0] + cell_lengths[0][0]))
-            self._fh.write('{0} {1}\n'.format(mins[1], mins[1] + cell_lengths[0][1]))
-            self._fh.write('{0} {1}\n'.format(mins[2], mins[2] + cell_lengths[0][2]))
+            self.write_box(cell_lengths[i], cell_angles[i], xyz[i].min(axis=0))
             # --- end header ---
 
             # --- begin body ---
