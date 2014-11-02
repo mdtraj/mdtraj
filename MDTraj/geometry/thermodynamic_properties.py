@@ -8,7 +8,7 @@ mu0 = 4 * np.pi * 1E-7 * u.henry / u.meter
 epsilon0 = 1. / (mu0 * u.constants.SPEED_OF_LIGHT_C ** 2.)
 
 def dipole_moments(traj, charges):
-    """Calculate the dipole moments of a trajectory.
+    """Calculate the dipole moments of each frame in a trajectory.
 
 
     Parameters
