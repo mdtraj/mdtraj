@@ -43,7 +43,7 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
     Parameters
     ----------
     traj : Trajectory
-        An mtraj trajectory.
+        An mdtraj trajectory.
     angle_indices : np.ndarray, shape=(num_pairs, 2), dtype=int
        Each row gives the indices of three atoms which together make an angle.
     periodic : bool, default=True
