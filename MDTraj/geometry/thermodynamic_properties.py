@@ -1,11 +1,10 @@
 import numpy as np
-import simtk.unit as u
 import mdtraj as md
+import mdtraj.utils.unit.unit_definitions as u
 
-kB = u.BOLTZMANN_CONSTANT_kB
-
-mu0 = 4 * np.pi * 1E-7 * u.henry / u.meter
-epsilon0 = 1. / (mu0 * u.constants.SPEED_OF_LIGHT_C ** 2.)
+# Units taken from http://en.wikipedia.org/wiki/Boltzmann_constant on Nov. 2.
+kB = 1.3806488E-23 * u.joule / u.kelvin
+epsilon0 = 8.854187817E-12 * u.farad / u.meter
 
 def dipole_moments(traj, charges):
     """Calculate the dipole moments of each frame in a trajectory.
