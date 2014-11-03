@@ -1,3 +1,14 @@
+"""
+Notes
+-----
+The functions in this file use the MDTraj version of simtk.unit *internally*.  
+However, all inputs and outputs are done with implicit units.  This is 
+to avoid incompatibilities between versions of simtk.unit and MDTraj.utils.unit.
+
+"""
+
+
+
 import numpy as np
 import mdtraj as md
 import mdtraj.utils.unit.unit_definitions as u
@@ -53,14 +64,16 @@ def static_dielectric(traj, charges, temperature):
     charges : np.ndarray, shape=(n_atoms), dtype=float
        Charges of each atom in the topology, expressed in units of the
        elementary charge constant.  
-    temperature : temperature, simtk.unit.Quantity [Temperature]
-        The temperature of interest.
+    temperature : temperature, float
+        The temperature of interest, in units of kelvin.  
 
     Returns
     -------
     static_dielectric : float, 
         The (unitless) relative static dielectric constant.
-    """    
+    """
+    temperature = temperature * u.kelvin
+    
     moments = dipole_moments(traj, charges)
     
     mu = moments.mean(0)  # Mean over frames

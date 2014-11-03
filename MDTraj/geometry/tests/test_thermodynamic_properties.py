@@ -25,7 +25,6 @@ import itertools
 import numpy as np
 
 import mdtraj as md
-import mdtraj.utils.unit.unit_definitions as u
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif, raises
 
 tip3p_charges = np.array([-0.834, 0.417, 0.417])
@@ -58,7 +57,7 @@ def test_static_dielectric():
     
     charges = np.tile(tip3p_charges, traj.n_residues)
 
-    temperature = 300 * u.kelvin
+    temperature = 300
 
     epsilon0 = md.geometry.static_dielectric(traj, charges, temperature)
 
