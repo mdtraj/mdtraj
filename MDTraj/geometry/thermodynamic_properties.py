@@ -76,20 +76,28 @@ def thermal_expansion_alpha_P():
     raise(NotImplementedError("This has not been implemented yet!"))
 
 
-def density(traj):
-    """Calculate the instantaneous mass density of a trajectory.
+def density(traj, masses=None):
+    """Calculate the mass density of each frame in a trajectory.
 
     Parameters
     ----------
     traj : Trajectory
         An mdtraj trajectory.
+    masses : np.ndarray, optional, default=None
+        If not None, use these masses when calculating the density.  If
+        None, then use the masses associated with traj.topology.atoms.
 
     Returns
     -------
     density_trace : np.array, shape=(n_frames), dtype=float
-        A timeseries of the mass density of each frame.
+        The mass density of each frame.
+
     """
-    mass = sum(atom.element.mass for atom in traj.top.atoms)
+    if masses is None:
+        mass = sum(atom.element.mass for atom in traj.top.atoms)
+    else:
+        mass = sum(masses)
+
     volume_trace = traj.unitcell_volumes
     densities = mass / volume_trace
 
