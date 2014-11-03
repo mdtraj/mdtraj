@@ -113,7 +113,8 @@ def density(traj, masses=None):
     volume_trace = traj.unitcell_volumes
     densities = mass / volume_trace
 
-    conversion = in_units_of(1., "dalton * nanometer ** -3", "kilogram / item * meter ** -3")  # The item thing is really weird, but taken from OpenMM StateDataReporter's density calculation
+    #conversion = in_units_of(1., "dalton * nanometer ** -3", "kilogram / item * meter ** -3")  # The item thing is really weird, but taken from OpenMM StateDataReporter's density calculation
+    conversion = 1.6605387823355087  # The units stuff is busted on py3k, so using hard-coded for now.
 
     densities = densities * conversion
     return densities
