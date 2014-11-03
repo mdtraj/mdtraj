@@ -66,10 +66,12 @@ def test_box():
     yield lambda: eq(t.unitcell_vectors, None)
     yield lambda: eq(t.unitcell_lengths, None)
     yield lambda: eq(t.unitcell_angles, None)
+    yield lambda: eq(t.unitcell_volumes, None)
 
     t.unitcell_vectors = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]).reshape(1, 3, 3)
     yield lambda: eq(np.array([1.0, 1.0, 1.0]), t.unitcell_lengths[0])
     yield lambda: eq(np.array([90.0, 90.0, 90.0]), t.unitcell_angles[0])
+    yield lambda: eq(np.array([1.0]), t.unitcell_volumes)
 
 
 def test_load_pdb_box():

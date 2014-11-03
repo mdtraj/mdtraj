@@ -58,8 +58,8 @@ def static_dielectric(traj, charges, temperature):
     subtracted = moments - mu
     
     dipole_variance = (subtracted * subtracted).sum(-1).mean(0) * (u.elementary_charge * u.nanometers) ** 2.  # <M*M> - <M>*<M>
-    
-    volume = np.mean(map(np.linalg.det, traj.unitcell_vectors)) * u.nanometers ** 3.  # Average box volume of trajectory
+
+    volume = traj.unitcell_volumes.mean() * u.nanometers ** 3.  # Average box volume of trajectory
     
     static_dielectric = 1.0 + dipole_variance / (3 * kB * temperature * volume * epsilon0)  # Eq. 7 of Derivation of an improved simple point charge model for liquid water: SPC/A and SPC/L 
     
@@ -90,7 +90,7 @@ def density(traj):
         A timeseries of the mass density of each frame.
     """
     mass = sum(atom.element.mass for atom in traj.top.atoms)
-    volume_trace = np.array(map(np.linalg.det, traj.unitcell_vectors))
+    volume_trace = traj.unitcell_volumes
     densities = mass / volume_trace
 
     #conversion = 1.660538921E-23
