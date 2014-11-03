@@ -725,7 +725,7 @@ class Trajectory(object):
             if the Trajectory contains no unitcell information.
         """
         if self.unitcell_lengths is not None:
-            return np.array(map(np.linalg.det, self.unitcell_vectors))
+            return np.array(list(map(np.linalg.det, self.unitcell_vectors)))
         else:
             return None
 
