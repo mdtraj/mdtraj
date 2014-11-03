@@ -12,3 +12,7 @@ was taken from the AmberTools test suite found in `$AMBERHOME/test/netcdf/`.
 
 `ncinpcrd.rst7` is an AMBER NetCDF restart/inpcrd file for the same system as
 `inpcrd` (see above)
+
+The following files contain 5 ns (400 frames) of TIP3P water at 300K, 1 atm, simulated using OpenMM 6.2.  Used for testing density calculation.  
+tip3p_300K_1ATM.xtc
+tip3p_300K_1ATM.pdb

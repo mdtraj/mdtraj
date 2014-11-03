@@ -39,3 +39,4 @@ from mdtraj.geometry.contact import *
 from mdtraj.geometry.drid import *
 from mdtraj.geometry.dssp import *
 from mdtraj.geometry.neighbors import *
+from mdtraj.geometry.thermodynamic_properties import *
