@@ -33,7 +33,7 @@ def dipole_moments(traj, charges):
     return moments
 
 def static_dielectric(traj, charges, temperature):
-    """Calculate the dipole moments of a trajectory.
+    """Calculate the static dielectric constant from a trajectory.
 
 
     Parameters
