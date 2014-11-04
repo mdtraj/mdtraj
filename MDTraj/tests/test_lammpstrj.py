@@ -65,6 +65,10 @@ def test_read_write_0():
     eq(angles, new_angles)
     eq(xyz, xyz2/10, decimal=3)
 
+def test_mdwrite():
+    t = md.load(get_fn('frame0.dcd'), top=get_fn('native.pdb'))
+    t.save(temp)
+
 def test_multiread():
     reference = md.load(get_fn('frame0.lammpstrj'), top=get_fn('native.pdb'))
     with LAMMPSTrajectoryFile(get_fn('frame0.lammpstrj')) as f:
