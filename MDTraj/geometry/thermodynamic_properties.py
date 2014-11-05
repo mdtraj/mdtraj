@@ -6,9 +6,6 @@ However, all inputs and outputs are done with implicit units.  This is
 to avoid incompatibilities between versions of simtk.unit and MDTraj.utils.unit.
 
 """
-
-
-
 import numpy as np
 import mdtraj as md
 import mdtraj.utils.unit.unit_definitions as u
@@ -17,6 +14,7 @@ from mdtraj.utils.unit import in_units_of
 # Units taken from http://en.wikipedia.org/wiki/Boltzmann_constant on Nov. 2.
 kB = 1.3806488E-23 * u.joule / u.kelvin
 epsilon0 = 8.854187817E-12 * u.farad / u.meter
+gas_constant = 8.3144621 * u.joule / u.kelvin / u.mole
 
 def dipole_moments(traj, charges):
     """Calculate the dipole moments of each frame in a trajectory.
@@ -91,13 +89,72 @@ def static_dielectric(traj, charges, temperature):
 
 
 def heat_capacity_Cp():
-    raise(NotImplementedError("This has not been implemented yet!"))
+    raise(NotImplementedError("Has not been implemented."))
 
-def isothermal_compressability_kappa_T():
-    raise(NotImplementedError("This has not been implemented yet!"))
 
-def thermal_expansion_alpha_P():
-    raise(NotImplementedError("This has not been implemented yet!"))
+def isothermal_compressability_kappa_T(traj, temperature):
+    """Calculate the isothermal compressability.
+    
+    Parameters
+    ----------
+    traj : mdtraj.Trajectory
+        An mdtraj trajectory.
+    temperature: float
+        The temperature of your trajectory, in units of kelvin.
+    
+    Returns
+    -------
+    kappa : float
+        The isothermal compressability, in units of bar^-1.
+        
+    Notes
+    -----
+    Equation (4) in Fennell, Dill.  J. Phys. Chem. B, 2012.
+    """
+    temperature = temperature * u.kelvin
+    
+    mu = traj.unitcell_volumes.mean()
+
+    kappa = np.cov(traj.unitcell_volumes) / mu
+    kappa = kappa * u.nanometers ** 3
+
+    kappa /= (kB * temperature)
+
+    return kappa * u.bar
+
+def thermal_expansion_alpha_P(traj, temperature, energies):
+    """Calculate the isothermal compressability.
+    
+    Parameters
+    ----------
+    traj : mdtraj.Trajectory
+        An mdtraj trajectory.
+    temperature: float
+        The temperature of your trajectory, in units of kelvin.
+    energies : np.ndarray, dtype=float, shape=(n_frames)
+        An array containing the potentail energies of each trajectory
+        frame, in units of kJ / mol.
+    
+    Returns
+    -------
+    alpha : float
+        The thermal expanssion coefficient, units of inverse Kelvin
+        
+    Notes
+    -----
+    Equation (5) in Fennell, Dill.  J. Phys. Chem. B, 2012.
+    """
+    temperature = temperature * u.kelvin
+    
+    mean_volume = traj.unitcell_volumes.mean()
+    
+    alpha = np.cov(traj.unitcell_volumes, energies)[0, 1]  # <HV> - <H><V> = cov(H, V)
+    alpha /= mean_volume
+    alpha *= u.kilojoules_per_mole
+    
+    alpha /= (gas_constant * temperature ** 2)
+
+    return alpha * u.kelvin
 
 
 def density(traj, masses=None):
