@@ -37,7 +37,7 @@ __all__ = ['shrake_rupley']
 #using the the same vdw radii for P and S based upon 
 #http://en.wikipedia.org/wiki/Van_der_Waals_radius
 _ATOMIC_RADII = {'C': 0.15,  'F': 0.12,  'H': 0.04,
-                 'N': 0.110, 'O': 0.105, 'S': 0.16
+                 'N': 0.110, 'O': 0.105, 'S': 0.16,
                  'P': 0.16}
 
 ##############################################################################
