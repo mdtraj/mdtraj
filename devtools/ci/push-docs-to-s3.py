@@ -9,10 +9,9 @@ AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
 BUCKET_NAME = 'mdtraj.org'
 
-bucket_name = AWS_ACCESS_KEY_ID.lower() + '-' + BUCKET_NAME
 conn = boto.connect_s3(AWS_ACCESS_KEY_ID,
             AWS_SECRET_ACCESS_KEY)
-bucket = conn.create_bucket(BUCKET_NAME)
+bucket = conn.get_bucket(BUCKET_NAME)
 
 root = 'docs/_build'
 for dirpath, dirnames, filenames in os.walk(root):

@@ -103,9 +103,12 @@ def compute_dihedrals(traj, indices, periodic=True, opt=True):
 
     """
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
-    quartets = ensure_type(np.asarray(indices), dtype=np.int32, ndim=2, name='indices', shape=(None, 4), warn_on_cast=False)
+    quartets = ensure_type(indices, dtype=np.int32, ndim=2, name='indices', shape=(None, 4), warn_on_cast=False)
     if not np.all(np.logical_and(quartets < traj.n_atoms, quartets >= 0)):
         raise ValueError('indices must be between 0 and %d' % traj.n_atoms)
+
+    if len(quartets) == 0:
+        return np.zeros((len(xyz), 0), dtype=np.float32)
 
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
     if periodic is True and traj._have_unitcell:
@@ -283,7 +286,8 @@ CHI2_ATOMS = [["CA", "CB", "CG", "CD"],
               ["CA", "CB", "CG", "CD1"],
               ["CA", "CB", "CG1", "CD1"],
               ["CA", "CB", "CG", "OD1"],
-              ["CA", "CB", "CG", "ND1"]]
+              ["CA", "CB", "CG", "ND1"],
+              ["CA", "CB", "CG", "SD"]]
 
 CHI3_ATOMS = [["CB", "CG", "CD", "NE"],
               ["CB", "CG", "CD", "CE"],
@@ -322,7 +326,7 @@ def compute_phi(traj, periodic=True, opt=True):
     """
     rid, indices = _get_indices_phi(traj)
     if len(indices) == 0:
-        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
+        return np.empty(shape=(0, 4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
 
 
@@ -350,7 +354,7 @@ def compute_psi(traj, periodic=True, opt=True):
     """
     rid, indices = _get_indices_psi(traj)
     if len(indices) == 0:
-        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
+        return np.empty(shape=(0, 4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
 
 
@@ -380,11 +384,12 @@ def compute_chi1(traj, periodic=True, opt=True):
     rids, indices = zip(*(_atom_sequence(traj, atoms) for atoms in CHI1_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
     if not any(x.size for x in indices):
-        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
+        return np.empty(shape=(0, 4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
 
     indices = np.vstack(x for x in indices if x.size)[id_sort]
     all_chi1 = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
     return indices, all_chi1
+
 
 def compute_chi2(traj, periodic=True, opt=True):
     """Calculate the chi2 torsions of a trajectory. chi2 is the second side chain torsion angle 
@@ -412,7 +417,7 @@ def compute_chi2(traj, periodic=True, opt=True):
     rids, indices = zip(*(_atom_sequence(traj, atoms) for atoms in CHI2_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
     if not any(x.size for x in indices):
-        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
+        return np.empty(shape=(0, 4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
 
     indices = np.vstack(x for x in indices if x.size)[id_sort]
     all_chi1 = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
@@ -446,7 +451,7 @@ def compute_chi3(traj, periodic=True, opt=True):
     rids, indices = zip(*(_atom_sequence(traj, atoms) for atoms in CHI3_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
     if not any(x.size for x in indices):
-        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
+        return np.empty(shape=(0, 4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
 
     indices = np.vstack(x for x in indices if x.size)[id_sort]
     all_chi1 = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
@@ -480,7 +485,7 @@ def compute_chi4(traj, periodic=True, opt=True):
     rids, indices = zip(*(_atom_sequence(traj, atoms) for atoms in CHI4_ATOMS))
     id_sort = np.argsort(np.concatenate(rids))
     if not any(x.size for x in indices):
-        return np.empty(shape=(0,4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
+        return np.empty(shape=(0, 4), dtype=np.int), np.empty(shape=(len(traj), 0), dtype=np.float32)
 
     indices = np.vstack(x for x in indices if x.size)[id_sort]
     all_chi1 = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)

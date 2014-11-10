@@ -45,6 +45,8 @@
 
 from __future__ import print_function, division
 import os
+from datetime import date
+import gzip
 import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy
@@ -54,6 +56,7 @@ from mdtraj.utils import ilen, cast_indices, in_units_of
 from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.core import element as elem
 from mdtraj.utils import six
+from mdtraj import version
 if six.PY3:
     from urllib.request import urlopen
     from urllib.parse import urlparse
@@ -210,10 +213,10 @@ class PDBTrajectoryFile(object):
 
         if mode == 'r':
             PDBTrajectoryFile._loadNameReplacementTables()
+
             if _is_url(filename):
                 self._file = urlopen(filename)
                 if filename.lower().endswith('.gz'):
-                    import gzip
                     if six.PY3:
                         self._file = gzip.GzipFile(fileobj=self._file)
                     else:
@@ -222,7 +225,12 @@ class PDBTrajectoryFile(object):
                 if six.PY3:
                     self._file = six.StringIO(self._file.read().decode('utf-8'))
             else:
-                self._file = open(filename, 'r')
+                if filename.lower().endswith('.gz'):
+                    self._file = gzip.open(filename, 'r')
+                    self._file = six.StringIO(self._file.read().decode('utf-8'))                    
+                else:
+                    self._file = open(filename, 'r')
+
             self._read_models()
         elif mode == 'w':
             self._header_written = False
@@ -235,7 +243,8 @@ class PDBTrajectoryFile(object):
 
         self._open = True
 
-    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, unitcell_angles=None):
+    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, 
+              unitcell_angles=None, bfactors=None):
         """Write a PDB file to disk
 
         Parameters
@@ -251,6 +260,9 @@ class PDBTrajectoryFile(object):
             Lengths of the three unit cell vectors, or None for a non-periodic system
         unitcell_angles : {tuple, None}
             Angles between the three unit cell vectors, or None for a non-periodic system
+        bfactors : array_like, default=None, shape=(n_atoms,)
+            Save bfactors with pdb file. Should contain a single number for
+            each atom in the topology
         """
         if not self._mode == 'w':
             raise ValueError('file not opened for writing')
@@ -266,6 +278,14 @@ class PDBTrajectoryFile(object):
             raise ValueError('Particle position is infinite')
         
         self._last_topology = topology  # Hack to save the topology of the last frame written, allows us to output CONECT entries in write_footer()
+
+        if bfactors is None:
+            bfactors = ['{0:5.2f}'.format(0.0)] * len(positions)
+        else:
+            if (np.max(bfactors) >= 100) or (np.min(bfactors) <= -10):
+                raise ValueError("bfactors must be in (-10, 100)")
+
+            bfactors = ['{0:5.2f}'.format(b) for b in bfactors]
         
         atomIndex = 1
         posIndex = 0
@@ -291,10 +311,11 @@ class PDBTrajectoryFile(object):
                         symbol = atom.element.symbol
                     else:
                         symbol = ' '
-                    line = "ATOM  %5d %-4s %3s %s%4d    %s%s%s  1.00  0.00          %2s  " % (
+                    line = "ATOM  %5d %-4s %3s %s%4d    %s%s%s  1.00 %s          %2s  " % (
                         atomIndex % 100000, atomName, resName, chainName,
                         (res.resSeq) % 10000, _format_83(coords[0]),
-                        _format_83(coords[1]), _format_83(coords[2]), symbol)
+                        _format_83(coords[1]), _format_83(coords[2]),
+                        bfactors[posIndex], symbol)
                     assert len(line) == 80, 'Fixed width overflow detected'
                     print(line, file=self._file)
                     posIndex += 1
@@ -306,7 +327,7 @@ class PDBTrajectoryFile(object):
         if modelIndex is not None:
             print("ENDMDL", file=self._file)
 
-    def _write_header(self, unitcell_lengths, unitcell_angles):
+    def _write_header(self, unitcell_lengths, unitcell_angles, write_metadata=True):
         """Write out the header for a PDB file.
 
         Parameters
@@ -334,6 +355,8 @@ class PDBTrajectoryFile(object):
         box = list(unitcell_lengths) + list(unitcell_angles)
         assert len(box) == 6
 
+        if write_metadata:
+            print("REMARK   1 CREATED WITH MDTraj %s, %s" % (version.version, str(date.today())), file=self._file)
         print("CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f P 1           1 " % tuple(box), file=self._file)
 
     def _write_footer(self):
@@ -476,7 +499,7 @@ class PDBTrajectoryFile(object):
                     if element is None:
                         element = self._guess_element(atomName, residue)
 
-                    newAtom = self._topology.add_atom(atomName, element, r)
+                    newAtom = self._topology.add_atom(atomName, element, r, serial=atom.serial_number)
                     atomByNumber[atom.serial_number] = newAtom
 
         # load all of the positions (from every model)
@@ -488,6 +511,10 @@ class PDBTrajectoryFile(object):
                     for atom in residue.atoms:
                         coords.append(atom.get_position())
             _positions.append(coords)
+
+        if not all(len(f) == len(_positions[0]) for f in _positions):
+            raise ValueError('PDB Error: All MODELs must contain the same number of ATOMs')
+
         self._positions = np.array(_positions)
 
         ## The atom positions read from the PDB file
@@ -501,7 +528,8 @@ class PDBTrajectoryFile(object):
         for connect in pdb.models[0].connects:
             i = connect[0]
             for j in connect[1:]:
-                connectBonds.append((atomByNumber[i], atomByNumber[j]))
+                if i in atomByNumber and j in atomByNumber:
+                    connectBonds.append((atomByNumber[i], atomByNumber[j]))
         if len(connectBonds) > 0:
             # Only add bonds that don't already exist.
             existingBonds = set(self._topology.bonds)

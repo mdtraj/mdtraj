@@ -54,8 +54,6 @@ import itertools
 
 from mdtraj.utils import import_
 from mdtraj.utils.six.moves import cStringIO as StringIO
-from mdtraj.formats import pdb
-from mdtraj.core import element as elem
 from mdtraj.formats.registry import _FormatRegistry
 
 __all__ = ['load_mol2', "mol2_to_dataframes"]
@@ -77,27 +75,30 @@ def load_mol2(filename):
     Notes
     -----
     This function should work on GAFF and sybyl style MOL2 files, but has
-    been primarily tested on GAFF mol2 files. 
+    been primarily tested on GAFF mol2 files.
     This function does NOT accept multi-structure MOL2 files!!!
     The elements are guessed using GAFF atom types or via the atype string.
-    
+
     Examples
     --------
     >>> traj = md.load_mol2('mysystem.mol2')
     """
     from mdtraj.core.trajectory import Trajectory
     from mdtraj.core.topology import Topology
-    
+
     atoms, bonds = mol2_to_dataframes(filename)
-    
-    atoms_mdtraj = atoms[["name", "resName"]]
+
+    atoms_mdtraj = atoms[["name", "resName"]].copy()
     atoms_mdtraj["serial"] = atoms.index
-    
+
     #Figure out 1 letter element names
-    
-    atoms_mdtraj["element"] = atoms.atype.map(gaff_elements)  # IF this is a GAFF mol2, this line should work without issues
-    if atoms_mdtraj.element.isnull().any():  # If this is a sybyl mol2, there should be NAN (null) values
-        atoms_mdtraj["element"] = atoms.atype.apply(lambda x: x.strip(".")[0])  # If this is a sybyl mol2, I think this works generally.
+
+    # IF this is a GAFF mol2, this line should work without issues
+    atoms_mdtraj["element"] = atoms.atype.map(gaff_elements)
+    # If this is a sybyl mol2, there should be NAN (null) values
+    if atoms_mdtraj.element.isnull().any():
+        # If this is a sybyl mol2, I think this works generally.
+        atoms_mdtraj["element"] = atoms.atype.apply(lambda x: x.strip(".")[0])
 
     atoms_mdtraj["resSeq"] = np.ones(len(atoms), 'int')
     atoms_mdtraj["chainID"] = np.ones(len(atoms), 'int')
@@ -107,10 +108,10 @@ def load_mol2(filename):
     bonds_mdtraj -= offset
 
     top = Topology.from_dataframe(atoms_mdtraj, bonds_mdtraj)
-    
+
     xyzlist = np.array([atoms[["x", "y", "z"]].values])
     xyzlist /= 10.0  # Convert from angstrom to nanometer
-    
+
     traj = Trajectory(xyzlist, top)
 
     return traj
@@ -120,7 +121,6 @@ def load_mol2(filename):
 
 def mol2_to_dataframes(filename):
     """Convert a GAFF (or sybyl) mol2 file to a pair of pandas dataframes.
-
 
     Parameters
     ----------
@@ -133,15 +133,15 @@ def mol2_to_dataframes(filename):
         DataFrame containing atom information
     bonds_frame : pd.DataFrame
         DataFrame containing bond information
-    
+
     Notes
     -----
     These dataframes may contain force field information as well as the
     information necessary for constructing the coordinates and molecular
-    topology.  This function has been tested for GAFF and sybyl-style 
-    mol2 files but has been primarily tested on GAFF mol2 files. 
-    This function does NOT accept multi-structure MOL2 files!!!    
-    
+    topology.  This function has been tested for GAFF and sybyl-style
+    mol2 files but has been primarily tested on GAFF mol2 files.
+    This function does NOT accept multi-structure MOL2 files!!!
+
     See Also
     --------
     If you just need the coordinates and bonds, use load_mol2(filename)
@@ -154,12 +154,15 @@ def mol2_to_dataframes(filename):
     csv = StringIO()
     csv.writelines(data["@<TRIPOS>BOND\n"][1:])
     csv.seek(0)
-    bonds_frame = pd.read_table(csv, names=["bond_id", "id0", "id1", "bond_type"], index_col=0, header=None, sep="\s*")
+    bonds_frame = pd.read_table(csv, names=["bond_id", "id0", "id1", "bond_type"],
+        index_col=0, header=None, sep="\s*", engine='python')
 
     csv = StringIO()
     csv.writelines(data["@<TRIPOS>ATOM\n"][1:])
     csv.seek(0)
-    atoms_frame = pd.read_csv(csv, sep="\s*", names=["serial", "name", "x", "y", "z", "atype", "code", "resName", "charge"], header=None)  # , usecols=range(1, 10))  # usecols not available in pandas 0.11
+    atoms_frame = pd.read_csv(csv, sep="\s*", engine='python',  header=None,
+        names=["serial", "name", "x", "y", "z",
+               "atype", "code", "resName", "charge"])
     return atoms_frame, bonds_frame
 
 

@@ -3,16 +3,17 @@ language: c
 install:
   - source devtools/ci/install.sh
   - export PYTHONUNBUFFERED=true
+  - export CC=gcc
+  - export CXX=g++
 
 script:
-  - export CC="gcc -std=c89"
   - source deactivate
   - conda install --yes conda-build
   - conda build devtools/conda-recipe
   - source activate $python
-  - conda install $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
+  - conda install --yes $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
   - conda list -e
-  - pydir=$(which python); $precmd $(dirname $pydir)/nosetests --with-coverage --cover-erase -vv
+  - pydir=$(which python); $precmd $(dirname $pydir)/nosetests --exclude-dir=MDTraj/html --with-coverage --cover-erase -vv
   - cd devtools/c-tests/; make valgrind; cd -
 
 env:
@@ -24,8 +25,8 @@ env:
 
   global:
     # encrypted AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to push documentation to S3
-    - secure: "fB9S4+Ok+5RO6OobqhfWzjnjxWSbJxPrtHNcciKX5/yE+IC4WjkXhGkIKY1FLVNDStoerdYKN7wHdi98QAArQBunYxruuALxifyDPo2HZNTnK2Wvq6+eMjqHKuHMyJgE+ZJ2TuQGjM3WNOT1dv+awOsGr5tNw6KJa4YAtC6a4oo="
-    - secure: "d3xpZOaixS6TyYTjOSPvIdwUYrTfuEM9sN8AxZKp/92sfcHj3EP7qyCMj/cuf1Gl7mT2nZJj4daOgMam4/sZD6MUnXokDwEgIMes2rrVjQX0i0MvXFU1LN8KbUcK+6QQyXc8AwxJJ603L9YxLnBdPfYTQNrd3zP7BzWYP00Nch4="
+    - secure: "qrbibHwlbXBTq+8h1DC1plyUcl67qwn5yr4UYILdk9WsBhPdNT0ObpRUOcFDW/YM9RDfcOvx7Ruq/OPhvlVCg1C+Lj01kSx3vHxYCxFJVyN7iiD9oI/xzFUc6guvYF9O8um2+QE1ZI70yffGJGT7MZUQNUBnKchqvV3uIeSOqw4="
+    - secure: "Y4deQNbKXm0dTth0VoR59wEPYr0dNmp4Np+GDnJofwL+HKQ/w3dTrM3PQOV3bZ2w7WV2gAdtOv8MMUjdFYyyB+GS1wIZa4XbXchGNJr/lljvT3OP579ZwSLAowjEFFR6hidFDfMcR4D7KzTnoCIe9odXrZplI6l0M4OL1agki84="
     # encrypted BINSTAR_TOKEN for push of dev package to binstar
     - secure: "UrRBa1B9zPUe4R3GKie4LcEz66AS33185D+EfWJw1YJ5BF3479qK0d31lS79UdhiUw6i0Ayopofdz3JMmboXBmviOII5myviVLPY5iTeDQY+oExf6osTK5JdtXuDlUV3YcdeOBC5DzA3Ec6oYkvG0U2zv0MdR+cy5T/Yu4Nw0rQ="
 

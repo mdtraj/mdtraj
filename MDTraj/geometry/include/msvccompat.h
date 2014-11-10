@@ -14,7 +14,7 @@
 #   endif
 #  endif
 # elif defined(_M_AMD64)
-// If the target is x86_64 then SSE2 is guaranteed
+/* If the target is x86_64 then SSE2 is guaranteed */
 #  ifndef __SSE__
 #   define __SSE__ 1
 #  endif
@@ -46,6 +46,13 @@
 #else
  #define CAST__M128(x)  ( (__m128)  x )
  #define CAST__M128I(x) ( (__m128i) x )
+#endif
+
+/**
+ * Defines M_PI
+ **/
+#ifdef _WIN32
+ #define _USE_MATH_DEFINES
 #endif
 
 /**

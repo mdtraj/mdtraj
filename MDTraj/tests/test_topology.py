@@ -23,10 +23,11 @@
 import os
 import tempfile
 import mdtraj as md
-from mdtraj.utils.six.moves import cPickle
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
-from nose.tools import assert_raises
 import numpy as np
+from mdtraj.utils.six.moves import cPickle
+from mdtraj.utils import import_
+from mdtraj.testing import (get_fn, eq, DocStringFormatTester, skipif,
+                            assert_raises)
 
 try:
     from simtk.openmm import app
@@ -55,6 +56,14 @@ def test_topology_openmm():
     assert isinstance(mm, app.Topology)
     topology2 = md.Topology.from_openmm(mm)
     eq(topology, topology2)
+
+
+@skipif(not HAVE_OPENMM)
+def test_topology_openmm_boxes():
+    u = import_('simtk.unit')
+    traj = md.load(get_fn('1vii_sustiva_water.pdb'))
+    mmtop = traj.topology.to_openmm(traj=traj)
+    box = mmtop.getUnitCellDimensions() / u.nanometer
 
 
 @skipif(not HAVE_PANDAS)
@@ -146,4 +155,33 @@ def test_select_atom_indices():
                      np.array([4, 5, 6, 8, 10, 14, 15, 16, 18]))
 
     assert_raises(ValueError, lambda: top.select_atom_indices('sdfsdfsdf'))
+
+@skipif(not HAVE_OPENMM)
+def test_top_dataframe_openmm_roundtrip():
+    t = md.load(get_fn('2EQQ.pdb'))
+    top, bonds = t.top.to_dataframe()
+    t.topology = md.Topology.from_dataframe(top, bonds)
+    omm_top = t.top.to_openmm()
+
+
+def test_n_bonds():
+    t = md.load(get_fn('2EQQ.pdb'))
+    for atom in t.top.atoms:
+        if atom.element.symbol == 'H':
+            assert atom.n_bonds == 1
+        elif atom.element.symbol == 'C':
+            assert atom.n_bonds in [3, 4]
+        elif atom.element.symbol == 'O':
+            assert atom.n_bonds in [1, 2]
+
+
+def test_load_unknown_topology():
+    try:
+        md.load(get_fn('frame0.dcd'), top=get_fn('frame0.dcd'))
+    except IOError as e:
+        # we want to make sure there's a nice error message than includes
+        # a list of the supported topology formats.
+        assert all(s in str(e) for s in ('.pdb', '.psf', '.prmtop'))
+    else:
+        assert False  # fail
 

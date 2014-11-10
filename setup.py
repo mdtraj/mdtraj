@@ -16,7 +16,9 @@ import sys
 import shutil
 import tempfile
 import subprocess
+from distutils.errors import DistutilsExecError
 from distutils.ccompiler import new_compiler
+from distutils.sysconfig import customize_compiler, get_config_vars
 try:
     from setuptools import setup, Extension
 except ImportError:
@@ -70,14 +72,14 @@ else:
 
 
 ##########################
-VERSION = "0.9.1"
+VERSION = "1.X.0"
 ISRELEASED = False
 __version__ = VERSION
 ##########################
 
 
 CLASSIFIERS = """\
-Development Status :: 3 - Alpha
+Development Status :: 5 - Production/Stable
 Intended Audience :: Science/Research
 Intended Audience :: Developers
 License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)
@@ -175,8 +177,22 @@ if not release:
 ################################################################################
 
 class CompilerDetection(object):
+    # Necessary for OSX. See https://github.com/mdtraj/mdtraj/issues/576
+    # The problem is that distutils.sysconfig.customize_compiler()
+    # is necessary to properly invoke the correct compiler for this class
+    # (otherwise the CC env variable isn't respected). Unfortunately,
+    # distutils.sysconfig.customize_compiler() DIES on OSX unless some
+    # appropriate initialization routines have been called. This line
+    # has a side effect of calling those initialzation routes, and is therefor
+    # necessary for OSX, even though we don't use the result.
+    _DONT_REMOVE_ME = get_config_vars()
+
     def __init__(self, disable_openmp):
-        self.msvc = new_compiler().compiler_type == 'msvc'
+        cc = new_compiler()
+        customize_compiler(cc)
+
+        self.msvc = cc.compiler_type == 'msvc'
+        self._print_compiler_version(cc)
 
         if disable_openmp:
             self.openmp_enabled = False
@@ -195,12 +211,14 @@ class CompilerDetection(object):
                 self.compiler_args_sse41 = ['-msse4']
 
         if self.openmp_enabled:
-            self.compiler_libraries_openmp = ['gomp'] if openmp_needs_gomp else []
+            self.compiler_libraries_openmp = []
 
             if self.msvc:
                 self.compiler_args_openmp = ['/openmp']
             else:
                 self.compiler_args_openmp = ['-fopenmp']
+                if openmp_needs_gomp:
+                    self.compiler_libraries_openmp = ['gomp']
         else:
             self.compiler_libraries_openmp = []
             self.compiler_args_openmp = []
@@ -209,6 +227,19 @@ class CompilerDetection(object):
             self.compiler_args_opt = ['/O2']
         else:
             self.compiler_args_opt = ['-O3', '-funroll-loops']
+        print()
+
+    def _print_compiler_version(self, cc):
+        print("C compiler:")
+        try:
+            if self.msvc:
+                if not cc.initialized:
+                    cc.initialize()
+                cc.spawn([cc.cc])
+            else:
+                cc.spawn([cc.compiler[0]] + ['-v'])
+        except DistutilsExecError:
+            pass
 
     def hasfunction(self, cc, funcname, include=None, extra_postargs=None):
         # From http://stackoverflow.com/questions/
@@ -242,7 +273,7 @@ class CompilerDetection(object):
             shutil.rmtree(tmpdir)
 
     def _print_support_start(self, feature):
-        print('Attempting to autodetect {0} support...'.format(feature), end=' ')
+        print('Attempting to autodetect {0:6} support...'.format(feature), end=' ')
 
     def _print_support_end(self, feature, status):
         if status is True:
@@ -253,6 +284,7 @@ class CompilerDetection(object):
     def _detect_openmp(self):
         self._print_support_start('OpenMP')
         compiler = new_compiler()
+        customize_compiler(compiler)
         hasopenmp = self.hasfunction(compiler, 'omp_get_num_threads()', extra_postargs=['-fopenmp', '/openmp'])
         needs_gomp = hasopenmp
         if not hasopenmp:
@@ -265,6 +297,7 @@ class CompilerDetection(object):
     def _detect_sse3(self):
         "Does this compiler support SSE3 intrinsics?"
         compiler = new_compiler()
+        customize_compiler(compiler)
         self._print_support_start('SSE3')
         result = self.hasfunction(compiler, '__m128 v; _mm_hadd_ps(v,v)',
                            include='<pmmintrin.h>',
@@ -275,6 +308,7 @@ class CompilerDetection(object):
     def _detect_sse41(self):
         "Does this compiler support SSE4.1 intrinsics?"
         compiler = new_compiler()
+        customize_compiler(compiler)
         self._print_support_start('SSE4.1')
         result = self.hasfunction(compiler, '__m128 v; _mm_round_ps(v,0x00)',
                            include='<smmintrin.h>',
@@ -284,6 +318,14 @@ class CompilerDetection(object):
 
 # Global info about compiler
 compiler = CompilerDetection(disable_openmp)
+extra_cpp_libraries = []
+if sys.platform == 'darwin':
+    extra_cpp_libraries.append('stdc++')
+if sys.platform == 'win32':
+    extra_cpp_libraries.append('Ws2_32')
+    # For determining if a path is relative (for dtr)
+    extra_cpp_libraries.append('Shlwapi')
+
 
 ################################################################################
 # Declaration of the compiled extension modules (cython + c)
@@ -316,11 +358,21 @@ binpos = Extension('mdtraj.formats.binpos',
                    include_dirs=['MDTraj/formats/binpos/include/',
                                  'MDTraj/formats/binpos/', numpy.get_include()])
 
+dtr = Extension('mdtraj.formats.dtr',
+                   sources=['MDTraj/formats/dtr/src/dtrplugin.cxx',
+                            'MDTraj/formats/dtr/dtr.pyx'],
+                   include_dirs=['MDTraj/formats/dtr/include/',
+                                 'MDTraj/formats/dtr/', numpy.get_include()],
+                   define_macros = [('DESRES_READ_TIMESTEP2', 1)],
+                   language='c++',
+                   libraries=extra_cpp_libraries)
+
 
 def rmsd_extensions():
     compiler_args = (compiler.compiler_args_openmp + compiler.compiler_args_sse2 +
                      compiler.compiler_args_sse3 + compiler.compiler_args_opt)
     compiler_libraries = compiler.compiler_libraries_openmp
+
     rmsd = Extension('mdtraj._rmsd',
                      sources=[
                          'MDTraj/rmsd/src/theobald_rmsd.c',
@@ -345,7 +397,7 @@ def rmsd_extensions():
                        include_dirs=[
                            'MDTraj/rmsd/include', numpy.get_include()],
                        extra_compile_args=compiler_args,
-                       libraries=compiler_libraries)
+                       libraries=compiler_libraries + extra_cpp_libraries)
     return rmsd, lprmsd
 
 
@@ -359,12 +411,15 @@ def geometry_extensions():
         Extension('mdtraj.geometry._geometry',
             sources=['MDTraj/geometry/src/geometry.c',
                      'MDTraj/geometry/src/sasa.c',
+                     'MDTraj/geometry/src/dssp.cpp',
                      'MDTraj/geometry/src/_geometry.pyx'],
             include_dirs=['MDTraj/geometry/include',
                           'MDTraj/geometry/src/kernels',
                           numpy.get_include()],
             define_macros=define_macros,
-            extra_compile_args=compiler_args),
+            extra_compile_args=compiler_args,
+            libraries=extra_cpp_libraries,
+            language='c++'),
         Extension('mdtraj.geometry.drid',
             sources=["MDTraj/geometry/drid.pyx",
                      "MDTraj/geometry/src/dridkernels.c",
@@ -375,10 +430,17 @@ def geometry_extensions():
                           "MDTraj/geometry/include/cephes",
                           numpy.get_include()],
             define_macros=define_macros,
-            extra_compile_args=compiler_args)
+            extra_compile_args=compiler_args),
+        Extension('mdtraj.geometry.neighbors',
+            sources=["MDTraj/geometry/neighbors.pyx",
+                     "MDTraj/geometry/src/neighbors.cpp"],
+            include_dirs=["MDTraj/geometry/include",],
+            define_macros=define_macros,
+            extra_compile_args=compiler_args,
+            language='c++'),
         ]
 
-extensions = [xtc, trr, dcd, binpos]
+extensions = [xtc, trr, dcd, binpos, dtr]
 extensions.extend(rmsd_extensions())
 extensions.extend(geometry_extensions())
 
@@ -398,5 +460,14 @@ setup(name='mdtraj',
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
       ext_modules=cythonize(extensions),
       package_data={'mdtraj.formats.pdb': ['data/*'],
-                    'mdtraj.testing': ['reference/*']},
+                    'mdtraj.testing': ['reference/*',
+                                       'reference/ala_dipeptide_trj/*',
+                                       'reference/ala_dipeptide_trj/not_hashed/*',
+                                       'reference/frame0.dtr/*',
+                                       'reference/frame0.dtr/not_hashed/*',],
+                    'mdtraj.html': ['static/*']},
+      exclude_package_data={'mdtraj.testing': ['reference/ala_dipeptide_trj',
+                                               'reference/ala_dipeptide_trj/not_hashed',
+                                               'reference/frame0.dtr',
+                                               'reference/frame0.dtr/not_hashed',]},
       **setup_kwargs)

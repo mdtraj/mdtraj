@@ -3,33 +3,53 @@ MDTraj
 
 *Read, write and analyze MD trajectories with only a few lines of Python code.*
 
-MDTraj is a python library that allows users to manipulate `molecular dynamics (MD) <http://en.wikipedia.org/wiki/Molecular_dynamics>`_ trajectories and perform a variety of analyses, including fast `RMSD <http://en.wikipedia.org/wiki/Root-mean-square_deviation_of_atomic_positions>`_,
-`solvent accessible surface area <http://en.wikipedia.org/wiki/Accessible_surface_area>`_, hydrogen bonding, etc. A highlight of MDTraj is the wide variety of molecular dynamics trajectory file formats which are supported, including RCSB pdb, GROMACS xtc and trr, CHARMM / NAMD dcd, AMBER binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and :ref:`MDTraj HDF5 <HDF5FormatSpec>`.
+MDTraj is a python library that allows users to manipulate `molecular dynamics (MD) <http://en.wikipedia.org/wiki/Molecular_dynamics>`_ trajectories.
+Extensive :ref:`trajectory analysis <analysis>` routines are implemented. With MDTraj,
+you can
 
-MDTraj is based on numpy and is both easy to use and fast. Core routines like RMSD are written in C with explicit SSE vectorization and multicore parallelization. The RMSD code, in particular, is based on the Theobald QCP method and is 4x the speed of the original Theobald code and over 3x as fast as Theobald code modified to use GotoBLAS.
+ - Read and write from **every MD format imaginable** (``pdb``, ``xtc``, ``trr``,
+   ``dcd``, ``binpos``, ``netcdf``, ``mdcrd``, ``prmtop``, ...)
+ - Run **blazingly fast** RMSD calculations (4x the speed of the original
+   `Theobald QCP <http://theobald.brandeis.edu/qcp/>`_).
+ - Use tons of :ref:`analysis <analysis>` functions like bonds/angles/dihedrals,
+   hydrogen bonding identification, secondary structure assignment, NMR observables.
+ - **Lightweight API**, with a focus on **speed** and vectorized operations.
 
 The library also ships with a flexible command-line application for converting
 trajectories between formats. When you install MDTraj, the script will be
 installed under the name ``mdconvert``.
 
 .. raw:: html
- 
+
   <div>
-  <h2 style="display: inline; float:left; margin-left:5em"><a href="https://github.com/rmcgibbo/mdtraj/releases/latest">
-  Download the Code</a></h2>
-  <h2 style="display: inline; float:right; margin-right:5em"> <a href="examples/index.html"> See it in Action
-  </a></h2>
-  <div style="clear:both"></div>
-  <div style="display:block; text-align:center;"><h2 style="display:inline;"><a href="https://github.com/rmcgibbo/mdtraj/issues">Get Involved</a></h2></div>
+      <h2 style="display: inline; float:left; margin-left:5em">
+          <a href="https://github.com/mdtraj/mdtraj/releases/latest">
+          Download the Code</a>
+      </h2>
+      <h2 style="display: inline; float:right; margin-right:5em">
+          <a href="examples/index.html">
+          See it in Action</a>
+      </h2>
+      <div style="clear:both"></div>
+      <h2 style="display: inline; float:left; margin-left:7em">
+          <a href="http://discourse.mdtraj.org/">
+          Get Help</a>
+      </h2>
+      <h2 style="display: inline; float:right; margin-right:7em">
+          <a href="https://github.com/mdtraj/mdtraj/issues">
+          Get Involved</a>
+      </h2>
   </div>
   <br/>
+  <iframe id="player" type="text/html" width="500" height="300" style="display:block; margin:auto"
+  src="http://www.youtube.com/embed/Lwy2Hdsr518"/>
+  frameborder="0"></iframe>
 
 
-Feedback
---------
-The best way to report a bug or request a new feature is to make an issue
-on github. Don't hesitate to fork the repository, make some changes, and 
-submit a pull request!
+
+.. raw:: html
+
+   <div style="display:none">
 
 
 --------------------------------------------------------------------------------
@@ -39,30 +59,32 @@ Documentation
 
 .. toctree::
    :maxdepth: 1
-   
+
    getting_started
    examples/index
-   mdconvert
    whatsnew
+   faq
+   Discussion Forums <http://discourse.mdtraj.org>
 
 API Reference
 -------------
 
-.. toctree:: 
+.. toctree::
    :maxdepth: 1
-   
-   api/load_functions
-   api/analysis
+
+   load_functions
+   atom_selection
+   analysis
    api/trajectory_files
    api/reporters
-   api/classes
    api/utils
+   mdconvert
 
 
 Developing
 ----------
 
-.. toctree:: 
+.. toctree::
    :maxdepth: 1
 
    hdf5_format
@@ -71,6 +93,10 @@ Developing
 
 
 --------------------------------------------------------------------------------
+
+.. raw:: html
+
+   </div>
 
 License
 -------

@@ -91,8 +91,6 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-    if atom_indices is not None:
-        topology = topology.subset(atom_indices)
 
     with MDCRDTrajectoryFile(filename, n_atoms=topology._numAtoms) as f:
         if frame is not None:
@@ -107,6 +105,9 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
 
             # Assume that its a rectilinear box
             cell_angles = 90.0 * np.ones_like(cell_lengths)
+
+    if atom_indices is not None:
+        topology = topology.subset(atom_indices)
 
     time = np.arange(len(xyz))
     if frame is not None:

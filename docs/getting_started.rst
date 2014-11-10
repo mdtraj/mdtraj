@@ -1,19 +1,32 @@
 .. _getting-started:
 
-***************
-Getting Started
-***************
-
+************
 Installation
-============
+************
+
+Platforms
+=========
 
 MDTraj runs on CPython 2.6, 2.7, and 3.2+. The developers generally use
 CPython2.7 or 3.3, on both Mac and Linux platforms. Automated tests on Linux
 and Windows are performed on every incremental update to the code, and release
 tests are performed on Mac, Linux and Windows platforms.
 
+Supported Hardware
+------------------
+Some components of MDTraj are written in C / C++ and make use of `SSE
+intrinsics <http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions>`_ for
+maximum performance. The SSE4.1 instruction set (the latest we use) was released
+in 2007, so most recent x86 machines should have no problem with this
+requirement. Utilization of these features also requires using a suitably modern
+compiler. This is only really a question on Linux, where gcc >= 4.3 is a
+prerequisite.
+
+
 Install with Conda
 ------------------
+.. _install-with-conda:
+
 `conda <http://www.continuum.io/blog/conda>`_ is a python package manager built for scientific python. Unlike ``easy_install`` or ``pip``, it handles binaries and binary dependencies, which are critical for most scientific workflows. If you're a ``conda`` user, you can install MDTraj by adding the omnia channel. If you're not a conda user, you should look into it. ::
 
 To install MDTraj with conda, use the following commands ::

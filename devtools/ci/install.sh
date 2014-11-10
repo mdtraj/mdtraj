@@ -1,7 +1,17 @@
+sudo apt-get update
 sudo apt-get install -qq -y g++ gfortran valgrind csh
 sudo apt-get install -qq -y g++-multilib gcc-multilib
-wget http://repo.continuum.io/miniconda/Miniconda-3.0.5-Linux-x86_64.sh
-bash Miniconda-3.0.5-Linux-x86_64.sh -b
+
+MINICONDA=Miniconda-latest-Linux-x86_64.sh
+MINICONDA_MD5=$(curl -s http://repo.continuum.io/miniconda/ | grep -A3 $MINICONDA | sed -n '4p' | sed -n 's/ *<td>\(.*\)<\/td> */\1/p')
+wget http://repo.continuum.io/miniconda/$MINICONDA
+if [[ $MINICONDA_MD5 != $(md5sum $MINICONDA | cut -d ' ' -f 1) ]]; then
+    echo "Miniconda MD5 mismatch"
+    exit 1
+fi
+bash $MINICONDA -b
+
+
 PIP_ARGS="-U"
 
 export PATH=$HOME/miniconda/bin:$PATH
@@ -14,17 +24,18 @@ $HOME/miniconda/envs/${python}/bin/pip install $PIP_ARGS -r devtools/ci/requirem
 
 # Install SPARTA+ for NMR chemical shift predicition
 MDTRAJ_DIR=`pwd`
-mkdir $HOME/external
+mkdir -p $HOME/external
 cd $HOME/external
-wget http://spin.niddk.nih.gov/bax/software/SPARTA+/sparta+.tar.Z
-REFERENCE_MD5="12a04ec45d9bd9e7974b218fe2353765"
+# wget http://spin.niddk.nih.gov/bax/software/SPARTA+/sparta+.tar.Z
+wget https://s3-us-west-1.amazonaws.com/mdtraj-travis-ci-cached-files/sparta%2B.tar.Z
+REFERENCE_MD5="d4293336254f5696221db0edcc57cfed"
 RECEIVED_MD5=$(md5sum sparta+.tar.Z | cut -d " " -f 1)
 if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
     echo "sparta+.tar.Z md5 mismatch"
     exit 1
 fi
 
-tar -xzvf sparta+.tar.Z
+tar -xzf sparta+.tar.Z
 cd SPARTA+
 csh ./install.com
 export SPARTAP_DIR=`pwd`
@@ -33,13 +44,14 @@ export PATH=`pwd`/bin:$PATH
 # go back to the original directory we were in
 cd $MDTRAJ_DIR
 
+# -------------------
+
 # Install shiftx2 for NMR chemical shift predicition
 MDTRAJ_DIR=`pwd`
-mkdir $HOME/external
+mkdir -p $HOME/external
 cd $HOME/external
 #wget http://www.shiftx2.ca/download/shiftx2-v107-linux-20120106.tgz
-#Use Stanford cached version because shiftx2 servers are super slow.
-wget http://stanford.edu/%7Ermcgibbo/files/shiftx2-v107-linux-20120106.tgz
+wget https://s3-us-west-1.amazonaws.com/mdtraj-travis-ci-cached-files/shiftx2-v107-linux-20120106.tgz
 REFERENCE_MD5="4d3b23d77e773aa321af2a01ed04199a"
 RECEIVED_MD5=$(md5sum shiftx2-v107-linux-20120106.tgz | cut -d " " -f 1)
 if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
@@ -47,19 +59,20 @@ if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
     exit 1
 fi
 
-tar -xzvf shiftx2-v107-linux-20120106.tgz
+tar -xzf shiftx2-v107-linux-20120106.tgz
 cd shiftx2-v107-linux/
 make
 export PATH=`pwd`:$PATH
 # go back to the original directory we were in
 cd $MDTRAJ_DIR
 
+# -------------------
 
 # Install ppm for NMR chemical shift predicition
 MDTRAJ_DIR=`pwd`
-mkdir $HOME/external
+mkdir -p $HOME/external
 cd $HOME/external
-wget http:// stanford.edu/~rmcgibbo/files/ppm_linux_64.exe
+wget https://s3-us-west-1.amazonaws.com/mdtraj-travis-ci-cached-files/ppm_linux_64.exe
 chmod a+x ppm_linux_64.exe
 REFERENCE_MD5="f3cb5681bd2769cdcfc77fe17c563ee4"
 RECEIVED_MD5=$(md5sum ppm_linux_64.exe | cut -d " " -f 1)

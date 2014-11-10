@@ -52,38 +52,13 @@ static int processorSupportsSSE41(void) {
    #ifdef _WIN32
       #define NOMINMAX
       #include <windows.h>
+      #include <intrin.h>
    #else
       #include <dlfcn.h>
       #include <unistd.h>
    #endif
 #endif
 
-static int getNumProcessors() {
-#ifdef __APPLE__
-    int ncpu;
-    size_t len = 4;
-    if (sysctlbyname("hw.logicalcpu", &ncpu, &len, NULL, 0) == 0)
-       return ncpu;
-    else
-       return 1;
-#else
-#ifdef WIN32
-    SYSTEM_INFO siSysInfo;
-    int ncpu;
-    GetSystemInfo(&siSysInfo);
-    ncpu = siSysInfo.dwNumberOfProcessors;
-    if (ncpu < 1)
-        ncpu = 1;
-    return ncpu;
-#else
-    long nProcessorsOnline = sysconf(_SC_NPROCESSORS_ONLN);
-    if (nProcessorsOnline == -1)
-        return 1;
-    else
-        return (int) nProcessorsOnline;
-#endif
-#endif
-}
 
 /**
  * Get a description of the CPU's capabilities.

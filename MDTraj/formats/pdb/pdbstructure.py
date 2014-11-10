@@ -195,8 +195,8 @@ class PdbStructure(object):
                 self._unit_cell_angles = (float(pdb_line[33:40]), float(pdb_line[40:47]), float(pdb_line[47:54]))
 
             elif (pdb_line.find("CONECT") == 0):
-                atoms = [int(pdb_line[7:12])]
-                for pos in (12,17,22,27):
+                atoms = [int(pdb_line[6:11])]
+                for pos in (11,16,21,26):
                     try:
                         atoms.append(int(pdb_line[pos:pos+5]))
                     except:

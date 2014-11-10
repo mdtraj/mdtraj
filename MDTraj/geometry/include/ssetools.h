@@ -30,11 +30,13 @@ static INLINE int store_float3(float* loc, __m128 val) {
   return 1;
 }
 
+#ifdef DEBUG
 static int printf_m128(__m128 v) {
     /* Print the contents of a SSE float4 vector to stdout (debugging) */
   float* p = (float*)(&v);
   printf("%f %f %f %f\n", p[0], p[1], p[2], p[3]);
   return 1;
 }
+#endif
 
 #endif /* _SSE_TOOLS_H */

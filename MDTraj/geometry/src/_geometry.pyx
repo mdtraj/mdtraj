@@ -20,12 +20,9 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
+import sys
 import cython
 import numpy as np
-cimport numpy as np
-np.import_array()
-assert sizeof(int) == sizeof(np.int32_t)
-assert sizeof(float) == sizeof(np.float32_t)
 
 ##############################################################################
 # Headers
@@ -53,12 +50,18 @@ cdef extern from "geometry.h":
                      int n_quartets) nogil
 
     int kabsch_sander(float* xyz, int* nco_indices, int* ca_indices,
-                      int n_frames, int n_atoms, int n_residues,
-                      int* hbonds, float* henergies) nogil
+                      const int* is_proline, int n_frames, int n_atoms,
+                      int n_residues, int* hbonds, float* henergies) nogil
+    
+    int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
+             const int* is_proline, const int* chains_ids, const int n_frames,
+             const int n_atoms, const int n_residues, char* secondary) nogil
 
-cdef extern int sasa(int n_frames, int n_atoms, const float* xyzlist,
-                     const float* atom_radii, int n_sphere_points,
-                     float* array_of_areas) nogil
+cdef extern from "sasa.h":
+    int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
+             const float* atom_radii, const int n_sphere_points,
+             const int* atom_mapping, const int n_groups, float* out) nogil
+
 cdef extern from "hardware.h":
     int processorSupportsSSE41()
 
@@ -73,19 +76,19 @@ def _processor_supports_sse41():
 
 
 @cython.boundscheck(False)
-def _dist(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
-          np.ndarray[np.int32_t, ndim=2, mode='c'] pairs not None,
-          np.ndarray[np.float32_t, ndim=2, mode='c'] out not None):
+def _dist(float[:, :, ::1] xyz,
+          int[:, ::1] pairs,
+          float[:, ::1] out):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_pairs = pairs.shape[0]
-    dist(&xyz[0,0,0], <int*> &pairs[0,0], &out[0,0], NULL, n_frames, n_atoms, n_pairs)
+    dist(&xyz[0,0,0], &pairs[0,0], &out[0,0], NULL, n_frames, n_atoms, n_pairs)
 
 
 @cython.boundscheck(False)
-def _dist_displacement(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
-          np.ndarray[np.int32_t, ndim=2, mode='c'] pairs not None,
-          np.ndarray[np.float32_t, ndim=3, mode='c'] out not None):
+def _dist_displacement(float[:, :, ::1] xyz,
+                       int[:, ::1] pairs,
+                       float[:, :, ::1] out):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_pairs = pairs.shape[0]
@@ -93,22 +96,21 @@ def _dist_displacement(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
 
 
 @cython.boundscheck(False)
-def _dist_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
-              np.ndarray[np.int32_t, ndim=2, mode='c'] pairs not None,
-              np.ndarray[np.float32_t, ndim=3, mode='c'] box_matrix not None,
-              np.ndarray[np.float32_t, ndim=2, mode='c'] out not None,
-              int outflag=0):
+def _dist_mic(float[:, :, ::1] xyz,
+              int[:, ::1] pairs,
+              float[:, :, ::1] box_matrix,
+              float[:, ::1] out):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_pairs = pairs.shape[0]
-    dist_mic(&xyz[0,0,0], <int*> &pairs[0,0], &box_matrix[0,0,0], &out[0,0], NULL, n_frames, n_atoms, n_pairs)
+    dist_mic(&xyz[0,0,0], &pairs[0,0], &box_matrix[0,0,0], &out[0,0], NULL, n_frames, n_atoms, n_pairs)
 
 
 @cython.boundscheck(False)
-def _dist_mic_displacement(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
-              np.ndarray[np.int32_t, ndim=2, mode='c'] pairs not None,
-              np.ndarray[np.float32_t, ndim=3, mode='c'] box_matrix not None,
-              np.ndarray[np.float32_t, ndim=3, mode='c'] out not None):
+def _dist_mic_displacement(float[:, :, ::1] xyz,
+                           int[:, ::1] pairs,
+                           float[:, :, ::1] box_matrix,
+                           float[:, :, ::1] out):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_pairs = pairs.shape[0]
@@ -116,30 +118,30 @@ def _dist_mic_displacement(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not No
 
 
 @cython.boundscheck(False)
-def _angle(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
-           np.ndarray[np.int32_t, ndim=2, mode='c'] triplets not None,
-           np.ndarray[np.float32_t, ndim=2, mode='c'] out not None):
+def _angle(float[:, :, ::1] xyz,
+           int[:, ::1] triplets,
+           float[:, ::1] out):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_angles = triplets.shape[0]
-    angle(&xyz[0,0,0], <int*> &triplets[0,0], &out[0,0], n_frames, n_atoms, n_angles)
+    angle(&xyz[0,0,0], &triplets[0,0], &out[0,0], n_frames, n_atoms, n_angles)
 
 
 @cython.boundscheck(False)
-def _angle_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
-               np.ndarray[np.int32_t, ndim=2, mode='c'] triplets not None,
-               np.ndarray[np.float32_t, ndim=3, mode='c'] box_matrix not None,
-               np.ndarray[np.float32_t, ndim=2, mode='c'] out not None):
+def _angle_mic(float[:, :, ::1] xyz,
+               int[:, ::1] triplets,
+               float[:, :, ::1] box_matrix,
+               float[:, ::1] out):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_angles = triplets.shape[0]
-    angle_mic(&xyz[0,0,0], <int*> &triplets[0,0], &box_matrix[0,0,0], &out[0,0], n_frames, n_atoms, n_angles)
+    angle_mic(&xyz[0,0,0], &triplets[0,0], &box_matrix[0,0,0], &out[0,0], n_frames, n_atoms, n_angles)
 
 
 @cython.boundscheck(False)
-def _dihedral(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
-              np.ndarray[np.int32_t, ndim=2, mode='c'] quartets not None,
-              np.ndarray[np.float32_t, ndim=2, mode='c'] out not None):
+def _dihedral(float[:, :, ::1] xyz,
+              int[:, ::1] quartets,
+              float[:, ::1] out):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_quartets = quartets.shape[0]
@@ -147,10 +149,10 @@ def _dihedral(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
 
 
 @cython.boundscheck(False)
-def _dihedral_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
-                  np.ndarray[np.int32_t, ndim=2, mode='c'] quartets not None,
-                  np.ndarray[np.float32_t, ndim=3, mode='c'] box_matrix not None,
-                  np.ndarray[np.float32_t, ndim=2, mode='c'] out not None):
+def _dihedral_mic(float[:, :, ::1] xyz,
+                  int[:, ::1] quartets,
+                  float[:, :, ::1] box_matrix,
+                  float[:, ::1] out):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_quartets = quartets.shape[0]
@@ -158,23 +160,46 @@ def _dihedral_mic(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
 
 
 @cython.boundscheck(False)
-def _kabsch_sander(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
-                   np.ndarray[np.int32_t, ndim=2, mode='c'] nco_indices not None,
-                   np.ndarray[np.int32_t, ndim=1, mode='c'] ca_indices not None,
-                   np.ndarray[np.int32_t, ndim=3, mode='c'] hbonds not None,
-                   np.ndarray[np.float32_t, ndim=3, mode='c'] henergies not None):
+def _kabsch_sander(float[:, :, ::1] xyz,
+                   int[:, ::1] nco_indices,
+                   int[::1] ca_indices,
+                   int[::1] is_proline,
+                   int[:, :, ::1] hbonds,
+                   float[:, :, ::1] henergies):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_residues = ca_indices.shape[0]
-    kabsch_sander(&xyz[0,0,0], <int*> &nco_indices[0,0], <int*> &ca_indices[0],
-                  n_frames, n_atoms, n_residues, <int*> &hbonds[0,0,0], &henergies[0,0,0])
+    kabsch_sander(&xyz[0,0,0], &nco_indices[0,0], &ca_indices[0],
+                  &is_proline[0], n_frames, n_atoms, n_residues,
+                  &hbonds[0,0,0], &henergies[0,0,0])
 
 
 @cython.boundscheck(False)
-def _sasa(np.ndarray[np.float32_t, ndim=3, mode='c'] xyz not None,
-          np.ndarray[np.float32_t, ndim=1, mode='c'] atom_radii not None,
+def _sasa(float[:, :, ::1] xyz,
+          float[::1] atom_radii,
           int n_sphere_points,
-          np.ndarray[np.float32_t, ndim=2, mode='c'] array_of_areas not None):
+          int[::1] atom_outmapping,
+          float[:, ::1] out):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
-    sasa(n_frames, n_atoms, &xyz[0,0,0], &atom_radii[0], n_sphere_points, &array_of_areas[0,0])
+    sasa(n_frames, n_atoms, &xyz[0,0,0], &atom_radii[0], n_sphere_points,
+         &atom_outmapping[0], out.shape[1], &out[0,0])
+
+
+@cython.boundscheck(False)
+def _dssp(float[:, :, ::1] xyz,
+          int[:, ::1] nco_indices,
+          int[::1] ca_indices,
+          int[::1] is_proline,
+          int[::1] chain_ids):
+    cdef int n_frames = xyz.shape[0]
+    cdef int n_atoms = xyz.shape[1]
+    cdef int n_residues = ca_indices.shape[0]
+    cdef char[:] secondary = bytearray(n_frames*n_residues)
+    dssp(&xyz[0,0,0], &nco_indices[0,0], &ca_indices[0],
+         &is_proline[0], &chain_ids[0], n_frames, n_atoms,
+         n_residues, &secondary[0])
+
+    PY2 = sys.version_info[0] == 2
+    value = str(secondary.base) if PY2 else secondary.base.decode('ascii')
+    return value

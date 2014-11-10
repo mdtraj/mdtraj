@@ -4,6 +4,47 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.X (development)
+------------------
+- New loader for CHARMM topology files: ``md.load_psf`` (Jason M. Swails)
+- New text-based :doc:`atom selection domain-specific language <atom_selection>`
+  allowing natural querying of atoms as well as generation of equivalent
+  python code for embedding in scripts or applications
+  (Matthew P. Harrigan, Robert T. McGibbon)
+- Support reading and writing Amber restart files (Jason M. Swails)
+- ``md.shrake_rupley`` supports a new option to accumulate total SASA by residue
+  (Robert T. McGibbon)
+- Fix potential segmentation fault when reading corrupted XTC files.
+  (Robert T. McGibbon)
+
+
+
+v1.0.0 (September 7, 2014)
+--------------------------
+We're pleased to announce the 1.0 release of MDTraj! Our 1.0 release indicates
+that MDTraj is stable enough to be used in production calculations, and that
+we have a stronger commitment to backward compatibility. Two substantial new
+features have been added since 0.9, but the API has remained quite stable.
+
+- New interactive WebGl-based protein visualization in IPython notebook -- this
+  feature is quite new and will continue to evolve throughout the 1.X release
+  cycle.
+- New ``md.compute_dssp`` function for DSSP secondary structure assignment.
+- Multiple bugfixes in PDB parsing, including handling of ATOM serial's
+  CONNECT records, support of .gziped files,
+- Fix compilation errors on OSX and older linux platforms (gcc-4.1)
+- ``compute_distances``, ``compute_angles``, ``compute_dihedrals`` now accept
+  iterators for the indices argument.
+- New ``Topology.select_atom_indices`` method.
+- Ability to save b factors in PDB files.
+- ``restrict_atoms`` has been deprecated, and replaced with ``atom_slice``.
+- Better support for multi-chain proteins in dihedral methods.
+
+Thanks to Robert T. McGibbon, Kyle A. Beauchamp, Lee-Ping Wang, Jason M. Swails,
+ag1989, Carlos X. Hernandez, Matthew P. Harrigan and Christian Schwantes
+for contributions.
+
+
 v0.9.0 (June 10, 2014)
 -----------------------
 - Brand new ``nmr`` library that includes transparent python interfaces to

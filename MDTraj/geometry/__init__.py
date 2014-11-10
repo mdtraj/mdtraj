@@ -27,7 +27,7 @@ __all__ = ['baker_hubbard', 'shrake_rupley', 'kabsch_sander', 'compute_distances
            'compute_phi', 'compute_psi', 'compute_chi1', 'compute_chi2',
            'compute_chi3', 'compute_chi4', 'compute_omega', 'compute_rg',
            'compute_contacts', 'compute_drid', 'compute_center_of_mass',
-           'wernet_nilsson']
+           'wernet_nilsson', 'compute_dssp', 'compute_neighbors']
 
 from mdtraj.geometry.rg import *
 from mdtraj.geometry.angle import *
@@ -37,3 +37,5 @@ from mdtraj.geometry.hbond import *
 from mdtraj.geometry.sasa import *
 from mdtraj.geometry.contact import *
 from mdtraj.geometry.drid import *
+from mdtraj.geometry.dssp import *
+from mdtraj.geometry.neighbors import *

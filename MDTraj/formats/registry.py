@@ -3,9 +3,6 @@ Registry for trajectory file formats, so that the appropriate file
 object and loader can be resolved based on the filename extension.
 """
 
-import os.path
-
-
 class _FormatRegistry(object):
     """Registry for trajectory file objects.
     

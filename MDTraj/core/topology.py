@@ -52,6 +52,8 @@ import os
 import numpy as np
 import itertools
 from mdtraj.core import element as elem
+from mdtraj.core.residue_names import _PROTEIN_RESIDUES
+from mdtraj.core.selection import parse_selection
 import xml.etree.ElementTree as etree
 
 from mdtraj.utils import ilen, import_
@@ -59,12 +61,6 @@ from mdtraj.utils import ilen, import_
 ##############################################################################
 # Utilities
 ##############################################################################
-
-PROTEIN_RESIDUES = set([
-    'ACE', 'AIB', 'ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'FOR', 'GLN', 'GLU',
-    'GLY', 'HIS', 'ILE', 'LEU', 'LYS', 'MET', 'NH2', 'NME', 'ORN', 'PCA',
-    'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'UNK', 'VAL'])
-
 
 def _topology_from_subset(topology, atom_indices):
     """Create a new topology that only contains the supplied indices
@@ -93,7 +89,11 @@ def _topology_from_subset(topology, atom_indices):
             newResidue = newTopology.add_residue(residue.name, newChain, resSeq)
             for atom in residue._atoms:
                 if atom.index in atom_indices:
-                    newAtom = newTopology.add_atom(atom.name, atom.element, newResidue)
+                    try:  # OpenMM Topology objects don't have serial attributes, so we have to check first.
+                        serial = atom.serial
+                    except AttributeError:
+                        serial = None
+                    newAtom = newTopology.add_atom(atom.name, atom.element, newResidue, serial=serial)
                     old_atom_to_new_atom[atom] = newAtom
 
     bondsiter = topology.bonds
@@ -155,20 +155,20 @@ class Topology(object):
     >>> table, bonds = topology.to_dataframe()
     >>> print(table.head())
        serial name element  resSeq resName  chainID
-    0       0   H1       H       0     CYS        0
-    1       1  CH3       C       0     CYS        0
-    2       2   H2       H       0     CYS        0
-    3       3   H3       H       0     CYS        0
-    4       4    C       C       0     CYS        0
+    0       0   H1       H       1     CYS        0
+    1       1  CH3       C       1     CYS        0
+    2       2   H2       H       1     CYS        0
+    3       3   H3       H       1     CYS        0
+    4       4    C       C       1     CYS        0
     >>> # rename residue "CYS" to "CYSS"
     >>> table[table['residue'] == 'CYS']['residue'] = 'CYSS'
     >>> print(table.head())
        serial name element  resSeq resName   chainID
-    0       0   H1       H       0     CYSS        0
-    1       1  CH3       C       0     CYSS        0
-    2       2   H2       H       0     CYSS        0
-    3       3   H3       H       0     CYSS        0
-    4       4    C       C       0     CYSS        0
+    0       0   H1       H       1     CYSS        0
+    1       1  CH3       C       1     CYSS        0
+    2       2   H2       H       1     CYSS        0
+    3       3   H3       H       1     CYSS        0
+    4       4    C       C       1     CYSS        0
     >>> t2 = md.Topology.from_dataframe(table, bonds)
     """
 
@@ -209,7 +209,7 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq)
                 for atom in residue.atoms:
-                    out.add_atom(atom.name, atom.element, r)
+                    out.add_atom(atom.name, atom.element, r, serial=atom.serial)
 
         for a1, a2 in self.bonds:
             out.add_bond(a1, a2)
@@ -246,7 +246,7 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq)
                 for atom in residue.atoms:
-                    a = out.add_atom(atom.name, atom.element, r)
+                    a = out.add_atom(atom.name, atom.element, r, serial=atom.serial)
                     atom_mapping[atom] = a
 
         for a1, a2 in other.bonds:
@@ -254,8 +254,14 @@ class Topology(object):
 
         return out
 
-    def to_openmm(self):
+    def to_openmm(self, traj=None):
         """Convert this topology into OpenMM topology
+        
+        Parameters
+        ----------
+        traj : MDTraj.Trajectory, optional, default=None
+            If specified, use the first frame from this trajectory to
+            set the unitcell information in the openmm topology.
 
         Returns
         -------
@@ -263,6 +269,8 @@ class Topology(object):
            This topology, as an OpenMM topology
         """
         app = import_('simtk.openmm.app')
+        mm = import_('simtk.openmm')
+        u = import_('simtk.unit')
 
         out = app.Topology()
         atom_mapping = {}
@@ -277,6 +285,15 @@ class Topology(object):
 
         for a1, a2 in self.bonds:
             out.addBond(atom_mapping[a1], atom_mapping[a2])
+        
+        if traj is not None:
+            angles = traj.unitcell_angles[0]
+            
+            if np.linalg.norm(angles - 90.0) > 1E-4:
+                raise(ValueError("Unitcell angles must be 90.0 to use in OpenMM topology."))
+
+            box_vectors = mm.Vec3(*traj.unitcell_lengths[0]) * u.nanometer
+            out.setUnitCellDimensions(box_vectors)
 
         return out
 
@@ -330,13 +347,13 @@ class Topology(object):
                 element_symbol = ""
             else:
                 element_symbol = atom.element.symbol
-            data.append((atom.index, atom.name, element_symbol,
+            data.append((atom.serial, atom.name, element_symbol,
                          atom.residue.resSeq, atom.residue.name,
                          atom.residue.chain.index))
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
                                             "resSeq", "resName", "chainID"])
-        atoms = atoms.set_index("serial")
+
         bonds = np.array([(a.index, b.index) for (a, b) in self.bonds])
         return atoms, bonds
 
@@ -365,7 +382,7 @@ class Topology(object):
         """
         pd = import_('pandas')
 
-        for col in ["name", "element", "resSeq" , "resName", "chainID"]:
+        for col in ["name", "element", "resSeq", "resName", "chainID"]:
             if col not in atoms.columns:
                 raise ValueError('dataframe must have column %s' % col)
 
@@ -380,6 +397,7 @@ class Topology(object):
         if not np.all(np.arange(len(atoms)) == atoms.index):
             raise ValueError('atoms must be uniquely numbered starting from zero.')
         out._atoms = [None for i in range(len(atoms))]
+
         for ci in np.unique(atoms['chainID']):
             chain_atoms = atoms[atoms['chainID'] == ci]
             c = out.add_chain()
@@ -392,13 +410,15 @@ class Topology(object):
                     raise ValueError('All of the atoms with residue index %d do not share the same residue name' % ri)
                 r = out.add_residue(residue_name, c, ri)
 
-                for ai, atom in residue_atoms.iterrows():
+                for atom_index, atom in residue_atoms.iterrows():
+                    atom_index = int(atom_index)  # Fixes bizarre hashing issue on Py3K.  See #545
+                    serial = atom["serial"]
                     if atom['element'] == "":
                         element = None
                     else:
                         element = elem.get_by_symbol(atom['element'])
-                    a = Atom(atom['name'], element, ai, r)
-                    out._atoms[ai] = a
+                    a = Atom(atom['name'], element, atom_index, r, serial=serial)
+                    out._atoms[atom_index] = a
                     r._atoms.append(a)
 
         if bonds is not None:
@@ -530,7 +550,7 @@ class Topology(object):
         chain._residues.append(residue)
         return residue
 
-    def add_atom(self, name, element, residue):
+    def add_atom(self, name, element, residue, serial=None):
         """Create a new Atom and add it to the Topology.
 
         Parameters
@@ -547,7 +567,7 @@ class Topology(object):
         atom : mdtraj.topology.Atom
             the newly created Atom
         """
-        atom = Atom(name, element, self._numAtoms, residue)
+        atom = Atom(name, element, self._numAtoms, residue, serial=serial)
         self._atoms.append(atom)
         self._numAtoms += 1
         residue._atoms.append(atom)
@@ -738,6 +758,7 @@ class Topology(object):
         positions : list
             The list of atomic positions based on which to identify bonded atoms
         """
+
         def isCyx(res):
             names = [atom.name for atom in res._atoms]
             return 'SG' in names and 'HG' not in names
@@ -770,29 +791,82 @@ class Topology(object):
         """
         return _topology_from_subset(self, atom_indices)
 
+    def select_expression(self, selection_string):
+        """Translate a atom selection expression into a pure python expression.
+
+        Parameters
+        ----------
+        selection_string : str
+            An expression in the MDTraj atom selection DSL
+
+        Examples
+        --------
+        >>> topology.select_expression('name O and water')
+        "[atom.index for atom in topology.atoms if ((atom.name == 'O') and atom.residue.is_water)]")
+
+        Returns
+        -------
+        python_string : str
+            A string containing a pure python expression, equivalent to the
+            selection expression.
+        """
+        condition = parse_selection(selection_string).source
+        fmt_string = "[atom.index for atom in topology.atoms if {condition}]"
+        return fmt_string.format(condition=condition)
+
+    def select(self, selection_string):
+        """Execute a selection against the topology
+
+        Parameters
+        ----------
+        selection_string : str
+            An expression in the MDTraj atom selection DSL
+
+        Examples
+        --------
+        >>> topology.select('name O and water')
+        array([1, 3, 5, 10, ...])
+
+        Returns
+        -------
+        indices : np.ndarray, dtype=int, ndim=1
+            Array of the indices of the atoms matching the selection expression.
+
+        See Also
+        --------
+        select_expression, mdtraj.core.selection.parse_selection
+        """
+
+        filter_func = parse_selection(selection_string).expr
+        indices = np.array([a.index for a in self.atoms if filter_func(a)])
+        return indices
+
     def select_atom_indices(self, selection='minimal'):
         """Get the indices of biologically-relevant groups by name.
 
-        Attributes
+        Parameters
         ----------
-        topology : md.Topology
-            Topology object
         selection : {'all', 'alpha', 'minimal', 'heavy', 'water'}
             What types of atoms to select.
-            - all:      All atoms
-            - alpha :   Alpha carbons
-            - minimal:  Keep the atoms in protein residues with names
-                        CA, CB, C, N, O,
-            - heavy:    All non-hydrogen atoms that are not symmetry equivalent.
-                        By symmetry equivalent, we mean atoms identical under an
-                        exchange of labels. For example, heavy will exclude the
-                        two pairs of equivalent carbons (CD, CE) in a PHE ring.
-            - water:    Water oxygen atoms
+
+            ``all``
+                All atoms
+            ``alpha``
+                Protein residue alpha carbons
+            ``minimal``
+                Keep the atoms in protein residues with names in {CA, CB, C, N, O}
+            ``heavy``
+                All non-hydrogen atoms that are not symmetry equivalent. By
+                symmetry equivalent, we mean atoms identical under an exchange
+                of labels. For example, heavy will exclude the two pairs of
+                equivalent carbons (CD, CE) in a PHE ring.
+            ``water``
+                Water oxygen atoms
 
         Returns
         ----------
         indices : np.ndarray (N,)
-            An array of the selected indices.
+            An array of the indices of the selected atoms.
         """
         selection = selection.lower()
         options = ['all', 'alpha', 'minimal', 'heavy', 'water']
@@ -837,6 +911,7 @@ class Chain(object):
     atoms : generator
         Iterator over all Atoms in the Chain.
     """
+
     def __init__(self, index, topology):
         """Construct a new Chain.  You should call add_chain() on the Topology instead of calling this directly."""
         ## The index of the Chain within its Topology
@@ -863,7 +938,7 @@ class Chain(object):
         -------
         residue : Residue
         """
-        return self._residue[index]
+        return self._residues[index]
 
     @property
     def n_residues(self):
@@ -908,7 +983,7 @@ class Chain(object):
         """
         # this could be made faster by caching the list
         # of atoms internally if necessary
-        return next(itertools.islice(self.atoms, index, index+1))
+        return next(itertools.islice(self.atoms, index, index + 1))
 
     @property
     def n_atoms(self):
@@ -928,6 +1003,7 @@ class Residue(object):
     chain : int
         The residue sequence number
     """
+
     def __init__(self, name, index, chain, resSeq):
         """Construct a new Residue.  You should call add_residue()
         on the Topology instead of calling this directly."""
@@ -993,12 +1069,12 @@ class Residue(object):
 
     @property
     def is_protein(self):
-        """Whether this residue is found in proteins."""
-        return self.name in PROTEIN_RESIDUES
+        """Whether the residue is one found in proteins."""
+        return self.name in _PROTEIN_RESIDUES
 
     @property
     def is_water(self):
-        """Whether this residue is water.
+        """Whether the residue is water.
 
         Residue names according to VMD
 
@@ -1009,8 +1085,13 @@ class Residue(object):
         return self.name in ['H2O', 'HHO', 'OHH', 'HOH', 'OH2', 'SOL',
                              'WAT', 'TIP', 'TIP2', 'TIP3', 'TIP4']
 
+    @property
+    def is_nucleic(self):
+        """Whether the residue is one found in nucleic acids."""
+        raise NotImplementedError
 
-    def  __str__(self):
+
+    def __str__(self):
         return '%s%s' % (self.name, self.resSeq)
 
     def __repr__(self):
@@ -1032,7 +1113,7 @@ class Atom(object):
         The Residue this Atom belongs to
     """
 
-    def __init__(self, name, element, index, residue):
+    def __init__(self, name, element, index, residue, serial=None):
         """Construct a new Atom.  You should call add_atom() on the Topology instead of calling this directly."""
         ## The name of the Atom
         self.name = name
@@ -1042,6 +1123,22 @@ class Atom(object):
         self.index = index
         ## The Residue this Atom belongs to
         self.residue = residue
+        self.serial = serial
+
+    @property
+    def n_bonds(self):
+        """Number of bonds in which the atom participates."""
+        # TODO: this info could be cached.
+        return ilen(bond for bond in self.residue.chain.topology.bonds
+                    if self in bond)
+
+    def is_backbone(self):
+        """Whether the atom is in the backbone of a protein residue"""
+        return self.name in set(['C', 'CA', 'N', 'O']) and self.residue.is_protein
+
+    def is_sidechain(self):
+        """Whether the atom is in the sidechain of a protein residue"""
+        return self.name not in set(['C', 'CA', 'N', 'O']) and self.residue.is_protein
 
     def __eq__(self, other):
         """ Check whether two Atom objects are equal. """

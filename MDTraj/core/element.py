@@ -53,6 +53,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from __future__ import print_function, division
 import numpy as np
+from mdtraj.utils.unit.quantity import is_quantity
+from mdtraj.utils.unit.unit_definitions import daltons
 
 class Element(tuple):
     """An Element represents a chemical element.
@@ -119,20 +121,45 @@ class Element(tuple):
         """ Get the element with a particular atomic number """
         return Element._elements_by_atomic_number[number]
 
+    @staticmethod
+    def getByMass(mass):
+        """
+        Get the element whose mass is CLOSEST to the requested mass. This method
+        should not be used for repartitioned masses
+        """
+        # Convert any masses to daltons
+        if is_quantity(mass):
+            mass = mass.value_in_unit(daltons)
+        diff = mass
+        best_guess = None
+
+        for key in Element._elements_by_atomic_number:
+            element = Element._elements_by_atomic_number[key]
+            massdiff = abs(element.mass - mass)
+            if massdiff < diff:
+                best_guess = element
+                diff = massdiff
+
+        return best_guess
+
     @property
     def number(self):
+        """Atomic number."""
         return tuple.__getitem__(self, 0)
 
     @property
     def name(self):
+        """Element name"""
         return tuple.__getitem__(self, 1)
 
     @property
     def symbol(self):
+        """Element symbol"""
         return tuple.__getitem__(self, 2)
 
     @property
     def mass(self):
+        """Element mass"""
         return tuple.__getitem__(self, 3)
 
     def __getitem__(self, item):
@@ -143,7 +170,13 @@ class Element(tuple):
 
     @property
     def atomic_number(self):
+        """Atomic number"""
         return tuple.__getitem__(self, 0)
+
+    @property
+    def radius(self):
+        """Element atomic radius"""
+        raise NotImplementedError
 
 
 # This is for backward compatibility.
