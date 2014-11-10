@@ -177,7 +177,7 @@ if not release:
 ################################################################################
 
 class CompilerDetection(object):
-    # Necessary for OSX. See https://github.com/pandegroup/mdtraj/issues/576
+    # Necessary for OSX. See https://github.com/mdtraj/mdtraj/issues/576
     # The problem is that distutils.sysconfig.customize_compiler()
     # is necessary to properly invoke the correct compiler for this class
     # (otherwise the CC env variable isn't respected). Unfortunately,

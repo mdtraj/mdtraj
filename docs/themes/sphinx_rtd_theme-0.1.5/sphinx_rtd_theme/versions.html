@@ -1,6 +1,6 @@
 <script>
 $(document).ready(function() {
-    $.get("https://api.github.com/repos/pandegroup/mdtraj/releases")
+    $.get("https://api.github.com/repos/mdtraj/mdtraj/releases")
       .done(function(data) {
           tag_names = [];
           numItems = data.length;
