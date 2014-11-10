@@ -23,7 +23,7 @@ installed under the name ``mdconvert``.
 
   <div>
       <h2 style="display: inline; float:left; margin-left:5em">
-          <a href="https://github.com/simtk/mdtraj/releases/latest">
+          <a href="https://github.com/mdtraj/mdtraj/releases/latest">
           Download the Code</a>
       </h2>
       <h2 style="display: inline; float:right; margin-right:5em">
@@ -36,7 +36,7 @@ installed under the name ``mdconvert``.
           Get Help</a>
       </h2>
       <h2 style="display: inline; float:right; margin-right:7em">
-          <a href="https://github.com/simtk/mdtraj/issues">
+          <a href="https://github.com/mdtraj/mdtraj/issues">
           Get Involved</a>
       </h2>
   </div>

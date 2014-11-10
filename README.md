@@ -1,7 +1,7 @@
 ## MDTraj: a modern, open library for the analysis of molecular dynamics trajectories
 
-[![Linux Build Status](https://travis-ci.org/SimTk/mdtraj.png?branch=master)](https://travis-ci.org/SimTk/mdtraj)
-[![Windows Build status](https://ci.appveyor.com/api/projects/status/80ov9tdffg5jkr7i/branch/master)](https://ci.appveyor.com/project/rmcgibbo/mdtraj-813/branch/master)
+[![Linux Build Status](https://travis-ci.org/mdtraj/mdtraj.png?branch=master)](https://travis-ci.org/mdtraj/mdtraj)
+[![Windows Build status](https://ci.appveyor.com/api/projects/status/sqjgx3jh14vuxks5/branch/master?svg=true)](https://ci.appveyor.com/project/rmcgibbo/mdtraj/branch/master)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.png)](https://pypi.python.org/pypi/mdtraj)
 [![Binstar Badge](https://binstar.org/omnia/mdtraj/badges/version.svg)](https://binstar.org/omnia/mdtraj)
 [![Downloads](https://pypip.in/d/mdtraj/badge.png)](https://pypi.python.org/pypi/mdtraj)
@@ -16,7 +16,7 @@ With MDTraj, you can
 - Use a **lightweight API**, with a focus on **speed** and vectorized operations.
 
 For details, see the website at [mdtraj.org](http://mdtraj.org). To get involved,
-take a look at the [github issue tracker](https://github.com/simtk/mdtraj/issues
+take a look at the [github issue tracker](https://github.com/mdtraj/mdtraj/issues
 and/or the user forums [discourse.mdtraj.org](http://discourse.mdtraj.org).
 
 License: GNU LGPL version 2.1, or at your option a later version of the license.

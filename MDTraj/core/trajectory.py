@@ -44,6 +44,7 @@ from mdtraj.formats import PDBTrajectoryFile
 from mdtraj.formats import MDCRDTrajectoryFile
 from mdtraj.formats import ArcTrajectoryFile
 from mdtraj.formats import DTRTrajectoryFile
+from mdtraj.formats import LAMMPSTrajectoryFile
 
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
@@ -1186,6 +1187,7 @@ class Trajectory(object):
                   '.mdcrd': self.save_mdcrd,
                   '.ncdf': self.save_netcdf,
                   '.lh5': self.save_lh5,
+                  '.lammpstrj': self.save_lammpstrj,
                   }
 
         try:
@@ -1213,6 +1215,21 @@ class Trajectory(object):
                     cell_angles=self.unitcell_angles,
                     cell_lengths=self.unitcell_lengths)
             f.topology = self.topology
+
+    def save_lammpstrj(self, filename, force_overwrite=True):
+        """Save trajectory to LAMMPS custom dump format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
+        """
+        with LAMMPSTrajectoryFile(filename, 'w', force_overwrite=True) as f:
+            f.write(xyz=self.xyz,
+                    cell_angles=self.unitcell_angles,
+                    cell_lengths=self.unitcell_lengths)
 
     def save_pdb(self, filename, force_overwrite=True, bfactors=None):
         """Save trajectory to RCSB PDB format

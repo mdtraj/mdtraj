@@ -9,7 +9,7 @@ Erik Lindahl, David van der Spoel, Robert T. McGibbon.
 
 Changes from upsteam's xdrfile-1.1.4 include:
  - More descriptive error strings printed inside xdrfile.c
- - Fix for a segfault on malformed xtc files inside xdrfile_decompress_coord_float (https://github.com/SimTk/mdtraj/pull/607, https://mailman-1.sys.kth.se/pipermail/gromacs.org_gmx-developers/2014-September/007942.html)
+ - Fix for a segfault on malformed xtc files inside xdrfile_decompress_coord_float (https://github.com/mdtraj/mdtraj/pull/607, https://mailman-1.sys.kth.se/pipermail/gromacs.org_gmx-developers/2014-September/007942.html)
  - Addition of read_xtc_nframes function in xdrfile_xtc.c
  - Addition of read_trr_nframes function in xdrfile_trr.c
  - Bugfix in do_trnheader to return the appropriate error code when reading magic, and properly check the value of the magic in xdrfile_trr.c
