@@ -321,6 +321,10 @@ compiler = CompilerDetection(disable_openmp)
 extra_cpp_libraries = []
 if sys.platform == 'darwin':
     extra_cpp_libraries.append('stdc++')
+if sys.platform == 'win32':
+    extra_cpp_libraries.append('Ws2_32')
+    # For determining if a path is relative (for dtr)
+    extra_cpp_libraries.append('Shlwapi')
 
 
 ################################################################################
@@ -353,6 +357,15 @@ binpos = Extension('mdtraj.formats.binpos',
                             'MDTraj/formats/binpos/binpos.pyx'],
                    include_dirs=['MDTraj/formats/binpos/include/',
                                  'MDTraj/formats/binpos/', numpy.get_include()])
+
+dtr = Extension('mdtraj.formats.dtr',
+                   sources=['MDTraj/formats/dtr/src/dtrplugin.cxx',
+                            'MDTraj/formats/dtr/dtr.pyx'],
+                   include_dirs=['MDTraj/formats/dtr/include/',
+                                 'MDTraj/formats/dtr/', numpy.get_include()],
+                   define_macros = [('DESRES_READ_TIMESTEP2', 1)],
+                   language='c++',
+                   libraries=extra_cpp_libraries)
 
 
 def rmsd_extensions():
@@ -417,10 +430,17 @@ def geometry_extensions():
                           "MDTraj/geometry/include/cephes",
                           numpy.get_include()],
             define_macros=define_macros,
-            extra_compile_args=compiler_args)
+            extra_compile_args=compiler_args),
+        Extension('mdtraj.geometry.neighbors',
+            sources=["MDTraj/geometry/neighbors.pyx",
+                     "MDTraj/geometry/src/neighbors.cpp"],
+            include_dirs=["MDTraj/geometry/include",],
+            define_macros=define_macros,
+            extra_compile_args=compiler_args,
+            language='c++'),
         ]
 
-extensions = [xtc, trr, dcd, binpos]
+extensions = [xtc, trr, dcd, binpos, dtr]
 extensions.extend(rmsd_extensions())
 extensions.extend(geometry_extensions())
 
@@ -440,6 +460,14 @@ setup(name='mdtraj',
       package_dir={'mdtraj': 'MDTraj', 'mdtraj.scripts': 'scripts'},
       ext_modules=cythonize(extensions),
       package_data={'mdtraj.formats.pdb': ['data/*'],
-                    'mdtraj.testing': ['reference/*'],
+                    'mdtraj.testing': ['reference/*',
+                                       'reference/ala_dipeptide_trj/*',
+                                       'reference/ala_dipeptide_trj/not_hashed/*',
+                                       'reference/frame0.dtr/*',
+                                       'reference/frame0.dtr/not_hashed/*',],
                     'mdtraj.html': ['static/*']},
+      exclude_package_data={'mdtraj.testing': ['reference/ala_dipeptide_trj',
+                                               'reference/ala_dipeptide_trj/not_hashed',
+                                               'reference/frame0.dtr',
+                                               'reference/frame0.dtr/not_hashed',]},
       **setup_kwargs)

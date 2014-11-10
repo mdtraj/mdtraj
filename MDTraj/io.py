@@ -85,9 +85,9 @@ TABLES2 = tables.__version__ < '3.0.0'
 __all__ = ['saveh', 'loadh']
 
 try:
-    COMPRESSION = tables.Filters(complevel=9, complib='blosc', shuffle=True)
+    COMPRESSION = tables.Filters(complevel=9, complib='zlib', shuffle=True)
 except Exception:  #type?
-    warnings.warn("Missing BLOSC; no compression will used.")
+    warnings.warn("Missing Zlib; no compression will used.")
     COMPRESSION = tables.Filters()
 
 def saveh(file, *args, **kwargs):

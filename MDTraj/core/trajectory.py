@@ -43,9 +43,13 @@ from mdtraj.formats import LH5TrajectoryFile
 from mdtraj.formats import PDBTrajectoryFile
 from mdtraj.formats import MDCRDTrajectoryFile
 from mdtraj.formats import ArcTrajectoryFile
+from mdtraj.formats import DTRTrajectoryFile
+from mdtraj.formats import LAMMPSTrajectoryFile
+
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.mol2 import load_mol2
+from mdtraj.formats.gro import load_gro
 from mdtraj.core.topology import Topology
 from mdtraj.core.residue_names import _SOLVENT_TYPES
 from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_vectors, 
@@ -83,6 +87,21 @@ def _assert_files_exist(filenames):
             raise IOError('No such file: %s' % fn)
 
 
+def _assert_files_or_dirs_exist(names):
+    """Throw an IO error if files don't exist
+
+    Parameters
+    ----------
+    filenames : {str, [str]}
+        String or list of strings to check
+    """
+    if isinstance(names, string_types):
+        names = [names]
+    for fn in names:
+        if not (os.path.exists(fn) and \
+                        (os.path.isfile(fn) or os.path.isdir(fn))):
+            raise IOError('No such file: %s' % fn)
+
 def _parse_topology(top):
     """Get the topology from a argument of indeterminate type
     If top is a string, we try loading a pdb, if its a trajectory
@@ -110,6 +129,8 @@ def _parse_topology(top):
         topology = load_psf(top)
     elif isinstance(top, string_types) and (ext in ['.mol2']):
         topology = load_mol2(top).topology
+    elif isinstance(top, string_types) and (ext in ['.gro']):
+        topology = load_gro(top).topology
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, Topology):
@@ -215,7 +236,7 @@ def load_frame(filename, index, top=None, atom_indices=None):
         The resulting conformation, as an md.Trajectory object containing
         a single frame.
     """
-    _assert_files_exist(filename)
+
     extension = os.path.splitext(filename)[1]
     try:
         loader = _FormatRegistry.loaders[extension]
@@ -227,6 +248,11 @@ def load_frame(filename, index, top=None, atom_indices=None):
     kwargs = {'atom_indices': atom_indices}
     if loader.__name__ not in ['load_hdf5', 'load_pdb']:
         kwargs['top'] = top
+
+    if loader.__name__ not in ['load_dtr']:
+        _assert_files_exist(filename)
+    else:
+        _assert_files_or_dirs_exist(filename)
 
     return loader(filename, frame=index, **kwargs)
 
@@ -286,8 +312,6 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         The resulting trajectory, as an md.Trajectory object.
     """
 
-    _assert_files_exist(filename_or_filenames)
-
     if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
         kwargs["top"] = _parse_topology(kwargs["top"])
 
@@ -328,6 +352,12 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         # there would be a signature binding error. it's easier just to ignore
         # it.
         kwargs.pop('top', None)
+
+    if loader.__name__ not in ['load_dtr']:
+        _assert_files_exist(filename_or_filenames)
+    else:
+        _assert_files_or_dirs_exist(filename_or_filenames)
+
 
     value = loader(filename, **kwargs)
     return value
@@ -1141,6 +1171,7 @@ class Trajectory(object):
                   '.mdcrd': self.save_mdcrd,
                   '.ncdf': self.save_netcdf,
                   '.lh5': self.save_lh5,
+                  '.lammpstrj': self.save_lammpstrj,
                   }
 
         try:
@@ -1168,6 +1199,21 @@ class Trajectory(object):
                     cell_angles=self.unitcell_angles,
                     cell_lengths=self.unitcell_lengths)
             f.topology = self.topology
+
+    def save_lammpstrj(self, filename, force_overwrite=True):
+        """Save trajectory to LAMMPS custom dump format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
+        """
+        with LAMMPSTrajectoryFile(filename, 'w', force_overwrite=True) as f:
+            f.write(xyz=self.xyz,
+                    cell_angles=self.unitcell_angles,
+                    cell_lengths=self.unitcell_lengths)
 
     def save_pdb(self, filename, force_overwrite=True, bfactors=None):
         """Save trajectory to RCSB PDB format
@@ -1263,6 +1309,22 @@ class Trajectory(object):
                     cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
+    def save_dtr(self, filename, force_overwrite=True):
+        """Save trajectory to DESMOND DTR format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filenames, if its already there
+        """
+        self._check_valid_unitcell()
+        with DTRTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
+                    cell_angles=self.unitcell_angles,
+                    times=self.time)
 
     def save_binpos(self, filename, force_overwrite=True):
         """Save trajectory to AMBER BINPOS format
