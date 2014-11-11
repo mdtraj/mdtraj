@@ -16,7 +16,7 @@ With MDTraj, you can
 - Use a **lightweight API**, with a focus on **speed** and vectorized operations.
 
 For details, see the website at [mdtraj.org](http://mdtraj.org). To get involved,
-take a look at the [github issue tracker](https://github.com/mdtraj/mdtraj/issues
+take a look at the [github issue tracker](https://github.com/mdtraj/mdtraj/issues)
 and/or the user forums [discourse.mdtraj.org](http://discourse.mdtraj.org).
 
 License: GNU LGPL version 2.1, or at your option a later version of the license.
