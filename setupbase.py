@@ -4,7 +4,6 @@ import string
 import shutil
 import subprocess
 import tempfile
-from types import ListType, TupleType
 from distutils.dep_util import newer_group
 from distutils.core import Extension
 from distutils.errors import DistutilsExecError
@@ -255,18 +254,18 @@ class build_ext(_build_ext):
         from distutils import log
         
         sources = ext.sources
-        if sources is None or type(sources) not in (ListType, TupleType):
-            raise DistutilsSetupError, \
+        if sources is None or not isinstance(sources, (list, tuple)):
+            raise DistutilsSetupError(
                   ("in 'ext_modules' option (extension '%s'), " +
                    "'sources' must be present and must be " +
-                   "a list of source filenames") % ext.name
+                   "a list of source filenames") % ext.name)
         sources = list(sources)
 
         ext_path = self.get_ext_fullpath(ext.name)
         depends = sources + ext.depends
         if not (self.force or newer_group(depends, ext_path, 'newer')):
             log.debug("skipping '%s' extension (up-to-date)", ext.name)
-            # return (DEBUG)
+            return
         else:
             log.info("building '%s' extension", ext.name)
 
