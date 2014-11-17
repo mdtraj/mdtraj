@@ -316,8 +316,8 @@ class build_ext(_build_ext):
             libname = libname[3:]
 
         if not os.path.exists(output_dir):
-			# necessary for windows
-			os.makedirs(output_dir)
+            # necessary for windows
+            os.makedirs(output_dir)
 
         self.compiler.create_static_lib(objects,
             output_libname=libname,
