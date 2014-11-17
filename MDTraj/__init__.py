@@ -79,6 +79,6 @@ def capi():
     import sys
     module_path = sys.modules['mdtraj'].__path__[0]
     return {
-        'lib_path':  os.path.join(module_path, 'core', 'lib'),
-        'include_path': os.path.join(module_path, 'core', 'lib'),
+        'lib_dir':  os.path.join(module_path, 'core', 'lib'),
+        'include_dir': os.path.join(module_path, 'core', 'lib'),
     }
