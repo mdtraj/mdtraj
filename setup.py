@@ -148,10 +148,12 @@ def rmsd_extensions():
     libtheobald = StaticLibrary(
         'mdtraj.core.lib.libtheobald',
         sources=[
-            'MDTraj/rmsd/src/theobald_rmsd.c'],
+            'MDTraj/rmsd/src/theobald_rmsd.c',
+            'MDTraj/rmsd/src/center.c'],
         include_dirs=[
             'MDTraj/rmsd/include'],
-        export_include=['MDTraj/rmsd/include/theobald_rmsd.h'],
+        export_include=['MDTraj/rmsd/include/theobald_rmsd.h',
+                        'MDTraj/rmsd/include/center.h'],
         extra_compile_args=compiler_args,
         libraries=compiler_libraries)
 

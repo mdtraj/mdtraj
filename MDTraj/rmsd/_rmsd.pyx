@@ -46,7 +46,8 @@ cdef extern float msd_atom_major(int nrealatoms, int npaddedatoms,  float* a,
 cdef extern float rot_msd_atom_major(const int n_real_atoms,
     const int n_padded_atoms, const float* a, const float* b, const float rot[9]) nogil
 cdef extern float rot_atom_major(const int n_atoms, float* a, const float rot[9]) nogil
-cdef extern void inplace_center_and_trace_atom_major(float* coords, float* traces,
+cdef extern from "center.h":
+    void inplace_center_and_trace_atom_major(float* coords, float* traces,
     const int n_frames, const int n_atoms) nogil
 cdef extern from "math.h":
     float sqrtf(float x) nogil
