@@ -1,5 +1,7 @@
 from __future__ import print_function, absolute_import
 import os
+import sys
+import json
 import string
 import shutil
 import subprocess
@@ -97,36 +99,63 @@ class CompilerDetection(object):
         except DistutilsExecError:
             pass
 
-    def hasfunction(self, cc, funcname, include=None, extra_postargs=None):
-        # From http://stackoverflow.com/questions/
-        #            7018879/disabling-output-when-compiling-with-distutils
+    def hasfunction(self, funcname, include=None, libraries=None, extra_postargs=None):
+        # running in a separate subshell lets us prevent unwanted stdout/stderr
+        part1 = '''
+from __future__ import print_function
+import os
+import json
+from distutils.ccompiler import new_compiler
+from distutils.sysconfig import customize_compiler, get_config_vars
+
+FUNCNAME = json.loads('%(funcname)s')
+INCLUDE = json.loads('%(include)s')
+LIBRARIES = json.loads('%(libraries)s')
+EXTRA_POSTARGS = json.loads('%(extra_postargs)s')
+        ''' % {
+            'funcname': json.dumps(funcname),
+            'include': json.dumps(include),
+            'libraries': json.dumps(libraries or []),
+            'extra_postargs': json.dumps(extra_postargs)}
+
+        part2 = '''
+get_config_vars()  # DON'T REMOVE ME
+cc = new_compiler()
+customize_compiler(cc)
+for library in LIBRARIES:
+    cc.add_library(library)
+
+status = 0
+try:
+    with open('func.c', 'w') as f:
+        if INCLUDE is not None:
+            f.write('#include %s\\n' % INCLUDE)
+        f.write('int main(void) {\\n')
+        f.write('    %s;\\n' % FUNCNAME)
+        f.write('}\\n')
+    objects = cc.compile(['func.c'], output_dir='.',
+                         extra_postargs=EXTRA_POSTARGS)
+    cc.link_executable(objects, 'a.out')
+except Exception as e:
+    status = 1
+exit(status)
+        '''
         tmpdir = tempfile.mkdtemp(prefix='hasfunction-')
-        devnull = oldstderr = None
         try:
-            try:
-                fname = os.path.join(tmpdir, 'funcname.c')
-                f = open(fname, 'w')
-                if include is not None:
-                    f.write('#include %s\n' % include)
-                f.write('int main(void) {\n')
-                f.write('    %s;\n' % funcname)
-                f.write('}\n')
-                f.close()
-                devnull = open(os.devnull, 'w')
-                oldstderr = os.dup(sys.stderr.fileno())
-                os.dup2(devnull.fileno(), sys.stderr.fileno())
-                objects = cc.compile([fname], output_dir=tmpdir,
-                                     extra_postargs=extra_postargs)
-                cc.link_executable(objects, os.path.join(tmpdir, 'a.out'))
-            except Exception as e:
-                return False
-            return True
+            curdir = os.path.abspath(os.curdir)
+            os.chdir(tmpdir)
+            with open('script.py', 'w') as f:
+                f.write(part1 + part2)
+            proc = subprocess.Popen(
+                [sys.executable, 'script.py'],
+                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            proc.communicate()
+            status = proc.wait()
         finally:
-            if oldstderr is not None:
-                os.dup2(oldstderr, sys.stderr.fileno())
-            if devnull is not None:
-                devnull.close()
+            os.chdir(curdir)
             shutil.rmtree(tmpdir)
+
+        return status == 0
 
     def _print_support_start(self, feature):
         print('Attempting to autodetect {0:6} support...'.format(feature), end=' ')
@@ -139,23 +168,18 @@ class CompilerDetection(object):
 
     def _detect_openmp(self):
         self._print_support_start('OpenMP')
-        compiler = new_compiler()
-        customize_compiler(compiler)
-        hasopenmp = self.hasfunction(compiler, 'omp_get_num_threads()', extra_postargs=['-fopenmp', '/openmp'])
+        hasopenmp = self.hasfunction('omp_get_num_threads()', extra_postargs=['-fopenmp', '/openmp'])
         needs_gomp = hasopenmp
         if not hasopenmp:
-            compiler.add_library('gomp')
-            hasopenmp = self.hasfunction(compiler, 'omp_get_num_threads()')
+            hasopenmp = self.hasfunction('omp_get_num_threads()', libraries=['gomp'])
             needs_gomp = hasopenmp
         self._print_support_end('OpenMP', hasopenmp)
         return hasopenmp, needs_gomp
 
     def _detect_sse3(self):
         "Does this compiler support SSE3 intrinsics?"
-        compiler = new_compiler()
-        customize_compiler(compiler)
         self._print_support_start('SSE3')
-        result = self.hasfunction(compiler, '__m128 v; _mm_hadd_ps(v,v)',
+        result = self.hasfunction('__m128 v; _mm_hadd_ps(v,v)',
                            include='<pmmintrin.h>',
                            extra_postargs=['-msse3'])
         self._print_support_end('SSE3', result)
@@ -163,10 +187,8 @@ class CompilerDetection(object):
 
     def _detect_sse41(self):
         "Does this compiler support SSE4.1 intrinsics?"
-        compiler = new_compiler()
-        customize_compiler(compiler)
         self._print_support_start('SSE4.1')
-        result = self.hasfunction(compiler, '__m128 v; _mm_round_ps(v,0x00)',
+        result = self.hasfunction( '__m128 v; _mm_round_ps(v,0x00)',
                            include='<smmintrin.h>',
                            extra_postargs=['-msse4'])
         self._print_support_end('SSE4.1', result)
@@ -234,7 +256,7 @@ if not release:
                        'isrelease': str(ISRELEASED)})
     finally:
         a.close()
-    
+
 
 class StaticLibrary(Extension):
     def __init__(self, *args, **kwargs):
@@ -252,7 +274,7 @@ class build_ext(_build_ext):
 
     def build_static_extension(self, ext):
         from distutils import log
-        
+
         sources = ext.sources
         if sources is None or not isinstance(sources, (list, tuple)):
             raise DistutilsSetupError(
@@ -284,7 +306,7 @@ class build_ext(_build_ext):
         if ext.extra_objects:
             objects.extend(ext.extra_objects)
         extra_args = ext.extra_link_args or []
-        
+
         language = ext.language or self.compiler.detect_language(sources)
 
         libname = os.path.splitext(os.path.basename(ext_path))[0]
@@ -293,7 +315,7 @@ class build_ext(_build_ext):
             libname.startswith('lib')):
             libname = libname[3:]
 
-        self.compiler.create_static_lib(objects, 
+        self.compiler.create_static_lib(objects,
             output_libname=libname,
             output_dir=output_dir,
             target_lang=language)
