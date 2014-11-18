@@ -1,5 +1,9 @@
 language: c
 
+branches:
+  only:
+    - master
+
 install:
   - source devtools/ci/install.sh
   - export PYTHONUNBUFFERED=true
