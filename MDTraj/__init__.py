@@ -72,3 +72,13 @@ def test(label='full', verbose=2):
 # prevent nose from discovering this function, or otherwise when its run
 # the test suite in an infinite loop
 test.__test__ = False
+
+
+def capi():
+    import os
+    import sys
+    module_path = sys.modules['mdtraj'].__path__[0]
+    return {
+        'lib_dir':  os.path.join(module_path, 'core', 'lib'),
+        'include_dir': os.path.join(module_path, 'core', 'lib'),
+    }
