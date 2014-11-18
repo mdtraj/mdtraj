@@ -154,8 +154,10 @@ def rmsd_extensions():
             'MDTraj/rmsd/include'],
         export_include=['MDTraj/rmsd/include/theobald_rmsd.h',
                         'MDTraj/rmsd/include/center.h'],
-        extra_compile_args=compiler_args,
-        libraries=compiler_libraries)
+        # don't enable OpenMP
+        extra_compile_args=(compiler.compiler_args_sse2 + 
+                            compiler.compiler_args_sse3 +
+                            compiler.compiler_args_opt))
 
     rmsd = Extension('mdtraj._rmsd',
                      sources=[
