@@ -309,8 +309,9 @@ class build_ext(_build_ext):
 
         language = ext.language or self.compiler.detect_language(sources)
 
-        libname = os.path.splitext(os.path.basename(ext_path))[0]
+        libname = os.path.basename(ext_path).split(os.extsep)[0]
         output_dir = os.path.dirname(ext_path)
+
         if (self.compiler.static_lib_format.startswith('lib') and
             libname.startswith('lib')):
             libname = libname[3:]
