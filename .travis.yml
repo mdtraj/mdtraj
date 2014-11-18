@@ -29,7 +29,7 @@ env:
     - secure: "qrbibHwlbXBTq+8h1DC1plyUcl67qwn5yr4UYILdk9WsBhPdNT0ObpRUOcFDW/YM9RDfcOvx7Ruq/OPhvlVCg1C+Lj01kSx3vHxYCxFJVyN7iiD9oI/xzFUc6guvYF9O8um2+QE1ZI70yffGJGT7MZUQNUBnKchqvV3uIeSOqw4="
     - secure: "Y4deQNbKXm0dTth0VoR59wEPYr0dNmp4Np+GDnJofwL+HKQ/w3dTrM3PQOV3bZ2w7WV2gAdtOv8MMUjdFYyyB+GS1wIZa4XbXchGNJr/lljvT3OP579ZwSLAowjEFFR6hidFDfMcR4D7KzTnoCIe9odXrZplI6l0M4OL1agki84="
     # encrypted BINSTAR_TOKEN for push of dev package to binstar
-    - secure: "UrRBa1B9zPUe4R3GKie4LcEz66AS33185D+EfWJw1YJ5BF3479qK0d31lS79UdhiUw6i0Ayopofdz3JMmboXBmviOII5myviVLPY5iTeDQY+oExf6osTK5JdtXuDlUV3YcdeOBC5DzA3Ec6oYkvG0U2zv0MdR+cy5T/Yu4Nw0rQ="
+    - secure: "YdOr8FF3Vw8FzMUYDOB6NSuet3Vh2YxHw9Q1pRu5SsSv3hgLeWIf1wlWOwEHmxU03oLD6DVrqvhStmYWZHunsQqziwGIUuqLxGXC0/dM//ayzfNObU266Pyy50Xn7+/J6YpRSrmMF/GaQeJbq0c357cIMSYRHg8izSaFYPOXKjs="
 
 after_success:
   - echo "after_success"
