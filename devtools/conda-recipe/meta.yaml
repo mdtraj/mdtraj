@@ -1,6 +1,6 @@
 package:
-  name: mdtraj
-  version: !!str dev
+  name: mdtraj-dev
+  version: !!str 1.1.X
 
 build:
   entry_points:
@@ -16,9 +16,12 @@ requirements:
 
   run:
     - python
+    - numpy
     - pandas
     - scipy
+    - scripttest
 
 about:
   home: http://mdtraj.org
   license: GNU Lesser General Public License v2 or later (LGPLv2+)
+  summary: A modern, open library for the analysis of molecular dynamics trajectories (development snapshot)

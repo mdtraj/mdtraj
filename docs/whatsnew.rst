@@ -4,19 +4,25 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.X (development)
-------------------
+v1.1 (November 10, 2014)
+------------------------
+We're pleased to announce the 1.1 release of MDTraj! This release brings
+support for even more trajectory formats, and some new analysis features.
+
 - New loader for CHARMM topology files: ``md.load_psf`` (Jason M. Swails)
+- New loader for Desmond trajectory files (Teng Lin)
+- New loader for Amber restart files (Jason M. Swails)
+- New loader for Gromacs gro files (Robert T. McGibbon)
+- New loader for LAMMPS trj files (Christoph Klein)
 - New text-based :doc:`atom selection domain-specific language <atom_selection>`
   allowing natural querying of atoms as well as generation of equivalent
   python code for embedding in scripts or applications
   (Matthew P. Harrigan, Robert T. McGibbon)
-- Support reading and writing Amber restart files (Jason M. Swails)
+- New ``md.compute_neighbors`` function to efficiently find nearby atoms (Robert T. McGibbon)
 - ``md.shrake_rupley`` supports a new option to accumulate total SASA by residue
   (Robert T. McGibbon)
 - Fix potential segmentation fault when reading corrupted XTC files.
   (Robert T. McGibbon)
-
 
 
 v1.0.0 (September 7, 2014)
