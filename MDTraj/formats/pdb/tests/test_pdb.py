@@ -254,3 +254,7 @@ def test_bfactors():
     # make sure the numbers are actually the same
     eq(bfactors0, flt_bfactors1)
 
+def test_hex():
+   pdb = load_pdb(get_fn('water_hex.pdb.gz'))
+   assert pdb.n_atoms == 100569
+   pdb.save(temp)
