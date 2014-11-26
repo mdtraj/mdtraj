@@ -152,9 +152,9 @@ class PdbStructure(object):
 
     def _load(self, input_stream):
         state = None
-	 
+        
         self._reset_atom_numbers()
-	self._reset_residue_numbers()
+        self._reset_residue_numbers()
 
         # Read one line at a time
         for pdb_line in input_stream:
@@ -194,7 +194,7 @@ class PdbStructure(object):
 
             elif (pdb_line.find("TER") == 0 and pdb_line.split()[0] == "TER"):
                 self._current_model._current_chain._add_ter_record()
-	        self._reset_residue_numbers()
+                self._reset_residue_numbers()
 
             elif (pdb_line.find("CRYST1") == 0):
                 self._unit_cell_lengths = (float(pdb_line[6:15]), float(pdb_line[15:24]), float(pdb_line[24:33]))
