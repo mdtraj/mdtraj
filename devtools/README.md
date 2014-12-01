@@ -12,9 +12,8 @@ How to do a release
 - Commit to master, and [tag](https://github.com/mdtraj/mdtraj/releases) the
   release on github
 - To push the source to PyPI, use `python setup.py sdist --formats=gztar,zip upload`
-- Conda binaries need to built separately on each platform (`conda build mdtraj;
-  binstar upload <path to .tar.bz2>`)
-- Make an announcement on github / email
+- Update `meta.yaml` in the mdtraj/mdtraj-conda-binaries repository. Commit
+  to master. Travis and Appveyor will build binary conda packages.
 - After tagging the release, make a NEW commit that changes `ISRELEASED` back
   to `False` in `setup.py`
 
@@ -46,7 +45,7 @@ version. The logic that populates the version dropdown menu in the browser is in
 
 `docs/themes/sphinx_rtd_theme-0.1.5/sphinx_rtd_theme/versions.html`
 
-Specifically note that it goes to https://api.github.com/repos/rmcgibbo/mdtraj/releases,
+Specifically note that it goes to https://api.github.com/repos/mdtraj/mdtraj/releases,
 and uses the `tag_names` to build the links. So these much line up with the
 prefix of `mdtraj.version.short_version` used in `tools/travis-ci/push-docs-to-s3.py`
 for the links not to break.
