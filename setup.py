@@ -65,8 +65,8 @@ else:
 
 
 ##########################
-VERSION = "1.1.X"
-ISRELEASED = False
+VERSION = "1.2.0"
+ISRELEASED = True
 __version__ = VERSION
 ##########################
 
