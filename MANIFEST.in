@@ -1,2 +1,3 @@
 graft examples
 graft MDTraj
+include basesetup.py
