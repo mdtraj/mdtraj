@@ -4,6 +4,14 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.2 (December 1, 2014)
+-----------------------
+We're pleased to announce the 1.2 release of MDTraj! This release brings
+minor changes to support the forthcoming release of MSMBuilder 3.
+
+- Refactor RMSD code into a static library (Robert T. McGibbon)
+
+
 v1.1 (November 10, 2014)
 ------------------------
 We're pleased to announce the 1.1 release of MDTraj! This release brings

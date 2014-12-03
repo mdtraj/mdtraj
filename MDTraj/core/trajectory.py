@@ -1046,8 +1046,13 @@ class Trajectory(object):
             if self.unitcell_lengths is not None:
                 unitcell_lengths = unitcell_lengths.copy()
 
-        newtraj = self.__class__(xyz, topology, time, unitcell_lengths=unitcell_lengths,
-                                 unitcell_angles=unitcell_angles)
+        newtraj = self.__class__(
+            xyz, topology, time, unitcell_lengths=unitcell_lengths,
+            unitcell_angles=unitcell_angles)
+
+        if self._rmsd_traces is not None:
+            newtraj._rmsd_traces = np.array(self._rmsd_traces[key],
+                                            ndmin=1, copy=True)
         return newtraj
 
     def __init__(self, xyz, topology, time=None, unitcell_lengths=None, unitcell_angles=None):

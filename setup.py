@@ -14,7 +14,7 @@ DOCLINES = __doc__.split("\n")
 import sys
 from setuptools import setup, Extension
 sys.path.insert(0, '.')
-from setupbase import (find_packages, write_version_py, build_ext,
+from basesetup import (find_packages, write_version_py, build_ext,
                        StaticLibrary, CompilerDetection)
 
 try:
@@ -65,7 +65,7 @@ else:
 
 
 ##########################
-VERSION = "1.1.X"
+VERSION = "1.2.X"
 ISRELEASED = False
 __version__ = VERSION
 ##########################
