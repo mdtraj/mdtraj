@@ -257,4 +257,5 @@ def test_bfactors():
 def test_hex():
    pdb = load_pdb(get_fn('water_hex.pdb.gz'))
    assert pdb.n_atoms == 100569
+   assert pdb.n_residues == 33523
    pdb.save(temp)
