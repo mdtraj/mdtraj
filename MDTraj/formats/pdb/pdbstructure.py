@@ -684,7 +684,7 @@ class Atom(object):
                     self.serial_number = int(pdb_line[6:11], 16)
                     pdbstructure._atom_numbers_are_hex = True
                 except:
-                # Just give it the next number in sequence.
+                    # Just give it the next number in sequence.
                     self.serial_number = pdbstructure._next_atom_number
         self.name_with_spaces = pdb_line[12:16]
         alternate_location_indicator = pdb_line[16]
@@ -719,7 +719,7 @@ class Atom(object):
                     else:
                         currentRes = pdbstructure._current_model._current_chain._current_residue
                         if currentRes.name_with_spaces != self.residue_name_with_spaces:
-                        # The residue name has changed.
+                            # The residue name has changed.
                             self.residue_number = pdbstructure._next_residue_number
                         elif self.name_with_spaces in currentRes.atoms_by_name:
                             # There is already an atom with this name.
