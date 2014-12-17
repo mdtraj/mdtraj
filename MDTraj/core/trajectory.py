@@ -1565,11 +1565,11 @@ class Trajectory(object):
         local_indices[0, 1] = 0  # Would otherwise be -1
         local_displacements = -1. * distance.compute_displacements(self, local_indices, periodic=True)
 
-        xyz = local_displacements.cumsum(axis=1)
-        x0 = self.xyz[:, 0]  # Will add this so initial coordinate remains unchanged.
+        delta_xyz = local_displacements.cumsum(axis=1)
+        xyz0 = self.xyz[:, 0][:, None]  # This provides the coordinates of atom zero
 
         if inplace:
-            self.xyz = xyz + x0[:, None]
+            self.xyz = xyz0 + delta_xyz
             traj = self
         else:
             raise(NotImplementedError("Not implemented."))
