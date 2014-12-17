@@ -1538,3 +1538,35 @@ class Trajectory(object):
     @property
     def _have_unitcell(self):
         return self._unitcell_lengths is not None and self._unitcell_angles is not None
+
+    def make_whole(self, inplace=False):
+        """Return a new trajectory with PBC whole.
+
+        Parameters
+        ----------
+        inplace : bool, optional, default=False
+            If True, modify the existing trajectory inplace.  
+
+        Notes
+        -----
+        This approach to making whole iterates over the atoms in the trajectory
+        and computes the PBC-corrected displacement between atoms (i, i+1).
+        These displacements are then cumulatively added to the positions
+        of atom 0 to construct a "whole" molecule.
+        """
+        
+        # Compute displacement from first atom in each chain to each atom, e.g. a "local" coordinate system.
+        local_indices = np.array([(a.index, a.index - 1) for a in self.top.atoms], dtype='int32')
+        local_indices[0, 1] = 0  # Would otherwise be -1
+        local_displacements = -1. * distance.compute_displacements(self, local_indices, periodic=True)
+
+        xyz = local_displacements.cumsum(axis=1)
+        x0 = self.xyz[:, 0]  # Will add this so initial coordinate remains unchanged.
+
+        if inplace:
+            self.xyz = xyz + x0[:, None]
+            traj = self
+        else:
+            raise(NotImplementedError("Not implemented."))
+        
+        return traj

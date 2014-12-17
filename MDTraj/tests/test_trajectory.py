@@ -509,5 +509,34 @@ def test_chunk0_iterload():
     
     eq(trj0.n_frames, trj.n_frames)
 
+def test_make_whole0():
+    pdb_filename = '1am7_protein.pdb'
+    filename = '1am7_corrected.xtc'
+    
+    trj0 = md.load(get_fn(filename), top=get_fn(pdb_filename))
+    trj1 = md.load(get_fn(filename), top=get_fn(pdb_filename))
+
+    trj1.make_whole(inplace=True)
+    
+    eq(trj0.xyz, trj1.xyz)
+
+def test_make_whole1():
+    pdb_filename = '1am7_protein.pdb'
+    filename = '1am7_corrected.xtc'
+    
+    trj0 = md.load(get_fn(filename), top=get_fn(pdb_filename))
+    trj1 = md.load(get_fn(filename), top=get_fn(pdb_filename))
+
+    # Construct a 3D array with lengths corresponding to unitcell lengths.
+    offsets = np.tile(trj0.unitcell_lengths, [trj0.n_atoms, 1, 1]).transpose(1, 0, 2)
+    
+    offsets[:, 0:5] *= 0.0
+    offsets[:, 5:10] *= 2.0
+
+    trj1.xyz = trj1.xyz + offsets
+    trj1.make_whole(inplace=True)
+    
+    eq(trj0.xyz, trj1.xyz, decimal=5)  # E.g. accept some precision loss due to np.cumsum()
+
 
 test_dtr()
