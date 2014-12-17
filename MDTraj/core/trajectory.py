@@ -1540,12 +1540,18 @@ class Trajectory(object):
         return self._unitcell_lengths is not None and self._unitcell_angles is not None
 
     def make_whole(self, inplace=False):
-        """Return a new trajectory with PBC whole.
+        """Return a trajectory with molecules made whole, without PBC jumps.
 
         Parameters
         ----------
         inplace : bool, optional, default=False
             If True, modify the existing trajectory inplace.  
+        
+        Returns
+        -------
+        traj : md.Trajectory
+            The return value is either ``self``, or the new trajectory,
+            depending on the value of ``inplace``.
 
         Notes
         -----
