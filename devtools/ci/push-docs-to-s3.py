@@ -6,10 +6,10 @@ import msmbuilder.version
 
 
 BUCKET_NAME = 'mdtraj.org'
-if not msmbuilder.version.release:
+if not mdtraj.version.release:
     PREFIX = 'latest'
 else:
-    PREFIX = msmbuilder.version.short_version
+    PREFIX = mdtraj.version.short_version
 
 if not any(d.project_name == 's3cmd' for d in pip.get_installed_distributions()):
     raise ImportError('The s3cmd pacakge is required. try $ pip install s3cmd')
