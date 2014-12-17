@@ -1554,8 +1554,7 @@ class Trajectory(object):
         These displacements are then cumulatively added to the positions
         of atom 0 to construct a "whole" molecule.
         """
-        
-        # Compute displacement from first atom in each chain to each atom, e.g. a "local" coordinate system.
+
         local_indices = np.array([(a.index, a.index - 1) for a in self.top.atoms], dtype='int32')
         local_indices[0, 1] = 0  # Would otherwise be -1
         local_displacements = -1. * distance.compute_displacements(self, local_indices, periodic=True)
