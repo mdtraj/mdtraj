@@ -538,5 +538,30 @@ def test_make_whole1():
     
     eq(trj0.xyz, trj1.xyz, decimal=5)  # E.g. accept some precision loss due to np.cumsum()
 
+def test_make_whole2():
+    pdb_filename = '4K6Q.pdb'
+    
+    trj0 = md.load(get_fn(pdb_filename))
+    indices = trj0.top.select("protein")
+    trj0 = trj0.atom_slice(indices)
+
+    trj1 = md.load(get_fn(pdb_filename))
+    trj1 = trj1.atom_slice(indices)
+
+    offset = trj1.unitcell_lengths / 2.
+    trj1.xyz += offset  # Shift the protein to lie across the PBC boundary
+
+    # Now force the coordinates to satisfy PBC, breaking the protein.
+    trj1.xyz = md.compute_displacements(trj1, np.array([[0, i] for i in range(trj1.n_atoms)]))
+
+    rmsd = md.rmsd(trj0, trj1, 0)[0]
+    assert rmsd > 0.2, "Displaced trajectory should no longer align to initial trajectory."
+
+    # Now try to fix it.
+    trj1.make_whole(inplace=True)
+
+    rmsd = md.rmsd(trj0, trj1, 0)[0]
+    eq(float(rmsd), 0.0, decimal=5)
+
 
 test_dtr()

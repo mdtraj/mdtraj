@@ -1559,6 +1559,9 @@ class Trajectory(object):
         and computes the PBC-corrected displacement between atoms (i, i+1).
         These displacements are then cumulatively added to the positions
         of atom 0 to construct a "whole" molecule.
+        
+        This simple approach is probably NOT useful for systems with
+        multiple molecules.
         """
 
         local_indices = np.array([(a.index, a.index - 1) for a in self.top.atoms], dtype='int32')
