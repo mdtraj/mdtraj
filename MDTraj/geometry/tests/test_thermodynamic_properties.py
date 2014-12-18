@@ -154,17 +154,14 @@ def test_kappa():
     assert abs((kappa - reference) / reference) < 2E-1, "Compressability tolerance not met!"
 
 
+@skipif(not HAVE_PANDAS, "Skipping thermal expansion test.")  # Not working
 @skipif(True, "Skipping thermal expansion test.")  # Not working
 def test_alpha():
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
+
+    data = pd.read_table(get_fn('tip3p_300K_1ATM.tab'), names=["timestep", "energy"], sep=r"\s*")
+    energy = data.energy.values
+    alpha = md.geometry.thermal_expansion_alpha_P(traj, temperature, energy)    
     
-    energy = np.random.normal(size=traj.n_frames)  # First check if we can run
-    alpha = md.geometry.thermal_expansion_alpha_P(traj, temperature, energy)
-
     reference = 0.000895685  # From gromacs, see notes above.md        
-
-    if HAVE_PANDAS:
-        # Could generate data from g_energy -xvg None
-        data = pd.read_table(get_fn('tip3p_300K_1ATM.tab'), names=["timestep", "energy"], sep=r"\s*")
-        energy = data.energy.values
-        eq(alpha, reference, decimal=3)
+    eq(alpha, reference, decimal=3)
