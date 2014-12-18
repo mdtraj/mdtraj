@@ -123,7 +123,7 @@ def isothermal_compressability_kappa_T(traj, temperature):
     return kappa * u.bar
 
 def thermal_expansion_alpha_P(traj, temperature, energies):
-    """Calculate the isothermal compressability.
+    """Calculate the thermal expansion coefficient.
     
     Parameters
     ----------
@@ -143,7 +143,10 @@ def thermal_expansion_alpha_P(traj, temperature, energies):
     Notes
     -----
     Equation (5) in Fennell, Dill.  J. Phys. Chem. B, 2012.
+    THIS FUNCTION IS NOT CURRENTLY IMPLEMENTED!
     """
+    raise(NotImplementedError("Disabled due to lack of available unit test."))
+    # Had some issues finding a useful unit test, so disabled this code for now.
     temperature = temperature * u.kelvin
     
     mean_volume = traj.unitcell_volumes.mean()
