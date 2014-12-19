@@ -1,0 +1,29 @@
+; This MDP file is used for calculating the reference value of the static dielelectric constant tests.
+
+integrator               = md
+dt                       = 0.002
+
+nstxout                  = 500
+nstvout                  = 500
+nstlog                   = 500
+nstenergy                = 500
+nstxtcout                = 500
+nstlist                  = 10
+ns-type                  = grid
+
+rlist                    = 0.8
+nstcalclr = 1
+
+coulombtype              = pme
+rcoulomb                 = 0.9
+rvdw                     = 0.9
+tcoupl                   = v-rescale
+tc-grps                  = SOL
+tau-t                    = 1.0
+ref-t                    = 300 
+Pcoupl                   = berendsen
+tau-p                    = 1.0
+compressibility          = 4.5e-5
+ref-p                    = 1.0
+gen-vel                  = no
+constraints              = all-bonds

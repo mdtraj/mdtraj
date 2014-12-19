@@ -714,6 +714,22 @@ class Trajectory(object):
         self._unitcell_lengths = np.vstack((a, b, c)).T
         self._unitcell_angles =  np.vstack((alpha, beta, gamma)).T
 
+
+    @property
+    def unitcell_volumes(self):
+        """Volumes of unit cell for each frame.
+
+        Returns
+        -------
+        volumes : {np.ndarray, shape=(n_frames), None}
+            Volumes of the unit cell in each frame, in nanometers^3, or None
+            if the Trajectory contains no unitcell information.
+        """
+        if self.unitcell_lengths is not None:
+            return np.array(list(map(np.linalg.det, self.unitcell_vectors)))
+        else:
+            return None
+
     @property
     def unitcell_lengths(self):
         """Lengths that define the shape of the unit cell in each frame.
