@@ -32,6 +32,7 @@ import functools
 from copy import deepcopy
 from collections import Iterable
 import numpy as np
+import scipy.sparse
 
 from mdtraj.formats import DCDTrajectoryFile
 from mdtraj.formats import BINPOSTrajectoryFile
@@ -1539,7 +1540,7 @@ class Trajectory(object):
     def _have_unitcell(self):
         return self._unitcell_lengths is not None and self._unitcell_angles is not None
 
-    def make_whole(self, inplace=False):
+    def make_whole_bad(self, inplace=False):
         """Return a trajectory with molecules made whole, without PBC jumps.
 
         Parameters
@@ -1573,6 +1574,62 @@ class Trajectory(object):
 
         if inplace:
             self.xyz = xyz0 + delta_xyz
+            traj = self
+        else:
+            raise(NotImplementedError("Not implemented."))
+        
+        return traj
+
+    def make_whole(self, inplace=False):
+        """Return a trajectory with molecules made whole, without PBC jumps.
+
+        Parameters
+        ----------
+        inplace : bool, optional, default=False
+            If True, modify the existing trajectory inplace.  
+        
+        Returns
+        -------
+        traj : md.Trajectory
+            The return value is either ``self``, or the new trajectory,
+            depending on the value of ``inplace``.
+
+        Notes
+        -----
+        This approach to making whole iterates over the atoms in the trajectory
+        and computes the PBC-corrected displacement between atoms (i, i+1).
+        These displacements are then cumulatively added to the positions
+        of atom 0 to construct a "whole" molecule.
+
+        """
+
+        # Build a sparse matrix / graph of the bonds
+        bonds = self.top.to_dataframe()[1]
+        data = np.ones(bonds.shape[0])
+        row = bonds[:, 0]
+        col = bonds[:, 1]
+        n = self.n_atoms
+        graph = scipy.sparse.coo_matrix((data, (row, col)), shape=(n, n)).tocsr()
+
+        # Separate the bond graph into connected components
+        n_components, components = scipy.sparse.csgraph.connected_components(graph)
+
+        local_indices = np.array([(a.index, a.index) for a in self.top.atoms], dtype='int32')
+        molecule_indices = np.array([(a.index, 0) for a in self.top.atoms], dtype='int32')
+
+        for i in range(n_components):
+            this_component_indices = np.where(components == i)[0]
+            first_atom_in_component = this_component_indices[0]
+            local_indices[this_component_indices, 1] = first_atom_in_component
+            molecule_indices[this_component_indices, 0] = first_atom_in_component
+        
+        local_displacements = distance.compute_displacements(self, local_indices, periodic=True)
+        molecule_displacements = distance.compute_displacements(self, molecule_indices, periodic=True)
+
+        xyz = self.xyz[:, 0] - local_displacements - molecule_displacements
+
+        if inplace:
+            self.xyz = xyz
             traj = self
         else:
             raise(NotImplementedError("Not implemented."))
