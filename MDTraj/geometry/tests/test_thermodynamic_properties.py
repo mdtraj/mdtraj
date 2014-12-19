@@ -157,6 +157,8 @@ def test_kappa():
 @skipif(not HAVE_PANDAS, "Skipping thermal expansion test.")  # Not working
 @skipif(True, "Skipping thermal expansion test.")  # Not working
 def test_alpha():
+    # Had some issues finding a useful unit test, so thermal_expansion_alpha_P() is currently disabled.
+    # Feel free to file a pull request with a working unit test :)    
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
 
     data = pd.read_table(get_fn('tip3p_300K_1ATM.tab'), names=["timestep", "energy"], sep=r"\s*")
