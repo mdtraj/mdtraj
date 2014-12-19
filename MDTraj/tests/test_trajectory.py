@@ -509,5 +509,59 @@ def test_chunk0_iterload():
     
     eq(trj0.n_frames, trj.n_frames)
 
+def test_make_whole0():
+    pdb_filename = '1am7_protein.pdb'
+    filename = '1am7_corrected.xtc'
+    
+    trj0 = md.load(get_fn(filename), top=get_fn(pdb_filename))
+    trj1 = md.load(get_fn(filename), top=get_fn(pdb_filename))
+
+    trj1.make_whole(inplace=True)
+    
+    eq(trj0.xyz, trj1.xyz)
+
+def test_make_whole1():
+    pdb_filename = '1am7_protein.pdb'
+    filename = '1am7_corrected.xtc'
+    
+    trj0 = md.load(get_fn(filename), top=get_fn(pdb_filename))
+    trj1 = md.load(get_fn(filename), top=get_fn(pdb_filename))
+
+    # Construct a 3D array with lengths corresponding to unitcell lengths.
+    offsets = np.tile(trj0.unitcell_lengths, [trj0.n_atoms, 1, 1]).transpose(1, 0, 2)
+    
+    offsets[:, 0:5] *= 0.0
+    offsets[:, 5:10] *= 2.0
+
+    trj1.xyz = trj1.xyz + offsets
+    trj1.make_whole(inplace=True)
+    
+    eq(trj0.xyz, trj1.xyz, decimal=5)  # E.g. accept some precision loss due to np.cumsum()
+
+def test_make_whole2():
+    pdb_filename = '4K6Q.pdb'
+    
+    trj0 = md.load(get_fn(pdb_filename))
+    indices = trj0.top.select("protein")
+    trj0 = trj0.atom_slice(indices)
+
+    trj1 = md.load(get_fn(pdb_filename))
+    trj1 = trj1.atom_slice(indices)
+
+    offset = trj1.unitcell_lengths / 2.
+    trj1.xyz += offset  # Shift the protein to lie across the PBC boundary
+
+    # Now force the coordinates to satisfy PBC, breaking the protein.
+    trj1.xyz = md.compute_displacements(trj1, np.array([[0, i] for i in range(trj1.n_atoms)]))
+
+    rmsd = md.rmsd(trj0, trj1, 0)[0]
+    assert rmsd > 0.2, "Displaced trajectory should no longer align to initial trajectory."
+
+    # Now try to fix it.
+    trj1.make_whole(inplace=True)
+
+    rmsd = md.rmsd(trj0, trj1, 0)[0]
+    eq(float(rmsd), 0.0, decimal=5)
+
 
 test_dtr()
