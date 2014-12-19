@@ -69,6 +69,11 @@ def static_dielectric(traj, charges, temperature):
     -------
     static_dielectric : float, 
         The (unitless) relative static dielectric constant.
+
+    Notes
+    -----
+    See eqn. (2) in 10.1021/jp3002383 or eqn. (7) in 10.1063/1.1476316
+    or https://github.com/gromacs/gromacs/blob/master/src/gromacs/gmxana/gmx_current.c#L622
     """
     temperature = temperature * u.kelvin
     
@@ -147,6 +152,7 @@ def thermal_expansion_alpha_P(traj, temperature, energies):
     """
     raise(NotImplementedError("Disabled due to lack of available unit test."))
     # Had some issues finding a useful unit test, so disabled this code for now.
+    # Feel free to file a pull request with a working unit test :)
     temperature = temperature * u.kelvin
     
     mean_volume = traj.unitcell_volumes.mean()
