@@ -1,6 +1,6 @@
 package:
   name: mdtraj-dev
-  version: !!str 1.1.X
+  version: !!str 1.2.X
 
 build:
   entry_points:
