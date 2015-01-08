@@ -143,7 +143,7 @@ def test_wernet_nilsson_1():
             for d_i, h_i, a_i in hbonds:
                 assert t.topology.atom(d_i).element.symbol in ['O', 'N']
                 assert t.topology.atom(h_i).element.symbol == 'H'
-                assert t.topology.atom(a_i).element.symbol == 'O'
+                assert t.topology.atom(a_i).element.symbol in ['O', 'N']
             # assert that the donor-acceptor distance is less than 0.5 nm, just
             # to make sure the criterion is giving back totally implausible stuff
             if len(hbonds) > 0:
