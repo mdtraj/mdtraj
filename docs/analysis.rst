@@ -91,3 +91,13 @@ NMR Observables
     reindex_dataframe_by_atoms
 
 
+Thermodynamic Quantities
+------------------------
+.. autosummary::
+    :toctree: api/generated/
+
+    dipole_moments
+    static_dielectric
+    isothermal_compressability_kappa_T
+    thermal_expansion_alpha_P
+    density
