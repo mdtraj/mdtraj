@@ -51,7 +51,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
 
     When donor the donor is 'O' and the acceptor is 'O', this corresponds to
     the definition established in [1]_. The donors considered by this method
-    are NH and OH, and the acceptors considered are O. In the paper the only
+    are NH and OH, and the acceptors considered are O and N. In the paper the only
     donor considered is OH.
 
     Parameters
@@ -178,7 +178,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
 
     When donor the donor is 'N' and the acceptor is 'O', this corresponds to
     the definition established in [1]_. The donors considered by this method
-    are NH and OH, and the acceptors considered are O.
+    are NH and OH, and the acceptors considered are O and N.
 
     Parameters
     ----------
