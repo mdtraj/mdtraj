@@ -1,5 +1,5 @@
 Benchmarking MDTraj's RMSD engine
 ===================================
 
-.. notebook:: rmsd-benchmark.ipynb
+.. notebook:: examples/rmsd-benchmark.ipynb
    :skip_exceptions:

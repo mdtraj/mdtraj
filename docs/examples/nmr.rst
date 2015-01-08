@@ -1,5 +1,5 @@
 Calculating NMR observables with :func:`mdtraj.nmr`
 ===================================================
 
-.. notebook:: nmr.ipynb
+.. notebook:: examples/nmr.ipynb
    :skip_exceptions:

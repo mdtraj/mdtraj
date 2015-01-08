@@ -1,5 +1,5 @@
 Finding centroids of clusters
 =============================
 
-.. notebook:: centroids.ipynb
+.. notebook:: examples/centroids.ipynb
    :skip_exceptions:
