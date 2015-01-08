@@ -4,7 +4,6 @@
 #include "msvccompat.h"
 #include <stdio.h>
 #include <pmmintrin.h>
-#include <smmintrin.h>
 
 /* Macros from http://sseplus.sourceforge.net/_s_s_e_plus__platform_8h-source.html */
 

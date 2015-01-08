@@ -12,6 +12,7 @@ v1.3 (development)
    ``density``) (Kyle A. Beauchamp)
 - Fix for PDB parser to handle more than 100K atoms. (Peter Eastman + ChayaSt)
 - Include nitrogen atoms as h-bond acceptors in hydrogen bond detection (Gert Kiss)
+- SSE4.1 support not required. The latest CPU feature now required is SSE3. (Robert T. McGibbon)
 
 
 v1.2 (December 1, 2014)
