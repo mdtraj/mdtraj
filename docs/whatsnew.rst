@@ -4,6 +4,16 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.3 (development)
+------------------
+- New functions to calculate various statistical mechanical properties
+  (``unitcell_volumes``, ``dipole_moments``, ``static_dielectric``,
+   ``isothermal_compressability_kappa_T``, ``thermal_expansion_alpha_P``,
+   ``density``) (Kyle A. Beauchamp)
+- Fix for PDB parser to handle more than 100K atoms. (Peter Eastman + ChayaSt)
+- Include nitrogen atoms as h-bond acceptors in hydrogen bond detection (Gert Kiss)
+
+
 v1.2 (December 1, 2014)
 -----------------------
 We're pleased to announce the 1.2 release of MDTraj! This release brings

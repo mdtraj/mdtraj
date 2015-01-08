@@ -65,7 +65,7 @@ else:
 
 
 ##########################
-VERSION = "1.2.X"
+VERSION = "1.3.0.dev0"
 ISRELEASED = False
 __version__ = VERSION
 ##########################
@@ -155,7 +155,7 @@ def rmsd_extensions():
         export_include=['MDTraj/rmsd/include/theobald_rmsd.h',
                         'MDTraj/rmsd/include/center.h'],
         # don't enable OpenMP
-        extra_compile_args=(compiler.compiler_args_sse2 + 
+        extra_compile_args=(compiler.compiler_args_sse2 +
                             compiler.compiler_args_sse3 +
                             compiler.compiler_args_opt))
 
