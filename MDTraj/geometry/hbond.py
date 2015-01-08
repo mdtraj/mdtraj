@@ -51,7 +51,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
 
     When donor the donor is 'O' and the acceptor is 'O', this corresponds to
     the definition established in [1]_. The donors considered by this method
-    are NH and OH, and the acceptors considered are O. In the paper the only
+    are NH and OH, and the acceptors considered are O and N. In the paper the only
     donor considered is OH.
 
     Parameters
@@ -150,9 +150,9 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
         return [np.zeros((0, 3), dtype=int) for _ in range(traj.n_frames)]
 
     if not exclude_water:
-        acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O']
+        acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O' or a.element.symbol == 'N']
     else:
-        acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O' and a.residue.name != 'HOH']
+        acceptors = [a.index for a in traj.topology.atoms if (a.element.symbol == 'O' and a.residue.name != 'HOH') or a.element.symbol == 'N']
 
     # This is used to compute the angles
     angle_triplets = np.array([(e[0][1], e[0][0], e[1]) for e in product(xh_donors, acceptors) if e[0][0] != e[1]])
@@ -178,7 +178,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
 
     When donor the donor is 'N' and the acceptor is 'O', this corresponds to
     the definition established in [1]_. The donors considered by this method
-    are NH and OH, and the acceptors considered are O.
+    are NH and OH, and the acceptors considered are O and N.
 
     Parameters
     ----------
@@ -280,9 +280,9 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
         return np.zeros((0, 3), dtype=int)
 
     if not exclude_water:
-        acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O']
+        acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O' or a.element.symbol == 'N']
     else:
-        acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O' and a.residue.name != 'HOH']
+        acceptors = [a.index for a in traj.topology.atoms if (a.element.symbol == 'O' and a.residue.name != 'HOH') or a.element.symbol == 'N']
 
     angle_triplets = np.array([(e[0][0], e[0][1], e[1]) for e in product(xh_donors, acceptors)])
     distance_pairs = angle_triplets[:, [1,2]]  # possible H..acceptor pairs
