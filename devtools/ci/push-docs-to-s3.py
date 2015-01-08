@@ -2,7 +2,7 @@ import os
 import pip
 import tempfile
 import subprocess
-import msmbuilder.version
+import mdtraj.version
 
 
 BUCKET_NAME = 'mdtraj.org'
