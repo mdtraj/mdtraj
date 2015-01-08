@@ -57,11 +57,11 @@ def _test_against_vmd(pdb):
     # this is probably not cross-platform compatible. I assume that the exact
     # path to this CHARMM topology that is included with VMD depends on
     # the install mechanism, especially for bundled mac or windows installers
-    VMD_ROOT = os.path.join(os.path.dirname(VMD), '..')
+    VMD_ROOT = os.path.join(os.path.dirname(os.path.realpath(VMD)), '..')
     top_paths = [os.path.join(r, f) for (r, _, fs) in os.walk(VMD_ROOT) for f in fs
          if 'top_all27_prot_lipid_na.inp' in f]
     assert len(top_paths) >= 0
-    top = top_paths[0]
+    top = os.path.abspath(top_paths[0]).replace(" ", "\\ ")
 
     TEMPLATE = '''
 package require psfgen
