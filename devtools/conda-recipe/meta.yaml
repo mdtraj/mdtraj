@@ -20,7 +20,8 @@ requirements:
     - pandas
     - scipy
 
-  test:
+test:
+  requires:
     - nose
     - scripttest
 
