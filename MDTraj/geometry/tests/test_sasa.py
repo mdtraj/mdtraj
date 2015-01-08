@@ -28,7 +28,6 @@
 import numpy as np
 from numpy.testing import *
 
-from mdtraj.geometry._geometry import _processor_supports_sse41
 import mdtraj as md
 from mdtraj import element
 from mdtraj.testing import get_fn, skipif, eq
@@ -54,7 +53,6 @@ topology2.add_atom('H', element.hydrogen, _res2)
 # Tests
 ##############################################################################
 
-@skipif(not _processor_supports_sse41(), "This CPU does not support the required instructions")
 def test_sasa_0():
     # make one atom at the origin
     traj = md.Trajectory(xyz=np.zeros((1,1,3)), topology=topology1)
@@ -66,7 +64,6 @@ def test_sasa_0():
     assert_approx_equal(calc_area, true_area)
 
 
-@skipif(not _processor_supports_sse41(), "This CPU does not support the required instructions")
 def test_sasa_1():
     # two atoms
     traj = md.Trajectory(xyz=np.zeros((1,2,3)), topology=topology2)
@@ -92,7 +89,6 @@ def test_sasa_1():
     assert_array_less(areas[0:8], areas[1:9])
 
 
-@skipif(not _processor_supports_sse41(), "This CPU does not support the required instructions")
 def test_sasa_2():
     t = md.load(get_fn('frame0.h5'))
     val1 = np.sum(md.geometry.shrake_rupley(t[0])) # calculate only frame 0
@@ -103,7 +99,6 @@ def test_sasa_2():
     assert_approx_equal(true_frame_0_sasa, val2)
 
 
-@skipif(not _processor_supports_sse41(), "This CPU does not support the required instructions")
 def test_sasa_3():
     traj_ref = np.loadtxt(get_fn('g_sas_ref.dat'))
     traj = md.load(get_fn('frame0.h5'))
@@ -114,7 +109,6 @@ def test_sasa_3():
     assert_array_almost_equal(traj_sasa, traj_ref, decimal=2)
 
 
-@skipif(not _processor_supports_sse41(), "This CPU does not support the required instructions")
 def test_sasa_4():
     def _test_atom_group(t, value):
         sasa = md.shrake_rupley(t, mode='atom')

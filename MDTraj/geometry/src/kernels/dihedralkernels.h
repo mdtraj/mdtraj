@@ -63,8 +63,8 @@ int dihedral(const float* xyz, const int* quartets, float* out,
       c1 = cross(b2, b3);
       c2 = cross(b1, b2);
 
-      p1 = _mm_mul_ps(_mm_dp_ps(b1, c1, 0x71), _mm_sqrt_ps(_mm_dp_ps(b2, b2, 0x71)));
-      p2 = _mm_dp_ps(c1, c2, 0x71);
+      p1 = _mm_mul_ps(_mm_dp_ps2(b1, c1, 0x71), _mm_sqrt_ps(_mm_dp_ps2(b2, b2, 0x71)));
+      p2 = _mm_dp_ps2(c1, c2, 0x71);
 
       *(out++) = (float) atan2(_mm_cvtss_f32(p1), _mm_cvtss_f32(p2));
     };

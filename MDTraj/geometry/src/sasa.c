@@ -21,14 +21,9 @@
 /*=======================================================================*/
 
 #include <stdlib.h>
-/* Only compile this file if you have SSE4.1 */
-#ifndef __SSE4_1__
-int sasa(void) {exit(EXIT_FAILURE);}
-#else
 #include <stdio.h>
 #include <math.h>
 #include <pmmintrin.h>
-#include <smmintrin.h>
 
 #include "sasa.h"
 #include "msvccompat.h"
@@ -94,7 +89,7 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
       /* Look for atoms `j` that are nearby atom `i` */
       radius_cutoff =  _mm_add_ps(atom_radius_i, atom_radius_j);
       radius_cutoff2 = _mm_mul_ps(radius_cutoff, radius_cutoff);
-      r2 = _mm_dp_ps(r_ij, r_ij, 0x7F);
+      r2 = _mm_dp_ps2(r_ij, r_ij, 0x7F);
       if (_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(r2, radius_cutoff2)), 0)) {
 	    neighbor_indices[n_neighbor_indices]  = j;
 	    n_neighbor_indices++;
@@ -125,9 +120,9 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
       for (k = k_closest_neighbor; k < n_neighbor_indices + k_closest_neighbor; k++) {
 	k_prime = k % n_neighbor_indices;
 	r = _mm_set1_ps(atom_radii[neighbor_indices[k_prime]]);
-	
+
 	r_jk = _mm_sub_ps(r_j, load_float3(frame+3*neighbor_indices[k_prime]));
-	if (_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(_mm_dp_ps(r_jk, r_jk, 0xFF), _mm_mul_ps(r, r))), 0)) {
+	if (_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(_mm_dp_ps2(r_jk, r_jk, 0xFF), _mm_mul_ps(r, r))), 0)) {
 	  k_closest_neighbor = k;
 	  is_accessible = 0;
 	  break;
@@ -252,5 +247,3 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   free(sphere_points);
   return 1;
 }
-
-#endif /* SSE 4.1 */

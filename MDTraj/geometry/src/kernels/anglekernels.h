@@ -58,11 +58,11 @@ int angle(const float* xyz, const int* triplets, float* out,
 #endif
 
       /* normalize the vectors u_prime and v_prime */
-      u = _mm_div_ps(u_prime, _mm_sqrt_ps(_mm_dp_ps(u_prime, u_prime, 0x7F)));
-      v = _mm_div_ps(v_prime, _mm_sqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
+      u = _mm_div_ps(u_prime, _mm_sqrt_ps(_mm_dp_ps2(u_prime, u_prime, 0x7F)));
+      v = _mm_div_ps(v_prime, _mm_sqrt_ps(_mm_dp_ps2(v_prime, v_prime, 0x7F)));
 
       /* compute the arccos of the dot product, and store the result. */
-      *(out++) = (float) acos(CLIP(_mm_cvtss_f32(_mm_dp_ps(u, v, 0x71)), -1, 1));
+      *(out++) = (float) acos(CLIP(_mm_cvtss_f32(_mm_dp_ps2(u, v, 0x71)), -1, 1));
     }
     /* advance to the next frame */
     xyz += n_atoms*3;

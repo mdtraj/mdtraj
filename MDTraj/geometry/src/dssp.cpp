@@ -21,19 +21,7 @@
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 #define CLIP(X, X_min, X_max) (MIN(MAX(X, X_min), X_max))
 
-#ifndef __SSE4_1__
-/* If we don't have the required instruction set, we just want to compile
-   a stub. This function will never be called (hopefully), because from the
-   python wrappers we always call processorSupportsSSE41 before trying
-   to call this function.
-*/
-int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
-         const int* is_proline, const int* chain_ids, const int n_frames,
-         const int n_atoms, const int n_residues, char* secondary)
-{exit(EXIT_FAILURE);}
-#else
 #include <pmmintrin.h>
-#include <smmintrin.h>
 #include "ssetools.h"
 #include "msvccompat.h"
 #include <math.h>
@@ -229,10 +217,10 @@ static std::vector<int> calculate_bends(const float* xyz, const int* ca_indices,
             u_prime = _mm_sub_ps(prev_ca, this_ca);
             v_prime = _mm_sub_ps(this_ca, next_ca);
             /* normalize the vectors u_prime and v_prime */
-            u = _mm_div_ps(u_prime, _mm_sqrt_ps(_mm_dp_ps(u_prime, u_prime, 0x7F)));
-            v = _mm_div_ps(v_prime, _mm_sqrt_ps(_mm_dp_ps(v_prime, v_prime, 0x7F)));
+            u = _mm_div_ps(u_prime, _mm_sqrt_ps(_mm_dp_ps2(u_prime, u_prime, 0x7F)));
+            v = _mm_div_ps(v_prime, _mm_sqrt_ps(_mm_dp_ps2(v_prime, v_prime, 0x7F)));
             /* compute the arccos of the dot product. this gives the angle */
-            kappa = (float) acos(CLIP(_mm_cvtss_f32(_mm_dp_ps(u, v, 0x71)), -1, 1));
+            kappa = (float) acos(CLIP(_mm_cvtss_f32(_mm_dp_ps2(u, v, 0x71)), -1, 1));
             is_bend[i] = kappa > (70 * (M_PI / 180.0));
         }
     }
@@ -404,4 +392,3 @@ int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
 
     return 1;
 }
-#endif

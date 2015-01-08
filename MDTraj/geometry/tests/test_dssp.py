@@ -5,7 +5,6 @@ import itertools
 import tempfile
 import subprocess
 from distutils.spawn import find_executable
-from mdtraj.geometry._geometry import _processor_supports_sse41
 
 
 import numpy as np
@@ -13,10 +12,8 @@ import mdtraj as md
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
 
 HAVE_DSSP = find_executable('mkdssp')
-SUPPORT_SSE41 = _processor_supports_sse41()
 DSSP_MSG =  "This tests required mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
 tmpdir = None
-SSE41_MSG = "This CPU does not support the required instructions"
 
 
 def setup():
@@ -56,7 +53,6 @@ def assert_(a, b):
 
 
 @skipif(not HAVE_DSSP, DSSP_MSG)
-@skipif(not SUPPORT_SSE41, SSE41_MSG)
 def test_1():
     for fn in ['1bpi.pdb', '1vii.pdb', '4K6Q.pdb', '1am7_protein.pdb']:
         t = md.load_pdb(get_fn(fn))
@@ -67,7 +63,6 @@ def test_1():
 
 
 @skipif(not HAVE_DSSP, DSSP_MSG)
-@skipif(not SUPPORT_SSE41, SSE41_MSG)
 def test_2():
     t = md.load(get_fn('2EQQ.pdb'))
     for i in range(len(t)):
@@ -75,7 +70,6 @@ def test_2():
 
 
 @skipif(not HAVE_DSSP, DSSP_MSG)
-@skipif(not SUPPORT_SSE41, SSE41_MSG)
 def test_3():
     # 1COY gives a small error, due to a broken chain.
     pdbids = ['1GAI', '6gsv', '2AAC']
@@ -86,7 +80,6 @@ def test_3():
         f.description = 'test_1: %s' % pdbid
         yield f
 
-@skipif(not SUPPORT_SSE41, SSE41_MSG)
 def test_4():
     t = md.load_pdb(get_fn('1am7_protein.pdb'))
     a = md.compute_dssp(t, simplified=True)
