@@ -44,7 +44,7 @@ autodoc_default_flags = ['members', 'inherited-members']
 html_context = {
     'github_user': 'mdtraj',
     'display_github': True,
-    'github_repo': 'msmbuilder',
+    'github_repo': 'mdtraj',
     'github_version': 'master',
     'conf_py_path': '/doc/',
     'html_logo' : 'mdtraj_logo-small.png',
