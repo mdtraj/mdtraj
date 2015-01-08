@@ -28,7 +28,7 @@ fi
 conda install --yes pip
 conda config --add channels http://conda.binstar.org/omnia
 conda install --yes `conda build devtools/conda-recipe --output`
-pip install numpydoc s3cmd
+pip install numpydoc s3cmd msmb_theme
 conda install --yes `cat docs/requirements.txt | xargs`
 
 conda list -e
