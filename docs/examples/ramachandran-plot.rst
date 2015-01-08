@@ -1,5 +1,5 @@
 Plotting a Ramachandran map with :class:`matplotlib`
 ====================================================
 
-.. notebook:: ramachandran-plot.ipynb
+.. notebook:: examples/ramachandran-plot.ipynb
    :skip_exceptions:

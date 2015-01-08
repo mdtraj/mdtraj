@@ -19,6 +19,10 @@ requirements:
     - numpy
     - pandas
     - scipy
+
+test:
+  requires:
+    - nose
     - scripttest
 
 about:

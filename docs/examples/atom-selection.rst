@@ -1,5 +1,5 @@
 Atom Selection
 ==========================================
 
-.. notebook:: atom-selection.ipynb
+.. notebook:: examples/atom-selection.ipynb
    :skip_exceptions:

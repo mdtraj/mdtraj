@@ -16,10 +16,7 @@ import os
 
 import mdtraj
 import mdtraj.version
-
-sys.path.insert(0, os.path.abspath('sphinxext'))
-sys.path.insert(0, os.path.abspath('themes/sphinx_rtd_theme-0.1.5'))
-import sphinx_rtd_theme
+import msmb_theme
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -44,9 +41,18 @@ extensions = ['sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.autosumma
 autosummary_generate = True
 autodoc_default_flags = ['members', 'inherited-members']
 
+html_context = {
+    'github_user': 'mdtraj',
+    'display_github': True,
+    'github_repo': 'mdtraj',
+    'github_version': 'master',
+    'conf_py_path': '/doc/',
+    'html_logo' : 'mdtraj_logo-small.png',
+    'base_url' : 'http://mdtraj.org'
+}
 
+sys.path.insert(0, os.path.abspath('sphinxext'))
 extensions.append('notebook_sphinxext')
-extensions.append('notebookcell_sphinxext')
 
 _python_doc_base = 'http://docs.python.org/2.7'
 intersphinx_mapping = {
@@ -120,7 +126,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "sphinx_rtd_theme"
+html_theme = "msmb_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -129,7 +135,7 @@ html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_theme_path = [msmb_theme.get_html_theme_path()]
 
 
 # The name for this set of Sphinx documents.  If None, it defaults to
