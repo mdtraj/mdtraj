@@ -46,7 +46,7 @@ html_context = {
     'display_github': True,
     'github_repo': 'mdtraj',
     'github_version': 'master',
-    'conf_py_path': '/doc/',
+    'conf_py_path': '/docs/',
     'html_logo' : 'mdtraj_logo-small.png',
     'base_url' : 'http://mdtraj.org'
 }
