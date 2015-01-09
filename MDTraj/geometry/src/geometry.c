@@ -28,45 +28,7 @@
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 #define CLIP(X, X_min, X_max) (MIN(MAX(X, X_min), X_max))
 
-/* Only compile this file if you have SSE4.1 */
-#ifndef __SSE4_1__
-
-/* These declarations are necessary to get the
-proper error on machines that don't support SSE4.1.
-Without them, you get a linker error which is
-cryptic, since the real definitions are online
-compiled inside #ifdef __SSE4_1__
-*/
-int dist(const float* xyz, const int* pairs, float* distance_out,
-         float* displacement_out, const int n_frames, const int n_atoms,
-         const int n_pairs)
-{ exit(EXIT_FAILURE); }
-int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
-             float* distance_out, float* displacement_out,
-             const int n_frames, const int n_atoms, const int n_pairs)
-{ exit(EXIT_FAILURE); }
-int angle(const float* xyz, const int* triplets, float* out,
-          const int n_frames, const int n_atoms, const int n_angles)
-{ exit(EXIT_FAILURE); }
-int angle_mic(const float* xyz, const int* triplets,
-              const float* box_matrix, float* out,
-              const int n_frames, const int n_atoms, const int n_angles)
-{ exit(EXIT_FAILURE); }
-int dihedral(const float* xyz, const int* quartets, float* out,
-           const int n_frames, const int n_atoms, const int n_quartets)
-{ exit(EXIT_FAILURE); }
-int dihedral_mic(const float* xyz, const int* quartets,
-                 const float* box_matrix, float* out,
-                 const int n_frames, const int n_atoms, const int n_quartets)
-{ exit(EXIT_FAILURE); }
-int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indices,
-                  const int* is_proline, const int n_frames, const int n_atoms,
-                  const int n_residues, int* hbonds, float* henergies)
-{ exit(EXIT_FAILURE); }
-
-#else
 #include <pmmintrin.h>
-#include <smmintrin.h>
 #include "ssetools.h"
 #include "msvccompat.h"
 #include "geometryutils.h"
@@ -167,13 +129,13 @@ static float ks_donor_acceptor(const float* xyz, const float* hcoords,
 
   /* compute all four dot products (each of the squared distances), and then */
   /* pack them into a single float4 using three shuffles. */
-  d2_honchcno = _mm_shuffle_ps(_mm_shuffle_ps(_mm_dp_ps(r_ho, r_ho, 0xF3), _mm_dp_ps(r_nc, r_nc, 0xF3), _MM_SHUFFLE(0,1,0,1)),
-                               _mm_shuffle_ps(_mm_dp_ps(r_hc, r_hc, 0xF3), _mm_dp_ps(r_no, r_no, 0xF3), _MM_SHUFFLE(0,1,0,1)),
+  d2_honchcno = _mm_shuffle_ps(_mm_shuffle_ps(_mm_dp_ps2(r_ho, r_ho, 0xF3), _mm_dp_ps2(r_nc, r_nc, 0xF3), _MM_SHUFFLE(0,1,0,1)),
+                               _mm_shuffle_ps(_mm_dp_ps2(r_hc, r_hc, 0xF3), _mm_dp_ps2(r_no, r_no, 0xF3), _MM_SHUFFLE(0,1,0,1)),
                                _MM_SHUFFLE(2,0,2,0));
 
   /* rsqrt_ps is really not that accurate... */
   recip_sqrt = _mm_div_ps(one, _mm_sqrt_ps(d2_honchcno));
-  energy = _mm_cvtss_f32(_mm_dp_ps(coupling, recip_sqrt, 0xFF));
+  energy = _mm_cvtss_f32(_mm_dp_ps2(coupling, recip_sqrt, 0xFF));
   // energy = _mm_cvtss_f32(_mm_dp_ps(coupling, _mm_rsqrt_ps(d2_honchcno), 0xFF));
   return (energy < -9.9f ? -9.9f : energy);
 }
@@ -200,7 +162,7 @@ static int ks_assign_hydrogens(const float* xyz, const int* nco_indices, const i
           po = load_float3(xyz + 3*po_index);
           r_co = _mm_sub_ps(pc, po);
           r_n = load_float3(xyz + 3*nco_indices[3*ri + 0]);
-          norm_r_co = _mm_mul_ps(r_co, _mm_rsqrt_ps(_mm_dp_ps(r_co, r_co, 0xFF)));
+          norm_r_co = _mm_mul_ps(r_co, _mm_rsqrt_ps(_mm_dp_ps2(r_co, r_co, 0xFF)));
           r_h = _mm_add_ps(r_n, _mm_mul_ps(tenth, norm_r_co));
           store_float3(hcoords, r_h);
       }
@@ -300,7 +262,7 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
         /* check the ca distance before proceding */
         r12 = _mm_sub_ps(ri_ca, rj_ca);
 
-        if(_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(_mm_dp_ps(r12, r12, 0x7F), MINIMAL_CA_DISTANCE2)), 0)) {
+        if(_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(_mm_dp_ps2(r12, r12, 0x7F), MINIMAL_CA_DISTANCE2)), 0)) {
           float e = ks_donor_acceptor(xyz, hcoords, nco_indices, ri, rj);
           if (e < HBOND_ENERGY_CUTOFF && !is_proline[ri])
             /* hbond from donor=ri to acceptor=rj */
@@ -324,4 +286,3 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
 
   return 1;
 }
-#endif

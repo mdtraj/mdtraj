@@ -2,10 +2,10 @@
 #define _GEOMETRY_UTILS_H_
 
 #include "msvccompat.h"
-#include <smmintrin.h>
+#include "ssetools.h"
 
 
-/** 
+/**
  * Compute the cross-product of two 3D vectors stored the first three float
  * elements of `a` and `b`.
  */
@@ -84,7 +84,7 @@ static INLINE void loadBoxMatrix(const float M[9], __m128 (*h)[3], __m128 (*hinv
  * where h and h^{-1} are the 3x3 matrix of box vectors and the inverse
  * of that matrix respectively.
  * -------------------------------------------------------------------
- * For this function, r is supplied in the first three elements of float4 
+ * For this function, r is supplied in the first three elements of float4
  * vector (__m128) `r`. `h` and `hinv` are pointers to arrays of three
  * float4s which specify the matricies H and H^{-1} in column-major order.
  * That is, the first float4 (*h)[0] gives [H[0,0], H[1,0], H[2,0]. 0],
@@ -102,7 +102,8 @@ static INLINE __m128 minimum_image(__m128 r, const __m128 (*h)[3], const __m128 
        _mm_mul_ps((*hinv)[2], _mm_shuffle_ps(r, r, _MM_SHUFFLE(2,2,2,2))));
 
     /* s = s - NEAREST_INTEGER(s) */
-    s = _mm_sub_ps(s, _mm_round_ps(s, _MM_FROUND_TO_NEAREST_INT));
+    /* s = _mm_sub_ps(s, _mm_round_ps(s, _MM_FROUND_TO_NEAREST_INT)); */
+    s = _mm_sub_ps(s, _mm_round_ps2(s));
 
     r = _mm_add_ps(_mm_add_ps(
         _mm_mul_ps((*h)[0], _mm_shuffle_ps(s, s, _MM_SHUFFLE(0,0,0,0))),

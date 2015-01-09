@@ -76,15 +76,10 @@ int dist(const float* xyz, const int* pairs, float* distance_out,
       if (store_distance) {
         /* r12_2 = r12*r12 */
         r12_2 = _mm_mul_ps(r12, r12);
-        /* horizontal add the components of d2 with */
-        /* two instructions. note: it's critical */
-        /* here that the last entry of x1 and x2 was 0 */
-        /* so that d2.w = 0 */
-        s = _mm_hadd_ps(r12_2, r12_2);
-        s = _mm_hadd_ps(s, s);
+        /* horizontal add the components of d2 (last one is zero)*/
+        s = _mm_hsum_ps(r12_2);
         /* sqrt our final answer */
         s = _mm_sqrt_ps(s);
-
         /* s now contains our answer in all four elements, because */
         /* of the way the hadd works. we only want to store one */
         /* element. */

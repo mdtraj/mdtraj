@@ -113,14 +113,14 @@ def compute_dihedrals(traj, indices, periodic=True, opt=True):
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
     if periodic is True and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
-        if opt and _geometry._processor_supports_sse41():
+        if opt:
             _geometry._dihedral_mic(xyz, quartets, box, out)
             return out
         else:
             _dihedral(traj, quartets, periodic, out)
             return out
 
-    if opt and _geometry._processor_supports_sse41():
+    if opt:
         _geometry._dihedral(xyz, quartets, out)
     else:
         _dihedral(traj, quartets, periodic, out)
@@ -359,8 +359,8 @@ def compute_psi(traj, periodic=True, opt=True):
 
 
 def compute_chi1(traj, periodic=True, opt=True):
-    """Calculate the chi1 torsions of a trajectory. chi1 is the first side chain torsion angle 
-    formed between the 4 atoms over the CA-CB axis. 
+    """Calculate the chi1 torsions of a trajectory. chi1 is the first side chain torsion angle
+    formed between the 4 atoms over the CA-CB axis.
 
     Parameters
     ----------
@@ -392,7 +392,7 @@ def compute_chi1(traj, periodic=True, opt=True):
 
 
 def compute_chi2(traj, periodic=True, opt=True):
-    """Calculate the chi2 torsions of a trajectory. chi2 is the second side chain torsion angle 
+    """Calculate the chi2 torsions of a trajectory. chi2 is the second side chain torsion angle
     formed between the corresponding 4 atoms  over the CB-CG axis.
 
     Parameters
@@ -426,7 +426,7 @@ def compute_chi2(traj, periodic=True, opt=True):
 
 def compute_chi3(traj, periodic=True, opt=True):
     """Calculate the chi3 torsions of a trajectory. chi3 is the third side chain torsion angle
-    formed between the corresponding 4 atoms over the CG-CD axis 
+    formed between the corresponding 4 atoms over the CG-CD axis
     (only the residues ARG, GLN, GLU, LYS & MET have these atoms)
 
     Parameters
@@ -460,7 +460,7 @@ def compute_chi3(traj, periodic=True, opt=True):
 
 def compute_chi4(traj, periodic=True, opt=True):
     """Calculate the chi4 torsions of a trajectory. chi4 is the fourth side chain torsion angle
-    formed between the corresponding 4 atoms over the CD-CE or CD-NE axis 
+    formed between the corresponding 4 atoms over the CD-CE or CD-NE axis
     (only ARG & LYS residues have these atoms)
 
     Parameters

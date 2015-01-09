@@ -1,7 +1,6 @@
 #include "stdio.h"
 #include <vector>
 #include <pmmintrin.h>
-#include <smmintrin.h>
 #include "ssetools.h"
 #include "msvccompat.h"
 #include "geometryutils.h"
@@ -33,12 +32,8 @@ template<bool periodic> float get_dist(float* frame_xyz, int i, int j,
 
     /* r12_2 = r12*r12 */
     r12_2 = _mm_mul_ps(r12, r12);
-    /* horizontal add the components of d2 with */
-    /* two instructions. note: it's critical */
-    /* here that the last entry of x1 and x2 was 0 */
-    /* so that d2.w = 0 */
-    s = _mm_hadd_ps(r12_2, r12_2);
-    s = _mm_hadd_ps(s, s);
+    /* horizontal add the components of d2 (last one is zero)*/
+    s = _mm_hsum_ps(r12_2);
     /* sqrt our final answer */
     s = _mm_sqrt_ps(s);
 

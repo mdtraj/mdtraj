@@ -29,7 +29,7 @@ __all__ = ['compute_dssp']
 
 def compute_dssp(traj, simplified=True):
     """Compute Dictionary of protein secondary structure (DSSP) secondary structure assignments
-    
+
     Parameters
     ----------
     traj : md.Trajectory
@@ -74,9 +74,7 @@ def compute_dssp(traj, simplified=True):
     """
     if traj.topology is None:
         raise ValueError('kabsch_sander requires topology')
-    if not _geometry._processor_supports_sse41():
-        raise RuntimeError('This CPU does not support the required instruction set (SSE4.1)')
-    
+
     xyz, nco_indices, ca_indices, proline_indices = _prep_kabsch_sander_arrays(traj)
     chain_ids = np.array([r.chain.index for r in traj.top.residues], dtype=np.int32)
 

@@ -71,14 +71,14 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
     out = np.zeros((xyz.shape[0], triplets.shape[0]), dtype=np.float32)
     if periodic is True and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
-        if opt and _geometry._processor_supports_sse41():
+        if opt:
             _geometry._angle_mic(xyz, triplets, box, out)
             return out
         else:
             _angle(traj, triplets, periodic, out)
             return out
 
-    if opt and _geometry._processor_supports_sse41():
+    if opt:
         _geometry._angle(xyz, triplets, out)
     else:
         _angle(traj, triplets, periodic, out)

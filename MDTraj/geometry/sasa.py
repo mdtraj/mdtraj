@@ -34,7 +34,7 @@ __all__ = ['shrake_rupley']
 
 # these van der waals radii are taken from GROMACS 4.5.3
 # and the file share/gromacs/top/vdwradii.dat
-#using the the same vdw radii for P and S based upon 
+#using the the same vdw radii for P and S based upon
 #http://en.wikipedia.org/wiki/Van_der_Waals_radius
 _ATOMIC_RADII = {'C': 0.15,  'F': 0.12,  'H': 0.04,
                  'N': 0.110, 'O': 0.105, 'S': 0.16,
@@ -101,8 +101,6 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom'):
     ----------
     .. [1] Shrake, A; Rupley, JA. (1973) J Mol Biol 79 (2): 351--71.
     """
-    if not _geometry._processor_supports_sse41():
-        raise RuntimeError('This CPU does not support the required instruction set (SSE4.1)')
 
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     if mode == 'atom':

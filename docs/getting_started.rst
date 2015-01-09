@@ -16,11 +16,10 @@ Supported Hardware
 ------------------
 Some components of MDTraj are written in C / C++ and make use of `SSE
 intrinsics <http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions>`_ for
-maximum performance. The SSE4.1 instruction set (the latest we use) was released
-in 2007, so most recent x86 machines should have no problem with this
+maximum performance. The SSE3 instruction set (the latest we use) was released
+in early 2004, so most recent x86 machines should have no problem with this
 requirement. Utilization of these features also requires using a suitably modern
-compiler. This is only really a question on Linux, where gcc >= 4.3 is a
-prerequisite.
+compiler.
 
 
 Install with Conda
@@ -43,7 +42,7 @@ Install with Pip
 On a Mac or Linux machine, just run ::
 
   $ pip install mdtraj
-  
+
 Or, if you want the bleeding-edge source code, use ::
 
   $ pip install git+git://github.com/rmcgibbo/mdtraj.git
@@ -98,11 +97,11 @@ Optional packages:
 Avoid Hassles with Anaconda or Canopy
 -------------------------------------
 
-The easiest way to get all of the dependencies is to install one of the 
-pre-packaged scientific python distributes like `Enthought's Canopy 
-<https://www.enthought.com/products/canopy/>`_ or `Continuum's Anaconda 
-<https://store.continuum.io/>`_. These distributions already contain all of 
-the dependences, and are distributed via 1-click installers for Windows, Mac 
+The easiest way to get all of the dependencies is to install one of the
+pre-packaged scientific python distributes like `Enthought's Canopy
+<https://www.enthought.com/products/canopy/>`_ or `Continuum's Anaconda
+<https://store.continuum.io/>`_. These distributions already contain all of
+the dependences, and are distributed via 1-click installers for Windows, Mac
 and Linux.
 
 .. note:: I (RTM) personally recommend Continuum's Anaconda. It's free, includes the **AWESOME** conda package manager, and quite simple to use.
@@ -194,7 +193,7 @@ suite uses `nose <https://nose.readthedocs.org/en/latest/>`_, which you can pick
 up via ``pip`` if you don't already have it. ::
 
   pip install nose
-  
+
 Then, to run the tests, open a python shell and do ::
 
   >>> import mdtraj

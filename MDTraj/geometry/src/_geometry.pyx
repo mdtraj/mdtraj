@@ -21,6 +21,7 @@
 ##############################################################################
 
 import sys
+import warnings
 import cython
 import numpy as np
 
@@ -46,13 +47,13 @@ cdef extern from "geometry.h":
                  int n_frames, int n_atoms,  int n_quartets) nogil
 
     int dihedral_mic(const float* xyz, const int* quartets, float* out,
-                     const float* box_matrix, int n_frames, int n_atoms, 
+                     const float* box_matrix, int n_frames, int n_atoms,
                      int n_quartets) nogil
 
     int kabsch_sander(float* xyz, int* nco_indices, int* ca_indices,
                       const int* is_proline, int n_frames, int n_atoms,
                       int n_residues, int* hbonds, float* henergies) nogil
-    
+
     int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
              const int* is_proline, const int* chains_ids, const int n_frames,
              const int n_atoms, const int n_residues, char* secondary) nogil
@@ -65,15 +66,15 @@ cdef extern from "sasa.h":
 cdef extern from "hardware.h":
     int processorSupportsSSE41()
 
-
 ##############################################################################
 # Wrappers
 ##############################################################################
 
 def _processor_supports_sse41():
     """Does the current processor support SSE4.1 instructions?"""
+    warnings.warn(('_processor_supports_sse41 is depicrated, and will be '
+                  'removed in MDTraj 1.4'), DeprecationWarning)
     return processorSupportsSSE41()
-
 
 @cython.boundscheck(False)
 def _dist(float[:, :, ::1] xyz,
