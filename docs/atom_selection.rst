@@ -18,7 +18,7 @@ following are all valid selection queries::
     top.select("protein and (backbone or resname ALA)")
 
 These queries return a numpy array of integers containing the indices of the
-matching residues. Equivalent python code for every selection expression
+matching atoms. Equivalent python code for every selection expression
 can be generated using ``Topology.select_expression``. ::
 
     >>> top.select_expression("water and name O")
