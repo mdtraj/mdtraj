@@ -304,7 +304,7 @@ static void calculate_alpha_helices(const float* xyz,
         }
 
     const std::vector<int> is_bend = calculate_bends(xyz, ca_indices, chain_ids, n_residues, skip);
-    for (unsigned i = 1; i < n_residues-1; i++)
+    for (int i = 1; i < n_residues-1; i++)
         if (secondary[i] == SS_LOOP && !skip[i]) {
             bool isTurn = false;
             for (int stride = 3; stride <= 5 && !isTurn; ++stride)

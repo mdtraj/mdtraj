@@ -28,14 +28,15 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 from mdtraj.utils import ensure_type
-cimport numpy as np
 cimport cython
+from libc.stdint cimport int32_t
+# cimport numpy as np
 
 __all__ = ['compute_drid']
 
 cdef extern from "dridkernels.h":
-    int drid_moments(float* coords, np.int32_t index, np.int32_t * partners,
-                     np.int32_t n_partners, double* moments) nogil
+    int drid_moments(float* coords, int32_t index, int32_t * partners,
+                     int32_t n_partners, double* moments) nogil
 
 
 ##############################################################################
@@ -113,13 +114,13 @@ def compute_drid(traj, atom_indices=None):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def _drid(np.ndarray[ndim=3, mode='c', dtype=np.float32_t] xyz not None,
-          np.ndarray[ndim=1, mode='c', dtype=np.int32_t] atom_indices not None,
-          np.ndarray[ndim=2, mode='c', dtype=np.int32_t] partners not None,
-          np.ndarray[ndim=1, mode='c', dtype=np.int32_t] n_partners not None):
+def _drid(float[:, :, ::1] xyz,
+          int32_t[::1] atom_indices,
+          int32_t[:, ::1] partners,
+          int32_t[::1] n_partners):
 
     cdef int i, j, n_frames, n_atoms, n_dims, n_atom_indices
-    cdef np.ndarray[ndim=3, mode='c', dtype=np.double_t] result
+    cdef double[:, :, ::1] result
 
     n_frames = xyz.shape[0]
     n_atoms = xyz.shape[1]
@@ -133,4 +134,4 @@ def _drid(np.ndarray[ndim=3, mode='c', dtype=np.float32_t] xyz not None,
             drid_moments(&xyz[i, 0, 0], atom_indices[j], &partners[j,0],
                          n_partners[j], &result[i, j, 0])
 
-    return result.reshape(n_frames, n_atom_indices*3)
+    return np.array(result).reshape(n_frames, n_atom_indices*3)

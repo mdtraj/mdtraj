@@ -30,8 +30,6 @@ import cython
 cimport cython
 import os
 import numpy as np
-cimport numpy as np
-np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import _FormatRegistry
@@ -40,7 +38,6 @@ from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
 from dcdlib cimport open_dcd_write, close_file_write, write_timestep
 from dcdlib cimport dcd_nsets, dcd_rewind
-
 
 ##############################################################################
 # Globals
@@ -424,13 +421,12 @@ cdef class DCDTrajectoryFile:
             _stride = stride
 
         # malloc space to put the data that we're going to read off the disk
-        cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((_n_frames, n_atoms_to_read, 3), dtype=np.float32)
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] cell_lengths = np.zeros((_n_frames, 3), dtype=np.float32)
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] cell_angles = np.zeros((_n_frames, 3), dtype=np.float32)
+        cdef float[:, :, ::1] xyz = np.zeros((_n_frames, n_atoms_to_read, 3), dtype=np.float32)
+        cdef float[:, ::1] cell_lengths = np.zeros((_n_frames, 3), dtype=np.float32)
+        cdef float[:, ::1] cell_angles = np.zeros((_n_frames, 3), dtype=np.float32)
 
         # only used if atom_indices is given
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
-
+        cdef float[:, ::1] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
         cdef int i, j
         cdef int status = _DCD_SUCCESS
 
@@ -441,7 +437,7 @@ cdef class DCDTrajectoryFile:
             else:
                 self.timestep.coords = &framebuffer[0,0]
                 status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
-                xyz[i, :, :] = framebuffer[atom_indices, :]
+                xyz.base[i, :, :] = framebuffer.base[atom_indices, :]
 
             self.frame_counter += 1
             cell_lengths[i, 0] = self.timestep.A
@@ -458,31 +454,30 @@ cdef class DCDTrajectoryFile:
             for j in range(_stride - 1):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
 
-        if np.all(cell_lengths < 1e-10):
-            # in the DCD C code, if there's unitcell information inside the
-            # DCD file, it just sets them to length=0 and angle=90. Other tools
-            # like VMD explicitly write length=0 and angle=90 into their
-            # DCD files. In both cases, we detect that indicate the
-            # information's absense
-            cell_lengths = None
-            cell_angles = None
-
         if status == _DCD_SUCCESS:
             # if we're done either because of we read all of the n_frames
             # requested succcessfully, return
-            return xyz, cell_lengths, cell_angles
+            if np.all(cell_lengths.base < 1e-10):
+                # in the DCD C code, if there's unitcell information inside the
+                # DCD file, it just sets them to length=0 and angle=90. Other
+                # tools like VMD explicitly write length=0 and angle=90 into
+                # their  DCD files. In both cases, we detect that indicate the
+                # information's absense
+                return (np.array(xyz, copy=False), None, None)
+            return (np.array(xyz, copy=False),
+                    np.array(cell_lengths, copy=False),
+                    np.array(cell_angles, copy=False))
 
         if status == _DCD_EOF:
             # if we're doing because we reached a normal EOF (perhaps the)
             # user asked to read more frames than were in the file, we need
             # to truncate the return arrays -- we don't want to return them
             # a big stack of zeros.
-            xyz = xyz[0:i]
-            if cell_lengths is not None and cell_angles is not None:
-                cell_lengths = cell_lengths[0:i]
-                cell_angles = cell_angles[0:i]
-
-            return xyz, cell_lengths, cell_angles
+            if cell_lengths is None and cell_angles is None:
+                return (np.array(xyz[:i], copy=False), None, None)
+            return (np.array(xyz[:i], copy=False),
+                    np.array(cell_lengths[:i], copy=False),
+                    np.array(cell_angles[:i], copy=False))
 
         # If we got some other status, thats a "real" error.
         raise IOError("Error: %s", ERROR_MESSAGES(status))
@@ -543,9 +538,8 @@ cdef class DCDTrajectoryFile:
 
         self._write(xyz, cell_lengths, cell_angles)
 
-    cdef _write(self, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz,
-                np.ndarray[np.float32_t, ndim=2, mode="c"] cell_lengths,
-                np.ndarray[np.float32_t, ndim=2, mode="c"] cell_angles):
+    def _write(self, float[:, :, ::1] xyz, float[:, ::1] cell_lengths,
+               float[:, ::1] cell_angles):
         if str(self.mode) != 'w':
             raise ValueError('_write() is only available when the file is opened in mode="w"')
 

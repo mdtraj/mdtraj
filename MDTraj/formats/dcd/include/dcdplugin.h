@@ -72,5 +72,6 @@ dcdhandle* open_dcd_write(const char *path, const char *filetype, const int nato
 int write_timestep(dcdhandle *v, const molfile_timestep_t *ts);
 void close_file_write(dcdhandle *v);
 int dcd_rewind(dcdhandle* dcd);
+int dcd_nsets(dcdhandle* v);
   
 #endif

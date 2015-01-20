@@ -29,11 +29,8 @@ import cython
 import numpy as np
 from mdtraj.utils import ensure_type
 
-cimport numpy as np
 from cpython cimport bool
 from cython.parallel cimport prange
-
-np.import_array()
 
 ##############################################################################
 # External Declarations
@@ -57,6 +54,7 @@ cdef extern from "math.h":
 # External (Public) Functions
 ##############################################################################
 
+@cython.boundscheck(False)
 def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, bool precentered=False):
     """rmsd(target, reference, frame=0, atom_indices=None, parallel=True, precentered=False)
 
@@ -141,13 +139,15 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
     # static declarations
     cdef int i
     cdef float msd, ref_g
-    cdef np.ndarray[ndim=3, dtype=np.float32_t] target_xyz
-    cdef np.ndarray[ndim=2, dtype=np.float32_t] ref_xyz_frame
-    cdef np.ndarray[ndim=1, dtype=np.float32_t] target_g
+    cdef float[:, :, ::1] target_xyz
+    cdef float[:, ::1] ref_xyz_frame
+    cdef float[::1] target_g
     cdef int target_n_frames = target.xyz.shape[0]
     cdef int n_atoms = target.xyz.shape[1] if np.all(atom_indices == slice(None)) else len(atom_indices)
 
     # make sure *every* frame in target_xyz is in proper c-major order
+    if not target.xyz.flags.writeable:
+        target.xyz = np.array(target.xyz, copy=True)
     target_xyz = np.asarray(target.xyz[:, atom_indices, :], order='C', dtype=np.float32)
     # only extract the `frame`-th conformation from ref_xyz
     ref_xyz_frame = np.asarray(reference.xyz[frame, atom_indices, :], order='C', dtype=np.float32)
@@ -158,14 +158,12 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
         ref_g = reference._rmsd_traces[frame]
     else:
         target_g = np.empty(target_n_frames, dtype=np.float32)
-        if not target_xyz.flags.writeable:
-            raise ValueError('target_xyz is not writeable')
         inplace_center_and_trace_atom_major(&target_xyz[0,0,0], &target_g[0], target_n_frames, n_atoms)
         inplace_center_and_trace_atom_major(&ref_xyz_frame[0, 0], &ref_g, 1, n_atoms)
 
     # t1 = time.time()
 
-    cdef np.ndarray[dtype=np.float32_t, ndim=1] distances = np.zeros(target_n_frames, dtype=np.float32)
+    cdef float[::1] distances = np.zeros(target_n_frames, dtype=np.float32)
     if parallel:
         for i in prange(target_n_frames, nogil=True):
             msd = msd_atom_major(n_atoms, n_atoms, &target_xyz[i, 0, 0], &ref_xyz_frame[0, 0], target_g[i], ref_g, 0, NULL)
@@ -177,16 +175,14 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
 
     # t2 = time.time()
     # print 'rmsd: %s, centering: %s' % (t2-t1, t1-t0)
-    return distances
+    return np.array(distances)
 
 
-def _center_inplace_atom_major(np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz not None):
+def _center_inplace_atom_major(float[:, :, ::1] xyz not None):
     assert xyz.shape[2] == 3
-    if not xyz.flags.writeable:
-        raise ValueError('xyz is not writeable')
-    cdef np.ndarray[ndim=1, dtype=np.float32_t] traces = np.empty(xyz.shape[0], dtype=np.float32)
+    cdef float[::1] traces = np.empty(xyz.shape[0], dtype=np.float32)
     inplace_center_and_trace_atom_major(&xyz[0,0,0], &traces[0], xyz.shape[0], xyz.shape[1])
-    return traces
+    return np.array(traces)
 
 
 
@@ -197,13 +193,9 @@ def _center_inplace_atom_major(np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def getMultipleRMSDs_axis_major(
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz1 not None,
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz2 not None,
-np.ndarray[np.float32_t, ndim=1, mode="c"] g1 not None,
-np.ndarray[np.float32_t, ndim=1, mode="c"] g2 not None,
-int frame,
-bool parallel=True):
+def getMultipleRMSDs_axis_major(float[:, :, ::1] xyz1 not None, float[:, :, ::1] xyz2 not None,
+                                float[::1] g1 not None, float[::1] g2 not None, int frame,
+                                bool parallel=True):
     """getMultipleRMSDs_axis_major(xyz1, xyz2, g1, g2, n_atoms, frame, parallel=True)
 
     Calculate the RMSD of several frames to a single frame, with the
@@ -243,7 +235,7 @@ bool parallel=True):
         raise ValueError("Cannot calculate RMSD of frame %d: xyz1 has "
                          "only %d frames." % (frame, xyz1.shape[0]))
 
-    cdef np.ndarray[dtype=np.float32_t, ndim=1] distances = np.zeros(n_frames, dtype=np.float32)
+    cdef float[::1] distances = np.zeros(n_frames, dtype=np.float32)
 
     if parallel == True:
         for i in prange(n_frames, nogil=True):
@@ -256,16 +248,16 @@ bool parallel=True):
                                    &xyz1[frame, 0, 0], &xyz2[i, 0, 0], g1[frame], g2[i])
             distances[i] = sqrtf(msd)
 
-    return distances
+    return np.array(distances)
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def getMultipleRMSDs_atom_major(
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz1 not None,
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz2 not None,
-np.ndarray[np.float32_t, ndim=1, mode="c"] g1 not None,
-np.ndarray[np.float32_t, ndim=1, mode="c"] g2 not None,
+float[:, :, ::1] xyz1 not None,
+float[:, :, ::1] xyz2 not None,
+float[::1] g1 not None,
+float[::1] g2 not None,
 int frame,
 bool parallel=True):
     """getMultipleRMSDs_atom_major(xyz1, xyz2, g1, g2, n_atoms, frame, parallel=True)
@@ -309,7 +301,7 @@ bool parallel=True):
         raise ValueError("Cannot calculate RMSD of frame %d: xyz1 has "
                          "only %d frames." % (frame, xyz1.shape[0]))
 
-    cdef np.ndarray[dtype=np.float32_t, ndim=1] distances = np.zeros(n_frames, dtype=np.float32)
+    cdef float[::1] distances = np.zeros(n_frames, dtype=np.float32)
 
     if parallel == True:
         for i in prange(n_frames, nogil=True):
@@ -320,17 +312,17 @@ bool parallel=True):
             msd = msd_atom_major(n_atoms, n_atoms, &xyz1[frame, 0, 0], &xyz2[i, 0, 0], g1[frame], g2[i], 0, NULL)
             distances[i] = sqrtf(msd)
 
-    return distances
+    return np.array(distances)
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def superpose_atom_major(
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz_align_target not None,
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz_align_mobile not None,
-np.ndarray[np.float32_t, ndim=1, mode="c"] g_target not None,
-np.ndarray[np.float32_t, ndim=1, mode="c"] g_mobile not None,
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz_displace_mobile not None,
+float[:, :, ::1] xyz_align_target not None,
+float[:, :, ::1] xyz_align_mobile not None,
+float[::1] g_target not None,
+float[::1] g_mobile not None,
+float[:, :, ::1] xyz_displace_mobile not None,
 int target_frame,
 bool parallel=True):
     """superpose_atom_major(xyz_target, xyz_mobile, g_target, g_mobile, xyz_mobile_displace)
@@ -364,7 +356,7 @@ bool parallel=True):
 
     # we could get away with using less memory here: we only need 1 rotation
     # matrix in serial mode and 1 rotation matrix per thread in parallel mode.
-    cdef np.ndarray[ndim=3, dtype=np.float32_t] rot = np.zeros((n_frames, 3, 3), dtype=np.float32)
+    cdef float[:, :, ::1] rot = np.zeros((n_frames, 3, 3), dtype=np.float32)
 
     if parallel == True:
         for i in prange(n_frames, nogil=True):
@@ -383,12 +375,12 @@ bool parallel=True):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def getMultipleAlignDisplaceRMSDs_atom_major(
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz_align1 not None,
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz_align2 not None,
-np.ndarray[np.float32_t, ndim=1, mode="c"] g_align1 not None,
-np.ndarray[np.float32_t, ndim=1, mode="c"] g_align2 not None,
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz_displ1 not None,
-np.ndarray[np.float32_t, ndim=3, mode="c"] xyz_displ2 not None,
+float[:, :, ::1] xyz_align1 not None,
+float[:, :, ::1] xyz_align2 not None,
+float[::1] g_align1 not None,
+float[::1] g_align2 not None,
+float[:, :, ::1] xyz_displ1 not None,
+float[:, :, ::1] xyz_displ2 not None,
 int n_atoms_align,
 int n_atoms_displ,
 int frame,
@@ -454,8 +446,8 @@ bool parallel=True):
     cdef int n_align_atoms_padded = xyz_align1.shape[1]
     cdef int n_displ_atoms_padded = xyz_displ1.shape[1]
 
-    cdef np.ndarray[ndim=3, dtype=np.float32_t] rot = np.zeros((n_frames, 3, 3), dtype=np.float32)
-    cdef np.ndarray[dtype=np.float32_t, ndim=1] distances = np.zeros(n_frames, dtype=np.float32)
+    cdef float[:, :, ::1] rot = np.zeros((n_frames, 3, 3), dtype=np.float32)
+    cdef float[::1] distances = np.zeros(n_frames, dtype=np.float32)
 
     if parallel == True:
         for i in prange(n_frames, nogil=True):
@@ -468,5 +460,5 @@ bool parallel=True):
             msd = rot_msd_atom_major(n_atoms_displ, n_displ_atoms_padded, &xyz_displ1[frame, 0, 0], &xyz_displ2[i, 0, 0], &rot[i, 0, 0])
             distances[i] = sqrtf(msd)
 
-    return distances, rot
+    return np.array(distances), np.array(rot)
 

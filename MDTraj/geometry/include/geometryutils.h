@@ -93,7 +93,7 @@ static INLINE void loadBoxMatrix(const float M[9], __m128 (*h)[3], __m128 (*hinv
  * .. [1] Tuckerman, Mark. Statistical Mechanics and Molecular Simulations.
  *    Oxford University Press, 2008.
  */
-static INLINE __m128 minimum_image(__m128 r, const __m128 (*h)[3], const __m128 (*hinv)[3])
+static INLINE __m128 minimum_image(__m128 r, __m128 (*h)[3], __m128 (*hinv)[3])
 {
     __m128 s;
     s = _mm_add_ps(_mm_add_ps(

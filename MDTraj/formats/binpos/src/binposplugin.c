@@ -125,7 +125,7 @@ int seek_timestep(void* v, long int offset, int origin) {
 
 long int tell_timestep(void* v) {
     binposhandle *binpos;
-    int i, numatoms, frame;
+    int numatoms, frame;
     long int offset;
 
     binpos = (binposhandle *)v;
