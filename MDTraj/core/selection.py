@@ -104,7 +104,7 @@ class SelectionKeyword(object):
         (('all', 'everything'), ast.Name(id='True', ctx=ast.Load())),
         (('none', 'nothing'), ast.Name(id='False', ctx=ast.Load())),
         (('backbone', 'is_backbone'), _chain('is_backbone')),
-        (('sidechain', 'is_sidechain'), _chain('is_backbone')),
+        (('sidechain', 'is_sidechain'), _chain('is_sidechain')),
 
         ###--- Atom.residue.<attribute> ---###
         (('protein', 'is_protein'), _chain('residue', 'is_protein')),
