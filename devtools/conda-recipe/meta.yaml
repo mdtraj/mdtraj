@@ -16,6 +16,7 @@ requirements:
 
   run:
     - python
+    - setuptools
     - argparse # [py26]
     - ordereddict # [py26]
     - numpy
