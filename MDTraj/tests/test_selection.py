@@ -29,6 +29,7 @@ from mdtraj.testing import eq, get_fn, assert_raises
 pnode = lambda s: ast.parse(s, mode='eval').body
 
 ala = mdtraj.load(get_fn("alanine-dipeptide-explicit.pdb"))
+gbp = mdtraj.load(get_fn("2EQQ.pdb"))
 
 def make_test_topology():
     t = mdtraj.Topology()
@@ -256,3 +257,21 @@ def test_top_2():
     expr = ala.topology.select_expression("name O and water")
     eq(expr,
        "[atom.index for atom in topology.atoms if ((atom.name == 'O') and atom.residue.is_water)]")
+
+
+def test_backbone():
+    ref_backbone = gbp.topology.select("protein and (name C or name CA or name N or name O)")
+    backbone = gbp.topology.select("backbone")
+    is_backbone = gbp.topology.select("is_backbone")
+
+    eq(np.asarray(backbone), np.asarray(ref_backbone))
+    eq(np.asarray(is_backbone), np.asarray(ref_backbone))
+
+
+def test_sidechain():
+    ref_sidechain = gbp.topology.select("protein and not (name C or name CA or name N or name O)")
+    sidechain = gbp.topology.select("sidechain")
+    is_sidechain = gbp.topology.select("is_sidechain")
+
+    eq(np.asarray(sidechain), np.asarray(ref_sidechain))
+    eq(np.asarray(is_sidechain), np.asarray(ref_sidechain))
