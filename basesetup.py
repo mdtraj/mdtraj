@@ -20,12 +20,12 @@ def find_packages():
     contributors, licensed under the BSD license.
     """
     packages = ['mdtraj.scripts']
-    for dir,subdirs,files in os.walk('MDTraj'):
+    for dir,subdirs,files in os.walk('mdtraj'):
         package = dir.replace(os.path.sep, '.')
         if '__init__.py' not in files:
             # not a package
             continue
-        packages.append(package.replace('MDTraj', 'mdtraj'))
+        packages.append(package)
     return packages
 
 
@@ -225,7 +225,7 @@ def git_version():
     return GIT_REVISION
 
 
-def write_version_py(VERSION, ISRELEASED, filename='MDTraj/version.py'):
+def write_version_py(VERSION, ISRELEASED, filename='mdtraj/version.py'):
     cnt = """
 # THIS FILE IS GENERATED FROM MDTRAJ SETUP.PY
 short_version = '%(version)s'
