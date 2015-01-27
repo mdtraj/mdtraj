@@ -139,7 +139,7 @@ class MDCRDTrajectoryFile(object):
         The filename to open. A path to a file on disk.
     n_atoms : int
         The number of atoms in the system. This is _required_ when mode == 'r'
-        and irrelivant when mode == 'w'.
+        and irrelevant when mode == 'w'.
     mode : {'r', 'w'}
         The mode in which to open the file, either 'r' for read or 'w' for
         write.
