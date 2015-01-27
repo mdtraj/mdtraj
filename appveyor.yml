@@ -3,20 +3,46 @@
 
 os: Windows Server 2012
 
-install:
-  - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
-  - C:\Python27\python.exe c:\get-pip.py
-  - C:\Python27\Scripts\pip.exe install pyyaml
-  - C:\Python27\Scripts\pip.exe install pycosat
-  - C:\Python27\Scripts\pip.exe install conda
-  - C:\Python27\Scripts\conda.exe init
-  - C:\Python27\Scripts\conda.exe config --add channels http://conda.binstar.org/omnia
-  - C:\Python27\Scripts\conda.exe create -n py3 --yes --quiet python=3 numpy pytables cython pandas pip netcdf4 pyyaml nose scripttest scipy
-  - C:\Python27\envs\py3\Scripts\pip.exe install nose-exclude
+environment:
+  global:
+    # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
+    # /E:ON and /V:ON options are not enabled in the batch script intepreter
+    # See: http://stackoverflow.com/a/13751649/163740
+    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\devtools\\appveyor\\run_with_env.cmd"
 
-build_script:
-  - C:\Python27\envs\py3\python.exe setup.py install
+  matrix:
+    - PYTHON: "C:\\Python27_32"
+      PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "32"
+      CONDA_PY: "27"
+      CONDA_NPY: "19"
+
+    - PYTHON: "C:\\Python27_64"
+      PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "64"
+      CONDA_PY: "27"
+      CONDA_NPY: "19"
+
+    - PYTHON: "C:\\Python34_32"
+      PYTHON_VERSION: "3.4"
+      PYTHON_ARCH: "32"
+      CONDA_PY: "34"
+      CONDA_NPY: "19"
+
+    - PYTHON: "C:\\Python34_64"
+      PYTHON_VERSION: "3.4"
+      PYTHON_ARCH: "64"
+      CONDA_PY: "34"
+      CONDA_NPY: "19"
+
+install:
+  # this installs the appropriate Miniconda (Py2/Py3, 32/64 bit),
+  # as well as pip, conda-build, and the binstar CLI
+  - powershell .\\devtools\\appveyor-ci\\install.ps1
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - conda config --add channels http://conda.binstar.org/omnia
+
+build: false
 
 test_script:
-  - SET PATH=%PATH%;C:\Python27\envs\py3\Scripts
-  - C:\Python27\envs\py3\Scripts\nosetests -v
+  - "%CMD_IN_ENV% conda build devtools\\conda-recipe"
