@@ -31,5 +31,5 @@ conda install --yes `cat docs/requirements.txt | xargs`
 conda list -e
 
 (cd docs && make html)
-python devtools/ci/push-docs-to-s3.py
-python devtools/ci/update-versions.py
+python devtools/travis-ci/push-docs-to-s3.py
+python devtools/travis-ci/update-versions.py
