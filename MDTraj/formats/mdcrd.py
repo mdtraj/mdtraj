@@ -145,8 +145,8 @@ class MDCRDTrajectoryFile(object):
         write.
     has_box = 'detect'
         Does the mdcrd file contain box length information? This is optional
-        when mode == 'r' (and irrelvant when mode == 'w'). The presence or
-        absense of box information can generally be infered from the file,
+        when mode == 'r' (and irrelevant when mode == 'w'). The presence or
+        absence of box information can generally be inferred from the file,
         but there might be corner cases in which this is not possible,
         because of limitations in the mdcrd format.
     force_overwrite : bool
