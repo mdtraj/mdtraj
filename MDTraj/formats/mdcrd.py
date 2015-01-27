@@ -139,14 +139,14 @@ class MDCRDTrajectoryFile(object):
         The filename to open. A path to a file on disk.
     n_atoms : int
         The number of atoms in the system. This is _required_ when mode == 'r'
-        and irrelivant when mode == 'w'.
+        and irrelevant when mode == 'w'.
     mode : {'r', 'w'}
         The mode in which to open the file, either 'r' for read or 'w' for
         write.
     has_box = 'detect'
         Does the mdcrd file contain box length information? This is optional
-        when mode == 'r' (and irrelvant when mode == 'w'). The presence or
-        absense of box information can generally be infered from the file,
+        when mode == 'r' (and irrelevant when mode == 'w'). The presence or
+        absence of box information can generally be inferred from the file,
         but there might be corner cases in which this is not possible,
         because of limitations in the mdcrd format.
     force_overwrite : bool
