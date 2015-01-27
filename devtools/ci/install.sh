@@ -12,14 +12,10 @@ fi
 bash $MINICONDA -b
 
 
-PIP_ARGS="-U"
-
 export PATH=$HOME/miniconda/bin:$PATH
-
-conda update --yes conda
-conda create --yes -n ${python} --file devtools/ci/requirements-conda-${python}.txt
-source activate $python
-$HOME/miniconda/envs/${python}/bin/pip install $PIP_ARGS -r devtools/ci/requirements-${python}.txt
+conda install --yes conda-build jinja2 binstar pip
+conda config --add channels http://conda.binstar.org/colli_r
+conda config --add channels http://conda.binstar.org/omnia
 
 
 # Install SPARTA+ for NMR chemical shift predicition

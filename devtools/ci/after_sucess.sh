@@ -13,7 +13,6 @@ fi
 
 
 if [[ "2.7 3.3 3.4" =~ "$python" ]]; then
-    conda install --yes binstar
     binstar -t $BINSTAR_TOKEN  upload --force -u omnia -p mdtraj-dev $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
 fi
 
@@ -25,8 +24,6 @@ fi
 # Create the docs and push them to S3
 # -----------------------------------
 
-conda install --yes pip
-conda config --add channels http://conda.binstar.org/omnia
 conda install --yes `conda build devtools/conda-recipe --output`
 pip install numpydoc s3cmd msmb_theme
 conda install --yes `cat docs/requirements.txt | xargs`
