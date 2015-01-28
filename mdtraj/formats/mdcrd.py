@@ -304,7 +304,10 @@ class MDCRDTrajectoryFile(object):
             if i + length > len(coords):
                 raise IOError('mdcrd parse error: specified n_atoms (%d) is '
                               'likely incorrect. Incorrect buffer size '
-                              'encountered. ' % self._n_atoms)
+                              'encountered. INFO: len(coords)=%d, i=%d, '
+                              'length=%d, items=%s line="%s", coords=%s' % (
+                              self._n_atoms, len(coords), i,  length, items,
+                              line, coords))
 
             coords[i:i+length] = items
             i += length
