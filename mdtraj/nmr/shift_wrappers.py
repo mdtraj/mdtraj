@@ -25,6 +25,7 @@
 # Imports
 ##############################################################################
 
+from __future__ import print_function, absolute_import
 import os
 import sys
 from distutils.spawn import find_executable as _find_executable
