@@ -140,13 +140,13 @@ def chemical_shifts_shiftx2(trj, pH=5.0, temperature=298.00):
     results = []
     with enter_temp_directory():
         for i in range(trj.n_frames):
-            trj[i].save("./trj%d.pdb" % i)
-        cmd = "%s -b 'trj*.pdb' -p %.1f -t %.2f" % (binary, pH, temperature)
+            fn = './trj%d.pdb" % i'
+            trj[i].save(fn)
+            cmd = "%s -b %s -p %.1f -t %.2f" % (binary, fn, pH, temperature)
+            return_flag = os.system(cmd)
 
-        return_flag = os.system(cmd)
-
-        if return_flag != 0:
-            raise(IOError("Could not successfully execute command '%s', check your ShiftX2 installation or your input trajectory." % cmd))
+            if return_flag != 0:
+                raise(IOError("Could not successfully execute command '%s', check your ShiftX2 installation or your input trajectory." % cmd))
 
         for i in range(trj.n_frames):
             try:
