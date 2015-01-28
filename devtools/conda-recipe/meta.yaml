@@ -28,6 +28,9 @@ test:
   requires:
     - nose
     - scripttest
+    # Hack to install shiftx2 on travis
+    {{ '- shiftx2' if environ.get('TRAVIS', False) == 'true' }}
+
     # Hack for py26. Get pip for extra dependencies that arent in
     # conda packages.
     - pip # [py26]

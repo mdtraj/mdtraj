@@ -15,6 +15,7 @@ bash $MINICONDA -b
 export PATH=$HOME/miniconda/bin:$PATH
 conda install --yes conda-build jinja2 binstar pip
 conda config --add channels http://conda.binstar.org/colli_r
+conda config --add channels http://conda.binstar.org/rmcgibbo
 conda config --add channels http://conda.binstar.org/omnia
 
 
@@ -42,25 +43,27 @@ cd $MDTRAJ_DIR
 
 # -------------------
 
-# Install shiftx2 for NMR chemical shift predicition
-MDTRAJ_DIR=`pwd`
-mkdir -p $HOME/external
-cd $HOME/external
-#wget http://www.shiftx2.ca/download/shiftx2-v107-linux-20120106.tgz
-wget https://s3-us-west-1.amazonaws.com/mdtraj-travis-ci-cached-files/shiftx2-v107-linux-20120106.tgz
-REFERENCE_MD5="4d3b23d77e773aa321af2a01ed04199a"
-RECEIVED_MD5=$(md5sum shiftx2-v107-linux-20120106.tgz | cut -d " " -f 1)
-if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
-    echo "shiftx2-v107-linux-20120106.tgz md5 mismatch"
-    exit 1
-fi
+# Shiftx2 now installed on travis-ci through conda.
 
-tar -xzf shiftx2-v107-linux-20120106.tgz
-cd shiftx2-v107-linux/
-make
-export PATH=`pwd`:$PATH
-# go back to the original directory we were in
-cd $MDTRAJ_DIR
+# Install shiftx2 for NMR chemical shift predicition
+# MDTRAJ_DIR=`pwd`
+# mkdir -p $HOME/external
+# cd $HOME/external
+# #wget http://www.shiftx2.ca/download/shiftx2-v107-linux-20120106.tgz
+# wget https://s3-us-west-1.amazonaws.com/mdtraj-travis-ci-cached-files/shiftx2-v107-linux-20120106.tgz
+# REFERENCE_MD5="4d3b23d77e773aa321af2a01ed04199a"
+# RECEIVED_MD5=$(md5sum shiftx2-v107-linux-20120106.tgz | cut -d " " -f 1)
+# if [ $REFERENCE_MD5 != $RECEIVED_MD5 ]; then
+#     echo "shiftx2-v107-linux-20120106.tgz md5 mismatch"
+#     exit 1
+# fi
+#
+# tar -xzf shiftx2-v107-linux-20120106.tgz
+# cd shiftx2-v107-linux/
+# make
+# export PATH=`pwd`:$PATH
+# # go back to the original directory we were in
+# cd $MDTRAJ_DIR
 
 # -------------------
 
