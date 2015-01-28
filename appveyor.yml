@@ -40,6 +40,7 @@ install:
   # as well as pip, conda-build, and the binstar CLI
   - powershell .\\devtools\\appveyor-ci\\install.ps1
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - echo %PATH%
   - conda config --add channels http://conda.binstar.org/omnia
 
 build: false
