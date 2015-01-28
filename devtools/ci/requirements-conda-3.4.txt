@@ -1,9 +1,0 @@
-python==3.4
-numpy
-scipy
-pytables
-cython
-pandas
-pyyaml
-pip
-nose

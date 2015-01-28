@@ -25,7 +25,9 @@
 # Imports
 ##############################################################################
 
+from __future__ import print_function, absolute_import
 import os
+import sys
 from distutils.spawn import find_executable as _find_executable
 import numpy as np
 
@@ -138,16 +140,20 @@ def chemical_shifts_shiftx2(trj, pH=5.0, temperature=298.00):
     results = []
     with enter_temp_directory():
         for i in range(trj.n_frames):
-            trj[i].save("./trj%d.pdb" % i)
-        cmd = "%s -b 'trj*.pdb' -p %.1f -t %.2f" % (binary, pH, temperature)
+            fn = './trj%d.pdb' % i
+            trj[i].save(fn)
+            cmd = "%s -b %s -p %.1f -t %.2f" % (binary, fn, pH, temperature)
+            return_flag = os.system(cmd)
 
-        return_flag = os.system(cmd)
-
-        if return_flag != 0:
-            raise(IOError("Could not successfully execute command '%s', check your ShiftX2 installation or your input trajectory." % cmd))
+            if return_flag != 0:
+                raise(IOError("Could not successfully execute command '%s', check your ShiftX2 installation or your input trajectory." % cmd))
 
         for i in range(trj.n_frames):
-            d = pd.read_csv("./trj%d.pdb.cs" % i)
+            try:
+                d = pd.read_csv("./trj%d.pdb.cs" % i)
+            except IOError:
+                print(os.listdir('.'), file=sys.stderr)
+                raise
             d.rename(columns={"NUM": "resSeq", "RES": "resName", "ATOMNAME": "name"}, inplace=True)
             d["frame"] = i
             results.append(d)
@@ -236,7 +242,7 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
     trj : Trajectory
         Trajectory to predict shifts for.
     rename_HN : bool, optional, default=True
-        SPARTA+ calls the amide proton "HN" instead of the standard "H".  
+        SPARTA+ calls the amide proton "HN" instead of the standard "H".
         When True, this option renames the output as "H" to match the PDB
         and BMRB nomenclature.
 
@@ -292,10 +298,10 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
             results.append(d)
 
     results = pd.concat(results)
-    
+
     if rename_HN:
         results.name[results.name == "HN"] = "H"
-    
+
     results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
 
     return results
