@@ -116,7 +116,7 @@
   <Atom name="HB3" alt1="HB1" alt2="1HB" alt3="3HB"/>
   <Atom name="HE1" alt1="HNE"/>
  </Residue>
- <Residue name="HIS" type="Protein" alt1="HSP" alt2="HSH" alt3="HIP" alt4="HIH" alt5="HID" alt6="HIE">
+ <Residue name="HIS" type="Protein" alt1="HSP" alt2="HSH" alt3="HIP" alt4="HIH" alt5="HID" alt6="HIE" alt7="HSD" alt8="HSE">
   <Atom name="HB2" alt1="2HB"/>
   <Atom name="HB3" alt1="HB1" alt2="1HB" alt3="3HB"/>
   <Atom name="HD1" alt1="HND" alt2="HND1"/>
