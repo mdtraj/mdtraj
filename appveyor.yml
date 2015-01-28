@@ -46,4 +46,4 @@ install:
 build: false
 
 test_script:
-  - "%CMD_IN_ENV% conda build .\\devtools\\conda-recipe"
+  - "%CMD_IN_ENV% conda build -q .\\devtools\\conda-recipe"
