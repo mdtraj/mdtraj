@@ -41,7 +41,7 @@ from nose import SkipTest
 from pkg_resources import resource_filename
 
 # py2/3 compatibility
-from mdtraj.utils.six import iteritems
+from mdtraj.utils.six import iteritems, integer_types, PY2
 
 # if the system doesn't have scipy, we'd like
 # this package to still work:
@@ -155,6 +155,8 @@ def eq(o1, o2, decimal=6, err_msg=''):
         assert_dict_equal(o1, o2, decimal=decimal)
     elif isinstance(o1, ast.AST) and isinstance(o2, ast.AST):
         eq_(ast.dump(o1), ast.dump(o2))
+    elif isinstance(o1, integer_types) and isinstance(o2, integer_types) and PY2:
+        eq_(long(o1), long(o2))
 
     # probably these are other specialized types
     # that need a special check?

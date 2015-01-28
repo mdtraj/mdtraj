@@ -180,14 +180,14 @@ class MDCRDTrajectoryFile(object):
                                  'supply the number of atoms, "n_atoms"')
             if not os.path.exists(filename):
                 raise IOError("The file '%s' doesn't exist" % filename)
-            self._fh = open(filename, 'r')
+            self._fh = open(filename, 'rb')
             self._is_open = True
             self._fh.readline()  # read comment
             self._line_counter += 1
         elif mode == 'w':
             if os.path.exists(filename) and not force_overwrite:
                 raise IOError("The file '%s' already exists" % filename)
-            self._fh = open(filename, 'w')
+            self._fh = open(filename, 'wb')
             self._is_open = True
         else:
             raise ValueError('mode must be one of "r" or "w". '
@@ -288,7 +288,7 @@ class MDCRDTrajectoryFile(object):
             line = self._fh.readline()
             self._line_counter += 1
 
-            if line == '':
+            if line == b'':
                 raise _EOF()
             try:
                 items = [float(line[j:j+8])
@@ -301,13 +301,11 @@ class MDCRDTrajectoryFile(object):
 
             length = len(items)
 
-            if i + length > len(coords):
-                raise IOError('mdcrd parse error: specified n_atoms (%d) is '
-                              'likely incorrect. Incorrect buffer size '
-                              'encountered. INFO: len(coords)=%d, i=%d, '
-                              'length=%d, items=%s line="%s", coords=%s' % (
-                              self._n_atoms, len(coords), i,  length, items,
-                              line, coords))
+            if i + length > len(coords) or float(line.strip().split()[0]) != items[0]:
+                raise IOError(
+                    'mdcrd parse error: specified n_atoms (%d) is likely incorrect. '
+                    'Incorrect buffer size encountered on line=%d' % (
+                    self._n_atoms, self._line_counter))
 
             coords[i:i+length] = items
             i += length
@@ -319,12 +317,13 @@ class MDCRDTrajectoryFile(object):
                 # peek ahead for box
                 here = self._fh.tell()
                 line = self._fh.readline()
-                peek = [float(elem) for elem in line.split()]
+                peek = [float(elem) for elem in line.strip().split()]
                 if len(peek) == 3:
                     box = peek
                 else:
                     if self._has_box is True:
                         raise IOError('Box information not found in file.')
+                    self._fh.seek(-len(line), 1)
                     self._fh.seek(here)
                 break
 

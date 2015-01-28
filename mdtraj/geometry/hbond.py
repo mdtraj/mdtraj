@@ -110,8 +110,8 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
     References
     ----------
     .. [1] Wernet, Ph., L.G.M. Pettersson, and A. Nilsson, et al.
-    "The Structure of the First Coordination Shell in Liquid Water." (2004)
-    Science 304, 995-999.
+       "The Structure of the First Coordination Shell in Liquid Water." (2004)
+       Science 304, 995-999.
     """
 
     distance_cutoff = 0.33
@@ -168,6 +168,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
     # from what's used to compute the angles.
     angle_triplets2 = angle_triplets[:, [1,0,2]]
     return [angle_triplets2[i] for i in mask]
+
 
 def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
