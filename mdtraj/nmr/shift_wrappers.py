@@ -140,7 +140,7 @@ def chemical_shifts_shiftx2(trj, pH=5.0, temperature=298.00):
     results = []
     with enter_temp_directory():
         for i in range(trj.n_frames):
-            fn = './trj%d.pdb" % i'
+            fn = './trj%d.pdb' % i
             trj[i].save(fn)
             cmd = "%s -b %s -p %.1f -t %.2f" % (binary, fn, pH, temperature)
             return_flag = os.system(cmd)
