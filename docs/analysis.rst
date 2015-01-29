@@ -57,6 +57,7 @@ Distances
 
     compute_distances
     compute_displacements
+    compute_neighbors
     compute_contacts
     compute_drid
     compute_center_of_mass
