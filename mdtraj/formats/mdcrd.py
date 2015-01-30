@@ -301,7 +301,7 @@ class MDCRDTrajectoryFile(object):
 
             length = len(items)
 
-            if i + length > len(coords) or float(line.strip().split()[0]) != items[0]:
+            if i + length > len(coords):
                 raise IOError(
                     'mdcrd parse error: specified n_atoms (%d) is likely incorrect. '
                     'Incorrect buffer size encountered on line=%d' % (
