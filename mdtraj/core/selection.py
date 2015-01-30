@@ -28,8 +28,8 @@ from copy import deepcopy
 from collections import namedtuple
 from mdtraj.utils.six import PY2
 from mdtraj.utils.external.pyparsing import (Word, ParserElement, MatchFirst,
-    Keyword, opAssoc, quotedString, alphas, infixNotation, Group, Optional,
-    ParseException)
+    Keyword, opAssoc, quotedString, alphas, alphanums, infixNotation, Group,
+    Optional, ParseException)
 from mdtraj.utils.external.astor import codegen
 ParserElement.enablePackrat()
 
@@ -279,7 +279,7 @@ class parse_selection(object):
         # but we exclude any of the logical operands (e.g. 'or') from being
         # parsed literals
         literal = ~(keywords(BinaryInfixOperand) | keywords(UnaryInfixOperand)) + \
-                  (Word(NUMS) | quotedString | Word(alphas))
+                  (Word(NUMS) | quotedString | Word(alphas, alphanums))
         literal.setParseAction(Literal)
 
         # these are the other 'root' expressions, the selection keywords (resname, resid, mass, etc)
