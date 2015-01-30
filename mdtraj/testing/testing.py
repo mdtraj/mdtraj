@@ -41,7 +41,7 @@ from nose import SkipTest
 from pkg_resources import resource_filename
 
 # py2/3 compatibility
-from mdtraj.utils.six import iteritems
+from mdtraj.utils.six import iteritems, integer_types, PY2
 
 # if the system doesn't have scipy, we'd like
 # this package to still work:
@@ -130,6 +130,10 @@ def eq(o1, o2, decimal=6, err_msg=''):
     AssertionError
         If the tests fail
     """
+    if isinstance(o1, integer_types) and isinstance(o2, integer_types) and PY2:
+        eq_(long(o1), long(o2))
+        return
+
     assert (type(o1) is type(o2)), 'o1 and o2 not the same type: %s %s' % (type(o1), type(o2))
 
     if isinstance(o1, dict):

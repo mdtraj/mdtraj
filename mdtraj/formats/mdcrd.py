@@ -31,7 +31,7 @@ import itertools
 import numpy as np
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.formats.registry import _FormatRegistry
-from mdtraj.utils.six import string_types
+from mdtraj.utils.six import string_types, PY3
 from mdtraj.utils.six.moves import xrange
 
 __all__ = ['MDCRDTrajectoryFile', 'load_mdcrd']
@@ -180,14 +180,14 @@ class MDCRDTrajectoryFile(object):
                                  'supply the number of atoms, "n_atoms"')
             if not os.path.exists(filename):
                 raise IOError("The file '%s' doesn't exist" % filename)
-            self._fh = open(filename, 'r')
+            self._fh = open(filename, 'rb')
             self._is_open = True
             self._fh.readline()  # read comment
             self._line_counter += 1
         elif mode == 'w':
             if os.path.exists(filename) and not force_overwrite:
                 raise IOError("The file '%s' already exists" % filename)
-            self._fh = open(filename, 'w')
+            self._fh = open(filename, 'wb')
             self._is_open = True
         else:
             raise ValueError('mode must be one of "r" or "w". '
@@ -288,7 +288,7 @@ class MDCRDTrajectoryFile(object):
             line = self._fh.readline()
             self._line_counter += 1
 
-            if line == '':
+            if line == b'':
                 raise _EOF()
             try:
                 items = [float(line[j:j+8])
@@ -302,9 +302,10 @@ class MDCRDTrajectoryFile(object):
             length = len(items)
 
             if i + length > len(coords):
-                raise IOError('mdcrd parse error: specified n_atoms (%d) is '
-                              'likely incorrect. Incorrect buffer size '
-                              'encountered. ' % self._n_atoms)
+                raise IOError(
+                    'mdcrd parse error: specified n_atoms (%d) is likely incorrect. '
+                    'Incorrect buffer size encountered on line=%d' % (
+                    self._n_atoms, self._line_counter))
 
             coords[i:i+length] = items
             i += length
@@ -316,12 +317,13 @@ class MDCRDTrajectoryFile(object):
                 # peek ahead for box
                 here = self._fh.tell()
                 line = self._fh.readline()
-                peek = [float(elem) for elem in line.split()]
+                peek = [float(elem) for elem in line.strip().split()]
                 if len(peek) == 3:
                     box = peek
                 else:
                     if self._has_box is True:
                         raise IOError('Box information not found in file.')
+                    self._fh.seek(-len(line), 1)
                     self._fh.seek(here)
                 break
 
@@ -355,7 +357,10 @@ class MDCRDTrajectoryFile(object):
         if self._w_has_box is None:
             # this is the first write()
             self._n_atoms = xyz.shape[1]
-            self._fh.write('TITLE : Created by MDTraj with %d atoms\n' % self._n_atoms)
+            comment = 'TITLE : Created by MDTraj with %d atoms\n' % self._n_atoms
+            if PY3:
+                comment = comment.encode('ascii')
+            self._fh.write(comment)
 
             if cell_lengths is None:
                 self._w_has_box = False
@@ -378,16 +383,21 @@ class MDCRDTrajectoryFile(object):
                 out = "%8.3f" % coord
                 if len(out) > 8:
                     raise ValueError('Overflow error')
+                if PY3:
+                    out = out.encode('ascii')
                 self._fh.write(out)
                 if (j+1) % 10 == 0:
-                    self._fh.write("\n")
+                    self._fh.write(b"\n")
                     lfdone = True
 
             if not lfdone:
-                self._fh.write("\n")
+                self._fh.write(b"\n")
 
             if cell_lengths is not None:
-                self._fh.write("%8.3f %8.3f %8.3f\n" % tuple(cell_lengths[i]))
+                line = "%8.3f %8.3f %8.3f\n" % tuple(cell_lengths[i])
+                if PY3:
+                    line = line.encode('ascii')
+                self._fh.write(line)
 
     def seek(self, offset, whence=0):
         """Move to a new file position
@@ -423,7 +433,7 @@ class MDCRDTrajectoryFile(object):
                     self._read()  # advance and throw away these frames
             elif absolute is not None:
                 self._fh.close()
-                self._fh = open(self._filename, 'r')
+                self._fh = open(self._filename, 'rb')
                 self._fh.readline()  # read comment
                 self._frame_index = 0
                 self._line_counter = 1
