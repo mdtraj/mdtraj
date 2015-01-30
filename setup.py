@@ -48,20 +48,11 @@ except ValueError:
     no_install_deps = False
 
 
-setup_kwargs = {}
-if 'setuptools' in sys.modules:
-    setup_kwargs['zip_safe'] = False
-    setup_kwargs['entry_points'] = {'console_scripts':
-              ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
-               'mdinspect = mdtraj.scripts.mdinspect:entry_point']}
-
-    if sys.version_info[0] == 2:
-        # required to fix cythoninze() for old versions of setuptools on
-        # python 2
-        m = sys.modules['setuptools.extension']
-        m.Extension.__dict__ = m._Extension.__dict__
-else:
-    setup_kwargs['scripts'] = ['scripts/mdconvert.py', 'scripts/mdinspect.py']
+if sys.version_info[0] == 2:
+    # required to fix cythoninze() for old versions of setuptools on
+    # python 2
+    m = sys.modules['setuptools.extension']
+    m.Extension.__dict__ = m._Extension.__dict__
 
 
 ##########################
@@ -243,7 +234,6 @@ setup(name='mdtraj',
       platforms=['Linux', 'Mac OS-X', 'Unix', 'Windows'],
       classifiers=CLASSIFIERS.splitlines(),
       packages=find_packages(),
-      package_dir={'mdtraj.scripts': 'scripts'},
       cmdclass={'build_ext': build_ext},
       ext_modules=cythonize(extensions),
       package_data={'mdtraj.formats.pdb': ['data/*'],
@@ -257,4 +247,8 @@ setup(name='mdtraj',
                                                'reference/ala_dipeptide_trj/not_hashed',
                                                'reference/frame0.dtr',
                                                'reference/frame0.dtr/not_hashed',]},
-      **setup_kwargs)
+      zip_safe=False,
+      entry_points={'console_scripts':
+          ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
+           'mdinspect = mdtraj.scripts.mdinspect:entry_point']},
+)
