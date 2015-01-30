@@ -275,3 +275,13 @@ def test_sidechain():
 
     eq(np.asarray(sidechain), np.asarray(ref_sidechain))
     eq(np.asarray(is_sidechain), np.asarray(ref_sidechain))
+
+def test_literal():
+    name_og1_0 = gbp.topology.select('name "OG1"')
+    name_og1_1 = gbp.topology.select("name 'OG1'")
+    name_og1_2 = gbp.topology.select("name OG1")
+
+    ref_og1 = np.asarray([a.index for a in gbp.topology.atoms if a.name == 'OG1'])
+    eq(name_og1_0, ref_og1)
+    eq(name_og1_2, ref_og1)
+    eq(name_og1_0, ref_og1)
