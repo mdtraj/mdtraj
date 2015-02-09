@@ -56,6 +56,9 @@ def test_unitcell_0():
         np.testing.assert_array_almost_equal(a, b)
 
 def test_unitcell_1():
+    # try round-tripping some random lengths and angles through
+    # lengths_and_angles_to_box_vectors and box_vectors_to_lengths_and_angles,
+    # and make sure we get back to where we started
     for _ in range(10):
         arg = np.hstack((random.rand(3), random.uniform(70, 110, size=3)))
         vectors = lengths_and_angles_to_box_vectors(*arg)
