@@ -84,7 +84,7 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
     a = np.array([a_length, np.zeros_like(a_length), np.zeros_like(a_length)])
     b = np.array([b_length*np.cos(gamma), b_length*np.sin(gamma), np.zeros_like(b_length)])
     cx = c_length*np.cos(beta)
-    cy = c_length*(np.cos(alpha) - np.cos(beta)*np.cos(gamma))
+    cy = c_length*(np.cos(alpha) - np.cos(beta)*np.cos(gamma)) / np.sin(gamma)
     cz = np.sqrt(c_length*c_length - cx*cx - cy*cy)
     c = np.array([cx,cy,cz])
 
