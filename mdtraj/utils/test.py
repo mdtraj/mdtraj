@@ -31,7 +31,8 @@ import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.utils.validation import TypeCastPerformanceWarning
 from mdtraj.utils.unit import in_units_of, _str_to_unit
-from mdtraj.utils import import_, lengths_and_angles_to_box_vectors
+from mdtraj.utils import (import_, lengths_and_angles_to_box_vectors,
+                          box_vectors_to_lengths_and_angles)
 from mdtraj.testing import raises, eq
 import warnings
 from itertools import combinations
@@ -42,6 +43,7 @@ from itertools import combinations
 
 a = np.ones(10, dtype=np.float32)
 b = np.ones((10,10), dtype=np.float64, order='F')
+random = np.random.RandomState(0)
 
 ##############################################################################
 # tests
@@ -52,6 +54,16 @@ def test_unitcell_0():
     expected = (np.array([1, 0, 0]), np.array([ 0.,  1.,  0.]), np.array([ 0.,  0.,  1.]))
     for (a, b) in zip(result, expected):
         np.testing.assert_array_almost_equal(a, b)
+
+def test_unitcell_1():
+    # try round-tripping some random lengths and angles through
+    # lengths_and_angles_to_box_vectors and box_vectors_to_lengths_and_angles,
+    # and make sure we get back to where we started
+    for _ in range(10):
+        arg = np.hstack((random.rand(3), random.uniform(70, 110, size=3)))
+        vectors = lengths_and_angles_to_box_vectors(*arg)
+        out = box_vectors_to_lengths_and_angles(*vectors)
+        np.testing.assert_array_almost_equal(arg, out)
 
 def test_ensure_type_1():
     ensure_type(a, np.float32, 1, '', length=10)
