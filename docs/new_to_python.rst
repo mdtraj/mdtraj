@@ -44,6 +44,7 @@ On windows, we recommend using the 32-bit Anaconda installer, regardless of
 whether or not your operating system is 32-bit or 64-bit. On OS X and Linux,
 use the 64-bit python.
 
+
 Installing MDTraj
 -----------------
 After installing python, you'll need to install ``mdtraj`` using the
