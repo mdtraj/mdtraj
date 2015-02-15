@@ -44,14 +44,14 @@ Optional packages:
 
     `SciPy <http://scipy.org>`_ >= 0.12.0
         We use scipy for loading and saving AMBER netcdf formatted
-	trajectories.
+        trajectories.
 
     `Pandas <http://pandas.pydata.org>`_ >= 0.9.0
         Some functionality, including mol2 parsing,  requires pandas.
 
     `PyTables <http://www.pytables.org/>`_ >= 2.4.0
         Working with HDF5 formatted trajectories requires the PyTables
-	package.
+        package.
 
 
 Testing Your Installation
