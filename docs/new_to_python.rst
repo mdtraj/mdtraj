@@ -86,6 +86,7 @@ Resources and Getting Help
 Here are some resources that you might find useful for getting started,
 especially for scientists and scientific programming in Python.
 
+
 Python resources:
 
     `Code Academy Introduction to Python <http://www.codecademy.com/en/tracks/python>`_
