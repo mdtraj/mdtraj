@@ -2,8 +2,8 @@ Help! How do I get started?
 ===========================
 
 These instructions are intended for users from a biology, chemistry, or
-physics perspective who are getting started with MDTraj. It does not assume prior
-experience with the Python programming language or the command line.
+physics perspective who are getting started with MDTraj. It does not assume
+prior experience with the Python programming language or the command line.
 
 Why Python?
 -----------
@@ -33,6 +33,8 @@ installing additional packages. We also like the
 `miniconda <http://conda.pydata.org/miniconda.html>`_ python distribution,
 which is a little bit smaller and contains just python and ``conda``.
 
+.. tip:: Here's the `download link <http://continuum.io/downloads>`_ for the Anaconda scientific python distribution.
+
 When given the option to choose which version of python, we recommend the
 latest, **python 3.4**.
 
@@ -46,12 +48,15 @@ After installing python, you'll need to install ``mdtraj`` using the
 command line.
 
 - Windows: Find the ``Anaconda Command Prompt`` in the Start Menu
-- OS X: Open the Terminal application in Applications / Utilies
+- OS X: Open the Terminal application in Applications / Utilities
 
 From the command line, type ``python --version``. This should show the version
-of python you have installed. For example: ::
+of python you have installed. For example, the command: ::
 
   $ python --version
+
+prints out ::
+
   Python 3.4.2 :: Continuum Analytics, Inc.
 
 If everything looks good, go ahead and install ``mdtraj`` using the ``conda``
@@ -63,22 +68,29 @@ package manager. ::
 Starting MDTraj with IPython
 ----------------------------
 
-On Windows, open the IPython Notebook from the Start Menu. On OS X or Linux, run
-the command ``ipython notebook`` from a command line prompt. This should load
-up a new notebook in your browser.
+If you're using Windows, open the IPython Notebook from the Start Menu. For
+OS X or Linux, run the command ``ipython notebook`` from a command line prompt.
+This should load up a new notebook in your browser.
 
-From here, you can start copying a pasting
-commands from our :ref:`examples <examples>` page, and getting familar with
-the environment.
+From here, you can start by trying ``import mdtraj``, or copying a pasting
+commands from our :ref:`examples <examples>` page, and getting familiar with
+the environment. You're off to the races!
 
 
 Resources and Getting Help
 --------------------------
 
-Here are some resources that you might find useful for getting started, especially
-for scientists and scientific programming in Python.
+Here are some resources that you might find useful for getting started,
+especially for scientists and scientific programming in Python.
 
-    `Python Scientific Lecture Notes <https://scipy-lectures.github.io/>`_
+Python resources:
+
+    `Code Academy Introduction to Python <http://www.codecademy.com/en/tracks/python>`_
+        This web course from Code Academy is a good introduction to basic
+        programming in Python (without a particular focus on scientific
+        works). It covers syntax, functions, control flow, and data structures.
+
+    `Scientific Python Lecture Notes <https://scipy-lectures.github.io/>`_
         Tutorial material on the scientific Python ecosystem, a quick
         introduction to central tools and techniques. The different chapters
         each correspond to a 1 to 2 hours course with increasing level of
@@ -86,8 +98,11 @@ for scientists and scientific programming in Python.
 
     `Lessons from the Software Carpentry <http://software-carpentry.org/lessons.html>`_
         The Software Carpentry is a non-profit organization whose members teach
-        researchers basic software skills. All their teaching material is online
-        and freely available. They might be hosting a workshop near you too!
+        researchers basic software skills. All their teaching material is
+        online and freely available. They might be hosting a workshop near you
+        too!
+
+Getting help:
 
     `MDTraj Discussion Forums <http://discourse.mdtraj.org/>`_
         You can ask questions in our discussion forums. It is generally quite
