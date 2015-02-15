@@ -60,7 +60,8 @@ Documentation
 .. toctree::
    :maxdepth: 1
 
-   getting_started
+   installation
+   new_to_python
    examples/index
    whatsnew
    faq
