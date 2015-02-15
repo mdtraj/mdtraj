@@ -5,8 +5,10 @@ These instructions are intended for users from a biology, chemistry, or
 physics perspective who are getting started with MDTraj. It does not assume
 prior experience with the Python programming language or the command line.
 
+
 Why Python?
 -----------
+
 MDtraj is not a standalone program. It's a software package that provides
 functions for analyzing and working with molecular dynamics trajectories
 in python; **it's a set of building blocks.**
