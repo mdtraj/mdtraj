@@ -1,3 +1,5 @@
+.. _examples:
+
 MDTraj Examples
 ====================
 
