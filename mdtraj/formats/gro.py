@@ -57,7 +57,7 @@ from re import sub, match
 import numpy as np
 
 import mdtraj as md
-from mdtraj.utils import cast_indices, ensure_type
+from mdtraj.utils import in_units_of, cast_indices, ensure_type
 from mdtraj.formats import pdb
 from mdtraj.core import element as elem
 from mdtraj.formats.registry import _FormatRegistry
@@ -85,18 +85,23 @@ def load_gro(filename, stride=None, atom_indices=None, frame=None):
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
     """
+    from mdtraj.core.trajectory import _parse_topology, Trajectory
+
     with GroTrajectoryFile(filename, 'r') as f:
         topology = f.topology
         if frame is not None:
             f.seek(frame)
-            coordinates, time, unitcell_vectors = f.read(n_frames=1, atom_indices=atom_indices)
+            coordinates, unitcell_vectors, time = f.read(n_frames=1, atom_indices=atom_indices)
         else:
-            coordinates, time, unitcell_vectors = f.read(stride=stride, atom_indices=atom_indices)
+            coordinates, unitcell_vectors, time = f.read(stride=stride, atom_indices=atom_indices)
 
         coordinates = in_units_of(coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
         unitcell_vectors = in_units_of(unitcell_vectors, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
-    return Trajectory(xyz=xyz, topology=topology, time=time, unitcell_vectors=unitcell_vectors)
+    traj = Trajectory(xyz=coordinates, topology=topology, time=time)
+    traj.unitcell_vectors = unitcell_vectors
+
+    return traj
 
 
 @_FormatRegistry.register_fileobject('.gro')
