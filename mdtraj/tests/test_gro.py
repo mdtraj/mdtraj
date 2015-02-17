@@ -47,3 +47,14 @@ def test_read_write():
 
     eq(xyz, t.xyz, decimal=3)
     eq(list(top.atoms), list(t.top.atoms))
+
+
+def test_load():
+    tref = md.load(get_fn('4waters.pdb'))
+    with GroTrajectoryFile(temp, 'w') as f:
+        f.write(tref.xyz, tref.topology)
+
+    t = md.load(temp)
+
+    eq(t.xyz, tref.xyz, decimal=3)
+    eq(list(t.top.atoms), list(tref.top.atoms))
