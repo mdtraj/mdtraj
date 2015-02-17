@@ -91,9 +91,9 @@ def load_gro(filename, stride=None, atom_indices=None, frame=None):
         topology = f.topology
         if frame is not None:
             f.seek(frame)
-            coordinates, unitcell_vectors, time = f.read(n_frames=1, atom_indices=atom_indices)
+            coordinates, time, unitcell_vectors = f.read(n_frames=1, atom_indices=atom_indices)
         else:
-            coordinates, unitcell_vectors, time = f.read(stride=stride, atom_indices=atom_indices)
+            coordinates, time, unitcell_vectors = f.read(stride=stride, atom_indices=atom_indices)
 
         coordinates = in_units_of(coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
         unitcell_vectors = in_units_of(unitcell_vectors, f.distance_unit, Trajectory._distance_unit, inplace=True)
@@ -244,7 +244,8 @@ class GroTrajectoryFile(object):
             time = None
         else:
             time = time[::stride]
-        return coordinates[::stride], unitcell_vectors[::stride], time
+
+        return coordinates[::stride], time, unitcell_vectors[::stride]
 
     def _read_topology(self):
         if not self._open:
