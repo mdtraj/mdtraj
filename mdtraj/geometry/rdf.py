@@ -57,7 +57,7 @@ def compute_rdf(traj, pair_names=None, r_range=None, bin_width=0.005,
         Radial distribution function values at r.
     """
     if not r_range:
-        r_range = np.array([0.0, 0.99])
+        r_range = np.array([0.0, 1.0])
     r_range = ensure_type(r_range, dtype=np.float64, ndim=1, name='r_range',
                           shape=(2,), warn_on_cast=False)
     bins = np.arange(r_range[0], r_range[1], bin_width)
