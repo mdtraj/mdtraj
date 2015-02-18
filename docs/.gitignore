@@ -1,0 +1,6 @@
+_build/
+api/generated/
+examples/*.ipynb
+examples/*.py
+examples/.ipynb_checkpoints/
+examples/generated/
