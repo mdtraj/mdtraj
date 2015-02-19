@@ -23,6 +23,7 @@
 from __future__ import print_function, division
 
 import itertools
+import re
 
 import numpy as np
 
@@ -41,7 +42,8 @@ def compute_rdf(traj, pair_names=None, r_range=None, bin_width=0.005,
     ----------
     traj : Trajectory
     pair_names : array-like, shape=(2), optional, default=None
-        Pair of atomtypes to consider.
+        Pair of atom names to consider. Atom names are matched using the same
+        regex matching employed by MDTraj's  atom selection DSL.
     r_range : array-like, shape=(2), optional, default=(0.0, 1.0)
         Minimum and maximum radii.
     bin_width : int, optional, default=0.005
@@ -51,9 +53,9 @@ def compute_rdf(traj, pair_names=None, r_range=None, bin_width=0.005,
 
     Returns
     -------
-    r : np.ndarray, shape=(n_bins), dtype=float
+    r : np.ndarray, shape=(np.diff(r_range) / bin_width - 1), dtype=float
         Radii values corresponding to bins.
-    g_r : np.ndarray, shape=(n_bins), dtype=float
+    g_r : np.ndarray, shape=(np.diff(r_range) / bin_width - 1), dtype=float
         Radial distribution function values at r.
     """
     if not r_range:
@@ -68,8 +70,10 @@ def compute_rdf(traj, pair_names=None, r_range=None, bin_width=0.005,
         # all-all
         pairs = np.array(list(itertools.combinations(range(traj.n_atoms), 2)))
     else:
-        type_a = traj.top.select("name =~ '{0}'".format(pair_names[0]))
-        type_b = traj.top.select("name =~ '{0}'".format(pair_names[1]))
+        type_a = [a.index for a in traj.top.atoms
+                  if (re.match(pair_names[0], a.name) is not None)]
+        type_b = [a.index for a in traj.top.atoms
+                  if (re.match(pair_names[1], a.name) is not None)]
         # TODO: Probably a cleaner way to generate these pairs.
         prod = itertools.product(type_a, type_b)
         pairs = set()
