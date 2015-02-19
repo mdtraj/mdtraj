@@ -275,32 +275,42 @@ class parse_selection(object):
             return [(kw, klass.n_terms, getattr(opAssoc, klass.assoc), klass)
                     for kw in kws]
 
-        # literals include words made of alphanumerics, numbers, or quoted strings
-        # but we exclude any of the logical operands (e.g. 'or') from being
-        # parsed literals
-        literal = ~(keywords(BinaryInfixOperand) | keywords(UnaryInfixOperand)) + \
-                  (Word(NUMS) | quotedString | Word(alphas, alphanums))
+        # literals include words made of alphanumerics, numbers,
+        # or quoted strings but we exclude any of the logical
+        # operands (e.g. 'or') from being parsed literals
+        literal = (
+            ~(keywords(BinaryInfixOperand) | keywords(UnaryInfixOperand)) +
+            (Word(NUMS) | quotedString | Word(alphas, alphanums))
+        )
         literal.setParseAction(Literal)
 
-        # these are the other 'root' expressions, the selection keywords (resname, resid, mass, etc)
+        # These are the other 'root' expressions,
+        # the selection keywords (resname, resid, mass, etc)
         selection_keyword = keywords(SelectionKeyword)
         selection_keyword.setParseAction(SelectionKeyword)
         base_expression = MatchFirst([selection_keyword, literal])
 
-        # the grammer includes implicit equality comparisons between adjacent expressions:
-        # i.e. 'name CA' -> 'name == CA'
-        implicit_equality = Group(base_expression + Optional(Keyword('=='), '==') + base_expression)
+        # the grammar includes implicit equality comparisons
+        # between adjacent expressions:
+        # i.e. 'name CA' --> 'name == CA'
+        implicit_equality = Group(
+            base_expression + Optional(Keyword('=='), '==') + base_expression
+        )
         implicit_equality.setParseAction(BinaryInfixOperand)
 
-        # range condition matches expresssions such as 'mass 1 to 20'
-        range_condition = Group(base_expression + literal + Keyword('to') + literal)
+        # range condition matches expressions such as 'mass 1 to 20'
+        range_condition = Group(
+            base_expression + literal + Keyword('to') + literal
+        )
         range_condition.setParseAction(RangeCondition)
 
         expression = range_condition | implicit_equality | base_expression
-        logical_expr = infixNotation(expression,
-                                        infix(UnaryInfixOperand) +
-                                        infix(BinaryInfixOperand) +
-                                        infix(RegexInfixOperand))
+        logical_expr = infixNotation(
+            expression,
+            infix(UnaryInfixOperand) +
+            infix(BinaryInfixOperand) +
+            infix(RegexInfixOperand)
+        )
 
         self.expression = logical_expr
         self.is_initialized = True
@@ -316,9 +326,8 @@ class parse_selection(object):
         except ParseException as e:
             msg = str(e)
             lines = ["%s: %s" % (msg, selection),
-                     " " * (12 + len("%s: " % msg) + (e.loc)) + "^^^"]
+                     " " * (12 + len("%s: " % msg) + e.loc) + "^^^"]
             raise ValueError('\n'.join(lines))
-
 
         # Change __ATOM__ in function bodies. It must bind to the arg
         # name specified below (i.e. 'atom')
