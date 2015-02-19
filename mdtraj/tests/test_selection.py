@@ -164,6 +164,17 @@ def test_raises():
     assert_raises(ValueError, lambda: parse_selection('or'))
     assert_raises(ValueError, lambda: parse_selection('a <'))
 
+def test_raises2():
+    assert_raises(ValueError, lambda: parse_selection('dog 5'))
+    assert_raises(ValueError, lambda: parse_selection('dog == 5'))
+    assert_raises(ValueError, lambda: parse_selection('dog frog'))
+    assert_raises(ValueError, lambda: parse_selection('not dog'))
+    assert_raises(ValueError, lambda: parse_selection('protein or dog'))
+    assert_raises(ValueError, lambda: parse_selection('dog 1 to 5'))
+
+    # I can't figure out how to fail on a single literal
+    # assert_raises(ValueError, lambda: parse_selection('dog'))
+
 
 def test_bool():
     sp = parse_selection("protein or water")
