@@ -156,6 +156,8 @@ class UnaryInfixOperand(object):
         _check_n_tokens(tokens, 2, 'Unary infix operators')
         self.op_token, self.value_token = tokens
         assert self.op_token in self.keyword_aliases
+        if isinstance(self.value_token, Literal):
+            raise ValueError("Cannot use literals as booleans.")
 
     def ast(self):
         return ast.UnaryOp(op=self.keyword_aliases[self.op_token],
@@ -169,14 +171,21 @@ class RegexInfixOperand(object):
     def __init__(self, tokens):
         self.tokens = tokens[0]
         _check_n_tokens(self.tokens, 3, 'regex operator')
-        assert self.tokens[1] == '=~'
+        self.string, op, self.pattern = self.tokens
+        assert op == '=~'
+        if isinstance(self.string, Literal):
+            raise ValueError("Cannot do regex comparison on literal")
 
     def ast(self):
         pattern = self.tokens[2].ast()
         string = self.tokens[0].ast()
-        return ast.Compare(left=ast.Call(func=ast.Attribute(value=RE_MODULE, attr='match', ctx=ast.Load()),
-                                  args=[pattern, string], keywords=[], starargs=None, kwargs=None),
-                    ops=[ast.IsNot()], comparators=[ast.Name(id='None', ctx=ast.Load())])
+        return ast.Compare(
+            left=ast.Call(func=ast.Attribute(value=RE_MODULE, attr='match',
+                                             ctx=ast.Load()),
+                          args=[pattern, string], keywords=[], starargs=None,
+                          kwargs=None),
+            ops=[ast.IsNot()], comparators=[ast.Name(id='None', ctx=ast.Load())]
+        )
 
 
 
@@ -206,6 +215,15 @@ class BinaryInfixOperand(object):
             raise ParseException(err)
         assert self.op_token in self.keyword_aliases
 
+        # Check for too many literals and not enough keywords
+        op = self.keyword_aliases[self.op_token]
+        if isinstance(op, ast.boolop):
+            if any(isinstance(c, Literal) for c in self.comparators):
+                raise ValueError("Cannot use literals as truth")
+        else:
+            if all(isinstance(c, Literal) for c in self.comparators):
+                raise ValueError("Cannot compare literals.")
+
     def ast(self):
         op = self.keyword_aliases[self.op_token]
 
@@ -225,6 +243,8 @@ class RangeCondition(object):
         _check_n_tokens(tokens, 4, 'range condition')
         assert tokens[2] == 'to'
         self._from, self._center, self._to = tokens[0], tokens[1], tokens[3]
+        if isinstance(self._from, Literal):
+            raise ValueError("Can't test literal in range.")
 
     def ast(self):
         return ast.Compare(left=self._center.ast(), ops=[ast.LtE(), ast.LtE()],
