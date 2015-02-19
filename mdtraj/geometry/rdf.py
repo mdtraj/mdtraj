@@ -41,10 +41,10 @@ def compute_rdf(traj, pair_names=None, r_range=None, bin_width=0.005,
     Parameters
     ----------
     traj : Trajectory
-    pair_names : array-like, shape=(2), optional, default=None
+    pair_names : array-like, shape=(2,), optional, default=None
         Pair of atom names to consider. Atom names are matched using the same
         regex matching employed by MDTraj's  atom selection DSL.
-    r_range : array-like, shape=(2), optional, default=(0.0, 1.0)
+    r_range : array-like, shape=(2,), optional, default=(0.0, 1.0)
         Minimum and maximum radii.
     bin_width : int, optional, default=0.005
         Width of the bins in nanometers.
