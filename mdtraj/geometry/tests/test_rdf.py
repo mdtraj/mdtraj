@@ -26,7 +26,7 @@ import numpy as np
 
 import mdtraj as md
 import mdtraj.geometry
-from mdtraj.testing import get_fn, eq, skipif
+from mdtraj.testing import get_fn, eq, skipif, assert_raises
 
 """
 Reference values taken from gromacs 5.0.4 using the following commands on the
@@ -55,6 +55,12 @@ def test_rdf_norm():
     assert eq(np.ones(20), RDF_ALL[-20:], decimal=1)
     assert eq(np.ones(20), RDF_O_O[-20:], decimal=1)
     assert eq(np.ones(20), RDF_O_H[-20:], decimal=1)
+
+
+def test_rdf_args():
+    assert_raises(ValueError, lambda: md.geometry.rdf.compute_rdf(TRAJ, pair_names=('O', 'O', 'O')))
+    assert_raises(ValueError, lambda: md.geometry.rdf.compute_rdf(TRAJ, pair_names=('O')))
+    assert_raises(ValueError, lambda: md.geometry.rdf.compute_rdf(TRAJ, pair_names=('C', 'C')))
 
 
 @skipif(True, 'Binning does not match up with gromacs currently.')
