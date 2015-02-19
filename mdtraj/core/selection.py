@@ -353,6 +353,10 @@ class parse_selection(object):
         # name specified below (i.e. 'atom')
         astnode = self.transformer.visit(deepcopy(parse_result[0].ast()))
 
+        # Special check for a single literal
+        if isinstance(astnode, ast.Num) or isinstance(astnode, ast.Str):
+            raise ValueError("Cannot use a single literal as a boolean.")
+
         if PY2:
             args = [ast.Name(id='atom', ctx=ast.Param())]
             signature = ast.arguments(args=args, vararg=None, kwarg=None,
