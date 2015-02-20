@@ -178,7 +178,6 @@ def rmsd_extensions():
     return rmsd, lprmsd, libtheobald
 
 
-
 def geometry_extensions():
     compiler_args = (compiler.compiler_args_sse2 + compiler.compiler_args_sse3 +
                      compiler.compiler_args_opt)
@@ -215,7 +214,14 @@ def geometry_extensions():
             define_macros=define_macros,
             extra_compile_args=compiler_args,
             language='c++'),
+        Extension('mdtraj.geometry._numericutils',
+            sources=["mdtraj/geometry/src/_numericutils.pyx",
+                     "mdtraj/geometry/src/numericutils.c"],
+            include_dirs=["mdtraj/geometry/include"],
+            define_macros=define_macros,
+            extra_compile_args=compiler_args),
         ]
+
 
 extensions = [xtc, trr, dcd, binpos, dtr]
 extensions.extend(rmsd_extensions())
