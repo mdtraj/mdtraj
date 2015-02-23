@@ -701,6 +701,11 @@ class Topology(object):
         """
         return iter(self._bonds)
 
+    @property
+    def n_bonds(self):
+        """Get the number of bonds in the Topology"""
+        return len(self._bonds)
+
     def create_standard_bonds(self):
         """Create bonds based on the atom and residue names for all standard residue types.
         """

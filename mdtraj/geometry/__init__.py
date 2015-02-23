@@ -27,10 +27,11 @@ __all__ = ['baker_hubbard', 'shrake_rupley', 'kabsch_sander', 'compute_distances
            'compute_phi', 'compute_psi', 'compute_chi1', 'compute_chi2',
            'compute_chi3', 'compute_chi4', 'compute_omega', 'compute_rg',
            'compute_contacts', 'compute_drid', 'compute_center_of_mass',
-           'wernet_nilsson', 'compute_dssp', 'compute_neighbors',
-           
-           'dipole_moments', 'static_dielectric', 'isothermal_compressability_kappa_T',  # from thermodynamic_properties
-           'thermal_expansion_alpha_P',  'density'  # from thermodynamic_properties
+           'wernet_nilsson', 'compute_dssp', 'compute_neighbors', 'compute_rdf',
+
+           # from thermodynamic_properties
+           'dipole_moments', 'static_dielectric', 'isothermal_compressability_kappa_T',
+           'thermal_expansion_alpha_P',  'density'
            ]
 
 from mdtraj.geometry.rg import *
@@ -44,3 +45,4 @@ from mdtraj.geometry.drid import *
 from mdtraj.geometry.dssp import *
 from mdtraj.geometry.neighbors import *
 from mdtraj.geometry.thermodynamic_properties import *
+from mdtraj.geometry.rdf import *
