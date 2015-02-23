@@ -26,6 +26,7 @@ import numpy as np
 
 import mdtraj as md
 import mdtraj.geometry
+from mdtraj.geometry import _numericutils
 from mdtraj.testing import get_fn, eq, skipif, assert_raises
 
 """
@@ -52,9 +53,9 @@ _, RDF_O_H = mdtraj.geometry.rdf.compute_rdf(TRAJ, pair_names=('O', 'H*'))
 
 def test_rdf_norm():
     """Check if the RDF's tail is normalized to ~1.0 """
-    assert eq(np.ones(20), RDF_ALL[-20:], decimal=1)
-    assert eq(np.ones(20), RDF_O_O[-20:], decimal=1)
-    assert eq(np.ones(20), RDF_O_H[-20:], decimal=1)
+    eq(np.ones(20), RDF_ALL[-20:], decimal=1)
+    eq(np.ones(20), RDF_O_O[-20:], decimal=1)
+    eq(np.ones(20), RDF_O_H[-20:], decimal=1)
 
 
 def test_rdf_args():
