@@ -34,7 +34,7 @@ DistanceDocStringTester = DocStringFormatTester(mdtraj.geometry.distance)
 DihedralDocStringTester = DocStringFormatTester(mdtraj.geometry.dihedral)
 AngleDocStringTester = DocStringFormatTester(mdtraj.geometry.angle)
 
-RUN_PERFOMANCE_TESTS = False
+RUN_PERFORMANCE_TESTS = False
 
 
 def test_rg():
@@ -211,7 +211,7 @@ def test_angle_1():
     assert np.nansum(np.abs(r1 - r2)) / r1.size < 5e-4
 
 
-@skipif(not RUN_PERFOMANCE_TESTS, 'Not doing performance testing')
+@skipif(not RUN_PERFORMANCE_TESTS, 'Not doing performance testing')
 def test_dihedral_performance():
     n_atoms = 10
     xyz = np.random.randn(5000, n_atoms, 3)
@@ -229,7 +229,7 @@ def test_dihedral_performance():
     print('opt sse: %f s' % (t3 - t2))
 
 
-@skipif(not RUN_PERFOMANCE_TESTS, 'Not doing performance testing')
+@skipif(not RUN_PERFORMANCE_TESTS, 'Not doing performance testing')
 def test_angle_performance():
     n_atoms = 20
     xyz = np.random.randn(10000, n_atoms, 3)
