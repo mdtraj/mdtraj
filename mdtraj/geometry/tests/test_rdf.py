@@ -26,7 +26,6 @@ import numpy as np
 
 import mdtraj as md
 import mdtraj.geometry
-from mdtraj.geometry import _numericutils
 from mdtraj.testing import get_fn, eq, skipif, assert_raises
 
 """
