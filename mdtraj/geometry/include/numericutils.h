@@ -1,5 +1,5 @@
-#ifndef _GEOMETRY_H_
-#define _GEOMETRY_H_
+#ifndef _NUMERICUTILS_H_
+#define _NUMERICUTILS_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
