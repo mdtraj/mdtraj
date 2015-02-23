@@ -20,10 +20,25 @@
 /* License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.*/
 /*=======================================================================*/
 
+#include <math.h>
 
-int histogram(const float* a, const float* bin_edges, float* out)
+
+int histogram(const float* data, const int n_data, const float* bins,
+              const int n_bins, const float min_bin, const float max_bin,
+              int* out)
 {
-  /* Compute the histogram of a set of data. */
-  out[2] = 5;
-  return 1;
+    /* Compute the histogram of a set of data. */
+    int i, bin;
+    float binwidth = (max_bin - min_bin) / n_bins;
+    printf("%.1f %.1f %d  %.1f\n\n", max_bin, min_bin, n_bins, binwidth);
+
+    for (i = 0; i < n_data; ++i)
+    {
+        printf("%.1f %.1f   ", data[i], min_bin);
+        bin = floor((data[i] - min_bin)) / binwidth;
+        printf("%d\n", bin);
+        out[bin]++;
+    }
+
+    return 1;
 }

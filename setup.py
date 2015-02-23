@@ -224,7 +224,7 @@ def geometry_extensions():
 
 
 extensions = [xtc, trr, dcd, binpos, dtr]
-extensions.extend(rmsd_extensions())
+#extensions.extend(rmsd_extensions())
 extensions.extend(geometry_extensions())
 
 write_version_py(VERSION, ISRELEASED)

@@ -32,10 +32,26 @@ import numpy as np
 ##############################################################################
 
 cdef extern from 'numericutils.h':
-    int histogram(const float* a, const float* bin_edges, float* out) nogil
+    int histogram(const float* data, const int n_data, const float* bins,
+                  const int n_bins, const float min_bin, const float max_bin,
+                  int* out) nogil
 
 ##############################################################################
 # Wrappers
+##############################################################################
+
+@cython.boundscheck(False)
+def _hist(float[::1] data,
+          float[::1] cbins,
+          int[::1] out):
+    cdef int n_data = data.shape[0]
+    cdef int n_bins = cbins.shape[0] - 1
+    cdef float min_bin = cbins[0]
+    cdef float max_bin = cbins[-1]
+    histogram(&data[0], n_data, &cbins[0], n_bins, min_bin, max_bin, &out[0])
+
+##############################################################################
+# Functions
 ##############################################################################
 
 def _histogram(a, bins=10, bin_range=None):
@@ -95,17 +111,8 @@ def _histogram(a, bins=10, bin_range=None):
             raise AttributeError(
                 'bins must increase monotonically.')
 
-    bin_edges = [0, 1, 2, 3, 4, 5]
-
-    cdef float[::1] ca = np.ascontiguousarray(a, dtype=np.float32)
-    cdef float[::1] cbin_edges = np.ascontiguousarray(bin_edges, dtype=np.float32)
-    cdef float[::1] out = np.zeros(cbin_edges.shape[0] - 1, dtype=np.float32)
-    _hist(ca, cbin_edges, out)
-    return np.asarray(out), np.asarray(cbin_edges)
-
-
-@cython.boundscheck(False)
-def _hist(float[::1] ca,
-               float[::1] cbin_edges,
-               float[::1] out):
-    histogram(&ca[0], &cbin_edges[0], &out[0])
+    cdef float[::1] data = np.ascontiguousarray(a, dtype=np.float32)
+    cdef float[::1] cbins = np.ascontiguousarray(bins, dtype=np.float32)
+    cdef int[::1] out = np.zeros(bins.shape[0] - 1, dtype=np.int32)
+    _hist(data, cbins, out)
+    return np.asarray(out), np.asarray(cbins)
