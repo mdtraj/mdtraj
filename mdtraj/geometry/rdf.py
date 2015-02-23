@@ -93,7 +93,12 @@ def compute_rdf(traj, pair_names=None, r_range=None, bin_width=0.005,
     g_r, edges = np.histogram(distances, bins=bins)
     r = 0.5 * (edges[1:] + edges[:-1])
 
-    # Normalize.
+    # Normalize by volume of the spherical shell.
+    # See discussion https://github.com/mdtraj/mdtraj/pull/724. There might be
+    # a less biased way to accomplish this. The conclusion was that this could
+    # be interesting to try, but is likely not hugely consequential. This method
+    # of doing the calculations matches the implementation in other packages like
+    # AmberTools' cpptraj and gromacs g_rdf.
     V = (4 / 3) * np.pi * (np.power(edges[1:], 3) - np.power(edges[:-1], 3))
     norm = len(pairs) * np.sum(1.0 / traj.unitcell_volumes) * V
     g_r = g_r.astype(np.float64) / norm  # From int64.
