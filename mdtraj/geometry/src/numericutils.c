@@ -27,18 +27,38 @@ int histogram(const float* data, const int n_data, const float* bins,
               const int n_bins, const float min_bin, const float max_bin,
               int* out)
 {
-    /* Compute the histogram of a set of data. */
-    int i, bin;
-    float binwidth = (max_bin - min_bin) / n_bins;
-    printf("%.1f %.1f %d  %.1f\n\n", max_bin, min_bin, n_bins, binwidth);
+    /* Compute the histogram of a set of data.
 
+    Notes
+    -----
+    All but the last (righthand-most) bin is half-open.  In other words, if
+    `bins` is::
+
+      [1, 2, 3, 4]
+
+    then the first bin is ``[1, 2)`` (including 1, but excluding 2) and the
+    second ``[2, 3)``.  The last bin, however, is ``[3, 4]``, which *includes*
+    4.
+
+    */
+    int i, bin;
+    float value;
+    float binwidth = (max_bin - min_bin) / n_bins;
     for (i = 0; i < n_data; ++i)
     {
-        printf("%.1f %.1f   ", data[i], min_bin);
-        bin = floor((data[i] - min_bin)) / binwidth;
-        printf("%d\n", bin);
+        value = data[i];
+        if (value < min_bin || value > max_bin)
+        {
+            continue;
+        }
+
+        bin = floor((value - min_bin) / binwidth);
+        /* Righthand-most bin is inclusive. */
+        if (value == max_bin)
+        {
+            bin--;
+        }
         out[bin]++;
     }
-
     return 1;
 }
