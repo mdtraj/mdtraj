@@ -229,6 +229,7 @@ def load_psf(fname):
         mass = _convert(words[7], float, 'atomic mass')
         if last_chain != segid:
             c = top.add_chain()
+            last_chain = segid
         curr_residue = (resid, rname, segid)
         if prev_residue != curr_residue:
             prev_residue = curr_residue
