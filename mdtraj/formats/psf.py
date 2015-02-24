@@ -1,7 +1,7 @@
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
-# Copyright 2012-2013 Stanford University and the Authors
+# Copyright 2012-2015 Stanford University and the Authors
 #
 # Authors: Jason Swails
 # Contributors:
@@ -209,32 +209,35 @@ def load_psf(fname):
             # We only have to parse up to the NBOND section
             if sec == 'NBOND': break
 
-    c = top.add_chain()
-    prev_residue = (None, None)
+    prev_residue = (None, None, None)
 
     pdb.PDBTrajectoryFile._loadNameReplacementTables()
 
     natom = _convert(psfsections['NATOM'][0], int, 'natom')
+    last_chain = None
     for i in range(natom):
         words = psfsections['NATOM'][1][i].split()
         atid = _convert(words[0], int, 'atom index')
         if atid != i + 1:
             raise PSFError('Nonsequential atom indices detected!')
-#       system = words[1]
+        segid = words[1]
         resid = _convert(words[2], int, 'residue number')
         rname = words[3]
         name = words[4]
 #       attype = words[5]
 #       charge = _convert(words[6], float, 'partial atomic charge')
         mass = _convert(words[7], float, 'atomic mass')
-        curr_residue = (resid, rname)
+        if last_chain != segid:
+            c = top.add_chain()
+            last_chain = segid
+        curr_residue = (resid, rname, segid)
         if prev_residue != curr_residue:
             prev_residue = curr_residue
             try:
                 rname = pdb.PDBTrajectoryFile._residueNameReplacements[rname]
             except KeyError:
                 pass
-            r = top.add_residue(rname, c)
+            r = top.add_residue(rname, c, resid)
 
         try:
             name = pdb.PDBTrajectoryFile._atomNameReplacements[rname][name]

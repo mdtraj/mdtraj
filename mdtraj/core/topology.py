@@ -142,7 +142,7 @@ class Topology(object):
     ----------
     chains : generator
         Iterator over all Chains in the Topology.
-    residues : genetator
+    residues : generator
         Iterator over all Residues in the Chain.
     atoms : generator
         Iterator over all Atoms in the Chain.
@@ -1005,7 +1005,9 @@ class Residue(object):
         The name of the Residue
     index : int
         The index of the Residue within its Topology
-    chain : int
+    chain : mdtraj.topology.Chain
+        The chain within which this residue belongs
+    resSeq : int
         The residue sequence number
     """
 

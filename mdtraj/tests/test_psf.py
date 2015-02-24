@@ -39,6 +39,37 @@ def test_load_psf():
     top2 = psf.load_psf(get_fn('ala_ala_ala.xpsf'))
     eq(top2, ref_top)
 
+def test_multichain_psf():
+    top = psf.load_psf(get_fn('3pqr_memb.psf'))
+    # Check that each segment was turned into a chain
+    eq(top.n_chains, 11)
+    chain_lengths = [5162, 185, 97, 28, 24, 24, 45, 35742, 72822, 75, 73]
+    for i, n in enumerate(chain_lengths):
+        eq(top.chain(i).n_atoms, n)
+    # There are some non-sequentially numbered residues across chain
+    # boundaries... make sure resSeq is properly taken from the PSF
+    eq(top.chain(0).residue(0).resSeq, 1)
+    eq(top.chain(0).residue(-1).resSeq, 326)
+    eq(top.chain(1).residue(0).resSeq, 340)
+    eq(top.chain(1).residue(-1).resSeq, 350)
+    eq(top.chain(2).residue(0).resSeq, 1)
+    eq(top.chain(2).residue(-1).resSeq, 4)
+    eq(top.chain(3).residue(0).resSeq, 1)
+    eq(top.chain(3).residue(-1).resSeq, 1)
+    eq(top.chain(4).residue(0).resSeq, 1)
+    eq(top.chain(4).residue(-1).resSeq, 1)
+    eq(top.chain(5).residue(0).resSeq, 1)
+    eq(top.chain(5).residue(-1).resSeq, 1)
+    eq(top.chain(6).residue(0).resSeq, 1)
+    eq(top.chain(6).residue(-1).resSeq, 2)
+    eq(top.chain(7).residue(0).resSeq, 1)
+    eq(top.chain(7).residue(-1).resSeq, 276)
+    eq(top.chain(8).residue(0).resSeq, 1)
+    eq(top.chain(8).residue(-1).resSeq, 24274)
+    eq(top.chain(9).residue(0).resSeq, 1)
+    eq(top.chain(9).residue(-1).resSeq, 75)
+    eq(top.chain(10).residue(0).resSeq, 1)
+    eq(top.chain(10).residue(-1).resSeq, 73)
 
 def test_load_mdcrd_with_psf():
     traj = md.load(get_fn('ala_ala_ala.mdcrd'), top=get_fn('ala_ala_ala.psf'))
