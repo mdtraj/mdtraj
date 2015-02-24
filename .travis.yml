@@ -1,9 +1,5 @@
 language: c
 
-branches:
-  only:
-    - master
-
 install:
   - source devtools/travis-ci/install.sh
   - export PYTHONUNBUFFERED=true
