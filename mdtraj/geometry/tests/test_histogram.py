@@ -70,7 +70,7 @@ def test_simple1():
     eq(b, b_np)
 
     # Check if the sum of the bins equals the number of samples.
-    eq(np.sum(a, axis=0), n)
+    eq(np.sum(a, axis=0), np.int64(n))
 
 
 def test_simple2():
@@ -167,7 +167,7 @@ def test_outliers():
 
     # Lower outliers
     a, b = _numericutils._histogram(v, bin_range=[0, 9])
-    eq(a.sum(), 9)
+    eq(a.sum(), np.int64(9))
 
     # Matches numpy
     a_np, b_np = np.histogram(v, range=[0, 9])
@@ -176,7 +176,7 @@ def test_outliers():
 
     # Upper outliers
     a, b = _numericutils._histogram(v, bin_range=[1, 10])
-    eq(a.sum(), 9)
+    eq(a.sum(), np.int64(9))
 
     # Matches numpy
     a_np, b_np = np.histogram(v, range=[1, 10])
@@ -217,7 +217,7 @@ def test_f32_rounding():
     v = np.array([276.318359  , -69.593948  , 21.329449], dtype=np.float32)
     bins = 100
     a, b = _numericutils._histogram(v, bins)
-    eq(a.sum(), 3)
+    eq(a.sum(), np.int64(3))
 
     # Matches numpy
     a_np, b_np = np.histogram(v, bins)
@@ -227,7 +227,7 @@ def test_f32_rounding():
     v = np.array([5005.689453, 4481.327637, 6010.369629], dtype=np.float32)
     bins = 100
     a, b = _numericutils._histogram(v, bins)
-    eq(a.sum(), 3)
+    eq(a.sum(), np.int64(3))
 
     # Matches numpy
     a_np, b_np = np.histogram(v, bins)
@@ -268,3 +268,6 @@ def test_empty():
     a, b = _numericutils._histogram([], bins=([0, 1]))
     eq(a, np.array([0]))
     eq(b, np.array([0, 1]))
+
+if __name__ == '__main__':
+    test_simple1()
