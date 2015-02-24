@@ -856,10 +856,7 @@ class Topology(object):
             ``minimal``
                 Keep the atoms in protein residues with names in {CA, CB, C, N, O}
             ``heavy``
-                All non-hydrogen atoms that are not symmetry equivalent. By
-                symmetry equivalent, we mean atoms identical under an exchange
-                of labels. For example, heavy will exclude the two pairs of
-                equivalent carbons (CD, CE) in a PHE ring.
+                All non-hydrogen protein atoms.
             ``water``
                 Water oxygen atoms
 
