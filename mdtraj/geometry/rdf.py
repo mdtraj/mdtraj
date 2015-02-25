@@ -1,7 +1,7 @@
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
-# Copyright 2012-2013 Stanford University and the Authors
+# Copyright 2012-2015 Stanford University and the Authors
 #
 # Authors: Christoph Klein
 # Contributors:
@@ -49,6 +49,10 @@ def compute_rdf(traj, pair_names=None, r_range=None, bin_width=0.005,
         Minimum and maximum radii.
     bin_width : int, optional, default=0.005
         Width of the bins in nanometers.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will compute distances under the minimum image
+        convention.
     opt : bool, default=True
         Use an optimized native library to compute the pair wise distances.
 
