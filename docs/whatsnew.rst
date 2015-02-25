@@ -4,8 +4,13 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.3 (development)
+
+v1.4 (Development)
 ------------------
+
+
+v1.3 (February 25, 2015)
+------------------------
 - New functions to calculate various statistical mechanical properties
   (``unitcell_volumes``, ``dipole_moments``, ``static_dielectric``,
    ``isothermal_compressability_kappa_T``, ``thermal_expansion_alpha_P``,
@@ -14,6 +19,7 @@ v1.3 (development)
 - Include nitrogen atoms as h-bond acceptors in hydrogen bond detection (Gert Kiss)
 - SSE4.1 support not required. The latest CPU feature now required is SSE3. (Robert T. McGibbon)
 - New function to calculate radial distribution functions (``compute_rdf``) (Christoph Klein)
+- Assorted bugfixes and improvements to documentation
 
 
 v1.2 (December 1, 2014)

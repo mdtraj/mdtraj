@@ -5,7 +5,7 @@ Assorted notes for developers.
 
 How to do a release
 -------------------
-- Update the whatsnew.rst document. Use the github view that shows all the
+- Update the `docs/whatsnew.rst` document. Use the github view that shows all the
   commits to master since the last release to write it.
 - Update the version number in `setup.py`, change `ISRELEASED` to `True`
 - Update the version number in `devtools/conda-recipe/meta.yaml`
