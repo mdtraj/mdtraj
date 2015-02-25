@@ -1,7 +1,7 @@
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
-# Copyright 2012-2013 Stanford University and the Authors
+# Copyright 2012-2015 Stanford University and the Authors
 #
 # Authors: Christoph Klein
 # Contributors:
