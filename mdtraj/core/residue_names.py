@@ -49,3 +49,6 @@ _PROTEIN_RESIDUES = frozenset([
     'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'UNK', 'VAL'])
 
 
+_WATER_RESIDUES = frozenset([
+    'H2O', 'HHO', 'OHH', 'HOH', 'OH2', 'SOL',
+    'WAT', 'TIP', 'TIP2', 'TIP3', 'TIP4'])

@@ -52,7 +52,7 @@ import os
 import numpy as np
 import itertools
 from mdtraj.core import element as elem
-from mdtraj.core.residue_names import _PROTEIN_RESIDUES
+from mdtraj.core.residue_names import _PROTEIN_RESIDUES, _WATER_RESIDUES
 from mdtraj.core.selection import parse_selection
 import xml.etree.ElementTree as etree
 
@@ -1086,8 +1086,7 @@ class Residue(object):
         ----------
         http://www.ks.uiuc.edu/Research/vmd/vmd-1.3/ug/node133.html
         """
-        return self.name in ['H2O', 'HHO', 'OHH', 'HOH', 'OH2', 'SOL',
-                             'WAT', 'TIP', 'TIP2', 'TIP3', 'TIP4']
+        return self.name in _WATER_RESIDUES
 
     @property
     def is_nucleic(self):
