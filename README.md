@@ -21,7 +21,7 @@ and/or the user forums [discourse.mdtraj.org](http://discourse.mdtraj.org).
 
 ####  Citation [![DOI for Citing MDTraj](https://img.shields.io/badge/DOI-10.1101%2F008896-blue.svg)](http://doi.org/10.1101/008896)
 
-MDTraj is research software. If you make use of MDTraj in a scientific publication, please cite it. The BibTeX reference is
+MDTraj is research software. If you make use of MDTraj in scientific publications, please cite it. The BibTeX reference is
 ```
 @article {
 	author = {McGibbon, Robert T. and Beauchamp, Kyle A. and Schwantes, Christian R. and Wang, Lee-Ping and Hern{\'a}ndez, Carlos X. and Harrigan, Matthew P. and Lane, Thomas J. and Swails, Jason M. and Pande, Vijay S.},
