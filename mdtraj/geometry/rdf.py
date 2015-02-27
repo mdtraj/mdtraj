@@ -22,7 +22,7 @@
 
 from __future__ import print_function, division
 
-import itertools
+from itertools import combinations, chain, product
 import re
 
 import numpy as np
@@ -65,7 +65,8 @@ def compute_rdf(traj, pair_names=None, r_range=None, bin_width=0.005,
     """
     if not pair_names:
         # all-all
-        pairs = np.array(list(itertools.combinations(range(traj.n_atoms), 2)))
+        pairs = np.fromiter(chain.from_iterable(combinations(range(traj.n_atoms), 2)),
+                             dtype=np.int32, count=traj.n_atoms * (traj.n_atoms - 1))
     elif len(pair_names) != 2:
         raise ValueError('pair_names must contain two entries if you want to '
                          'calculate the RDF for specific types of atoms.')
@@ -79,13 +80,9 @@ def compute_rdf(traj, pair_names=None, r_range=None, bin_width=0.005,
         if non_matching_atom_names:
             raise ValueError('Unable to find atoms matching the following '
                              'selection(s): {0}'.format(non_matching_atom_names))
-        # TODO: Probably a cleaner way to generate these pairs.
-        prod = itertools.product(type_a, type_b)
-        pairs = set()
-        for a, b in prod:
-            if a != b and (b, a) not in pairs:
-                pairs.add((a, b))
-        pairs = np.array(list(pairs))
+        pairs = np.fromiter(chain.from_iterable((a, b) if a > b else (b, a) for (a, b) in product(type_a, type_b) if a != b),
+                            dtype=np.int32)
+    pairs = np.vstack((pairs[::2], pairs[1::2])).T
 
     if not r_range:
         r_range = np.array([0.0, 1.0])
