@@ -641,7 +641,7 @@ class Topology(object):
 
     @property
     def n_residues(self):
-        "Get the number of residues in the Topology"
+        """Get the number of residues in the Topology. """
         return len(self._residues)
 
     def atom(self, index):
