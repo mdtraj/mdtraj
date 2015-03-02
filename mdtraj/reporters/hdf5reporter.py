@@ -65,6 +65,8 @@ class HDF5Reporter(_BaseReporter):
         Whether to write the kinetic energy to the file.
     temperature : bool
         Whether to write the instantaneous temperature to the file.
+    velocities : bool
+        Whether to write the velocities to the file.
     atomSubset : array_like, default=None
         Only write a subset of the atoms, with these (zero based) indices
         to the file. If None, *all* of the atoms will be written to disk.
