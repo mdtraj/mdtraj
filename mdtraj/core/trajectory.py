@@ -1215,7 +1215,7 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        with HDF5TrajectoryFile(filename, 'w', force_overwrite=True) as f:
+        with HDF5TrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(coordinates=self.xyz, time=self.time,
                     cell_angles=self.unitcell_angles,
                     cell_lengths=self.unitcell_lengths)
@@ -1231,7 +1231,7 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        with LAMMPSTrajectoryFile(filename, 'w', force_overwrite=True) as f:
+        with LAMMPSTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(xyz=self.xyz,
                     cell_angles=self.unitcell_angles,
                     cell_lengths=self.unitcell_lengths)

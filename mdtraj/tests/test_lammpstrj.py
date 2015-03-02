@@ -22,18 +22,18 @@
 
 
 import tempfile, os
+
 import numpy as np
-from mdtraj.utils import (lengths_and_angles_to_box_vectors,
-                          box_vectors_to_lengths_and_angles)
+
 import mdtraj as md
 from mdtraj.formats import LAMMPSTrajectoryFile, lammpstrj
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
+from mdtraj.testing import get_fn, eq, DocStringFormatTester
 TestDocstrings = DocStringFormatTester(lammpstrj, error_on_none=True)
 
 fd, temp = tempfile.mkstemp(suffix='.lammpstrj')
 def teardown_module(module):
-    """remove the temporary file created by tests in this file
-    this gets automatically called by nose"""
+    """Remove the temporary file created by tests in this file
+    this gets automatically called by nose. """
     os.close(fd)
     os.unlink(temp)
 
