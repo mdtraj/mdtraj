@@ -54,7 +54,7 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom'):
         An mtraj trajectory.
     probe_radius : float, optional
         The radius of the probe, in nm.
-    n_sphere_pts : int, optional
+    n_sphere_points : int, optional
         The number of points representing the surface of each atom, higher
         values leads to more accuracy.
     mode : {'atom', 'residue'}

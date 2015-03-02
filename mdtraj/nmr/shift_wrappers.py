@@ -314,7 +314,7 @@ def reindex_dataframe_by_atoms(trj, frame):
     ----------
     trj : Trajectory
         Trajectory to predict shifts for.
-    results : pandas.DataFrame
+    frame : pandas.DataFrame
         Dataframe containing results, with index consisting of
         (resSeq, atom_name) pairs and columns for each frame in trj.
 
