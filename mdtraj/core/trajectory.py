@@ -1239,7 +1239,7 @@ class Trajectory(object):
                     cell_lengths=self.unitcell_lengths)
 
     def save_xyz(self, filename, force_overwrite=True):
-        """Save trajectory to LAMMPS custom dump format
+        """Save trajectory to .xyz format.
 
         Parameters
         ----------
@@ -1248,7 +1248,7 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        with XYZTrajectoryFile(filename, 'w', force_overwrite=True) as f:
+        with XYZTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(xyz=self.xyz, types=[a.name for a in self.top.atoms])
 
     def save_pdb(self, filename, force_overwrite=True, bfactors=None):
