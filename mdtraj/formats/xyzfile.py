@@ -50,6 +50,14 @@ class _EOF(IOError):
 def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load a xyz trajectory file.
 
+    While there is no universal standard for this format, this plugin adheres
+    to the same format as the VMD plugin:
+
+    http://www.ks.uiuc.edu/Research/vmd/plugins/molfile/xyzplugin.html
+
+    Most notably, units are in angstroms and anything past the 'z' field is
+    ignored.
+
     Parameters
     ----------
     filename : str
