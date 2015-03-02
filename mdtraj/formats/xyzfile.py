@@ -1,7 +1,7 @@
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
-# Copyright 2012-2013 Stanford University and the Authors
+# Copyright 2012-2015 Stanford University and the Authors
 #
 # Authors: Christoph Klein
 # Contributors:
@@ -27,35 +27,35 @@
 
 from __future__ import print_function, division
 
-import os
+from datetime import date
 import itertools
+import os
 
 import numpy as np
 
-from mdtraj.utils import (ensure_type, cast_indices, in_units_of,
-                          lengths_and_angles_to_box_vectors)
 from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.utils import cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
+from mdtraj.version import version
 
-__all__ = ['LAMMPSTrajectoryFile', 'load_lammpstrj']
+__all__ = ['XYZTrajectoryFile', 'load_xyz']
 
 
 class _EOF(IOError):
     pass
 
 
-@_FormatRegistry.register_loader('.lammpstrj')
-def load_lammpstrj(filename, top=None, stride=None, atom_indices=None,
-                   frame=None, unit_set='real'):
-    """Load a LAMMPS trajectory file.
+@_FormatRegistry.register_loader('.xyz')
+def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
+    """Load a xyz trajectory file.
 
     Parameters
     ----------
     filename : str
-        String filename of LAMMPS trajectory file.
+        String filename of xyz trajectory file.
     top : {str, Trajectory, Topology}
-        The lammpstrj format does not contain topology information. Pass in
+        The xyz format does not contain topology information. Pass in
         either the path to a pdb file, a trajectory, or a topology to supply
         this information.
     stride : int, default=None
@@ -67,10 +67,6 @@ def load_lammpstrj(filename, top=None, stride=None, atom_indices=None,
         Use this option to load only a single frame from a trajectory on disk.
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
-    unit_set : str, optional
-        The LAMMPS unit set that the simulation was performed in. See
-        http://lammps.sandia.gov/doc/units.html for options. Currently supported
-        unit sets: 'real'.
 
     Returns
     -------
@@ -79,7 +75,7 @@ def load_lammpstrj(filename, top=None, stride=None, atom_indices=None,
 
     See Also
     --------
-    mdtraj.LAMMPSTrajectoryFile :  Low level interface to lammpstrj files
+    mdtraj.XYZTrajectoryFile :  Low level interface to xyz files
     """
     from mdtraj.core.trajectory import _parse_topology, Trajectory
 
@@ -88,10 +84,10 @@ def load_lammpstrj(filename, top=None, stride=None, atom_indices=None,
     # from **kwargs. So if its not supplied, we want to give the user an
     # informative error message.
     if top is None:
-        raise ValueError('"top" argument is required for load_lammpstrj')
+        raise ValueError('"top" argument is required for load_xyz')
 
     if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_lammpstrj. '
+        raise TypeError('filename must be of type string for load_xyz. '
                         'you supplied %s'.format(type(filename)))
 
     topology = _parse_topology(top)
@@ -99,18 +95,12 @@ def load_lammpstrj(filename, top=None, stride=None, atom_indices=None,
     if atom_indices is not None:
         topology = topology.subset(atom_indices)
 
-    with LAMMPSTrajectoryFile(filename) as f:
-        # TODO: Support other unit sets.
-        if unit_set == 'real':
-            f.distance_unit == 'angstroms'
-        else:
-            raise ValueError('Unsupported unit set specified: {0}.'.format(unit_set))
+    with XYZTrajectoryFile(filename) as f:
         if frame is not None:
             f.seek(frame)
-            xyz, cell_lengths, cell_angles = f.read(n_frames=1, atom_indices=atom_indices)
+            xyz = f.read(n_frames=1, atom_indices=atom_indices)
         else:
-            xyz, cell_lengths, cell_angles = f.read(stride=stride, atom_indices=atom_indices)
-
+            xyz = f.read(stride=stride, atom_indices=atom_indices)
         in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
 
     time = np.arange(len(xyz))
@@ -120,14 +110,13 @@ def load_lammpstrj(filename, top=None, stride=None, atom_indices=None,
         time *= stride
 
     t = Trajectory(xyz=xyz, topology=topology, time=time)
-    t.unitcell_lengths = cell_lengths
-    t.unitcell_angles = cell_angles
     return t
 
 
-@_FormatRegistry.register_fileobject('.lammpstrj')
-class LAMMPSTrajectoryFile(object):
-    """Interface for reading and writing to a LAMMPS lammpstrj files.
+@_FormatRegistry.register_fileobject('.xyz')
+class XYZTrajectoryFile(object):
+    """Interface for reading and writing to xyz files.
+
     This is a file-like object, that both reading or writing depending
     on the `mode` flag. It implements the context manager protocol,
     so you can also use it with the python 'with' statement.
@@ -147,8 +136,7 @@ class LAMMPSTrajectoryFile(object):
     distance_unit = 'angstroms'
 
     def __init__(self, filename, mode='r', force_overwrite=True):
-        """Open a LAMMPS lammpstrj file for reading/writing.
-        """
+        """Open a xyz file for reading/writing. """
         self._is_open = False
         self._filename = filename
         self._mode = mode
@@ -172,7 +160,7 @@ class LAMMPSTrajectoryFile(object):
                              'you supplied "{0}"'.format(mode))
 
     def close(self):
-        """Close the lammpstrj file. """
+        """Close the xyz file. """
         if self._is_open:
             self._fh.close()
             self._is_open = False
@@ -189,7 +177,7 @@ class LAMMPSTrajectoryFile(object):
         self.close()
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
-        """Read data from a lammpstrj file
+        """Read data from a xyz file.
 
         Parameters
         ----------
@@ -205,10 +193,6 @@ class LAMMPSTrajectoryFile(object):
         Returns
         -------
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=np.float32
-        cell_lengths : {np.ndarray, None}
-            If the file contains unitcell lengths, they will be returned as an
-            array of shape=(n_frames, 3). Otherwise, unitcell_angles will be
-            None.
         """
         if not self._mode == 'r':
             raise ValueError('read() is only available when file is opened '
@@ -222,18 +206,16 @@ class LAMMPSTrajectoryFile(object):
         if stride is None:
             stride = 1
 
-        all_coords, all_lengths, all_angles = [], [], []
+        all_coords = []
         for i in frame_counter:
             try:
-                frame_coords, frame_lengths, frame_angles = self._read()
+                frame_coords = self._read()
                 if atom_indices is not None:
                     frame_coords = frame_coords[atom_indices, :]
             except _EOF:
                 break
 
             all_coords.append(frame_coords)
-            all_lengths.append(frame_lengths)
-            all_angles.append(frame_angles)
 
             for j in range(stride - 1):
                 # throw away these frames
@@ -243,234 +225,71 @@ class LAMMPSTrajectoryFile(object):
                     break
 
         all_coords = np.array(all_coords)
-        all_lengths = np.array(all_lengths, dtype=np.float32)
-        all_angles = np.array(all_angles, dtype=np.float32)
-        return all_coords, all_lengths, all_angles
-
-    def parse_box(self, style):
-        """Extract lengths and angles from a frame.
-
-        Parameters
-        ----------
-        style : str
-            Type of box, 'triclinic' or 'orthogonal'.
-
-        Returns
-        -------
-            lengths : ndarray
-            angles : ndarray
-
-        Notes
-        -----
-        For more info on how LAMMPS defines boxes:
-        http://lammps.sandia.gov/doc/Section_howto.html#howto_12
-        """
-        box = np.empty(shape=(3, 2))
-        if style == 'triclinic':
-            factors = np.empty(3)
-            for i in range(3):
-                line = self._fh.readline().split()
-                box[i] = line[:2]
-                factors[i] = line[2]
-            xy, xz, yz = factors
-
-            xlo = box[0, 0] - np.min([0.0, xy, xz, xy+xz])
-            xhi = box[0, 1] - np.max([0.0, xy, xz, xy+xz])
-            ylo = box[1, 0] - np.min([0.0, yz])
-            yhi = box[1, 1] - np.max([0.0, yz])
-            zlo = box[2, 0]
-            zhi = box[2, 1]
-
-            lx = xhi - xlo
-            ly = yhi - ylo
-            lz = zhi - zlo
-
-            a = lx
-            b = np.sqrt(ly**2 + xy**2)
-            c = np.sqrt(lz**2 + xz**2 + yz**2)
-            alpha = np.arccos((xy*xz + ly*yz) / (b*c))
-            beta = np.arccos(xz / c)
-            gamma = np.arccos(xy / b)
-
-            lengths = np.array([a, b, c])
-            in_units_of(lengths, self.distance_unit, 'nanometers', inplace=True)
-            angles = np.degrees(np.array([alpha, beta, gamma]))
-        elif style == 'orthogonal':
-            box[0] = self._fh.readline().split()  # x-dim of box
-            box[1] = self._fh.readline().split()  # y-dim of box
-            box[2] = self._fh.readline().split()  # z-dim of box
-            lengths = np.diff(box, axis=1).reshape(1, 3)[0]  # box lengths
-            in_units_of(lengths, self.distance_unit, 'nanometers', inplace=True)
-            angles = np.empty(3)
-            angles.fill(90.0)
-        return lengths, angles
+        return all_coords
 
     def _read(self):
         """Read a single frame. """
 
-        # --- begin header ---
-        first = self._fh.readline()  # ITEM: TIMESTEP
+        first = self._fh.readline()  # Number of atoms.
         if first == '':
             raise _EOF()
-        self._fh.readline()  # timestep
-        self._fh.readline()  # ITEM: NUMBER OF ATOMS
-        self._n_atoms = int(self._fh.readline())  # num atoms
-
-        box_header = self._fh.readline().split()  # ITEM: BOX BOUNDS
-        self._line_counter += 5
-        if len(box_header) == 9:
-            lengths, angles = self.parse_box('triclinic')
-        elif len(box_header) == 6:
-            lengths, angles = self.parse_box('orthogonal')
         else:
-            raise IOError('lammpstrj parse error on line {0:d} of "{1:s}". '
-                          'This file does not appear to be a valid '
-                          'lammpstrj file.'.format(
-                    self._line_counter,  self._filename))
-
-        self._fh.readline()  # ITEM: ATOMS ...
-        self._line_counter += 4
-        # --- end header ---
+            self._n_atoms = int(first)
+        self._fh.readline()  # Comment line.
+        self._line_counter += 2
 
         xyz = np.empty(shape=(self._n_atoms, 3))
-        types = np.empty(shape=(self._n_atoms), dtype='int')
+        types = np.empty(shape=self._n_atoms, dtype=str)
 
-        # --- begin body ---
-        for _ in xrange(self._n_atoms):
+        for i in xrange(self._n_atoms):
             line = self._fh.readline()
             if line == '':
                 raise _EOF()
-            temp = line.split()
+            split_line = line.split()
             try:
-                atom_index = int(temp[0])
-                types[atom_index - 1] = int(temp[1])
-                xyz[atom_index - 1] = [float(x) for x in temp[2:5]]
+                types[i] = split_line[0]
+                xyz[i] = [float(x) for x in split_line[1:4]]
             except Exception:
-                raise IOError('lammpstrj parse error on line {0:d} of "{1:s}". '
+                raise IOError('xyz parse error on line {0:d} of "{1:s}". '
                               'This file does not appear to be a valid '
-                              'lammpstrj file.'.format(
+                              'xyz file.'.format(
                         self._line_counter,  self._filename))
             self._line_counter += 1
         # --- end body ---
 
         self._frame_index += 1
-        return xyz, lengths, angles
+        return xyz
 
-    def write_box(self, lengths, angles, mins):
-        """Write the box lines in the header of a frame.
-
-        Parameters
-        ----------
-        lengths : np.ndarray, dtype=np.double, shape=(3, )
-            The lengths (a,b,c) of the unit cell for each frame.
-        angles : np.ndarray, dtype=np.double, shape=(3, )
-            The angles (\alpha, \beta, \gamma) defining the unit cell for
-            each frame.
-        mins : np.ndarray, dtype=np.double, shape=(3, )
-            The minimum coordinates in the x-, y- and z-directions.
-        """
-        if np.allclose(angles, np.array([90, 90, 90])):
-            self._fh.write('ITEM: BOX BOUNDS pp pp pp\n')
-            self._fh.write('{0} {1}\n'.format(mins[0], mins[0] + lengths[0]))
-            self._fh.write('{0} {1}\n'.format(mins[1], mins[1] + lengths[1]))
-            self._fh.write('{0} {1}\n'.format(mins[2], mins[2] + lengths[2]))
-        else:
-            a, b, c = lengths
-            alpha, beta, gamma = np.radians(angles)
-
-            lx = a
-            xy = b * np.cos(gamma)
-            xz = c * np.cos(beta)
-            ly = np.sqrt(b**2 - xy**2)
-            yz = (b*c*np.cos(alpha) - xy*xz) / ly
-            lz = np.sqrt(c**2 - xz**2 - yz**2)
-
-            xlo = mins[0]
-            xhi = xlo + lx
-            ylo = mins[1]
-            yhi = ylo + ly
-            zlo = mins[2]
-            zhi = zlo + lz
-
-            xlo_bound = xlo + np.min([0.0, xy, xz, xy+xz])
-            xhi_bound = xhi + np.max([0.0, xy, xz, xy+xz])
-            ylo_bound = ylo + np.min([0.0, yz])
-            yhi_bound = yhi + np.max([0.0, yz])
-            zlo_bound = zlo
-            zhi_bound = zhi
-            self._fh.write('ITEM: BOX BOUNDS xy xz yz pp pp pp\n')
-            self._fh.write('{0} {1} {2}\n'.format(xlo_bound, xhi_bound, xy))
-            self._fh.write('{0} {1} {2}\n'.format(ylo_bound, yhi_bound, xz))
-            self._fh.write('{0} {1} {2}\n'.format(zlo_bound, zhi_bound, yz))
-
-    def write(self, xyz, cell_lengths, cell_angles=None, types=None, unit_set='real'):
-        """Write one or more frames of data to a lammpstrj file
+    def write(self, xyz, types=None):
+        """Write one or more frames of data to a xyz file.
 
         Parameters
         ----------
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
             The cartesian coordinates of the atoms to write.
-        cell_lengths : np.ndarray, dtype=np.double, shape=(n_frames, 3)
-            The lengths (a,b,c) of the unit cell for each frame.
-        cell_angles : np.ndarray, dtype=np.double, shape=(n_frames, 3)
-            The angles (\alpha, \beta, \gamma) defining the unit cell for
-            each frame.
-        types : np.ndarray, shape(3, ), dtype=int
-            The numeric type of each particle.
-        unit_set : str, optional
-            The LAMMPS unit set that the simulation was performed in. See
-            http://lammps.sandia.gov/doc/units.html for options. Currently supported
-            unit sets: 'real'.
+        types : np.ndarray, shape(3, )
+            The type of each particle.
         """
         if not self._mode == 'w':
             raise ValueError('write() is only available when file is opened '
                              'in mode="w"')
 
-        xyz = ensure_type(xyz, np.float32, 3, 'xyz', can_be_none=False,
-                shape=(None, None, 3), warn_on_cast=False,
-                add_newaxis_on_deficient_ndim=True)
-        cell_lengths = ensure_type(cell_lengths, np.float32, 2, 'cell_lengths',
-                can_be_none=False, shape=(len(xyz), 3), warn_on_cast=False,
-                add_newaxis_on_deficient_ndim=True)
-        if cell_angles is None:
-            cell_angles = np.empty_like(cell_lengths)
-            cell_angles.fill(90)
-        cell_angles = ensure_type(cell_angles, np.float32, 2, 'cell_angles',
-                can_be_none=False, shape=(len(xyz), 3), warn_on_cast=False,
-                add_newaxis_on_deficient_ndim=True)
         if not types:
             # Make all particles the same type.
-            types = np.ones(shape=(xyz.shape[1]))
-        types = ensure_type(types, np.int, 1, 'types', can_be_none=True,
-                shape=(xyz.shape[1], ), warn_on_cast=False,
-                add_newaxis_on_deficient_ndim=False)
+            types = ['X' for _ in xrange(xyz.shape[1])]
 
-        # TODO: Support other unit sets.
-        if unit_set == 'real':
-            self.distance_unit == 'angstroms'
-        else:
-            raise ValueError('Unsupported unit set specified: {0}.'.format(unit_set))
         in_units_of(xyz, 'nanometers', self.distance_unit, inplace=True)
-        in_units_of(cell_lengths, 'nanometers', self.distance_unit, inplace=True)
 
         for i in range(xyz.shape[0]):
-            # --- begin header ---
-            self._fh.write('ITEM: TIMESTEP\n')
-            self._fh.write('{0}\n'.format(i))  # TODO: Write actual time if known.
-            self._fh.write('ITEM: NUMBER OF ATOMS\n')
             self._fh.write('{0}\n'.format(xyz.shape[1]))
-            self.write_box(cell_lengths[i], cell_angles[i], xyz[i].min(axis=0))
-            # --- end header ---
+            self._fh.write("Created with MDTraj {0}, {1}".format(version, str(date.today())))
 
-            # --- begin body ---
-            self._fh.write('ITEM: ATOMS id type xu yu zu\n')
             for j, coord in enumerate(xyz[i]):
-                self._fh.write('{0:d} {1:d} {2:8.3f} {3:8.3f} {4:8.3f}\n'.format(
-                    j+1, types[j], coord[0], coord[1], coord[2]))
-            # --- end body ---
+                self._fh.write('{0} {1:8.3f} {2:8.3f} {3:8.3f}\n'.format(
+                    types[j], coord[0], coord[1], coord[2]))
 
     def seek(self, offset, whence=0):
-        """Move to a new file position
+        """Move to a new file position.
 
         Parameters
         ----------
@@ -515,7 +334,7 @@ class LAMMPSTrajectoryFile(object):
             raise NotImplementedError('offsets in write mode are not supported yet')
 
     def tell(self):
-        """Current file position
+        """Current file position.
 
         Returns
         -------
@@ -525,7 +344,7 @@ class LAMMPSTrajectoryFile(object):
         return int(self._frame_index)
 
     def __len__(self):
-        "Number of frames in the file"
+        """Number of frames in the file. """
         raise NotImplementedError()
 
 
