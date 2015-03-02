@@ -603,7 +603,20 @@ class Trajectory(object):
         """
         if self.top is None:
             return 0
-        return sum([1 for r in self.top.residues])
+        return self.top.n_residues
+
+    @property
+    def n_chains(self):
+        """Number of chains in the trajectory
+
+        Returns
+        -------
+        n_chains : int
+            The number of chains in the trajectory's topology
+        """
+        if self.top is None:
+            return 0
+        return self.top.n_chains
 
     @property
     def top(self):
