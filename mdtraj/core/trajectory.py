@@ -45,6 +45,7 @@ from mdtraj.formats import MDCRDTrajectoryFile
 from mdtraj.formats import ArcTrajectoryFile
 from mdtraj.formats import DTRTrajectoryFile
 from mdtraj.formats import LAMMPSTrajectoryFile
+from mdtraj.formats import XYZTrajectoryFile
 
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
@@ -1193,6 +1194,7 @@ class Trajectory(object):
                   '.ncdf': self.save_netcdf,
                   '.lh5': self.save_lh5,
                   '.lammpstrj': self.save_lammpstrj,
+                  '.xyz': self.save_xyz,
                   }
 
         try:
@@ -1215,7 +1217,7 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        with HDF5TrajectoryFile(filename, 'w', force_overwrite=True) as f:
+        with HDF5TrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(coordinates=self.xyz, time=self.time,
                     cell_angles=self.unitcell_angles,
                     cell_lengths=self.unitcell_lengths)
@@ -1231,10 +1233,23 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        with LAMMPSTrajectoryFile(filename, 'w', force_overwrite=True) as f:
+        with LAMMPSTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(xyz=self.xyz,
                     cell_angles=self.unitcell_angles,
                     cell_lengths=self.unitcell_lengths)
+
+    def save_xyz(self, filename, force_overwrite=True):
+        """Save trajectory to .xyz format.
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
+        """
+        with XYZTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(xyz=self.xyz, types=[a.name for a in self.top.atoms])
 
     def save_pdb(self, filename, force_overwrite=True, bfactors=None):
         """Save trajectory to RCSB PDB format

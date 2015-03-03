@@ -40,7 +40,7 @@ def compute_dssp(traj, simplified=True):
     assignments : np.ndarray, shape=(n_frames, n_residues), dtype=S1
         The assignments is a 2D array of character codes (see below), giving
         the secondary structure of each residue in each frame.
-    simplified  : bool, default=True.
+    simplified : bool, default=True.
         Use the simplified 3-category assignment scheme. Otherwise the original
         8-category scheme is used.
 

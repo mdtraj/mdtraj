@@ -48,7 +48,7 @@ class Transformation(object):
     ----------
     rotation : np.array, shape=(3,3)
         Rotation matrix
-    rotation : np.array, shape=(3)
+    translation : np.array, shape=(3)
         Translation vector
     """
     def __init__(self, rotation, translation):
@@ -162,6 +162,7 @@ def rmsd_kabsch(xyz1, xyz2):
         xyz1 coordinates of a SINGLE frame
     xyz2 : ndarray, shape = (n_atoms, 3)
         xyz2 coordinates of a SINGLE frame
+
     Returns
     -------
     rmsd : float

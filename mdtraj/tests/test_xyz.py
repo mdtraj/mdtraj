@@ -22,15 +22,14 @@
 
 
 import tempfile, os
-
 import numpy as np
 
 import mdtraj as md
-from mdtraj.formats import LAMMPSTrajectoryFile, lammpstrj
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
-TestDocstrings = DocStringFormatTester(lammpstrj, error_on_none=True)
+from mdtraj.formats import XYZTrajectoryFile, xyzfile
+from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
+TestDocstrings = DocStringFormatTester(xyzfile, error_on_none=True)
 
-fd, temp = tempfile.mkstemp(suffix='.lammpstrj')
+fd, temp = tempfile.mkstemp(suffix='.xyz')
 def teardown_module(module):
     """Remove the temporary file created by tests in this file
     this gets automatically called by nose. """
@@ -38,65 +37,58 @@ def teardown_module(module):
     os.unlink(temp)
 
 def test_read_0():
-    with LAMMPSTrajectoryFile(get_fn('frame0.lammpstrj')) as f:
-        xyz, _, _ = f.read()
-    with LAMMPSTrajectoryFile(get_fn('frame0.lammpstrj')) as f:
-        xyz3, _, _ = f.read(stride=3)
+    with XYZTrajectoryFile(get_fn('frame0.xyz')) as f:
+        xyz = f.read()
+    with XYZTrajectoryFile(get_fn('frame0.xyz')) as f:
+        xyz3 = f.read(stride=3)
     eq(xyz[::3], xyz3)
 
 def test_read_1():
     reference = md.load(get_fn('frame0.dcd'), top=get_fn('native.pdb'))
-    traj = md.load(get_fn('frame0.lammpstrj'), top=get_fn('native.pdb'))
+    traj = md.load(get_fn('frame0.xyz'), top=get_fn('native.pdb'))
 
     eq(reference.xyz[0], traj.xyz[0], decimal=3)
 
-def test_read_write_0():
-    xyz = 10 * np.random.randn(100, 11, 3)
-    lengths = np.ones(shape=(100, 3))
-    angles = np.empty(shape=(100, 3))
-    angles.fill(45)
-
-    with LAMMPSTrajectoryFile(temp, mode='w') as f:
-        f.write(xyz, lengths, angles)
-    with LAMMPSTrajectoryFile(temp) as f:
-        xyz2, new_lengths, new_angles = f.read()
-
-    eq(lengths, new_lengths)
-    eq(angles, new_angles)
-    eq(xyz, xyz2/10, decimal=3)
 
 def test_mdwrite():
     t = md.load(get_fn('frame0.dcd'), top=get_fn('native.pdb'))
     t.save(temp)
 
 def test_multiread():
-    reference = md.load(get_fn('frame0.lammpstrj'), top=get_fn('native.pdb'))
-    with LAMMPSTrajectoryFile(get_fn('frame0.lammpstrj')) as f:
-        xyz0, _, _ = f.read(n_frames=1)
-        xyz1, _, _ = f.read(n_frames=1)
+    reference = md.load(get_fn('frame0.xyz'), top=get_fn('native.pdb'))
+    with XYZTrajectoryFile(get_fn('frame0.xyz')) as f:
+        xyz0 = f.read(n_frames=1)
+        xyz1 = f.read(n_frames=1)
 
     eq(reference.xyz[0], xyz0[0]/10)
     eq(reference.xyz[1], xyz1[0]/10)
 
 def test_seek():
-    reference = md.load(get_fn('frame0.lammpstrj'), top=get_fn('native.pdb'))
+    reference = md.load(get_fn('frame0.xyz'), top=get_fn('native.pdb'))
 
-    with LAMMPSTrajectoryFile(get_fn('frame0.lammpstrj')) as f:
+    with XYZTrajectoryFile(get_fn('frame0.xyz')) as f:
         f.seek(1)
         eq(1, f.tell())
-        xyz1, _, _ = f.read(n_frames=1)
+        xyz1 = f.read(n_frames=1)
         eq(reference.xyz[1], xyz1[0]/10)
 
         f.seek(10)
         eq(10, f.tell())
-        xyz10, _, _ = f.read(n_frames=1)
+        xyz10 = f.read(n_frames=1)
         eq(reference.xyz[10], xyz10[0]/10)
         eq(11, f.tell())
 
         f.seek(-8, 1)
-        xyz3, _, _ = f.read(n_frames=1)
+        xyz3 = f.read(n_frames=1)
         eq(reference.xyz[3], xyz3[0]/10)
 
         f.seek(4, 1)
-        xyz8, _, _ = f.read(n_frames=1)
+        xyz8 = f.read(n_frames=1)
         eq(reference.xyz[8], xyz8[0]/10)
+
+if __name__ == "__main__":
+    test_read_0()
+    test_read_1()
+    test_mdwrite()
+    test_multiread()
+    test_seek()
