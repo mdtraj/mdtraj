@@ -44,8 +44,10 @@ fd5, temp5 = tempfile.mkstemp(suffix='.h5')
 fd6, temp6 = tempfile.mkstemp(suffix='.pdb')
 fd7, temp7 = tempfile.mkstemp(suffix='.nc')
 fd8, temp8 = tempfile.mkstemp(suffix='.lh5')
+fd9, temp9 = tempfile.mkstemp(suffix='.lammpstrj')
+fd10, temp10 = tempfile.mkstemp(suffix='.xyz')
 
-for e in [fd1, fd2, fd3, fd4, fd5, fd6, fd7, fd8]:
+for e in [fd1, fd2, fd3, fd4, fd5, fd6, fd7, fd8, fd9, fd10]:
     os.close(e)
 
 def teardown_module(module):
@@ -166,7 +168,8 @@ def test_binpos():
 
 def test_load():
     filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos",
-                 "traj.h5", 'legacy_msmbuilder_trj0.lh5', 'frame0.nc', six.u('traj.h5')]
+                 "traj.h5", 'legacy_msmbuilder_trj0.lh5', 'frame0.nc', six.u('traj.h5'),
+                 "frame0.lammpstrj", "frame0.xyz"]
     num_block = 3
     for filename in filenames:
         t0 = md.load(get_fn(filename), top=nat, discard_overlapping_frames=True)
@@ -322,7 +325,8 @@ def test_load_combination():
     topology = md.load(get_fn('native.pdb')).topology
     ainds = np.array([a.index for a in topology.atoms if a.element.symbol == 'C'])
     filenames = ['frame0.binpos', 'frame0.dcd', 'frame0.trr', 'frame0.xtc',
-                 'frame0.nc', 'frame0.h5', 'frame0.pdb', 'legacy_msmbuilder_trj0.lh5']
+                 'frame0.nc', 'frame0.h5', 'frame0.pdb', 'legacy_msmbuilder_trj0.lh5',
+                 'frame0.lammpstrj', 'frame0.xyz']
 
     no_kwargs = [md.load(fn, top=topology) for fn in map(get_fn, filenames)]
     strided3 =  [md.load(fn, top=topology, stride=3) for fn in map(get_fn, filenames)]
@@ -391,7 +395,9 @@ def test_seek_read_mode():
              (md.formats.MDCRDTrajectoryFile, 'frame0.mdcrd'),
              (md.formats.BINPOSTrajectoryFile, 'frame0.binpos'),
              (md.formats.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'),
-             (md.formats.DTRTrajectoryFile,'frame0.dtr/clickme.dtr'),]
+             (md.formats.DTRTrajectoryFile, 'frame0.dtr/clickme.dtr'),
+             (md.formats.XYZTrajectoryFile, 'frame0.xyz'),
+             (md.formats.LAMMPSTrajectoryFile, 'frame0.lammpstrj'),]
 
     for a, b in files:
         point = 0
@@ -416,7 +422,8 @@ def test_seek_read_mode():
                     offset = np.random.randint(1, 10)
                     if point + offset < length:
                         read = f.read(offset)
-                        if a not in [md.formats.BINPOSTrajectoryFile, md.formats.LH5TrajectoryFile]:
+                        if a not in [md.formats.BINPOSTrajectoryFile, md.formats.LH5TrajectoryFile,
+                                     md.formats.XYZTrajectoryFile]:
                             read = read[0]
                         readlength = len(read)
                         read = mdtraj.utils.in_units_of(read, f.distance_unit, 'nanometers')
@@ -443,7 +450,7 @@ def test_seek_read_mode():
 def test_load_frame():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
              'frame0.dcd', 'frame0.mdcrd', 'frame0.binpos',
-             'legacy_msmbuilder_trj0.lh5']
+             'legacy_msmbuilder_trj0.lh5', 'frame0.xyz', 'frame0.lammpstrj']
     trajectories = [md.load(get_fn(f), top=get_fn('native.pdb')) for f in files]
     rand = [np.random.randint(len(t)) for t in trajectories]
     frames = [md.load_frame(get_fn(f), index=r, top=get_fn('native.pdb')) for f, r in zip(files, rand)]
@@ -460,7 +467,8 @@ def test_load_frame():
 
 def test_iterload():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
-             'frame0.dcd', 'frame0.binpos', 'legacy_msmbuilder_trj0.lh5']
+             'frame0.dcd', 'frame0.binpos', 'legacy_msmbuilder_trj0.lh5',
+             'frame0.xyz', 'frame0.lammpstrj']
     chunk = 100
     for stride in [1, 2, 5, 10]:
         for file in files:
@@ -473,7 +481,8 @@ def test_iterload():
 def test_length():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
              'frame0.mdcrd', '4waters.arc', 'frame0.dcd', '2EQQ.pdb',
-             'frame0.binpos', 'legacy_msmbuilder_trj0.lh5']
+             'frame0.binpos', 'legacy_msmbuilder_trj0.lh5',
+             'frame0.lammpstrj', 'frame0.xyz']
     for file in files:
         if file.endswith('.mdcrd'):
             kwargs = {'n_atoms': 22}
@@ -511,5 +520,3 @@ def test_chunk0_iterload():
     
     eq(trj0.n_frames, trj.n_frames)
 
-
-test_dtr()
