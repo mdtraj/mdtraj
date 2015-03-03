@@ -21,26 +21,27 @@
 ##############################################################################
 
 from __future__ import print_function, division
+import pdb
 
 import numpy as np
+
+from mdtraj.geometry.distance import compute_center_of_mass
+from mdtraj.utils import ensure_type
 
 
 __all__ = ['compute_nematic_order']
 
 
-def compute_nematic_order(traj, select='chains', periodic=True):
+def compute_nematic_order(traj, indices='chains'):
     """Compute the nematic ordering of a group in every frame.
 
     Parameters
     ----------
     traj : Trajectory
-        This trajectory is assumed to only contain the atoms to be considered in
-        the calculation.
-    select: str, optional, default='chains'
-        The group to consider. Valid groups are 'chains' and 'residues'. Atoms
-        within individual members of the selected group are assumed to be
-        consecutively indexed. E.g., a chain will could contain atoms [1, 2, 3]
-        but not [1, 2, 4].
+        Trajectory to compute ordering in.
+    indices: str or array-like, optional, default='chains'
+        The group to consider. Users can pass their own indices or
+        Recognized groups are 'chains' and 'residues'.
 
     Returns
     -------
@@ -49,35 +50,34 @@ def compute_nematic_order(traj, select='chains', periodic=True):
 
     """
 
-    # xyz  shape=(n_frames, n_groups, n_atoms, 3)
+    if indices.lower() == 'chains':
+        group = list(traj.top.chains)
+    elif indices.lower() == 'residues':
+        group = list(traj.top.residues)
+    else:
+        raise ValueError('Invalid selection: {0}'.format(indices))
+    indices = [[at.index for at in compound.atoms]
+               for compound in group]
 
-    if select.lower() == 'chains':
-        group = traj.top.chains
-    elif select.lower() == 'residues':
-        group = traj.top.residues
+    all_directors = np.zeros(shape=(traj.n_frames, len(indices), 3),
+                             dtype=np.float64)
+    for i, ids in enumerate(indices):
+        sub_traj = traj.atom_slice(ids)
+        director = compute_director(sub_traj)
+        all_directors[:, i, :] = director
+    return all_directors
+    Q = compute_Q_tensor(all_directors)
 
-    indices = list()
-    for member in group:
-        indices.append()
-
-    xyz = np.split(traj.xyz, indices_or_sections=indices, axis=1)
-
-    # center_of_mass  shape=(n_frames, n_groups, n_atoms, 3)
-    # inertia  shape=(n_frames, n_groups, 3, 3)
-    # all_directors  shape=(n_frames, n_groups, 3)
-
-    # Q_tensors  shape=(n_frames, 3, 3)
-
-    # S2  shape=(n_frames, )
-    s2 = list()
-    for Q in Q_tensors:
+    print(Q)
+    s2 = np.zeros(shape=(traj.n_frames,), dtype=np.float64)
+    # TODO: vectorize
+    for n in range(traj.n_frames):
         w, _ = np.linalg.eig(Q)
-        s2.append(w.max())
+        s2[n] = w.max()
+    return s2
 
-    return np.asarray(s2)
 
-
-def _compute_Q_tensor(directors):
+def compute_Q_tensor(all_directors):
     """Compute Q tensor of set of directors.
 
     Parameters
@@ -98,23 +98,33 @@ def _compute_Q_tensor(directors):
     ----------
 
     """
-    normed = directors / np.sqrt((directors ** 2.0).sum(-1))[..., np.newaxis]
-    Q = np.zeros(shape=(3, 3))
-    for vector in normed:
-        Q[0, 0] += 3.0 * vector[0] * vector[0] - 1
-        Q[0, 1] += 3.0 * vector[0] * vector[1]
-        Q[0, 2] += 3.0 * vector[0] * vector[2]
-        Q[1, 0] += 3.0 * vector[1] * vector[0]
-        Q[1, 1] += 3.0 * vector[1] * vector[1] - 1
-        Q[1, 2] += 3.0 * vector[1] * vector[2]
-        Q[2, 0] += 3.0 * vector[2] * vector[0]
-        Q[2, 1] += 3.0 * vector[2] * vector[1]
-        Q[2, 2] += 3.0 * vector[2] * vector[2] - 1
+    # center_of_mass  shape=(n_frames, n_groups, n_atoms, 3)
+    # inertia  shape=(n_frames, n_groups, 3, 3)
+    # all_directors  shape=(n_frames, n_groups, 3)
+    # Q_tensors  shape=(n_frames, 3, 3)
+
+    all_directors = ensure_type(all_directors, dtype=np.float64, ndim=3,
+                                name='directors', shape=(None, None, 3))
+    Q = np.zeros(shape=(all_directors.shape[0], 3, 3), dtype=np.float64)
+
+    # TODO: vectorize
+    for n, directors in enumerate(all_directors):
+        normed = directors / np.sqrt((directors ** 2.0).sum(-1))[..., np.newaxis]
+        for vector in normed:
+            Q[n, 0, 0] += 3.0 * vector[0] * vector[0] - 1
+            Q[n, 0, 1] += 3.0 * vector[0] * vector[1]
+            Q[n, 0, 2] += 3.0 * vector[0] * vector[2]
+            Q[n, 1, 0] += 3.0 * vector[1] * vector[0]
+            Q[n, 1, 1] += 3.0 * vector[1] * vector[1] - 1
+            Q[n, 1, 2] += 3.0 * vector[1] * vector[2]
+            Q[n, 2, 0] += 3.0 * vector[2] * vector[0]
+            Q[n, 2, 1] += 3.0 * vector[2] * vector[1]
+            Q[n, 2, 2] += 3.0 * vector[2] * vector[2] - 1
     Q /= (2.0 * normed.shape[0])
     return Q
 
 
-def _compute_director(I):
+def compute_director(traj):
     """Compute characteristic vector describing a group's orientation.
 
     Parameters
@@ -131,25 +141,32 @@ def _compute_director(I):
     ----------
 
     """
-    w, v = np.linalg.eig(I)
-    director = v[:, np.argmin(w)]
-    return director
+    inertia_tensor = compute_inertia_tensor(traj)
+    directors = np.zeros(shape=(traj.n_frames, 3), dtype=np.float64)
+    for n, I in enumerate(inertia_tensor):
+        w, v = np.linalg.eig(I)
+        directors[n] = v[:, np.argmin(w)]
+    return directors
 
 
-def compute_inerita_tensor(xyz, masses):
-    """ """
-    I = np.zeros(shape=(3, 3))
-    com =
-    for i, coord0 in enumerate(xyz):
-        mass = masses[i]
-        coord = coord0 - com
-        I[0, 0] += mass * (coord[1] * coord[1] + coord[2] * coord[2])
-        I[1, 1] += mass * (coord[0] * coord[0] + coord[2] * coord[2])
-        I[2, 2] += mass * (coord[0] * coord[0] + coord[1] * coord[1])
-        I[0, 1] -= mass * coord[0] * coord[1]
-        I[0, 2] -= mass * coord[0] * coord[2]
-        I[1, 2] -= mass * coord[1] * coord[2]
-    I[1, 0] = I[0, 1]
-    I[2, 0] = I[0, 2]
-    I[2, 1] = I[1, 2]
+def compute_inertia_tensor(traj):
+    """Compute the inertia tensor of a group of atoms. """
+    I = np.zeros(shape=(traj.n_frames, 3, 3), dtype=np.float64)
+    com = compute_center_of_mass(traj)
+    masses = np.array([a.element.mass for a in traj.top.atoms])
+
+    # TODO: vectorize
+    for n, xyz in enumerate(traj.xyz):
+        for i, coord0 in enumerate(xyz):
+            mass = masses[i]
+            coord = coord0 - com[n]
+            I[n, 0, 0] += mass * (coord[1] * coord[1] + coord[2] * coord[2])
+            I[n, 1, 1] += mass * (coord[0] * coord[0] + coord[2] * coord[2])
+            I[n, 2, 2] += mass * (coord[0] * coord[0] + coord[1] * coord[1])
+            I[n, 0, 1] -= mass * coord[0] * coord[1]
+            I[n, 0, 2] -= mass * coord[0] * coord[2]
+            I[n, 1, 2] -= mass * coord[1] * coord[2]
+        I[n, 1, 0] = I[n, 0, 1]
+        I[n, 2, 0] = I[n, 0, 2]
+        I[n, 2, 1] = I[n, 1, 2]
     return I
