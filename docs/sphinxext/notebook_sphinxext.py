@@ -111,52 +111,23 @@ class NotebookDirective(Directive):
 class notebook_node(nodes.raw):
     pass
 
+
 def nb_to_python(nb_path):
     """convert notebook to python script"""
     exporter = python.PythonExporter()
     output, resources = exporter.from_filename(nb_path)
     return output
 
+
 def nb_to_html(nb_path):
     """convert notebook to html"""
-    exporter = html.HTMLExporter(template_file='full')
+    exporter = html.HTMLExporter(template_file='basic')
     output, resources = exporter.from_filename(nb_path)
-    header = output.split('<head>', 1)[1].split('</head>',1)[0]
-    body = output.split('<body>', 1)[1].split('</body>',1)[0]
-
-    # http://imgur.com/eR9bMRH
-    header = header.replace('<style', '<style scoped="scoped"')
-    header = header.replace('body {\n  overflow: visible;\n  padding: 8px;\n}\n', '')
-    header = header.replace("code,pre{", "code{")
-
-    # Filter out styles that conflict with the sphinx theme.
-    filter_strings = [
-        'navbar',
-        'body{',
-        'alert{',
-        'uneditable-input{',
-        'collapse{',
-    ]
-    filter_strings.extend(['h%s{' % (i+1) for i in range(6)])
-
-    line_begin_strings = [
-        'pre{',
-        'p{margin'
-        ]
-
-    header_lines = filter(
-        lambda x: not any([s in x for s in filter_strings]), header.split('\n'))
-    header_lines = filter(
-        lambda x: not any([x.startswith(s) for s in line_begin_strings]), header_lines)
-
-    header = '\n'.join(header_lines)
-
-    # concatenate raw html lines
-    lines = ['<div class="ipynotebook">']
-    lines.append(header)
-    lines.append(body)
+    lines = ['<div class="ipynotebook" id="notebook-container">']
+    lines.append(output)
     lines.append('</div>')
     return '\n'.join(lines)
+
 
 def evaluate_notebook(nb_path, dest_path=None, skip_exceptions=False):
     # Create evaluated version and save it to the dest path.
@@ -171,10 +142,7 @@ def evaluate_notebook(nb_path, dest_path=None, skip_exceptions=False):
         print(e)
         print('-'*80)
         raise
-        # Return the traceback, filtering out ANSI color codes.
-        # http://stackoverflow.com/questions/13506033/filtering-out-ansi-escape-sequences
-        # return 'Notebook conversion failed with the following traceback: \n%s' % \
-        # re.sub(r'\\033[\[\]]([0-9]{1,2}([;@][0-9]{0,2})*)*[mKP]?', '', str(e))
+
     if dest_path is None:
         dest_path = 'temp_evaluated.ipynb'
     write(nb_runner.nb, open(dest_path, 'w'), 'json')
@@ -183,14 +151,18 @@ def evaluate_notebook(nb_path, dest_path=None, skip_exceptions=False):
         os.remove(dest_path)
     return ret
 
+
 def formatted_link(path):
     return "`%s <%s>`__" % (os.path.basename(path), path)
+
 
 def visit_notebook_node(self, node):
     self.visit_raw(node)
 
+
 def depart_notebook_node(self, node):
     self.depart_raw(node)
+
 
 def setup(app):
     setup.app = app
