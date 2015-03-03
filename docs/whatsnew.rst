@@ -13,8 +13,8 @@ v1.3 (February 25, 2015)
 ------------------------
 - New functions to calculate various statistical mechanical properties
   (``unitcell_volumes``, ``dipole_moments``, ``static_dielectric``,
-   ``isothermal_compressability_kappa_T``, ``thermal_expansion_alpha_P``,
-   ``density``) (Kyle A. Beauchamp)
+  ``isothermal_compressability_kappa_T``, ``thermal_expansion_alpha_P``,
+  ``density``) (Kyle A. Beauchamp)
 - Fix for PDB parser to handle more than 100K atoms. (Peter Eastman + ChayaSt)
 - Include nitrogen atoms as h-bond acceptors in hydrogen bond detection (Gert Kiss)
 - SSE4.1 support not required. The latest CPU feature now required is SSE3. (Robert T. McGibbon)
