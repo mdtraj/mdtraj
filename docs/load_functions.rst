@@ -56,3 +56,5 @@ Format-specific loaders
     load_trr
     load_xtc
     load_prmtop
+    load_xyz
+    load_lammpstrj
