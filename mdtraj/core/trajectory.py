@@ -603,7 +603,7 @@ class Trajectory(object):
         """
         if self.top is None:
             return 0
-        return self.top.n_residues
+        return sum([1 for r in self.top.residues])
 
     @property
     def n_chains(self):
@@ -616,7 +616,7 @@ class Trajectory(object):
         """
         if self.top is None:
             return 0
-        return self.top.n_chains
+        return sum([1 for c in self.top.chains])
 
     @property
     def top(self):
