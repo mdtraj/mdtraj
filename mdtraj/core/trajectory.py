@@ -607,6 +607,19 @@ class Trajectory(object):
         return sum([1 for r in self.top.residues])
 
     @property
+    def n_chains(self):
+        """Number of chains in the trajectory
+
+        Returns
+        -------
+        n_chains : int
+            The number of chains in the trajectory's topology
+        """
+        if self.top is None:
+            return 0
+        return sum([1 for c in self.top.chains])
+
+    @property
     def top(self):
         """Alias for self.topology, describing the organization of atoms into residues, bonds, etc
 
