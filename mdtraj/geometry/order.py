@@ -93,8 +93,12 @@ def compute_nematic_order(traj, indices='chains'):
 
     # From the directors, compute the Q-tensor and nematic order parameter, S2.
     Q_ab = _compute_Q_tensor(all_directors)
-    w = np.linalg.eigvals(Q_ab)
-    S2 = w.max(axis=1)
+    # w = np.linalg.eigvals(Q_ab)
+    # S2 = w.max(axis=1)
+    S2 = np.zeros(shape=traj.n_frames, dtype=np.float64)
+    for n, Q in enumerate(Q_ab):
+        w = np.linalg.eigvals(Q)
+        S2[n] = w.max()
     return S2
 
 
@@ -178,9 +182,13 @@ def _compute_nematic_director(traj):
     inertia_tensor = compute_inertia_tensor(traj)
     # TODO: Is there a cleaner way to do this broadcasting? Closer to this which
     # does not work:    v[:, :, np.argmin(w, axis=1)]
-    w, v = np.linalg.eig(inertia_tensor)
-    return np.array([v[:, :, x][i] for i, x in enumerate(np.argmin(w, axis=1))])
-
+    # w, v = np.linalg.eig(inertia_tensor)
+    # return np.array([v[:, :, x][i] for i, x in enumerate(np.argmin(w, axis=1))])
+    directors = np.zeros(shape=(traj.n_frames, 3), dtype=np.float64)
+    for n, I_ab in enumerate(inertia_tensor):
+        w, v = np.linalg.eig(I_ab)
+        directors[n] = v[:, np.argmin(w)]
+    return directors
 
 def compute_inertia_tensor(traj):
     """Compute the inertia tensor of a trajectory.
