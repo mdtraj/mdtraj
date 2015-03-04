@@ -205,6 +205,7 @@ def compute_inertia_tensor(traj):
 
     # TODO: Look into vectorizing.
     for n, xyz in enumerate(traj.xyz):
+        # TODO: Currently assumes unwrapped trajectory.
         for i, coord in enumerate(xyz):
             mass = masses[i]
             coord = coord - com[n]
