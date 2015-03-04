@@ -1,6 +1,6 @@
 ## MDTraj: a modern, open library for the analysis of molecular dynamics trajectories
 
-[![Linux Build Status](https://travis-ci.org/mdtraj/mdtraj.png?branch=master)](https://travis-ci.org/mdtraj/mdtraj)
+[![Lunux Build Status](https://travis-ci.org/mdtraj/mdtraj.svg?branch=master)](https://travis-ci.org/mdtraj/mdtraj)
 [![Windows Build status](https://ci.appveyor.com/api/projects/status/sqjgx3jh14vuxks5/branch/master?svg=true)](https://ci.appveyor.com/project/rmcgibbo/mdtraj/branch/master)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.png)](https://pypi.python.org/pypi/mdtraj)
 [![Binstar Badge](https://binstar.org/omnia/mdtraj/badges/version.svg)](https://binstar.org/omnia/mdtraj)
