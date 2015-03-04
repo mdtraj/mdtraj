@@ -1,8 +1,8 @@
 """
 Notes
 -----
-The functions in this file use the MDTraj version of simtk.unit *internally*.  
-However, all inputs and outputs are done with implicit units.  This is 
+The functions in this file use the MDTraj version of simtk.unit *internally*.
+However, all inputs and outputs are done with implicit units.  This is
 to avoid incompatibilities between versions of simtk.unit and MDTraj.utils.unit.
 
 """
@@ -31,7 +31,7 @@ def dipole_moments(traj, charges):
     -------
     moments : np.ndarray, shape=(n_frames, 3), dtype=float
         Dipole moments of trajectory, units of nm * elementary charge.
-    
+
     Notes
     -----
     This code works by first calculating displacements relative to the
@@ -42,12 +42,12 @@ def dipole_moments(traj, charges):
     """
     local_indices = np.array([(a.index, a.residue.atom(0).index) for a in traj.top.atoms], dtype='int32')
     local_displacements = md.compute_displacements(traj, local_indices, periodic=True)
-    
+
     molecule_indices = np.array([(a.residue.atom(0).index, 0) for a in traj.top.atoms], dtype='int32')
     molecule_displacements = md.compute_displacements(traj, molecule_indices, periodic=True)
-    
+
     xyz = local_displacements + molecule_displacements
-    
+
     moments = xyz.transpose(0, 2, 1).dot(charges)
 
     return moments
@@ -61,13 +61,13 @@ def static_dielectric(traj, charges, temperature):
         An mdtraj trajectory.
     charges : np.ndarray, shape=(n_atoms), dtype=float
        Charges of each atom in the topology, expressed in units of the
-       elementary charge constant.  
+       elementary charge constant.
     temperature : temperature, float
-        The temperature of interest, in units of kelvin.  
+        The temperature of interest, in units of kelvin.
 
     Returns
     -------
-    static_dielectric : float, 
+    static_dielectric : float,
         The (unitless) relative static dielectric constant.
 
     Notes
@@ -76,20 +76,20 @@ def static_dielectric(traj, charges, temperature):
     or https://github.com/gromacs/gromacs/blob/master/src/gromacs/gmxana/gmx_current.c#L622
     """
     temperature = temperature * u.kelvin
-    
+
     moments = dipole_moments(traj, charges)
-    
+
     mu = moments.mean(0)  # Mean over frames
-    
+
     subtracted = moments - mu
-    
+
     dipole_variance = (subtracted * subtracted).sum(-1).mean(0) * (u.elementary_charge * u.nanometers) ** 2.  # <M*M> - <M>*<M> = <(M - <M>) * (M - <M>)>
 
     volume = traj.unitcell_volumes.mean() * u.nanometers ** 3.  # Average box volume of trajectory
-    
-    static_dielectric = 1.0 + dipole_variance / (3 * kB * temperature * volume * epsilon0)  # Eq. 7 of Derivation of an improved simple point charge model for liquid water: SPC/A and SPC/L 
+
+    static_dielectric = 1.0 + dipole_variance / (3 * kB * temperature * volume * epsilon0)  # Eq. 7 of Derivation of an improved simple point charge model for liquid water: SPC/A and SPC/L
     # Also https://github.com/gromacs/gromacs/blob/master/src/gromacs/gmxana/gmx_current.c#L622
-    
+
     return static_dielectric
 
 
@@ -99,25 +99,25 @@ def heat_capacity_Cp():
 
 def isothermal_compressability_kappa_T(traj, temperature):
     """Calculate the isothermal compressability.
-    
+
     Parameters
     ----------
     traj : mdtraj.Trajectory
         An mdtraj trajectory.
-    temperature: float
+    temperature : float
         The temperature of your trajectory, in units of kelvin.
-    
+
     Returns
     -------
     kappa : float
         The isothermal compressability, in units of bar^-1.
-        
+
     Notes
     -----
     Equation (4) in Fennell, Dill.  J. Phys. Chem. B, 2012.
     """
     temperature = temperature * u.kelvin
-    
+
     mu = traj.unitcell_volumes.mean()
 
     kappa = np.cov(traj.unitcell_volumes) / mu
@@ -129,22 +129,22 @@ def isothermal_compressability_kappa_T(traj, temperature):
 
 def thermal_expansion_alpha_P(traj, temperature, energies):
     """Calculate the thermal expansion coefficient.
-    
+
     Parameters
     ----------
     traj : mdtraj.Trajectory
         An mdtraj trajectory.
-    temperature: float
+    temperature : float
         The temperature of your trajectory, in units of kelvin.
     energies : np.ndarray, dtype=float, shape=(n_frames)
         An array containing the potentail energies of each trajectory
         frame, in units of kJ / mol.
-    
+
     Returns
     -------
     alpha : float
         The thermal expanssion coefficient, units of inverse Kelvin
-        
+
     Notes
     -----
     Equation (5) in Fennell, Dill.  J. Phys. Chem. B, 2012.
@@ -154,13 +154,13 @@ def thermal_expansion_alpha_P(traj, temperature, energies):
     # Had some issues finding a useful unit test, so disabled this code for now.
     # Feel free to file a pull request with a working unit test :)
     temperature = temperature * u.kelvin
-    
+
     mean_volume = traj.unitcell_volumes.mean()
-    
+
     alpha = np.cov(traj.unitcell_volumes, energies)[0, 1]  # <HV> - <H><V> = cov(H, V)
     alpha /= mean_volume
     alpha *= u.kilojoules_per_mole
-    
+
     alpha /= (gas_constant * temperature ** 2)
 
     return alpha * u.kelvin

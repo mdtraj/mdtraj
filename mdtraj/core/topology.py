@@ -641,7 +641,7 @@ class Topology(object):
 
     @property
     def n_residues(self):
-        """Get the number of residues in the Topology"""
+        """Get the number of residues in the Topology. """
         return len(self._residues)
 
     def atom(self, index):
@@ -934,7 +934,7 @@ class Chain(object):
         return iter(self._residues)
 
     def residue(self, index):
-        """Get a specific residue in this Chain
+        """Get a specific residue in this Chain.
 
         Returns
         -------
@@ -944,7 +944,7 @@ class Chain(object):
 
     @property
     def n_residues(self):
-        "Get the number of residues in this Chain"
+        """Get the number of residues in this Chain. """
         return len(self._residues)
 
     @property
@@ -961,7 +961,7 @@ class Chain(object):
                 yield atom
 
     def atoms_by_name(self, name):
-        """Iterator over all Atoms in the Chain with a specified name
+        """Iterator over all Atoms in the Chain with a specified name.
 
         Example
         -------
@@ -977,7 +977,7 @@ class Chain(object):
                 yield atom
 
     def atom(self, index):
-        """Get a specific atom in this Chain
+        """Get a specific atom in this Chain.
 
         Returns
         -------
@@ -1162,7 +1162,7 @@ class Atom(object):
         return True
 
     def __hash__(self):
-        """ A quick comparison. """
+        """A quick comparison. """
         return self.index
 
     def __str__(self):

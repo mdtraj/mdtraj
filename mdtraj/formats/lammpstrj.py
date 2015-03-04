@@ -147,8 +147,7 @@ class LAMMPSTrajectoryFile(object):
     distance_unit = 'angstroms'
 
     def __init__(self, filename, mode='r', force_overwrite=True):
-        """Open a LAMMPS lammpstrj file for reading/writing.
-        """
+        """Open a LAMMPS lammpstrj file for reading/writing. """
         self._is_open = False
         self._filename = filename
         self._mode = mode
@@ -189,7 +188,7 @@ class LAMMPSTrajectoryFile(object):
         self.close()
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
-        """Read data from a lammpstrj file
+        """Read data from a lammpstrj file.
 
         Parameters
         ----------
@@ -223,7 +222,7 @@ class LAMMPSTrajectoryFile(object):
             stride = 1
 
         all_coords, all_lengths, all_angles = [], [], []
-        for i in frame_counter:
+        for _ in frame_counter:
             try:
                 frame_coords, frame_lengths, frame_angles = self._read()
                 if atom_indices is not None:
@@ -333,7 +332,7 @@ class LAMMPSTrajectoryFile(object):
         # --- end header ---
 
         xyz = np.empty(shape=(self._n_atoms, 3))
-        types = np.empty(shape=(self._n_atoms), dtype='int')
+        types = np.empty(shape=self._n_atoms, dtype='int')
 
         # --- begin body ---
         for _ in xrange(self._n_atoms):
@@ -404,7 +403,7 @@ class LAMMPSTrajectoryFile(object):
             self._fh.write('{0} {1} {2}\n'.format(zlo_bound, zhi_bound, yz))
 
     def write(self, xyz, cell_lengths, cell_angles=None, types=None, unit_set='real'):
-        """Write one or more frames of data to a lammpstrj file
+        """Write one or more frames of data to a lammpstrj file.
 
         Parameters
         ----------
@@ -470,7 +469,7 @@ class LAMMPSTrajectoryFile(object):
             # --- end body ---
 
     def seek(self, offset, whence=0):
-        """Move to a new file position
+        """Move to a new file position.
 
         Parameters
         ----------
@@ -515,7 +514,7 @@ class LAMMPSTrajectoryFile(object):
             raise NotImplementedError('offsets in write mode are not supported yet')
 
     def tell(self):
-        """Current file position
+        """Current file position.
 
         Returns
         -------
