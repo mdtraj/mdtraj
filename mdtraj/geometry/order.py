@@ -22,7 +22,6 @@
 
 from __future__ import print_function, division
 
-import pdb
 import numpy as np
 
 from mdtraj.geometry.distance import compute_center_of_mass
@@ -30,7 +29,7 @@ from mdtraj.utils import ensure_type
 from mdtraj.utils.six import string_types
 
 
-__all__ = ['compute_nematic_order']  #, 'compute_inertia_tensor']  # Expose this?
+__all__ = ['compute_nematic_order', 'compute_inertia_tensor']
 
 
 def compute_nematic_order(traj, indices='chains'):
@@ -79,7 +78,7 @@ def compute_nematic_order(traj, indices='chains'):
                     raise ValueError('Invalid selection: {0}'.format(indices))
                 for index in sublist:
                     if not isinstance(index, int):
-                        raise ValueError('Invalid selection: {0}'.format(indices))
+                        raise ValueError('Indices must be integers: {0}'.format(indices))
         else:
             raise ValueError('Invalid selection: {0}'.format(indices))
 
@@ -93,6 +92,8 @@ def compute_nematic_order(traj, indices='chains'):
 
     # From the directors, compute the Q-tensor and nematic order parameter, S2.
     Q_ab = _compute_Q_tensor(all_directors)
+
+    # Only works with numpy >= 1.8.
     # w = np.linalg.eigvals(Q_ab)
     # S2 = w.max(axis=1)
     S2 = np.zeros(shape=traj.n_frames, dtype=np.float64)
@@ -180,6 +181,8 @@ def _compute_nematic_director(traj):
 
     """
     inertia_tensor = compute_inertia_tensor(traj)
+
+    # Only works with numpy >= 1.8.
     # TODO: Is there a cleaner way to do this broadcasting? Closer to this which
     # does not work:    v[:, :, np.argmin(w, axis=1)]
     # w, v = np.linalg.eig(inertia_tensor)
@@ -189,6 +192,7 @@ def _compute_nematic_director(traj):
         w, v = np.linalg.eig(I_ab)
         directors[n] = v[:, np.argmin(w)]
     return directors
+
 
 def compute_inertia_tensor(traj):
     """Compute the inertia tensor of a trajectory.
