@@ -96,7 +96,12 @@ def generate_unique_pairs(traj=None, pair_names=None, a_indices=None,
     If only a trajectory is provided, unique pairs between all atoms will be
     returned.
 
-    If only pair_names is provided, unique pairs between all atoms
+    If only pair_names is provided, atoms matching each of the names will be
+    looked up and unique pairs will be generated between those two lists.
+    
+    If a_indices and b_indices is provided, pairs will be generated between
+    those two arrays.
+
 
     Parameters
     ----------
@@ -105,9 +110,15 @@ def generate_unique_pairs(traj=None, pair_names=None, a_indices=None,
     pair_names : array-like, shape=(2,), dtype=str, optional, default=None
          Pair of atom names to consider. Atom names are matched using the same
          regex matching employed by MDTraj's atom selection DSL.
-    a_indices : array-like, shape=(1, )
+    a_indices : array-like, shape=(n_indices, ), dtype=int
+        An array of atom indices.
+    b_indices : array-like, shape=(n_indices, ), dtype=int
+        An array of atom indices.
+
     Returns
     -------
+    pairs : array-like, shape=(n_pairs, 2), dtype=int, optional, default=None
+        Each row gives the indices of two atoms.
 
     """
     _gave_indices = a_indices is not None and b_indices is not None
