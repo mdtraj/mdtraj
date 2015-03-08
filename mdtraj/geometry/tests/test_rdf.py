@@ -26,7 +26,7 @@ import numpy as np
 
 import mdtraj as md
 import mdtraj.geometry
-from mdtraj.testing import get_fn, eq, skipif, assert_raises
+from mdtraj.testing import get_fn, eq, skipif
 
 """
 Reference values taken from gromacs 5.0.4 using the following commands on the
@@ -43,13 +43,12 @@ echo 0 0 | gmx rdf -f tip3p_300K_1ATM.xtc -s tip3p_300K_1ATM.pdb -bin 0.005 \
         -rdf atom -n tip3p_300K_1ATM.ndx -o tip3p_300K_1ATM_all-all_rdf.xvg
 
 """
-TRAJ = md.load(get_fn('tip3p_300K_1ATM.xtc'),
-               top=get_fn('tip3p_300K_1ATM.pdb'))
-pairs = mdtraj.geometry.rdf.generate_unique_pairs(TRAJ)
+TRAJ = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))
+pairs = TRAJ.top.select_pairs('all', 'all')
 R, RDF_ALL = mdtraj.geometry.rdf.compute_rdf(TRAJ, pairs)
-pairs = mdtraj.geometry.rdf.generate_unique_pairs(TRAJ, pair_names=('O', 'O'))
+pairs = TRAJ.top.select_pairs('name O', 'name O')
 _, RDF_O_O = mdtraj.geometry.rdf.compute_rdf(TRAJ, pairs)
-pairs = mdtraj.geometry.rdf.generate_unique_pairs(TRAJ, pair_names=('O', 'H*'))
+pairs = TRAJ.top.select_pairs('name O', "name =~ 'H.*'")
 _, RDF_O_H = mdtraj.geometry.rdf.compute_rdf(TRAJ, pairs)
 
 
@@ -58,15 +57,6 @@ def test_rdf_norm():
     assert eq(np.ones(20), RDF_ALL[-20:], decimal=1)
     assert eq(np.ones(20), RDF_O_O[-20:], decimal=1)
     assert eq(np.ones(20), RDF_O_H[-20:], decimal=1)
-
-
-def test_generate_unique_pairs_args():
-    assert_raises(ValueError, lambda: md.geometry.rdf.generate_unique_pairs(TRAJ, pair_names=('O', 'O', 'O')))
-    assert_raises(ValueError, lambda: md.geometry.rdf.generate_unique_pairs(TRAJ, pair_names=('O')))
-    assert_raises(ValueError, lambda: md.geometry.rdf.generate_unique_pairs(TRAJ, pair_names=('C', 'C')))
-    assert_raises(TypeError, lambda: md.geometry.rdf.generate_unique_pairs(TRAJ, pair_names=True, a_indices=True))
-    assert_raises(AssertionError, lambda: md.geometry.rdf.generate_unique_pairs(TRAJ, pair_names=True, a_indices=True, b_indices=True))
-    assert_raises(ValueError, lambda: md.geometry.rdf.generate_unique_pairs(TRAJ, a_indices=['god'], b_indices=['rock']))
 
 
 @skipif(True, 'Binning does not match up with gromacs currently.')

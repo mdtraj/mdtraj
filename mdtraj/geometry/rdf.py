@@ -22,16 +22,12 @@
 
 from __future__ import print_function, division
 
-from itertools import combinations, chain, product
-import re
-
 import numpy as np
 
 from mdtraj.utils import ensure_type
 from mdtraj.geometry.distance import compute_distances
 
-
-__all__ = ['compute_rdf', 'generate_unique_pairs']
+__all__ = ['compute_rdf']
 
 
 def compute_rdf(traj, pairs=None, r_range=None, bin_width=0.005,
@@ -87,74 +83,3 @@ def compute_rdf(traj, pairs=None, r_range=None, bin_width=0.005,
     norm = len(pairs) * np.sum(1.0 / traj.unitcell_volumes) * V
     g_r = g_r.astype(np.float64) / norm  # From int64.
     return r, g_r
-
-
-def generate_unique_pairs(traj=None, pair_names=None, a_indices=None,
-                          b_indices=None):
-    """Generate unique pairs of atom indices.
-
-    If only a trajectory is provided, unique pairs between all atoms will be
-    returned.
-
-    If only pair_names is provided, atoms matching each of the names will be
-    looked up and unique pairs will be generated between those two lists.
-    
-    If a_indices and b_indices is provided, pairs will be generated between
-    those two arrays.
-
-
-    Parameters
-    ----------
-    traj : Trajectory
-        Trajectory to compute radial distribution function in.
-    pair_names : array-like, shape=(2,), dtype=str, optional, default=None
-         Pair of atom names to consider. Atom names are matched using the same
-         regex matching employed by MDTraj's atom selection DSL.
-    a_indices : array-like, shape=(n_indices, ), dtype=int
-        An array of atom indices.
-    b_indices : array-like, shape=(n_indices, ), dtype=int
-        An array of atom indices.
-
-    Returns
-    -------
-    pairs : array-like, shape=(n_pairs, 2), dtype=int, optional, default=None
-        Each row gives the indices of two atoms.
-
-    """
-    _gave_indices = a_indices is not None and b_indices is not None
-    _gave_pair_names = pair_names is not None
-
-    # Provided nothing: generate all-all pairs.
-    if not (_gave_pair_names or _gave_indices):
-        pairs = np.fromiter(chain.from_iterable(combinations(range(traj.n_atoms), 2)),
-                             dtype=np.int32, count=traj.n_atoms * (traj.n_atoms - 1))
-        pairs = np.vstack((pairs[::2], pairs[1::2])).T
-        return pairs
-
-    assert _gave_pair_names != _gave_indices, (
-        'Must provide either pair_names or both a_indices and b_indices.')
-
-    # Find the indices for the provided pair_names.
-    if _gave_pair_names:
-        pair_names = ensure_type(pair_names, dtype=str, ndim=1, name='pair_names', length=2,
-                                 warn_on_cast=False)
-        a_indices = [a.index for a in traj.top.atoms
-                  if (re.match(pair_names[0], a.name) is not None)]
-        b_indices = [a.index for a in traj.top.atoms
-                  if (re.match(pair_names[1], a.name) is not None)]
-        _non_matching_atom_names = [pair_names[i] for i, t in enumerate((a_indices, b_indices))
-                                   if len(t) == 0]
-        if _non_matching_atom_names:
-            raise ValueError('Unable to find atoms matching the following '
-                             'selection(s): {0}'.format(_non_matching_atom_names))
-
-    # Create the pairs from the indices.
-    a_indices = ensure_type(a_indices, dtype=np.int32, ndim=1, name='a_indices', warn_on_cast=False)
-    b_indices = ensure_type(b_indices, dtype=np.int32, ndim=1, name='b_indices', warn_on_cast=False)
-    pairs = np.fromiter(
-        chain.from_iterable(
-            (a, b) if a > b else (b, a)
-            for (a, b) in product(a_indices, b_indices) if a != b),
-        dtype=np.int32)
-    pairs = np.vstack((pairs[::2], pairs[1::2])).T
-    return pairs

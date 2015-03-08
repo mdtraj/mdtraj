@@ -185,3 +185,13 @@ def test_load_unknown_topology():
     else:
         assert False  # fail
 
+
+def test_select_pairs_args():
+    traj = md.load(get_fn('tip3p_300K_1ATM.pdb'))
+    assert len(traj.top.select_pairs(selection1='name O', selection2='name O')) == 258 * (258 - 1) // 2
+    assert (eq(traj.top.select_pairs(selection1="(name O) or (name =~ 'H.*')", selection2="(name O) or (name =~ 'H.*')").sort(),
+               traj.top.select_pairs(selection1='all', selection2='all').sort()))
+    assert (eq(traj.top.select_pairs(selection1="name O", selection2="name H1").sort(),
+               traj.top.select_pairs(selection1="name H1", selection2="name O").sort()))
+    assert (eq(traj.top.select_pairs(selection1=range(traj.n_atoms), selection2="(name O) or (name =~ 'H.*')").sort(),
+               traj.top.select_pairs(selection1='all', selection2='all').sort()))
