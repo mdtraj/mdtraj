@@ -60,7 +60,7 @@ def compute_rdf(traj, pairs=None, r_range=None, bin_width=0.005,
 
     See also
     --------
-    generate_unique pairs
+    Topology.select_pairs
 
     """
     if not r_range:
