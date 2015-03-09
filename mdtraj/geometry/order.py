@@ -23,6 +23,7 @@
 from __future__ import print_function, division
 
 import numpy as np
+NP18 = float(np.__version__[:3]) >= 1.8
 
 from mdtraj.geometry.distance import compute_center_of_mass
 from mdtraj.utils import ensure_type
@@ -39,7 +40,7 @@ def compute_nematic_order(traj, indices='chains'):
     ----------
     traj : Trajectory
         Trajectory to compute ordering in.
-    indices: str or list of lists, optional, default='chains'
+    indices : str or list of lists, optional, default='chains'
         The group to consider. Users can pass their own indices as a list of
         lists with the "shape" (n_compounds, len(each_compound)).
         Recognized string keywords are 'chains' and 'residues'.
@@ -56,6 +57,20 @@ def compute_nematic_order(traj, indices='chains'):
     .. [2] http://cmt.dur.ac.uk/sjc/thesis_dlc/node65.html
     .. [3] http://cmt.dur.ac.uk/sjc/thesis_dlc/node19.html
 
+    Examples
+    --------
+    Ordering of chains in an alkylsilane monolayer of C10H31-Si(OH)2-.
+
+    >>> import mdtraj as md
+    >>> from mdtraj.testing import get_fn
+    >>> traj = md.load(get_fn('monolayer.xtc'), top=get_fn('monolayer.pdb'))
+    >>> # Each of the 100 chains contains 36 atoms.
+    >>> chain_indices = [[n+x for x in range(36)] for n in range(0, 3600, 36)]
+    >>> S2 = md.compute_nematic_order(traj, indices=chain_indices)
+
+    The chains were attached to a flat, crystalline substrate and are thus
+    highly ordered with a mean S2 of ~0.996.
+
     """
     if isinstance(indices, string_types):
         if indices.lower() == 'chains':
@@ -64,9 +79,7 @@ def compute_nematic_order(traj, indices='chains'):
             group = list(traj.top.residues)
         else:
             raise ValueError('Invalid selection: {0}'.format(indices))
-
-        indices = np.array([[at.index for at in compound.atoms]
-                               for compound in group], dtype=np.int32)
+        indices = [[at.index for at in compound.atoms] for compound in group]
     else:
         # TODO: Clean way to ensure that indices is a list of lists of ints?
         # This may be easier than I'm thinking but `ensure_type` won't work
@@ -83,24 +96,53 @@ def compute_nematic_order(traj, indices='chains'):
             raise ValueError('Invalid selection: {0}'.format(indices))
 
     # Compute the directors for each compound for each frame.
-    all_directors = np.zeros(shape=(traj.n_frames, len(indices), 3),
+    all_directors = np.empty(shape=(traj.n_frames, len(indices), 3),
                              dtype=np.float64)
     for i, ids in enumerate(indices):
         sub_traj = traj.atom_slice(ids)
-        director = _compute_nematic_director(sub_traj)
+        director = _compute_director(sub_traj)
         all_directors[:, i, :] = director
 
     # From the directors, compute the Q-tensor and nematic order parameter, S2.
     Q_ab = _compute_Q_tensor(all_directors)
 
-    # Only works with numpy >= 1.8.
-    # w = np.linalg.eigvals(Q_ab)
-    # S2 = w.max(axis=1)
-    S2 = np.zeros(shape=traj.n_frames, dtype=np.float64)
-    for n, Q in enumerate(Q_ab):
-        w = np.linalg.eigvals(Q)
-        S2[n] = w.max()
+    if NP18:  # Only works with numpy >= 1.8.
+        w = np.linalg.eigvals(Q_ab)
+        S2 = w.max(axis=1)
+    else:
+        S2 = np.empty(shape=traj.n_frames, dtype=np.float64)
+        for n, Q in enumerate(Q_ab):
+            w = np.linalg.eigvals(Q)
+            S2[n] = w.max()
     return S2
+
+
+def compute_inertia_tensor(traj):
+    """Compute the inertia tensor of a trajectory.
+
+    For each frame,
+        I_{ab} = sum_{i_atoms} [m_i * (r_i^2 * d_{ab} - r_{ia} * r_{ib})]
+
+    Parameters
+    ----------
+    traj : Trajectory
+        Trajectory to compute inertia tensor of.
+
+    Returns
+    -------
+    I_ab:  np.ndarray, shape=(traj.n_frames, 3, 3), dtype=float64
+        Inertia tensors for each frame.
+
+    """
+    center_of_mass = np.expand_dims(compute_center_of_mass(traj), axis=1)
+    xyz = traj.xyz - center_of_mass
+    masses = np.array([atom.element.mass for atom in traj.top.atoms])
+
+    eyes = np.empty(shape=(traj.n_frames, 3, 3), dtype=np.float64)
+    eyes[:] = np.eye(3)
+    A = np.einsum("i, ...ij->...", masses, xyz ** 2).reshape(traj.n_frames, 1, 1)
+    B = np.einsum("ij..., ...jk->...ki", masses[:, np.newaxis] * xyz.T, xyz)
+    return A * eyes - B
 
 
 def _compute_Q_tensor(all_directors):
@@ -121,7 +163,7 @@ def _compute_Q_tensor(all_directors):
 
     See also
     --------
-    _compute_nematic_director
+    _compute_director
 
     References
     ----------
@@ -132,12 +174,11 @@ def _compute_Q_tensor(all_directors):
 
     all_directors = ensure_type(all_directors, dtype=np.float64, ndim=3,
                                 name='directors', shape=(None, None, 3))
-    Q_ab = np.zeros(shape=(all_directors.shape[0], 3, 3), dtype=np.float64)
+    normed = all_directors / np.linalg.norm(all_directors, axis=2)[..., np.newaxis]
 
-    # TODO: Look into vectorizing.
+    Q_ab = np.zeros(shape=(all_directors.shape[0], 3, 3), dtype=np.float64)
     for n, directors in enumerate(all_directors):
-        normed = directors / np.sqrt((directors ** 2.0).sum(-1))[..., np.newaxis]
-        for vector in normed:
+        for vector in normed[n]:
             Q_ab[n, 0, 0] += 3.0 * vector[0] * vector[0] - 1
             Q_ab[n, 0, 1] += 3.0 * vector[0] * vector[1]
             Q_ab[n, 0, 2] += 3.0 * vector[0] * vector[2]
@@ -147,11 +188,11 @@ def _compute_Q_tensor(all_directors):
             Q_ab[n, 2, 0] += 3.0 * vector[2] * vector[0]
             Q_ab[n, 2, 1] += 3.0 * vector[2] * vector[1]
             Q_ab[n, 2, 2] += 3.0 * vector[2] * vector[2] - 1
-    Q_ab /= (2.0 * normed.shape[0])
+    Q_ab /= (2.0 * normed.shape[1])
     return Q_ab
 
 
-def _compute_nematic_director(traj):
+def _compute_director(traj):
     """Compute the characteristic vector describing a trajectory's orientation.
 
     In this definition, the long molecular axis is found from the inertia
@@ -182,52 +223,14 @@ def _compute_nematic_director(traj):
     """
     inertia_tensor = compute_inertia_tensor(traj)
 
-    # Only works with numpy >= 1.8.
-    # TODO: Is there a cleaner way to do this broadcasting? Closer to this which
-    # does not work:    v[:, :, np.argmin(w, axis=1)]
-    # w, v = np.linalg.eig(inertia_tensor)
-    # return np.array([v[:, :, x][i] for i, x in enumerate(np.argmin(w, axis=1))])
-    directors = np.zeros(shape=(traj.n_frames, 3), dtype=np.float64)
-    for n, I_ab in enumerate(inertia_tensor):
-        w, v = np.linalg.eig(I_ab)
-        directors[n] = v[:, np.argmin(w)]
+    if NP18:  # Only works with numpy >= 1.8.
+        # TODO: Is there a cleaner way to do this broadcasting? Closer to this which
+        # does not work:    v[:, :, np.argmin(w, axis=1)]
+        w, v = np.linalg.eig(inertia_tensor)
+        directors = np.array([v[:, :, x][i] for i, x in enumerate(np.argmin(w, axis=1))])
+    else:
+        directors = np.empty(shape=(traj.n_frames, 3), dtype=np.float64)
+        for n, I_ab in enumerate(inertia_tensor):
+            w, v = np.linalg.eig(I_ab)
+            directors[n] = v[:, np.argmin(w)]
     return directors
-
-
-def compute_inertia_tensor(traj):
-    """Compute the inertia tensor of a trajectory.
-
-    For each frame,
-        I_{ab} = sum_{i_atoms} [m_i * (r_i^2 * d_{ab} - r_{ia} * r_{ib})]
-
-    Parameters
-    ----------
-    traj : Trajectory
-        Trajectory to compute inertia tensor of.
-
-    Returns
-    -------
-    I_ab:  np.ndarray, shape=(traj.n_frames, 3, 3), dtype=float64
-        Inertia tensors for each frame.
-
-    """
-    I_ab = np.zeros(shape=(traj.n_frames, 3, 3), dtype=np.float64)
-    com = compute_center_of_mass(traj)
-    masses = np.array([atom.element.mass for atom in traj.top.atoms])
-
-    # TODO: Look into vectorizing.
-    for n, xyz in enumerate(traj.xyz):
-        # TODO: Currently assumes unwrapped trajectory.
-        for i, coord in enumerate(xyz):
-            mass = masses[i]
-            coord = coord - com[n]
-            I_ab[n, 0, 0] += mass * (coord[1] * coord[1] + coord[2] * coord[2])
-            I_ab[n, 1, 1] += mass * (coord[0] * coord[0] + coord[2] * coord[2])
-            I_ab[n, 2, 2] += mass * (coord[0] * coord[0] + coord[1] * coord[1])
-            I_ab[n, 0, 1] -= mass * coord[0] * coord[1]
-            I_ab[n, 0, 2] -= mass * coord[0] * coord[2]
-            I_ab[n, 1, 2] -= mass * coord[1] * coord[2]
-        I_ab[n, 1, 0] = I_ab[n, 0, 1]
-        I_ab[n, 2, 0] = I_ab[n, 0, 2]
-        I_ab[n, 2, 1] = I_ab[n, 1, 2]
-    return I_ab

@@ -25,7 +25,9 @@ from __future__ import print_function
 import numpy as np
 
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, assert_raises
+from mdtraj.testing import get_fn, eq, assert_raises, DocStringFormatTester
+from mdtraj.geometry import order
+
 
 """The trajectories `2lines.pdb` and `3lines.pdb` contain several frames of,
 respectively, 2 and 3 "residues" each consisting of two atoms in different
@@ -45,22 +47,25 @@ Frame 2: ||| in z        - S2 should be 1.0
 Frame 3: at right angles - S2 should be 0.0
 """
 
+TRAJ1 = md.load(get_fn('1line.pdb'))
 TRAJ2 = md.load(get_fn('2lines.pdb'))
 TRAJ2_LINE1 = TRAJ2.atom_slice((0, 1))
 TRAJ2_LINE2 = TRAJ2.atom_slice((2, 3))
 
 TRAJ3 = md.load(get_fn('3lines.pdb'))
 
+TestDocstrings = DocStringFormatTester(order, error_on_none=True)
+
 
 def test_nematic_order():
     assert eq(np.array([1.0, 1.0, 1.0, 0.25, 0.25]),
-              md.geometry.order.compute_nematic_order(TRAJ2))
+              order.compute_nematic_order(TRAJ2))
     assert eq(np.array([1.0, 1.0, 1.0, 0.0]),
-              md.geometry.order.compute_nematic_order(TRAJ3))
+              order.compute_nematic_order(TRAJ3))
 
 
 def test_director():
-    directors = md.geometry.order._compute_nematic_director(TRAJ2_LINE1)
+    directors = order._compute_director(TRAJ2_LINE1)
     assert eq(directors,
               np.array([[1, 0, 0],  # Frame 0
                         [0, 1, 0],  # Frame 1
@@ -68,7 +73,7 @@ def test_director():
                         [1, 0, 0],  # Frame 3
                         [1, 0, 0],  # Frame 4
                         ]))
-    directors = md.geometry.order._compute_nematic_director(TRAJ2_LINE2)
+    directors = order._compute_director(TRAJ2_LINE2)
     assert eq(directors,
               np.array([[1, 0, 0],  # Frame 0
                         [0, 1, 0],  # Frame 1
@@ -78,11 +83,24 @@ def test_director():
                         ]))
 
 
+def test_inertia():
+    assert eq(order.compute_inertia_tensor(TRAJ1),
+              np.array([[[0.00000000, 0.00000000, 0.00000000],
+                         [0.00000000, 0.05689870, 0.00000000],
+                         [0.00000000, 0.00000000, 0.05689870]],
+                        [[0.05689870, 0.00000000, 0.00000000],
+                         [0.00000000, 0.00000000, 0.00000000],
+                         [0.00000000, 0.00000000, 0.05689870]],
+                        [[0.05689870, 0.00000000, 0.00000000],
+                         [0.00000000, 0.05689870, 0.00000000],
+                         [0.00000000, 0.00000000, 0.00000000]]]))
+
+
 def test_nematic_order_args():
-    assert_raises(ValueError, lambda: md.geometry.order.compute_nematic_order(TRAJ2, indices='dog'))
-    assert_raises(ValueError, lambda: md.geometry.order.compute_nematic_order(TRAJ2, indices='O'))
-    assert_raises(ValueError, lambda: md.geometry.order.compute_nematic_order(TRAJ2, indices=1))
+    assert_raises(ValueError, lambda: order.compute_nematic_order(TRAJ2, indices='dog'))
+    assert_raises(ValueError, lambda: order.compute_nematic_order(TRAJ2, indices='O'))
+    assert_raises(ValueError, lambda: order.compute_nematic_order(TRAJ2, indices=1))
     # Input indices with wrong "shapes".
-    assert_raises(ValueError, lambda: md.geometry.order.compute_nematic_order(TRAJ2, indices=[[1, [2]], [2]]))
-    assert_raises(ValueError, lambda: md.geometry.order.compute_nematic_order(TRAJ2, indices=[1, 2, 3]))
+    assert_raises(ValueError, lambda: order.compute_nematic_order(TRAJ2, indices=[[1, [2]], [2]]))
+    assert_raises(ValueError, lambda: order.compute_nematic_order(TRAJ2, indices=[1, 2, 3]))
 
