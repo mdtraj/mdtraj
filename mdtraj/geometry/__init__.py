@@ -28,7 +28,7 @@ __all__ = ['baker_hubbard', 'shrake_rupley', 'kabsch_sander', 'compute_distances
            'compute_chi3', 'compute_chi4', 'compute_omega', 'compute_rg',
            'compute_contacts', 'compute_drid', 'compute_center_of_mass',
            'wernet_nilsson', 'compute_dssp', 'compute_neighbors', 'compute_rdf',
-           'compute_nematic_order',
+           'compute_nematic_order', 'compute_inertia_tensor',
 
            # from thermodynamic_properties
            'dipole_moments', 'static_dielectric', 'isothermal_compressability_kappa_T',
