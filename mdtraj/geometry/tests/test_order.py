@@ -85,15 +85,11 @@ def test_director():
 
 def test_inertia():
     assert eq(order.compute_inertia_tensor(TRAJ1),
-              np.array([[[0.00000000, 0.00000000, 0.00000000],
-                         [0.00000000, 0.05689870, 0.00000000],
-                         [0.00000000, 0.00000000, 0.05689870]],
-                        [[0.05689870, 0.00000000, 0.00000000],
-                         [0.00000000, 0.00000000, 0.00000000],
-                         [0.00000000, 0.00000000, 0.05689870]],
-                        [[0.05689870, 0.00000000, 0.00000000],
-                         [0.00000000, 0.05689870, 0.00000000],
-                         [0.00000000, 0.00000000, 0.00000000]]]))
+              order._compute_inertia_tensor_slow(TRAJ1))
+    assert eq(order.compute_inertia_tensor(TRAJ2),
+              order._compute_inertia_tensor_slow(TRAJ2))
+    assert eq(order.compute_inertia_tensor(TRAJ3),
+              order._compute_inertia_tensor_slow(TRAJ3))
 
 
 def test_nematic_order_args():

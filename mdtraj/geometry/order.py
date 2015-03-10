@@ -59,7 +59,7 @@ def compute_nematic_order(traj, indices='chains'):
 
     Examples
     --------
-    Ordering of chains in an alkylsilane monolayer of C10H31-Si(OH)2-.
+    Ordering of chains in an alkylsilane monolayer of C10H31-Si(OH)2-:
 
     >>> import mdtraj as md
     >>> from mdtraj.testing import get_fn
@@ -87,7 +87,7 @@ def compute_nematic_order(traj, indices='chains'):
         # E.g. [[1, 2], [3, 4, 5], [6, 7]] should be valid.
         if isinstance(indices, (list, tuple)):
             for sublist in indices:
-                if not isinstance(indices[0], (list, tuple)):
+                if not isinstance(sublist, (list, tuple)):
                     raise ValueError('Invalid selection: {0}'.format(indices))
                 for index in sublist:
                     if not isinstance(index, int):
@@ -234,3 +234,30 @@ def _compute_director(traj):
             w, v = np.linalg.eig(I_ab)
             directors[n] = v[:, np.argmin(w)]
     return directors
+
+
+#####################################################
+# Pure python reference implementations for testing #
+#####################################################
+
+
+def _compute_inertia_tensor_slow(traj):
+    """Compute the inertia tensor of a trajectory. """
+    center_of_mass = np.expand_dims(compute_center_of_mass(traj), axis=1)
+    xyz = traj.xyz - center_of_mass
+    masses = np.array([atom.element.mass for atom in traj.top.atoms])
+
+    I_ab = np.zeros(shape=(traj.n_frames, 3, 3), dtype=np.float64)
+    for n, xyz_frame in enumerate(xyz):
+        for i, coord in enumerate(xyz_frame):
+            mass = masses[i]
+            I_ab[n, 0, 0] += mass * (coord[1] * coord[1] + coord[2] * coord[2])
+            I_ab[n, 1, 1] += mass * (coord[0] * coord[0] + coord[2] * coord[2])
+            I_ab[n, 2, 2] += mass * (coord[0] * coord[0] + coord[1] * coord[1])
+            I_ab[n, 0, 1] -= mass * coord[0] * coord[1]
+            I_ab[n, 0, 2] -= mass * coord[0] * coord[2]
+            I_ab[n, 1, 2] -= mass * coord[1] * coord[2]
+        I_ab[n, 1, 0] = I_ab[n, 0, 1]
+        I_ab[n, 2, 0] = I_ab[n, 0, 2]
+        I_ab[n, 2, 1] = I_ab[n, 1, 2]
+    return I_ab
