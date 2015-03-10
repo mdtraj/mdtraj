@@ -140,7 +140,7 @@ def compute_inertia_tensor(traj):
 
     eyes = np.empty(shape=(traj.n_frames, 3, 3), dtype=np.float64)
     eyes[:] = np.eye(3)
-    A = np.einsum("i, ...ij->...", masses, xyz ** 2).reshape(traj.n_frames, 1, 1)
+    A = np.einsum("i, kij->k", masses, xyz ** 2).reshape(traj.n_frames, 1, 1)
     B = np.einsum("ij..., ...jk->...ki", masses[:, np.newaxis] * xyz.T, xyz)
     return A * eyes - B
 
@@ -244,19 +244,19 @@ def _compute_director(traj):
 def _compute_inertia_tensor_slow(traj):
     """Compute the inertia tensor of a trajectory. """
     center_of_mass = np.expand_dims(compute_center_of_mass(traj), axis=1)
-    xyz = traj.xyz - center_of_mass
+    centered_xyz = traj.xyz - center_of_mass
     masses = np.array([atom.element.mass for atom in traj.top.atoms])
 
     I_ab = np.zeros(shape=(traj.n_frames, 3, 3), dtype=np.float64)
-    for n, xyz_frame in enumerate(xyz):
-        for i, coord in enumerate(xyz_frame):
+    for n, xyz in enumerate(centered_xyz):
+        for i, r in enumerate(xyz):
             mass = masses[i]
-            I_ab[n, 0, 0] += mass * (coord[1] * coord[1] + coord[2] * coord[2])
-            I_ab[n, 1, 1] += mass * (coord[0] * coord[0] + coord[2] * coord[2])
-            I_ab[n, 2, 2] += mass * (coord[0] * coord[0] + coord[1] * coord[1])
-            I_ab[n, 0, 1] -= mass * coord[0] * coord[1]
-            I_ab[n, 0, 2] -= mass * coord[0] * coord[2]
-            I_ab[n, 1, 2] -= mass * coord[1] * coord[2]
+            I_ab[n, 0, 0] += mass * (r[1] * r[1] + r[2] * r[2])
+            I_ab[n, 1, 1] += mass * (r[0] * r[0] + r[2] * r[2])
+            I_ab[n, 2, 2] += mass * (r[0] * r[0] + r[1] * r[1])
+            I_ab[n, 0, 1] -= mass * r[0] * r[1]
+            I_ab[n, 0, 2] -= mass * r[0] * r[2]
+            I_ab[n, 1, 2] -= mass * r[1] * r[2]
         I_ab[n, 1, 0] = I_ab[n, 0, 1]
         I_ab[n, 2, 0] = I_ab[n, 0, 2]
         I_ab[n, 2, 1] = I_ab[n, 1, 2]
