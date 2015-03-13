@@ -48,19 +48,22 @@
 ##############################################################################
 
 from __future__ import print_function, division
-import os
-import numpy as np
+
 import itertools
+import numpy as np
+import os
+import xml.etree.ElementTree as etree
+
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import _PROTEIN_RESIDUES, _WATER_RESIDUES
 from mdtraj.core.selection import parse_selection
-import xml.etree.ElementTree as etree
-
-from mdtraj.utils import ilen, import_
+from mdtraj.utils import ilen, import_, ensure_type
+from mdtraj.utils.six import string_types
 
 ##############################################################################
 # Utilities
 ##############################################################################
+
 
 def _topology_from_subset(topology, atom_indices):
     """Create a new topology that only contains the supplied indices
@@ -285,10 +288,10 @@ class Topology(object):
 
         for a1, a2 in self.bonds:
             out.addBond(atom_mapping[a1], atom_mapping[a2])
-        
+
         if traj is not None:
             angles = traj.unitcell_angles[0]
-            
+
             if np.linalg.norm(angles - 90.0) > 1E-4:
                 raise(ValueError("Unitcell angles must be 90.0 to use in OpenMM topology."))
 
@@ -897,6 +900,54 @@ class Topology(object):
 
         indices = np.array(atom_indices)
         return indices
+
+    def select_pairs(self, selection1=None, selection2=None):
+        """Generate unique pairs of atom indices.
+
+        If a selecton is a string, it will be resolved using the atom selection
+        DSL, otherwise it is expected to be an array of atom indices.
+
+        Parameters
+        ----------
+        selection1 : str or array-like, shape=(n_indices, ), dtype=int
+            A selection for `select()` or an array of atom indices.
+        selection2 : str or array-like, shape=(n_indices, ), dtype=int
+            A selection for `select()` or an array of atom indices.
+
+        Returns
+        -------
+        pairs : array-like, shape=(n_pairs, 2), dtype=int
+            Each row gives the indices of two atoms.
+
+        """
+        # Resolve selections using the atom selection DSL...
+        if isinstance(selection1, string_types):
+            a_indices = self.select(selection1)
+        else:  # ...or use a provided array of indices.
+            a_indices = ensure_type(selection1, dtype=np.int32, ndim=1,
+                                    name='a_indices', warn_on_cast=False)
+        if isinstance(selection2, string_types):
+            b_indices = self.select(selection2)
+        else:
+            b_indices = ensure_type(selection2, dtype=np.int32, ndim=1,
+                                    name='b_indices', warn_on_cast=False)
+        a_indices.sort()
+        b_indices.sort()
+
+        # Create unique pairs from the indices.
+        if np.array_equal(a_indices, b_indices):
+            # This is more efficient and memory friendly by removing the
+            # intermediate set creation required in the case below.
+            pairs = np.fromiter(itertools.chain.from_iterable(itertools.combinations(a_indices, 2)),
+                                dtype=np.int32, count=len(a_indices) * (len(a_indices) - 1))
+            pairs = np.vstack((pairs[::2], pairs[1::2])).T
+        else:
+            pairs = np.array(list(set(
+                (a, b) if a > b else (b, a)
+                for a, b in itertools.product(a_indices, b_indices)
+                if a != b)),
+                             dtype=np.int32)
+        return pairs
 
 
 class Chain(object):
