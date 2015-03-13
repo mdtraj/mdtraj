@@ -34,7 +34,7 @@ import os
 import numpy as np
 
 from mdtraj.formats.registry import _FormatRegistry
-from mdtraj.utils import cast_indices, in_units_of
+from mdtraj.utils import cast_indices, in_units_of, ensure_type
 from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
 from mdtraj.version import version
@@ -278,6 +278,7 @@ class XYZTrajectoryFile(object):
         types : np.ndarray, shape(3, )
             The type of each particle.
         """
+
         if not self._mode == 'w':
             raise ValueError('write() is only available when file is opened '
                              'in mode="w"')
@@ -285,12 +286,14 @@ class XYZTrajectoryFile(object):
         if not types:
             # Make all particles the same type.
             types = ['X' for _ in xrange(xyz.shape[1])]
-
+        xyz = ensure_type(xyz, np.float32, 3, 'xyz', can_be_none=False,
+                        shape=(None, None, 3), warn_on_cast=False,
+                        add_newaxis_on_deficient_ndim=True)
         in_units_of(xyz, 'nanometers', self.distance_unit, inplace=True)
 
         for i in range(xyz.shape[0]):
             self._fh.write('{0}\n'.format(xyz.shape[1]))
-            self._fh.write("Created with MDTraj {0}, {1}".format(version, str(date.today())))
+            self._fh.write("Created with MDTraj {0}, {1}\n".format(version, str(date.today())))
 
             for j, coord in enumerate(xyz[i]):
                 self._fh.write('{0} {1:8.3f} {2:8.3f} {3:8.3f}\n'.format(

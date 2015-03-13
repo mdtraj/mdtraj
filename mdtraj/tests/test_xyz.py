@@ -26,7 +26,7 @@ import numpy as np
 
 import mdtraj as md
 from mdtraj.formats import XYZTrajectoryFile, xyzfile
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
+from mdtraj.testing import get_fn, eq, DocStringFormatTester
 TestDocstrings = DocStringFormatTester(xyzfile, error_on_none=True)
 
 fd, temp = tempfile.mkstemp(suffix='.xyz')
@@ -49,9 +49,18 @@ def test_read_1():
 
     eq(reference.xyz[0], traj.xyz[0], decimal=3)
 
+def test_read_write():
+    xyz = 10 * np.random.randn(100, 11, 3)
+    with XYZTrajectoryFile(temp, mode='w') as f:
+        f.write(xyz)
+    with XYZTrajectoryFile(temp) as f:
+        xyz2 = f.read()
+
+    eq(xyz, xyz2/10, decimal=4)
+
 
 def test_mdwrite():
-    t = md.load(get_fn('frame0.dcd'), top=get_fn('native.pdb'))
+    t = md.load(get_fn('frame0.xyz'), top=get_fn('native.pdb'))
     t.save(temp)
 
 def test_multiread():
@@ -85,10 +94,3 @@ def test_seek():
         f.seek(4, 1)
         xyz8 = f.read(n_frames=1)
         eq(reference.xyz[8], xyz8[0]/10)
-
-if __name__ == "__main__":
-    test_read_0()
-    test_read_1()
-    test_mdwrite()
-    test_multiread()
-    test_seek()
