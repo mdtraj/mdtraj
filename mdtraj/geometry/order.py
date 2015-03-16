@@ -22,8 +22,10 @@
 
 from __future__ import print_function, division
 
+from pkg_resources import parse_version
+
 import numpy as np
-NP18 = float(np.__version__[:3]) >= 1.8
+NP18 = parse_version(np.__version__) >= parse_version('1.8.0')
 
 from mdtraj.geometry.distance import compute_center_of_mass
 from mdtraj.utils import ensure_type
