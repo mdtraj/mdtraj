@@ -34,13 +34,20 @@ __all__ = ['compute_nematic_order', 'compute_inertia_tensor']
 
 
 def compute_nematic_order(traj, indices='chains'):
-    """Compute the nematic ordering of a group in every frame.
+    """Compute the nematic order parameter of a group in every frame.
+
+    The nematic order parameter describes the orientational order of a system
+    with a value between 0 and 1. A completely isotropic system, such as a
+    liquid, has no preferred direction and a nematic order parameter of 0. An
+    anisotropic system, such as many liquid crystals, monolayers or bilayers,
+    have a preferred orientation and will have a positive order parameter where
+    a value of 1 signifies perfect ordering.
 
     Parameters
     ----------
     traj : Trajectory
         Trajectory to compute ordering in.
-    indices : str or list of lists, optional, default='chains'
+    indices : {'chains', 'residues', list of lists}, optional, default='chains'
         The group to consider. Users can pass their own indices as a list of
         lists with the "shape" (n_compounds, len(each_compound)).
         Recognized string keywords are 'chains' and 'residues'.
@@ -70,6 +77,12 @@ def compute_nematic_order(traj, indices='chains'):
 
     The chains were attached to a flat, crystalline substrate and are thus
     highly ordered with a mean S2 of ~0.996.
+
+    >>> traj = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))
+    >>> water_indices = [[n+x for x in range(3)] for n in range(0, 3600, 3)]
+    >>> S2 = md.compute_nematic_order(traj, indices=water_indices)
+
+    This water box is essentially isotropic and has a mean S2 of ~0.042.
 
     """
     if isinstance(indices, string_types):
