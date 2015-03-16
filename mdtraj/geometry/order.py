@@ -206,7 +206,7 @@ def _compute_Q_tensor(all_directors):
             Q_ab[n, 2, 0] += 3.0 * vector[2] * vector[0]
             Q_ab[n, 2, 1] += 3.0 * vector[2] * vector[1]
             Q_ab[n, 2, 2] += 3.0 * vector[2] * vector[2] - 1
-    Q_ab /= (2.0 * normed.shape[1])
+    Q_ab /= (2.0 * all_directors.shape[1])
     return Q_ab
 
 
