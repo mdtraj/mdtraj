@@ -187,11 +187,16 @@ def _compute_Q_tensor(all_directors):
 
     all_directors = ensure_type(all_directors, dtype=np.float64, ndim=3,
                                 name='directors', shape=(None, None, 3))
-    normed = all_directors / np.linalg.norm(all_directors, axis=2)[..., np.newaxis]
+    if NP18:
+        normed = all_directors / np.linalg.norm(all_directors, axis=2)[..., np.newaxis]
 
     Q_ab = np.zeros(shape=(all_directors.shape[0], 3, 3), dtype=np.float64)
     for n, directors in enumerate(all_directors):
-        for vector in normed[n]:
+        if NP18:
+            normed_vectors = normed[n]
+        else:
+            normed_vectors = directors / np.sqrt((directors ** 2.0).sum(-1))[..., np.newaxis]
+        for vector in normed_vectors:
             Q_ab[n, 0, 0] += 3.0 * vector[0] * vector[0] - 1
             Q_ab[n, 0, 1] += 3.0 * vector[0] * vector[1]
             Q_ab[n, 0, 2] += 3.0 * vector[0] * vector[2]
