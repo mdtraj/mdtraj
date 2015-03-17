@@ -50,6 +50,7 @@ Keyword          Synonyms                   Type           Description
 ``residue``      ``resSeq``                 ``int``        Residue Sequence record (generally 1-based, but depends on topology)
 ``resid``        ``resi``                   ``int``        Residue index (0-based)
 ``resname``      ``resn``                   ``str``        Residue name
+``chainid``                                 ``int``        Chain index (0-based)
 =============    ========================   =========      ================================================================
 
 Literals

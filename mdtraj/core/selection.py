@@ -98,15 +98,14 @@ def _check_n_tokens(tokens, n_tokens, name):
 
 
 class SelectionKeyword(object):
-
     keyword_aliases = _kw(
-        ###--- Atom.<attribute> ---###
+        # Atom.<attribute>
         (('all', 'everything'), ast.Name(id='True', ctx=ast.Load())),
         (('none', 'nothing'), ast.Name(id='False', ctx=ast.Load())),
         (('backbone', 'is_backbone'), _chain('is_backbone')),
         (('sidechain', 'is_sidechain'), _chain('is_sidechain')),
 
-        ###--- Atom.residue.<attribute> ---###
+        # Atom.residue.<attribute>
         (('protein', 'is_protein'), _chain('residue', 'is_protein')),
         # (('nucleic', 'is_nucleic'), _chain('residue', 'is_nucleic')),
         (('water', 'waters', 'is_water'), _chain('residue', 'is_water')),
@@ -117,7 +116,10 @@ class SelectionKeyword(object):
         (('resname', 'resn'), _chain('residue', 'name')),
         (('resid', 'resi'), _chain('residue', 'index')),
 
-        ###--- Atom.element.<attribute> ---###
+        # Atom.residue.chain.<attribute>
+        (('chainid',), _chain('residue', 'chain', 'index')),
+
+        # Atom.element.<attribute>
         (('type', 'element', 'symbol'), _chain('element', 'symbol')),
         # (('radius',), _chain('element', 'radius')),
         (('mass',), _chain('element', 'mass')),
