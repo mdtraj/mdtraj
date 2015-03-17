@@ -198,6 +198,9 @@ def test_values():
     sp = parse_selection("resid 4")
     eq(sp.source, "(atom.residue.index == 4)")
 
+    sp = parse_selection("chainid 4")
+    eq(sp.source, "(atom.residue.chain.index == 4)")
+
     sp = parse_selection("resid > 4")
     eq(sp.source, "(atom.residue.index > 4)")
 
