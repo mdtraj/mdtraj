@@ -384,8 +384,11 @@ class Topology(object):
         create_standard_bonds
         """
         pd = import_('pandas')
+        
+        if bonds is None:
+            bonds = np.zeros((2, 0))
 
-        for col in ["name", "element", "resSeq", "resName", "chainID"]:
+        for col in ["name", "element", "resSeq", "resName", "chainID", "serial"]:
             if col not in atoms.columns:
                 raise ValueError('dataframe must have column %s' % col)
 

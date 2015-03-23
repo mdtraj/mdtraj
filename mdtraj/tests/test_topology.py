@@ -74,6 +74,9 @@ def test_topology_pandas():
     topology2 = md.Topology.from_dataframe(atoms, bonds)
     eq(topology, topology2)
 
+    topology3 = md.Topology.from_dataframe(atoms)  # Make sure you default arguement of None works, see issue #774
+    
+
 
 @skipif(not HAVE_PANDAS)
 def test_topology_pandas_TIP4PEW():
