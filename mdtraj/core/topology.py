@@ -427,9 +427,8 @@ class Topology(object):
                     out._atoms[atom_index] = a
                     r._atoms.append(a)
 
-        if bonds is not None:
-            for ai1, ai2 in bonds:
-                out.add_bond(out.atom(ai1), out.atom(ai2))
+        for ai1, ai2 in bonds:
+            out.add_bond(out.atom(ai1), out.atom(ai2))
 
         out._numAtoms = out.n_atoms
         return out
