@@ -386,7 +386,7 @@ class Topology(object):
         pd = import_('pandas')
         
         if bonds is None:
-            bonds = np.zeros((2, 0))
+            bonds = np.zeros((0, 2))
 
         for col in ["name", "element", "resSeq", "resName", "chainID", "serial"]:
             if col not in atoms.columns:
