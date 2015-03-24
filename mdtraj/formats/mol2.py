@@ -51,6 +51,7 @@
 from __future__ import print_function, division
 import numpy as np
 import itertools
+import re
 
 from mdtraj.utils import import_
 from mdtraj.utils.six.moves import cStringIO as StringIO
@@ -151,6 +152,13 @@ def mol2_to_dataframes(filename):
     with open(filename) as f:
         data = dict((key, list(grp)) for key, grp in itertools.groupby(f, _parse_mol2_sections))
 
+    # Mol2 can have "status bits" at the end of the bond lines. We don't care
+    # about these, but they interfere with using pd_read_table because it looks
+    # like one line has too many columns. So we just regex out the offending
+    # text.
+    status_bit_regex = "BACKBONE|DICT|INTERRES|\|"
+    data["@<TRIPOS>BOND\n"] = [re.sub(status_bit_regex, lambda _: "", s)
+                               for s in data["@<TRIPOS>BOND\n"]]
     csv = StringIO()
     csv.writelines(data["@<TRIPOS>BOND\n"][1:])
     csv.seek(0)
