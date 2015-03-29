@@ -7,6 +7,7 @@ These are new features and improvements of note in each release.
 
 v1.4 (Development)
 ------------------
+- New function to calculate nematic order parameters (``compute_nematic_order``) (Christoph Klein)
 
 
 v1.3 (February 25, 2015)

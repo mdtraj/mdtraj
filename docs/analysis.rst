@@ -103,3 +103,10 @@ Thermodynamic Quantities
     isothermal_compressability_kappa_T
     thermal_expansion_alpha_P
     density
+
+Order Parameters
+----------------
+.. autosummary::
+    :toctree: api/generated/
+
+    compute_nematic_order
