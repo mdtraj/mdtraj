@@ -88,6 +88,7 @@ def _is_url(url):
 
 
 @_FormatRegistry.register_loader('.pdb')
+@_FormatRegistry.register_loader('.pdb.gz')
 def load_pdb(filename, stride=None, atom_indices=None, frame=None):
     """Load a RCSB Protein Data Bank file from disk.
 
