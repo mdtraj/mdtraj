@@ -30,7 +30,7 @@ from mdtraj.geometry.distance import compute_distances
 __all__ = ['compute_rdf']
 
 
-def compute_rdf(traj, pairs=None, r_range=None, bin_width=0.005,
+def compute_rdf(traj, pairs=None, r_range=None, bin_width=0.005, n_bins=None,
                 periodic=True, opt=True):
     """Compute radial distribution functions for pairs in every frame.
 
@@ -42,8 +42,11 @@ def compute_rdf(traj, pairs=None, r_range=None, bin_width=0.005,
         Each row gives the indices of two atoms.
     r_range : array-like, shape=(2,), optional, default=(0.0, 1.0)
         Minimum and maximum radii.
-    bin_width : int, optional, default=0.005
+    bin_width : float, optional, default=0.005
         Width of the bins in nanometers.
+    n_bins : int, optional, default=None
+        The number of bins. If specified, this will override the `bin_width`
+         parameter.
     periodic : bool, default=True
         If `periodic` is True and the trajectory contains unitcell
         information, we will compute distances under the minimum image
@@ -67,7 +70,10 @@ def compute_rdf(traj, pairs=None, r_range=None, bin_width=0.005,
         r_range = np.array([0.0, 1.0])
     r_range = ensure_type(r_range, dtype=np.float64, ndim=1, name='r_range',
                           shape=(2,), warn_on_cast=False)
-    bins = np.arange(r_range[0], r_range[1], bin_width)
+    if n_bins:
+        bins = np.linspace(r_range[0], r_range[1], n_bins)
+    else:
+        bins = np.arange(r_range[0], r_range[1] + bin_width, bin_width)
 
     distances = compute_distances(traj, pairs, periodic=periodic, opt=opt)
     g_r, edges = np.histogram(distances, bins=bins)
