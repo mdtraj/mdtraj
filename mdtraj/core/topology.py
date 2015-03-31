@@ -384,8 +384,11 @@ class Topology(object):
         create_standard_bonds
         """
         pd = import_('pandas')
+        
+        if bonds is None:
+            bonds = np.zeros((0, 2))
 
-        for col in ["name", "element", "resSeq", "resName", "chainID"]:
+        for col in ["name", "element", "resSeq", "resName", "chainID", "serial"]:
             if col not in atoms.columns:
                 raise ValueError('dataframe must have column %s' % col)
 
@@ -424,9 +427,8 @@ class Topology(object):
                     out._atoms[atom_index] = a
                     r._atoms.append(a)
 
-        if bonds is not None:
-            for ai1, ai2 in bonds:
-                out.add_bond(out.atom(ai1), out.atom(ai2))
+        for ai1, ai2 in bonds:
+            out.add_bond(out.atom(ai1), out.atom(ai2))
 
         out._numAtoms = out.n_atoms
         return out
