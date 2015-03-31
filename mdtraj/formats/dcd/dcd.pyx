@@ -36,6 +36,7 @@ from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import _FormatRegistry
 from libc.stdlib cimport malloc, free
+from libc.string cimport strcpy, strlen
 from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
 from dcdlib cimport open_dcd_write, close_file_write, write_timestep
@@ -225,8 +226,14 @@ cdef class DCDTrajectoryFile:
         self.is_open = False
         self.mode = mode
 
+        # Note: we need to copy this string, see issue #206
+        self.filename = <char*>malloc(strlen(filename)+1)
+        if self.filename is NULL:
+            raise MemoryError()
+        strcpy(self.filename, filename)
+
+
         if str(mode) == 'r':
-            self.filename = filename
             self.fh = open_dcd_read(filename, "dcd", &self.n_atoms, &self.n_frames)
             if self.fh is NULL:
                 raise IOError("Could not open file: %s" % filename)
@@ -236,7 +243,6 @@ cdef class DCDTrajectoryFile:
             self.frame_counter = 0
             self.is_open = True
         elif str(mode) == 'w':
-            self.filename = filename
             self._needs_write_initialization = 1
             if not force_overwrite and os.path.exists(filename):
                 raise IOError('"%s" already exists' % filename)
@@ -252,6 +258,7 @@ cdef class DCDTrajectoryFile:
     def __dealloc__(self):
         # free whatever we malloced
         free(self.timestep)
+        free(self.filename)
         self.close()
 
     def _initialize_write(self, int n_atoms, int with_unitcell):
