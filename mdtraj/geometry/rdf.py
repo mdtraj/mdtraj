@@ -70,7 +70,7 @@ def compute_rdf(traj, pairs=None, r_range=None, bin_width=0.005, n_bins=None,
         r_range = np.array([0.0, 1.0])
     r_range = ensure_type(r_range, dtype=np.float64, ndim=1, name='r_range',
                           shape=(2,), warn_on_cast=False)
-    if n_bins:
+    if n_bins is not None:
         bins = np.linspace(r_range[0], r_range[1], n_bins)
     else:
         bins = np.arange(r_range[0], r_range[1] + bin_width, bin_width)
