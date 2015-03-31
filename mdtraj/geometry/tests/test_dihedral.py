@@ -176,7 +176,7 @@ with open('output.txt', 'w') as f:
 def test_dihedral_2chains():
     # make sure that comput_phi is finding dihedrals from all of the chains
     # in a multi-chain topology
-    t = md.load_pdb('http://www.rcsb.org/pdb/files/4OH9.pdb')
+    t = md.load_pdb(get_fn('4OH9.pdb'))
 
     # remove the water
     water_indices = [a.index for a in t.top.atoms if a.residue.name != 'HOH']
