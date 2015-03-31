@@ -83,6 +83,11 @@ def test_load_pdb_box():
     yield lambda: eq(t.unitcell_vectors[0], np.array([[0.1, 0, 0], [0, 0.2, 0], [0, 0, 0.3]]))
 
 
+def test_load_pdb_gz():
+    t = md.load(get_fn('1ncw.pdb.gz'))
+    yield lambda: eq(t.n_atoms, 3990)
+
+
 def test_box_load_save():
     t = md.load(get_fn('native2.pdb'))
 
@@ -519,4 +524,3 @@ def test_chunk0_iterload():
         pass
     
     eq(trj0.n_frames, trj.n_frames)
-
