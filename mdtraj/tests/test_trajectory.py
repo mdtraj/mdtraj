@@ -48,7 +48,7 @@ for suffix, (fd, temp) in {
       'nc' : tempfile.mkstemp(suffix='.nc'),
       'lh5' : tempfile.mkstemp(suffix='.lh5'),
       'lammpstrj' : tempfile.mkstemp(suffix='.lammpstrj'),
-      'xyz' : tempfile.mkstemp(suffix='.xyz')}.iteritems():
+      'xyz' : tempfile.mkstemp(suffix='.xyz')}.items():
     os.close(fd)
     tmpfns[suffix] = temp
 
@@ -56,7 +56,7 @@ def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
 
-    for e in tmpfns.itervalues():
+    for e in tmpfns.values():
         os.unlink(e)
 
 def test_mismatch():
