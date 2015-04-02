@@ -1223,6 +1223,7 @@ class Trajectory(object):
                   '.lh5': self.save_lh5,
                   '.lammpstrj': self.save_lammpstrj,
                   '.xyz': self.save_xyz,
+                  '.xyz.gz': self.save_xyz,
                   }
 
         try:

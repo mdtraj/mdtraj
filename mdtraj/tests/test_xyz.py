@@ -79,6 +79,7 @@ def test_read_write_gz():
 def test_mdwrite():
     t = md.load(get_fn('frame0.xyz'), top=get_fn('native.pdb'))
     t.save(temp)
+    t.save(temp_gz)
 
 def test_multiread():
     reference = md.load(get_fn('frame0.xyz'), top=get_fn('native.pdb'))
