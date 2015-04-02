@@ -1212,6 +1212,7 @@ class Trajectory(object):
         savers = {'.xtc': self.save_xtc,
                   '.trr': self.save_trr,
                   '.pdb': self.save_pdb,
+                  '.pdb.gz': self.save_pdb,
                   '.dcd': self.save_dcd,
                   '.h5': self.save_hdf5,
                   '.binpos': self.save_binpos,

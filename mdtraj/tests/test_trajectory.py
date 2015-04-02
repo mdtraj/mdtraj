@@ -44,6 +44,7 @@ for suffix, (fd, temp) in {
       'trr' : tempfile.mkstemp(suffix='.trr'),
       'h5' : tempfile.mkstemp(suffix='.h5'),
       'pdb' : tempfile.mkstemp(suffix='.pdb'),
+      'pdb.gz' : tempfile.mkstemp(suffix='.pdb.gz'),
       'nc' : tempfile.mkstemp(suffix='.nc'),
       'lh5' : tempfile.mkstemp(suffix='.lh5'),
       'lammpstrj' : tempfile.mkstemp(suffix='.lammpstrj'),
@@ -125,7 +126,7 @@ def test_slice2():
 
 def test_xtc():
     t = md.load(get_fn('frame0.xtc'), top=nat)
-    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['nc']]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
         def f():
             t.save(e)
             t2 = md.load(e, top=nat)
@@ -140,7 +141,7 @@ def test_xtc():
 
 def test_dcd():
     t = md.load(get_fn('frame0.dcd'), top=nat)
-    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['nc']]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
         def f():
             t.save(e)
             t2 = md.load(e, top=nat)
@@ -150,7 +151,7 @@ def test_dcd():
 
 def test_dtr():
     t = md.load(get_fn('ala_dipeptide_trj/clickme.dtr'), top=get_fn('ala_dipeptide.pdb'))
-    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['nc']]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
         def f():
             t.save(e)
             t2 = md.load(e, top=get_fn('ala_dipeptide.pdb'))
@@ -163,7 +164,7 @@ def test_dtr():
 
 def test_binpos():
     t = md.load(get_fn('frame0.binpos'), top=nat)
-    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['nc']]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
         def f():
             t.save(e)
             t2 = md.load(e, top=nat)
@@ -510,7 +511,7 @@ def test_unitcell():
     t = md.Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
 
     #           xtc    dcd   binpos  trr    h5     pdb    nc     lh5
-    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['nc']]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
         t.save(fn)
         f = lambda: eq(md.load(fn, top=top).unitcell_vectors, None)
         f.description = 'unitcell preservation in %s' % os.path.splitext(fn)[1]

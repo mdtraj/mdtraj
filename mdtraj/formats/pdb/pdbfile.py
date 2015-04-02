@@ -238,7 +238,10 @@ class PDBTrajectoryFile(object):
             self._footer_written = False
             if os.path.exists(filename) and not force_overwrite:
                 raise IOError('"%s" already exists' % filename)
-            self._file = open(filename, 'w')
+            if filename.lower().endswith('.gz'):
+                self._file = gzip.open(filename, 'w')
+            else:
+                self._file = open(filename, 'w')
         else:
             raise ValueError("invalid mode: %s" % mode)
 
