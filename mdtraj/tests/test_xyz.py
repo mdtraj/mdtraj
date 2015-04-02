@@ -30,11 +30,14 @@ from mdtraj.testing import get_fn, eq, DocStringFormatTester
 TestDocstrings = DocStringFormatTester(xyzfile, error_on_none=True)
 
 fd, temp = tempfile.mkstemp(suffix='.xyz')
+fd_gz, temp_gz = tempfile.mkstemp(suffix='.xyz.gz')
 def teardown_module(module):
     """Remove the temporary file created by tests in this file
     this gets automatically called by nose. """
     os.close(fd)
     os.unlink(temp)
+    os.close(fd_gz)
+    os.unlink(temp_gz)
 
 def test_read_0():
     with XYZTrajectoryFile(get_fn('frame0.xyz')) as f:
@@ -49,6 +52,12 @@ def test_read_1():
 
     eq(reference.xyz[0], traj.xyz[0], decimal=3)
 
+def test_read_2():
+    reference = md.load(get_fn('frame0.dcd'), top=get_fn('native.pdb'))
+    traj = md.load(get_fn('frame0.xyz.gz'), top=get_fn('native.pdb'))
+
+    eq(reference.xyz[0], traj.xyz[0], decimal=3)
+
 def test_read_write():
     xyz = 10 * np.random.randn(100, 11, 3)
     with XYZTrajectoryFile(temp, mode='w') as f:
@@ -58,10 +67,19 @@ def test_read_write():
 
     eq(xyz, xyz2/10, decimal=4)
 
+def test_read_write_gz():
+    xyz = 10 * np.random.randn(100, 11, 3)
+    with XYZTrajectoryFile(temp_gz, mode='w') as f:
+        f.write(xyz)
+    with XYZTrajectoryFile(temp_gz) as f:
+        xyz2 = f.read()
+
+    eq(xyz, xyz2/10, decimal=4)
 
 def test_mdwrite():
     t = md.load(get_fn('frame0.xyz'), top=get_fn('native.pdb'))
     t.save(temp)
+    t.save(temp_gz)
 
 def test_multiread():
     reference = md.load(get_fn('frame0.xyz'), top=get_fn('native.pdb'))

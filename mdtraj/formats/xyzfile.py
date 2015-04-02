@@ -28,6 +28,7 @@
 from __future__ import print_function, division
 
 from datetime import date
+import gzip
 import itertools
 import os
 
@@ -47,6 +48,7 @@ class _EOF(IOError):
 
 
 @_FormatRegistry.register_loader('.xyz')
+@_FormatRegistry.register_loader('.xyz.gz')
 def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load a xyz trajectory file.
 
@@ -156,12 +158,18 @@ class XYZTrajectoryFile(object):
         if mode == 'r':
             if not os.path.exists(filename):
                 raise IOError("The file '%s' doesn't exist" % filename)
-            self._fh = open(filename, 'r')
+            if filename.lower().endswith('.gz'):
+                self._fh = gzip.open(filename, 'r')
+            else:
+                self._fh = open(filename, 'r')
             self._is_open = True
         elif mode == 'w':
             if os.path.exists(filename) and not force_overwrite:
                 raise IOError("The file '%s' already exists" % filename)
-            self._fh = open(filename, 'w')
+            if filename.lower().endswith('.gz'):
+                self._fh = gzip.open(filename, 'w')
+            else:
+                self._fh = open(filename, 'w')
             self._is_open = True
         else:
             raise ValueError('mode must be one of "r" or "w". '
@@ -357,5 +365,3 @@ class XYZTrajectoryFile(object):
     def __len__(self):
         """Number of frames in the file. """
         raise NotImplementedError()
-
-
