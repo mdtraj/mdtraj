@@ -159,17 +159,17 @@ class XYZTrajectoryFile(object):
             if not os.path.exists(filename):
                 raise IOError("The file '%s' doesn't exist" % filename)
             if filename.lower().endswith('.gz'):
-              self._fh = gzip.open(filename, 'r')
+                self._fh = gzip.open(filename, 'r')
             else:
-              self._fh = open(filename, 'r')
+                self._fh = open(filename, 'r')
             self._is_open = True
         elif mode == 'w':
             if os.path.exists(filename) and not force_overwrite:
                 raise IOError("The file '%s' already exists" % filename)
             if filename.lower().endswith('.gz'):
-              self._fh = gzip.open(filename, 'w')
+                self._fh = gzip.open(filename, 'w')
             else:
-              self._fh = open(filename, 'w')
+                self._fh = open(filename, 'w')
             self._is_open = True
         else:
             raise ValueError('mode must be one of "r" or "w". '
