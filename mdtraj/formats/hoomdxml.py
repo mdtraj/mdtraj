@@ -61,22 +61,11 @@ def load_hoomdxml(filename, top=None):
     atom_type = config.find('type')  # MDTraj calls this "name"
 
     box = config.find('box')
+    box.attrib = dict((key.lower(), val) for key, val in box.attrib.items())
     # be generous for case of box attributes
-    for L in ['lx', 'Lx', 'lX', 'LX']:
-        try:
-            lx = float(box.attrib[L])
-        except KeyError:
-            pass
-    for L in ['ly', 'Ly', 'lY', 'LY']:
-        try:
-            ly = float(box.attrib[L])
-        except KeyError:
-            pass
-    for L in ['lz', 'Lz', 'lZ', 'LZ']:
-        try:
-            lz = float(box.attrib[L])
-        except KeyError:
-            pass
+    lx = float(box.attrib['lx'])
+    ly = float(box.attrib['ly'])
+    lz = float(box.attrib['lz'])
     try:
         xy = float(box.attrib['xy'])
         xz = float(box.attrib['xz'])
@@ -101,12 +90,9 @@ def load_hoomdxml(filename, top=None):
         raise ValueError('Different number of types and positions in xml file')
 
     # ignore the bond type
-    bonds = []
-    for b in bond.text.splitlines()[1:]:
-        bonds.append((int(b.split()[1]),  # b.split()[0] == bond type
-                      int(b.split()[2])))
+    bonds = [(int(b.split()[1]), int(b.split()[2])) for b in bond.text.splitlines()[1:]]
     chains = _find_chains(bonds)
-    ions = _find_ions(chains, len(types))
+    ions = [i for i in range(len(types)) if not _in_chain(chains, i)]
 
     # add chains, bonds and ions (each chain = 1 residue)
     for chain in chains:
@@ -148,22 +134,6 @@ def _find_chains(bond_list):
     molecules.add_nodes_from(set(bond_list.flatten()))
     molecules.add_edges_from(bond_list)
     return list(nx.connected_components(molecules))
-
-def _find_ions(chains, n):
-    """Find atoms that are not included in any chains.
-
-    Parameters
-    __________
-    chains : list of list of int 
-        The list of atoms in chains
-    n : int
-        Total number of atoms
-    """
-    ions = []
-    for i in range(n):
-        if not _in_chain(chains, i):
-            ions.append(i)
-    return ions
 
 def _in_chain(lists, n):
     """Check if an item is in a list of lists"""
