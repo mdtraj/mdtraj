@@ -1,5 +1,5 @@
-require(["widgets/js/widget"], function(WidgetManager){
-    var ImageButtonView = IPython.DOMWidgetView.extend({
+require(["widgets/js/widget", "widgets/js/manager"], function(widget, manager){
+    var ImageButtonView = widget.DOMWidgetView.extend({
         render : function(){
             // Called when view is rendered.
             this.setElement($("<img />"));
@@ -52,5 +52,5 @@ require(["widgets/js/widget"], function(WidgetManager){
     });
 
     // Register the DatePickerView with the widget manager.
-    WidgetManager.register_widget_view('ImageButtonView', ImageButtonView);
+    manager.WidgetManager.register_widget_view('ImageButtonView', ImageButtonView);
 });
