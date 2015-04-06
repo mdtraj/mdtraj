@@ -23,7 +23,6 @@ requirements:
     - pandas
     - scipy
     - pytables
-    - networkx
 
 test:
   requires:

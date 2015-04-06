@@ -19,7 +19,6 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
-import networkx as nx
 from xml.etree import cElementTree
 
 import numpy as np
@@ -50,6 +49,10 @@ def load_hoomdxml(filename, top=None):
     trajectory : md.Trajectory
         The resulting trajectory, as an md.Trajectory object, with corresponding 
         Topology.
+
+    Notes
+    -----
+    This function requires the NetworkX python package.
     """
     from mdtraj.core.trajectory import Trajectory
     from mdtraj.core.topology import Topology
@@ -127,7 +130,12 @@ def _find_chains(bond_list):
     _______
     chains : list of list of int
         List of atoms in each chain
+
+    Notes
+    -----
+    This function requires the NetworkX python package.
     """
+    nx = import_('networkx')
     chains = []
     bond_list = np.asarray(bond_list)
     molecules = nx.Graph()
@@ -141,6 +149,3 @@ def _in_chain(lists, n):
         if n in l:
             return True
     return False
-
-if __name__ == '__main__':
-    t = load_hoomdxml('start.xml')
