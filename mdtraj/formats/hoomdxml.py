@@ -22,7 +22,10 @@
 from xml.etree import cElementTree
 
 import numpy as np
+
 from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.utils import ilen, import_, ensure_type
+
 
 __all__ = ['load_hoomdxml']
 
