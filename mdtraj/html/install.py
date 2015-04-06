@@ -50,9 +50,10 @@ def enable_notebook():
     """
     libs = ['iview.js','surface.min.js','objexporter.js','filesaver.js','context.js']
     fns = [resource_filename('mdtraj', os.path.join('html', 'static', f)) for f in libs]
-    install_nbextension(fns, verbose=0)
+    for fn in fns:
+        install_nbextension(fn, verbose=0, user=True)
     display(_REQUIRE_CONFIG)
-    
+
     widgets = ['widget_trajectory.js', 'widget_imagebutton.js']
     for fn in widgets:
         fn = resource_filename('mdtraj', os.path.join('html', 'static', fn))

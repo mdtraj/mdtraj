@@ -8,6 +8,7 @@ propagate here and modify `this.model.attributes`, and re-call `update`.
 require([
     "jquery",
     "widgets/js/widget",
+    "widgets/js/manager",
     "iview",
     "exporter",
     "filesaver",
@@ -16,13 +17,13 @@ require([
     'jqueryui',
     ],
 
-function($, WidgetManager, iview) {
+function($, widget, manager, iview) {
     var HEIGHT = 300,
         WIDTH = 300,
         HEIGHT_PX = '300px',
         WIDTH_PX = '300px';
 
-    var TrajectoryView = IPython.DOMWidgetView.extend({
+    var TrajectoryView = widget.DOMWidgetView.extend({
         render : function() {
             var canvas = $("<canvas/>").height(HEIGHT).width(WIDTH);
             var iv = new iview(canvas);
@@ -159,5 +160,5 @@ function($, WidgetManager, iview) {
     });
 
 
-    WidgetManager.register_widget_view('TrajectoryView', TrajectoryView);
+    manager.WidgetManager.register_widget_view('TrajectoryView', TrajectoryView);
 });
