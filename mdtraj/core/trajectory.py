@@ -51,6 +51,7 @@ from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.mol2 import load_mol2
 from mdtraj.formats.gro import load_gro
+from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.core.topology import Topology
 from mdtraj.core.residue_names import _SOLVENT_TYPES
 from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_vectors, 
@@ -119,7 +120,8 @@ def _parse_topology(top):
         ext = None  # might not be a string
 
     # supported extensions for constructing topologies
-    extensions = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7', '.psf', '.mol2']
+    extensions = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
+            '.psf', '.mol2', '.hoomdxml']
 
     if isinstance(top, string_types) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):
         _traj = load_frame(top, 0)
@@ -132,6 +134,8 @@ def _parse_topology(top):
         topology = load_mol2(top).topology
     elif isinstance(top, string_types) and (ext in ['.gro']):
         topology = load_gro(top).topology
+    elif isinstance(top, string_types) and (ext in ['.hoomdxml']):
+        topology = load_hoomdxml(top).topology
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, Topology):

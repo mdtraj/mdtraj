@@ -58,3 +58,4 @@ Format-specific loaders
     load_prmtop
     load_xyz
     load_lammpstrj
+    load_hoomdxml

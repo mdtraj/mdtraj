@@ -110,7 +110,8 @@ exit
     with enter_temp_directory():
         with open('script.tcl', 'w') as f:
             f.write(TEMPLATE)
-        os.system(' '.join([VMD, '-e', 'script.tcl', '-dispdev', 'none']))
+        os.system(' '.join([VMD.replace(' ', '\ '), '-e', 'script.tcl', 
+            '-dispdev', 'none']))
         out_pdb = md.load('out.pdb')
         out_psf = md.load_psf('out.psf')
 

@@ -19,3 +19,6 @@ tip3p_300K_1ATM.xtc  # Trajectory
 tip3p_300K_1ATM.pdb  # First Frame
 md.mdp  # A template gromacs mdp file for equilibration and production runs
 
+`well-mixed.hoomdxml` is a HOOMD-Blue XML file of a a coarse-grained free fatty acid +
+cholesterol + water system containing 200 free fatty acid and 200 cholesterol chains.
+`test_hoomdxml.dcd` is 21 frames of an MD trajectory of the system in `well-mixed.hoomdxml`
