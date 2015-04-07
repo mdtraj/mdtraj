@@ -43,8 +43,8 @@ This `video <https://www.youtube.com/watch?v=Lwy2Hdsr518>`_ shows an example of 
 
        $('#widgetview').append(container).css({
            'margin-left': 'auto',
-	   'margin-right': 'auto',
-	   'width': WIDTH
+           'margin-right': 'auto',
+           'width': WIDTH
        });
        
        var options = {
