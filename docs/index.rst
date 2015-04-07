@@ -65,6 +65,7 @@ Documentation
    examples/index
    whatsnew
    faq
+   viewer
    Discussion Forums <http://discourse.mdtraj.org>
 
 API Reference
