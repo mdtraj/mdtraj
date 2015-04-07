@@ -86,7 +86,7 @@ Requirements
 
     `IPython <http://ipython.org/>`_  >= 3.0
         To install IPython and the notebook with ``conda``,
-	use ``conda install ipython-notebook``.
+        use ``conda install ipython-notebook``.
 
     Modern web browser with WebGL
         We've had the best luck with Chrome and modern versions
