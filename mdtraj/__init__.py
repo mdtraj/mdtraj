@@ -44,6 +44,7 @@ from mdtraj.formats.mol2 import load_mol2
 from mdtraj.formats.amberrst import load_restrt, load_ncrestrt
 from mdtraj.formats.lammpstrj import load_lammpstrj
 from mdtraj.formats.dtr import load_dtr
+from mdtraj.formats.xyzfile import load_xyz
 
 from mdtraj.core import element
 from mdtraj._rmsd import rmsd
