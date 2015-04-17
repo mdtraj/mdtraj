@@ -159,7 +159,7 @@ def chemical_shifts_shiftx2(trj, pH=5.0, temperature=298.00):
             results.append(d)
 
     results = pd.concat(results)
-    results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
+    results = results.pivot_table(index=["resSeq", "name"], columns="frame", values="SHIFT")
     return results
 
 
@@ -302,7 +302,7 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
     if rename_HN:
         results.name[results.name == "HN"] = "H"
 
-    results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
+    results = results.pivot_table(index=["resSeq", "name"], columns="frame", values="SHIFT")
 
     return results
 
