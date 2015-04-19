@@ -1167,6 +1167,9 @@ class Atom(object):
         The index of the Atom within its Topology
     residue : mdtraj.topology.Residue
         The Residue this Atom belongs to
+    serial : int
+        The serial number from the PDB specification. Unlike index,
+        this may not be contiguous or 0-indexed.
     """
 
     def __init__(self, name, element, index, residue, serial=None):
@@ -1179,6 +1182,7 @@ class Atom(object):
         self.index = index
         ## The Residue this Atom belongs to
         self.residue = residue
+        ## The not-necessarily-contiguous "serial" number from the PDB spec
         self.serial = serial
 
     @property
