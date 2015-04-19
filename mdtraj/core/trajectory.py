@@ -46,6 +46,7 @@ from mdtraj.formats import ArcTrajectoryFile
 from mdtraj.formats import DTRTrajectoryFile
 from mdtraj.formats import LAMMPSTrajectoryFile
 from mdtraj.formats import XYZTrajectoryFile
+from mdtraj.formats import GroTrajectoryFile
 
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
@@ -1227,6 +1228,7 @@ class Trajectory(object):
                   '.lh5': self.save_lh5,
                   '.lammpstrj': self.save_lammpstrj,
                   '.xyz': self.save_xyz,
+                  '.gro': self.save_gro
                   }
 
         try:
@@ -1456,6 +1458,20 @@ class Trajectory(object):
         with LH5TrajectoryFile(filename, 'w', force_overwrite=True) as f:
             f.write(coordinates=self.xyz)
             f.topology = self.topology
+
+    def save_gro(self, filename, force_overwrite=True):
+        """Save trajectory in Gromacs .gro format
+
+        Parameters
+        ----------
+        filename : str
+            Path to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at that filename if it exists
+        """
+        self._check_valid_unitcell()
+        with GroTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(self.xyz, self.topology, self.time, self.unitcell_vectors)
 
     def center_coordinates(self, mass_weighted=False):
         """Center each trajectory frame at the origin (0,0,0).
