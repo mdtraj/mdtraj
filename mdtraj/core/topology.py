@@ -1179,6 +1179,7 @@ class Atom(object):
         self.index = index
         ## The Residue this Atom belongs to
         self.residue = residue
+        ## The not-necessarily-contiguous "serial" number from the PDB spec
         self.serial = serial
 
     @property
