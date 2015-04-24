@@ -75,6 +75,7 @@ Functions
 ---------
 """
 from __future__ import print_function, division
+import bz2
 import gzip
 import os
 import warnings
@@ -297,6 +298,9 @@ def open_maybe_zipped(filename, mode, force_overwrite=True):
         if extension == '.gz':
            with gzip.GzipFile(filename, 'r') as gz_f:
                return StringIO(gz_f.read().decode('utf-8'))
+        elif extension == '.bz2':
+           with bz2.BZ2File(filename, 'r') as bz2_f:
+               return StringIO(bz2_f.read().decode('utf-8'))
         else:
             return open(filename, 'r')
     elif mode == 'w':
@@ -304,6 +308,8 @@ def open_maybe_zipped(filename, mode, force_overwrite=True):
             raise IOError('"%s" already exists' % filename)
         if extension == '.gz':
             return gzip.GzipFile(filename, 'w')
+        elif extension == '.bz2':
+            return bz2.BZ2File(filename, 'w')
         else:
             return open(filename, 'w')
     else:
