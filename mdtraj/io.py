@@ -291,8 +291,6 @@ def loadh(file, name=Ellipsis, deferred=True):
 
 
 def open_maybe_zipped(filename, mode, force_overwrite=True):
-    # Don't use _get_extension because we specially only want the .gz/.bz2
-    # extension.
     _, extension = os.path.splitext(filename.lower())
     if mode == 'r':
         if extension == '.gz':
