@@ -22,9 +22,11 @@
 
 import os
 import os.path
+import glob
 import tables
 import tempfile
 import unittest
+import gzip
 
 from mdtraj.testing import eq
 from mdtraj import io
@@ -70,6 +72,30 @@ def test_overwrite_2():
         if os.path.exists(fn):
             os.close(fid)
             os.unlink(fn)
+
+
+class test_open_maybe_zipped(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+
+    def teardown(self):
+        for fn in glob.glob(os.path.join(self.tmpdir, '*')):
+            os.remove(fn)
+        os.rmdir(self.tmpdir)
+
+    def test_read_gz(self):
+        fn = os.path.join(self.tmpdir, 'read.gz')
+        f = gzip.open(fn, 'w')
+        f.write(u'COOKIE')
+        f.close()
+        eq(io.open_maybe_zipped(fn, 'r').read(), u'COOKIE')
+
+    def test_write_gz(self):
+        fn = os.path.join(self.tmpdir, 'write.gz')
+        f = io.open_maybe_zipped(fn, 'w')
+        f.write(u'COOKIE')
+        f.close()
+        eq(gzip.open(fn, 'r').read().decode('utf-8'), u'COOKIE')
 
 
 class test_io(unittest.TestCase):
@@ -152,4 +178,3 @@ def test_groups():
     yield lambda: eq(io.loadh(temp, deferred=False)['mya2'], y)
     yield lambda: eq(io.loadh(temp, 'mygroup/myarray'), x)
     yield lambda: eq(io.loadh(temp, 'mya2'), y)
-
