@@ -8,7 +8,6 @@ from mdtraj.utils.rotation import rotation_matrix_from_quaternion, uniform_quate
 from mdtraj.utils.unitcell import (lengths_and_angles_to_box_vectors,
                        box_vectors_to_lengths_and_angles)
 from mdtraj.utils.contextmanagers import timing, enter_temp_directory
-from mdtraj.utils import six
 
 __all__ = ["ensure_type", "import_", "in_units_of",
            "lengths_and_angles_to_box_vectors",

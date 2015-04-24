@@ -80,7 +80,7 @@ import os
 import warnings
 import numpy as np
 from mdtraj.utils import import_
-from mdtraj.utils.six import PY3, iteritems
+from mdtraj.utils.six import PY3, iteritems, StringIO
 if PY3:
     basestring = str
 tables = import_('tables')
@@ -296,7 +296,7 @@ def open_maybe_zipped(filename, mode, force_overwrite=True):
     if mode == 'r':
         if extension == '.gz':
            with gzip.GzipFile(filename, 'r') as gz_f:
-               return six.StringIO(gz_f.read().decode('utf-8'))
+               return StringIO(gz_f.read().decode('utf-8'))
         else:
             return open(filename, 'r')
     elif mode == 'w':
