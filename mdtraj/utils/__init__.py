@@ -120,24 +120,3 @@ class deprecated(object):
         if olddoc:
             newdoc = "%s\n\n%s" % (newdoc, olddoc)
         return newdoc
-
-
-def open_maybe_zipped(filename, mode, force_overwrite=True):
-    # Don't use _get_extension because we specially only want the .gz/.bz2
-    # extension.
-    _, extension = os.path.splitext(filename.lower())
-    if mode == 'r':
-        if extension == '.gz':
-           with gzip.GzipFile(filename, 'r') as gz_f:
-               return six.StringIO(gz_f.read().decode('utf-8'))
-        else:
-            return open(filename, 'r')
-    elif mode == 'w':
-        if os.path.exists(filename) and not force_overwrite:
-            raise IOError('"%s" already exists' % filename)
-        if extension == '.gz':
-            return gzip.GzipFile(filename, 'w')
-        else:
-            return open(filename, 'w')
-    else:
-        raise ValueError('Invalid mode "%s"' % mode)
