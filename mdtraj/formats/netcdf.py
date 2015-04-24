@@ -52,6 +52,7 @@ __all__ = ['NetCDFTrajectoryFile', 'load_netcdf']
 
 @_FormatRegistry.register_loader('.nc')
 @_FormatRegistry.register_loader('.netcdf')
+@_FormatRegistry.register_loader('.ncdf')
 def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load an AMBER NetCDF file. Since the NetCDF format doesn't contain
     information to specify the topology, you need to supply a topology
@@ -109,6 +110,7 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
 
 @_FormatRegistry.register_fileobject('.nc')
 @_FormatRegistry.register_fileobject('.netcdf')
+@_FormatRegistry.register_fileobject('.ncdf')
 class NetCDFTrajectoryFile(object):
     """Interface for reading and writing to AMBER NetCDF files. This is a
     file-like object, that supports both reading or writing depending
