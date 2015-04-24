@@ -159,7 +159,6 @@ def _get_extension(filename):
         return extension2 + extension
     return extension
 
-
 ##############################################################################
 # Utilities
 ##############################################################################
@@ -1217,6 +1216,7 @@ class Trajectory(object):
         savers = {'.xtc': self.save_xtc,
                   '.trr': self.save_trr,
                   '.pdb': self.save_pdb,
+                  '.pdb.gz': self.save_pdb,
                   '.dcd': self.save_dcd,
                   '.h5': self.save_hdf5,
                   '.binpos': self.save_binpos,
@@ -1228,6 +1228,7 @@ class Trajectory(object):
                   '.lh5': self.save_lh5,
                   '.lammpstrj': self.save_lammpstrj,
                   '.xyz': self.save_xyz,
+                  '.xyz.gz': self.save_xyz,
                   '.gro': self.save_gro
                   }
 

@@ -1,4 +1,6 @@
 from __future__ import print_function, division
+import gzip
+import os
 import time
 import warnings
 from mdtraj.utils.delay_import import import_
@@ -8,6 +10,7 @@ from mdtraj.utils.rotation import rotation_matrix_from_quaternion, uniform_quate
 from mdtraj.utils.unitcell import (lengths_and_angles_to_box_vectors,
                        box_vectors_to_lengths_and_angles)
 from mdtraj.utils.contextmanagers import timing, enter_temp_directory
+from mdtraj.utils import six
 
 __all__ = ["ensure_type", "import_", "in_units_of",
            "lengths_and_angles_to_box_vectors",
@@ -117,3 +120,24 @@ class deprecated(object):
         if olddoc:
             newdoc = "%s\n\n%s" % (newdoc, olddoc)
         return newdoc
+
+
+def open_maybe_zipped(filename, mode, force_overwrite=True):
+    # Don't use _get_extension because we specially only want the .gz/.bz2
+    # extension.
+    _, extension = os.path.splitext(filename.lower())
+    if mode == 'r':
+        if extension == '.gz':
+           with gzip.GzipFile(filename, 'r') as gz_f:
+               return six.StringIO(gz_f.read().decode('utf-8'))
+        else:
+            return open(filename, 'r')
+    elif mode == 'w':
+        if os.path.exists(filename) and not force_overwrite:
+            raise IOError('"%s" already exists' % filename)
+        if extension == '.gz':
+            return gzip.GzipFile(filename, 'w')
+        else:
+            return open(filename, 'w')
+    else:
+        raise ValueError('Invalid mode "%s"' % mode)

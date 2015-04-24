@@ -510,7 +510,6 @@ def test_unitcell():
     top = md.load(get_fn('native.pdb')).restrict_atoms(range(5)).topology
     t = md.Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
 
-    #           xtc    dcd   binpos  trr    h5     pdb    nc     lh5
     for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
         t.save(fn)
         f = lambda: eq(md.load(fn, top=top).unitcell_vectors, None)
