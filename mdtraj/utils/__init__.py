@@ -1,6 +1,4 @@
 from __future__ import print_function, division
-import gzip
-import os
 import time
 import warnings
 from mdtraj.utils.delay_import import import_

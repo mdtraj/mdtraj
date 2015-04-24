@@ -75,6 +75,7 @@ Functions
 ---------
 """
 from __future__ import print_function, division
+import gzip
 import os
 import warnings
 import numpy as np
