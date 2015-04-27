@@ -352,7 +352,7 @@ class GroTrajectoryFile(object):
             comment += ', t= %s' % time
 
         assert topology.n_atoms == coordinates.shape[0]
-        lines = [comment, '  %d' % topology.n_atoms]
+        lines = [comment, ' %d' % topology.n_atoms]
         if box is None:
             box = np.zeros((3,3))
 
