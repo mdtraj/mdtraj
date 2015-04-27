@@ -74,9 +74,10 @@ True
 Functions
 ---------
 """
-from __future__ import print_function, division
+from __future__ import print_function, division, absolute_import
 import bz2
 import gzip
+import io
 import os
 import warnings
 import numpy as np
