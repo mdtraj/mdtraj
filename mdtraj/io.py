@@ -318,6 +318,8 @@ def open_maybe_zipped(filename, mode, force_overwrite=True):
         elif extension == '.bz2':
             with bz2.BZ2File(filename, 'r') as bz2_f:
                 return StringIO(bz2_f.read().decode('utf-8'))
+        else:
+            return open(filename, 'r')
     elif mode == 'w':
         if os.path.exists(filename) and not force_overwrite:
             raise IOError('"%s" already exists' % filename)
