@@ -87,30 +87,28 @@ class test_open_maybe_zipped(unittest.TestCase):
     def test_read_gz(self):
         fn = os.path.join(self.tmpdir, 'read.gz')
         with gzip.GzipFile(fn, 'w') as f:
-          f.write(u'COOKIE')
+            f.write('COOKIE'.encode('utf-8'))
         eq(io.open_maybe_zipped(fn, 'r').read(), u'COOKIE')
 
     def test_write_gz(self):
         fn = os.path.join(self.tmpdir, 'write.gz')
-        f = io.open_maybe_zipped(fn, 'w')
-        f.write(u'COOKIE')
-        f.close()
+        with io.open_maybe_zipped(fn, 'w') as f:
+            f.write('COOKIE'.encode('utf-8'))
         with gzip.GzipFile(fn, 'r') as f:
-          eq(f.read().decode('utf-8'), u'COOKIE')
+            eq(f.read().decode('utf-8'), u'COOKIE')
 
     def test_read_bz2(self):
         fn = os.path.join(self.tmpdir, 'read.bz2')
         with bz2.BZ2File(fn, 'w') as f:
-          f.write(u'COOKIE')
+            f.write('COOKIE'.encode('utf-8'))
         eq(io.open_maybe_zipped(fn, 'r').read(), u'COOKIE')
 
     def test_write_bz2(self):
         fn = os.path.join(self.tmpdir, 'write.bz2')
-        f = io.open_maybe_zipped(fn, 'w')
-        f.write(u'COOKIE')
-        f.close()
+        with io.open_maybe_zipped(fn, 'w') as f:
+            f.write('COOKIE'.encode('utf-8'))
         with bz2.BZ2File(fn, 'r') as f:
-          eq(f.read().decode('utf-8'), u'COOKIE')
+            eq(f.read().decode('utf-8'), u'COOKIE')
 
 
 class test_io(unittest.TestCase):
