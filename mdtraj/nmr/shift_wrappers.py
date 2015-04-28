@@ -308,7 +308,10 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
     if rename_HN:
         results.name[results.name == "HN"] = "H"
 
-    results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
+    if LooseVersion(pd.version.short_version) < LooseVersion('0.14.0'):
+        results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
+    else:
+        results = results.pivot_table(index=["resSeq", "name"], columns="frame", values="SHIFT")
 
     return results
 
