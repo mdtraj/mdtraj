@@ -93,7 +93,7 @@ class test_open_maybe_zipped(unittest.TestCase):
     def test_write_gz(self):
         fn = os.path.join(self.tmpdir, 'write.gz')
         with io.open_maybe_zipped(fn, 'w') as f:
-            f.write('COOKIE'.encode('utf-8'))
+            f.write(u'COOKIE')
         with gzip.GzipFile(fn, 'r') as f:
             eq(f.read().decode('utf-8'), u'COOKIE')
 
@@ -106,7 +106,7 @@ class test_open_maybe_zipped(unittest.TestCase):
     def test_write_bz2(self):
         fn = os.path.join(self.tmpdir, 'write.bz2')
         with io.open_maybe_zipped(fn, 'w') as f:
-            f.write('COOKIE'.encode('utf-8'))
+            f.write(u'COOKIE')
         with bz2.BZ2File(fn, 'r') as f:
             eq(f.read().decode('utf-8'), u'COOKIE')
 
