@@ -28,6 +28,7 @@
 from __future__ import print_function, absolute_import
 import os
 import sys
+from distutils.version import LooseVersion
 from distutils.spawn import find_executable as _find_executable
 import numpy as np
 
@@ -159,7 +160,12 @@ def chemical_shifts_shiftx2(trj, pH=5.0, temperature=298.00):
             results.append(d)
 
     results = pd.concat(results)
-    results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
+
+    if LooseVersion(pd.version.short_version) < LooseVersion('0.14.0'):
+        results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
+    else:
+        results = results.pivot_table(index=["resSeq", "name"], columns="frame", values="SHIFT")
+
     return results
 
 
