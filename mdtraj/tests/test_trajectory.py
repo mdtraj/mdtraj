@@ -511,8 +511,8 @@ def test_unitcell():
     t = md.Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
 
     for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
-        t.save(fn)
-        f = lambda: eq(md.load(fn, top=top).unitcell_vectors, None)
+        t.save(e)
+        f = lambda: eq(md.load(e, top=top).unitcell_vectors, None)
         f.description = 'unitcell preservation in %s' % os.path.splitext(fn)[1]
         yield f
 
