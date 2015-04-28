@@ -46,8 +46,8 @@ Optional packages:
         We use scipy for loading and saving AMBER netcdf formatted
         trajectories.
 
-    `Pandas <http://pandas.pydata.org>`_ >= 0.9.0
-        Some functionality, including mol2 parsing,  requires pandas.
+    `Pandas <http://pandas.pydata.org>`_ >= 0.14.0
+        Some functionality, including mol2 parsing and computing NMR observables requires pandas.
 
     `PyTables <http://www.pytables.org/>`_ >= 2.4.0
         Working with HDF5 formatted trajectories requires the PyTables
