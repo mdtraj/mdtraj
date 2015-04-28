@@ -34,6 +34,7 @@ import os
 import numpy as np
 
 from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.io import open_maybe_zipped
 from mdtraj.utils import cast_indices, in_units_of, ensure_type
 from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
@@ -47,6 +48,7 @@ class _EOF(IOError):
 
 
 @_FormatRegistry.register_loader('.xyz')
+@_FormatRegistry.register_loader('.xyz.gz')
 def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load a xyz trajectory file.
 
@@ -122,6 +124,7 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
 
 
 @_FormatRegistry.register_fileobject('.xyz')
+@_FormatRegistry.register_fileobject('.xyz.gz')
 class XYZTrajectoryFile(object):
     """Interface for reading and writing to xyz files.
 
@@ -154,14 +157,10 @@ class XYZTrajectoryFile(object):
         self._line_counter = 0
 
         if mode == 'r':
-            if not os.path.exists(filename):
-                raise IOError("The file '%s' doesn't exist" % filename)
-            self._fh = open(filename, 'r')
+            self._fh = open_maybe_zipped(filename, 'r')
             self._is_open = True
         elif mode == 'w':
-            if os.path.exists(filename) and not force_overwrite:
-                raise IOError("The file '%s' already exists" % filename)
-            self._fh = open(filename, 'w')
+            self._fh = open_maybe_zipped(filename, 'w', force_overwrite)
             self._is_open = True
         else:
             raise ValueError('mode must be one of "r" or "w". '
@@ -357,5 +356,3 @@ class XYZTrajectoryFile(object):
     def __len__(self):
         """Number of frames in the file. """
         raise NotImplementedError()
-
-

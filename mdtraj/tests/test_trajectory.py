@@ -36,25 +36,27 @@ TestDocstrings = DocStringFormatTester(mdtraj.core.trajectory, error_on_none=Tru
 
 fn = get_fn('traj.h5')
 nat = get_fn('native.pdb')
-fd1, temp1 = tempfile.mkstemp(suffix='.xtc')
-fd2, temp2 = tempfile.mkstemp(suffix='.dcd')
-fd3, temp3 = tempfile.mkstemp(suffix='.binpos')
-fd4, temp4 = tempfile.mkstemp(suffix='.trr')
-fd5, temp5 = tempfile.mkstemp(suffix='.h5')
-fd6, temp6 = tempfile.mkstemp(suffix='.pdb')
-fd7, temp7 = tempfile.mkstemp(suffix='.nc')
-fd8, temp8 = tempfile.mkstemp(suffix='.lh5')
-fd9, temp9 = tempfile.mkstemp(suffix='.lammpstrj')
-fd10, temp10 = tempfile.mkstemp(suffix='.xyz')
-
-for e in [fd1, fd2, fd3, fd4, fd5, fd6, fd7, fd8, fd9, fd10]:
-    os.close(e)
+tmpfns = {}
+for suffix, (fd, temp) in {
+      'xtc' : tempfile.mkstemp(suffix='.xtc'),
+      'dcd' : tempfile.mkstemp(suffix='.dcd'),
+      'binpos' : tempfile.mkstemp(suffix='.binpos'),
+      'trr' : tempfile.mkstemp(suffix='.trr'),
+      'h5' : tempfile.mkstemp(suffix='.h5'),
+      'pdb' : tempfile.mkstemp(suffix='.pdb'),
+      'pdb.gz' : tempfile.mkstemp(suffix='.pdb.gz'),
+      'nc' : tempfile.mkstemp(suffix='.nc'),
+      'lh5' : tempfile.mkstemp(suffix='.lh5'),
+      'lammpstrj' : tempfile.mkstemp(suffix='.lammpstrj'),
+      'xyz' : tempfile.mkstemp(suffix='.xyz')}.items():
+    os.close(fd)
+    tmpfns[suffix] = temp
 
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
 
-    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8]:
+    for e in tmpfns.values():
         os.unlink(e)
 
 def test_mismatch():
@@ -91,10 +93,10 @@ def test_load_pdb_gz():
 def test_box_load_save():
     t = md.load(get_fn('native2.pdb'))
 
-    # these three tempfile have extensions (dcd, xtc, trr) that
+    # these four tempfile have extensions (dcd, xtc, trr, h5) that
     # should store the box information. lets make sure than through a load/save
     # cycle, the box information is preserved:
-    for temp_fn in [temp1, temp2, temp4, temp5]:
+    for temp_fn in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['trr'], tmpfns['h5']]:
         t.save(temp_fn)
         if temp_fn.endswith('.h5'):
             t2 = md.load(temp_fn)
@@ -124,7 +126,7 @@ def test_slice2():
 
 def test_xtc():
     t = md.load(get_fn('frame0.xtc'), top=nat)
-    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
         def f():
             t.save(e)
             t2 = md.load(e, top=nat)
@@ -139,7 +141,7 @@ def test_xtc():
 
 def test_dcd():
     t = md.load(get_fn('frame0.dcd'), top=nat)
-    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
         def f():
             t.save(e)
             t2 = md.load(e, top=nat)
@@ -149,7 +151,7 @@ def test_dcd():
 
 def test_dtr():
     t = md.load(get_fn('ala_dipeptide_trj/clickme.dtr'), top=get_fn('ala_dipeptide.pdb'))
-    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
         def f():
             t.save(e)
             t2 = md.load(e, top=get_fn('ala_dipeptide.pdb'))
@@ -162,7 +164,7 @@ def test_dtr():
 
 def test_binpos():
     t = md.load(get_fn('frame0.binpos'), top=nat)
-    for e in [temp1, temp2, temp3, temp4, temp5, temp6, temp7]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
         def f():
             t.save(e)
             t2 = md.load(e, top=nat)
@@ -318,9 +320,9 @@ def test_pdb_unitcell_loadsave():
     tref = md.load(get_fn('native.pdb'))
     tref.unitcell_lengths = 1 + 0.1  * np.random.randn(tref.n_frames, 3)
     tref.unitcell_angles = 90 + 0.0  * np.random.randn(tref.n_frames, 3)
-    tref.save(temp6)
+    tref.save(tmpfns['pdb'])
 
-    tnew = md.load(temp6)
+    tnew = md.load(tmpfns['pdb'])
     eq(tref.unitcell_vectors, tnew.unitcell_vectors, decimal=3)
 
 
@@ -508,19 +510,18 @@ def test_unitcell():
     top = md.load(get_fn('native.pdb')).restrict_atoms(range(5)).topology
     t = md.Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
 
-    #           xtc    dcd   binpos  trr    h5     pdb    nc     lh5
-    for fn in [temp1, temp2, temp3, temp4, temp5, temp6, temp6, temp8]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
         t.save(fn)
         f = lambda: eq(md.load(fn, top=top).unitcell_vectors, None)
         f.description = 'unitcell preservation in %s' % os.path.splitext(fn)[1]
         yield f
-    
+
 def test_chunk0_iterload():
     filename = 'frame0.h5'
-    
+
     trj0 = md.load(get_fn(filename))
 
     for trj in md.iterload(get_fn(filename), chunk=0):
         pass
-    
+
     eq(trj0.n_frames, trj.n_frames)

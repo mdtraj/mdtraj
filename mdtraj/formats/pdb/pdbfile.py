@@ -51,6 +51,7 @@ import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
+from mdtraj.io import open_maybe_zipped
 from mdtraj.core.topology import Topology
 from mdtraj.utils import ilen, cast_indices, in_units_of
 from mdtraj.formats.registry import _FormatRegistry
@@ -226,19 +227,13 @@ class PDBTrajectoryFile(object):
                 if six.PY3:
                     self._file = six.StringIO(self._file.read().decode('utf-8'))
             else:
-                if filename.lower().endswith('.gz'):
-                    self._file = gzip.open(filename, 'r')
-                    self._file = six.StringIO(self._file.read().decode('utf-8'))                    
-                else:
-                    self._file = open(filename, 'r')
+                self._file = open_maybe_zipped(filename, 'r')
 
             self._read_models()
         elif mode == 'w':
             self._header_written = False
             self._footer_written = False
-            if os.path.exists(filename) and not force_overwrite:
-                raise IOError('"%s" already exists' % filename)
-            self._file = open(filename, 'w')
+            self._file = open_maybe_zipped(filename, 'w', force_overwrite)
         else:
             raise ValueError("invalid mode: %s" % mode)
 
