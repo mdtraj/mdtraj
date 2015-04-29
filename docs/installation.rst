@@ -33,7 +33,7 @@ To use ``mdtraj``, the following libraries and software will need to be installe
         We develop mainly on 64-bit Linux and OS X machines. We make our best
         effort to support Windows where possible.
 
-    `Python <http://python.org>`_ >= 2.6
+    `Python <http://python.org>`_ >= 2.7
         The development package (``python-dev`` or ``python-devel``
         on most Linux distributions) is recommended.
 
