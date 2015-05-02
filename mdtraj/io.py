@@ -173,7 +173,10 @@ def saveh(file, *args, **kwargs):
 
     for key in namedict.keys():
         if key in current_nodes:
-            handle.removeNode('/', name=key)
+            if TABLES2:
+                handle.removeNode('/', name=key)
+            else:
+                handle.remove_node('/', name=key)
             # per discussion on github, https://github.com/rmcgibbo/mdtraj/issues/5
             # silent overwriting appears to be the desired functionality
             # raise IOError('Array already exists in file: %s' % key)
