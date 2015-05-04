@@ -66,7 +66,7 @@ class Element(tuple):
     _elements_by_symbol = {}
     _elements_by_atomic_number = {}
 
-    def __new__(cls, number, name, symbol, mass):
+    def __new__(cls, number, name, symbol, mass, radius):
         """Create a new element
 
         Parameters
@@ -79,9 +79,11 @@ class Element(tuple):
             The chemical symbol of the element
         mass : float
             The atomic mass of the element
+        radius : float
+            The van der Waals radius of the element, in nm.
         """
 
-        newobj = tuple.__new__(cls, (number, name, symbol, mass))
+        newobj = tuple.__new__(cls, (number, name, symbol, mass, radius))
 
         # Index this element in a global table
         s = symbol.strip().upper()
@@ -162,6 +164,20 @@ class Element(tuple):
         """Element mass"""
         return tuple.__getitem__(self, 3)
 
+    @property
+    def radius(self):
+        """Element atomic radius
+
+        van der Waals radii are taken from A. Bondi, J. Phys. Chem., 68, 441 -
+        452, 1964, except the value for H, which is taken from R.S.
+        Rowland & R. Taylor, J.Phys.Chem., 100, 7384 - 7391, 1996. Radii
+        that are not available in either of these publications have RvdW =
+        2.00 A. The radii for Ions (Na, K, Cl, Ca, Mg, and Cs are based on
+        the CHARMM27 Rmin/2 parameters for (SOD, POT, CLA, CAL, MG, CES) by
+        default.
+        """
+        return tuple.__getitem__(self, 4)
+
     def __getitem__(self, item):
         raise TypeError
 
@@ -173,10 +189,7 @@ class Element(tuple):
         """Atomic number"""
         return tuple.__getitem__(self, 0)
 
-    @property
-    def radius(self):
-        """Element atomic radius"""
-        raise NotImplementedError
+
 
 
 # This is for backward compatibility.
@@ -185,123 +198,132 @@ def get_by_symbol(symbol):
     return Element._elements_by_symbol[s]
 
 
-hydrogen =       Element(  1, "hydrogen", "H", 1.007947)
-deuterium =      Element(  1, "deuterium", "D", 2.01355321270)
-helium =         Element(  2, "helium", "He", 4.003)
-lithium =        Element(  3, "lithium", "Li", 6.9412)
-beryllium =      Element(  4, "beryllium", "Be", 9.0121823)
-boron =          Element(  5, "boron", "B", 10.8117)
-carbon =         Element(  6, "carbon", "C", 12.01078)
-nitrogen =       Element(  7, "nitrogen", "N", 14.00672)
-oxygen =         Element(  8, "oxygen", "O", 15.99943)
-fluorine =       Element(  9, "fluorine", "F", 18.99840325)
-neon =           Element( 10, "neon", "Ne", 20.17976)
-sodium =         Element( 11, "sodium", "Na", 22.989769282)
-magnesium =      Element( 12, "magnesium", "Mg", 24.30506)
-aluminum =       Element( 13, "aluminum", "Al", 26.98153868)
-silicon =        Element( 14, "silicon", "Si", 28.08553)
-phosphorus =     Element( 15, "phosphorus", "P", 30.9737622)
-sulfur =         Element( 16, "sulfur", "S", 32.0655)
-chlorine =       Element( 17, "chlorine", "Cl", 35.4532)
-argon =          Element( 18, "argon", "Ar", 39.9481)
-potassium =      Element( 19, "potassium", "K", 39.09831)
-calcium =        Element( 20, "calcium", "Ca", 40.0784)
-scandium =       Element( 21, "scandium", "Sc", 44.9559126)
-titanium =       Element( 22, "titanium", "Ti", 47.8671)
-vanadium =       Element( 23, "vanadium", "V", 50.94151)
-chromium =       Element( 24, "chromium", "Cr", 51.99616)
-manganese =      Element( 25, "manganese", "Mn", 54.9380455)
-iron =           Element( 26, "iron", "Fe", 55.8452)
-cobalt =         Element( 27, "cobalt", "Co", 58.9331955)
-nickel =         Element( 28, "nickel", "Ni", 58.69342)
-copper =         Element( 29, "copper", "Cu", 63.5463)
-zinc =           Element( 30, "zinc", "Zn", 65.4094)
-gallium =        Element( 31, "gallium", "Ga", 69.7231)
-germanium =      Element( 32, "germanium", "Ge", 72.641)
-arsenic =        Element( 33, "arsenic", "As", 74.921602)
-selenium =       Element( 34, "selenium", "Se", 78.963)
-bromine =        Element( 35, "bromine", "Br", 79.9041)
-krypton =        Element( 36, "krypton", "Kr", 83.7982)
-rubidium =       Element( 37, "rubidium", "Rb", 85.46783)
-strontium =      Element( 38, "strontium", "Sr", 87.621)
-yttrium =        Element( 39, "yttrium", "Y", 88.905852)
-zirconium =      Element( 40, "zirconium", "Zr", 91.2242)
-niobium =        Element( 41, "niobium", "Nb", 92.906382)
-molybdenum =     Element( 42, "molybdenum", "Mo", 95.942)
-technetium =     Element( 43, "technetium", "Tc", 98)
-ruthenium =      Element( 44, "ruthenium", "Ru", 101.072)
-rhodium =        Element( 45, "rhodium", "Rh", 102.905502)
-palladium =      Element( 46, "palladium", "Pd", 106.421)
-silver =         Element( 47, "silver", "Ag", 107.86822)
-cadmium =        Element( 48, "cadmium", "Cd", 112.4118)
-indium =         Element( 49, "indium", "In", 114.8183)
-tin =            Element( 50, "tin", "Sn", 118.7107)
-antimony =       Element( 51, "antimony", "Sb", 121.7601)
-tellurium =      Element( 52, "tellurium", "Te", 127.603)
-iodine =         Element( 53, "iodine", "I", 126.904473)
-xenon =          Element( 54, "xenon", "Xe", 131.2936)
-cesium =         Element( 55, "cesium", "Cs", 132.90545192)
-barium =         Element( 56, "barium", "Ba", 137.3277)
-lanthanum =      Element( 57, "lanthanum", "La", 138.905477)
-cerium =         Element( 58, "cerium", "Ce", 140.1161)
-praseodymium =   Element( 59, "praseodymium", "Pr", 140.907652)
-neodymium =      Element( 60, "neodymium", "Nd", 144.2423)
-promethium =     Element( 61, "promethium", "Pm", 145)
-samarium =       Element( 62, "samarium", "Sm", 150.362)
-europium =       Element( 63, "europium", "Eu", 151.9641)
-gadolinium =     Element( 64, "gadolinium", "Gd", 157.253)
-terbium =        Element( 65, "terbium", "Tb", 158.925352)
-dysprosium =     Element( 66, "dysprosium", "Dy", 162.5001)
-holmium =        Element( 67, "holmium", "Ho", 164.930322)
-erbium =         Element( 68, "erbium", "Er", 167.2593)
-thulium =        Element( 69, "thulium", "Tm", 168.934212)
-ytterbium =      Element( 70, "ytterbium", "Yb", 173.043)
-lutetium =       Element( 71, "lutetium", "Lu", 174.9671)
-hafnium =        Element( 72, "hafnium", "Hf", 178.492)
-tantalum =       Element( 73, "tantalum", "Ta", 180.947882)
-tungsten =       Element( 74, "tungsten", "W", 183.841)
-rhenium =        Element( 75, "rhenium", "Re", 186.2071)
-osmium =         Element( 76, "osmium", "Os", 190.233)
-iridium =        Element( 77, "iridium", "Ir", 192.2173)
-platinum =       Element( 78, "platinum", "Pt", 195.0849)
-gold =           Element( 79, "gold", "Au", 196.9665694)
-mercury =        Element( 80, "mercury", "Hg", 200.592)
-thallium =       Element( 81, "thallium", "Tl", 204.38332)
-lead =           Element( 82, "lead", "Pb", 207.21)
-bismuth =        Element( 83, "bismuth", "Bi", 208.980401)
-polonium =       Element( 84, "polonium", "Po", 209)
-astatine =       Element( 85, "astatine", "At", 210)
-radon =          Element( 86, "radon", "Rn", 222.018)
-francium =       Element( 87, "francium", "Fr", 223)
-radium =         Element( 88, "radium", "Ra", 226)
-actinium =       Element( 89, "actinium", "Ac", 227)
-thorium =        Element( 90, "thorium", "Th", 232.038062)
-protactinium =   Element( 91, "protactinium", "Pa", 231.035882)
-uranium =        Element( 92, "uranium", "U", 238.028913)
-neptunium =      Element( 93, "neptunium", "Np", 237)
-plutonium =      Element( 94, "plutonium", "Pu", 244)
-americium =      Element( 95, "americium", "Am", 243)
-curium =         Element( 96, "curium", "Cm", 247)
-berkelium =      Element( 97, "berkelium", "Bk", 247)
-californium =    Element( 98, "californium", "Cf", 251)
-einsteinium =    Element( 99, "einsteinium", "Es", 252)
-fermium =        Element(100, "fermium", "Fm", 257)
-mendelevium =    Element(101, "mendelevium", "Md", 258)
-nobelium =       Element(102, "nobelium", "No", 259)
-lawrencium =     Element(103, "lawrencium",     "Lr", 262)
-rutherfordium =  Element(104, "rutherfordium",  "Rf", 261)
-dubnium =        Element(105, "dubnium",        "Db", 262)
-seaborgium =     Element(106, "seaborgium",     "Sg", 266)
-bohrium =        Element(107, "bohrium",        "Bh", 264)
-hassium =        Element(108, "hassium",        "Hs", 269)
-meitnerium =     Element(109, "meitnerium",     "Mt", 268)
-darmstadtium =   Element(110, "darmstadtium",   "Ds", 281)
-roentgenium =    Element(111, "roentgenium",    "Rg", 272)
-ununbium =       Element(112, "ununbium",       "Uub", 285)
-ununtrium =      Element(113, "ununtrium",      "Uut", 284)
-ununquadium =    Element(114, "ununquadium",    "Uuq", 289)
-ununpentium =    Element(115, "ununpentium",    "Uup", 288)
-ununhexium =     Element(116, "ununhexium",     "Uuh", 292)
+
+# van der Waals radii are taken from A. Bondi,
+# J. Phys. Chem., 68, 441 - 452, 1964,
+# except the value for H, which is taken from R.S. Rowland & R. Taylor,
+# J.Phys.Chem., 100, 7384 - 7391, 1996. Radii that are not available in
+# either of these publications have RvdW = 2.00 A
+# The radii for Ions (Na, K, Cl, Ca, Mg, and Cs are based on the CHARMM27
+# Rmin/2 parameters for (SOD, POT, CLA, CAL, MG, CES) by default.
+
+hydrogen =       Element(  1,"hydrogen","H", 1.007947, 0.12)
+deuterium =      Element(  1,"deuterium","D", 2.0135532127, 0.12)
+helium =         Element(  2,"helium","He", 4.003, 0.14)
+lithium =        Element(  3,"lithium","Li", 6.9412, 0.182)
+beryllium =      Element(  4,"beryllium","Be", 9.0121823, 0.2)
+boron =          Element(  5,"boron","B", 10.8117, 0.2)
+carbon =         Element(  6,"carbon","C", 12.01078, 0.17)
+nitrogen =       Element(  7,"nitrogen","N", 14.00672, 0.155)
+oxygen =         Element(  8,"oxygen","O", 15.99943, 0.152)
+fluorine =       Element(  9,"fluorine","F", 18.99840325, 0.147)
+neon =           Element( 10,"neon","Ne", 20.17976, 0.154)
+sodium =         Element( 11,"sodium","Na", 22.989769282, 0.136)
+magnesium =      Element( 12,"magnesium","Mg", 24.30506, 0.118)
+aluminum =       Element( 13,"aluminum","Al", 26.98153868, 0.2)
+silicon =        Element( 14,"silicon","Si", 28.08553, 0.21)
+phosphorus =     Element( 15,"phosphorus","P", 30.9737622, 0.18)
+sulfur =         Element( 16,"sulfur","S", 32.0655, 0.18)
+chlorine =       Element( 17,"chlorine","Cl", 35.4532, 0.227)
+argon =          Element( 18,"argon","Ar", 39.9481, 0.188)
+potassium =      Element( 19,"potassium","K", 39.09831, 0.176)
+calcium =        Element( 20,"calcium","Ca", 40.0784, 0.137)
+scandium =       Element( 21,"scandium","Sc", 44.9559126, 0.2)
+titanium =       Element( 22,"titanium","Ti", 47.8671, 0.2)
+vanadium =       Element( 23,"vanadium","V", 50.94151, 0.2)
+chromium =       Element( 24,"chromium","Cr", 51.99616, 0.2)
+manganese =      Element( 25,"manganese","Mn", 54.9380455, 0.2)
+iron =           Element( 26,"iron","Fe", 55.8452, 0.2)
+cobalt =         Element( 27,"cobalt","Co", 58.9331955, 0.2)
+nickel =         Element( 28,"nickel","Ni", 58.69342, 0.163)
+copper =         Element( 29,"copper","Cu", 63.5463, 0.14)
+zinc =           Element( 30,"zinc","Zn", 65.4094, 0.139)
+gallium =        Element( 31,"gallium","Ga", 69.7231, 0.107)
+germanium =      Element( 32,"germanium","Ge", 72.641, 0.2)
+arsenic =        Element( 33,"arsenic","As", 74.921602, 0.185)
+selenium =       Element( 34,"selenium","Se", 78.963, 0.19)
+bromine =        Element( 35,"bromine","Br", 79.9041, 0.185)
+krypton =        Element( 36,"krypton","Kr", 83.7982, 0.202)
+rubidium =       Element( 37,"rubidium","Rb", 85.46783, 0.2)
+strontium =      Element( 38,"strontium","Sr", 87.621, 0.2)
+yttrium =        Element( 39,"yttrium","Y", 88.905852, 0.2)
+zirconium =      Element( 40,"zirconium","Zr", 91.2242, 0.2)
+niobium =        Element( 41,"niobium","Nb", 92.906382, 0.2)
+molybdenum =     Element( 42,"molybdenum","Mo", 95.942, 0.2)
+technetium =     Element( 43,"technetium","Tc", 98, 0.2)
+ruthenium =      Element( 44,"ruthenium","Ru", 101.072, 0.2)
+rhodium =        Element( 45,"rhodium","Rh", 102.905502, 0.2)
+palladium =      Element( 46,"palladium","Pd", 106.421, 0.163)
+silver =         Element( 47,"silver","Ag", 107.86822, 0.172)
+cadmium =        Element( 48,"cadmium","Cd", 112.4118, 0.158)
+indium =         Element( 49,"indium","In", 114.8183, 0.193)
+tin =            Element( 50,"tin","Sn", 118.7107, 0.217)
+antimony =       Element( 51,"antimony","Sb", 121.7601, 0.2)
+tellurium =      Element( 52,"tellurium","Te", 127.603, 0.206)
+iodine =         Element( 53,"iodine","I", 126.904473, 0.198)
+xenon =          Element( 54,"xenon","Xe", 131.2936, 0.216)
+cesium =         Element( 55,"cesium","Cs", 132.90545192, 0.21)
+barium =         Element( 56,"barium","Ba", 137.3277, 0.2)
+lanthanum =      Element( 57,"lanthanum","La", 138.905477, 0.2)
+cerium =         Element( 58,"cerium","Ce", 140.1161, 0.2)
+praseodymium =   Element( 59,"praseodymium","Pr", 140.907652, 0.2)
+neodymium =      Element( 60,"neodymium","Nd", 144.2423, 0.2)
+promethium =     Element( 61,"promethium","Pm", 145, 0.2)
+samarium =       Element( 62,"samarium","Sm", 150.362, 0.2)
+europium =       Element( 63,"europium","Eu", 151.9641, 0.2)
+gadolinium =     Element( 64,"gadolinium","Gd", 157.253, 0.2)
+terbium =        Element( 65,"terbium","Tb", 158.925352, 0.2)
+dysprosium =     Element( 66,"dysprosium","Dy", 162.5001, 0.2)
+holmium =        Element( 67,"holmium","Ho", 164.930322, 0.2)
+erbium =         Element( 68,"erbium","Er", 167.2593, 0.2)
+thulium =        Element( 69,"thulium","Tm", 168.934212, 0.2)
+ytterbium =      Element( 70,"ytterbium","Yb", 173.043, 0.2)
+lutetium =       Element( 71,"lutetium","Lu", 174.9671, 0.2)
+hafnium =        Element( 72,"hafnium","Hf", 178.492, 0.2)
+tantalum =       Element( 73,"tantalum","Ta", 180.947882, 0.2)
+tungsten =       Element( 74,"tungsten","W", 183.841, 0.2)
+rhenium =        Element( 75,"rhenium","Re", 186.2071, 0.2)
+osmium =         Element( 76,"osmium","Os", 190.233, 0.2)
+iridium =        Element( 77,"iridium","Ir", 192.2173, 0.2)
+platinum =       Element( 78,"platinum","Pt", 195.0849, 0.172)
+gold =           Element( 79,"gold","Au", 196.9665694, 0.166)
+mercury =        Element( 80,"mercury","Hg", 200.592, 0.155)
+thallium =       Element( 81,"thallium","Tl", 204.38332, 0.196)
+lead =           Element( 82,"lead","Pb", 207.21, 0.202)
+bismuth =        Element( 83,"bismuth","Bi", 208.980401, 0.2)
+polonium =       Element( 84,"polonium","Po", 209, 0.2)
+astatine =       Element( 85,"astatine","At", 210, 0.2)
+radon =          Element( 86,"radon","Rn", 222.018, 0.2)
+francium =       Element( 87,"francium","Fr", 223, 0.2)
+radium =         Element( 88,"radium","Ra", 226, 0.2)
+actinium =       Element( 89,"actinium","Ac", 227, 0.2)
+thorium =        Element( 90,"thorium","Th", 232.038062, 0.2)
+protactinium =   Element( 91,"protactinium","Pa", 231.035882, 0.2)
+uranium =        Element( 92,"uranium","U", 238.028913, 0.186)
+neptunium =      Element( 93,"neptunium","Np", 237, 0.2)
+plutonium =      Element( 94,"plutonium","Pu", 244, 0.2)
+americium =      Element( 95,"americium","Am", 243, 0.2)
+curium =         Element( 96,"curium","Cm", 247, 0.2)
+berkelium =      Element( 97,"berkelium","Bk", 247, 0.2)
+californium =    Element( 98,"californium","Cf", 251, 0.2)
+einsteinium =    Element( 99,"einsteinium","Es", 252, 0.2)
+fermium =        Element(100,"fermium","Fm", 257, 0.2)
+mendelevium =    Element(101,"mendelevium","Md", 258, 0.2)
+nobelium =       Element(102,"nobelium","No", 259, 0.2)
+lawrencium =     Element(103,"lawrencium","Lr", 262, 0.2)
+rutherfordium =  Element(104,"rutherfordium","Rf", 261, 0.2)
+dubnium =        Element(105,"dubnium","Db", 262, 0.2)
+seaborgium =     Element(106,"seaborgium","Sg", 266, 0.2)
+bohrium =        Element(107,"bohrium","Bh", 264, 0.2)
+hassium =        Element(108,"hassium","Hs", 269, 0.2)
+meitnerium =     Element(109,"meitnerium","Mt", 268, 0.2)
+darmstadtium =   Element(110,"darmstadtium","Ds", 281, 0.2)
+roentgenium =    Element(111,"roentgenium","Rg", 272, 0.2)
+ununbium =       Element(112,"ununbium","Uub", 285, 0.2)
+ununtrium =      Element(113,"ununtrium","Uut", 284, 0.2)
+ununquadium =    Element(114,"ununquadium","Uuq", 289, 0.2)
+ununpentium =    Element(115,"ununpentium","Uup", 288, 0.2)
+ununhexium =     Element(116,"ununhexium","Uuh", 292, 0.2)
 
 # Aliases to recognize common alternative spellings. Both the '==' and 'is'
 # relational operators will work with any chosen name
