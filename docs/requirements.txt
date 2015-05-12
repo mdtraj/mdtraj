@@ -1,5 +1,5 @@
 matplotlib
-sphinx
+sphinx==1.2.3
 boto
 ipython-notebook
 jinja2
