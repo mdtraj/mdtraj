@@ -448,7 +448,7 @@ class AmberNetCDFRestartFile(object):
     """
     distance_unit = 'angstroms'
 
-    def __init__(self, filename, mode='r', force_overwrite=True):
+    def __init__(self, filename, mode='r', force_overwrite=False):
         self._closed = True
         self._mode = mode
         if StrictVersion(import_('scipy.version').short_version) < StrictVersion('0.12.0'):

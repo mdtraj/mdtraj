@@ -4,7 +4,7 @@
 # Copyright 2012-2014 Stanford University and the Authors
 #
 # Authors: Robert McGibbon
-# Contributors: Kyle A. Beauchamp, TJ Lane, Joshua Adelman, Lee-Ping Wang
+# Contributors: Kyle A. Beauchamp, TJ Lane, Joshua Adelman, Lee-Ping Wang, Jason Swails
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -47,6 +47,8 @@ from mdtraj.formats import DTRTrajectoryFile
 from mdtraj.formats import LAMMPSTrajectoryFile
 from mdtraj.formats import XYZTrajectoryFile
 from mdtraj.formats import GroTrajectoryFile
+from mdtraj.formats import AmberNetCDFRestartFile
+from mdtraj.formats import AmberRestartFile
 
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
@@ -1222,6 +1224,7 @@ class Trajectory(object):
                   '.binpos': self.save_binpos,
                   '.nc': self.save_netcdf,
                   '.netcdf': self.save_netcdf,
+                  '.ncrst' : self.save_netcdfrst,
                   '.crd': self.save_mdcrd,
                   '.mdcrd': self.save_mdcrd,
                   '.ncdf': self.save_netcdf,
@@ -1229,7 +1232,8 @@ class Trajectory(object):
                   '.lammpstrj': self.save_lammpstrj,
                   '.xyz': self.save_xyz,
                   '.xyz.gz': self.save_xyz,
-                  '.gro': self.save_gro
+                  '.gro': self.save_gro,
+                  '.rst7' : self.save_amberrst7,
                   }
 
         try:
@@ -1439,7 +1443,7 @@ class Trajectory(object):
         filename : str
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
-            Overwrite anything that exists at filename, if its already there
+            Overwrite anything that exists at filename, if it's already there
         """
         self._check_valid_unitcell()
         with NetCDFTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
@@ -1447,6 +1451,80 @@ class Trajectory(object):
                     time=self.time,
                     cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
+
+    def save_netcdfrst(self, filename, force_overwrite=True):
+        """Save trajectory in AMBER NetCDF restart format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the restart
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if it's already there
+
+        Notes
+        -----
+        NetCDF restart files can only store a single frame. If only one frame
+        exists, "filename" will be written.  Otherwise, "filename.#" will be
+        written, where # is a zero-padded number from 1 to the total number of
+        frames in the trajectory
+        """
+        self._check_valid_unitcell()
+        if self.n_frames == 1:
+            with AmberNetCDFRestartFile(filename, 'w', force_overwrite=force_overwrite) as f:
+                coordinates = in_units_of(self._xyz, Trajectory._distance_unit,
+                                          NetCDFRestartFile.distance_unit)
+                lengths = in_units_of(self.unitcell_lengths, Trajectory._distance_unit,
+                                      NetCDFRestartFile.distance_unit)
+                f.write(coordinates=coordinates, time=self.time[0],
+                        cell_lengths=lengths, cell_angles=self.unitcell_angles)
+        else:
+            fmt = '%s.%%0%dd' % (filename, len(str(self.n_frames)))
+            for i in xrange(self.n_frames):
+                with AmberNetCDFRestartFile(fmt % (i+1), 'w', force_overwrite=force_overwrite) as f:
+                    coordinates = in_units_of(self._xyz, Trajectory._distance_unit,
+                                              NetCDFRestartFile.distance_unit)
+                    lengths = in_units_of(self.unitcell_lengths, Trajectory._distance_unit,
+                                          NetCDFRestartFile.distance_unit)
+                    f.write(coordinates=coordinates, time=self.time[0],
+                            cell_lengths=lengths, cell_angles=self.unitcell_angles)
+
+    def save_amberrst7(self, filename, force_overwrite=True):
+        """Save trajectory in AMBER ASCII restart format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the restart
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if it's already there
+
+        Notes
+        -----
+        Amber restart files can only store a single frame. If only one frame
+        exists, "filename" will be written.  Otherwise, "filename.#" will be
+        written, where # is a zero-padded number from 1 to the total number of
+        frames in the trajectory
+        """
+        self._check_valid_unitcell()
+        if self.n_frames == 1:
+            with AmberRestartFile(filename, 'w', force_overwrite=force_overwrite) as f:
+                coordinates = in_units_of(self._xyz, Trajectory._distance_unit,
+                                          NetCDFRestartFile.distance_unit)
+                lengths = in_units_of(self.unitcell_lengths, Trajectory._distance_unit,
+                                      NetCDFRestartFile.distance_unit)
+                f.write(coordinates=coordinates, time=self.time[0],
+                        cell_lengths=lengths, cell_angles=self.unitcell_angles)
+        else:
+            fmt = '%s.%%0%dd' % (filename, len(str(self.n_frames)))
+            for i in xrange(self.n_frames):
+                with AmberRestartFile(fmt % (i+1), 'w', force_overwrite=force_overwrite) as f:
+                    coordinates = in_units_of(self._xyz, Trajectory._distance_unit,
+                                              NetCDFRestartFile.distance_unit)
+                    lengths = in_units_of(self.unitcell_lengths, Trajectory._distance_unit,
+                                          NetCDFRestartFile.distance_unit)
+                    f.write(coordinates=coordinates, time=self.time[0],
+                            cell_lengths=lengths, cell_angles=self.unitcell_angles)
 
     def save_lh5(self, filename):
         """Save trajectory in deprecated MSMBuilder2 LH5 (lossy HDF5) format.
