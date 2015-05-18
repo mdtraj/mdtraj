@@ -1473,9 +1473,9 @@ class Trajectory(object):
         if self.n_frames == 1:
             with AmberNetCDFRestartFile(filename, 'w', force_overwrite=force_overwrite) as f:
                 coordinates = in_units_of(self._xyz, Trajectory._distance_unit,
-                                          NetCDFRestartFile.distance_unit)
+                                          AmberNetCDFRestartFile.distance_unit)
                 lengths = in_units_of(self.unitcell_lengths, Trajectory._distance_unit,
-                                      NetCDFRestartFile.distance_unit)
+                                      AmberNetCDFRestartFile.distance_unit)
                 f.write(coordinates=coordinates, time=self.time[0],
                         cell_lengths=lengths, cell_angles=self.unitcell_angles)
         else:
@@ -1483,11 +1483,11 @@ class Trajectory(object):
             for i in xrange(self.n_frames):
                 with AmberNetCDFRestartFile(fmt % (i+1), 'w', force_overwrite=force_overwrite) as f:
                     coordinates = in_units_of(self._xyz, Trajectory._distance_unit,
-                                              NetCDFRestartFile.distance_unit)
+                                              AmberNetCDFRestartFile.distance_unit)
                     lengths = in_units_of(self.unitcell_lengths, Trajectory._distance_unit,
-                                          NetCDFRestartFile.distance_unit)
-                    f.write(coordinates=coordinates, time=self.time[0],
-                            cell_lengths=lengths, cell_angles=self.unitcell_angles)
+                                          AmberNetCDFRestartFile.distance_unit)
+                    f.write(coordinates=coordinates[i], time=self.time[i],
+                            cell_lengths=lengths[i], cell_angles=self.unitcell_angles[i])
 
     def save_amberrst7(self, filename, force_overwrite=True):
         """Save trajectory in AMBER ASCII restart format
@@ -1510,9 +1510,9 @@ class Trajectory(object):
         if self.n_frames == 1:
             with AmberRestartFile(filename, 'w', force_overwrite=force_overwrite) as f:
                 coordinates = in_units_of(self._xyz, Trajectory._distance_unit,
-                                          NetCDFRestartFile.distance_unit)
+                                          AmberRestartFile.distance_unit)
                 lengths = in_units_of(self.unitcell_lengths, Trajectory._distance_unit,
-                                      NetCDFRestartFile.distance_unit)
+                                      AmberRestartFile.distance_unit)
                 f.write(coordinates=coordinates, time=self.time[0],
                         cell_lengths=lengths, cell_angles=self.unitcell_angles)
         else:
@@ -1520,11 +1520,11 @@ class Trajectory(object):
             for i in xrange(self.n_frames):
                 with AmberRestartFile(fmt % (i+1), 'w', force_overwrite=force_overwrite) as f:
                     coordinates = in_units_of(self._xyz, Trajectory._distance_unit,
-                                              NetCDFRestartFile.distance_unit)
+                                              AmberRestartFile.distance_unit)
                     lengths = in_units_of(self.unitcell_lengths, Trajectory._distance_unit,
-                                          NetCDFRestartFile.distance_unit)
-                    f.write(coordinates=coordinates, time=self.time[0],
-                            cell_lengths=lengths, cell_angles=self.unitcell_angles)
+                                          AmberRestartFile.distance_unit)
+                    f.write(coordinates=coordinates[i], time=self.time[0],
+                            cell_lengths=lengths[i], cell_angles=self.unitcell_angles[i])
 
     def save_lh5(self, filename):
         """Save trajectory in deprecated MSMBuilder2 LH5 (lossy HDF5) format.
