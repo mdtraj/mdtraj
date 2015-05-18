@@ -24,7 +24,7 @@ Example Usage
    simulation = Simulation(pdb.topology, system, integrator)
    simulation.context.setPositions(pdb.positions)
    simulation.minimizeEnergy()
-   simulation.reporters.append(NetCDFReporter('output.nc'), 1000)   # <-- AMBER compatible
+   simulation.reporters.append(NetCDFReporter('output.nc', 1000))   # <-- AMBER compatible
    simulation.step(10000)
 
 .. currentmodule:: mdtraj.reporters
