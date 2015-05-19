@@ -39,8 +39,8 @@ def teardown_module(module):
     this gets automatically called by nose"""
     os.close(fd1)
     os.close(fd2)
-    os.unlink(temp1)
-    os.unlink(temp2)
+    if os.path.exists(temp1): os.unlink(temp1)
+    if os.path.exists(temp2): os.unlink(temp2)
 
 def test_read_after_close():
     f = AmberNetCDFRestartFile(get_fn('ncinpcrd.rst7'))
