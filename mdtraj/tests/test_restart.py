@@ -27,20 +27,20 @@ Tests for the AMBER netcdf reader/writer code
 
 from mdtraj.formats import AmberRestartFile, AmberNetCDFRestartFile
 import os, tempfile
-from nose.tools import assert_raises
+from nose.tools import assert_raises, assert_true
 import numpy as np
 import mdtraj as md
-from mdtraj.testing import get_fn, eq
+from mdtraj.testing import get_fn, eq, assert_allclose
 
 fd1, temp1 = tempfile.mkstemp(suffix='.rst7')
 fd2, temp2 = tempfile.mkstemp(suffix='.ncrst')
+os.close(fd1)
+os.close(fd2)
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
-    os.close(fd1)
-    os.close(fd2)
-    os.unlink(temp1)
-    os.unlink(temp2)
+    if os.path.exists(temp1): os.unlink(temp1)
+    if os.path.exists(temp2): os.unlink(temp2)
 
 def test_read_after_close():
     f = AmberNetCDFRestartFile(get_fn('ncinpcrd.rst7'))
@@ -103,3 +103,27 @@ def test_read_write_2():
         yield lambda: eq(b, time)
         yield lambda: eq(c, boxlengths)
         yield lambda: eq(d, boxangles)
+
+def test_read_write_3():
+    traj = md.load(get_fn('frame0.nc'), top=get_fn('native.pdb'))
+    traj[0].save(temp1)
+    assert_true(os.path.exists(temp1))
+    rsttraj = md.load(temp1, top=get_fn('native.pdb'))
+    assert_allclose(rsttraj.xyz, traj[0].xyz)
+    os.unlink(temp1)
+    traj.save(temp1)
+    for i in range(traj.n_frames):
+        assert_true(os.path.exists('%s.%03d' % (temp1, i+1)))
+        os.unlink('%s.%03d' % (temp1, i+1))
+
+def test_read_write_4():
+    traj = md.load(get_fn('frame0.nc'), top=get_fn('native.pdb'))
+    traj[0].save(temp2)
+    assert_true(os.path.exists(temp2))
+    rsttraj = md.load(temp2, top=get_fn('native.pdb'))
+    assert_allclose(rsttraj.xyz, traj[0].xyz)
+    os.unlink(temp2)
+    traj.save(temp2)
+    for i in range(traj.n_frames):
+        assert_true(os.path.exists('%s.%03d' % (temp2, i+1)))
+        os.unlink('%s.%03d' % (temp2, i+1))
