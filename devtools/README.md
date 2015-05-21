@@ -5,9 +5,10 @@ Assorted notes for developers.
 
 How to do a release
 -------------------
-- Update the whatsnew.rst document. Use the github view that shows all the
+- Update the `docs/whatsnew.rst` document. Use the github view that shows all the
   commits to master since the last release to write it.
 - Update the version number in `setup.py`, change `ISRELEASED` to `True`
+- Update the version number in `devtools/conda-recipe/meta.yaml`
 - Commit to master, and [tag](https://github.com/mdtraj/mdtraj/releases) the
   release on github
 - To push the source to PyPI, use `python setup.py sdist --formats=gztar,zip upload`
@@ -34,7 +35,7 @@ As of version 0.7-dev (0.8 release) multiple versions of the docs are hosted
 online. When a build happens on a version with ISRELEASED==False, it's put into
 the "latest" folder on the S3 bucket. If ISRELEASED==True, it's put into a
 subfolder with the name of the short release. The relevant logic is in
-`tools/ci/push-docs-to-s3.py`.
+`tools/travis-ci/push-docs-to-s3.py`.
 
 In order for the select bar at the bottom of the docs that toggles between
 versions to work, these folders MUST match up with the tag names on github.
@@ -47,5 +48,5 @@ version. The logic that populates the version dropdown menu in the browser is in
 
 Specifically note that it goes to https://api.github.com/repos/rmcgibbo/mdtraj/releases,
 and uses the `tag_names` to build the links. So these much line up with the
-prefix of `mdtraj.version.short_version` used in `tools/ci/push-docs-to-s3.py`
+prefix of `mdtraj.version.short_version` used in `tools/travis-ci/push-docs-to-s3.py`
 for the links not to break.

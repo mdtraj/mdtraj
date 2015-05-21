@@ -1,5 +1,5 @@
 Fraction of Native Contacts
 ===========================
 
-.. notebook:: native-contact.ipynb
+.. notebook:: examples/native-contact.ipynb
    :skip_exceptions:

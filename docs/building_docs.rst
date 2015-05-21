@@ -22,8 +22,3 @@ Now, go back to the docs subdirectory in the main repository. The documentation 
     make html
 
 
-Building the documentation on Python 3
----------------------------------------
-
-Numpydoc 0.5 is not compatible with Python 3. At the time of writing, v0.6 is unreleased, but the development version can be used to build the MDTraj documentation.
-

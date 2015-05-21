@@ -1,3 +1,5 @@
+.. _examples:
+
 MDTraj Examples
 ====================
 
@@ -13,7 +15,7 @@ If you installed `MDTraj` from source, you will need to navigate to
 files, start an IPython notebook server:
 
 .. code:: bash
-  
+
    $ ipython notebook
 
 .. warning:: The pre-filled out notebooks are *far* less fun than running them

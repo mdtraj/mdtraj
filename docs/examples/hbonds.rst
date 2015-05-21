@@ -1,5 +1,5 @@
 Baker-Hubbard Hydrogen Bond Identification
 ==========================================
 
-.. notebook:: hbonds.ipynb
+.. notebook:: examples/hbonds.ipynb
    :skip_exceptions:

@@ -57,10 +57,12 @@ Distances
 
     compute_distances
     compute_displacements
+    compute_neighbors
     compute_contacts
     compute_drid
     compute_center_of_mass
     geometry.squareform
+    compute_rdf
 
 
 Bond Angles and Dihedrals
@@ -91,3 +93,20 @@ NMR Observables
     reindex_dataframe_by_atoms
 
 
+Thermodynamic Quantities
+------------------------
+.. autosummary::
+    :toctree: api/generated/
+
+    dipole_moments
+    static_dielectric
+    isothermal_compressability_kappa_T
+    thermal_expansion_alpha_P
+    density
+
+Order Parameters
+----------------
+.. autosummary::
+    :toctree: api/generated/
+
+    compute_nematic_order
