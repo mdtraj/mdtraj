@@ -568,6 +568,7 @@ class Topology(object):
         atom : mdtraj.topology.Atom
             the newly created Atom
         """
+        if element is None: element = elem.virtual
         atom = Atom(name, element, self._numAtoms, residue, serial=serial)
         self._atoms.append(atom)
         self._numAtoms += 1
