@@ -82,7 +82,7 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
         try:
             element = elem.get_by_symbol(element_symbol)
         except KeyError:
-            element = None
+            element = elem.virtual
         
         topology.add_atom(atom_name, element,
                           registered_residues[ResidueID[i]])

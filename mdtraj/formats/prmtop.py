@@ -199,7 +199,7 @@ def load_prmtop(filename):
             try:
                 element = elem.Element.getByAtomicNumber(int(raw_data['ATOMIC_NUMBER'][index]))
             except KeyError:
-                element = None
+                element = elem.virtual
         else:
             # Try to guess the element from the atom name.
 
@@ -216,7 +216,7 @@ def load_prmtop(filename):
                 try:
                     element = elem.get_by_symbol(atom_name[0])
                 except KeyError:
-                    element = None
+                    element = elem.virtual
 
         top.add_atom(atom_name, element, r)
 

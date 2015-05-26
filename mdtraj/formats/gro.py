@@ -277,13 +277,12 @@ class GroTrajectoryFile(object):
                         atomReplacements = {}
 
                 thiselem = thisatomname
-                element = None
                 if len(thiselem) > 1:
                     thiselem = thiselem[0] + sub('[A-Z0-9]','',thiselem[1:])
                 try:
                     element = elem.get_by_symbol(thiselem)
                 except KeyError:
-                    pass
+                    element = elem.virtual
                 if thisatomname in atomReplacements:
                     thisatomname = atomReplacements[thisatomname]
 

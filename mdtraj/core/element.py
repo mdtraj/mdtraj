@@ -189,6 +189,13 @@ class Element(tuple):
         """Atomic number"""
         return tuple.__getitem__(self, 0)
 
+    # Make it so only virtual sites evaluate to boolean False (since it's really
+    # *not* an element)
+    def __bool__(self):
+        return bool(self.mass)
+
+    def __nonzero__(self):
+        return bool(self.mass)
 
 
 
@@ -207,6 +214,7 @@ def get_by_symbol(symbol):
 # The radii for Ions (Na, K, Cl, Ca, Mg, and Cs are based on the CHARMM27
 # Rmin/2 parameters for (SOD, POT, CLA, CAL, MG, CES) by default.
 
+virtual =        Element(  0,"virtual site","VS", 0.0, 0.0)
 hydrogen =       Element(  1,"hydrogen","H", 1.007947, 0.12)
 deuterium =      Element(  1,"deuterium","D", 2.0135532127, 0.12)
 helium =         Element(  2,"helium","He", 4.003, 0.14)
@@ -329,3 +337,4 @@ ununhexium =     Element(116,"ununhexium","Uuh", 292, 0.2)
 # relational operators will work with any chosen name
 sulphur = sulfur
 aluminium = aluminum
+virtual_site = virtual
