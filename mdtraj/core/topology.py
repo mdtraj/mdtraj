@@ -353,7 +353,7 @@ class Topology(object):
         """
         pd = import_('pandas')
         data = [(atom.serial, atom.name, atom.element.symbol,
-                 atomm.residue.resSeq, atom.residue.name,
+                 atom.residue.resSeq, atom.residue.name,
                  atom.residue.chain.index) for atom in self.atoms]
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
