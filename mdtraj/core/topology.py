@@ -421,7 +421,7 @@ class Topology(object):
                 for atom_index, atom in residue_atoms.iterrows():
                     atom_index = int(atom_index)  # Fixes bizarre hashing issue on Py3K.  See #545
                     a = Atom(atom['name'], elem.get_by_symbol(atom['element']),
-                             r, serial=atom['serial'])
+                             atom_index, r, serial=atom['serial'])
                     out._atoms[atom_index] = a
                     r._atoms.append(a)
 
