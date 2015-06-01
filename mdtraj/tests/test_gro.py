@@ -29,32 +29,37 @@ from mdtraj.testing import get_fn, eq, DocStringFormatTester
 TestDocstrings = DocStringFormatTester(gro, error_on_none=True)
 
 fd, temp = tempfile.mkstemp(suffix='.gro')
+os.close(fd)
+
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
-    os.close(fd)
     os.unlink(temp)
 
 
 def test_read_write():
-    t = md.load(get_fn('4waters.pdb'))
-    with GroTrajectoryFile(temp, 'w') as f:
-        f.write(t.xyz, t.topology)
+    for t in [md.load(get_fn('4waters.pdb')),   # no unit cell
+              md.load(get_fn('native2.pdb'))]:  # unit cell
+        with GroTrajectoryFile(temp, 'w') as f:
+            f.write(t.xyz, t.topology, unitcell_vectors=t.unitcell_vectors)
 
-    with GroTrajectoryFile(temp) as f:
-        xyz, time, unitcell = f.read()
-        top = f.topology
+        with GroTrajectoryFile(temp) as f:
+            xyz, time, unitcell = f.read()
+            top = f.topology
 
-    eq(xyz, t.xyz, decimal=3)
-    eq(list(top.atoms), list(t.top.atoms))
-
+        eq(xyz, t.xyz, decimal=3)
+        eq(list(top.atoms), list(t.top.atoms))
+        if t.unitcell_vectors is not None:
+            eq(unitcell, t.unitcell_vectors)
 
 def test_load():
-    tref = md.load(get_fn('4waters.pdb'))
-    with GroTrajectoryFile(temp, 'w') as f:
-        f.write(tref.xyz, tref.topology)
+    for tref in [md.load(get_fn('4waters.pdb')),   # no unit cell
+                 md.load(get_fn('native2.pdb'))]:  # unit cell
+        with GroTrajectoryFile(temp, 'w') as f:
+            f.write(tref.xyz, tref.topology, unitcell_vectors=tref.unitcell_vectors)
 
-    t = md.load(temp)
+        t = md.load(temp)
+        eq(t.xyz, tref.xyz, decimal=3)
+        eq(list(t.top.atoms), list(tref.top.atoms))
+        eq(t.unitcell_vectors, tref.unitcell_vectors)
 
-    eq(t.xyz, tref.xyz, decimal=3)
-    eq(list(t.top.atoms), list(tref.top.atoms))
