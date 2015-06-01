@@ -68,7 +68,7 @@ J3_HN_HA_uncertainties = {
     "Bax2007": 0.36,
     "Bax1997": 0.39
 }
- 
+
 ##############################################################################
 # Functions
 ##############################################################################
@@ -76,6 +76,7 @@ J3_HN_HA_uncertainties = {
 def _J3_function(phi, A, B, C, phi0):
     """Return a scalar couplings with a given choice of karplus coefficients.  USES RADIANS!"""
     return A * np.cos(phi + phi0) ** 2. + B * np.cos(phi + phi0) + C
+
 
 def compute_J3_HN_HA(traj, model="Bax2007"):
     """Calculate the scalar coupling between HN and H_alpha.
@@ -96,7 +97,7 @@ def compute_J3_HN_HA(traj, model="Bax2007"):
     -------
     indices : np.ndarray, shape=(n_phi, 4), dtype=int
         Atom indices (zero-based) of the phi dihedrals
-    J : np.ndarray, shape=(n_phi, n_frames)
+    J : np.ndarray, shape=(n_frames, n_phi)
         Scalar couplings (J3_HN_HA, in [Hz]) of this trajectory.
         `J[k]` corresponds to the phi dihedral associated with
         atoms `indices[k]`
@@ -132,6 +133,7 @@ def compute_J3_HN_HA(traj, model="Bax2007"):
     J = _J3_function(phi, **J3_HN_HA_coefficients[model])
     return indices, J
 
+
 def compute_J3_HN_C(traj, model="Bax2007"):
     """Calculate the scalar coupling between HN and C_prime.
 
@@ -150,7 +152,7 @@ def compute_J3_HN_C(traj, model="Bax2007"):
     -------
     indices : np.ndarray, shape=(n_phi, 4), dtype=int
         Atom indices (zero-based) of the phi dihedrals
-    J : np.ndarray, shape=(n_phi, n_frames)
+    J : np.ndarray, shape=(n_frames, n_phi)
         Scalar couplings (J3_HN_C, in [Hz]) of this trajectory.
         `J[k]` corresponds to the phi dihedral associated with
         atoms `indices[k]`
@@ -176,6 +178,7 @@ def compute_J3_HN_C(traj, model="Bax2007"):
     J = _J3_function(phi, **J3_HN_C_coefficients[model])
     return indices, J
 
+
 def compute_J3_HN_CB(traj, model="Bax2007"):
     """Calculate the scalar coupling between HN and C_beta.
 
@@ -194,7 +197,7 @@ def compute_J3_HN_CB(traj, model="Bax2007"):
     -------
     indices : np.ndarray, shape=(n_phi, 4), dtype=int
         Atom indices (zero-based) of the phi dihedrals
-    J : np.ndarray, shape=(n_phi, n_frames)
+    J : np.ndarray, shape=(n_frames, n_phi)
         Scalar couplings (J3_HN_CB, in [Hz]) of this trajectory.
         `J[k]` corresponds to the phi dihedral associated with
         atoms `indices[k]`
