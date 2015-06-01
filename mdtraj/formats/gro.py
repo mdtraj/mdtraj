@@ -340,8 +340,8 @@ class GroTrajectoryFile(object):
         box = [boxvectors[i] if i < len(boxvectors) else 0 for i in range(9)]
         unitcell_vectors = np.array([
             [box[0], box[3], box[4]],
-            [box[1], box[5], box[6]],
-            [box[2], box[7], box[8]]])
+            [box[5], box[1], box[6]],
+            [box[7], box[8], box[2]]])
 
         return xyz, unitcell_vectors, time
 
