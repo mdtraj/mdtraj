@@ -282,7 +282,7 @@ class ArcTrajectoryFile(object):
     def _read(self):
         "Read a single frame"
         from mdtraj.core.topology import Topology
-        from mdtraj.core.element import Element
+        from mdtraj.core.element import Element, virtual
         # Read in the number of atoms.
         line = self._fh.readline()
         if line == '':
@@ -338,7 +338,7 @@ class ArcTrajectoryFile(object):
                     try:
                         elem = Element.getBySymbol(at[0])
                     except KeyError:
-                        elem = None
+                        elem = virtual
                 top.add_atom(at, elem, res)
             # Now add the bonds
             atoms = list(top.atoms)

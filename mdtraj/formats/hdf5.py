@@ -333,7 +333,7 @@ class HDF5TrajectoryFile(object):
                     try:
                         element = elem.get_by_symbol(atom_dict['element'])
                     except KeyError:
-                        element = None
+                        element = elem.virtual
                     topology.add_atom(atom_dict['name'], element, residue)
 
         atoms = list(topology.atoms)

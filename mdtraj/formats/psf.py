@@ -258,7 +258,7 @@ def load_psf(fname):
         elif upper == 'CAL':
             element = elem.calcium
         elif mass == 0:
-            element = None
+            element = elem.virtual
         else:
             element = elem.Element.getByMass(mass*u.dalton)
         top.add_atom(name, element, r)

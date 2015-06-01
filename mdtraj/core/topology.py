@@ -283,7 +283,11 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.addResidue(residue.name, c)
                 for atom in residue.atoms:
-                    a = out.addAtom(atom.name, app.Element.getBySymbol(atom.element.symbol), r)
+                    if atom.element is elem.virtual:
+                        element = None
+                    else:
+                        element = app.Element.getBySymbol(atom.element.symbol)
+                    a = out.addAtom(atom.name, element, r)
                     atom_mapping[atom] = a
 
         for a1, a2 in self.bonds:
@@ -324,7 +328,11 @@ class Topology(object):
             for residue in chain.residues():
                 r = out.add_residue(residue.name, c)
                 for atom in residue.atoms():
-                    a = out.add_atom(atom.name, elem.get_by_symbol(atom.element.symbol), r)
+                    if atom.element is None:
+                        element = elem.virtual
+                    else:
+                        element = elem.get_by_symbol(atom.element.symbol)
+                    a = out.add_atom(atom.name, element, r)
                     atom_mapping[atom] = a
 
         for a1, a2 in value.bonds():
@@ -344,15 +352,9 @@ class Topology(object):
             of the indices of the atoms involved in each bond.
         """
         pd = import_('pandas')
-        data = []
-        for atom in self.atoms:
-            if atom.element is None:
-                element_symbol = ""
-            else:
-                element_symbol = atom.element.symbol
-            data.append((atom.serial, atom.name, element_symbol,
-                         atom.residue.resSeq, atom.residue.name,
-                         atom.residue.chain.index))
+        data = [(atom.serial, atom.name, atom.element.symbol,
+                 atom.residue.resSeq, atom.residue.name,
+                 atom.residue.chain.index) for atom in self.atoms]
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
                                             "resSeq", "resName", "chainID"])
@@ -418,12 +420,8 @@ class Topology(object):
 
                 for atom_index, atom in residue_atoms.iterrows():
                     atom_index = int(atom_index)  # Fixes bizarre hashing issue on Py3K.  See #545
-                    serial = atom["serial"]
-                    if atom['element'] == "":
-                        element = None
-                    else:
-                        element = elem.get_by_symbol(atom['element'])
-                    a = Atom(atom['name'], element, atom_index, r, serial=serial)
+                    a = Atom(atom['name'], elem.get_by_symbol(atom['element']),
+                             atom_index, r, serial=atom['serial'])
                     out._atoms[atom_index] = a
                     r._atoms.append(a)
 
@@ -493,12 +491,10 @@ class Topology(object):
                 for a1, a2 in zip(r1.atoms, r2.atoms):
                     if (a1.index != a2.index)  or (a1.name != a2.name):
                         return False
-                    if a1.element is not None and a2.element is not None:
-                        if a1.element != a2.element:
-                            return False
-                        #for attr in ['atomic_number', 'name', 'symbol']:
-                        #    if getattr(a1.element, attr) != getattr(a2.element, attr):
-                        #        return False
+                    if a1.element is not a2.element: return False
+                    #for attr in ['atomic_number', 'name', 'symbol']:
+                    #    if getattr(a1.element, attr) != getattr(a2.element, attr):
+                    #        return False
 
         if len(self._bonds) != len(other._bonds):
             return False
@@ -572,6 +568,7 @@ class Topology(object):
         atom : mdtraj.topology.Atom
             the newly created Atom
         """
+        if element is None: element = elem.virtual
         atom = Atom(name, element, self._numAtoms, residue, serial=serial)
         self._atoms.append(atom)
         self._numAtoms += 1
