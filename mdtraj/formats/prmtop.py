@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: TJ Lane
-# Contributors: Robert McGibbon
+# Contributors: Robert McGibbon, Jason Swails
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -118,31 +118,35 @@ def load_prmtop(filename):
     flags      = []
     raw_format = {}
     raw_data   = {}
+    ignoring = False
 
     with open(filename, 'r') as f:
         for line in f:
-            if line.startswith('%VERSION'):
-                tag, prmtop_version = line.rstrip().split(None, 1)
+            if line[0] == '%':
+                if line.startswith('%VERSION'):
+                    tag, prmtop_version = line.rstrip().split(None, 1)
 
-            elif line.startswith('%FLAG'):
-                tag, flag = line.rstrip().split(None, 1)
-                flags.append(flag)
-                raw_data[flag] = []
+                elif line.startswith('%FLAG'):
+                    tag, flag = line.rstrip().split(None, 1)
+                    flags.append(flag)
+                    raw_data[flag] = []
+                    ignoring = flag in ('TITLE', 'CTITLE')
 
-            elif line.startswith('%FORMAT'):
-                format = line.rstrip()
-                index0=format.index('(')
-                index1=format.index(')')
-                format = format[index0+1:index1]
-                m = FORMAT_RE_PATTERN.search(format)
-                raw_format[flags[-1]] = (format, m.group(1), m.group(2), m.group(3), m.group(4))
+                elif line.startswith('%FORMAT'):
+                    format = line.rstrip()
+                    index0=format.index('(')
+                    index1=format.index(')')
+                    format = format[index0+1:index1]
+                    m = FORMAT_RE_PATTERN.search(format)
+                    if m is None:
+                        ignoring = True
+                    else:
+                        raw_format[flags[-1]] = (format, m.group(1), m.group(2), m.group(3), m.group(4))
 
-            elif flags \
-                 and 'TITLE'==flags[-1] \
-                 and not raw_data['TITLE']:
-                raw_data['TITLE'] = line.rstrip()
+                elif line.startswith('%COMMENT'):
+                    continue
 
-            else:
+            elif not ignoring:
                 flag=flags[-1]
                 format, numItems, itemType, itemLength, itemPrecision = raw_format[flag]
                 iLength=int(itemLength)

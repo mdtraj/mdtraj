@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: TJ Lane
-# Contributors: Robert McGibbon
+# Contributors: Robert McGibbon, Jason Swails
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -38,3 +38,10 @@ def test_load_binpos_w_prmtop():
 
     eq(traj.topology, ref_traj.topology)
     eq(traj.xyz, ref_traj.xyz)
+
+def test_load_chamber_prmtop():
+    top = prmtop.load_prmtop(get_fn('ala3_chamber.parm7'))
+    eq(top.n_atoms, 33)
+    eq(top.n_residues, 3)
+    eq(top.n_bonds, 32)
+    eq(top.n_chains, 1)
