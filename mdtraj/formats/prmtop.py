@@ -118,6 +118,7 @@ def load_prmtop(filename):
     flags      = []
     raw_format = {}
     raw_data   = {}
+    ignoring = False
 
     with open(filename, 'r') as f:
         for line in f:
@@ -126,8 +127,10 @@ def load_prmtop(filename):
 
             elif line.startswith('%FLAG'):
                 tag, flag = line.rstrip().split(None, 1)
+                if flag == 'CTITLE': flag = 'TITLE' # hack for chamber
                 flags.append(flag)
                 raw_data[flag] = []
+                ignoring = False
 
             elif line.startswith('%FORMAT'):
                 format = line.rstrip()
@@ -135,14 +138,21 @@ def load_prmtop(filename):
                 index1=format.index(')')
                 format = format[index0+1:index1]
                 m = FORMAT_RE_PATTERN.search(format)
-                raw_format[flags[-1]] = (format, m.group(1), m.group(2), m.group(3), m.group(4))
+                if m is None:
+                    ignoring = True
+                    raw_format[flags[-1]] = None
+                else:
+                    raw_format[flags[-1]] = (format, m.group(1), m.group(2), m.group(3), m.group(4))
+
+            elif line.startswith('%COMMENT'):
+                continue
 
             elif flags \
                  and 'TITLE'==flags[-1] \
                  and not raw_data['TITLE']:
                 raw_data['TITLE'] = line.rstrip()
 
-            else:
+            elif not ignoring:
                 flag=flags[-1]
                 format, numItems, itemType, itemLength, itemPrecision = raw_format[flag]
                 iLength=int(itemLength)
