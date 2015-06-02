@@ -249,7 +249,6 @@ class NetCDFTrajectoryFile(object):
         if 'time' in self._handle.variables:
             time = self._handle.variables['time'][frame_slice]
         else:
-            warnings.warn('No time information found in the NetCDF file')
             time = None
 
         if 'cell_lengths' in self._handle.variables:

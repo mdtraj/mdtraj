@@ -570,7 +570,6 @@ class AmberNetCDFRestartFile(object):
         if 'time' in self._handle.variables:
             time = self._handle.variables['time'].getValue()
         else:
-            warnings.warn('No time found in NetCDF file.')
             time = None
 
         # scipy.io.netcdf variables are mem-mapped, and are only backed by valid
