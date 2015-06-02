@@ -57,7 +57,7 @@ from mdtraj.formats.gro import load_gro
 from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.core.topology import Topology
 from mdtraj.core.residue_names import _SOLVENT_TYPES
-from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_vectors, 
+from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_vectors,
                           box_vectors_to_lengths_and_angles, cast_indices,
                           deprecated)
 from mdtraj.utils.six.moves import xrange
@@ -231,7 +231,7 @@ def load_frame(filename, index, top=None, atom_indices=None):
         If not none, then read only a subset of the atoms coordinates from the
         file. These indices are zero-based (not 1 based, as used by the PDB
         format).
-        
+
     Examples
     --------
     >>> import mdtraj as md
@@ -310,15 +310,15 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     >>> traj = md.load('output.xtc', top='topology.pdb')
     >>> print traj
     <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>
-    
+
     >>> traj2 = md.load('output.xtc', stride=2, top='topology.pdb')
     >>> print traj2
     <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>
-    
+
     >>> traj3 = md.load_hdf5('output.xtc', atom_indices=[0,1] top='topology.pdb')
     >>> print traj3
     <mdtraj.Trajectory with 500 frames, 2 atoms at 0x18236e4a0>
-    
+
     Returns
     -------
     trajectory : md.Trajectory
@@ -415,7 +415,7 @@ def iterload(filename, chunk=100, **kwargs):
     See Also
     --------
     load, load_frame
-        
+
     Examples
     --------
     >>> import mdtraj as md
@@ -732,7 +732,7 @@ class Trajectory(object):
             in frame ``i`` are given by the three vectors, ``value[i, 0, :]``,
             ``value[i, 1, :]``, and ``value[i, 2, :]``.
         """
-        if vectors is None:
+        if vectors is None or np.all(np.abs(vectors) < 1e-15):
             self._unitcell_lengths = None
             self._unitcell_angles = None
             return
@@ -1300,8 +1300,8 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         bfactors : array_like, default=None, shape=(n_frames, n_atoms) or (n_atoms,)
-            Save bfactors with pdb file. If the array is two dimensional it should 
-            contain a bfactor for each atom in each frame of the trajectory. 
+            Save bfactors with pdb file. If the array is two dimensional it should
+            contain a bfactor for each atom in each frame of the trajectory.
             Otherwise, the same bfactor will be saved in each frame.
         """
         self._check_valid_unitcell()
@@ -1319,7 +1319,7 @@ class Trajectory(object):
 
         else:
             bfactors = [None] * self.n_frames
-                
+
 
         with PDBTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             for i in xrange(self.n_frames):
@@ -1653,7 +1653,7 @@ class Trajectory(object):
         inplace : bool, default=False
             The return value is either ``self``, or the new trajectory,
             depending on the value of ``inplace``.
-        
+
         Returns
         -------
         traj : md.Trajectory
@@ -1668,15 +1668,15 @@ class Trajectory(object):
                 raise TypeError('exclude must be array-like')
             if not isinstance(exclude, Iterable):
                 raise TypeError('exclude is not iterable')
-        
+
             for type in exclude:
                 if type not in solvent_types:
                     raise ValueError(type + 'is not a valid solvent type')
                 solvent_types.remove(type)
-        
+
         atom_indices = [atom.index for atom in self.topology.atoms if
                 atom.residue.name not in solvent_types]
-        
+
         return self.atom_slice(atom_indices, inplace = inplace)
 
     def _check_valid_unitcell(self):
