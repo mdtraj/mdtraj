@@ -38,6 +38,7 @@ __all__ = ['wernet_nilsson', 'baker_hubbard', 'kabsch_sander']
 # Functions
 ##############################################################################
 
+
 def wernet_nilsson(traj, exclude_water=True, periodic=True):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle according to the criterion outlined in [1].
@@ -156,9 +157,9 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
 
     # This is used to compute the angles
     angle_triplets = np.array([(e[0][1], e[0][0], e[1]) for e in product(xh_donors, acceptors) if e[0][0] != e[1]])
-    distance_pairs = angle_triplets[:, [0,2]]  # possible O..acceptor pairs
+    distance_pairs = angle_triplets[:, [0, 2]]  # possible O..acceptor pairs
 
-    angles = compute_angles(traj, angle_triplets, periodic=periodic) * 180.0 / np.pi # degrees
+    angles = compute_angles(traj, angle_triplets, periodic=periodic) * 180.0 / np.pi  # degrees
     distances = compute_distances(traj, distance_pairs, periodic=periodic, opt=True)
     cutoffs = distance_cutoff - angle_const * angles ** 2
 
@@ -166,7 +167,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
 
     # The triplets that are returned are O-H ... O, different
     # from what's used to compute the angles.
-    angle_triplets2 = angle_triplets[:, [1,0,2]]
+    angle_triplets2 = angle_triplets[:, [1, 0, 2]]
     return [angle_triplets2[i] for i in mask]
 
 
@@ -286,7 +287,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
         acceptors = [a.index for a in traj.topology.atoms if (a.element.symbol == 'O' and a.residue.name != 'HOH') or a.element.symbol == 'N']
 
     angle_triplets = np.array([(e[0][0], e[0][1], e[1]) for e in product(xh_donors, acceptors)])
-    distance_pairs = angle_triplets[:, [1,2]]  # possible H..acceptor pairs
+    distance_pairs = angle_triplets[:, [1, 2]]  # possible H..acceptor pairs
 
     angles = compute_angles(traj, angle_triplets, periodic=periodic)
     distances = compute_distances(traj, distance_pairs, periodic=periodic)
@@ -296,7 +297,6 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
     occurance = np.sum(mask, axis=0).astype(np.double) / traj.n_frames
 
     return angle_triplets[occurance > freq]
-
 
 
 def kabsch_sander(traj):
@@ -343,7 +343,7 @@ def kabsch_sander(traj):
         raise ValueError('kabsch_sander requires topology')
 
     import scipy.sparse
-    xyz, nco_indices, ca_indices, proline_indices = _prep_kabsch_sander_arrays(traj)
+    xyz, nco_indices, ca_indices, proline_indices, _ = _prep_kabsch_sander_arrays(traj)
     n_residues = len(ca_indices)
 
     hbonds = np.empty((xyz.shape[0], n_residues, 2), np.int32)
@@ -371,7 +371,8 @@ def kabsch_sander(traj):
         indices = hbonds_frame[mask].flatten()
         data = henergies_frame[mask].flatten()
 
-        matrices.append(scipy.sparse.csr_matrix((data, indices, indptr), shape=(n_residues, n_residues)).T)
+        matrices.append(scipy.sparse.csr_matrix(
+            (data, indices, indptr), shape=(n_residues, n_residues)).T)
 
     return matrices
 
@@ -382,23 +383,26 @@ def _get_or_minus1(f):
     except IndexError:
         return -1
 
+
 def _prep_kabsch_sander_arrays(traj):
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz',
                       shape=(None, None, 3), warn_on_cast=False)
 
-    ca_indices, nco_indices, is_proline = [], [], []
+    ca_indices, nco_indices, is_proline, is_protein = [], [], [], []
     for residue in traj.topology.residues:
-        ca = _get_or_minus1(lambda : [a.index for a in residue.atoms if a.name == 'CA'][0])
-        n = _get_or_minus1(lambda : [a.index for a in residue.atoms if a.name == 'N'][0])
-        c = _get_or_minus1(lambda : [a.index for a in residue.atoms if a.name == 'C'][0])
-        o = _get_or_minus1(lambda : [a.index for a in residue.atoms if a.name == 'O'][0])
+        ca = _get_or_minus1(lambda: [a.index for a in residue.atoms if a.name == 'CA'][0])
+        n = _get_or_minus1(lambda: [a.index for a in residue.atoms if a.name == 'N'][0])
+        c = _get_or_minus1(lambda: [a.index for a in residue.atoms if a.name == 'C'][0])
+        o = _get_or_minus1(lambda: [a.index for a in residue.atoms if a.name == 'O'][0])
 
         ca_indices.append(ca)
         is_proline.append(residue.name == 'PRO')
         nco_indices.append([n, c, o])
+        is_protein.append(ca != -1 and n != -1 and c != -1 and o != -1)
 
     nco_indices = np.array(nco_indices, np.int32)
     ca_indices = np.array(ca_indices, np.int32)
     proline_indices = np.array(is_proline, np.int32)
+    is_protein = np.array(is_protein, np.int32)
 
-    return xyz, nco_indices, ca_indices, proline_indices
+    return xyz, nco_indices, ca_indices, proline_indices, is_protein

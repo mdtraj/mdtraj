@@ -80,6 +80,7 @@ def test_3():
         f.description = 'test_1: %s' % pdbid
         yield f
 
+
 def test_4():
     t = md.load_pdb(get_fn('1am7_protein.pdb'))
     a = md.compute_dssp(t, simplified=True)
@@ -87,3 +88,21 @@ def test_4():
     assert len(a) == len(b)
     assert len(a[0]) == len(b[0])
     assert list(np.unique(a[0])) == ['C', 'E', 'H']
+
+
+def test_5():
+    t = md.load(get_fn('4waters.pdb'))
+    a = md.compute_dssp(t, simplified=True)
+    b = md.compute_dssp(t, simplified=False)
+    ref = np.array([['NA', 'NA', 'NA', 'NA']])
+
+    np.testing.assert_array_equal(a, ref)
+    np.testing.assert_array_equal(b, ref)
+
+
+def test_6():
+    t = md.load(get_fn('alanine-dipeptide-explicit.pdb'))
+    a = md.compute_dssp(t, simplified=True)
+    protein_residues = np.array([set(a.name for a in r.atoms).issuperset(('C', 'N', 'O', 'CA')) for r in t.topology.residues])
+    assert np.unique(a[:, protein_residues]) == "C"
+    assert np.unique(a[:, np.logical_not(protein_residues)]) == 'NA'
