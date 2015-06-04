@@ -844,6 +844,26 @@ class Trajectory(object):
     def __repr__(self):
         return "<%s at 0x%02x>" % (self._string_summary_basic(), id(self))
 
+    def __hash__(self):
+        def _hash_numpy_array(x):
+            x.flags.writeable = False
+            hash_value = hash(x.shape)
+            hash_value ^= hash(x.strides)
+            hash_value ^= hash(x.data)
+            x.flags.writeable = True
+            return hash_value
+
+        hash_value = hash(self.top)
+        # combine with hashes of arrays
+        hash_value ^= _hash_numpy_array(self._xyz)
+        hash_value ^= _hash_numpy_array(self.time)
+        hash_value ^= _hash_numpy_array(self._unitcell_lengths)
+        hash_value ^= _hash_numpy_array(self._unitcell_angles)
+        return hash_value
+
+    def __eq__(self, other):
+        return self.__hash__() == other.__hash__()
+
     # def describe(self):
     #     """Diagnostic summary statistics on the trajectory"""
     #     # What information do we want to display?
