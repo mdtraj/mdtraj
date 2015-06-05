@@ -224,7 +224,9 @@ class MDCRDTrajectoryFile(object):
         in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
         in_units_of(cell_lengths, self.distance_unit, Trajectory._distance_unit, inplace=True)
 
-        if cell_lengths is not None:
+        if cell_lengths is None:
+            cell_angles = None
+        else:
             # Assume that its a rectilinear box
             cell_angles = 90.0 * np.ones_like(cell_lengths)
 
