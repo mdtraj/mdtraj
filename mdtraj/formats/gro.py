@@ -91,17 +91,11 @@ def load_gro(filename, stride=None, atom_indices=None, frame=None):
         topology = f.topology
         if frame is not None:
             f.seek(frame)
-            coordinates, time, unitcell_vectors = f.read(n_frames=1, atom_indices=atom_indices)
+            n_frames = 1
         else:
-            coordinates, time, unitcell_vectors = f.read(stride=stride, atom_indices=atom_indices)
-
-        coordinates = in_units_of(coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        unitcell_vectors = in_units_of(unitcell_vectors, f.distance_unit, Trajectory._distance_unit, inplace=True)
-
-    traj = Trajectory(xyz=coordinates, topology=topology, time=time)
-    traj.unitcell_vectors = unitcell_vectors
-
-    return traj
+            n_frames = None
+        return f.read_as_traj(n_frames=n_frames, stride=stride,
+                              atom_indices=atom_indices)
 
 
 @_FormatRegistry.register_fileobject('.gro')
