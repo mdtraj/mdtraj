@@ -301,6 +301,9 @@ cdef class XTCTrajectoryFile:
             topology = topology.subset(atom_indices)
 
         xyz, time, step, box = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
+        if len(xyz) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
         in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
         in_units_of(box, self.distance_unit, Trajectory._distance_unit, inplace=True)
 

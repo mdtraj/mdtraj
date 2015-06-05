@@ -458,6 +458,9 @@ cdef class DTRTrajectoryFile:
             topology = topology.subset(atom_indices)
 
         xyz, time, box_length, box_angle = self.read(stride=stride, atom_indices=atom_indices)
+        if len(xyz) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
         in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
         in_units_of(box_length, self.distance_unit, Trajectory._distance_unit, inplace=True)
         return Trajectory(xyz=xyz, topology=topology, time=time,

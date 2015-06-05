@@ -203,12 +203,15 @@ class NetCDFTrajectoryFile(object):
             topology = topology.subset(atom_indices)
 
         xyz, time, cell_lengths, cell_angles = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
+        if len(xyz) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
         xyz = in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
         cell_lengths = in_units_of(cell_lengths, self.distance_unit, Trajectory._distance_unit, inplace=True)
 
         return Trajectory(xyz=xyz, topology=topology, time=time,
-                                unitcell_lengths=cell_lengths,
-                                unitcell_angles=cell_angles)
+                          unitcell_lengths=cell_lengths,
+                          unitcell_angles=cell_angles)
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read data from a molecular dynamics trajectory in the AMBER NetCDF

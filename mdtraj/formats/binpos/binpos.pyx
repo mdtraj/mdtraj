@@ -274,6 +274,9 @@ cdef class BINPOSTrajectoryFile:
 
         initial = int(self.frame_counter)
         xyz = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
+        if len(xyz) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
         in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
 
         if stride is None:

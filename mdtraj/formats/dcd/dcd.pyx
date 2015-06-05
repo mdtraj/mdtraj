@@ -382,6 +382,9 @@ cdef class DCDTrajectoryFile:
 
         initial = int(self.frame_counter)
         xyz, box_length, box_angle = self.read(stride=stride, atom_indices=atom_indices)
+        if len(xyz) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
         in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
         in_units_of(box_length, self.distance_unit, Trajectory._distance_unit, inplace=True)
 
