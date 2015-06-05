@@ -446,7 +446,7 @@ def iterload(filename, chunk=100, **kwargs):
     """
     stride = kwargs.pop('stride', 1)
     atom_indices = cast_indices(kwargs.pop('atom_indices', None))
-    top = _parse_topology(kwargs.pop('top', None))
+    top = kwargs.pop('top', None)
     extension = _get_extension(filename)
     if extension not in _TOPOLOGY_EXTS:
         topology = _parse_topology(top)

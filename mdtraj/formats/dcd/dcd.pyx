@@ -132,7 +132,7 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-   
+
     with DCDTrajectoryFile(filename) as f:
         if frame is not None:
             f.seek(frame)
@@ -381,7 +381,7 @@ cdef class DCDTrajectoryFile:
             topology = topology.subset(atom_indices)
 
         initial = int(self.frame_counter)
-        xyz, box_length, box_angle = self.read(stride=stride, atom_indices=atom_indices)
+        xyz, box_length, box_angle = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
         if len(xyz) == 0:
             return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
 

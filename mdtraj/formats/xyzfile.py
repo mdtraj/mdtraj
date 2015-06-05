@@ -200,7 +200,7 @@ class XYZTrajectoryFile(object):
             topology = topology.subset(atom_indices)
 
         initial = int(self._frame_index)
-        xyz = self.read(stride=stride, atom_indices=atom_indices)
+        xyz = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
         if len(xyz) == 0:
             return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
 

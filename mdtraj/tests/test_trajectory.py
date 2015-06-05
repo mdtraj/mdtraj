@@ -464,9 +464,12 @@ def test_load_frame():
     frames = [md.load_frame(get_fn(f), index=r, top=get_fn('native.pdb')) for f, r in zip(files, rand)]
 
     for traj, frame, r, f in zip(trajectories, frames, rand, files):
-        eq(traj[r].xyz, frame.xyz)
-        eq(traj[r].unitcell_vectors, frame.unitcell_vectors)
-        eq(traj[r].time, frame.time, err_msg='%d, %d: %s' % (traj[r].time[0], frame.time[0], f))
+        def test():
+            eq(traj[r].xyz, frame.xyz)
+            eq(traj[r].unitcell_vectors, frame.unitcell_vectors)
+            eq(traj[r].time, frame.time, err_msg='%d, %d: %s' % (traj[r].time[0], frame.time[0], f))
+        test.description = 'test_load_frame: %s' % f
+        yield test
 
     t1 = md.load(get_fn('2EQQ.pdb'))
     r = np.random.randint(len(t1))
