@@ -43,7 +43,7 @@ MAXINT32 = np.iinfo(np.int32).max
 DEFAULT_PRECISION = 1000
 if PY3:
     basestring = str
-    
+
 __all__ = ['LH5TrajectoryFile', 'load_lh5']
 
 ##############################################################################
@@ -78,12 +78,12 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
         if not isinstance(atom_name, basestring):
             atom_name = atom_name.decode()
         element_symbol = atom_name.lstrip('0123456789')[0]
-        
+
         try:
             element = elem.get_by_symbol(element_symbol)
         except KeyError:
             element = elem.virtual
-        
+
         topology.add_atom(atom_name, element,
                           registered_residues[ResidueID[i]])
 
@@ -143,36 +143,26 @@ def load_lh5(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.LH5TrajectoryFile :  Low level interface to LH5 files
     """
-    from mdtraj import Trajectory
+    if not isinstance(filename, string_types):
+        raise TypeError('filename must be of type string for load_lh5. '
+            'you supplied %s' % type(filename))
 
     atom_indices = cast_indices(atom_indices)
+
     with LH5TrajectoryFile(filename) as f:
         if frame is not None:
             f.seek(frame)
-            xyz = f.read(n_frames=1, atom_indices=atom_indices)
+            n_frames = 1
         else:
-            xyz = f.read(stride=stride, atom_indices=atom_indices)
-
-        topology = f.topology
-        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-
-        if atom_indices is not None:
-            topology = f.topology.subset(atom_indices)
-
-    time = np.arange(len(xyz))
-    if frame is not None:
-        time += frame
-    elif stride is not None:
-        time *= stride
-
-    return Trajectory(xyz=xyz, topology=topology, time=time)
+            n_frames = None
+        return f.read_as_traj(topology, n_frames=n_frames, stride=stride, atom_indices=atom_indices)
 
 
 @_FormatRegistry.register_fileobject('.lh5')
 class LH5TrajectoryFile(object):
     """Interface for reading and writing to a MSMBuilder2 "LH5" molecular
     dynamics trajectory file, a deprecated format.
-    
+
     Parameters
     ----------
     filename : str
@@ -185,7 +175,7 @@ class LH5TrajectoryFile(object):
         already exists? if `force_overwrite=True`, it will be overwritten.
     """
     distance_unit = 'nanometers'
-    
+
 
     def __init__(self, filename, mode='r', force_overwrite=True):
         self._open = False
@@ -288,8 +278,9 @@ class LH5TrajectoryFile(object):
             A trajectory object containing the loaded portion of the file.
         """
         from mdtraj.core.trajectory import Trajectory
+        topology = self.topology
         if atom_indices is not None:
-            topology = self.topology.subset(atom_indices)
+            topology = topology.subset(atom_indices)
 
         initial = int(self._frame_index)
         xyz = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
@@ -366,7 +357,7 @@ class LH5TrajectoryFile(object):
         if self._needs_initialization:
             self._initialize_headers(coordinates.shape[1])
             self._needs_initialization = False
-        
+
         coordinates = _convert_to_lossy_integers(coordinates)
         self._get_node(where='/', name='XYZList').append(coordinates)
 
@@ -481,4 +472,3 @@ class LH5TrajectoryFile(object):
         if self.tables.__version__ >= '3.0.0':
             return self._handle.get_node
         return self._handle.getNode
-

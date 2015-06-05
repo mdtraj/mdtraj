@@ -127,7 +127,7 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_dcd')
     if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_trr. '
+        raise TypeError('filename must be of type string for load_dcd. '
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
