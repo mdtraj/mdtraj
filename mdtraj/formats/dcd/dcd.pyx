@@ -118,7 +118,7 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.DCDTrajectoryFile :  Low level interface to DCD files
     """
-    from mdtraj.core.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology
 
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a
@@ -126,7 +126,6 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     # we want to give the user an informative error message
     if top is None:
         raise ValueError('"top" argument is required for load_dcd')
-
     if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_trr. '
             'you supplied %s' % type(filename))
