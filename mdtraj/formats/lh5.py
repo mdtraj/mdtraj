@@ -263,6 +263,47 @@ class LH5TrajectoryFile(object):
             node[:] = val[:]
 
     @ensure_mode('r')
+    def read_as_traj(self, n_frames=None, stride=None, atom_indices=None):
+        """Read a trajectory from the LH5 file
+
+        Parameters
+        ----------
+        n_frames : {int, None}
+            The number of frames to read. If not supplied, all of the
+            remaining frames will be read.
+        stride : {int, None}
+            By default all of the frames will be read, but you can pass this
+            flag to read a subset of of the data by grabbing only every
+            `stride`-th frame from disk.
+        atom_indices : {int, None}
+            By default all of the atom  will be read, but you can pass this
+            flag to read only a subsets of the atoms for the `coordinates` and
+            `velocities` fields. Note that you will have to carefully manage
+            the indices and the offsets, since the `i`-th atom in the topology
+            will not necessarily correspond to the `i`-th atom in your subset.
+
+        Returns
+        -------
+        trajectory : Trajectory
+            A trajectory object containing the loaded portion of the file.
+        """
+        from mdtraj.core.trajectory import Trajectory
+        if atom_indices is not None:
+            topology = self.topology.subset(atom_indices)
+
+        initial = int(self._frame_index)
+        xyz = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
+        if len(xyz) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
+        in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
+        if stride is None:
+            stride = 1
+        time = (stride*np.arange(len(xyz))) + initial
+
+        return Trajectory(xyz=xyz, topology=topology, time=time)
+
+    @ensure_mode('r')
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read one or more frames of data from the file
 

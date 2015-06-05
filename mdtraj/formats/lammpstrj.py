@@ -322,14 +322,12 @@ class LAMMPSTrajectoryFile(object):
             gamma = np.arccos(xy / b)
 
             lengths = np.array([a, b, c])
-            in_units_of(lengths, self.distance_unit, 'nanometers', inplace=True)
             angles = np.degrees(np.array([alpha, beta, gamma]))
         elif style == 'orthogonal':
             box[0] = self._fh.readline().split()  # x-dim of box
             box[1] = self._fh.readline().split()  # y-dim of box
             box[2] = self._fh.readline().split()  # z-dim of box
             lengths = np.diff(box, axis=1).reshape(1, 3)[0]  # box lengths
-            in_units_of(lengths, self.distance_unit, 'nanometers', inplace=True)
             angles = np.empty(3)
             angles.fill(90.0)
         return lengths, angles
@@ -438,12 +436,14 @@ class LAMMPSTrajectoryFile(object):
         Parameters
         ----------
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
-            The cartesian coordinates of the atoms to write.
+            The cartesian coordinates of the atoms to write. By convention,
+            the lengths should be in units of angstroms.
         cell_lengths : np.ndarray, dtype=np.double, shape=(n_frames, 3)
-            The lengths (a,b,c) of the unit cell for each frame.
+            The lengths (a,b,c) of the unit cell for each frame. By convention,
+            the lengths should be in units of angstroms.
         cell_angles : np.ndarray, dtype=np.double, shape=(n_frames, 3)
             The angles (\alpha, \beta, \gamma) defining the unit cell for
-            each frame.
+            each frame. (Units of degrees).
         types : np.ndarray, shape(3, ), dtype=int
             The numeric type of each particle.
         unit_set : str, optional
@@ -479,8 +479,6 @@ class LAMMPSTrajectoryFile(object):
             self.distance_unit == 'angstroms'
         else:
             raise ValueError('Unsupported unit set specified: {0}.'.format(unit_set))
-        in_units_of(xyz, 'nanometers', self.distance_unit, inplace=True)
-        in_units_of(cell_lengths, 'nanometers', self.distance_unit, inplace=True)
 
         for i in range(xyz.shape[0]):
             # --- begin header ---
