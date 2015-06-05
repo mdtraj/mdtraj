@@ -4,7 +4,7 @@
 # Copyright 2012-2015 Stanford University and the Authors
 #
 # Authors: Christoph Klein
-# Contributors:
+# Contributors: Robert T. McGibbon
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -102,25 +102,15 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-    if atom_indices is not None:
-        topology = topology.subset(atom_indices)
 
     with XYZTrajectoryFile(filename) as f:
         if frame is not None:
             f.seek(frame)
-            xyz = f.read(n_frames=1, atom_indices=atom_indices)
+            n_frames = 1
         else:
-            xyz = f.read(stride=stride, atom_indices=atom_indices)
-        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-
-    time = np.arange(len(xyz))
-    if frame is not None:
-        time += frame
-    elif stride is not None:
-        time *= stride
-
-    t = Trajectory(xyz=xyz, topology=topology, time=time)
-    return t
+            n_frames = None
+        return f.read_as_traj(topology, n_frames=n_frames, stride=stride,
+                              atom_indices=atom_indices)
 
 
 @_FormatRegistry.register_fileobject('.xyz')
@@ -182,6 +172,44 @@ class XYZTrajectoryFile(object):
     def __exit__(self, *exc_info):
         """Support the context manager protocol. """
         self.close()
+
+    def read_as_traj(self, topology, n_frames=None, stride=None, atom_indices=None):
+        """Read a trajectory from a XYZ file
+
+        Parameters
+        ----------
+        topology : Topology
+            The system topology
+        n_frames : int, optional
+            If positive, then read only the next `n_frames` frames. Otherwise read all
+            of the frames in the file.
+        stride : np.ndarray, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
+
+        Returns
+        -------
+        trajectory : Trajectory
+            A trajectory object containing the loaded portion of the file.
+        """
+        from mdtraj.core.trajectory import Trajectory
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
+
+        initial = int(self._frame_index)
+        xyz = self.read(stride=stride, atom_indices=atom_indices)
+        if len(xyz) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
+        in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
+
+        if stride is None:
+            stride = 1
+        time = (stride*np.arange(len(xyz))) + initial
+        return Trajectory(xyz=xyz, topology=topology, time=time)
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read data from a xyz file.

@@ -92,34 +92,14 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
 
-    with MDCRDTrajectoryFile(filename, n_atoms=topology._numAtoms) as f:
+    with MDCRDTrajectoryFile(filename, topology.n_atoms) as f:
         if frame is not None:
             f.seek(frame)
-            xyz, cell_lengths = f.read(n_frames=1, atom_indices=atom_indices)
+            n_frames = 1
         else:
-            xyz, cell_lengths = f.read(stride=stride, atom_indices=atom_indices)
-
-        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        if cell_lengths is not None:
-            in_units_of(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
-
-            # Assume that its a rectilinear box
-            cell_angles = 90.0 * np.ones_like(cell_lengths)
-
-    if atom_indices is not None:
-        topology = topology.subset(atom_indices)
-
-    time = np.arange(len(xyz))
-    if frame is not None:
-        time += frame
-    elif stride is not None:
-        time *= stride
-
-    t = Trajectory(xyz=xyz, topology=topology, time=time)
-    if cell_lengths is not None:
-        t.unitcell_lengths = cell_lengths
-        t.unitcell_angles = cell_angles
-    return t
+            n_frames = None
+        return f.read_as_traj(topology, n_frames=n_frames, stride=stride,
+                              atom_indices=atom_indices)
 
 
 @_FormatRegistry.register_fileobject('.mdcrd')
@@ -209,6 +189,53 @@ class MDCRDTrajectoryFile(object):
     def __exit__(self, *exc_info):
         "Support the context manager protocol"
         self.close()
+
+    def read_as_traj(self, topology, n_frames=None, stride=None, atom_indices=None):
+        """Read a trajectory from a mdcrd file
+
+        Parameters
+        ----------
+        topology : Topology
+            The system topology
+        n_frames : int, optional
+            If positive, then read only the next `n_frames` frames. Otherwise read all
+            of the frames in the file.
+        stride : np.ndarray, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
+
+        Returns
+        -------
+        trajectory : Trajectory
+            A trajectory object containing the loaded portion of the file.
+        """
+        from mdtraj.core.trajectory import Trajectory
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
+
+        initial = int(self._frame_index)
+        xyz, cell_lengths = self.read(stride=stride, atom_indices=atom_indices)
+        if len(xyz) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
+        in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(cell_lengths, self.distance_unit, Trajectory._distance_unit, inplace=True)
+
+        if cell_lengths is not None:
+            # Assume that its a rectilinear box
+            cell_angles = 90.0 * np.ones_like(cell_lengths)
+
+        if stride is None:
+            stride = 1
+        time = (stride*np.arange(len(xyz))) + initial
+
+        t = Trajectory(xyz=xyz, topology=topology, time=time)
+        t.unitcell_lengths = cell_lengths
+        t.unitcell_angles = cell_angles
+        return t
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read data from a mdcrd file

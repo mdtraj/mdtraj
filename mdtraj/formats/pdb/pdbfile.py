@@ -169,6 +169,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
 
 
 @_FormatRegistry.register_fileobject('.pdb')
+@_FormatRegistry.register_fileobject('.pdb.gz')
 class PDBTrajectoryFile(object):
     """Interface for reading and writing Protein Data Bank (PDB) files
 

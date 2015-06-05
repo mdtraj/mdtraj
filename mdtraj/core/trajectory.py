@@ -73,7 +73,7 @@ from mdtraj.geometry import distance
 __all__ = ['open', 'load', 'iterload', 'load_frame', 'Trajectory']
 # supported extensions for constructing topologies
 _TOPOLOGY_EXTS = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
-            '.psf', '.mol2', '.hoomdxml']
+                  '.psf', '.mol2', '.hoomdxml', '.gro']
 
 
 ##############################################################################
@@ -444,26 +444,37 @@ def iterload(filename, chunk=100, **kwargs):
     <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
     <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
     """
-    stride = kwargs.get('stride', 1)
-    atom_indices = cast_indices(kwargs.get('atom_indices', None))
+    stride = kwargs.pop('stride', 1)
+    atom_indices = cast_indices(kwargs.pop('atom_indices', None))
+    top = _parse_topology(kwargs.pop('top', None))
     extension = _get_extension(filename)
     if extension not in _TOPOLOGY_EXTS:
-        topology = _parse_topology(kwargs.get('top', None))
-
+        topology = _parse_topology(top)
 
     if chunk % stride != 0:
         raise ValueError('Stride must be a divisor of chunk. stride=%d does not go '
                          'evenly into chunk=%d' % (stride, chunk))
     if chunk == 0:
+        # If chunk was 0 then we want to avoid filetype-specific code
+        # in case of undefined behavior in various file parsers.
         yield load(filename, **kwargs)
-    else:  # If chunk was 0 then we want to avoid filetype-specific code in case of undefined behavior in various file parsers.
 
-        with open(filename) as f:
+    elif extension in ('.pdb', '.pdb.gz'):
+        # the PDBTrajectortFile class doesn't follow the standard API. Fixing it
+        # to support iterload could be worthwhile, but requires a deep refactor.
+        t = load(filename, stride=stride, atom_indices=atom_indices)
+        for i in range(0, len(t), chunk):
+            yield  t[i:i+chunk]
+
+    else:
+        with (lambda x: open(x, n_atoms=topology.n_atoms)
+              if extension in ('.crd', '.mdcrd')
+              else open(filename))(filename) as f:
             while True:
                 if extension not in _TOPOLOGY_EXTS:
-                    traj = f.read_as_traj(topology, n_frames=chunk*stride, stride=stride, atom_indices=atom_indices)
+                    traj = f.read_as_traj(topology, n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
                 else:
-                    traj = f.read_as_traj(n_frames=chunk*stride, stride=stride, atom_indices=atom_indices)
+                    traj = f.read_as_traj(n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
 
                 if len(traj) == 0:
                     raise StopIteration()
@@ -534,6 +545,7 @@ class Trajectory(object):
     # this is NOT configurable. if it's set to something else, things will break
     # (thus why I make it private)
     _distance_unit = 'nanometers'
+
 
     @property
     def topology(self):
@@ -1157,6 +1169,29 @@ class Trajectory(object):
         """
         return load(filenames, **kwargs)
 
+    def _savers(self):
+        """Return a dictionary mapping extensions to the appropriate format-specific save function"""
+        return {'.xtc': self.save_xtc,
+                '.trr': self.save_trr,
+                '.pdb': self.save_pdb,
+                '.pdb.gz': self.save_pdb,
+                '.dcd': self.save_dcd,
+                '.h5': self.save_hdf5,
+                '.binpos': self.save_binpos,
+                '.nc': self.save_netcdf,
+                '.netcdf': self.save_netcdf,
+                '.ncrst' : self.save_netcdfrst,
+                '.crd': self.save_mdcrd,
+                '.mdcrd': self.save_mdcrd,
+                '.ncdf': self.save_netcdf,
+                '.lh5': self.save_lh5,
+                '.lammpstrj': self.save_lammpstrj,
+                '.xyz': self.save_xyz,
+                '.xyz.gz': self.save_xyz,
+                '.gro': self.save_gro,
+                '.rst7' : self.save_amberrst7,
+            }
+
     def save(self, filename, **kwargs):
         """Save trajectory to disk, in a format determined by the filename extension
 
@@ -1177,27 +1212,7 @@ class Trajectory(object):
         """
         # grab the extension of the filename
         extension = _get_extension(filename)
-
-        savers = {'.xtc': self.save_xtc,
-                  '.trr': self.save_trr,
-                  '.pdb': self.save_pdb,
-                  '.pdb.gz': self.save_pdb,
-                  '.dcd': self.save_dcd,
-                  '.h5': self.save_hdf5,
-                  '.binpos': self.save_binpos,
-                  '.nc': self.save_netcdf,
-                  '.netcdf': self.save_netcdf,
-                  '.ncrst' : self.save_netcdfrst,
-                  '.crd': self.save_mdcrd,
-                  '.mdcrd': self.save_mdcrd,
-                  '.ncdf': self.save_netcdf,
-                  '.lh5': self.save_lh5,
-                  '.lammpstrj': self.save_lammpstrj,
-                  '.xyz': self.save_xyz,
-                  '.xyz.gz': self.save_xyz,
-                  '.gro': self.save_gro,
-                  '.rst7' : self.save_amberrst7,
-                  }
+        savers = self._savers()
 
         try:
             saver = savers[extension]
@@ -1251,7 +1266,8 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         with XYZTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(xyz=self.xyz, types=[a.name for a in self.top.atoms])
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    types=[a.name for a in self.top.atoms])
 
     def save_pdb(self, filename, force_overwrite=True, bfactors=None):
         """Save trajectory to RCSB PDB format

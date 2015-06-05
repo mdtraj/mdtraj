@@ -143,19 +143,14 @@ def load_lh5(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.LH5TrajectoryFile :  Low level interface to LH5 files
     """
-    if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_lh5. '
-            'you supplied %s' % type(filename))
-
     atom_indices = cast_indices(atom_indices)
-
     with LH5TrajectoryFile(filename) as f:
         if frame is not None:
             f.seek(frame)
             n_frames = 1
         else:
             n_frames = None
-        return f.read_as_traj(topology, n_frames=n_frames, stride=stride, atom_indices=atom_indices)
+        return f.read_as_traj(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
 
 
 @_FormatRegistry.register_fileobject('.lh5')

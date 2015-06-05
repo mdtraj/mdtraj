@@ -199,7 +199,8 @@ class LAMMPSTrajectoryFile(object):
         if atom_indices is not None:
             topology = topology.subset(atom_indices)
 
-        xyz, cell_lengths, cell_angles = f.read(stride=stride, atom_indices=atom_indices)
+        initial = int(self._frame_index)
+        xyz, cell_lengths, cell_angles = self.read(stride=stride, atom_indices=atom_indices)
         if len(xyz) == 0:
             return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
 
