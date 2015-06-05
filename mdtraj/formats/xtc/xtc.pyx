@@ -129,8 +129,6 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-    if atom_indices is not None:
-        topology = topology.subset(atom_indices)
 
     with XTCTrajectoryFile(filename, 'r') as f:
         if frame is not None:
@@ -271,12 +269,14 @@ cdef class XTCTrajectoryFile:
             self.is_open = False
 
     def read_as_traj(self, topology, n_frames=None, stride=None, atom_indices=None):
-        """read_as_traj(n_frames=None, stride=None, atom_indices=None)
+        """read_as_traj(topology, n_frames=None, stride=None, atom_indices=None)
 
         Read a trajectory from an XTC file
 
         Parameters
         ----------
+        topology : Topology
+            The system topology
         n_frames : int, None
             The number of frames you would like to read from the file.
             If None, all of the remaining frames will be loaded.
@@ -296,9 +296,9 @@ cdef class XTCTrajectoryFile:
         --------
         read : Returns the raw data from the file
         """
-        from mdtraj.core.trajectory import Trajectory, Topology
-        if not isinstance(topology, Topology):
-            raise TypeError('topology must be an mdtraj.Topology')
+        from mdtraj.core.trajectory import Trajectory
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
 
         xyz, time, step, box = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
         in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)

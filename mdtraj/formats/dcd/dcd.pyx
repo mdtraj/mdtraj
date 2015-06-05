@@ -133,29 +133,14 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-    if atom_indices is not None:
-        topology = topology.subset(atom_indices)
-
+   
     with DCDTrajectoryFile(filename) as f:
         if frame is not None:
             f.seek(frame)
-            xyz, box_length, box_angle = f.read(n_frames=1, atom_indices=atom_indices)
+            n_frames = 1
         else:
-            xyz, box_length, box_angle = f.read(stride=stride, atom_indices=atom_indices)
-
-        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        in_units_of(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
-
-    time = np.arange(len(xyz))
-    if frame is not None:
-        time += frame
-    elif stride is not None:
-        time *= stride
-
-    trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
-                            unitcell_lengths=box_length,
-                            unitcell_angles=box_angle)
-    return trajectory
+            n_frames = None
+        return f.read_as_traj(topology, n_frames=n_frames, stride=stride, atom_indices=atom_indices)
 
 
 cdef class DCDTrajectoryFile:
@@ -367,6 +352,47 @@ cdef class DCDTrajectoryFile:
         if not self.is_open:
             raise ValueError('I/O operation on closed file')
         return dcd_nsets(self.fh)
+
+    def read_as_traj(self, topology, n_frames=None, stride=None, atom_indices=None):
+        """read_as_traj(topology, n_frames=None, stride=None, atom_indices=None)
+
+        Read a trajectory from an XTC file
+
+        Parameters
+        ----------
+        topology : Topology
+            The system topology
+        n_frames : int, optional
+            If positive, then read only the next `n_frames` frames. Otherwise read all
+            of the frames in the file.
+        stride : np.ndarray, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
+
+        Returns
+        -------
+        trajectory : Trajectory
+            A trajectory object containing the loaded portion of the file.
+        """
+        from mdtraj.core.trajectory import Trajectory
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
+
+        initial = int(self.frame_counter)
+        xyz, box_length, box_angle = self.read(stride=stride, atom_indices=atom_indices)
+        in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(box_length, self.distance_unit, Trajectory._distance_unit, inplace=True)
+
+        if stride is None:
+            stride = 1
+        time = (stride*np.arange(len(xyz))) + initial
+
+        return Trajectory(xyz=xyz, topology=topology, time=time,
+                          unitcell_lengths=box_length,
+                          unitcell_angles=box_angle)
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)
