@@ -1236,8 +1236,8 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         with LAMMPSTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(xyz=self.xyz,
-                    cell_angles=self.unitcell_angles,
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    cell_angles=in_units_of(self.unitcell_angles, Trajectory._distance_unit, f.distance_unit),
                     cell_lengths=self.unitcell_lengths)
 
     def save_xyz(self, filename, force_overwrite=True):
