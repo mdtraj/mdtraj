@@ -71,6 +71,10 @@ from mdtraj.geometry import distance
 ##############################################################################
 
 __all__ = ['open', 'load', 'iterload', 'load_frame', 'Trajectory']
+# supported extensions for constructing topologies
+_TOPOLOGY_EXTS = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
+            '.psf', '.mol2', '.hoomdxml']
+
 
 ##############################################################################
 # Utilities
@@ -107,6 +111,24 @@ def _assert_files_or_dirs_exist(names):
                         (os.path.isfile(fn) or os.path.isdir(fn))):
             raise IOError('No such file: %s' % fn)
 
+
+def load_topology(filename):
+    """Load a topology
+
+    Parameters
+    ----------
+    filename : str
+        Path to a file containing a system topology. The following extensions
+        are supported: '.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
+            '.psf', '.mol2', '.hoomdxml'
+
+    Returns
+    -------
+    topology : md.Topology
+    """
+    return _parse_topology(filename)
+
+
 def _parse_topology(top):
     """Get the topology from a argument of indeterminate type
     If top is a string, we try loading a pdb, if its a trajectory
@@ -121,10 +143,6 @@ def _parse_topology(top):
         ext = _get_extension(top)
     except:
         ext = None  # might not be a string
-
-    # supported extensions for constructing topologies
-    extensions = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
-            '.psf', '.mol2', '.hoomdxml']
 
     if isinstance(top, string_types) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):
         _traj = load_frame(top, 0)
@@ -145,10 +163,10 @@ def _parse_topology(top):
         topology = top
     elif isinstance(top, string_types):
         raise IOError('The topology is loaded by filename extension, and the '
-                        'detected "%s" format is not supported. Supported topology '
-                        'formats include %s and "%s".' % (ext,
-                        ', '.join(['"%s"' % e for e in extensions[:-1]]),
-                        extensions[-1]))
+                      'detected "%s" format is not supported. Supported topology '
+                      'formats include %s and "%s".' % (
+                          ext, ', '.join(['"%s"' % e for e in _TOPOLOGY_EXTS[:-1]]),
+                          _TOPOLOGY_EXTS[-1]))
     else:
         raise TypeError('A topology is required. You supplied top=%s' % str(top))
 
@@ -259,7 +277,7 @@ def load_frame(filename, index, top=None, atom_indices=None):
                       % (filename, extension, _FormatRegistry.loaders.keys()))
 
     kwargs = {'atom_indices': atom_indices}
-    if loader.__name__ not in ['load_hdf5', 'load_pdb']:
+    if extension not in _TOPOLOGY_EXTS:
         kwargs['top'] = top
 
     if loader.__name__ not in ['load_dtr']:
@@ -364,22 +382,21 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                       'was found. I can only load files '
                       'with extensions in %s' % (filename, extension, _FormatRegistry.loaders.keys()))
 
-    if loader.__name__ in ['load_hdf5', 'load_pdb', 'load_lh5']:
-        if 'top' in kwargs:
-            warnings.warn('top= kwarg ignored since file contains topology information')
+    if extension in _TOPOLOGY_EXTS:
         # this is a little hack that makes calling load() more predicable. since
         # most of the loaders take a kwargs "top" except for load_hdf5, (since
         # it saves the topology inside the file), we often end up calling
         # load_hdf5 via this function with the top kwarg specified. but then
         # there would be a signature binding error. it's easier just to ignore
         # it.
-        kwargs.pop('top', None)
+        if 'top' in kwargs:
+            warnings.warn('top= kwarg ignored since file contains topology information')
+            kwargs.pop('top', None)
 
     if loader.__name__ not in ['load_dtr']:
         _assert_files_exist(filename_or_filenames)
     else:
         _assert_files_or_dirs_exist(filename_or_filenames)
-
 
     value = loader(filename, **kwargs)
     return value
@@ -429,15 +446,20 @@ def iterload(filename, chunk=100, **kwargs):
     """
     stride = kwargs.get('stride', 1)
     atom_indices = cast_indices(kwargs.get('atom_indices', None))
+    extension = _get_extension(filename)
+
     if chunk % stride != 0:
         raise ValueError('Stride must be a divisor of chunk. stride=%d does not go '
                          'evenly into chunk=%d' % (stride, chunk))
     if chunk == 0:
         yield load(filename, **kwargs)
     else:  # If chunk was 0 then we want to avoid filetype-specific code in case of undefined behavior in various file parsers.
-        if filename.endswith('.h5'):
-            if 'top' in kwargs:
-                warnings.warn('top= kwarg ignored since file contains topology information')
+
+        if extension in _TOPOLOGY_EXTS:
+            warnings.warn('top= kwarg ignored since file contains topology information')
+            kwargs.pop('top', None)
+
+        if extension == '.h5':
             with HDF5TrajectoryFile(filename) as f:
                 if atom_indices is None:
                     topology = f.topology
@@ -454,9 +476,7 @@ def iterload(filename, chunk=100, **kwargs):
                                      time=data.time, unitcell_lengths=data.cell_lengths,
                                      unitcell_angles=data.cell_angles)
 
-        if filename.endswith('.lh5'):
-            if 'top' in kwargs:
-                warnings.warn('top= kwarg ignored since file contains topology information')
+        if extension == '.lh5':
             with LH5TrajectoryFile(filename) as f:
                 if atom_indices is None:
                     topology = f.topology
@@ -473,7 +493,7 @@ def iterload(filename, chunk=100, **kwargs):
                     ptr += len(xyz)*stride
                     yield Trajectory(xyz=xyz, topology=topology, time=time)
 
-        elif filename.endswith('.xtc'):
+        elif extension == '.xtc':
             topology = _parse_topology(kwargs.get('top', None))
             with XTCTrajectoryFile(filename) as f:
                 while True:
@@ -486,7 +506,7 @@ def iterload(filename, chunk=100, **kwargs):
                     trajectory.unitcell_vectors = box
                     yield trajectory
 
-        elif filename.endswith('.dcd'):
+        elif extension == '.dcd':
             topology = _parse_topology(kwargs.get('top', None))
             with DCDTrajectoryFile(filename) as f:
                 ptr = 0
