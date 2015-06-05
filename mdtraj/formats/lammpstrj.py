@@ -335,9 +335,13 @@ class LAMMPSTrajectoryFile(object):
                 if header in {'x', 'y', 'z', 'xs', 'ys', 'zs', 'xu', 'yu', 'zu',
                               'xsu', 'ysu', 'zsu'}:
                     columns[header[0]] = columns.pop(header)
-            self._atom_index_column = columns['id']
-            self._atom_type_column = columns['type']
-            self._xyz_columns = [columns['x'], columns['y'], columns['z']]
+            try:
+                self._atom_index_column = columns['id']
+                self._atom_type_column = columns['type']
+                self._xyz_columns = [columns['x'], columns['y'], columns['z']]
+            except KeyError:
+                raise IOError("Invalid .lammpstrj file. Must contain 'id', "
+                              "'type', 'x*', 'y*' and 'z*' entries.")
         self._line_counter += 4
         # --- end header ---
 
