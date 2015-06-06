@@ -54,6 +54,7 @@ from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.mol2 import load_mol2
 from mdtraj.formats.gro import load_gro
+from mdtraj.formats.arc import load_arc
 from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.core.topology import Topology
 from mdtraj.core.residue_names import _SOLVENT_TYPES
@@ -155,6 +156,8 @@ def _parse_topology(top):
         topology = load_mol2(top).topology
     elif isinstance(top, string_types) and (ext in ['.gro']):
         topology = load_gro(top).topology
+    elif isinstance(top, string_types) and (ext in ['.arc']):
+        topology = load_arc(top).topology
     elif isinstance(top, string_types) and (ext in ['.hoomdxml']):
         topology = load_hoomdxml(top).topology
     elif isinstance(top, Trajectory):
