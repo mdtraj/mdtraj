@@ -194,6 +194,10 @@ class LAMMPSTrajectoryFile(object):
         -------
         trajectory : Trajectory
             A trajectory object containing the loaded portion of the file.
+
+        See Also
+        --------
+        read : Returns the raw data from the file
         """
         from mdtraj.core.trajectory import Trajectory
         if atom_indices is not None:
