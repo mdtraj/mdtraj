@@ -336,10 +336,11 @@ class AmberRestartFile(object):
             # Must have already been written -- can only write once
             raise RuntimeError('restart file has already been written -- can '
                                'only write one frame to restart files.')
-        coordinates = in_units_of(coordinates, None, 'angstroms')
-        time = in_units_of(time, None, 'picoseconds')
-        cell_lengths = in_units_of(cell_lengths, None, 'angstroms')
-        cell_angles = in_units_of(cell_angles, None, 'degrees')
+        # These are no-ops.
+        # coordinates = in_units_of(coordinates, None, 'angstroms')
+        # time = in_units_of(time, None, 'picoseconds')
+        # cell_lengths = in_units_of(cell_lengths, None, 'angstroms')
+        # cell_angles = in_units_of(cell_angles, None, 'degrees')
 
         # typecheck all of the input arguments rigorously
         coordinates = ensure_type(coordinates, np.float32, 3, 'coordinates',
@@ -670,10 +671,11 @@ class AmberNetCDFRestartFile(object):
             # Must have already been written -- can only write once
             raise RuntimeError('NetCDF restart file has already been written '
                                '-- can only write one frame to restart files.')
-        coordinates = in_units_of(coordinates, None, 'angstroms')
-        time = in_units_of(time, None, 'picoseconds')
-        cell_lengths = in_units_of(cell_lengths, None, 'angstroms')
-        cell_angles = in_units_of(cell_angles, None, 'degrees')
+        # these are no-ops
+        # coordinates = in_units_of(coordinates, None, 'angstroms')
+        # time = in_units_of(time, None, 'picoseconds')
+        # cell_lengths = in_units_of(cell_lengths, None, 'angstroms')
+        # cell_angles = in_units_of(cell_angles, None, 'degrees')
 
         # typecheck all of the input arguments rigorously
         coordinates = ensure_type(coordinates, np.float32, 3, 'coordinates',
