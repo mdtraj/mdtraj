@@ -74,24 +74,14 @@ def load_restrt(filename, top=None, atom_indices=None):
     --------
     mdtraj.AmberRestartFile : Low level interface to AMBER restart files
     """
-    from mdtraj.core.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-    if atom_indices is not None:
-        topology = topology.subset(atom_indices)
 
     with AmberRestartFile(filename) as f:
-        xyz, time, cell_lengths, cell_angles = f.read(atom_indices=atom_indices)
-        xyz = in_units_of(xyz, f.distance_unit, Trajectory._distance_unit,
-                          inplace=True)
-        cell_lengths = in_units_of(cell_lengths, f.distance_unit,
-                                   Trajectory._distance_unit, inplace=True)
+        return f.read_as_traj(topology, atom_indices=atom_indices)
 
-    trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
-                            unitcell_lengths=cell_lengths,
-                            unitcell_angles=cell_angles)
-    return trajectory
 
 @_FormatRegistry.register_fileobject('.rst7')
 @_FormatRegistry.register_fileobject('.restrt')
@@ -247,6 +237,37 @@ class AmberRestartFile(object):
 
         return coordinates, time, cell_lengths, cell_angles
 
+    def read_as_traj(self, topology, atom_indices=None):
+        """Read an AMBER ASCII restart file as a trajectory.
+
+        Parameters
+        ----------
+        topology : Topology
+            The system topology
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
+
+        Returns
+        -------
+        trajectory : Trajectory
+            A trajectory object with 1 frame created from the file.
+        """
+        from mdtraj.core.trajectory import Trajectory
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
+
+        xyz, time, cell_lengths, cell_angles = self.read(atom_indices=atom_indices)
+        xyz = in_units_of(xyz, self.distance_unit, Trajectory._distance_unit,
+                          inplace=True)
+        cell_lengths = in_units_of(cell_lengths, self.distance_unit,
+                                   Trajectory._distance_unit, inplace=True)
+
+        return Trajectory(xyz=xyz, topology=topology, time=time,
+                          unitcell_lengths=cell_lengths,
+                          unitcell_angles=cell_angles)
+
     def read(self, atom_indices=None):
         """Read data from an AMBER ASCII restart file
 
@@ -277,7 +298,7 @@ class AmberRestartFile(object):
 
         with open(self._filename, 'r') as f:
             lines = f.readlines()
-            
+
         coordinates, time, cell_lengths, cell_angles = self._parse(lines)
 
         if atom_indices is not None:
@@ -409,24 +430,14 @@ def load_ncrestrt(filename, top=None, atom_indices=None):
     --------
     mdtraj.AmberRestartFile : Low level interface to AMBER restart files
     """
-    from mdtraj.core.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-    if atom_indices is not None:
-        topology = topology.subset(atom_indices)
 
     with AmberNetCDFRestartFile(filename) as f:
-        xyz, time, cell_lengths, cell_angles = f.read(atom_indices=atom_indices)
-        xyz = in_units_of(xyz, f.distance_unit, Trajectory._distance_unit,
-                          inplace=True)
-        cell_lengths = in_units_of(cell_lengths, f.distance_unit,
-                                   Trajectory._distance_unit, inplace=True)
+        return f.read_as_traj(topology, atom_indices=atom_indices)
 
-    trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
-                            unitcell_lengths=cell_lengths,
-                            unitcell_angles=cell_angles)
-    return trajectory
 
 @_FormatRegistry.register_fileobject('.ncrst')
 class AmberNetCDFRestartFile(object):
@@ -487,6 +498,37 @@ class AmberNetCDFRestartFile(object):
     def _validate_open(self):
         if self._closed:
             raise IOError('The file is closed.')
+
+    def read_as_traj(self, topology, atom_indices=None):
+        """Read an AMBER ASCII restart file as a trajectory.
+
+        Parameters
+        ----------
+        topology : Topology
+            The system topology
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
+
+        Returns
+        -------
+        trajectory : Trajectory
+            A trajectory object with 1 frame created from the file.
+        """
+        from mdtraj.core.trajectory import Trajectory
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
+
+        xyz, time, cell_lengths, cell_angles = self.read(atom_indices=atom_indices)
+        xyz = in_units_of(xyz, self.distance_unit, Trajectory._distance_unit,
+                          inplace=True)
+        cell_lengths = in_units_of(cell_lengths, self.distance_unit,
+                                   Trajectory._distance_unit, inplace=True)
+
+        return Trajectory(xyz=xyz, topology=topology, time=time,
+                          unitcell_lengths=cell_lengths,
+                          unitcell_angles=cell_angles)
 
     def read(self, atom_indices=None):
         """Read data from an AMBER NetCDF restart file
