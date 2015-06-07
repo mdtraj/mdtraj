@@ -502,6 +502,28 @@ def test_iterload():
             yield test
 
 
+def test_save_load():
+    # this cycles all the known formats you can save to, and then tries
+    # to reload, using just a single-frame file.
+
+    t_ref = md.load(get_fn('native.pdb'))
+    t_ref.unitcell_vectors = np.array([[[1,0,0], [0,1,0], [0,0,1]]])
+    with enter_temp_directory():
+        for ext in t_ref._savers().keys():
+            def test():
+                fn = 'temp%s' % ext
+                t_ref.save(fn)
+                t = md.load(fn, top=t_ref.topology)
+
+                eq(t.xyz, t_ref.xyz)
+                eq(t.time, t_ref.time)
+                if t._have_unitcell:
+                    eq(t.unitcell_angles, t_ref.unitcell_angles)
+                    eq(t.unitcell_lengths, t_ref.unitcell_lengths)
+
+            test.description = 'test_save_load: %s' % ext
+            yield test
+
 
 def test_length():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',

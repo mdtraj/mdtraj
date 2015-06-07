@@ -530,16 +530,16 @@ cdef class DCDTrajectoryFile:
         Parameters
         ----------
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
-            The cartesian coordinates of the atoms to write. By convention, the
-            lengths should be in units of angstroms.
+            The cartesian coordinates of the atoms to write. By convention for
+            this trajectory format, the lengths should be in units of angstroms.
         cell_lengths : np.ndarray, shape=(n_frames, 3), dtype=float32, optional
             The length of the periodic box in each frame, in each direction,
-            `a`, `b`, `c`. By convention the lengths should be in units
-            of angstroms.
+            `a`, `b`, `c`. By convention for
+            this trajectory format, the lengths should be in units of angstroms.
         cell_angles : np.ndarray, shape=(n_frames, 3), dtype=float32, optional
             Organized analogously to cell_lengths. Gives the alpha, beta and
-            gamma angles respectively. By convention, the angles should be
-            in units of degrees.
+            gamma angles respectively. By convention for
+            this trajectory format, the lengths should be in units of angstroms.
         """
         if str(self.mode) != 'w':
             raise ValueError('write() is only available when the file is opened in mode="w"')

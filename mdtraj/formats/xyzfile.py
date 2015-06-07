@@ -301,7 +301,8 @@ class XYZTrajectoryFile(object):
         Parameters
         ----------
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
-            The cartesian coordinates of the atoms to write.
+            The cartesian coordinates of the atoms to write. By convention for
+            this trajectory format, the lengths should be in units of angstroms.
         types : np.ndarray, shape(3, )
             The type of each particle.
         """
@@ -316,7 +317,6 @@ class XYZTrajectoryFile(object):
         xyz = ensure_type(xyz, np.float32, 3, 'xyz', can_be_none=False,
                         shape=(None, None, 3), warn_on_cast=False,
                         add_newaxis_on_deficient_ndim=True)
-        in_units_of(xyz, 'nanometers', self.distance_unit, inplace=True)
 
         for i in range(xyz.shape[0]):
             self._fh.write('{0}\n'.format(xyz.shape[1]))

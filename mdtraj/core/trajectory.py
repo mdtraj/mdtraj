@@ -1238,9 +1238,10 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         with HDF5TrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(coordinates=self.xyz, time=self.time,
-                    cell_angles=self.unitcell_angles,
-                    cell_lengths=self.unitcell_lengths)
+            f.write(coordinates=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    time=self.time,
+                    cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
+                    cell_angles=self.unitcell_angles)
             f.topology = self.topology
 
     def save_lammpstrj(self, filename, force_overwrite=True):
@@ -1255,8 +1256,8 @@ class Trajectory(object):
         """
         with LAMMPSTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
-                    cell_angles=in_units_of(self.unitcell_angles, Trajectory._distance_unit, f.distance_unit),
-                    cell_lengths=self.unitcell_lengths)
+                    cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
+                    cell_angles=self.unitcell_angles)
 
     def save_xyz(self, filename, force_overwrite=True):
         """Save trajectory to .xyz format.
@@ -1330,7 +1331,9 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         with XTCTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(xyz=self.xyz, time=self.time, box=self.unitcell_vectors)
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    time=self.time,
+                    box=in_units_of(self.unitcell_vectors, Trajectory._distance_unit, f.distance_unit))
 
     def save_trr(self, filename, force_overwrite=True):
         """Save trajectory to Gromacs TRR format
@@ -1348,7 +1351,9 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         with TRRTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(xyz=self.xyz, time=self.time, box=self.unitcell_vectors)
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    time=self.time,
+                    box=in_units_of(self.unitcell_vectors, Trajectory._distance_unit, f.distance_unit))
 
     def save_dcd(self, filename, force_overwrite=True):
         """Save trajectory to CHARMM/NAMD DCD format
@@ -1362,7 +1367,7 @@ class Trajectory(object):
         """
         self._check_valid_unitcell()
         with DCDTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
@@ -1378,7 +1383,7 @@ class Trajectory(object):
         """
         self._check_valid_unitcell()
         with DTRTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles,
                     times=self.time)
@@ -1413,8 +1418,8 @@ class Trajectory(object):
                 raise ValueError('Only rectilinear boxes can be saved to mdcrd files')
 
         with MDCRDTrajectoryFile(filename, mode='w', force_overwrite=force_overwrite) as f:
-            f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
-                    in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit))
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit))
 
 
     def save_netcdf(self, filename, force_overwrite=True):
