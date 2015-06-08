@@ -11,7 +11,9 @@ How to do a release
 - Update the version number in `devtools/conda-recipe/meta.yaml`
 - Commit to master, and [tag](https://github.com/mdtraj/mdtraj/releases) the
   release on github
-- To push the source to PyPI, use `python setup.py sdist --formats=gztar,zip upload`
+- To push the source to PyPI, use `python setup.py sdist --formats=gztar,zip upload`.
+  **Before pushing to PyPI, run `git clean -x -f -d` to make sure that nothing
+  else gets added to the source release by accident**
 - Update `meta.yaml` in the mdtraj/mdtraj-conda-binaries repository. Commit
   to master. Travis and Appveyor will build binary conda packages.
 - After tagging the release, make a NEW commit that changes `ISRELEASED` back
