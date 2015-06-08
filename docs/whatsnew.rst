@@ -4,10 +4,48 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.5 (in development)
+---------------------
 
-v1.4 (Development)
-------------------
-- New function to calculate nematic order parameters (``compute_nematic_order``) (Christoph Klein)
+v1.4 (June 8, 2014)
+-------------------
+Version 1.4 is our best release yet! It contains many new features, performance improvements, and bug fixes.
+
+Major highlights include:
+
+- New function to calculate nematic order parameters (``compute_nematic_order``).
+- Improved efficiency of generating RDF pairs.
+- Add support for XYZ-format files.
+- Fix parsing error with certain mol2 files.
+- Support .pdb.gz files and make loading multiple pdb files more efficient.
+- Fix use-after-free bug with DCD causing incorrect filenames.
+- Update IPython-notebook trajectory viewer for IPython 3.0.
+- Add support for the HOOMD-Blue XML topology format.
+- Make virtual sites a new "element".
+- Add 'NA' code to dssp for non-protein residues.
+- Add support for CHARMM (Chamber) topologies in prmtop loader.
+- Add methods to calculate more NMR J-couplings.
+- Fix gro file unitcell handling.
+- Enable .lammpstrj to parse custom column orders.
+- Add read_as_traj method to all TrajectoryFile classes, making iterload work for all formats.
+
+A total of 10 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+Authors
+~~~~~~~
+* Kyle A. Beauchamp
+* Anton Goloborodko +
+* Matthew Harrigan
+* Christoph Klein
+* Robert T. McGibbon
+* Tim Moore +
+* Patrick Riley +
+* Jason Swails
+* Lee-Ping Wang
+* Andrea Zonca +
+
+
 
 
 v1.3 (February 25, 2015)

@@ -56,8 +56,8 @@ if sys.version_info[0] == 2:
 
 
 ##########################
-VERSION = "1.4.0.dev0"
-ISRELEASED = False
+VERSION = "1.4.0"
+ISRELEASED = True
 __version__ = VERSION
 ##########################
 
