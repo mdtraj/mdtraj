@@ -100,3 +100,10 @@ def test_seek():
         f.seek(4, 1)
         xyz8, _, _ = f.read(n_frames=1)
         eq(reference.xyz[8], xyz8[0]/10)
+
+def test_custom():
+    t0 = md.load(get_fn('custom.lammpstrj'), top=get_fn('custom.pdb'))
+    t0.save(temp)
+
+    t1 = md.load(temp, top=get_fn('custom.pdb'))
+    eq(t0.xyz, t1.xyz)

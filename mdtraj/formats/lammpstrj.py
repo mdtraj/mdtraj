@@ -360,7 +360,21 @@ class LAMMPSTrajectoryFile(object):
                           'lammpstrj file.'.format(
                     self._line_counter,  self._filename))
 
-        self._fh.readline()  # ITEM: ATOMS ...
+        column_headers = self._fh.readline().split()[2:]  # ITEM: ATOMS ...
+        if self._frame_index == 0:
+            # Detect which columns the atom index, type and coordinates are.
+            columns = {header: idx for idx, header in enumerate(column_headers)}
+            for header in columns:
+                if header in {'x', 'y', 'z', 'xs', 'ys', 'zs', 'xu', 'yu', 'zu',
+                              'xsu', 'ysu', 'zsu'}:
+                    columns[header[0]] = columns.pop(header)
+            try:
+                self._atom_index_column = columns['id']
+                self._atom_type_column = columns['type']
+                self._xyz_columns = [columns['x'], columns['y'], columns['z']]
+            except KeyError:
+                raise IOError("Invalid .lammpstrj file. Must contain 'id', "
+                              "'type', 'x*', 'y*' and 'z*' entries.")
         self._line_counter += 4
         # --- end header ---
 
@@ -372,11 +386,11 @@ class LAMMPSTrajectoryFile(object):
             line = self._fh.readline()
             if line == '':
                 raise _EOF()
-            temp = line.split()
+            split_line = line.split()
             try:
-                atom_index = int(temp[0])
-                types[atom_index - 1] = int(temp[1])
-                xyz[atom_index - 1] = [float(x) for x in temp[2:5]]
+                atom_index = int(split_line[self._atom_index_column])
+                types[atom_index - 1] = int(split_line[self._atom_type_column])
+                xyz[atom_index - 1] = [float(split_line[column]) for column in self._xyz_columns]
             except Exception:
                 raise IOError('lammpstrj parse error on line {0:d} of "{1:s}". '
                               'This file does not appear to be a valid '
