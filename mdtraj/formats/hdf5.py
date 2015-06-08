@@ -21,8 +21,8 @@
 ##############################################################################
 
 """
-This module implements the MDTraj HDF5 format described in
-https://github.com/rmcgibbo/mdtraj/issues/36
+This module implements the MDTraj HDF5 format described at
+https://github.com/mdtraj/mdtraj/wiki/HDF5-Trajectory-Format
 """
 
 ##############################################################################
@@ -141,27 +141,19 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.HDF5TrajectoryFile :  Low level interface to HDF5 files
     """
-    from mdtraj.core.trajectory import _parse_topology, Trajectory
+    if not isinstance(filename, string_types):
+        raise TypeError('filename must be of type string for load_lh5. '
+            'you supplied %s' % type(filename))
+
     atom_indices = cast_indices(atom_indices)
 
     with HDF5TrajectoryFile(filename) as f:
         if frame is not None:
             f.seek(frame)
-            data = f.read(n_frames=1, atom_indices=atom_indices)
+            n_frames = 1
         else:
-            data = f.read(stride=stride, atom_indices=atom_indices)
-
-        topology = f.topology
-        in_units_of(data.coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        in_units_of(data.cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
-
-        if atom_indices is not None:
-            topology = f.topology.subset(atom_indices)
-
-    trajectory = Trajectory(xyz=data.coordinates, topology=topology,
-                            time=data.time, unitcell_lengths=data.cell_lengths,
-                            unitcell_angles=data.cell_angles)
-    return trajectory
+            n_frames = None
+        return f.read_as_traj(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
 
 
 @_FormatRegistry.register_fileobject('.h5')
@@ -521,6 +513,49 @@ class HDF5TrajectoryFile(object):
     #####################################################
     # read/write methods for file-like behavior
     #####################################################
+
+    @ensure_mode('r')
+    def read_as_traj(self, n_frames=None, stride=None, atom_indices=None):
+        """Read a trajectory from the HDF5 file
+
+        Parameters
+        ----------
+        n_frames : {int, None}
+            The number of frames to read. If not supplied, all of the
+            remaining frames will be read.
+        stride : {int, None}
+            By default all of the frames will be read, but you can pass this
+            flag to read a subset of of the data by grabbing only every
+            `stride`-th frame from disk.
+        atom_indices : {int, None}
+            By default all of the atom  will be read, but you can pass this
+            flag to read only a subsets of the atoms for the `coordinates` and
+            `velocities` fields. Note that you will have to carefully manage
+            the indices and the offsets, since the `i`-th atom in the topology
+            will not necessarily correspond to the `i`-th atom in your subset.
+
+        Returns
+        -------
+        trajectory : Trajectory
+            A trajectory object containing the loaded portion of the file.
+        """
+
+        from mdtraj.core.trajectory import Trajectory
+        topology = self.topology
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
+
+        initial = int(self._frame_index)
+        data = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
+        if len(data) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
+        in_units_of(data.coordinates, self.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(data.cell_lengths, self.distance_unit, Trajectory._distance_unit, inplace=True)
+
+        return Trajectory(xyz=data.coordinates, topology=topology, time=data.time,
+                          unitcell_lengths=data.cell_lengths,
+                          unitcell_angles=data.cell_angles)
 
     @ensure_mode('r')
     def read(self, n_frames=None, stride=None, atom_indices=None):

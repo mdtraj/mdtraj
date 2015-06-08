@@ -91,17 +91,11 @@ def load_gro(filename, stride=None, atom_indices=None, frame=None):
         topology = f.topology
         if frame is not None:
             f.seek(frame)
-            coordinates, time, unitcell_vectors = f.read(n_frames=1, atom_indices=atom_indices)
+            n_frames = 1
         else:
-            coordinates, time, unitcell_vectors = f.read(stride=stride, atom_indices=atom_indices)
-
-        coordinates = in_units_of(coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        unitcell_vectors = in_units_of(unitcell_vectors, f.distance_unit, Trajectory._distance_unit, inplace=True)
-
-    traj = Trajectory(xyz=coordinates, topology=topology, time=time)
-    traj.unitcell_vectors = unitcell_vectors
-
-    return traj
+            n_frames = None
+        return f.read_as_traj(n_frames=n_frames, stride=stride,
+                              atom_indices=atom_indices)
 
 
 @_FormatRegistry.register_fileobject('.gro')
@@ -184,6 +178,43 @@ class GroTrajectoryFile(object):
             frame_time = None if time is None else time[i]
             frame_box = None if unitcell_vectors is None else unitcell_vectors[i]
             self._write_frame(coordinates[i], topology, frame_time, frame_box)
+
+    def read_as_traj(self, n_frames=None, stride=None, atom_indices=None):
+        """Read a trajectory from a gro file
+
+        Parameters
+        ----------
+        n_frames : int, optional
+            If positive, then read only the next `n_frames` frames. Otherwise read all
+            of the frames in the file.
+        stride : np.ndarray, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
+
+        Returns
+        -------
+        trajectory : Trajectory
+            A trajectory object containing the loaded portion of the file.
+        """
+        from mdtraj.core.trajectory import Trajectory
+        topology = self.topology
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
+
+        coordinates, time, unitcell_vectors = self.read(stride=stride, atom_indices=atom_indices)
+        if len(coordinates) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
+        coordinates = in_units_of(coordinates, self.distance_unit, Trajectory._distance_unit, inplace=True)
+        unitcell_vectors = in_units_of(unitcell_vectors, self.distance_unit, Trajectory._distance_unit, inplace=True)
+
+        traj = Trajectory(xyz=coordinates, topology=topology, time=time)
+        traj.unitcell_vectors = unitcell_vectors
+        return traj
+
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read data from a molecular dynamics trajectory in the GROMACS GRO
@@ -373,6 +404,7 @@ class GroTrajectoryFile(object):
             box[1,2], box[2,0], box[2,1]))
 
         self._file.write('\n'.join(lines))
+        self._file.write('\n')
 
     def seek(self, offset, whence=0):
         """Move to a new file position

@@ -63,7 +63,7 @@ def test_read_write_0():
 
     eq(lengths, new_lengths)
     eq(angles, new_angles)
-    eq(xyz, xyz2/10, decimal=3)
+    eq(xyz, xyz2, decimal=3)
 
 def test_mdwrite():
     t = md.load(get_fn('frame0.dcd'), top=get_fn('native.pdb'))
