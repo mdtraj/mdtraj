@@ -86,26 +86,20 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
     mdtraj.NetCDFTrajectoryFile :  Low level interface to NetCDF files
     """
     from mdtraj.core.trajectory import _parse_topology, Trajectory
+    if top is None:
+        raise ValueError('"top" argument is required for load_netcdf')
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-    if atom_indices is not None:
-        topology = topology.subset(atom_indices)
 
     with NetCDFTrajectoryFile(filename) as f:
         if frame is not None:
             f.seek(frame)
-            xyz, time, cell_lengths, cell_angles = f.read(n_frames=1, atom_indices=atom_indices)
+            n_frames = 1
         else:
-            xyz, time, cell_lengths, cell_angles = f.read(stride=stride, atom_indices=atom_indices)
+            n_frames = None
 
-        xyz = in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        cell_lengths = in_units_of(cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
-
-    trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
-                            unitcell_lengths=cell_lengths,
-                            unitcell_angles=cell_angles)
-    return trajectory
+        return f.read_as_traj(topology, n_frames=n_frames, atom_indices=atom_indices, stride=stride)
 
 
 @_FormatRegistry.register_fileobject('.nc')
@@ -181,6 +175,43 @@ class NetCDFTrajectoryFile(object):
     def _validate_open(self):
         if self._closed:
             raise IOError('The file is closed.')
+
+    def read_as_traj(self, topology, n_frames=None, stride=None, atom_indices=None):
+        """Read a trajectory from a NetCDF file
+
+        Parameters
+        ----------
+        topology : Topology
+            The system topology
+        n_frames : int, optional
+            If positive, then read only the next `n_frames` frames. Otherwise read all
+            of the frames in the file.
+        stride : np.ndarray, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
+
+        Returns
+        -------
+        trajectory : Trajectory
+            A trajectory object containing the loaded portion of the file.
+        """
+        from mdtraj.core.trajectory import Trajectory
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
+
+        xyz, time, cell_lengths, cell_angles = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
+        if len(xyz) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
+        xyz = in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
+        cell_lengths = in_units_of(cell_lengths, self.distance_unit, Trajectory._distance_unit, inplace=True)
+
+        return Trajectory(xyz=xyz, topology=topology, time=time,
+                          unitcell_lengths=cell_lengths,
+                          unitcell_angles=cell_angles)
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read data from a molecular dynamics trajectory in the AMBER NetCDF

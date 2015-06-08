@@ -23,6 +23,7 @@
 
 import tempfile, os
 import functools
+from mdtraj.utils import enter_temp_directory
 from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises, SkipTest
 import numpy as np
 import mdtraj as md
@@ -463,27 +464,66 @@ def test_load_frame():
     frames = [md.load_frame(get_fn(f), index=r, top=get_fn('native.pdb')) for f, r in zip(files, rand)]
 
     for traj, frame, r, f in zip(trajectories, frames, rand, files):
-        eq(traj[r].xyz, frame.xyz)
-        eq(traj[r].unitcell_vectors, frame.unitcell_vectors)
-        eq(traj[r].time, frame.time, err_msg='%d, %d: %s' % (traj[r].time[0], frame.time[0], f))
+        def test():
+            eq(traj[r].xyz, frame.xyz)
+            eq(traj[r].unitcell_vectors, frame.unitcell_vectors)
+            eq(traj[r].time, frame.time, err_msg='%d, %d: %s' % (traj[r].time[0], frame.time[0], f))
+        test.description = 'test_load_frame: %s' % f
+        yield test
 
     t1 = md.load(get_fn('2EQQ.pdb'))
     r = np.random.randint(len(t1))
     t2 = md.load_frame(get_fn('2EQQ.pdb'), r)
     eq(t1[r].xyz, t2.xyz)
 
+
 def test_iterload():
-    files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
-             'frame0.dcd', 'frame0.binpos', 'legacy_msmbuilder_trj0.lh5',
-             'frame0.xyz', 'frame0.lammpstrj']
-    chunk = 100
-    for stride in [1, 2, 5, 10]:
-        for file in files:
-            t_ref = md.load(get_fn(file), stride=stride, top=get_fn('native.pdb'))
-            t = functools.reduce(lambda a, b: a.join(b), md.iterload(get_fn(file), stride=stride, top=get_fn('native.pdb'), chunk=100))
-            eq(t_ref.xyz, t.xyz)
-            eq(t_ref.time, t.time)
-            eq(t_ref.topology, t.topology)
+    t_ref = md.load(get_fn('frame0.h5'))[:20]
+    with enter_temp_directory():
+        for ext in t_ref._savers().keys():
+
+            # only a 1 frame per file format
+            if ext in ('.ncrst', '.rst7'):
+                continue
+
+            fn = 'temp%s' % ext
+            t_ref.save(fn)
+
+            def test():
+                for stride in [1, 2, 3]:
+                    loaded = md.load(fn, top=t_ref, stride=stride)
+                    iterloaded = functools.reduce(lambda a, b: a.join(b), md.iterload(fn, top=t_ref, stride=stride, chunk=6))
+                    eq(loaded.xyz, iterloaded.xyz)
+                    eq(loaded.time, iterloaded.time)
+                    eq(loaded.unitcell_angles, iterloaded.unitcell_angles)
+                    eq(loaded.unitcell_lengths, iterloaded.unitcell_lengths)
+
+            test.description = 'test_iterload: %s' % ext
+            yield test
+
+
+def test_save_load():
+    # this cycles all the known formats you can save to, and then tries
+    # to reload, using just a single-frame file.
+
+    t_ref = md.load(get_fn('native.pdb'))
+    t_ref.unitcell_vectors = np.array([[[1,0,0], [0,1,0], [0,0,1]]])
+    with enter_temp_directory():
+        for ext in t_ref._savers().keys():
+            def test():
+                fn = 'temp%s' % ext
+                t_ref.save(fn)
+                t = md.load(fn, top=t_ref.topology)
+
+                eq(t.xyz, t_ref.xyz)
+                eq(t.time, t_ref.time)
+                if t._have_unitcell:
+                    eq(t.unitcell_angles, t_ref.unitcell_angles)
+                    eq(t.unitcell_lengths, t_ref.unitcell_lengths)
+
+            test.description = 'test_save_load: %s' % ext
+            yield test
+
 
 def test_length():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',

@@ -54,6 +54,7 @@ from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.mol2 import load_mol2
 from mdtraj.formats.gro import load_gro
+from mdtraj.formats.arc import load_arc
 from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.core.topology import Topology
 from mdtraj.core.residue_names import _SOLVENT_TYPES
@@ -70,7 +71,11 @@ from mdtraj.geometry import distance
 # Globals
 ##############################################################################
 
-__all__ = ['open', 'load', 'iterload', 'load_frame', 'Trajectory']
+__all__ = ['open', 'load', 'iterload', 'load_frame', 'load_topology', 'Trajectory']
+# supported extensions for constructing topologies
+_TOPOLOGY_EXTS = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
+                  '.psf', '.mol2', '.hoomdxml', '.gro', '.arc']
+
 
 ##############################################################################
 # Utilities
@@ -107,6 +112,24 @@ def _assert_files_or_dirs_exist(names):
                         (os.path.isfile(fn) or os.path.isdir(fn))):
             raise IOError('No such file: %s' % fn)
 
+
+def load_topology(filename):
+    """Load a topology
+
+    Parameters
+    ----------
+    filename : str
+        Path to a file containing a system topology. The following extensions
+        are supported: '.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
+            '.psf', '.mol2', '.hoomdxml'
+
+    Returns
+    -------
+    topology : md.Topology
+    """
+    return _parse_topology(filename)
+
+
 def _parse_topology(top):
     """Get the topology from a argument of indeterminate type
     If top is a string, we try loading a pdb, if its a trajectory
@@ -122,10 +145,6 @@ def _parse_topology(top):
     except:
         ext = None  # might not be a string
 
-    # supported extensions for constructing topologies
-    extensions = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
-            '.psf', '.mol2', '.hoomdxml']
-
     if isinstance(top, string_types) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):
         _traj = load_frame(top, 0)
         topology = _traj.topology
@@ -137,6 +156,8 @@ def _parse_topology(top):
         topology = load_mol2(top).topology
     elif isinstance(top, string_types) and (ext in ['.gro']):
         topology = load_gro(top).topology
+    elif isinstance(top, string_types) and (ext in ['.arc']):
+        topology = load_arc(top).topology
     elif isinstance(top, string_types) and (ext in ['.hoomdxml']):
         topology = load_hoomdxml(top).topology
     elif isinstance(top, Trajectory):
@@ -145,10 +166,10 @@ def _parse_topology(top):
         topology = top
     elif isinstance(top, string_types):
         raise IOError('The topology is loaded by filename extension, and the '
-                        'detected "%s" format is not supported. Supported topology '
-                        'formats include %s and "%s".' % (ext,
-                        ', '.join(['"%s"' % e for e in extensions[:-1]]),
-                        extensions[-1]))
+                      'detected "%s" format is not supported. Supported topology '
+                      'formats include %s and "%s".' % (
+                          ext, ', '.join(['"%s"' % e for e in _TOPOLOGY_EXTS[:-1]]),
+                          _TOPOLOGY_EXTS[-1]))
     else:
         raise TypeError('A topology is required. You supplied top=%s' % str(top))
 
@@ -259,7 +280,7 @@ def load_frame(filename, index, top=None, atom_indices=None):
                       % (filename, extension, _FormatRegistry.loaders.keys()))
 
     kwargs = {'atom_indices': atom_indices}
-    if loader.__name__ not in ['load_hdf5', 'load_pdb']:
+    if extension not in _TOPOLOGY_EXTS:
         kwargs['top'] = top
 
     if loader.__name__ not in ['load_dtr']:
@@ -364,22 +385,21 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                       'was found. I can only load files '
                       'with extensions in %s' % (filename, extension, _FormatRegistry.loaders.keys()))
 
-    if loader.__name__ in ['load_hdf5', 'load_pdb', 'load_lh5']:
-        if 'top' in kwargs:
-            warnings.warn('top= kwarg ignored since file contains topology information')
+    if extension in _TOPOLOGY_EXTS:
         # this is a little hack that makes calling load() more predicable. since
         # most of the loaders take a kwargs "top" except for load_hdf5, (since
         # it saves the topology inside the file), we often end up calling
         # load_hdf5 via this function with the top kwarg specified. but then
         # there would be a signature binding error. it's easier just to ignore
         # it.
-        kwargs.pop('top', None)
+        if 'top' in kwargs:
+            warnings.warn('top= kwarg ignored since file contains topology information')
+            kwargs.pop('top', None)
 
     if loader.__name__ not in ['load_dtr']:
         _assert_files_exist(filename_or_filenames)
     else:
         _assert_files_or_dirs_exist(filename_or_filenames)
-
 
     value = loader(filename, **kwargs)
     return value
@@ -427,86 +447,42 @@ def iterload(filename, chunk=100, **kwargs):
     <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
     <mdtraj.Trajectory with 100 frames, 423 atoms at 0x110740a90>
     """
-    stride = kwargs.get('stride', 1)
-    atom_indices = cast_indices(kwargs.get('atom_indices', None))
+    stride = kwargs.pop('stride', 1)
+    atom_indices = cast_indices(kwargs.pop('atom_indices', None))
+    top = kwargs.pop('top', None)
+    extension = _get_extension(filename)
+    if extension not in _TOPOLOGY_EXTS:
+        topology = _parse_topology(top)
+
     if chunk % stride != 0:
         raise ValueError('Stride must be a divisor of chunk. stride=%d does not go '
                          'evenly into chunk=%d' % (stride, chunk))
     if chunk == 0:
+        # If chunk was 0 then we want to avoid filetype-specific code
+        # in case of undefined behavior in various file parsers.
         yield load(filename, **kwargs)
-    else:  # If chunk was 0 then we want to avoid filetype-specific code in case of undefined behavior in various file parsers.
-        if filename.endswith('.h5'):
-            if 'top' in kwargs:
-                warnings.warn('top= kwarg ignored since file contains topology information')
-            with HDF5TrajectoryFile(filename) as f:
-                if atom_indices is None:
-                    topology = f.topology
+
+    elif extension in ('.pdb', '.pdb.gz'):
+        # the PDBTrajectortFile class doesn't follow the standard API. Fixing it
+        # to support iterload could be worthwhile, but requires a deep refactor.
+        t = load(filename, stride=stride, atom_indices=atom_indices)
+        for i in range(0, len(t), chunk):
+            yield  t[i:i+chunk]
+
+    else:
+        with (lambda x: open(x, n_atoms=topology.n_atoms)
+              if extension in ('.crd', '.mdcrd')
+              else open(filename))(filename) as f:
+            while True:
+                if extension not in _TOPOLOGY_EXTS:
+                    traj = f.read_as_traj(topology, n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
                 else:
-                    topology = f.topology.subset(atom_indices)
+                    traj = f.read_as_traj(n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
 
-                while True:
-                    data = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
-                    if data == []:
-                        raise StopIteration()
-                    in_units_of(data.coordinates, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                    in_units_of(data.cell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                    yield Trajectory(xyz=data.coordinates, topology=topology,
-                                     time=data.time, unitcell_lengths=data.cell_lengths,
-                                     unitcell_angles=data.cell_angles)
+                if len(traj) == 0:
+                    raise StopIteration()
 
-        if filename.endswith('.lh5'):
-            if 'top' in kwargs:
-                warnings.warn('top= kwarg ignored since file contains topology information')
-            with LH5TrajectoryFile(filename) as f:
-                if atom_indices is None:
-                    topology = f.topology
-                else:
-                    topology = f.topology.subset(atom_indices)
-
-                ptr = 0
-                while True:
-                    xyz = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
-                    if len(xyz) == 0:
-                        raise StopIteration()
-                    in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                    time = np.arange(ptr, ptr+len(xyz)*stride, stride)
-                    ptr += len(xyz)*stride
-                    yield Trajectory(xyz=xyz, topology=topology, time=time)
-
-        elif filename.endswith('.xtc'):
-            topology = _parse_topology(kwargs.get('top', None))
-            with XTCTrajectoryFile(filename) as f:
-                while True:
-                    xyz, time, step, box = f.read(chunk*stride, stride=stride, atom_indices=atom_indices)
-                    if len(xyz) == 0:
-                        raise StopIteration()
-                    in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                    in_units_of(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                    trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
-                    trajectory.unitcell_vectors = box
-                    yield trajectory
-
-        elif filename.endswith('.dcd'):
-            topology = _parse_topology(kwargs.get('top', None))
-            with DCDTrajectoryFile(filename) as f:
-                ptr = 0
-                while True:
-                    # for reasons that I have not investigated, dcdtrajectory file chunk and stride
-                    # together work like this method, but HDF5/XTC do not.
-                    xyz, box_length, box_angle = f.read(chunk, stride=stride, atom_indices=atom_indices)
-                    if len(xyz) == 0:
-                        raise StopIteration()
-                    in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                    in_units_of(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
-                    time = np.arange(ptr, ptr+len(xyz)*stride, stride)
-                    ptr += len(xyz)*stride
-                    yield Trajectory(xyz=xyz, topology=topology, time=time, unitcell_lengths=box_length,
-                                     unitcell_angles=box_angle)
-
-        else:
-            t = load(filename, **kwargs)
-            for i in range(0, len(t), chunk):
-                yield t[i:i+chunk]
+                yield traj
 
 
 class Trajectory(object):
@@ -572,6 +548,7 @@ class Trajectory(object):
     # this is NOT configurable. if it's set to something else, things will break
     # (thus why I make it private)
     _distance_unit = 'nanometers'
+
 
     @property
     def topology(self):
@@ -1111,6 +1088,7 @@ class Trajectory(object):
         self.unitcell_angles = unitcell_angles
 
         # time will take the default 1..N
+        self._time_default_to_arange = (time is None)
         if time is None:
             time = np.arange(len(self.xyz))
         self.time = time
@@ -1194,6 +1172,29 @@ class Trajectory(object):
         """
         return load(filenames, **kwargs)
 
+    def _savers(self):
+        """Return a dictionary mapping extensions to the appropriate format-specific save function"""
+        return {'.xtc': self.save_xtc,
+                '.trr': self.save_trr,
+                '.pdb': self.save_pdb,
+                '.pdb.gz': self.save_pdb,
+                '.dcd': self.save_dcd,
+                '.h5': self.save_hdf5,
+                '.binpos': self.save_binpos,
+                '.nc': self.save_netcdf,
+                '.netcdf': self.save_netcdf,
+                '.ncrst' : self.save_netcdfrst,
+                '.crd': self.save_mdcrd,
+                '.mdcrd': self.save_mdcrd,
+                '.ncdf': self.save_netcdf,
+                '.lh5': self.save_lh5,
+                '.lammpstrj': self.save_lammpstrj,
+                '.xyz': self.save_xyz,
+                '.xyz.gz': self.save_xyz,
+                '.gro': self.save_gro,
+                '.rst7' : self.save_amberrst7,
+            }
+
     def save(self, filename, **kwargs):
         """Save trajectory to disk, in a format determined by the filename extension
 
@@ -1214,27 +1215,7 @@ class Trajectory(object):
         """
         # grab the extension of the filename
         extension = _get_extension(filename)
-
-        savers = {'.xtc': self.save_xtc,
-                  '.trr': self.save_trr,
-                  '.pdb': self.save_pdb,
-                  '.pdb.gz': self.save_pdb,
-                  '.dcd': self.save_dcd,
-                  '.h5': self.save_hdf5,
-                  '.binpos': self.save_binpos,
-                  '.nc': self.save_netcdf,
-                  '.netcdf': self.save_netcdf,
-                  '.ncrst' : self.save_netcdfrst,
-                  '.crd': self.save_mdcrd,
-                  '.mdcrd': self.save_mdcrd,
-                  '.ncdf': self.save_netcdf,
-                  '.lh5': self.save_lh5,
-                  '.lammpstrj': self.save_lammpstrj,
-                  '.xyz': self.save_xyz,
-                  '.xyz.gz': self.save_xyz,
-                  '.gro': self.save_gro,
-                  '.rst7' : self.save_amberrst7,
-                  }
+        savers = self._savers()
 
         try:
             saver = savers[extension]
@@ -1257,9 +1238,10 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         with HDF5TrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(coordinates=self.xyz, time=self.time,
-                    cell_angles=self.unitcell_angles,
-                    cell_lengths=self.unitcell_lengths)
+            f.write(coordinates=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    time=self.time,
+                    cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
+                    cell_angles=self.unitcell_angles)
             f.topology = self.topology
 
     def save_lammpstrj(self, filename, force_overwrite=True):
@@ -1273,9 +1255,9 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         with LAMMPSTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(xyz=self.xyz,
-                    cell_angles=self.unitcell_angles,
-                    cell_lengths=self.unitcell_lengths)
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
+                    cell_angles=self.unitcell_angles)
 
     def save_xyz(self, filename, force_overwrite=True):
         """Save trajectory to .xyz format.
@@ -1288,7 +1270,8 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         with XYZTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(xyz=self.xyz, types=[a.name for a in self.top.atoms])
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    types=[a.name for a in self.top.atoms])
 
     def save_pdb(self, filename, force_overwrite=True, bfactors=None):
         """Save trajectory to RCSB PDB format
@@ -1348,7 +1331,9 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         with XTCTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(xyz=self.xyz, time=self.time, box=self.unitcell_vectors)
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    time=self.time,
+                    box=in_units_of(self.unitcell_vectors, Trajectory._distance_unit, f.distance_unit))
 
     def save_trr(self, filename, force_overwrite=True):
         """Save trajectory to Gromacs TRR format
@@ -1366,7 +1351,9 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         with TRRTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(xyz=self.xyz, time=self.time, box=self.unitcell_vectors)
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    time=self.time,
+                    box=in_units_of(self.unitcell_vectors, Trajectory._distance_unit, f.distance_unit))
 
     def save_dcd(self, filename, force_overwrite=True):
         """Save trajectory to CHARMM/NAMD DCD format
@@ -1380,7 +1367,7 @@ class Trajectory(object):
         """
         self._check_valid_unitcell()
         with DCDTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
 
@@ -1396,7 +1383,7 @@ class Trajectory(object):
         """
         self._check_valid_unitcell()
         with DTRTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles,
                     times=self.time)
@@ -1431,8 +1418,8 @@ class Trajectory(object):
                 raise ValueError('Only rectilinear boxes can be saved to mdcrd files')
 
         with MDCRDTrajectoryFile(filename, mode='w', force_overwrite=force_overwrite) as f:
-            f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
-                    in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit))
+            f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                    cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit))
 
 
     def save_netcdf(self, filename, force_overwrite=True):

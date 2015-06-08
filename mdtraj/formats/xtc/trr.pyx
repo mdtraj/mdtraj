@@ -76,7 +76,7 @@ if sizeof(float) != sizeof(np.float32_t):
 @_FormatRegistry.register_loader('.trr')
 def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
     """load_trr(filename, top=None, stride=None, atom_indices=None, frame=None)
-    
+
     Load a Gromacs TRR file from disk.
 
     The .trr format is a cross-platform compressed binary trajectory format
@@ -131,22 +131,15 @@ def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-    if atom_indices is not None:
-        topology = topology.subset(atom_indices)
-
-    with TRRTrajectoryFile(filename) as f:
+    with TRRTrajectoryFile(filename, 'r') as f:
         if frame is not None:
             f.seek(frame)
-            xyz, time, step, box, lambd = f.read(n_frames=1, atom_indices=atom_indices)
+            n_frames = 1
         else:
-            xyz, time, step, box, lambd = f.read(stride=stride, atom_indices=atom_indices)
+            n_frames = None
 
-        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        in_units_of(box, f.distance_unit, Trajectory._distance_unit, inplace=True)
-
-    trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
-    trajectory.unitcell_vectors = box
-    return trajectory
+        return f.read_as_traj(topology, n_frames=n_frames, stride=stride,
+                              atom_indices=atom_indices)
 
 
 cdef class TRRTrajectoryFile:
@@ -265,6 +258,50 @@ cdef class TRRTrajectoryFile:
         if self.is_open:
             trrlib.xdrfile_close(self.fh)
             self.is_open = False
+
+    def read_as_traj(self, topology, n_frames=None, stride=None, atom_indices=None):
+        """read_as_traj(topology, n_frames=None, stride=None, atom_indices=None)
+
+        Read a trajectory from an XTC file
+
+        Parameters
+        ----------
+        topology : Topology
+            The system topology
+        n_frames : int, None
+            The number of frames you would like to read from the file.
+            If None, all of the remaining frames will be loaded.
+        stride : int, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
+
+        Returns
+        -------
+        trajectory : Trajectory
+            A trajectory object containing the loaded portion of the file.
+
+        See Also
+        --------
+        read : Returns the raw data from the file
+        """
+
+        from mdtraj.core.trajectory import Trajectory
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
+
+        xyz, time, step, box, _ = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
+        if len(xyz) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
+        in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(box, self.distance_unit, Trajectory._distance_unit, inplace=True)
+
+        trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
+        trajectory.unitcell_vectors = box
+        return trajectory
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)

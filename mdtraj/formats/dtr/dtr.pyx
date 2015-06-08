@@ -62,39 +62,27 @@ cdef int _DTR_EOF    = -1   # No problems
 def _load_desmond_traj(filename, top=None, stride=None, atom_indices=None, frame=None):
     """
     """
-    from mdtraj.core.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology
     if top is None:
         raise ValueError('"top" argument is required for load_dtr')
-
     if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_trr. '
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-    if atom_indices is not None:
-        topology = topology.subset(atom_indices)
-
     with DTRTrajectoryFile(filename) as f:
         if frame is not None:
             f.seek(frame)
-            xyz, time, box_length, box_angle = f.read(n_frames=1, atom_indices=atom_indices)
+            n_frames = 1
         else:
-            xyz, time, box_length, box_angle = f.read(stride=stride, atom_indices=atom_indices)
+            n_frames = None
 
-        in_units_of(xyz, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        in_units_of(box_length, f.distance_unit, Trajectory._distance_unit, inplace=True)
-
-
-    trajectory = Trajectory(xyz=xyz, topology=topology, time=time,
-                            unitcell_lengths=box_length,
-                            unitcell_angles=box_angle)
-    return trajectory
+        return f.read_as_traj(topology, n_frames=n_frames, atom_indices=atom_indices, stride=stride)
 
 
 @_FormatRegistry.register_loader('.dtr')
 def load_dtr(filename, top=None, stride=None, atom_indices=None, frame=None):
-
     """load_dtr(filename, top=None, stride=None, atom_indices=None, frame=None)
 
     Load a dtr file from disk.
@@ -169,6 +157,7 @@ def load_dtr(filename, top=None, stride=None, atom_indices=None, frame=None):
     mdtraj.DTRTrajectoryFile :  Low level interface to dtr files
     """
     return _load_desmond_traj(filename, top=top, stride=stride, atom_indices=atom_indices, frame=frame)
+
 
 @_FormatRegistry.register_loader('.stk')
 def load_stk(filename, top=None, stride=None, atom_indices=None, frame=None):
@@ -440,10 +429,48 @@ cdef class DTRTrajectoryFile:
              raise ValueError('I/O operation on closed file')
         return self.n_frames
 
+    def read_as_traj(self, topology, n_frames=None, stride=None, atom_indices=None):
+        """read_as_traj(topology, n_frames=None, stride=None, atom_indices=None)
+
+        Read a trajectory from a DTR file
+
+        Parameters
+        ----------
+        topology : Topology
+            The system topology
+        n_frames : int, optional
+            If positive, then read only the next `n_frames` frames. Otherwise read all
+            of the frames in the file.
+        stride : np.ndarray, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
+
+        Returns
+        -------
+        trajectory : Trajectory
+            A trajectory object containing the loaded portion of the file.
+        """
+        from mdtraj.core.trajectory import Trajectory
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
+
+        xyz, time, box_length, box_angle = self.read(stride=stride, atom_indices=atom_indices)
+        if len(xyz) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
+        in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(box_length, self.distance_unit, Trajectory._distance_unit, inplace=True)
+        return Trajectory(xyz=xyz, topology=topology, time=time,
+                          unitcell_lengths=box_length,
+                          unitcell_angles=box_angle)
+
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)
 
-        Read the data from a dtr file
+        Read the data from a DTR file
 
         Parameters
         ----------
@@ -604,7 +631,7 @@ cdef class DTRTrajectoryFile:
             The chemical time in each frame. It must be stored in ascending order.
         """
 
-        
+
         if str(self.mode) != 'w':
             raise ValueError('write() is only available when the file is opened in mode="w"')
         if not self._needs_write_initialization and not self.is_open:
@@ -646,11 +673,11 @@ cdef class DTRTrajectoryFile:
                     "to contain unitcell information, but you did not supply it.")
             if times is None:
                 raise ValueError("The file that you're saving to was created without "
-                    "time information.")        
-                    
+                    "time information.")
+
         self._write(xyz, cell_lengths, cell_angles, times)
-    
-    
+
+
     cdef _write(self, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz,
                 np.ndarray[np.float32_t, ndim=2, mode="c"] cell_lengths,
                 np.ndarray[np.float32_t, ndim=2, mode="c"] cell_angles,
@@ -673,7 +700,7 @@ cdef class DTRTrajectoryFile:
                 self.timestep.beta  = cell_angles[i, 1]
                 self.timestep.gamma = cell_angles[i, 2]
                 self.timestep.physical_time = times[i]
-                
+
             # when the dcd handle is opened during initialize_write,
             # it passes the flag for whether the unitcell information is written
             # to disk or not. So when we don't have unitcell information being
@@ -683,8 +710,8 @@ cdef class DTRTrajectoryFile:
             status = write_timestep(self.fh, self.timestep)
 
             if status != _DTR_SUCCESS:
-                raise IOError("DTR Error: %s" %status)    
-        
+                raise IOError("DTR Error: %s" %status)
 
-        
+
+
 _FormatRegistry.register_fileobject('.dtr')(DTRTrajectoryFile)

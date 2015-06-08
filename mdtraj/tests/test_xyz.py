@@ -57,13 +57,13 @@ def test_read_gz():
     eq(reference.xyz[0], traj.xyz[0], decimal=3)
 
 def test_read_write():
-    xyz = 10 * np.random.randn(100, 11, 3)
+    xyz = np.around(10 * np.random.randn(100, 11, 3), decimals=3)
     with XYZTrajectoryFile(temp, mode='w') as f:
         f.write(xyz)
     with XYZTrajectoryFile(temp) as f:
         xyz2 = f.read()
 
-    eq(xyz, xyz2/10, decimal=4)
+    eq(xyz, xyz2)
 
 
 def test_mdwrite():
