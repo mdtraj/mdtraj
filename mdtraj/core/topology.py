@@ -958,7 +958,7 @@ class Chain(object):
         The index of the Chain within its Topology
     topology : mdtraj.Topology
         The Topology this Chain belongs to
-    residues : genetator
+    residues : generator
         Iterator over all Residues in the Chain.
     atoms : generator
         Iterator over all Atoms in the Chain.
