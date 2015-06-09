@@ -1,4 +1,4 @@
-"""MDTraj: Read, write and analyze MD trajectories with only a few lines of Python code.
+"""MDTraj: A modern, open library for the analysis of molecular dynamics trajectories
 
 MDTraj is a python library that allows users to manipulate molecular dynamics
 (MD) trajectories and perform a variety of analyses, including fast RMSD,
@@ -56,8 +56,8 @@ if sys.version_info[0] == 2:
 
 
 ##########################
-VERSION = "1.5.0.dev0"
-ISRELEASED = False
+VERSION = "1.4.2"
+ISRELEASED = True
 __version__ = VERSION
 ##########################
 
