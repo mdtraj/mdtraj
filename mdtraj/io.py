@@ -95,6 +95,25 @@ except Exception:  #type?
     warnings.warn("Missing Zlib; no compression will used.")
     COMPRESSION = tables.Filters()
 
+
+# Note to developers: This module is pseudo-deprecated. It provides (loadh, saveh)
+# which are useful functions (and we want to maintain them), but aren't really
+# within the scope of MDTraj as we now understand it.
+#
+# With that said, many people use these functions and no good would come from getting
+# rid of them. But we shouldn't add any new functions or new features to this file.
+#
+# One potential landmine is that this file _requires_ the `tables` package, which is
+# only an _optional_ dependency in MDTraj. So if you import this file (or anything in
+# it) from another file that is imported at startup (on a user running `import mdtraj`)
+# then tables ceases to be an optional dependency and becomes a strict requirement.
+#
+# So add new features to a different file, and there shouldn't be any reason for
+# any files inside MDTraj to `import mdtraj.io`.
+#
+# See github issue #852.
+
+
 def saveh(file, *args, **kwargs):
     """Save several numpy arrays into a single file in compressed ``.hdf`` format.
 
