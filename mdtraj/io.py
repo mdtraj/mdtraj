@@ -75,8 +75,7 @@ Functions
 ---------
 """
 from __future__ import print_function, division, absolute_import
-import bz2
-import gzip
+
 import io
 import os
 import warnings
@@ -95,6 +94,25 @@ try:
 except Exception:  #type?
     warnings.warn("Missing Zlib; no compression will used.")
     COMPRESSION = tables.Filters()
+
+
+# Note to developers: This module is pseudo-deprecated. It provides (loadh, saveh)
+# which are useful functions (and we want to maintain them), but aren't really
+# within the scope of MDTraj as we now understand it.
+#
+# With that said, many people use these functions and no good would come from getting
+# rid of them. But we shouldn't add any new functions or new features to this file.
+#
+# One potential landmine is that this file _requires_ the `tables` package, which is
+# only an _optional_ dependency in MDTraj. So if you import this file (or anything in
+# it) from another file that is imported at startup (on a user running `import mdtraj`)
+# then tables ceases to be an optional dependency and becomes a strict requirement.
+#
+# So add new features to a different file, and there shouldn't be any reason for
+# any files inside MDTraj to `import mdtraj.io`.
+#
+# See github issue #852.
+
 
 def saveh(file, *args, **kwargs):
     """Save several numpy arrays into a single file in compressed ``.hdf`` format.
@@ -292,55 +310,6 @@ def loadh(file, name=Ellipsis, deferred=True):
         return result
 
     return DeferredTable(handle, own_fid)
-
-
-def open_maybe_zipped(filename, mode, force_overwrite=True):
-    """Open a file in text (not binary) mode, transparently handling
-    .gz or .bz2 compresssion, with utf-8 encoding.
-
-    Parameters
-    ----------
-    filename : str
-        Path to file. Compression will be automatically detected if
-        the filename ends in .gz or .bz2.
-    mode : {'r', 'w'}
-        Mode in which to open file
-    force_overwrite: bool, default=True
-        If 'w', should we overwrite the file if something with `filename`
-        already exists?
-
-    Returns
-    -------
-    handle : file
-        Open file handle.
-    """
-    _, extension = os.path.splitext(filename.lower())
-    if mode == 'r':
-        if extension == '.gz':
-            with gzip.GzipFile(filename, 'r') as gz_f:
-                return StringIO(gz_f.read().decode('utf-8'))
-        elif extension == '.bz2':
-            with bz2.BZ2File(filename, 'r') as bz2_f:
-                return StringIO(bz2_f.read().decode('utf-8'))
-        else:
-            return open(filename, 'r')
-    elif mode == 'w':
-        if os.path.exists(filename) and not force_overwrite:
-            raise IOError('"%s" already exists' % filename)
-        if extension == '.gz':
-            if PY2:
-                return gzip.GzipFile(filename, 'w')
-            binary_fh = gzip.GzipFile(filename, 'wb')
-            return io.TextIOWrapper(binary_fh, encoding='utf-8')
-        elif extension == '.bz2':
-            if PY2:
-                return bz2.BZ2File(filename, 'w')
-            binary_fh = bz2.BZ2File(filename, 'wb')
-            return io.TextIOWrapper(binary_fh, encoding='utf-8')
-        else:
-            return open(filename, 'w')
-    else:
-        raise ValueError('Invalid mode "%s"' % mode)
 
 
 class DeferredTable(object):
