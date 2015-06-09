@@ -364,7 +364,8 @@ class LAMMPSTrajectoryFile(object):
         if self._frame_index == 0:
             # Detect which columns the atom index, type and coordinates are.
             columns = {header: idx for idx, header in enumerate(column_headers)}
-            for header in columns:
+            keys = list(columns.keys())
+            for header in keys:
                 if header in {'x', 'y', 'z', 'xs', 'ys', 'zs', 'xu', 'yu', 'zu',
                               'xsu', 'ysu', 'zsu'}:
                     columns[header[0]] = columns.pop(header)
