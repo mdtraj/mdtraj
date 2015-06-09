@@ -199,8 +199,8 @@ class LAMMPSTrajectoryFile(object):
         --------
         read : Returns the raw data from the file
 
-        Note
-        ----
+        Notes
+        -----
         If coordinates are specified in more than one style, the first complete
         trio of x/y/z coordinates will be read in according to the following
         order:
