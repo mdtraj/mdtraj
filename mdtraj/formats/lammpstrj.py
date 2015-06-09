@@ -198,6 +198,19 @@ class LAMMPSTrajectoryFile(object):
         See Also
         --------
         read : Returns the raw data from the file
+
+        Notes
+        -----
+        If coordinates are specified in more than one style, the first complete
+        trio of x/y/z coordinates will be read in according to the following
+        order:
+            1) x,y,z (unscaled coordinates)
+            2) xs,ys,zs (scaled atom coordinates)
+            3) xu,yu,zu (unwrapped atom coordinates)
+            4) xsu,ysu,zsu (scaled unwrapped atom coordinates)
+
+        E.g., if the file contains x, y, z, xs, ys, zs then x, y, z will be used.
+              if the file contains x, y, xs, ys, zs then xs, ys, zs will be used.
         """
         from mdtraj.core.trajectory import Trajectory
         if atom_indices is not None:
@@ -364,15 +377,24 @@ class LAMMPSTrajectoryFile(object):
         if self._frame_index == 0:
             # Detect which columns the atom index, type and coordinates are.
             columns = {header: idx for idx, header in enumerate(column_headers)}
-            keys = list(columns.keys())
-            for header in keys:
-                if header in {'x', 'y', 'z', 'xs', 'ys', 'zs', 'xu', 'yu', 'zu',
-                              'xsu', 'ysu', 'zsu'}:
-                    columns[header[0]] = columns.pop(header)
+
+            # Make sure the file contains an x, y, and z-coordinate of the same
+            # style.
+            coord_keywords = [('x', 'y', 'z'),  # unscaled
+                              ('xs', 'ys', 'zs'),  # scaled
+                              ('xu', 'yu', 'zu'),  # unwrapped
+                              ('xsu', 'ysu', 'zsu')]  # scaled and unwrapped
+            for keywords in coord_keywords:
+                if set(keywords).issubset(column_headers):
+                    break
+            else:
+                raise IOError('Invalid .lammpstrj file. Must contain x, y, and '
+                              'z coordinates that all adhere to the same style.')
+
             try:
                 self._atom_index_column = columns['id']
                 self._atom_type_column = columns['type']
-                self._xyz_columns = [columns['x'], columns['y'], columns['z']]
+                self._xyz_columns = [columns[keywords[0]], columns[keywords[1]], columns[keywords[2]]]
             except KeyError:
                 raise IOError("Invalid .lammpstrj file. Must contain 'id', "
                               "'type', 'x*', 'y*' and 'z*' entries.")
