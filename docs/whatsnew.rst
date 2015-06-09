@@ -7,6 +7,11 @@ These are new features and improvements of note in each release.
 v1.5 (in development)
 ---------------------
 
+v1.4.2 (June 9, 2014)
+---------------------
+- BUGFIX: Fix pytables inadvertently being moved to a required dependency
+
+
 v1.4 (June 8, 2014)
 -------------------
 Version 1.4 is our best release yet! It contains many new features, performance improvements, and bug fixes.

@@ -34,8 +34,8 @@ import os
 import numpy as np
 
 from mdtraj.formats.registry import _FormatRegistry
-from mdtraj.io import open_maybe_zipped
-from mdtraj.utils import cast_indices, in_units_of, ensure_type
+from mdtraj.utils import (cast_indices, in_units_of, ensure_type,
+                          open_maybe_zipped)
 from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
 from mdtraj.version import version
