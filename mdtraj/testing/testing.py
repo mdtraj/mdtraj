@@ -168,10 +168,15 @@ def eq(o1, o2, decimal=6, err_msg=''):
     return True
 
 def assert_dict_equal(t1, t2, decimal=6):
-    """
-    Assert two dicts are equal.
-    This method should actually
+    """Assert two dicts are equal. This method should actually
     work for any dict of numpy arrays/objects
+
+    Parameters
+    ----------
+    t1 : object
+    t2 : object
+    decimal : int
+        Number of decimal places to check, for arrays inside the dicts
     """
 
     # make sure the keys are the same

@@ -9,6 +9,9 @@ SKIP_MODULES = [
     'mdtraj\.utils\.unit\.unit_math',
     'mdtraj\.utils\.unit\.baseunit',
     'mdtraj\.utils\.unit\.prefix',
+    'mdtraj\.utils\.unit\.unit',
+    'mdtraj\.utils\.unit\.quantity',
+    'mdtraj\.utils\.unit\.mymatrix',
 ]
 
 SKIP_FUNCTIONS = [

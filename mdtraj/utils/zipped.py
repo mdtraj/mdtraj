@@ -18,7 +18,7 @@ def open_maybe_zipped(filename, mode, force_overwrite=True):
         the filename ends in .gz or .bz2.
     mode : {'r', 'w'}
         Mode in which to open file
-    force_overwrite: bool, default=True
+    force_overwrite : bool, default=True
         If 'w', should we overwrite the file if something with `filename`
         already exists?
 
