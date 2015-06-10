@@ -22,7 +22,7 @@
 
 import numpy as np
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
+from mdtraj.testing import get_fn, eq, skipif
 from mdtraj.formats import mol2
 from distutils.spawn import find_executable
 from mdtraj.utils import enter_temp_directory
@@ -32,7 +32,6 @@ import os
 import numpy as np
 import scipy.sparse
 import subprocess
-doc = DocStringFormatTester(mol2)
 
 
 def test_load_mol2():

@@ -25,7 +25,7 @@ from __future__ import print_function
 import numpy as np
 
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, assert_raises, DocStringFormatTester
+from mdtraj.testing import get_fn, eq, assert_raises
 from mdtraj.geometry import order
 
 
@@ -53,8 +53,6 @@ TRAJ2_LINE1 = TRAJ2.atom_slice((0, 1))
 TRAJ2_LINE2 = TRAJ2.atom_slice((2, 3))
 
 TRAJ3 = md.load(get_fn('3lines.pdb'))
-
-TestDocstrings = DocStringFormatTester(order, error_on_none=True)
 
 
 def test_nematic_order():

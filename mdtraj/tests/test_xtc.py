@@ -34,10 +34,7 @@ import numpy as np
 from mdtraj import io
 from nose.tools import assert_raises
 from mdtraj.formats import XTCTrajectoryFile
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
-
-from mdtraj.formats import xtc
-TestDocstrings = DocStringFormatTester(xtc, error_on_none=True)
+from mdtraj.testing import get_fn, eq, raises
 
 fn_xtc = get_fn('frame0.xtc')
 pdb = get_fn('native.pdb')

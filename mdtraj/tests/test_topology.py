@@ -26,8 +26,8 @@ import mdtraj as md
 import numpy as np
 from mdtraj.utils.six.moves import cPickle
 from mdtraj.utils import import_
-from mdtraj.testing import (get_fn, eq, DocStringFormatTester, skipif,
-                            assert_raises)
+from mdtraj.testing import get_fn, eq, skipif, assert_raises
+                            
 
 try:
     from simtk.openmm import app

@@ -361,6 +361,7 @@ class LAMMPSTrajectoryFile(object):
                     self._line_counter,  self._filename))
 
         column_headers = self._fh.readline().split()[2:]  # ITEM: ATOMS ...
+        print(column_headers)
         if self._frame_index == 0:
             # Detect which columns the atom index, type and coordinates are.
             columns = {header: idx for idx, header in enumerate(column_headers)}
@@ -371,6 +372,7 @@ class LAMMPSTrajectoryFile(object):
             try:
                 self._atom_index_column = columns['id']
                 self._atom_type_column = columns['type']
+                print(columns)
                 self._xyz_columns = [columns['x'], columns['y'], columns['z']]
             except KeyError:
                 raise IOError("Invalid .lammpstrj file. Must contain 'id', "
