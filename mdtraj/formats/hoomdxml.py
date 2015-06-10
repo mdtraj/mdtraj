@@ -46,6 +46,8 @@ def load_hoomdxml(filename, top=None):
     ----------
     filename : string
         The path on disk to the XML file
+    top : None
+        This argumet is ignored
 
     Returns
     -------

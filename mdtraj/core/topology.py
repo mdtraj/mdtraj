@@ -562,6 +562,8 @@ class Topology(object):
             The element of the atom to add
         residue : mdtraj.topology.Residue
             The Residue to add it to
+        serial : int
+            Serial number associated with the atom.
 
         Returns
         -------
@@ -594,6 +596,10 @@ class Topology(object):
         """Get a specific chain by index.  These indices
         start from zero.
 
+        Parameters
+        ----------
+        index : int
+
         Returns
         -------
         chain : Chain
@@ -620,6 +626,10 @@ class Topology(object):
     def residue(self, index):
         """Get a specific residue by index.  These indices
         start from zero.
+
+        Parameters
+        ----------
+        index : int
 
         Returns
         -------
@@ -674,8 +684,8 @@ class Topology(object):
     def atoms_by_name(self, name):
         """Iterator over all Atoms in the Topology with a specified name
 
-        Example
-        -------
+        Examples
+        --------
         >>> for atom in topology.atoms_by_name('CA'):
         ...     print(atom)
 
@@ -792,7 +802,7 @@ class Topology(object):
 
         Parameters
         ----------
-        atom_indices array_like
+        atom_indices : array_like
             A list of the indices corresponding to the atoms in that you'd
             like to retain.
         """
@@ -986,6 +996,10 @@ class Chain(object):
     def residue(self, index):
         """Get a specific residue in this Chain.
 
+        Parameters
+        ----------
+        index : int
+
         Returns
         -------
         residue : Residue
@@ -1028,6 +1042,10 @@ class Chain(object):
 
     def atom(self, index):
         """Get a specific atom in this Chain.
+
+        Parameters
+        ----------
+        index : int
 
         Returns
         -------
