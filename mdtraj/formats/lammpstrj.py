@@ -374,7 +374,6 @@ class LAMMPSTrajectoryFile(object):
                     self._line_counter,  self._filename))
 
         column_headers = self._fh.readline().split()[2:]  # ITEM: ATOMS ...
-        print(column_headers)
         if self._frame_index == 0:
             # Detect which columns the atom index, type and coordinates are.
             columns = {header: idx for idx, header in enumerate(column_headers)}
