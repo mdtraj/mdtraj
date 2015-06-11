@@ -339,7 +339,7 @@ class GroTrajectoryFile(object):
 
         got_line = False
         firstDecimalPos = None
-        atomindex = 0
+        atomindex = -1
         for ln, line in enumerate(self._file):
             got_line = True
             if ln == 0:
