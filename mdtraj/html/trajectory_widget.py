@@ -5,11 +5,44 @@ from itertools import groupby
 import mdtraj as md
 
 from IPython.display import display, Javascript
-from IPython.html.widgets import DOMWidget, IntSliderWidget, ContainerWidget
+from IPython.html.widgets import DOMWidget, IntSlider, Box
+from IPython.html.widgets import interactive
 from IPython.utils.traitlets import (Unicode, Bool, Bytes, CInt, Any,
                                      Dict, Enum)
 
-__all__ = ['TrajectoryView']
+__all__ = ['TrajectoryView', 'TrajectorySliderView']
+
+
+def TrajectorySliderView(traj, frame=0, **kwargs):
+    """IPython notebook widget for viewing trajectories in the browser with
+    an interactiver slider.
+
+    Parameters
+    ----------
+    traj : Trajectory
+        Trajectory for which you want the viewer.
+    frame : int, default=0
+        Frame to set the slider to by default
+    kwargs : string
+        See TrajectoryView for all available options.
+
+    See Also
+    --------
+    TrajectoryView: IPython notebook widget for displaying trajectories in the
+    browser with WebGL.
+    """
+    widget = TrajectoryView(traj, frame=frame, **kwargs)
+
+    def slide(frame):
+        widget.frame = frame
+
+    s = IntSlider(min=0, max=traj.n_frames - 1, value=frame)
+    slider = interactive(slide, frame=s)
+    
+    container = Box()
+    container.children = [widget, slider] 
+
+    return container
 
 
 class TrajectoryView(DOMWidget):
