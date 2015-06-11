@@ -104,7 +104,7 @@ def test_box_load_save():
         else:
             t2 = md.load(temp_fn, top=get_fn('native.pdb'))
 
-        assert t.unitcell_vectors != None
+        assert t.unitcell_vectors is not None
         yield lambda: eq(t.xyz, t2.xyz, decimal=3)
         yield lambda: eq(t.unitcell_vectors, t2.unitcell_vectors)
         yield lambda: eq(t.unitcell_angles, t2.unitcell_angles)
@@ -344,14 +344,14 @@ def test_load_combination():
     for i, (t1, t2) in enumerate(zip(no_kwargs, strided3)):
         yield lambda: eq(t1.xyz[::3], t2.xyz)
         yield lambda: eq(t1.time[::3], t2.time)
-        if t1.unitcell_vectors != None:
+        if t1.unitcell_vectors is not None:
             yield lambda: eq(t1.unitcell_vectors[::3], t2.unitcell_vectors)
         yield lambda: eq(t1.topology, t2.topology)
 
     for i, (t1, t2) in enumerate(zip(no_kwargs, subset)):
         yield lambda: eq(t1.xyz[:, ainds, :], t2.xyz)
         yield lambda: eq(t1.time, t2.time)
-        if t1.unitcell_vectors != None:
+        if t1.unitcell_vectors is not None:
             yield lambda: eq(t1.unitcell_vectors, t2.unitcell_vectors)
         yield lambda: eq(t1.topology.subset(ainds), t2.topology)
 

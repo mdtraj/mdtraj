@@ -338,6 +338,8 @@ class GroTrajectoryFile(object):
         xyz = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
         got_line = False
+        firstDecimalPos = None
+        atomindex = 0
         for ln, line in enumerate(self._file):
             got_line = True
             if ln == 0:
@@ -346,13 +348,14 @@ class GroTrajectoryFile(object):
             elif ln == 1:
                 assert self.n_atoms == int(line.strip())
                 continue
-            try:
-                firstDecimalPos = line.index('.', 20)
-                secondDecimalPos = line.index('.', firstDecimalPos+1)
-            except ValueError:
-                firstDecimalPos = secondDecimalPos = None
+            if firstDecimalPos is None:
+                try:
+                    firstDecimalPos = line.index('.', 20)
+                    secondDecimalPos = line.index('.', firstDecimalPos+1)
+                except ValueError:
+                    firstDecimalPos = secondDecimalPos = None
             crd = _parse_gro_coord(line, firstDecimalPos, secondDecimalPos)
-            if crd is not None:
+            if crd is not None and atomindex < self.n_atoms - 1:
                 atomindex = next(atomcounter)
                 xyz[atomindex, :] = (crd[0], crd[1], crd[2])
             elif _is_gro_box(line) and ln == self.n_atoms + 2:
@@ -387,7 +390,7 @@ class GroTrajectoryFile(object):
         if time is not None:
             comment += ', t= %s' % time
 
-        fmt = '%%5d%%-5s%%5d%%8.%df%%8.%df%%8.%df' % (precision, precision, precision)
+        fmt = '%%5d%%-5s%%5s%%5d%%8.%df%%8.%df%%8.%df' % (precision, precision, precision)
         assert topology.n_atoms == coordinates.shape[0]
         lines = [comment, ' %d' % topology.n_atoms]
         if box is None:
@@ -481,6 +484,8 @@ def _parse_gro_coord(line, firstDecimal, secondDecimal):
     @param[in] line The line to be tested
 
     """
+    if firstDecimal is None or secondDecimal is None:
+        return None
     digits = secondDecimal - firstDecimal
     try:
         return tuple(float(line[20+i*digits:20+(i+1)*digits]) for i in range(3))
