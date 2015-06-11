@@ -6,7 +6,6 @@ import mdtraj as md
 
 from IPython.display import display, Javascript
 from IPython.html.widgets import DOMWidget, IntSlider, Box
-from IPython.display import display
 from IPython.html.widgets import interactive
 from IPython.utils.traitlets import (Unicode, Bool, Bytes, CInt, Any,
                                      Dict, Enum)
