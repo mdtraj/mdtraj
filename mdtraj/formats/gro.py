@@ -3,10 +3,10 @@
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
-# Copyright 2012-2014 Stanford University and the Authors
+# Copyright 2012-2015 Stanford University and the Authors
 #
 # Authors: Robert McGibbon, Lee-Ping Wang, Peter Eastman
-# Contributors:
+# Contributors: Jason Swails
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -148,7 +148,8 @@ class GroTrajectoryFile(object):
             raise ValueError("invalid mode: %s" % mode)
 
 
-    def write(self, coordinates, topology, time=None, unitcell_vectors=None):
+    def write(self, coordinates, topology, time=None, unitcell_vectors=None,
+              precision=3):
         """Write one or more frames of a molecular dynamics trajectory to disk
         in the GROMACS GRO format.
 
@@ -163,6 +164,8 @@ class GroTrajectoryFile(object):
             If not supplied, the numbers 0..n_frames will be written.
         unitcell_vectors : np.ndarray, dtype=float32, shape=(n_frames, 3, 3), optional
             The periodic box vectors of the simulation in each frame, in nanometers.
+        precision : int, optional
+            The number of decimal places to print for coordinates. Default is 3
         """
         if not self._open:
             raise ValueError('I/O operation on closed file')
@@ -177,7 +180,7 @@ class GroTrajectoryFile(object):
         for i in range(coordinates.shape[0]):
             frame_time = None if time is None else time[i]
             frame_box = None if unitcell_vectors is None else unitcell_vectors[i]
-            self._write_frame(coordinates[i], topology, frame_time, frame_box)
+            self._write_frame(coordinates[i], topology, frame_time, frame_box, precision)
 
     def read_as_traj(self, n_frames=None, stride=None, atom_indices=None):
         """Read a trajectory from a gro file
@@ -339,16 +342,19 @@ class GroTrajectoryFile(object):
             got_line = True
             if ln == 0:
                 comment = line.strip()
+                continue
             elif ln == 1:
                 assert self.n_atoms == int(line.strip())
-            elif _is_gro_coord(line):
-                atomindex = next(atomcounter)
-
+                continue
+            try:
                 firstDecimalPos = line.index('.', 20)
                 secondDecimalPos = line.index('.', firstDecimalPos+1)
-                digits = secondDecimalPos-firstDecimalPos
-                pos = [float(line[20+i*digits:20+(i+1)*digits]) for i in range(3)]
-                xyz[atomindex, :] = (pos[0], pos[1], pos[2])
+            except ValueError:
+                firstDecimalPos = secondDecimalPos = None
+            crd = _parse_gro_coord(line, firstDecimalPos, secondDecimalPos)
+            if crd is not None:
+                atomindex = next(atomcounter)
+                xyz[atomindex, :] = (crd[0], crd[1], crd[2])
             elif _is_gro_box(line) and ln == self.n_atoms + 2:
                 sline = line.split()
                 boxvectors = tuple([float(i) for i in sline])
@@ -376,11 +382,12 @@ class GroTrajectoryFile(object):
 
         return xyz, unitcell_vectors, time
 
-    def _write_frame(self, coordinates, topology, time, box):
+    def _write_frame(self, coordinates, topology, time, box, precision):
         comment = 'Generated with MDTraj'
         if time is not None:
             comment += ', t= %s' % time
 
+        fmt = '%%5d%%-5s%%5d%%8.%df%%8.%df%%8.%df' % (precision, precision, precision)
         assert topology.n_atoms == coordinates.shape[0]
         lines = [comment, ' %d' % topology.n_atoms]
         if box is None:
@@ -394,9 +401,8 @@ class GroTrajectoryFile(object):
                 serial = atom.index
             if serial >= 100000:
                 serial -= 100000
-            lines.append("%5d%-5s%5s%5d%8.3f%8.3f%8.3f" % (
-                residue.resSeq, residue.name, atom.name, serial,
-                coordinates[i, 0], coordinates[i, 1], coordinates[i, 2]))
+            lines.append(fmt % (residue.resSeq, residue.name, atom.name, serial,
+                                coordinates[i, 0], coordinates[i, 1], coordinates[i, 2]))
 
         lines.append('%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f' % (
             box[0,0], box[1,1], box[2,2],
@@ -469,19 +475,17 @@ def _isfloat(word):
     """
     return match('^[-+]?[0-9]*\.?[0-9]*([eEdD][-+]?[0-9]+)?$',word)
 
-def _is_gro_coord(line):
+def _parse_gro_coord(line, firstDecimal, secondDecimal):
     """ Determines whether a line contains GROMACS data or not
 
     @param[in] line The line to be tested
 
     """
-    sline = line.split()
-    if len(sline) == 6 or len(sline) == 9:
-        return all([_isint(sline[2]), _isfloat(sline[3]), _isfloat(sline[4]), _isfloat(sline[5])])
-    elif len(sline) == 5 or len(sline) == 8:
-        return all([_isint(line[15:20]), _isfloat(sline[2]), _isfloat(sline[3]), _isfloat(sline[4])])
-    else:
-        return 0
+    digits = secondDecimal - firstDecimal
+    try:
+        return tuple(float(line[20+i*digits:20+(i+1)*digits]) for i in range(3))
+    except ValueError:
+        return None
 
 def _is_gro_box(line):
     """ Determines whether a line contains a GROMACS box vector or not
