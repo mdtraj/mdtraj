@@ -5,7 +5,7 @@ from itertools import groupby
 import mdtraj as md
 
 from IPython.display import display, Javascript
-from IPython.html.widgets import DOMWidget, IntSlider, ContainerWidget
+from IPython.html.widgets import DOMWidget, IntSlider, Box
 from IPython.display import display
 from IPython.html.widgets import interactive
 from IPython.utils.traitlets import (Unicode, Bool, Bytes, CInt, Any,
@@ -37,13 +37,13 @@ def TrajectorySliderView(traj, frame=0, **kwargs):
     def slide(frame):
         widget.frame = frame
 
-    s = IntSlider(min=0, max=trajectory.n_frames - 1, value=frame)
+    s = IntSlider(min=0, max=traj.n_frames - 1, value=frame)
     slider = interactive(slide, frame=s)
+    
+    container = Box()
+    container.children = [widget, slider] 
 
-    display(widget)
-    display(slider)
-
-    return widget
+    return container
 
 
 class TrajectoryView(DOMWidget):
