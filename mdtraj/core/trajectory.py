@@ -1525,7 +1525,7 @@ class Trajectory(object):
             f.write(coordinates=self.xyz)
             f.topology = self.topology
 
-    def save_gro(self, filename, force_overwrite=True):
+    def save_gro(self, filename, force_overwrite=True, precision=3):
         """Save trajectory in Gromacs .gro format
 
         Parameters
@@ -1534,10 +1534,13 @@ class Trajectory(object):
             Path to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at that filename if it exists
+        precision : int, default=3
+            The number of decimal places to use for coordinates in GRO file
         """
         self._check_valid_unitcell()
         with GroTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            f.write(self.xyz, self.topology, self.time, self.unitcell_vectors)
+            f.write(self.xyz, self.topology, self.time, self.unitcell_vectors,
+                    precision=precision)
 
     def center_coordinates(self, mass_weighted=False):
         """Center each trajectory frame at the origin (0,0,0).
