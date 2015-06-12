@@ -78,6 +78,13 @@ def test_read_write_precision():
     t.save(temp, precision=5)
     eq(t.xyz, md.load(temp).xyz, decimal=3)
 
+
+def test_no_whitespace_gro():
+    t = md.load(get_fn('v_error.gro'))
+    eq(t.xyz.shape, (1, 1, 3))
+    eq(t.n_atoms, 1)
+
+
 def test_load():
     for tref in [md.load(get_fn('4waters.pdb')),   # no unit cell
                  md.load(get_fn('native2.pdb'))]:  # unit cell
