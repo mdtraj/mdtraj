@@ -390,7 +390,9 @@ class GroTrajectoryFile(object):
         if time is not None:
             comment += ', t= %s' % time
 
-        fmt = '%%5d%%-5s%%5s%%5d%%8.%df%%8.%df%%8.%df' % (precision, precision, precision)
+        varwidth = precision + 5
+        fmt = '%%5d%%-5s%%5s%%5d%%%d.%df%%%d.%df%%%d.%df' % (
+                varwidth, precision, varwidth, precision, varwidth, precision)
         assert topology.n_atoms == coordinates.shape[0]
         lines = [comment, ' %d' % topology.n_atoms]
         if box is None:
