@@ -205,7 +205,8 @@ class PdbStructure(object):
                 for pos in (11,16,21,26):
                     try:
                         atoms.append(int(pdb_line[pos:pos+5]))
-                    except:
+                    except ValueError:
+                        # Optional field, don't worry if it isn't defined
                         pass
 
                 self._current_model.connects.append(atoms)
@@ -679,11 +680,11 @@ class Atom(object):
         else:
             try:
                 self.serial_number = int(pdb_line[6:11])
-            except:
+            except ValueError:
                 try:
                     self.serial_number = int(pdb_line[6:11], 16)
                     pdbstructure._atom_numbers_are_hex = True
-                except:
+                except ValueError:
                     # Just give it the next number in sequence.
                     self.serial_number = pdbstructure._next_atom_number
         self.name_with_spaces = pdb_line[12:16]
@@ -706,11 +707,11 @@ class Atom(object):
         else:
             try:
                 self.residue_number = int(pdb_line[22:26])
-            except:
+            except ValueError:
                 try:
                     self.residue_number = int(pdb_line[22:26], 16)
                     pdbstructure._residue_numbers_are_hex = True
-                except:
+                except ValueError:
                     # When VMD runs out of hex values it starts filling in the residue ID field with ****
                     # Look at the most recent atoms to figure out whether this is a new residue or not.
                     if pdbstructure._current_model is None or pdbstructure._current_model._current_chain is None or pdbstructure._current_model._current_chain._current_residue is None:
@@ -733,11 +734,11 @@ class Atom(object):
         z = float(pdb_line[46:54])
         try:
             occupancy = float(pdb_line[54:60])
-        except:
+        except ValueError:
             occupancy = 1.0
         try:
             temperature_factor = float(pdb_line[60:66])
-        except:
+        except ValueError:
             temperature_factor = 0.0
         self.locations = {}
         loc = Atom.Location(alternate_location_indicator, np.array([x,y,z]), occupancy, temperature_factor, self.residue_name_with_spaces)

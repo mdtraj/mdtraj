@@ -140,9 +140,9 @@ def _parse_topology(top):
     topology : md.Topology
     """
 
-    try:
+    if isinstance(top, string_types):
         ext = _get_extension(top)
-    except:
+    else:
         ext = None  # might not be a string
 
     if isinstance(top, string_types) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):

@@ -83,7 +83,7 @@ def _is_url(url):
     """
     try:
         return urlparse(url).scheme in _VALID_URLS
-    except:
+    except (AttributeError, TypeError):
         return False
 
 
