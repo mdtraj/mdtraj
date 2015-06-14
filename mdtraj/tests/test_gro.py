@@ -55,6 +55,36 @@ def test_read_write():
             eq(unitcell, t.unitcell_vectors)
 
 
+def test_read_write_precision():
+    import random
+    for t in [md.load(get_fn('4waters.pdb')),   # no unit cell
+              md.load(get_fn('native2.pdb')),   # unitcell
+              md.load(get_fn('frame0.pdb'))]:   # multiframe
+        with GroTrajectoryFile(temp, 'w') as f:
+            f.write(t.xyz, t.topology, unitcell_vectors=t.unitcell_vectors,
+                    precision=random.randint(4, 10))
+
+        with GroTrajectoryFile(temp) as f:
+            xyz, time, unitcell = f.read()
+            top = f.topology
+
+        eq(xyz, t.xyz, decimal=3)
+        eq(list(top.atoms), list(t.top.atoms))
+        if t.unitcell_vectors is not None:
+            eq(unitcell, t.unitcell_vectors)
+
+    # Test out the automatic saver and loader with different precisions
+    t = md.load(get_fn('native2.pdb'))
+    t.save(temp, precision=5)
+    eq(t.xyz, md.load(temp).xyz, decimal=3)
+
+
+def test_no_whitespace_gro():
+    t = md.load(get_fn('v_error.gro'))
+    eq(t.xyz.shape, (1, 1, 3))
+    eq(t.n_atoms, 1)
+
+
 def test_load():
     for tref in [md.load(get_fn('4waters.pdb')),   # no unit cell
                  md.load(get_fn('native2.pdb'))]:  # unit cell
