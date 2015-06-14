@@ -199,9 +199,9 @@ class Topology(object):
         return "<%s at 0x%02x>" % (self._string_summary_basic(), id(self))
 
     def _string_summary_basic(self):
-        return "mdtraj.Topology with %d chains, %d residues, \
-                %d atoms, %d bonds" % (self.n_chains, self.n_residues,
-                                       self.n_atoms, len(self._bonds))
+        return ("mdtraj.Topology with %d chains, %d residues, "
+                "%d atoms, %d bonds" % (self.n_chains, self.n_residues,
+                                        self.n_atoms, len(self._bonds)))
 
     def copy(self):
         """Return a copy of the topology
@@ -327,8 +327,8 @@ class Topology(object):
             angles = traj.unitcell_angles[0]
 
             if np.linalg.norm(angles - 90.0) > 1E-4:
-                raise(ValueError("Unitcell angles must be 90.0 to use \
-                                 in OpenMM topology."))
+                raise(ValueError("Unitcell angles must be 90.0 to use "
+                                 "in OpenMM topology."))
 
             box_vectors = mm.Vec3(*traj.unitcell_lengths[0]) * u.nanometer
             out.setUnitCellDimensions(box_vectors)
