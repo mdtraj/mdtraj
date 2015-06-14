@@ -922,7 +922,7 @@ class HDF5TrajectoryFile(object):
         return int(self._frame_index)
 
     def _validate(self):
-        raise NotImplemented
+        raise NotImplementedError()
 
         # check that all of the shapes are consistent
         # check that everything has units

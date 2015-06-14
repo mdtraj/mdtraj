@@ -76,7 +76,7 @@ def load_hoomdxml(filename, top=None):
         xy = float(box.attrib['xy'])
         xz = float(box.attrib['xz'])
         yz = float(box.attrib['yz'])
-    except:
+    except (ValueError, KeyError):
         xy = 0.0
         xz = 0.0
         yz = 0.0
