@@ -38,7 +38,7 @@ Keyword          Synonyms                   Type           Description
 -------------    ------------------------   ---------      ----------------------------------------------------------------
 ``all``          ``everything``             ``bool``       Matches everything
 ``none``         ``nothing``                ``bool``       Matches nothing
-``backbone``     ``is_backbone``            ``bool``       Whether atom is in the backbone of a protein residue 
+``backbone``     ``is_backbone``            ``bool``       Whether atom is in the backbone of a protein residue
 ``sidechain``    ``is_sidechain``           ``bool``       Whether atom is in the sidechain of a protein residue
 ``protein``      ``is_protein``             ``bool``       Whether atom is part of a protein residue
 ``water``        ``is_water``, ``waters``   ``bool``       Whether atom is part of a water residue
@@ -50,6 +50,7 @@ Keyword          Synonyms                   Type           Description
 ``residue``      ``resSeq``                 ``int``        Residue Sequence record (generally 1-based, but depends on topology)
 ``resid``        ``resi``                   ``int``        Residue index (0-based)
 ``resname``      ``resn``                   ``str``        Residue name
+``rescode``      ``code``, ``resc```        ``str``        1-letter residue code
 ``chainid``                                 ``int``        Chain index (0-based)
 =============    ========================   =========      ================================================================
 
@@ -75,7 +76,7 @@ along with their FORTRAN-style synonyms (``lt``, ``le``, ``eq``, ``ne``,
 ``ge``, ``gt``).
 
 A regular-expression matching operator, ``=~``, is available. For example, to
-match any of the names ``'C1'``, ``'C2'``, ``'C3'``, ``'C4'``, you can use the 
+match any of the names ``'C1'``, ``'C2'``, ``'C3'``, ``'C4'``, you can use the
 following query. The regular expression syntax is just the `native python Regex
 syntax <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_ ::
 
@@ -113,4 +114,3 @@ grammar defined using `PyParsing <http://pyparsing.wikispaces.com/>`_. The
 parse tree is traversed, and used to construct an `abstract syntax tree <https://docs.python.org/3/library/ast.html>`_
 corresponding to the equivalent Python atom selection expression
 (e.g. ``Topology.select_expression``).
-
