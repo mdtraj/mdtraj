@@ -279,7 +279,7 @@ class Topology(object):
            A FASTA string for each chain specified.
         """
         fasta = lambda c: "".join([res.code for res in c.residues
-                                   if res.is_protein])
+                                   if res.is_protein and res.code is not None])
         if chain is not None:
             if not isinstance(chain, int):
                 raise ValueError('chain must be an Integer.')

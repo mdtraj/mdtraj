@@ -48,7 +48,9 @@ _WATER_RESIDUES = frozenset([
     'H2O', 'HHO', 'OHH', 'HOH', 'OH2', 'SOL',
     'WAT', 'TIP', 'TIP2', 'TIP3', 'TIP4'])
 
-_AMINO_ACID_CODES = {'00C': 'C',
+_AMINO_ACID_CODES = {'ACE': None,
+                     'NME': None,
+                     '00C': 'C',
                      '01W': 'X',
                      '02K': 'A',
                      '02L': 'N',
