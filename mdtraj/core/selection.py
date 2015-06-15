@@ -107,6 +107,7 @@ class SelectionKeyword(object):
 
         # Atom.residue.<attribute>
         (('protein', 'is_protein'), _chain('residue', 'is_protein')),
+        (('code', 'rescode', 'resc'), _chain('residue', 'code')),
         # (('nucleic', 'is_nucleic'), _chain('residue', 'is_nucleic')),
         (('water', 'waters', 'is_water'), _chain('residue', 'is_water')),
         (('name',), _chain('name')),

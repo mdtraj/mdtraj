@@ -4,7 +4,7 @@
 # Copyright 2012-2014 Stanford University and the Authors
 #
 # Authors: Peter Eastman, Robert McGibbon
-# Contributors: Kyle A. Beauchamp, Matthew Harrigan
+# Contributors: Kyle A. Beauchamp, Matthew Harrigan, Carlos Xavier Hernandez
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -55,7 +55,8 @@ import os
 import xml.etree.ElementTree as etree
 
 from mdtraj.core import element as elem
-from mdtraj.core.residue_names import _PROTEIN_RESIDUES, _WATER_RESIDUES
+from mdtraj.core.residue_names import (_PROTEIN_RESIDUES, _WATER_RESIDUES,
+                                       _AMINO_ACID_CODES)
 from mdtraj.core.selection import parse_selection
 from mdtraj.utils import ilen, import_, ensure_type
 from mdtraj.utils.six import string_types
@@ -89,14 +90,16 @@ def _topology_from_subset(topology, atom_indices):
         newChain = newTopology.add_chain()
         for residue in chain._residues:
             resSeq = getattr(residue, 'resSeq', None) or residue.index
-            newResidue = newTopology.add_residue(residue.name, newChain, resSeq)
+            newResidue = newTopology.add_residue(residue.name, newChain,
+                                                 resSeq)
             for atom in residue._atoms:
                 if atom.index in atom_indices:
                     try:  # OpenMM Topology objects don't have serial attributes, so we have to check first.
                         serial = atom.serial
                     except AttributeError:
                         serial = None
-                    newAtom = newTopology.add_atom(atom.name, atom.element, newResidue, serial=serial)
+                    newAtom = newTopology.add_atom(atom.name, atom.element,
+                                                   newResidue, serial=serial)
                     old_atom_to_new_atom[atom] = newAtom
 
     bondsiter = topology.bonds
@@ -106,7 +109,7 @@ def _topology_from_subset(topology, atom_indices):
     for atom1, atom2 in bondsiter:
         try:
             newTopology.add_bond(old_atom_to_new_atom[atom1],
-                                old_atom_to_new_atom[atom2])
+                                 old_atom_to_new_atom[atom2])
         except KeyError:
             pass
             # we only put bonds into the new topology if both of their partners
@@ -116,7 +119,8 @@ def _topology_from_subset(topology, atom_indices):
     for chain in newTopology._chains:
         chain._residues = [r for r in chain._residues if len(r._atoms) > 0]
     # Delete empty chains
-    newTopology._chains = [c for c in newTopology._chains if len(c._residues) > 0]
+    newTopology._chains = [c for c in newTopology._chains
+                           if len(c._residues) > 0]
     # Re-set the numAtoms and numResidues
     newTopology._numAtoms = ilen(newTopology.atoms)
     newTopology._numResidues = ilen(newTopology.residues)
@@ -196,7 +200,9 @@ class Topology(object):
         return "<%s at 0x%02x>" % (self._string_summary_basic(), id(self))
 
     def _string_summary_basic(self):
-        return "mdtraj.Topology with %d chains, %d residues, %d atoms, %d bonds" % (self.n_chains, self.n_residues, self.n_atoms, len(self._bonds))
+        return ("mdtraj.Topology with %d chains, %d residues, "
+                "%d atoms, %d bonds" % (self.n_chains, self.n_residues,
+                                        self.n_atoms, len(self._bonds)))
 
     def copy(self):
         """Return a copy of the topology
@@ -212,7 +218,8 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq)
                 for atom in residue.atoms:
-                    out.add_atom(atom.name, atom.element, r, serial=atom.serial)
+                    out.add_atom(atom.name, atom.element, r,
+                                 serial=atom.serial)
 
         for a1, a2 in self.bonds:
             out.add_bond(a1, a2)
@@ -249,7 +256,8 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq)
                 for atom in residue.atoms:
-                    a = out.add_atom(atom.name, atom.element, r, serial=atom.serial)
+                    a = out.add_atom(atom.name, atom.element, r,
+                                     serial=atom.serial)
                     atom_mapping[atom] = a
 
         for a1, a2 in other.bonds:
@@ -257,9 +265,32 @@ class Topology(object):
 
         return out
 
+    def to_fasta(self, chain=None):
+        """Convert this topology into FASTA string
+
+        Parameters
+        ----------
+        chain : Integer, optional, default=None
+            If specified, will return the FASTA string for this chain in the
+            Topology.
+
+        Returns
+        -------
+        fasta : String or list of Strings
+           A FASTA string for each chain specified.
+        """
+        fasta = lambda c: "".join([res.code for res in c.residues
+                                   if res.is_protein and res.code is not None])
+        if chain is not None:
+            if not isinstance(chain, int):
+                raise ValueError('chain must be an Integer.')
+            return fasta(self._chains[chain])
+        else:
+            return [fasta(c) for c in self._chains]
+
     def to_openmm(self, traj=None):
         """Convert this topology into OpenMM topology
-        
+
         Parameters
         ----------
         traj : MDTraj.Trajectory, optional, default=None
@@ -297,7 +328,8 @@ class Topology(object):
             angles = traj.unitcell_angles[0]
 
             if np.linalg.norm(angles - 90.0) > 1E-4:
-                raise(ValueError("Unitcell angles must be 90.0 to use in OpenMM topology."))
+                raise(ValueError("Unitcell angles must be 90.0 to use "
+                                 "in OpenMM topology."))
 
             box_vectors = mm.Vec3(*traj.unitcell_lengths[0]) * u.nanometer
             out.setUnitCellDimensions(box_vectors)
@@ -386,11 +418,12 @@ class Topology(object):
         create_standard_bonds
         """
         pd = import_('pandas')
-        
+
         if bonds is None:
             bonds = np.zeros((0, 2))
 
-        for col in ["name", "element", "resSeq", "resName", "chainID", "serial"]:
+        for col in ["name", "element", "resSeq",
+                    "resName", "chainID", "serial"]:
             if col not in atoms.columns:
                 raise ValueError('dataframe must have column %s' % col)
 
@@ -403,7 +436,8 @@ class Topology(object):
                             'You supplied a %s' % type(bonds))
 
         if not np.all(np.arange(len(atoms)) == atoms.index):
-            raise ValueError('atoms must be uniquely numbered starting from zero.')
+            raise ValueError('atoms must be uniquely numbered '
+                             'starting from zero.')
         out._atoms = [None for i in range(len(atoms))]
 
         for ci in np.unique(atoms['chainID']):
@@ -415,7 +449,8 @@ class Topology(object):
                 rnames = residue_atoms['resName']
                 residue_name = np.array(rnames)[0]
                 if not np.all(rnames == residue_name):
-                    raise ValueError('All of the atoms with residue index %d do not share the same residue name' % ri)
+                    raise ValueError('All of the atoms with residue index %d '
+                                     'do not share the same residue name' % ri)
                 r = out.add_residue(residue_name, c, ri)
 
                 for atom_index, atom in residue_atoms.iterrows():
@@ -483,25 +518,28 @@ class Topology(object):
                 return False
 
             for r1, r2 in zip(c1.residues, c2.residues):
-                if (r1.index != r1.index) or (r1.name != r2.name): # or (r1.resSeq != r2.resSeq):
+                if (r1.index != r1.index) or (r1.name != r2.name):  # or (r1.resSeq != r2.resSeq):
                     return False
                 if len(r1._atoms) != len(r2._atoms):
                     return False
 
                 for a1, a2 in zip(r1.atoms, r2.atoms):
-                    if (a1.index != a2.index)  or (a1.name != a2.name):
+                    if (a1.index != a2.index) or (a1.name != a2.name):
                         return False
-                    if a1.element is not a2.element: return False
-                    #for attr in ['atomic_number', 'name', 'symbol']:
-                    #    if getattr(a1.element, attr) != getattr(a2.element, attr):
-                    #        return False
+                    if a1.element is not a2.element:
+                        return False
+                    # for attr in ['atomic_number', 'name', 'symbol']:
+                    #     if getattr(a1.element, attr) != getattr(a2.element, attr):
+                    #         return False
 
         if len(self._bonds) != len(other._bonds):
             return False
 
         # the bond ordering is somewhat ambiguous, so try and fix it for comparison
-        self_sorted_bonds  = sorted([(a1.index, b1.index) for (a1, b1) in self.bonds])
-        other_sorted_bonds = sorted([(a2.index, b2.index) for (a2, b2) in other.bonds])
+        self_sorted_bonds = sorted([(a1.index, b1.index)
+                                    for (a1, b1) in self.bonds])
+        other_sorted_bonds = sorted([(a2.index, b2.index)
+                                     for (a2, b2) in other.bonds])
 
         for i in range(len(self._bonds)):
             (a1, b1) = self_sorted_bonds[i]
@@ -568,7 +606,8 @@ class Topology(object):
         atom : mdtraj.topology.Atom
             the newly created Atom
         """
-        if element is None: element = elem.virtual
+        if element is None:
+            element = elem.virtual
         atom = Atom(name, element, self._numAtoms, residue, serial=serial)
         self._atoms.append(atom)
         self._numAtoms += 1
@@ -714,7 +753,8 @@ class Topology(object):
         if len(Topology._standardBonds) == 0:
             # Load the standard bond defitions.
 
-            tree = etree.parse(os.path.join(os.path.dirname(__file__), '..', 'formats', 'pdb', 'data', 'residues.xml'))
+            tree = etree.parse(os.path.join(os.path.dirname(__file__), '..',
+                               'formats', 'pdb', 'data', 'residues.xml'))
             for residue in tree.getroot().findall('Residue'):
                 bonds = []
                 Topology._standardBonds[residue.attrib['name']] = bonds
@@ -739,7 +779,8 @@ class Topology(object):
                         if bond[0].startswith('-') and i > 0:
                             fromResidue = i-1
                             fromAtom = bond[0][1:]
-                        elif bond[0].startswith('+') and i <len(chain._residues):
+                        elif (bond[0].startswith('+')
+                              and i < len(chain._residues)):
                             fromResidue = i+1
                             fromAtom = bond[0][1:]
                         else:
@@ -748,14 +789,17 @@ class Topology(object):
                         if bond[1].startswith('-') and i > 0:
                             toResidue = i-1
                             toAtom = bond[1][1:]
-                        elif bond[1].startswith('+') and i <len(chain._residues):
+                        elif (bond[1].startswith('+')
+                              and i < len(chain._residues)):
                             toResidue = i+1
                             toAtom = bond[1][1:]
                         else:
                             toResidue = i
                             toAtom = bond[1]
-                        if fromAtom in atomMaps[fromResidue] and toAtom in atomMaps[toResidue]:
-                            self.add_bond(atomMaps[fromResidue][fromAtom], atomMaps[toResidue][toAtom])
+                        if (fromAtom in atomMaps[fromResidue]
+                                and toAtom in atomMaps[toResidue]):
+                            self.add_bond(atomMaps[fromResidue][fromAtom],
+                                          atomMaps[toResidue][toAtom])
 
     def create_disulfide_bonds(self, positions):
         """Identify disulfide bonds based on proximity and add them to the Topology.
@@ -770,7 +814,8 @@ class Topology(object):
             names = [atom.name for atom in res._atoms]
             return 'SG' in names and 'HG' not in names
 
-        cyx = [res for res in self.residues if res.name == 'CYS' and isCyx(res)]
+        cyx = [res for res in self.residues
+               if res.name == 'CYS' and isCyx(res)]
         atomNames = [[atom.name for atom in res._atoms] for res in cyx]
         for i in range(len(cyx)):
             sg1 = cyx[i]._atoms[atomNames[i].index('SG')]
@@ -778,9 +823,10 @@ class Topology(object):
             for j in range(i):
                 sg2 = cyx[j]._atoms[atomNames[j].index('SG')]
                 pos2 = positions[sg2.index]
-                delta = [x-y for (x,y) in zip(pos1, pos2)]
-                distance = np.sqrt(delta[0]*delta[0] + delta[1]*delta[1] + delta[2]*delta[2])
-                if distance < 0.3: # this is supposed to be nm. I think we're good
+                delta = [x-y for (x, y) in zip(pos1, pos2)]
+                distance = np.sqrt(
+                    delta[0]*delta[0] + delta[1]*delta[1] + delta[2]*delta[2])
+                if distance < 0.3:  # this is supposed to be nm. I think we're good
                     self.add_bond(sg1, sg2)
 
     def subset(self, atom_indices):
@@ -937,15 +983,15 @@ class Topology(object):
         if np.array_equal(a_indices, b_indices):
             # This is more efficient and memory friendly by removing the
             # intermediate set creation required in the case below.
-            pairs = np.fromiter(itertools.chain.from_iterable(itertools.combinations(a_indices, 2)),
-                                dtype=np.int32, count=len(a_indices) * (len(a_indices) - 1))
+            pairs = np.fromiter(itertools.chain.from_iterable(
+                itertools.combinations(a_indices, 2)),
+                dtype=np.int32, count=len(a_indices) * (len(a_indices) - 1))
             pairs = np.vstack((pairs[::2], pairs[1::2])).T
         else:
             pairs = np.array(list(set(
                 (a, b) if a > b else (b, a)
                 for a, b in itertools.product(a_indices, b_indices)
-                if a != b)),
-                             dtype=np.int32)
+                if a != b)), dtype=np.int32)
         return pairs
 
 
@@ -966,9 +1012,9 @@ class Chain(object):
 
     def __init__(self, index, topology):
         """Construct a new Chain.  You should call add_chain() on the Topology instead of calling this directly."""
-        ## The index of the Chain within its Topology
+        # The index of the Chain within its Topology
         self.index = index
-        ## The Topology this Chain belongs to
+        # The Topology this Chain belongs to
         self.topology = topology
         self._residues = []
 
@@ -1127,6 +1173,14 @@ class Residue(object):
         return self.name in _PROTEIN_RESIDUES
 
     @property
+    def code(self):
+        """Get the one letter code for this Residue"""
+        if self.is_protein:
+            return _AMINO_ACID_CODES[self.name]
+        else:
+            return None
+
+    @property
     def is_water(self):
         """Whether the residue is water.
 
@@ -1142,7 +1196,6 @@ class Residue(object):
     def is_nucleic(self):
         """Whether the residue is one found in nucleic acids."""
         raise NotImplementedError
-
 
     def __str__(self):
         return '%s%s' % (self.name, self.resSeq)
@@ -1171,15 +1224,15 @@ class Atom(object):
 
     def __init__(self, name, element, index, residue, serial=None):
         """Construct a new Atom.  You should call add_atom() on the Topology instead of calling this directly."""
-        ## The name of the Atom
+        # The name of the Atom
         self.name = name
-        ## That Atom's element
+        # That Atom's element
         self.element = element
-        ## The index of the Atom within its Topology
+        # The index of the Atom within its Topology
         self.index = index
-        ## The Residue this Atom belongs to
+        # The Residue this Atom belongs to
         self.residue = residue
-        ## The not-necessarily-contiguous "serial" number from the PDB spec
+        # The not-necessarily-contiguous "serial" number from the PDB spec
         self.serial = serial
 
     @property
@@ -1192,12 +1245,14 @@ class Atom(object):
     @property
     def is_backbone(self):
         """Whether the atom is in the backbone of a protein residue"""
-        return self.name in set(['C', 'CA', 'N', 'O']) and self.residue.is_protein
+        return (self.name in set(['C', 'CA', 'N', 'O'])
+                and self.residue.is_protein)
 
     @property
     def is_sidechain(self):
         """Whether the atom is in the sidechain of a protein residue"""
-        return self.name not in set(['C', 'CA', 'N', 'O']) and self.residue.is_protein
+        return (self.name not in set(['C', 'CA', 'N', 'O'])
+                and self.residue.is_protein)
 
     def __eq__(self, other):
         """ Check whether two Atom objects are equal. """

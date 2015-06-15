@@ -4,7 +4,7 @@
 # Copyright 2012-2014 Stanford University and the Authors
 #
 # Authors: Matthew Harrigan
-# Contributors:
+# Contributors: Carlos Xavier Hernandez
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -19,7 +19,6 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 # #############################################################################
-
 import ast
 
 import mdtraj
@@ -30,6 +29,7 @@ pnode = lambda s: ast.parse(s, mode='eval').body
 
 ala = mdtraj.load(get_fn("alanine-dipeptide-explicit.pdb"))
 gbp = mdtraj.load(get_fn("2EQQ.pdb"))
+
 
 def make_test_topology():
     t = mdtraj.Topology()
@@ -52,7 +52,8 @@ tt = make_test_topology()
 
 
 def test_range():
-    eq(parse_selection('resSeq 1 to 10').astnode, pnode('1 <= atom.residue.resSeq <= 10'))
+    eq(parse_selection('resSeq 1 to 10').astnode,
+       pnode('1 <= atom.residue.resSeq <= 10'))
 
     sp = parse_selection('resSeq 5 to 6')
     for a in tt.atoms:
@@ -93,6 +94,10 @@ def test_unary_3():
 
 def test_binary_1():
     sp = parse_selection('resname "ALA"')
+    assert sp.expr(tt.atom(0))
+    assert sp.expr(tt.atom(1))
+
+    sp = parse_selection('rescode A')
     assert sp.expr(tt.atom(0))
     assert sp.expr(tt.atom(1))
 
@@ -164,6 +169,7 @@ def test_raises():
     assert_raises(ValueError, lambda: parse_selection('or'))
     assert_raises(ValueError, lambda: parse_selection('a <'))
 
+
 def test_raises2():
     assert_raises(ValueError, lambda: parse_selection('dog 5'))
     assert_raises(ValueError, lambda: parse_selection('dog == 5'))
@@ -181,7 +187,6 @@ def test_bool():
     sp = parse_selection("protein or water or all")
     eq(sp.source,
        "(atom.residue.is_protein or atom.residue.is_water or True)")
-
 
 
 def test_nested_bool():
@@ -218,6 +223,7 @@ def test_element():
     sp = parse_selection("mass 5.5 to 12.3")
     eq(sp.astnode, pnode("(5.5 <= atom.element.mass <= 12.3)"))
 
+
 def test_not():
     sp = parse_selection("not protein")
     eq(sp.source, "(not atom.residue.is_protein)")
@@ -227,6 +233,7 @@ def test_not():
 
     sp = parse_selection('!protein')
     eq(sp.source, "(not atom.residue.is_protein)")
+
 
 def test_re():
     sp = parse_selection("name =~ 'C.*'")
@@ -267,12 +274,13 @@ def test_top():
 
 def test_top_2():
     expr = ala.topology.select_expression("name O and water")
-    eq(expr,
-       "[atom.index for atom in topology.atoms if ((atom.name == 'O') and atom.residue.is_water)]")
+    eq(expr, "[atom.index for atom in topology.atoms if ((atom.name == 'O') "
+             "and atom.residue.is_water)]")
 
 
 def test_backbone():
-    ref_backbone = gbp.topology.select("protein and (name C or name CA or name N or name O)")
+    ref_backbone = gbp.topology.select("protein and (name C or name CA or "
+                                       "name N or name O)")
     backbone = gbp.topology.select("backbone")
     is_backbone = gbp.topology.select("is_backbone")
 
@@ -281,19 +289,22 @@ def test_backbone():
 
 
 def test_sidechain():
-    ref_sidechain = gbp.topology.select("protein and not (name C or name CA or name N or name O)")
+    ref_sidechain = gbp.topology.select("protein and not (name C or name CA "
+                                        "or name N or name O)")
     sidechain = gbp.topology.select("sidechain")
     is_sidechain = gbp.topology.select("is_sidechain")
 
     eq(np.asarray(sidechain), np.asarray(ref_sidechain))
     eq(np.asarray(is_sidechain), np.asarray(ref_sidechain))
 
+
 def test_literal():
     name_og1_0 = gbp.topology.select('name "OG1"')
     name_og1_1 = gbp.topology.select("name 'OG1'")
     name_og1_2 = gbp.topology.select("name OG1")
 
-    ref_og1 = np.asarray([a.index for a in gbp.topology.atoms if a.name == 'OG1'])
+    ref_og1 = np.asarray([a.index for a in gbp.topology.atoms
+                          if a.name == 'OG1'])
     eq(name_og1_0, ref_og1)
+    eq(name_og1_1, ref_og1)
     eq(name_og1_2, ref_og1)
-    eq(name_og1_0, ref_og1)

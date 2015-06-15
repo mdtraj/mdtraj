@@ -4,7 +4,7 @@
 # Copyright 2012-2014 Stanford University and the Authors
 #
 # Authors: Kyle A. Beauchamp
-# Contributors: Robert McGibbon, Matthew Harrigan
+# Contributors: Robert McGibbon, Matthew Harrigan, Carlos Xavier Hernandez
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -75,7 +75,6 @@ def test_topology_pandas():
     eq(topology, topology2)
 
     topology3 = md.Topology.from_dataframe(atoms)  # Make sure you default arguement of None works, see issue #774
-    
 
 
 @skipif(not HAVE_PANDAS)
@@ -86,11 +85,13 @@ def test_topology_pandas_TIP4PEW():
     topology2 = md.Topology.from_dataframe(atoms, bonds)
     eq(topology, topology2)
 
+
 def test_topology_numbers():
     topology = md.load(get_fn('1bpi.pdb')).topology
     assert len(list(topology.atoms)) == topology.n_atoms
     assert len(list(topology.residues)) == topology.n_residues
     assert all([topology.atom(i).index == i for i in range(topology.n_atoms)])
+
 
 @skipif(not HAVE_PANDAS)
 def test_topology_unique_elements_bpti():
@@ -98,6 +99,7 @@ def test_topology_unique_elements_bpti():
     top, bonds = traj.top.to_dataframe()
     atoms = np.unique(["C", "O", "N", "H", "S"])
     eq(atoms, np.unique(top.element.values))
+
 
 def test_chain():
     top = md.load(get_fn('bpti.pdb')).topology
@@ -109,6 +111,7 @@ def test_chain():
     for i in range(chain.n_atoms):
         assert atoms[i] == chain.atom(i)
 
+
 def test_residue():
     top = md.load(get_fn('bpti.pdb')).topology
     residue = top.residue(0)
@@ -116,6 +119,7 @@ def test_residue():
     atoms = list(residue.atoms)
     for i in range(residue.n_atoms):
         assert residue.atom(i) == atoms[i]
+
 
 def test_nonconsective_resSeq():
     t = md.load(get_fn('nonconsecutive_resSeq.pdb'))
@@ -132,9 +136,11 @@ def test_nonconsective_resSeq():
     yield lambda : eq(df1[0], t2.top.to_dataframe()[0])
     os.unlink(fname)
 
+
 def test_pickle():
     # test pickling of topology (bug #391)
     cPickle.loads(cPickle.dumps(md.load(get_fn('bpti.pdb')).topology))
+
 
 def test_atoms_by_name():
     top = md.load(get_fn('bpti.pdb')).topology
@@ -150,6 +156,7 @@ def test_atoms_by_name():
 
     assert_raises(KeyError, lambda: top.residue(15).atom('sdfsdsdf'))
 
+
 def test_select_atom_indices():
     top = md.load(get_fn('native.pdb')).topology
 
@@ -158,6 +165,7 @@ def test_select_atom_indices():
                      np.array([4, 5, 6, 8, 10, 14, 15, 16, 18]))
 
     assert_raises(ValueError, lambda: top.select_atom_indices('sdfsdfsdf'))
+
 
 @skipif(not HAVE_OPENMM)
 def test_top_dataframe_openmm_roundtrip():
@@ -198,3 +206,8 @@ def test_select_pairs_args():
                traj.top.select_pairs(selection1="name H1", selection2="name O").sort()))
     assert (eq(traj.top.select_pairs(selection1=range(traj.n_atoms), selection2="(name O) or (name =~ 'H.*')").sort(),
                traj.top.select_pairs(selection1='all', selection2='all').sort()))
+
+
+def test_to_fasta():
+    t = md.load(get_fn('2EQQ.pdb'))
+    assert t.topology.to_fasta(0) == "ENFSGGCVAGYMRTPDGRCKPTFYQLIT"
