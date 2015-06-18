@@ -846,11 +846,9 @@ class Trajectory(object):
 
     def __hash__(self):
         def _hash_numpy_array(x):
-            x.flags.writeable = False
             hash_value = hash(x.shape)
             hash_value ^= hash(x.strides)
-            hash_value ^= hash(x.data)
-            x.flags.writeable = True
+            hash_value ^= hash(x.data.tobytes())
             return hash_value
 
         hash_value = hash(self.top)

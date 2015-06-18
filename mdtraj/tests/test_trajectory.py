@@ -569,15 +569,16 @@ def test_chunk0_iterload():
 
 
 def test_hashing():
-    hashes = [hash(frame) for frame in
+    frames = [frame for frame in
               md.iterload(get_fn('frame0.xtc'), chunk=1,
                           top=get_fn('native.pdb'))]
+    hashes = [hash(frame) for frame in frames]
     # check all frames have a unique hash value
     assert len(hashes) == len(set(hashes))
 
     # change topology and ensure hash changes too
-    top = frame.topology
+    top = frames[0].topology
     top.add_bond(top.atom(0), top.atom(1))
 
-    last_frame_hash = hash(frame)
+    last_frame_hash = hash(frames[0])
     assert last_frame_hash != hashes[-1]
