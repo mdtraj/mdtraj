@@ -479,25 +479,18 @@ def iterload(filename, chunk=100, **kwargs):
         with (lambda x: open(x, n_atoms=topology.n_atoms)
               if extension in ('.crd', '.mdcrd')
               else open(filename))(filename) as f:
-            skipped = 0
+            if skip > 0:
+                f.seek(skip)
             while True:
                 if extension not in _TOPOLOGY_EXTS:
                     traj = f.read_as_traj(topology, n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
                 else:
                     traj = f.read_as_traj(n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
 
-                orig_len = len(traj)
-                if orig_len == 0:
+                if len(traj) == 0:
                     raise StopIteration()
 
-                if skip > 0 and skipped < skip:
-                    to_skip = abs(skipped - skip)
-                    # this might yield zero frames!
-                    traj = traj[to_skip:]
-                    skipped += orig_len - len(traj)
-
-                if skipped == skip and len(traj) > 0:
-                    yield traj
+                yield traj
 
 
 class Trajectory(object):
