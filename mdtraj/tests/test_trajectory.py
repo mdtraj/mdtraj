@@ -502,6 +502,26 @@ def test_iterload():
             yield test
 
 
+def test_iterload_skip():
+    files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
+             'frame0.dcd', 'frame0.binpos', 'legacy_msmbuilder_trj0.lh5',
+             'frame0.xyz', 'frame0.lammpstrj']
+
+    err_msg = "failed for file %s with chunksize %i and skip %i"
+
+    for file in files:
+        for cs in [0, 1, 11, 100]:
+            for skip in [0, 1, 20, 101]:
+                print("testing file %s with skip=%i" % (file, skip))
+                t_ref = md.load(get_fn(file), top=get_fn('native.pdb'))
+                t = functools.reduce(lambda a, b: a.join(b),
+                                     md.iterload(get_fn(file), skip=skip,
+                                                 top=get_fn('native.pdb'), chunk=cs))
+                eq(t_ref.xyz[skip:], t.xyz, err_msg=err_msg % (file, cs, skip))
+                eq(t_ref.time[skip:], t.time, err_msg=err_msg % (file, cs, skip))
+                eq(t_ref.topology, t.topology, err_msg=err_msg % (file, cs, skip))
+
+
 def test_save_load():
     # this cycles all the known formats you can save to, and then tries
     # to reload, using just a single-frame file.
