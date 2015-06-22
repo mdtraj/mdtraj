@@ -12,6 +12,11 @@ SKIP_MODULES = [
     'mdtraj\.utils\.unit\.unit',
     'mdtraj\.utils\.unit\.quantity',
     'mdtraj\.utils\.unit\.mymatrix',
+    'mdtraj\.formats\.lh5',
+    'mdtraj\.formats\.hdf5',
+    'mdtraj\.formats\.pdb\.pdbstructure',
+    'mdtraj\.scripts',
+    'mdtraj\.testing\.docscrape',
 ]
 
 SKIP_FUNCTIONS = [

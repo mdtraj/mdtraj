@@ -70,8 +70,8 @@ def get_redundant_internal_coordinates(trajectory, **kwargs):
     trajectory : mdtraj.Trajectory
         Trajectory object containing the internal coordinates
 
-    Additional Parameters
-    ---------------------
+    Other Parameters
+    ----------------
     ibonds : np.ndarray, optional, shape[n_bonds, 2], dtype=int
         Each row gives the indices of two atoms involved in a bond
     iangles : np.ndarray, optional shape[n_angles, 3], dtype=int
@@ -213,7 +213,26 @@ def get_nonredundant_internal_coordinates(trajectory, conformation, get_operator
 # angles and dihedrals
 ################################################################################
 def get_connectivity(conf):
-    "Convenience method"
+    """Get the indices of all the bonds/angles/dihedrals
+
+    Parameters
+    ----------
+    conf : MDTraj.Trajectory
+        An MDTraj trajectory, only the first frame will be used.
+
+    Returns
+    -------
+    ibonds : np.ndarray, shape=[n_bonds, 2], dtype=int
+        n_bonds x 2 array of indices, where each row is the index of two
+        atom who participate in a bond.
+    iangles : np.ndarray, shape[n_angles, 3], dtype=int
+        n_angles x 3 array of indices, where each row is the index of three
+        atoms m,n,o such that n is bonded to both m and o.
+    idihedrals : np.ndarray, shape[n_dihedrals, 4], dtype=int
+        All sets of 4 atoms A,B,C,D such that A is bonded to B, B is bonded
+        to C, and C is bonded to D
+    """
+
     ibonds = get_bond_connectivity(conf)
     iangles = get_angle_connectivity(ibonds)
     idihedrals = get_dihedral_connectivity(ibonds)
@@ -365,8 +384,8 @@ def get_wilson_B(conformation, **kwargs):
     conformation : mdtraj.Trajectory
         Only the first frame is used
 
-    Additional Parameters
-    ---------------------
+    Other Parameters
+    ----------------
     ibonds : np.ndarray, optional shape[n_bonds, 2], dtype=int
         Each row gives the indices of two atoms involved in a bond
     iangles : np.ndarray, optional, shape[n_angles, 3], dtype=int
@@ -399,8 +418,19 @@ def get_wilson_B(conformation, **kwargs):
 
 
 def get_bond_derivs(xyz, ibonds):
-    """
-    Derivatives of the bond lengths with respect to cartesian coordinates
+    """Derivatives of the bond lengths with respect to cartesian coordinates
+
+    Parameters
+    ----------
+    xyz : np.ndarray, shape=(n_atoms, 3)
+        The cartesian coordinates of the atomic positions for a single frame
+    ibonds : np.ndarray, optional, shape[n_bonds, 2], dtype=int
+        Each row gives the indices of two atoms involved in a bond
+
+    Returns
+    -------
+    derivs : np.ndarray, shape=(n_bonds, n_atoms, 3)
+        The gradient of the bond lengths w.r.t. each atomic position
 
     References
     ----------
@@ -423,6 +453,18 @@ def get_bond_derivs(xyz, ibonds):
 def get_angle_derivs(xyz, iangles):
     """
     Derivatives of the bond angles with respect to cartesian coordinates
+
+    Parameters
+    ----------
+    xyz : np.ndarray, shape=(n_atoms, 3)
+        The cartesian coordinates of the atomic positions for a single frame
+    iangles : np.ndarray, optional shape[n_angles, 3], dtype=int
+        Each row gives the indices of three atoms which together make an angle
+
+    Returns
+    -------
+    derivs : np.ndarray, shape=(n_bonds, n_atoms, 3)
+        The gradient of the bond angles w.r.t. each atomic position
 
     References
     ----------
@@ -466,6 +508,19 @@ def get_angle_derivs(xyz, iangles):
 def get_dihedral_derivs(xyz, idihedrals):
     """
     Derivatives of the dihedral angles with respect to cartesian coordinates
+
+    Parameters
+    ----------
+    xyz : np.ndarray, shape=(n_atoms, 3)
+        The cartesian coordinates of the atomic positions for a single frame
+    idihedrals : np.ndarray, optional, shape[n_dihedrals, 4], dtype=int
+        Each row gives the indices of the four atoms which together make a
+        dihedral
+
+    Returns
+    -------
+    derivs : np.ndarray, shape=(n_dihedrals, n_atoms, 3)
+        The gradient of the dihedral angles w.r.t. each atomic position
 
     References
     ----------

@@ -196,7 +196,15 @@ def assert_dict_equal(t1, t2, decimal=6):
 
 
 def assert_sparse_matrix_equal(m1, m2, decimal=6):
-    """Assert two scipy.sparse matrices are equal."""
+    """Assert two scipy.sparse matrices are equal.
+
+    Parameters
+    ----------
+    m1 : sparse_matrix
+    m2 : sparse_matrix
+    decimal : int
+        Number of decimal places to check.
+    """
     # both are sparse matricies
     assert isspmatrix(m1)
     assert isspmatrix(m1)

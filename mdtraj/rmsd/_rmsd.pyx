@@ -204,7 +204,7 @@ np.ndarray[np.float32_t, ndim=1, mode="c"] g1 not None,
 np.ndarray[np.float32_t, ndim=1, mode="c"] g2 not None,
 int frame,
 bool parallel=True):
-    """getMultipleRMSDs_axis_major(xyz1, xyz2, g1, g2, n_atoms, frame, parallel=True)
+    """getMultipleRMSDs_axis_major(xyz1, xyz2, g1, g, frame, parallel=True)
 
     Calculate the RMSD of several frames to a single frame, with the
     coordinates laid out in axis-major orders
@@ -283,8 +283,6 @@ bool parallel=True):
         Pre-calculated G factors (traces) for each frame in xyz1
     g2 : np.ndarray, shape = (n_frames), dtype=float32
         Pre-calculated G factors (traces) for each frame in xyz2
-    n_atoms : int
-        The number of atoms in the system.
     frame : int
         Index of the desired reference frame in xyz1.
     parallel : bool, default True
@@ -349,6 +347,11 @@ bool parallel=True):
         Pre-calculated G factors (traces) for each frame in xyz_mobile
     xyz_displace_mobile : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
         The coordinates of the mobile trajectory to displace
+    target_frame : int
+        The particular frame in xyz_align_target / g_target to align the mobile
+        trajectory  to.
+    parallel : bool, default=True
+        Run the calculation using multiple cores simultaneously.
     """
     cdef int i
     cdef int n_frames = xyz_align_mobile.shape[0]

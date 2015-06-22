@@ -137,6 +137,8 @@ def docstring_verifiers(module, error_on_none=False):
             args = set(getargs(get_function_code(f)).args)
             if 'self' in args:
                 args.remove('self')
+            if 'cls' in args:
+                args.remove('cls')
 
             if args != param_names:
                 raise ValueError("In %s, arguments %s don't "
