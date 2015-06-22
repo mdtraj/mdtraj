@@ -33,6 +33,7 @@ from mdtraj.utils.six.moves import xrange
 from mdtraj.core import element
 
 import mdtraj.core.trajectory
+from mdtraj.core.topology import Topology
 TestDocstrings = DocStringFormatTester(mdtraj.core.trajectory, error_on_none=True)
 
 fn = get_fn('traj.h5')
@@ -585,3 +586,19 @@ def test_chunk0_iterload():
         pass
 
     eq(trj0.n_frames, trj.n_frames)
+
+
+def test_hashing():
+    frames = [frame for frame in
+              md.iterload(get_fn('frame0.xtc'), chunk=1,
+                          top=get_fn('native.pdb'))]
+    hashes = [hash(frame) for frame in frames]
+    # check all frames have a unique hash value
+    assert len(hashes) == len(set(hashes))
+
+    # change topology and ensure hash changes too
+    top = frames[0].topology
+    top.add_bond(top.atom(0), top.atom(1))
+
+    last_frame_hash = hash(frames[0])
+    assert last_frame_hash != hashes[-1]

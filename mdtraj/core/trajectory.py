@@ -28,7 +28,6 @@
 from __future__ import print_function, division
 import os
 import warnings
-import functools
 from copy import deepcopy
 from collections import Iterable
 import numpy as np
@@ -42,7 +41,6 @@ from mdtraj.formats import NetCDFTrajectoryFile
 from mdtraj.formats import LH5TrajectoryFile
 from mdtraj.formats import PDBTrajectoryFile
 from mdtraj.formats import MDCRDTrajectoryFile
-from mdtraj.formats import ArcTrajectoryFile
 from mdtraj.formats import DTRTrajectoryFile
 from mdtraj.formats import LAMMPSTrajectoryFile
 from mdtraj.formats import XYZTrajectoryFile
@@ -111,6 +109,21 @@ def _assert_files_or_dirs_exist(names):
         if not (os.path.exists(fn) and \
                         (os.path.isfile(fn) or os.path.isdir(fn))):
             raise IOError('No such file: %s' % fn)
+
+if PY3:
+    def _hash_numpy_array(x):
+        hash_value = hash(x.shape)
+        hash_value ^= hash(x.strides)
+        hash_value ^= hash(x.data.tobytes())
+        return hash_value
+else:
+    def _hash_numpy_array(x):
+        x.flags.writeable = False
+        hash_value = hash(x.shape)
+        hash_value ^= hash(x.strides)
+        hash_value ^= hash(x.data)
+        x.flags.writeable = True
+        return hash_value
 
 
 def load_topology(filename):
@@ -851,6 +864,18 @@ class Trajectory(object):
 
     def __repr__(self):
         return "<%s at 0x%02x>" % (self._string_summary_basic(), id(self))
+
+    def __hash__(self):
+        hash_value = hash(self.top)
+        # combine with hashes of arrays
+        hash_value ^= _hash_numpy_array(self._xyz)
+        hash_value ^= _hash_numpy_array(self.time)
+        hash_value ^= _hash_numpy_array(self._unitcell_lengths)
+        hash_value ^= _hash_numpy_array(self._unitcell_angles)
+        return hash_value
+
+    def __eq__(self, other):
+        return self.__hash__() == other.__hash__()
 
     # def describe(self):
     #     """Diagnostic summary statistics on the trajectory"""
