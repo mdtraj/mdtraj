@@ -386,10 +386,12 @@ class Topology(object):
         pd = import_('pandas')
         data = [(atom.serial, atom.name, atom.element.symbol,
                  atom.residue.resSeq, atom.residue.name,
-                 atom.residue.chain.id) for atom in self.atoms]
+                 atom.residue.chain.index, atom.residue.chain.id)
+                for atom in self.atoms]
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
-                                            "resSeq", "resName", "chainID"])
+                                            "resSeq", "resName", "chainIndex",
+                                            "chainID"])
 
         bonds = np.array([(a.index, b.index) for (a, b) in self.bonds])
         return atoms, bonds
@@ -440,9 +442,10 @@ class Topology(object):
                              'starting from zero.')
         out._atoms = [None for i in range(len(atoms))]
 
-        for ci in np.unique(atoms['chainID']):
-            chain_atoms = atoms[atoms['chainID'] == ci]
-            c = out.add_chain()
+        for ci in np.unique(atoms['chainIndex']):
+            chain_atoms = atoms[atoms['chainIndex'] == ci]
+            chainID = np.unique(chain_atoms['chainID'])[0]
+            c = out.add_chain(chainID)
 
             for ri in np.unique(chain_atoms['resSeq']):
                 residue_atoms = chain_atoms[chain_atoms['resSeq'] == ri]
@@ -558,7 +561,7 @@ class Topology(object):
             the newly created Chain
         """
         if id is None:
-            id = str(len(self._chains)+1)
+            id = chr(ord('A') + (len(self._chains)))
         chain = Chain(len(self._chains), self, id)
         self._chains.append(chain)
         return chain

@@ -476,10 +476,9 @@ class PDBTrajectoryFile(object):
 
         atomByNumber = {}
         for chain in pdb.iter_chains():
-            print(chain)
-            c = self._topology.add_chain(id=chain.chain_id)
+            c = self._topology.add_chain(id=(
+                chain.chain_id if chain.chain_id is not ' ' else None))
             for residue in chain.iter_residues():
-                print(residue.number, end=' ')
                 resName = residue.get_name()
                 if resName in PDBTrajectoryFile._residueNameReplacements:
                     resName = PDBTrajectoryFile._residueNameReplacements[resName]
