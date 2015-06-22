@@ -208,6 +208,7 @@ def test_3nch_serial_resSeq():
     # HETATM19791  O4  SO4 D 804      -4.210  -8.560  23.575  1.00112.54           O  
     t1 = load_pdb(get_fn('3nch.pdb.gz'))
     top, bonds = t1.top.to_dataframe()
+    print([c.index for c in t1.top.chains])
     
     top2 = Topology.from_dataframe(top, bonds)
     eq(t1.top, top2)

@@ -87,7 +87,7 @@ def _topology_from_subset(topology, atom_indices):
     old_atom_to_new_atom = {}
 
     for chain in topology._chains:
-        newChain = newTopology.add_chain()
+        newChain = newTopology.add_chain(chain.id)
         for residue in chain._residues:
             resSeq = getattr(residue, 'resSeq', None) or residue.index
             newResidue = newTopology.add_residue(residue.name, newChain,
@@ -214,7 +214,7 @@ class Topology(object):
         """
         out = Topology()
         for chain in self.chains:
-            c = out.add_chain()
+            c = out.add_chain(chain.id)
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq)
                 for atom in residue.atoms:
@@ -252,7 +252,7 @@ class Topology(object):
 
         atom_mapping = {}
         for chain in other.chains:
-            c = out.add_chain()
+            c = out.add_chain(chain.id)
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq)
                 for atom in residue.atoms:
@@ -356,7 +356,7 @@ class Topology(object):
         atom_mapping = {}
 
         for chain in value.chains():
-            c = out.add_chain()
+            c = out.add_chain(chain.id)
             for residue in chain.residues():
                 r = out.add_residue(residue.name, c)
                 for atom in residue.atoms():
@@ -386,7 +386,7 @@ class Topology(object):
         pd = import_('pandas')
         data = [(atom.serial, atom.name, atom.element.symbol,
                  atom.residue.resSeq, atom.residue.name,
-                 atom.residue.chain.index) for atom in self.atoms]
+                 atom.residue.chain.id) for atom in self.atoms]
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
                                             "resSeq", "resName", "chainID"])
@@ -549,7 +549,7 @@ class Topology(object):
 
         return True
 
-    def add_chain(self):
+    def add_chain(self, id=None):
         """Create a new Chain and add it to the Topology.
 
         Returns
@@ -557,7 +557,9 @@ class Topology(object):
         chain : mdtraj.topology.Chain
             the newly created Chain
         """
-        chain = Chain(len(self._chains), self)
+        if id is None:
+            id = str(len(self._chains)+1)
+        chain = Chain(len(self._chains), self, id)
         self._chains.append(chain)
         return chain
 
@@ -1010,10 +1012,12 @@ class Chain(object):
         Iterator over all Atoms in the Chain.
     """
 
-    def __init__(self, index, topology):
+    def __init__(self, index, topology, id):
         """Construct a new Chain.  You should call add_chain() on the Topology instead of calling this directly."""
         # The index of the Chain within its Topology
         self.index = index
+        # Identifier for the Chain (e.g. from a PDB file)
+        self.id = id
         # The Topology this Chain belongs to
         self.topology = topology
         self._residues = []
