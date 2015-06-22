@@ -9,10 +9,10 @@ from distutils.spawn import find_executable
 
 import numpy as np
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
+from mdtraj.testing import get_fn, eq, skipif
 
 HAVE_DSSP = find_executable('mkdssp')
-DSSP_MSG =  "This tests required mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
+DSSP_MSG =  "This test requires mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
 tmpdir = None
 
 

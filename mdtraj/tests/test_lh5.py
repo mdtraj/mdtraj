@@ -23,9 +23,12 @@
 import numpy as np
 import tempfile
 import os
+import sys
 import mdtraj as md
 from mdtraj.formats import LH5TrajectoryFile
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises, skipif, assert_raises
+from mdtraj.testing import get_fn, eq, raises, skipif, assert_raises
+on_win = (sys.platform == 'win32')
+on_py3 = (sys.version_info >= (3, 0))
 
 
 fd, temp = tempfile.mkstemp(suffix='.lh5')
@@ -36,6 +39,7 @@ def teardown_module(module):
     os.unlink(temp)
 
 
+@skipif(on_win and on_py3)
 def test_write_coordinates():
     coordinates = np.random.randn(4, 10,3)
     with LH5TrajectoryFile(temp, 'w') as f:
@@ -43,7 +47,7 @@ def test_write_coordinates():
 
     with LH5TrajectoryFile(temp) as f:
         eq(f.read(), coordinates, decimal=3)
-        
+
     with LH5TrajectoryFile(temp) as f:
         f.seek(2)
         eq(f.read(), coordinates[2:], decimal=3)
@@ -53,6 +57,7 @@ def test_write_coordinates():
         eq(f.read(), coordinates[3:], decimal=3)
 
 
+@skipif(on_win and on_py3)
 def test_write_coordinates_reshape():
     coordinates = np.random.randn(10,3)
     with LH5TrajectoryFile(temp, 'w') as f:
@@ -62,6 +67,7 @@ def test_write_coordinates_reshape():
        eq(f.read(), coordinates.reshape(1,10,3), decimal=3)
 
 
+@skipif(on_win and on_py3)
 def test_write_multiple():
     coordinates = np.random.randn(4, 10, 3)
     with LH5TrajectoryFile(temp, 'w') as f:
@@ -72,6 +78,7 @@ def test_write_multiple():
         eq(f.read(), np.vstack((coordinates, coordinates)), decimal=3)
 
 
+@skipif(on_win and on_py3)
 def test_topology():
     top = md.load(get_fn('native.pdb')).topology
 
@@ -82,6 +89,7 @@ def test_topology():
         assert f.topology == top
 
 
+@skipif(on_win and on_py3)
 def test_read_slice_0():
     coordinates = np.random.randn(4, 10,3)
     with LH5TrajectoryFile(temp, 'w') as f:
@@ -98,15 +106,17 @@ def test_read_slice_0():
         eq(f.read(stride=2, atom_indices=np.array([0,1])), coordinates[::2, [0,1], :], decimal=3)
 
 
+@skipif(on_win and on_py3)
 def test_vsite_elements():
     #  Test case for issue #263
     pdb_filename = get_fn('GG-tip4pew.pdb')
     trj = md.load(pdb_filename)
     trj.save_lh5(temp)
-    
+
     trj2 = md.load(temp, top=pdb_filename)
 
 
+@skipif(on_win and on_py3)
 def test_do_overwrite_0():
     with open(temp, 'w') as f:
         f.write('a')
@@ -115,10 +125,11 @@ def test_do_overwrite_0():
         f.write(np.random.randn(10,5,3))
 
 
+@skipif(on_win and on_py3)
 @raises(IOError)
 def test_do_overwrite_1():
     with open(temp, 'w') as f:
         f.write('a')
 
     with LH5TrajectoryFile(temp, 'w', force_overwrite=False) as f:
-        f.write(np.random.randn(10,5,3))    
+        f.write(np.random.randn(10,5,3))

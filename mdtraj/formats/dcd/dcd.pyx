@@ -539,7 +539,7 @@ cdef class DCDTrajectoryFile:
         cell_angles : np.ndarray, shape=(n_frames, 3), dtype=float32, optional
             Organized analogously to cell_lengths. Gives the alpha, beta and
             gamma angles respectively. By convention for
-            this trajectory format, the lengths should be in units of angstroms.
+            this trajectory format, the angles should be in units of degrees.
         """
         if str(self.mode) != 'w':
             raise ValueError('write() is only available when the file is opened in mode="w"')

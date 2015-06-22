@@ -1,10 +1,10 @@
 /*=======================================================================*/
 /* MDTraj: A Python Library for Loading, Saving, and Manipulating        */
 /*         Molecular Dynamics Trajectories.                              */
-/* Copyright 2012-2013 Stanford University and the Authors               */
+/* Copyright 2012-2015 Stanford University and the Authors               */
 /*                                                                       */
 /* Authors: Robert McGibbon                                              */
-/* Contributors:                                                         */
+/* Contributors: Jason Swails                                            */
 /*                                                                       */
 /* MDTraj is free software: you can redistribute it and/or modify        */
 /* it under the terms of the GNU Lesser General Public License as        */
@@ -43,7 +43,7 @@
 /****************************************************************************/
 
 /**
- * This is kindof hacky / gross, but I think it's the best way to avoid havving
+ * This is kindof hacky / gross, but I think it's the best way to avoid having
  * lots of copy-paste code. For each of the distance/angle/dihedral kernels, we
  * want to compile two version: one which uses PBCs and the other which does
  * not. Most of the code between these versions is shared, so I've written
@@ -65,6 +65,99 @@
 #include "anglekernels.h"
 #include "dihedralkernels.h"
 
+/**
+ * Distance kernel for general triclinic cells. It is the same as the standard
+ * MIC distance code, except that it has to check the distances in all 27
+ * surrounding unit cells to pick out the closest one. This is because the MIC
+ * code uses scaled, or fractional, coordinates and finds the minimum image that
+ * way, which eliminates the anisotropy of the unit cell (i.e., for
+ * non-orthorhombic cells, some corners of the unit cell are farther away than
+ * others). The only distances that the algorithm in dist_mic are *guaranteed*
+ * to get correct are the ones that fall within the largest sphere that can be
+ * entirely contained between the planes of the adjacent unit cells (equal to
+ * the largest cutoff distance permissible in MD simulations).
+ *
+ * TODO: Add SSE-vectorization to the nearest neighbor search here
+ */
+int dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_matrix,
+                       float* distance_out, float* displacement_out, int n_frames,
+                       int n_atoms, int n_pairs) {
+    float *displacements; // We need to get these regardless
+    float *distances;     // We need to get these regardless
+    int f, i, j, k, n, dist_start, disp_start, dist_idx, disp_idx;
+    float min_dist, dist_test;
+
+    float orig_disp[3], min_disp[3], disp_test[3];
+    float v1[3], v2[3], bv1[3], bv2[3], bv3[3];
+
+    if (displacement_out == NULL)
+        displacements = (float*) malloc(n_pairs*n_frames*3 * sizeof(float));
+    else
+        displacements = displacement_out;
+
+    if (distance_out == NULL)
+        distances = (float*) malloc(n_pairs*n_frames * sizeof(float));
+    else
+        distances = distance_out;
+
+    dist_mic(xyz, pairs, box_matrix, distances, displacements, n_frames, n_atoms, n_pairs);
+
+    /* Now we have to search the surrounding unit cells  */
+    for (f = 0; f < n_frames; f++) {
+        dist_start = n_pairs*f;
+        disp_start = dist_start*3;
+
+        /* Store the original box vectors, which are columns in the row-major matrix layout */
+        bv1[0] = box_matrix[9*f  ]; bv2[0] = box_matrix[9*f+1]; bv3[0] = box_matrix[9*f+2];
+        bv1[1] = box_matrix[9*f+3]; bv2[1] = box_matrix[9*f+4]; bv3[1] = box_matrix[9*f+5];
+        bv1[2] = box_matrix[9*f+6]; bv2[2] = box_matrix[9*f+7]; bv3[2] = box_matrix[9*f+8];
+
+        for (n = 0; n < n_pairs; n++) {
+            dist_idx = dist_start + n;
+            disp_idx = disp_start + n*3;
+            min_dist = distances[dist_idx]*distances[dist_idx];
+            min_disp[0] = displacements[disp_idx  ];
+            min_disp[1] = displacements[disp_idx+1];
+            min_disp[2] = displacements[disp_idx+2];
+            orig_disp[0] = displacements[disp_idx  ];
+            orig_disp[1] = displacements[disp_idx+1];
+            orig_disp[2] = displacements[disp_idx+2];
+            for (i = -1; i < 2; i++) {
+                v1[0] = bv1[0]*i;
+                v1[1] = bv1[1]*i;
+                v1[2] = bv1[2]*i;
+                for (j = -1; j < 2; j++) {
+                    v2[0] = bv2[0]*j + v1[0];
+                    v2[1] = bv2[1]*j + v1[1];
+                    v2[2] = bv2[2]*j + v1[2];
+                    for (k = -1; k < 2; k++) {
+                        disp_test[0] = orig_disp[0] + v2[0] + bv3[0]*k;
+                        disp_test[1] = orig_disp[1] + v2[1] + bv3[1]*k;
+                        disp_test[2] = orig_disp[2] + v2[2] + bv3[2]*k;
+                        dist_test = disp_test[0]*disp_test[0] + disp_test[1]*disp_test[1] + disp_test[2]*disp_test[2];
+                        if (dist_test < min_dist) {
+                            min_dist = dist_test;
+                            min_disp[0] = disp_test[0];
+                            min_disp[1] = disp_test[1];
+                            min_disp[2] = disp_test[2];
+                        }
+                    }
+                }
+            }
+            if (distance_out != NULL)
+                distances[dist_idx] = sqrtf(min_dist);
+            displacements[disp_idx  ] = min_disp[0];
+            displacements[disp_idx+1] = min_disp[1];
+            displacements[disp_idx+2] = min_disp[2];
+        }
+    }
+
+    /* If we had to allocate either displacements or distances, deallocate them now */
+    if (displacement_out == NULL) free(displacements);
+    if (distance_out == NULL) free(distances);
+
+    return 1;
+}
 
 /****************************************************************************/
 /* HBond Kernels                                                            */

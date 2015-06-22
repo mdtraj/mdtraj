@@ -57,7 +57,8 @@ cdef extern from "math.h":
 # External (Public) Functions
 ##############################################################################
 
-def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, bool precentered=False):
+def rmsd(target, reference, int frame=0, atom_indices=None,
+         ref_atom_indices=None, bool parallel=True, bool precentered=False):
     """rmsd(target, reference, frame=0, atom_indices=None, parallel=True, precentered=False)
 
     Compute RMSD of all conformations in target to a reference conformation.
@@ -78,6 +79,9 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
     atom_indices : array_like, or None
         The indices of the atoms to use in the RMSD calculation. If not
         supplied, all atoms will be used.
+    ref_atom_indices : array_like, or None
+        Use these indices for the reference trajectory. If not supplied,
+        the atom indices will be the same as those for target.
     parallel : bool
         Use OpenMP to calculate each of the RMSDs in parallel over
         multiple cores.
@@ -126,8 +130,20 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
         atom_indices = slice(None)
     else:
         atom_indices = ensure_type(np.asarray(atom_indices), dtype=np.int, ndim=1, name='atom_indices')
-        if not np.all((atom_indices >= 0) * (atom_indices < target.xyz.shape[1]) * (atom_indices < reference.xyz.shape[1])):
+        if not np.all((atom_indices >= 0) *
+                              (atom_indices < target.xyz.shape[1]) *
+                              (atom_indices < reference.xyz.shape[1])):
             raise ValueError("atom_indices must be valid positive indices")
+
+    if ref_atom_indices is None:
+        ref_atom_indices = atom_indices
+
+    if not isinstance(ref_atom_indices, slice):
+        ref_atom_indices = ensure_type(np.asarray(ref_atom_indices), dtype=np.int, ndim=1, name='ref_atom_indices')
+        if not np.all((ref_atom_indices >= 0) *
+                              (ref_atom_indices < target.xyz.shape[1]) *
+                              (ref_atom_indices < reference.xyz.shape[1])):
+            raise ValueError("ref_atom_indices must be valid positive indices")
 
     # Error checks
     assert (target.xyz.ndim == 3) and (reference.xyz.ndim == 3) and (target.xyz.shape[2]) == 3 and (reference.xyz.shape[2] == 3)
@@ -150,7 +166,7 @@ def rmsd(target, reference, int frame=0, atom_indices=None, bool parallel=True, 
     # make sure *every* frame in target_xyz is in proper c-major order
     target_xyz = np.asarray(target.xyz[:, atom_indices, :], order='C', dtype=np.float32)
     # only extract the `frame`-th conformation from ref_xyz
-    ref_xyz_frame = np.asarray(reference.xyz[frame, atom_indices, :], order='C', dtype=np.float32)
+    ref_xyz_frame = np.asarray(reference.xyz[frame, ref_atom_indices, :], order='C', dtype=np.float32)
 
     # t0 = time.time()
     if precentered and (reference._rmsd_traces is not None) and (target._rmsd_traces is not None) and atom_indices == slice(None):
@@ -204,7 +220,7 @@ np.ndarray[np.float32_t, ndim=1, mode="c"] g1 not None,
 np.ndarray[np.float32_t, ndim=1, mode="c"] g2 not None,
 int frame,
 bool parallel=True):
-    """getMultipleRMSDs_axis_major(xyz1, xyz2, g1, g2, n_atoms, frame, parallel=True)
+    """getMultipleRMSDs_axis_major(xyz1, xyz2, g1, g, frame, parallel=True)
 
     Calculate the RMSD of several frames to a single frame, with the
     coordinates laid out in axis-major orders
@@ -283,8 +299,6 @@ bool parallel=True):
         Pre-calculated G factors (traces) for each frame in xyz1
     g2 : np.ndarray, shape = (n_frames), dtype=float32
         Pre-calculated G factors (traces) for each frame in xyz2
-    n_atoms : int
-        The number of atoms in the system.
     frame : int
         Index of the desired reference frame in xyz1.
     parallel : bool, default True
@@ -349,6 +363,11 @@ bool parallel=True):
         Pre-calculated G factors (traces) for each frame in xyz_mobile
     xyz_displace_mobile : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=float32
         The coordinates of the mobile trajectory to displace
+    target_frame : int
+        The particular frame in xyz_align_target / g_target to align the mobile
+        trajectory  to.
+    parallel : bool, default=True
+        Run the calculation using multiple cores simultaneously.
     """
     cdef int i
     cdef int n_frames = xyz_align_mobile.shape[0]

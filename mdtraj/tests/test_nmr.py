@@ -1,7 +1,7 @@
 from __future__ import print_function
 import numpy as np
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
+from mdtraj.testing import get_fn, eq, skipif
 from mdtraj.nmr.shift_wrappers import find_executable, SPARTA_PLUS, PPM, SHIFTX2
 from mdtraj.utils import six
 

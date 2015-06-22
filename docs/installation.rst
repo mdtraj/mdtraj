@@ -6,12 +6,18 @@ Installation
 
 We recommend that you install ``mdtraj`` with ``conda``. ::
 
-  $ conda install -c https://conda.binstar.org/omnia mdtraj
+  $ conda install -c omnia mdtraj
 
 You can install also ``mdtraj`` with ``pip``, if you prefer. ::
 
   $ pip install mdtraj
 
+
+Conda is a cross-platform package manager built especially for scientific python. It will install
+``mdtraj`` along with all dependencies from a pre-compiled binary. If you don't have Python or the
+``conda`` package manager, we recommend starting with the `Anaconda Scientific Python distribution
+<https://store.continuum.io/cshop/anaconda/>`_, which comes pre-packaged with many of the core scientific
+python packages that MDTraj uses (see below), or with the `Miniconda Python distribution <http://conda.pydata.org/miniconda.html>`_, which is more bare-bones.
 
 Supported Platforms
 ===================
@@ -66,8 +72,8 @@ Then, to run the tests, execute the command ::
 
   nosetests mdtraj -v
 
-Compiling From Source (Expert)
-==============================
+Compiling From Source
+=====================
 
 To compile MDTraj from source, you'll need ``cython``, ``numpy``, and an appropriate
 compiler toolchain for your platform. For linux and OS X, we support the gcc and

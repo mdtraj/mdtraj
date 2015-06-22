@@ -26,8 +26,7 @@ import numpy as np
 import mdtraj as md
 from mdtraj.utils import enter_temp_directory
 from mdtraj.formats import GroTrajectoryFile, gro
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
-TestDocstrings = DocStringFormatTester(gro, error_on_none=True)
+from mdtraj.testing import get_fn, eq
 
 fd, temp = tempfile.mkstemp(suffix='.gro')
 os.close(fd)

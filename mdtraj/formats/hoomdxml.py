@@ -46,6 +46,8 @@ def load_hoomdxml(filename, top=None):
     ----------
     filename : string
         The path on disk to the XML file
+    top : None
+        This argumet is ignored
 
     Returns
     -------
@@ -109,7 +111,7 @@ def load_hoomdxml(filename, top=None):
     for ion in ions:
         t_chain = topology.add_chain()
         t_residue = topology.add_residue('A', t_chain)
-        topology.add_atom(types[atom], 'U', t_residue)
+        topology.add_atom(types[ion], 'U', t_residue)
     for bond in bonds:
         atom1, atom2 = bond[0], bond[1]
         topology.add_bond(topology.atom(atom1), topology.atom(atom2))
@@ -144,7 +146,7 @@ def _find_chains(bond_list):
     molecules = nx.Graph()
     molecules.add_nodes_from(set(bond_list.flatten()))
     molecules.add_edges_from(bond_list)
-    return list(nx.connected_components(molecules))
+    return [sorted(x) for x in list(nx.connected_components(molecules))]
 
 def _in_chain(lists, n):
     """Check if an item is in a list of lists"""

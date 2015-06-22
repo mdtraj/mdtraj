@@ -12,6 +12,10 @@ int dist(const float* xyz, const int* pairs, float* distance_out,
          float* displacement_out, const int n_frames, const int n_atoms,
          const int n_pairs);
 
+int dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_matrix,
+                       float* distance_out, float* displacement_out,
+                       const int n_frames, const int n_atoms, const int n_pairs);
+
 int angle(const float* xyz, const int* triplets, float* out,
           const int n_frames, const int n_atoms, const int n_angles);
 

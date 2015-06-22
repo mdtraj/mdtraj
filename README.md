@@ -4,7 +4,7 @@
 [![Windows Build status](https://ci.appveyor.com/api/projects/status/sqjgx3jh14vuxks5/branch/master?svg=true)](https://ci.appveyor.com/project/rmcgibbo/mdtraj/branch/master)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.svg)](https://pypi.python.org/pypi/mdtraj)
 [![Binstar Badge](https://binstar.org/omnia/mdtraj/badges/version.svg)](https://binstar.org/omnia/mdtraj)
-[![Downloads](https://pypip.in/d/mdtraj/badge.svg)](https://pypi.python.org/pypi/mdtraj)
+[![Downloads](https://img.shields.io/pypi/dm/mdtraj.svg)](https://pypi.python.org/pypi/mdtraj)
 
 Read, write and analyze MD trajectories with only a few lines of Python code.
 

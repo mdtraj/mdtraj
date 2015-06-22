@@ -29,6 +29,7 @@ from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import _geometry, distance
+import warnings
 
 __all__ = ['compute_angles']
 
@@ -67,6 +68,14 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
 
     if len(triplets) == 0:
         return np.zeros((len(xyz), 0), dtype=np.float32)
+
+    if periodic and traj._have_unitcell:
+        if opt and not np.allclose(traj.unitcell_angles, 90):
+            warnings.warn('Optimized angle calculation does not work for non-orthorhombic '
+                          'unit cells and periodic boundary conditions. Falling back to much '
+                          'slower pure-Python implementation. Set periodic=False or opt=False '
+                          'to disable this message.')
+            opt = False
 
     out = np.zeros((xyz.shape[0], triplets.shape[0]), dtype=np.float32)
     if periodic is True and traj._have_unitcell:

@@ -20,20 +20,19 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-
+import sys
 import tempfile, os
 import functools
 from mdtraj.utils import enter_temp_directory
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises, SkipTest
+from mdtraj.testing import get_fn, eq, assert_raises, SkipTest
 import numpy as np
 import mdtraj as md
 import mdtraj.utils
 from mdtraj.utils import six
 from mdtraj.utils.six.moves import xrange
 from mdtraj.core import element
-
-import mdtraj.core.trajectory
-TestDocstrings = DocStringFormatTester(mdtraj.core.trajectory, error_on_none=True)
+on_win = (sys.platform == 'win32')
+on_py3 = (sys.version_info >= (3, 0))
 
 fn = get_fn('traj.h5')
 nat = get_fn('native.pdb')
@@ -176,8 +175,8 @@ def test_binpos():
 
 def test_load():
     filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos",
-                 "traj.h5", 'legacy_msmbuilder_trj0.lh5', 'frame0.nc', six.u('traj.h5'),
-                 "frame0.lammpstrj", "frame0.xyz"]
+                 "traj.h5", "frame0.nc", "traj.h5", "frame0.lammpstrj",
+                 "frame0.xyz"]
     num_block = 3
     for filename in filenames:
         t0 = md.load(get_fn(filename), top=nat, discard_overlapping_frames=True)
@@ -185,8 +184,9 @@ def test_load():
         t2 = md.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=False)
         t3 = md.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=True)
 
-        # these don't actually overlap, so discard_overlapping_frames should have no effect
-        # the overlap is between the last frame of one and the first frame of the next.
+        # these don't actually overlap, so discard_overlapping_frames should
+        # have no effect. the overlap is between the last frame of one and the
+        # first frame of the next.
         yield lambda: eq(t0.n_frames, t1.n_frames)
         yield lambda: eq(t0.n_frames * num_block, t2.n_frames)
         yield lambda: eq(t3.n_frames, t2.n_frames)
@@ -316,8 +316,8 @@ def test_array_vs_matrix():
     eq(t2.xyz, xyz)
 
 def test_pdb_unitcell_loadsave():
-    """Make sure that nonstandard unitcell dimensions are saved and loaded
-    correctly with PDB"""
+    # Make sure that nonstandard unitcell dimensions are saved and loaded
+    # correctly with PDB
     tref = md.load(get_fn('native.pdb'))
     tref.unitcell_lengths = 1 + 0.1  * np.random.randn(tref.n_frames, 3)
     tref.unitcell_angles = 90 + 0.0  * np.random.randn(tref.n_frames, 3)
@@ -328,13 +328,16 @@ def test_pdb_unitcell_loadsave():
 
 
 def test_load_combination():
-    "Test that the load function's stride and atom_indices work across all trajectory formats"
+    # Test that the load function's stride and atom_indices work across
+    # all trajectory formats
 
     topology = md.load(get_fn('native.pdb')).topology
     ainds = np.array([a.index for a in topology.atoms if a.element.symbol == 'C'])
-    filenames = ['frame0.binpos', 'frame0.dcd', 'frame0.trr', 'frame0.xtc',
-                 'frame0.nc', 'frame0.h5', 'frame0.pdb', 'legacy_msmbuilder_trj0.lh5',
-                 'frame0.lammpstrj', 'frame0.xyz']
+    filenames = [
+        'frame0.binpos', 'frame0.dcd', 'frame0.trr', 'frame0.xtc', 'frame0.nc',
+        'frame0.h5', 'frame0.pdb', 'frame0.lammpstrj', 'frame0.xyz']
+    if not (on_win and on_py3):
+        filenames.append('legacy_msmbuilder_trj0.lh5')
 
     no_kwargs = [md.load(fn, top=topology) for fn in map(get_fn, filenames)]
     strided3 =  [md.load(fn, top=topology, stride=3) for fn in map(get_fn, filenames)]
@@ -402,10 +405,11 @@ def test_seek_read_mode():
              (md.formats.DCDTrajectoryFile, 'frame0.dcd'),
              (md.formats.MDCRDTrajectoryFile, 'frame0.mdcrd'),
              (md.formats.BINPOSTrajectoryFile, 'frame0.binpos'),
-             (md.formats.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'),
              (md.formats.DTRTrajectoryFile, 'frame0.dtr/clickme.dtr'),
              (md.formats.XYZTrajectoryFile, 'frame0.xyz'),
              (md.formats.LAMMPSTrajectoryFile, 'frame0.lammpstrj'),]
+    if not (on_win and on_py3):
+        files.append((md.formats.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'))
 
     for a, b in files:
         point = 0
@@ -457,8 +461,11 @@ def test_seek_read_mode():
 
 def test_load_frame():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
-             'frame0.dcd', 'frame0.mdcrd', 'frame0.binpos',
-             'legacy_msmbuilder_trj0.lh5', 'frame0.xyz', 'frame0.lammpstrj']
+             'frame0.dcd', 'frame0.mdcrd', 'frame0.binpos', 'frame0.xyz',
+             'frame0.lammpstrj']
+    if not (on_win and on_py3):
+        files.append('legacy_msmbuilder_trj0.lh5')
+
     trajectories = [md.load(get_fn(f), top=get_fn('native.pdb')) for f in files]
     rand = [np.random.randint(len(t)) for t in trajectories]
     frames = [md.load_frame(get_fn(f), index=r, top=get_fn('native.pdb')) for f, r in zip(files, rand)]
@@ -485,6 +492,8 @@ def test_iterload():
             # only a 1 frame per file format
             if ext in ('.ncrst', '.rst7'):
                 continue
+            if ext in ('.lh5') and (on_win and on_py3):
+                continue
 
             fn = 'temp%s' % ext
             t_ref.save(fn)
@@ -502,6 +511,27 @@ def test_iterload():
             yield test
 
 
+def test_iterload_skip():
+    files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
+             'frame0.dcd', 'frame0.binpos', 'frame0.xyz', 'frame0.lammpstrj']
+    if not (on_win and on_py3):
+        files.append('legacy_msmbuilder_trj0.lh5')
+
+    err_msg = "failed for file %s with chunksize %i and skip %i"
+
+    for file in files:
+        for cs in [0, 1, 11, 100]:
+            for skip in [0, 1, 20, 101]:
+                print("testing file %s with skip=%i" % (file, skip))
+                t_ref = md.load(get_fn(file), top=get_fn('native.pdb'))
+                t = functools.reduce(lambda a, b: a.join(b),
+                                     md.iterload(get_fn(file), skip=skip,
+                                                 top=get_fn('native.pdb'), chunk=cs))
+                eq(t_ref.xyz[skip:], t.xyz, err_msg=err_msg % (file, cs, skip))
+                eq(t_ref.time[skip:], t.time, err_msg=err_msg % (file, cs, skip))
+                eq(t_ref.topology, t.topology, err_msg=err_msg % (file, cs, skip))
+
+
 def test_save_load():
     # this cycles all the known formats you can save to, and then tries
     # to reload, using just a single-frame file.
@@ -510,6 +540,9 @@ def test_save_load():
     t_ref.unitcell_vectors = np.array([[[1,0,0], [0,1,0], [0,0,1]]])
     with enter_temp_directory():
         for ext in t_ref._savers().keys():
+            if ext in ('.lh5') and (on_win and on_py3):
+                continue
+
             def test():
                 fn = 'temp%s' % ext
                 t_ref.save(fn)
@@ -528,8 +561,10 @@ def test_save_load():
 def test_length():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
              'frame0.mdcrd', '4waters.arc', 'frame0.dcd', '2EQQ.pdb',
-             'frame0.binpos', 'legacy_msmbuilder_trj0.lh5',
-             'frame0.lammpstrj', 'frame0.xyz']
+             'frame0.binpos', 'frame0.lammpstrj', 'frame0.xyz']
+    if not (on_win and on_py3):
+        files.append('legacy_msmbuilder_trj0.lh5')
+
     for file in files:
         if file.endswith('.mdcrd'):
             kwargs = {'n_atoms': 22}
@@ -565,3 +600,19 @@ def test_chunk0_iterload():
         pass
 
     eq(trj0.n_frames, trj.n_frames)
+
+
+def test_hashing():
+    frames = [frame for frame in
+              md.iterload(get_fn('frame0.xtc'), chunk=1,
+                          top=get_fn('native.pdb'))]
+    hashes = [hash(frame) for frame in frames]
+    # check all frames have a unique hash value
+    assert len(hashes) == len(set(hashes))
+
+    # change topology and ensure hash changes too
+    top = frames[0].topology
+    top.add_bond(top.atom(0), top.atom(1))
+
+    last_frame_hash = hash(frames[0])
+    assert last_frame_hash != hashes[-1]

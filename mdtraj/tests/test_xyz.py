@@ -25,9 +25,8 @@ import tempfile, os
 import numpy as np
 
 import mdtraj as md
-from mdtraj.formats import XYZTrajectoryFile, xyzfile
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
-TestDocstrings = DocStringFormatTester(xyzfile, error_on_none=True)
+from mdtraj.formats import XYZTrajectoryFile
+from mdtraj.testing import get_fn, eq
 
 fd, temp = tempfile.mkstemp(suffix='.xyz')
 fd_gz, temp_gz = tempfile.mkstemp(suffix='.xyz.gz')

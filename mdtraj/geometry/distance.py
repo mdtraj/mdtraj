@@ -1,10 +1,10 @@
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
-# Copyright 2012-2013 Stanford University and the Authors
+# Copyright 2012-2015 Stanford University and the Authors
 #
 # Authors: Robert McGibbon
-# Contributors: Kyle A Beauchamp
+# Contributors: Kyle A Beauchamp, Jason Swails
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -28,6 +28,7 @@
 from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
+from mdtraj.utils.six.moves import range
 from mdtraj.geometry import _geometry
 
 
@@ -70,14 +71,16 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
     if len(pairs) == 0:
         return np.zeros((len(xyz), 0), dtype=np.float32)
 
-    if periodic is True and traj._have_unitcell:
-        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
+    if periodic and traj._have_unitcell:
+        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3),
+                          warn_on_cast=False)
+        orthogonal = np.allclose(traj.unitcell_angles, 90)
         if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
-            _geometry._dist_mic(xyz, pairs, box, out)
+            _geometry._dist_mic(xyz, pairs, box.transpose(0, 2, 1).copy(), out, orthogonal)
             return out
         else:
-            return _distance_mic(xyz, pairs, box)
+            return _distance_mic(xyz, pairs, box.transpose(0, 2, 1), orthogonal)
 
     # either there are no unitcell vectors or they dont want to use them
     if opt:
@@ -111,19 +114,21 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
     displacements : np.ndarray, shape=[n_frames, n_pairs, 3], dtype=float32
          The displacememt vector, in each frame, between each pair of atoms.
     """
-    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3))
-    pairs = ensure_type(np.asarray(atom_pairs), dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2))
+    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
+    pairs = ensure_type(np.asarray(atom_pairs), dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2), warn_on_cast=False)
     if not np.all(np.logical_and(pairs < traj.n_atoms, pairs >= 0)):
         raise ValueError('atom_pairs must be between 0 and %d' % traj.n_atoms)
 
-    if periodic is True and traj._have_unitcell:
-        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
+    if periodic and traj._have_unitcell:
+        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3),
+                          warn_on_cast=False)
+        orthogonal = np.allclose(traj.unitcell_angles, 90)
         if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
-            _geometry._dist_mic_displacement(xyz, pairs, box, out)
+            _geometry._dist_mic_displacement(xyz, pairs, box.transpose(0, 2, 1).copy(), out, orthogonal)
             return out
         else:
-            return _displacement_mic(xyz, pairs, box)
+            return _displacement_mic(xyz, pairs, box.transpose(0, 2, 1), orthogonal)
 
     # either there are no unitcell vectors or they dont want to use them
     if opt:
@@ -174,7 +179,7 @@ def _displacement(xyz, pairs):
     return value
 
 
-def _distance_mic(xyz, pairs, box_vectors):
+def _distance_mic(xyz, pairs, box_vectors, orthogonal):
     """Distance between pairs of points in each frame under the minimum image
     convention for periodic boundary conditions.
 
@@ -186,6 +191,7 @@ def _distance_mic(xyz, pairs, box_vectors):
     out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
     for i in range(len(xyz)):
         hinv = np.linalg.inv(box_vectors[i])
+        bv1, bv2, bv3 = box_vectors[i].T
 
         for j, (a,b) in enumerate(pairs):
             s1 = np.dot(hinv, xyz[i,a,:])
@@ -194,28 +200,52 @@ def _distance_mic(xyz, pairs, box_vectors):
 
             s12 = s12 - np.round(s12)
             r12 = np.dot(box_vectors[i], s12)
-            out[i, j] = np.sqrt(np.sum(r12 * r12))
+            dist = np.linalg.norm(r12)
+            if not orthogonal:
+                for ii in range(-1, 2):
+                    v1 = bv1*ii
+                    for jj in range(-1, 2):
+                        v12 = bv2*jj + v1
+                        for kk in range(-1, 2):
+                            new_r12 = r12 + v12 + bv3*kk
+                            dist = min(dist, np.linalg.norm(new_r12))
+            out[i, j] = dist
     return out
 
 
-def _displacement_mic(xyz, pairs, box_vectors):
+def _displacement_mic(xyz, pairs, box_vectors, orthogonal):
     """Displacement vector between pairs of points in each frame under the
     minimum image convention for periodic boundary conditions.
 
     The computation follows scheme B.9 in Tukerman, M. "Statistical
     Mechanics: Theory and Molecular Simulation", 2010.
 
-    This is a slow pure python implementation, mostly for testing.
+    This is a very slow pure python implementation, mostly for testing.
     """
     out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
     for i in range(len(xyz)):
         hinv = np.linalg.inv(box_vectors[i])
+        bv1, bv2, bv3 = box_vectors[i].T
 
         for j, (a,b) in enumerate(pairs):
             s1 = np.dot(hinv, xyz[i,a,:])
             s2 = np.dot(hinv, xyz[i,b,:])
             s12 = s2 - s1
             s12 = s12 - np.round(s12)
-            out[i, j] = np.dot(box_vectors[i], s12)
+            disp = np.dot(box_vectors[i], s12)
+            min_disp = disp
+            dist2 = (disp*disp).sum()
+            if not orthogonal:
+                for ii in range(-1, 2):
+                    v1 = bv1*ii
+                    for jj in range(-1, 2):
+                        v12 = bv2*jj+v1
+                        for kk in range(-1, 2):
+                            tmp = disp + v12 + bv3*kk
+                            new_dist2 = (tmp*tmp).sum()
+                            if new_dist2 < dist2:
+                                dist2 = new_dist2
+                                min_disp = tmp
+            out[i, j] = min_disp
 
     return out

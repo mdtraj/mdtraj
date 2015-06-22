@@ -22,14 +22,14 @@
 
 import os
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
+from mdtraj.testing import get_fn, eq, skipif
 from mdtraj.formats import psf
 from mdtraj.utils import enter_temp_directory
 from distutils.spawn import find_executable
 
-doc = DocStringFormatTester(psf)
 VMD = find_executable('vmd')
 VMD_MSG = 'This test requires the VMD executable: http://www.ks.uiuc.edu/Research/vmd/'
+
 
 def test_load_psf():
     top = psf.load_psf(get_fn('ala_ala_ala.psf'))

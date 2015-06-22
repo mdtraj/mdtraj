@@ -5,10 +5,16 @@ from itertools import groupby
 import mdtraj as md
 
 from IPython.display import display, Javascript
-from IPython.html.widgets import DOMWidget, IntSlider, Box
-from IPython.html.widgets import interactive
-from IPython.utils.traitlets import (Unicode, Bool, Bytes, CInt, Any,
-                                     Dict, Enum)
+try:
+    # Jupyter 4.x
+    from ipywidgets.widgets import DOMWidget, IntSlider, Box, interactive
+    from traitlets import Unicode, Bool, Bytes, CInt, Any, Dict, Enum
+except ImportError:
+    # IPython 3.x
+    from IPython.html.widgets import DOMWidget, IntSlider, Box, interactive
+    from IPython.utils.traitlets import Unicode, Bool, Bytes, CInt, Any, Dict, Enum
+
+_module = 'nbextensions/mdtraj/widget_trajectory'
 
 __all__ = ['TrajectoryView', 'TrajectorySliderView']
 
@@ -23,6 +29,9 @@ def TrajectorySliderView(traj, frame=0, **kwargs):
         Trajectory for which you want the viewer.
     frame : int, default=0
         Frame to set the slider to by default
+
+    Other Parameters
+    ----------------
     kwargs : string
         See TrajectoryView for all available options.
 
@@ -38,9 +47,9 @@ def TrajectorySliderView(traj, frame=0, **kwargs):
 
     s = IntSlider(min=0, max=traj.n_frames - 1, value=frame)
     slider = interactive(slide, frame=s)
-    
+
     container = Box()
-    container.children = [widget, slider] 
+    container.children = [widget, slider]
 
     return container
 
@@ -101,6 +110,7 @@ class TrajectoryView(DOMWidget):
     # registered and loaded in the browser before this widget is constructed
     # (that's what enable_notebook() does)
     _view_name = Unicode('TrajectoryView', sync=True)
+    _view_module = Unicode(_module, sync=True)
 
     frame = CInt(0, help='Which frame from the trajectory to display')
     trajectory = Any()
@@ -124,10 +134,10 @@ class TrajectoryView(DOMWidget):
     secondaryStructure = Enum(['ribbon', 'strand', 'cylinder & plate',
                                'C alpha trace', 'nothing'], 'cylinder & plate',
                                sync=True)
-    surfaceRepresentation = Enum(['Van der Waals surface','solvent excluded surface', 
+    surfaceRepresentation = Enum(['Van der Waals surface','solvent excluded surface',
                     'solvent accessible surface', 'molecular surface',
                     'nothing'], 'nothing', sync=True)
-    
+
     def __init__(self, trajectory, frame=0, **kwargs):
         super(TrajectoryView, self).__init__(**kwargs)
         self.trajectory = trajectory
@@ -153,7 +163,7 @@ class TrajectoryView(DOMWidget):
         """Compute the secondary structure of the selected frame and
         format it for the browser
         """
-        SS_MAP = {'C': 'coil', 'H': 'helix', 'E': 'sheet'}
+        SS_MAP = {'C': 'coil', 'H': 'helix', 'E': 'sheet', 'NA': 'coil'}
 
         top = self.trajectory.topology
         dssp = md.compute_dssp(self.trajectory[self.frame])[0]
@@ -184,7 +194,7 @@ class TrajectoryView(DOMWidget):
         # TODO(rmcgibbo). Document this schema. It needs to match with what's
         # going on inside iview.loadTopology on the browser side.
 
-        
+
         atoms = {}
 
         # these should be mutually exclusive. you're only in one of
