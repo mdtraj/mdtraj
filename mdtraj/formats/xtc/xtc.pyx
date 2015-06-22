@@ -262,7 +262,6 @@ cdef class XTCTrajectoryFile(object):
         elif str(mode) == 'w':
             if force_overwrite and os.path.exists(filename):
                 os.unlink(filename)
-
             self.fh = xdrlib.xdrfile_open(filename, 'w')
             if self.fh is NULL:
                 raise IOError('Unable to open file "%s"' % filename)

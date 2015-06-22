@@ -574,6 +574,24 @@ def test_save_load():
             yield test
 
 
+def test_force_overwrite():
+    t_ref = md.load(get_fn('1vii.pdb'))
+    with enter_temp_directory():
+        for ext in t_ref._savers().keys():
+            def test_1():
+                fn = 'temp-1%s' % ext
+                open(fn, 'w').close()
+                t_ref.save(fn, force_overwrite=True)
+            def test_2():
+                fn = 'temp-2%s' % ext
+                open(fn, 'w').close()
+                assert_raises(IOError, lambda: t_ref.save(fn, force_overwrite=False))
+            test_1.description = 'test_force_overwrite (1): %s' % ext
+            test_2.description = 'test_force_overwrite (2): %s' % ext
+            yield test_1
+            yield test_2
+
+
 def test_length():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
              'frame0.mdcrd', '4waters.arc', 'frame0.dcd', '2EQQ.pdb',
