@@ -17,6 +17,7 @@ SKIP_MODULES = [
     'mdtraj\.formats\.pdb\.pdbstructure',
     'mdtraj\.scripts',
     'mdtraj\.testing\.docscrape',
+    'mdtraj\.io',
 ]
 
 SKIP_FUNCTIONS = [
