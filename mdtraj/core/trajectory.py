@@ -431,6 +431,8 @@ def iterload(filename, chunk=100, **kwargs):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+    skip : int, default=0
+        Skip first n frames.
 
     See Also
     --------
@@ -450,6 +452,8 @@ def iterload(filename, chunk=100, **kwargs):
     stride = kwargs.pop('stride', 1)
     atom_indices = cast_indices(kwargs.pop('atom_indices', None))
     top = kwargs.pop('top', None)
+    skip = kwargs.pop('skip', 0)
+
     extension = _get_extension(filename)
     if extension not in _TOPOLOGY_EXTS:
         topology = _parse_topology(top)
@@ -460,19 +464,23 @@ def iterload(filename, chunk=100, **kwargs):
     if chunk == 0:
         # If chunk was 0 then we want to avoid filetype-specific code
         # in case of undefined behavior in various file parsers.
-        yield load(filename, **kwargs)
-
+        # TODO: this will first apply stride, then skip!
+        if extension not in _TOPOLOGY_EXTS:
+            kwargs['top'] = top
+        yield load(filename, **kwargs)[skip:]
     elif extension in ('.pdb', '.pdb.gz'):
         # the PDBTrajectortFile class doesn't follow the standard API. Fixing it
         # to support iterload could be worthwhile, but requires a deep refactor.
         t = load(filename, stride=stride, atom_indices=atom_indices)
         for i in range(0, len(t), chunk):
-            yield  t[i:i+chunk]
+            yield t[i:i+chunk]
 
     else:
         with (lambda x: open(x, n_atoms=topology.n_atoms)
               if extension in ('.crd', '.mdcrd')
               else open(filename))(filename) as f:
+            if skip > 0:
+                f.seek(skip)
             while True:
                 if extension not in _TOPOLOGY_EXTS:
                     traj = f.read_as_traj(topology, n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
