@@ -114,20 +114,45 @@ class Element(tuple):
 
     @staticmethod
     def getBySymbol(symbol):
-        """Get the Element with a particular chemical symbol."""
+        """Get the Element with a particular chemical symbol
+
+        Parameters
+        ----------
+        symbol : str
+
+        Returns
+        -------
+        element : Element
+        """
         s = symbol.strip().upper()
         return Element._elements_by_symbol[s]
 
     @staticmethod
     def getByAtomicNumber(number):
-        """ Get the element with a particular atomic number """
+        """ Get the element with a particular atomic number
+
+        Parameters
+        ----------
+        number : int
+
+        Returns
+        -------
+        element : Element
+        """
         return Element._elements_by_atomic_number[number]
 
     @staticmethod
     def getByMass(mass):
-        """
-        Get the element whose mass is CLOSEST to the requested mass. This method
-        should not be used for repartitioned masses
+        """Get the element whose mass is CLOSEST to the requested mass. This
+        method should not be used for repartitioned masses.
+
+        Parameters
+        ----------
+        mass : float
+
+        Returns
+        -------
+        element : Element
         """
         # Convert any masses to daltons
         if is_quantity(mass):

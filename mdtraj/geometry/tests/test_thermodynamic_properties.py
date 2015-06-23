@@ -32,13 +32,13 @@ except IOError:
     pass
 
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif, raises
+from mdtraj.testing import get_fn, eq, skipif, raises
 
 temperature = 300.
 tip3p_charges = np.array([-0.834, 0.417, 0.417])
 
 """
-Reference value taken from Gromacs 5.0.4 using the following commands.  
+Reference value taken from Gromacs 5.0.4 using the following commands.
 Note that gromacs accumulates property averages over every timestep, so precise
 comparisons require writing XTC output very frequently.
 
@@ -57,7 +57,7 @@ mdrun -nsteps 500000
 # Do a short production run
 grompp -f ./reference/md.mdp -c ./confout.gro -p ./topol.top
 mdrun -nsteps 200000
-cp traj_comp.xtc reference/tip3p_300K_1ATM.xtc 
+cp traj_comp.xtc reference/tip3p_300K_1ATM.xtc
 
 # Compute tab separated dataset for energies
 g_energy -xvg None
@@ -111,7 +111,7 @@ def test_density():
 
 def test_dipole_moments():
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
-    
+
     charges = np.tile(tip3p_charges, traj.n_residues)
 
     moments0 = md.geometry.dipole_moments(traj, charges)
@@ -124,11 +124,11 @@ def test_dipole_moments():
     moments1 = md.geometry.dipole_moments(traj, charges)
 
     eq(moments0, moments1, decimal=4)
-        
+
 
 def test_static_dielectric():
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
-    
+
     charges = np.tile(tip3p_charges, traj.n_residues)
 
     epsilon0 = md.geometry.static_dielectric(traj, charges, temperature)
@@ -137,20 +137,20 @@ def test_static_dielectric():
     xyz = md.compute_displacements(traj, atom_indices, periodic=True)  # Define coordinates relative to atom 0, PBC corrected.
     traj.xyz = xyz
     epsilon1 = md.geometry.static_dielectric(traj, charges, temperature)
-    
+
     eq(epsilon0, epsilon1, decimal=3)
 
     reference = 87.1818  # From gromacs, see above comment
 
     assert abs((epsilon1 - reference) / reference) < 1E-3, "Dielectric tolerance not met!"
 
-        
+
 def test_kappa():
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
     kappa = md.geometry.isothermal_compressability_kappa_T(traj, temperature)
     reference = 2.05427E-10 * 1E5  # m^3 / J to 1 / bar.  Data from gromacs.  See above comment
-    
-    # 20% tolerance.  
+
+    # 20% tolerance.
     assert abs((kappa - reference) / reference) < 2E-1, "Compressability tolerance not met!"
 
 
@@ -158,12 +158,12 @@ def test_kappa():
 @skipif(True, "Skipping thermal expansion test.")  # Not working
 def test_alpha():
     # Had some issues finding a useful unit test, so thermal_expansion_alpha_P() is currently disabled.
-    # Feel free to file a pull request with a working unit test :)    
+    # Feel free to file a pull request with a working unit test :)
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
 
     data = pd.read_table(get_fn('tip3p_300K_1ATM.tab'), names=["timestep", "energy"], sep=r"\s*")
     energy = data.energy.values
-    alpha = md.geometry.thermal_expansion_alpha_P(traj, temperature, energy)    
-    
-    reference = 0.000895685  # From gromacs, see notes above.md        
+    alpha = md.geometry.thermal_expansion_alpha_P(traj, temperature, energy)
+
+    reference = 0.000895685  # From gromacs, see notes above.md
     eq(alpha, reference, decimal=3)

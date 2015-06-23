@@ -24,9 +24,8 @@ from mdtraj.formats import TRRTrajectoryFile
 import os, tempfile
 import numpy as np
 from nose.tools import assert_raises
-from mdtraj.testing import eq, DocStringFormatTester, get_fn
+from mdtraj.testing import eq, get_fn
 from mdtraj.formats import trr
-DocStringFormatTester(trr)
 
 fd, temp = tempfile.mkstemp(suffix='.trr')
 os.close(fd)

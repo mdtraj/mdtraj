@@ -30,9 +30,8 @@ import os, tempfile
 from nose.tools import assert_raises
 import numpy as np
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
+from mdtraj.testing import get_fn, eq, raises
 
-TestDocstrings = DocStringFormatTester(netcdf, error_on_none=True)
 
 fd, temp = tempfile.mkstemp(suffix='.nc')
 def teardown_module(module):

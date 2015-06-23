@@ -35,12 +35,10 @@ except ImportError:
     HAVE_OPENMM = False
 
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
+from mdtraj.testing import get_fn, eq, skipif
 from mdtraj.reporters import hdf5reporter, netcdfreporter
 from mdtraj.reporters import HDF5Reporter, NetCDFReporter, DCDReporter
 from mdtraj.formats import HDF5TrajectoryFile, NetCDFTrajectoryFile
-DocStringTester = DocStringFormatTester(hdf5reporter)
-DocStringTester = DocStringFormatTester(netcdfreporter)
 
 
 dir = tempfile.mkdtemp()

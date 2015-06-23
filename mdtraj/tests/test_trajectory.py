@@ -24,7 +24,7 @@
 import tempfile, os
 import functools
 from mdtraj.utils import enter_temp_directory
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises, SkipTest
+from mdtraj.testing import get_fn, eq, assert_raises, SkipTest
 import numpy as np
 import mdtraj as md
 import mdtraj.utils
@@ -32,8 +32,6 @@ from mdtraj.utils import six
 from mdtraj.utils.six.moves import xrange
 from mdtraj.core import element
 
-import mdtraj.core.trajectory
-TestDocstrings = DocStringFormatTester(mdtraj.core.trajectory, error_on_none=True)
 
 fn = get_fn('traj.h5')
 nat = get_fn('native.pdb')

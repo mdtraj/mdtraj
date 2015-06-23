@@ -28,53 +28,31 @@ from __future__ import print_function, division
 import sys
 import types
 import warnings
+import pkgutil
+import importlib
 from inspect import (isclass, ismodule, isfunction, ismethod,
                      getmembers, getdoc, getmodule, getargs, isbuiltin)
 from mdtraj.testing.docscrape import NumpyDocString
 from mdtraj.utils.six import get_function_code, get_function_closure, PY2
 
-__all__ = ['DocStringFormatTester']
+__all__ = ['docstring_verifiers', 'import_all_modules']
 
 ##############################################################################
 # functions
 ##############################################################################
 
 
-def DocStringFormatTester(module, error_on_none=False):
-    """
-    Create a class that tests the docstrings of a python module for adherance
-    to the numpy docstring format, for use with Nose.
+def docstring_verifiers(module, error_on_none=False):
+    """Yield an iterable of tests that verify the docstrings (for
+    adherance to the NumpyDoc format) of all functions/classes defined
+    in a module.
 
     Parameters
     ----------
     module : module
         The module to test
-    error_on_none : bool
+    error_on_none : bool, default=False
         Throw an error if no docstring is defined
-
-    Notes
-    -----
-    For example, test_trajectory.py in mdtraj contains the line:
-
-    TestDocstrings = DocStringFormatTester(mdtraj.trajectory)
-
-    TestDocstrings is now a class with one method defined per class/function in
-    mdtraj.trajectory. Each method, when called, validates a single docstring.
-    When nosetests runs that file (in verbose mode), you see:
-
-    NumpyDoc: mdtraj.trajectory.load_xtc ... ok
-    NumpyDoc: mdtraj.trajectory.load_pdb ... ok
-    NumpyDoc: mdtraj.trajectory.Trajectory.save_binpos ... ok
-    NumpyDoc: mdtraj.trajectory.Trajectory.save ... ok
-    NumpyDoc: mdtraj.trajectory.load ... ok
-    NumpyDoc: mdtraj.trajectory.load_hdf ... ok
-    NumpyDoc: mdtraj.trajectory.load_dcd ... ok
-    NumpyDoc: mdtraj.trajectory.load_binpos ... ok
-    NumpyDoc: mdtraj.trajectory.load ... ok
-    NumpyDoc: mdtraj.trajectory.Trajectory.save_xtc ... ok
-    NumpyDoc: mdtraj.trajectory.Trajectory.save_pdb ... ok
-    NumpyDoc: mdtraj.trajectory.Trajectory.save_hdf ... ok
-    NumpyDoc: mdtraj.trajectory.Trajectory.save_dcd ... ok
     """
 
     # These are the types that we want to check
@@ -108,7 +86,7 @@ def DocStringFormatTester(module, error_on_none=False):
             return f.__name__
         return 'Error'
 
-    def check_docstring(self, f):
+    def check_docstring(f):
         """
         Ensure the docstring of `f` is in accordance with the numpy standard
 
@@ -159,35 +137,19 @@ def DocStringFormatTester(module, error_on_none=False):
             args = set(getargs(get_function_code(f)).args)
             if 'self' in args:
                 args.remove('self')
+            if 'cls' in args:
+                args.remove('cls')
 
             if args != param_names:
                 raise ValueError("In %s, arguments %s don't "
                     "match Parameters list %s" % (format(f),
                         list(args), list(param_names)))
 
-    funcdict = {}
-    # populate the func dict before calling type()
-    for i, f in enumerate(functions):
-        name = 'test_%s' % i  # this is the name we give the method
-
-        # create the method. this is a little complicated, but the basic
-        # idea is that NoseTests checks the func_name, so we need to create
-        # the method correctly. Just giving it a pointer to a closure we define
-        # won't set func_name correctly. Instead, we make a function where
-        # func_code is set to the func_code of check_docstring, but we add
-        # set second argument of that function (after self) to be a default
-        # arg -- the f that we're iterating over.
-        method = types.FunctionType(get_function_code(check_docstring), globals(), name,
-            (f,), get_function_closure(check_docstring))
-
-        # give the method a short docstring
-        if PY2:
-            method.func_doc = 'NumpyDoc: ' + format(f)
-        else:
-            method.__doc__ = 'NumpyDoc: ' + format(f)
-        funcdict[name] = method
-
-    return type('TestDoc', (), funcdict)
+    for f in functions:
+        qq = lambda: check_docstring(f)
+        qq.description = 'NumpyDoc: %s.%s' % (module.__name__, f.__name__)
+        qq.fname = f.__name__
+        yield qq
 
 
 def ispackage(obj):
@@ -252,4 +214,22 @@ def walk(module):
     return outstack
 
 
-TestModule = DocStringFormatTester(sys.modules[__name__])
+def import_all_modules(pkg):
+    result = []
+    for _, modname, ispkg in pkgutil.iter_modules(pkg.__path__):
+        c = '%s.%s' % (pkg.__name__, modname)
+        if modname.startswith('test_'):
+            continue
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=DeprecationWarning)
+                mod = importlib.import_module(c)
+            if ispkg:
+                result.extend(import_all_modules(mod))
+            else:
+                result.append(mod)
+        except ImportError as e:
+            print('e', e)
+            continue
+
+    return result

@@ -35,10 +35,9 @@ import tempfile, os
 import numpy as np
 from mdtraj.formats import DTRTrajectoryFile, DCDTrajectoryFile
 from nose.tools import assert_raises
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
+from mdtraj.testing import get_fn, eq, raises
 from shutil import rmtree
 
-#TestDocstrings = DocStringFormatTester(dtr, error_on_none=True)
 
 fn_dtr = get_fn('frame0.dtr')
 fn_dcd = get_fn('frame0.dcd')

@@ -28,7 +28,7 @@ import subprocess
 from distutils.spawn import find_executable
 
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
+from mdtraj.testing import get_fn, eq, skipif
 
 import numpy as np
 import scipy.sparse
@@ -37,7 +37,6 @@ import scipy.sparse
 # Globals
 ###############################################################################
 
-HBondDocStringTester = DocStringFormatTester(md.geometry.hbond)
 HAVE_DSSP = find_executable('mkdssp')
 tmpdir = None
 

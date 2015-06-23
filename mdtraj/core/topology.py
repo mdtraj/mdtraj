@@ -600,6 +600,8 @@ class Topology(object):
             The element of the atom to add
         residue : mdtraj.topology.Residue
             The Residue to add it to
+        serial : int
+            Serial number associated with the atom.
 
         Returns
         -------
@@ -633,6 +635,11 @@ class Topology(object):
         """Get a specific chain by index.  These indices
         start from zero.
 
+        Parameters
+        ----------
+        index : int
+            The index of the chain to select.
+
         Returns
         -------
         chain : Chain
@@ -659,6 +666,11 @@ class Topology(object):
     def residue(self, index):
         """Get a specific residue by index.  These indices
         start from zero.
+
+        Parameters
+        ----------
+        index : int
+            The index of the residue to select.
 
         Returns
         -------
@@ -689,6 +701,11 @@ class Topology(object):
         """Get a specific atom by index. These indices
         start from zero.
 
+        Parameters
+        ----------
+        index : int
+            The index of the atom to select.
+
         Returns
         -------
         atom : Atom
@@ -713,8 +730,13 @@ class Topology(object):
     def atoms_by_name(self, name):
         """Iterator over all Atoms in the Topology with a specified name
 
-        Example
-        -------
+        Parameters
+        ----------
+        name : str
+            The particular atom name of interest.
+
+        Examples
+        --------
         >>> for atom in topology.atoms_by_name('CA'):
         ...     print(atom)
 
@@ -838,7 +860,7 @@ class Topology(object):
 
         Parameters
         ----------
-        atom_indices array_like
+        atom_indices : array_like
             A list of the indices corresponding to the atoms in that you'd
             like to retain.
         """
@@ -1032,6 +1054,11 @@ class Chain(object):
     def residue(self, index):
         """Get a specific residue in this Chain.
 
+        Parameters
+        ----------
+        index : int
+            The index of the residue to select.
+
         Returns
         -------
         residue : Residue
@@ -1059,8 +1086,13 @@ class Chain(object):
     def atoms_by_name(self, name):
         """Iterator over all Atoms in the Chain with a specified name.
 
-        Example
-        -------
+        Parameters
+        ----------
+        name : str
+            The particular atom name of interest.
+
+        Examples
+        --------
         >>> for atom in chain.atoms_by_name('CA'):
         ...     print(atom)
 
@@ -1074,6 +1106,11 @@ class Chain(object):
 
     def atom(self, index):
         """Get a specific atom in this Chain.
+
+        Parameters
+        ----------
+        index : int
+            The index of the atom to select.
 
         Returns
         -------
@@ -1127,8 +1164,13 @@ class Residue(object):
     def atoms_by_name(self, name):
         """Iterator over all Atoms in the Residue with a specified name
 
-        Example
-        -------
+        Parameters
+        ----------
+        name : str
+            The particular atom name of interest.
+
+        Examples
+        --------
         >>> for atom in residue.atoms_by_name('CA'):
         ...     print(atom)
 

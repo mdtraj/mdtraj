@@ -21,7 +21,7 @@
 ##############################################################################
 
 
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
+from mdtraj.testing import get_fn, eq
 from mdtraj.geometry import alignment
 import numpy as np
 
