@@ -157,6 +157,7 @@ class TrajectoryView(DOMWidget):
 
         top = self.trajectory.topology
         dssp = md.compute_dssp(self.trajectory[self.frame])[0]
+        dssp = dssp[dssp != 'NA']
         result = {}
 
         # iterate over the (rindx, ss) pairs in enumerate(dssp),
