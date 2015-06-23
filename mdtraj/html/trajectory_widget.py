@@ -124,10 +124,10 @@ class TrajectoryView(DOMWidget):
     secondaryStructure = Enum(['ribbon', 'strand', 'cylinder & plate',
                                'C alpha trace', 'nothing'], 'cylinder & plate',
                                sync=True)
-    surfaceRepresentation = Enum(['Van der Waals surface','solvent excluded surface', 
+    surfaceRepresentation = Enum(['Van der Waals surface','solvent excluded surface',
                     'solvent accessible surface', 'molecular surface',
                     'nothing'], 'nothing', sync=True)
-    
+
     def __init__(self, trajectory, frame=0, **kwargs):
         super(TrajectoryView, self).__init__(**kwargs)
         self.trajectory = trajectory
@@ -164,6 +164,8 @@ class TrajectoryView(DOMWidget):
         # chain and ss.
         keyfunc = lambda ir : (top.residue(ir[0]).chain, ir[1])
         for (chain, ss), grouper in groupby(enumerate(dssp), keyfunc):
+            if ss == 'NA':
+                continue
             # rindxs is a list of residue indices in this contiguous run
             rindxs = [g[0] for g in grouper]
             for r in rindxs:
@@ -184,7 +186,6 @@ class TrajectoryView(DOMWidget):
         # TODO(rmcgibbo). Document this schema. It needs to match with what's
         # going on inside iview.loadTopology on the browser side.
 
-        
         atoms = {}
 
         # these should be mutually exclusive. you're only in one of
