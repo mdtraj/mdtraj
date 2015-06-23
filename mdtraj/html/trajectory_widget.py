@@ -38,9 +38,9 @@ def TrajectorySliderView(traj, frame=0, **kwargs):
 
     s = IntSlider(min=0, max=traj.n_frames - 1, value=frame)
     slider = interactive(slide, frame=s)
-    
+
     container = Box()
-    container.children = [widget, slider] 
+    container.children = [widget, slider]
 
     return container
 
@@ -165,8 +165,6 @@ class TrajectoryView(DOMWidget):
         # chain and ss.
         keyfunc = lambda ir : (top.residue(ir[0]).chain, ir[1])
         for (chain, ss), grouper in groupby(enumerate(dssp), keyfunc):
-            if ss == 'NA':
-                continue
             # rindxs is a list of residue indices in this contiguous run
             rindxs = [g[0] for g in grouper]
             for r in rindxs:
