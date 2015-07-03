@@ -1,5 +1,5 @@
-Principle components analysis (PCA) with :class:`scikit-learn`
+Principal components analysis (PCA) with :class:`scikit-learn`
 ==============================================================
 
-.. notebook:: examples/principle-components.ipynb
+.. notebook:: examples/principal-components.ipynb
    :skip_exceptions:
