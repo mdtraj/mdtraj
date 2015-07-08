@@ -88,12 +88,16 @@ def _topology_from_subset(topology, atom_indices):
 
     for chain in topology._chains:
         newChain = newTopology.add_chain()
+        previous_residue = None
         for residue in chain._residues:
             resSeq = getattr(residue, 'resSeq', None) or residue.index
-            newResidue = newTopology.add_residue(residue.name, newChain,
-                                                 resSeq)
             for atom in residue._atoms:
                 if atom.index in atom_indices:
+                    if not residue == previous_residue:
+                        newResidue = newTopology.add_residue(residue.name, newChain,
+                                                             resSeq)
+                        previous_residue = residue
+                    
                     try:  # OpenMM Topology objects don't have serial attributes, so we have to check first.
                         serial = atom.serial
                     except AttributeError:
@@ -101,6 +105,7 @@ def _topology_from_subset(topology, atom_indices):
                     newAtom = newTopology.add_atom(atom.name, atom.element,
                                                    newResidue, serial=serial)
                     old_atom_to_new_atom[atom] = newAtom
+
 
     bondsiter = topology.bonds
     if not hasattr(bondsiter, '__iter__'):
