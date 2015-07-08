@@ -1144,6 +1144,8 @@ class Residue(object):
         The chain within which this residue belongs
     resSeq : int
         The residue sequence number
+    segment_id : str
+        An optional label for the segment to which this residue belongs
     """
 
     def __init__(self, name, index, chain, resSeq):
@@ -1153,6 +1155,7 @@ class Residue(object):
         self.index = index
         self.chain = chain
         self.resSeq = resSeq
+        self.segment_id = ""
         self._atoms = []
 
     @property

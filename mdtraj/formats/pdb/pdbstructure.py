@@ -418,12 +418,12 @@ class Chain(object):
         """
         # Create a residue if none have been created
         if len(self.residues) == 0:
-            self._add_residue(Residue(atom.residue_name_with_spaces, atom.residue_number, atom.insertion_code, atom.alternate_location_indicator))
+            self._add_residue(Residue(atom.residue_name_with_spaces, atom.residue_number, atom.insertion_code, atom.alternate_location_indicator,atom.segment_id))
         # Create a residue if the residue information has changed
         elif self._current_residue.number != atom.residue_number:
-            self._add_residue(Residue(atom.residue_name_with_spaces, atom.residue_number, atom.insertion_code, atom.alternate_location_indicator))
+            self._add_residue(Residue(atom.residue_name_with_spaces, atom.residue_number, atom.insertion_code, atom.alternate_location_indicator,atom.segment_id))
         elif self._current_residue.insertion_code != atom.insertion_code:
-            self._add_residue(Residue(atom.residue_name_with_spaces, atom.residue_number, atom.insertion_code, atom.alternate_location_indicator))
+            self._add_residue(Residue(atom.residue_name_with_spaces, atom.residue_number, atom.insertion_code, atom.alternate_location_indicator,atom.segment_id))
         elif self._current_residue.name_with_spaces == atom.residue_name_with_spaces:
             # This is a normal case: number, name, and iCode have not changed
             pass
@@ -433,7 +433,7 @@ class Chain(object):
         else: # Residue name does not match
             # Only residue name does not match
             warnings.warn("WARNING: two consecutive residues with same number (%s, %s)" % (atom, self._current_residue.atoms[-1]))
-            self._add_residue(Residue(atom.residue_name_with_spaces, atom.residue_number, atom.insertion_code, atom.alternate_location_indicator))
+            self._add_residue(Residue(atom.residue_name_with_spaces, atom.residue_number, atom.insertion_code, atom.alternate_location_indicator,atom.segment_id))
         self._current_residue._add_atom(atom)
 
     def _add_residue(self, residue):
@@ -499,7 +499,7 @@ class Chain(object):
 
 
 class Residue(object):
-    def __init__(self, name, number, insertion_code=' ', primary_alternate_location_indicator=' '):
+    def __init__(self, name, number, insertion_code=' ', primary_alternate_location_indicator=' ',segment_id=''):
         alt_loc = primary_alternate_location_indicator
         self.primary_location_id = alt_loc
         self.locations = {}
@@ -512,6 +512,7 @@ class Residue(object):
         self.is_first_in_chain = False
         self.is_final_in_chain = False
         self._current_atom = None
+        self.segment_id = segment_id
 
     def _add_atom(self, atom):
         """
