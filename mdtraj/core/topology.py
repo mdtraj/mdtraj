@@ -1304,6 +1304,11 @@ class Atom(object):
         return (self.name not in set(['C', 'CA', 'N', 'O'])
                 and self.residue.is_protein)
 
+    @property
+    def segment_id(self):
+        """User specified segment_id of the residue to which this atom belongs"""
+        return self.residue.segment_id
+
     def __eq__(self, other):
         """ Check whether two Atom objects are equal. """
         if self.name != other.name:
