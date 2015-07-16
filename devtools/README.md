@@ -57,9 +57,9 @@ License
 Copyright (c) 2012-2015 Stanford University and the Authors
 All rights reserved.
 
-Redistribution and use of all files in this folder (devtools) and ../.travis.yml
-in source and binary forms, with or without modification, are permitted
-provided that the following conditions are met:
+Redistribution and use of all files in this folder (devtools) and (../.travis.yml,
+../basesetup.py, ../setup.py) files in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this
 list of conditions and the following disclaimer.
