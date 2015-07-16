@@ -111,6 +111,7 @@ class SelectionKeyword(object):
         # (('nucleic', 'is_nucleic'), _chain('residue', 'is_nucleic')),
         (('water', 'waters', 'is_water'), _chain('residue', 'is_water')),
         (('name',), _chain('name')),
+        (('segment_id','segname',), _chain('segment_id')),
         (('index',), _chain('index')),
         (('n_bonds',), _chain('n_bonds')),
         (('residue', 'resSeq'), _chain('residue', 'resSeq')),
