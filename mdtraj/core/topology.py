@@ -235,6 +235,14 @@ class Topology(object):
     def __deepcopy__(self, *args):
         return self.copy()
 
+    def __hash__(self):
+        hash_value = hash(tuple(self._chains))
+        hash_value ^= hash(tuple(self._atoms))
+        hash_value ^= hash(tuple(self._bonds))
+        hash_value ^= hash(tuple(self._residues))
+
+        return hash_value
+
     def join(self, other):
         """Join two topologies together
 
