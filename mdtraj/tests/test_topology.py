@@ -216,4 +216,4 @@ def test_to_fasta():
 def test_subset():
      t1 = md.load(get_fn('2EQQ.pdb')).top
      t2 = t1.subset([1,2,3])
-     print(t2)
+     assert t2.n_residues == 1
