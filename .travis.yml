@@ -1,4 +1,14 @@
 language: c
+sudo: false
+addons:
+  apt:
+    packages:
+      -g++
+      -gfortran
+      -valgrind
+      -csh
+      -g++-multilib
+      -gcc-multilib
 
 install:
   - source devtools/travis-ci/install.sh
