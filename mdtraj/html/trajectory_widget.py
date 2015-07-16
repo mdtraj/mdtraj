@@ -153,7 +153,7 @@ class TrajectoryView(DOMWidget):
         """Compute the secondary structure of the selected frame and
         format it for the browser
         """
-        SS_MAP = {'C': 'coil', 'H': 'helix', 'E': 'sheet'}
+        SS_MAP = {'C': 'coil', 'H': 'helix', 'E': 'sheet', 'NA': 'coil'}
 
         top = self.trajectory.topology
         dssp = md.compute_dssp(self.trajectory[self.frame])[0]
