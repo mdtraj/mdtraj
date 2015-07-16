@@ -38,9 +38,9 @@ def TrajectorySliderView(traj, frame=0, **kwargs):
 
     s = IntSlider(min=0, max=traj.n_frames - 1, value=frame)
     slider = interactive(slide, frame=s)
-    
+
     container = Box()
-    container.children = [widget, slider] 
+    container.children = [widget, slider]
 
     return container
 
@@ -124,10 +124,10 @@ class TrajectoryView(DOMWidget):
     secondaryStructure = Enum(['ribbon', 'strand', 'cylinder & plate',
                                'C alpha trace', 'nothing'], 'cylinder & plate',
                                sync=True)
-    surfaceRepresentation = Enum(['Van der Waals surface','solvent excluded surface', 
+    surfaceRepresentation = Enum(['Van der Waals surface','solvent excluded surface',
                     'solvent accessible surface', 'molecular surface',
                     'nothing'], 'nothing', sync=True)
-    
+
     def __init__(self, trajectory, frame=0, **kwargs):
         super(TrajectoryView, self).__init__(**kwargs)
         self.trajectory = trajectory
@@ -157,6 +157,7 @@ class TrajectoryView(DOMWidget):
 
         top = self.trajectory.topology
         dssp = md.compute_dssp(self.trajectory[self.frame])[0]
+        dssp = dssp[dssp != 'NA']
         result = {}
 
         # iterate over the (rindx, ss) pairs in enumerate(dssp),
@@ -184,7 +185,6 @@ class TrajectoryView(DOMWidget):
         # TODO(rmcgibbo). Document this schema. It needs to match with what's
         # going on inside iview.loadTopology on the browser side.
 
-        
         atoms = {}
 
         # these should be mutually exclusive. you're only in one of
