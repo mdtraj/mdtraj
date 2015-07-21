@@ -31,4 +31,22 @@ def test_load():
     eq(top.n_atoms, 6600)
     eq(top.n_bonds, 3200)
     eq(top.n_chains, 4000)
-    eq(top.n_chains, top.n_residues)  # hoomdxml assumes each chain is 1 residue
+    eq(top.n_chains, top.n_residues)  # hoomdxml makes each chain 1 residue
+
+
+def test_load_no_chains():
+    top = load(get_fn('no_chains.hoomdxml')).topology
+    eq(top.n_atoms, 1458)
+    eq(top.n_bonds, 0)
+    eq(top.n_chains, top.n_atoms)
+    eq(top.n_chains, top.n_residues)
+
+
+def test_load_no_ions():
+    top = load(get_fn('no_ions.hoomdxml')).topology
+    eq(top.n_atoms, 1296)
+    eq(top.n_bonds, 1152)
+    eq(top.n_chains, 144)
+    eq(top.n_chains, top.n_residues)
+    for bond in top.bonds:  # atoms bonded to adjacent atoms by index
+        eq(bond[1].index - bond[0].index, 1)

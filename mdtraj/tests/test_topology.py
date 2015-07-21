@@ -211,3 +211,9 @@ def test_select_pairs_args():
 def test_to_fasta():
     t = md.load(get_fn('2EQQ.pdb'))
     assert t.topology.to_fasta(0) == "ENFSGGCVAGYMRTPDGRCKPTFYQLIT"
+
+
+def test_subset():
+     t1 = md.load(get_fn('2EQQ.pdb')).top
+     t2 = t1.subset([1,2,3])
+     assert t2.n_residues == 1

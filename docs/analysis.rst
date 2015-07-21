@@ -10,7 +10,7 @@ a variety of analyses on :class:`mdtraj.Trajectory` objects.
 It's usually as simple as ::
 
     >>> import mdtraj as md
-    >>> t = md.load('trajectory.pdb)
+    >>> t = md.load('trajectory.pdb')
     >>> print(md.compute_phi(t))
 
 Root-mean-square deviation (RMSD)

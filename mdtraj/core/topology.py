@@ -120,9 +120,12 @@ def _topology_from_subset(topology, atom_indices):
             # we only put bonds into the new topology if both of their partners
             # were indexed and thus HAVE a new atom
 
+
     # Delete empty residues
+    newTopology._residues = [r for r in newTopology._residues if len(r._atoms) > 0]
     for chain in newTopology._chains:
         chain._residues = [r for r in chain._residues if len(r._atoms) > 0]
+
     # Delete empty chains
     newTopology._chains = [c for c in newTopology._chains
                            if len(c._residues) > 0]
@@ -236,6 +239,14 @@ class Topology(object):
 
     def __deepcopy__(self, *args):
         return self.copy()
+
+    def __hash__(self):
+        hash_value = hash(tuple(self._chains))
+        hash_value ^= hash(tuple(self._atoms))
+        hash_value ^= hash(tuple(self._bonds))
+        hash_value ^= hash(tuple(self._residues))
+
+        return hash_value
 
     def join(self, other):
         """Join two topologies together
