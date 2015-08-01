@@ -100,7 +100,8 @@ static int fio_open(const char *filename, int mode, fio_fd *fd) {
     return -1; /* not supported yet */
 #endif
 
-  sharing = 0;       /* disallow sharing with other processes  */
+  if(!(mode & FIO_WRITE)) sharing = 1;  /* allow concurrent reading of data */
+  else sharing = 0;         /* disallow sharing with other or same process  */
   security = NULL;   /* child processes don't inherit anything */
 
   /* since we never append, blow away anything that's already there */
