@@ -28,7 +28,6 @@ from mdtraj.utils.six.moves import cPickle
 from mdtraj.utils import import_
 from mdtraj.testing import get_fn, eq, skipif, assert_raises
 
-
 try:
     from simtk.openmm import app
     HAVE_OPENMM = True
@@ -41,6 +40,7 @@ try:
     HAVE_PANDAS = True
 except ImportError:
     HAVE_PANDAS = False
+
 
 @skipif(not HAVE_OPENMM)
 def test_topology_openmm():
@@ -242,10 +242,28 @@ def test_to_fasta():
 
 
 def test_subset():
-     t1 = md.load(get_fn('2EQQ.pdb')).top
-     t2 = t1.subset([1,2,3])
-     assert t2.n_residues == 1
+    t1 = md.load(get_fn('2EQQ.pdb')).top
+    t2 = t1.subset([1,2,3])
+    assert t2.n_residues == 1
 
+
+def test_hashing():
+    top = md.load(get_fn('tip3p_300K_1ATM.pdb')).top
+    top_copy = top.copy()
+
+    # assert all atoms have a unique hash
+    s = set(top.atoms)
+    assert len(s) == top.n_atoms
+
+    s = set(top.residues)
+    assert len(s) == top.n_residues
+
+    s = set(top.bonds)
+    assert len(s) == top.n_bonds
+
+    htop = hash(top)
+    htopcopy = hash(top_copy)
+    assert htop == htopcopy
 
 def test_molecules():
     top = md.load(get_fn('4OH9.pdb')).topology
