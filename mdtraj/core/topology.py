@@ -1221,12 +1221,17 @@ class Chain(object):
         return sum(r.n_atoms for r in self._residues)
 
     def __eq__(self, other):
+        if not isinstance(other, Chain):
+            return False
+        if self is other:
+            return True
         return (self.index == other.index and
                 self._residues == other.residues)
 
     def __hash__(self, *args, **kwargs):
         hash_value = hash(tuple(self._residues)) ^ hash(self.index)
         return hash_value
+
 
 class Residue(object):
     """A Residue object represents a residue within a Topology.
@@ -1351,6 +1356,10 @@ class Residue(object):
         return str(self)
 
     def __eq__(self, other):
+        if not isinstance(other, Residue):
+            return False
+        if self is other:
+            return True
         return (self.name == other.name and
                 self.index == other.index and
                 self.resSeq == other.resSeq and
@@ -1422,6 +1431,10 @@ class Atom(object):
 
     def __eq__(self, other):
         """ Check whether two Atom objects are equal. """
+        if not isinstance(other, Atom):
+            return False
+        if self is other:
+            return True
         if self.name != other.name:
             return False
         if self.index != other.index:
