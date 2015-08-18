@@ -161,6 +161,23 @@ def test_rmsd_atom_indices():
     
     eq(dist1, dist2)
 
+
+def test_rmsd_ref_ainds():
+    native = md.load(get_fn('native.pdb'))
+    t1 = md.load(get_fn('traj.h5'))
+
+    atom_indices = np.arange(10)
+    dist1 = md.rmsd(t1, native, atom_indices=atom_indices,
+                    ref_atom_indices=atom_indices)
+
+    bad_atom_indices = np.arange(10, 20)
+    t2 = md.load(get_fn('traj.h5'))
+    dist2 = md.rmsd(t2, native, atom_indices=atom_indices,
+                    ref_atom_indices=bad_atom_indices)
+
+    assert np.all(dist2 > dist1)
+
+
 # def test_align_displace():
 #     t = md.load(get_fn('traj.h5'))
 #     t.center_coordinates()
