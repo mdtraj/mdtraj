@@ -894,7 +894,8 @@ class Trajectory(object):
     #     # min/max/mean/std.dev./percentiles of each column in a DataFrame.
     #     raise NotImplementedError()
 
-    def superpose(self, reference, frame=0, atom_indices=None, parallel=True):
+    def superpose(self, reference, frame=0, atom_indices=None,
+                  ref_atom_indices=None, parallel=True):
         """Superpose each conformation in this trajectory upon a reference
 
         Parameters
@@ -906,6 +907,10 @@ class Trajectory(object):
         atom_indices : array_like, or None
             The indices of the atoms to superpose. If not
             supplied, all atoms will be used.
+        ref_atom_indices : array_like, or None
+            Use these atoms on the reference structure. If not supplied,
+            the same atom indices will be used for this trajectory and the
+            reference one.
         parallel : bool
             Use OpenMP to run the superposition in parallel over multiple cores
 
@@ -913,13 +918,22 @@ class Trajectory(object):
         -------
         self
         """
+
         if atom_indices is None:
             atom_indices = slice(None)
+
+        if ref_atom_indices is None:
+            ref_atom_indices = atom_indices
+
+        if not isinstance(ref_atom_indices, slice) and (
+            len(ref_atom_indices) != len(atom_indices)):
+            raise ValueError("Number of atoms must be consistent!")
 
         n_frames = self.xyz.shape[0]
         self_align_xyz = np.asarray(self.xyz[:, atom_indices, :], order='c')
         self_displace_xyz = np.asarray(self.xyz, order='c')
-        ref_align_xyz = np.array(reference.xyz[frame, atom_indices, :], copy=True, order='c').reshape(1, -1, 3)
+        ref_align_xyz = np.array(reference.xyz[frame, ref_atom_indices, :],
+                                 copy=True, order='c').reshape(1, -1, 3)
 
         offset = np.mean(self_align_xyz, axis=1, dtype=np.float64).reshape(n_frames, 1, 3)
         self_align_xyz -= offset

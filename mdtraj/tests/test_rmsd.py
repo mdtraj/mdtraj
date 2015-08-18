@@ -124,6 +124,29 @@ def test_superpose_2():
     eq(t2.xyz, t2_copy)
 
 
+def test_superpose_refinds():
+    # make one frame far from the origin
+    normal = np.random.randn(1, 100, 3)
+    normal_xyz = normal.copy()
+
+    flipped = np.zeros_like(normal)
+    flipped[:,:50, :] = normal[:, 50:, :]
+    flipped[:, 50:, :] = normal[:,:50, :]
+    flipped_xyz = flipped.copy()
+
+    normal = md.Trajectory(xyz=normal, topology=None)
+    flipped = md.Trajectory(xyz=flipped, topology=None)
+
+    normal.superpose(flipped, atom_indices=np.arange(0,50), ref_atom_indices=np.arange(50,100))
+    eq(normal.xyz, normal_xyz)
+
+    flipped.superpose(normal, atom_indices=np.arange(50, 100), ref_atom_indices=np.arange(0,50))
+    eq(flipped.xyz, flipped_xyz)
+
+    normal.superpose(flipped)
+    assert not np.allclose(normal.xyz, normal_xyz)
+
+
 def test_rmsd_atom_indices():
     native = md.load(get_fn('native.pdb'))
     t1 = md.load(get_fn('traj.h5'))
@@ -137,9 +160,6 @@ def test_rmsd_atom_indices():
     dist2 = md.rmsd(t2, native)
     
     eq(dist1, dist2)
-
-if __name__ == '__main__':
-    test_rmsd_atom_indices()
 
 # def test_align_displace():
 #     t = md.load(get_fn('traj.h5'))
