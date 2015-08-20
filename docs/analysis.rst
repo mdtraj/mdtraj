@@ -41,14 +41,14 @@ Secondary Structure
     compute_dssp
 
 
-Surface Area and Radius of Gyration
------------------------------------
+Surface Area, Radius of Gyration and Inertia
+--------------------------------------------
 .. autosummary::
     :toctree: api/generated/
 
     shrake_rupley
     compute_rg
-
+    compute_inertia_tensor
 
 Distances
 ---------
