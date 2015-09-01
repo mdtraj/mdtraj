@@ -12,6 +12,7 @@ supported trajectory formats. The high level interface is provided by the
     ArcTrajectoryFile
     BINPOSTrajectoryFile
     DCDTrajectoryFile
+    DTRTrajectoryFile
     HDF5TrajectoryFile
     LH5TrajectoryFile
     MDCRDTrajectoryFile
