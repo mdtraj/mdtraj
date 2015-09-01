@@ -51,6 +51,7 @@ Format-specific loaders
     load_xml
     load_arc
     load_dcd
+    load_dtr
     load_hdf5
     load_netcdf
     load_trr
