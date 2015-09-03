@@ -9,7 +9,7 @@ bash $MINICONDA -b
 
 
 export PATH=$HOME/miniconda/bin:$PATH
-conda install --yes conda-build jinja2 binstar pip
+conda install --yes conda-build jinja2 anaconda-client pip
 conda config --add channels http://conda.binstar.org/colli_r
 conda config --add channels http://conda.binstar.org/rmcgibbo
 conda config --add channels http://conda.binstar.org/omnia

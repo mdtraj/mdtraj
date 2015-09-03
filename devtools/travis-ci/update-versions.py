@@ -4,7 +4,7 @@ import pip
 import json
 from tempfile import NamedTemporaryFile
 import subprocess
-from msmbuilder import version
+from mdtraj import version
 from six.moves.urllib.request import urlopen
 if not any(d.project_name == 's3cmd' for d in pip.get_installed_distributions()):
     raise ImportError('The s3cmd pacakge is required. try $ pip install s3cmd')
