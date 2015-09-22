@@ -43,7 +43,7 @@
 /****************************************************************************/
 
 /**
- * This is kindof hacky / gross, but I think it's the best way to avoid havving
+ * This is kindof hacky / gross, but I think it's the best way to avoid having
  * lots of copy-paste code. For each of the distance/angle/dihedral kernels, we
  * want to compile two version: one which uses PBCs and the other which does
  * not. Most of the code between these versions is shared, so I've written

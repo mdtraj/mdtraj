@@ -74,10 +74,10 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
         if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
-            _geometry._dist_mic(xyz, pairs, box, out)
+            _geometry._dist_mic(xyz, pairs, box.transpose(0, 2, 1).copy(), out)
             return out
         else:
-            return _distance_mic(xyz, pairs, box)
+            return _distance_mic(xyz, pairs, box.transpose(0, 2, 1))
 
     # either there are no unitcell vectors or they dont want to use them
     if opt:
@@ -120,10 +120,10 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
         if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
-            _geometry._dist_mic_displacement(xyz, pairs, box, out)
+            _geometry._dist_mic_displacement(xyz, pairs, box.transpose(0, 2, 1).copy(), out)
             return out
         else:
-            return _displacement_mic(xyz, pairs, box)
+            return _displacement_mic(xyz, pairs, box.transpose(0, 2, 1))
 
     # either there are no unitcell vectors or they dont want to use them
     if opt:
