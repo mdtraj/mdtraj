@@ -84,7 +84,7 @@ int dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_matr
                        int n_atoms, int n_pairs) {
     float *displacements; // We need to get these regardless
     float *distances;     // We need to get these regardless
-    int i, j, k, n, n3;
+    int f, i, j, k, n, dist_start, disp_start, dist_idx, disp_idx;
     float min_dist, dist_test;
 
     float orig_disp[3], min_disp[3], disp_test[3];
@@ -102,48 +102,54 @@ int dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_matr
 
     dist_mic(xyz, pairs, box_matrix, distances, displacements, n_frames, n_atoms, n_pairs);
 
-    /* Store the original box vectors, which are columns in the row-major matrix layout */
-    bv1[0] = box_matrix[0]; bv2[0] = box_matrix[1]; bv3[0] = box_matrix[2];
-    bv1[1] = box_matrix[3]; bv2[1] = box_matrix[4]; bv3[0] = box_matrix[5];
-    bv1[2] = box_matrix[6]; bv2[2] = box_matrix[7]; bv3[0] = box_matrix[8];
-
     /* Now we have to search the surrounding unit cells  */
-    for (n = 0; n < n_pairs; n++) {
-        n3 = n * 3;
-        min_dist = distances[n]*distances[n];
-        min_disp[0] = displacements[n3];
-        min_disp[1] = displacements[n3+1];
-        min_disp[2] = displacements[n3+1];
-        orig_disp[0] = displacements[n3];
-        orig_disp[1] = displacements[n3+1];
-        orig_disp[2] = displacements[n3+1];
-        for (i = -1; i < 2; i++) {
-            v1[0] = bv1[0]*i + orig_disp[0];
-            v1[1] = bv1[1]*i + orig_disp[1];
-            v1[2] = bv1[2]*i + orig_disp[2];
-            for (j = -1; j < 2; j++) {
-                v2[0] = bv2[0]*j + orig_disp[0];
-                v2[1] = bv2[1]*j + orig_disp[1];
-                v2[2] = bv2[2]*j + orig_disp[2];
-            }
-            for (k = -1; k < 2; k++) {
-                disp_test[0] = orig_disp[0] + v1[0] + v2[0] + bv3[0]*k+orig_disp[0];
-                disp_test[1] = orig_disp[1] + v1[1] + v2[1] + bv3[1]*k+orig_disp[1];
-                disp_test[2] = orig_disp[2] + v1[2] + v2[2] + bv3[2]*k+orig_disp[2];
-                dist_test = disp_test[0]*disp_test[0] + disp_test[1]*disp_test[1] + disp_test[2]*disp_test[2];
-                if (dist_test < min_dist) {
-                    min_dist = dist_test;
-                    min_disp[0] = disp_test[0];
-                    min_disp[1] = disp_test[1];
-                    min_disp[2] = disp_test[2];
+    for (f = 0; f < n_frames; f++) {
+        dist_start = n_pairs*f;
+        disp_start = dist_start*3;
+
+        /* Store the original box vectors, which are columns in the row-major matrix layout */
+        bv1[0] = box_matrix[9*f  ]; bv2[0] = box_matrix[9*f+1]; bv3[0] = box_matrix[9*f+2];
+        bv1[1] = box_matrix[9*f+3]; bv2[1] = box_matrix[9*f+4]; bv3[1] = box_matrix[9*f+5];
+        bv1[2] = box_matrix[9*f+6]; bv2[2] = box_matrix[9*f+7]; bv3[2] = box_matrix[9*f+8];
+
+        for (n = 0; n < n_pairs; n++) {
+            dist_idx = dist_start + n;
+            disp_idx = disp_start + n*3;
+            min_dist = distances[dist_idx]*distances[dist_idx];
+            min_disp[0] = displacements[disp_idx  ];
+            min_disp[1] = displacements[disp_idx+1];
+            min_disp[2] = displacements[disp_idx+2];
+            orig_disp[0] = displacements[disp_idx  ];
+            orig_disp[1] = displacements[disp_idx+1];
+            orig_disp[2] = displacements[disp_idx+2];
+            for (i = -1; i < 2; i++) {
+                v1[0] = bv1[0]*i;
+                v1[1] = bv1[1]*i;
+                v1[2] = bv1[2]*i;
+                for (j = -1; j < 2; j++) {
+                    v2[0] = bv2[0]*j + v1[0];
+                    v2[1] = bv2[1]*j + v1[1];
+                    v2[2] = bv2[2]*j + v1[2];
+                    for (k = -1; k < 2; k++) {
+                        disp_test[0] = orig_disp[0] + v2[0] + bv3[0]*k;
+                        disp_test[1] = orig_disp[1] + v2[1] + bv3[1]*k;
+                        disp_test[2] = orig_disp[2] + v2[2] + bv3[2]*k;
+                        dist_test = disp_test[0]*disp_test[0] + disp_test[1]*disp_test[1] + disp_test[2]*disp_test[2];
+                        if (dist_test < min_dist) {
+                            min_dist = dist_test;
+                            min_disp[0] = disp_test[0];
+                            min_disp[1] = disp_test[1];
+                            min_disp[2] = disp_test[2];
+                        }
+                    }
                 }
             }
+            if (distance_out != NULL)
+                distances[dist_idx] = sqrtf(min_dist);
+            displacements[disp_idx  ] = min_disp[0];
+            displacements[disp_idx+1] = min_disp[1];
+            displacements[disp_idx+2] = min_disp[2];
         }
-        if (distance_out != NULL)
-            distance_out[n] = sqrtf(min_dist);
-        displacements[n3  ] = min_disp[0];
-        displacements[n3+1] = min_disp[1];
-        displacements[n3+2] = min_disp[2];
     }
 
     /* If we had to allocate either displacements or distances, deallocate them now */

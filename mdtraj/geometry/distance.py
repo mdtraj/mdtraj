@@ -74,12 +74,13 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
     if periodic and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3),
                           warn_on_cast=False)
+        orthogonal = np.allclose(traj.unitcell_angles, 90)
         if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
-            _geometry._dist_mic(xyz, pairs, box.transpose(0, 2, 1).copy(), out)
+            _geometry._dist_mic(xyz, pairs, box.transpose(0, 2, 1).copy(), out, orthogonal)
             return out
         else:
-            return _distance_mic(xyz, pairs, box.transpose(0, 2, 1))
+            return _distance_mic(xyz, pairs, box.transpose(0, 2, 1), orthogonal)
 
     # either there are no unitcell vectors or they dont want to use them
     if opt:
@@ -121,12 +122,13 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
     if periodic and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3),
                           warn_on_cast=False)
+        orthogonal = np.allclose(traj.unitcell_angles, 90)
         if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
-            _geometry._dist_mic_displacement(xyz, pairs, box.transpose(0, 2, 1).copy(), out)
+            _geometry._dist_mic_displacement(xyz, pairs, box.transpose(0, 2, 1).copy(), out, orthogonal)
             return out
         else:
-            return _displacement_mic(xyz, pairs, box.transpose(0, 2, 1))
+            return _displacement_mic(xyz, pairs, box.transpose(0, 2, 1), orthogonal)
 
     # either there are no unitcell vectors or they dont want to use them
     if opt:
@@ -177,7 +179,7 @@ def _displacement(xyz, pairs):
     return value
 
 
-def _distance_mic(xyz, pairs, box_vectors):
+def _distance_mic(xyz, pairs, box_vectors, orthogonal):
     """Distance between pairs of points in each frame under the minimum image
     convention for periodic boundary conditions.
 
@@ -199,18 +201,19 @@ def _distance_mic(xyz, pairs, box_vectors):
             s12 = s12 - np.round(s12)
             r12 = np.dot(box_vectors[i], s12)
             dist = np.linalg.norm(r12)
-            for ii in range(-1, 2):
-                v1 = bv1*ii
-                for jj in range(-1, 2):
-                    v12 = bv2*jj + v1
-                    for kk in range(-1, 2):
-                        new_r12 = r12 + v12 + bv3*kk
-                        dist = min(dist, np.linalg.norm(new_r12))
+            if not orthogonal:
+                for ii in range(-1, 2):
+                    v1 = bv1*ii
+                    for jj in range(-1, 2):
+                        v12 = bv2*jj + v1
+                        for kk in range(-1, 2):
+                            new_r12 = r12 + v12 + bv3*kk
+                            dist = min(dist, np.linalg.norm(new_r12))
             out[i, j] = dist
     return out
 
 
-def _displacement_mic(xyz, pairs, box_vectors):
+def _displacement_mic(xyz, pairs, box_vectors, orthogonal):
     """Displacement vector between pairs of points in each frame under the
     minimum image convention for periodic boundary conditions.
 
@@ -232,16 +235,17 @@ def _displacement_mic(xyz, pairs, box_vectors):
             disp = np.dot(box_vectors[i], s12)
             min_disp = disp
             dist2 = (disp*disp).sum()
-            for ii in range(-1, 2):
-                v1 = bv1*ii
-                for jj in range(-1, 2):
-                    v12 = bv2*jj+v1
-                    for kk in range(-1, 2):
-                        tmp = disp + v12 + bv3*kk
-                        new_dist2 = (tmp*tmp).sum()
-                        if new_dist2 < dist2:
-                            dist2 = new_dist2
-                            min_disp = tmp
+            if not orthogonal:
+                for ii in range(-1, 2):
+                    v1 = bv1*ii
+                    for jj in range(-1, 2):
+                        v12 = bv2*jj+v1
+                        for kk in range(-1, 2):
+                            tmp = disp + v12 + bv3*kk
+                            new_dist2 = (tmp*tmp).sum()
+                            if new_dist2 < dist2:
+                                dist2 = new_dist2
+                                min_disp = tmp
             out[i, j] = min_disp
 
     return out
