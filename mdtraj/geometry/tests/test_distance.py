@@ -129,6 +129,6 @@ def _run_amber_traj(trajname, ext_ref):
     assert_allclose(distopt.flatten(), ext_ref, atol=2e-5)
 
     # Make sure distances from displacements are the same
-    eq(np.linalg.norm(dispopt, axis=2), distopt)
-    eq(np.linalg.norm(dispslw, axis=2), distslw)
+    eq(np.sqrt((dispopt.squeeze(1)**2).sum(axis=1)), distopt.squeeze(1))
+    eq(np.sqrt((dispslw.squeeze(1)**2).sum(axis=1)), distslw.squeeze(1))
     eq(dispopt, dispslw, decimal=5)
