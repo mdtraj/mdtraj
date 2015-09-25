@@ -65,6 +65,93 @@
 #include "anglekernels.h"
 #include "dihedralkernels.h"
 
+/**
+ * Distance kernel for general triclinic cells. It is the same as the standard
+ * MIC distance code, except that it has to check the distances in all 27
+ * surrounding unit cells to pick out the closest one. This is because the MIC
+ * code uses scaled, or fractional, coordinates and finds the minimum image that
+ * way, which eliminates the anisotropy of the unit cell (i.e., for
+ * non-orthorhombic cells, some corners of the unit cell are farther away than
+ * others). The only distances that the algorithm in dist_mic are *guaranteed*
+ * to get correct are the ones that fall within the largest sphere that can be
+ * entirely contained between the planes of the adjacent unit cells (equal to
+ * the largest cutoff distance permissible in MD simulations).
+ *
+ * TODO: Add SSE-vectorization to the nearest neighbor search here
+ */
+int dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_matrix,
+                       float* distance_out, float* displacement_out, int n_frames,
+                       int n_atoms, int n_pairs) {
+    float *displacements; // We need to get these regardless
+    float *distances;     // We need to get these regardless
+    int i, j, k, n, n3;
+    float min_dist, dist_test;
+
+    float orig_disp[3], min_disp[3], disp_test[3];
+    float v1[3], v2[3], bv1[3], bv2[3], bv3[3];
+
+    if (displacement_out == NULL)
+        displacements = (float*) malloc(n_pairs*n_frames*3 * sizeof(float));
+    else
+        displacements = displacement_out;
+
+    if (distance_out == NULL)
+        distances = (float*) malloc(n_pairs*n_frames * sizeof(float));
+    else
+        distances = distance_out;
+
+    dist_mic(xyz, pairs, box_matrix, distances, displacements, n_frames, n_atoms, n_pairs);
+
+    /* Store the original box vectors, which are columns in the row-major matrix layout */
+    bv1[0] = box_matrix[0]; bv2[0] = box_matrix[1]; bv3[0] = box_matrix[2];
+    bv1[1] = box_matrix[3]; bv2[1] = box_matrix[4]; bv3[0] = box_matrix[5];
+    bv1[2] = box_matrix[6]; bv2[2] = box_matrix[7]; bv3[0] = box_matrix[8];
+
+    /* Now we have to search the surrounding unit cells  */
+    for (n = 0; n < n_pairs; n++) {
+        n3 = n * 3;
+        min_dist = distances[n]*distances[n];
+        min_disp[0] = displacements[n3];
+        min_disp[1] = displacements[n3+1];
+        min_disp[2] = displacements[n3+1];
+        orig_disp[0] = displacements[n3];
+        orig_disp[1] = displacements[n3+1];
+        orig_disp[2] = displacements[n3+1];
+        for (i = -1; i < 2; i++) {
+            v1[0] = bv1[0]*i + orig_disp[0];
+            v1[1] = bv1[1]*i + orig_disp[1];
+            v1[2] = bv1[2]*i + orig_disp[2];
+            for (j = -1; j < 2; j++) {
+                v2[0] = bv2[0]*j + orig_disp[0];
+                v2[1] = bv2[1]*j + orig_disp[1];
+                v2[2] = bv2[2]*j + orig_disp[2];
+            }
+            for (k = -1; k < 2; k++) {
+                disp_test[0] = orig_disp[0] + v1[0] + v2[0] + bv3[0]*k+orig_disp[0];
+                disp_test[1] = orig_disp[1] + v1[1] + v2[1] + bv3[1]*k+orig_disp[1];
+                disp_test[2] = orig_disp[2] + v1[2] + v2[2] + bv3[2]*k+orig_disp[2];
+                dist_test = disp_test[0]*disp_test[0] + disp_test[1]*disp_test[1] + disp_test[2]*disp_test[2];
+                if (dist_test < min_dist) {
+                    min_dist = dist_test;
+                    min_disp[0] = disp_test[0];
+                    min_disp[1] = disp_test[1];
+                    min_disp[2] = disp_test[2];
+                }
+            }
+        }
+        if (distance_out != NULL)
+            distance_out[n] = sqrtf(min_dist);
+        displacements[n3  ] = min_disp[0];
+        displacements[n3+1] = min_disp[1];
+        displacements[n3+2] = min_disp[2];
+    }
+
+    /* If we had to allocate either displacements or distances, deallocate them now */
+    if (displacement_out == NULL) free(displacements);
+    if (distance_out == NULL) free(distances);
+
+    return 1;
+}
 
 /****************************************************************************/
 /* HBond Kernels                                                            */

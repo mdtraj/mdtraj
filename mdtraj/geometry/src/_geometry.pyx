@@ -36,6 +36,10 @@ cdef extern from "geometry.h":
     int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
                          float* distance_out, float* displacement_out,
                          int n_frames, int n_atoms, int n_pairs) nogil
+    int dist_mic_triclinic(const float* xyz, const int* pairs,
+                           const float* box_matrix, float* distance_out,
+                           float* displacement_out, int n_frames, int n_atoms,
+                           int n_pairs) nogil
 
     int angle(const float* xyz, const int* triplets, float* out,
               int n_frames, int n_atoms, int n_angles) nogil
