@@ -29,6 +29,7 @@ from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import _geometry, distance
+import warnings
 
 __all__ = ['compute_angles']
 
