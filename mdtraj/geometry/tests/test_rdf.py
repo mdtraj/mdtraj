@@ -54,9 +54,9 @@ _, RDF_O_H = mdtraj.geometry.rdf.compute_rdf(TRAJ, pairs)
 
 def test_rdf_norm():
     """Check if the RDF's tail is normalized to ~1.0 """
-    assert eq(np.ones(20), RDF_ALL[-20:], decimal=1)
-    assert eq(np.ones(20), RDF_O_O[-20:], decimal=1)
-    assert eq(np.ones(20), RDF_O_H[-20:], decimal=1)
+    eq(np.ones(20), RDF_ALL[-20:], decimal=1)
+    eq(np.ones(20), RDF_O_O[-20:], decimal=1)
+    eq(np.ones(20), RDF_O_H[-20:], decimal=1)
 
 
 @skipif(True, 'Binning does not match up with gromacs currently.')

@@ -26,6 +26,7 @@ import numpy as np
 
 from mdtraj.utils import ensure_type
 from mdtraj.geometry.distance import compute_distances
+from mdtraj.geometry import _numericutils
 
 __all__ = ['compute_rdf']
 
@@ -79,7 +80,10 @@ def compute_rdf(traj, pairs=None, r_range=None, bin_width=0.005, n_bins=None,
         bins = np.arange(r_range[0], r_range[1] + bin_width, bin_width)
 
     distances = compute_distances(traj, pairs, periodic=periodic, opt=opt)
-    g_r, edges = np.histogram(distances, bins=bins)
+    if opt:
+        g_r, edges = _numericutils._histogram(distances, bins=bins)
+    else:
+        g_r, edges = np.histogram(distances, bins=bins)
     r = 0.5 * (edges[1:] + edges[:-1])
 
     # Normalize by volume of the spherical shell.
