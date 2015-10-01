@@ -249,6 +249,12 @@ class StaticLibrary(Extension):
 
 class build_ext(_build_ext):
 
+    def initialize_options(self):
+        _build_ext.initialize_options(self)
+        import pkg_resources
+        dir = pkg_resources.resource_filename('numpy', 'core/include')
+        self.include_dirs = [dir]
+
     def build_extension(self, ext):
         if isinstance(ext, StaticLibrary):
             self.build_static_extension(ext)
