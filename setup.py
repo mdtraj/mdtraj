@@ -131,8 +131,7 @@ def rmsd_extensions():
                          'mdtraj/rmsd/src/rotation.c',
                          'mdtraj/rmsd/src/center.c',
                          'mdtraj/rmsd/_rmsd.pyx'],
-                     include_dirs=['mdtraj/rmsd/include',
-                                  ],
+                     include_dirs=['mdtraj/rmsd/include'],
                      extra_compile_args=compiler_args,
                      libraries=compiler_libraries)
 
@@ -146,9 +145,7 @@ def rmsd_extensions():
                            'mdtraj/rmsd/src/euclidean_permutation.cpp',
                            'mdtraj/rmsd/_lprmsd.pyx'],
                        language='c++',
-                       include_dirs=[
-                           'mdtraj/rmsd/include',
-                                    ],
+                       include_dirs=['mdtraj/rmsd/include'],
                        extra_compile_args=compiler_args,
                        libraries=compiler_libraries + extra_cpp_libraries)
     return rmsd, lprmsd, libtheobald
@@ -166,8 +163,7 @@ def geometry_extensions():
                      'mdtraj/geometry/src/dssp.cpp',
                      'mdtraj/geometry/src/_geometry.pyx'],
             include_dirs=['mdtraj/geometry/include',
-                          'mdtraj/geometry/src/kernels',
-                         ],
+                          'mdtraj/geometry/src/kernels'],
             define_macros=define_macros,
             extra_compile_args=compiler_args,
             libraries=extra_cpp_libraries,
@@ -179,8 +175,7 @@ def geometry_extensions():
                      "mdtraj/geometry/src/cephes/isnan.c",
                      "mdtraj/geometry/src/moments.c"],
             include_dirs=["mdtraj/geometry/include",
-                          "mdtraj/geometry/include/cephes",
-                         ],
+                          "mdtraj/geometry/include/cephes"],
             define_macros=define_macros,
             extra_compile_args=compiler_args),
         Extension('mdtraj.geometry.neighbors',
