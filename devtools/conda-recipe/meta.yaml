@@ -29,6 +29,9 @@ test:
     - nose
     - scripttest
     - networkx
+    - ipython-notebook
+    - ipywidgets
+    - matplotlib
     # Hack to install shiftx2 on travis
     {{ '- shiftx2' if environ.get('TRAVIS', False) == 'true' }}
 
