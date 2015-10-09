@@ -19,16 +19,17 @@ install:
   - export CXX=g++
 
 script:
-  - conda config --add channels https://conda.binstar.org/omnia
+  - conda config --add channels omnia
   - conda build devtools/conda-recipe
   - #cd devtools/c-tests/; make valgrind; cd -
 
 env:
   matrix:
     - python=2.7  CONDA_PY=27  CONDA_NPY=16
-    - python=3.3  CONDA_PY=33  CONDA_NPY=17
     - python=3.4  CONDA_PY=34  CONDA_NPY=18
     - python=3.4  CONDA_PY=34  CONDA_NPY=19
+    # python=3.5  CONDA_PY=35  CONDA_NPY=1.10
+    - python=3.5  CONDA_PY=35  CONDA_NPY=19
 
   global:
     # encrypted AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to push documentation to S3
@@ -38,5 +39,4 @@ env:
     - secure: "Fk6rmrCd4fnzkowd//FD9lI0bR3oNy1G2WjSke/1UiLtdZyCegiP0y0qcU5EIfEOoNk3NudM44RmPTHjqUMC7oS3tFI7SUBVUAyW34WOtTlOEaEBAzTDwfWhl6PLZNiXmZd75knjCyL6xJif4VwNT02VuMoR3ZchWG27ALpThwM="
 
 after_success:
-  - echo "after_success"
   - source devtools/travis-ci/after_sucess.sh
