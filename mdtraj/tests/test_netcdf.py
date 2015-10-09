@@ -25,13 +25,20 @@
 Tests for the AMBER netcdf reader/writer code
 """
 
-from mdtraj.formats import netcdf, NetCDFTrajectoryFile
+from mdtraj.formats import NetCDFTrajectoryFile
 import os, tempfile
 from nose.tools import assert_raises
 import numpy as np
 import mdtraj as md
 import subprocess
-from mdtraj.testing import get_fn, eq, raises
+from mdtraj.testing import get_fn, eq, raises, skipif
+
+from distutils.spawn import find_executable
+
+HAVE_CPPTRAJ = find_executable('cpptraj')
+CPPTRAJ_MSG = ("This test requires cpptraj from AmberTools to be installed "
+               "(http://ambermd.org)")
+
 
 
 fd, temp = tempfile.mkstemp(suffix='.nc')
@@ -233,7 +240,7 @@ def test_trajectory_save_load():
     eq(t.xyz, t2.xyz)
     eq(t.unitcell_lengths, t2.unitcell_lengths)
 
-
+@skipif(not HAVE_CPPTRAJ, CPPTRAJ_MSG)
 def test_cpptraj():
     trj0 = md.load(get_fn('frame0.dcd'), top=get_fn('frame0.pdb'))
     trj0.save(temp)
