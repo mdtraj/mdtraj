@@ -261,6 +261,12 @@ class build_ext(_build_ext):
         else:
             _build_ext.build_extension(self, ext)
 
+    def copy_extensions_to_source(self):
+        _extensions = self.extensions
+        self.extensions = [e for e in _extensions if not isinstance(e, StaticLibrary)]
+        super(build_ext, self).copy_extensions_to_source()
+        self.extensions = _extensions
+
     def build_static_extension(self, ext):
         from distutils import log
 
