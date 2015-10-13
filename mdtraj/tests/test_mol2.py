@@ -111,8 +111,8 @@ def test_mol2_dataframe():
 
 def test_mol2_dataframe_status():
     atoms, bonds = mol2.mol2_to_dataframes(get_fn('adp.mol2'))
-    eq(float(atoms['charge'][1]), 1.3672, decimal=4)
-    eq(atoms['status'][1], '****')
+    assert atoms['charge'][1] == 1.3672
+    assert atoms['status'][1] == '****'
 
 def test_mol2_warnings():
     trj = md.load_mol2(get_fn('lysozyme-ligand-tripos.mol2'))
