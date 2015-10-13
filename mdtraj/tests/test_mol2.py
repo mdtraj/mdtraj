@@ -109,6 +109,11 @@ def test_mol2_dataframe():
     eq(top.resName[2], "LIG")
     eq(float(top.charge[2]), -0.732600)
 
+def test_mol2_dataframe_status():
+    atoms, bonds = mol2.mol2_to_dataframes(get_fn('adp.mol2'))
+    eq(atoms['charge'][1], 1.3672)
+    eq(atoms['status'][1], '****')
+
 def test_mol2_warnings():
     trj = md.load_mol2(get_fn('lysozyme-ligand-tripos.mol2'))
 
