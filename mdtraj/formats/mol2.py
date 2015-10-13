@@ -168,9 +168,16 @@ def mol2_to_dataframes(filename):
     csv = StringIO()
     csv.writelines(data["@<TRIPOS>ATOM\n"][1:])
     csv.seek(0)
-    atoms_frame = pd.read_csv(csv, sep="\s*", engine='python',  header=None,
-        names=["serial", "name", "x", "y", "z",
-               "atype", "code", "resName", "charge", "status"])
+    # Filter column names based on how many are specified.
+    atoms_frame = pd.read_csv(csv, sep="\s*", engine='python',  header=None)
+    ncols = atoms_frame.shape[1]
+    names=["serial", "name", "x", "y", "z", "atype", "code", "resName", "charge", "status"]
+    names = names[0:ncols]
+    # Read again.
+    # I hate pandas.
+    csv.seek(0)
+    atoms_frame = pd.read_csv(csv, sep="\s*", engine='python',  header=None, names=names)
+    
     return atoms_frame, bonds_frame
 
 
