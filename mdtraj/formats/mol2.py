@@ -170,7 +170,7 @@ def mol2_to_dataframes(filename):
     csv.seek(0)
     atoms_frame = pd.read_csv(csv, sep="\s*", engine='python',  header=None,
         names=["serial", "name", "x", "y", "z",
-               "atype", "code", "resName", "charge"])
+               "atype", "code", "resName", "charge", "status"])
     return atoms_frame, bonds_frame
 
 
