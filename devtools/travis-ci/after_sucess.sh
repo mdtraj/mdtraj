@@ -20,7 +20,7 @@ if [[ "$python" == "2.7" ]]; then
     # -----------------------------------
 
     conda install --yes `conda build devtools/conda-recipe --output`
-    pip install numpydoc s3cmd msmb_theme
+    pip install numpydoc s3cmd msmb_theme==0.3.1
     conda install --yes `cat docs/requirements.txt | xargs`
 
     conda list -e
