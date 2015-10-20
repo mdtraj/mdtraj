@@ -23,13 +23,15 @@ and/or the user forums [discourse.mdtraj.org](http://discourse.mdtraj.org).
 
 MDTraj is research software. If you make use of MDTraj in scientific publications, please cite it. The BibTeX reference is
 ```
-@article {
+@article{McGibbon2015MDTraj,
 	author = {McGibbon, Robert T. and Beauchamp, Kyle A. and Schwantes, Christian R. and Wang, Lee-Ping and Hern{\'a}ndez, Carlos X. and Harrigan, Matthew P. and Lane, Thomas J. and Swails, Jason M. and Pande, Vijay S.},
-	title = {MDTraj: a modern, open library for the analysis of molecular dynamics trajectories},
-	year = {2014},
-	doi = {10.1101/008896},
-	publisher = {Cold Spring Harbor Labs Journals},
-	journal = {bioRxiv}
+    title = {MDTraj: A Modern Open Library for the Analysis of Molecular Dynamics Trajectories},
+	journal = {Biophysical Journal},
+    volume = {109},
+    number = {8},
+    pages = {1528 -- 1532},
+    year = {2015},
+	doi = {10.1016/j.bpj.2015.08.015}
 }
 ```
 
