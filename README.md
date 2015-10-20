@@ -19,7 +19,7 @@ For details, see the website at [mdtraj.org](http://mdtraj.org). To get involved
 take a look at the [github issue tracker](https://github.com/mdtraj/mdtraj/issues)
 and/or the user forums [discourse.mdtraj.org](http://discourse.mdtraj.org).
 
-####  Citation [![DOI for Citing MDTraj](https://img.shields.io/badge/DOI-10.1101%2F008896-blue.svg)](http://doi.org/10.1101/008896)
+####  Citation [![DOI for Citing MDTraj](https://img.shields.io/badge/DOI-10.1016%2Fj.bpj.2015.08.015-blue.svg)](http://doi.org/10.1016/j.bpj.2015.08.015)
 
 MDTraj is research software. If you make use of MDTraj in scientific publications, please cite it. The BibTeX reference is
 ```
