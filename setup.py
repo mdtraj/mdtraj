@@ -9,6 +9,7 @@ binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 """
 
 from __future__ import print_function, absolute_import
+__requires__=['setuptools>=18']
 
 DOCLINES = __doc__.split("\n")
 
@@ -194,8 +195,7 @@ extensions.extend(geometry_extensions())
 
 write_version_py(VERSION, ISRELEASED)
 
-try:
-    setup(name='mdtraj',
+setup(name='mdtraj',
       author='Robert McGibbon',
       author_email='rmcgibbo@gmail.com',
       description=DOCLINES[0],
@@ -227,11 +227,4 @@ try:
           ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
            'mdinspect = mdtraj.scripts.mdinspect:entry_point']},
 )
-except pkg_resources.VersionConflict as vc:
-    if len(vc.args) == 2 and hasattr(vc.args[0], 'key') and vc.args[0].key == 'setuptools':
-        print('Your setuptools version %s is too old, please upgrade it.'
-              ' Eg. via "pip install setuptools -U"'
-              ' Detailed instructions can be found here: https://pypi.python.org/pypi/setuptools' %
-              vc.args[0].version)
-        sys.exit(1)
-    raise
+
