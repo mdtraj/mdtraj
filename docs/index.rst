@@ -110,7 +110,7 @@ MDTraj is research software. If you make use of MDTraj in scientific publication
 
     @article{McGibbon2015MDTraj,
         title = {MDTraj: A Modern Open Library for the Analysis of Molecular Dynamics Trajectories},
-        author = {McGibbon, Robert T. and Beauchamp, Kyle A. and Schwantes, Christian R. and Wang, Lee-Ping and Hern{\'a}ndez, Carlos X. and Harrigan, Matthew P. and Lane, Thomas J. and Swails, Jason M. and Pande, Vijay S.},
+        author = {McGibbon, Robert T. and Beauchamp, Kyle A. and Harrigan, Matthew P. and Klein, Christoph and Swails, Jason M. and Hern{\'a}ndez, Carlos X.  and Schwantes, Christian R. and Wang, Lee-Ping and Lane, Thomas J. and Pande, Vijay S.},
         journal = {Biophysical Journal},
         volume = {109},
         number = {8},
