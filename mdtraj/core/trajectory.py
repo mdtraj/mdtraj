@@ -1674,6 +1674,7 @@ class Trajectory(object):
         Smoothen a trajectory using a zero-delay Buttersworth filter.
         This code is copied from the scipy cookbook, with sytlistic improvements.
         http://www.scipy.org/Cookbook/FiltFilt
+        
         Parameters
         ----------
         width : float
@@ -1690,6 +1691,7 @@ class Trajectory(object):
         inplace : bool, default=False
             The return value is either ``self``, or the new trajectory,
             depending on the value of ``inplace``.
+
         Returns
         -------
         traj : md.Trajectory
