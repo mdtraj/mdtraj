@@ -208,7 +208,7 @@ def _dssp(float[:, :, ::1] xyz,
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_residues = ca_indices.shape[0]
-    cdef char[:] secondary = bytearray(n_frames*n_residues)
+    cdef char[::1] secondary = bytearray(n_frames*n_residues)
     dssp(&xyz[0,0,0], &nco_indices[0,0], &ca_indices[0],
          &is_proline[0], &chain_ids[0], n_frames, n_atoms,
          n_residues, &secondary[0])

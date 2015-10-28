@@ -101,8 +101,12 @@ def test_5():
 
 
 def test_6():
+    print('1')
     t = md.load(get_fn('alanine-dipeptide-explicit.pdb'))
+    print('2')
     a = md.compute_dssp(t, simplified=True)
+    print('3')
     protein_residues = np.array([set(a.name for a in r.atoms).issuperset(('C', 'N', 'O', 'CA')) for r in t.topology.residues])
     assert np.unique(a[:, protein_residues]) == "C"
     assert np.unique(a[:, np.logical_not(protein_residues)]) == 'NA'
+    print('4')
