@@ -20,6 +20,7 @@ install:
 
 script:
   - conda config --add channels omnia
+  - conda update -y conda-build
   - conda build devtools/conda-recipe
   - #cd devtools/c-tests/; make valgrind; cd -
 
@@ -28,7 +29,7 @@ env:
     - python=2.7  CONDA_PY=27  CONDA_NPY=16
     - python=2.7  CONDA_PY=27  CONDA_NPY=19
     - python=3.4  CONDA_PY=34  CONDA_NPY=19
-    # python=3.5  CONDA_PY=35  CONDA_NPY=1.10
+    - python=3.5  CONDA_PY=35  CONDA_NPY=1.10
 
   global:
     # encrypted AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to push documentation to S3
