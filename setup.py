@@ -13,7 +13,7 @@ __requires__=['setuptools>=18']
 
 DOCLINES = __doc__.split("\n")
 
-import sys
+import sys, os
 import pkg_resources
 from setuptools import setup, Extension, find_packages
 
