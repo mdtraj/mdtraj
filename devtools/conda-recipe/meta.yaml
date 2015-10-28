@@ -20,7 +20,7 @@ requirements:
     - numpy x.x
     - pandas
     - scipy
-    - pytables  [not win]
+    - pytables
 
 test:
   requires:

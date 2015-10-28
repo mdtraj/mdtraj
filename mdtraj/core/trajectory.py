@@ -118,11 +118,14 @@ if PY3:
         return hash_value
 else:
     def _hash_numpy_array(x):
-        x.flags.writeable = False
-        hash_value = hash(x.shape)
-        hash_value ^= hash(x.strides)
-        hash_value ^= hash(x.data)
-        x.flags.writeable = True
+        writeable = x.flags.writeable
+        try:
+            x.flags.writeable = False
+            hash_value = hash(x.shape)
+            hash_value ^= hash(x.strides)
+            hash_value ^= hash(x.data)
+        finally:
+            x.flags.writeable = writeable
         return hash_value
 
 

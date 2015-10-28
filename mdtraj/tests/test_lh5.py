@@ -27,6 +27,7 @@ import sys
 import mdtraj as md
 from mdtraj.formats import LH5TrajectoryFile
 from mdtraj.testing import get_fn, eq, raises, skipif, assert_raises
+
 on_win = (sys.platform == 'win32')
 on_py3 = (sys.version_info >= (3, 0))
 

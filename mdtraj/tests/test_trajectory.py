@@ -31,8 +31,10 @@ import mdtraj.utils
 from mdtraj.utils import six
 from mdtraj.utils.six.moves import xrange
 from mdtraj.core import element
+
 on_win = (sys.platform == 'win32')
 on_py3 = (sys.version_info >= (3, 0))
+
 
 fn = get_fn('traj.h5')
 nat = get_fn('native.pdb')
@@ -513,7 +515,9 @@ def test_iterload():
 
 def test_iterload_skip():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
-             'frame0.dcd', 'frame0.binpos', 'frame0.xyz', 'frame0.lammpstrj']
+             'frame0.dcd', 'frame0.binpos', 'frame0.xyz', 'frame0.lammpstrj',
+             'frame0.dcd', 'frame0.binpos', 'legacy_msmbuilder_trj0.lh5',
+             'frame0.xyz', 'frame0.lammpstrj']
     if not (on_win and on_py3):
         files.append('legacy_msmbuilder_trj0.lh5')
 

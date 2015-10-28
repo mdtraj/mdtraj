@@ -5,8 +5,8 @@ import json
 import shutil
 import subprocess
 import tempfile
+from setuptools import Extension
 from distutils.dep_util import newer_group
-from distutils.core import Extension
 from distutils.errors import DistutilsExecError, DistutilsSetupError
 from distutils.ccompiler import new_compiler
 from distutils.sysconfig import customize_compiler, get_config_vars
@@ -260,6 +260,12 @@ class build_ext(_build_ext):
             self.build_static_extension(ext)
         else:
             _build_ext.build_extension(self, ext)
+
+    def copy_extensions_to_source(self):
+        _extensions = self.extensions
+        self.extensions = [e for e in _extensions if not isinstance(e, StaticLibrary)]
+        _build_ext.copy_extensions_to_source(self)
+        self.extensions = _extensions
 
     def build_static_extension(self, ext):
         from distutils import log
