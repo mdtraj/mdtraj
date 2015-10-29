@@ -81,7 +81,7 @@ def test_3():
         yield f
 
 
-@skipif(True, 'TODO')
+#@skipif(True, 'TODO')
 def test_4():
     t = md.load_pdb(get_fn('1am7_protein.pdb'))
     a = md.compute_dssp(t, simplified=True)
@@ -91,7 +91,7 @@ def test_4():
     assert list(np.unique(a[0])) == ['C', 'E', 'H']
 
 
-@skipif(True, 'TODO')
+#@skipif(True, 'TODO')
 def test_5():
     t = md.load(get_fn('4waters.pdb'))
     a = md.compute_dssp(t, simplified=True)
