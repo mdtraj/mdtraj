@@ -565,3 +565,14 @@ def test_chunk0_iterload():
         pass
 
     eq(trj0.n_frames, trj.n_frames)
+
+def test_smooth():
+    f1 = 'frame0.h5'
+    f2 = 'frame0-smooth.h5'
+
+    trj0 = md.load(get_fn(f1))
+    trj0.superpose(trj0[0], frame=0)
+    
+    trj = md.load(get_fn(f2))
+
+    eq(trj0.smooth(11).xyz, trj.xyz)
