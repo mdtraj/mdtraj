@@ -84,7 +84,9 @@ def compute_dssp(traj, simplified=True):
         = _prep_kabsch_sander_arrays(traj)
     chain_ids = np.array([r.chain.index for r in traj.top.residues], dtype=np.int32)
 
+    print('calling _dssp...')
     value = _geometry._dssp(xyz, nco_indices, ca_indices, proline_indices, chain_ids)
+    print("calling _dssp... done")
     if simplified:
         value = value.translate(SIMPLIFIED_CODE_TRANSLATION)
 
