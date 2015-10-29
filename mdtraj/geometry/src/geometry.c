@@ -80,8 +80,8 @@
  * TODO: Add SSE-vectorization to the nearest neighbor search here
  */
 int dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_matrix,
-                       float* distance_out, float* displacement_out, int n_frames,
-                       int n_atoms, int n_pairs) {
+                       float* distance_out, float* displacement_out, const int n_frames,
+                       const int n_atoms, const int n_pairs) {
     float *displacements; // We need to get these regardless
     float *distances;     // We need to get these regardless
     int f, i, j, k, n, dist_start, disp_start, dist_idx, disp_idx;
@@ -190,10 +190,10 @@ static float ks_donor_acceptor(const float* xyz, const float* hcoords,
   float energy;
   __m128 r_n, r_h, r_c, r_o, r_ho, r_nc, r_hc, r_no, d2_honchcno;
   __m128 coupling, recip_sqrt, one;
-  one = _mm_set1_ps(1.0);
+  one = _mm_set1_ps(1.0f);
 
   /* 332 (kcal*A/mol) * 0.42 * 0.2 * (1nm / 10 A) */
-  coupling = _mm_setr_ps(-2.7888, -2.7888, 2.7888, 2.7888);
+  coupling = _mm_setr_ps(-2.7888f, -2.7888f, 2.7888f, 2.7888f);
   r_n = load_float3(xyz + 3*nco_indices[3*donor]);
   r_h = load_float3(hcoords + 3*donor);
   r_c = load_float3(xyz + 3*nco_indices[3*acceptor + 1]);
@@ -329,7 +329,7 @@ int kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indice
   int i, ri, rj;
   static float HBOND_ENERGY_CUTOFF = -0.5;
   __m128 ri_ca, rj_ca, r12;
-  __m128 MINIMAL_CA_DISTANCE2 = _mm_set1_ps(0.81);
+  __m128 MINIMAL_CA_DISTANCE2 = _mm_set1_ps(0.81f);
   float* hcoords = (float*) malloc(n_residues*3 * sizeof(float));
   int* skip = (int*) calloc(n_residues, sizeof(int));
   if (hcoords == NULL || skip == NULL) {
