@@ -102,7 +102,7 @@ def test_5():
     np.testing.assert_array_equal(b, ref)
 
 
-@skipif(True, 'TODO')
+#@skipif(True, 'TODO')
 def test_6():
     t = md.load(get_fn('alanine-dipeptide-explicit.pdb'))
     a = md.compute_dssp(t, simplified=True)
