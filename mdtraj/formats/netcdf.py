@@ -450,17 +450,17 @@ class NetCDFTrajectoryFile(object):
             self._handle.createDimension('label', 5)
 
             # Define variables to store unit cell data
-            self._handle.createVariable('cell_spatial', 'c', ('cell_spatial',))
-            cell_angles = self._handle.createVariable('cell_angular', 'c', ('cell_spatial', 'label'))
             cell_lengths = self._handle.createVariable('cell_lengths', 'd', ('frame', 'cell_spatial'))
             setattr(cell_lengths, 'units', 'angstrom')
             cell_angles = self._handle.createVariable('cell_angles', 'd', ('frame', 'cell_angular'))
             setattr(cell_angles, 'units', 'degree')
 
-            self._handle.variables['cell_spatial'][0] = 'x'
-            self._handle.variables['cell_spatial'][1] = 'y'
-            self._handle.variables['cell_spatial'][2] = 'z'
+            self._handle.createVariable('cell_spatial', 'c', ('cell_spatial',))
+            self._handle.variables['cell_spatial'][0] = 'a'
+            self._handle.variables['cell_spatial'][1] = 'b'
+            self._handle.variables['cell_spatial'][2] = 'c'
 
+            self._handle.createVariable('cell_angular', 'c', ('cell_spatial', 'label'))
             self._handle.variables['cell_angular'][0] = 'alpha'
             self._handle.variables['cell_angular'][1] = 'beta '
             self._handle.variables['cell_angular'][2] = 'gamma'
@@ -473,6 +473,11 @@ class NetCDFTrajectoryFile(object):
         if set_coordinates:
             frame_coordinates = self._handle.createVariable('coordinates', 'f', ('frame', 'atom', 'spatial'))
             setattr(frame_coordinates, 'units', 'angstrom')
+
+            self._handle.createVariable('spatial', 'c', ('spatial',))
+            self._handle.variables['spatial'][0] = 'x'
+            self._handle.variables['spatial'][1] = 'y'
+            self._handle.variables['spatial'][2] = 'z'
 
     def seek(self, offset, whence=0):
         """Move to a new file position

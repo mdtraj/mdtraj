@@ -12,24 +12,22 @@ if [[ "$TRAVIS_BRANCH" != "master" ]]; then
 fi
 
 
-if [[ "2.7 3.3 3.4" =~ "$python" ]]; then
-    binstar -t $BINSTAR_TOKEN  upload --force -u omnia -p mdtraj-dev $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
+anaconda -t $ANACONDA_TOKEN  upload --force -u omnia -p mdtraj-dev $HOME/miniconda/conda-bld/linux-64/mdtraj-dev-*
+
+
+if [[ "$python" == "2.7" ]]; then
+    # Create the docs and push them to S3
+    # -----------------------------------
+
+    conda install --yes `conda build devtools/conda-recipe --output`
+    pip install numpydoc s3cmd msmb_theme==0.3.1
+    conda install --yes `cat docs/requirements.txt | xargs`
+
+    conda list -e
+
+    (cd docs && make html)
+    python devtools/travis-ci/push-docs-to-s3.py
+    python devtools/travis-ci/update-versions.py
 fi
 
-if [[ "$python" != "2.7" ]]; then
-    echo "No deploy on PYTHON_VERSION=${python}"; exit 0
-fi
 
-
-# Create the docs and push them to S3
-# -----------------------------------
-
-conda install --yes `conda build devtools/conda-recipe --output`
-pip install numpydoc s3cmd msmb_theme
-conda install --yes `cat docs/requirements.txt | xargs`
-
-conda list -e
-
-(cd docs && make html)
-python devtools/travis-ci/push-docs-to-s3.py
-python devtools/travis-ci/update-versions.py

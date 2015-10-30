@@ -25,8 +25,8 @@ import tempfile, os
 import numpy as np
 import mdtraj as md
 from mdtraj.formats import MDCRDTrajectoryFile, mdcrd
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
-TestDocstrings = DocStringFormatTester(mdcrd, error_on_none=True)
+from mdtraj.testing import get_fn, eq, raises
+
 
 fd, temp = tempfile.mkstemp(suffix='.mdcrd')
 def teardown_module(module):

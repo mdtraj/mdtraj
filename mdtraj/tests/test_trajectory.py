@@ -24,7 +24,7 @@
 import tempfile, os
 import functools
 from mdtraj.utils import enter_temp_directory
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, assert_raises, SkipTest
+from mdtraj.testing import get_fn, eq, assert_raises, SkipTest
 import numpy as np
 import mdtraj as md
 import mdtraj.utils
@@ -32,8 +32,6 @@ from mdtraj.utils import six
 from mdtraj.utils.six.moves import xrange
 from mdtraj.core import element
 
-import mdtraj.core.trajectory
-TestDocstrings = DocStringFormatTester(mdtraj.core.trajectory, error_on_none=True)
 
 fn = get_fn('traj.h5')
 nat = get_fn('native.pdb')
@@ -502,6 +500,26 @@ def test_iterload():
             yield test
 
 
+def test_iterload_skip():
+    files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
+             'frame0.dcd', 'frame0.binpos', 'legacy_msmbuilder_trj0.lh5',
+             'frame0.xyz', 'frame0.lammpstrj']
+
+    err_msg = "failed for file %s with chunksize %i and skip %i"
+
+    for file in files:
+        for cs in [0, 1, 11, 100]:
+            for skip in [0, 1, 20, 101]:
+                print("testing file %s with skip=%i" % (file, skip))
+                t_ref = md.load(get_fn(file), top=get_fn('native.pdb'))
+                t = functools.reduce(lambda a, b: a.join(b),
+                                     md.iterload(get_fn(file), skip=skip,
+                                                 top=get_fn('native.pdb'), chunk=cs))
+                eq(t_ref.xyz[skip:], t.xyz, err_msg=err_msg % (file, cs, skip))
+                eq(t_ref.time[skip:], t.time, err_msg=err_msg % (file, cs, skip))
+                eq(t_ref.topology, t.topology, err_msg=err_msg % (file, cs, skip))
+
+
 def test_save_load():
     # this cycles all the known formats you can save to, and then tries
     # to reload, using just a single-frame file.
@@ -566,13 +584,29 @@ def test_chunk0_iterload():
 
     eq(trj0.n_frames, trj.n_frames)
 
+
+def test_hashing():
+    frames = [frame for frame in
+              md.iterload(get_fn('frame0.xtc'), chunk=1,
+                          top=get_fn('native.pdb'))]
+    hashes = [hash(frame) for frame in frames]
+    # check all frames have a unique hash value
+    assert len(hashes) == len(set(hashes))
+
+    # change topology and ensure hash changes too
+    top = frames[0].topology
+    top.add_bond(top.atom(0), top.atom(1))
+
+    last_frame_hash = hash(frames[0])
+    assert last_frame_hash != hashes[-1]
+
 def test_smooth():
     f1 = 'frame0.h5'
     f2 = 'frame0-smooth.h5'
 
     trj0 = md.load(get_fn(f1))
     trj0.superpose(trj0[0], frame=0)
-    
+
     trj = md.load(get_fn(f2))
 
     eq(trj0.smooth(11).xyz, trj.xyz)

@@ -5,19 +5,21 @@ protein visualization) hooked in. Changes to the class on the python side
 propagate here and modify `this.model.attributes`, and re-call `update`.
 */
 
-require([
-    "jquery",
-    "widgets/js/widget",
-    "widgets/js/manager",
-    "iview",
-    "exporter",
-    "filesaver",
-    "contextmenu",
-    // only loaded, not used
-    'jqueryui',
-    ],
 
-function($, widget, manager, iview) {
+define([
+    "jquery",
+    "nbextensions/widgets/widgets/js/widget",
+    "iview",
+    "contextmenu",
+    "three",
+    "filesaver",
+    // only loaded, not used
+    "objexporter",
+    "jqueryui",
+
+], function ($, widget, iview, context, THREE) {
+    "use strict";
+
     var HEIGHT = 300,
         WIDTH = 300,
         HEIGHT_PX = '300px',
@@ -33,23 +35,24 @@ function($, widget, manager, iview) {
                     resize: function(event, ui) {
                         iv.renderer.setSize(ui.size.width, ui.size.height);
                     },
-		    stop : function(event, ui) {
-			iv.render()
-		    },
+                    stop : function(event, ui) {
+                        iv.render()
+                    },
                 });
+
             container.append(canvas);
             this.setElement(container);
             this.iv = iv;
             this.setupContextMenu(iv);
             this.setupFullScreen(canvas, container);
             this.update();
-            var options = this.getOptions() 
+            var options = this.getOptions()
             this.iv.zoomInto(options);
-
 
             // debugging
             window.iv = this.iv;
             window.model = this.model;
+            console.log('Render!');
         },
 
         update : function () {
@@ -65,14 +68,14 @@ function($, widget, manager, iview) {
             this.iv.loadTopology(this.model.attributes._topology);
             this.iv.loadCoordinates(this.model.attributes._frameData.coordinates);
             this.iv.loadAtomAttributes(this.model.attributes._frameData.secondaryStructure);
-           
-            var options = this.getOptions() 
+
+            var options = this.getOptions()
             this.iv.rebuildScene(options)
             this.iv.render()
 
             return TrajectoryView.__super__.update.apply(this);
         },
-        
+
         setupContextMenu : function(iv) {
             context.init({preventDoubleContext: true});
             var menu = [{header: 'Export as...'},
@@ -82,12 +85,12 @@ function($, widget, manager, iview) {
                         var data = atob( dataURL.substring( "data:image/png;base64,".length ) ),
                                 asArray = new Uint8Array(data.length);
                         for( var i = 0, len = data.length; i < len; ++i ) {
-                                asArray[i] = data.charCodeAt(i);    
+                                asArray[i] = data.charCodeAt(i);
                         }
                         var blob = new Blob( [ asArray.buffer ], {type: "image/png"} );
                         saveAs(blob,"mol.png")
                     }
-                }, { 
+                }, {
                     text: 'OBJ',
                     action: function () {
                        var obj = '';
@@ -100,7 +103,7 @@ function($, widget, manager, iview) {
                     }
                 }];
             context.attach('canvas',menu)
-            
+
         },
 
         getOptions : function() {
@@ -113,7 +116,7 @@ function($, widget, manager, iview) {
                 'secondaryStructure': this.model.attributes.secondaryStructure,
                 'surface': this.model.attributes.surfaceRepresentation
              };
-        
+
              return options
         },
 
@@ -135,30 +138,30 @@ function($, widget, manager, iview) {
                         iv.renderer.setSize(minHW, minHW);
                         iv.render();
                     }
-		}
+                }
             });
 
             if ('webkitCancelFullScreen' in document) {
-		document.addEventListener("webkitfullscreenchange", function() {
+                document.addEventListener("webkitfullscreenchange", function() {
                     if (!document.webkitIsFullScreen) {
-			container.css({width: HEIGHT_PX, height: WIDTH_PX});
-			iv.renderer.setSize(WIDTH, HEIGHT);
-			iv.render();
+                        container.css({width: HEIGHT_PX, height: WIDTH_PX});
+                        iv.renderer.setSize(WIDTH, HEIGHT);
+                        iv.render();
                     }
-		});
-	    } else if ('mozCancelFullScreen' in document) {
-		document.addEventListener("mozfullscreenchange", function() {
+                });
+            } else if ('mozCancelFullScreen' in document) {
+                document.addEventListener("mozfullscreenchange", function() {
                     if (!document.mozIsFullScreen) {
-			iv.renderer.setSize(WIDTH, HEIGHT);
-			container.css({width: HEIGHT_PX, height: WIDTH_PX});
-			iv.render();
-
+                        iv.renderer.setSize(WIDTH, HEIGHT);
+                        container.css({width: HEIGHT_PX, height: WIDTH_PX});
+                        iv.render();
                     }
-		});
-	    }
+		        });
+            }
         },
     });
 
-
-    manager.WidgetManager.register_widget_view('TrajectoryView', TrajectoryView);
+    return {
+        'TrajectoryView': TrajectoryView,
+    };
 });

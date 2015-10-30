@@ -28,7 +28,6 @@
 from __future__ import print_function, division
 import os
 import warnings
-import functools
 from copy import deepcopy
 from collections import Iterable
 import numpy as np
@@ -42,7 +41,6 @@ from mdtraj.formats import NetCDFTrajectoryFile
 from mdtraj.formats import LH5TrajectoryFile
 from mdtraj.formats import PDBTrajectoryFile
 from mdtraj.formats import MDCRDTrajectoryFile
-from mdtraj.formats import ArcTrajectoryFile
 from mdtraj.formats import DTRTrajectoryFile
 from mdtraj.formats import LAMMPSTrajectoryFile
 from mdtraj.formats import XYZTrajectoryFile
@@ -111,6 +109,24 @@ def _assert_files_or_dirs_exist(names):
         if not (os.path.exists(fn) and \
                         (os.path.isfile(fn) or os.path.isdir(fn))):
             raise IOError('No such file: %s' % fn)
+
+if PY3:
+    def _hash_numpy_array(x):
+        hash_value = hash(x.shape)
+        hash_value ^= hash(x.strides)
+        hash_value ^= hash(x.data.tobytes())
+        return hash_value
+else:
+    def _hash_numpy_array(x):
+        writeable = x.flags.writeable
+        try:
+            x.flags.writeable = False
+            hash_value = hash(x.shape)
+            hash_value ^= hash(x.strides)
+            hash_value ^= hash(x.data)
+        finally:
+            x.flags.writeable = writeable
+        return hash_value
 
 
 def load_topology(filename):
@@ -431,6 +447,8 @@ def iterload(filename, chunk=100, **kwargs):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+    skip : int, default=0
+        Skip first n frames.
 
     See Also
     --------
@@ -450,6 +468,8 @@ def iterload(filename, chunk=100, **kwargs):
     stride = kwargs.pop('stride', 1)
     atom_indices = cast_indices(kwargs.pop('atom_indices', None))
     top = kwargs.pop('top', None)
+    skip = kwargs.pop('skip', 0)
+
     extension = _get_extension(filename)
     if extension not in _TOPOLOGY_EXTS:
         topology = _parse_topology(top)
@@ -460,19 +480,23 @@ def iterload(filename, chunk=100, **kwargs):
     if chunk == 0:
         # If chunk was 0 then we want to avoid filetype-specific code
         # in case of undefined behavior in various file parsers.
-        yield load(filename, **kwargs)
-
+        # TODO: this will first apply stride, then skip!
+        if extension not in _TOPOLOGY_EXTS:
+            kwargs['top'] = top
+        yield load(filename, **kwargs)[skip:]
     elif extension in ('.pdb', '.pdb.gz'):
         # the PDBTrajectortFile class doesn't follow the standard API. Fixing it
         # to support iterload could be worthwhile, but requires a deep refactor.
         t = load(filename, stride=stride, atom_indices=atom_indices)
         for i in range(0, len(t), chunk):
-            yield  t[i:i+chunk]
+            yield t[i:i+chunk]
 
     else:
         with (lambda x: open(x, n_atoms=topology.n_atoms)
               if extension in ('.crd', '.mdcrd')
               else open(filename))(filename) as f:
+            if skip > 0:
+                f.seek(skip)
             while True:
                 if extension not in _TOPOLOGY_EXTS:
                     traj = f.read_as_traj(topology, n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
@@ -844,6 +868,18 @@ class Trajectory(object):
     def __repr__(self):
         return "<%s at 0x%02x>" % (self._string_summary_basic(), id(self))
 
+    def __hash__(self):
+        hash_value = hash(self.top)
+        # combine with hashes of arrays
+        hash_value ^= _hash_numpy_array(self._xyz)
+        hash_value ^= _hash_numpy_array(self.time)
+        hash_value ^= _hash_numpy_array(self._unitcell_lengths)
+        hash_value ^= _hash_numpy_array(self._unitcell_angles)
+        return hash_value
+
+    def __eq__(self, other):
+        return self.__hash__() == other.__hash__()
+
     # def describe(self):
     #     """Diagnostic summary statistics on the trajectory"""
     #     # What information do we want to display?
@@ -858,7 +894,8 @@ class Trajectory(object):
     #     # min/max/mean/std.dev./percentiles of each column in a DataFrame.
     #     raise NotImplementedError()
 
-    def superpose(self, reference, frame=0, atom_indices=None, parallel=True):
+    def superpose(self, reference, frame=0, atom_indices=None,
+                  ref_atom_indices=None, parallel=True):
         """Superpose each conformation in this trajectory upon a reference
 
         Parameters
@@ -870,6 +907,10 @@ class Trajectory(object):
         atom_indices : array_like, or None
             The indices of the atoms to superpose. If not
             supplied, all atoms will be used.
+        ref_atom_indices : array_like, or None
+            Use these atoms on the reference structure. If not supplied,
+            the same atom indices will be used for this trajectory and the
+            reference one.
         parallel : bool
             Use OpenMP to run the superposition in parallel over multiple cores
 
@@ -877,13 +918,22 @@ class Trajectory(object):
         -------
         self
         """
+
         if atom_indices is None:
             atom_indices = slice(None)
+
+        if ref_atom_indices is None:
+            ref_atom_indices = atom_indices
+
+        if not isinstance(ref_atom_indices, slice) and (
+            len(ref_atom_indices) != len(atom_indices)):
+            raise ValueError("Number of atoms must be consistent!")
 
         n_frames = self.xyz.shape[0]
         self_align_xyz = np.asarray(self.xyz[:, atom_indices, :], order='c')
         self_displace_xyz = np.asarray(self.xyz, order='c')
-        ref_align_xyz = np.array(reference.xyz[frame, atom_indices, :], copy=True, order='c').reshape(1, -1, 3)
+        ref_align_xyz = np.array(reference.xyz[frame, ref_atom_indices, :],
+                                 copy=True, order='c').reshape(1, -1, 3)
 
         offset = np.mean(self_align_xyz, axis=1, dtype=np.float64).reshape(n_frames, 1, 3)
         self_align_xyz -= offset

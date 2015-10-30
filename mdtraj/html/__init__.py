@@ -1,6 +1,3 @@
-try:
-    from .install import enable_notebook
-    from .trajectory_widget import TrajectoryView, TrajectorySliderView
-    from .linked_heatmap import TrajectoryHeatmap
-except ImportError:
-    pass
+from .install import enable_notebook
+from .trajectory_widget import TrajectoryView, TrajectorySliderView
+from .linked_heatmap import TrajectoryHeatmap

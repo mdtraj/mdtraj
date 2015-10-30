@@ -20,9 +20,8 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-import numpy as np
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif
+from mdtraj.testing import get_fn, eq, skipif
 from mdtraj.formats import mol2
 from distutils.spawn import find_executable
 from mdtraj.utils import enter_temp_directory
@@ -32,7 +31,6 @@ import os
 import numpy as np
 import scipy.sparse
 import subprocess
-doc = DocStringFormatTester(mol2)
 
 
 def test_load_mol2():
@@ -109,6 +107,11 @@ def test_mol2_dataframe():
     eq(top.atype[2], "n3")
     eq(top.resName[2], "LIG")
     eq(float(top.charge[2]), -0.732600)
+
+def test_mol2_dataframe_status():
+    atoms, bonds = mol2.mol2_to_dataframes(get_fn('adp.mol2'))
+    assert atoms['charge'][1] == 1.3672
+    assert atoms['status'][1] == '****'
 
 def test_mol2_warnings():
     trj = md.load_mol2(get_fn('lysozyme-ligand-tripos.mol2'))

@@ -27,8 +27,8 @@ import numpy as np
 
 import mdtraj as md
 from mdtraj.formats import LAMMPSTrajectoryFile, lammpstrj
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
-TestDocstrings = DocStringFormatTester(lammpstrj, error_on_none=True)
+from mdtraj.testing import get_fn, eq
+
 
 fd, temp = tempfile.mkstemp(suffix='.lammpstrj')
 def teardown_module(module):

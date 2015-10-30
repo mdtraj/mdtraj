@@ -11,15 +11,13 @@ requirements:
   build:
     - python
     - cython
-    - numpy
+    - numpy x.x
     - setuptools
 
   run:
     - python
     - setuptools
-    - argparse # [py26]
-    - ordereddict # [py26]
-    - numpy
+    - numpy x.x
     - pandas
     - scipy
     - pytables
@@ -29,16 +27,13 @@ test:
     - nose
     - scripttest
     - networkx
+    - ipython-notebook
+    - ipywidgets
+    - matplotlib
     # Hack to install shiftx2 on travis
     {{ '- shiftx2' if environ.get('TRAVIS', False) == 'true' }}
 
-    # Hack for py26. Get pip for extra dependencies that arent in
-    # conda packages.
-    - pip # [py26]
   commands:
-    # HACK for py26. We need the importlib backport, but it's not in
-    # the main conda repos and I don't feel like adding it to omnia.
-    - pip install importlib # [py26]
     - nosetests mdtraj -v
 
 about:

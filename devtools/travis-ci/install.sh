@@ -1,7 +1,3 @@
-sudo apt-get update
-sudo apt-get install -qq -y g++ gfortran valgrind csh
-sudo apt-get install -qq -y g++-multilib gcc-multilib
-
 MINICONDA=Miniconda-latest-Linux-x86_64.sh
 MINICONDA_MD5=$(curl -s http://repo.continuum.io/miniconda/ | grep -A3 $MINICONDA | sed -n '4p' | sed -n 's/ *<td>\(.*\)<\/td> */\1/p')
 wget http://repo.continuum.io/miniconda/$MINICONDA
@@ -13,7 +9,7 @@ bash $MINICONDA -b
 
 
 export PATH=$HOME/miniconda/bin:$PATH
-conda install --yes conda-build jinja2 binstar pip
+conda install --yes conda-build jinja2 anaconda-client pip
 conda config --add channels http://conda.binstar.org/colli_r
 conda config --add channels http://conda.binstar.org/rmcgibbo
 conda config --add channels http://conda.binstar.org/omnia

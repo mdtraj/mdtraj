@@ -33,9 +33,7 @@ import numpy as np
 
 from mdtraj import io
 from mdtraj.formats import DCDTrajectoryFile, BINPOSTrajectoryFile, binpos
-from mdtraj.testing import get_fn, eq, DocStringFormatTester
-
-TestDocstrings = DocStringFormatTester(binpos, error_on_none=True)
+from mdtraj.testing import get_fn, eq
 
 
 # frame0.binpos was generated from frame0.dcd using

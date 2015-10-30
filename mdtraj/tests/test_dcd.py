@@ -36,9 +36,8 @@ import numpy as np
 from mdtraj.formats import DCDTrajectoryFile
 from mdtraj import io
 from nose.tools import assert_raises
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
+from mdtraj.testing import get_fn, eq, raises
 
-#TestDocstrings = DocStringFormatTester(dcd, error_on_none=True)
 
 fn_dcd = get_fn('frame0.dcd')
 pdb = get_fn('native.pdb')

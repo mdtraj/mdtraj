@@ -25,21 +25,31 @@
 Tests for the AMBER netcdf reader/writer code
 """
 
-from mdtraj.formats import netcdf, NetCDFTrajectoryFile
+from mdtraj.formats import NetCDFTrajectoryFile
 import os, tempfile
 from nose.tools import assert_raises
 import numpy as np
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, raises
+import subprocess
+from mdtraj.testing import get_fn, eq, raises, skipif
 
-TestDocstrings = DocStringFormatTester(netcdf, error_on_none=True)
+from distutils.spawn import find_executable
+
+HAVE_CPPTRAJ = find_executable('cpptraj')
+CPPTRAJ_MSG = ("This test requires cpptraj from AmberTools to be installed "
+               "(http://ambermd.org)")
+
+
 
 fd, temp = tempfile.mkstemp(suffix='.nc')
+fd2, temp2 = tempfile.mkstemp(suffix='.nc')
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
     os.close(fd)
+    os.close(fd2)
     os.unlink(temp)
+    os.unlink(temp2)
 
 
 def test_read_after_close():
@@ -229,3 +239,31 @@ def test_trajectory_save_load():
 
     eq(t.xyz, t2.xyz)
     eq(t.unitcell_lengths, t2.unitcell_lengths)
+
+@skipif(not HAVE_CPPTRAJ, CPPTRAJ_MSG)
+def test_cpptraj():
+    trj0 = md.load(get_fn('frame0.dcd'), top=get_fn('frame0.pdb'))
+    trj0.save(temp)
+
+    top = get_fn("frame0.pdb")
+    subprocess.check_call([
+        'cpptraj',
+        '-p', top,
+        '-y', temp,
+        '-x', temp2
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    trj1 = md.load(temp, top=top)
+    trj2 = md.load(temp2, top=top)
+
+    np.testing.assert_array_almost_equal(trj0.xyz, trj2.xyz)
+    np.testing.assert_array_almost_equal(trj1.xyz, trj2.xyz)
+    np.testing.assert_array_almost_equal(trj0.unitcell_vectors,
+                                         trj2.unitcell_vectors)
+    np.testing.assert_array_almost_equal(trj1.unitcell_vectors,
+                                         trj2.unitcell_vectors)
+
+    # cpptraj doesn't preserve time information (?)
+    np.testing.assert_array_almost_equal(trj0.time, trj1.time)
+    # np.testing.assert_array_almost_equal(trj0.time, trj2.time)
+    # np.testing.assert_array_almost_equal(trj1.time, trj2.time)

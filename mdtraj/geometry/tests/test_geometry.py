@@ -27,12 +27,7 @@ import numpy as np
 
 import mdtraj as md
 import mdtraj.geometry
-from mdtraj.testing import get_fn, eq, DocStringFormatTester, skipif, raises
-
-RgDocStringTester = DocStringFormatTester(mdtraj.geometry.rg)
-DistanceDocStringTester = DocStringFormatTester(mdtraj.geometry.distance)
-DihedralDocStringTester = DocStringFormatTester(mdtraj.geometry.dihedral)
-AngleDocStringTester = DocStringFormatTester(mdtraj.geometry.angle)
+from mdtraj.testing import get_fn, eq, skipif, raises
 
 RUN_PERFORMANCE_TESTS = False
 
