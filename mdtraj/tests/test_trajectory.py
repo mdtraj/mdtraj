@@ -504,7 +504,7 @@ def test_iterload_skip():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
              'frame0.dcd', 'frame0.binpos',
              'frame0.xyz', 'frame0.lammpstrj']
-    if not (on_win and on_py3):
+    if not (os.name == 'nt' and six.PY3):
         files.append('legacy_msmbuilder_trj0.lh5')
 
     err_msg = "failed for file %s with chunksize %i and skip %i"
