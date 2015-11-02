@@ -20,7 +20,6 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-import numpy as np
 import mdtraj as md
 from mdtraj.testing import get_fn, eq, skipif
 from mdtraj.formats import mol2

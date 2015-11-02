@@ -4,15 +4,30 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.5 (in development)
----------------------
+v1.5 (Development)
+------------------
 
-v1.4.2 (June 9, 2014)
+- Improvements to build process (#955, #954, #941, #943, #942, #934)
+- Faster histogramming method in RDF calculations when supported by numpy (#952)
+- Improved support for mol2 reading (#945)
+- Support for IPython/Jupyter 4 (#935)
+- Improved support for Amber NetCDF writing (#939)
+- Fix handling of periodic boundaries for distance calculations for general triclinic unit cells (#930)
+- Support different reference and query indices for superposition and RMSD calculation (#915)
+- Fix dcd reading bug under Windows (#905)
+- Trajectories have a hash implementation (#898)
+- Fixes for Hoomd (#900, #885)
+- Support files (``devtools/``, ``setup.py``, ``.travis.yml``) are BSD licensed (#891, #893)
+- Fixes for Lammpstrj (#861)
+- Support for one letter amino acid codes (#871)
+
+
+v1.4.2 (June 9, 2015)
 ---------------------
 - BUGFIX: Fix pytables inadvertently being moved to a required dependency
 
 
-v1.4 (June 8, 2014)
+v1.4 (June 8, 2015)
 -------------------
 Version 1.4 is our best release yet! It contains many new features, performance improvements, and bug fixes.
 
@@ -49,8 +64,6 @@ Authors
 * Jason Swails
 * Lee-Ping Wang
 * Andrea Zonca +
-
-
 
 
 v1.3 (February 25, 2015)
