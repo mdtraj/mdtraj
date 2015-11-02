@@ -52,7 +52,8 @@ def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb():
         tar.extractall()
         tar.close()
 
-        database = pickle.load(open("./v0.3/database.pickle"))
+        with open("./v0.3/database.pickle", 'rb') as f:
+            database = pickle.load(f)
 
         for key in database:
             gaff_filename = "./v0.3/mol2files_gaff/%s.mol2" % key

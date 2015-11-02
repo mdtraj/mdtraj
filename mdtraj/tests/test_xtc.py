@@ -29,7 +29,8 @@ directory is not a python package (it has no __init__.py) and is thus tests
 there are not discovered by nose
 """
 from __future__ import print_function
-import os, tempfile
+import os
+import tempfile
 import numpy as np
 from mdtraj import io
 from nose.tools import assert_raises
@@ -45,7 +46,6 @@ def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by nose"""
     os.unlink(temp)
-
 
 def test_read_chunk1():
     with XTCTrajectoryFile(fn_xtc, 'r', chunk_size_multiplier=0.5) as f:
