@@ -34,6 +34,7 @@ does significant integration testing of the XXXTrajectoryFile modules as well.
 ##############################################################################
 
 import os
+import sys
 import tempfile
 import shutil
 import numpy as np
@@ -42,6 +43,9 @@ import mdtraj as md
 from mdtraj import element
 from mdtraj.utils import import_
 from mdtraj.testing import skipif, get_fn, eq, slow
+on_win = (sys.platform == 'win32')
+on_py3 = (sys.version_info >= (3, 0))
+
 
 try:
     scripttest = import_('scripttest')
@@ -139,7 +143,9 @@ def test_mdconvert_0():
 
     fns = ['traj.xtc', 'traj.dcd', 'traj.binpos', 'traj.trr', 'traj.nc',
            'traj.pdb', 'traj.h5', 'traj.lh5', 'traj.netcdf']
-    # fns = ['traj.lh5', 'traj.netcdf']
+    if on_win and on_py3:
+        fns.remove('traj.lh5')
+        fns.remove('traj.h5')
 
     for fn in fns:
         path = os.path.join(staging_dir, fn)

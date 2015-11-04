@@ -30,11 +30,12 @@ test:
     - ipython-notebook
     - ipywidgets
     - matplotlib
+    - pandas
     # Hack to install shiftx2 on travis
     {{ '- shiftx2' if environ.get('TRAVIS', False) == 'true' }}
 
   commands:
-    - nosetests mdtraj -v
+    - nosetests mdtraj -v -s
 
 about:
   home: http://mdtraj.org
