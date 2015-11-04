@@ -166,7 +166,7 @@ def _construct_atom_dict(topology):
     return atom_dict
 
 
-def _atom_sequence(traj, atom_names, residue_offsets=None):
+def _atom_sequence(top, atom_names, residue_offsets=None):
     """Find sequences of atom indices corresponding to desired atoms.
 
     This method can be used to find sets of atoms corresponding to specific
@@ -175,8 +175,10 @@ def _atom_sequence(traj, atom_names, residue_offsets=None):
 
     Parameters
     ----------
-    traj : Trajectory
-        Trajectory for which you want dihedrals.
+    top : Topology or Trajectory (deprecated)
+        Topology for which you want dihedrals. If you pass an object
+        with a "topology" attribute, we will use that topology, but this
+        behavior is deprecated.
     atom_names : np.ndarray, shape=(4), dtype='str'
         Array of atoms to in each dihedral angle.
     residue_offsets : np.ndarray, optional, shape=(4), dtype='int'
@@ -186,7 +188,7 @@ def _atom_sequence(traj, atom_names, residue_offsets=None):
 
     Notes
     -----
-    In additional finding dihedral atoms, this function could be used to
+    In addition to finding dihedral atoms, this function could be used to
     match *general* sequences of atoms and residue_id offsets.
 
     Examples
@@ -204,23 +206,28 @@ def _atom_sequence(traj, atom_names, residue_offsets=None):
         residue_offsets = parse_offsets(atom_names)
     atom_names = _strip_offsets(atom_names)
 
-    atom_dict = _construct_atom_dict(traj.top)
+    if hasattr(top, "topology"):
+        top = top.topology
+    atom_dict = _construct_atom_dict(top)
 
     atom_indices = []
     found_residue_ids = []
     # py3k criticial list(zip(, not just zip(, since we iterate multiple
     # times through it
     atoms_and_offsets = list(zip(atom_names, residue_offsets))
-    for chain in traj.top.chains:
+    for chain in top.chains:
         cid = chain.index
         for residue in chain.residues:
             rid = residue.index
             # Check that desired residue_IDs are in dict
-            if all([rid + offset in atom_dict[cid] for offset in residue_offsets]):
+            if all([rid + offset in atom_dict[cid]
+                    for offset in residue_offsets]):
                 # Check that we find all atom names in dict
-                if all([atom in atom_dict[cid][rid + offset] for atom, offset in atoms_and_offsets]):
+                if all([atom in atom_dict[cid][rid + offset]
+                        for atom, offset in atoms_and_offsets]):
                     # Lookup desired atom indices and and add to list.
-                    atom_indices.append([atom_dict[cid][rid + offset][atom] for atom, offset in atoms_and_offsets])
+                    atom_indices.append([atom_dict[cid][rid + offset][atom]
+                                         for atom, offset in atoms_and_offsets])
                     found_residue_ids.append(rid)
 
     atom_indices = np.array(atom_indices)
@@ -313,20 +320,20 @@ CHI4_ATOMS = [["CG", "CD", "NE", "CZ"],
               ["CG", "CD", "CE", "NZ"]]
 
 
-def indices_phi(traj):
-    return _atom_sequence(traj, PHI_ATOMS)[1]
+def indices_phi(top):
+    return _atom_sequence(top, PHI_ATOMS)[1]
 
 
-def indices_psi(traj):
-    return _atom_sequence(traj, PSI_ATOMS)[1]
+def indices_psi(top):
+    return _atom_sequence(top, PSI_ATOMS)[1]
 
 
-def indices_omega(traj):
-    return _atom_sequence(traj, OMEGA_ATOMS)[1]
+def indices_omega(top):
+    return _atom_sequence(top, OMEGA_ATOMS)[1]
 
 
-def _indices_chi(traj, chi_atoms):
-    rids, indices = zip(*(_atom_sequence(traj, atoms) for atoms in chi_atoms))
+def _indices_chi(top, chi_atoms):
+    rids, indices = zip(*(_atom_sequence(top, atoms) for atoms in chi_atoms))
     id_sort = np.argsort(np.concatenate(rids))
     if not any(x.size for x in indices):
         return np.empty(shape=(0, 4), dtype=np.int)
@@ -334,20 +341,20 @@ def _indices_chi(traj, chi_atoms):
     return indices
 
 
-def indices_chi1(traj):
-    return _indices_chi(traj, CHI1_ATOMS)
+def indices_chi1(top):
+    return _indices_chi(top, CHI1_ATOMS)
 
 
-def indices_chi2(traj):
-    return _indices_chi(traj, CHI2_ATOMS)
+def indices_chi2(top):
+    return _indices_chi(top, CHI2_ATOMS)
 
 
-def indices_chi3(traj):
-    return _indices_chi(traj, CHI3_ATOMS)
+def indices_chi3(top):
+    return _indices_chi(top, CHI3_ATOMS)
 
 
-def indices_chi4(traj):
-    return _indices_chi(traj, CHI4_ATOMS)
+def indices_chi4(top):
+    return _indices_chi(top, CHI4_ATOMS)
 
 
 def compute_phi(traj, periodic=True, opt=True):
@@ -372,7 +379,7 @@ def compute_phi(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = indices_phi(traj)
+    rid, indices = indices_phi(traj.topology)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
@@ -400,7 +407,7 @@ def compute_psi(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = indices_psi(traj)
+    rid, indices = indices_psi(traj.topology)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
@@ -429,7 +436,7 @@ def compute_chi1(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    indices = indices_chi1(traj)
+    indices = indices_chi1(traj.topology)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     all_chi = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
@@ -460,7 +467,7 @@ def compute_chi2(traj, periodic=True, opt=True):
         the frames.
     """
 
-    indices = indices_chi2(traj)
+    indices = indices_chi2(traj.topology)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     all_chi = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
@@ -491,7 +498,7 @@ def compute_chi3(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    indices = indices_chi3(traj)
+    indices = indices_chi3(traj.topology)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     all_chi = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
@@ -522,7 +529,7 @@ def compute_chi4(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    indices = indices_chi3(traj)
+    indices = indices_chi3(traj.topology)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     all_chi = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
@@ -551,7 +558,7 @@ def compute_omega(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = indices_omega(traj)
+    rid, indices = indices_omega(traj.topology)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
