@@ -324,14 +324,50 @@ CHI4_ATOMS = [["CG", "CD", "NE", "CZ"],
 
 
 def indices_phi(top):
+    """Calculate indices for phi dihedral angles
+
+    Parameters
+    ----------
+    top : Topology
+        Topology for which you want dihedral indices
+
+    Returns
+    -------
+    indices : np.ndarray, shape=(n_phi, 4)
+        The indices of the atoms involved in each of ths phi angles
+    """
     return _atom_sequence(top, PHI_ATOMS)[1]
 
 
 def indices_psi(top):
+    """Calculate indices for psi dihedral angles
+
+    Parameters
+    ----------
+    top : Topology
+        Topology for which you want dihedral indices
+
+    Returns
+    -------
+    indices : np.ndarray, shape=(n_psi, 4)
+        The indices of the atoms involved in each of ths psi angles
+    """
     return _atom_sequence(top, PSI_ATOMS)[1]
 
 
 def indices_omega(top):
+    """Calculate indices for omega dihedral angles
+
+    Parameters
+    ----------
+    top : Topology
+        Topology for which you want dihedral indices
+
+    Returns
+    -------
+    indices : np.ndarray, shape=(n_omega, 4)
+        The indices of the atoms involved in each of ths omega angles
+    """
     return _atom_sequence(top, OMEGA_ATOMS)[1]
 
 
@@ -345,18 +381,66 @@ def _indices_chi(top, chi_atoms):
 
 
 def indices_chi1(top):
+    """Calculate indices for chi1 dihedral angles
+
+    Parameters
+    ----------
+    top : Topology
+        Topology for which you want dihedral indices
+
+    Returns
+    -------
+    indices : np.ndarray, shape=(n_chi1, 4)
+        The indices of the atoms involved in each of ths chi1 angles
+    """
     return _indices_chi(top, CHI1_ATOMS)
 
 
 def indices_chi2(top):
+    """Calculate indices for chi2 dihedral angles
+
+    Parameters
+    ----------
+    top : Topology
+        Topology for which you want dihedral indices
+
+    Returns
+    -------
+    indices : np.ndarray, shape=(n_chi2, 4)
+        The indices of the atoms involved in each of ths chi2 angles
+    """
     return _indices_chi(top, CHI2_ATOMS)
 
 
 def indices_chi3(top):
+    """Calculate indices for chi3 dihedral angles
+
+    Parameters
+    ----------
+    top : Topology
+        Topology for which you want dihedral indices
+
+    Returns
+    -------
+    indices : np.ndarray, shape=(n_chi3, 4)
+        The indices of the atoms involved in each of ths chi3 angles
+    """
     return _indices_chi(top, CHI3_ATOMS)
 
 
 def indices_chi4(top):
+    """Calculate indices for chi4 dihedral angles
+
+    Parameters
+    ----------
+    top : Topology
+        Topology for which you want dihedral indices
+
+    Returns
+    -------
+    indices : np.ndarray, shape=(n_chi4, 4)
+        The indices of the atoms involved in each of ths chi4 angles
+    """
     return _indices_chi(top, CHI4_ATOMS)
 
 
@@ -382,7 +466,7 @@ def compute_phi(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = indices_phi(traj.topology)
+    indices = indices_phi(traj.topology)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
@@ -410,7 +494,7 @@ def compute_psi(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = indices_psi(traj.topology)
+    indices = indices_psi(traj.topology)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
@@ -561,7 +645,7 @@ def compute_omega(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    rid, indices = indices_omega(traj.topology)
+    indices = indices_omega(traj.topology)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
