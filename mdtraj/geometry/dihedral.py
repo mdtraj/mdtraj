@@ -207,6 +207,9 @@ def _atom_sequence(top, atom_names, residue_offsets=None):
     atom_names = _strip_offsets(atom_names)
 
     if hasattr(top, "topology"):
+        warnings.warn("Passing a Trajectory object to _atom_sequence is"
+                      "deprecated. Please pass a Topology object",
+                      DeprecationWarning)
         top = top.topology
     atom_dict = _construct_atom_dict(top)
 
