@@ -618,3 +618,25 @@ def test_hashing():
 
     last_frame_hash = hash(frames[0])
     assert last_frame_hash != hashes[-1]
+
+def test_smooth():
+
+    from scipy.signal import lfilter, lfilter_zi, filtfilt, butter
+
+    pad = 5
+    order = 3
+    b, a = butter(order, 2.0 / pad)
+    zi = lfilter_zi(b, a)
+
+    signal = np.sin(np.arange(100))
+    padded = np.r_[signal[pad - 1: 0: -1], signal, signal[-1: -pad: -1]]
+
+
+    z, _ = lfilter(b, a, padded, zi=zi*padded[0])
+    z2, _ = lfilter(b, a, z, zi=zi*z[0])
+
+
+    output = filtfilt(b, a, padded)
+    test = np.loadtxt(get_fn('smooth.txt'))
+
+    eq(output, test)

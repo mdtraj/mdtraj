@@ -1719,6 +1719,83 @@ class Trajectory(object):
 
         return self.atom_slice(atom_indices, inplace = inplace)
 
+    def smooth(self, width, order=3, atom_indices=None, inplace=False):
+        """Smoothen a trajectory using a zero-delay Buttersworth filter. Please
+        note that for optimal results the trajectory should be properly aligned
+        prior to smoothing (see `md.Trajectory.superpose`).
+
+        Parameters
+        ----------
+        width : int
+            This acts very similar to the window size in a moving average
+            smoother. In this implementation, the frequency of the low-pass
+            filter is taken to be two over this width, so it's like
+            "half the period" of the sinusiod where the filter starts
+            to kick in. Must be an integer greater than one.
+        order : int, optional, default=3
+            The order of the filter. A small odd number is recommended. Higher
+            order filters cutoff more quickly, but have worse numerical
+            properties.
+        atom_indices : array-like, dtype=int, shape=(n_atoms), default=None
+            List of indices of atoms to retain in the new trajectory.
+            Default is set to `None`, which applies smoothing to all atoms.
+        inplace : bool, default=False
+            The return value is either ``self``, or the new trajectory,
+            depending on the value of ``inplace``.
+
+        Returns
+        -------
+        traj : md.Trajectory
+            The return value is either ``self``, or the new smoothed trajectory,
+            depending on the value of ``inplace``.
+
+        References
+        ----------
+        .. [1] "FiltFilt". Scipy Cookbook. SciPy. <http://www.scipy.org/Cookbook/FiltFilt>.
+        """
+        from scipy.signal import lfilter, lfilter_zi, filtfilt, butter
+
+        if width < 2.0 or not isinstance(width, int):
+            raise ValueError('width must be an integer greater than 1.')
+        if not atom_indices:
+            atom_indices = range(self.n_atoms)
+
+        # find nearest odd integer
+        pad = int(np.ceil((width + 1)/2)*2 - 1)
+
+        # Use lfilter_zi to choose the initial condition of the filter.
+        b, a = butter(order, 2.0 / width)
+        zi = lfilter_zi(b, a)
+
+        xyz = self.xyz.copy()
+
+        for i in atom_indices:
+            for j in range(3):
+
+                signal = xyz[:, i, j]
+                padded = np.r_[signal[pad - 1: 0: -1], signal, signal[-1: -pad: -1]]
+
+                # Apply the filter to the width.
+                z, _ = lfilter(b, a, padded, zi=zi*padded[0])
+
+                # Apply the filter again, to have a result filtered at an order
+                # the same as filtfilt.
+                z2, _ = lfilter(b, a, z, zi=zi*z[0])
+
+                # Use filtfilt to apply the filter.
+                output = filtfilt(b, a, padded)
+
+                xyz[:, i, j] = output[(pad-1): -(pad-1)]
+
+
+        if not inplace:
+            return Trajectory(xyz=xyz, topology=self.topology,
+                              time=self.time,
+                              unitcell_lengths=self.unitcell_lengths,
+                              unitcell_angles=self.unitcell_angles)
+
+        self.xyz = xyz
+
     def _check_valid_unitcell(self):
         """Do some sanity checking on self.unitcell_lengths and self.unitcell_angles
         """
