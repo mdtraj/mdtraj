@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: Peter Eastman, Robert McGibbon
-# Contributors: Carlos Hernandez
+# Contributors: Carlos Hernandez, Jason Swails
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -57,6 +57,7 @@ from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.core import element as elem
 from mdtraj.utils import six
 from mdtraj import version
+import warnings
 if six.PY3:
     from urllib.request import urlopen
     from urllib.parse import urlparse
@@ -162,10 +163,26 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
     elif stride is not None:
         time *= stride
 
-    return Trajectory(xyz=coords, time=time, topology=topology,
+    traj = Trajectory(xyz=coords, time=time, topology=topology,
                       unitcell_lengths=unitcell_lengths,
                       unitcell_angles=unitcell_angles)
 
+    if traj.unitcell_lengths is not None:
+        # Only one CRYST1 record is allowed, so only do this check for the first
+        # frame. Some RCSB PDB files do not *really* have a unit cell, but still
+        # have a CRYST1 record with a dummy definition. These boxes are usually
+        # tiny (e.g., 1 A^3), so check that the particle density in the unit
+        # cell is not absurdly high. Standard water density is ~55 M, which
+        # yields a particle density ~100 atoms per cubic nm. It should be safe
+        # to say that no particle density should exceed 10x that.
+        particle_density = traj.top.n_atoms / traj.unitcell_volumes[0]
+        if particle_density > 1000:
+            warnings.warn('Unlikely unit cell vectors detected in PDB file likely '
+                          'resulting from a dummy CRYST1 record. Discarding unit '
+                          'cell vectors.')
+            traj._unitcell_lengths = traj._unitcell_angles = None
+
+    return traj
 
 @_FormatRegistry.register_fileobject('.pdb')
 @_FormatRegistry.register_fileobject('.pdb.gz')
