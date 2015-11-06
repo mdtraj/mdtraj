@@ -44,7 +44,7 @@ def test_multichain_psf():
         top = psf.load_psf(get_fn('3pqr_memb.psf'))
     except ValueError:
         # side-note: why does get_fn raise ValueError and not IOError?
-        raise SkipTest("This test requires a large file:"
+        raise SkipTest("This test requires a large file: "
                        "3pqr_memb.psf. It's available from GitHub")
     # Check that each segment was turned into a chain
     eq(top.n_chains, 11)
