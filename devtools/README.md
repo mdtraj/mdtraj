@@ -10,18 +10,20 @@ How to do a release
 - Update the version number in `setup.py`, change `ISRELEASED` to `True`
 - Update the version number in `devtools/conda-recipe/meta.yaml`
 - Commit to master, and [tag](https://github.com/mdtraj/mdtraj/releases) the
-  release on github
+  release on github.
+- Run `git clean -fdx` to clean the source directory.
 - To push the source to PyPI, use `python setup.py sdist --formats=gztar,zip upload`.
-  **Before pushing to PyPI, run `git clean -x -f -d` to make sure that nothing
-  else gets added to the source release by accident**
-- Update `meta.yaml` in the mdtraj/mdtraj-conda-binaries repository. Commit
-  to master. Travis and Appveyor will build binary conda packages.
-- After tagging the release, make a NEW commit that changes `ISRELEASED` back
-  to `False` in `setup.py`
-
+  **Make sure you ran `git clean`**
+- File a PR against `meta.yaml` in the omnia-md/conda-recipes repository using the
+  new version string and new PyPI tar.gz. Travis and Appveyor will build binary conda packages.
+- Update the version number in `setup.py` to `1.(x+1).0.dev0` per PEP440;
+  change `ISRELEASED` to `False`.
+- Update the version number in `devtools/conda-recipe/meta.yaml` similarly.
+- Add a new section in `docs/whatsnew.rst` and mark it "(Development)".
+- Commit to master.
 
 It's important that the version which is tagged on github for the release be
-the one with the ISRELEASED flag in setup.py set to true.
+the (only) one with the ISRELEASED flag in setup.py set to true.
 
 
 Docs Building & Hosting
