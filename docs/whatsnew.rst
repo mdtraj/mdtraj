@@ -4,6 +4,10 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.6 (Development)
+------------------
+
+
 v1.5 (November 6, 2015)
 -----------------------
 
