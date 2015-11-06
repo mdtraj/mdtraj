@@ -22,7 +22,7 @@
 
 import os
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, skipif
+from mdtraj.testing import get_fn, eq, skipif, SkipTest
 from mdtraj.formats import psf
 from mdtraj.utils import enter_temp_directory
 from distutils.spawn import find_executable
@@ -40,7 +40,12 @@ def test_load_psf():
     eq(top2, ref_top)
 
 def test_multichain_psf():
-    top = psf.load_psf(get_fn('3pqr_memb.psf'))
+    try:
+        top = psf.load_psf(get_fn('3pqr_memb.psf'))
+    except ValueError:
+        # side-note: why does get_fn raise ValueError and not IOError?
+        raise SkipTest("This test requires a large file:"
+                       "3pqr_memb.psf. It's available from GitHub")
     # Check that each segment was turned into a chain
     eq(top.n_chains, 11)
     chain_lengths = [5162, 185, 97, 28, 24, 24, 45, 35742, 72822, 75, 73]
