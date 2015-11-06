@@ -616,7 +616,7 @@ def compute_chi4(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    indices = indices_chi3(traj.topology)
+    indices = indices_chi4(traj.topology)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     all_chi = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
