@@ -7,7 +7,6 @@ These are new features and improvements of note in each release.
 v1.5 (Development)
 ------------------
 
-- Improvements to build process (#955, #954, #941, #943, #942, #934)
 - Faster histogramming method in RDF calculations when supported by numpy (#952)
 - Improved support for mol2 reading (#945)
 - Support for IPython/Jupyter 4 (#935)
@@ -20,6 +19,9 @@ v1.5 (Development)
 - Support files (``devtools/``, ``setup.py``, ``.travis.yml``) are BSD licensed (#891, #893)
 - Fixes for Lammpstrj (#861)
 - Support for one letter amino acid codes (#871)
+- Trajectory smoothing using a Buttersworth filter (#962)
+- New functions for computing dihedral indices from a topology (#972)
+- Improvements to build process (#955, #954, #941, #943, #942, #934)
 
 
 v1.4.2 (June 9, 2015)
