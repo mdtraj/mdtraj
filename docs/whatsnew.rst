@@ -4,8 +4,12 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.5 (Development)
-------------------
+v1.5 (November 6, 2015)
+-----------------------
+
+We're pleased to announce the 1.5 release of MDTraj. It contains new
+features, improvements, and bug fixes. Highlights of the changes for this
+version include:
 
 - Faster histogramming method in RDF calculations when supported by numpy (#952)
 - Improved support for mol2 reading (#945)
