@@ -153,6 +153,7 @@ ATOM      3    C ACE     1       4.900  14.300   9.600  1.00  0.00
 ATOM      4    D ACE     1       5.600  14.200   7.900  1.00  0.00
     '''
     script = '''
+from pymol import cmd
 with open('output.txt', 'w') as f:
     f.write('%f' % cmd.get_dihedral('1/A', '1/B', '1/C', '1/D'))
 '''
