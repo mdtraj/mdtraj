@@ -521,7 +521,7 @@ class PDBTrajectoryFile(object):
 
         # Add bonds based on CONECT records.
         connectBonds = []
-        for connect in pdb.models[0].connects:
+        for connect in pdb.models[-1].connects:
             i = connect[0]
             for j in connect[1:]:
                 if i in atomByNumber and j in atomByNumber:
