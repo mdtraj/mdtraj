@@ -52,6 +52,7 @@ import mdtraj.core.element as elem
 from mdtraj.core.topology import Topology
 from mdtraj.utils import in_units_of, ensure_type, import_, cast_indices
 from mdtraj.utils.six import string_types
+from mdtraj.utils.external.decorator import decorate
 from mdtraj.formats.registry import _FormatRegistry
 
 __all__ = ['HDF5TrajectoryFile', 'load_hdf5']
@@ -80,16 +81,13 @@ def ensure_mode(*m):
             print('i must be in write mode!')
     """
     def inner(f):
-        @wraps(f)
         def wrapper(*args, **kwargs):
             # args[0] is self on the method
             if args[0].mode in m:
                 return f(*args, **kwargs)
             raise ValueError('This operation is only available when a file '
                              'is open in mode="%s".' % args[0].mode)
-        # hack for to set argpsec for our custon numpydoc sphinx extension
-        setattr(wrapper, '__argspec__', inspect.getargspec(f))
-        return wrapper
+        return decorate(f, wrapper)
     return inner
 
 
