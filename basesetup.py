@@ -29,13 +29,20 @@ class CompilerDetection(object):
     _DONT_REMOVE_ME = get_config_vars()
 
     def __init__(self, disable_openmp):
+        self.disable_openmp = disable_openmp
+        self._is_initialized = False
+
+    def initialize(self):
+        if self._is_initialized:
+            return
+
         cc = new_compiler()
         customize_compiler(cc)
 
         self.msvc = cc.compiler_type == 'msvc'
         self._print_compiler_version(cc)
 
-        if disable_openmp:
+        if self.disable_openmp:
             self.openmp_enabled = False
         else:
             self.openmp_enabled, openmp_needs_gomp = self._detect_openmp()
@@ -69,7 +76,8 @@ class CompilerDetection(object):
         else:
             self.compiler_args_opt = ['-O3', '-funroll-loops']
         print()
-
+        self._is_initialized = True
+        
     def _print_compiler_version(self, cc):
         print("C compiler:")
         try:
