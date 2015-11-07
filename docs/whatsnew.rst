@@ -8,6 +8,15 @@ v1.6 (Development)
 ------------------
 
 
+v1.5.1 (November 6, 2015)
+-------------------------
+
+- A recent change (merged Nov 5) caused ``compute_chi4`` to compute chi3
+  angles (#981).
+- Revert changes in setup.py that resulted in a more confusing error when
+  cython is not installed at build-time (#985).
+
+
 v1.5 (November 6, 2015)
 -----------------------
 
@@ -145,7 +154,7 @@ for contributions.
 
 
 v0.9.0 (June 10, 2014)
------------------------
+----------------------
 - Brand new ``nmr`` library that includes transparent python interfaces to
   SHIFTX2, PPM and SPARTA+ for chemical shifts, as a library for scalar
   couplings (J) using the Karplus relation.
