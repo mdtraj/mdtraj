@@ -24,11 +24,8 @@ The next step is to add the release to the python package index.
   `twine upload [path to sdist files]`. This requires being registered on PyPI as a owner or maintainer
   of the project.
 
-Conda
------
-- File a PR against [omnia-md/conda-recipes](https://github.com/omnia-md/conda-recipes) that
-  updates the recipe's version string and source URL to pull the new sdist from PyPI. Travis
-  and Appveyor will then build binary conda packages.
+Immediately after creating the sdist
+------------------------------------
 - Update the version number in `setup.py` to `1.(x+1).0.dev0` per PEP440;
   change `ISRELEASED` to `False`.
 - Update the version number in `devtools/conda-recipe/meta.yaml` similarly.
@@ -37,6 +34,12 @@ Conda
 
 It's important that the version which is tagged on github for the release be
 the (only) one with the ISRELEASED flag in setup.py set to true.
+
+Conda
+-----
+- File a PR against [omnia-md/conda-recipes](https://github.com/omnia-md/conda-recipes) that
+  updates the recipe's version string and source URL to pull the new sdist from PyPI. Travis
+  and Appveyor will then build binary conda packages.
 
 Wheels
 ------
