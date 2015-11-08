@@ -105,10 +105,12 @@ def test_2EQQ_0():
 
 def test_1vii_solvated_with_ligand():
     traj = load(get_fn("1vii_sustiva_water.pdb"))
-    eq(len(list(traj.top.bonds)), 5124)
+    eq(len(list(traj.top.bonds)), 5156)
+    eq(len([bond for bond in traj.top.bonds if bond[0].residue.name == 'LIG']), 32)
     traj.save(temp)
     traj = load(temp)
-    eq(len(list(traj.top.bonds)), 5124)
+    eq(len(list(traj.top.bonds)), 5156)
+    eq(len([bond for bond in traj.top.bonds if bond[0].residue.name == 'LIG']), 32)
 
 @raises(ValueError)
 def test_write_large():
