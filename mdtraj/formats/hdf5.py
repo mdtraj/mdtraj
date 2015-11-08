@@ -56,43 +56,6 @@ from mdtraj.formats.registry import _FormatRegistry
 
 __all__ = ['HDF5TrajectoryFile', 'load_hdf5']
 
-##############################################################################
-# Utilities
-##############################################################################
-
-
-def ensure_mode(*m):
-    """This is a little decorator that is used inside HDF5Trajectory
-    to validate that the file is open in the correct mode before doing
-    a a method
-
-    Parameters
-    ----------
-    m : str or list
-        One or more of ['w', 'r', 'a'], giving the allowable modes
-        for the method
-
-    Examples
-    --------
-    class HDF5Trajectory:
-        @ensure_mode('w')
-        def method_that_is_only_allowed_to_be_called_in_write_mode(self):
-            print('i must be in write mode!')
-    """
-    def inner(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            # args[0] is self on the method
-            if args[0].mode in m:
-                return f(*args, **kwargs)
-            raise ValueError('This operation is only available when a file '
-                             'is open in mode="%s".' % args[0].mode)
-        # hack for to set argpsec for our custon numpydoc sphinx extension
-        setattr(wrapper, '__argspec__', inspect.getargspec(f))
-        return wrapper
-    return inner
-
-
 Frames = namedtuple('Frames', ['coordinates', 'time', 'cell_lengths', 'cell_angles',
                                'velocities', 'kineticEnergy', 'potentialEnergy',
                                'temperature', 'alchemicalLambda'])
@@ -246,13 +209,13 @@ class HDF5TrajectoryFile(object):
             self._needs_initialization = False
 
     @property
-    @ensure_mode('r', 'a')
     def root(self):
         """Direct access to the root group of the underlying Tables HDF5 file handle.
 
         This can be used for random or specific access to the underlying arrays
         on disk
         """
+        _check_mode(self.mode, ('r', 'a'))
         return self._handle.root
 
     #####################################################
@@ -267,9 +230,9 @@ class HDF5TrajectoryFile(object):
         return None
 
     @title.setter
-    @ensure_mode('w', 'a')
     def title(self, value):
         """Set the user-defined title for the data represented in the file"""
+        _check_mode(self.mode, ('w', 'a'))
         self._handle.root._v_attrs.title = str(value)
 
     #####################################################
@@ -284,9 +247,9 @@ class HDF5TrajectoryFile(object):
         return None
 
     @application.setter
-    @ensure_mode('w', 'a')
     def application(self, value):
         "Set the suite of programs that created the file"
+        _check_mode(self.mode, ('w', 'a'))
         self._handle.root._v_attrs.application = str(value)
 
     #####################################################
@@ -335,7 +298,6 @@ class HDF5TrajectoryFile(object):
         return topology
 
     @topology.setter
-    @ensure_mode('w', 'a')
     def topology(self, topology_object):
         """Set the topology in the file
 
@@ -344,6 +306,7 @@ class HDF5TrajectoryFile(object):
         topology_object : mdtraj.Topology
             A topology object
         """
+        _check_mode(self.mode, ('w', 'a'))
 
         # we want to be able to handle the simtk.openmm Topology object
         # here too, so if it's not an mdtraj topology we'll just guess
@@ -423,9 +386,9 @@ class HDF5TrajectoryFile(object):
         return None
 
     @randomState.setter
-    @ensure_mode('w', 'a')
     def randomState(self, value):
         "Set the state of the creators internal random number generator at the start of the simulation"
+        _check_mode(self.mode, ('w', 'a'))
         self._handle.root._v_attrs.randomState = str(value)
 
     #####################################################
@@ -440,9 +403,9 @@ class HDF5TrajectoryFile(object):
         return None
 
     @forcefield.setter
-    @ensure_mode('w', 'a')
     def forcefield(self, value):
         "Set the description of the hamiltonian used. A short, human readable string, like AMBER99sbildn."
+        _check_mode(self.mode, ('w', 'a'))
         self._handle.root._v_attrs.forcefield = str(value)
 
     #####################################################
@@ -457,9 +420,9 @@ class HDF5TrajectoryFile(object):
         return None
 
     @reference.setter
-    @ensure_mode('w', 'a')
     def reference(self, value):
         "Set a published reference that documents the program or parameters used to generate the data"
+        _check_mode(self.mode, ('w', 'a'))
         self._handle.root._v_attrs.reference = str(value)
 
     #####################################################
@@ -483,7 +446,6 @@ class HDF5TrajectoryFile(object):
         return None
 
     @constraints.setter
-    @ensure_mode('w', 'a')
     def constraints(self, value):
         """Set the constraints applied to bond lengths
 
@@ -494,6 +456,8 @@ class HDF5TrajectoryFile(object):
             the index of the two atoms involved in the constraints and the
             distance of the constraint.
         """
+        _check_mode(self.mode, ('w', 'a'))
+
         dtype = np.dtype([
                 ('atom1', np.int32),
                 ('atom2', np.int32),
@@ -514,7 +478,6 @@ class HDF5TrajectoryFile(object):
     # read/write methods for file-like behavior
     #####################################################
 
-    @ensure_mode('r')
     def read_as_traj(self, n_frames=None, stride=None, atom_indices=None):
         """Read a trajectory from the HDF5 file
 
@@ -539,6 +502,7 @@ class HDF5TrajectoryFile(object):
         trajectory : Trajectory
             A trajectory object containing the loaded portion of the file.
         """
+        _check_mode(self.mode, ('r',))
 
         from mdtraj.core.trajectory import Trajectory
         topology = self.topology
@@ -557,7 +521,6 @@ class HDF5TrajectoryFile(object):
                           unitcell_lengths=data.cell_lengths,
                           unitcell_angles=data.cell_angles)
 
-    @ensure_mode('r')
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read one or more frames of data from the file
 
@@ -594,6 +557,8 @@ class HDF5TrajectoryFile(object):
             n units of "nanometers", "picoseconds", "kelvin", "degrees" and
             "kilojoules_per_mole".
         """
+        _check_mode(self.mode, ('r',))
+
         if n_frames is None:
             n_frames = np.inf
         if stride is not None:
@@ -648,7 +613,6 @@ class HDF5TrajectoryFile(object):
         self._frame_index += (frame_slice.stop - frame_slice.start)
         return frames
 
-    @ensure_mode('w', 'a')
     def write(self, coordinates, time=None, cell_lengths=None, cell_angles=None,
                     velocities=None, kineticEnergy=None, potentialEnergy=None,
                     temperature=None, alchemicalLambda=None):
@@ -703,7 +667,7 @@ class HDF5TrajectoryFile(object):
             You may optionally specify the alchemical lambda in each frame. These
             have no units, but are generally between zero and one.
         """
-
+        _check_mode(self.mode, ('w', 'a'))
 
         # these must be either both present or both absent. since
         # we're going to throw an error if one is present w/o the other,
@@ -888,7 +852,6 @@ class HDF5TrajectoryFile(object):
                 atom=self.tables.Float32Atom(), shape=(0,))
             self._get_node('/', name='lambda').attrs['units'] = 'dimensionless'
 
-    @ensure_mode('r')
     def seek(self, offset, whence=0):
         """Move to a new file position
 
@@ -902,6 +865,8 @@ class HDF5TrajectoryFile(object):
             2: move relative to the end of file, offset should be <= 0.
             Seeking beyond the end of a file is not supported
         """
+        _check_mode(self.mode, ('r',))
+
         if whence == 0 and offset >= 0:
             self._frame_index = offset
         elif whence == 1:
@@ -984,3 +949,9 @@ class HDF5TrajectoryFile(object):
         if not self._open:
             raise ValueError('I/O operation on closed file')
         return len(self._handle.root.coordinates)
+
+
+def _check_mode(m, modes):
+    if m not in modes:
+        raise ValueError('This operation is only available when a file '
+                         'is open in mode="%s".' % m)
