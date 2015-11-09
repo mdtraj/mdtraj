@@ -35,7 +35,7 @@ from mdtraj.core import element as elem
 from mdtraj.utils.six import iteritems, PY3, u
 from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.utils import import_, ensure_type, in_units_of, cast_indices
-from mdtraj.formats.hdf5 import ensure_mode
+from mdtraj.formats.hdf5 import _check_mode
 import warnings
 
 MAXINT16 = np.iinfo(np.int16).max
@@ -221,7 +221,6 @@ class LH5TrajectoryFile(object):
             self._handle.root.ResidueNames[:])
 
     @topology.setter
-    @ensure_mode('w')
     def topology(self, top):
         """Set the topology in the file
 
@@ -230,6 +229,8 @@ class LH5TrajectoryFile(object):
         top : mdtraj.Topology
             A topology object
         """
+        _check_mode(self.mode, ('w',))
+
         if self._needs_initialization:
             self._initialize_headers(top.n_atoms)
             self._needs_initialization = False
@@ -247,7 +248,6 @@ class LH5TrajectoryFile(object):
             node = self._get_node(where='/', name=key)[:] = val[:]
             node[:] = val[:]
 
-    @ensure_mode('r')
     def read_as_traj(self, n_frames=None, stride=None, atom_indices=None):
         """Read a trajectory from the LH5 file
 
@@ -272,6 +272,8 @@ class LH5TrajectoryFile(object):
         trajectory : Trajectory
             A trajectory object containing the loaded portion of the file.
         """
+        _check_mode(self.mode, ('r',))
+
         from mdtraj.core.trajectory import Trajectory
         topology = self.topology
         if atom_indices is not None:
@@ -289,7 +291,6 @@ class LH5TrajectoryFile(object):
 
         return Trajectory(xyz=xyz, topology=topology, time=time)
 
-    @ensure_mode('r')
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read one or more frames of data from the file
 
@@ -314,6 +315,8 @@ class LH5TrajectoryFile(object):
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=np.float32
             The cartesian coordinates, in nanometers
         """
+        _check_mode(self.mode, ('r'))
+
         if n_frames is None:
             n_frames = np.inf
         if stride is not None:
@@ -337,7 +340,6 @@ class LH5TrajectoryFile(object):
         self._frame_index += (frame_slice.stop - frame_slice.start)
         return xyz
 
-    @ensure_mode('w')
     def write(self, coordinates):
         """Write one or more frames of data to the file
 
@@ -346,6 +348,8 @@ class LH5TrajectoryFile(object):
         coordinates : np.ndarray, dtype=np.float32, shape=(n_frames, n_atoms, 3)
             The cartesian coordinates of the atoms in every frame, in nanometers.
         """
+        _check_mode(self.mode, ('w'))
+
         coordinates = ensure_type(coordinates, dtype=np.float32, ndim=3,
                                   name='coordinates', shape=(None, None, 3), can_be_none=False,
                                   warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
@@ -356,8 +360,9 @@ class LH5TrajectoryFile(object):
         coordinates = _convert_to_lossy_integers(coordinates)
         self._get_node(where='/', name='XYZList').append(coordinates)
 
-    @ensure_mode('w')
     def _initialize_headers(self, n_atoms):
+        _check_mode(self.mode, ('w'))
+
         self._create_carray(
             where='/', name='AtomID', atom=self.tables.Int64Atom(), shape=(n_atoms,))
         self._create_carray(
@@ -375,7 +380,6 @@ class LH5TrajectoryFile(object):
             where='/', name='XYZList', atom=self.tables.Int16Atom(),
             shape=(0, n_atoms, 3))
 
-    @ensure_mode('r')
     def seek(self, offset, whence=0):
         """Move to a new file position
 
@@ -389,6 +393,8 @@ class LH5TrajectoryFile(object):
             2: move relative to the end of file, offset should be <= 0.
             Seeking beyond the end of a file is not supported
         """
+        _check_mode(self.mode, ('r',))
+
         if whence == 0 and offset >= 0:
             self._frame_index = offset
         elif whence == 1:

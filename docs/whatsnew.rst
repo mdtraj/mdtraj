@@ -6,10 +6,13 @@ These are new features and improvements of note in each release.
 
 v1.6 (Development)
 ------------------
+- ``formats.hdf5.ensure_mode`` was removed to eliminate the use of a function depreciated in Python 3.5. (#990)
 
 
 v1.5.1 (November 6, 2015)
 -------------------------
+MDTraj 1.5.1 is a small bugfix release to correct two issues introduced in the
+immediately preceeding 1.5.0 release.
 
 - A recent change (merged Nov 5) caused ``compute_chi4`` to compute chi3
   angles (#981).
