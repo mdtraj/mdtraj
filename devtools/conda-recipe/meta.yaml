@@ -35,7 +35,7 @@ test:
     {{ '- shiftx2' if environ.get('TRAVIS', False) == 'true' }}
 
   commands:
-    - nosetests mdtraj -v -s
+    - nosetests mdtraj.geometry -v -s
 
 about:
   home: http://mdtraj.org

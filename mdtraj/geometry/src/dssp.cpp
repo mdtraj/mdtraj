@@ -141,16 +141,16 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
 
     // Extend ladders
     sort(bridges.begin(), bridges.end());
-    for (unsigned int i = 0; i < bridges.size(); ++i) {
-        for (unsigned int j = i + 1; j < bridges.size(); ++j) {
-            unsigned int ibi = bridges[i].i.front();
-            unsigned int iei = bridges[i].i.back();
-            unsigned int jbi = bridges[i].j.front();
-            unsigned int jei = bridges[i].j.back();
-            unsigned int ibj = bridges[j].i.front();
-            unsigned int iej = bridges[j].i.back();
-            unsigned int jbj = bridges[j].j.front();
-            unsigned int jej = bridges[j].j.back();
+    for (int i = 0; i < (int) bridges.size(); ++i) {
+        for (int j = i + 1; j < (int) bridges.size(); ++j) {
+            int ibi = bridges[i].i.front();
+            int iei = bridges[i].i.back();
+            int jbi = bridges[i].j.front();
+            int jei = bridges[i].j.back();
+            int ibj = bridges[j].i.front();
+            int iej = bridges[j].i.back();
+            int jbj = bridges[j].j.front();
+            int jej = bridges[j].j.back();
 
             if ((bridges[i].type != bridges[j].type) ||
                 chain_ids[std::min(ibi, ibj)] != chain_ids[std::max(iei, iej)] ||
