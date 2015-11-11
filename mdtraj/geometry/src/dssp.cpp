@@ -250,7 +250,7 @@ static void calculate_alpha_helices(const float* xyz,
         std::vector<int> residues = it->second;
 
         for (int stride = 3; stride <= 5; stride++) {
-            for (unsigned int ii = 0; ii < residues.size(); ii++) {
+            for (int ii = 0; ii < (int) residues.size(); ii++) {
                 int i = residues[ii];
 
                 if ((i+stride) < n_residues && _test_bond(i+stride, i, hbonds) && (chain_ids[i] == chain_ids[i+stride])) {
@@ -304,7 +304,7 @@ static void calculate_alpha_helices(const float* xyz,
         }
 
     const std::vector<int> is_bend = calculate_bends(xyz, ca_indices, chain_ids, n_residues, skip);
-    for (unsigned i = 1; i < n_residues-1; i++)
+    for (int i = 1; i < n_residues-1; i++)
         if (secondary[i] == SS_LOOP && !skip[i]) {
             bool isTurn = false;
             for (int stride = 3; stride <= 5 && !isTurn; ++stride)
