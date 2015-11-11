@@ -100,12 +100,12 @@ def test_5():
     np.testing.assert_array_equal(b, ref)
 
 
-def test_6():
-    t = md.load(get_fn('alanine-dipeptide-explicit.pdb'))
-    a = md.compute_dssp(t, simplified=True)
-    protein_residues = np.array([set(a.name for a in r.atoms).issuperset(('C', 'N', 'O', 'CA')) for r in t.topology.residues])
-    assert np.unique(a[:, protein_residues]) == "C"
-    assert np.unique(a[:, np.logical_not(protein_residues)]) == 'NA'
+#def test_6():
+#    t = md.load(get_fn('alanine-dipeptide-explicit.pdb'))
+#    a = md.compute_dssp(t, simplified=True)
+#    protein_residues = np.array([set(a.name for a in r.atoms).issuperset(('C', 'N', 'O', 'CA')) for r in t.topology.residues])
+#    assert np.unique(a[:, protein_residues]) == "C"
+#    assert np.unique(a[:, np.logical_not(protein_residues)]) == 'NA'
 
 
 def test_7():
