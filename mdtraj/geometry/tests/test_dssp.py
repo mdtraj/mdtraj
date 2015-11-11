@@ -106,3 +106,8 @@ def test_6():
     protein_residues = np.array([set(a.name for a in r.atoms).issuperset(('C', 'N', 'O', 'CA')) for r in t.topology.residues])
     assert np.unique(a[:, protein_residues]) == "C"
     assert np.unique(a[:, np.logical_not(protein_residues)]) == 'NA'
+
+
+def test_7():
+    t = md.load(get_fn('2EQQ.pdb'))
+    a = md.compute_dssp(t, simplified=True)
