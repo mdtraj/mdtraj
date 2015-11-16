@@ -182,6 +182,8 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         # now squash the results based on residue membership
         n_residue_pairs = len(residue_pairs)
         distances = np.zeros((len(traj), n_residue_pairs), dtype=np.float32)
+        n_atom_pairs_per_residue_pair = np.asarray(n_atom_pairs_per_residue_pair)
+
         for i in xrange(n_residue_pairs):
             index = int(np.sum(n_atom_pairs_per_residue_pair[:i]))
             n = n_atom_pairs_per_residue_pair[i]
