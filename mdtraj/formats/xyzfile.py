@@ -142,6 +142,7 @@ class XYZTrajectoryFile(object):
         self._filename = filename
         self._mode = mode
         self._frame_index = 0
+        self._n_frames = None
         # track which line we're on. this is not essential, but its useful
         # when reporting errors to the user to say what line it occured on.
         self._line_counter = 0
@@ -387,6 +388,8 @@ class XYZTrajectoryFile(object):
             raise NotImplementedError('len() only available in mode="r" currently')
         if not self._is_open:
             raise ValueError('I/O operation on closed file')
-        with open(self._filename) as fh:
-            n_atoms = int(fh.readline())
-            return (sum(1 for line in fh) + 1) // (n_atoms + 2)
+        if not self._n_frames:
+            with open(self._filename) as fh:
+                n_atoms = int(fh.readline())
+                self._n_frames = (sum(1 for line in fh) + 1) // (n_atoms + 2)
+        return self._n_frames
