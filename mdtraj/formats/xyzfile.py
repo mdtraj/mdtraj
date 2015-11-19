@@ -383,4 +383,9 @@ class XYZTrajectoryFile(object):
 
     def __len__(self):
         """Number of frames in the file. """
-        raise NotImplementedError()
+        if str(self._mode) != 'r':
+            raise NotImplementedError('len() only available in mode="r" currently')
+        if not self._is_open:
+            raise ValueError('I/O operation on closed file')
+        n_atoms = int(self._fh.readline())
+        return (sum(1 for line in self._fh) + 1) // (n_atoms + 2)
