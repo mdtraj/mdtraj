@@ -101,3 +101,9 @@ def test_seek():
         f.seek(4, 1)
         xyz8 = f.read(n_frames=1)
         eq(reference.xyz[8], xyz8[0]/10)
+
+def test_len():
+    with md.open(get_fn('frame0.xyz')) as fh:
+        assert len(fh) == 501
+        assert fh._frame_index == 0
+        assert len(fh.read()) == 501
