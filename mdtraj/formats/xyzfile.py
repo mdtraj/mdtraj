@@ -388,7 +388,7 @@ class XYZTrajectoryFile(object):
             raise NotImplementedError('len() only available in mode="r" currently')
         if not self._is_open:
             raise ValueError('I/O operation on closed file')
-        if not self._n_frames:
+        if self._n_frames is None:
             with open(self._filename) as fh:
                 n_atoms = int(fh.readline())
                 self._n_frames = (sum(1 for line in fh) + 1) // (n_atoms + 2)
