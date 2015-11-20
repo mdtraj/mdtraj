@@ -90,7 +90,8 @@ def _is_url(url):
 
 @_FormatRegistry.register_loader('.pdb')
 @_FormatRegistry.register_loader('.pdb.gz')
-def load_pdb(filename, stride=None, atom_indices=None, frame=None):
+def load_pdb(filename, stride=None, atom_indices=None, frame=None,
+             no_boxchk=False):
     """Load a RCSB Protein Data Bank file from disk.
 
     Parameters
@@ -100,15 +101,24 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
         schemes include http and ftp.
     stride : int, default=None
         Only read every stride-th model from the file
-    atom_indices : array_like, optional
-        If not none, then read only a subset of the atoms coordinates from the
+    atom_indices : array_like, default=None
+        If not None, then read only a subset of the atoms coordinates from the
         file. These indices are zero-based (not 1 based, as used by the PDB
         format). So if you want to load only the first atom in the file, you
         would supply ``atom_indices = np.array([0])``.
-    frame : int, optional
+    frame : int, default=None
         Use this option to load only a single frame from a trajectory on disk.
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
+    no_boxchk : bool, default=False
+        By default, a heuristic check based on the particle density will be
+        performed to determine if the unit cell dimensions are absurd. If the
+        particle density is >1000 atoms per nm^3, the unit cell will be
+        discarded. This is done because all PDB files from RCSB contain a CRYST1
+        record, even if there are no periodic boundaries, and dummy values are
+        filled in instead. This check will filter out those false unit cells and
+        avoid potential errors in geometry calculations. Set this variable to
+        ``True`` in order to skip this heuristic check.
 
     Returns
     -------
@@ -119,7 +129,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
     --------
     >>> import mdtraj as md
     >>> pdb = md.load_pdb('2EQQ.pdb')
-    >>> print pdb
+    >>> print(pdb)
     <mdtraj.Trajectory with 20 frames, 423 atoms at 0x110740a90>
 
     See Also
@@ -167,7 +177,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
                       unitcell_lengths=unitcell_lengths,
                       unitcell_angles=unitcell_angles)
 
-    if traj.unitcell_lengths is not None:
+    if not no_boxchk and traj.unitcell_lengths is not None:
         # Only one CRYST1 record is allowed, so only do this check for the first
         # frame. Some RCSB PDB files do not *really* have a unit cell, but still
         # have a CRYST1 record with a dummy definition. These boxes are usually
