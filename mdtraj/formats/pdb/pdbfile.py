@@ -66,6 +66,9 @@ else:
     from urllib2 import urlopen
     from urlparse import urlparse
     from urlparse import uses_relative, uses_netloc, uses_params
+    # Ugly hack -- we don't always issue UserWarning in Py2, but we need to in
+    # this module
+    warnings.filterwarnings('always', category=UserWarning, module=__name__)
 
 _VALID_URLS = set(uses_relative + uses_netloc + uses_params)
 _VALID_URLS.discard('')
