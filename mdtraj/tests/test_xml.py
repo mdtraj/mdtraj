@@ -22,11 +22,9 @@
 
 from mdtraj.testing import get_fn, eq
 from mdtraj import load, load_topology
-import warnings
 
 
 def test_0():
-    warnings.filterwarnings('error', category=UserWarning)
     top = load_topology(get_fn('native2.pdb'), no_boxchk=True)
     t1 = load(get_fn('native2.xml'), top=top)
     t2 = load(get_fn('native2.pdb'), no_boxchk=True)
@@ -36,4 +34,3 @@ def test_0():
 
     yield lambda: eq(t1.xyz, t2.xyz)
     yield lambda: eq(t1.unitcell_vectors, t2.unitcell_vectors)
-    warnings.filterwarnings('default', category=UserWarning)
