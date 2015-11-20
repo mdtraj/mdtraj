@@ -265,6 +265,7 @@ def test_hex():
 
 
 def test_dummy_pdb_box_detection():
+    warnings.filterwarnings('default', category=UserWarning)
     assert_warns(UserWarning, lambda: load(get_fn('2koc.pdb')))
     warnings.filterwarnings('ignore', category=UserWarning)
     traj = load(get_fn('2koc.pdb'))
