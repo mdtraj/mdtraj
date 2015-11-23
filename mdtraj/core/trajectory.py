@@ -129,7 +129,7 @@ else:
         return hash_value
 
 
-def load_topology(filename):
+def load_topology(filename, **kwargs):
     """Load a topology
 
     Parameters
@@ -143,10 +143,10 @@ def load_topology(filename):
     -------
     topology : md.Topology
     """
-    return _parse_topology(filename)
+    return _parse_topology(filename, **kwargs)
 
 
-def _parse_topology(top):
+def _parse_topology(top, **kwargs):
     """Get the topology from a argument of indeterminate type
     If top is a string, we try loading a pdb, if its a trajectory
     we extract its topology.
@@ -162,20 +162,20 @@ def _parse_topology(top):
         ext = None  # might not be a string
 
     if isinstance(top, string_types) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):
-        _traj = load_frame(top, 0)
+        _traj = load_frame(top, 0, **kwargs)
         topology = _traj.topology
     elif isinstance(top, string_types) and (ext in ['.prmtop', '.parm7']):
-        topology = load_prmtop(top)
+        topology = load_prmtop(top, **kwargs)
     elif isinstance(top, string_types) and (ext in ['.psf']):
-        topology = load_psf(top)
+        topology = load_psf(top, **kwargs)
     elif isinstance(top, string_types) and (ext in ['.mol2']):
-        topology = load_mol2(top).topology
+        topology = load_mol2(top, **kwargs).topology
     elif isinstance(top, string_types) and (ext in ['.gro']):
-        topology = load_gro(top).topology
+        topology = load_gro(top, **kwargs).topology
     elif isinstance(top, string_types) and (ext in ['.arc']):
-        topology = load_arc(top).topology
+        topology = load_arc(top, **kwargs).topology
     elif isinstance(top, string_types) and (ext in ['.hoomdxml']):
-        topology = load_hoomdxml(top).topology
+        topology = load_hoomdxml(top, **kwargs).topology
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, Topology):
@@ -251,7 +251,7 @@ def open(filename, mode='r', force_overwrite=True, **kwargs):
     return loader(filename, mode=mode, force_overwrite=force_overwrite, **kwargs)
 
 
-def load_frame(filename, index, top=None, atom_indices=None):
+def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
     """Load a single frame from a trajectory file
 
     Parameters
@@ -295,7 +295,7 @@ def load_frame(filename, index, top=None, atom_indices=None):
                       'was found. I can only load files with extensions in %s'
                       % (filename, extension, _FormatRegistry.loaders.keys()))
 
-    kwargs = {'atom_indices': atom_indices}
+    kwargs['atom_indices'] = atom_indices
     if extension not in _TOPOLOGY_EXTS:
         kwargs['top'] = top
 
@@ -402,7 +402,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                       'with extensions in %s' % (filename, extension, _FormatRegistry.loaders.keys()))
 
     if extension in _TOPOLOGY_EXTS:
-        # this is a little hack that makes calling load() more predicable. since
+        # this is a little hack that makes calling load() more predictable. since
         # most of the loaders take a kwargs "top" except for load_hdf5, (since
         # it saves the topology inside the file), we often end up calling
         # load_hdf5 via this function with the top kwarg specified. but then

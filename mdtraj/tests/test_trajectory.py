@@ -81,7 +81,7 @@ def test_box():
 
 
 def test_load_pdb_box():
-    t = md.load(get_fn('native2.pdb'))
+    t = md.load(get_fn('native2.pdb'), no_boxchk=True)
     yield lambda: eq(t.unitcell_lengths[0], np.array([0.1, 0.2, 0.3]))
     yield lambda: eq(t.unitcell_angles[0], np.array([90.0, 90.0, 90.0]))
     yield lambda: eq(t.unitcell_vectors[0], np.array([[0.1, 0, 0], [0, 0.2, 0], [0, 0, 0.3]]))
@@ -93,17 +93,18 @@ def test_load_pdb_gz():
 
 
 def test_box_load_save():
-    t = md.load(get_fn('native2.pdb'))
+    t = md.load(get_fn('native2.pdb'), no_boxchk=True)
 
     # these four tempfile have extensions (dcd, xtc, trr, h5) that
     # should store the box information. lets make sure than through a load/save
     # cycle, the box information is preserved:
+    top = md.load_topology(get_fn('native.pdb'), no_boxchk=True)
     for temp_fn in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['trr'], tmpfns['h5']]:
         t.save(temp_fn)
         if temp_fn.endswith('.h5'):
             t2 = md.load(temp_fn)
         else:
-            t2 = md.load(temp_fn, top=get_fn('native.pdb'))
+            t2 = md.load(temp_fn, top=top)
 
         assert t.unitcell_vectors is not None
         yield lambda: eq(t.xyz, t2.xyz, decimal=3)

@@ -21,12 +21,13 @@
 ##############################################################################
 
 from mdtraj.testing import get_fn, eq
-from mdtraj import load
+from mdtraj import load, load_topology
 
 
 def test_0():
-    t1 = load(get_fn('native2.xml'), top=get_fn('native2.pdb'))
-    t2 = load(get_fn('native2.pdb'))
+    top = load_topology(get_fn('native2.pdb'), no_boxchk=True)
+    t1 = load(get_fn('native2.xml'), top=top)
+    t2 = load(get_fn('native2.pdb'), no_boxchk=True)
 
     t1.center_coordinates()
     t2.center_coordinates()

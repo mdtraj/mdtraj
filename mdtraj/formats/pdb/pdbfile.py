@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: Peter Eastman, Robert McGibbon
-# Contributors: Carlos Hernandez
+# Contributors: Carlos Hernandez, Jason Swails
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -57,6 +57,7 @@ from mdtraj.formats.registry import _FormatRegistry
 from mdtraj.core import element as elem
 from mdtraj.utils import six
 from mdtraj import version
+import warnings
 if six.PY3:
     from urllib.request import urlopen
     from urllib.parse import urlparse
@@ -65,6 +66,9 @@ else:
     from urllib2 import urlopen
     from urlparse import urlparse
     from urlparse import uses_relative, uses_netloc, uses_params
+    # Ugly hack -- we don't always issue UserWarning in Py2, but we need to in
+    # this module
+    warnings.filterwarnings('always', category=UserWarning, module=__name__)
 
 _VALID_URLS = set(uses_relative + uses_netloc + uses_params)
 _VALID_URLS.discard('')
@@ -89,7 +93,8 @@ def _is_url(url):
 
 @_FormatRegistry.register_loader('.pdb')
 @_FormatRegistry.register_loader('.pdb.gz')
-def load_pdb(filename, stride=None, atom_indices=None, frame=None):
+def load_pdb(filename, stride=None, atom_indices=None, frame=None,
+             no_boxchk=False):
     """Load a RCSB Protein Data Bank file from disk.
 
     Parameters
@@ -99,15 +104,24 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
         schemes include http and ftp.
     stride : int, default=None
         Only read every stride-th model from the file
-    atom_indices : array_like, optional
-        If not none, then read only a subset of the atoms coordinates from the
+    atom_indices : array_like, default=None
+        If not None, then read only a subset of the atoms coordinates from the
         file. These indices are zero-based (not 1 based, as used by the PDB
         format). So if you want to load only the first atom in the file, you
         would supply ``atom_indices = np.array([0])``.
-    frame : int, optional
+    frame : int, default=None
         Use this option to load only a single frame from a trajectory on disk.
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
+    no_boxchk : bool, default=False
+        By default, a heuristic check based on the particle density will be
+        performed to determine if the unit cell dimensions are absurd. If the
+        particle density is >1000 atoms per nm^3, the unit cell will be
+        discarded. This is done because all PDB files from RCSB contain a CRYST1
+        record, even if there are no periodic boundaries, and dummy values are
+        filled in instead. This check will filter out those false unit cells and
+        avoid potential errors in geometry calculations. Set this variable to
+        ``True`` in order to skip this heuristic check.
 
     Returns
     -------
@@ -118,7 +132,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
     --------
     >>> import mdtraj as md
     >>> pdb = md.load_pdb('2EQQ.pdb')
-    >>> print pdb
+    >>> print(pdb)
     <mdtraj.Trajectory with 20 frames, 423 atoms at 0x110740a90>
 
     See Also
@@ -162,10 +176,26 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None):
     elif stride is not None:
         time *= stride
 
-    return Trajectory(xyz=coords, time=time, topology=topology,
+    traj = Trajectory(xyz=coords, time=time, topology=topology,
                       unitcell_lengths=unitcell_lengths,
                       unitcell_angles=unitcell_angles)
 
+    if not no_boxchk and traj.unitcell_lengths is not None:
+        # Only one CRYST1 record is allowed, so only do this check for the first
+        # frame. Some RCSB PDB files do not *really* have a unit cell, but still
+        # have a CRYST1 record with a dummy definition. These boxes are usually
+        # tiny (e.g., 1 A^3), so check that the particle density in the unit
+        # cell is not absurdly high. Standard water density is ~55 M, which
+        # yields a particle density ~100 atoms per cubic nm. It should be safe
+        # to say that no particle density should exceed 10x that.
+        particle_density = traj.top.n_atoms / traj.unitcell_volumes[0]
+        if particle_density > 1000:
+            warnings.warn('Unlikely unit cell vectors detected in PDB file likely '
+                          'resulting from a dummy CRYST1 record. Discarding unit '
+                          'cell vectors.')
+            traj._unitcell_lengths = traj._unitcell_angles = None
+
+    return traj
 
 @_FormatRegistry.register_fileobject('.pdb')
 @_FormatRegistry.register_fileobject('.pdb.gz')
