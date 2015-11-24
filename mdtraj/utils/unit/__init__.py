@@ -124,7 +124,7 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
         back your quantity without doing any unit checking.
     units_out : str
         A string description of the units you want out. This should look
-        like "nanometers/picosecondsecond" or "nanometers**3" or whatever
+        like "nanometers/picosecond" or "nanometers**3" or whatever
     inplace : bool
         Attempt to do the transformation inplace, by mutating the `quantity`
         argument and avoiding a copy. This is only possible if `quantity` is a
