@@ -1013,12 +1013,19 @@ class Topology(object):
         b_indices.sort()
 
         # Create unique pairs from the indices.
+        # In the cases where a_indices and b_indices are identical or mutually
+        # exclusive, we can utilize a more efficient and memory friendly
+        # approach by removing the intermediate set creation required in
+        # the general case.
         if np.array_equal(a_indices, b_indices):
-            # This is more efficient and memory friendly by removing the
-            # intermediate set creation required in the case below.
             pairs = np.fromiter(itertools.chain.from_iterable(
                 itertools.combinations(a_indices, 2)),
                 dtype=np.int32, count=len(a_indices) * (len(a_indices) - 1))
+            pairs = np.vstack((pairs[::2], pairs[1::2])).T
+        elif len(np.intersect1d(a_indices, b_indices)) == 0:
+            pairs = np.fromiter(itertools.chain.from_iterable(
+                itertools.product(a_indices, b_indices)),
+                dtype=np.int32, count=len(a_indices) * len(b_indices) * 2)
             pairs = np.vstack((pairs[::2], pairs[1::2])).T
         else:
             pairs = np.array(list(set(
