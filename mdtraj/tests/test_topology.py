@@ -197,6 +197,15 @@ def test_load_unknown_topology():
         assert False  # fail
 
 
+def test_unique_pairs():
+    n = 10
+    a = np.arange(n)
+    b = np.arange(n, n+n)
+
+    eq(md.Topology._unique_pairs(a, a).sort(), md.Topology._unique_pairs_equal(a).sort())
+    eq(md.Topology._unique_pairs(a, b).sort(), md.Topology._unique_pairs_mutually_exclusive(a, b).sort())
+
+
 def test_select_pairs():
     traj = md.load(get_fn('tip3p_300K_1ATM.pdb'))
     select_pairs = traj.top.select_pairs
