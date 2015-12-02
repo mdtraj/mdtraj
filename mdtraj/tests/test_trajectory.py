@@ -20,7 +20,7 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-
+import sys
 import tempfile, os
 import functools
 from mdtraj.utils import enter_temp_directory
@@ -31,6 +31,9 @@ import mdtraj.utils
 from mdtraj.utils import six
 from mdtraj.utils.six.moves import xrange
 from mdtraj.core import element
+
+on_win = (sys.platform == 'win32')
+on_py3 = (sys.version_info >= (3, 0))
 
 
 fn = get_fn('traj.h5')
@@ -78,7 +81,7 @@ def test_box():
 
 
 def test_load_pdb_box():
-    t = md.load(get_fn('native2.pdb'))
+    t = md.load(get_fn('native2.pdb'), no_boxchk=True)
     yield lambda: eq(t.unitcell_lengths[0], np.array([0.1, 0.2, 0.3]))
     yield lambda: eq(t.unitcell_angles[0], np.array([90.0, 90.0, 90.0]))
     yield lambda: eq(t.unitcell_vectors[0], np.array([[0.1, 0, 0], [0, 0.2, 0], [0, 0, 0.3]]))
@@ -90,17 +93,18 @@ def test_load_pdb_gz():
 
 
 def test_box_load_save():
-    t = md.load(get_fn('native2.pdb'))
+    t = md.load(get_fn('native2.pdb'), no_boxchk=True)
 
     # these four tempfile have extensions (dcd, xtc, trr, h5) that
     # should store the box information. lets make sure than through a load/save
     # cycle, the box information is preserved:
+    top = md.load_topology(get_fn('native.pdb'), no_boxchk=True)
     for temp_fn in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['trr'], tmpfns['h5']]:
         t.save(temp_fn)
         if temp_fn.endswith('.h5'):
             t2 = md.load(temp_fn)
         else:
-            t2 = md.load(temp_fn, top=get_fn('native.pdb'))
+            t2 = md.load(temp_fn, top=top)
 
         assert t.unitcell_vectors is not None
         yield lambda: eq(t.xyz, t2.xyz, decimal=3)
@@ -174,8 +178,8 @@ def test_binpos():
 
 def test_load():
     filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos",
-                 "traj.h5", 'legacy_msmbuilder_trj0.lh5', 'frame0.nc', six.u('traj.h5'),
-                 "frame0.lammpstrj", "frame0.xyz"]
+                 "traj.h5", "frame0.nc", "traj.h5", "frame0.lammpstrj",
+                 "frame0.xyz"]
     num_block = 3
     for filename in filenames:
         t0 = md.load(get_fn(filename), top=nat, discard_overlapping_frames=True)
@@ -183,8 +187,9 @@ def test_load():
         t2 = md.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=False)
         t3 = md.load([get_fn(filename) for i in xrange(num_block)], top=nat, discard_overlapping_frames=True)
 
-        # these don't actually overlap, so discard_overlapping_frames should have no effect
-        # the overlap is between the last frame of one and the first frame of the next.
+        # these don't actually overlap, so discard_overlapping_frames should
+        # have no effect. the overlap is between the last frame of one and the
+        # first frame of the next.
         yield lambda: eq(t0.n_frames, t1.n_frames)
         yield lambda: eq(t0.n_frames * num_block, t2.n_frames)
         yield lambda: eq(t3.n_frames, t2.n_frames)
@@ -314,8 +319,8 @@ def test_array_vs_matrix():
     eq(t2.xyz, xyz)
 
 def test_pdb_unitcell_loadsave():
-    """Make sure that nonstandard unitcell dimensions are saved and loaded
-    correctly with PDB"""
+    # Make sure that nonstandard unitcell dimensions are saved and loaded
+    # correctly with PDB
     tref = md.load(get_fn('native.pdb'))
     tref.unitcell_lengths = 1 + 0.1  * np.random.randn(tref.n_frames, 3)
     tref.unitcell_angles = 90 + 0.0  * np.random.randn(tref.n_frames, 3)
@@ -326,13 +331,16 @@ def test_pdb_unitcell_loadsave():
 
 
 def test_load_combination():
-    "Test that the load function's stride and atom_indices work across all trajectory formats"
+    # Test that the load function's stride and atom_indices work across
+    # all trajectory formats
 
     topology = md.load(get_fn('native.pdb')).topology
     ainds = np.array([a.index for a in topology.atoms if a.element.symbol == 'C'])
-    filenames = ['frame0.binpos', 'frame0.dcd', 'frame0.trr', 'frame0.xtc',
-                 'frame0.nc', 'frame0.h5', 'frame0.pdb', 'legacy_msmbuilder_trj0.lh5',
-                 'frame0.lammpstrj', 'frame0.xyz']
+    filenames = [
+        'frame0.binpos', 'frame0.dcd', 'frame0.trr', 'frame0.xtc', 'frame0.nc',
+        'frame0.h5', 'frame0.pdb', 'frame0.lammpstrj', 'frame0.xyz']
+    if not (on_win and on_py3):
+        filenames.append('legacy_msmbuilder_trj0.lh5')
 
     no_kwargs = [md.load(fn, top=topology) for fn in map(get_fn, filenames)]
     strided3 =  [md.load(fn, top=topology, stride=3) for fn in map(get_fn, filenames)]
@@ -400,10 +408,11 @@ def test_seek_read_mode():
              (md.formats.DCDTrajectoryFile, 'frame0.dcd'),
              (md.formats.MDCRDTrajectoryFile, 'frame0.mdcrd'),
              (md.formats.BINPOSTrajectoryFile, 'frame0.binpos'),
-             (md.formats.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'),
              (md.formats.DTRTrajectoryFile, 'frame0.dtr/clickme.dtr'),
              (md.formats.XYZTrajectoryFile, 'frame0.xyz'),
              (md.formats.LAMMPSTrajectoryFile, 'frame0.lammpstrj'),]
+    if not (on_win and on_py3):
+        files.append((md.formats.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'))
 
     for a, b in files:
         point = 0
@@ -455,8 +464,11 @@ def test_seek_read_mode():
 
 def test_load_frame():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
-             'frame0.dcd', 'frame0.mdcrd', 'frame0.binpos',
-             'legacy_msmbuilder_trj0.lh5', 'frame0.xyz', 'frame0.lammpstrj']
+             'frame0.dcd', 'frame0.mdcrd', 'frame0.binpos', 'frame0.xyz',
+             'frame0.lammpstrj']
+    if not (on_win and on_py3):
+        files.append('legacy_msmbuilder_trj0.lh5')
+
     trajectories = [md.load(get_fn(f), top=get_fn('native.pdb')) for f in files]
     rand = [np.random.randint(len(t)) for t in trajectories]
     frames = [md.load_frame(get_fn(f), index=r, top=get_fn('native.pdb')) for f, r in zip(files, rand)]
@@ -483,6 +495,8 @@ def test_iterload():
             # only a 1 frame per file format
             if ext in ('.ncrst', '.rst7'):
                 continue
+            if ext in ('.lh5') and (on_win and on_py3):
+                continue
 
             fn = 'temp%s' % ext
             t_ref.save(fn)
@@ -502,8 +516,9 @@ def test_iterload():
 
 def test_iterload_skip():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
-             'frame0.dcd', 'frame0.binpos', 'legacy_msmbuilder_trj0.lh5',
-             'frame0.xyz', 'frame0.lammpstrj']
+             'frame0.dcd', 'frame0.binpos', 'frame0.xyz', 'frame0.lammpstrj']
+    if not (on_win and on_py3):
+        files.append('legacy_msmbuilder_trj0.lh5')
 
     err_msg = "failed for file %s with chunksize %i and skip %i"
 
@@ -528,6 +543,9 @@ def test_save_load():
     t_ref.unitcell_vectors = np.array([[[1,0,0], [0,1,0], [0,0,1]]])
     with enter_temp_directory():
         for ext in t_ref._savers().keys():
+            if ext in ('.lh5') and (on_win and on_py3):
+                continue
+
             def test():
                 fn = 'temp%s' % ext
                 t_ref.save(fn)
@@ -546,8 +564,10 @@ def test_save_load():
 def test_length():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
              'frame0.mdcrd', '4waters.arc', 'frame0.dcd', '2EQQ.pdb',
-             'frame0.binpos', 'legacy_msmbuilder_trj0.lh5',
-             'frame0.lammpstrj', 'frame0.xyz']
+             'frame0.binpos', 'frame0.lammpstrj', 'frame0.xyz']
+    if not (on_win and on_py3):
+        files.append('legacy_msmbuilder_trj0.lh5')
+
     for file in files:
         if file.endswith('.mdcrd'):
             kwargs = {'n_atoms': 22}
@@ -599,3 +619,25 @@ def test_hashing():
 
     last_frame_hash = hash(frames[0])
     assert last_frame_hash != hashes[-1]
+
+def test_smooth():
+
+    from scipy.signal import lfilter, lfilter_zi, filtfilt, butter
+
+    pad = 5
+    order = 3
+    b, a = butter(order, 2.0 / pad)
+    zi = lfilter_zi(b, a)
+
+    signal = np.sin(np.arange(100))
+    padded = np.r_[signal[pad - 1: 0: -1], signal, signal[-1: -pad: -1]]
+
+
+    z, _ = lfilter(b, a, padded, zi=zi*padded[0])
+    z2, _ = lfilter(b, a, z, zi=zi*z[0])
+
+
+    output = filtfilt(b, a, padded)
+    test = np.loadtxt(get_fn('smooth.txt'))
+
+    eq(output, test)

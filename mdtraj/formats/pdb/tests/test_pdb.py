@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: Robert McGibbon
-# Contributors:
+# Contributors: Jason Swails
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -26,7 +26,7 @@ import numpy as np
 import re, os, tempfile
 from mdtraj.formats.pdb import pdbstructure
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
-from mdtraj.testing import get_fn, eq, raises
+from mdtraj.testing import get_fn, eq, raises, assert_warns
 from mdtraj import load, load_pdb
 from mdtraj.utils import ilen
 from mdtraj import Topology
@@ -105,10 +105,12 @@ def test_2EQQ_0():
 
 def test_1vii_solvated_with_ligand():
     traj = load(get_fn("1vii_sustiva_water.pdb"))
-    eq(len(list(traj.top.bonds)), 5124)
+    eq(len(list(traj.top.bonds)), 5156)
+    eq(len([bond for bond in traj.top.bonds if bond[0].residue.name == 'LIG']), 32)
     traj.save(temp)
     traj = load(temp)
-    eq(len(list(traj.top.bonds)), 5124)
+    eq(len(list(traj.top.bonds)), 5156)
+    eq(len([bond for bond in traj.top.bonds if bond[0].residue.name == 'LIG']), 32)
 
 @raises(ValueError)
 def test_write_large():
@@ -259,3 +261,9 @@ def test_hex():
    assert pdb.n_atoms == 100569
    assert pdb.n_residues == 33523
    pdb.save(temp)
+
+
+def test_dummy_pdb_box_detection():
+    assert_warns(UserWarning, lambda: load(get_fn('2koc.pdb')))
+    traj = load(get_fn('2koc.pdb'))
+    assert traj.unitcell_lengths is None, 'Expected dummy box to be deleted'

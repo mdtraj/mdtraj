@@ -84,10 +84,10 @@ And then at the end of a cell, to render the viewer in the output space, use a :
 Requirements
 ------------
 
-    `IPython <http://ipython.org/>`_  >= 3.0
+    `IPython <http://ipython.org/>`_  >= 4.0
         To install IPython and the notebook with ``conda``,
-        use ``conda install ipython-notebook``.
+        use ``conda install ipython-notebook ipywidgets``.
 
     Modern web browser with WebGL
         We've had the best luck with Chrome and modern versions
-	of Firefox.
+        of Firefox.

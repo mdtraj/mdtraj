@@ -11,26 +11,35 @@ binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 from __future__ import print_function, absolute_import
 DOCLINES = __doc__.split("\n")
 
+import os
 import sys
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 sys.path.insert(0, '.')
-from basesetup import (find_packages, write_version_py, build_ext,
+from basesetup import (write_version_py, build_ext,
                        StaticLibrary, CompilerDetection)
 
 try:
     import numpy
-except ImportError:
-    print('Building and running mdtraj requires numpy', file=sys.stderr)
-    sys.exit(1)
-
-try:
     import Cython
     if Cython.__version__ < '0.19':
         raise ImportError
     from Cython.Build import cythonize
 except ImportError:
-    print('Building from source requires cython >= 0.19', file=sys.stderr)
-    exit(1)
+    print('-'*80, file=sys.stderr)
+    print('''Error: building mdtraj requires numpy and cython>=0.19
+
+Try running the command ``pip install numpy cython`` or
+``conda install numpy cython``.
+
+or see http://docs.scipy.org/doc/numpy/user/install.html and
+http://cython.org/ for more information.
+
+If you're feeling lost, we recommend downloading the (free) Anaconda python
+distribution https://www.continuum.io/downloads, because it comes with
+these components included.''', file=sys.stderr)
+    print('-'*80, file=sys.stderr)
+    sys.exit(1)
+
 
 try:
     # add an optional --disable-openmp to disable OpenMP support
@@ -39,25 +48,10 @@ try:
 except ValueError:
     disable_openmp = False
 
-try:
-    # add an optional command line flag --no-install-deps to setup.py
-    # to turn off setuptools automatic downloading of dependencies
-    sys.argv.remove('--no-install-deps')
-    no_install_deps = True
-except ValueError:
-    no_install_deps = False
-
-
-if sys.version_info[0] == 2:
-    # required to fix cythoninze() for old versions of setuptools on
-    # python 2
-    m = sys.modules['setuptools.extension']
-    m.Extension.__dict__ = m._Extension.__dict__
-
 
 ##########################
-VERSION = "1.4.2"
-ISRELEASED = True
+VERSION = "1.6.0.dev1"
+ISRELEASED = False
 __version__ = VERSION
 ##########################
 
@@ -84,6 +78,8 @@ compiler = CompilerDetection(disable_openmp)
 extra_cpp_libraries = []
 if sys.platform == 'darwin':
     extra_cpp_libraries.append('stdc++')
+    os.environ['CXX'] = 'clang++'
+    os.environ['CC'] = 'clang'
 if sys.platform == 'win32':
     extra_cpp_libraries.append('Ws2_32')
     # For determining if a path is relative (for dtr)
@@ -94,44 +90,47 @@ if sys.platform == 'win32':
 # Declaration of the compiled extension modules (cython + c)
 ################################################################################
 
+def format_extensions():
+    xtc = Extension('mdtraj.formats.xtc',
+                    sources=['mdtraj/formats/xtc/src/xdrfile.c',
+                             'mdtraj/formats/xtc/src/xdrfile_xtc.c',
+                             'mdtraj/formats/xtc/xtc.pyx'],
+                    include_dirs=['mdtraj/formats/xtc/include/',
+                                  'mdtraj/formats/xtc/'])
 
-xtc = Extension('mdtraj.formats.xtc',
-                sources=['mdtraj/formats/xtc/src/xdrfile.c',
-                         'mdtraj/formats/xtc/src/xdrfile_xtc.c',
-                         'mdtraj/formats/xtc/xtc.pyx'],
-                include_dirs=['mdtraj/formats/xtc/include/',
-                              'mdtraj/formats/xtc/', numpy.get_include()])
+    trr = Extension('mdtraj.formats.trr',
+                    sources=['mdtraj/formats/xtc/src/xdrfile.c',
+                             'mdtraj/formats/xtc/src/xdrfile_trr.c',
+                             'mdtraj/formats/xtc/trr.pyx'],
+                    include_dirs=['mdtraj/formats/xtc/include/',
+                                  'mdtraj/formats/xtc/'])
 
-trr = Extension('mdtraj.formats.trr',
-                sources=['mdtraj/formats/xtc/src/xdrfile.c',
-                         'mdtraj/formats/xtc/src/xdrfile_trr.c',
-                         'mdtraj/formats/xtc/trr.pyx'],
-                include_dirs=['mdtraj/formats/xtc/include/',
-                              'mdtraj/formats/xtc/', numpy.get_include()])
+    dcd = Extension('mdtraj.formats.dcd',
+                    sources=['mdtraj/formats/dcd/src/dcdplugin.c',
+                             'mdtraj/formats/dcd/dcd.pyx'],
+                    include_dirs=["mdtraj/formats/dcd/include/",
+                                  'mdtraj/formats/dcd/'])
 
-dcd = Extension('mdtraj.formats.dcd',
-                sources=['mdtraj/formats/dcd/src/dcdplugin.c',
-                         'mdtraj/formats/dcd/dcd.pyx'],
-                include_dirs=["mdtraj/formats/dcd/include/",
-                              'mdtraj/formats/dcd/', numpy.get_include()])
+    binpos = Extension('mdtraj.formats.binpos',
+                       sources=['mdtraj/formats/binpos/src/binposplugin.c',
+                                'mdtraj/formats/binpos/binpos.pyx'],
+                       include_dirs=['mdtraj/formats/binpos/include/',
+                                     'mdtraj/formats/binpos/'])
 
-binpos = Extension('mdtraj.formats.binpos',
-                   sources=['mdtraj/formats/binpos/src/binposplugin.c',
-                            'mdtraj/formats/binpos/binpos.pyx'],
-                   include_dirs=['mdtraj/formats/binpos/include/',
-                                 'mdtraj/formats/binpos/', numpy.get_include()])
+    dtr = Extension('mdtraj.formats.dtr',
+                    sources=['mdtraj/formats/dtr/src/dtrplugin.cxx',
+                             'mdtraj/formats/dtr/dtr.pyx'],
+                    include_dirs=['mdtraj/formats/dtr/include/',
+                                  'mdtraj/formats/dtr/'],
+                    define_macros=[('DESRES_READ_TIMESTEP2', 1)],
+                    language='c++',
+                    libraries=extra_cpp_libraries)
 
-dtr = Extension('mdtraj.formats.dtr',
-                   sources=['mdtraj/formats/dtr/src/dtrplugin.cxx',
-                            'mdtraj/formats/dtr/dtr.pyx'],
-                   include_dirs=['mdtraj/formats/dtr/include/',
-                                 'mdtraj/formats/dtr/', numpy.get_include()],
-                   define_macros = [('DESRES_READ_TIMESTEP2', 1)],
-                   language='c++',
-                   libraries=extra_cpp_libraries)
+    return [xtc, trr, dcd, binpos, dtr]
 
 
 def rmsd_extensions():
+    compiler.initialize()
     compiler_args = (compiler.compiler_args_openmp + compiler.compiler_args_sse2 +
                      compiler.compiler_args_sse3 + compiler.compiler_args_opt)
     compiler_libraries = compiler.compiler_libraries_openmp
@@ -156,8 +155,7 @@ def rmsd_extensions():
                          'mdtraj/rmsd/src/rotation.c',
                          'mdtraj/rmsd/src/center.c',
                          'mdtraj/rmsd/_rmsd.pyx'],
-                     include_dirs=[
-                         'mdtraj/rmsd/include', numpy.get_include()],
+                     include_dirs=['mdtraj/rmsd/include'],
                      extra_compile_args=compiler_args,
                      libraries=compiler_libraries)
 
@@ -171,15 +169,14 @@ def rmsd_extensions():
                            'mdtraj/rmsd/src/euclidean_permutation.cpp',
                            'mdtraj/rmsd/_lprmsd.pyx'],
                        language='c++',
-                       include_dirs=[
-                           'mdtraj/rmsd/include', numpy.get_include()],
+                       include_dirs=['mdtraj/rmsd/include'],
                        extra_compile_args=compiler_args,
                        libraries=compiler_libraries + extra_cpp_libraries)
     return rmsd, lprmsd, libtheobald
 
 
-
 def geometry_extensions():
+    compiler.initialize()
     compiler_args = (compiler.compiler_args_sse2 + compiler.compiler_args_sse3 +
                      compiler.compiler_args_opt)
     define_macros = None
@@ -191,8 +188,7 @@ def geometry_extensions():
                      'mdtraj/geometry/src/dssp.cpp',
                      'mdtraj/geometry/src/_geometry.pyx'],
             include_dirs=['mdtraj/geometry/include',
-                          'mdtraj/geometry/src/kernels',
-                          numpy.get_include()],
+                          'mdtraj/geometry/src/kernels'],
             define_macros=define_macros,
             extra_compile_args=compiler_args,
             libraries=extra_cpp_libraries,
@@ -204,8 +200,7 @@ def geometry_extensions():
                      "mdtraj/geometry/src/cephes/isnan.c",
                      "mdtraj/geometry/src/moments.c"],
             include_dirs=["mdtraj/geometry/include",
-                          "mdtraj/geometry/include/cephes",
-                          numpy.get_include()],
+                          "mdtraj/geometry/include/cephes"],
             define_macros=define_macros,
             extra_compile_args=compiler_args),
         Extension('mdtraj.geometry.neighbors',
@@ -217,11 +212,13 @@ def geometry_extensions():
             language='c++'),
         ]
 
-extensions = [xtc, trr, dcd, binpos, dtr]
+
+extensions = format_extensions()
 extensions.extend(rmsd_extensions())
 extensions.extend(geometry_extensions())
 
 write_version_py(VERSION, ISRELEASED)
+
 setup(name='mdtraj',
       author='Robert McGibbon',
       author_email='rmcgibbo@gmail.com',
@@ -236,6 +233,15 @@ setup(name='mdtraj',
       packages=find_packages(),
       cmdclass={'build_ext': build_ext},
       ext_modules=cythonize(extensions),
+
+      # setup_requires really doesn't work sufficently well with `pip install`
+      # to use. See https://github.com/mdtraj/mdtraj/issues/984. Also
+      # setup_requires=['setuptools>=18', 'cython>=0.22', 'numpy>=1.6'],
+
+      # Also, install_requires is no better, especially with numpy.
+      # See http://article.gmane.org/gmane.comp.python.distutils.devel/24218
+      # install_requires=['numpy>=1.6'],
+
       package_data={'mdtraj.formats.pdb': ['data/*'],
                     'mdtraj.testing': ['reference/*',
                                        'reference/ala_dipeptide_trj/*',

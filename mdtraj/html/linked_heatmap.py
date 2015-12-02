@@ -1,7 +1,10 @@
 import numpy as np
 from scipy.spatial import cKDTree
 import matplotlib.pyplot as pp
-from IPython.html.widgets import ContainerWidget
+try:
+    from ipywidgets.widgets import Box
+except ImportError:
+    from IPython.html.widgets import Box
 from .trajectory_widget import TrajectoryView
 from .imagebutton_widget import MPLFigureButton
 
@@ -28,4 +31,4 @@ def TrajectoryHeatmap(trajectory, x, y, fig=None, **kwargs):
         viewer.frame = index
 
     heatmap.on_click(callback)
-    return ContainerWidget(children=(heatmap, viewer))
+    return Box(children=(heatmap, viewer))

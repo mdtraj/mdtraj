@@ -111,7 +111,7 @@ def docstring_verifiers(module, error_on_none=False):
                 warnings.simplefilter('error')
                 parsed = NumpyDocString(doc)
 
-            param_names = set([e[0] for e in parsed['Parameters']])
+            param_names = {e[0] for e in parsed['Parameters']}
 
             if isbuiltin(f):
                 # You can't get the arglist from a builtin, which

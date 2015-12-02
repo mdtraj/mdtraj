@@ -36,6 +36,10 @@ cdef extern from "geometry.h":
     int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
                          float* distance_out, float* displacement_out,
                          int n_frames, int n_atoms, int n_pairs) nogil
+    int dist_mic_triclinic(const float* xyz, const int* pairs,
+                           const float* box_matrix, float* distance_out,
+                           float* displacement_out, int n_frames, int n_atoms,
+                           int n_pairs) nogil
 
     int angle(const float* xyz, const int* triplets, float* out,
               int n_frames, int n_atoms, int n_angles) nogil
@@ -100,22 +104,30 @@ def _dist_displacement(float[:, :, ::1] xyz,
 def _dist_mic(float[:, :, ::1] xyz,
               int[:, ::1] pairs,
               float[:, :, ::1] box_matrix,
-              float[:, ::1] out):
+              float[:, ::1] out,
+              orthogonal):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_pairs = pairs.shape[0]
-    dist_mic(&xyz[0,0,0], &pairs[0,0], &box_matrix[0,0,0], &out[0,0], NULL, n_frames, n_atoms, n_pairs)
+    if orthogonal:
+        dist_mic(&xyz[0,0,0], &pairs[0,0], &box_matrix[0,0,0], &out[0,0], NULL, n_frames, n_atoms, n_pairs)
+    else:
+        dist_mic_triclinic(&xyz[0,0,0], &pairs[0,0], &box_matrix[0,0,0], &out[0,0], NULL, n_frames, n_atoms, n_pairs)
 
 
 @cython.boundscheck(False)
 def _dist_mic_displacement(float[:, :, ::1] xyz,
                            int[:, ::1] pairs,
                            float[:, :, ::1] box_matrix,
-                           float[:, :, ::1] out):
+                           float[:, :, ::1] out,
+                           orthogonal):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_pairs = pairs.shape[0]
-    dist_mic(&xyz[0,0,0], <int*> &pairs[0,0], &box_matrix[0,0,0], NULL, &out[0,0, 0], n_frames, n_atoms, n_pairs)
+    if orthogonal:
+        dist_mic(&xyz[0,0,0], <int*> &pairs[0,0], &box_matrix[0,0,0], NULL, &out[0,0, 0], n_frames, n_atoms, n_pairs)
+    else:
+        dist_mic_triclinic(&xyz[0,0,0], <int*> &pairs[0,0], &box_matrix[0,0,0], NULL, &out[0,0, 0], n_frames, n_atoms, n_pairs)
 
 
 @cython.boundscheck(False)
@@ -196,7 +208,7 @@ def _dssp(float[:, :, ::1] xyz,
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_residues = ca_indices.shape[0]
-    cdef char[:] secondary = bytearray(n_frames*n_residues)
+    cdef char[::1] secondary = bytearray(n_frames*n_residues)
     dssp(&xyz[0,0,0], &nco_indices[0,0], &ca_indices[0],
          &is_proline[0], &chain_ids[0], n_frames, n_atoms,
          n_residues, &secondary[0])

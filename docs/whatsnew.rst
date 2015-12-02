@@ -4,15 +4,52 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.5 (in development)
----------------------
+v1.6 (Development)
+------------------
+- ``formats.hdf5.ensure_mode`` was removed to eliminate the use of a function depreciated in Python 3.5. (#990)
 
-v1.4.2 (June 9, 2014)
+
+v1.5.1 (November 6, 2015)
+-------------------------
+MDTraj 1.5.1 is a small bugfix release to correct two issues introduced in the
+immediately preceeding 1.5.0 release.
+
+- A recent change (merged Nov 5) caused ``compute_chi4`` to compute chi3
+  angles (#981).
+- Revert changes in setup.py that resulted in a more confusing error when
+  cython is not installed at build-time (#985).
+
+
+v1.5 (November 6, 2015)
+-----------------------
+
+We're pleased to announce the 1.5 release of MDTraj. It contains new
+features, improvements, and bug fixes. Highlights of the changes for this
+version include:
+
+- Faster histogramming method in RDF calculations when supported by numpy (#952)
+- Improved support for mol2 reading (#945)
+- Support for IPython/Jupyter 4 (#935)
+- Improved support for Amber NetCDF writing (#939)
+- Fix handling of periodic boundaries for distance calculations for general triclinic unit cells (#930)
+- Support different reference and query indices for superposition and RMSD calculation (#915)
+- Fix dcd reading bug under Windows (#905)
+- Trajectories have a hash implementation (#898)
+- Fixes for Hoomd (#900, #885)
+- Support files (``devtools/``, ``setup.py``, ``.travis.yml``) are BSD licensed (#891, #893)
+- Fixes for Lammpstrj (#861)
+- Support for one letter amino acid codes (#871)
+- Trajectory smoothing using a Buttersworth filter (#962)
+- New functions for computing dihedral indices from a topology (#972)
+- Improvements to build process (#955, #954, #941, #943, #942, #934)
+
+
+v1.4.2 (June 9, 2015)
 ---------------------
 - BUGFIX: Fix pytables inadvertently being moved to a required dependency
 
 
-v1.4 (June 8, 2014)
+v1.4 (June 8, 2015)
 -------------------
 Version 1.4 is our best release yet! It contains many new features, performance improvements, and bug fixes.
 
@@ -49,8 +86,6 @@ Authors
 * Jason Swails
 * Lee-Ping Wang
 * Andrea Zonca +
-
-
 
 
 v1.3 (February 25, 2015)
@@ -122,7 +157,7 @@ for contributions.
 
 
 v0.9.0 (June 10, 2014)
------------------------
+----------------------
 - Brand new ``nmr`` library that includes transparent python interfaces to
   SHIFTX2, PPM and SPARTA+ for chemical shifts, as a library for scalar
   couplings (J) using the Karplus relation.

@@ -141,16 +141,16 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
 
     // Extend ladders
     sort(bridges.begin(), bridges.end());
-    for (unsigned int i = 0; i < bridges.size(); ++i) {
-        for (unsigned int j = i + 1; j < bridges.size(); ++j) {
-            unsigned int ibi = bridges[i].i.front();
-            unsigned int iei = bridges[i].i.back();
-            unsigned int jbi = bridges[i].j.front();
-            unsigned int jei = bridges[i].j.back();
-            unsigned int ibj = bridges[j].i.front();
-            unsigned int iej = bridges[j].i.back();
-            unsigned int jbj = bridges[j].j.front();
-            unsigned int jej = bridges[j].j.back();
+    for (int i = 0; i < (int) bridges.size(); ++i) {
+        for (int j = i + 1; j < (int) bridges.size(); ++j) {
+            int ibi = bridges[i].i.front();
+            int iei = bridges[i].i.back();
+            int jbi = bridges[i].j.front();
+            int jei = bridges[i].j.back();
+            int ibj = bridges[j].i.front();
+            int iej = bridges[j].i.back();
+            int jbj = bridges[j].j.front();
+            int jej = bridges[j].j.back();
 
             if ((bridges[i].type != bridges[j].type) ||
                 chain_ids[std::min(ibi, ibj)] != chain_ids[std::max(iei, iej)] ||
@@ -250,7 +250,7 @@ static void calculate_alpha_helices(const float* xyz,
         std::vector<int> residues = it->second;
 
         for (int stride = 3; stride <= 5; stride++) {
-            for (unsigned int ii = 0; ii < residues.size(); ii++) {
+            for (int ii = 0; ii < (int) residues.size(); ii++) {
                 int i = residues[ii];
 
                 if ((i+stride) < n_residues && _test_bond(i+stride, i, hbonds) && (chain_ids[i] == chain_ids[i+stride])) {
@@ -304,7 +304,7 @@ static void calculate_alpha_helices(const float* xyz,
         }
 
     const std::vector<int> is_bend = calculate_bends(xyz, ca_indices, chain_ids, n_residues, skip);
-    for (unsigned i = 1; i < n_residues-1; i++)
+    for (int i = 1; i < n_residues-1; i++)
         if (secondary[i] == SS_LOOP && !skip[i]) {
             bool isTurn = false;
             for (int stride = 3; stride <= 5 && !isTurn; ++stride)

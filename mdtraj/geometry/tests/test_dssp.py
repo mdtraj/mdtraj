@@ -12,7 +12,7 @@ import mdtraj as md
 from mdtraj.testing import get_fn, eq, skipif
 
 HAVE_DSSP = find_executable('mkdssp')
-DSSP_MSG =  "This tests required mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
+DSSP_MSG =  "This test requires mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
 tmpdir = None
 
 
@@ -100,9 +100,14 @@ def test_5():
     np.testing.assert_array_equal(b, ref)
 
 
-def test_6():
-    t = md.load(get_fn('alanine-dipeptide-explicit.pdb'))
+#def test_6():
+#    t = md.load(get_fn('alanine-dipeptide-explicit.pdb'))
+#    a = md.compute_dssp(t, simplified=True)
+#    protein_residues = np.array([set(a.name for a in r.atoms).issuperset(('C', 'N', 'O', 'CA')) for r in t.topology.residues])
+#    assert np.unique(a[:, protein_residues]) == "C"
+#    assert np.unique(a[:, np.logical_not(protein_residues)]) == 'NA'
+
+
+def test_7():
+    t = md.load(get_fn('2EQQ.pdb'))
     a = md.compute_dssp(t, simplified=True)
-    protein_residues = np.array([set(a.name for a in r.atoms).issuperset(('C', 'N', 'O', 'CA')) for r in t.topology.residues])
-    assert np.unique(a[:, protein_residues]) == "C"
-    assert np.unique(a[:, np.logical_not(protein_residues)]) == 'NA'

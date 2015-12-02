@@ -197,15 +197,39 @@ def test_load_unknown_topology():
         assert False  # fail
 
 
-def test_select_pairs_args():
+def test_unique_pairs():
+    n = 10
+    a = np.arange(n)
+    b = np.arange(n, n+n)
+
+    eq(md.Topology._unique_pairs(a, a).sort(), md.Topology._unique_pairs_equal(a).sort())
+    eq(md.Topology._unique_pairs(a, b).sort(), md.Topology._unique_pairs_mutually_exclusive(a, b).sort())
+
+
+def test_select_pairs():
     traj = md.load(get_fn('tip3p_300K_1ATM.pdb'))
-    assert len(traj.top.select_pairs(selection1='name O', selection2='name O')) == 258 * (258 - 1) // 2
-    assert (eq(traj.top.select_pairs(selection1="(name O) or (name =~ 'H.*')", selection2="(name O) or (name =~ 'H.*')").sort(),
-               traj.top.select_pairs(selection1='all', selection2='all').sort()))
-    assert (eq(traj.top.select_pairs(selection1="name O", selection2="name H1").sort(),
-               traj.top.select_pairs(selection1="name H1", selection2="name O").sort()))
-    assert (eq(traj.top.select_pairs(selection1=range(traj.n_atoms), selection2="(name O) or (name =~ 'H.*')").sort(),
-               traj.top.select_pairs(selection1='all', selection2='all').sort()))
+    select_pairs = traj.top.select_pairs
+
+    assert len(select_pairs(selection1='name O', selection2='name O')) == 258 * (258 - 1) // 2
+    assert len(select_pairs(selection1='name H1', selection2='name O')) == 258 * 258
+
+    selections = iter([
+        # Equal
+        ("(name O) or (name =~ 'H.*')", "(name O) or (name =~ 'H.*')"),
+        ('all', 'all'),
+
+        # Exclusive
+        ('name O', 'name H1'),
+        ('name H1', 'name O'),
+
+        # Overlap
+        (range(traj.n_atoms), 'name O'),
+        ('all', 'name O')])
+
+    for select1, select2 in selections:
+        select3, select4 = next(selections)
+        assert eq(select_pairs(selection1=select1, selection2=select2).sort(),
+                  select_pairs(selection1=select3, selection2=select4).sort())
 
 
 def test_to_fasta():

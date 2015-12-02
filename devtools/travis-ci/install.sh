@@ -1,4 +1,4 @@
-MINICONDA=Miniconda-latest-Linux-x86_64.sh
+MINICONDA=Miniconda3-latest-Linux-x86_64.sh
 MINICONDA_MD5=$(curl -s http://repo.continuum.io/miniconda/ | grep -A3 $MINICONDA | sed -n '4p' | sed -n 's/ *<td>\(.*\)<\/td> */\1/p')
 wget http://repo.continuum.io/miniconda/$MINICONDA
 if [[ $MINICONDA_MD5 != $(md5sum $MINICONDA | cut -d ' ' -f 1) ]]; then
@@ -8,8 +8,8 @@ fi
 bash $MINICONDA -b
 
 
-export PATH=$HOME/miniconda/bin:$PATH
-conda install --yes conda-build jinja2 binstar pip
+export PATH=$HOME/miniconda3/bin:$PATH
+conda install --yes conda-build jinja2 anaconda-client pip
 conda config --add channels http://conda.binstar.org/colli_r
 conda config --add channels http://conda.binstar.org/rmcgibbo
 conda config --add channels http://conda.binstar.org/omnia

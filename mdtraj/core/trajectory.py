@@ -129,7 +129,7 @@ else:
         return hash_value
 
 
-def load_topology(filename):
+def load_topology(filename, **kwargs):
     """Load a topology
 
     Parameters
@@ -143,10 +143,10 @@ def load_topology(filename):
     -------
     topology : md.Topology
     """
-    return _parse_topology(filename)
+    return _parse_topology(filename, **kwargs)
 
 
-def _parse_topology(top):
+def _parse_topology(top, **kwargs):
     """Get the topology from a argument of indeterminate type
     If top is a string, we try loading a pdb, if its a trajectory
     we extract its topology.
@@ -162,20 +162,20 @@ def _parse_topology(top):
         ext = None  # might not be a string
 
     if isinstance(top, string_types) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):
-        _traj = load_frame(top, 0)
+        _traj = load_frame(top, 0, **kwargs)
         topology = _traj.topology
     elif isinstance(top, string_types) and (ext in ['.prmtop', '.parm7']):
-        topology = load_prmtop(top)
+        topology = load_prmtop(top, **kwargs)
     elif isinstance(top, string_types) and (ext in ['.psf']):
-        topology = load_psf(top)
+        topology = load_psf(top, **kwargs)
     elif isinstance(top, string_types) and (ext in ['.mol2']):
-        topology = load_mol2(top).topology
+        topology = load_mol2(top, **kwargs).topology
     elif isinstance(top, string_types) and (ext in ['.gro']):
-        topology = load_gro(top).topology
+        topology = load_gro(top, **kwargs).topology
     elif isinstance(top, string_types) and (ext in ['.arc']):
-        topology = load_arc(top).topology
+        topology = load_arc(top, **kwargs).topology
     elif isinstance(top, string_types) and (ext in ['.hoomdxml']):
-        topology = load_hoomdxml(top).topology
+        topology = load_hoomdxml(top, **kwargs).topology
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, Topology):
@@ -251,7 +251,7 @@ def open(filename, mode='r', force_overwrite=True, **kwargs):
     return loader(filename, mode=mode, force_overwrite=force_overwrite, **kwargs)
 
 
-def load_frame(filename, index, top=None, atom_indices=None):
+def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
     """Load a single frame from a trajectory file
 
     Parameters
@@ -295,7 +295,7 @@ def load_frame(filename, index, top=None, atom_indices=None):
                       'was found. I can only load files with extensions in %s'
                       % (filename, extension, _FormatRegistry.loaders.keys()))
 
-    kwargs = {'atom_indices': atom_indices}
+    kwargs['atom_indices'] = atom_indices
     if extension not in _TOPOLOGY_EXTS:
         kwargs['top'] = top
 
@@ -402,7 +402,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                       'with extensions in %s' % (filename, extension, _FormatRegistry.loaders.keys()))
 
     if extension in _TOPOLOGY_EXTS:
-        # this is a little hack that makes calling load() more predicable. since
+        # this is a little hack that makes calling load() more predictable. since
         # most of the loaders take a kwargs "top" except for load_hdf5, (since
         # it saves the topology inside the file), we often end up calling
         # load_hdf5 via this function with the top kwarg specified. but then
@@ -894,7 +894,8 @@ class Trajectory(object):
     #     # min/max/mean/std.dev./percentiles of each column in a DataFrame.
     #     raise NotImplementedError()
 
-    def superpose(self, reference, frame=0, atom_indices=None, parallel=True):
+    def superpose(self, reference, frame=0, atom_indices=None,
+                  ref_atom_indices=None, parallel=True):
         """Superpose each conformation in this trajectory upon a reference
 
         Parameters
@@ -906,6 +907,10 @@ class Trajectory(object):
         atom_indices : array_like, or None
             The indices of the atoms to superpose. If not
             supplied, all atoms will be used.
+        ref_atom_indices : array_like, or None
+            Use these atoms on the reference structure. If not supplied,
+            the same atom indices will be used for this trajectory and the
+            reference one.
         parallel : bool
             Use OpenMP to run the superposition in parallel over multiple cores
 
@@ -913,13 +918,22 @@ class Trajectory(object):
         -------
         self
         """
+
         if atom_indices is None:
             atom_indices = slice(None)
+
+        if ref_atom_indices is None:
+            ref_atom_indices = atom_indices
+
+        if not isinstance(ref_atom_indices, slice) and (
+            len(ref_atom_indices) != len(atom_indices)):
+            raise ValueError("Number of atoms must be consistent!")
 
         n_frames = self.xyz.shape[0]
         self_align_xyz = np.asarray(self.xyz[:, atom_indices, :], order='c')
         self_displace_xyz = np.asarray(self.xyz, order='c')
-        ref_align_xyz = np.array(reference.xyz[frame, atom_indices, :], copy=True, order='c').reshape(1, -1, 3)
+        ref_align_xyz = np.array(reference.xyz[frame, ref_atom_indices, :],
+                                 copy=True, order='c').reshape(1, -1, 3)
 
         offset = np.mean(self_align_xyz, axis=1, dtype=np.float64).reshape(n_frames, 1, 3)
         self_align_xyz -= offset
@@ -1704,6 +1718,83 @@ class Trajectory(object):
                 atom.residue.name not in solvent_types]
 
         return self.atom_slice(atom_indices, inplace = inplace)
+
+    def smooth(self, width, order=3, atom_indices=None, inplace=False):
+        """Smoothen a trajectory using a zero-delay Buttersworth filter. Please
+        note that for optimal results the trajectory should be properly aligned
+        prior to smoothing (see `md.Trajectory.superpose`).
+
+        Parameters
+        ----------
+        width : int
+            This acts very similar to the window size in a moving average
+            smoother. In this implementation, the frequency of the low-pass
+            filter is taken to be two over this width, so it's like
+            "half the period" of the sinusiod where the filter starts
+            to kick in. Must be an integer greater than one.
+        order : int, optional, default=3
+            The order of the filter. A small odd number is recommended. Higher
+            order filters cutoff more quickly, but have worse numerical
+            properties.
+        atom_indices : array-like, dtype=int, shape=(n_atoms), default=None
+            List of indices of atoms to retain in the new trajectory.
+            Default is set to `None`, which applies smoothing to all atoms.
+        inplace : bool, default=False
+            The return value is either ``self``, or the new trajectory,
+            depending on the value of ``inplace``.
+
+        Returns
+        -------
+        traj : md.Trajectory
+            The return value is either ``self``, or the new smoothed trajectory,
+            depending on the value of ``inplace``.
+
+        References
+        ----------
+        .. [1] "FiltFilt". Scipy Cookbook. SciPy. <http://www.scipy.org/Cookbook/FiltFilt>.
+        """
+        from scipy.signal import lfilter, lfilter_zi, filtfilt, butter
+
+        if width < 2.0 or not isinstance(width, int):
+            raise ValueError('width must be an integer greater than 1.')
+        if not atom_indices:
+            atom_indices = range(self.n_atoms)
+
+        # find nearest odd integer
+        pad = int(np.ceil((width + 1)/2)*2 - 1)
+
+        # Use lfilter_zi to choose the initial condition of the filter.
+        b, a = butter(order, 2.0 / width)
+        zi = lfilter_zi(b, a)
+
+        xyz = self.xyz.copy()
+
+        for i in atom_indices:
+            for j in range(3):
+
+                signal = xyz[:, i, j]
+                padded = np.r_[signal[pad - 1: 0: -1], signal, signal[-1: -pad: -1]]
+
+                # Apply the filter to the width.
+                z, _ = lfilter(b, a, padded, zi=zi*padded[0])
+
+                # Apply the filter again, to have a result filtered at an order
+                # the same as filtfilt.
+                z2, _ = lfilter(b, a, z, zi=zi*z[0])
+
+                # Use filtfilt to apply the filter.
+                output = filtfilt(b, a, padded)
+
+                xyz[:, i, j] = output[(pad-1): -(pad-1)]
+
+
+        if not inplace:
+            return Trajectory(xyz=xyz, topology=self.topology,
+                              time=self.time,
+                              unitcell_lengths=self.unitcell_lengths,
+                              unitcell_angles=self.unitcell_angles)
+
+        self.xyz = xyz
 
     def _check_valid_unitcell(self):
         """Do some sanity checking on self.unitcell_lengths and self.unitcell_angles

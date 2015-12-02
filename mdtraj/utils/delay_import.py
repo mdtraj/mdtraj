@@ -34,8 +34,12 @@ import sys
 import inspect
 import importlib
 import textwrap
+from unittest.case import SkipTest
 
 __all__ = ['import_']
+
+class DelayImportError(ImportError, SkipTest):
+    pass
 
 ##############################################################################
 # globals
@@ -191,4 +195,4 @@ def import_(module):
         print(bar, file=sys.stderr)
         print(m, file=sys.stderr)
         print(bar, file=sys.stderr)
-        raise e
+        raise DelayImportError(m)

@@ -106,27 +106,24 @@ def test_dihedral_indices():
     phi0_ind = np.array([3, 12, 13, 14]) - 1  # Taken from PDB, so subtract 1
     psi0_ind = np.array([1, 2,  3, 12]) - 1  # Taken from PDB, so subtract 1
 
-    rid, ind = mdtraj.geometry.dihedral._get_indices_phi(traj)
+    ind = mdtraj.geometry.dihedral.indices_phi(traj)
     eq(ind[0], phi0_ind)
-    eq(int(rid[0]), 1)
 
-    rid, ind = mdtraj.geometry.dihedral._get_indices_psi(traj)
+    ind = mdtraj.geometry.dihedral.indices_psi(traj)
     eq(ind[0], psi0_ind)
-    eq(int(rid[0]), 0)
 
 
 def test_dihedral_index_offset_generation():
     traj = md.load(get_fn('1bpi.pdb'))
+    top = traj.topology
 
-    result = np.array([2, 11, 12, 13])  # The atom indices of the first phi angle
+    # The atom indices of the first phi angle
+    result = np.array([2, 11, 12, 13])
     print([e.name for e in traj.topology.atoms])
-    rid1, ind1 = mdtraj.geometry.dihedral._get_indices_phi(traj)
-    rid2, ind2 = mdtraj.geometry.dihedral._atom_sequence(traj, ["-C","N","CA","C"])
-    rid3, ind3 = mdtraj.geometry.dihedral._atom_sequence(traj, ["-C","N","CA","C"], [-1, 0, 0, 0])
-    rid4, ind4 = mdtraj.geometry.dihedral._atom_sequence(traj, ["C" ,"N","CA","C"], [-1, 0, 0, 0])
-    eq(rid1, rid2)
-    eq(rid1, rid3)
-    eq(rid1, rid4)
+    ind1 = mdtraj.geometry.dihedral.indices_phi(top)
+    rid2, ind2 = mdtraj.geometry.dihedral._atom_sequence(top, ["-C","N","CA","C"])
+    rid3, ind3 = mdtraj.geometry.dihedral._atom_sequence(top, ["-C","N","CA","C"], [-1, 0, 0, 0])
+    rid4, ind4 = mdtraj.geometry.dihedral._atom_sequence(top, ["C" ,"N","CA","C"], [-1, 0, 0, 0])
 
     eq(ind1, ind2)
     eq(ind1, ind3)

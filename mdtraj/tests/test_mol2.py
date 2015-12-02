@@ -20,7 +20,6 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-import numpy as np
 import mdtraj as md
 from mdtraj.testing import get_fn, eq, skipif
 from mdtraj.formats import mol2
@@ -53,7 +52,8 @@ def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb():
         tar.extractall()
         tar.close()
 
-        database = pickle.load(open("./v0.3/database.pickle"))
+        with open("./v0.3/database.pickle", 'rb') as f:
+            database = pickle.load(f)
 
         for key in database:
             gaff_filename = "./v0.3/mol2files_gaff/%s.mol2" % key
@@ -108,6 +108,11 @@ def test_mol2_dataframe():
     eq(top.atype[2], "n3")
     eq(top.resName[2], "LIG")
     eq(float(top.charge[2]), -0.732600)
+
+def test_mol2_dataframe_status():
+    atoms, bonds = mol2.mol2_to_dataframes(get_fn('adp.mol2'))
+    assert atoms['charge'][1] == 1.3672
+    assert atoms['status'][1] == '****'
 
 def test_mol2_warnings():
     trj = md.load_mol2(get_fn('lysozyme-ligand-tripos.mol2'))
