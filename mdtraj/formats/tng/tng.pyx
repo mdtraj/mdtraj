@@ -1,3 +1,4 @@
+# cython: c_string_type=str, c_string_encoding=ascii
 
 cimport tnglib
 import numpy as np
@@ -6,25 +7,36 @@ np.import_array()
 
 
 cdef class TNGTrajectoryFile:
-    cdef tng_trajectory_t _traj
+    cdef tnglib.tng_trajectory_t _traj
     cdef const char * filename
     cdef char mode
     cdef int is_open
     cdef readonly char * distance_unit
+    cdef long pos
+    cdef int n_atoms          # number of atoms in the file
 
     def __cinit__(self, char * filename, char mode='r', force_overwrite=True, **kwargs):
         self.filename = filename
         self.mode = mode
+        self.pos = 0
+        if mode == 'w':
+            raise NotImplementedError()
 
-        res = tng_util_trajectory_open(filename, mode, & self._traj)
+        # TNG_CONSTANT_N_ATOMS assert that this is set
+
+        res = tnglib.tng_util_trajectory_open(filename, mode, &self._traj)
         if res == 0:
             self.is_open = True
         else:
             raise Exception("something went wrong during opening.")
 
+        res = tnglib.tng_num_particles_get(self._traj, &self.n_atoms)
+        if res != 0:
+            raise Exception("something went wrong during obtaining num particles")
+
     def __len__(self):
         cdef long res
-        tng_num_frames_get(self._traj, & res)
+        tnglib.tng_num_frames_get(self._traj, & res)
         return res
 
     def __dealloc__(self):
@@ -33,8 +45,35 @@ cdef class TNGTrajectoryFile:
     def close(self):
         "Close the XTC file handle"
         if self.is_open:
-            tng_trajectory_destroy( & self._traj)
+            tnglib.tng_trajectory_destroy( & self._traj)
             self.is_open = False
+
+    def _read(self, int n_frames, atom_indices):
+        cdef int n_atoms_to_read
+
+        if atom_indices is None:
+            n_atoms_to_read = self.n_atoms
+        elif isinstance(atom_indices, slice):
+            n_atoms_to_read = len(np.arange(self.n_atoms)[atom_indices])
+        else:
+            atom_indices = np.asarray(atom_indices)
+            if min(atom_indices) < 0:
+                raise ValueError('atom_indices should be zero indexed. you gave an index less than zero')
+            if max(atom_indices) >= self.n_atoms:
+                raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
+            n_atoms_to_read = len(atom_indices)
+        cdef long stride_length
+        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz = \
+            np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
+
+        assert n_frames == self.pos+n_frames - self.pos
+        cdef float** buffer = NULL;
+
+        res = tnglib.tng_util_pos_read_range(self._traj, self.pos, self.pos+n_frames, buffer, &stride_length)
+                                    #   <float**>&xyz[0,0,0], &stride_length)
+        if res != 0:
+            raise Exception("Error during read.")
+        return np.frombuffer(xyz)
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)
@@ -175,3 +214,10 @@ cdef class TNGTrajectoryFile:
 # 
 #         return xyz, time, step, box
 
+    def __enter__(self):
+        "Support the context manager protocol"
+        return self
+
+    def __exit__(self, *exc_info):
+        "Support the context manager protocol"
+        self.close()
