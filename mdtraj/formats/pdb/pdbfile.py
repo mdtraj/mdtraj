@@ -512,6 +512,7 @@ class PDBTrajectoryFile(object):
                 if resName in PDBTrajectoryFile._residueNameReplacements:
                     resName = PDBTrajectoryFile._residueNameReplacements[resName]
                 r = self._topology.add_residue(resName, c, residue.number)
+                r.segment_id = residue.segment_id
                 if resName in PDBTrajectoryFile._atomNameReplacements:
                     atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
                 else:

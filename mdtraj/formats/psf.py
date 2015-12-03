@@ -238,6 +238,7 @@ def load_psf(fname):
             except KeyError:
                 pass
             r = top.add_residue(rname, c, resid)
+            r.segment_id = segid
 
         try:
             name = pdb.PDBTrajectoryFile._atomNameReplacements[rname][name]
