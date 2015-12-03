@@ -13,6 +13,7 @@ DOCLINES = __doc__.split("\n")
 
 import os
 import sys
+from glob import glob
 from setuptools import setup, Extension, find_packages
 sys.path.insert(0, '.')
 from basesetup import (write_version_py, build_ext,
@@ -104,6 +105,12 @@ def format_extensions():
                              'mdtraj/formats/xtc/trr.pyx'],
                     include_dirs=['mdtraj/formats/xtc/include/',
                                   'mdtraj/formats/xtc/'])
+    tng = Extension('mdtraj.formats.tng',
+                    sources=glob('mdtraj/formats/tng/src/compression/*.c') +
+                                ['mdtraj/formats/tng/src/lib/tng_io.c',
+                                 'mdtraj/formats/tng/src/lib/md5.c',
+                                 'mdtraj/formats/tng/tng.pyx'],
+                    include_dirs=['mdtraj/formats/tng/include'])
 
     dcd = Extension('mdtraj.formats.dcd',
                     sources=['mdtraj/formats/dcd/src/dcdplugin.c',
@@ -126,7 +133,7 @@ def format_extensions():
                     language='c++',
                     libraries=extra_cpp_libraries)
 
-    return [xtc, trr, dcd, binpos, dtr]
+    return [xtc, trr, tng, dcd, binpos, dtr]
 
 
 def rmsd_extensions():
