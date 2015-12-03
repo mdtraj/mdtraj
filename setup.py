@@ -105,12 +105,16 @@ def format_extensions():
                              'mdtraj/formats/xtc/trr.pyx'],
                     include_dirs=['mdtraj/formats/xtc/include/',
                                   'mdtraj/formats/xtc/'])
+
     tng = Extension('mdtraj.formats.tng',
                     sources=glob('mdtraj/formats/tng/src/compression/*.c') +
                                 ['mdtraj/formats/tng/src/lib/tng_io.c',
                                  'mdtraj/formats/tng/src/lib/md5.c',
                                  'mdtraj/formats/tng/tng.pyx'],
-                    include_dirs=['mdtraj/formats/tng/include'])
+                    include_dirs=['mdtraj/formats/tng/include'],
+                    define_macros=[('USE_ZLIB', 1)],
+                    libraries=['z'],
+                    )
 
     dcd = Extension('mdtraj.formats.dcd',
                     sources=['mdtraj/formats/dcd/src/dcdplugin.c',
