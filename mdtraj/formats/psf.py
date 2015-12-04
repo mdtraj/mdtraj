@@ -237,7 +237,7 @@ def load_psf(fname):
                 rname = pdb.PDBTrajectoryFile._residueNameReplacements[rname]
             except KeyError:
                 pass
-            r = top.add_residue(rname, c, resid)
+            r = top.add_residue(rname, c, resid, segid)
 
         try:
             name = pdb.PDBTrajectoryFile._atomNameReplacements[rname][name]
