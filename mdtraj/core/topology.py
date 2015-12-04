@@ -416,7 +416,8 @@ class Topology(object):
             frame should have columns "serial" (atom index), "name" (atom name),
             "element" (atom's element), "resSeq" (index of the residue)
             "resName" (name of the residue), "chainID" (index of the chain),
-            following the same conventions as wwPDB 3.0 format.
+            and optionally "segmentID", following the same conventions 
+            as wwPDB 3.0 format.
         bonds : np.ndarray, shape=(n_bonds, 2), dtype=int, optional
             The bonds in the topology, represented as an n_bonds x 2 array
             of the indices of the atoms involved in each bond. Specifiying
@@ -434,9 +435,12 @@ class Topology(object):
             bonds = np.zeros((0, 2))
 
         for col in ["name", "element", "resSeq",
-                    "resName", "chainID", "serial","segmentID"]:
+                    "resName", "chainID", "serial"]:
             if col not in atoms.columns:
                 raise ValueError('dataframe must have column %s' % col)
+
+        if "segmentID" not in atoms.columns:
+            atoms["segmentID"] = ""
 
         out = cls()
         if not isinstance(atoms, pd.DataFrame):
