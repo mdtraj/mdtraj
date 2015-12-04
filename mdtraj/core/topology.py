@@ -397,10 +397,10 @@ class Topology(object):
         pd = import_('pandas')
         data = [(atom.serial, atom.name, atom.element.symbol,
                  atom.residue.resSeq, atom.residue.name,
-                 atom.residue.chain.index) for atom in self.atoms]
+                 atom.residue.chain.index,atom.segment_id) for atom in self.atoms]
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
-                                            "resSeq", "resName", "chainID"])
+                                            "resSeq", "resName", "chainID","segmentID"])
 
         bonds = np.array([(a.index, b.index) for (a, b) in self.bonds])
         return atoms, bonds
@@ -434,7 +434,7 @@ class Topology(object):
             bonds = np.zeros((0, 2))
 
         for col in ["name", "element", "resSeq",
-                    "resName", "chainID", "serial"]:
+                    "resName", "chainID", "serial","segmentID"]:
             if col not in atoms.columns:
                 raise ValueError('dataframe must have column %s' % col)
 
@@ -459,10 +459,12 @@ class Topology(object):
                 residue_atoms = chain_atoms[chain_atoms['resSeq'] == ri]
                 rnames = residue_atoms['resName']
                 residue_name = np.array(rnames)[0]
+                segids = residue_atoms['segmentID']
+                segment_id = np.array(segids)[0]
                 if not np.all(rnames == residue_name):
                     raise ValueError('All of the atoms with residue index %d '
                                      'do not share the same residue name' % ri)
-                r = out.add_residue(residue_name, c, ri, residue.segment_id)
+                r = out.add_residue(residue_name, c, ri,segment_id)
 
                 for atom_index, atom in residue_atoms.iterrows():
                     atom_index = int(atom_index)  # Fixes bizarre hashing issue on Py3K.  See #545
