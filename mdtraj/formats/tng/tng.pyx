@@ -22,16 +22,14 @@ cdef class TNGTrajectoryFile:
         if mode == 'w':
             raise NotImplementedError()
 
-        # TNG_CONSTANT_N_ATOMS assert that this is set
+        # TODO: TNG_CONSTANT_N_ATOMS assert that this is set
 
-        res = tnglib.tng_util_trajectory_open(filename, mode, &self._traj)
-        if res == 0:
+        if tnglib.tng_util_trajectory_open(filename, mode, &self._traj) == 0:
             self.is_open = True
         else:
             raise Exception("something went wrong during opening.")
 
-        res = tnglib.tng_num_particles_get(self._traj, &self.n_atoms)
-        if res != 0:
+        if tnglib.tng_num_particles_get(self._traj, &self.n_atoms) != 0:
             raise Exception("something went wrong during obtaining num particles")
 
     def __len__(self):
@@ -45,7 +43,7 @@ cdef class TNGTrajectoryFile:
     def close(self):
         "Close the XTC file handle"
         if self.is_open:
-            tnglib.tng_trajectory_destroy( & self._traj)
+            tnglib.tng_util_trajectory_close(& self._traj)
             self.is_open = False
 
     def _read(self, int n_frames, atom_indices):
@@ -62,20 +60,20 @@ cdef class TNGTrajectoryFile:
             if max(atom_indices) >= self.n_atoms:
                 raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
             n_atoms_to_read = len(atom_indices)
+
         cdef tnglib.int64_t stride_length
         cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz = \
             np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
 
         assert n_frames == self.pos+n_frames - self.pos
-        cdef float** buffer = NULL;
-
-        res = tnglib.tng_util_pos_read_range(self._traj, self.pos, 
-                                             self.pos+n_frames, buffer,
+        #cdef float** buffer = NULL;
+        res = tnglib.tng_util_pos_read_range(self._traj, self.pos,
+                                             self.pos+n_frames, &xyz[0,0,0],
                                              &stride_length)
                                     #   <float**>&xyz[0,0,0], &stride_length)
         if res != 0:
             raise Exception("Error during read.")
-        return np.frombuffer(xyz)
+        return xyz
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)
