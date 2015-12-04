@@ -121,7 +121,7 @@ def test_residue():
 
 def test_segment_id():
     top = md.load(get_fn('ala_ala_ala.pdb')).topology
-    assert top.residues.next().segment_id == "AAL", "Segment id is not being assigned correctly for ala_ala_ala.psf"
+    assert next(top.residues).segment_id == "AAL", "Segment id is not being assigned correctly for ala_ala_ala.psf"
     df = top.to_dataframe()[0]
     assert len(df["segmentID"] == "AAL")==len(df), "Segment id is not being assigned correctly to topology data frame ala_ala_ala.psf"
 
