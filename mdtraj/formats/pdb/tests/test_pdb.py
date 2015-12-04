@@ -237,6 +237,21 @@ def test_1vii_url_and_gz():
     eq(t1.n_atoms, t3.n_atoms)
     eq(t1.n_atoms, t4.n_atoms)
 
+def test_segment_id():
+    pdb = load_pdb(get_fn('ala_ala_ala.pdb'))
+    pdb.save_pdb(temp)
+    pdb2 = load_pdb(temp)
+
+    correct_segment_id = 'AAL'
+    # check that all segment ids are set correctly
+    for ridx,r in enumerate(pdb.top.residues):
+        assert r.segment_id == correct_segment_id, "residue %i (0-indexed) does not have segment_id set correctly from ala_ala_ala.pdb"%(ridx)
+
+    # check that all segment ids are set correctly after a new pdb file is written
+    for ridx,(r1,r2) in enumerate(zip(pdb.top.residues,pdb2.top.residues)):
+        assert r1.segment_id == r2.segment_id, "segment_id of residue %i (0-indexed) in ala_ala_ala.pdb does not agree with value in after being written out to a new pdb file"%(ridx)
+    
+
 def test_bfactors():
     pdb = load_pdb(get_fn('native.pdb'))
     bfactors0 = np.arange(pdb.n_atoms) / 2.0 - 4.0 # (Get some decimals..)

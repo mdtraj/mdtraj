@@ -38,6 +38,9 @@ def test_load_psf():
     # Test the XPLOR psf format parsing
     top2 = psf.load_psf(get_fn('ala_ala_ala.xpsf'))
     eq(top2, ref_top)
+    # Test segment_names are loaded properly
+    assert top.residues.next().segment_id == "AAL", "Segment id is not being assigned correctly for ala_ala_ala.psf"
+    assert top2.residues.next().segment_id == "AAL", "Segment id is not being assigned correctly for ala_ala_ala.xpsf"
 
 def test_multichain_psf():
     top = psf.load_psf(get_fn('3pqr_memb.psf'))
