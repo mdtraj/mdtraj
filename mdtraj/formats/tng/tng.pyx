@@ -13,7 +13,7 @@ cdef class TNGTrajectoryFile:
     cdef int is_open
     cdef readonly char * distance_unit
     cdef long pos
-    cdef int n_atoms          # number of atoms in the file
+    cdef tnglib.int64_t n_atoms          # number of atoms in the file
 
     def __cinit__(self, char * filename, char mode='r', force_overwrite=True, **kwargs):
         self.filename = filename
@@ -35,7 +35,7 @@ cdef class TNGTrajectoryFile:
             raise Exception("something went wrong during obtaining num particles")
 
     def __len__(self):
-        cdef long res
+        cdef tnglib.int64_t res
         tnglib.tng_num_frames_get(self._traj, & res)
         return res
 
@@ -62,14 +62,16 @@ cdef class TNGTrajectoryFile:
             if max(atom_indices) >= self.n_atoms:
                 raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
             n_atoms_to_read = len(atom_indices)
-        cdef long stride_length
+        cdef tnglib.int64_t stride_length
         cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz = \
             np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
 
         assert n_frames == self.pos+n_frames - self.pos
         cdef float** buffer = NULL;
 
-        res = tnglib.tng_util_pos_read_range(self._traj, self.pos, self.pos+n_frames, buffer, &stride_length)
+        res = tnglib.tng_util_pos_read_range(self._traj, self.pos, 
+                                             self.pos+n_frames, buffer,
+                                             &stride_length)
                                     #   <float**>&xyz[0,0,0], &stride_length)
         if res != 0:
             raise Exception("Error during read.")
