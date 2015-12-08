@@ -1107,6 +1107,8 @@ class Trajectory(object):
                 unitcell_angles = unitcell_angles.copy()
             if self.unitcell_lengths is not None:
                 unitcell_lengths = unitcell_lengths.copy()
+        else:
+            topology = self._topology
 
         newtraj = self.__class__(
             xyz, topology, time, unitcell_lengths=unitcell_lengths,
