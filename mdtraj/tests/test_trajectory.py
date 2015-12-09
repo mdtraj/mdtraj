@@ -115,16 +115,29 @@ def test_box_load_save():
 
 def test_slice():
     t = md.load(fn)
+
+    # with copying
     yield lambda: eq((t[0:5] + t[5:10]).xyz, t[0:10].xyz)
     yield lambda: eq((t[0:5] + t[5:10]).time, t[0:10].time)
     yield lambda: eq((t[0:5] + t[5:10]).unitcell_vectors, t[0:10].unitcell_vectors)
     yield lambda: eq((t[0:5] + t[5:10]).unitcell_lengths, t[0:10].unitcell_lengths)
     yield lambda: eq((t[0:5] + t[5:10]).unitcell_angles, t[0:10].unitcell_angles)
 
+    # without copying (in place)
+    yield lambda: eq((t.slice(key=range(5), copy=False) + t.slice(key=range(5,10), copy=False)).xyz             , t.slice(key=range(10), copy=False).xyz             )
+    yield lambda: eq((t.slice(key=range(5), copy=False) + t.slice(key=range(5,10), copy=False)).time            , t.slice(key=range(10), copy=False).time            )
+    yield lambda: eq((t.slice(key=range(5), copy=False) + t.slice(key=range(5,10), copy=False)).unitcell_vectors, t.slice(key=range(10), copy=False).unitcell_vectors)
+    yield lambda: eq((t.slice(key=range(5), copy=False) + t.slice(key=range(5,10), copy=False)).unitcell_lengths, t.slice(key=range(10), copy=False).unitcell_lengths)
+    yield lambda: eq((t.slice(key=range(5), copy=False) + t.slice(key=range(5,10), copy=False)).unitcell_angles , t.slice(key=range(10), copy=False).unitcell_angles )
+ 
+
 
 def test_slice2():
     t = md.load(get_fn('traj.h5'))
+    # with copying
     yield lambda: t[0] == t[[0,1]][0]
+    # without copying (in place)
+    yield lambda: t.slice(key=[0], copy=False) == t.slice(key=[0,1], copy=True)[0]
 
 
 def test_xtc():
