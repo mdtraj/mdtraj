@@ -54,7 +54,7 @@ def assert_(a, b):
 
 @skipif(not HAVE_DSSP, DSSP_MSG)
 def test_1():
-    for fn in ['1bpi.pdb', '1vii.pdb', '4K6Q.pdb', '1am7_protein.pdb']:
+    for fn in ['1bpi.pdb', '1vii.pdb', '4ZUO.pdb', '1am7_protein.pdb']:
         t = md.load_pdb(get_fn(fn))
         t = t.atom_slice(t.top.select_atom_indices('minimal'))
         f = lambda : assert_(call_dssp(t), md.compute_dssp(t, simplified=False)[0])

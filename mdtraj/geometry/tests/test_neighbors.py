@@ -31,7 +31,7 @@ def test_compute_neighbors_1():
         eq(value[i], reference[i])
         
 def test_compute_neighbors_2():
-    traj = md.load(get_fn('4K6Q.pdb'))
+    traj = md.load(get_fn('4ZUO.pdb'))
     query_indices = traj.top.select('residue 1')
     cutoff = 1.0
     value = md.compute_neighbors(traj, cutoff, query_indices)

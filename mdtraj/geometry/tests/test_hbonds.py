@@ -128,7 +128,7 @@ def test_wernet_nilsson_0():
 
 def test_wernet_nilsson_1():
     # one of these files has PBCs and the other doesnt
-    for fn in ['2EQQ.pdb', '4K6Q.pdb']:
+    for fn in ['2EQQ.pdb', '4ZUO.pdb']:
         t = md.load(get_fn(fn))
 
         result = md.wernet_nilsson(t)

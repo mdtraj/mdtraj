@@ -71,26 +71,29 @@ def test_load_multiframe():
     yield lambda: eq(t.xyz[0], t.xyz[1])
 
 
-def test_4K6Q():
-    t = load(get_fn('4K6Q.pdb'))
+def test_4ZUO():
+    t = load(get_fn('4ZUO.pdb'))
     eq(t.n_frames, 1)
-    eq(t.n_atoms, 2208)
+    eq(t.n_atoms, 6200)
 
     # this is a random line from the file
-    #ATOM   1567  O   LEU A 201      40.239  19.248 -14.530  1.00 33.74           O
+    #ATOM   1609  O   GLY A 201     -25.423  13.774 -25.234  1.00  8.92           O
 
-    atom = list(t.top.atoms)[1566]
+    atom = list(t.top.atoms)[1525]
     eq(atom.element.symbol, 'O')
-    eq(atom.residue.name, 'LEU')
-    eq(atom.index, 1566)
-    eq(t.xyz[0, 1566], np.array([40.239, 19.248, -14.530]) / 10)  # converting to NM
+    eq(atom.residue.name, 'GLY')
+    eq(atom.index, 1525)
+    eq(t.xyz[0, 1525], np.array([-25.423,  13.774, -25.234]) / 10)  # converting to NM
 
-    # this is atom 1913 in the PDB
-    atom = list(t.top.atoms)[1911]
-    eq(atom.name, 'C1')
-    eq(atom.residue.name, 'NAG')
-    eq([(a1.index, a2.index) for a1, a2 in t.top.bonds if a1.index == 1911 or a2.index == 1911],
-       [(1765, 1911), (1911, 1912), (1911, 1922)])
+    # this is atom 1577 in the PDB
+    #CONECT 1577 5518
+    #ATOM   1577  O   HIS A 197     -18.521   9.724 -32.805  1.00  8.81           O
+    #HETATM 5518  K     K A 402     -19.609  10.871 -35.067  1.00  9.11           K
+    atom = list(t.top.atoms)[1493]
+    eq(atom.name, 'O')
+    eq(atom.residue.name, 'HIS')
+    eq([(a1.index, a2.index) for a1, a2 in t.top.bonds if a1.index == 1493 or a2.index == 1493],
+       [(1492, 1493), (1493, 5129)])
 
     # that first bond is from a conect record
 
@@ -181,12 +184,12 @@ def test_pdbstructure_3():
         
 def test_pdb_from_url():
     # load pdb from URL
-    t1 = load_pdb('http://www.rcsb.org/pdb/files/4K6Q.pdb.gz')
-    t2 = load_pdb('http://www.rcsb.org/pdb/files/4K6Q.pdb')
+    t1 = load_pdb('http://www.rcsb.org/pdb/files/4ZUO.pdb.gz')
+    t2 = load_pdb('http://www.rcsb.org/pdb/files/4ZUO.pdb')
     eq(t1.n_frames, 1)
     eq(t2.n_frames, 1)
-    eq(t1.n_atoms, 2208)
-    eq(t2.n_atoms, 2208)
+    eq(t1.n_atoms, 6200)
+    eq(t2.n_atoms, 6200)
 
 def test_3nch_conect():
     # This has conect entries that use all available digits, good failure case.
