@@ -26,7 +26,7 @@ from __future__ import division, print_function
 
 PROJECT_MODULE = "mdtraj"
 PROJECT_ROOT_FILES = ['mdtraj', 'LICENSE', 'setup.py']
-SAMPLE_TEST = "numpy/linalg/tests/test_linalg.py:test_byteorder_check"
+SAMPLE_TEST = "mdtraj/tests/test_trajectory.py:test_load"
 
 EXTRA_PATH = ['/usr/lib/ccache', '/usr/lib/f90cache',
               '/usr/local/lib/ccache', '/usr/local/lib/f90cache']
@@ -57,8 +57,11 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 
 def main(argv):
     parser = ArgumentParser(usage=__doc__.lstrip())
-    parser.add_argument("--verbose", "-v", action="count", default=1,
+    parser.add_argument("--verbose", "-v", action="count", default=2,
                         help="more verbosity")
+    # parser.add_argument('--nocapture', '-s', help="Don't capture stdout (any "
+    #                     "stdout output will be pr printed immediately",
+    #                     action='store_true')
     parser.add_argument("--no-build", "-n", action="store_true", default=False,
                         help="do not build the project (use system installed version)")
     parser.add_argument("--build-only", "-b", action="store_true", default=False,
@@ -100,6 +103,9 @@ def main(argv):
     extra_argv = args.args[:]
     if extra_argv and extra_argv[0] == '--':
         extra_argv = extra_argv[1:]
+
+    # if args.nocapture:
+    #     extra_argv += ['-s']
 
     if args.python:
         # Debugging issues with warnings is much easier if you can see them
@@ -154,7 +160,7 @@ def main(argv):
             extra_argv = kw.pop('extra_argv', ())
             extra_argv = extra_argv + tests[1:]
             kw['extra_argv'] = extra_argv
-            from numpy.testing import Tester
+            from mdtraj.testing.nosetester import MDTrajTester as Tester
             return Tester(tests[0]).test(*a, **kw)
     else:
         __import__(PROJECT_MODULE)
