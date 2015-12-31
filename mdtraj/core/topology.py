@@ -91,7 +91,7 @@ def _topology_from_subset(topology, atom_indices):
         for residue in chain._residues:
             resSeq = getattr(residue, 'resSeq', None) or residue.index
             newResidue = newTopology.add_residue(residue.name, newChain,
-                                                 resSeq)
+                                                 resSeq, residue.segment_id)
             for atom in residue._atoms:
                 if atom.index in atom_indices:
                     try:  # OpenMM Topology objects don't have serial attributes, so we have to check first.
@@ -219,7 +219,7 @@ class Topology(object):
         for chain in self.chains:
             c = out.add_chain()
             for residue in chain.residues:
-                r = out.add_residue(residue.name, c, residue.resSeq)
+                r = out.add_residue(residue.name, c, residue.resSeq, residue.segment_id)
                 for atom in residue.atoms:
                     out.add_atom(atom.name, atom.element, r,
                                  serial=atom.serial)
@@ -265,7 +265,7 @@ class Topology(object):
         for chain in other.chains:
             c = out.add_chain()
             for residue in chain.residues:
-                r = out.add_residue(residue.name, c, residue.resSeq)
+                r = out.add_residue(residue.name, c, residue.resSeq, residue.segment_id)
                 for atom in residue.atoms:
                     a = out.add_atom(atom.name, atom.element, r,
                                      serial=atom.serial)
@@ -369,7 +369,7 @@ class Topology(object):
         for chain in value.chains():
             c = out.add_chain()
             for residue in chain.residues():
-                r = out.add_residue(residue.name, c)
+                r = out.add_residue(residue.name, c, residue.segment_id)
                 for atom in residue.atoms():
                     if atom.element is None:
                         element = elem.virtual
@@ -397,10 +397,10 @@ class Topology(object):
         pd = import_('pandas')
         data = [(atom.serial, atom.name, atom.element.symbol,
                  atom.residue.resSeq, atom.residue.name,
-                 atom.residue.chain.index) for atom in self.atoms]
+                 atom.residue.chain.index,atom.segment_id) for atom in self.atoms]
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
-                                            "resSeq", "resName", "chainID"])
+                                            "resSeq", "resName", "chainID","segmentID"])
 
         bonds = np.array([(a.index, b.index) for (a, b) in self.bonds])
         return atoms, bonds
@@ -416,7 +416,8 @@ class Topology(object):
             frame should have columns "serial" (atom index), "name" (atom name),
             "element" (atom's element), "resSeq" (index of the residue)
             "resName" (name of the residue), "chainID" (index of the chain),
-            following the same conventions as wwPDB 3.0 format.
+            and optionally "segmentID", following the same conventions 
+            as wwPDB 3.0 format.
         bonds : np.ndarray, shape=(n_bonds, 2), dtype=int, optional
             The bonds in the topology, represented as an n_bonds x 2 array
             of the indices of the atoms involved in each bond. Specifiying
@@ -437,6 +438,9 @@ class Topology(object):
                     "resName", "chainID", "serial"]:
             if col not in atoms.columns:
                 raise ValueError('dataframe must have column %s' % col)
+
+        if "segmentID" not in atoms.columns:
+            atoms["segmentID"] = ""
 
         out = cls()
         if not isinstance(atoms, pd.DataFrame):
@@ -459,10 +463,12 @@ class Topology(object):
                 residue_atoms = chain_atoms[chain_atoms['resSeq'] == ri]
                 rnames = residue_atoms['resName']
                 residue_name = np.array(rnames)[0]
+                segids = residue_atoms['segmentID']
+                segment_id = np.array(segids)[0]
                 if not np.all(rnames == residue_name):
                     raise ValueError('All of the atoms with residue index %d '
                                      'do not share the same residue name' % ri)
-                r = out.add_residue(residue_name, c, ri)
+                r = out.add_residue(residue_name, c, ri,segment_id)
 
                 for atom_index, atom in residue_atoms.iterrows():
                     atom_index = int(atom_index)  # Fixes bizarre hashing issue on Py3K.  See #545
@@ -572,7 +578,7 @@ class Topology(object):
         self._chains.append(chain)
         return chain
 
-    def add_residue(self, name, chain, resSeq=None):
+    def add_residue(self, name, chain, resSeq=None, segment_id=""):
         """Create a new Residue and add it to the Topology.
 
         Parameters
@@ -586,6 +592,8 @@ class Topology(object):
             numbers are arbitrary, and do not necessarily start at 0 (or 1).
             If not supplied, the resSeq attribute will be set to the
             residue's sequential (0 based) index.
+        segment_id : str, optional
+            A label for the segment to which this residue belongs
 
         Returns
         -------
@@ -594,7 +602,7 @@ class Topology(object):
         """
         if resSeq is None:
             resSeq = self._numResidues
-        residue = Residue(name, self._numResidues, chain, resSeq)
+        residue = Residue(name, self._numResidues, chain, resSeq, segment_id)
         self._residues.append(residue)
         self._numResidues += 1
         chain._residues.append(residue)
@@ -1169,15 +1177,18 @@ class Residue(object):
         The chain within which this residue belongs
     resSeq : int
         The residue sequence number
+    segment_id : str, optional
+        A label for the segment to which this residue belongs
     """
 
-    def __init__(self, name, index, chain, resSeq):
+    def __init__(self, name, index, chain, resSeq, segment_id=''):
         """Construct a new Residue.  You should call add_residue()
         on the Topology instead of calling this directly."""
         self.name = name
         self.index = index
         self.chain = chain
         self.resSeq = resSeq
+        self.segment_id = segment_id
         self._atoms = []
 
     @property
@@ -1325,6 +1336,11 @@ class Atom(object):
         """Whether the atom is in the sidechain of a protein residue"""
         return (self.name not in set(['C', 'CA', 'N', 'O'])
                 and self.residue.is_protein)
+
+    @property
+    def segment_id(self):
+        """User specified segment_id of the residue to which this atom belongs"""
+        return self.residue.segment_id
 
     def __eq__(self, other):
         """ Check whether two Atom objects are equal. """

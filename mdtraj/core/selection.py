@@ -116,6 +116,7 @@ class SelectionKeyword(object):
         (('residue', 'resSeq'), _chain('residue', 'resSeq')),
         (('resname', 'resn'), _chain('residue', 'name')),
         (('resid', 'resi'), _chain('residue', 'index')),
+        (('segment_id','segname',), _chain('segment_id')),
 
         # Atom.residue.chain.<attribute>
         (('chainid',), _chain('residue', 'chain', 'index')),
