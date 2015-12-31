@@ -58,8 +58,8 @@ void moments_clear(moments_t *self) {
 /* Push a number or a set of numbers onto the RunningMoments */
 void moments_push(moments_t *self, double x) {
     int n1;
-    double delta, term1, delta_n, delta_n2;
-    
+    double delta, term1, delta_n;  //, delta_n2;
+
     n1 = self->_n;
     self->_n += 1;
     delta = x - self->_u;

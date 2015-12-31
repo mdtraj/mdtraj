@@ -1,11 +1,17 @@
 #ifndef _MDTRAJ_DRIDKERNELS_H_
 #define _MDTRAJ_DRIDKERNELS_H_
 
+#ifdef _MSC_VER
+typedef __int32 int32_t;
+#else
+#include <stdint.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int drid_moments(float* coords, int index, int* partners, int n_partners, double* moments);
+int drid_moments(float* coords, int32_t index, int32_t* partners, int32_t n_partners, double* moments);
 
 #ifdef __cplusplus
 }

@@ -54,3 +54,4 @@ nosetests.xml
 # PyCharm
 .idea
 mdtraj/tests/.ipynb_checkpoints
+mdtraj/geometry/drid.cpp

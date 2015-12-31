@@ -57,6 +57,8 @@ cdef extern from "math.h":
 # External (Public) Functions
 ##############################################################################
 
+
+@cython.boundscheck(False)
 def rmsd(target, reference, int frame=0, atom_indices=None,
          ref_atom_indices=None, bool parallel=True, bool precentered=False):
     """rmsd(target, reference, frame=0, atom_indices=None, parallel=True, precentered=False)
