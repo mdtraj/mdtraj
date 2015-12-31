@@ -57,7 +57,7 @@ from mdtraj.core.trajectory import *
 from mdtraj.nmr import *
 import mdtraj.reporters
 
-def test(label='full', verbose=2):
+def test(label='full', verbose=2, extra_argv=None, doctests=False):
     """Run tests for mdtraj using nose.
 
     Parameters
