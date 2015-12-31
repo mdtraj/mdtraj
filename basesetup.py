@@ -51,6 +51,7 @@ class CompilerDetection(object):
 
         self.compiler_args_sse2  = ['-msse2'] if not self.msvc else ['/arch:SSE2']
         self.compiler_args_sse3  = ['-mssse3'] if (self.sse3_enabled and not self.msvc) else []
+        self.compiler_args_warn = ['-Wno-unused-function', '-Wno-unreachable-code'] if not self.msvc else []
 
         self.compiler_args_sse41, self.define_macros_sse41 = [], []
         if self.sse41_enabled:
@@ -77,7 +78,7 @@ class CompilerDetection(object):
             self.compiler_args_opt = ['-O3', '-funroll-loops']
         print()
         self._is_initialized = True
-        
+
     def _print_compiler_version(self, cc):
         print("C compiler:")
         try:

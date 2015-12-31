@@ -30,13 +30,13 @@
 #include "cbrt.h"
 
 int
-drid_moments(float* coords, int index, int* partners, int n_partners, double* moments)
+drid_moments(float* coords, int32_t index, int32_t* partners, int32_t n_partners, double* moments)
 {
-    int i;
+    int32_t i;
     float d;
     moments_t onlinemoments;
     __m128 x, y, r, r2, s;
-    
+
     moments_clear(&onlinemoments);
     x = load_float3(&coords[3 * index]);
 

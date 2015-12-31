@@ -39,7 +39,7 @@ typedef struct {
   float *xyz;
 } binposhandle;
 
-void *open_binpos_read(const char *path, const char *filetype, 
+void *open_binpos_read(const char *path, const char *filetype,
     int *natoms) {
   binposhandle *binpos;
   FILE *fd;
@@ -49,7 +49,7 @@ void *open_binpos_read(const char *path, const char *filetype,
   char magicchar[5];
 
   fd = fopen(path, "rb");
-  if (!fd) 
+  if (!fd)
    {
     fprintf(stderr, "Could not open file '%s' for reading.\n", path);
     return NULL;
@@ -82,7 +82,7 @@ void *open_binpos_read(const char *path, const char *filetype,
 	if((fseek(fd, point, SEEK_SET))!=0)
       {
 	  fprintf(stderr,"Endian correction failed. er=%d\n",er);
-      return NULL;	
+      return NULL;
      }
 	fseek(fd, point, SEEK_SET);
    }
@@ -105,7 +105,7 @@ int seek_timestep(void* v, long int offset, int origin) {
     int numatoms;
 
     binpos = (binposhandle *)v;
-    if (!binpos->fd) 
+    if (!binpos->fd)
       return MOLFILE_ERROR;
     numatoms = binpos->numatoms;
 
@@ -125,11 +125,11 @@ int seek_timestep(void* v, long int offset, int origin) {
 
 long int tell_timestep(void* v) {
     binposhandle *binpos;
-    int i, numatoms, frame;
+    int numatoms, frame;
     long int offset;
 
     binpos = (binposhandle *)v;
-    if (!binpos->fd) 
+    if (!binpos->fd)
       return MOLFILE_ERROR;
     numatoms = binpos->numatoms;
     offset = ftell(binpos->fd);
@@ -152,7 +152,7 @@ int read_next_timestep(void *v, int natoms, molfile_timestep_t *ts) {
   char tmpc;
 
   binpos = (binposhandle *)v;
-  if (!binpos->fd) 
+  if (!binpos->fd)
     return MOLFILE_ERROR;  /* Done reading frames */
 
   numatoms = binpos->numatoms;
@@ -182,8 +182,8 @@ int read_next_timestep(void *v, int natoms, molfile_timestep_t *ts) {
     }
   }
   /*
-   * Close the file handle and set to NULL so we know we're done reading 
-   * 
+   * Close the file handle and set to NULL so we know we're done reading
+   *
    */
 
   if((fread(&igarb,sizeof(int),1,binpos->fd))!=1)
@@ -193,7 +193,7 @@ int read_next_timestep(void *v, int natoms, molfile_timestep_t *ts) {
    }
   return MOLFILE_SUCCESS;
 }
- 
+
 void close_file_read(void *v) {
   binposhandle *binpos = (binposhandle *)v;
   if (binpos->fd)
@@ -222,11 +222,11 @@ void *open_binpos_write(const char *path, const char *filetype, int natoms) {
 }
 
 int write_timestep(void *v, const molfile_timestep_t *ts) {
-  
+
   int i,numatoms;
 
   binposhandle *binpos = (binposhandle *)v;
-  
+
   if (!binpos->fd)
     return MOLFILE_ERROR;
 
@@ -236,7 +236,7 @@ int write_timestep(void *v, const molfile_timestep_t *ts) {
 
   fwrite(&numatoms, 4, 1, binpos->fd);
 
-  for (i=0; i<3*numatoms; i++) 
+  for (i=0; i<3*numatoms; i++)
    {
     float tmp = ts->coords[i];
     if (fwrite(&tmp, sizeof(float), 1, binpos->fd) != 1) {
@@ -253,7 +253,7 @@ int write_timestep(void *v, const molfile_timestep_t *ts) {
 
   return MOLFILE_SUCCESS;
 }
-       
+
 void close_file_write(void *v) {
   binposhandle *binpos = (binposhandle *)v;
   if (binpos->fd)

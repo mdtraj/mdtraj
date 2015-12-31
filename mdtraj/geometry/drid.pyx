@@ -28,14 +28,14 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 from mdtraj.utils import ensure_type
-cimport numpy as np
 cimport cython
 
 __all__ = ['compute_drid']
 
 cdef extern from "dridkernels.h":
-    int drid_moments(float* coords, np.int32_t index, np.int32_t * partners,
-                     np.int32_t n_partners, double* moments) nogil
+    ctypedef signed int int32_t
+    int drid_moments(float* coords, int32_t index, int32_t * partners,
+                     int32_t n_partners, double* moments) nogil
 
 
 ##############################################################################
@@ -74,7 +74,7 @@ def compute_drid(traj, atom_indices=None):
     if atom_indices is None:
         atom_indices = np.arange(traj.n_atoms, dtype=np.int32)
     else:
-        atom_indices = ensure_type(np.asarray(atom_indices), dtype=np.int32,ndim=1, name='atom_indices', warn_on_cast=False)
+        atom_indices = ensure_type(np.asarray(atom_indices), dtype=np.int32, ndim=1, name='atom_indices', warn_on_cast=False)
         if not np.all((atom_indices >= 0) * (atom_indices < traj.xyz.shape[1]) * (atom_indices < traj.xyz.shape[1])):
             raise ValueError("atom_indices must be valid positive indices")
 
@@ -96,16 +96,11 @@ def compute_drid(traj, atom_indices=None):
     for i, j in enumerate(atom_indices):
         partners_l.append(set_atom_indices - bonds[i] - set([j]))
     n_partners = np.array([len(p) for p in partners_l], dtype=np.int32)
-    
+
     partners = np.zeros((len(atom_indices), np.max(n_partners)), dtype=np.int32)
     partners.fill(-1)
     for i in range(len(atom_indices)):
         partners[i,:n_partners[i]] = np.array(sorted(partners_l[i]))
-
-    # DEBUG
-    # print(atom_indices)
-    # print(n_partners)
-    # print(partners)
 
     return _drid(traj.xyz, atom_indices, partners, n_partners)
 
@@ -113,13 +108,11 @@ def compute_drid(traj, atom_indices=None):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def _drid(np.ndarray[ndim=3, mode='c', dtype=np.float32_t] xyz not None,
-          np.ndarray[ndim=1, mode='c', dtype=np.int32_t] atom_indices not None,
-          np.ndarray[ndim=2, mode='c', dtype=np.int32_t] partners not None,
-          np.ndarray[ndim=1, mode='c', dtype=np.int32_t] n_partners not None):
+cdef _drid(float[:, :, ::1] xyz, int32_t[::1] atom_indices,
+           int32_t[:, ::1] partners, int32_t[::1] n_partners):
 
     cdef int i, j, n_frames, n_atoms, n_dims, n_atom_indices
-    cdef np.ndarray[ndim=3, mode='c', dtype=np.double_t] result
+    cdef double[:, :, ::1] result
 
     n_frames = xyz.shape[0]
     n_atoms = xyz.shape[1]
@@ -133,4 +126,4 @@ def _drid(np.ndarray[ndim=3, mode='c', dtype=np.float32_t] xyz not None,
             drid_moments(&xyz[i, 0, 0], atom_indices[j], &partners[j,0],
                          n_partners[j], &result[i, j, 0])
 
-    return result.reshape(n_frames, n_atom_indices*3)
+    return np.array(result, copy=False).reshape(n_frames, n_atom_indices*3)

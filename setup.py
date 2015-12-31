@@ -74,6 +74,7 @@ Operating System :: MacOS
 
 # Global info about compiler
 compiler = CompilerDetection(disable_openmp)
+compiler.initialize()
 
 extra_cpp_libraries = []
 if sys.platform == 'darwin':
@@ -91,31 +92,37 @@ if sys.platform == 'win32':
 ################################################################################
 
 def format_extensions():
+    compiler_args = compiler.compiler_args_warn
+
     xtc = Extension('mdtraj.formats.xtc',
                     sources=['mdtraj/formats/xtc/src/xdrfile.c',
                              'mdtraj/formats/xtc/src/xdrfile_xtc.c',
                              'mdtraj/formats/xtc/xtc.pyx'],
                     include_dirs=['mdtraj/formats/xtc/include/',
-                                  'mdtraj/formats/xtc/'])
+                                  'mdtraj/formats/xtc/'],
+                    extra_compile_args=compiler_args)
 
     trr = Extension('mdtraj.formats.trr',
                     sources=['mdtraj/formats/xtc/src/xdrfile.c',
                              'mdtraj/formats/xtc/src/xdrfile_trr.c',
                              'mdtraj/formats/xtc/trr.pyx'],
                     include_dirs=['mdtraj/formats/xtc/include/',
-                                  'mdtraj/formats/xtc/'])
+                                  'mdtraj/formats/xtc/'],
+                    extra_compile_args=compiler_args)
 
     dcd = Extension('mdtraj.formats.dcd',
                     sources=['mdtraj/formats/dcd/src/dcdplugin.c',
                              'mdtraj/formats/dcd/dcd.pyx'],
                     include_dirs=["mdtraj/formats/dcd/include/",
-                                  'mdtraj/formats/dcd/'])
+                                  'mdtraj/formats/dcd/'],
+                    extra_compile_args=compiler_args)
 
     binpos = Extension('mdtraj.formats.binpos',
                        sources=['mdtraj/formats/binpos/src/binposplugin.c',
                                 'mdtraj/formats/binpos/binpos.pyx'],
                        include_dirs=['mdtraj/formats/binpos/include/',
-                                     'mdtraj/formats/binpos/'])
+                                     'mdtraj/formats/binpos/'],
+                       extra_compile_args=compiler_args)
 
     dtr = Extension('mdtraj.formats.dtr',
                     sources=['mdtraj/formats/dtr/src/dtrplugin.cxx',
@@ -124,15 +131,16 @@ def format_extensions():
                                   'mdtraj/formats/dtr/'],
                     define_macros=[('DESRES_READ_TIMESTEP2', 1)],
                     language='c++',
+                    extra_compile_args=compiler_args,
                     libraries=extra_cpp_libraries)
 
     return [xtc, trr, dcd, binpos, dtr]
 
 
 def rmsd_extensions():
-    compiler.initialize()
     compiler_args = (compiler.compiler_args_openmp + compiler.compiler_args_sse2 +
-                     compiler.compiler_args_sse3 + compiler.compiler_args_opt)
+                     compiler.compiler_args_sse3 + compiler.compiler_args_opt +
+                     compiler.compiler_args_warn)
     compiler_libraries = compiler.compiler_libraries_openmp
 
     libtheobald = StaticLibrary(
@@ -178,7 +186,7 @@ def rmsd_extensions():
 def geometry_extensions():
     compiler.initialize()
     compiler_args = (compiler.compiler_args_sse2 + compiler.compiler_args_sse3 +
-                     compiler.compiler_args_opt)
+                     compiler.compiler_args_opt + compiler.compiler_args_warn)
     define_macros = None
 
     return [
@@ -202,7 +210,8 @@ def geometry_extensions():
             include_dirs=["mdtraj/geometry/include",
                           "mdtraj/geometry/include/cephes"],
             define_macros=define_macros,
-            extra_compile_args=compiler_args),
+            extra_compile_args=compiler_args,
+            language='c++'),
         Extension('mdtraj.geometry.neighbors',
             sources=["mdtraj/geometry/neighbors.pyx",
                      "mdtraj/geometry/src/neighbors.cpp"],
