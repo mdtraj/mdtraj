@@ -7,10 +7,8 @@ Run tests, building the project first.
 Examples::
 
     $ python runtests.py
+    $ python runtests.py -t {SAMPLE_TEST_FILE}
     $ python runtests.py -t {SAMPLE_TEST}
-    $ python runtests.py --ipython
-    $ python runtests.py --python somescript.py
-    $ python runtests.py --bench
 
 Run a debugger:
 
@@ -27,6 +25,7 @@ from __future__ import division, print_function
 PROJECT_MODULE = "mdtraj"
 PROJECT_ROOT_FILES = ['mdtraj', 'LICENSE', 'setup.py']
 SAMPLE_TEST = "mdtraj/tests/test_trajectory.py:test_load"
+SAMPLE_TEST_FILE = "mdtraj/tests/test_psf.py"
 
 EXTRA_PATH = ['/usr/lib/ccache', '/usr/lib/f90cache',
               '/usr/local/lib/ccache', '/usr/local/lib/f90cache']
@@ -75,20 +74,12 @@ def main(argv):
                         help="Paths to prepend to PYTHONPATH")
     parser.add_argument("--tests", "-t", action='append',
                         help="Specify tests to run")
-    parser.add_argument("--python", action="store_true",
-                        help="Start a Python shell with PYTHONPATH set")
-    parser.add_argument("--ipython", "-i", action="store_true",
-                        help="Start IPython shell with PYTHONPATH set")
-    parser.add_argument("--shell", action="store_true",
-                        help="Start Unix shell with PYTHONPATH set")
     parser.add_argument("--debug", "-g", action="store_true",
                         help="Debug build")
-    parser.add_argument("--parallel", "-j", type=int, default=0,
-                        help="Number of parallel jobs during build")
     parser.add_argument("--show-build-log", action="store_true",
                         help="Show build output rather than using a log file")
     parser.add_argument("args", metavar="ARGS", default=[], nargs=REMAINDER,
-                        help="Arguments to pass to Nose, Python or shell")
+                        help="Arguments to pass to Nose")
     args = parser.parse_args(argv)
 
     if args.pythonpath:
@@ -106,41 +97,6 @@ def main(argv):
 
     # if args.nocapture:
     #     extra_argv += ['-s']
-
-    if args.python:
-        # Debugging issues with warnings is much easier if you can see them
-        print("Enabling display of all warnings")
-        import warnings; warnings.filterwarnings("always")
-        if extra_argv:
-            # Don't use subprocess, since we don't want to include the
-            # current path in PYTHONPATH.
-            sys.argv = extra_argv
-            with open(extra_argv[0], 'r') as f:
-                script = f.read()
-            sys.modules['__main__'] = imp.new_module('__main__')
-            ns = dict(__name__='__main__',
-                      __file__=extra_argv[0])
-            exec_(script, ns)
-            sys.exit(0)
-        else:
-            import code
-            code.interact()
-            sys.exit(0)
-
-    if args.ipython:
-        # Debugging issues with warnings is much easier if you can see them
-        print("Enabling display of all warnings and pre-importing numpy as np")
-        import warnings; warnings.filterwarnings("always")
-        import IPython
-        import numpy as np
-        IPython.embed(user_ns={"np": np})
-        sys.exit(0)
-
-    if args.shell:
-        shell = os.environ.get('SHELL', 'sh')
-        print("Spawning a Unix shell...")
-        os.execv(shell, [shell] + extra_argv)
-        sys.exit(1)
 
     test_dir = os.path.join(ROOT_DIR, 'build', 'test')
 
@@ -224,8 +180,6 @@ def build_project(args):
         env['FOPT'] = '-O0 -ggdb'
 
     cmd += ["build"]
-    if args.parallel > 1:
-        cmd += ["-j", str(args.parallel)]
     cmd += ['install', '--single-version-externally-managed', '--prefix=' + dst_dir,
             '--record='+os.path.join(dst_dir, 'install.txt')]
 
