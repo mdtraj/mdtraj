@@ -287,7 +287,6 @@ class HDF5TrajectoryFile(object):
                     segment_id = residue_dict["segmentID"]
                 except KeyError:
                     segment_id = ""
-                    warnings.warn('No segment_id information found in HDF file, setting as blank')
                 residue = topology.add_residue(residue_dict['name'], chain, resSeq=resSeq, segment_id=segment_id)
                 for atom_dict in sorted(residue_dict['atoms'], key=operator.itemgetter('index')):
                     try:
@@ -335,7 +334,7 @@ class HDF5TrajectoryFile(object):
                         'index': int(residue.index),
                         'name': str(residue.name),
                         'atoms': [],
-                        "resSeq": int(residue.resSeq), 
+                        "resSeq": int(residue.resSeq),
                         "segmentID": str(residue.segment_id)
                     }
 
