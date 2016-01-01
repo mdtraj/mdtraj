@@ -335,7 +335,7 @@ class HDF5TrajectoryFile(object):
                         'index': int(residue.index),
                         'name': str(residue.name),
                         'atoms': [],
-                        "resSeq": int(residue.resSeq), 
+                        "resSeq": int(residue.resSeq),
                         "segmentID": str(residue.segment_id)
                     }
 
