@@ -57,7 +57,7 @@ from mdtraj.core.trajectory import *
 from mdtraj.nmr import *
 import mdtraj.reporters
 
-def test(label='full', verbose=2):
+def test(label='full', verbose=2, extra_argv=None, doctests=False):
     """Run tests for mdtraj using nose.
 
     Parameters
@@ -71,7 +71,7 @@ def test(label='full', verbose=2):
     import mdtraj
     from mdtraj.testing.nosetester import MDTrajTester
     tester = MDTrajTester(mdtraj)
-    return tester.test(label=label, verbose=verbose, extra_argv=('--exe',))
+    return tester.test(label=label, verbose=verbose, extra_argv=extra_argv)
 # prevent nose from discovering this function, or otherwise when its run
 # the test suite in an infinite loop
 test.__test__ = False

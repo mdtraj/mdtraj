@@ -32,6 +32,7 @@ VMD_MSG = 'This test requires the VMD executable: http://www.ks.uiuc.edu/Researc
 
 
 def test_load_psf():
+    print('sddsfsfdsdsdf')
     top = psf.load_psf(get_fn('ala_ala_ala.psf'))
     ref_top = md.load(get_fn('ala_ala_ala.pdb')).topology
     eq(top, ref_top)
@@ -113,7 +114,7 @@ exit
     with enter_temp_directory():
         with open('script.tcl', 'w') as f:
             f.write(TEMPLATE)
-        os.system(' '.join([VMD.replace(' ', '\ '), '-e', 'script.tcl', 
+        os.system(' '.join([VMD.replace(' ', '\ '), '-e', 'script.tcl',
             '-dispdev', 'none']))
         out_pdb = md.load('out.pdb')
         out_psf = md.load_psf('out.psf')
