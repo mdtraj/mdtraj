@@ -7,7 +7,7 @@ from mdtraj.testing import get_fn, assert_raises
 
 
 def test_1():
-    # https://github.com/rmcgibbo/mdtraj/issues/438
+    # https://github.com/mdtraj/mdtraj/issues/438
     try:
         dir = tempfile.mkdtemp()
         fn = os.path.join(dir, 'temp.npy')
@@ -19,7 +19,8 @@ def test_1():
         # since traj isn't precentered, this requires centering
         # the coordinates which is done inplace. but that's not possible
         # with mmap_mode = 'r'
-        assert_raises(ValueError, md.rmsd, traj, traj, 0)
+        with assert_raises(ValueError):
+            md.rmsd(traj, traj, 0)
 
         # this should work
         traj.xyz = np.load(fn, mmap_mode='c')
@@ -32,7 +33,7 @@ def test_1():
 
 
 def test_2():
-    # https://github.com/rmcgibbo/mdtraj/issues/438
+    # https://github.com/mdtraj/mdtraj/issues/438
     try:
         dir = tempfile.mkdtemp()
         fn = os.path.join(dir, 'temp.npy')
@@ -44,9 +45,8 @@ def test_2():
         traj.xyz = np.load(fn, mmap_mode='r')
         traj._rmsd_traces = traces
 
-        # this should work, since we don't need to modify the
-        # coordinates inplace
-        md.rmsd(traj, traj, 0, precentered=True)
+        with assert_raises(ValueError):
+            md.rmsd(traj, traj, 0, precentered=True)
 
     finally:
         del traj
