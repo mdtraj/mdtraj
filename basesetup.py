@@ -49,9 +49,9 @@ class CompilerDetection(object):
         self.sse3_enabled = self._detect_sse3() if not self.msvc else True
         self.sse41_enabled = self._detect_sse41() if not self.msvc else True
 
-        self.compiler_args_sse2  = ['-msse2'] if not self.msvc else ['/arch:SSE2']
-        self.compiler_args_sse3  = ['-mssse3'] if (self.sse3_enabled and not self.msvc) else []
-        self.compiler_args_warn = ['-Wno-unused-function', '-Wno-unreachable-code'] if not self.msvc else []
+        self.compiler_args_sse2 = ['-msse2'] if not self.msvc else ['/arch:SSE2']
+        self.compiler_args_sse3 = ['-mssse3'] if (self.sse3_enabled and not self.msvc) else []
+        self.compiler_args_warn = ['-Wno-unused-function', '-Wno-unreachable-code', '-Wno-sign-compare'] if not self.msvc else []
 
         self.compiler_args_sse41, self.define_macros_sse41 = [], []
         if self.sse41_enabled:
@@ -257,7 +257,6 @@ class StaticLibrary(Extension):
 
 
 class build_ext(_build_ext):
-
     def initialize_options(self):
         _build_ext.initialize_options(self)
         import pkg_resources
@@ -331,3 +330,18 @@ class build_ext(_build_ext):
 
         for item in ext.export_include:
             shutil.copy(item, output_dir)
+
+    def get_ext_filename(self, ext_name):
+        filename = _build_ext.get_ext_filename(self, ext_name)
+
+        try:
+            exts = [e for e in self.extensions if ext_name in {e.name, e.name.split('.')[-1]}]
+            ext = exts[0]
+            if isinstance(ext, StaticLibrary):
+                if new_compiler().compiler_type == 'msvc':
+                    return filename.split('.')[0] + '.lib'
+                else:
+                    return filename.split('.')[0] + '.a'
+        except Exception as e:
+            pass
+        return filename
