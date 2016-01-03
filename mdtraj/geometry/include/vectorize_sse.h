@@ -32,27 +32,83 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.                                     *
  * -------------------------------------------------------------------------- */
 
-#include <smmintrin.h>
-#include "hardware.h"
+#include <pmmintrin.h>
+
+
+/* Macros from http://sseplus.sourceforge.net/_s_s_e_plus__platform_8h-source.html */
+#ifdef _MSC_VER
+#define __CNST32I28I_( x ) \
+    ((unsigned __int8)((x) & 0xFF)), ((unsigned __int8)(((x) >> 8) & 0xFF)), ((unsigned __int8)(((x) >> 16) & 0xFF)), ((unsigned __int8)(((x) >> 24) & 0xFF))
+
+#define SSP_CONST_SETR_32I( a, b, c, d ) \
+    { __CNST32I28I_((a)), __CNST32I28I_((b)), __CNST32I28I_((c)), __CNST32I28I_((d)) }
+
+#define SSP_CONST_SET_32I( a, b, c, d ) \
+    SSP_CONST_SETR_32I( (d), (c), (b), (a) )
+#else
+#define __CNST32TO64_( a, b ) \
+        ( ((b)<<32) | ((a) & 0xFFFFFFFF) )
+
+#define SSP_CONST_SETR_32I( a, b, c, d ) \
+    { __CNST32TO64_( (unsigned long long)(a), (unsigned long long)(b) ), \
+      __CNST32TO64_( (unsigned long long)(c), (unsigned long long)(d) ) }
+
+#define SSP_CONST_SET_32I( a, b, c, d ) \
+    SSP_CONST_SETR_32I( (d), (c), (b), (a) )
+#endif
+
+
+static inline __m128 _mm_hsum_ps(__m128 v) {
+    v = _mm_hadd_ps(v, v);
+    v = _mm_hadd_ps(v, v);
+    return v;
+}
+
+
+static inline __m128 _mm_round_ps2(const __m128 a) {
+    /* http://dss.stephanierct.com/DevBlog/?p=8 */
+    __m128 v0 = _mm_setzero_ps();             /* generate the highest value < 2 */
+    __m128 v1 = _mm_cmpeq_ps(v0,v0);
+    __m128i srli = _mm_srli_epi32( *(__m128i*)& v1, 2);
+    __m128 vNearest2 = *(__m128*)& srli;
+    __m128i i = _mm_cvttps_epi32(a);
+    __m128 aTrunc = _mm_cvtepi32_ps(i);        /* truncate a */
+    __m128 rmd = _mm_sub_ps(a, aTrunc);        /* get remainder */
+    __m128 rmd2 = _mm_mul_ps( rmd, vNearest2); /* mul remainder by near 2 will yield the needed offset */
+    __m128i rmd2i = _mm_cvttps_epi32(rmd2);    /* after being truncated of course */
+    __m128 rmd2Trunc = _mm_cvtepi32_ps(rmd2i);
+    __m128 r =_mm_add_ps(aTrunc, rmd2Trunc);
+    return r;
+}
+
+static inline __m128 _mm_dp_ps2( __m128 a, __m128 b, const int mask ) {
+    /*
+     Copyright (c) 2006-2008 Advanced Micro Devices, Inc. All Rights Reserved.
+     This software is subject to the Apache v2.0 License.
+    */
+
+    /* Shift mask multiply moves 0,1,2,3 bits to left, becomes MSB */
+    const static __m128i mulShiftImm_0123 = SSP_CONST_SET_32I(0x010000, 0x020000, 0x040000, 0x080000);
+    /* Shift mask multiply moves 4,5,6,7 bits to left, becomes MSB */
+    const static __m128i mulShiftImm_4567 = SSP_CONST_SET_32I(0x100000, 0x200000, 0x400000, 0x800000);
+
+    /* Begin mask preparation */
+    __m128i mHi, mLo;
+    mLo = _mm_set1_epi32(mask);    /* Load the mask into register */
+    mLo = _mm_slli_si128(mLo, 3);  /* Shift into reach of the 16 bit multiply */
+    mHi = _mm_mullo_epi16(mLo, mulShiftImm_0123);  /* Shift the bits */
+    mLo = _mm_mullo_epi16(mLo, mulShiftImm_4567);  /* Shift the bits */
+    mHi = _mm_cmplt_epi32(mHi, _mm_setzero_si128()); /* FFFFFFFF if bit set, 00000000 if not set */
+    mLo = _mm_cmplt_epi32(mLo, _mm_setzero_si128()); /* FFFFFFFF if bit set, 00000000 if not set */
+    /* End mask preparation - Mask bits 0-3 in mLo, 4-7 in mHi */
+    a = _mm_and_ps(a, *(__m128*)& mHi);   /* Clear input using the high bits of the mask */
+    a = _mm_mul_ps(a, b);
+    a = _mm_hsum_ps(a);                  /* Horizontally add the 4 values */
+    a = _mm_and_ps(a, *(__m128*)& mLo);  /* Clear output using low bits of the mask */
+    return a;
+}
 
 // This file defines classes and functions to simplify vectorizing code with SSE.
-
-// These two functions are defined in the vecmath library, which is linked into OpenMM.
-__m128 exp_ps(__m128);
-__m128 log_ps(__m128);
-
-/**
- * Determine whether ivec4 and fvec4 are supported on this processor.
- */
-static bool isVec4Supported() {
-    int cpuInfo[4];
-    cpuid(cpuInfo, 0);
-    if (cpuInfo[0] >= 1) {
-        cpuid(cpuInfo, 1);
-        return ((cpuInfo[2] & ((int) 1 << 19)) != 0);
-    }
-    return false;
-}
 
 class ivec4;
 
@@ -162,18 +218,22 @@ public:
     ivec4 operator-(const ivec4& other) const {
         return _mm_sub_epi32(val, other);
     }
+    /*
     ivec4 operator*(const ivec4& other) const {
         return _mm_mullo_epi32(val, other);
     }
+    */
     void operator+=(const ivec4& other) {
         val = _mm_add_epi32(val, other);
     }
     void operator-=(const ivec4& other) {
         val = _mm_sub_epi32(val, other);
     }
+    /*
     void operator*=(const ivec4& other) {
         val = _mm_mullo_epi32(val, other);
     }
+    */
     ivec4 operator-() const {
         return _mm_sub_epi32(_mm_set1_epi32(0), val);
     }
@@ -216,16 +276,8 @@ inline ivec4::operator fvec4() const {
 
 // Functions that operate on fvec4s.
 
-static inline fvec4 floor(const fvec4& v) {
-    return fvec4(_mm_floor_ps(v.val));
-}
-
-static inline fvec4 ceil(const fvec4& v) {
-    return fvec4(_mm_ceil_ps(v.val));
-}
-
 static inline fvec4 round(const fvec4& v) {
-    return fvec4(_mm_round_ps(v.val, _MM_FROUND_TO_NEAREST_INT));
+    return fvec4(_mm_round_ps2(v.val));
 }
 
 static inline fvec4 min(const fvec4& v1, const fvec4& v2) {
@@ -257,20 +309,12 @@ static inline fvec4 rsqrt(const fvec4& v) {
     return y;
 }
 
-static inline fvec4 exp(const fvec4& v) {
-    return fvec4(exp_ps(v.val));
-}
-
-static inline fvec4 log(const fvec4& v) {
-    return fvec4(log_ps(v.val));
-}
-
 static inline float dot3(const fvec4& v1, const fvec4& v2) {
-    return _mm_cvtss_f32(_mm_dp_ps(v1, v2, 0x71));
+    return _mm_cvtss_f32(_mm_dp_ps2(v1, v2, 0x71));
 }
 
 static inline float dot4(const fvec4& v1, const fvec4& v2) {
-    return _mm_cvtss_f32(_mm_dp_ps(v1, v2, 0xF1));
+    return _mm_cvtss_f32(_mm_dp_ps2(v1, v2, 0xF1));
 }
 
 static inline fvec4 cross(const fvec4& v1, const fvec4& v2) {
@@ -281,34 +325,6 @@ static inline fvec4 cross(const fvec4& v1, const fvec4& v2) {
 
 static inline void transpose(fvec4& v1, fvec4& v2, fvec4& v3, fvec4& v4) {
     _MM_TRANSPOSE4_PS(v1, v2, v3, v4);
-}
-
-
-/* Print the contents of a SSE float4 vector to stdout (debugging) */
-#include <cstdio>
-static inline void print(fvec4 v) {
-    float p[4];
-    v.store(p);
-    printf("%.3f %.3f %.3f %.3f\n", p[0], p[1], p[2], p[3]);
-}
-
-
-// Functions that operate on ivec4s.
-
-static inline ivec4 min(const ivec4& v1, const ivec4& v2) {
-    return ivec4(_mm_min_epi32(v1.val, v2.val));
-}
-
-static inline ivec4 max(const ivec4& v1, const ivec4& v2) {
-    return ivec4(_mm_max_epi32(v1.val, v2.val));
-}
-
-static inline ivec4 abs(const ivec4& v) {
-    return ivec4(_mm_abs_epi32(v.val));
-}
-
-static inline bool any(const ivec4& v) {
-    return !_mm_test_all_zeros(v, _mm_set1_epi32(0xFFFFFFFF));
 }
 
 // Mathematical operators involving a scalar and a vector.
@@ -329,11 +345,29 @@ static inline fvec4 operator/(float v1, const fvec4& v2) {
     return fvec4(v1)/v2;
 }
 
-// Operations for blending fvec4s based on an ivec4.
-
-static inline fvec4 blend(const fvec4& v1, const fvec4& v2, const ivec4& mask) {
-    return fvec4(_mm_blendv_ps(v1.val, v2.val, _mm_castsi128_ps(mask.val)));
+static inline fvec4 load3(const float* v) {
+    /* Load (x,y,z) into a SSE register, leaving the last entry */
+    /* set to zero. */
+  __m128 x = _mm_load_ss(&v[0]);
+  __m128 y = _mm_load_ss(&v[1]);
+  __m128 z = _mm_load_ss(&v[2]);
+  __m128 xy = _mm_movelh_ps(x, y);
+  return fvec4(_mm_shuffle_ps(xy, z, _MM_SHUFFLE(2, 0, 2, 0)));
 }
+
+
+static inline int store3(const fvec4& v, float* loc) {
+    /* Store the low three floats in an SSE register into */
+    /* memory, at location loc[0], loc[1], loc[2]. The high */
+    /* float is not touched. */
+  __m128 val = v.val;
+  _mm_store_ss(loc, val);
+  _mm_store_ss(loc+1, _mm_shuffle_ps(val, val, _MM_SHUFFLE(1,1,1,1)));
+  _mm_store_ss(loc+2, _mm_shuffle_ps(val, val, _MM_SHUFFLE(2,2,2,2)));
+
+  return 1;
+}
+
 
 #endif /*OPENMM_VECTORIZE_SSE_H_*/
 

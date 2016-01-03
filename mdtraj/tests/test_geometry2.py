@@ -13,9 +13,9 @@ def test_1():
     angles = 90 * np.random.rand(1, 3).astype(np.float32)
     t = md.Trajectory(xyz, topology=None, unitcell_lengths=lengths, unitcell_angles=angles)
 
-    pairs = np.array([[0,1]]).astype(np.int32)
+    pairs = np.array([[0,1]])
 
-    d1 = geometry2.compute_distances_triclinic(
+    d1 = geometry2.compute_distances(
         xyz,
         np.asarray(t.unitcell_vectors, order='c'),
         pairs)

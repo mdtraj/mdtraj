@@ -196,7 +196,7 @@ def geometry_extensions():
                      'mdtraj/geometry/src/geometry2.pyx'],
             include_dirs=['mdtraj/geometry/include'],
             define_macros=define_macros,
-            extra_compile_args=compiler_args + ['-msse4'],
+            extra_compile_args=compiler_args,
             libraries=extra_cpp_libraries,
             language='c++'),
         Extension('mdtraj.geometry._geometry',
