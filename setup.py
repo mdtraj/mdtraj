@@ -190,11 +190,11 @@ def geometry_extensions():
     define_macros = None
 
     return [
-        Extension('mdtraj.geometry.geometry2',
-            sources=['mdtraj/geometry/src/geometry.cpp',
-                     'mdtraj/geometry/src/unitcell.cpp',
-                     'mdtraj/geometry/src/geometry2.pyx'],
-            include_dirs=['mdtraj/geometry/include'],
+        Extension('mdtraj.geometry.geometry',
+            sources=['mdtraj/geometry/libgeometry/src/geometry.cpp',
+                     'mdtraj/geometry/libgeometry/src/unitcell.cpp',
+                     'mdtraj/geometry/libgeometry/geometry.pyx'],
+            include_dirs=['mdtraj/geometry/libgeometry/include'],
             define_macros=define_macros,
             extra_compile_args=compiler_args,
             libraries=extra_cpp_libraries,

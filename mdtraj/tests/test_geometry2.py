@@ -1,6 +1,6 @@
 import numpy as np
 import mdtraj as md
-from mdtraj.geometry import geometry2
+from mdtraj.geometry import geometry
 
 np.random.seed(2)
 
@@ -15,7 +15,7 @@ def test_1():
 
     pairs = np.array([[0,1]])
 
-    d1 = geometry2.compute_distances(
+    d1 = geometry.compute_distances(
         xyz,
         np.asarray(t.unitcell_vectors, order='c'),
         pairs)
