@@ -9,14 +9,19 @@ supported trajectory formats. The high level interface is provided by the
 .. autosummary::
     :toctree: generated/
     
+    AmberNetCDFRestartFile
+    AmberRestartFile
     ArcTrajectoryFile
     BINPOSTrajectoryFile
     DCDTrajectoryFile
     DTRTrajectoryFile
+    GroTrajectoryFile
     HDF5TrajectoryFile
+    LAMMPSTrajectoryFile
     LH5TrajectoryFile
     MDCRDTrajectoryFile
     NetCDFTrajectoryFile
     PDBTrajectoryFile
     TRRTrajectoryFile
     XTCTrajectoryFile
+    XYZTrajectoryFile
