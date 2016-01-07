@@ -11,8 +11,8 @@ def test_1():
 
     t = md.Trajectory(xyz, topology=None, unitcell_lengths=lengths, unitcell_angles=angles)
 
-    print('\nInverse', np.linalg.inv(t.unitcell_vectors))
-    print(np.linalg.det(t.unitcell_vectors))
+    print('\nInverse', np.linalg.inv(t.unitcell_vectors[0]))
+    print(np.linalg.det(t.unitcell_vectors[0]))
 
     pairs = np.array([[0,1]])
 
