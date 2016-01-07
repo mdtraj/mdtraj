@@ -11,20 +11,20 @@
 
 
 int compute_distances(
-    const float* xyz, const ssize_t* pairs, const float* box_matrix,
+    const float* xyz, const Py_ssize_t* pairs, const float* box_matrix,
     float* distance_out, float* displacement_out,
-    const ssize_t n_frames, const ssize_t n_atoms, const ssize_t n_pairs)
+    const Py_ssize_t n_frames, const Py_ssize_t n_atoms, const Py_ssize_t n_pairs)
 {
     const bool store_displacement = displacement_out == NULL ? 0 : 1;
     const bool store_distance = distance_out == NULL ? 0 : 1;
     UnitCell u;
 
-    for (ssize_t i = 0; i < n_frames; i++) {
+    for (Py_ssize_t i = 0; i < n_frames; i++) {
         if (box_matrix != NULL) {
              u.setBoxMatrix(&box_matrix[9*i]);
         }
 
-        for (ssize_t j = 0; j < n_pairs; j++) {
+        for (Py_ssize_t j = 0; j < n_pairs; j++) {
             fvec4 x0 = load3(&xyz[i*n_atoms*3 + 3*pairs[2*j + 0]]);
             fvec4 x1 = load3(&xyz[i*n_atoms*3 + 3*pairs[2*j + 1]]);
             fvec4 r = x1 - x0;
@@ -49,18 +49,18 @@ int compute_distances(
 
 
 int compute_angles(
-    const float* xyz, const ssize_t* triplets,
+    const float* xyz, const Py_ssize_t* triplets,
     const float* box_matrix, float* out,
-    const ssize_t n_frames, const ssize_t n_atoms, const ssize_t n_angles)
+    const Py_ssize_t n_frames, const Py_ssize_t n_atoms, const Py_ssize_t n_angles)
 {
     UnitCell u;
 
-    for (ssize_t i = 0; i < n_frames; i++) {
+    for (Py_ssize_t i = 0; i < n_frames; i++) {
         if (box_matrix != NULL) {
              u.setBoxMatrix(&box_matrix[9*i]);
         }
 
-        for (ssize_t j = 0; j < n_angles; j++) {
+        for (Py_ssize_t j = 0; j < n_angles; j++) {
             fvec4 x0 = load3(&xyz[i*n_atoms*3 + 3*triplets[3*j + 0]]);
             fvec4 x1 = load3(&xyz[i*n_atoms*3 + 3*triplets[3*j + 1]]);
             fvec4 x2 = load3(&xyz[i*n_atoms*3 + 3*triplets[3*j + 2]]);
@@ -84,18 +84,18 @@ int compute_angles(
 }
 
 int compute_dihedrals(
-    const float* xyz, const ssize_t* quartets,
+    const float* xyz, const Py_ssize_t* quartets,
     const float* box_matrix, float* out,
-    const ssize_t n_frames, const ssize_t n_atoms, const ssize_t n_quartets)
+    const Py_ssize_t n_frames, const Py_ssize_t n_atoms, const Py_ssize_t n_quartets)
 {
     UnitCell u;
 
-    for (ssize_t i = 0; i < n_frames; i++) {
+    for (Py_ssize_t i = 0; i < n_frames; i++) {
         if (box_matrix != NULL) {
              u.setBoxMatrix(&box_matrix[9*i]);
         }
 
-        for (ssize_t j = 0; j < n_quartets; j++) {
+        for (Py_ssize_t j = 0; j < n_quartets; j++) {
             fvec4 x0 = load3(&xyz[i*n_atoms*3 + 3*quartets[4*j + 0]]);
             fvec4 x1 = load3(&xyz[i*n_atoms*3 + 3*quartets[4*j + 1]]);
             fvec4 x2 = load3(&xyz[i*n_atoms*3 + 3*quartets[4*j + 2]]);
