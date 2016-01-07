@@ -35,7 +35,7 @@ void UnitCell::setBoxMatrix(const float M[9])
 }
 
 
-fvec4 UnitCell::minimumImage(fvec4 r) {
+fvec4 UnitCell::minimumImage(const fvec4& r) {
     if (isOrthorhombic) {
         fvec4 s = invBoxLengths*r;
         s = s - round(s);
@@ -43,7 +43,7 @@ fvec4 UnitCell::minimumImage(fvec4 r) {
     } else {
         fvec4 s = vi0*r[0] + vi1*r[1] + vi2*r[2];
         s = s - round(s);
-        r = v0*s[0] + v1*s[1] + v2*s[2];
+        fvec4 r_prime = v0*s[0] + v1*s[1] + v2*s[2];
 
         fvec4 min_disp;
         float min_d2 = FLT_MAX;
@@ -51,12 +51,12 @@ fvec4 UnitCell::minimumImage(fvec4 r) {
         for (int k0 = -1; k0 < 2; k0++) {
             for (int k1 = -1; k1 < 2; k1++) {
                 for (int k2 = -1; k2 < 2; k2++) {
-                    fvec4 r_prime = r + k0*v0 + k1*v1 + k2*v2;
+                    fvec4 r_dprime = r_prime + k0*v0 + k1*v1 + k2*v2;
 
-                    float d2 = dot3(r_prime, r_prime);
+                    float d2 = dot3(r_dprime, r_dprime);
                     if (d2 < min_d2) {
                         min_d2 = d2;
-                        min_disp = r_prime;
+                        min_disp = r_dprime;
                     }
                 }
             }

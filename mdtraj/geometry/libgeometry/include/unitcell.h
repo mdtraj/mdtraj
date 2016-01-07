@@ -6,7 +6,7 @@
 class UnitCell {
 public:
     void setBoxMatrix(const float M[9]);
-    fvec4 minimumImage(fvec4 r);
+    fvec4 minimumImage(const fvec4& r);
 
 private:
     bool isOrthorhombic;
