@@ -9,7 +9,6 @@ cdef extern from "include/xdrfile.h":
 
 
 cdef extern from "include/xdrfile_trr.h":
-
     int read_trr_natoms(char *fn, int *natoms)
     int read_trr_nframes(char* fn, unsigned long *nframes)
 
@@ -21,3 +20,10 @@ cdef extern from "include/xdrfile_trr.h":
     # Write a frame to xtc file
     int write_trr(XDRFILE *xd, int natoms, int step, float t, float lambd,
         matrix box, rvec* x, rvec* v, rvec* f)
+
+cdef extern from "include/trr_header.h":
+    ctypedef struct t_trnheader:
+        pass
+
+    # header
+    int do_trnheader(XDRFILE *xd, int bRead, t_trnheader *sh)

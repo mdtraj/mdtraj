@@ -87,7 +87,7 @@ static int nFloatSize(t_trnheader *sh,int *nflsz)
     return exdrOK;
 }
 
-static int do_trnheader(XDRFILE *xd,mybool bRead,t_trnheader *sh)
+extern int do_trnheader(XDRFILE *xd,mybool bRead,t_trnheader *sh)
 {
 	int magic=GROMACS_MAGIC;
 	int nflsz,slen,result;

@@ -29,6 +29,7 @@
 import os
 import warnings
 import cython
+import xdrlib
 cimport cython
 import numpy as np
 cimport numpy as np
@@ -37,6 +38,9 @@ from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
 cimport xdrlib
+from libc.stdio cimport SEEK_SET, SEEK_CUR
+ctypedef np.npy_int64   int64_t
+
 
 __all__ = ['load_xtc', 'XTCTrajectoryFile']
 
@@ -61,6 +65,8 @@ _EXDR_ERROR_MESSAGES = {
     12: "File not found"
 }
 
+# Note: following constant depend on int is a 32bit integer!
+
 # numpy variable types include the specific numpy of bytes of each, but the c
 # variables in our interface file don't. this could get bad if we're on a wierd
 # machine, so lets make sure first
@@ -69,11 +75,36 @@ if sizeof(int) != sizeof(np.int32_t):
 if sizeof(float) != sizeof(np.float32_t):
     raise RuntimeError('Floats on your compiler are not 32 bits. This is not good')
 
+# constants for short (<= 10 atoms) XTC files:
+cdef int DIM = 3
+# header fields (before coords):
+# 1. magic (int)
+# 2. natoms (int)
+# 3. step (int)
+# 4. time (float)
+cdef int XTC_HDR_SIZE = 3*sizeof(np.int32_t) + sizeof(np.float32_t)
+cdef int XTC_SHORT_HEADER_SIZE = XTC_HDR_SIZE + DIM**2 * sizeof(np.float32_t) + 4 
+cdef int XTC_SHORT_BYTES_PER_ATOM = DIM*sizeof(np.float32_t)
+
+# constant for 'regular' XTCs (> 10 atoms):
+# 1. magic(int)
+# 2. natoms (int)
+# 3. step (int)
+# 4. time (float)
+# 5. DIM*DIM_box_vecs (DIM*DIM floats)
+# 6. natoms (int)
+# 7. prec (float)
+# 8. DIM_min_xyz (int[3])
+# 9. DIM_max_xyz (int[3])
+# 10. smallidx (int)
+cdef int XTC_HEADER_SIZE = 11*sizeof(np.int32_t) + 2*sizeof(np.float32_t) + DIM**2 * sizeof(np.float32_t)
+
+
 ###############################################################################
 # Code
 ###############################################################################
 
-@FormatRegistry.register_loader('.xtc')
+@_FormatRegistry.register_loader('.xtc')
 def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     """load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None)
 
@@ -109,7 +140,7 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     >>> traj = md.load_xtc('output.xtc', top='topology.pdb')
     >>> print traj
     <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>
-    
+
     Returns
     -------
     trajectory : md.Trajectory
@@ -125,7 +156,7 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_xtc. '
-            'you supplied %s' % type(filename))
+                        'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
@@ -141,7 +172,7 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
                               atom_indices=atom_indices)
 
 
-cdef class XTCTrajectoryFile:
+cdef class XTCTrajectoryFile(object):
     """XTCTrajectoryFile(filenamee, mode='r', force_overwrite=True, **kwargs)
 
     Interface for reading and writing to a GROMACS XTC file.
@@ -190,16 +221,16 @@ cdef class XTCTrajectoryFile:
     cdef xdrlib.XDRFILE* fh
     cdef str filename
     cdef int n_atoms          # number of atoms in the file
-    cdef unsigned long n_frames # number of frames in the file, cached
-    cdef int frame_counter    # current position in the file, in read mode
-    cdef int is_open          # is the file handle currently open?
-    cdef int approx_n_frames  # appriximate number of frames in the file, as guessed based on its size
+    cdef int64_t n_frames # number of frames in the file, cached
+    cdef int64_t frame_counter    # current position in the file, in read mode
+    cdef char is_open          # is the file handle currently open?
+    cdef int64_t approx_n_frames  # appriximate number of frames in the file, as guessed based on its size
     cdef char* mode           # mode in which the file is open, either 'r' or 'w'
     cdef int min_chunk_size
     cdef float chunk_size_multiplier
-    cdef int with_unitcell    # used in mode='w' to know if we're writing unitcells or nor
+    cdef char with_unitcell    # used in mode='w' to know if we're writing unitcells or nor
     cdef readonly char* distance_unit
-
+    cdef np.ndarray _offsets
 
     def __cinit__(self, char* filename, char* mode='r', force_overwrite=True, **kwargs):
         """Open a GROMACS XTC file for reading/writing.
@@ -209,6 +240,7 @@ cdef class XTCTrajectoryFile:
         self.frame_counter = 0
         self.n_frames = -1  # means unknown
         self.filename = filename
+        self._offsets = None
 
         if str(mode) == 'r':
             self.n_atoms = 0
@@ -226,7 +258,6 @@ cdef class XTCTrajectoryFile:
 
             self.min_chunk_size = max(kwargs.pop('min_chunk_size', 100), 1)
             self.chunk_size_multiplier = max(kwargs.pop('chunk_size_multiplier', 1.5), 0.01)
-
 
         elif str(mode) == 'w':
             if force_overwrite and os.path.exists(filename):
@@ -286,7 +317,7 @@ cdef class XTCTrajectoryFile:
             If not none, then read only a subset of the atoms coordinates from the
             file. This may be slightly slower than the standard read because it required
             an extra copy, but will save memory.
-        
+
         Returns
         -------
         trajectory : Trajectory
@@ -358,6 +389,8 @@ cdef class XTCTrajectoryFile:
                 box = None
             return xyz, time, step, box
 
+        # TODO: use offsets if stride is set
+
         # if they want ALL of the remaining frames, we need to guess at the
         # chunk size, and then check the exit status to make sure we're really 
         # at the EOF
@@ -388,7 +421,7 @@ cdef class XTCTrajectoryFile:
             all_box = None
         return all_xyz, all_time, all_step, all_box
 
-    def _read(self, int n_frames, atom_indices):
+    def _read(self, int64_t n_frames, atom_indices):
         """Read a specified number of XTC frames from the buffer"""
 
         cdef int i = 0
@@ -477,7 +510,7 @@ cdef class XTCTrajectoryFile:
                            warn_on_cast=False)
         step = ensure_type(step, dtype=np.int32, ndim=1, name='step', can_be_none=True,
                            shape=(n_frames,), add_newaxis_on_deficient_ndim=True,
-                            warn_on_cast=False)
+                           warn_on_cast=False)
         box = ensure_type(box, dtype=np.float32, ndim=3, name='box', can_be_none=True,
                           shape=(n_frames, 3, 3), add_newaxis_on_deficient_ndim=True,
                           warn_on_cast=False)
@@ -508,7 +541,6 @@ cdef class XTCTrajectoryFile:
         prec = 1000.0 * np.ones(n_frames, dtype=np.float32)
         self._write(xyz, time, step, box, prec)
 
-
     def _write(self, np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz not None,
                np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time not None,
                np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step not None,
@@ -529,7 +561,7 @@ cdef class XTCTrajectoryFile:
         self.frame_counter += n_frames
         return status
 
-    def seek(self, int offset, int whence=0):
+    def seek(self, int64_t offset, int whence=0):
         """seek(offset, whence=0)
 
         Move to a new file position
@@ -544,11 +576,8 @@ cdef class XTCTrajectoryFile:
             2: move relative to the end of file, offset should be <= 0.
             Seeking beyond the end of a file is not supported
         """
-        cdef int i, status, step
-        cdef float time = 0
-        cdef float prec = 0
-        cdef np.ndarray[dtype=np.float_t] box = np.empty(9, dtype=np.float)
-        cdef np.ndarray[dtype=np.float_t] xyz = np.empty(self.n_atoms * 3, dtype=np.float)
+        cdef int status
+        cdef int64_t pos, absolute
 
         if str(self.mode) != 'r':
             raise NotImplementedError('seek() only available in mode="r" currently')
@@ -561,16 +590,70 @@ cdef class XTCTrajectoryFile:
         else:
             raise IOError('Invalid argument')
 
-        xdrlib.xdrfile_close(self.fh)
-        self.fh = xdrlib.xdrfile_open(self.filename, self.mode)
-
-        for i in range(absolute):
-            status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step,
-                                     &time, <xdrlib.matrix>&box[0], <xdrlib.rvec*>&xyz[0], &prec)
-            if status != _EXDROK:
-                raise RuntimeError('XTC seek error: %s' % status)
+        pos = self.offsets[absolute]
+        status = xdrlib.xdr_seek(self.fh, pos, SEEK_SET)
+        if status != _EXDROK:
+            raise RuntimeError('XTC seek error: %s' % status)
 
         self.frame_counter = absolute
+
+    def _calc_len_and_offsets(self):
+        cdef int byte_offset, status
+        cdef int64_t n_frames, filesize
+        cdef np.ndarray[dtype=int64_t, ndim=1] offsets
+
+        # restore old pos when done or in case of error
+        cdef int64_t old_pos = xdrlib.xdr_tell(self.fh)
+
+        if self.n_atoms <= 9:
+            filesize = os.stat(self.filename).st_size
+            byte_offset = XTC_SHORT_HEADER_SIZE + XTC_SHORT_BYTES_PER_ATOM*self.n_atoms
+            assert filesize % byte_offset == 0, ("filesize(%i) not divideable"
+                                                 " by bytes per frames(%i)"
+                                                 % (filesize, byte_offset))
+            n_frames = filesize / byte_offset
+            offsets = np.fromiter((i*byte_offset for i in range(n_frames)),
+                                  dtype=np.int64, count=n_frames)
+        else:
+            offsets = np.empty(self.approx_n_frames, dtype=np.int64)
+
+            try:
+                # skip header
+                if xdrlib.xdr_seek(self.fh, XTC_HEADER_SIZE, SEEK_SET) != 0:
+                    raise RuntimeError('could not skip header for file ' + self.filename)
+
+                # init first byte_offset
+                status = xdrlib.xdrfile_read_int(&byte_offset, 1, self.fh)
+                if status == 0:
+                    raise RuntimeError("error reading from first frame: %i" % status)
+                byte_offset += 3 - ((byte_offset + 3) % 0x04)
+
+                n_frames = 1
+                offsets[0] = 0
+                resize = np.resize
+                while True:
+                    # relative seek
+                    status = xdrlib.xdr_seek(self.fh, byte_offset + XTC_HEADER_SIZE, SEEK_CUR)
+                    if status != 0:
+                        raise RuntimeError("error during seek:" % status)
+
+                    # return value == # ints read, so we're finished
+                    if xdrlib.xdrfile_read_int(&byte_offset, 1, self.fh) == 0:
+                        break
+
+                    if n_frames == len(offsets):
+                        new_len = int(len(offsets)*1.2)
+                        offsets = resize(offsets, new_len)
+
+                    offsets[n_frames] = xdrlib.xdr_tell(self.fh) - 4 - XTC_HEADER_SIZE
+                    n_frames += 1
+
+                    # truncate byte offset to next 32-bit boundary
+                    byte_offset += 3 - ((byte_offset + 3) % 0x04)
+            finally:
+                xdrlib.xdr_seek(self.fh, old_pos, SEEK_SET)
+
+        return n_frames, offsets[:n_frames]
 
     def tell(self):
         """Current file position
@@ -583,6 +666,18 @@ cdef class XTCTrajectoryFile:
         if str(self.mode) != 'r':
             raise NotImplementedError('tell() only available in mode="r" currently')
         return int(self.frame_counter)
+
+    @property
+    def offsets(self):
+        "get byte offsets from current xtc file"
+        if self._offsets is None:
+            self.n_frames, self._offsets = self._calc_len_and_offsets()
+        return self._offsets
+
+    @offsets.setter
+    def offsets(self, offsets):
+        "set frame offsets"
+        self._offsets = offsets
 
     def __enter__(self):
         "Support the context manager protocol"
@@ -599,6 +694,7 @@ cdef class XTCTrajectoryFile:
         if not self.is_open:
             raise ValueError('I/O operation on closed file')
         if self.n_frames == -1:
-            xdrlib.read_xtc_nframes(self.filename, &self.n_frames)
+            self.offsets # invokes _calc_len_and_offsets
         return int(self.n_frames)
-FormatRegistry.register_fileobject('.xtc')(XTCTrajectoryFile)
+
+_FormatRegistry.register_fileobject('.xtc')(XTCTrajectoryFile)

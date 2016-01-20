@@ -70,9 +70,9 @@
  * documentation on the FORTRAN interface!
  */
 
-
 #ifndef _XDRFILE_H_
 #define _XDRFILE_H_
+
 
 #ifdef __cplusplus
 extern "C" 

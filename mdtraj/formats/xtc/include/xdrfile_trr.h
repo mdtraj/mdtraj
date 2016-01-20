@@ -36,7 +36,7 @@ extern "C" {
 
 #include "xdrfile.h"
   
-  /* All functions return exdrOK if succesfull. 
+  /* All functions return exdrOK if successful.
    * (error codes defined in xdrfile.h).
    */  
    
