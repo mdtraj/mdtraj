@@ -622,7 +622,9 @@ extern "C"
 									double *     precision,
 									XDRFILE *    xfp);
 
-
+	// taken from xdrlib2
+	int64_t xdr_tell(XDRFILE *xd);
+	int xdr_seek(XDRFILE *xd, int64_t pos, int whence);
 
 #ifdef __cplusplus
 }

@@ -37,8 +37,19 @@ from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import _FormatRegistry
 cimport trrlib
+from libc.stdio cimport SEEK_SET
+from libc.stdint cimport int64_t
 
 __all__ = ['load_trr', 'TRRTrajectoryFile']
+
+# utility func to take over memory of a pointer in a ndarray.
+
+cdef extern from "numpy/arrayobject.h":
+    void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
+cdef _int64_ptr_to_numpy_array(void * ptr, np.npy_intp N, int t):
+    cdef np.ndarray[np.int64_t, ndim=1] arr = np.PyArray_SimpleNewFromData(1, &N, t, ptr)
+    PyArray_ENABLEFLAGS(arr, np.NPY_OWNDATA)
+    return arr
 
 
 ###############################################################################
@@ -198,6 +209,8 @@ cdef class TRRTrajectoryFile:
     cdef float chunk_size_multiplier
     cdef int with_unitcell    # used in mode='w' to know if we're writing unitcells or nor
     cdef readonly char* distance_unit
+    cdef char _has_offsets
+    cdef np.ndarray _offsets
 
 
     def __cinit__(self, char* filename, char* mode='r', force_overwrite=True, **kwargs):
@@ -225,7 +238,6 @@ cdef class TRRTrajectoryFile:
 
             self.min_chunk_size = max(kwargs.pop('min_chunk_size', 100), 1)
             self.chunk_size_multiplier = max(kwargs.pop('chunk_size_multiplier', 1.5), 0.01)
-
 
         elif str(mode) == 'w':
             if force_overwrite and os.path.exists(filename):
@@ -547,10 +559,8 @@ cdef class TRRTrajectoryFile:
             2: move relative to the end of file, offset should be <= 0.
             Seeking beyond the end of a file is not supported
         """
-        cdef int i, status, step
-        cdef float time, prec, lambd
-        cdef np.ndarray[dtype=np.float_t] box = np.empty(9, dtype=np.float)
-        cdef np.ndarray[dtype=np.float_t] xyz = np.empty(self.n_atoms * 3, dtype=np.float)
+        cdef int status
+        cdef int64_t pos
 
         if str(self.mode) != 'r':
             raise NotImplementedError('seek() only available in mode="r" currently')
@@ -563,14 +573,10 @@ cdef class TRRTrajectoryFile:
         else:
             raise IOError('Invalid argument')
 
-        trrlib.xdrfile_close(self.fh)
-        self.fh = trrlib.xdrfile_open(self.filename, self.mode)
-
-        for i in range(absolute):
-            status = trrlib.read_trr(self.fh, self.n_atoms, &step, &time,
-                &lambd, <trrlib.matrix>&box[0], <trrlib.rvec*>&xyz[0], NULL, NULL)
-            if status != _EXDROK:
-                raise RuntimeError('TRR seek error: %s' % status)
+        pos = self.offsets[absolute]
+        status = trrlib.xdr_seek(self.fh, pos, SEEK_SET)
+        if status != 0:
+            raise RuntimeError('TRR seek error: %s' % status)
 
         self.frame_counter = absolute
 
@@ -585,6 +591,42 @@ cdef class TRRTrajectoryFile:
         if str(self.mode) != 'r':
             raise NotImplementedError('tell() only available in mode="r" currently')
         return int(self.frame_counter)
+
+    @property
+    def offsets(self):
+        """get byte offsets from current xtc file
+        See Also
+        --------
+        set_offsets
+        """
+        if not self._has_offsets:
+            self._offsets = self._calc_offsets()
+            self._has_offsets = True
+        return self._offsets
+
+    @offsets.setter
+    def offsets(self, offsets):
+        """set frame offsets"""
+        self._offsets = offsets
+        self._has_offsets = True
+
+    def _calc_offsets(self):
+        """read byte offsets from TRR file directly"""
+        if not self.is_open:
+            return np.array([])
+        cdef unsigned long est_nframes = 0
+        cdef int64_t *frame_offsets
+
+        status = trrlib.read_trr_nframes(self.filename, &self.n_frames,
+                                         &est_nframes, &frame_offsets)
+        if status != 0:
+            raise RuntimeError("TRR couldn't calculate offsets: %s" % status)
+        # the read_xtc_n_frames allocates memory for the offsets with an
+        # overestimation. This number is saved in est_nframes and we need to
+        # tell the new numpy array about the whole allocated memory to avoid
+        # memory leaks.
+        nd_offsets = _int64_ptr_to_numpy_array(frame_offsets, est_nframes, np.NPY_INT64)
+        return nd_offsets[:self.n_frames]
 
     def __enter__(self):
         "Support the context manager protocol"
@@ -601,6 +643,7 @@ cdef class TRRTrajectoryFile:
         if not self.is_open:
             raise ValueError('I/O operation on closed file')
         if self.n_frames == -1:
-            trrlib.read_trr_nframes(self.filename, &self.n_frames)
+            self._calc_offsets()
         return int(self.n_frames)
+
 _FormatRegistry.register_fileobject('.trr')(TRRTrajectoryFile)

@@ -99,7 +99,9 @@ def format_extensions():
                              'mdtraj/formats/xtc/src/xdrfile_xtc.c',
                              'mdtraj/formats/xtc/xtc.pyx'],
                     include_dirs=['mdtraj/formats/xtc/include/',
-                                  'mdtraj/formats/xtc/'],
+                                  'mdtraj/formats/xtc/',
+                                  # for fastio.h
+                                  'mdtraj/formats/dcd/include/'],
                     extra_compile_args=compiler_args)
 
     trr = Extension('mdtraj.formats.trr',
@@ -107,7 +109,9 @@ def format_extensions():
                              'mdtraj/formats/xtc/src/xdrfile_trr.c',
                              'mdtraj/formats/xtc/trr.pyx'],
                     include_dirs=['mdtraj/formats/xtc/include/',
-                                  'mdtraj/formats/xtc/'],
+                                  'mdtraj/formats/xtc/',
+                                  # for fastio.h
+                                  'mdtraj/formats/dcd/include/'],
                     extra_compile_args=compiler_args)
 
     dcd = Extension('mdtraj.formats.dcd',
