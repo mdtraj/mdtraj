@@ -37,20 +37,11 @@ from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import _FormatRegistry
 cimport trrlib
+from xdrlib cimport _int64_ptr_to_numpy_array
 from libc.stdio cimport SEEK_SET
 from libc.stdint cimport int64_t
 
 __all__ = ['load_trr', 'TRRTrajectoryFile']
-
-# utility func to take over memory of a pointer in a ndarray.
-
-cdef extern from "numpy/arrayobject.h":
-    void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
-cdef _int64_ptr_to_numpy_array(void * ptr, np.npy_intp N, int t):
-    cdef np.ndarray[np.int64_t, ndim=1] arr = np.PyArray_SimpleNewFromData(1, &N, t, ptr)
-    PyArray_ENABLEFLAGS(arr, np.NPY_OWNDATA)
-    return arr
-
 
 ###############################################################################
 # globals

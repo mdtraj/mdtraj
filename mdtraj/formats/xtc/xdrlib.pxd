@@ -17,3 +17,12 @@ cdef extern from "include/xdrfile_xtc.h":
     int write_xtc(XDRFILE *xd, int natoms, int step, float time, matrix box, rvec* x, float prec)
     int read_xtc_nframes(char* fn, unsigned long *nframes, unsigned long *est_nframes, int64_t** offsets)
 
+cdef extern from "include/util.h":
+    void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
+
+# utility func to take over memory of a pointer in a ndarray.
+# TODO: this should be more general.
+cdef inline _int64_ptr_to_numpy_array(void * ptr, np.npy_intp N, int t, ):
+    cdef np.ndarray[np.int64_t, ndim=1] arr = np.PyArray_SimpleNewFromData(1, &N, t, ptr)
+    PyArray_ENABLEFLAGS(arr, 0x0004) # NPY_ARRAY_OWNDATA
+    return arr
