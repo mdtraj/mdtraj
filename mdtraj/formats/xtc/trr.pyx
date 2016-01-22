@@ -39,7 +39,8 @@ from mdtraj.formats.registry import _FormatRegistry
 cimport trrlib
 from xdrlib cimport _int64_ptr_to_numpy_array
 from libc.stdio cimport SEEK_SET
-from libc.stdint cimport int64_t
+
+ctypedef np.npy_int64   int64_t
 
 __all__ = ['load_trr', 'TRRTrajectoryFile']
 

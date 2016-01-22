@@ -38,7 +38,7 @@ from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import _FormatRegistry
 cimport xdrlib
 from libc.stdio cimport SEEK_SET
-from libc.stdint cimport int64_t
+ctypedef np.npy_int64   int64_t
 
 __all__ = ['load_xtc', 'XTCTrajectoryFile']
 
