@@ -95,7 +95,8 @@ def format_extensions():
     compiler_args = compiler.compiler_args_warn
 
     xtc = Extension('mdtraj.formats.xtc',
-                    sources=['mdtraj/formats/xtc/src/xdrfile.c',
+                    sources=['mdtraj/formats/xtc/src/util.c',
+                             'mdtraj/formats/xtc/src/xdrfile.c',
                              'mdtraj/formats/xtc/src/xdrfile_xtc.c',
                              'mdtraj/formats/xtc/xtc.pyx'],
                     include_dirs=['mdtraj/formats/xtc/include/',
@@ -107,6 +108,7 @@ def format_extensions():
     trr = Extension('mdtraj.formats.trr',
                     sources=['mdtraj/formats/xtc/src/xdrfile.c',
                              'mdtraj/formats/xtc/src/xdrfile_trr.c',
+                             'mdtraj/formats/xtc/src/util.c',
                              'mdtraj/formats/xtc/trr.pyx'],
                     include_dirs=['mdtraj/formats/xtc/include/',
                                   'mdtraj/formats/xtc/',

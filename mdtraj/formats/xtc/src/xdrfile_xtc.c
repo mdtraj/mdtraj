@@ -26,15 +26,16 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 #include "fastio.h"
+// stdlib needs to be included after fastio.h (fuck it)
 #include <stdlib.h>
 #include "xdrfile.h"
 #include "xdrfile_xtc.h"
 	
 #define MAGIC 1995
 
-enum { FALSE, TRUE };
+enum { _FALSE, _TRUE };
 
 static int xtc_header(XDRFILE *xd,int *natoms,int *step,float *time,mybool bRead)
 {
@@ -97,7 +98,7 @@ int read_xtc_natoms(char *fn,int *natoms)
 	xd = xdrfile_open(fn,"r");
 	if (NULL == xd)
 		return exdrFILENOTFOUND;
-	result = xtc_header(xd,natoms,&step,&time,TRUE);
+	result = xtc_header(xd,natoms,&step,&time,_TRUE);
 	xdrfile_close(xd);
 	
 	return result;
@@ -113,7 +114,7 @@ int read_xtc_nframes(char *fn, unsigned long *n_frames, unsigned long *est_nfram
 	if ((xd = xdrfile_open(fn, "r"))==NULL)
 		return exdrFILENOTFOUND;
 
-	if (xtc_header(xd, &natoms, &step, &time, TRUE) != exdrOK)
+	if (xtc_header(xd, &natoms, &step, &time, _TRUE) != exdrOK)
 	{
 		xdrfile_close(xd);
 		return exdrHEADER;
@@ -206,7 +207,7 @@ int read_xtc(XDRFILE *xd,
 {
 	int result;
   
-	if ((result = xtc_header(xd,&natoms,step,time,TRUE)) != exdrOK)
+	if ((result = xtc_header(xd,&natoms,step,time,_TRUE)) != exdrOK)
 		return result;
 	  
 	if ((result = xtc_coord(xd,&natoms,box,x,prec,1)) != exdrOK)
@@ -222,7 +223,7 @@ int write_xtc(XDRFILE *xd,
 {
 	int result;
   
-	if ((result = xtc_header(xd,&natoms,&step,&time,FALSE)) != exdrOK)
+	if ((result = xtc_header(xd,&natoms,&step,&time,_FALSE)) != exdrOK)
 		return result;
 
 	if ((result = xtc_coord(xd,&natoms,box,x,&prec,0)) != exdrOK)
