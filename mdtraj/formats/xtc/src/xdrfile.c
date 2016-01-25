@@ -2534,8 +2534,8 @@ static int xdrstdio_getlong (XDR *, int32_t *);
 static int xdrstdio_putlong (XDR *, int32_t *);
 static int xdrstdio_getbytes (XDR *, char *, unsigned int);
 static int xdrstdio_putbytes (XDR *, char *, unsigned int);
-static unsigned int xdrstdio_getpos (XDR *);
-static int xdrstdio_setpos (XDR *, unsigned int);
+static int64_t xdrstdio_getpos (XDR *);
+static int64_t xdrstdio_setpos (XDR *, int64_t, int);
 static void xdrstdio_destroy (XDR *);
 
 /*
@@ -2616,19 +2616,49 @@ xdrstdio_putbytes (XDR *xdrs, char *addr, unsigned int len)
 	return 1;
 }
 
-/* 32 bit fileseek operations */
-static unsigned int
+/* 64 bit fileseek operations */
+static int64_t
 xdrstdio_getpos (XDR *xdrs)
 {
-	return (unsigned int) ftell ((FILE *) xdrs->x_private);
+#ifndef _WIN32
+	// use posix 64 bit ftell version
+	return ftello ((FILE *) xdrs->x_private);
+#elif defined(_MSVC_VER) && !__INTEL_COMPILER
+	return _ftelli64((FILE *) xdrs->x_private);
+#endif
+// fallback to 32bit
+	return ftell((FILE *) xdrs->x_private);
 }
 
-static int
-xdrstdio_setpos (XDR *xdrs, unsigned int pos)
+static int64_t
+xdrstdio_setpos (XDR *xdrs, int64_t pos, int whence)
 {
-	return fseek ((FILE *) xdrs->x_private, pos, 0) < 0 ? 0 : 1;
+#ifndef _WIN32
+	// use posix 64 bit ftell version
+	return fseeko((FILE *) xdrs->x_private, pos, whence) < 0 ? exdrNR : exdrOK;
+#elif _MSVC_VER && !__INTEL_COMPILER
+	return _fseeki64((FILE *) xdrs->x_private, pos, whence) < 0 ? exdrNR : exdrOK;
+#endif
+	return fseek((FILE *) xdrs->x_private, pos, whence) < 0 ? exdrNR : exdrOK;
 }
 
+// adopted from xdrlib2
+int64_t xdr_tell(XDRFILE *xd)
+/* Reads position in file */
+{
+    return xdrstdio_getpos(xd->xdr);
+}
+
+// adopted from xdrlib2
+int xdr_seek(XDRFILE *xd, int64_t pos, int whence)
+/* Seeks to position in file */
+{
+    int result;
+    if ((result = xdrstdio_setpos(xd->xdr, pos, whence)) != exdrOK)
+        return result;
+
+    return exdrOK;
+}
 
 
 #endif /* HAVE_RPC_XDR_H not defined */

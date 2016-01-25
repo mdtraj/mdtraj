@@ -159,3 +159,41 @@ def test_ragged_2():
     with TRRTrajectoryFile(temp, 'w', force_overwrite=True) as f:
         f.write(xyz, time=time, box=box)
         assert_raises(ValueError, lambda: f.write(xyz))
+
+
+def test_tell():
+    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+        eq(f.tell(), 0)
+
+        f.read(101)
+        eq(f.tell(), 101)
+
+        f.read(3)
+        eq(f.tell(), 104)
+
+
+def test_seek():
+    reference = TRRTrajectoryFile(get_fn('frame0.trr')).read()[0]
+    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+
+        eq(f.tell(), 0)
+        eq(f.read(1)[0][0], reference[0])
+        eq(f.tell(), 1)
+        
+        xyz = f.read(1)[0][0]
+        eq(xyz, reference[1])
+        eq(f.tell(), 2)
+
+        f.seek(0)
+        eq(f.tell(), 0)
+        xyz = f.read(1)[0][0]
+        eq(f.tell(), 1)
+        eq(xyz, reference[0])
+        
+        f.seek(5)
+        eq(f.read(1)[0][0], reference[5])
+        eq(f.tell(), 6)
+        
+        f.seek(-5, 1)
+        eq(f.tell(), 1)
+        eq(f.read(1)[0][0], reference[1])

@@ -1,9 +1,13 @@
+cimport numpy as np
+ctypedef np.npy_int64 int64_t
+
 cdef extern from "include/xdrfile.h":
     ctypedef struct XDRFILE:
         pass
 
     XDRFILE* xdrfile_open (char * path, char * mode)
     int xdrfile_close (XDRFILE * xfp)
+    int xdr_seek(XDRFILE *xfp, int64_t pos, int whence)
     ctypedef float matrix[3][3]
     ctypedef float rvec[3]
 
@@ -11,7 +15,7 @@ cdef extern from "include/xdrfile.h":
 cdef extern from "include/xdrfile_trr.h":
 
     int read_trr_natoms(char *fn, int *natoms)
-    int read_trr_nframes(char* fn, unsigned long *nframes)
+    int read_trr_nframes(char* fn, unsigned long *nframes, unsigned long *est_nframes, int64_t** offsets)
 
     # Read one frame of an open xtc file. If either of x, v, f, box are
     # NULL the arrays will be read from the file but not used.

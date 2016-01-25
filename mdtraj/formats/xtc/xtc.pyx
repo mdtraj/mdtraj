@@ -37,6 +37,8 @@ from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import _FormatRegistry
 cimport xdrlib
+from libc.stdio cimport SEEK_SET
+ctypedef np.npy_int64   int64_t
 
 __all__ = ['load_xtc', 'XTCTrajectoryFile']
 
@@ -199,6 +201,8 @@ cdef class XTCTrajectoryFile:
     cdef float chunk_size_multiplier
     cdef int with_unitcell    # used in mode='w' to know if we're writing unitcells or nor
     cdef readonly char* distance_unit
+    cdef char _has_offsets
+    cdef np.ndarray _offsets
 
 
     def __cinit__(self, char* filename, char* mode='r', force_overwrite=True, **kwargs):
@@ -209,6 +213,7 @@ cdef class XTCTrajectoryFile:
         self.frame_counter = 0
         self.n_frames = -1  # means unknown
         self.filename = filename
+        self._has_offsets = False
 
         if str(mode) == 'r':
             self.n_atoms = 0
@@ -226,7 +231,6 @@ cdef class XTCTrajectoryFile:
 
             self.min_chunk_size = max(kwargs.pop('min_chunk_size', 100), 1)
             self.chunk_size_multiplier = max(kwargs.pop('chunk_size_multiplier', 1.5), 0.01)
-
 
         elif str(mode) == 'w':
             if force_overwrite and os.path.exists(filename):
@@ -286,7 +290,7 @@ cdef class XTCTrajectoryFile:
             If not none, then read only a subset of the atoms coordinates from the
             file. This may be slightly slower than the standard read because it required
             an extra copy, but will save memory.
-        
+
         Returns
         -------
         trajectory : Trajectory
@@ -544,11 +548,7 @@ cdef class XTCTrajectoryFile:
             2: move relative to the end of file, offset should be <= 0.
             Seeking beyond the end of a file is not supported
         """
-        cdef int i, status, step
-        cdef float time = 0
-        cdef float prec = 0
-        cdef np.ndarray[dtype=np.float_t] box = np.empty(9, dtype=np.float)
-        cdef np.ndarray[dtype=np.float_t] xyz = np.empty(self.n_atoms * 3, dtype=np.float)
+        cdef int status
 
         if str(self.mode) != 'r':
             raise NotImplementedError('seek() only available in mode="r" currently')
@@ -561,14 +561,10 @@ cdef class XTCTrajectoryFile:
         else:
             raise IOError('Invalid argument')
 
-        xdrlib.xdrfile_close(self.fh)
-        self.fh = xdrlib.xdrfile_open(self.filename, self.mode)
-
-        for i in range(absolute):
-            status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step,
-                                     &time, <xdrlib.matrix>&box[0], <xdrlib.rvec*>&xyz[0], &prec)
-            if status != _EXDROK:
-                raise RuntimeError('XTC seek error: %s' % status)
+        pos = self.offsets[absolute]
+        status = xdrlib.xdr_seek(self.fh, pos, SEEK_SET)
+        if status != _EXDROK:
+            raise RuntimeError('XTC seek error: %s' % status)
 
         self.frame_counter = absolute
 
@@ -583,6 +579,43 @@ cdef class XTCTrajectoryFile:
         if str(self.mode) != 'r':
             raise NotImplementedError('tell() only available in mode="r" currently')
         return int(self.frame_counter)
+
+    @property
+    def offsets(self):
+        """get byte offsets from current xtc file
+        See Also
+        --------
+        set_offsets
+        """
+        if not self._has_offsets:
+            self._offsets = self._calc_offsets()
+            self._has_offsets = True
+        return self._offsets
+
+    @offsets.setter
+    def offsets(self, offsets):
+        """set frame offsets"""
+        self._offsets = offsets
+        self._has_offsets = True
+
+    def _calc_offsets(self):
+        """read byte offsets from TRR file directly"""
+        if not self.is_open:
+            return np.array([])
+        cdef unsigned long est_nframes = 0
+        cdef int64_t *frame_offsets
+
+        status = xdrlib.read_xtc_nframes(self.filename, &self.n_frames,
+                                         &est_nframes, &frame_offsets)
+        if status != 0:
+            raise RuntimeError("TRR couldn't calculate offsets: %s" % status)
+        # the read_xtc_n_frames allocates memory for the offsets with an
+        # overestimation. This number is saved in est_nframes and we need to
+        # tell the new numpy array about the whole allocated memory to avoid
+        # memory leaks.
+        nd_offsets = xdrlib._int64_ptr_to_numpy_array(frame_offsets, self.n_frames, np.NPY_INT64)
+        assert len(nd_offsets) == self.n_frames
+        return nd_offsets
 
     def __enter__(self):
         "Support the context manager protocol"
@@ -599,6 +632,7 @@ cdef class XTCTrajectoryFile:
         if not self.is_open:
             raise ValueError('I/O operation on closed file')
         if self.n_frames == -1:
-            xdrlib.read_xtc_nframes(self.filename, &self.n_frames)
+            self._calc_offsets()
         return int(self.n_frames)
+
 _FormatRegistry.register_fileobject('.xtc')(XTCTrajectoryFile)
