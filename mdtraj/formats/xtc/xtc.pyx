@@ -613,8 +613,9 @@ cdef class XTCTrajectoryFile:
         # overestimation. This number is saved in est_nframes and we need to
         # tell the new numpy array about the whole allocated memory to avoid
         # memory leaks.
-        nd_offsets = xdrlib._int64_ptr_to_numpy_array(frame_offsets, est_nframes, np.NPY_INT64)
-        return nd_offsets[:self.n_frames]
+        nd_offsets = xdrlib._int64_ptr_to_numpy_array(frame_offsets, self.n_frames, np.NPY_INT64)
+        assert len(nd_offsets) == self.n_frames
+        return nd_offsets
 
     def __enter__(self):
         "Support the context manager protocol"
