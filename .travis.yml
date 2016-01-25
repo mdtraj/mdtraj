@@ -20,8 +20,8 @@ install:
 
 script:
   - conda config --add channels omnia
-  - conda update -y conda-build
-  - conda build devtools/conda-recipe
+  - conda update -qy conda-build
+  - conda build -q devtools/conda-recipe
   - #cd devtools/c-tests/; make valgrind; cd -
 
 env:
