@@ -1,4 +1,5 @@
-from libc.stdint cimport int64_t
+cimport numpy as np
+ctypedef np.npy_int64 int64_t
 
 cdef extern from "include/xdrfile.h":
     ctypedef struct XDRFILE:
