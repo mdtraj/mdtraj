@@ -107,9 +107,11 @@ int read_xtc_natoms(char *fn,int *natoms)
 int read_xtc_nframes(char *fn, unsigned long *n_frames, unsigned long *est_nframes,
                       int64_t **offsets) {
 	XDRFILE *xd;
-	int framebytes, natoms, step;
+	int  natoms, step;
 	float time;
-	int64_t filesize;
+    // framebytes is actually being read as double to avoid 32 bit boundary condition
+    // since xdrlib can only read 32 bit integer integral datatypes (no long etc.)
+	int64_t framebytes, filesize;
 
 	if ((xd = xdrfile_open(fn, "r"))==NULL)
 		return exdrFILENOTFOUND;
@@ -151,15 +153,17 @@ int read_xtc_nframes(char *fn, unsigned long *n_frames, unsigned long *est_nfram
 			xdrfile_close(xd);
 			return exdrNR;
 		}
-		if (xdrfile_read_int(&framebytes, 1, xd) == 0)
+		if (xdrfile_read_double(&framebytes, 1, xd) == 0)
 		{
 			xdrfile_close(xd);
 			return exdrENDOFFILE;
 		}
-		//Rounding to the next 64-bit boundary
-		framebytes = (framebytes + 3) & ~(sizeof(int64_t) - 1);
-		// add one because it'd be easy to underestimate low frame numbers.
-		*est_nframes = /*(int)*/ (filesize/((int64_t) (framebytes+XTC_HEADER_SIZE)) + 1);
+		
+        //Rounding to the next 64-bit boundary
+        framebytes = (framebytes + 3) % sizeof(int64_t);
+
+  	    // add one because it'd be easy to underestimate low frame numbers.
+		*est_nframes = (filesize/((int64_t) (framebytes+XTC_HEADER_SIZE)) + 1);
 		*est_nframes += *est_nframes/5;
 
 		/* Allocate memory for the frame index array */
@@ -170,6 +174,7 @@ int read_xtc_nframes(char *fn, unsigned long *n_frames, unsigned long *est_nfram
 		}
 		(*offsets)[0] = 0L;
 		*n_frames = 1;
+
 		while (1)
 		{
 			if (xdr_seek(xd, (int64_t) (framebytes+XTC_HEADER_SIZE), SEEK_CUR) != exdrOK) {
@@ -177,7 +182,7 @@ int read_xtc_nframes(char *fn, unsigned long *n_frames, unsigned long *est_nfram
 				xdrfile_close(xd);
 				return exdrNR;
 			}
-			if (xdrfile_read_int(&framebytes,1,xd) == 0)
+			if (xdrfile_read_double(&framebytes,1,xd) == 0)
 				break;
 			/* Read was successful; this is another frame */
 			/* Check if we need to enlarge array */
@@ -193,8 +198,8 @@ int read_xtc_nframes(char *fn, unsigned long *n_frames, unsigned long *est_nfram
 			/*Account for the header and the nbytes bytes we read.*/
 			(*offsets)[*n_frames] = xdr_tell(xd) - 4L - (int64_t) (XTC_HEADER_SIZE);
 			(*n_frames)++;
-			//Rounding to the next 64-bit boundary
-			framebytes = (framebytes + 3) & ~(sizeof(int64_t) - 1);
+            /* Rounding to the next 64-bit boundary */
+            framebytes = (framebytes + 3) % sizeof(int64_t);
 		}
 		xdrfile_close(xd);
 		return exdrOK;
