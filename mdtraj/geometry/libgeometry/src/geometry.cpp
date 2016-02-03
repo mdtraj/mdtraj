@@ -27,10 +27,17 @@ int compute_distances(
         for (Py_ssize_t j = 0; j < n_pairs; j++) {
             fvec4 x0 = load3(&xyz[i*n_atoms*3 + 3*pairs[2*j + 0]]);
             fvec4 x1 = load3(&xyz[i*n_atoms*3 + 3*pairs[2*j + 1]]);
-            fvec4 r = x1 - x0;
 
+            // fvec4 r = x1-x0;
+            // if (box_matrix != NULL) {
+            //     r = u.minimumImage(r);
+            // }
+
+            fvec4 r;
             if (box_matrix != NULL) {
-                r = u.minimumImage(r);
+                r = u.minimumImage(x0, x1);
+            } else {
+                r = x1-x0;
             }
 
             if (store_displacement) {
@@ -38,7 +45,7 @@ int compute_distances(
             }
 
             if (store_distance) {
-                distance_out[i*n_pairs + j] = sqrt(dot3(r, r));
+                distance_out[i*n_pairs + j] = sqrtf(dot3(r, r));
             }
 
         }
@@ -68,10 +75,10 @@ int compute_angles(
             fvec4 u_prime = x0 - x1;
             fvec4 v_prime = x2 - x1;
 
-            if (box_matrix != NULL) {
-                u_prime = u.minimumImage(u_prime);
-                v_prime = u.minimumImage(v_prime);
-            }
+            // if (box_matrix != NULL) {
+            //     u_prime = u.minimumImage(u_prime);
+            //     v_prime = u.minimumImage(v_prime);
+            // }
 
             fvec4 u = u_prime / sqrt(dot3(u_prime, u_prime));
             fvec4 v = v_prime / sqrt(dot3(v_prime, v_prime));
@@ -105,11 +112,11 @@ int compute_dihedrals(
             fvec4 b2 = x2 - x1;
             fvec4 b3 = x3 - x2;
 
-            if (box_matrix != NULL) {
-                b1 = u.minimumImage(b1);
-                b2 = u.minimumImage(b2);
-                b3 = u.minimumImage(b3);
-            }
+            // if (box_matrix != NULL) {
+            //     b1 = u.minimumImage(b1);
+            //     b2 = u.minimumImage(b2);
+            //     b3 = u.minimumImage(b3);
+            // }
 
             fvec4 c1 = cross(b2, b3);
             fvec4 c2 = cross(b1, b2);

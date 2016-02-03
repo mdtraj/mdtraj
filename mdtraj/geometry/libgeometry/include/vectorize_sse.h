@@ -81,6 +81,19 @@ static inline __m128 _mm_round_ps2(const __m128 a) {
     return r;
 }
 
+inline __m128 _mm_floor_ps2(const __m128& x) {
+    /* http://dss.stephanierct.com/DevBlog/?p=8 */
+    __m128i v0 = _mm_setzero_si128();
+    __m128i v1 = _mm_cmpeq_epi32(v0,v0);
+    __m128i ji = _mm_srli_epi32( v1, 25);
+    __m128 j = _mm_castsi128_ps(_mm_slli_epi32( ji, 23)); //create vector 1.0f
+    __m128i i = _mm_cvttps_epi32(x);
+    __m128 fi = _mm_cvtepi32_ps(i);
+    __m128 igx = _mm_cmpgt_ps(fi, x);
+    j = _mm_and_ps(igx, j);
+    return _mm_sub_ps(fi, j);
+}
+
 static inline __m128 _mm_dp_ps2( __m128 a, __m128 b, const int mask ) {
     /*
      Copyright (c) 2006-2008 Advanced Micro Devices, Inc. All Rights Reserved.
@@ -280,6 +293,10 @@ static inline fvec4 round(const fvec4& v) {
     return fvec4(_mm_round_ps2(v.val));
 }
 
+static inline fvec4 floor(const fvec4& v) {
+    return fvec4(_mm_floor_ps2(v.val));
+}
+
 static inline fvec4 min(const fvec4& v1, const fvec4& v2) {
     return fvec4(_mm_min_ps(v1.val, v2.val));
 }
@@ -315,6 +332,12 @@ static inline float dot3(const fvec4& v1, const fvec4& v2) {
 
 static inline float dot4(const fvec4& v1, const fvec4& v2) {
     return _mm_cvtss_f32(_mm_dp_ps2(v1, v2, 0xF1));
+}
+
+static inline fvec4 clearw(const fvec4& v) {
+    // bitwise and with a mask to clear out the 4th element of the vector
+    const static __m128i fff0_mask = SSP_CONST_SET_32I(0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
+    return fvec4(_mm_and_ps(v, _mm_castsi128_ps(fff0_mask)));
 }
 
 static inline fvec4 cross(const fvec4& v1, const fvec4& v2) {
