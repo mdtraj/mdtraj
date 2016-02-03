@@ -18,10 +18,6 @@ __all__ = ["ensure_type", "import_", "in_units_of",
            "enter_temp_directory", "timing", "deprecated"]
 
 
-# Make sure that DeprecationWarning get printed
-warnings.simplefilter("always", DeprecationWarning)
-
-
 def ilen(iterable):
     """Length of an iterator. Note, this consumes the iterator
 
