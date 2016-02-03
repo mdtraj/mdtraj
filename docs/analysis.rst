@@ -87,6 +87,9 @@ NMR Observables
 .. autosummary::
     :toctree: api/generated/
 
+    compute_J3_HN_C
+    compute_J3_HN_CB
+    compute_J3_HN_HA
     chemical_shifts_shiftx2
     chemical_shifts_ppm
     chemical_shifts_spartaplus
