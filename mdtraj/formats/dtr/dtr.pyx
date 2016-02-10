@@ -35,7 +35,7 @@ cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from libc.stdlib cimport malloc, free
 from dtrlib cimport molfile_timestep_t, molfile_timestep_metadata
 from dtrlib cimport open_file_read, close_file_read, read_timestep2
@@ -81,7 +81,7 @@ def _load_desmond_traj(filename, top=None, stride=None, atom_indices=None, frame
         return f.read_as_traj(topology, n_frames=n_frames, atom_indices=atom_indices, stride=stride)
 
 
-@_FormatRegistry.register_loader('.dtr')
+@FormatRegistry.register_loader('.dtr')
 def load_dtr(filename, top=None, stride=None, atom_indices=None, frame=None):
     """load_dtr(filename, top=None, stride=None, atom_indices=None, frame=None)
 
@@ -159,7 +159,7 @@ def load_dtr(filename, top=None, stride=None, atom_indices=None, frame=None):
     return _load_desmond_traj(filename, top=top, stride=stride, atom_indices=atom_indices, frame=frame)
 
 
-@_FormatRegistry.register_loader('.stk')
+@FormatRegistry.register_loader('.stk')
 def load_stk(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     """load_dtr(filename, top=None, stride=None, atom_indices=None, frame=None)
@@ -714,4 +714,4 @@ cdef class DTRTrajectoryFile:
 
 
 
-_FormatRegistry.register_fileobject('.dtr')(DTRTrajectoryFile)
+FormatRegistry.register_fileobject('.dtr')(DTRTrajectoryFile)

@@ -53,7 +53,7 @@ from copy import copy
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
 from mdtraj.core.topology import Topology
 from mdtraj.utils import ilen, cast_indices, in_units_of, open_maybe_zipped
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from mdtraj.core import element as elem
 from mdtraj.utils import six
 from mdtraj import version
@@ -91,8 +91,8 @@ def _is_url(url):
         return False
 
 
-@_FormatRegistry.register_loader('.pdb')
-@_FormatRegistry.register_loader('.pdb.gz')
+@FormatRegistry.register_loader('.pdb')
+@FormatRegistry.register_loader('.pdb.gz')
 def load_pdb(filename, stride=None, atom_indices=None, frame=None,
              no_boxchk=False):
     """Load a RCSB Protein Data Bank file from disk.
@@ -197,8 +197,8 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
 
     return traj
 
-@_FormatRegistry.register_fileobject('.pdb')
-@_FormatRegistry.register_fileobject('.pdb.gz')
+@FormatRegistry.register_fileobject('.pdb')
+@FormatRegistry.register_fileobject('.pdb.gz')
 class PDBTrajectoryFile(object):
     """Interface for reading and writing Protein Data Bank (PDB) files
 

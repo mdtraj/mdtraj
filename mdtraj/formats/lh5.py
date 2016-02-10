@@ -33,7 +33,7 @@ import sys
 import numpy as np
 from mdtraj.core import element as elem
 from mdtraj.utils.six import iteritems, PY3, u
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import import_, ensure_type, in_units_of, cast_indices
 from mdtraj.formats.hdf5 import _check_mode
 import warnings
@@ -116,7 +116,7 @@ def _convert_to_lossy_integers(X, precision=DEFAULT_PRECISION):
 # Main code
 ##############################################################################
 
-@_FormatRegistry.register_loader('.lh5')
+@FormatRegistry.register_loader('.lh5')
 def load_lh5(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load an deprecated MSMBuilder2 LH5 trajectory file.
 
@@ -153,7 +153,7 @@ def load_lh5(filename, top=None, stride=None, atom_indices=None, frame=None):
         return f.read_as_traj(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
 
 
-@_FormatRegistry.register_fileobject('.lh5')
+@FormatRegistry.register_fileobject('.lh5')
 class LH5TrajectoryFile(object):
     """Interface for reading and writing to a MSMBuilder2 "LH5" molecular
     dynamics trajectory file, a deprecated format.

@@ -36,7 +36,7 @@ cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from libc.stdlib cimport malloc, free
 from binposlib cimport molfile_timestep_t
 from binposlib cimport seek_timestep, tell_timestep;
@@ -56,7 +56,7 @@ cdef int _BINPOS_EOF = -1  # end of file (or error)
 # Classes
 ###############################################################################
 
-@_FormatRegistry.register_loader('.binpos')
+@FormatRegistry.register_loader('.binpos')
 def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
     """load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None)
 
@@ -476,4 +476,4 @@ cdef class BINPOSTrajectoryFile:
             self.n_frames = self.tell()
             self.seek(position)
         return self.n_frames
-_FormatRegistry.register_fileobject('.binpos')(BINPOSTrajectoryFile)
+FormatRegistry.register_fileobject('.binpos')(BINPOSTrajectoryFile)

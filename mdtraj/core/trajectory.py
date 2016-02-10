@@ -62,7 +62,7 @@ from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_ve
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3, string_types
 from mdtraj import _rmsd
-from mdtraj import _FormatRegistry
+from mdtraj import FormatRegistry
 from mdtraj.geometry import distance
 
 ##############################################################################
@@ -243,11 +243,11 @@ def open(filename, mode='r', force_overwrite=True, **kwargs):
     """
     extension = _get_extension(filename)
     try:
-        loader = _FormatRegistry.fileobjects[extension]
+        loader = FormatRegistry.fileobjects[extension]
     except KeyError:
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
                       'was found. I can only load files with extensions in %s'
-                      % (filename, extension, _FormatRegistry.fileobjects.keys()))
+                      % (filename, extension, FormatRegistry.fileobjects.keys()))
     return loader(filename, mode=mode, force_overwrite=force_overwrite, **kwargs)
 
 
@@ -289,11 +289,11 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
 
     extension = _get_extension(filename)
     try:
-        loader = _FormatRegistry.loaders[extension]
+        loader = FormatRegistry.loaders[extension]
     except KeyError:
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
                       'was found. I can only load files with extensions in %s'
-                      % (filename, extension, _FormatRegistry.loaders.keys()))
+                      % (filename, extension, FormatRegistry.loaders.keys()))
 
     kwargs['atom_indices'] = atom_indices
     if extension not in _TOPOLOGY_EXTS:
@@ -395,11 +395,11 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     try:
         #loader = _LoaderRegistry[extension][0]
-        loader = _FormatRegistry.loaders[extension]
+        loader = FormatRegistry.loaders[extension]
     except KeyError:
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
                       'was found. I can only load files '
-                      'with extensions in %s' % (filename, extension, _FormatRegistry.loaders.keys()))
+                      'with extensions in %s' % (filename, extension, FormatRegistry.loaders.keys()))
 
     if extension in _TOPOLOGY_EXTS:
         # this is a little hack that makes calling load() more predictable. since

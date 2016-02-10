@@ -41,7 +41,7 @@ from distutils.version import StrictVersion
 
 import numpy as np
 from mdtraj import version
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices
 
 __all__ = ['NetCDFTrajectoryFile', 'load_netcdf']
@@ -50,9 +50,9 @@ __all__ = ['NetCDFTrajectoryFile', 'load_netcdf']
 # classes
 ##############################################################################
 
-@_FormatRegistry.register_loader('.nc')
-@_FormatRegistry.register_loader('.netcdf')
-@_FormatRegistry.register_loader('.ncdf')
+@FormatRegistry.register_loader('.nc')
+@FormatRegistry.register_loader('.netcdf')
+@FormatRegistry.register_loader('.ncdf')
 def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load an AMBER NetCDF file. Since the NetCDF format doesn't contain
     information to specify the topology, you need to supply a topology
@@ -102,9 +102,9 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
         return f.read_as_traj(topology, n_frames=n_frames, atom_indices=atom_indices, stride=stride)
 
 
-@_FormatRegistry.register_fileobject('.nc')
-@_FormatRegistry.register_fileobject('.netcdf')
-@_FormatRegistry.register_fileobject('.ncdf')
+@FormatRegistry.register_fileobject('.nc')
+@FormatRegistry.register_fileobject('.netcdf')
+@FormatRegistry.register_fileobject('.ncdf')
 class NetCDFTrajectoryFile(object):
     """Interface for reading and writing to AMBER NetCDF files. This is a
     file-like object, that supports both reading or writing depending

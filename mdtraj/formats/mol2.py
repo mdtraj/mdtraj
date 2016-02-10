@@ -55,11 +55,11 @@ import re
 
 from mdtraj.utils import import_
 from mdtraj.utils.six.moves import cStringIO as StringIO
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 
 __all__ = ['load_mol2', "mol2_to_dataframes"]
 
-@_FormatRegistry.register_loader('.mol2')
+@FormatRegistry.register_loader('.mol2')
 def load_mol2(filename):
     """Load a TRIPOS mol2 file from disk.
 

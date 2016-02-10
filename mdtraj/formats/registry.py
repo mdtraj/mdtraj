@@ -3,16 +3,16 @@ Registry for trajectory file formats, so that the appropriate file
 object and loader can be resolved based on the filename extension.
 """
 
-class _FormatRegistry(object):
+class FormatRegistry(object):
     """Registry for trajectory file objects.
-    
+
     Examples
     --------
-    >>> @_FormatRegistry.register_loader('.xyz')
+    >>> @FormatRegistry.register_loader('.xyz')
     >>> def load_xyz(filename):
         return Trajectory(...)
     >>>
-    >>> print _FormatRegistry.loaders['.xyz']
+    >>> print FormatRegistry.loaders['.xyz']
     <function load_xyz at 0x1004a15f0>
     """
     loaders = {}
@@ -35,4 +35,7 @@ class _FormatRegistry(object):
 # Make a single instance of this class, and then
 # get rid of the class object. This should be
 # treated as a singleton
-_FormatRegistry = _FormatRegistry()
+FormatRegistry = FormatRegistry()
+
+# for backward compatibility reasons, we have this alias:
+_FormatRegistry = FormatRegistry

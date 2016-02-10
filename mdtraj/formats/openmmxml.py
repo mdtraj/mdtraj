@@ -21,12 +21,12 @@
 ##############################################################################
 
 import numpy as np
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 
 __all__ = ['load_xml']
 
 
-@_FormatRegistry.register_loader('.xml')
+@FormatRegistry.register_loader('.xml')
 def load_xml(filename, top=None):
     """Load a single conformation from an OpenMM XML file.
 

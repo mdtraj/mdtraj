@@ -52,7 +52,7 @@ import mdtraj.core.element as elem
 from mdtraj.core.topology import Topology
 from mdtraj.utils import in_units_of, ensure_type, import_, cast_indices
 from mdtraj.utils.six import string_types
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 
 __all__ = ['HDF5TrajectoryFile', 'load_hdf5']
 
@@ -64,8 +64,8 @@ Frames = namedtuple('Frames', ['coordinates', 'time', 'cell_lengths', 'cell_angl
 # Code
 ##############################################################################
 
-@_FormatRegistry.register_loader('.h5')
-@_FormatRegistry.register_loader('.hdf5')
+@FormatRegistry.register_loader('.h5')
+@FormatRegistry.register_loader('.hdf5')
 def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     """Load an MDTraj hdf5 trajectory file from disk.
 
@@ -119,8 +119,8 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
         return f.read_as_traj(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
 
 
-@_FormatRegistry.register_fileobject('.h5')
-@_FormatRegistry.register_fileobject('.hdf5')
+@FormatRegistry.register_fileobject('.h5')
+@FormatRegistry.register_fileobject('.hdf5')
 class HDF5TrajectoryFile(object):
     """Interface for reading and writing to a MDTraj HDF5 molecular
     dynamics trajectory file, whose format is described
