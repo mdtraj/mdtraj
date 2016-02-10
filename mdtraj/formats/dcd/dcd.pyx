@@ -34,7 +34,7 @@ cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from libc.stdlib cimport malloc, free
 from libc.string cimport strcpy, strlen
 from dcdlib cimport molfile_timestep_t, dcdhandle
@@ -69,7 +69,7 @@ cdef ERROR_MESSAGES = {
 # Code
 ##############################################################################
 
-@_FormatRegistry.register_loader('.dcd')
+@FormatRegistry.register_loader('.dcd')
 def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     """load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None)
 
@@ -607,4 +607,4 @@ cdef class DCDTrajectoryFile:
 
             if status != _DCD_SUCCESS:
                 raise IOError("DCD Error: %s" % ERROR_MESSAGES(status))
-_FormatRegistry.register_fileobject('.dcd')(DCDTrajectoryFile)
+FormatRegistry.register_fileobject('.dcd')(DCDTrajectoryFile)

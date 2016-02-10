@@ -26,7 +26,7 @@ trajectories in a variety of formats, including Gromacs XTC & TRR, CHARMM/NAMD
 DCD, AMBER BINPOS, PDB, and HDF5.
 """
 
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from mdtraj.formats.xtc import load_xtc
 from mdtraj.formats.trr import load_trr
 from mdtraj.formats.hdf5 import load_hdf5

@@ -33,7 +33,7 @@ import os
 
 import numpy as np
 
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import (cast_indices, in_units_of, ensure_type,
                           open_maybe_zipped)
 from mdtraj.utils.six import string_types
@@ -47,8 +47,8 @@ class _EOF(IOError):
     pass
 
 
-@_FormatRegistry.register_loader('.xyz')
-@_FormatRegistry.register_loader('.xyz.gz')
+@FormatRegistry.register_loader('.xyz')
+@FormatRegistry.register_loader('.xyz.gz')
 def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load a xyz trajectory file.
 
@@ -113,8 +113,8 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
                               atom_indices=atom_indices)
 
 
-@_FormatRegistry.register_fileobject('.xyz')
-@_FormatRegistry.register_fileobject('.xyz.gz')
+@FormatRegistry.register_fileobject('.xyz')
+@FormatRegistry.register_fileobject('.xyz.gz')
 class XYZTrajectoryFile(object):
     """Interface for reading and writing to xyz files.
 

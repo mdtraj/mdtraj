@@ -37,7 +37,7 @@ import warnings
 
 import numpy as np
 from mdtraj import version
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices, six
 
 __all__ = ['AmberRestartFile', 'load_restrt', 'AmberNetCDFRestartFile',
@@ -45,9 +45,9 @@ __all__ = ['AmberRestartFile', 'load_restrt', 'AmberNetCDFRestartFile',
 
 range = six.moves.range
 
-@_FormatRegistry.register_loader('.rst7')
-@_FormatRegistry.register_loader('.restrt')
-@_FormatRegistry.register_loader('.inpcrd')
+@FormatRegistry.register_loader('.rst7')
+@FormatRegistry.register_loader('.restrt')
+@FormatRegistry.register_loader('.inpcrd')
 def load_restrt(filename, top=None, atom_indices=None):
     """Load an AMBER ASCII restart/inpcrd file. Since this file doesn't contain
     information to specify the topology, you need to supply a topology
@@ -83,9 +83,9 @@ def load_restrt(filename, top=None, atom_indices=None):
         return f.read_as_traj(topology, atom_indices=atom_indices)
 
 
-@_FormatRegistry.register_fileobject('.rst7')
-@_FormatRegistry.register_fileobject('.restrt')
-@_FormatRegistry.register_fileobject('.inpcrd')
+@FormatRegistry.register_fileobject('.rst7')
+@FormatRegistry.register_fileobject('.restrt')
+@FormatRegistry.register_fileobject('.inpcrd')
 class AmberRestartFile(object):
     """Interface for reading and writing AMBER ASCII restart files. This is a
     file-like object, that supports both reading and writing depending on the
@@ -404,7 +404,7 @@ class AmberRestartFile(object):
     def __len__(self):
         return 1 # All restarts have only 1 frame
 
-@_FormatRegistry.register_loader('.ncrst')
+@FormatRegistry.register_loader('.ncrst')
 def load_ncrestrt(filename, top=None, atom_indices=None):
     """Load an AMBER NetCDF restart/inpcrd file. Since this file doesn't
     contain information to specify the topology, you need to supply a topology
@@ -440,7 +440,7 @@ def load_ncrestrt(filename, top=None, atom_indices=None):
         return f.read_as_traj(topology, atom_indices=atom_indices)
 
 
-@_FormatRegistry.register_fileobject('.ncrst')
+@FormatRegistry.register_fileobject('.ncrst')
 class AmberNetCDFRestartFile(object):
     """Interface for reading and writing AMBER NetCDF files. This is a file-like
     object, that supports both reading and writing depending on the `mode` flag.

@@ -34,7 +34,7 @@ import numpy as np
 
 from mdtraj.utils import (ensure_type, cast_indices, in_units_of,
                           lengths_and_angles_to_box_vectors)
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
 
@@ -45,7 +45,7 @@ class _EOF(IOError):
     pass
 
 
-@_FormatRegistry.register_loader('.lammpstrj')
+@FormatRegistry.register_loader('.lammpstrj')
 def load_lammpstrj(filename, top=None, stride=None, atom_indices=None,
                    frame=None, unit_set='real'):
     """Load a LAMMPS trajectory file.
@@ -111,7 +111,7 @@ def load_lammpstrj(filename, top=None, stride=None, atom_indices=None,
         return f.read_as_traj(topology, n_frames=n_frames, stride=stride, atom_indices=atom_indices)
 
 
-@_FormatRegistry.register_fileobject('.lammpstrj')
+@FormatRegistry.register_fileobject('.lammpstrj')
 class LAMMPSTrajectoryFile(object):
     """Interface for reading and writing to a LAMMPS lammpstrj files.
     This is a file-like object, that both reading or writing depending

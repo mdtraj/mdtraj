@@ -35,7 +35,7 @@ cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 cimport xdrlib
 
 __all__ = ['load_xtc', 'XTCTrajectoryFile']
@@ -73,7 +73,7 @@ if sizeof(float) != sizeof(np.float32_t):
 # Code
 ###############################################################################
 
-@_FormatRegistry.register_loader('.xtc')
+@FormatRegistry.register_loader('.xtc')
 def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     """load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None)
 
@@ -601,4 +601,4 @@ cdef class XTCTrajectoryFile:
         if self.n_frames == -1:
             xdrlib.read_xtc_nframes(self.filename, &self.n_frames)
         return int(self.n_frames)
-_FormatRegistry.register_fileobject('.xtc')(XTCTrajectoryFile)
+FormatRegistry.register_fileobject('.xtc')(XTCTrajectoryFile)

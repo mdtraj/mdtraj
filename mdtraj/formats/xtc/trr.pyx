@@ -35,7 +35,7 @@ cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 cimport trrlib
 
 __all__ = ['load_trr', 'TRRTrajectoryFile']
@@ -73,7 +73,7 @@ if sizeof(float) != sizeof(np.float32_t):
 # Code
 ###############################################################################
 
-@_FormatRegistry.register_loader('.trr')
+@FormatRegistry.register_loader('.trr')
 def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
     """load_trr(filename, top=None, stride=None, atom_indices=None, frame=None)
 
@@ -603,4 +603,4 @@ cdef class TRRTrajectoryFile:
         if self.n_frames == -1:
             trrlib.read_trr_nframes(self.filename, &self.n_frames)
         return int(self.n_frames)
-_FormatRegistry.register_fileobject('.trr')(TRRTrajectoryFile)
+FormatRegistry.register_fileobject('.trr')(TRRTrajectoryFile)

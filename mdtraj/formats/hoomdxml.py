@@ -23,14 +23,14 @@ from xml.etree import cElementTree
 
 import numpy as np
 
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import ilen, import_, ensure_type
 
 
 __all__ = ['load_hoomdxml']
 
 
-@_FormatRegistry.register_loader('.hoomdxml')
+@FormatRegistry.register_loader('.hoomdxml')
 def load_hoomdxml(filename, top=None):
     """Load a single conformation from an HOOMD-Blue XML file.
 

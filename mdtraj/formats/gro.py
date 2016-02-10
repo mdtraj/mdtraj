@@ -60,14 +60,14 @@ import mdtraj as md
 from mdtraj.utils import in_units_of, cast_indices, ensure_type
 from mdtraj.formats import pdb
 from mdtraj.core import element as elem
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 
 
 ##############################################################################
 # Code
 ##############################################################################
 
-@_FormatRegistry.register_loader('.gro')
+@FormatRegistry.register_loader('.gro')
 def load_gro(filename, stride=None, atom_indices=None, frame=None):
     """Load a GROMACS GRO file.
 
@@ -98,7 +98,7 @@ def load_gro(filename, stride=None, atom_indices=None, frame=None):
                               atom_indices=atom_indices)
 
 
-@_FormatRegistry.register_fileobject('.gro')
+@FormatRegistry.register_fileobject('.gro')
 class GroTrajectoryFile(object):
     """Interface for reading and writing to GROMACS GRO files.
 

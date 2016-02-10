@@ -30,7 +30,7 @@ import os
 import itertools
 import numpy as np
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils.six import string_types, PY3
 from mdtraj.utils.six.moves import xrange
 
@@ -44,8 +44,8 @@ __all__ = ['MDCRDTrajectoryFile', 'load_mdcrd']
 class _EOF(IOError):
     pass
 
-@_FormatRegistry.register_loader('.mdcrd')
-@_FormatRegistry.register_loader('.crd')
+@FormatRegistry.register_loader('.mdcrd')
+@FormatRegistry.register_loader('.crd')
 def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load an AMBER mdcrd file.
 
@@ -102,8 +102,8 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
                               atom_indices=atom_indices)
 
 
-@_FormatRegistry.register_fileobject('.mdcrd')
-@_FormatRegistry.register_fileobject('.crd')
+@FormatRegistry.register_fileobject('.mdcrd')
+@FormatRegistry.register_fileobject('.crd')
 class MDCRDTrajectoryFile(object):
     """Interface for reading and writing to an AMBER mdcrd files.
     This is a file-like object, that both reading or writing depending

@@ -258,7 +258,7 @@ def test_center_aind():
 def test_float_atom_indices_exception():
     "Is an informative error message given when you supply floats for atom_indices?"
     top = md.load(get_fn('native.pdb')).topology
-    for ext in md._FormatRegistry.loaders.keys():
+    for ext in md.FormatRegistry.loaders.keys():
         try:
             fn = get_fn('frame0' + ext)
         except:

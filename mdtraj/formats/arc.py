@@ -30,7 +30,7 @@ import os
 import itertools
 import numpy as np
 from mdtraj.utils import cast_indices, in_units_of
-from mdtraj.formats.registry import _FormatRegistry
+from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
 
@@ -45,7 +45,7 @@ class _EOF(IOError):
     pass
 
 
-@_FormatRegistry.register_loader('.arc')
+@FormatRegistry.register_loader('.arc')
 def load_arc(filename, stride=None, atom_indices=None, frame=None):
     """Load a TINKER .arc file from disk.
 
@@ -90,7 +90,7 @@ def load_arc(filename, stride=None, atom_indices=None, frame=None):
                               atom_indices=atom_indices)
 
 
-@_FormatRegistry.register_fileobject('.arc')
+@FormatRegistry.register_fileobject('.arc')
 class ArcTrajectoryFile(object):
     """Interface for reading and writing to an TINKER archive files.
     (Note that the TINKER .xyz format is identical to this.)  This is
