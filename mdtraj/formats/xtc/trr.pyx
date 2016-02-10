@@ -77,7 +77,7 @@ if sizeof(float) != sizeof(np.float32_t):
 # Code
 ###############################################################################
 
-@_FormatRegistry.register_loader('.trr')
+@FormatRegistry.register_loader('.trr')
 def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
     """load_trr(filename, top=None, stride=None, atom_indices=None, frame=None)
 
@@ -674,4 +674,4 @@ cdef class TRRTrajectoryFile:
             self.offsets
         return int(self.n_frames)
 
-_FormatRegistry.register_fileobject('.trr')(TRRTrajectoryFile)
+FormatRegistry.register_fileobject('.trr')(TRRTrajectoryFile)

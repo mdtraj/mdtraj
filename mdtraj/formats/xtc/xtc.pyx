@@ -104,7 +104,7 @@ cdef int XTC_HEADER_SIZE = 11*sizeof(np.int32_t) + 2*sizeof(np.float32_t) + DIM*
 # Code
 ###############################################################################
 
-@_FormatRegistry.register_loader('.xtc')
+@FormatRegistry.register_loader('.xtc')
 def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     """load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None)
 
@@ -697,4 +697,4 @@ cdef class XTCTrajectoryFile(object):
             self.offsets # invokes _calc_len_and_offsets
         return int(self.n_frames)
 
-_FormatRegistry.register_fileobject('.xtc')(XTCTrajectoryFile)
+FormatRegistry.register_fileobject('.xtc')(XTCTrajectoryFile)
