@@ -29,6 +29,7 @@
 import os
 import warnings
 import cython
+import xdrlib
 cimport cython
 import numpy as np
 cimport numpy as np
@@ -37,9 +38,12 @@ from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
 cimport trrlib
+cimport xdrlib
+from libc.stdio cimport SEEK_SET, SEEK_CUR
+
+ctypedef np.npy_int64   int64_t
 
 __all__ = ['load_trr', 'TRRTrajectoryFile']
-
 
 ###############################################################################
 # globals
@@ -127,7 +131,7 @@ def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_trr. '
-            'you supplied %s' % type(filename))
+                        'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
@@ -189,16 +193,16 @@ cdef class TRRTrajectoryFile:
     cdef trrlib.XDRFILE* fh
     cdef str filename
     cdef int n_atoms          # number of atoms in the file
-    cdef unsigned long n_frames  # numnber of frames in the file, cached
-    cdef int frame_counter    # current position in the file, in read mode
-    cdef int is_open          # is the file handle currently open?
-    cdef int approx_n_frames  # appriximate number of frames in the file, as guessed based on its size
+    cdef int64_t n_frames  # numnber of frames in the file, cached
+    cdef int64_t frame_counter    # current position in the file, in read mode
+    cdef char is_open          # is the file handle currently open?
+    cdef int64_t approx_n_frames  # appriximate number of frames in the file, as guessed based on its size
     cdef char* mode           # mode in which the file is open, either 'r' or 'w'
     cdef int min_chunk_size
     cdef float chunk_size_multiplier
-    cdef int with_unitcell    # used in mode='w' to know if we're writing unitcells or nor
+    cdef char with_unitcell    # used in mode='w' to know if we're writing unitcells or nor
     cdef readonly char* distance_unit
-
+    cdef np.ndarray _offsets
 
     def __cinit__(self, char* filename, char* mode='r', force_overwrite=True, **kwargs):
         """Open a GROMACS TRR file for reading/writing.
@@ -208,6 +212,7 @@ cdef class TRRTrajectoryFile:
         self.frame_counter = 0
         self.n_frames = -1
         self.filename = filename
+        self._offsets = None
 
         if str(mode) == 'r':
             self.n_atoms = 0
@@ -225,7 +230,6 @@ cdef class TRRTrajectoryFile:
 
             self.min_chunk_size = max(kwargs.pop('min_chunk_size', 100), 1)
             self.chunk_size_multiplier = max(kwargs.pop('chunk_size_multiplier', 1.5), 0.01)
-
 
         elif str(mode) == 'w':
             if force_overwrite and os.path.exists(filename):
@@ -245,10 +249,24 @@ cdef class TRRTrajectoryFile:
         self.mode = mode
 
     def _estimate_n_frames_from_filesize(self, filesize):
-        # this approximation is pretty bad. on 5000/500 frames, 50/100 atoms,
-        # it seems to be about 30%
-        approx_n_frames = filesize / ((self.n_atoms * 2 * + 16) / 2)
-        return approx_n_frames
+        # read the first header, sum the size of all data fields and extrapolate.
+        cdef trrlib.t_trnheader header
+        cdef int frame_size, header_size
+        cdef int64_t n_frames, old_pos
+
+        old_pos = xdrlib.xdr_tell(self.fh)
+        try:
+            xdrlib.xdr_seek(self.fh, 0, SEEK_SET)
+            if trrlib.do_trnheader(self.fh, 1, &header) != 0:
+                raise RuntimeError("could not read header of first frame!")
+        finally:
+            xdrlib.xdr_seek(self.fh, old_pos, SEEK_SET)
+
+        header_size = xdrlib.xdr_tell(self.fh)
+        frame_size = sum((<int*> &header)[i] for i in range(1, 11))
+        n_frames = filesize / (frame_size + header_size)
+
+        return n_frames
 
     def __dealloc__(self):
         self.close()
@@ -354,6 +372,7 @@ cdef class TRRTrajectoryFile:
                 box = None
             return xyz, time, step, box, lambd
 
+        # TODO: investigate if this is neccessary because TRR should have constant offsets!
         # if they want ALL of the remaining frames, we need to guess at the chunk
         # size, and then check the exit status to make sure we're really at the EOF
         all_xyz, all_time, all_step, all_box, all_lambd = [], [], [], [], []
@@ -363,6 +382,7 @@ cdef class TRRTrajectoryFile:
             # think are in the file and how many we've currently read
             chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
                         self.min_chunk_size)
+
             xyz, time, step, box, lambd = self._read(chunk, atom_indices)
             if len(xyz) <= 0:
                 break
@@ -382,7 +402,7 @@ cdef class TRRTrajectoryFile:
             all_box = None
         return all_xyz, all_time, all_step, all_box, all_lambd
 
-    def _read(self, int n_frames, atom_indices):
+    def _read(self, int64_t n_frames, atom_indices):
         """Read a specified number of TRR frames from the buffer"""
 
         cdef int i = 0
@@ -414,8 +434,6 @@ cdef class TRRTrajectoryFile:
 
         # only used if atom_indices is given
         cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
-
-
 
         while (i < n_frames) and (status != _EXDRENDOFFILE):
             if atom_indices is None:
@@ -547,10 +565,8 @@ cdef class TRRTrajectoryFile:
             2: move relative to the end of file, offset should be <= 0.
             Seeking beyond the end of a file is not supported
         """
-        cdef int i, status, step
-        cdef float time, prec, lambd
-        cdef np.ndarray[dtype=np.float_t] box = np.empty(9, dtype=np.float)
-        cdef np.ndarray[dtype=np.float_t] xyz = np.empty(self.n_atoms * 3, dtype=np.float)
+        cdef int status
+        cdef int64_t pos
 
         if str(self.mode) != 'r':
             raise NotImplementedError('seek() only available in mode="r" currently')
@@ -563,14 +579,10 @@ cdef class TRRTrajectoryFile:
         else:
             raise IOError('Invalid argument')
 
-        trrlib.xdrfile_close(self.fh)
-        self.fh = trrlib.xdrfile_open(self.filename, self.mode)
-
-        for i in range(absolute):
-            status = trrlib.read_trr(self.fh, self.n_atoms, &step, &time,
-                &lambd, <trrlib.matrix>&box[0], <trrlib.rvec*>&xyz[0], NULL, NULL)
-            if status != _EXDROK:
-                raise RuntimeError('TRR seek error: %s' % status)
+        pos = self.offsets[absolute]
+        status = xdrlib.xdr_seek(self.fh, pos, SEEK_SET)
+        if status != 0:
+            raise RuntimeError('TRR seek error: %s' % status)
 
         self.frame_counter = absolute
 
@@ -585,6 +597,64 @@ cdef class TRRTrajectoryFile:
         if str(self.mode) != 'r':
             raise NotImplementedError('tell() only available in mode="r" currently')
         return int(self.frame_counter)
+
+    @property
+    def offsets(self):
+        """get byte offsets from current xtc file
+        See Also
+        --------
+        set_offsets
+        """
+        if self._offsets is None:
+            self.n_frames, self._offsets = self._calc_len_and_offsets()
+        return self._offsets
+
+    @offsets.setter
+    def offsets(self, offsets):
+        """set frame offsets"""
+        self._offsets = offsets
+
+    def _calc_len_and_offsets(self):
+        """read byte offsets from TRR file directly"""
+        cdef int status, i, frame_size, frame_offset, header_size
+        cdef int64_t file_size
+        cdef unsigned long n_frames
+        cdef np.ndarray[ndim=1, dtype=np.npy_int64] offsets
+        cdef trrlib.t_trnheader header
+
+        import os
+        file_size = os.stat(self.filename).st_size
+        cdef int64_t old_pos = xdrlib.xdr_tell(self.fh)
+
+        try:
+            xdrlib.xdr_seek(self.fh, 0, SEEK_SET)
+            if trrlib.do_trnheader(self.fh, 1, &header) != 0:
+                raise RuntimeError("could not read header of first frame!")
+            header_size = xdrlib.xdr_tell(self.fh)
+            frame_size = sum((<int*> &header)[i] for i in range(1, 11))
+
+            size = file_size / (frame_size + header_size)
+            offsets = np.empty(size, dtype=np.int64)
+            n_frames = 1
+            offsets[0] = 0
+
+            while True:
+                status = xdrlib.xdr_seek(self.fh, frame_size, SEEK_CUR)
+                if status != 0:
+                    raise RuntimeError("could not seek...")
+                frame_offset = xdrlib.xdr_tell(self.fh)
+                if trrlib.do_trnheader(self.fh, 1, &header) != 0:
+                    break
+
+                frame_size = sum((<int*> &header)[i] for i in range(1, 11))
+                if n_frames == len(offsets):
+                    offsets = np.resize(offsets, int(len(offsets)*1.2))
+                offsets[n_frames] = frame_offset
+                n_frames += 1
+        finally:
+            xdrlib.xdr_seek(self.fh, old_pos, SEEK_SET)
+
+        return n_frames, offsets[:n_frames]
 
     def __enter__(self):
         "Support the context manager protocol"
@@ -601,6 +671,7 @@ cdef class TRRTrajectoryFile:
         if not self.is_open:
             raise ValueError('I/O operation on closed file')
         if self.n_frames == -1:
-            trrlib.read_trr_nframes(self.filename, &self.n_frames)
+            self.offsets
         return int(self.n_frames)
+
 FormatRegistry.register_fileobject('.trr')(TRRTrajectoryFile)

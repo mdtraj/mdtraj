@@ -216,7 +216,7 @@ def test_seek():
         eq(f.tell(), 0)
         eq(f.read(1)[0][0], reference[0])
         eq(f.tell(), 1)
-        
+
         xyz = f.read(1)[0][0]
         eq(xyz, reference[1])
         eq(f.tell(), 2)
@@ -226,14 +226,36 @@ def test_seek():
         xyz = f.read(1)[0][0]
         eq(f.tell(), 1)
         eq(xyz, reference[0])
-        
-        f.seek(5)
+
+        f.seek(5) # offset array is going to be built
+        assert len(f.offsets) == len(reference)
         eq(f.read(1)[0][0], reference[5])
         eq(f.tell(), 6)
-        
+
         f.seek(-5, 1)
         eq(f.tell(), 1)
         eq(f.read(1)[0][0], reference[1])
+
+
+def test_seek_natoms9():
+    # create a xtc file with 9 atoms and seek it.
+    with XTCTrajectoryFile(get_fn('frame0.xtc'), 'r') as fh:
+        xyz = fh.read()[0][:, :9, :]
+
+    with XTCTrajectoryFile(temp, 'w', force_overwrite=True) as f:
+        f.write(xyz)
+
+    with XTCTrajectoryFile(temp, 'r') as f:
+        eq(f.read(1)[0].shape, (1, 9, 3))
+        eq(f.tell(), 1)
+        f.seek(99)
+        eq(f.read(1)[0].squeeze(), xyz[99])
+        # seek relative
+        f.seek(-1, 1)
+        eq(f.read(1)[0].squeeze(), xyz[99])
+
+        f.seek(0, 0)
+        eq(f.read(1)[0].squeeze(), xyz[0])
 
 
 def test_ragged_1():
