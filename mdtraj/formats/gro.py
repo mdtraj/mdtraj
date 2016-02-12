@@ -52,7 +52,7 @@
 import os
 import sys
 import itertools
-from re import sub, match
+from re import sub, match, findall
 # import element as elem
 import numpy as np
 
@@ -372,7 +372,7 @@ class GroTrajectoryFile(object):
         time = None
         if 't=' in comment:
             # title string (free format string, optional time in ps after 't=')
-            time = float(comment[comment.index('t=')+2:].strip())
+            time = float(findall('t= *(\d+\.\d+)',comment)[-1])
 
         # box vectors (free format, space separated reals), values: v1(x) v2(y)
         # v3(z) v1(y) v1(z) v2(x) v2(z) v3(x) v3(y), the last 6 values may be
