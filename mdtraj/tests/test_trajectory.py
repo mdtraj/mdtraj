@@ -24,7 +24,7 @@ import sys
 import tempfile, os
 import functools
 from mdtraj.utils import enter_temp_directory
-from mdtraj.testing import get_fn, eq, assert_raises, SkipTest
+from mdtraj.testing import get_fn, eq, assert_raises, assert_raises_regex, SkipTest
 import numpy as np
 import mdtraj as md
 import mdtraj.utils
@@ -575,7 +575,7 @@ def test_save_load():
 
 
 def test_force_overwrite():
-    t_ref = md.load(get_fn('1vii.pdb'))
+    t_ref = md.load(get_fn('frame0.dcd'), top=get_fn('native.pdb'))
     with enter_temp_directory():
         for ext in t_ref._savers().keys():
             def test_1():
@@ -585,7 +585,9 @@ def test_force_overwrite():
             def test_2():
                 fn = 'temp-2%s' % ext
                 open(fn, 'w').close()
-                assert_raises(IOError, lambda: t_ref.save(fn, force_overwrite=False))
+                assert_raises_regex(IOError,
+                                    r'File {} exists.*'.format(fn),
+                                    lambda: t_ref.save(fn, force_overwrite=False))
             test_1.description = 'test_force_overwrite (1): %s' % ext
             test_2.description = 'test_force_overwrite (2): %s' % ext
             yield test_1

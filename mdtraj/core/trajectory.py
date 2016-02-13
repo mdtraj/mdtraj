@@ -1467,7 +1467,8 @@ class Trajectory(object):
         self._check_valid_unitcell()
         if self._have_unitcell:
             if not np.all(self.unitcell_angles == 90):
-                raise ValueError('Only rectilinear boxes can be saved to mdcrd files')
+                raise ValueError('Only rectilinear boxes can be saved to mdcrd files. '
+                                 'Your angles are {}'.format(self.unitcell_angles))
 
         with MDCRDTrajectoryFile(filename, mode='w', force_overwrite=force_overwrite) as f:
             f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),

@@ -34,7 +34,7 @@ import numpy as np
 from numpy.testing import (assert_allclose, assert_almost_equal,
   assert_approx_equal, assert_array_almost_equal, assert_array_almost_equal_nulp,
   assert_array_equal, assert_array_less, assert_array_max_ulp, assert_equal,
-  assert_raises, assert_string_equal, assert_warns)
+  assert_raises, assert_string_equal, assert_warns, assert_raises_regex)
 from numpy.testing.decorators import skipif, slow
 from nose.tools import ok_, eq_, raises
 from nose import SkipTest
@@ -59,13 +59,14 @@ try:
 except ImportError:
     pass
 
-
 __all__ = ['assert_allclose', 'assert_almost_equal', 'assert_approx_equal',
            'assert_array_almost_equal', 'assert_array_almost_equal_nulp',
            'assert_array_equal', 'assert_array_less', 'assert_array_max_ulp',
-           'assert_equal', 'assert_raises', 'assert_string_equal', 'assert_warns',
-           'get_fn', 'eq', 'assert_dict_equal', 'assert_sparse_matrix_equal',
-           'expected_failure', 'SkipTest', 'ok_', 'eq_', 'raises', 'skipif', 'slow']
+           'assert_equal', 'assert_raises', 'assert_raises_regex',
+           'assert_string_equal', 'assert_warns', 'get_fn', 'eq',
+           'assert_dict_equal', 'assert_sparse_matrix_equal',
+           'expected_failure', 'SkipTest', 'ok_', 'eq_', 'raises', 'skipif',
+           'slow']
 
 ##############################################################################
 # functions
