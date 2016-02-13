@@ -1572,6 +1572,8 @@ class Trajectory(object):
         ----------
         filename : str
             filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if it's already there
         """
         with LH5TrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(coordinates=self.xyz)
