@@ -193,6 +193,15 @@ def geometry_extensions():
     define_macros = None
 
     return [
+        Extension('mdtraj.geometry.geometry',
+            sources=['mdtraj/geometry/libgeometry/src/geometry.cpp',
+                     'mdtraj/geometry/libgeometry/src/unitcell.cpp',
+                     'mdtraj/geometry/libgeometry/geometry.pyx'],
+            include_dirs=['mdtraj/geometry/libgeometry/include'],
+            define_macros=define_macros,
+            extra_compile_args=compiler_args,
+            libraries=extra_cpp_libraries,
+            language='c++'),
         Extension('mdtraj.geometry._geometry',
             sources=['mdtraj/geometry/src/geometry.c',
                      'mdtraj/geometry/src/sasa.c',
