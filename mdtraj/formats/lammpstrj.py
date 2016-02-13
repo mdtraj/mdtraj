@@ -148,8 +148,8 @@ class LAMMPSTrajectoryFile(object):
             self._fh = open(filename, 'r')
             self._is_open = True
         elif mode == 'w':
-            if os.path.exists(filename) and not force_overwrite:
-                raise IOError("The file '%s' already exists" % filename)
+            if not force_overwrite and os.path.exists(filename):
+                raise IOError("File %s exits and force_overwrite=False" % filename)
             self._fh = open(filename, 'w')
             self._is_open = True
         else:

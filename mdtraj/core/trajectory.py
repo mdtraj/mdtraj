@@ -1263,7 +1263,7 @@ class Trajectory(object):
         no_models: bool
             For .pdb. TODO: Document this?
         force_overwrite : bool
-            For .binpos, .xtc, .dcd. If `filename` already exists, overwrite it.
+            If `filename` already exists, overwrite it.
         """
         # grab the extension of the filename
         extension = _get_extension(filename)
@@ -1467,7 +1467,8 @@ class Trajectory(object):
         self._check_valid_unitcell()
         if self._have_unitcell:
             if not np.all(self.unitcell_angles == 90):
-                raise ValueError('Only rectilinear boxes can be saved to mdcrd files')
+                raise ValueError('Only rectilinear boxes can be saved to mdcrd files. '
+                                 'Your angles are {}'.format(self.unitcell_angles))
 
         with MDCRDTrajectoryFile(filename, mode='w', force_overwrite=force_overwrite) as f:
             f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
@@ -1565,15 +1566,17 @@ class Trajectory(object):
                     f.write(coordinates=coordinates[i], time=self.time[0],
                             cell_lengths=lengths[i], cell_angles=self.unitcell_angles[i])
 
-    def save_lh5(self, filename):
+    def save_lh5(self, filename, force_overwrite=True):
         """Save trajectory in deprecated MSMBuilder2 LH5 (lossy HDF5) format.
 
         Parameters
         ----------
         filename : str
             filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if it's already there
         """
-        with LH5TrajectoryFile(filename, 'w', force_overwrite=True) as f:
+        with LH5TrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(coordinates=self.xyz)
             f.topology = self.topology
 
