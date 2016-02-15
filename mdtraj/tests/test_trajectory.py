@@ -24,7 +24,7 @@ import sys
 import tempfile, os
 import functools
 from mdtraj.utils import enter_temp_directory
-from mdtraj.testing import get_fn, eq, assert_raises, assert_raises_regex, SkipTest
+from mdtraj.testing import get_fn, eq, assert_raises, SkipTest
 import numpy as np
 import mdtraj as md
 import mdtraj.utils
@@ -585,9 +585,8 @@ def test_force_overwrite():
             def test_2():
                 fn = 'temp-2%s' % ext
                 open(fn, 'w').close()
-                assert_raises_regex(IOError,
-                                    r'"{}" already exists'.format(fn),
-                                    lambda: t_ref.save(fn, force_overwrite=False))
+                assert_raises(IOError,
+                              lambda: t_ref.save(fn, force_overwrite=False))
             test_1.description = 'test_force_overwrite (1): %s' % ext
             test_2.description = 'test_force_overwrite (2): %s' % ext
             yield test_1
