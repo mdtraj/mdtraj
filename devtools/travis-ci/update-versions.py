@@ -10,7 +10,7 @@ if not any(d.project_name == 's3cmd' for d in pip.get_installed_distributions())
     raise ImportError('The s3cmd pacakge is required. try $ pip install s3cmd')
 
 
-URL = 'http://mdtraj.org/'
+URL = 'http://mdtraj.org'
 BUCKET_NAME = 'mdtraj.org'
 
 if not version.release:
