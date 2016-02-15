@@ -166,7 +166,7 @@ class MDCRDTrajectoryFile(object):
             self._line_counter += 1
         elif mode == 'w':
             if os.path.exists(filename) and not force_overwrite:
-                raise IOError("The file '%s' already exists" % filename)
+                raise IOError('"%s" already exists' % filename)
             self._fh = open(filename, 'wb')
             self._is_open = True
         else:

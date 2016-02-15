@@ -234,6 +234,8 @@ cdef class TRRTrajectoryFile:
         elif str(mode) == 'w':
             if force_overwrite and os.path.exists(filename):
                 os.unlink(filename)
+            if not force_overwrite and os.path.exists(filename):
+                raise IOError('"%s" already exists' % filename)
 
             self.fh = trrlib.xdrfile_open(filename, 'w')
             if self.fh is NULL:

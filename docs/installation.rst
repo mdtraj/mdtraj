@@ -43,7 +43,7 @@ To use ``mdtraj``, the following libraries and software will need to be installe
         The development package (``python-dev`` or ``python-devel``
         on most Linux distributions) is recommended.
 
-    `NumPy <http://numpy.scipy.org/>`_ >= 1.6.0
+    `NumPy <http://numpy.scipy.org/>`_ >= 1.7.0
         Numpy is the base package for numerical computing in python.
 
 Optional packages:

@@ -129,7 +129,7 @@ def test_slice():
     yield lambda: eq((t.slice(key=range(5), copy=False) + t.slice(key=range(5,10), copy=False)).unitcell_vectors, t.slice(key=range(10), copy=False).unitcell_vectors)
     yield lambda: eq((t.slice(key=range(5), copy=False) + t.slice(key=range(5,10), copy=False)).unitcell_lengths, t.slice(key=range(10), copy=False).unitcell_lengths)
     yield lambda: eq((t.slice(key=range(5), copy=False) + t.slice(key=range(5,10), copy=False)).unitcell_angles , t.slice(key=range(10), copy=False).unitcell_angles )
- 
+
 
 
 def test_slice2():
@@ -572,6 +572,25 @@ def test_save_load():
 
             test.description = 'test_save_load: %s' % ext
             yield test
+
+
+def test_force_overwrite():
+    t_ref = md.load(get_fn('native2.pdb'), no_boxchk=True)
+    for ext in t_ref._savers().keys():
+        with enter_temp_directory():
+            def test_1():
+                fn = 'temp-1%s' % ext
+                open(fn, 'w').close()
+                t_ref.save(fn, force_overwrite=True)
+            def test_2():
+                fn = 'temp-2%s' % ext
+                open(fn, 'w').close()
+                assert_raises(IOError,
+                              lambda: t_ref.save(fn, force_overwrite=False))
+            test_1.description = 'test_force_overwrite (1): %s' % ext
+            test_2.description = 'test_force_overwrite (2): %s' % ext
+            yield test_1
+            yield test_2
 
 
 def test_length():
