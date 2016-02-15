@@ -129,7 +129,7 @@ def test_slice():
     yield lambda: eq((t.slice(key=range(5), copy=False) + t.slice(key=range(5,10), copy=False)).unitcell_vectors, t.slice(key=range(10), copy=False).unitcell_vectors)
     yield lambda: eq((t.slice(key=range(5), copy=False) + t.slice(key=range(5,10), copy=False)).unitcell_lengths, t.slice(key=range(10), copy=False).unitcell_lengths)
     yield lambda: eq((t.slice(key=range(5), copy=False) + t.slice(key=range(5,10), copy=False)).unitcell_angles , t.slice(key=range(10), copy=False).unitcell_angles )
- 
+
 
 
 def test_slice2():
@@ -586,7 +586,7 @@ def test_force_overwrite():
                 fn = 'temp-2%s' % ext
                 open(fn, 'w').close()
                 assert_raises_regex(IOError,
-                                    r'File {} exists.*'.format(fn),
+                                    r'"?{}"?.*exists.*'.format(fn),
                                     lambda: t_ref.save(fn, force_overwrite=False))
             test_1.description = 'test_force_overwrite (1): %s' % ext
             test_2.description = 'test_force_overwrite (2): %s' % ext
