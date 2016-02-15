@@ -11,7 +11,7 @@ if [[ "$TRAVIS_BRANCH" != "master" ]]; then
 fi
 
 
-if [[ "$CONDA_PY" == "27" -a "$CONDA_NPY" == "19" ]]; then
+if [[ "$CONDA_PY" == "27" && "$CONDA_NPY" == "19" ]]; then
     # Create the docs and push them to S3
     # -----------------------------------
 
