@@ -4,8 +4,8 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.6 (Development)
-------------------
+v1.6 (February 15, 2016)
+------------------------
 
 MDTraj 1.6 contains a good mix of bug fixes and enhancements. Some
 highlights include:

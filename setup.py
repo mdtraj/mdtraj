@@ -50,7 +50,7 @@ except ValueError:
 
 
 ##########################
-VERSION = "1.6.0"
+VERSION = "1.6.1"
 ISRELEASED = True
 __version__ = VERSION
 ##########################
