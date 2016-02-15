@@ -6,11 +6,27 @@ These are new features and improvements of note in each release.
 
 v1.6 (Development)
 ------------------
-- ``formats.hdf5.ensure_mode`` was removed to eliminate the use of a function depreciated in Python 3.5. (#990)
+
+MDTraj 1.6 contains a good mix of bug fixes and enhancements. Some
+highlights include:
+
+- Improved performance for ``compute_contacts`` (#995)
+- Improved performance for ``Topology.select_pairs`` (#1000)
+- Fast random access to xtc and trr files (#1038)
+- xyz files support the ``__len__`` attribute (#998)
+- ``segment_id`` is a new residue attribute (#1002)
+- Expose ``FormatRegistry`` as a public api (#1039)
+- Perform a heuristic check for valid unit cells when reading pdb files (#974)
+- pdb file parsing uses the last model ``CONNECT`` records for bonds, not the first (#980)
+- No longer force all warnings to be emitted (#1013 #1030)
+- Always respect the ``force_overwrite`` argument in save methods (#878)
+- Fix interop with ``scipy.cluster`` (#997)
+- ``formats.hdf5.ensure_mode`` was removed (#990)
 
 
 v1.5.1 (November 6, 2015)
 -------------------------
+
 MDTraj 1.5.1 is a small bugfix release to correct two issues introduced in the
 immediately preceeding 1.5.0 release.
 
