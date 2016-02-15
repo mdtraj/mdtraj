@@ -83,7 +83,7 @@ cdef int DIM = 3
 # 3. step (int)
 # 4. time (float)
 cdef int XTC_HDR_SIZE = 3*sizeof(np.int32_t) + sizeof(np.float32_t)
-cdef int XTC_SHORT_HEADER_SIZE = XTC_HDR_SIZE + DIM**2 * sizeof(np.float32_t) + 4 
+cdef int XTC_SHORT_HEADER_SIZE = XTC_HDR_SIZE + DIM**2 * sizeof(np.float32_t) + 4
 cdef int XTC_SHORT_BYTES_PER_ATOM = DIM*sizeof(np.float32_t)
 
 # constant for 'regular' XTCs (> 10 atoms):
@@ -263,7 +263,7 @@ cdef class XTCTrajectoryFile(object):
             if force_overwrite and os.path.exists(filename):
                 os.unlink(filename)
             if not force_overwrite and os.path.exists(filename):
-                raise IOError("File %s exits and force_overwrite=False" % filename)
+                raise IOError('"%s" already exists' % filename)
             self.fh = xdrlib.xdrfile_open(filename, 'w')
             if self.fh is NULL:
                 raise IOError('Unable to open file "%s"' % filename)
@@ -393,7 +393,7 @@ cdef class XTCTrajectoryFile(object):
         # TODO: use offsets if stride is set
 
         # if they want ALL of the remaining frames, we need to guess at the
-        # chunk size, and then check the exit status to make sure we're really 
+        # chunk size, and then check the exit status to make sure we're really
         # at the EOF
         all_xyz, all_time, all_step, all_box = [], [], [], []
 

@@ -243,7 +243,7 @@ cdef class BINPOSTrajectoryFile:
         if force_overwrite and os.path.exists(filename):
             os.unlink(filename)
         if not force_overwrite and os.path.exists(filename):
-            raise IOError("File %s exits and force_overwrite=False" % filename)
+            raise IOError('"%s" already exists' % filename)
         self.fh = open_binpos_write(filename, "binpos", n_atoms)
         self.n_atoms = n_atoms
         self.is_open = True

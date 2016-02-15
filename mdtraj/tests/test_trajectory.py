@@ -575,9 +575,9 @@ def test_save_load():
 
 
 def test_force_overwrite():
-    t_ref = md.load(get_fn('frame0.dcd'), top=get_fn('native.pdb'))
-    with enter_temp_directory():
-        for ext in t_ref._savers().keys():
+    t_ref = md.load(get_fn('native2.pdb'), no_boxchk=True)
+    for ext in t_ref._savers().keys():
+        with enter_temp_directory():
             def test_1():
                 fn = 'temp-1%s' % ext
                 open(fn, 'w').close()
@@ -586,7 +586,7 @@ def test_force_overwrite():
                 fn = 'temp-2%s' % ext
                 open(fn, 'w').close()
                 assert_raises_regex(IOError,
-                                    r'"?{}"?.*exists.*'.format(fn),
+                                    r'"{}" already exists'.format(fn),
                                     lambda: t_ref.save(fn, force_overwrite=False))
             test_1.description = 'test_force_overwrite (1): %s' % ext
             test_2.description = 'test_force_overwrite (2): %s' % ext
