@@ -150,7 +150,12 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, proposed_donor_indic
 
     nh_donors = get_donors('N', 'H', proposed_donor_indices=proposed_donor_indices)
     oh_donors = get_donors('O', 'H', proposed_donor_indices=proposed_donor_indices)
-    xh_donors = np.array(nh_donors + oh_donors)
+    if nh_donors != [] and oh_donors != []:
+        xh_donors = np.array(nh_donors + oh_donors)
+    elif nh_donors == []:
+        xh_donors = oh_donors
+    else:
+        xh_donors = nh_donors
 
     if len(xh_donors) == 0:
         # if there are no hydrogens or protein in the trajectory, we get
@@ -294,7 +299,12 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, proposed_do
 
     nh_donors = get_donors('N', 'H', proposed_donor_indices=proposed_donor_indices)
     oh_donors = get_donors('O', 'H', proposed_donor_indices=proposed_donor_indices)
-    xh_donors = np.concatenate((nh_donors, oh_donors))
+    if nh_donors != [] and oh_donors != []:
+        xh_donors = np.array(nh_donors + oh_donors)
+    elif nh_donors == []:
+        xh_donors = oh_donors
+    else:
+        xh_donors = nh_donors
 
     if len(xh_donors) == 0:
         # if there are no hydrogens or protein in the trajectory, we get
