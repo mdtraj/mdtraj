@@ -148,8 +148,8 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
             atoms = [(b[0], b[1])
                      for b in bonditer
                      if set((b[0].element.symbol, b[1].element.symbol))==elems
-                     and b[0].index in proposed_donor_indices
-                     and b[1].index in proposed_donor_indices]
+                        and b[0].index in proposed_donor_indices
+                        and b[1].index in proposed_donor_indices]
 
         indices = []
         for a0, a1 in atoms:
@@ -185,27 +185,27 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
             acceptors = [a.index
                          for a in traj.topology.atoms
                          if a.element.symbol == 'O'
-                         or a.element.symbol == 'N']
+                            or a.element.symbol == 'N']
         else:
             acceptors = [a.index
                          for a in traj.topology.atoms
                          if (a.element.symbol == 'O'
-                         or a.element.symbol == 'N')
-                         and a.index in proposed_acceptor_indices]
+                             or a.element.symbol == 'N')
+                            and a.index in proposed_acceptor_indices]
     else:
         if proposed_acceptor_indices is None:
             acceptors = [a.index
                          for a in traj.topology.atoms
                          if (a.element.symbol == 'O'
-                         and a.residue.name != 'HOH')
-                         or a.element.symbol == 'N']
+                             and a.residue.name != 'HOH')
+                            or a.element.symbol == 'N']
         else:
             acceptors = [a.index
                          for a in traj.topology.atoms
                          if ((a.element.symbol == 'O'
-                         and a.residue.name != 'HOH')
-                         or a.element.symbol == 'N')
-                         and a.index in proposed_acceptor_indices]
+                              and a.residue.name != 'HOH')
+                             or a.element.symbol == 'N')
+                            and a.index in proposed_acceptor_indices]
 
     # This is used to compute the angles
     angle_triplets = np.array([(e[0][1], e[0][0], e[1]) for e in product(xh_donors, acceptors) if e[0][0] != e[1]])
@@ -330,8 +330,8 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
             atoms = [(b[0], b[1])
                      for b in bonditer
                      if set((b[0].element.symbol, b[1].element.symbol))==elems
-                     and b[0].index in proposed_donor_indices
-                     and b[1].index in proposed_donor_indices]
+                        and b[0].index in proposed_donor_indices
+                        and b[1].index in proposed_donor_indices]
 
         indices = []
         for a0, a1 in atoms:
@@ -367,27 +367,27 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
             acceptors = [a.index
                          for a in traj.topology.atoms
                          if a.element.symbol == 'O'
-                         or a.element.symbol == 'N']
+                            or a.element.symbol == 'N']
         else:
             acceptors = [a.index
                          for a in traj.topology.atoms
                          if (a.element.symbol == 'O'
-                         or a.element.symbol == 'N')
-                         and a.index in proposed_acceptor_indices]
+                             or a.element.symbol == 'N')
+                            and a.index in proposed_acceptor_indices]
     else:
         if proposed_acceptor_indices is None:
             acceptors = [a.index
                          for a in traj.topology.atoms
                          if (a.element.symbol == 'O'
-                         and a.residue.name != 'HOH')
-                         or a.element.symbol == 'N']
+                             and a.residue.name != 'HOH')
+                            or a.element.symbol == 'N']
         else:
             acceptors = [a.index
                          for a in traj.topology.atoms
                          if ((a.element.symbol == 'O'
-                         and a.residue.name != 'HOH')
-                         or a.element.symbol == 'N')
-                         and a.index in proposed_acceptor_indices]
+                              and a.residue.name != 'HOH')
+                             or a.element.symbol == 'N')
+                            and a.index in proposed_acceptor_indices]
 
 
     angle_triplets = np.array([(e[0][0], e[0][1], e[1]) for e in product(xh_donors, acceptors)])
