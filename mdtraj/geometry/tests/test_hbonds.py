@@ -118,6 +118,22 @@ def test_baker_hubbard_2():
     # ensure that there aren't any repeat rows
     eq(len(np.unique(rows)), len(rows))
 
+def test_baker_hubbard_3():
+    # test use of proposed_donor_indices and proposed_acceptor_indices
+    t = md.load(get_fn('2EQQ.pdb'))
+    thr14 = np.array([181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+                      192, 193, 194])
+    arg18 = np.array([228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238,
+                      239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249,
+                      250, 251])
+    ref1 = np.array([[181, 188, 231]])
+    ref2 = np.array([[228, 239, 186]])
+    eq(ref1, md.baker_hubbard(t,
+                              proposed_donor_indices=thr14,
+                              proposed_acceptor_indices=arg18))
+    eq(ref2, md.baker_hubbard(t,
+                              proposed_donor_indices=arg18,
+                              proposed_acceptor_indices=thr14))
 
 def test_wernet_nilsson_0():
     # no hydrogens in this file -> no hydrogen bonds
@@ -145,3 +161,20 @@ def test_wernet_nilsson_1():
             # to make sure the criterion is giving back totally implausible stuff
             if len(hbonds) > 0:
                 assert np.all(md.compute_distances(t[frame], hbonds[:, [0,2]]) < 0.5)
+
+def test_wernet_nilsson_2():
+    # test use of proposed_donor_indices and proposed_acceptor_indices
+    t = md.load(get_fn('2EQQ.pdb'))
+    thr14 = np.array([181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+                      192, 193, 194])
+    arg18 = np.array([228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238,
+                      239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249,
+                      250, 251])
+    ref1 = np.array([[181, 188, 231]])
+    ref2 = np.array([[228, 239, 186]])
+    eq(ref1, md.wernet_nilsson(t,
+                               proposed_donor_indices=thr14,
+                               proposed_acceptor_indices=arg18)[0])
+    eq(ref2, md.wernet_nilsson(t,
+                               proposed_donor_indices=arg18,
+                               proposed_acceptor_indices=thr14)[0])
