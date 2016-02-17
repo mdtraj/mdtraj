@@ -65,10 +65,18 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
         Exclude solvent molecules from consideration.
     periodic : bool, default=True
         Set to True to calculate displacements and angles across periodic box boundaries.
-    proposed_donor_indices : np.ndarray, shape=(n_donor_indices,), dtype=int, default=None
-        If supplied, restrict search for donor atoms to only those atoms in proposed_donor_indices
-    proposed_acceptor_indices : np.ndarray, shape=(n_acceptor_indices,), dtype=int, default=None
-        If supplied, restrict search for acceptor atoms to only those atoms in proposed_acceptor_indices
+    proposed_donor_indices : np.ndarray,
+                             shape=(n_donor_indices,),
+                             dtype=int,
+                             default=None
+        Restrict search for donor atoms to those whose indices are 
+        included here.
+    proposed_acceptor_indices : np.ndarray,
+                                shape=(n_acceptor_indices,),
+                                dtype=int,
+                                default=None
+        Restrict search for acceptor atoms to those whose indices are
+        included here.
 
     Returns
     -------
@@ -134,14 +142,14 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
         bonditer = traj.topology.bonds
         if proposed_donor_indices is None:
             atoms = [(b[0], b[1])
-                    for b in bonditer
-                    if set((b[0].element.symbol, b[1].element.symbol))==elems]
+                     for b in bonditer
+                     if set((b[0].element.symbol, b[1].element.symbol))==elems]
         else:
             atoms = [(b[0], b[1])
-                    for b in bonditer
-                    if set((b[0].element.symbol, b[1].element.symbol))==elems
-                    and b[0].index in proposed_donor_indices
-                    and b[1].index in proposed_donor_indices]
+                     for b in bonditer
+                     if set((b[0].element.symbol, b[1].element.symbol))==elems
+                     and b[0].index in proposed_donor_indices
+                     and b[1].index in proposed_donor_indices]
 
         indices = []
         for a0, a1 in atoms:
@@ -156,8 +164,10 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
 
         return indices
 
-    nh_donors = get_donors('N', 'H', proposed_donor_indices=proposed_donor_indices)
-    oh_donors = get_donors('O', 'H', proposed_donor_indices=proposed_donor_indices)
+    nh_donors = get_donors('N', 'H',
+                           proposed_donor_indices=proposed_donor_indices)
+    oh_donors = get_donors('O', 'H',
+                           proposed_donor_indices=proposed_donor_indices)
     if len(nh_donors) > 0 and len(oh_donors) > 0:
         xh_donors = np.array(nh_donors + oh_donors)
     elif len(nh_donors) == 0:
@@ -173,29 +183,29 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
     if not exclude_water:
         if proposed_acceptor_indices is None:
             acceptors = [a.index
-                        for a in traj.topology.atoms
-                        if a.element.symbol == 'O'
-                        or a.element.symbol == 'N']
+                         for a in traj.topology.atoms
+                         if a.element.symbol == 'O'
+                         or a.element.symbol == 'N']
         else:
             acceptors = [a.index
-                        for a in traj.topology.atoms
-                        if (a.element.symbol == 'O'
-                        or a.element.symbol == 'N')
-                        and a.index in proposed_acceptor_indices]
+                         for a in traj.topology.atoms
+                         if (a.element.symbol == 'O'
+                         or a.element.symbol == 'N')
+                         and a.index in proposed_acceptor_indices]
     else:
         if proposed_acceptor_indices is None:
             acceptors = [a.index
-                        for a in traj.topology.atoms
-                        if (a.element.symbol == 'O'
-                        and a.residue.name != 'HOH')
-                        or a.element.symbol == 'N']
+                         for a in traj.topology.atoms
+                         if (a.element.symbol == 'O'
+                         and a.residue.name != 'HOH')
+                         or a.element.symbol == 'N']
         else:
             acceptors = [a.index
-                        for a in traj.topology.atoms
-                        if ((a.element.symbol == 'O'
-                        and a.residue.name != 'HOH')
-                        or a.element.symbol == 'N')
-                        and a.index in proposed_acceptor_indices]
+                         for a in traj.topology.atoms
+                         if ((a.element.symbol == 'O'
+                         and a.residue.name != 'HOH')
+                         or a.element.symbol == 'N')
+                         and a.index in proposed_acceptor_indices]
 
     # This is used to compute the angles
     angle_triplets = np.array([(e[0][1], e[0][0], e[1]) for e in product(xh_donors, acceptors) if e[0][0] != e[1]])
@@ -236,10 +246,18 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
         Exclude solvent molecules from consideration
     periodic : bool, default=True
         Set to True to calculate displacements and angles across periodic box boundaries.
-    proposed_donor_indices : np.ndarray, shape=(n_donor_indices,), dtype=int, default=None
-        If supplied, restrict search for donor atoms to only those atoms in proposed_donor_indices
-    proposed_acceptor_indices : np.ndarray, shape=(n_acceptor_indices,), dtype=int, default=None
-        If supplied, restrict search for acceptor atoms to only those atoms in proposed_acceptor_indices
+    proposed_donor_indices : np.ndarray,
+                             shape=(n_donor_indices,),
+                             dtype=int,
+                             default=None
+        Restrict search for donor atoms to those whose indices are 
+        included here.
+    proposed_acceptor_indices : np.ndarray,
+                                shape=(n_acceptor_indices,),
+                                dtype=int,
+                                default=None
+        Restrict search for acceptor atoms to those whose indices are
+        included here.
 
     Returns
     -------
@@ -306,14 +324,14 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
         bonditer = traj.topology.bonds
         if proposed_donor_indices is None:
             atoms = [(b[0], b[1])
-                    for b in bonditer
-                    if set((b[0].element.symbol, b[1].element.symbol))==elems]
+                     for b in bonditer
+                     if set((b[0].element.symbol, b[1].element.symbol))==elems]
         else:
             atoms = [(b[0], b[1])
-                    for b in bonditer
-                    if set((b[0].element.symbol, b[1].element.symbol))==elems
-                    and b[0].index in proposed_donor_indices
-                    and b[1].index in proposed_donor_indices]
+                     for b in bonditer
+                     if set((b[0].element.symbol, b[1].element.symbol))==elems
+                     and b[0].index in proposed_donor_indices
+                     and b[1].index in proposed_donor_indices]
 
         indices = []
         for a0, a1 in atoms:
@@ -347,29 +365,29 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
     if not exclude_water:
         if proposed_acceptor_indices is None:
             acceptors = [a.index
-                        for a in traj.topology.atoms
-                        if a.element.symbol == 'O'
-                        or a.element.symbol == 'N']
+                         for a in traj.topology.atoms
+                         if a.element.symbol == 'O'
+                         or a.element.symbol == 'N']
         else:
             acceptors = [a.index
-                        for a in traj.topology.atoms
-                        if (a.element.symbol == 'O'
-                        or a.element.symbol == 'N')
-                        and a.index in proposed_acceptor_indices]
+                         for a in traj.topology.atoms
+                         if (a.element.symbol == 'O'
+                         or a.element.symbol == 'N')
+                         and a.index in proposed_acceptor_indices]
     else:
         if proposed_acceptor_indices is None:
             acceptors = [a.index
-                        for a in traj.topology.atoms
-                        if (a.element.symbol == 'O'
-                        and a.residue.name != 'HOH')
-                        or a.element.symbol == 'N']
+                         for a in traj.topology.atoms
+                         if (a.element.symbol == 'O'
+                         and a.residue.name != 'HOH')
+                         or a.element.symbol == 'N']
         else:
             acceptors = [a.index
-                        for a in traj.topology.atoms
-                        if ((a.element.symbol == 'O'
-                        and a.residue.name != 'HOH')
-                        or a.element.symbol == 'N')
-                        and a.index in proposed_acceptor_indices]
+                         for a in traj.topology.atoms
+                         if ((a.element.symbol == 'O'
+                         and a.residue.name != 'HOH')
+                         or a.element.symbol == 'N')
+                         and a.index in proposed_acceptor_indices]
 
 
     angle_triplets = np.array([(e[0][0], e[0][1], e[1]) for e in product(xh_donors, acceptors)])
