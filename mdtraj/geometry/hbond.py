@@ -39,7 +39,9 @@ __all__ = ['wernet_nilsson', 'baker_hubbard', 'kabsch_sander']
 ##############################################################################
 
 
-def wernet_nilsson(traj, exclude_water=True, periodic=True, proposed_donor_indices=None, proposed_acceptor_indices=None):
+def wernet_nilsson(traj, exclude_water=True, periodic=True,
+                   proposed_donor_indices=None,
+                   proposed_acceptor_indices=None):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle according to the criterion outlined in [1].
     As opposed to Baker-Hubbard, this is a "cone" criterion where the
@@ -175,7 +177,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, proposed_donor_indic
                         if a.element.symbol == 'O'
                         or a.element.symbol == 'N']
         else:
-            acceptors = [a.index 
+            acceptors = [a.index
                         for a in traj.topology.atoms
                         if (a.element.symbol == 'O'
                         or a.element.symbol == 'N')
@@ -211,7 +213,8 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, proposed_donor_indic
     return [angle_triplets2[i] for i in mask]
 
 
-def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, proposed_donor_indices=None, proposed_acceptor_indices=None):
+def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
+                  proposed_donor_indices=None, proposed_acceptor_indices=None):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle.
 
@@ -325,8 +328,10 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, proposed_do
 
         return indices
 
-    nh_donors = get_donors('N', 'H', proposed_donor_indices=proposed_donor_indices)
-    oh_donors = get_donors('O', 'H', proposed_donor_indices=proposed_donor_indices)
+    nh_donors = get_donors('N', 'H',
+                           proposed_donor_indices=proposed_donor_indices)
+    oh_donors = get_donors('O', 'H',
+                           proposed_donor_indices=proposed_donor_indices)
     if len(nh_donors) > 0 and len(oh_donors) > 0:
         xh_donors = np.array(nh_donors + oh_donors)
     elif len(nh_donors) == 0:
@@ -354,7 +359,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, proposed_do
     else:
         if proposed_acceptor_indices is None:
             acceptors = [a.index
-                        for a in traj.topology.atoms 
+                        for a in traj.topology.atoms
                         if (a.element.symbol == 'O'
                         and a.residue.name != 'HOH')
                         or a.element.symbol == 'N']
@@ -363,7 +368,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, proposed_do
                         for a in traj.topology.atoms
                         if ((a.element.symbol == 'O'
                         and a.residue.name != 'HOH')
-                        or a.element.symbol == 'N') 
+                        or a.element.symbol == 'N')
                         and a.index in proposed_acceptor_indices]
 
 
