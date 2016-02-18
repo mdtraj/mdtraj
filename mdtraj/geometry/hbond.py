@@ -69,7 +69,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
                              shape=(n_donor_indices,),
                              dtype=int,
                              default=None
-        Restrict search for donor atoms to those whose indices are 
+        Restrict search for donor atoms to those whose indices are
         included here.
     proposed_acceptor_indices : np.ndarray,
                                 shape=(n_acceptor_indices,),
@@ -143,13 +143,13 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
         if proposed_donor_indices is None:
             atoms = [(b[0], b[1])
                      for b in bonditer
-                     if set((b[0].element.symbol, b[1].element.symbol))==elems]
+                     if set((b[0].element.symbol, b[1].element.symbol)) == elems]
         else:
             atoms = [(b[0], b[1])
                      for b in bonditer
-                     if set((b[0].element.symbol, b[1].element.symbol))==elems
-                        and b[0].index in proposed_donor_indices
-                        and b[1].index in proposed_donor_indices]
+                     if (set((b[0].element.symbol, b[1].element.symbol)) == elems and
+                         b[0].index in proposed_donor_indices and
+                         b[1].index in proposed_donor_indices)]
 
         indices = []
         for a0, a1 in atoms:
@@ -179,9 +179,11 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
         return [np.zeros((0, 3), dtype=int) for _ in range(traj.n_frames)]
 
     def is_acceptor(atom):
-        if exclude_water and atom.residue.name == 'HOH': return False
+        if exclude_water and atom.residue.name == 'HOH':
+            return False
         if (proposed_acceptor_indices is not None and
-            atom.index not in proposed_acceptor_indices): return False
+            atom.index not in proposed_acceptor_indices):
+            return False
         return (atom.element.symbol == 'O' or atom.element.symbol == 'N')
 
     acceptors = [a.index
@@ -231,7 +233,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
                              shape=(n_donor_indices,),
                              dtype=int,
                              default=None
-        Restrict search for donor atoms to those whose indices are 
+        Restrict search for donor atoms to those whose indices are
         included here.
     proposed_acceptor_indices : np.ndarray,
                                 shape=(n_acceptor_indices,),
@@ -306,13 +308,13 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
         if proposed_donor_indices is None:
             atoms = [(b[0], b[1])
                      for b in bonditer
-                     if set((b[0].element.symbol, b[1].element.symbol))==elems]
+                     if set((b[0].element.symbol, b[1].element.symbol)) == elems]
         else:
             atoms = [(b[0], b[1])
                      for b in bonditer
-                     if set((b[0].element.symbol, b[1].element.symbol))==elems
-                        and b[0].index in proposed_donor_indices
-                        and b[1].index in proposed_donor_indices]
+                     if (set((b[0].element.symbol, b[1].element.symbol)) == elems and
+                         b[0].index in proposed_donor_indices and
+                         b[1].index in proposed_donor_indices)]
 
         indices = []
         for a0, a1 in atoms:
@@ -342,9 +344,11 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
         return np.zeros((0, 3), dtype=int)
 
     def is_acceptor(atom):
-        if exclude_water and atom.residue.name == 'HOH': return False
+        if exclude_water and atom.residue.name == 'HOH':
+            return False
         if (proposed_acceptor_indices is not None and
-            atom.index not in proposed_acceptor_indices): return False
+            atom.index not in proposed_acceptor_indices):
+            return False
         return (atom.element.symbol == 'O' or atom.element.symbol == 'N')
 
     acceptors = [a.index
