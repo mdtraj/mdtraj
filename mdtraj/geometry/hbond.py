@@ -137,7 +137,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
         raise ValueError('wernet_nilsson requires that traj contain topology '
                          'information')
 
-    def get_donors(e0, e1, proposed_donor_indices=None):
+    def get_donors(e0, e1):
         elems = set((e0, e1))
         bonditer = traj.topology.bonds
         if proposed_donor_indices is None:
@@ -164,10 +164,8 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
 
         return indices
 
-    nh_donors = get_donors('N', 'H',
-                           proposed_donor_indices=proposed_donor_indices)
-    oh_donors = get_donors('O', 'H',
-                           proposed_donor_indices=proposed_donor_indices)
+    nh_donors = get_donors('N', 'H')
+    oh_donors = get_donors('O', 'H')
     if len(nh_donors) > 0 and len(oh_donors) > 0:
         xh_donors = np.array(nh_donors + oh_donors)
     elif len(nh_donors) == 0:
@@ -180,32 +178,15 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
         # no possible pairs and return nothing
         return [np.zeros((0, 3), dtype=int) for _ in range(traj.n_frames)]
 
-    if not exclude_water:
-        if proposed_acceptor_indices is None:
-            acceptors = [a.index
-                         for a in traj.topology.atoms
-                         if a.element.symbol == 'O'
-                            or a.element.symbol == 'N']
-        else:
-            acceptors = [a.index
-                         for a in traj.topology.atoms
-                         if (a.element.symbol == 'O'
-                             or a.element.symbol == 'N')
-                            and a.index in proposed_acceptor_indices]
-    else:
-        if proposed_acceptor_indices is None:
-            acceptors = [a.index
-                         for a in traj.topology.atoms
-                         if (a.element.symbol == 'O'
-                             and a.residue.name != 'HOH')
-                            or a.element.symbol == 'N']
-        else:
-            acceptors = [a.index
-                         for a in traj.topology.atoms
-                         if ((a.element.symbol == 'O'
-                              and a.residue.name != 'HOH')
-                             or a.element.symbol == 'N')
-                            and a.index in proposed_acceptor_indices]
+    def is_acceptor(atom):
+        if exclude_water and atom.residue.name == 'HOH': return False
+        if (proposed_acceptor_indices is not None
+            and atom.index not in proposed_acceptor_indices): return False
+        return (atom.element.symbol == 'O' or atom.element.symbol == 'N')
+
+    acceptors = [a.index
+                 for a in traj.topology.atoms
+                 if is_acceptor(a)]
 
     # This is used to compute the angles
     angle_triplets = np.array([(e[0][1], e[0][0], e[1]) for e in product(xh_donors, acceptors) if e[0][0] != e[1]])
@@ -319,7 +300,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
         raise ValueError('baker_hubbard requires that traj contain topology '
                          'information')
 
-    def get_donors(e0, e1, proposed_donor_indices=None):
+    def get_donors(e0, e1):
         elems = set((e0, e1))
         bonditer = traj.topology.bonds
         if proposed_donor_indices is None:
@@ -346,10 +327,8 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
 
         return indices
 
-    nh_donors = get_donors('N', 'H',
-                           proposed_donor_indices=proposed_donor_indices)
-    oh_donors = get_donors('O', 'H',
-                           proposed_donor_indices=proposed_donor_indices)
+    nh_donors = get_donors('N', 'H')
+    oh_donors = get_donors('O', 'H')
     if len(nh_donors) > 0 and len(oh_donors) > 0:
         xh_donors = np.array(nh_donors + oh_donors)
     elif len(nh_donors) == 0:
@@ -362,33 +341,15 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
         # no possible pairs and return nothing
         return np.zeros((0, 3), dtype=int)
 
-    if not exclude_water:
-        if proposed_acceptor_indices is None:
-            acceptors = [a.index
-                         for a in traj.topology.atoms
-                         if a.element.symbol == 'O'
-                            or a.element.symbol == 'N']
-        else:
-            acceptors = [a.index
-                         for a in traj.topology.atoms
-                         if (a.element.symbol == 'O'
-                             or a.element.symbol == 'N')
-                            and a.index in proposed_acceptor_indices]
-    else:
-        if proposed_acceptor_indices is None:
-            acceptors = [a.index
-                         for a in traj.topology.atoms
-                         if (a.element.symbol == 'O'
-                             and a.residue.name != 'HOH')
-                            or a.element.symbol == 'N']
-        else:
-            acceptors = [a.index
-                         for a in traj.topology.atoms
-                         if ((a.element.symbol == 'O'
-                              and a.residue.name != 'HOH')
-                             or a.element.symbol == 'N')
-                            and a.index in proposed_acceptor_indices]
+    def is_acceptor(atom):
+        if exclude_water and atom.residue.name == 'HOH': return False
+        if (proposed_acceptor_indices is not None
+            and atom.index not in proposed_acceptor_indices): return False
+        return (atom.element.symbol == 'O' or atom.element.symbol == 'N')
 
+    acceptors = [a.index
+                 for a in traj.topology.atoms
+                 if is_acceptor(a)]
 
     angle_triplets = np.array([(e[0][0], e[0][1], e[1]) for e in product(xh_donors, acceptors)])
     distance_pairs = angle_triplets[:, [1, 2]]  # possible H..acceptor pairs
