@@ -180,8 +180,8 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True,
 
     def is_acceptor(atom):
         if exclude_water and atom.residue.name == 'HOH': return False
-        if (proposed_acceptor_indices is not None
-            and atom.index not in proposed_acceptor_indices): return False
+        if (proposed_acceptor_indices is not None and
+            atom.index not in proposed_acceptor_indices): return False
         return (atom.element.symbol == 'O' or atom.element.symbol == 'N')
 
     acceptors = [a.index
@@ -343,8 +343,8 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True,
 
     def is_acceptor(atom):
         if exclude_water and atom.residue.name == 'HOH': return False
-        if (proposed_acceptor_indices is not None
-            and atom.index not in proposed_acceptor_indices): return False
+        if (proposed_acceptor_indices is not None and
+            atom.index not in proposed_acceptor_indices): return False
         return (atom.element.symbol == 'O' or atom.element.symbol == 'N')
 
     acceptors = [a.index
