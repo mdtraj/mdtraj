@@ -7,3 +7,5 @@ runipy
 openmm
 pytables
 scikit-learn
+nose
+pandas
