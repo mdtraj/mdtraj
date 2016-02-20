@@ -7,6 +7,8 @@ These are new features and improvements of note in each release.
 v1.6.2 (Development)
 --------------------
 
+ - Fix issues and rendering issues with example notebooks (#1049, #1050)
+
 v1.6 (February 15, 2016)
 ------------------------
 
