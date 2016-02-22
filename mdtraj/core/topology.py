@@ -290,8 +290,12 @@ class Topology(object):
         fasta : String or list of Strings
            A FASTA string for each chain specified.
         """
-        fasta = lambda c: "".join([res.code for res in c.residues
-                                   if res.is_protein and res.code is not None])
+
+        def fasta(c):
+            seq = [res.code if res.code is not None else '?'
+                   for res in c.residues if res.is_protein]
+            return "".join(seq)
+
         if chain is not None:
             if not isinstance(chain, int):
                 raise ValueError('chain must be an Integer.')
@@ -416,7 +420,7 @@ class Topology(object):
             frame should have columns "serial" (atom index), "name" (atom name),
             "element" (atom's element), "resSeq" (index of the residue)
             "resName" (name of the residue), "chainID" (index of the chain),
-            and optionally "segmentID", following the same conventions 
+            and optionally "segmentID", following the same conventions
             as wwPDB 3.0 format.
         bonds : np.ndarray, shape=(n_bonds, 2), dtype=int, optional
             The bonds in the topology, represented as an n_bonds x 2 array
