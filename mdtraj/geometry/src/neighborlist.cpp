@@ -1,24 +1,24 @@
-##############################################################################
-# MDTraj: A Python Library for Loading, Saving, and Manipulating
-#         Molecular Dynamics Trajectories.
-# Copyright 2013-2016 Stanford University and the Authors
-#
-# Authors: Peter Eastman
-# Contributors:
-#
-# MDTraj is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as
-# published by the Free Software Foundation, either version 2.1
-# of the License, or (at your option) any later version.
-#
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
-##############################################################################
+/**
+ * MDTraj: A Python Library for Loading, Saving, and Manipulating
+ *         Molecular Dynamics Trajectories.
+ * Copyright 2013-2016 Stanford University and the Authors
+ *
+ * Authors: Peter Eastman
+ * Contributors:
+ *
+ * MDTraj is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 2.1
+ * of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "vectorize_sse.h"
 #include <algorithm>
@@ -202,28 +202,65 @@ public:
                 if (usePeriodic)
                     voxelIndex.y = (y < 0 ? y+ny : (y >= ny ? y-ny : y));
                 float boxy = floor((float) y/ny);
-                float xoffset = (float) (usePeriodic ? boxy*periodicBoxVectors[1][0]+boxz*periodicBoxVectors[2][0] : 0);
 
                 // Identify the range of atoms within this bin we need to search.  When using periodic boundary
                 // conditions, there may be two separate ranges.
 
                 float minx = centerAtomPos[0];
                 float maxx = centerAtomPos[0];
-                fvec4 offset(-xoffset, -yoffset+voxelSizeY*y+(usePeriodic ? 0.0f : miny), voxelSizeZ*z+(usePeriodic ? 0.0f : minz), 0);
-                fvec4 delta1 = offset-centerPosVec;
-                fvec4 delta2 = delta1+fvec4(0, voxelSizeY, voxelSizeZ, 0);
-                if (usePeriodic) {
-                    delta1 -= round(delta1*invBoxSize)*boxSize;
-                    delta2 -= round(delta2*invBoxSize)*boxSize;
+                if (usePeriodic && triclinic) {
+                    fvec4 delta1(0, voxelSizeY*voxelIndex.y-centerPosVec[1], voxelSizeZ*voxelIndex.z-centerPosVec[2], 0);
+                    fvec4 delta2 = delta1+fvec4(0, voxelSizeY, 0, 0);
+                    fvec4 delta3 = delta1+fvec4(0, 0, voxelSizeZ, 0);
+                    fvec4 delta4 = delta1+fvec4(0, voxelSizeY, voxelSizeZ, 0);
+                    delta1 -= periodicBoxVec4[2]*floorf(delta1[2]*recipBoxSize[2]+0.5f);
+                    delta1 -= periodicBoxVec4[1]*floorf(delta1[1]*recipBoxSize[1]+0.5f);
+                    delta1 -= periodicBoxVec4[0]*floorf(delta1[0]*recipBoxSize[0]+0.5f);
+                    delta2 -= periodicBoxVec4[2]*floorf(delta2[2]*recipBoxSize[2]+0.5f);
+                    delta2 -= periodicBoxVec4[1]*floorf(delta2[1]*recipBoxSize[1]+0.5f);
+                    delta2 -= periodicBoxVec4[0]*floorf(delta2[0]*recipBoxSize[0]+0.5f);
+                    delta3 -= periodicBoxVec4[2]*floorf(delta3[2]*recipBoxSize[2]+0.5f);
+                    delta3 -= periodicBoxVec4[1]*floorf(delta3[1]*recipBoxSize[1]+0.5f);
+                    delta3 -= periodicBoxVec4[0]*floorf(delta3[0]*recipBoxSize[0]+0.5f);
+                    delta4 -= periodicBoxVec4[2]*floorf(delta4[2]*recipBoxSize[2]+0.5f);
+                    delta4 -= periodicBoxVec4[1]*floorf(delta4[1]*recipBoxSize[1]+0.5f);
+                    delta4 -= periodicBoxVec4[0]*floorf(delta4[0]*recipBoxSize[0]+0.5f);
+                    if (delta1[1] < 0 && delta1[1]+voxelSizeY > 0)
+                        delta1 = fvec4(delta1[0], 0, delta1[2], 0);
+                    if (delta1[2] < 0 && delta1[2]+voxelSizeZ > 0)
+                        delta1 = fvec4(delta1[0], delta1[1], 0, 0);
+                    if (delta3[1] < 0 && delta3[1]+voxelSizeY > 0)
+                        delta3 = fvec4(delta3[0], 0, delta3[2], 0);
+                    if (delta2[2] < 0 && delta2[2]+voxelSizeZ > 0)
+                        delta2 = fvec4(delta2[0], delta2[1], 0, 0);
+                    fvec4 delta = min(min(min(abs(delta1), abs(delta2)), abs(delta3)), abs(delta4));
+                    float dy = (voxelIndex.y == atomVoxelIndex.y ? 0.0f : delta[1]);
+                    float dz = (voxelIndex.z == atomVoxelIndex.z ? 0.0f : delta[2]);
+                    float dist2 = maxDistanceSquared-dy*dy-dz*dz;
+                    if (dist2 > 0) {
+                        float dist = sqrtf(dist2);
+                        minx = min(minx, centerAtomPos[0]-dist-max(max(max(delta1[0], delta2[0]), delta3[0]), delta4[0]));
+                        maxx = max(maxx, centerAtomPos[0]+dist-min(min(min(delta1[0], delta2[0]), delta3[0]), delta4[0]));
+                    }
                 }
-                fvec4 delta = min(abs(delta1), abs(delta2));
-                float dy = (y == atomVoxelIndex.y ? 0.0f : delta[1]);
-                float dz = (z == atomVoxelIndex.z ? 0.0f : delta[2]);
-                float dist2 = maxDistanceSquared-dy*dy-dz*dz;
-                if (dist2 > 0) {
-                    float dist = sqrtf(dist2);
-                    minx = min(minx, centerAtomPos[0]-dist-xoffset);
-                    maxx = max(maxx, centerAtomPos[0]+dist-xoffset);
+                else {
+                    float xoffset = (float) (usePeriodic ? boxy*periodicBoxVectors[1][0]+boxz*periodicBoxVectors[2][0] : 0);
+                    fvec4 offset(-xoffset, -yoffset+voxelSizeY*y+(usePeriodic ? 0.0f : miny), voxelSizeZ*z+(usePeriodic ? 0.0f : minz), 0);
+                    fvec4 delta1 = offset-centerPosVec;
+                    fvec4 delta2 = delta1+fvec4(0, voxelSizeY, voxelSizeZ, 0);
+                    if (usePeriodic) {
+                        delta1 -= round(delta1*invBoxSize)*boxSize;
+                        delta2 -= round(delta2*invBoxSize)*boxSize;
+                    }
+                    fvec4 delta = min(abs(delta1), abs(delta2));
+                    float dy = (y == atomVoxelIndex.y ? 0.0f : delta[1]);
+                    float dz = (z == atomVoxelIndex.z ? 0.0f : delta[2]);
+                    float dist2 = maxDistanceSquared-dy*dy-dz*dz;
+                    if (dist2 > 0) {
+                        float dist = sqrtf(dist2);
+                        minx = min(minx, centerAtomPos[0]-dist-xoffset);
+                        maxx = max(maxx, centerAtomPos[0]+dist-xoffset);
+                    }
                 }
                 if (minx == maxx)
                     continue;
@@ -267,7 +304,7 @@ public:
                             continue;
 
                         fvec4 atomPos(&atomLocations[3*index]);
-                        fvec4 delta = atomPos-centerAtomPos;
+                        fvec4 delta = atomPos-centerPosVec;
                         if (periodicRectangular)
                             delta -= round(delta*invBoxSize)*boxSize;
                         else if (needPeriodic) {
