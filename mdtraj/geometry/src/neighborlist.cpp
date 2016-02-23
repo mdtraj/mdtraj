@@ -372,6 +372,7 @@ vector<vector<int> > _compute_neighborlist(const float* atomLocations, int numAt
     // Compute neighbors.
 
     vector<vector<int> > neighbors(numAtoms);
+#pragma omp parallel for default(shared)
     for (int i = 0; i < numAtoms; i++)
         voxels.getNeighbors(neighbors[i], i, maxDistance, atomLocations, voxels.getVoxelIndex(&atomLocations[3*i]));
 
