@@ -3,7 +3,7 @@ import mdtraj as md
 from mdtraj.testing import eq
 random = np.random.RandomState(0)
 
-def run_one_test(periodic, triclinic):
+def run_neighborlist_test(periodic, triclinic):
     n_atoms = 100
     cutoff = 1.5
     box_size = np.array([3.0, 4.0, 5.0])
@@ -29,10 +29,10 @@ def run_one_test(periodic, triclinic):
             assert(i not in neighbors[j])
 
 def test_nonperiodic():
-    run_one_test(False, False)
+    run_neighborlist_test(False, False)
 
 def test_periodic():
-    run_one_test(True, False)
+    run_neighborlist_test(True, False)
 
 def test_triclinic():
-    run_one_test(True, True)
+    run_neighborlist_test(True, True)
