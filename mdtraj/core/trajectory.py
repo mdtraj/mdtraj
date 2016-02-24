@@ -1821,6 +1821,25 @@ class Trajectory(object):
         return self._unitcell_lengths is not None and self._unitcell_angles is not None
 
     def image_molecules(self, inplace=False):
+        """Recenter and apply periodic boundary conditions to the molecules in each frame of the trajectory.
+
+        This method is useful for visualizing a trajectory in which molecules were not wrapped
+        to the periodic unit cell, or in which the macromolecules are not centered with respect
+        to the solvent.  It tries to be intelligent in deciding what molecules to center, so you
+        can simply call it and trust that it will "do the right thing".
+
+        Parameters
+        ----------
+        inplace : bool, default=False
+            If False, a new Trajectory is created and returned.  If True, this Trajectory
+            is modified directly.
+
+        Returns
+        -------
+        traj : md.Trajectory
+            The return value is either ``self`` or the new trajectory,
+            depending on the value of ``inplace``.
+        """
         if self._topology is None:
             raise ValueError('Trajectory must have a Topology that defines molecules')
         unitcell_vectors = self.unitcell_vectors
@@ -1918,3 +1937,4 @@ class Trajectory(object):
                 result.xyz[frame, mol_atom_indices] += mol_offset-mol_center
         if not inplace:
             return result
+        return self
