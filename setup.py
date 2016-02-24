@@ -222,6 +222,14 @@ def geometry_extensions():
             define_macros=define_macros,
             extra_compile_args=compiler_args,
             language='c++'),
+        Extension('mdtraj.geometry.neighborlist',
+            sources=["mdtraj/geometry/neighborlist.pyx",
+                     "mdtraj/geometry/src/neighborlist.cpp"],
+            include_dirs=["mdtraj/geometry/include",],
+            define_macros=define_macros,
+            extra_compile_args=compiler_args+compiler.compiler_args_openmp,
+            libraries=compiler.compiler_libraries_openmp,
+            language='c++'),
         ]
 
 
