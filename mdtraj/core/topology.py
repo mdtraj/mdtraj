@@ -416,7 +416,7 @@ class Topology(object):
             frame should have columns "serial" (atom index), "name" (atom name),
             "element" (atom's element), "resSeq" (index of the residue)
             "resName" (name of the residue), "chainID" (index of the chain),
-            and optionally "segmentID", following the same conventions 
+            and optionally "segmentID", following the same conventions
             as wwPDB 3.0 format.
         bonds : np.ndarray, shape=(n_bonds, 2), dtype=int, optional
             The bonds in the topology, represented as an n_bonds x 2 array
@@ -1053,6 +1053,61 @@ class Topology(object):
             itertools.combinations(a_indices, 2)),
             dtype=np.int32, count=len(a_indices) * (len(a_indices) - 1))
         return np.vstack((pairs[::2], pairs[1::2])).T
+
+    def find_molecules(self):
+        """Identify molecules based on bonds.
+
+        A molecule is defined as a set of atoms that are connected to each other by bonds.
+        This method uses the list of bonds to divide up the Topology's atoms into molecules.
+
+        Returns
+        -------
+        molecules : list of sets
+            Each entry represents one molecule, and is the set of all Atoms in that molecule
+        """
+        # Make a list of every other atom to which each atom is connected.
+
+        num_atoms = self.n_atoms
+        atom_bonds = [[] for i in range(num_atoms)]
+        for atom1, atom2 in self.bonds:
+            atom_bonds[atom1.index].append(atom2.index)
+            atom_bonds[atom2.index].append(atom1.index)
+
+        # This is essentially a recursive algorithm, but it is reformulated as a loop to avoid
+        # stack overflows.  It selects an atom, marks it as a new molecule, then recursively
+        # marks every atom bonded to it as also being in that molecule.
+
+        atom_molecule = [-1]*num_atoms
+        num_molecules = 0
+        for i in range(num_atoms):
+            if atom_molecule[i] == -1:
+                # Start a new molecule.
+
+                atom_stack = [i]
+                neighbor_stack = [0]
+                molecule = num_molecules
+                num_molecules += 1
+
+                # Recursively tag all the bonded atoms.
+
+                while len(atom_stack) > 0:
+                    atom = atom_stack[-1]
+                    atom_molecule[atom] = molecule
+                    while neighbor_stack[-1] < len(atom_bonds[atom]) and atom_molecule[atom_bonds[atom][neighbor_stack[-1]]] != -1:
+                        neighbor_stack[-1] += 1
+                    if neighbor_stack[-1] < len(atom_bonds[atom]):
+                        atom_stack.append(atom_bonds[atom][neighbor_stack[-1]])
+                        neighbor_stack.append(0)
+                    else:
+                        del atom_stack[-1]
+                        del neighbor_stack[-1]
+
+        # Build the final output.
+
+        molecules = [set() for i in range(num_molecules)]
+        for atom in self.atoms:
+            molecules[atom_molecule[atom.index]].add(atom)
+        return molecules
 
 
 class Chain(object):

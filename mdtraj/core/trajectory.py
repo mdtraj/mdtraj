@@ -62,6 +62,7 @@ from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_ve
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3, string_types
 from mdtraj import _rmsd
+from mdtraj import compute_distances
 from mdtraj import FormatRegistry
 from mdtraj.geometry import distance
 
@@ -1818,3 +1819,102 @@ class Trajectory(object):
     @property
     def _have_unitcell(self):
         return self._unitcell_lengths is not None and self._unitcell_angles is not None
+
+    def image_molecules(self, inplace=False):
+        if self._topology is None:
+            raise ValueError('Trajectory must have a Topology that defines molecules')
+        unitcell_vectors = self.unitcell_vectors
+        if unitcell_vectors is None:
+            raise ValueError('This Trajectory does not define a periodic unit cell')
+        molecules = self._topology.find_molecules()
+        all_atoms = list(self._topology.atoms)
+        if inplace:
+            result = self
+        else:
+            result = Trajectory(xyz=self.xyz, topology=self.topology, time=self.time,
+                unitcell_lengths=self.unitcell_lengths, unitcell_angles=self.unitcell_angles)
+
+        # Select the anchor molecules.
+
+        molecules.sort(key=lambda x: -len(x))
+        atoms_cutoff = max(len(molecules[int(0.1*len(molecules))]), int(0.1*len(molecules[0])))
+        anchor_molecules = [m for m in molecules if len(m) > atoms_cutoff]
+        other_molecules = [m for m in molecules if len(m) <= atoms_cutoff]
+        num_anchors = len(anchor_molecules)
+        anchor_atom_indices = []
+        for mol in anchor_molecules:
+            anchor_atom_indices += [atom.index for atom in mol]
+
+        # Compute the distance between each pair of anchor molecules in each frame.
+
+        anchor_dist = np.zeros((self.n_frames, num_anchors, num_anchors))
+        anchor_nearest_atoms = np.zeros((self.n_frames, num_anchors, num_anchors, 2), dtype=int)
+        for mol1 in range(num_anchors):
+            for mol2 in range(mol1):
+                pairs = np.array([(atom1.index,atom2.index) for atom1 in anchor_molecules[mol1] for atom2 in anchor_molecules[mol2]], dtype=int)
+                dists = compute_distances(self, pairs)
+                for frame in range(dists.shape[0]):
+                    nearest_pair_index = np.argmin(dists[frame])
+                    anchor_dist[frame, mol1, mol2] = dists[frame, nearest_pair_index]
+                    anchor_dist[frame, mol2, mol1] = dists[frame, nearest_pair_index]
+                    anchor_nearest_atoms[frame, mol1, mol2] = pairs[nearest_pair_index]
+                    anchor_nearest_atoms[frame, mol2, mol1] = pairs[nearest_pair_index]
+
+        # Loop over frames and process each one.
+
+        for frame in range(self.n_frames):
+            frame_positions = self.xyz[frame].copy()
+
+            # Start by taking the largest molecule as our first anchor.
+
+            used_anchors = [0]
+            available_anchors = list(range(1, num_anchors))
+            min_anchor_dist = anchor_dist[frame, 0, :]
+
+            # Add in anchors one at a time, always taking the one that is nearest an existing anchor.
+
+            while len(available_anchors) > 0:
+                next_index = np.argmin(min_anchor_dist[available_anchors])
+                next_anchor = available_anchors[next_index]
+
+                # Find which existing anchor it's closest to, and choose the periodic copy that minimizes
+                # the distance to that anchor.
+
+                nearest_to = used_anchors[np.argmin(anchor_dist[frame, next_anchor, used_anchors])]
+                atoms = anchor_nearest_atoms[frame, next_anchor, nearest_to]
+                if all_atoms[atoms[0]] in molecules[next_anchor]:
+                    atoms = atoms[::-1]
+                delta = frame_positions[atoms[1]]-frame_positions[atoms[0]]
+                offset = np.zeros((3))
+                offset += unitcell_vectors[frame,2]*np.floor(delta[2]/unitcell_vectors[frame,2,2])
+                offset += unitcell_vectors[frame,1]*np.floor((delta[1]-offset[1])/unitcell_vectors[frame,1,1])
+                offset += unitcell_vectors[frame,0]*np.floor((delta[0]-offset[0])/unitcell_vectors[frame,0,0])
+                for atom in molecules[next_anchor]:
+                    frame_positions[atom.index] -= offset
+
+                # Transfer it from the available list to the used list.
+
+                used_anchors.append(next_anchor)
+                del available_anchors[next_index]
+
+            # Find the center of all anchor molecules.
+
+            if num_anchors == 0:
+                center = np.zeros((3))
+            else:
+                center = np.mean(frame_positions[anchor_atom_indices], axis=0)
+
+            # Loop over all molecules, apply the correct offset (so that anchor molecules will end up centered
+            # in the periodic box), and then wrap the molecule into the box.
+
+            offset = 0.5*np.array((unitcell_vectors[frame,0,0], unitcell_vectors[frame,1,1], unitcell_vectors[frame,2,2])) - center
+            for mol in molecules:
+                mol_atom_indices = [atom.index for atom in mol]
+                mol_center = np.mean(self.xyz[frame, mol_atom_indices], axis=0)
+                mol_offset = offset+mol_center
+                mol_offset -= unitcell_vectors[frame,2]*np.floor(mol_offset[2]/unitcell_vectors[frame,2,2])
+                mol_offset -= unitcell_vectors[frame,1]*np.floor(mol_offset[1]/unitcell_vectors[frame,1,1])
+                mol_offset -= unitcell_vectors[frame,0]*np.floor(mol_offset[0]/unitcell_vectors[frame,0,0])
+                result.xyz[frame, mol_atom_indices] += mol_offset-mol_center
+        if not inplace:
+            return result
