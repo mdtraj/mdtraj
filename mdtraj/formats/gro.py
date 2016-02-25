@@ -90,8 +90,15 @@ def load_gro(filename, stride=None, atom_indices=None, frame=None):
     with GroTrajectoryFile(filename, 'r') as f:
         topology = f.topology
         if frame is not None:
-            f.seek(frame)
-            n_frames = 1
+            if isinstance(frame, slice):
+                start  = 0 if frame.start is None else frame.start
+                stop   = frame.stop
+                stride = stride if frame.step is None else frame.step
+                f.seek(start)
+                n_frames = stop - start
+            else:
+                f.seek(frame)
+                n_frames = 1
         else:
             n_frames = None
         return f.read_as_traj(n_frames=n_frames, stride=stride,

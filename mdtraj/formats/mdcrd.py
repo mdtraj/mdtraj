@@ -94,8 +94,15 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     with MDCRDTrajectoryFile(filename, topology.n_atoms) as f:
         if frame is not None:
-            f.seek(frame)
-            n_frames = 1
+            if isinstance(frame, slice):
+                start  = 0 if frame.start is None else frame.start
+                stop   = frame.stop
+                stride = stride if frame.step is None else frame.step
+                f.seek(start)
+                n_frames = int((stop - start) / stride)
+            else:
+                f.seek(frame)
+                n_frames = 1
         else:
             n_frames = None
         return f.read_as_traj(topology, n_frames=n_frames, stride=stride,

@@ -94,8 +94,15 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     with NetCDFTrajectoryFile(filename) as f:
         if frame is not None:
-            f.seek(frame)
-            n_frames = 1
+            if isinstance(frame, slice):
+                start  = 0 if frame.start is None else frame.start
+                stop   = frame.stop
+                stride = stride if frame.step is None else frame.step
+                f.seek(start)
+                n_frames = stop - start
+            else:
+                f.seek(frame)
+                n_frames = 1
         else:
             n_frames = None
 

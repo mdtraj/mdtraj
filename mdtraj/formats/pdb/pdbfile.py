@@ -150,7 +150,10 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
     with PDBTrajectoryFile(filename) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
         if frame is not None:
-            coords = f.positions[[frame], atom_slice, :]
+            if isinstance(frame, slice):
+                coords = f.positions[frame, atom_slice, :]
+            else:
+                coords = f.positions[[frame], atom_slice, :]
         else:
             coords = f.positions[::stride, atom_slice, :]
         assert coords.ndim == 3, 'internal shape error'
@@ -172,7 +175,11 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
 
     time = np.arange(len(coords))
     if frame is not None:
-        time += frame
+        if isinstance(frame, slice):
+            time *= 1 if frame.step is None else frame.step
+            time += 0 if frame.start is None else frame.start
+        else:
+            time += frame
     elif stride is not None:
         time *= stride
 

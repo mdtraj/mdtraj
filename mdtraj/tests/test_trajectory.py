@@ -500,6 +500,39 @@ def test_load_frame():
     eq(t1[r].xyz, t2.xyz)
     eq(t1[r].time, t2.time)
 
+def test_load_frame_slice():
+    files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
+             'frame0.dcd', 'frame0.mdcrd', 'frame0.binpos', 'frame0.xyz',
+             'frame0.lammpstrj']
+    if not (on_win and on_py3):
+        files.append('legacy_msmbuilder_trj0.lh5')
+
+    trajectories = [md.load(get_fn(f), top=get_fn('native.pdb')) for f in files]
+    frames = [md.load_frame(get_fn(f), index=slice(10, 20, 2), top=get_fn('native.pdb')) for f in files]
+
+    for traj, frame, f in zip(trajectories, frames, files):
+        def test():
+            eq(len(frame), 5)
+            eq(traj[10].xyz, frame[0].xyz)
+            eq(traj[10].unitcell_vectors, frame[0].unitcell_vectors)
+            eq(traj[10].time, frame[0].time, err_msg='%d, %d: %s' % (
+                traj[10].time[0], frame[0].time[0], f)
+            )
+            eq(traj[12].xyz, frame[1].xyz)
+            eq(traj[12].unitcell_vectors, frame[1].unitcell_vectors)
+            eq(traj[12].time, frame[1].time, err_msg='%d, %d: %s' % (
+                traj[12].time[0], frame[1].time[0], f)
+            )
+        test.description = 'test_load_frame: %s' % f
+        yield test
+
+    t1 = md.load(get_fn('2EQQ.pdb'))
+    t2 = md.load_frame(get_fn('2EQQ.pdb'), slice(10, 20, 2))
+    eq(len(t2), 5)
+    eq(t1[10].xyz, t2[0].xyz)
+    eq(t1[10].time, t2[0].time)
+    eq(t1[12].xyz, t2[1].xyz)
+    eq(t1[12].time, t2[1].time)
 
 def test_iterload():
     t_ref = md.load(get_fn('frame0.h5'))[:20]
