@@ -172,7 +172,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
 
     time = np.arange(len(coords))
     if frame is not None:
-        time *= frame
+        time += frame
     elif stride is not None:
         time *= stride
 

@@ -498,6 +498,7 @@ def test_load_frame():
     r = np.random.randint(len(t1))
     t2 = md.load_frame(get_fn('2EQQ.pdb'), r)
     eq(t1[r].xyz, t2.xyz)
+    eq(t1[r].time, t2.time)
 
 
 def test_iterload():
