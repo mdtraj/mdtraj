@@ -26,7 +26,7 @@ import numpy as np
 import mdtraj as md
 
 from mdtraj.testing import eq, skipif, get_fn, assert_allclose
-from mdtraj.geometry.distance import compute_distances, compute_displacements
+from mdtraj.geometry.distance import compute_distances, compute_displacements, find_closest_contact
 from mdtraj.geometry.distance import _displacement_mic, _displacement
 
 N_FRAMES = 20
@@ -132,3 +132,24 @@ def _run_amber_traj(trajname, ext_ref):
     eq(np.sqrt((dispopt.squeeze()**2).sum(axis=1)), distopt.squeeze())
     eq(np.sqrt((dispslw.squeeze()**2).sum(axis=1)), distslw.squeeze())
     eq(dispopt, dispslw, decimal=5)
+
+def test_closest_contact():
+    box_size = np.array([3.0, 4.0, 5.0])
+    traj = md.Trajectory(xyz=xyz*box_size, topology=None)
+    _verify_closest_contact(traj)
+    traj.unitcell_lengths = np.array([box_size for i in range(N_FRAMES)])
+    traj.unitcell_angles = np.array([[90.0, 90.0, 90.0] for i in range(N_FRAMES)])
+    _verify_closest_contact(traj)
+    traj.unitcell_angles = np.array([[80.0, 90.0, 100.0] for i in range(N_FRAMES)])
+    _verify_closest_contact(traj)
+
+def _verify_closest_contact(traj):
+    group1 = np.array([i for i in range(N_ATOMS//2)], dtype=np.int)
+    group2 = np.array([i for i in range(N_ATOMS//2, N_ATOMS)], dtype=np.int)
+    contact = find_closest_contact(traj, group1, group2)
+    pairs = np.array([(i,j) for i in group1 for j in group2], dtype=np.int)
+    dists = md.compute_distances(traj, pairs, True)[0]
+    dists2 = md.compute_distances(traj, pairs, False)[0]
+    nearest = np.argmin(dists)
+    eq(float(dists[nearest]), contact[2], decimal=5)
+    assert((pairs[nearest,0] == contact[0] and pairs[nearest,1] == contact[1]) or (pairs[nearest,0] == contact[1] and pairs[nearest,1] == contact[0]))

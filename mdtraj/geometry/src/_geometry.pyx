@@ -62,6 +62,10 @@ cdef extern from "geometry.h":
              const int* is_proline, const int* chains_ids, const int n_frames,
              const int n_atoms, const int n_residues, char* secondary) nogil
 
+    void find_closest_contact(const float* positions, const int* group1, const int* group2,
+                              int n_group1, int n_group2, const float* box_vectors_pointer,
+                              int* atom1, int* atom2, float* distance)
+
 cdef extern from "sasa.h":
     int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
              const float* atom_radii, const int n_sphere_points,
@@ -216,3 +220,22 @@ def _dssp(float[:, :, ::1] xyz,
     PY2 = sys.version_info[0] == 2
     value = str(secondary.base) if PY2 else secondary.base.decode('ascii')
     return value
+
+
+@cython.boundscheck(False)
+def _find_closest_contact(float[:, ::1] positions,
+          int[::1] group1,
+          int[::1] group2,
+          box):
+    cdef int atom1
+    cdef int atom2
+    cdef float distance
+    cdef float[:, ::1] box_vectors
+    cdef float* box_vectors_pointer
+    if box is not None:
+        box_vectors = np.asarray(box, order='c')
+        box_vectors_pointer = &box_vectors[0,0]
+    else:
+        box_vectors_pointer = NULL
+    find_closest_contact(&positions[0,0], &group1[0], &group2[0], len(group1), len(group2), box_vectors_pointer, &atom1, &atom2, &distance)
+    return (atom1, atom2, distance)
