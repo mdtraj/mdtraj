@@ -94,7 +94,7 @@ def _is_url(url):
 @FormatRegistry.register_loader('.pdb')
 @FormatRegistry.register_loader('.pdb.gz')
 def load_pdb(filename, stride=None, atom_indices=None, frame=None,
-             no_boxchk=False):
+             no_boxchk=False, standard_names=True ):
     """Load a RCSB Protein Data Bank file from disk.
 
     Parameters
@@ -122,6 +122,9 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
         filled in instead. This check will filter out those false unit cells and
         avoid potential errors in geometry calculations. Set this variable to
         ``True`` in order to skip this heuristic check.
+    standard_names : bool, default=True
+        If True, non-standard atomnames and residuenames are standardized to conform 
+        with the current PDB format version. If set to false, this step is skipped.
 
     Returns
     -------
@@ -147,7 +150,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
     atom_indices = cast_indices(atom_indices)
     
     filename = str(filename)
-    with PDBTrajectoryFile(filename) as f:
+    with PDBTrajectoryFile(filename, standard_names=standard_names) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
         if frame is not None:
             coords = f.positions[[frame], atom_slice, :]
@@ -211,6 +214,9 @@ class PDBTrajectoryFile(object):
     force_overwrite : bool
         If opened in write mode, and a file by the name of `filename` already
         exists on disk, should we overwrite it?
+    standard_names : bool, default=True
+        If True, non-standard atomnames and residuenames are standardized to conform 
+        with the current PDB format version. If set to false, this step is skipped.
 
     Attributes
     ----------
@@ -235,13 +241,14 @@ class PDBTrajectoryFile(object):
     _atomNameReplacements = {}
     _chain_names = [chr(ord('A') + i) for i in range(26)]
 
-    def __init__(self, filename, mode='r', force_overwrite=True):
+    def __init__(self, filename, mode='r', force_overwrite=True, standard_names=True):
         self._open = False
         self._file = None
         self._topology = None
         self._positions = None
         self._mode = mode
         self._last_topology = None
+        self._standard_names = standard_names
 
         if mode == 'r':
             PDBTrajectoryFile._loadNameReplacementTables()
@@ -509,10 +516,10 @@ class PDBTrajectoryFile(object):
             c = self._topology.add_chain()
             for residue in chain.iter_residues():
                 resName = residue.get_name()
-                if resName in PDBTrajectoryFile._residueNameReplacements:
+                if resName in PDBTrajectoryFile._residueNameReplacements and self._standard_names:
                     resName = PDBTrajectoryFile._residueNameReplacements[resName]
                 r = self._topology.add_residue(resName, c, residue.number, residue.segment_id)
-                if resName in PDBTrajectoryFile._atomNameReplacements:
+                if resName in PDBTrajectoryFile._atomNameReplacements and self._standard_names:
                     atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
                 else:
                     atomReplacements = {}

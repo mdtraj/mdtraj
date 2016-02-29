@@ -673,3 +673,9 @@ def test_smooth():
     test = np.loadtxt(get_fn('smooth.txt'))
 
     eq(output, test)
+
+def test_load_pdb_no_standard_names():
+    # Minimal test. Standard_names=False will force load_pdb.py
+    # to NOT replace any non-standard atom or residue names in the topology
+    md.load(get_fn('native2.pdb'), standard_names=False)
+    md.load_pdb(get_fn('native2.pdb'), standard_names=False)
