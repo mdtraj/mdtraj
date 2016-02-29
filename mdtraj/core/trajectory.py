@@ -62,7 +62,7 @@ from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_ve
 from mdtraj.utils.six.moves import xrange
 from mdtraj.utils.six import PY3, string_types
 from mdtraj import _rmsd
-from mdtraj import compute_distances
+from mdtraj import find_closest_contact
 from mdtraj import FormatRegistry
 from mdtraj.geometry import distance
 
@@ -1864,34 +1864,33 @@ class Trajectory(object):
         for mol in anchor_molecules:
             anchor_atom_indices += [atom.index for atom in mol]
 
-        # Compute the distance between each pair of anchor molecules in each frame.
-
-        anchor_dist = np.zeros((self.n_frames, num_anchors, num_anchors))
-        anchor_nearest_atoms = np.zeros((self.n_frames, num_anchors, num_anchors, 2), dtype=int)
-        for mol1 in range(num_anchors):
-            for mol2 in range(mol1):
-                pairs = np.array([(atom1.index,atom2.index) for atom1 in anchor_molecules[mol1] for atom2 in anchor_molecules[mol2]], dtype=int)
-                dists = compute_distances(self, pairs)
-                for frame in range(dists.shape[0]):
-                    nearest_pair_index = np.argmin(dists[frame])
-                    anchor_dist[frame, mol1, mol2] = dists[frame, nearest_pair_index]
-                    anchor_dist[frame, mol2, mol1] = dists[frame, nearest_pair_index]
-                    anchor_nearest_atoms[frame, mol1, mol2] = pairs[nearest_pair_index]
-                    anchor_nearest_atoms[frame, mol2, mol1] = pairs[nearest_pair_index]
-
         # Loop over frames and process each one.
 
         for frame in range(self.n_frames):
-            frame_positions = self.xyz[frame].copy()
+            # Compute the distance between each pair of anchor molecules in this frame.
+
+            anchor_dist = np.zeros((num_anchors, num_anchors))
+            anchor_nearest_atoms = np.zeros((num_anchors, num_anchors, 2), dtype=int)
+            for mol1 in range(num_anchors):
+                atoms1 = np.array([atom.index for atom in anchor_molecules[mol1]], dtype=int)
+                for mol2 in range(mol1):
+                    atoms2 = np.array([atom.index for atom in anchor_molecules[mol2]], dtype=int)
+                    contact = find_closest_contact(self, atoms1, atoms2, frame)
+                    anchor_dist[mol1, mol2] = contact[2]
+                    anchor_dist[mol2, mol1] = contact[2]
+                    atoms = np.array(contact[:2])
+                    anchor_nearest_atoms[mol1, mol2] = atoms
+                    anchor_nearest_atoms[mol2, mol1] = atoms
 
             # Start by taking the largest molecule as our first anchor.
 
             used_anchors = [0]
             available_anchors = list(range(1, num_anchors))
-            min_anchor_dist = anchor_dist[frame, 0, :]
+            min_anchor_dist = anchor_dist[0, :]
 
             # Add in anchors one at a time, always taking the one that is nearest an existing anchor.
 
+            frame_positions = self.xyz[frame].copy()
             while len(available_anchors) > 0:
                 next_index = np.argmin(min_anchor_dist[available_anchors])
                 next_anchor = available_anchors[next_index]
@@ -1899,15 +1898,15 @@ class Trajectory(object):
                 # Find which existing anchor it's closest to, and choose the periodic copy that minimizes
                 # the distance to that anchor.
 
-                nearest_to = used_anchors[np.argmin(anchor_dist[frame, next_anchor, used_anchors])]
-                atoms = anchor_nearest_atoms[frame, next_anchor, nearest_to]
+                nearest_to = used_anchors[np.argmin(anchor_dist[next_anchor, used_anchors])]
+                atoms = anchor_nearest_atoms[next_anchor, nearest_to]
                 if all_atoms[atoms[0]] in molecules[next_anchor]:
                     atoms = atoms[::-1]
                 delta = frame_positions[atoms[1]]-frame_positions[atoms[0]]
                 offset = np.zeros((3))
-                offset += unitcell_vectors[frame,2]*np.floor(delta[2]/unitcell_vectors[frame,2,2])
-                offset += unitcell_vectors[frame,1]*np.floor((delta[1]-offset[1])/unitcell_vectors[frame,1,1])
-                offset += unitcell_vectors[frame,0]*np.floor((delta[0]-offset[0])/unitcell_vectors[frame,0,0])
+                offset += unitcell_vectors[frame,2]*np.round(delta[2]/unitcell_vectors[frame,2,2])
+                offset += unitcell_vectors[frame,1]*np.round((delta[1]-offset[1])/unitcell_vectors[frame,1,1])
+                offset += unitcell_vectors[frame,0]*np.round((delta[0]-offset[0])/unitcell_vectors[frame,0,0])
                 for atom in molecules[next_anchor]:
                     frame_positions[atom.index] -= offset
 

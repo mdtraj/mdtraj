@@ -191,7 +191,7 @@ def find_closest_contact(traj, group1, group2, frame=0, periodic=True):
     atoms1 = ensure_type(group1, dtype=np.int32, ndim=1, name='group1', warn_on_cast=False)
     atoms2 = ensure_type(group2, dtype=np.int32, ndim=1, name='group2', warn_on_cast=False)
     if periodic and traj._have_unitcell:
-        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3),
+        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(traj.xyz), 3, 3),
                           warn_on_cast=False)[frame]
     else:
         box = None
