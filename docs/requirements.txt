@@ -7,3 +7,4 @@ pytables
 scikit-learn
 nose
 pandas
+numpydoc
