@@ -72,7 +72,7 @@ from mdtraj.geometry import distance
 __all__ = ['open', 'load', 'iterload', 'load_frame', 'load_topology', 'Trajectory']
 # supported extensions for constructing topologies
 _TOPOLOGY_EXTS = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
-                  '.psf', '.mol2', '.hoomdxml', '.gro', '.arc']
+                  '.psf', '.mol2', '.hoomdxml', '.gro', '.arc', '.hdf5']
 
 
 ##############################################################################
