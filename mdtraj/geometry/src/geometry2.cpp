@@ -23,6 +23,7 @@
 #include "geometry.h"
 #include "vectorize_sse.h"
 #include <cmath>
+#include <cstddef>
 #include <float.h>
 
 /**
