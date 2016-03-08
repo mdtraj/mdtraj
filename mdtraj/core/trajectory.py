@@ -1852,6 +1852,7 @@ class Trajectory(object):
         else:
             result = Trajectory(xyz=self.xyz, topology=self.topology, time=self.time,
                 unitcell_lengths=self.unitcell_lengths, unitcell_angles=self.unitcell_angles)
+        sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
 
         # Select the anchor molecules.
 
@@ -1867,6 +1868,19 @@ class Trajectory(object):
         # Loop over frames and process each one.
 
         for frame in range(self.n_frames):
+            # Fix each molecule to ensure the periodic boundary conditions are not splitting it into pieces.
+
+            frame_positions = result.xyz[frame]
+            for atom1, atom2 in sorted_bonds:
+                pos1 = frame_positions[atom1.index, :]
+                pos2 = frame_positions[atom2.index, :]
+                delta = pos2-pos1
+                offset = np.zeros((3))
+                offset += unitcell_vectors[frame,2]*np.round(delta[2]/unitcell_vectors[frame,2,2])
+                offset += unitcell_vectors[frame,1]*np.round((delta[1]-offset[1])/unitcell_vectors[frame,1,1])
+                offset += unitcell_vectors[frame,0]*np.round((delta[0]-offset[0])/unitcell_vectors[frame,0,0])
+                frame_positions[atom2.index, :] -= offset
+
             # Compute the distance between each pair of anchor molecules in this frame.
 
             anchor_dist = np.zeros((num_anchors, num_anchors))
@@ -1890,7 +1904,6 @@ class Trajectory(object):
 
             # Add in anchors one at a time, always taking the one that is nearest an existing anchor.
 
-            frame_positions = self.xyz[frame].copy()
             while len(available_anchors) > 0:
                 next_index = np.argmin(min_anchor_dist[available_anchors])
                 next_anchor = available_anchors[next_index]
@@ -1926,10 +1939,11 @@ class Trajectory(object):
             # in the periodic box), and then wrap the molecule into the box.
 
             offset = 0.5*np.array((unitcell_vectors[frame,0,0], unitcell_vectors[frame,1,1], unitcell_vectors[frame,2,2])) - center
-            for mol in molecules:
+            result.xyz[frame, :] += offset
+            for mol in other_molecules:
                 mol_atom_indices = [atom.index for atom in mol]
-                mol_center = np.mean(self.xyz[frame, mol_atom_indices], axis=0)
-                mol_offset = offset+mol_center
+                mol_center = np.mean(result.xyz[frame, mol_atom_indices], axis=0)
+                mol_offset = mol_center.copy()
                 mol_offset -= unitcell_vectors[frame,2]*np.floor(mol_offset[2]/unitcell_vectors[frame,2,2])
                 mol_offset -= unitcell_vectors[frame,1]*np.floor(mol_offset[1]/unitcell_vectors[frame,1,1])
                 mol_offset -= unitcell_vectors[frame,0]*np.floor(mol_offset[0]/unitcell_vectors[frame,0,0])
