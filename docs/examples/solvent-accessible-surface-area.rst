@@ -1,4 +1,4 @@
-Solvent Sccessible Surface Area (SASA) Calculation
+Solvent Accessible Surface Area (SASA) Calculation
 ==================================================
 
 .. notebook:: examples/solvent-accessible-surface-area.ipynb
