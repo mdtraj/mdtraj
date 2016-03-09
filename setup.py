@@ -197,6 +197,7 @@ def geometry_extensions():
             sources=['mdtraj/geometry/src/geometry.c',
                      'mdtraj/geometry/src/sasa.c',
                      'mdtraj/geometry/src/dssp.cpp',
+                     'mdtraj/geometry/src/geometry2.cpp',
                      'mdtraj/geometry/src/_geometry.pyx'],
             include_dirs=['mdtraj/geometry/include',
                           'mdtraj/geometry/src/kernels'],
