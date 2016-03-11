@@ -1,24 +1,11 @@
 language: c
 sudo: false
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-      # Why are these needed?
-      - g++
-      - gfortran
-      - valgrind
-      - csh
-      - g++-multilib
-      - gcc-multilib
 
 install:
   - source devtools/travis-ci/install_miniconda.sh
   - source devtools/travis-ci/install_sparta.sh
   - source devtools/travis-ci/install_ppm.sh
-  # Why is colli_r needed?
-  - conda config --add channels omnia colli_r
+  - conda config --add channels omnia
 
 script:
   conda build --quiet devtools/conda-recipe
