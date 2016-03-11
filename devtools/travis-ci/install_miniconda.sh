@@ -12,4 +12,4 @@ rm -f $MINICONDA
 export PATH=$HOME/miniconda3/bin:$PATH
 
 conda update -yq conda
-conda install --yq conda-build jinja2
+conda install -yq conda-build jinja2
