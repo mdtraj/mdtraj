@@ -16,12 +16,16 @@ void dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_mat
                         float* distance_out, float* displacement_out,
                         const int n_frames, const int n_atoms, const int n_pairs);
 
-int angle(const float* xyz, const int* triplets, float* out,
-          const int n_frames, const int n_atoms, const int n_angles);
+void angle(const float* xyz, const int* triplets, float* out,
+           const int n_frames, const int n_atoms, const int n_angles);
 
-int angle_mic(const float* xyz, const int* triplets,
-              const float* box_matrix, float* out,
-              const int n_frames, const int n_atoms, const int n_angles);
+void angle_mic(const float* xyz, const int* triplets,
+               const float* box_matrix, float* out,
+               const int n_frames, const int n_atoms, const int n_angles);
+
+void angle_mic_triclinic(const float* xyz, const int* triplets,
+                         const float* box_matrix, float* out,
+                         const int n_frames, const int n_atoms, const int n_angles);
 
 int dihedral(const float* xyz, const int* quartets, float* out,
              const int n_frames, const int n_atoms, const int n_quartets);

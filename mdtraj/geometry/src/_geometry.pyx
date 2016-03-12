@@ -41,11 +41,14 @@ cdef extern from "geometry.h":
                             float* displacement_out, int n_frames, int n_atoms,
                             int n_pairs) nogil
 
-    int angle(const float* xyz, const int* triplets, float* out,
-              int n_frames, int n_atoms, int n_angles) nogil
+    void angle(const float* xyz, const int* triplets, float* out,
+               int n_frames, int n_atoms, int n_angles) nogil
 
-    int angle_mic(const float* xyz, const int* triplets, const float* box_matrix,
-                  float* out, int n_frames, int n_atoms, int n_angles) nogil
+    void angle_mic(const float* xyz, const int* triplets, const float* box_matrix,
+                   float* out, int n_frames, int n_atoms, int n_angles) nogil
+
+    void angle_mic_triclinic(const float* xyz, const int* triplets, const float* box_matrix,
+                             float* out, int n_frames, int n_atoms, int n_angles) nogil
 
     int dihedral(const float* xyz, const int* quartets, float* out,
                  int n_frames, int n_atoms,  int n_quartets) nogil
@@ -148,11 +151,15 @@ def _angle(float[:, :, ::1] xyz,
 def _angle_mic(float[:, :, ::1] xyz,
                int[:, ::1] triplets,
                float[:, :, ::1] box_matrix,
-               float[:, ::1] out):
+               float[:, ::1] out,
+               orthogonal):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_angles = triplets.shape[0]
-    angle_mic(&xyz[0,0,0], &triplets[0,0], &box_matrix[0,0,0], &out[0,0], n_frames, n_atoms, n_angles)
+    if orthogonal:
+        angle_mic(&xyz[0,0,0], &triplets[0,0], &box_matrix[0,0,0], &out[0,0], n_frames, n_atoms, n_angles)
+    else:
+        angle_mic_triclinic(&xyz[0,0,0], &triplets[0,0], &box_matrix[0,0,0], &out[0,0], n_frames, n_atoms, n_angles)
 
 
 @cython.boundscheck(False)

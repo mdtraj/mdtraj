@@ -56,11 +56,11 @@
  * meant to be #included here.
  **/
 #undef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-#include "anglekernels.h"
+//#include "anglekernels.h"
 #include "dihedralkernels.h"
 
 #define COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-#include "anglekernels.h"
+//#include "anglekernels.h"
 #include "dihedralkernels.h"
 
 /****************************************************************************/

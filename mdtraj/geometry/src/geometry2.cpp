@@ -25,6 +25,7 @@
 #include <cmath>
 #include <cstddef>
 #include <float.h>
+#include <vector>
 
 /****************************************************************************/
 /* Distance, Angle and Dihedral kernels                                     */
@@ -45,13 +46,16 @@
  **/
 #undef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
 #include "distancekernels.h"
-//#include "anglekernels.h"
+#include "anglekernels.h"
 //#include "dihedralkernels.h"
 
 #define COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
 #include "distancekernels.h"
-//#include "anglekernels.h"
+#include "anglekernels.h"
 //#include "dihedralkernels.h"
+
+#define COMPILE_WITH_TRICLINIC
+#include "anglekernels.h"
 
 void dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_matrix,
                         float* distance_out, float* displacement_out, const int n_frames,
