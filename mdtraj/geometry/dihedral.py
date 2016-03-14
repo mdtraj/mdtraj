@@ -113,19 +113,12 @@ def compute_dihedrals(traj, indices, periodic=True, opt=True):
     if len(quartets) == 0:
         return np.zeros((len(xyz), 0), dtype=np.float32)
 
-    if periodic and traj._have_unitcell:
-        if opt and not np.allclose(traj.unitcell_angles, 90):
-            warnings.warn('Optimized dihedral calculation does not work for non-orthorhombic '
-                          'unit cells and periodic boundary conditions. Falling back to much '
-                          'slower pure-Python implementation. Set periodic=False or opt=False '
-                          'to disable this message.')
-            opt = False
-
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
     if periodic and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
         if opt:
-            _geometry._dihedral_mic(xyz, quartets, box, out)
+            orthogonal = np.allclose(traj.unitcell_angles, 90)
+            _geometry._dihedral_mic(xyz, quartets, box.transpose(0, 2, 1).copy(), out, orthogonal)
             return out
         else:
             _dihedral(traj, quartets, periodic, out)

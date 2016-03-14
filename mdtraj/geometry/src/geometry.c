@@ -37,32 +37,6 @@
  #define isnan(x) (_isnan(x))
 #endif
 
-
-/****************************************************************************/
-/* Distance, Angle and Dihedral kernels                                     */
-/****************************************************************************/
-
-/**
- * This is kindof hacky / gross, but I think it's the best way to avoid having
- * lots of copy-paste code. For each of the distance/angle/dihedral kernels, we
- * want to compile two version: one which uses PBCs and the other which does
- * not. Most of the code between these versions is shared, so I've written
- * the parts of the two functions which are different using #ifdefs. So we
- * just include these files _twice_ here, toggling the variable that controls
- * the ifdef.
- *
- * Note that these kernel files are really not capable of being compiled
- * independently -- they're not header files at all -- and they're really just
- * meant to be #included here.
- **/
-#undef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-//#include "anglekernels.h"
-#include "dihedralkernels.h"
-
-#define COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-//#include "anglekernels.h"
-#include "dihedralkernels.h"
-
 /****************************************************************************/
 /* HBond Kernels                                                            */
 /****************************************************************************/

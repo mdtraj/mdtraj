@@ -50,12 +50,16 @@ cdef extern from "geometry.h":
     void angle_mic_triclinic(const float* xyz, const int* triplets, const float* box_matrix,
                              float* out, int n_frames, int n_atoms, int n_angles) nogil
 
-    int dihedral(const float* xyz, const int* quartets, float* out,
-                 int n_frames, int n_atoms,  int n_quartets) nogil
+    void dihedral(const float* xyz, const int* quartets, float* out,
+                  int n_frames, int n_atoms,  int n_quartets) nogil
 
-    int dihedral_mic(const float* xyz, const int* quartets, float* out,
-                     const float* box_matrix, int n_frames, int n_atoms,
-                     int n_quartets) nogil
+    void dihedral_mic(const float* xyz, const int* quartets, float* out,
+                      const float* box_matrix, int n_frames, int n_atoms,
+                      int n_quartets) nogil
+
+    void dihedral_mic_triclinic(const float* xyz, const int* quartets, float* out,
+                                const float* box_matrix, int n_frames, int n_atoms,
+                                int n_quartets) nogil
 
     int kabsch_sander(float* xyz, int* nco_indices, int* ca_indices,
                       const int* is_proline, int n_frames, int n_atoms,
@@ -176,11 +180,15 @@ def _dihedral(float[:, :, ::1] xyz,
 def _dihedral_mic(float[:, :, ::1] xyz,
                   int[:, ::1] quartets,
                   float[:, :, ::1] box_matrix,
-                  float[:, ::1] out):
+                  float[:, ::1] out,
+                  orthogonal):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     cdef int n_quartets = quartets.shape[0]
-    dihedral_mic(&xyz[0,0,0], <int*> &quartets[0,0], &box_matrix[0,0,0], &out[0,0], n_frames, n_atoms, n_quartets)
+    if orthogonal:
+        dihedral_mic(&xyz[0,0,0], <int*> &quartets[0,0], &box_matrix[0,0,0], &out[0,0], n_frames, n_atoms, n_quartets)
+    else:
+        dihedral_mic_triclinic(&xyz[0,0,0], <int*> &quartets[0,0], &box_matrix[0,0,0], &out[0,0], n_frames, n_atoms, n_quartets)
 
 
 @cython.boundscheck(False)

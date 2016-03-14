@@ -162,6 +162,19 @@ def test_dihedral_1():
     eq(r1, r2)
 
 
+def test_dihedral_triclinic():
+    n_atoms = 4
+    np.random.seed(42)
+    xyz = np.random.randn(5, n_atoms, 3)
+    t = md.Trajectory(xyz=xyz, topology=None,
+                      unitcell_lengths=np.outer(np.ones(5), np.array([1.5, 1.5, 1.5])),
+                      unitcell_angles=np.outer(np.ones(5), np.array([95, 100, 110])))
+    indices = list(itertools.combinations(range(n_atoms), 4))
+    r1 = md.geometry.compute_dihedrals(t, indices, opt=False)
+    r2 = md.geometry.compute_dihedrals(t, indices, opt=True)
+    eq(r1, r2)
+
+
 def test_angle_0():
     xyz = np.array([[[0, 0, 0],
                     [0, 1, 0],
