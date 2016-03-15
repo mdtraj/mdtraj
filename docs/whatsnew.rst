@@ -6,6 +6,7 @@ These are new features and improvements of note in each release.
 
 v1.7 (Development)
 ------------------
+- Add option to skip standardization of atom and residue names during ``load_pdb`` (#1061)
 
 
 v1.6 (February 15, 2016)

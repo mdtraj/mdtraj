@@ -38,6 +38,9 @@ int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
          const int* is_proline, const int* chains_ids, const int n_frames,
          const int n_atoms, const int n_residues, char* secondary);
 
+void find_closest_contact(const float* positions, const int* group1, const int* group2, int n_group1, int n_group2,
+                          const float* box_vectors_pointer, int* atom1, int* atom2, float* distance);
+
 #ifdef __cplusplus
 }
 #endif

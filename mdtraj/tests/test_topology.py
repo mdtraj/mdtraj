@@ -27,7 +27,7 @@ import numpy as np
 from mdtraj.utils.six.moves import cPickle
 from mdtraj.utils import import_
 from mdtraj.testing import get_fn, eq, skipif, assert_raises
-                            
+
 
 try:
     from simtk.openmm import app
@@ -245,3 +245,10 @@ def test_subset():
      t1 = md.load(get_fn('2EQQ.pdb')).top
      t2 = t1.subset([1,2,3])
      assert t2.n_residues == 1
+
+
+def test_molecules():
+    top = md.load(get_fn('4OH9.pdb')).topology
+    molecules = top.find_molecules()
+    assert sum(len(mol) for mol in molecules) == top.n_atoms
+    assert sum(1 for mol in molecules if len(mol) > 1) == 2 # All but two molecules are water
