@@ -195,7 +195,7 @@ def geometry_extensions():
     return [
         Extension('mdtraj.geometry._geometry',
             sources=['mdtraj/geometry/src/geometry.c',
-                     'mdtraj/geometry/src/sasa.c',
+                     'mdtraj/geometry/src/sasa.cpp',
                      'mdtraj/geometry/src/dssp.cpp',
                      'mdtraj/geometry/src/geometry2.cpp',
                      'mdtraj/geometry/src/_geometry.pyx'],

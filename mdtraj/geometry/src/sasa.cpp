@@ -1,9 +1,9 @@
 /*=======================================================================*/
 /* MDTraj: A Python Library for Loading, Saving, and Manipulating        */
 /*         Molecular Dynamics Trajectories.                              */
-/* Copyright 2012-2013 Stanford University and the Authors               */
+/* Copyright 2012-2016 Stanford University and the Authors               */
 /*                                                                       */
-/* Authors: Robert McGibbon                                              */
+/* Authors: Robert McGibbon, Peter Eastman                               */
 /* Contributors:                                                         */
 /*                                                                       */
 /* MDTraj is free software: you can redistribute it and/or modify        */
@@ -20,123 +20,120 @@
 /* License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.*/
 /*=======================================================================*/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cmath>
 #include <pmmintrin.h>
 
 #include "sasa.h"
 #include "msvccompat.h"
-#include "ssetools.h"
+#include "vectorize_sse.h"
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
 
+/**
+ * Calculate the accessible surface area of each atom in a single snapshot
+ *
+ * Parameters
+ * ----------
+ * frame : 2d array, shape=[n_atoms, 3]
+ *     The coordinates of the nuclei
+ * n_atoms : int
+ *     the major axis length of frame
+ * atom_radii : 1d array, shape=[n_atoms]
+ *     the van der waals radii of the atoms PLUS the probe radius
+ * sphere_points : 2d array, shape=[n_sphere_points, 3]
+ *     a bunch of uniformly distributed points on a sphere
+ * n_sphere_points : int
+ *    the number of sphere points
+ *
+ * centered_sphere_points : WORK BUFFER 2d array, shape=[n_sphere_points, 3]
+ *    empty memory that intermediate calculations can be stored in
+ * neighbor_indices : WORK BUFFER 2d array, shape=[n_atoms]
+ *    empty memory that intermediate calculations can be stored in
+ * NOTE: the point of these work buffers is that if we want to call
+ *    this function repreatedly, its more efficient not to keep re-mallocing
+ *    these work buffers, but instead just reuse them.
+ *
+ * areas : 1d array, shape=[n_atoms]
+ *     the output buffer to place the results in -- the surface area of each
+ *     atom
+ */
 static void asa_frame(const float* frame, const int n_atoms, const float* atom_radii,
-		      const float* sphere_points, const int n_sphere_points,
-		      int* neighbor_indices, float* centered_sphere_points, float* areas)
+                      const float* sphere_points, const int n_sphere_points,
+                      int* neighbor_indices, float* centered_sphere_points, float* areas)
 {
-  /*// Calculate the accessible surface area of each atom in a single snapshot
-  //
-  // Parameters
-  // ----------
-  // frame : 2d array, shape=[n_atoms, 3]
-  //     The coordinates of the nuclei
-  // n_atoms : int
-  //     the major axis length of frame
-  // atom_radii : 1d array, shape=[n_atoms]
-  //     the van der waals radii of the atoms PLUS the probe radius
-  // sphere_points : 2d array, shape=[n_sphere_points, 3]
-  //     a bunch of uniformly distributed points on a sphere
-  // n_sphere_points : int
-  //    the number of sphere points
+    float constant = 4.0 * M_PI / n_sphere_points;
 
-  // centered_sphere_points : WORK BUFFER 2d array, shape=[n_sphere_points, 3]
-  //    empty memory that intermediate calculations can be stored in
-  // neighbor_indices : WORK BUFFER 2d array, shape=[n_atoms]
-  //    empty memory that intermediate calculations can be stored in
-  // NOTE: the point of these work buffers is that if we want to call
-  //    this function repreatedly, its more efficient not to keep re-mallocing
-  //    these work buffers, but instead just reuse them.
+    for (int i = 0; i < n_atoms; i++) {
+        float atom_radius_i = atom_radii[i];
+        fvec4 r_i(frame[i*3], frame[i*3+1], frame[i*3+2], 0);
 
-  // areas : 1d array, shape=[n_atoms]
-  //     the output buffer to place the results in -- the surface area of each
-  //     atom
-  */
+        // Get all the atoms close to atom `i`
+        int n_neighbor_indices = 0;
+        for (int j = 0; j < n_atoms; j++) {
+            if (i == j)
+                continue;
 
-  int i, j, k, k_prime;
-  __m128 r, r_i, r_j, r_ij, atom_radius_i, atom_radius_j, radius_cutoff;
-  __m128 radius_cutoff2, sp, r_jk, r2;
-  int n_neighbor_indices, is_accessible, k_closest_neighbor;
-  float constant = 4.0 * M_PI / n_sphere_points;
+            fvec4 r_j(frame[j*3], frame[j*3+1], frame[j*3+2], 0);
+            fvec4 r_ij = r_i-r_j;
+            float atom_radius_j = atom_radii[j];
 
-  for (i = 0; i < n_atoms; i++) {
-    atom_radius_i = _mm_set1_ps(atom_radii[i]);
-    r_i = load_float3(frame+i*3);
+            // Look for atoms `j` that are nearby atom `i`
+            float radius_cutoff = atom_radius_i+atom_radius_j;
+            float radius_cutoff2 = radius_cutoff*radius_cutoff;
+            float r2 = dot3(r_ij, r_ij);
+            if (r2 < radius_cutoff2) {
+                neighbor_indices[n_neighbor_indices]  = j;
+                n_neighbor_indices++;
+            }
+            if (r2 < 1e-10f) {
+                printf("ERROR: THIS CODE IS KNOWN TO FAIL WHEN ATOMS ARE VIRTUALLY");
+                printf("ON TOP OF ONE ANOTHER. YOU SUPPLIED TWO ATOMS %f", sqrtf(r2));
+                printf("APART. QUITTING NOW");
+                exit(1);
+            }
+        }
 
-    /* Get all the atoms close to atom `i` */
-    n_neighbor_indices = 0;
-    for (j = 0; j < n_atoms; j++) {
-      if (i == j) {
-	continue;
-      }
+        // Center the sphere points on atom i
+        for (int j = 0; j < n_sphere_points; j++) {
+            centered_sphere_points[3*j] = frame[3*i] + atom_radius_i*sphere_points[3*j];
+            centered_sphere_points[3*j+1] = frame[3*i+1] + atom_radius_i*sphere_points[3*j+1];
+            centered_sphere_points[3*j+2] = frame[3*i+2] + atom_radius_i*sphere_points[3*j+2];
+        }
 
-      r_j = load_float3(frame+j*3);
-      r_ij = _mm_sub_ps(r_i, r_j);
-      atom_radius_j = _mm_set1_ps(atom_radii[j]);
+        // Check if each of these points is accessible
+        int k_closest_neighbor = 0;
+        for (int j = 0; j < n_sphere_points; j++) {
+            bool is_accessible = true;
+            fvec4 r_j(centered_sphere_points[3*j], centered_sphere_points[3*j+1], centered_sphere_points[3*j+2], 0);
 
-      /* Look for atoms `j` that are nearby atom `i` */
-      radius_cutoff =  _mm_add_ps(atom_radius_i, atom_radius_j);
-      radius_cutoff2 = _mm_mul_ps(radius_cutoff, radius_cutoff);
-      r2 = _mm_dp_ps2(r_ij, r_ij, 0x7F);
-      if (_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(r2, radius_cutoff2)), 0)) {
-	    neighbor_indices[n_neighbor_indices]  = j;
-	    n_neighbor_indices++;
-      }
-    if (_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(r2, _mm_set1_ps(1e-10))), 0)) {
-	  printf("ERROR: THIS CODE IS KNOWN TO FAIL WHEN ATOMS ARE VIRTUALLY");
-	  printf("ON TOP OF ONE ANOTHER. YOU SUPPLIED TWO ATOMS %f", _mm_cvtss_f32(r));
-	  printf("APART. QUITTING NOW");
-	  exit(1);
-      }
+            // Iterate through the sphere points by cycling through them
+            // in a circle, starting with k_closest_neighbor and then wrapping
+            // around
+            for (int k = k_closest_neighbor; k < n_neighbor_indices + k_closest_neighbor; k++) {
+                int k_prime = k % n_neighbor_indices;
+                float r = atom_radii[neighbor_indices[k_prime]];
+
+                int index = neighbor_indices[k_prime];
+                fvec4 r_jk = r_j-fvec4(frame[3*index], frame[3*index+1], frame[3*index+2], 0);
+                if (dot3(r_jk, r_jk) < r*r) {
+                    k_closest_neighbor = k;
+                    is_accessible = false;
+                    break;
+                }
+            }
+
+            if (is_accessible)
+                areas[i]++;
+        }
+
+        areas[i] *= constant * (atom_radii[i])*(atom_radii[i]);
     }
-
-    /* Center the sphere points on atom i */
-    for (j = 0; j < n_sphere_points; j++) {
-      sp = _mm_add_ps(r_i, _mm_mul_ps(atom_radius_i, load_float3(sphere_points + 3*j)));
-      store_float3(centered_sphere_points + 3*j, sp);
-    }
-
-    /* Check if each of these points is accessible */
-    k_closest_neighbor = 0;
-    for (j = 0; j < n_sphere_points; j++) {
-      is_accessible = 1;
-      r_j = load_float3(centered_sphere_points + 3*j);
-
-      /* iterate through the sphere points by cycling through them */
-      /* in a circle, starting with k_closest_neighbor and then wrapping */
-      /* around */
-      for (k = k_closest_neighbor; k < n_neighbor_indices + k_closest_neighbor; k++) {
-	k_prime = k % n_neighbor_indices;
-	r = _mm_set1_ps(atom_radii[neighbor_indices[k_prime]]);
-
-	r_jk = _mm_sub_ps(r_j, load_float3(frame+3*neighbor_indices[k_prime]));
-	if (_mm_extract_epi16(CAST__M128I(_mm_cmplt_ps(_mm_dp_ps2(r_jk, r_jk, 0xFF), _mm_mul_ps(r, r))), 0)) {
-	  k_closest_neighbor = k;
-	  is_accessible = 0;
-	  break;
-	}
-      }
-
-      if (is_accessible) {
-	areas[i]++;
-      }
-    }
-
-    areas[i] *= constant * (atom_radii[i])*(atom_radii[i]);
-  }
 }
+
 
 static void generate_sphere_points(float* sphere_points, int n_points)
 {
