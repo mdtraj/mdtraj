@@ -27,6 +27,8 @@
 #include <float.h>
 #include <vector>
 
+using std::vector;
+
 /****************************************************************************/
 /* Distance, Angle and Dihedral kernels                                     */
 /****************************************************************************/
@@ -164,4 +166,148 @@ void find_closest_contact(const float* positions, const int* group1, const int* 
         }
     }
     *distance = sqrtf(distance2);
+}
+
+/**
+ * Conpute the Kabsch-Sander hydrogen bond energy between two residues
+ * in a single conformation.
+ */
+static float ks_donor_acceptor(const float* xyz, const float* hcoords, const int* nco_indices, int donor, int acceptor) {
+    fvec4 coupling(-2.7888f, -2.7888f, 2.7888f, 2.7888f); // 332 (kcal*A/mol) * 0.42 * 0.2 * (1nm / 10 A)
+    fvec4 r_n(xyz[3*nco_indices[3*donor]], xyz[3*nco_indices[3*donor]+1], xyz[3*nco_indices[3*donor]+2], 0);
+    fvec4 r_h(&hcoords[4*donor]);
+    fvec4 r_c(xyz[3*nco_indices[3*acceptor+1]], xyz[3*nco_indices[3*acceptor+1]+1], xyz[3*nco_indices[3*acceptor+1]+2], 0);
+    fvec4 r_o(xyz[3*nco_indices[3*acceptor+2]], xyz[3*nco_indices[3*acceptor+2]+1], xyz[3*nco_indices[3*acceptor+2]+2], 0);
+    fvec4 r_ho = r_h-r_o;
+    fvec4 r_hc = r_h-r_c;
+    fvec4 r_nc = r_n-r_c;
+    fvec4 r_no = r_n-r_o;
+
+    // Compute all four dot products (each of the squared distances) and pack them into a single fvec4.
+
+    fvec4 d2_honchcno(dot3(r_ho, r_ho), dot3(r_nc, r_nc), dot3(r_hc, r_hc), dot3(r_no, r_no));
+    fvec4 recip_sqrt = 1.0f/sqrt(d2_honchcno);
+    float energy = dot4(coupling, recip_sqrt);
+    return (energy < -9.9f ? -9.9f : energy);
+}
+
+/**
+ * Assign hydrogen atom coordinates
+ */
+static void ks_assign_hydrogens(const float* xyz, const int* nco_indices, const int n_residues, float *hcoords, int* skip) {
+    fvec4 r_n(xyz[3*nco_indices[0]], xyz[3*nco_indices[0]+1], xyz[3*nco_indices[0]+2], 0);
+    r_n.store(hcoords);
+    hcoords += 4;
+
+    for (int ri = 1; ri < n_residues; ri++) {
+        if (!skip[ri]) {
+            int pc_index = nco_indices[3*(ri-1) + 1];
+            int po_index = nco_indices[3*(ri-1) + 2];
+            fvec4 pc(xyz[3*pc_index], xyz[3*pc_index+1], xyz[3*pc_index+2], 0);
+            fvec4 po(xyz[3*po_index], xyz[3*po_index+1], xyz[3*po_index+2], 0);
+            fvec4 r_co = pc-po;
+            fvec4 r_n(xyz[3*nco_indices[3*ri]], xyz[3*nco_indices[3*ri]+1], xyz[3*nco_indices[3*ri]+2], 0);
+            fvec4 norm_r_co = r_co/sqrt(dot3(r_co, r_co));
+            fvec4 r_h = r_n+norm_r_co*0.1f;
+            r_h.store(hcoords);
+        }
+        hcoords += 4;
+    }
+}
+
+/**
+ * Store a computed hbond energy and the appropriate residue indices
+ * in the output arrays. This function is called twice by kabsch_sander,
+ * so it seemed appropriate to factor it out.
+ */
+static void store_energies(int* hbonds, float* henergies, int donor, int acceptor, float e) {
+    float existing_e0 = henergies[2*donor];
+    float existing_e1 = henergies[2*donor+1];
+
+    if (isnan(existing_e0) || e < existing_e0) {
+        // Copy over any info in #0 hbond to #1
+        hbonds[2*donor+1] = hbonds[donor*2];
+        henergies[2*donor+1] = existing_e0;
+        hbonds[2*donor] = acceptor;
+        henergies[2*donor] = e;
+    }
+    else if (isnan(existing_e1) || e < henergies[2*donor+1]) {
+        hbonds[2*donor+1] = acceptor;
+        henergies[2*donor+1] = e;
+    }
+}
+
+/**
+ * Find all of backbone hydrogen bonds between residues in each frame of a trajectory.
+ *
+ * Parameters
+ * ----------
+ * xyz : array, shape=(n_frames, n_atoms, 3)
+ *     The cartesian coordinates of all of the atoms in each frame.
+ * nco_indices : array, shape=(n_residues, 3)
+ *     The indices of the backbone N, C, and O atoms for each residue.
+ * ca_indices : array, shape=(n_residues,)
+ *     The index of the CA atom of each residue.
+ * is_proline : array, shape=(n_residue,)
+ *     If a particular residue does not contain a CA atom, or you want to skip
+ *     the residue for another reason, this value should evaluate to True.
+ *
+ * Returns
+ * -------
+ * hbonds : array, shape=(n_frames, n_residues, 2)
+ *     This is a little tricky, so bear with me. This array gives the indices
+ *     of the residues that each backbone hbond *donor* is engaged in an hbond
+ *     with. For instance, the equality `bonds[i, j, 0] == k` is interpreted as
+ *     "in frame i, residue j is donating its first hydrogen bond from residue
+ *     k". `bonds[i, j, 1] == k` means that residue j is donating its second
+ *     hydrogen bond from residue k. A negative value indicates that no such
+ *     hbond exists.
+ * henergies : array, shape=(n_frames, n_residues, 2)
+ *     The semantics of this array run parallel to the hbonds array, but
+ *     instead of giving the identity of the interaction partner, it gives
+ *     the energy of the hbond. Only hbonds with energy below -0.5 kcal/mol
+ *     are recorded.
+ */
+void kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indices,
+                   const int* is_proline, const int n_frames, const int n_atoms,
+                   const int n_residues, int* hbonds, float* henergies) {
+    float HBOND_ENERGY_CUTOFF = -0.5;
+    float MINIMAL_CA_DISTANCE2 = 0.81f;
+    vector<float> hcoords(n_residues*4);
+    vector<int> skip(n_residues);
+    for (int i = 0; i < n_residues; i++)
+        if ((nco_indices[i*3] == -1) || (nco_indices[i*3+1] == -1) ||
+            (nco_indices[i*3+2] == -1) || ca_indices[i] == -1)
+            skip[i] = 1;
+
+    for (int i = 0; i < n_frames; i++) {
+        ks_assign_hydrogens(xyz, nco_indices, n_residues, &hcoords[0], &skip[0]);
+        for (int ri = 0; ri < n_residues; ri++) {
+            if (skip[ri])
+                continue;
+            fvec4 ri_ca(xyz[3*ca_indices[ri]], xyz[3*ca_indices[ri]+1], xyz[3*ca_indices[ri]+2], 0);
+            for (int rj = ri + 1; rj < n_residues; rj++) {
+                if (skip[rj])
+                    continue;
+                fvec4 rj_ca(xyz[3*ca_indices[rj]], xyz[3*ca_indices[rj]+1], xyz[3*ca_indices[rj]+2], 0);
+
+                // Check the ca distance before proceding
+                
+                fvec4 r12 = ri_ca-rj_ca;
+                if (dot3(r12, r12) < MINIMAL_CA_DISTANCE2) {
+                    float e = ks_donor_acceptor(xyz, &hcoords[0], nco_indices, ri, rj);
+                    if (e < HBOND_ENERGY_CUTOFF && !is_proline[ri])
+                        store_energies(hbonds, henergies, ri, rj, e); // hbond from donor=ri to acceptor=rj
+                    if (rj != ri + 1) {
+                        float e = ks_donor_acceptor(xyz, &hcoords[0], nco_indices, rj, ri);
+                        if (e < HBOND_ENERGY_CUTOFF && !is_proline[rj])
+                            store_energies(hbonds, henergies, rj, ri, e); // hbond from donor=rj to acceptor=ri
+                    }
+                }
+            }
+        }
+        xyz += n_atoms*3; // advance to the next frame
+        hbonds += n_residues*2;
+        henergies += n_residues*2;
+    }
 }

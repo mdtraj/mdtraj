@@ -61,9 +61,9 @@ cdef extern from "geometry.h":
                                 const float* box_matrix, int n_frames, int n_atoms,
                                 int n_quartets) nogil
 
-    int kabsch_sander(float* xyz, int* nco_indices, int* ca_indices,
-                      const int* is_proline, int n_frames, int n_atoms,
-                      int n_residues, int* hbonds, float* henergies) nogil
+    void kabsch_sander(float* xyz, int* nco_indices, int* ca_indices,
+                       const int* is_proline, int n_frames, int n_atoms,
+                       int n_residues, int* hbonds, float* henergies) nogil
 
     int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
              const int* is_proline, const int* chains_ids, const int n_frames,
