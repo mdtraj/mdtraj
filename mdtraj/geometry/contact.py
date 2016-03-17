@@ -40,7 +40,7 @@ __all__ = ['compute_contacts', 'squareform']
 # Code
 ##############################################################################
 
-def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonprotein=True):
+def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonprotein=True, periodic=True):
     """Compute the distance between pairs of residues in a trajectory.
 
     Parameters
@@ -64,6 +64,9 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         When using `contact==all`, don't compute contacts between
         "residues" which are not protein (i.e. do not contain an alpha
         carbon).
+    periodic : bool, default=True
+        If periodic is True and the trajectory contains unitcell information,
+        we will compute distances under the minimum image convention.
 
     Returns
     -------
@@ -157,7 +160,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
                 raise ValueError('More than 1 alpha carbon detected in residue %d or %d' % (r0, r1))
 
         residue_pairs = np.array(filtered_residue_pairs)
-        distances = md.compute_distances(traj, atom_pairs)
+        distances = md.compute_distances(traj, atom_pairs, periodic=periodic)
 
 
     elif scheme in ['closest', 'closest-heavy']:
@@ -177,7 +180,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
             atom_pairs.extend(list(itertools.product(residue_membership[pair[0]], residue_membership[pair[1]])))
             n_atom_pairs_per_residue_pair.append(residue_lens[pair[0]] * residue_lens[pair[1]])
 
-        atom_distances = md.compute_distances(traj, atom_pairs)
+        atom_distances = md.compute_distances(traj, atom_pairs, periodic=periodic)
 
         # now squash the results based on residue membership
         n_residue_pairs = len(residue_pairs)
