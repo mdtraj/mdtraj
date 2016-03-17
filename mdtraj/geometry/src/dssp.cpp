@@ -161,9 +161,9 @@ static void calculate_beta_sheets(const int* chain_ids, const int* hbonds,
 
             bool bulge;
             if (bridges[i].type == BRIDGE_PARALLEL)
-                bulge = ((jbj - jei < 6 && ibj - iei < 3) || (jbj - jei < 3));
+                bulge = (jbj > jbi) && ((jbj - jei < 6 && ibj - iei < 3) || (jbj - jei < 3));
             else
-                bulge = ((jbi - jej < 6 && ibj - iei < 3) || (jbi - jej < 3));
+                bulge = (jbj < jbi) && ((jbi - jej < 6 && ibj - iei < 3) || (jbi - jej < 3));
 
             if (bulge) {
                 bridges[i].i.insert(bridges[i].i.end(), bridges[j].i.begin(), bridges[j].i.end());
