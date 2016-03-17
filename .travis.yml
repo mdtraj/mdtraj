@@ -1,6 +1,12 @@
 language: c
 sudo: false
 
+addons:
+  apt:
+    packages:
+      # SPARTA+ requires csh
+      - csh
+
 install:
   - source devtools/travis-ci/install_miniconda.sh
   - source devtools/travis-ci/install_sparta.sh
