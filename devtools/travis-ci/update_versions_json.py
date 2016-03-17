@@ -1,5 +1,9 @@
 import json
-from urllib.request import urlopen
+
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
 from mdtraj import version
 
 if not version.release:
