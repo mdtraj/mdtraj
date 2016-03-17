@@ -19,6 +19,7 @@ for i in range(len(versions)):
 
 versions.append({
     'version': version.short_version,
+    'display': version.short_version,
     'url': "{base}/{version}".format(base=URL, version=version.short_version),
     'latest': True})
 
