@@ -31,7 +31,7 @@ test:
     - ipywidgets
     - matplotlib
     - pandas
-    - shiftx2
+    - shiftx2 # [not win]
 
   commands:
     - nosetests mdtraj -v -s
