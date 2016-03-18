@@ -1,41 +1,38 @@
 language: c
 sudo: false
+
 addons:
   apt:
-    sources:
-    - ubuntu-toolchain-r-test
     packages:
-      - g++
-      - gfortran
-      - valgrind
+      # SPARTA+ requires csh
       - csh
-      - g++-multilib
-      - gcc-multilib
 
 install:
-  - source devtools/travis-ci/install.sh
-  - export PYTHONUNBUFFERED=true
-  - export CC=gcc
-  - export CXX=g++
+  - source devtools/travis-ci/install_miniconda.sh
+  - source devtools/travis-ci/install_sparta.sh
+  - source devtools/travis-ci/install_ppm.sh
+  - conda config --add channels omnia
 
 script:
-  - conda config --add channels omnia
-  - conda update -qy conda-build
-  - conda build -q devtools/conda-recipe
+  conda build --quiet devtools/conda-recipe
+  && devtools/travis-ci/build_docs.sh
 
 env:
   matrix:
-    - CONDA_PY=27  CONDA_NPY=17
-    - CONDA_PY=27  CONDA_NPY=19
-    - CONDA_PY=34  CONDA_NPY=19
-    - CONDA_PY=35  CONDA_NPY=1.10
+    - CONDA_PY=2.7  CONDA_NPY=1.7
+    - CONDA_PY=2.7  CONDA_NPY=1.10
+    - CONDA_PY=3.4  CONDA_NPY=1.9
+    - CONDA_PY=3.5  CONDA_NPY=1.10
 
-  global:
-    # encrypted AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to push documentation to S3
-    - secure: "qrbibHwlbXBTq+8h1DC1plyUcl67qwn5yr4UYILdk9WsBhPdNT0ObpRUOcFDW/YM9RDfcOvx7Ruq/OPhvlVCg1C+Lj01kSx3vHxYCxFJVyN7iiD9oI/xzFUc6guvYF9O8um2+QE1ZI70yffGJGT7MZUQNUBnKchqvV3uIeSOqw4="
-    - secure: "Y4deQNbKXm0dTth0VoR59wEPYr0dNmp4Np+GDnJofwL+HKQ/w3dTrM3PQOV3bZ2w7WV2gAdtOv8MMUjdFYyyB+GS1wIZa4XbXchGNJr/lljvT3OP579ZwSLAowjEFFR6hidFDfMcR4D7KzTnoCIe9odXrZplI6l0M4OL1agki84="
-    # encrypted ANACONDA_TOKEN for push of dev package to binstar
-    - secure: "Fk6rmrCd4fnzkowd//FD9lI0bR3oNy1G2WjSke/1UiLtdZyCegiP0y0qcU5EIfEOoNk3NudM44RmPTHjqUMC7oS3tFI7SUBVUAyW34WOtTlOEaEBAzTDwfWhl6PLZNiXmZd75knjCyL6xJif4VwNT02VuMoR3ZchWG27ALpThwM="
-
-after_success:
-  - source devtools/travis-ci/after_sucess.sh
+deploy:
+  - provider: s3
+    access_key_id:
+      secure: "ZJrGD3DMlnokMNL2IAro43fdILptst27+UNH1tcma5NFSXGYRpUYAk+uFdjtj5WR2bi0g81UFmsGd421SfDzJe9WY+zcNlBTNlushi0+8KOTXBVr38n8z03mUMz2wnGTYmOg5z0kBHQ+xBVuX9Hz9FM9CVbWZczCWpTTiem35W4="
+    secret_access_key:
+      secure: "lEpUy2/GD2PnpBcv1KV2qt5mzRPbe4hPJwqlCuYDYvLFLMTrl+v5d+R8IyZ1KMX5eRBTPdP2i2sVbyRH/rwCaeRl6btYcsLWmpydfovPP7KyL3dlSWxtquOZCi0wfjlK7H5RwZHUb0870XhdPrAPT04plbiqVHzlSqBhfVTbHB0="
+    bucket: "mdtraj.org"
+    skip_cleanup: true
+    local_dir: docs/_deploy/
+    on:
+      branch: master
+      condition: "$CONDA_PY = 3.5"
