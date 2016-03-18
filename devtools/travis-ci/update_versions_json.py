@@ -10,7 +10,7 @@ if not version.release:
     print("This is not a release.")
     exit(0)
 
-URL = 'http://www.msmbuilder.org'
+URL = 'http://www.mdtraj.org'
 versions = json.load(urlopen(URL + '/versions.json'))
 
 # new release so all the others are now old
