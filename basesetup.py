@@ -217,37 +217,36 @@ def git_version():
     return GIT_REVISION
 
 
-def write_version_py(VERSION, ISRELEASED, filename='mdtraj/version.py'):
+def write_version_py(version, isreleased, filename):
     cnt = """
-# THIS FILE IS GENERATED FROM MDTRAJ SETUP.PY
-short_version = '%(version)s'
-version = '%(version)s'
-full_version = '%(full_version)s'
-git_revision = '%(git_revision)s'
-release = %(isrelease)s
-
-if not release:
-    version = full_version
+# This file is generated in setup.py at build time.
+version = '{version}'
+short_version = '{short_version}'
+full_version = '{full_version}'
+git_revision = '{git_revision}'
+release = {release}
 """
-    # Adding the git rev number needs to be done inside write_version_py(),
-    # otherwise the import of numpy.version messes up the build under Python 3.
-    FULLVERSION = VERSION
+    # git_revision
     if os.path.exists('.git'):
-        GIT_REVISION = git_version()
+        git_revision = git_version()
     else:
-        GIT_REVISION = 'Unknown'
+        git_revision = 'Unknown'
 
-    if not ISRELEASED:
-        FULLVERSION += '.dev-' + GIT_REVISION[:7]
+    # short_version, full_version
+    if isreleased:
+        full_version = version
+        short_version = version
+    else:
+        full_version = ("{version}+{git_revision}"
+                        .format(version=version, git_revision=git_revision))
+        short_version = version
 
-    a = open(filename, 'w')
-    try:
-        a.write(cnt % {'version': VERSION,
-                       'full_version': FULLVERSION,
-                       'git_revision': GIT_REVISION,
-                       'isrelease': str(ISRELEASED)})
-    finally:
-        a.close()
+    with open(filename, 'w') as f:
+        f.write(cnt.format(version=version,
+                           short_version=short_version,
+                           full_version=full_version,
+                           git_revision=git_revision,
+                           release=isreleased))
 
 
 class StaticLibrary(Extension):
