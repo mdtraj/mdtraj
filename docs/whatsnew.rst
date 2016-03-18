@@ -1,12 +1,13 @@
-***********
 What's New?
-***********
+===========
 
 These are new features and improvements of note in each release.
 
 v1.7 (Development)
 ------------------
-- Add option to skip standardization of atom and residue names during ``load_pdb`` (#1061)
+
+- Add option to skip standardization of atom and residue names during
+  ``load_pdb`` (#1061)
 
 
 v1.6 (February 15, 2016)
@@ -279,3 +280,5 @@ v0.5.0 (January 3, 2014)
 - Full support for computing all of the chi angles
 - Add seek/tell methods to all of the trajectory file objects
 - New top level memory efficient ``iterload`` method for chunked trajectory loading
+
+.. vim: tw=75

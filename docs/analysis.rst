@@ -2,7 +2,7 @@
 
 .. currentmodule:: mdtraj
 
-Analysis Functions
+Analysis Reference
 ==================
 
 Trajectory analysis is the heart of MDTraj. These functions can be used to run

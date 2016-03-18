@@ -1,6 +1,9 @@
 IPython Notebook Viewer
 =======================
 
+.. This file needs to be updated for use with nglview. In the mean time, it has
+   been removed from the toctree
+
 
 Example
 -------
