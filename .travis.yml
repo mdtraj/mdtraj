@@ -31,6 +31,7 @@ deploy:
     secret_access_key:
       secure: "lEpUy2/GD2PnpBcv1KV2qt5mzRPbe4hPJwqlCuYDYvLFLMTrl+v5d+R8IyZ1KMX5eRBTPdP2i2sVbyRH/rwCaeRl6btYcsLWmpydfovPP7KyL3dlSWxtquOZCi0wfjlK7H5RwZHUb0870XhdPrAPT04plbiqVHzlSqBhfVTbHB0="
     bucket: "mdtraj.org"
+    region: us-west-1
     skip_cleanup: true
     local_dir: docs/_deploy/
     on:
