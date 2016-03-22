@@ -1,3 +1,5 @@
+cimport numpy as np
+ctypedef np.npy_int64 int64_t
 
 cdef extern from "include/xdrfile.h":
     ctypedef struct XDRFILE:
@@ -13,10 +15,7 @@ cdef extern from "include/xdrfile_xtc.h":
     int read_xtc(XDRFILE *xd, int natoms, int *step, float *time, matrix box, rvec *x, float *prec)
     int write_xtc(XDRFILE *xd, int natoms, int step, float time, matrix box, rvec* x, float prec)
     int xdrfile_read_int(int * ptr, int ndata, XDRFILE *xfp)
-
-
-cimport numpy as np
-ctypedef np.npy_int64 int64_t
+    int read_xtc_nframes(char* fn, int64_t *nframes)
 
 cdef extern from "include/xdr_seek.h":
     int64_t xdr_tell(XDRFILE *xd)

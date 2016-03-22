@@ -695,7 +695,7 @@ cdef class XTCTrajectoryFile(object):
         if not self.is_open:
             raise ValueError('I/O operation on closed file')
         if self.n_frames == -1:
-            self.offsets # invokes _calc_len_and_offsets
+            xdrlib.read_xtc_nframes(self.filename, &self.n_frames)
         return int(self.n_frames)
 
 FormatRegistry.register_fileobject('.xtc')(XTCTrajectoryFile)

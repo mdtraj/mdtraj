@@ -102,7 +102,7 @@ int read_xtc_natoms(char *fn,int *natoms)
 	return result;
 }
 
-int read_xtc_nframes(char* fn, unsigned long *nframes) {
+int read_xtc_nframes(char* fn, int64_t *nframes) {
     XDRFILE *xd;
     int result, step;
     float time;
