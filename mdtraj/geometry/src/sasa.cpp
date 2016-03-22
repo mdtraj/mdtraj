@@ -168,9 +168,9 @@ static void generate_sphere_points(float* sphere_points, int n_points)
 }
 
 
-int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
-         const float* atom_radii, const int n_sphere_points,
-         const int* atom_mapping, const int n_groups, float* out)
+void sasa(const int n_frames, const int n_atoms, const float* xyzlist,
+          const float* atom_radii, const int n_sphere_points,
+          const int* atom_mapping, const int n_groups, float* out)
 {
   /*
   // Calculate the accessible surface area of each atom in each frame of
@@ -242,5 +242,4 @@ int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
 #endif
 
   free(sphere_points);
-  return 1;
 }

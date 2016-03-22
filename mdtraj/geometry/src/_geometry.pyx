@@ -65,18 +65,18 @@ cdef extern from "geometry.h":
                        const int* is_proline, int n_frames, int n_atoms,
                        int n_residues, int* hbonds, float* henergies) nogil
 
-    int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
-             const int* is_proline, const int* chains_ids, const int n_frames,
-             const int n_atoms, const int n_residues, char* secondary) nogil
+    void dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
+              const int* is_proline, const int* chains_ids, const int n_frames,
+              const int n_atoms, const int n_residues, char* secondary) nogil
 
     void find_closest_contact(const float* positions, const int* group1, const int* group2,
                               int n_group1, int n_group2, const float* box_vectors_pointer,
                               int* atom1, int* atom2, float* distance)
 
 cdef extern from "sasa.h":
-    int sasa(const int n_frames, const int n_atoms, const float* xyzlist,
-             const float* atom_radii, const int n_sphere_points,
-             const int* atom_mapping, const int n_groups, float* out) nogil
+    void sasa(const int n_frames, const int n_atoms, const float* xyzlist,
+              const float* atom_radii, const int n_sphere_points,
+              const int* atom_mapping, const int n_groups, float* out) nogil
 
 cdef extern from "hardware.h":
     int processorSupportsSSE41()

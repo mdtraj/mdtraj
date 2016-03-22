@@ -341,9 +341,9 @@ static void calculate_alpha_helices(const float* xyz,
  *     null bytes) so you should be careful using it a input to libc string
  *     functions.
  */
-int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
-         const int* is_proline, const int* chain_ids, const int n_frames,
-         const int n_atoms, const int n_residues, char* secondary)
+void dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
+          const int* is_proline, const int* chain_ids, const int n_frames,
+          const int n_atoms, const int n_residues, char* secondary)
 {
     std::vector<int> skip(n_residues, 0);
     for (int i = 0; i < n_residues; i++)
@@ -384,6 +384,4 @@ int dssp(const float* xyz, const int* nco_indices, const int* ca_indices,
             secondary[i*n_residues+j] = ss;
         }
     }
-
-    return 1;
 }
