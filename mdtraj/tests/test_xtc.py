@@ -281,8 +281,14 @@ def test_ragged_2():
         assert_raises(ValueError, lambda: f.write(xyz))
 
 
-def test_short_traj():
+def test_short_traj_len():
     with XTCTrajectoryFile(temp, 'w') as f:
         f.write(np.random.uniform(size=(5,100000,3)))
     with XTCTrajectoryFile(temp, 'r') as f:
         assert len(f) == 5, len(f)
+
+def test_short_traj_offset():
+    with XTCTrajectoryFile(temp, 'w') as f:
+        f.write(np.random.uniform(size=(5,100000,3)))
+    with XTCTrajectoryFile(temp, 'r') as f:
+        _ = f.offsets
