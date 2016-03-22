@@ -279,3 +279,10 @@ def test_ragged_2():
     with XTCTrajectoryFile(temp, 'w', force_overwrite=True) as f:
         f.write(xyz, time=time, box=box)
         assert_raises(ValueError, lambda: f.write(xyz))
+
+def test_short_traj():
+    with XTCTrajectoryFile(temp, 'w') as f:
+        f.write(np.random.uniform(size=(5,100000,3)))
+    with XTCTrajectoryFile(temp, 'r') as f:
+        assert len(f) == 5, len(f)
+

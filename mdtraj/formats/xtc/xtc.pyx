@@ -39,6 +39,7 @@ from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
 cimport xdrlib
 from libc.stdio cimport SEEK_SET, SEEK_CUR
+from libc.math cimport ceil
 ctypedef np.npy_int64   int64_t
 
 
@@ -643,7 +644,7 @@ cdef class XTCTrajectoryFile(object):
                         break
 
                     if n_frames == len(offsets):
-                        new_len = int(len(offsets)*1.2)
+                        new_len = int(ceil(len(offsets)*1.2))
                         offsets = resize(offsets, new_len)
 
                     offsets[n_frames] = xdrlib.xdr_tell(self.fh) - 4 - XTC_HEADER_SIZE
