@@ -1,5 +1,3 @@
-#include "ssetools.h"
-#include <mmintrin.h>
 #include "stdio.h"
 #include "stdlib.h"
 

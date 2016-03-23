@@ -216,6 +216,15 @@ def _displacement(xyz, pairs):
     return value
 
 
+def _reduce_box_vectors(vectors):
+    """Make sure box vectors are in reduced form."""
+    (bv1, bv2, bv3) = vectors
+    bv3 -= bv2*round(bv3[1]/bv2[1]);
+    bv3 -= bv1*round(bv3[0]/bv1[0]);
+    bv2 -= bv1*round(bv2[0]/bv1[0]);
+    return (bv1, bv2, bv3)
+
+
 def _distance_mic(xyz, pairs, box_vectors, orthogonal):
     """Distance between pairs of points in each frame under the minimum image
     convention for periodic boundary conditions.
@@ -227,16 +236,13 @@ def _distance_mic(xyz, pairs, box_vectors, orthogonal):
     """
     out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
     for i in range(len(xyz)):
-        hinv = np.linalg.inv(box_vectors[i])
-        bv1, bv2, bv3 = box_vectors[i].T
+        bv1, bv2, bv3 = _reduce_box_vectors(box_vectors[i].T)
 
         for j, (a,b) in enumerate(pairs):
-            s1 = np.dot(hinv, xyz[i,a,:])
-            s2 = np.dot(hinv, xyz[i,b,:])
-            s12 = s2 - s1
-
-            s12 = s12 - np.round(s12)
-            r12 = np.dot(box_vectors[i], s12)
+            r12 = xyz[i,b,:] - xyz[i,a,:]
+            r12 -= bv3*round(r12[2]/bv3[2]);
+            r12 -= bv2*round(r12[1]/bv2[1]);
+            r12 -= bv1*round(r12[0]/bv1[0]);
             dist = np.linalg.norm(r12)
             if not orthogonal:
                 for ii in range(-1, 2):
@@ -261,24 +267,23 @@ def _displacement_mic(xyz, pairs, box_vectors, orthogonal):
     """
     out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
     for i in range(len(xyz)):
-        hinv = np.linalg.inv(box_vectors[i])
-        bv1, bv2, bv3 = box_vectors[i].T
+        bv1, bv2, bv3 = _reduce_box_vectors(box_vectors[i].T)
+        hinv = np.linalg.inv(np.array([bv1, bv2, bv3]).T)
 
         for j, (a,b) in enumerate(pairs):
-            s1 = np.dot(hinv, xyz[i,a,:])
-            s2 = np.dot(hinv, xyz[i,b,:])
-            s12 = s2 - s1
-            s12 = s12 - np.round(s12)
-            disp = np.dot(box_vectors[i], s12)
-            min_disp = disp
-            dist2 = (disp*disp).sum()
+            r12 = xyz[i,b,:] - xyz[i,a,:]
+            r12 -= bv3*round(r12[2]/bv3[2]);
+            r12 -= bv2*round(r12[1]/bv2[1]);
+            r12 -= bv1*round(r12[0]/bv1[0]);
+            min_disp = r12
+            dist2 = (r12*r12).sum()
             if not orthogonal:
                 for ii in range(-1, 2):
                     v1 = bv1*ii
                     for jj in range(-1, 2):
                         v12 = bv2*jj+v1
                         for kk in range(-1, 2):
-                            tmp = disp + v12 + bv3*kk
+                            tmp = r12 + v12 + bv3*kk
                             new_dist2 = (tmp*tmp).sum()
                             if new_dist2 < dist2:
                                 dist2 = new_dist2

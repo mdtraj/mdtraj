@@ -25,7 +25,7 @@ def test_angle_pbc_0():
     r1 = md.compute_angles(t1, [[0,1,2]], opt=False).reshape(-1)
     r2 = md.compute_angles(t0, [[0,1,2]], opt=True).reshape(-1)
     r3 = md.compute_angles(t1, [[0,1,2]], opt=True).reshape(-1)
-    
+
     np.testing.assert_array_almost_equal(r0, r1, decimal=4)
     np.testing.assert_array_almost_equal(r2, r3, decimal=4)
     np.testing.assert_array_almost_equal(r0, r3, decimal=4)

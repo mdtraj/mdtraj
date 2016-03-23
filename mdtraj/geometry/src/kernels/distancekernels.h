@@ -29,71 +29,58 @@
  */
 
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-int dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
+void dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
              float* distance_out, float* displacement_out,
              const int n_frames, const int n_atoms, const int n_pairs)
 #else
-int dist(const float* xyz, const int* pairs, float* distance_out,
+void dist(const float* xyz, const int* pairs, float* distance_out,
          float* displacement_out, const int n_frames, const int n_atoms,
          const int n_pairs)
 #endif
 {
-  int i, j;
-  int store_displacement = displacement_out == NULL ? 0 : 1;
-  int store_distance = distance_out == NULL ? 0 : 1;
-  __m128 x1, x2, r12, r12_2, s;
-#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-  __m128 hinv[3];
-  __m128 h[3];
-#endif
-
-  for (i = 0; i < n_frames; i++) {
-#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-    loadBoxMatrix(box_matrix, &h, &hinv);
-#endif
-
-    for (j = 0; j < n_pairs; j++) {
-      /* Load the two vectors whos distance we want to compute */
-      /* x1 = xyz[i, pairs[j,0], 0:3] */
-      /* x2 = xyz[i, pairs[j,1], 0:3] */
-      x1 = load_float3(xyz + 3*pairs[2*j + 0]);
-      x2 = load_float3(xyz + 3*pairs[2*j + 1]);
-
-      /* r12 = x2 - x1 */
-      r12 = _mm_sub_ps(x2, x1);
+    bool store_displacement = (displacement_out != NULL);
+    bool store_distance = (distance_out != NULL);
+    for (int i = 0; i < n_frames; i++) {
+        // Load the periodic box vectors.
 
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-      r12 = minimum_image(r12, &h, &hinv);
+        fvec4 box_size(box_matrix[0], box_matrix[4], box_matrix[8], 0);
+        fvec4 inv_box_size(1.0f/box_matrix[0], 1.0f/box_matrix[4], 1.0f/box_matrix[8], 0);
+#endif
+        for (int j = 0; j < n_pairs; j++) {
+            // Compute the displacement.
+
+            fvec4 pos1(xyz + 3*pairs[2*j + 0]);
+            fvec4 pos2(xyz + 3*pairs[2*j + 1]);
+            fvec4 r12 = pos2-pos1;
+#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
+            r12 -= round(r12*inv_box_size)*box_size;
 #endif
 
-      if (store_displacement) {
-        /* store the two lower entries (x,y) in memory */
-        _mm_storel_pi((__m64*)(displacement_out), r12);
-        displacement_out += 2;
-        /* swap high-low and then store the z entry in the memory */
-        _mm_store_ss(displacement_out++, _mm_movehl_ps(r12, r12));
-      }
-      if (store_distance) {
-        /* r12_2 = r12*r12 */
-        r12_2 = _mm_mul_ps(r12, r12);
-        /* horizontal add the components of d2 (last one is zero)*/
-        s = _mm_hsum_ps(r12_2);
-        /* sqrt our final answer */
-        s = _mm_sqrt_ps(s);
-        /* s now contains our answer in all four elements, because */
-        /* of the way the hadd works. we only want to store one */
-        /* element. */
-        _mm_store_ss(distance_out++, s);
-      }
+            // Store results.
+
+            if (store_displacement) {
+                float temp[4];
+                r12.store(temp);
+                *displacement_out = temp[0];
+                displacement_out++;
+                *displacement_out = temp[1];
+                displacement_out++;
+                *displacement_out = temp[2];
+                displacement_out++;
+            }
+            if (store_distance) {
+                *distance_out = sqrtf(dot3(r12, r12));
+                distance_out++;
+            }
+        }
+
+        // Advance to the next frame.
+
+        xyz += n_atoms*3;
+#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
+        box_matrix += 9;
+#endif
     }
-
-    /* advance to the next frame */
-    xyz += n_atoms*3;
-#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-     box_matrix += 9;
-#endif
-  }
-
-  return 1;
 }
 
