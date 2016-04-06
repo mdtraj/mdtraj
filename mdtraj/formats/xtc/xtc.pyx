@@ -637,7 +637,11 @@ cdef class XTCTrajectoryFile(object):
                     # relative seek
                     status = xdrlib.xdr_seek(self.fh, byte_offset + XTC_HEADER_SIZE, SEEK_CUR)
                     if status != 0:
-                        raise RuntimeError("error during seek:" % status)
+                        offset = byte_offset + XTC_HEADER_SIZE
+                        last_pos = xdrlib.xdr_tell(self.fh)
+                        raise RuntimeError("error during seek: status code "
+                                           "fseek=%s; offset=%s, last_pos=%s"
+                                           % (status, offset, last_pos))
 
                     # return value == # ints read, so we're finished
                     if xdrlib.xdrfile_read_int(&byte_offset, 1, self.fh) == 0:
