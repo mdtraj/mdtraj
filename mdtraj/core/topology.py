@@ -369,7 +369,7 @@ class Topology(object):
         for chain in value.chains():
             c = out.add_chain()
             for residue in chain.residues():
-                r = out.add_residue(residue.name, c, residue.segment_id)
+                r = out.add_residue(residue.name, c, residue.id)
                 for atom in residue.atoms():
                     if atom.element is None:
                         element = elem.virtual
