@@ -24,54 +24,42 @@
 */
 
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-int dihedral_mic(const float* xyz, const int* quartets,
-              const float* box_matrix, float* out,
-              const int n_frames, const int n_atoms, const int n_quartets)
+#ifdef COMPILE_WITH_TRICLINIC
+void dihedral_mic_triclinic(const float* xyz, const int* quartets,
+                            const float* box_matrix, float* out,
+                            const int n_frames, const int n_atoms, const int n_quartets)
 #else
-int dihedral(const float* xyz, const int* quartets, float* out,
-          const int n_frames, const int n_atoms, const int n_quartets)
+void dihedral_mic(const float* xyz, const int* quartets,
+                  const float* box_matrix, float* out,
+                  const int n_frames, const int n_atoms, const int n_quartets)
+#endif
+#else
+void dihedral(const float* xyz, const int* quartets, float* out,
+              const int n_frames, const int n_atoms, const int n_quartets)
 #endif
 {
-  int i, j;
-  __m128 x0, x1, x2, x3, b1, b2, b3, c1, c2, p1, p2;
+    std::vector<float> distances(3*n_frames);
+    std::vector<float> displacements(9*n_frames);
+    for (int i = 0; i < n_quartets; i++) {
+        int pairs[6] = {quartets[4*i], quartets[4*i+1], quartets[4*i+1], quartets[4*i+2], quartets[4*i+2], quartets[4*i+3]};
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-  __m128 hinv[3];
-  __m128 h[3];
+#ifdef COMPILE_WITH_TRICLINIC
+        dist_mic_triclinic(xyz, pairs, box_matrix, &distances[0], &displacements[0], n_frames, n_atoms, 3);
+#else
+        dist_mic(xyz, pairs, box_matrix, &distances[0], &displacements[0], n_frames, n_atoms, 3);
 #endif
-
-  for (i = 0; i < n_frames; i++) {
-#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-    loadBoxMatrix(box_matrix, &h, &hinv);
+#else
+        dist(xyz, pairs, &distances[0], &displacements[0], n_frames, n_atoms, 3);
 #endif
-
-    for (j = 0; j < n_quartets; j++) {
-      x0 = load_float3(xyz + 3*quartets[4*j + 0]);
-      x1 = load_float3(xyz + 3*quartets[4*j + 1]);
-      x2 = load_float3(xyz + 3*quartets[4*j + 2]);
-      x3 = load_float3(xyz + 3*quartets[4*j + 3]);
-
-      b1 = _mm_sub_ps(x1, x0);
-      b2 = _mm_sub_ps(x2, x1);
-      b3 = _mm_sub_ps(x3, x2);
-
-#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-      b1 = minimum_image(b1, &h, &hinv);
-      b2 = minimum_image(b2, &h, &hinv);
-      b3 = minimum_image(b3, &h, &hinv);
-#endif
-
-      c1 = cross(b2, b3);
-      c2 = cross(b1, b2);
-
-      p1 = _mm_mul_ps(_mm_dp_ps2(b1, c1, 0x71), _mm_sqrt_ps(_mm_dp_ps2(b2, b2, 0x71)));
-      p2 = _mm_dp_ps2(c1, c2, 0x71);
-
-      *(out++) = (float) atan2(_mm_cvtss_f32(p1), _mm_cvtss_f32(p2));
-    };
-    xyz += n_atoms*3;
-#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-    box_matrix += 9;
-#endif
-  }
-  return 1;
+        for (int j = 0; j < n_frames; j++) {
+            fvec4 v1(displacements[9*j], displacements[9*j+1], displacements[9*j+2], 0);
+            fvec4 v2(displacements[9*j+3], displacements[9*j+4], displacements[9*j+5], 0);
+            fvec4 v3(displacements[9*j+6], displacements[9*j+7], displacements[9*j+8], 0);
+            fvec4 c1 = cross(v2, v3);
+            fvec4 c2 = cross(v1, v2);
+            float p1 = dot3(v1, c1)*distances[3*j+1];
+            float p2 = dot3(c1, c2);
+            out[n_quartets*j + i] = atan2f(p1, p2);
+        }
+    }
 }

@@ -11,7 +11,7 @@ typedef __int32 int32_t;
 extern "C" {
 #endif
 
-int drid_moments(float* coords, int32_t index, int32_t* partners, int32_t n_partners, double* moments);
+void drid_moments(float* coords, int32_t index, int32_t* partners, int32_t n_partners, double* moments);
 
 #ifdef __cplusplus
 }

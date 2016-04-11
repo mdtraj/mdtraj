@@ -1,5 +1,7 @@
 .. _building-docs:
 
+.. This isn't really relevant and is removed from the toctree
+
 Building the documentation
 ==========================
 

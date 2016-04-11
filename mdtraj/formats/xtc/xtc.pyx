@@ -39,6 +39,7 @@ from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
 cimport xdrlib
 from libc.stdio cimport SEEK_SET, SEEK_CUR
+from libc.math cimport ceil
 ctypedef np.npy_int64   int64_t
 
 
@@ -636,14 +637,18 @@ cdef class XTCTrajectoryFile(object):
                     # relative seek
                     status = xdrlib.xdr_seek(self.fh, byte_offset + XTC_HEADER_SIZE, SEEK_CUR)
                     if status != 0:
-                        raise RuntimeError("error during seek:" % status)
+                        offset = byte_offset + XTC_HEADER_SIZE
+                        last_pos = xdrlib.xdr_tell(self.fh)
+                        raise RuntimeError("error during seek: status code "
+                                           "fseek=%s; offset=%s, last_pos=%s"
+                                           % (status, offset, last_pos))
 
                     # return value == # ints read, so we're finished
                     if xdrlib.xdrfile_read_int(&byte_offset, 1, self.fh) == 0:
                         break
 
                     if n_frames == len(offsets):
-                        new_len = int(len(offsets)*1.2)
+                        new_len = int(ceil(len(offsets)*1.2))
                         offsets = resize(offsets, new_len)
 
                     offsets[n_frames] = xdrlib.xdr_tell(self.fh) - 4 - XTC_HEADER_SIZE

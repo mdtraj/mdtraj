@@ -340,10 +340,20 @@ private:
 vector<vector<int> > _compute_neighborlist(const float* atomLocations, int numAtoms, float maxDistance, const float* boxVectors) {
     float periodicBoxVectors[3][3];
     bool usePeriodic = (boxVectors != NULL);
-    if (usePeriodic)
+    if (usePeriodic) {
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < 3; j++)
                 periodicBoxVectors[i][j] = boxVectors[3*i+j];
+
+        // Make sure box vectors are in reduced form.
+
+        for (int i = 0; i < 3; i++)
+            periodicBoxVectors[2][i] -= periodicBoxVectors[1][i]*roundf(periodicBoxVectors[2][1]/periodicBoxVectors[1][1]);
+        for (int i = 0; i < 3; i++)
+            periodicBoxVectors[2][i] -= periodicBoxVectors[0][i]*roundf(periodicBoxVectors[2][0]/periodicBoxVectors[0][0]);
+        for (int i = 0; i < 3; i++)
+            periodicBoxVectors[1][i] -= periodicBoxVectors[0][i]*roundf(periodicBoxVectors[1][0]/periodicBoxVectors[0][0]);
+    }
 
     // Identify the range of atom positions along each axis.
 

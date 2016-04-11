@@ -334,12 +334,6 @@ static inline float dot4(const fvec4& v1, const fvec4& v2) {
     return _mm_cvtss_f32(_mm_dp_ps2(v1, v2, 0xF1));
 }
 
-static inline fvec4 clearw(const fvec4& v) {
-    // bitwise and with a mask to clear out the 4th element of the vector
-    const static __m128i fff0_mask = SSP_CONST_SET_32I(0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
-    return fvec4(_mm_and_ps(v, _mm_castsi128_ps(fff0_mask)));
-}
-
 static inline fvec4 cross(const fvec4& v1, const fvec4& v2) {
     fvec4 temp = fvec4(_mm_mul_ps(v1, _mm_shuffle_ps(v2, v2, _MM_SHUFFLE(3, 0, 2, 1)))) -
                  fvec4(_mm_mul_ps(v2, _mm_shuffle_ps(v1, v1, _MM_SHUFFLE(3, 0, 2, 1))));

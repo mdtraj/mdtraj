@@ -34,8 +34,8 @@ __all__ = ['compute_drid']
 
 cdef extern from "dridkernels.h":
     ctypedef signed int int32_t
-    int drid_moments(float* coords, int32_t index, int32_t * partners,
-                     int32_t n_partners, double* moments) nogil
+    void drid_moments(float* coords, int32_t index, int32_t * partners,
+                      int32_t n_partners, double* moments) nogil
 
 
 ##############################################################################

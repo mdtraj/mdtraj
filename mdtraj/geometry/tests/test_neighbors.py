@@ -36,3 +36,14 @@ def test_compute_neighbors_2():
     cutoff = 1.0
     value = md.compute_neighbors(traj, cutoff, query_indices)
     reference = compute_neighbors_reference(traj, cutoff, query_indices)
+    for i in range(traj.n_frames):
+        eq(value[i], reference[i])
+
+def test_compute_neighbors_3():
+    traj = md.load(get_fn('test_good.nc'), top=get_fn('test.parm7'))
+    query_indices = traj.top.select('residue 1')
+    cutoff = 1.0
+    value = md.compute_neighbors(traj, cutoff, query_indices)
+    reference = compute_neighbors_reference(traj, cutoff, query_indices)
+    for i in range(traj.n_frames):
+        eq(value[i], reference[i])
