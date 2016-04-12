@@ -77,9 +77,9 @@ def _topology_from_subset(topology, atom_indices):
 
     Parameters
     ----------
-    topology : topology
+    topology : mdtraj.Topology
         The base topology
-    atom_indices : list([int])
+    atom_indices : array_like, dtype=int
         The indices of the atoms to keep
     """
     newTopology = Topology()
