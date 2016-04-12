@@ -71,16 +71,15 @@ def _topology_from_subset(topology, atom_indices):
 
     Note
     ----
-    This really should be a copy constructor (class method) on Topology,
-    but I want it to work on either the mdtraj topology OR the OpenMM
-    topology. An inplace version for the topology object we have here
-    is also available.
+    This really should be a copy constructor (class method) on Topology.
+    It used to work on OpenMM topologies, but we've diverged where that no
+    longer works.
 
     Parameters
     ----------
-    topology : topology
+    topology : mdtraj.Topology
         The base topology
-    atom_indices : list([int])
+    atom_indices : array_like, dtype=int
         The indices of the atoms to keep
     """
     newTopology = Topology()
@@ -369,7 +368,7 @@ class Topology(object):
         for chain in value.chains():
             c = out.add_chain()
             for residue in chain.residues():
-                r = out.add_residue(residue.name, c, residue.segment_id)
+                r = out.add_residue(residue.name, c)
                 for atom in residue.atoms():
                     if atom.element is None:
                         element = elem.virtual
