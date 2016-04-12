@@ -55,7 +55,7 @@ def test_reporter():
 
     pdb = PDBFile(get_fn('native.pdb'))
     forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
-    # NO PERIODIC BOUNARY CONDITIONS
+    # NO PERIODIC BOUNDARY CONDITIONS
     system = forcefield.createSystem(pdb.topology, nonbondedMethod=CutoffNonPeriodic,
         nonbondedCutoff=1.0*nanometers, constraints=HBonds, rigidWater=True)
     integrator = LangevinIntegrator(300*kelvin, 1.0/picoseconds, 2.0*femtoseconds)
@@ -87,21 +87,21 @@ def test_reporter():
 
     with HDF5TrajectoryFile(hdf5file) as f:
         got = f.read()
-        yield lambda: eq(got.temperature.shape, (50,))
-        yield lambda: eq(got.potentialEnergy.shape, (50,))
-        yield lambda: eq(got.kineticEnergy.shape, (50,))
-        yield lambda: eq(got.coordinates.shape, (50, 22, 3))
-        yield lambda: eq(got.velocities.shape, (50, 22, 3))
-        yield lambda: eq(got.cell_lengths, None)
-        yield lambda: eq(got.cell_angles, None)
-        yield lambda: eq(got.time, 0.002*2*(1+np.arange(50)))
-        yield lambda: f.topology == md.load(get_fn('native.pdb')).top
+        eq(got.temperature.shape, (50,))
+        eq(got.potentialEnergy.shape, (50,))
+        eq(got.kineticEnergy.shape, (50,))
+        eq(got.coordinates.shape, (50, 22, 3))
+        eq(got.velocities.shape, (50, 22, 3))
+        eq(got.cell_lengths, None)
+        eq(got.cell_angles, None)
+        eq(got.time, 0.002*2*(1+np.arange(50)))
+        assert f.topology == md.load(get_fn('native.pdb')).top
 
     with NetCDFTrajectoryFile(ncfile) as f:
         xyz, time, cell_lengths, cell_angles = f.read()
-        yield lambda: eq(cell_lengths, None)
-        yield lambda: eq(cell_angles, None)
-        yield lambda: eq(time, 0.002*2*(1+np.arange(50)))
+        eq(cell_lengths, None)
+        eq(cell_angles, None)
+        eq(time, 0.002*2*(1+np.arange(50)))
 
     hdf5_traj = md.load(hdf5file)
     dcd_traj = md.load(dcdfile, top=get_fn('native.pdb'))
@@ -110,11 +110,11 @@ def test_reporter():
     # we don't have to convert units here, because md.load already
     # handles that
     assert hdf5_traj.unitcell_vectors is None
-    yield lambda: eq(hdf5_traj.xyz, netcdf_traj.xyz)
-    yield lambda: eq(hdf5_traj.unitcell_vectors, netcdf_traj.unitcell_vectors)
-    yield lambda: eq(hdf5_traj.time, netcdf_traj.time)
+    eq(hdf5_traj.xyz, netcdf_traj.xyz)
+    eq(hdf5_traj.unitcell_vectors, netcdf_traj.unitcell_vectors)
+    eq(hdf5_traj.time, netcdf_traj.time)
 
-    yield lambda: eq(dcd_traj.xyz, hdf5_traj.xyz)
+    eq(dcd_traj.xyz, hdf5_traj.xyz)
     # yield lambda: eq(dcd_traj.unitcell_vectors, hdf5_traj.unitcell_vectors)
 
 
@@ -124,7 +124,7 @@ def test_reporter_subset():
     os.makedirs(tempdir)
 
     pdb = PDBFile(get_fn('native2.pdb'))
-    pdb.topology.setUnitCellDimensions((2*nanometers, 2*nanometers, 2*nanometers))
+    pdb.topology.setUnitCellDimensions([2, 2, 2])
     forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
     system = forcefield.createSystem(pdb.topology, nonbondedMethod=CutoffPeriodic,
         nonbondedCutoff=1*nanometers, constraints=HBonds, rigidWater=True)
@@ -163,22 +163,22 @@ def test_reporter_subset():
 
     with HDF5TrajectoryFile(hdf5file) as f:
         got = f.read()
-        yield lambda: eq(got.temperature.shape, (50,))
-        yield lambda: eq(got.potentialEnergy.shape, (50,))
-        yield lambda: eq(got.kineticEnergy.shape, (50,))
-        yield lambda: eq(got.coordinates.shape, (50, len(atomSubset), 3))
-        yield lambda: eq(got.velocities.shape, (50, len(atomSubset), 3))
-        yield lambda: eq(got.cell_lengths, 2 * np.ones((50, 3)))
-        yield lambda: eq(got.cell_angles, 90*np.ones((50, 3)))
-        yield lambda: eq(got.time, 0.002*2*(1+np.arange(50)))
-        yield lambda: f.topology == md.load(get_fn('native.pdb')).topology
+        eq(got.temperature.shape, (50,))
+        eq(got.potentialEnergy.shape, (50,))
+        eq(got.kineticEnergy.shape, (50,))
+        eq(got.coordinates.shape, (50, len(atomSubset), 3))
+        eq(got.velocities.shape, (50, len(atomSubset), 3))
+        eq(got.cell_lengths, 2 * np.ones((50, 3)))
+        eq(got.cell_angles, 90*np.ones((50, 3)))
+        eq(got.time, 0.002*2*(1+np.arange(50)))
+        assert f.topology == md.load(get_fn('native.pdb'), atom_indices=atomSubset).topology
 
     with NetCDFTrajectoryFile(ncfile) as f:
         xyz, time, cell_lengths, cell_angles = f.read()
-        yield lambda: eq(cell_lengths, 20 * np.ones((50, 3)))
-        yield lambda: eq(cell_angles, 90*np.ones((50, 3)))
-        yield lambda: eq(time, 0.002*2*(1+np.arange(50)))
-        yield lambda: eq(xyz.shape, (50, len(atomSubset), 3))
+        eq(cell_lengths, 20 * np.ones((50, 3)))
+        eq(cell_angles, 90*np.ones((50, 3)))
+        eq(time, 0.002*2*(1+np.arange(50)))
+        eq(xyz.shape, (50, len(atomSubset), 3))
 
     hdf5_traj = md.load(hdf5file)
     dcd_traj = md.load(dcdfile, top=hdf5_traj)
@@ -186,9 +186,9 @@ def test_reporter_subset():
 
     # we don't have to convert units here, because md.load already handles
     # that
-    yield lambda: eq(hdf5_traj.xyz, netcdf_traj.xyz)
-    yield lambda: eq(hdf5_traj.unitcell_vectors, netcdf_traj.unitcell_vectors)
-    yield lambda: eq(hdf5_traj.time, netcdf_traj.time)
+    eq(hdf5_traj.xyz, netcdf_traj.xyz)
+    eq(hdf5_traj.unitcell_vectors, netcdf_traj.unitcell_vectors)
+    eq(hdf5_traj.time, netcdf_traj.time)
 
-    yield lambda: eq(dcd_traj.xyz, hdf5_traj.xyz)
-    yield lambda: eq(dcd_traj.unitcell_vectors, hdf5_traj.unitcell_vectors)
+    eq(dcd_traj.xyz, hdf5_traj.xyz)
+    eq(dcd_traj.unitcell_vectors, hdf5_traj.unitcell_vectors)
