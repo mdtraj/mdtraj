@@ -237,7 +237,7 @@ extensions = format_extensions()
 extensions.extend(rmsd_extensions())
 extensions.extend(geometry_extensions())
 
-write_version_py(VERSION, ISRELEASED)
+write_version_py(VERSION, ISRELEASED, 'mdtraj/version.py')
 
 setup(name='mdtraj',
       author='Robert McGibbon',
