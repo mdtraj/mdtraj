@@ -153,7 +153,7 @@ static void generate_sphere_points(float* sphere_points, int n_points)
   */
   int i;
   float y, r, phi;
-  float inc = M_PI * (3.0 - sqrt(5));
+  float inc = M_PI * (3.0 - sqrt(5.0));
   float offset = 2.0 / n_points;
 
   for (i = 0; i < n_points; i++) {
