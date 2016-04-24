@@ -17,12 +17,12 @@ environment:
       ARCH: "64"
 
     - PYTHON: "C:\\Miniconda3"
-      CONDA_PY: "34"
-      CONDA_NPY: "19"
+      CONDA_PY: "35"
+      CONDA_NPY: "1.11"
 
     - PYTHON: "C:\\Miniconda3-x64"
-      CONDA_PY: "34"
-      CONDA_NPY: "19"
+      CONDA_PY: "35"
+      CONDA_NPY: "1.11"
       ARCH: "64"
 
 install:
