@@ -26,8 +26,6 @@
 # Imports
 ##############################################################################
 
-import cython
-cimport cython
 import os
 import numpy as np
 cimport numpy as np
