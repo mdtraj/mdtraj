@@ -6,7 +6,10 @@ float roundf(float x) {
    return x >= 0.0f ? floorf(x + 0.5f) : ceilf(x - 0.5f);
 }
 double cbrt(double x) {
-   return pow(x, 1.0/3.0);
+    if (x<0)
+        return -1.0 * pow(-1.0 * x, 1.0/3.0);
+    else
+        return pow(x, 1.0/3.0);
 }
 #endif // _MSC_VER < 1900
 
