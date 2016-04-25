@@ -27,14 +27,7 @@
 #include "msvccompat.h"
 #include "moments.h"
 #include <pmmintrin.h>
-
-#ifdef _MSC_VER
-#if _MSC_VER < 1900 // prior to vs2015
-double cbrt(double x) {
-   return pow(x, 1.0/3.0);
-}
-#endif // _MSC_VER < 1900
-#endif // _MSC_VER
+#include "math_patch.h"
 
 void drid_moments(float* coords, int32_t index, int32_t* partners, int32_t n_partners, double* moments)
 {

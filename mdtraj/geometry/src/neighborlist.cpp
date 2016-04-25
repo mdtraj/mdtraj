@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cmath>
 #include <vector>
+#include "math_patch.h"
 
 using namespace std;
 

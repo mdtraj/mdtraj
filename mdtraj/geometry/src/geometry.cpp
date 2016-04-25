@@ -26,18 +26,7 @@
 #include <cstddef>
 #include <float.h>
 #include <vector>
-
-#ifdef _MSC_VER
-#if _MSC_VER < 1900 // prior to vs2015
-float roundf(float x) {
-   return x >= 0.0f ? floorf(x + 0.5f) : ceilf(x - 0.5f);
-}
-#endif // _MSC_VER < 1900
-
-#ifndef isnan 
-#define isnan(x) ((x)!=(x)) 
-#endif // isnan
-#endif // _MSC_VER
+#include "math_patch.h"
 
 using std::vector;
 
