@@ -1861,6 +1861,12 @@ class Trajectory(object):
         anchor_molecules = [m for m in molecules if len(m) > atoms_cutoff]
         other_molecules = [m for m in molecules if len(m) <= atoms_cutoff]
         num_anchors = len(anchor_molecules)
+        if num_anchors == 0:
+            raise ValueError("Could not find any anchor molecules. Based on "
+                             "out heuristic, those should be molecules with "
+                             "more than {} atoms. Perhaps your topology "
+                             "doesn't give an acurate bond graph?"
+                             .format(atoms_cutoff))
         anchor_atom_indices = []
         for mol in anchor_molecules:
             anchor_atom_indices += [atom.index for atom in mol]
