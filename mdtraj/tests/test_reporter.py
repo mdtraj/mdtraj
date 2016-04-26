@@ -84,6 +84,7 @@ def test_reporter():
 
     reporter.close()
     reporter2.close()
+    reporter3.close()
 
     with HDF5TrajectoryFile(hdf5file) as f:
         got = f.read()
@@ -120,7 +121,7 @@ def test_reporter():
 
 @skipif(not HAVE_OPENMM, 'No OpenMM')
 def test_reporter_subset():
-    tempdir = os.path.join(dir, 'test_2')
+    tempdir = os.path.join(dir, 'test2')
     os.makedirs(tempdir)
 
     pdb = PDBFile(get_fn('native2.pdb'))
@@ -157,6 +158,7 @@ def test_reporter_subset():
 
     reporter.close()
     reporter2.close()
+    reporter3.close()
 
     t = md.load(get_fn('native.pdb'))
     t.restrict_atoms(atomSubset)

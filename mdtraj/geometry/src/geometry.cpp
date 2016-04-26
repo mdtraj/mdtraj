@@ -26,6 +26,7 @@
 #include <cstddef>
 #include <float.h>
 #include <vector>
+#include "math_patch.h"
 
 using std::vector;
 

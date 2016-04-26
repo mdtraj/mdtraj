@@ -4,6 +4,7 @@
 #include "msvccompat.h"
 #include "vectorize_sse.h"
 #include "neighbors.hpp"
+#include "math_patch.h"
 
 std::vector<int> _compute_neighbors(
     float* frame_xyz, int n_atoms, float cutoff,

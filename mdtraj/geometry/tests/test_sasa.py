@@ -69,7 +69,7 @@ def test_sasa_1():
     traj = md.Trajectory(xyz=np.zeros((1,2,3)), topology=topology2)
 
     probe_radius = 0.14
-    true  = 4 * np.pi * (_ATOMIC_RADII['H'] + probe_radius)**2
+    true = 4 * np.pi * (_ATOMIC_RADII['H'] + probe_radius)**2
 
     # when atoms are closer than 2e-5, there seems to be a bug.
     # note that you should never actually have a case where atoms are this close
@@ -83,7 +83,7 @@ def test_sasa_1():
         traj.xyz[0, 0, 1] = sep
         areas[i] = np.sum(md.geometry.shrake_rupley(traj, probe_radius=probe_radius))
 
-    assert_approx_equal(areas[0], true)
+    assert_approx_equal(areas[0], true, significant=3)
     assert_approx_equal(areas[-1], 2*true)
     # make sure that areas is increasing
     assert_array_less(areas[0:8], areas[1:9])

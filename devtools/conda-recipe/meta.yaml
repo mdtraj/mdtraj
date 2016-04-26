@@ -1,6 +1,6 @@
 package:
   name: mdtraj-dev
-  version: "1.7.0.dev0"
+  version: "0.0.0"
 
 build:
   entry_points:
@@ -31,7 +31,7 @@ test:
     - ipywidgets
     - matplotlib
     - pandas
-    - openmm
+    - openmm  # [not (win32 or (win and py2k))]
     - shiftx2 # [not win]
 
   commands:
