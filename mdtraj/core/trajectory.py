@@ -1863,7 +1863,7 @@ class Trajectory(object):
         num_anchors = len(anchor_molecules)
         if num_anchors == 0:
             raise ValueError("Could not find any anchor molecules. Based on "
-                             "out heuristic, those should be molecules with "
+                             "our heuristic, those should be molecules with "
                              "more than {} atoms. Perhaps your topology "
                              "doesn't give an acurate bond graph?"
                              .format(atoms_cutoff))
