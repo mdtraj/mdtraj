@@ -225,14 +225,14 @@ static void store_energies(int* hbonds, float* henergies, int donor, int accepto
     float existing_e0 = henergies[2*donor];
     float existing_e1 = henergies[2*donor+1];
 
-    if (isnan(existing_e0) || e < existing_e0) {
+    if (std::isnan(existing_e0) || e < existing_e0) {
         // Copy over any info in #0 hbond to #1
         hbonds[2*donor+1] = hbonds[donor*2];
         henergies[2*donor+1] = existing_e0;
         hbonds[2*donor] = acceptor;
         henergies[2*donor] = e;
     }
-    else if (isnan(existing_e1) || e < henergies[2*donor+1]) {
+    else if (std::isnan(existing_e1) || e < henergies[2*donor+1]) {
         hbonds[2*donor+1] = acceptor;
         henergies[2*donor+1] = e;
     }
