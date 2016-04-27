@@ -1064,6 +1064,9 @@ class Topology(object):
         molecules : list of sets
             Each entry represents one molecule, and is the set of all Atoms in that molecule
         """
+        if len(self._bonds) == 0 and any(res.n_atoms > 1 for res in self._residues):
+            raise ValueError('Cannot identify molecules because this Topology does not include bonds')
+        
         # Make a list of every other atom to which each atom is connected.
 
         num_atoms = self.n_atoms
