@@ -1881,58 +1881,58 @@ class Trajectory(object):
                 offset += unitcell_vectors[frame,0]*np.round((delta[0]-offset[0])/unitcell_vectors[frame,0,0])
                 frame_positions[atom2.index, :] -= offset
 
-            # Compute the distance between each pair of anchor molecules in this frame.
-
-            anchor_dist = np.zeros((num_anchors, num_anchors))
-            anchor_nearest_atoms = np.zeros((num_anchors, num_anchors, 2), dtype=int)
-            for mol1 in range(num_anchors):
-                atoms1 = np.array([atom.index for atom in anchor_molecules[mol1]], dtype=int)
-                for mol2 in range(mol1):
-                    atoms2 = np.array([atom.index for atom in anchor_molecules[mol2]], dtype=int)
-                    contact = find_closest_contact(self, atoms1, atoms2, frame)
-                    anchor_dist[mol1, mol2] = contact[2]
-                    anchor_dist[mol2, mol1] = contact[2]
-                    atoms = np.array(contact[:2])
-                    anchor_nearest_atoms[mol1, mol2] = atoms
-                    anchor_nearest_atoms[mol2, mol1] = atoms
-
-            # Start by taking the largest molecule as our first anchor.
-
-            used_anchors = [0]
-            available_anchors = list(range(1, num_anchors))
-            min_anchor_dist = anchor_dist[0, :]
-
-            # Add in anchors one at a time, always taking the one that is nearest an existing anchor.
-
-            while len(available_anchors) > 0:
-                next_index = np.argmin(min_anchor_dist[available_anchors])
-                next_anchor = available_anchors[next_index]
-
-                # Find which existing anchor it's closest to, and choose the periodic copy that minimizes
-                # the distance to that anchor.
-
-                nearest_to = used_anchors[np.argmin(anchor_dist[next_anchor, used_anchors])]
-                atoms = anchor_nearest_atoms[next_anchor, nearest_to]
-                if all_atoms[atoms[0]] in molecules[next_anchor]:
-                    atoms = atoms[::-1]
-                delta = frame_positions[atoms[1]]-frame_positions[atoms[0]]
-                offset = np.zeros((3))
-                offset += unitcell_vectors[frame,2]*np.round(delta[2]/unitcell_vectors[frame,2,2])
-                offset += unitcell_vectors[frame,1]*np.round((delta[1]-offset[1])/unitcell_vectors[frame,1,1])
-                offset += unitcell_vectors[frame,0]*np.round((delta[0]-offset[0])/unitcell_vectors[frame,0,0])
-                for atom in molecules[next_anchor]:
-                    frame_positions[atom.index] -= offset
-
-                # Transfer it from the available list to the used list.
-
-                used_anchors.append(next_anchor)
-                del available_anchors[next_index]
-
-            # Find the center of all anchor molecules.
-
             if num_anchors == 0:
                 center = np.zeros((3))
             else:
+                # Compute the distance between each pair of anchor molecules in this frame.
+
+                anchor_dist = np.zeros((num_anchors, num_anchors))
+                anchor_nearest_atoms = np.zeros((num_anchors, num_anchors, 2), dtype=int)
+                for mol1 in range(num_anchors):
+                    atoms1 = np.array([atom.index for atom in anchor_molecules[mol1]], dtype=int)
+                    for mol2 in range(mol1):
+                        atoms2 = np.array([atom.index for atom in anchor_molecules[mol2]], dtype=int)
+                        contact = find_closest_contact(self, atoms1, atoms2, frame)
+                        anchor_dist[mol1, mol2] = contact[2]
+                        anchor_dist[mol2, mol1] = contact[2]
+                        atoms = np.array(contact[:2])
+                        anchor_nearest_atoms[mol1, mol2] = atoms
+                        anchor_nearest_atoms[mol2, mol1] = atoms
+
+                # Start by taking the largest molecule as our first anchor.
+
+                used_anchors = [0]
+                available_anchors = list(range(1, num_anchors))
+                min_anchor_dist = anchor_dist[0, :]
+
+                # Add in anchors one at a time, always taking the one that is nearest an existing anchor.
+
+                while len(available_anchors) > 0:
+                    next_index = np.argmin(min_anchor_dist[available_anchors])
+                    next_anchor = available_anchors[next_index]
+
+                    # Find which existing anchor it's closest to, and choose the periodic copy that minimizes
+                    # the distance to that anchor.
+
+                    nearest_to = used_anchors[np.argmin(anchor_dist[next_anchor, used_anchors])]
+                    atoms = anchor_nearest_atoms[next_anchor, nearest_to]
+                    if all_atoms[atoms[0]] in molecules[next_anchor]:
+                        atoms = atoms[::-1]
+                    delta = frame_positions[atoms[1]]-frame_positions[atoms[0]]
+                    offset = np.zeros((3))
+                    offset += unitcell_vectors[frame,2]*np.round(delta[2]/unitcell_vectors[frame,2,2])
+                    offset += unitcell_vectors[frame,1]*np.round((delta[1]-offset[1])/unitcell_vectors[frame,1,1])
+                    offset += unitcell_vectors[frame,0]*np.round((delta[0]-offset[0])/unitcell_vectors[frame,0,0])
+                    for atom in molecules[next_anchor]:
+                        frame_positions[atom.index] -= offset
+
+                    # Transfer it from the available list to the used list.
+
+                    used_anchors.append(next_anchor)
+                    del available_anchors[next_index]
+
+                # Find the center of all anchor molecules.
+
                 center = np.mean(frame_positions[anchor_atom_indices], axis=0)
 
             # Loop over all molecules, apply the correct offset (so that anchor molecules will end up centered
