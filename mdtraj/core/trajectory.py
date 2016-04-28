@@ -66,7 +66,7 @@ from mdtraj.utils.six import PY3, string_types
 from mdtraj import _rmsd
 from mdtraj import FormatRegistry
 from mdtraj.geometry import distance
-from mdtraj.core.image_molecules import image_molecules
+from mdtraj.geometry import _geometry
 
 ##############################################################################
 # Globals
@@ -1933,7 +1933,7 @@ class Trajectory(object):
             sorted_bonds = None
 
         box = np.asarray(result.unitcell_vectors, order='c')
-        image_molecules(result.xyz, box, anchor_molecules, other_molecules, sorted_bonds)
+        _geometry.image_molecules(result.xyz, box, anchor_molecules, other_molecules, sorted_bonds)
         if not inplace:
             return result
         return self

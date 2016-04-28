@@ -1,18 +1,11 @@
-# cython: boundscheck=False, wraparound=False, initializedcheck=False, cdivision=True
+
+# This file is lovingly included from _geometry.pyx
+
 import numpy as np
 cimport numpy as np
 from libcpp.vector cimport vector
 
 ctypedef np.npy_intp intp
-
-cdef extern from "geometry.h":
-    void find_closest_contact(const float* positions, const int* group1, const int* group2,
-                              int n_group1, int n_group2, const float* box_vectors_pointer,
-                              int* atom1, int* atom2, float* distance) nogil
-
-cdef extern from "<cmath>" nogil:
-    float roundf(float x)
-    float floorf(float x)
 
 cdef void make_whole(float[:,::1] frame_positions,
                 float[:,::1] frame_unitcell_vectors,

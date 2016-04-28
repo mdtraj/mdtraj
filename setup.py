@@ -219,7 +219,7 @@ def geometry_extensions():
             sources=['mdtraj/geometry/src/sasa.cpp',
                      'mdtraj/geometry/src/dssp.cpp',
                      'mdtraj/geometry/src/geometry.cpp',
-                     'mdtraj/geometry/src/_geometry.pyx'],
+                     'mdtraj/geometry/src/_geometry.pyx',],
             include_dirs=['mdtraj/geometry/include',
                           'mdtraj/geometry/src/kernels'],
             define_macros=define_macros,
@@ -249,15 +249,6 @@ def geometry_extensions():
             extra_compile_args=compiler_args+compiler.compiler_args_openmp,
             libraries=compiler.compiler_libraries_openmp,
             language='c++'),
-        Extension('mdtraj.core.image_molecules',
-                  sources=['mdtraj/core/image_molecules.pyx',
-                           'mdtraj/geometry/src/geometry.cpp'],
-                  include_dirs=['mdtraj/geometry/include',
-                                'mdtraj/geometry/src/kernels'],
-                  define_macros=define_macros,
-                  extra_compile_args=compiler_args,
-                  libraries=extra_cpp_libraries,
-                  language='c++'),
         ]
 
 extensions = format_extensions()
