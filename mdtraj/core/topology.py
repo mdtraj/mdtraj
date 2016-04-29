@@ -1032,6 +1032,58 @@ class Topology(object):
             pairs = self._unique_pairs(a_indices, b_indices)
         return pairs
 
+    def select_top(self, topB, selection=None, invert=False):
+        r"""Returns the set of atom-indices of the intersection of self with a second topology topB.
+        "Intersection" means that for each atom "A" of self returned by this method, there is
+        another atom topB that satisfies:
+            A.name = B.name
+            A.residue.name = B.residue.name
+            A.residue.index = B.residue.index
+
+        (Note: even if A.__eq__(B) is False, the above still holds)
+
+        Parameters:
+        ----------
+        topB: topology to intersect with
+
+        selection: str, default is None
+            One can use a sub-set of atoms of topB instead of the whole topology. This argument will be
+            parsed to :py:obj:select
+
+        invert: boolean, default is False
+            Return the difference set. If set to True, intersect will return a the indices of those atoms
+            of topB that do not appear in the self
+    """
+
+        if not isinstance(topB,Topology):
+            raise TypeError()
+        if selection is not None:
+            atoms = topB.select(selection)
+        else:
+            atoms = np.arange(topB.n_atoms)
+
+        atoms_orig = []
+        atoms_diff = []
+        for aa in atoms:
+            aa_ref = topB.atom(aa)
+            rr_ref = aa_ref.residue
+            try:
+                aa_org = self.residue(rr_ref.index).atom(aa_ref.name)
+                # In the residue with same ref-index, there's also the same atom
+                # Lastly, we check if both residues have the same name
+                if aa_ref.residue.name == aa_org.residue.name:
+                    atoms_orig.append(aa_org.index)
+                else:
+                    atoms_diff.append(aa_ref.index)
+            except:
+                # This atom was not present in this residue
+                atoms_diff.append(aa_ref.index)
+
+        if invert:
+            return np.array(atoms_diff)
+        else:
+            return np.array(atoms_orig)
+
     @classmethod
     def _unique_pairs(cls, a_indices, b_indices):
         return np.array(list(set(
