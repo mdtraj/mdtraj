@@ -1053,7 +1053,7 @@ class Topology(object):
         invert: boolean, default is False
             Return the difference set. If set to True, intersect will return a the indices of those atoms
             of topB that do not appear in the self
-    """
+        """
 
         if not isinstance(topB,Topology):
             raise TypeError()

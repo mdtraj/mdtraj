@@ -1729,7 +1729,7 @@ class Trajectory(object):
                           unitcell_lengths=unitcell_lengths,
                           unitcell_angles=unitcell_angles)
 
-    def slice_top(self, ref_slice, keep_all=False, selection=None, inplace=False, ):
+    def slice_top(self, ref_slice, keep_all=False, selection=None, inplace=False):
         r"""Create a new trajectory containing only the atoms that intersect
         with the atoms of ref_slice. For the meaning of "intersect", see :py:obj:`topology.select_top`
 
@@ -1753,6 +1753,7 @@ class Trajectory(object):
         """
         if isinstance(ref_slice, Trajectory):
             ref_slice = ref_slice._topology
+
         atoms = self.topology.select_top(ref_slice, selection=selection)
         if len(atoms)!= ref_slice.n_atoms and keep_all:
             raise ValueError('Not all atoms of the reference slice could be found in the original topology. '
