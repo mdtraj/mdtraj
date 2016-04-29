@@ -1743,11 +1743,18 @@ class Trajectory(object):
             If set True, top_slice will raise an Exception in case not all atoms of ref_slice can be
             found in the trajectory being sliced.
 
-        selection: str, default is None
+        selection : str, default is None
             One can use a sub-set of atoms of topB instead of the whole topology. This argument will be
             parsed to :py:obj:`select`
 
         inplace : bool, default=False
+            If ``True``, the operation is done inplace, modifying ``self``.
+            Otherwise, a copy is returned with the sliced atoms, and
+            ``self`` is not modified.
+
+        Returns
+        -------
+        traj : md.Trajectory
             The return value is either ``self``, or the new trajectory,
             depending on the value of ``inplace``.
         """

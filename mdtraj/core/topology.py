@@ -1042,17 +1042,22 @@ class Topology(object):
 
         (Note: even if A.__eq__(B) is False, the above still holds)
 
-        Parameters:
+        Parameters
         ----------
-        topB: topology to intersect with
+        topB : topology to intersect with
 
-        selection: str, default is None
+        selection : str, default is None
             One can use a sub-set of atoms of topB instead of the whole topology. This argument will be
             parsed to :py:obj:`select`
 
-        invert: boolean, default is False
+        invert : boolean, default is False
             Return the difference set. If set to True, intersect will return a the indices of those atoms
             of topB that do not appear in the self
+
+        Returns
+        ------
+        indices : np.ndarray (N,)
+            An array of the indices of the selected atoms.
         """
 
         if not isinstance(topB,Topology):
@@ -1080,9 +1085,11 @@ class Topology(object):
                 atoms_diff.append(aa_ref.index)
 
         if invert:
-            return np.array(atoms_diff)
+            indices = np.array(atoms_diff)
         else:
-            return np.array(atoms_orig)
+            indices = np.array(atoms_orig)
+
+        return indices
 
     @classmethod
     def _unique_pairs(cls, a_indices, b_indices):
