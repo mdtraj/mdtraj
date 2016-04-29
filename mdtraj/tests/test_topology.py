@@ -161,21 +161,25 @@ def test_atoms_by_name():
     assert_raises(KeyError, lambda: top.residue(15).atom('sdfsdsdf'))
 
 def test_select_top():
-    geom1 = md.load(get_fn('protonation_state1.pdb.gz'))
-    geom2 = md.load(get_fn('protonation_state2.pdb.gz'))
-    # geom2 has two extra protonated sites histidines
+    geom1 = md.load(get_fn('6HISs_protonation_state1.pdb.gz'))
+    geom2 = md.load(get_fn('5HISs_protonation_state2.pdb.gz'))
+    # Geom two has two extra protons...and one less HIS
     extra_protons_geom2 = [29, 63]
+    atoms_geom1_resid_0to5 = np.hstack([[aa.index for aa in geom1.top.residue(rr).atoms]
+                                        for rr in np.arange(5)])
     shared_atoms_geom2 = np.arange(geom2.n_atoms)[np.in1d(np.arange(geom2.n_atoms),
                                                           extra_protons_geom2, invert=True)]
+
     # Find them as a difference between topologies
     assert np.allclose(geom1.topology.select_top(geom2.top, invert=True), extra_protons_geom2)
     # Both geometries start with the same residue, hence:
     assert np.allclose([aa.index for aa in geom1.topology.residue(0).atoms],
                        geom1.topology.select_top(geom2.topology, selection='resid 0'))
-    # All of the atoms of geom1 do appear in geom2 (but not the other way around), so this selection
-    # is returning the geom1 in full
-    assert np.allclose(geom1.topology.select_top(geom2.top), np.arange(geom1.n_atoms))
-    # Conversely
+    # geom2 is missing the last residue, but otherwise has all the atoms that geom1 has
+    # hence projecting geom1 on two returns a shorter version  of geom1 itself
+
+    assert np.allclose(geom1.topology.select_top(geom2.top), atoms_geom1_resid_0to5)
+    # Conversely, projecting geom2 on geom1 gives geom2 minus two atoms
     assert np.allclose(geom2.topology.select_top(geom1.top), shared_atoms_geom2)
 
 def test_select_atom_indices():

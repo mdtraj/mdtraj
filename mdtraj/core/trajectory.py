@@ -1751,9 +1751,8 @@ class Trajectory(object):
             The return value is either ``self``, or the new trajectory,
             depending on the value of ``inplace``.
         """
-
         if isinstance(ref_slice, Trajectory):
-            ref_slice = Trajectory._topology
+            ref_slice = ref_slice._topology
         atoms = self.topology.select_top(ref_slice, selection=selection)
         if len(atoms)!= ref_slice.n_atoms and keep_all:
             raise ValueError('Not all atoms of the reference slice could be found in the original topology. '
@@ -1762,7 +1761,7 @@ class Trajectory(object):
         if inplace:
             self.atom_slice(atoms, inplace=True)
         else:
-            return self.atom_slice(atoms, inplace=True)
+            return self.atom_slice(atoms, inplace=False)
 
     def remove_solvent(self, exclude=None, inplace=False):
         """
