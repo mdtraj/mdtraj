@@ -160,6 +160,23 @@ def test_atoms_by_name():
 
     assert_raises(KeyError, lambda: top.residue(15).atom('sdfsdsdf'))
 
+def test_select_top():
+    geom1 = md.load(get_fn('protonation_state1.pdb.gz'))
+    geom2 = md.load(get_fn('protonation_state2.pdb.gz'))
+    # geom2 has two extra protonated sites histidines
+    extra_protons_geom2 = [29, 63]
+    shared_atoms_geom2 = np.arange(geom2.n_atoms)[np.in1d(np.arange(geom2.n_atoms),
+                                                          extra_protons_geom2, invert=True)]
+    # Find them as a difference between topologies
+    assert np.allclose(geom1.topology.select_top(geom2.top, invert=True), extra_protons_geom2)
+    # Both geometries start with the same residue, hence:
+    assert np.allclose([aa.index for aa in geom1.topology.residue(0).atoms],
+                       geom1.topology.select_top(geom2.topology, selection='resid 0'))
+    # All of the atoms of geom1 do appear in geom2 (but not the other way around), so this selection
+    # is returning the geom1 in full
+    assert np.allclose(geom1.topology.select_top(geom2.top), np.arange(geom1.n_atoms))
+    # Conversely
+    assert np.allclose(geom2.topology.select_top(geom1.top), shared_atoms_geom2)
 
 def test_select_atom_indices():
     top = md.load(get_fn('native.pdb')).topology
