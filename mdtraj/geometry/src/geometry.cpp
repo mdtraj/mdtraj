@@ -22,8 +22,8 @@
 
 #include "geometry.h"
 #include "vectorize_sse.h"
-#include <cmath>
 #include <cstddef>
+#include <math.h>
 #include <float.h>
 #include <vector>
 #include "math_patch.h"
