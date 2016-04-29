@@ -1048,7 +1048,7 @@ class Topology(object):
 
         selection: str, default is None
             One can use a sub-set of atoms of topB instead of the whole topology. This argument will be
-            parsed to :py:obj:select
+            parsed to :py:obj:`select`
 
         invert: boolean, default is False
             Return the difference set. If set to True, intersect will return a the indices of those atoms

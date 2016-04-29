@@ -1729,6 +1729,41 @@ class Trajectory(object):
                           unitcell_lengths=unitcell_lengths,
                           unitcell_angles=unitcell_angles)
 
+    def slice_top(self, ref_slice, keep_all=False, selection=None, inplace=False, ):
+        r"""Create a new trajectory containing only the atoms that intersect
+        with the atoms of ref_slice. For the meaning of "intersect", see :py:obj:`topology.select_top`
+
+        Parameters
+        ----------
+
+        ref_slice : md.Topology or md.Trajectory
+            Trajectory or topology cointainig the atoms to retain
+
+        keep_all : boolean, default=False
+            If set True, top_slice will raise an Exception in case not all atoms of ref_slice can be
+            found in the trajectory being sliced.
+
+        selection: str, default is None
+            One can use a sub-set of atoms of topB instead of the whole topology. This argument will be
+            parsed to :py:obj:`select`
+
+        inplace : bool, default=False
+            The return value is either ``self``, or the new trajectory,
+            depending on the value of ``inplace``.
+        """
+
+        if isinstance(ref_slice, Trajectory):
+            ref_slice = Trajectory._topology
+        atoms = self.topology.select_top(ref_slice, selection=selection)
+        if len(atoms)!= ref_slice.n_atoms and keep_all:
+            raise ValueError('Not all atoms of the reference slice could be found in the original topology. '
+                             'Set keep_all=False if you are ok with this.')
+
+        if inplace:
+            self.atom_slice(atoms, inplace=True)
+        else:
+            return self.atom_slice(atoms, inplace=True)
+
     def remove_solvent(self, exclude=None, inplace=False):
         """
         Create a new trajectory without solvent atoms
