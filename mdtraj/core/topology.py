@@ -1044,7 +1044,8 @@ class Topology(object):
 
         Parameters
         ----------
-        topB : topology to intersect with
+        topB : mdtraj.Topology object
+            Topology to intersect with
 
         selection : str, default is None
             One can use a sub-set of atoms of topB instead of the whole topology. This argument will be
@@ -1055,7 +1056,7 @@ class Topology(object):
             of topB that do not appear in the self
 
         Returns
-        ------
+        -------
         indices : np.ndarray (N,)
             An array of the indices of the selected atoms.
         """

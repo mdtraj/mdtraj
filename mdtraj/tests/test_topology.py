@@ -167,8 +167,8 @@ def test_select_top():
     extra_protons_geom2 = [29, 63]
     atoms_geom1_resid_0to5 = np.hstack([[aa.index for aa in geom1.top.residue(rr).atoms]
                                         for rr in np.arange(5)])
-    shared_atoms_geom2 = np.arange(geom2.n_atoms)[np.in1d(np.arange(geom2.n_atoms),
-                                                          extra_protons_geom2, invert=True)]
+
+    shared_atoms_geom2 = np.delete(np.arange(geom2.n_atoms), extra_protons_geom2)
 
     # Find them as a difference between topologies
     assert np.allclose(geom1.topology.select_top(geom2.top, invert=True), extra_protons_geom2)

@@ -137,22 +137,18 @@ def test_slice_top():
     geom1 = md.load(get_fn('6HISs_protonation_state1.pdb.gz'))
     geom2 = md.load(get_fn('5HISs_protonation_state2.pdb.gz'))
     # Geom two has two extra protons and one less HIS
-    extra_protons_geom2 = [29, 63]
-    shared_atoms_geom2 = np.arange(geom2.n_atoms)[np.in1d(np.arange(geom2.n_atoms),
-                                                          extra_protons_geom2, invert=True)]
 
     # Accept both geometries and topologies...
     geom1.slice_top(geom2);
     geom1.slice_top(geom2.top)
-    # This should rise an exception...
+    # This should raise an exception...
     try:
         geom1.slice_top(geom2, keep_all=True)
-        pass
     except:
         failed = True
     assert failed # this fails also if "failed" doesn't exist, which is what we want to test anyways
 
-    # Check the selection and the inplace option
+    # Check the selection and the inplace option together
     geom1.slice_top(geom2.top, selection='name CA', inplace=True)
     assert geom1.n_atoms == geom2.n_residues
 
