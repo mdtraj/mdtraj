@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if [[ "$TRAVIS_OS_NAME" == "osx" ]];   then return; fi
+
 # Install SPARTA+ for NMR chemical shift predicition
 MDTRAJ_DIR=`pwd`
 mkdir -p $HOME/external
