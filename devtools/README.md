@@ -27,7 +27,6 @@ Immediately after creating the sdist
 ------------------------------------
 - Update the version number in `setup.py` to `1.(x+1).0.dev0` per PEP440;
   change `ISRELEASED` to `False`.
-- Update the version number in `devtools/conda-recipe/meta.yaml` similarly.
 - Add a new section in `docs/whatsnew.rst` and mark it "(Development)".
 - Commit to master.
 
