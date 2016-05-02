@@ -9,6 +9,8 @@ Pre-release + Github
 - Update the date in `docs/whatsnew.rst` and add a blurb about the release.
 - Commit to master, and [tag](https://github.com/mdtraj/mdtraj/releases) the
   release on github.
+- Make sure the docs were built and pushed to the correct place. Update `versions.json`
+  with the new version.
 
 PyPI
 ----
