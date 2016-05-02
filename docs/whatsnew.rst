@@ -6,6 +6,8 @@ These are new features and improvements of note in each release.
 v1.7.1 (Development)
 --------------------
 
+- Small fix to developer tools so docs get uploaded.
+
 v1.7 (May 2, 2016)
 ------------------
 
