@@ -3,21 +3,21 @@ How to release
 
 Pre-release + Github
 --------------------
-- Update the `docs/whatsnew.rst` document. Use the github view that shows all the
-  commits to master since the last release to write it
-   * You can also try using [this tool](https://github.com/rmcgibbo/gh-util), which should list all
-     of the PRs that have been merged since the laster release.
+- Update the `docs/whatsnew.rst` document. Use [this tool](https://github.com/rmcgibbo/gh-util),
+  which should list all of the PRs that have been merged since the laster release.
 - Update the version number in `setup.py`, change `ISRELEASED` to `True`
-- Update the version number in `devtools/conda-recipe/meta.yaml`
+- Update the date in `docs/whatsnew.rst` and add a blurb about the release.
 - Commit to master, and [tag](https://github.com/mdtraj/mdtraj/releases) the
   release on github.
+- Make sure the docs were built and pushed to the correct place. Update `versions.json`
+  with the new version.
 
 PyPI
 ----
 The next step is to add the release to the python package index.
 
 - Run `git clean -fdx` to clean the source directory.
-- Create the cannoncal "sdist" (source distribution) using `python setup.py sdist --formats=gztar,zip`. **Make sure you ran `git clean` first**
+- Create the cannoncal "sdist" (source distribution) using `python setup.py sdist --formats=gztar,zip`.
 - Inspect the sdist files (they're placed in `dist/`), and make sure they look right.
   You can try installing them into your environment with pip, unzipping or untaring them, etc.
 - Once you're satisfied that the sdist is correct, push the source to PyPI using
@@ -28,7 +28,6 @@ Immediately after creating the sdist
 ------------------------------------
 - Update the version number in `setup.py` to `1.(x+1).0.dev0` per PEP440;
   change `ISRELEASED` to `False`.
-- Update the version number in `devtools/conda-recipe/meta.yaml` similarly.
 - Add a new section in `docs/whatsnew.rst` and mark it "(Development)".
 - Commit to master.
 
