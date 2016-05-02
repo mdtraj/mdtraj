@@ -3,8 +3,14 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.7 (Development)
+v1.7 (May 2, 2016)
 ------------------
+
+We're please to announce the release of MDTraj 1.7. In addition to the
+usual fixes and improvements, MDTraj has gained the ability to image
+molecules in trajectories. So far, it's worked very well even on
+complicated systems like multi-molecule proteins. Look forward to future
+enhancements to this new feature! Some other highlights include:
 
 - New ``compute_neighborlist()`` function (#1057)
 - Add option to skip standardization of atom and residue names during
