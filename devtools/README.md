@@ -15,7 +15,7 @@ PyPI
 The next step is to add the release to the python package index.
 
 - Run `git clean -fdx` to clean the source directory.
-- Create the cannoncal "sdist" (source distribution) using `python setup.py sdist --formats=gztar,zip`. **Make sure you ran `git clean` first**
+- Create the cannoncal "sdist" (source distribution) using `python setup.py sdist --formats=gztar,zip`.
 - Inspect the sdist files (they're placed in `dist/`), and make sure they look right.
   You can try installing them into your environment with pip, unzipping or untaring them, etc.
 - Once you're satisfied that the sdist is correct, push the source to PyPI using
