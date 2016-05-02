@@ -6,7 +6,6 @@ Pre-release + Github
 - Update the `docs/whatsnew.rst` document. Use [this tool](https://github.com/rmcgibbo/gh-util),
   which should list all of the PRs that have been merged since the laster release.
 - Update the version number in `setup.py`, change `ISRELEASED` to `True`
-- Update the version number in `devtools/conda-recipe/meta.yaml`
 - Update the date in `docs/whatsnew.rst` and add a blurb about the release.
 - Commit to master, and [tag](https://github.com/mdtraj/mdtraj/releases) the
   release on github.
