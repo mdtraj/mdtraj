@@ -11,7 +11,8 @@ if not version.release:
     exit(0)
 
 URL = 'http://www.mdtraj.org'
-versions = json.load(urlopen(URL + '/versions.json'))
+data = urlopen(URL + '/versions.json').read().decode()
+versions = json.loads(data)
 
 # new release so all the others are now old
 for i in range(len(versions)):
@@ -24,5 +25,5 @@ versions.append({
     'latest': True})
 
 with open("docs/_deploy/versions.json", 'w') as versionf:
-    json.dump(versions, versionf)
+    json.dump(versions, versionf, indent=2)
 

@@ -3,10 +3,8 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.7.2 (Development)
---------------------
 
-v1.7.1 (May 2, 2016)
+v1.7.2 (May 2, 2016)
 --------------------
 
 - Small fix to developer tools so docs get uploaded.
