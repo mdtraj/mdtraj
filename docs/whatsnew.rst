@@ -6,8 +6,14 @@ These are new features and improvements of note in each release.
 v1.7 (Development)
 ------------------
 
+- New ``compute_neighborlist()`` function (#1057)
 - Add option to skip standardization of atom and residue names during
   ``load_pdb`` (#1061)
+- Function for imaging molecules (#1058)
+- New optional argument ``periodic`` for ``compute_contacts`` (#1072)
+- Refresh documentation (#1067, #1074, #1075)
+- Rewrite geometry code in modern c++ (#1077)
+- Fix issue with ``Topoplogy.from_openmm`` (#1089)
 
 
 v1.6 (February 15, 2016)
