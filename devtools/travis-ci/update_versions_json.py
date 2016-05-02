@@ -23,6 +23,6 @@ versions.append({
     'url': "{base}/{version}".format(base=URL, version=version.short_version),
     'latest': True})
 
-with open("doc/_deploy/versions.json", 'w') as versionf:
+with open("docs/_deploy/versions.json", 'w') as versionf:
     json.dump(versions, versionf)
 
