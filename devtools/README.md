@@ -3,21 +3,20 @@ How to release
 
 Pre-release + Github
 --------------------
-- Update the `docs/whatsnew.rst` document. Use the github view that shows all the
-  commits to master since the last release to write it
-   * You can also try using [this tool](https://github.com/rmcgibbo/gh-util), which should list all
-     of the PRs that have been merged since the laster release.
+- Update the `docs/whatsnew.rst` document. Use [this tool](https://github.com/rmcgibbo/gh-util),
+  which should list all of the PRs that have been merged since the laster release.
 - Update the version number in `setup.py`, change `ISRELEASED` to `True`
-- Update the version number in `devtools/conda-recipe/meta.yaml`
+- Update the date in `docs/whatsnew.rst` and add a blurb about the release.
 - Commit to master, and [tag](https://github.com/mdtraj/mdtraj/releases) the
   release on github.
+- Make sure the docs were built and pushed to the correct place. 
 
 PyPI
 ----
 The next step is to add the release to the python package index.
 
 - Run `git clean -fdx` to clean the source directory.
-- Create the cannoncal "sdist" (source distribution) using `python setup.py sdist --formats=gztar,zip`. **Make sure you ran `git clean` first**
+- Create the cannoncal "sdist" (source distribution) using `python setup.py sdist --formats=gztar,zip`.
 - Inspect the sdist files (they're placed in `dist/`), and make sure they look right.
   You can try installing them into your environment with pip, unzipping or untaring them, etc.
 - Once you're satisfied that the sdist is correct, push the source to PyPI using
@@ -26,20 +25,38 @@ The next step is to add the release to the python package index.
 
 Immediately after creating the sdist
 ------------------------------------
-- Update the version number in `setup.py` to `1.(x+1).0.dev0` per PEP440;
+- Update the version number in `setup.py` to `1.(y+1).0.dev0` per PEP440;
   change `ISRELEASED` to `False`.
-- Update the version number in `devtools/conda-recipe/meta.yaml` similarly.
 - Add a new section in `docs/whatsnew.rst` and mark it "(Development)".
 - Commit to master.
 
 It's important that the version which is tagged on github for the release be
 the (only) one with the ISRELEASED flag in setup.py set to true.
 
+Point releases
+--------------
+
+If you want to release 1.y.1 after 1.y.0, create a branch named 1.y, apply
+the fix, and follow the normal release procedure. If you need updated 
+docs, change `travis.yml` to deploy on branch 1.y instead of master.
+
 Conda
 -----
-- File a PR against [omnia-md/conda-recipes](https://github.com/omnia-md/conda-recipes) that
-  updates the recipe's version string and source URL to pull the new sdist from PyPI. Travis
-  and Appveyor will then build binary conda packages.
+- File a PR against [omnia-md/conda-recipes](https://github.com/omnia-md/conda-recipes)
+- Update the recipe's version string and source URL to pull the new
+  sdist from PyPI.
+- Compare the dependency lists in meta.yaml to those in the travis tests.
+  They should be the same!
+- Travis and Appveyor will then build binary conda packages.
+- Encourage people to test the "rc" release candidate packages with
+  `conda install -c omnia/label/rc mdtraj`
+- Move `rc` packages to `main` label via anaconda.org or posting an issue to
+  omnia-md/conda-recipes.
+
+Finally
+-------
+- Close the 1.y milestone. Make sure there is a 1.(y+1) milestone.
+- Update this document with things you've learned!
 
 Wheels
 ------
@@ -77,20 +94,6 @@ online. When a build happens on a version with ISRELEASED==False, it's put into
 the "latest" folder on the S3 bucket. If ISRELEASED==True, it's put into a
 subfolder with the name of the short release. The relevant logic is in
 `tools/travis-ci/push-docs-to-s3.py`.
-
-In order for the select bar at the bottom of the docs that toggles between
-versions to work, these folders MUST match up with the tag names on github.
-This is because the list of items to put in that little dropdown menu is
-dynamically determined from the github API in the browser. This is the only
-way I could think of to make sure the old docs have a link to the latest
-version. The logic that populates the version dropdown menu in the browser is in
-
-`docs/themes/sphinx_rtd_theme-0.1.5/sphinx_rtd_theme/versions.html`
-
-Specifically note that it goes to https://api.github.com/repos/mdtraj/mdtraj/releases,
-and uses the `tag_names` to build the links. So these must line up with the
-prefix of `mdtraj.version.short_version` used in `tools/travis-ci/push-docs-to-s3.py`
-for the links not to break.
 
 Tools License
 =============
