@@ -40,5 +40,5 @@ deploy:
     local_dir: docs/_deploy/
     on:
       os: linux
-      branch: master
+      branch: 1.7
       condition: "-n $DOCDEPLOY"
