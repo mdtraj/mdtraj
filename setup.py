@@ -50,8 +50,8 @@ except ValueError:
 
 
 ##########################
-VERSION = "1.7.0"
-ISRELEASED = True
+VERSION = "1.8.0.dev0"
+ISRELEASED = False
 __version__ = VERSION
 ##########################
 
