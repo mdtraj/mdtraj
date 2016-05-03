@@ -23,10 +23,19 @@ os:
   - linux
 
 env:
-  - CONDA_PY=2.7  CONDA_NPY=1.7
-  - CONDA_PY=2.7  CONDA_NPY=1.11
-  - CONDA_PY=3.4  CONDA_NPY=1.10
-  - CONDA_PY=3.5  CONDA_NPY=1.11  DOCDEPLOY=YES
+  - CONDA_PY=2.7 CONDA_NPY=1.7
+  - CONDA_PY=2.7 CONDA_NPY=1.11
+  - CONDA_PY=3.4 CONDA_NPY=1.10
+  - CONDA_PY=3.5 CONDA_NPY=1.11
+
+# Do include/exclude to add "DOCDEPLOY" to one matrix entry.
+matrix:
+  exclude:
+    - os: linux
+      env: CONDA_PY=3.5 CONDA_NPY=1.11
+  include:
+    - os: linux
+      env: CONDA_PY=3.5 CONDA_NPY=1.11 DOCDEPLOY=YES
 
 deploy:
   - provider: s3
@@ -39,6 +48,5 @@ deploy:
     skip_cleanup: true
     local_dir: docs/_deploy/
     on:
-      os: linux
       branch: master
       condition: "-n $DOCDEPLOY"
