@@ -56,3 +56,6 @@ nosetests.xml
 
 .cache
 build.log
+
+# export of libtheolib
+/mdtraj/core/lib/*
