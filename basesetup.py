@@ -325,8 +325,11 @@ class build_ext(_build_ext):
         src_tree_output_dir = re.match('build.*(mdtraj.*)', output_dir).group(1)
 
         if not os.path.exists(src_tree_output_dir):
-            # necessary for windows
             os.makedirs(src_tree_output_dir)
+
+        if not os.path.exists(output_dir):
+            # necessary for windows
+            os.makedirs(output_dir)
 
         assert os.path.isdir(src_tree_output_dir)
 
