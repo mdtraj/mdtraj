@@ -260,6 +260,7 @@ class build_ext(_build_ext):
         _build_ext.initialize_options(self)
         import pkg_resources
         dir = pkg_resources.resource_filename('numpy', 'core/include')
+        assert os.path.exists(dir), "Numpy include dir not found"
         self.include_dirs = [dir]
 
     def build_extension(self, ext):
@@ -280,9 +281,9 @@ class build_ext(_build_ext):
         sources = ext.sources
         if sources is None or not isinstance(sources, (list, tuple)):
             raise DistutilsSetupError(
-                  ("in 'ext_modules' option (extension '%s'), " +
-                   "'sources' must be present and must be " +
-                   "a list of source filenames") % ext.name)
+                ("in 'ext_modules' option (extension '%s'), " +
+                 "'sources' must be present and must be " +
+                 "a list of source filenames") % ext.name)
         sources = list(sources)
 
         ext_path = self.get_ext_fullpath(ext.name)
@@ -298,12 +299,12 @@ class build_ext(_build_ext):
         for undef in ext.undef_macros:
             macros.append((undef,))
         objects = self.compiler.compile(sources,
-                                         output_dir=self.build_temp,
-                                         macros=macros,
-                                         include_dirs=ext.include_dirs,
-                                         debug=self.debug,
-                                         extra_postargs=extra_args,
-                                         depends=ext.depends)
+                                        output_dir=self.build_temp,
+                                        macros=macros,
+                                        include_dirs=ext.include_dirs,
+                                        debug=self.debug,
+                                        extra_postargs=extra_args,
+                                        depends=ext.depends)
         self._built_objects = objects[:]
         if ext.extra_objects:
             objects.extend(ext.extra_objects)
@@ -315,19 +316,34 @@ class build_ext(_build_ext):
         output_dir = os.path.dirname(ext_path)
 
         if (self.compiler.static_lib_format.startswith('lib') and
-            libname.startswith('lib')):
+                libname.startswith('lib')):
             libname = libname[3:]
+
+        # 1. copy to build directory
+        # 1. copy to src tree for develop mode
+        import re
+        src_tree_output_dir = re.match('build.*(mdtraj.*)', output_dir).group(1)
+
+        if not os.path.exists(src_tree_output_dir):
+            os.makedirs(src_tree_output_dir)
 
         if not os.path.exists(output_dir):
             # necessary for windows
             os.makedirs(output_dir)
 
+        assert os.path.isdir(src_tree_output_dir)
+
         self.compiler.create_static_lib(objects,
-            output_libname=libname,
-            output_dir=output_dir,
-            target_lang=language)
+                                        output_libname=libname,
+                                        output_dir=output_dir,
+                                        target_lang=language)
+
+        lib_path = self.compiler.library_filename(libname, output_dir=output_dir)
+
+        shutil.copy(lib_path, src_tree_output_dir)
 
         for item in ext.export_include:
+            shutil.copy(item, src_tree_output_dir)
             shutil.copy(item, output_dir)
 
     def get_ext_filename(self, ext_name):
