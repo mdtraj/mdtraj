@@ -31,6 +31,7 @@ import warnings
 from copy import deepcopy
 from collections import Iterable
 import numpy as np
+import functools
 
 from mdtraj.formats import DCDTrajectoryFile
 from mdtraj.formats import BINPOSTrajectoryFile
@@ -70,7 +71,8 @@ from mdtraj.geometry import distance
 # Globals
 ##############################################################################
 
-__all__ = ['open', 'load', 'iterload', 'load_frame', 'load_topology', 'Trajectory']
+__all__ = ['open', 'load', 'iterload', 'load_frame', 'load_topology', 'join',
+           'Trajectory']
 # supported extensions for constructing topologies
 _TOPOLOGY_EXTS = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
                   '.psf', '.mol2', '.hoomdxml', '.gro', '.arc', '.hdf5']
@@ -509,6 +511,13 @@ def iterload(filename, chunk=100, **kwargs):
 
                 yield traj
 
+def join(trajs, check_topology=True, discard_overlapping_frames=False):
+    return functools.reduce(
+        lambda x, y:
+        x.join(y, check_topology=check_topology,
+               discard_overlapping_frames=discard_overlapping_frames),
+        trajs
+    )
 
 class Trajectory(object):
     """Container object for a molecular dynamics trajectory
