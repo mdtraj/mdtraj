@@ -39,6 +39,7 @@ Format-agnostic loading functions
     iterload
     load_frame
     open
+    join
 
 Format-specific loading functions
 ---------------------------------

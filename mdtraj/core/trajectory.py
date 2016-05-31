@@ -512,6 +512,17 @@ def iterload(filename, chunk=100, **kwargs):
                 yield traj
 
 def join(trajs, check_topology=True, discard_overlapping_frames=False):
+    """Concatenate multiple trajectories into one long trajectory
+
+    Parameters
+    ----------
+    trajs : iterable of trajectories
+        Combine these into one trajectory
+    check_topology : bool
+        Make sure topologies match before joining
+    discard_overlapping_frames : bool
+        Check for overlapping frames and discard
+    """
     return functools.reduce(
         lambda x, y:
         x.join(y, check_topology=check_topology,
