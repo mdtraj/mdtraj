@@ -1,12 +1,13 @@
 # cython: c_string_type=str, c_string_encoding=ascii
 
-# cimport tnglib
 from libc.stdio cimport printf
 from libc.stdint cimport int64_t
-
 from libc.stdlib cimport malloc, free
 
 from math import ceil
+from mdtraj.utils import cast_indices, in_units_of
+from mdtraj.utils.six import string_types
+from mdtraj.formats.registry import FormatRegistry
 
 import numpy as np
 cimport numpy as np
@@ -25,78 +26,154 @@ cdef extern from "tng/tng_io.h":
 
     # open/close
     tng_function_status tng_util_trajectory_open(
-                 const char *filename,
-                 const char mode,
-                 tng_trajectory_t *tng_data_p)
+                const char *filename,
+                const char mode,
+                tng_trajectory_t *tng_data_p)
     tng_function_status tng_util_trajectory_close(
                 tng_trajectory_t *tng_data_p)
 
     # n particles
     tng_function_status tng_num_particles_get(
-                 const tng_trajectory_t tng_data,
-                 int64_t *n)
+                const tng_trajectory_t tng_data,
+                int64_t *n)
 
     # n frames
     tng_function_status tng_num_frames_get(
                 const tng_trajectory_t tng_data,
-                 int64_t *n)
+                int64_t *n)
+    
+    # Units
+    tng_function_status tng_distance_unit_exponential_get(
+                const tng_trajectory_t tng_data,
+                int64_t *exp);
 
     # read frames in chunks
     tng_function_status tng_util_pos_read_range(
-                 const tng_trajectory_t tng_data,
-                 const int64_t first_frame,
-                 const int64_t last_frame,
-                 float **positions,
-                 int64_t *stride_length)
+                const tng_trajectory_t tng_data,
+                const int64_t first_frame,
+                const int64_t last_frame,
+                float **positions,
+                int64_t *stride_length)
 
     # Used to read the box shape
     tng_function_status tng_data_vector_interval_get(
-                 const tng_trajectory_t tng_data,
-                 const int64_t block_id,
-                 const int64_t start_frame_nr,
-                 const int64_t end_frame_nr,
-                 const char hash_mode,
-                 void **values,
-                 int64_t *stride_length,
-                 int64_t *n_values_per_frame,
-                 char *type)
+                const tng_trajectory_t tng_data,
+                const int64_t block_id,
+                const int64_t start_frame_nr,
+                const int64_t end_frame_nr,
+                const char hash_mode,
+                void **values,
+                int64_t *stride_length,
+                int64_t *n_values_per_frame,
+                char *type)
 
     # Read time
     tng_function_status tng_util_time_of_frame_get(
-                 const tng_trajectory_t tng_data,
-                 const int64_t frame_nr,
-                 double *time)
+                const tng_trajectory_t tng_data,
+                const int64_t frame_nr,
+                double *time)
 
 
-cdef class TNGTrajectoryFile:
+@FormatRegistry.register_loader('.tng')
+def load_tng(filename, top=None, stride=None, atom_indices=None, frame=None):
+    """load_tng(filename, top=None, stride=None, atom_indices=None, frame=None)
+
+    Load a Gromacs TNG file from disk.
+
+    The .tng format is a cross-platform compressed binary trajectory format
+    produced by the gromacs software that stores atomic coordinates, box
+    vectors, and time information. It is lossy (storing coordinates to about
+    1e-3 A) and extremely space-efficient.
+
+    Parameters
+    ----------
+    filename : str
+        Filename (string) of tng trajectory.
+    top : {str, Trajectory, Topology}
+        The TNG format does not contain topology information. Pass in either the
+        path to a RCSB PDB file, a trajectory, or a topology to supply this
+        information.
+    stride : int, default=None
+        Only read every stride-th frame
+    atom_indices : array_like, optional
+        If not none, then read only a subset of the atoms coordinates from the
+        file. This may be slightly slower than the standard read because it
+        requires an extra copy, but will save memory.
+    frame : int, optional
+        Use this option to load only a single frame from a trajectory on disk.
+        If frame is None, the default, the entire trajectory will be loaded.
+        If supplied, ``stride`` will be ignored.
+
+    Examples
+    --------
+    >>> import mdtraj as md
+    >>> traj = md.load_tng('output.tng', top='topology.pdb')
+    >>> print traj
+    <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>
+
+    Returns
+    -------
+    trajectory : md.Trajectory
+        The resulting trajectory, as an md.Trajectory object.
+
+    See Also
+    --------
+    mdtraj.TNGTrajectoryFile :  Low level interface to TNG files
+    """
+    from mdtraj.core.trajectory import _parse_topology
+    if top is None:
+        raise ValueError('"top" argument is required for load_tng')
+
+    if not isinstance(filename, string_types):
+        raise TypeError('filename must be of type string for load_tng. '
+                        'you supplied %s' % type(filename))
+
+    topology = _parse_topology(top)
+    atom_indices = cast_indices(atom_indices)
+
+    with TNGTrajectoryFile(filename, 'r') as f:
+        if frame is not None:
+            f.seek(frame)
+            n_frames = 1
+        else:
+            n_frames = None
+
+        return f.read_as_traj(topology, n_frames=n_frames, stride=stride,
+                              atom_indices=atom_indices)
+
+cdef class TNGTrajectoryFile(object):
     cdef tng_trajectory_t _traj
     cdef const char * filename
     cdef char mode
     cdef int is_open
-    cdef readonly char * distance_unit
+    cdef float distance_scale
     cdef int64_t n_atoms  # number of atoms in the file
     cdef int64_t tot_n_frames
     cdef int64_t _pos
 
-    def __cinit__(self, char * filename, char mode='r', force_overwrite=True, **kwargs):
+    def __cinit__(self, char* filename, char* mode='r', force_overwrite=True, **kwargs):
         self.filename = filename
-        self.mode = mode
-        if mode == 'w':
+        self.mode = mode[0]
+        if self.mode == 'w':
             raise NotImplementedError()
 
         # TODO: TNG_CONSTANT_N_ATOMS assert that this is set
 
-        if tng_util_trajectory_open(filename, mode, & self._traj) == 0:
+        if tng_util_trajectory_open(filename, self.mode, & self._traj) == TNG_SUCCESS:
             self.is_open = True
         else:
             raise Exception("something went wrong during opening.")
 
-        if tng_num_particles_get(self._traj, & self.n_atoms) != 0:
+        if tng_num_particles_get(self._traj, & self.n_atoms) != TNG_SUCCESS:
             raise Exception("something went wrong during obtaining num particles")
         
-        if tng_num_frames_get(self._traj, & self.tot_n_frames) != 0:
+        if tng_num_frames_get(self._traj, & self.tot_n_frames) != TNG_SUCCESS:
             raise Exception("error during len determination")
-        
+ 
+        cdef int64_t exponent;
+        if tng_distance_unit_exponential_get(self._traj, &exponent) != TNG_SUCCESS:
+            raise Exception("Error reading distance unit exponent")
+        self.distance_scale = 10.0**(exponent+9)
         self._pos = 0
 
     def __len__(self):
@@ -132,6 +209,7 @@ cdef class TNGTrajectoryFile:
                 for i, atom_index in enumerate(atom_indices):
                     for j in range(3):
                         xyz[i, j] = positions[atom_index*3 + j]
+                xyz *= self.distance_scale
             else:
                 raise Exception("Error reading positions")
         finally:
@@ -166,6 +244,7 @@ cdef class TNGTrajectoryFile:
                     for j in range(3):
                         for k in range(3):
                             box[j, k] = float_box[j*3 + k]
+                box *= self.distance_scale
             else:
                 raise Exception("Error reading box shape")
         finally:
@@ -175,6 +254,45 @@ cdef class TNGTrajectoryFile:
         self._pos += 1
 
         return xyz, time, box
+    def read_as_traj(self, topology, n_frames=None, stride=None, atom_indices=None):
+        """read_as_traj(topology, n_frames=None, stride=None, atom_indices=None)
+
+        Read a trajectory from a TNG file
+
+        Parameters
+        ----------
+        topology : Topology
+            The system topology
+        n_frames : int, None
+            The number of frames you would like to read from the file.
+            If None, all of the remaining frames will be loaded.
+        stride : int, optional
+            Read only every stride-th frame.
+        atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates from the
+            file. This may be slightly slower than the standard read because it required
+            an extra copy, but will save memory.
+
+        Returns
+        -------
+        trajectory : Trajectory
+            A trajectory object containing the loaded portion of the file.
+
+        See Also
+        --------
+        read : Returns the raw data from the file
+        """
+        from mdtraj.core.trajectory import Trajectory
+        if atom_indices is not None:
+            topology = topology.subset(atom_indices)
+
+        xyz, time, box = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
+        if len(xyz) == 0:
+            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+
+        trajectory = Trajectory(xyz=xyz, topology=topology, time=time)
+        trajectory.unitcell_vectors = box
+        return trajectory
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """read(n_frames=None, stride=None, atom_indices=None)
@@ -245,65 +363,35 @@ cdef class TNGTrajectoryFile:
         if np.all(np.logical_and(all_box < 1e-10, all_box > -1e-10)):
             all_box = None
         return all_xyz, all_time, all_box
-# 
-#     def _read(self, int n_frames, atom_indices):
-#         """Read a specified number of XTC frames from the buffer"""
-# 
-#         cdef int i = 0
-#         cdef int status = _EXDROK
-#         cdef int n_atoms_to_read
-# 
-#         if atom_indices is None:
-#             n_atoms_to_read = self.n_atoms
-#         elif isinstance(atom_indices, slice):
-#             n_atoms_to_read = len(np.arange(self.n_atoms)[atom_indices])
-#         else:
-#             atom_indices = np.asarray(atom_indices)
-#             if min(atom_indices) < 0:
-#                 raise ValueError(
-#                     'atom_indices should be zero indexed. you gave an index less than zero')
-#             if max(atom_indices) >= self.n_atoms:
-#                 raise ValueError(
-#                     'atom indices should be zero indexed. you gave an index bigger than the number of atoms')
-#             n_atoms_to_read = len(atom_indices)
-# 
-#         cdef np.ndarray[ndim = 3, dtype = np.float32_t, mode = 'c'] xyz = \
-#             np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
-#         cdef np.ndarray[ndim = 1, dtype = np.float32_t, mode = 'c'] time = \
-#             np.empty((n_frames), dtype=np.float32)
-#         cdef np.ndarray[ndim = 1, dtype = np.int32_t, mode = 'c'] step = \
-#             np.empty((n_frames), dtype=np.int32)
-#         cdef np.ndarray[ndim = 3, dtype = np.float32_t, mode = 'c'] box = \
-#             np.empty((n_frames, 3, 3), dtype=np.float32)
-#         cdef np.ndarray[ndim = 1, dtype = np.float32_t, mode = 'c'] prec = \
-#             np.empty((n_frames), dtype=np.float32)
-# 
-#         # only used if atom_indices is given
-#         cdef np.ndarray[dtype = np.float32_t, ndim = 2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
-# 
-#         while (i < n_frames) and (status != _EXDRENDOFFILE):
-#             if atom_indices is None:
-#                 status = xdrlib.read_xtc(self.fh, self.n_atoms, < int * > & step[i],
-#                                          & time[i], < xdrlib.matrix > &box[i, 0, 0], < xdrlib.rvec * > & xyz[i, 0, 0], & prec[i])
-#             else:
-#                 status = xdrlib.read_xtc(self.fh, self.n_atoms, < int * > & step[i],
-#                                          & time[i], < xdrlib.matrix > &box[i, 0, 0], < xdrlib.rvec * > & framebuffer[0, 0], & prec[i])
-#                 xyz[i, :, :] = framebuffer[atom_indices, :]
-# 
-#             if status != _EXDRENDOFFILE and status != _EXDROK:
-#                 raise RuntimeError('XTC read error: %s' %
-#                                    _EXDR_ERROR_MESSAGES.get(status, 'unknown'))
-#             i += 1
-# 
-#         if status == _EXDRENDOFFILE:
-#             xyz = xyz[:i - 1]
-#             box = box[:i - 1]
-#             time = time[:i - 1]
-#             step = step[:i - 1]
-# 
-#         self.frame_counter += i
-# 
-#         return xyz, time, step, box
+
+    def seek(self, int64_t offset, int whence=0):
+        """seek(offset, whence=0)
+
+        Move to a new file position
+
+        Parameters
+        ----------
+        offset : int
+            A number of frames.
+        whence : {0, 1, 2}
+            0: offset from start of file, offset should be >=0.
+            1: move relative to the current position, positive or negative
+            2: move relative to the end of file, offset should be <= 0.
+            Seeking beyond the end of a file is not supported
+        """
+        cdef int status
+        cdef int64_t pos, absolute
+
+        if self.mode != 'r':
+            raise NotImplementedError('seek() only available in mode="r" currently')
+        if whence == 0 and offset >= 0:
+            self._pos = offset
+        elif whence == 1:
+            self._pos += offset
+        elif whence == 2 and offset <= 0:
+            self._pos = self._tot_n_frames-offset-1
+        else:
+            raise IOError('Invalid argument')
 
     def __enter__(self):
         "Support the context manager protocol"
