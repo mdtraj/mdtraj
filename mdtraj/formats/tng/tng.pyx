@@ -5,13 +5,16 @@ from libc.stdint cimport int64_t
 from libc.stdlib cimport malloc, free
 
 from math import ceil
-from mdtraj.utils import cast_indices, in_units_of
+from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
 
+import os
 import numpy as np
 cimport numpy as np
 np.import_array()
+
+__all__ = ['load_tng', 'TNGTrajectoryFile']
 
 ctypedef enum tng_variable_n_atoms_flag: TNG_CONSTANT_N_ATOMS, TNG_VARIABLE_N_ATOMS
 ctypedef enum tng_function_status: TNG_SUCCESS, TNG_FAILURE, TNG_CRITICAL
@@ -36,9 +39,15 @@ cdef extern from "tng/tng_io.h":
     tng_function_status tng_num_particles_get(
                 const tng_trajectory_t tng_data,
                 int64_t *n)
+    tng_function_status tng_implicit_num_particles_set(
+                const tng_trajectory_t tng_data,
+                const int64_t n)
 
     # n frames
     tng_function_status tng_num_frames_get(
+                const tng_trajectory_t tng_data,
+                int64_t *n)
+    tng_function_status tng_num_frames_per_frame_set_get(
                 const tng_trajectory_t tng_data,
                 int64_t *n)
     
@@ -47,15 +56,22 @@ cdef extern from "tng/tng_io.h":
                 const tng_trajectory_t tng_data,
                 int64_t *exp);
 
-    # read frames in chunks
+    # Positions
     tng_function_status tng_util_pos_read_range(
                 const tng_trajectory_t tng_data,
                 const int64_t first_frame,
                 const int64_t last_frame,
                 float **positions,
                 int64_t *stride_length)
+    tng_function_status tng_util_pos_write(
+                const tng_trajectory_t tng_data,
+                const int64_t frame_nr,
+                const float *positions)
+    tng_function_status tng_util_pos_write_interval_set(
+                const tng_trajectory_t tng_data,
+                const int64_t i)
 
-    # Used to read the box shape
+    # Box shape
     tng_function_status tng_data_vector_interval_get(
                 const tng_trajectory_t tng_data,
                 const int64_t block_id,
@@ -66,12 +82,25 @@ cdef extern from "tng/tng_io.h":
                 int64_t *stride_length,
                 int64_t *n_values_per_frame,
                 char *type)
+    tng_function_status tng_util_box_shape_write(
+                const tng_trajectory_t tng_data,
+                const int64_t frame_nr,
+                const float *box_shape)
+    tng_function_status tng_util_box_shape_write_interval_set(
+                const tng_trajectory_t tng_data,
+                const int64_t i)
 
-    # Read time
+    # Time
     tng_function_status tng_util_time_of_frame_get(
                 const tng_trajectory_t tng_data,
                 const int64_t frame_nr,
                 double *time)
+    tng_function_status tng_time_per_frame_set(
+                const tng_trajectory_t tng_data,
+                const double time)
+    tng_function_status tng_frame_set_first_frame_time_set(
+                const tng_trajectory_t tng_data,
+                const double first_frame_time)
 
 
 @FormatRegistry.register_loader('.tng')
@@ -146,35 +175,45 @@ cdef class TNGTrajectoryFile(object):
     cdef const char * filename
     cdef char mode
     cdef int is_open
-    cdef float distance_scale
+    cdef float _distance_scale
     cdef int64_t n_atoms  # number of atoms in the file
     cdef int64_t tot_n_frames
     cdef int64_t _pos
+    cdef int64_t _frames_per_frame_set
+    cdef float _time_per_frame
+    cdef readonly char* distance_unit
 
     def __cinit__(self, char* filename, char* mode='r', force_overwrite=True, **kwargs):
+        self.distance_unit = 'nanometers'
         self.filename = filename
         self.mode = mode[0]
-        if self.mode == 'w':
-            raise NotImplementedError()
-
-        # TODO: TNG_CONSTANT_N_ATOMS assert that this is set
-
+        if self.mode == 'w' and os.path.exists(filename):
+            if force_overwrite:
+                os.unlink(filename)
+            else:
+                raise IOError('"%s" already exists' % filename)
         if tng_util_trajectory_open(filename, self.mode, & self._traj) == TNG_SUCCESS:
             self.is_open = True
         else:
-            raise Exception("something went wrong during opening.")
-
-        if tng_num_particles_get(self._traj, & self.n_atoms) != TNG_SUCCESS:
-            raise Exception("something went wrong during obtaining num particles")
-        
-        if tng_num_frames_get(self._traj, & self.tot_n_frames) != TNG_SUCCESS:
-            raise Exception("error during len determination")
- 
+            raise Exception("An error ocurred opening the file.")
         cdef int64_t exponent;
-        if tng_distance_unit_exponential_get(self._traj, &exponent) != TNG_SUCCESS:
-            raise Exception("Error reading distance unit exponent")
-        self.distance_scale = 10.0**(exponent+9)
+        if self.mode == 'r':
+            if tng_num_particles_get(self._traj, & self.n_atoms) != TNG_SUCCESS:
+                raise Exception("something went wrong during obtaining num particles")
+            
+            if tng_num_frames_get(self._traj, & self.tot_n_frames) != TNG_SUCCESS:
+                raise Exception("error during len determination")
+     
+            if tng_distance_unit_exponential_get(self._traj, &exponent) != TNG_SUCCESS:
+                raise Exception("Error reading distance unit exponent")
+            self._distance_scale = 10.0**(exponent+9)
+        else:
+            self.tot_n_frames = 0
+            self._distance_scale = 1.0
+            if tng_num_frames_per_frame_set_get(self._traj, &self._frames_per_frame_set) != TNG_SUCCESS:
+                raise Exception("Error reading number of frames per frame set")
         self._pos = 0
+        self._time_per_frame = 0
 
     def __len__(self):
         return self.tot_n_frames
@@ -209,7 +248,7 @@ cdef class TNGTrajectoryFile(object):
                 for i, atom_index in enumerate(atom_indices):
                     for j in range(3):
                         xyz[i, j] = positions[atom_index*3 + j]
-                xyz *= self.distance_scale
+                xyz *= self._distance_scale
             else:
                 raise Exception("Error reading positions")
         finally:
@@ -244,7 +283,7 @@ cdef class TNGTrajectoryFile(object):
                     for j in range(3):
                         for k in range(3):
                             box[j, k] = float_box[j*3 + k]
-                box *= self.distance_scale
+                box *= self._distance_scale
             else:
                 raise Exception("Error reading box shape")
         finally:
@@ -332,8 +371,9 @@ cdef class TNGTrajectoryFile(object):
 
         if stride is None:
             stride = 1
-        if n_frames is None:
-            n_frames = ceil((self.tot_n_frames-self._pos)/float(stride))
+        max_frames = ceil((self.tot_n_frames-self._pos)/float(stride))
+        if n_frames is None or n_frames > max_frames:
+            n_frames = max_frames
         if atom_indices is None:
             atom_indices = np.arange(self.n_atoms)
         elif isinstance(atom_indices, slice):
@@ -347,9 +387,9 @@ cdef class TNGTrajectoryFile(object):
         
         # Read the frames one at a time.
 
-        all_xyz = np.empty((n_frames, len(atom_indices), 3))
+        all_xyz = np.empty((n_frames, len(atom_indices), 3), dtype=np.float32)
         all_time = []
-        all_box = np.empty((n_frames, 3, 3));
+        all_box = np.empty((n_frames, 3, 3), dtype=np.float32);
         for i in range(n_frames):
             xyz, time, box = self._read_frame(atom_indices)
             all_xyz[i] = xyz
@@ -359,10 +399,78 @@ cdef class TNGTrajectoryFile(object):
         if any(time is None for time in all_time):
             all_time = None
         else:
-            all_time = np.array(all_time)
+            all_time = np.array(all_time, dtype=np.float32)
         if np.all(np.logical_and(all_box < 1e-10, all_box > -1e-10)):
             all_box = None
         return all_xyz, all_time, all_box
+
+    def write(self, xyz, time=None, box=None):
+        """write(xyz, time=None, box=None)
+
+        Write data to an XTC file
+
+        Parameters
+        ----------
+        xyz : np.ndarray, dtype=np.float32, shape=(n_frames, n_atoms, 3)
+            The cartesian coordinates of the atoms, in nanometers
+        time : np.ndarray, dtype=float32, shape=(n_frames), optional
+            The simulation time corresponding to each frame, in picoseconds.
+        box : np.ndarray, dtype=float32, shape=(n_frames, 3, 3), optional
+            The periodic box vectors of the simulation in each frame, in nanometers.
+            If not supplied, all box vectors will be recorded as (0,0,0).
+        """
+        if self.mode != 'w':
+            raise ValueError('write() is only available when the file is opened in mode="w"')
+
+        # do typechecking, and then dispatch to the c level function
+        xyz = ensure_type(xyz, dtype=np.float32, ndim=3, name='xyz', can_be_none=False,
+                          add_newaxis_on_deficient_ndim=True, warn_on_cast=False)
+        n_frames = len(xyz)
+        time = ensure_type(time, dtype=np.float32, ndim=1, name='time', can_be_none=True,
+                           shape=(n_frames,), add_newaxis_on_deficient_ndim=True,
+                           warn_on_cast=False)
+        box = ensure_type(box, dtype=np.float32, ndim=3, name='box', can_be_none=True,
+                          shape=(n_frames, 3, 3), add_newaxis_on_deficient_ndim=True,
+                          warn_on_cast=False)
+
+        if self.tot_n_frames == 0:
+            # Initialization before writing the first frame.
+            self.n_atoms = xyz.shape[1]
+            if tng_implicit_num_particles_set(self._traj, self.n_atoms) != TNG_SUCCESS:
+                raise Exception("Error writing number of particles")
+            if tng_util_pos_write_interval_set(self._traj, 1) != TNG_SUCCESS:
+                raise Exception("Error setting position stride")
+            if tng_util_box_shape_write_interval_set(self._traj, 1) != TNG_SUCCESS:
+                raise Exception("Error setting box shape stride")
+        else:
+            if not self.n_atoms == xyz.shape[1]:
+                raise ValueError("This file has %d atoms, but you're now "
+                    "trying to write %d atoms" % (self.n_atoms, xyz.shape[1]))
+        if n_frames > 1 and time is not None:
+            # Compute the time per frame and make sure it's consistent.
+            time_per_frame = time[1]-time[0]
+            if (self._time_per_frame != 0 and self._time_per_frame != time_per_frame) or not np.allclose(time[:-1]+time_per_frame, time[1:]):
+                raise ValueError("Frames must be evenly spaced in time")
+            if self._time_per_frame == 0:
+                self._time_per_frame = time_per_frame
+                if tng_time_per_frame_set(self._traj, time_per_frame) != TNG_SUCCESS:
+                    raise Exception("Error writing time per frame")
+
+        if box is None:
+            # Make each box[i] be the all zeros, which indicates the lack of a unitcell
+            box = np.zeros((n_frames, 3, 3), dtype=np.float32)
+
+        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz_array = xyz
+        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box_array = box
+        for i in range(len(xyz)):
+            if tng_util_pos_write(self._traj, self.tot_n_frames, &xyz_array[i,0,0]) != TNG_SUCCESS:
+                raise Exception("Error writing positions")
+            if tng_util_box_shape_write(self._traj, self.tot_n_frames, &box_array[i,0,0]) != TNG_SUCCESS:
+                raise Exception("Error writing box shape")
+            if self.tot_n_frames%self._frames_per_frame_set == 0 and time is not None:
+                if tng_frame_set_first_frame_time_set(self._traj, time[i]) != TNG_SUCCESS:
+                    raise Exception("Error writing first frame time")
+            self.tot_n_frames += 1
 
     def seek(self, int64_t offset, int whence=0):
         """seek(offset, whence=0)
@@ -389,9 +497,21 @@ cdef class TNGTrajectoryFile(object):
         elif whence == 1:
             self._pos += offset
         elif whence == 2 and offset <= 0:
-            self._pos = self._tot_n_frames-offset-1
+            self._pos = self.tot_n_frames+offset
         else:
             raise IOError('Invalid argument')
+
+    def tell(self):
+        """Current file position
+
+        Returns
+        -------
+        offset : int
+            The current frame in the file.
+        """
+        if self.mode != 'r':
+            raise NotImplementedError('tell() only available in mode="r" currently')
+        return int(self._pos)
 
     def __enter__(self):
         "Support the context manager protocol"
@@ -400,3 +520,5 @@ cdef class TNGTrajectoryFile(object):
     def __exit__(self, *exc_info):
         "Support the context manager protocol"
         self.close()
+
+FormatRegistry.register_fileobject('.tng')(TNGTrajectoryFile)

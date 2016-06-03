@@ -4,7 +4,7 @@ MDTraj is a python library that allows users to manipulate molecular dynamics
 (MD) trajectories and perform a variety of analyses, including fast RMSD,
 solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj
 is the wide variety of molecular dynamics trajectory file formats which are
-supported, including RCSB pdb, GROMACS xtc and trr, CHARMM / NAMD dcd, AMBER
+supported, including RCSB pdb, GROMACS xtc, tng, and trr, CHARMM / NAMD dcd, AMBER
 binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 """
 

@@ -45,6 +45,7 @@ from mdtraj.formats import DTRTrajectoryFile
 from mdtraj.formats import LAMMPSTrajectoryFile
 from mdtraj.formats import XYZTrajectoryFile
 from mdtraj.formats import GroTrajectoryFile
+from mdtraj.formats import TNGTrajectoryFile
 from mdtraj.formats import AmberNetCDFRestartFile
 from mdtraj.formats import AmberRestartFile
 
@@ -239,7 +240,7 @@ def open(filename, mode='r', force_overwrite=True, **kwargs):
     load, ArcTrajectoryFile, BINPOSTrajectoryFile, DCDTrajectoryFile,
     HDF5TrajectoryFile, LH5TrajectoryFile, MDCRDTrajectoryFile,
     NetCDFTrajectoryFile, PDBTrajectoryFile, TRRTrajectoryFile,
-    XTCTrajectoryFile
+    XTCTrajectoryFile, TNGTrajectoryFile
 
     """
     extension = _get_extension(filename)
@@ -1246,6 +1247,7 @@ class Trajectory(object):
                 '.xyz.gz': self.save_xyz,
                 '.gro': self.save_gro,
                 '.rst7' : self.save_amberrst7,
+                '.tng' : self.save_tng,
             }
 
     def save(self, filename, **kwargs):
@@ -1597,6 +1599,20 @@ class Trajectory(object):
         with GroTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(self.xyz, self.topology, self.time, self.unitcell_vectors,
                     precision=precision)
+
+    def save_tng(self, filename, force_overwrite=True):
+        """Save trajectory to Gromacs TNG format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
+        """
+        self._check_valid_unitcell()
+        with TNGTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(self.xyz, time=self.time, box=self.unitcell_vectors)
 
     def center_coordinates(self, mass_weighted=False):
         """Center each trajectory frame at the origin (0,0,0).
