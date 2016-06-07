@@ -530,7 +530,7 @@ class PDBTrajectoryFile(object):
                     atomName = atomName.strip()
                     element = atom.element
                     if element is None:
-                        element = self._guess_element(atomName, residue)
+                        element = PDBTrajectoryFile._guess_element(atomName, residue.name, len(residue))
 
                     newAtom = self._topology.add_atom(atomName, element, r, serial=atom.serial_number)
                     atomByNumber[atom.serial_number] = newAtom
@@ -606,7 +606,8 @@ class PDBTrajectoryFile(object):
                 PDBTrajectoryFile._parseResidueAtoms(residue, atoms)
                 PDBTrajectoryFile._atomNameReplacements[name] = atoms
 
-    def _guess_element(self, atom_name, residue):
+    @staticmethod
+    def _guess_element(atom_name, residue_name, residue_length):
         "Try to guess the element name"
 
         upper = atom_name.upper()
@@ -624,7 +625,7 @@ class PDBTrajectoryFile(object):
             element = elem.potassium
         elif upper.startswith('ZN'):
             element = elem.zinc
-        elif len(residue) == 1 and upper.startswith('CA'):
+        elif residue_length == 1 and upper.startswith('CA'):
             element = elem.calcium
 
         # TJL has edited this. There are a few issues here. First,
@@ -632,15 +633,15 @@ class PDBTrajectoryFile(object):
         # below. Second, there is additional parsing code in
         # pdbstructure.py, and I am unsure why it doesn't get used
         # here...
-        elif len(residue) > 1 and upper.startswith('CE'):
+        elif residue_length > 1 and upper.startswith('CE'):
             element = elem.carbon  # (probably) not Celenium...
-        elif len(residue) > 1 and upper.startswith('CD'):
+        elif residue_length > 1 and upper.startswith('CD'):
             element = elem.carbon  # (probably) not Cadmium...
-        elif residue.name in ['TRP', 'ARG', 'GLN', 'HIS'] and upper.startswith('NE'):
+        elif residue_name in ['TRP', 'ARG', 'GLN', 'HIS'] and upper.startswith('NE'):
             element = elem.nitrogen  # (probably) not Neon...
-        elif residue.name in ['ASN'] and upper.startswith('ND'):
+        elif residue_name in ['ASN'] and upper.startswith('ND'):
             element = elem.nitrogen  # (probably) not ND...
-        elif residue.name == 'CYS' and upper.startswith('SG'):
+        elif residue_name == 'CYS' and upper.startswith('SG'):
             element = elem.sulfur  # (probably) not SG...
         else:
             try:

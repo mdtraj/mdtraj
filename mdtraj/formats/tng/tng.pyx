@@ -8,6 +8,8 @@ from math import ceil
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
+from mdtraj.formats import PDBTrajectoryFile
+import mdtraj as md
 
 import os
 import numpy as np
@@ -45,9 +47,6 @@ cdef extern from "tng/tng_io.h":
 
     # n frames
     tng_function_status tng_num_frames_get(
-                const tng_trajectory_t tng_data,
-                int64_t *n)
-    tng_function_status tng_num_frames_per_frame_set_get(
                 const tng_trajectory_t tng_data,
                 int64_t *n)
     
@@ -101,6 +100,45 @@ cdef extern from "tng/tng_io.h":
     tng_function_status tng_frame_set_first_frame_time_set(
                 const tng_trajectory_t tng_data,
                 const double first_frame_time)
+    
+    # Miscellaneous
+    tng_function_status tng_num_frames_per_frame_set_get(
+                const tng_trajectory_t tng_data,
+                int64_t *n)
+    tng_function_status tng_last_program_name_set(
+                const tng_trajectory_t tng_data,
+                const char *new_name)
+    
+    # Topology
+    tng_function_status tng_chain_name_of_particle_nr_get(
+                const tng_trajectory_t tng_data,
+                const int64_t nr,
+                char *name,
+                const int max_len)
+    tng_function_status tng_residue_name_of_particle_nr_get(
+                const tng_trajectory_t tng_data,
+                const int64_t nr,
+                char *name,
+                const int max_len)
+    tng_function_status tng_global_residue_id_of_particle_nr_get(
+                const tng_trajectory_t tng_data,
+                const int64_t nr,
+                int64_t *id)
+    tng_function_status tng_atom_name_of_particle_nr_get(
+                const tng_trajectory_t tng_data,
+                const int64_t nr,
+                char *name,
+                const int max_len)
+    tng_function_status tng_atom_type_of_particle_nr_get(
+                const tng_trajectory_t tng_data,
+                const int64_t nr,
+                char *type,
+                const int max_len)
+    tng_function_status tng_molsystem_bonds_get(
+                const tng_trajectory_t tng_data,
+                int64_t *n_bonds,
+                int64_t **from_atoms,
+                int64_t **to_atoms)
 
 
 @FormatRegistry.register_loader('.tng')
@@ -111,17 +149,17 @@ def load_tng(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     The .tng format is a cross-platform compressed binary trajectory format
     produced by the gromacs software that stores atomic coordinates, box
-    vectors, and time information. It is lossy (storing coordinates to about
-    1e-3 A) and extremely space-efficient.
+    vectors, time information. It optionally can also store topology information.
+    It is lossy (storing coordinates to about 1e-3 A) and extremely space-efficient.
 
     Parameters
     ----------
     filename : str
         Filename (string) of tng trajectory.
-    top : {str, Trajectory, Topology}
-        The TNG format does not contain topology information. Pass in either the
-        path to a RCSB PDB file, a trajectory, or a topology to supply this
-        information.
+    top : {str, Trajectory, Topology}, optional
+        If the TNG file does not contain topology information, it must be provided
+        with this argument. Pass in either the path to a RCSB PDB file, a trajectory,
+        or a topology to supply this information.
     stride : int, default=None
         Only read every stride-th frame
     atom_indices : array_like, optional
@@ -150,14 +188,14 @@ def load_tng(filename, top=None, stride=None, atom_indices=None, frame=None):
     mdtraj.TNGTrajectoryFile :  Low level interface to TNG files
     """
     from mdtraj.core.trajectory import _parse_topology
-    if top is None:
-        raise ValueError('"top" argument is required for load_tng')
 
     if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_tng. '
                         'you supplied %s' % type(filename))
-
-    topology = _parse_topology(top)
+    if top is not None:
+        topology = _parse_topology(top)
+    else:
+        topology = None
     atom_indices = cast_indices(atom_indices)
 
     with TNGTrajectoryFile(filename, 'r') as f:
@@ -171,6 +209,41 @@ def load_tng(filename, top=None, stride=None, atom_indices=None, frame=None):
                               atom_indices=atom_indices)
 
 cdef class TNGTrajectoryFile(object):
+    """TNGTrajectoryFile(filename, mode='r', force_overwrite=True, **kwargs)
+
+    Interface for reading and writing to a GROMACS TNG file.
+    This is a file-like object that supports both reading and writing.
+    It also supports the context manager protocol, so you can use it
+    with the python 'with' statement.
+
+    This class supports both reading and writing of coordinates, time,
+    and unit cell parameters.  It also supports reading (but not writing)
+    of topology information.
+
+    Parameters
+    ----------
+    filename : str
+        The filename to open. A path to a file on disk.
+    mode : {'r', 'w'}
+        The mode in which to open the file, either 'r' for read or 'w' for write.
+    force_overwrite : bool
+        If opened in write mode, and a file by the name of `filename` already exists on disk, should we overwrite it?
+
+    Examples
+    --------
+    >>> # read the data from from an TNG file
+    >>> with TNGTrajectoryFile('traj.xtc') as f:
+    >>>    xyz, time, box = f.read()
+    >>>    top = f.topology
+
+    >>> # write some random coordinates to an TNG file
+    >>> with TNGTrajectoryFile('output.xtc', 'w') as f:
+    >>>     f.write(np.random.randn(10,1,3))
+
+    See Also
+    --------
+    mdtraj.load_tng : High-level wrapper that returns a ``md.Trajectory``
+    """
     cdef tng_trajectory_t _traj
     cdef const char * filename
     cdef char mode
@@ -181,6 +254,7 @@ cdef class TNGTrajectoryFile(object):
     cdef int64_t _pos
     cdef int64_t _frames_per_frame_set
     cdef float _time_per_frame
+    cdef object _topology
     cdef readonly char* distance_unit
 
     def __cinit__(self, char* filename, char* mode='r', force_overwrite=True, **kwargs):
@@ -212,8 +286,11 @@ cdef class TNGTrajectoryFile(object):
             self._distance_scale = 1.0
             if tng_num_frames_per_frame_set_get(self._traj, &self._frames_per_frame_set) != TNG_SUCCESS:
                 raise Exception("Error reading number of frames per frame set")
+            if tng_last_program_name_set(self._traj, 'MDTraj %s' % md.version.version) != TNG_SUCCESS:
+                raise Exception("Error writing program name")
         self._pos = 0
         self._time_per_frame = 0
+        self._topology = self._read_topology()
 
     def __len__(self):
         return self.tot_n_frames
@@ -227,6 +304,71 @@ cdef class TNGTrajectoryFile(object):
             tng_util_trajectory_close(& self._traj)
             self.is_open = False
             self._pos = 0
+    
+    def _read_topology(self):
+        cdef char text[1024]
+        cdef int64_t residue_id
+        last_chain_name = None
+        last_residue_id = None
+        top = md.Topology()
+        PDBTrajectoryFile._loadNameReplacementTables()
+        
+        # Loop over atoms, load the information for each one, and create the Topology
+        
+        cdef int i
+        for i in range(self.n_atoms):
+            if tng_chain_name_of_particle_nr_get(self._traj, i, text, 1024) != TNG_SUCCESS:
+                return None
+            chain_name = str(text)
+            if tng_residue_name_of_particle_nr_get(self._traj, i, text, 1024) != TNG_SUCCESS:
+                return None
+            residue_name = str(text).strip()
+            if residue_name in PDBTrajectoryFile._residueNameReplacements:
+                residue_name = PDBTrajectoryFile._residueNameReplacements[residue_name]
+            if tng_global_residue_id_of_particle_nr_get(self._traj, i, &residue_id) != TNG_SUCCESS:
+                return None
+            if tng_atom_name_of_particle_nr_get(self._traj, i, text, 1024) != TNG_SUCCESS:
+                return None
+            atom_name = str(text).strip()
+            if residue_name in PDBTrajectoryFile._atomNameReplacements and atom_name in PDBTrajectoryFile._atomNameReplacements[residue_name]:
+                atom_name = PDBTrajectoryFile._atomNameReplacements[residue_name][atom_name]
+            if tng_atom_type_of_particle_nr_get(self._traj, i, text, 1024) != TNG_SUCCESS:
+                return None
+            try:
+                element = md.element.get_by_symbol(str(text))
+            except KeyError:
+                element = None
+            if chain_name != last_chain_name:
+                chain = top.add_chain()
+                last_chain_name = chain_name
+                last_residue_id = None
+            if residue_id != last_residue_id:
+                residue = top.add_residue(residue_name, chain, residue_id)
+                last_residue_id = residue_id
+            top.add_atom(atom_name, element, residue)
+
+        if all(r.name == '' for r in top.residues) and all(a.name == '' for a in top.atoms):
+            # This file doesn't contain topology information.
+            return None
+
+        # Now that we know how many atoms are in each residue, we can guess the elements.
+
+        for atom in top.atoms:
+            if atom.element is None:
+                atom.element = PDBTrajectoryFile._guess_element(atom.name, atom.residue.name, atom.residue.n_atoms)
+        
+        # Load bonds.
+        
+        cdef int64_t n_bonds
+        cdef int64_t* from_atoms
+        cdef int64_t* to_atoms
+        if tng_molsystem_bonds_get(self._traj, &n_bonds, &from_atoms, &to_atoms) != TNG_SUCCESS:
+            raise Exception("Error reading bonds")
+        for i in  range(n_bonds):
+            top.add_bond(top.atom(from_atoms[i]), top.atom(to_atoms[i]))
+        free(from_atoms)
+        free(to_atoms)
+        return top
 
     def _read_frame(self, atom_indices):
         if self._pos >= self.tot_n_frames:
@@ -293,21 +435,22 @@ cdef class TNGTrajectoryFile(object):
         self._pos += 1
 
         return xyz, time, box
-    def read_as_traj(self, topology, n_frames=None, stride=None, atom_indices=None):
+    
+    def read_as_traj(self, topology=None, n_frames=None, stride=None, atom_indices=None):
         """read_as_traj(topology, n_frames=None, stride=None, atom_indices=None)
 
         Read a trajectory from a TNG file
 
         Parameters
         ----------
-        topology : Topology
-            The system topology
-        n_frames : int, None
+        topology : Topology, default=None, optional
+            The system topology. If None, the Topology read from the file will be used.
+        n_frames : int, default=None
             The number of frames you would like to read from the file.
             If None, all of the remaining frames will be loaded.
-        stride : int, optional
+        stride : int, default=None, optional
             Read only every stride-th frame.
-        atom_indices : array_like, optional
+        atom_indices : array_like, default=None, optional
             If not none, then read only a subset of the atoms coordinates from the
             file. This may be slightly slower than the standard read because it required
             an extra copy, but will save memory.
@@ -322,6 +465,10 @@ cdef class TNGTrajectoryFile(object):
         read : Returns the raw data from the file
         """
         from mdtraj.core.trajectory import Trajectory
+        if topology is None:
+            topology = self.topology
+        if topology is None:
+            raise ValueError('This file does not contain topology information, and no Topology was provided.')
         if atom_indices is not None:
             topology = topology.subset(atom_indices)
 
@@ -407,7 +554,7 @@ cdef class TNGTrajectoryFile(object):
     def write(self, xyz, time=None, box=None):
         """write(xyz, time=None, box=None)
 
-        Write data to an XTC file
+        Write data to a TNG file
 
         Parameters
         ----------
@@ -512,6 +659,12 @@ cdef class TNGTrajectoryFile(object):
         if self.mode != 'r':
             raise NotImplementedError('tell() only available in mode="r" currently')
         return int(self._pos)
+
+    @property
+    def topology(self):
+        """The Topology loaded from this TNG file, or None if it does not contain topology information. Only available when the file is opened in mode='r'.
+        """
+        return self._topology
 
     def __enter__(self):
         "Support the context manager protocol"

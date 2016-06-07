@@ -23,6 +23,23 @@ def test_load_trajectory():
     eq(pdbtraj.unitcell_vectors, tngtraj.unitcell_vectors)
     eq(pdbtraj.xyz, tngtraj.xyz)
 
+def test_load_topology():
+    """Test loading a Topology from a TNG file."""
+    
+    traj = md.load_tng(get_fn('tng_example.tng'))
+    top = traj.topology
+    eq(5, top.n_residues)
+    eq(10, top.n_bonds)
+    bonds = list(top.bonds)
+    for res in top.residues:
+        eq('HOH', res.name)
+        eq(3, res.n_atoms)
+        eq(md.element.oxygen, res.atom(0).element)
+        eq(md.element.hydrogen, res.atom(1).element)
+        eq(md.element.hydrogen, res.atom(2).element)
+        assert((res.atom(0), res.atom(1)) in bonds)
+        assert((res.atom(0), res.atom(2)) in bonds)
+
 def test_write():
     """Write a TNG file, then read it back."""
     xyz = np.asarray(np.around(np.random.randn(100, 10, 3), 3), dtype=np.float32)
