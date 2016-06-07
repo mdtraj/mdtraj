@@ -404,7 +404,7 @@ cdef class TNGTrajectoryFile(object):
             # This file doesn't specify times.
             time = None
         else:
-            time = frame_time
+            time = frame_time*1e12
 
         # Get the box shape of each frame in the requested range.
         
@@ -600,7 +600,7 @@ cdef class TNGTrajectoryFile(object):
                 raise ValueError("Frames must be evenly spaced in time")
             if self._time_per_frame == 0:
                 self._time_per_frame = time_per_frame
-                if tng_time_per_frame_set(self._traj, time_per_frame) != TNG_SUCCESS:
+                if tng_time_per_frame_set(self._traj, time_per_frame*1e-12) != TNG_SUCCESS:
                     raise Exception("Error writing time per frame")
 
         if box is None:
@@ -615,7 +615,7 @@ cdef class TNGTrajectoryFile(object):
             if tng_util_box_shape_write(self._traj, self.tot_n_frames, &box_array[i,0,0]) != TNG_SUCCESS:
                 raise Exception("Error writing box shape")
             if self.tot_n_frames%self._frames_per_frame_set == 0 and time is not None:
-                if tng_frame_set_first_frame_time_set(self._traj, time[i]) != TNG_SUCCESS:
+                if tng_frame_set_first_frame_time_set(self._traj, time[i]*1e-12) != TNG_SUCCESS:
                     raise Exception("Error writing first frame time")
             self.tot_n_frames += 1
 
