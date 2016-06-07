@@ -148,9 +148,9 @@ def load_tng(filename, top=None, stride=None, atom_indices=None, frame=None):
     Load a Gromacs TNG file from disk.
 
     The .tng format is a cross-platform compressed binary trajectory format
-    produced by the gromacs software that stores atomic coordinates, box
-    vectors, time information. It optionally can also store topology information.
-    It is lossy (storing coordinates to about 1e-3 A) and extremely space-efficient.
+    produced by the Gromacs software that stores atomic coordinates, box vectors,
+    and time information. It optionally can also store topology information.
+    It is lossy (storing coordinates to about 1e-3 nm) and extremely space-efficient.
 
     Parameters
     ----------
@@ -211,7 +211,7 @@ def load_tng(filename, top=None, stride=None, atom_indices=None, frame=None):
 cdef class TNGTrajectoryFile(object):
     """TNGTrajectoryFile(filename, mode='r', force_overwrite=True, **kwargs)
 
-    Interface for reading and writing to a GROMACS TNG file.
+    Interface for reading and writing to a Gromacs TNG file.
     This is a file-like object that supports both reading and writing.
     It also supports the context manager protocol, so you can use it
     with the python 'with' statement.
