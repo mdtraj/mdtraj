@@ -518,7 +518,7 @@ cdef class TNGTrajectoryFile(object):
 
         if stride is None:
             stride = 1
-        max_frames = ceil((self.tot_n_frames-self._pos)/float(stride))
+        max_frames = int(ceil((self.tot_n_frames-self._pos)/float(stride)))
         if n_frames is None or n_frames > max_frames:
             n_frames = max_frames
         if atom_indices is None:
