@@ -120,8 +120,6 @@ def format_extensions():
                                  'mdtraj/formats/tng/src/lib/md5.c',
                                  'mdtraj/formats/tng/tng.pyx'],
                     include_dirs=['mdtraj/formats/tng/include'],
-                    define_macros=[('USE_ZLIB', 1)],
-                    libraries=['z'],
                     )
 
     dcd = Extension('mdtraj.formats.dcd',
