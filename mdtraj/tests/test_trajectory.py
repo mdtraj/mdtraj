@@ -390,6 +390,15 @@ def test_join():
     eq(len(t4.xyz), 11)
     eq(t4.xyz, np.vstack((xyz[:5], xyz[4:])))
 
+def test_md_join():
+    t_ref = md.load(get_fn('frame0.h5'))[:20]
+    loaded = md.load(fn, top=t_ref, stride=2)
+    iterloaded = md.join(md.iterload(fn, top=t_ref, stride=2, chunk=6))
+    eq(loaded.xyz, iterloaded.xyz)
+    eq(loaded.time, iterloaded.time)
+    eq(loaded.unitcell_angles, iterloaded.unitcell_angles)
+    eq(loaded.unitcell_lengths, iterloaded.unitcell_lengths)
+
 def test_stack_1():
     t1 = md.load(get_fn('native.pdb'))
     t2 = t1.stack(t1)
