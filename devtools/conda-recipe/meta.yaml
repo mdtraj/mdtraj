@@ -13,6 +13,7 @@ requirements:
     - cython
     - numpy x.x
     - setuptools
+    - zlib
 
   run:
     - python
