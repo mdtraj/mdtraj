@@ -114,13 +114,24 @@ def format_extensions():
                                   'mdtraj/formats/xtc/'],
                     extra_compile_args=compiler_args)
 
+    zlib_include_dirs = []
+    zlib_library_dirs = []
+    if sys.platform == 'win32':
+        # Conda puts the zlib headers in ./Library/... on windows
+        # If you're not using conda, good luck!
+        # (on linux, zlib is a dependency of python and its headers/libraries
+        #  go in the normal ./include ./lib directories)
+        zlib_include_dirs += ["{}/Library/include".format(sys.prefix)]
+        zlib_library_dirs += ["{}/Library/lib".format(sys.prefix)]
     tng = Extension('mdtraj.formats.tng',
                     sources=glob('mdtraj/formats/tng/src/compression/*.c') +
                                 ['mdtraj/formats/tng/src/lib/tng_io.c',
                                  'mdtraj/formats/tng/src/lib/md5.c',
                                  'mdtraj/formats/tng/tng.pyx'],
-                    include_dirs=['mdtraj/formats/tng/include'],
+                    include_dirs=['mdtraj/formats/tng/include']
+                                 + zlib_include_dirs,
                     define_macros=[('USE_ZLIB', 1)],
+                    library_dirs=zlib_library_dirs,
                     libraries=['z'],
                     )
 
