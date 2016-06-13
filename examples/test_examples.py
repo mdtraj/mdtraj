@@ -9,7 +9,7 @@ import nbformat
 from jupyter_client import KernelManager
 
 def test_examples():
-    for f in os.listdir():
+    for f in os.listdir('.'):
         if f.endswith('.ipynb'):
             yield check_one_notebook, f
 
