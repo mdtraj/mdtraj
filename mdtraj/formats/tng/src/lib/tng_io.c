@@ -402,7 +402,7 @@ static TNG_INLINE int64_t tng_max_i64(const int64_t a, const int64_t b)
  * byte order is not recognised.
  */
 static tng_function_status tng_swap_byte_order_big_endian_32
-                (const tng_trajectory_t tng_data, int32_t *v)
+                (const tng_trajectory_t tng_data, uint32_t *v)
 {
     switch(tng_data->endianness_32)
     {
@@ -441,7 +441,7 @@ static tng_function_status tng_swap_byte_order_big_endian_32
  * byte order is not recognised.
  */
 static tng_function_status tng_swap_byte_order_big_endian_64
-                (const tng_trajectory_t tng_data, int64_t *v)
+                (const tng_trajectory_t tng_data, uint64_t *v)
 {
     switch(tng_data->endianness_64)
     {
@@ -494,7 +494,7 @@ static tng_function_status tng_swap_byte_order_big_endian_64
  * byte order is not recognised.
  */
 static tng_function_status tng_swap_byte_order_little_endian_32
-                (const tng_trajectory_t tng_data, int32_t *v)
+                (const tng_trajectory_t tng_data, uint32_t *v)
 {
     switch(tng_data->endianness_32)
     {
@@ -533,7 +533,7 @@ static tng_function_status tng_swap_byte_order_little_endian_32
  * byte order is not recognised.
  */
 static tng_function_status tng_swap_byte_order_little_endian_64
-                (const tng_trajectory_t tng_data, int64_t *v)
+                (const tng_trajectory_t tng_data, uint64_t *v)
 {
     switch(tng_data->endianness_64)
     {
