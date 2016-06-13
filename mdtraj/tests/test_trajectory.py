@@ -50,7 +50,8 @@ for suffix, (fd, temp) in {
       'nc' : tempfile.mkstemp(suffix='.nc'),
       'lh5' : tempfile.mkstemp(suffix='.lh5'),
       'lammpstrj' : tempfile.mkstemp(suffix='.lammpstrj'),
-      'xyz' : tempfile.mkstemp(suffix='.xyz')}.items():
+      'xyz' : tempfile.mkstemp(suffix='.xyz'),
+      'tng' : tempfile.mkstemp(suffix='.tng')}.items():
     os.close(fd)
     tmpfns[suffix] = temp
 
@@ -142,22 +143,22 @@ def test_slice2():
 
 def test_xtc():
     t = md.load(get_fn('frame0.xtc'), top=nat)
-    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc'], tmpfns['tng']]:
         def f():
             t.save(e)
             t2 = md.load(e, top=nat)
             eq(t.xyz, t2.xyz, err_msg=e)
 
-            # ony trr and xtc save the time that we read from the original
+            # ony trr, xtc, and tng save the time that we read from the original
             # xtc format
-            if e.endswith('.trr') or e.endswith('.xtc'):
-                eq(t.time, t2.time, err_msg=e)
+            if e.endswith('.trr') or e.endswith('.xtc') or e.endswith('.tng'):
+                eq(t.time, t2.time, decimal=3, err_msg=e)
         yield f
 
 
 def test_dcd():
     t = md.load(get_fn('frame0.dcd'), top=nat)
-    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc'], tmpfns['tng']]:
         def f():
             t.save(e)
             t2 = md.load(e, top=nat)
@@ -167,7 +168,7 @@ def test_dcd():
 
 def test_dtr():
     t = md.load(get_fn('ala_dipeptide_trj/clickme.dtr'), top=get_fn('ala_dipeptide.pdb'))
-    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc'], tmpfns['tng']]:
         def f():
             t.save(e)
             t2 = md.load(e, top=get_fn('ala_dipeptide.pdb'))
@@ -180,7 +181,7 @@ def test_dtr():
 
 def test_binpos():
     t = md.load(get_fn('frame0.binpos'), top=nat)
-    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc'], tmpfns['tng']]:
         def f():
             t.save(e)
             t2 = md.load(e, top=nat)
@@ -192,7 +193,7 @@ def test_binpos():
 def test_load():
     filenames = ["frame0.xtc", "frame0.trr", "frame0.dcd", "frame0.binpos",
                  "traj.h5", "frame0.nc", "traj.h5", "frame0.lammpstrj",
-                 "frame0.xyz"]
+                 "frame0.xyz", "frame0.tng"]
     num_block = 3
     for filename in filenames:
         t0 = md.load(get_fn(filename), top=nat, discard_overlapping_frames=True)
@@ -432,7 +433,8 @@ def test_seek_read_mode():
              (md.formats.BINPOSTrajectoryFile, 'frame0.binpos'),
              (md.formats.DTRTrajectoryFile, 'frame0.dtr/clickme.dtr'),
              (md.formats.XYZTrajectoryFile, 'frame0.xyz'),
-             (md.formats.LAMMPSTrajectoryFile, 'frame0.lammpstrj'),]
+             (md.formats.LAMMPSTrajectoryFile, 'frame0.lammpstrj'),
+             (md.formats.TNGTrajectoryFile, 'frame0.tng'),]
     if not (on_win and on_py3):
         files.append((md.formats.LH5TrajectoryFile, 'legacy_msmbuilder_trj0.lh5'))
 
@@ -487,7 +489,7 @@ def test_seek_read_mode():
 def test_load_frame():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
              'frame0.dcd', 'frame0.mdcrd', 'frame0.binpos', 'frame0.xyz',
-             'frame0.lammpstrj']
+             'frame0.lammpstrj', 'frame0.tng']
     if not (on_win and on_py3):
         files.append('legacy_msmbuilder_trj0.lh5')
 
@@ -538,7 +540,7 @@ def test_iterload():
 
 def test_iterload_skip():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
-             'frame0.dcd', 'frame0.binpos', 'frame0.xyz', 'frame0.lammpstrj']
+             'frame0.dcd', 'frame0.binpos', 'frame0.xyz', 'frame0.lammpstrj', 'frame0.tng']
     if not (on_win and on_py3):
         files.append('legacy_msmbuilder_trj0.lh5')
 
@@ -605,7 +607,7 @@ def test_force_overwrite():
 def test_length():
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
              'frame0.mdcrd', '4waters.arc', 'frame0.dcd', '2EQQ.pdb',
-             'frame0.binpos', 'frame0.lammpstrj', 'frame0.xyz']
+             'frame0.binpos', 'frame0.lammpstrj', 'frame0.xyz', 'frame0.tng']
     if not (on_win and on_py3):
         files.append('legacy_msmbuilder_trj0.lh5')
 
@@ -629,7 +631,7 @@ def test_unitcell():
     top = md.load(get_fn('native.pdb')).restrict_atoms(range(5)).topology
     t = md.Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
 
-    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc']]:
+    for e in [tmpfns['xtc'], tmpfns['dcd'], tmpfns['binpos'], tmpfns['trr'], tmpfns['h5'], tmpfns['pdb'], tmpfns['pdb.gz'], tmpfns['nc'], tmpfns['tng']]:
         t.save(e)
         f = lambda: eq(md.load(e, top=top).unitcell_vectors, None)
         f.description = 'unitcell preservation in %s' % os.path.splitext(fn)[1]
