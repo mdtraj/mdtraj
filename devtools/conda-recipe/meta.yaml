@@ -36,6 +36,7 @@ test:
     - shiftx2 # [linux]
     - nbformat
     - ipykernel
+    - scikit-learn
 
   commands:
     - nosetests mdtraj -v -s
