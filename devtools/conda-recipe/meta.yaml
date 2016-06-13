@@ -34,9 +34,14 @@ test:
     - pandas
     - openmm  # [not (win32 or (win and py2k))]
     - shiftx2 # [linux]
+    - nbformat
+    - ipykernel
 
   commands:
     - nosetests mdtraj -v -s
+    - cd {{SRC_DIR}}
+    - cd examples
+    - nosetests test_examples.py -v -s
 
 about:
   home: http://mdtraj.org
