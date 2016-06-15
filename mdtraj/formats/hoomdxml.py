@@ -25,6 +25,7 @@ import numpy as np
 
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import ilen, import_, ensure_type
+from mdtraj.core.element import virtual_site
 
 
 __all__ = ['load_hoomdxml']
@@ -98,20 +99,26 @@ def load_hoomdxml(filename, top=None):
         raise ValueError('Different number of types and positions in xml file')
 
     # ignore the bond type
-    bonds = [(int(b.split()[1]), int(b.split()[2])) for b in bond.text.splitlines()[1:]]
-    chains = _find_chains(bonds)
-    ions = [i for i in range(len(types)) if not _in_chain(chains, i)]
+    if hasattr(bond, 'text'):
+        bonds = [(int(b.split()[1]), int(b.split()[2])) for b in bond.text.splitlines()[1:]]
+        chains = _find_chains(bonds)
+        unbonded_particles = [i for i, _ in enumerate(types) if not _in_chain(chains, i)]
+    else:
+        chains = []
+        bonds = []
+        unbonded_particles = [i for i, _ in enumerate(types)]
 
-    # add chains, bonds and ions (each chain = 1 residue)
+
+    # add chains, bonds and unbonded_particles (each chain = 1 residue)
     for chain in chains:
         t_chain = topology.add_chain()
         t_residue = topology.add_residue('A', t_chain)
         for atom in chain:
-            topology.add_atom(types[atom], 'U', t_residue)
-    for ion in ions:
+            topology.add_atom(types[atom], virtual_site, t_residue)
+    for unbonded_particle in unbonded_particles:
         t_chain = topology.add_chain()
         t_residue = topology.add_residue('A', t_chain)
-        topology.add_atom(types[ion], 'U', t_residue)
+        topology.add_atom(types[unbonded_particle], virtual_site, t_residue)
     for bond in bonds:
         atom1, atom2 = bond[0], bond[1]
         topology.add_bond(topology.atom(atom1), topology.atom(atom2))
@@ -148,9 +155,9 @@ def _find_chains(bond_list):
     molecules.add_edges_from(bond_list)
     return [sorted(x) for x in list(nx.connected_components(molecules))]
 
-def _in_chain(lists, n):
+def _in_chain(chains, atom_index):
     """Check if an item is in a list of lists"""
-    for l in lists:
-        if n in l:
+    for chain in chains:
+        if atom_index in chain:
             return True
     return False

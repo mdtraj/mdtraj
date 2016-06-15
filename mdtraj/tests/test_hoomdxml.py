@@ -36,11 +36,10 @@ def test_load():
 
 def test_load_no_chains():
     top = load(get_fn('no_chains.hoomdxml')).topology
-    eq(top.n_atoms, 1458)
+    eq(top.n_atoms, 3)
     eq(top.n_bonds, 0)
     eq(top.n_chains, top.n_atoms)
     eq(top.n_chains, top.n_residues)
-
 
 def test_load_no_ions():
     top = load(get_fn('no_ions.hoomdxml')).topology
