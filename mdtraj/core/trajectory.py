@@ -31,6 +31,7 @@ import warnings
 from copy import deepcopy
 from collections import Iterable
 import numpy as np
+import functools
 
 from mdtraj.formats import DCDTrajectoryFile
 from mdtraj.formats import BINPOSTrajectoryFile
@@ -45,6 +46,7 @@ from mdtraj.formats import DTRTrajectoryFile
 from mdtraj.formats import LAMMPSTrajectoryFile
 from mdtraj.formats import XYZTrajectoryFile
 from mdtraj.formats import GroTrajectoryFile
+from mdtraj.formats import TNGTrajectoryFile
 from mdtraj.formats import AmberNetCDFRestartFile
 from mdtraj.formats import AmberRestartFile
 
@@ -70,7 +72,8 @@ from mdtraj.geometry import distance
 # Globals
 ##############################################################################
 
-__all__ = ['open', 'load', 'iterload', 'load_frame', 'load_topology', 'Trajectory']
+__all__ = ['open', 'load', 'iterload', 'load_frame', 'load_topology', 'join',
+           'Trajectory']
 # supported extensions for constructing topologies
 _TOPOLOGY_EXTS = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
                   '.psf', '.mol2', '.hoomdxml', '.gro', '.arc', '.hdf5']
@@ -239,7 +242,7 @@ def open(filename, mode='r', force_overwrite=True, **kwargs):
     load, ArcTrajectoryFile, BINPOSTrajectoryFile, DCDTrajectoryFile,
     HDF5TrajectoryFile, LH5TrajectoryFile, MDCRDTrajectoryFile,
     NetCDFTrajectoryFile, PDBTrajectoryFile, TRRTrajectoryFile,
-    XTCTrajectoryFile
+    XTCTrajectoryFile, TNGTrajectoryFile
 
     """
     extension = _get_extension(filename)
@@ -509,6 +512,24 @@ def iterload(filename, chunk=100, **kwargs):
 
                 yield traj
 
+def join(trajs, check_topology=True, discard_overlapping_frames=False):
+    """Concatenate multiple trajectories into one long trajectory
+
+    Parameters
+    ----------
+    trajs : iterable of trajectories
+        Combine these into one trajectory
+    check_topology : bool
+        Make sure topologies match before joining
+    discard_overlapping_frames : bool
+        Check for overlapping frames and discard
+    """
+    return functools.reduce(
+        lambda x, y:
+        x.join(y, check_topology=check_topology,
+               discard_overlapping_frames=discard_overlapping_frames),
+        trajs
+    )
 
 class Trajectory(object):
     """Container object for a molecular dynamics trajectory
@@ -1246,6 +1267,7 @@ class Trajectory(object):
                 '.xyz.gz': self.save_xyz,
                 '.gro': self.save_gro,
                 '.rst7' : self.save_amberrst7,
+                '.tng' : self.save_tng,
             }
 
     def save(self, filename, **kwargs):
@@ -1597,6 +1619,20 @@ class Trajectory(object):
         with GroTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(self.xyz, self.topology, self.time, self.unitcell_vectors,
                     precision=precision)
+
+    def save_tng(self, filename, force_overwrite=True):
+        """Save trajectory to Gromacs TNG format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if its already there
+        """
+        self._check_valid_unitcell()
+        with TNGTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+            f.write(self.xyz, time=self.time, box=self.unitcell_vectors)
 
     def center_coordinates(self, mass_weighted=False):
         """Center each trajectory frame at the origin (0,0,0).

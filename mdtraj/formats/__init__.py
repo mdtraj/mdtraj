@@ -13,3 +13,4 @@ from mdtraj.formats.lammpstrj import LAMMPSTrajectoryFile
 from mdtraj.formats.dtr import DTRTrajectoryFile
 from mdtraj.formats.gro import GroTrajectoryFile
 from mdtraj.formats.xyzfile import XYZTrajectoryFile
+from mdtraj.formats.tng import TNGTrajectoryFile

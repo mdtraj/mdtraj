@@ -4,7 +4,7 @@ MDTraj is a python library that allows users to manipulate molecular dynamics
 (MD) trajectories and perform a variety of analyses, including fast RMSD,
 solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj
 is the wide variety of molecular dynamics trajectory file formats which are
-supported, including RCSB pdb, GROMACS xtc and trr, CHARMM / NAMD dcd, AMBER
+supported, including RCSB pdb, GROMACS xtc, tng, and trr, CHARMM / NAMD dcd, AMBER
 binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 """
 
@@ -13,6 +13,7 @@ DOCLINES = __doc__.split("\n")
 
 import os
 import sys
+from glob import glob
 from setuptools import setup, Extension, find_packages
 sys.path.insert(0, '.')
 from basesetup import (write_version_py, build_ext,
@@ -113,6 +114,27 @@ def format_extensions():
                                   'mdtraj/formats/xtc/'],
                     extra_compile_args=compiler_args)
 
+    zlib_include_dirs = []
+    zlib_library_dirs = []
+    if sys.platform == 'win32':
+        # Conda puts the zlib headers in ./Library/... on windows
+        # If you're not using conda, good luck!
+        # (on linux, zlib is a dependency of python and its headers/libraries
+        #  go in the normal ./include ./lib directories)
+        zlib_include_dirs += ["{}/Library/include".format(sys.prefix)]
+        zlib_library_dirs += ["{}/Library/lib".format(sys.prefix)]
+    tng = Extension('mdtraj.formats.tng',
+                    sources=glob('mdtraj/formats/tng/src/compression/*.c') +
+                                ['mdtraj/formats/tng/src/lib/tng_io.c',
+                                 'mdtraj/formats/tng/src/lib/md5.c',
+                                 'mdtraj/formats/tng/tng.pyx'],
+                    include_dirs=['mdtraj/formats/tng/include']
+                                 + zlib_include_dirs,
+                    define_macros=[('USE_ZLIB', 1)],
+                    library_dirs=zlib_library_dirs,
+                    libraries=['z'],
+                    )
+
     dcd = Extension('mdtraj.formats.dcd',
                     sources=['mdtraj/formats/dcd/src/dcdplugin.c',
                              'mdtraj/formats/dcd/dcd.pyx'],
@@ -137,7 +159,7 @@ def format_extensions():
                     extra_compile_args=compiler_args,
                     libraries=extra_cpp_libraries)
 
-    return [xtc, trr, dcd, binpos, dtr]
+    return [xtc, trr, tng, dcd, binpos, dtr]
 
 
 def rmsd_extensions():
