@@ -42,7 +42,7 @@ test:
     - nosetests mdtraj -v -s
     - cd {{SRC_DIR}}
     - cd examples
-    - nosetests test_examples.py -v -s
+    - nosetests test_examples.py -v -s # [not (win32 or (win and py2k))]
 
 about:
   home: http://mdtraj.org
