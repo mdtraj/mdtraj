@@ -12,7 +12,7 @@ To load files that don't contain topology information, like Gromacs XTC files,
 we need to supply something with the ``top`` keyword argument that describes 
 the topology, for example a PDB file.
 
-If I'm interest in only a subset of the frames of the trajectory, I can slice it ::
+If I'm interested in only a subset of the frames of the trajectory, I can slice it ::
   
   >>> # lets take a look at the first ten frames
   >>> print t[1:10]
@@ -23,7 +23,7 @@ If I'm interest in only a subset of the frames of the trajectory, I can slice it
   <mdtraj.Trajectory with 1 frames, 22 atoms at 0x109b97810>
 
 There's a lot of information in the trajectory object. The most obvious is the
-cartesian coordinates. They're stored as a numpy array under ``xyz``. All of
+Cartesian coordinates. They're stored as a numpy array under ``xyz``. All of
 the distances in the `Trajectory` are stored in nanometers. The time unit
 is picoseconds. Angles are stored in degrees (not radians). ::
 
