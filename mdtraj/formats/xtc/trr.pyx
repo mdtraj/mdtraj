@@ -357,7 +357,8 @@ cdef class TRRTrajectoryFile:
         -----
         The TRR format DOES support saving velocities and forces, but those
         fields are not read (or written) by the current implementation of this
-        wrapper.
+        wrapper. However, this functionality is accessible in the internal
+        TRRTrajectoryFile._read() method.
         """
         if not str(self.mode) == 'r':
             raise ValueError('read() is only available when file is opened in mode="r"')
@@ -385,7 +386,7 @@ cdef class TRRTrajectoryFile:
             chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
                         self.min_chunk_size)
 
-            xyz, time, step, box, lambd = self._read(chunk, atom_indices)
+            xyz, time, step, box, lambd, vel, forces = self._read(chunk, atom_indices)
             if len(xyz) <= 0:
                 break
 
@@ -404,7 +405,7 @@ cdef class TRRTrajectoryFile:
             all_box = None
         return all_xyz, all_time, all_step, all_box, all_lambd
 
-    def _read(self, int64_t n_frames, atom_indices):
+    def _read(self, int64_t n_frames, atom_indices, bint get_velocities=False, get_forces=False):
         """Read a specified number of TRR frames from the buffer"""
 
         cdef int i = 0
@@ -434,17 +435,30 @@ cdef class TRRTrajectoryFile:
         cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box = \
             np.empty((n_frames, 3, 3), dtype=np.float32)
 
+        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] vel
+        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] forces = \
+            np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
+        if get_velocities:
+            vel = np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
+
         # only used if atom_indices is given
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] xyz_buffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
         while (i < n_frames) and (status != _EXDRENDOFFILE):
             if atom_indices is None:
+                cast_vel = NULL
+                if get_velocities:
+                    cast_vel = <trrlib.rvec*>&vel[i,0,0]
+                cast_forces = NULL
+                if get_forces:
+                    cast_forces = <trrlib.rvec>&forces[i,0,0]
                 status = trrlib.read_trr(self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
-                                         <trrlib.matrix>&box[i,0,0], <trrlib.rvec*>&xyz[i,0,0], NULL, NULL)
+                                         <trrlib.matrix>&box[i,0,0], <trrlib.rvec*>&xyz[i,0,0], 
+                                         cast_vel, cast_forces)
             else:
                 status = trrlib.read_trr(self.fh, self.n_atoms, <int*> &step[i], &time[i], &lambd[i],
-                                         <trrlib.matrix> &box[i,0,0], <trrlib.rvec*>&framebuffer[0,0], NULL, NULL)
-                xyz[i, :, :] = framebuffer[atom_indices, :]
+                                         <trrlib.matrix> &box[i,0,0], <trrlib.rvec*>&xyz_buffer[0,0], NULL, NULL)
+                xyz[i, :, :] = xyz_buffer[atom_indices, :]
 
             if status != _EXDRENDOFFILE and status != _EXDROK:
                 raise RuntimeError('TRR read error: %s' % _EXDR_ERROR_MESSAGES.get(status, 'unknown'))
