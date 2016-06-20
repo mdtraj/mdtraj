@@ -34,7 +34,7 @@ def run_notebook(nb):
             continue
         kc.execute(cell.source)
         # wait for finish, maximum 20s
-        reply = shell.get_msg(timeout=20)['content']
+        reply = shell.get_msg(timeout=60)['content']
         if reply['status'] == 'error':
             failures += 1
             print("\nFAILURE:")
