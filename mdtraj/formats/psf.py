@@ -4,7 +4,7 @@
 # Copyright 2012-2015 Stanford University and the Authors
 #
 # Authors: Jason Swails
-# Contributors:
+# Contributors: Robin Betz
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -231,13 +231,26 @@ def load_psf(fname):
             c = top.add_chain()
             last_chain = segid
         curr_residue = (resid, rname, segid)
+
         if prev_residue != curr_residue:
             prev_residue = curr_residue
             try:
                 rname = pdb.PDBTrajectoryFile._residueNameReplacements[rname]
             except KeyError:
                 pass
-            r = top.add_residue(rname, c, resid, segid)
+
+            # Find if the residue has already been defined
+            # Otherwise, create a new residue
+            matches = [r for r in top.residues if r.chain==c and
+                                                  r.name==rname and
+                                                  r.resSeq==resid and  
+                                                  r.segment_id==segid]
+            if len(matches) == 1:
+                r = matches[0]
+            elif not len(matches):
+                r = top.add_residue(rname, c, resid, segid)
+            else:
+                raise PSFError("Residue %s defined multiple times" % curr_residue)
 
         try:
             name = pdb.PDBTrajectoryFile._atomNameReplacements[rname][name]

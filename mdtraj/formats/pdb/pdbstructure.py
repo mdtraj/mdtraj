@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: Christopher M. Bruns
-# Contributors: Peter Eastman, Robert McGibbon
+# Contributors: Peter Eastman, Robert McGibbon, Robin Betz
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -419,9 +419,15 @@ class Chain(object):
         # Create a residue if none have been created
         if len(self.residues) == 0:
             self._add_residue(Residue(atom.residue_name_with_spaces, atom.residue_number, atom.insertion_code, atom.alternate_location_indicator,atom.segment_id))
-        # Create a residue if the residue information has changed
+        # Check if the residue information has changed
         elif self._current_residue.number != atom.residue_number:
-            self._add_residue(Residue(atom.residue_name_with_spaces, atom.residue_number, atom.insertion_code, atom.alternate_location_indicator,atom.segment_id))
+            # Check if we should add to an already defined residue that we have since moved on from
+            if self.residues_by_number.get(atom.residue_number):
+                self.residues_by_number[atom.residue_number]._add_atom(atom)
+                return
+            # Otherwise, create a new residue
+            else:
+                self._add_residue(Residue(atom.residue_name_with_spaces, atom.residue_number, atom.insertion_code, atom.alternate_location_indicator,atom.segment_id))
         elif self._current_residue.insertion_code != atom.insertion_code:
             self._add_residue(Residue(atom.residue_name_with_spaces, atom.residue_number, atom.insertion_code, atom.alternate_location_indicator,atom.segment_id))
         elif self._current_residue.name_with_spaces == atom.residue_name_with_spaces:
