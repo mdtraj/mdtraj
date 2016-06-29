@@ -422,7 +422,9 @@ class Chain(object):
         # Check if the residue information has changed
         elif self._current_residue.number != atom.residue_number:
             # Check if we should add to an already defined residue that we have since moved on from
-            if self.residues_by_number.get(atom.residue_number):
+            # That is in the same segment
+            if self.residues_by_number.get(atom.residue_number) and \
+               self.residues_by_number.get(atom.residue_number).segment_id == atom.segment_id:
                 self.residues_by_number[atom.residue_number]._add_atom(atom)
                 return
             # Otherwise, create a new residue
