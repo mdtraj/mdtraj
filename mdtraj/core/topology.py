@@ -655,6 +655,23 @@ class Topology(object):
             residue._atoms.insert(rindex, atom)
         return atom
 
+    def delete_atom_by_index(self, index):
+        """Delete an Atom from the topology.
+
+        Parameters
+        ----------
+        index : int
+            The index of the atom to be removed.
+        """
+        a = self._atoms[index]
+        if a.index != index:
+            raise RuntimeError("Index of selected atom does not match order in topology.")
+        for i in range(index+1, len(self._atoms)):
+            self._atoms[i].index -= 1
+        a.residue._atoms.remove(a)
+        self._atoms.remove(a)
+        self._numAtoms -= 1
+
     def add_atom(self, name, element, residue, serial=None):
         """Create a new Atom and add it to the Topology.
 
