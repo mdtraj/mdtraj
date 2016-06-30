@@ -645,9 +645,6 @@ class Topology(object):
             for i in range(index, len(self._atoms)):
                 self._atoms[i].index += 1
             self._atoms.insert(index, atom)
-            for i, a in enumerate(self._atoms):
-                if i != a.index:
-                    raise RuntimeError('Spoo!')
         self._numAtoms += 1
         if rindex is None:
             residue._atoms.append(atom)
