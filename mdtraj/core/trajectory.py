@@ -367,7 +367,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     """
 
     if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
-        kwargs["top"] = _parse_topology(kwargs["top"])
+        topkwargs = kwargs.copy()
+        topkwargs.pop("top", None)
+        kwargs["top"] = _parse_topology(kwargs["top"], **topkwargs)
 
     # grab the extension of the filename
     if isinstance(filename_or_filenames, string_types):  # If a single filename
@@ -404,7 +406,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
                       'was found. I can only load files '
                       'with extensions in %s' % (filename, extension, FormatRegistry.loaders.keys()))
-
+    
     if extension in _TOPOLOGY_EXTS:
         # this is a little hack that makes calling load() more predictable. since
         # most of the loaders take a kwargs "top" except for load_hdf5, (since
@@ -415,6 +417,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         if 'top' in kwargs:
             warnings.warn('top= kwarg ignored since file contains topology information')
             kwargs.pop('top', None)
+    else:
+        # standard_names is a valid keyword argument only for files containing topologies
+        kwargs.pop('standard_names', None)
 
     if loader.__name__ not in ['load_dtr']:
         _assert_files_exist(filename_or_filenames)
