@@ -607,6 +607,54 @@ class Topology(object):
         chain._residues.append(residue)
         return residue
 
+    def insert_atom(self, name, element, residue, index=None, rindex=None, serial=None):
+        """Create a new Atom and insert it into the Topology at a specific position.
+
+        Parameters
+        ----------
+        name : str
+            The name of the atom to add
+        element : mdtraj.element.Element
+            The element of the atom to add
+        residue : mdtraj.topology.Residue
+            The Residue to add it to
+        index : int
+            If provided, the desired index for this atom
+            within the topology. Existing atoms with 
+            indices >= index will be pushed back.
+        rindex : int
+            If provided, the desired position for this atom
+            within the residue
+        serial : int
+            Serial number associated with the atom.
+            This has nothing to do with the actual ordering
+            and is solely for PDB labeling purposes.
+
+        Returns
+        -------
+        atom : mdtraj.topology.Atom
+            the newly created Atom
+        """
+        if element is None:
+            element = elem.virtual
+        if index is None:
+            atom = Atom(name, element, self._numAtoms, residue, serial=serial)
+            self._atoms.append(atom)
+        else:
+            atom = Atom(name, element, index, residue, serial=serial)
+            for i in range(index, len(self._atoms)):
+                self._atoms[i].index += 1
+            self._atoms.insert(index, atom)
+            for i, a in enumerate(self._atoms):
+                if i != a.index:
+                    raise RuntimeError('Spoo!')
+        self._numAtoms += 1
+        if rindex is None:
+            residue._atoms.append(atom)
+        else:
+            residue._atoms.insert(rindex, atom)
+        return atom
+
     def add_atom(self, name, element, residue, serial=None):
         """Create a new Atom and add it to the Topology.
 
