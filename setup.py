@@ -130,9 +130,9 @@ def format_extensions():
                                  'mdtraj/formats/tng/tng.pyx'],
                     include_dirs=['mdtraj/formats/tng/include']
                                  + zlib_include_dirs,
-                    # define_macros=[('USE_ZLIB', 1)],
-                    # library_dirs=zlib_library_dirs,
-                    # libraries=['z'],
+                    define_macros=[('USE_ZLIB', 1)],
+                    library_dirs=zlib_library_dirs,
+                    libraries=['z'],
                     )
 
     dcd = Extension('mdtraj.formats.dcd',
@@ -255,11 +255,6 @@ def geometry_extensions():
 extensions = format_extensions()
 extensions.extend(rmsd_extensions())
 extensions.extend(geometry_extensions())
-
-# print("Mao")
-# cythonize(extensions)
-# print("Sniff")
-# sys.exit()
 
 write_version_py(VERSION, ISRELEASED, 'mdtraj/version.py')
 
