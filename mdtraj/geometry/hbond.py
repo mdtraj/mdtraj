@@ -224,7 +224,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
     # Get the possible donor-hydrogen...acceptor triplets
     bond_triplets = _get_bond_triplets(traj.topology, exclude_water=exclude_water)
 
-    mask, distances, angles = _compute_bounded_geometry(traj, triplets,
+    mask, distances, angles = _compute_bounded_geometry(traj, bond_triplets,
         distance_cutoff, [1, 2], [0, 1, 2], freq=freq, periodic=periodic)
 
     # Find triplets that meet the criteria. The _compute_bounded_geometry function
@@ -232,10 +232,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
     # factor in the angle cutoff.
     mask[mask] = angles > angle_cutoff
 
-    # Frequency of each hydrogen bond's presence in the trajectory
-    prevalence = np.mean(mask, axis=0)
-
-    return bond_triplets[prevalence > freq]
+    return bond_triplets[mask, :]
 
 
 def kabsch_sander(traj):
@@ -378,7 +375,7 @@ def _compute_bounded_geometry(traj, triplets, distance_cutoff, distance_indices,
 
     # Update data structures to ignore anything that isn't possible anymore
     triplets = triplets.compress(mask, axis=0)
-    distances = distances.compress(mask, axis=0)
+    distances = distances.compress(mask, axis=1)
 
     # Calculate angles using the law of cosines
     abc_pairs = zip(angle_indices, angle_indices[1:] + angle_indices[:1])
@@ -389,7 +386,8 @@ def _compute_bounded_geometry(traj, triplets, distance_cutoff, distance_indices,
         if set(abc_pair) == set(distance_indices):
             abc_distances.append(distances)
         else:
-            abc_distances = compute_distances(traj, triplets[:, abc_pair], periodic=periodic)
+            abc_distances.append(compute_distances(traj, triplets[:, abc_pair],
+                periodic=periodic))
 
     # Law of cosines calculation
     numerator = abc_distances[0] ** 2 + abc_distances[1] ** 2 - abc_distances[2] ** 2
@@ -397,7 +395,7 @@ def _compute_bounded_geometry(traj, triplets, distance_cutoff, distance_indices,
     np.clip(cosines, -1, 1, out=cosines) # avoid NaN error
     angles = np.arccos(cosines)
 
-    return mask, distances.compress(mask, axis=0), angles
+    return mask, distances, angles
 
 
 def _get_or_minus1(f):
