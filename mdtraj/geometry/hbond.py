@@ -227,8 +227,8 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
     mask, distances, angles = _compute_bounded_geometry(traj, triplets,
         distance_cutoff, [1, 2], [0, 1, 2], freq=freq, periodic=periodic)
 
-    # Find triplets that meet the criteria. The _compute_bounded_geometry has
-    # already performed the distance cutoff for us, so now we just need to
+    # Find triplets that meet the criteria. The _compute_bounded_geometry function
+    # has already performed the distance cutoff for us, so now we just need to
     # factor in the angle cutoff.
     mask[mask] = angles > angle_cutoff
 
