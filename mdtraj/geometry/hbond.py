@@ -37,7 +37,7 @@ __all__ = ['wernet_nilsson', 'baker_hubbard', 'kabsch_sander']
 # Functions
 ##############################################################################
 
-def wernet_nilsson(traj, exclude_water=True, sidechain_only=False, periodic=True):
+def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle according to the criterion outlined in [1].
     As opposed to Baker-Hubbard, this is a "cone" criterion where the
@@ -138,7 +138,7 @@ def wernet_nilsson(traj, exclude_water=True, sidechain_only=False, periodic=True
     return bond_triplets[mask, :]
 
 
-def baker_hubbard(traj, freq=0.1, exclude_water=True, sidechain_only=False, periodic=True):
+def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_only=False):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle.
 
