@@ -125,31 +125,15 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
     # Get the possible donor-hydrogen...acceptor triplets
     bond_triplets = _get_bond_triplets(traj.topology, exclude_water=exclude_water)
 
-    # Calculate donor-acceptor distances
-    da_distances = compute_distances(traj, bond_triplets[:, [0, 2]], periodic=periodic)
-
-    # Determine which triplets can still be hydrogen bonds
-    possibilities = np.any(da_distances < distance_cutoff, axis=0)
-
-    # Update data structures to include only possible bonds
-    bond_triplets = bond_triplets[possibilities, :]
-    da_distances = da_distances[:, possibilities]
-
-    # Calculate angles using the law of cosines
-    dh_distances = compute_distances(traj, bond_triplets[:, [0, 1]], periodic=periodic)
-    ha_distances = compute_distances(traj, bond_triplets[:, [1, 2]], periodic=periodic)
-
-    # Law of cosines calculation (a, b = dh, da; c = ha; C = A-D-H)
-    numerator = dh_distances ** 2 + da_distances ** 2 - ha_distances ** 2
-    cosines = numerator / (2 * dh_distances * da_distances)
-    np.clip(cosines, -1, 1, out=cosines) # avoid NaN error
-    angles = np.arccos(cosines) * 180.0 / np.pi
+    # Compute geometry
+    mask, distances, angles = _compute_bounded_geometry(traj, bond_triplets,
+        distance_cutoff, [0, 2], [2, 0, 1], periodic=periodic)
 
     # Calculate the true cutoffs for distances
     cutoffs = distance_cutoff - angle_const * angles ** 2
 
     # Find triplets that meet the criteria
-    mask = np.logical_and(da_distances < cutoffs, angles < angle_cutoff)
+    mask[mask] = np.logical_and(distances < cutoffs, angles < angle_cutoff)
 
     return bond_triplets[mask, :]
 
@@ -240,30 +224,13 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
     # Get the possible donor-hydrogen...acceptor triplets
     bond_triplets = _get_bond_triplets(traj.topology, exclude_water=exclude_water)
 
-    # Calculate hydrogen-acceptor distances
-    ha_distances = compute_distances(traj, bond_triplets[:, [1, 2]])
+    mask, distances, angles = _compute_bounded_geometry(traj, triplets,
+        distance_cutoff, [1, 2], [0, 1, 2], freq=freq, periodic=periodic)
 
-    # Determine which triplets can still be hydrogen bonds
-    distance_mask = ha_distances < distance_cutoff
-    possibilities = np.mean(distance_mask, axis=0) > freq
-
-    # Update data structures to include only possible bonds
-    bond_triplets = bond_triplets[possibilities, :]
-    ha_distances = ha_distances[:, possibilities]
-    distance_mask = distance_mask[:, possibilities]
-
-    # Calculate angles using the law of cosines
-    dh_distances = compute_distances(traj, triplets[:, [0, 1]])
-    da_distances = compute_distances(traj, triplets[:, [0, 2]])
-
-    # Law of cosines calculation (a, b = dh, ha; c = da; C = D-H-A)
-    numerator = dh_distances ** 2 + ha_distances ** 2 - da_distances ** 2
-    cosines = numerator / (2 * dh_distances * ha_distances)
-    np.clip(cosines, -1, 1, out=cosines) # avoid NaN error
-    angles = np.arccos(cosines)
-
-    # Find triplets that meet the criteria
-    mask = np.logical_and(distance_mask, angles > angle_cutoff)
+    # Find triplets that meet the criteria. The _compute_bounded_geometry has
+    # already performed the distance cutoff for us, so now we just need to
+    # factor in the angle cutoff.
+    mask[mask] = angles > angle_cutoff
 
     # Frequency of each hydrogen bond's presence in the trajectory
     prevalence = np.mean(mask, axis=0)
@@ -393,6 +360,44 @@ def _get_bond_triplets(topology, exclude_water=True):
     # Filter out self-bonds
     self_bond_mask = (bond_triplets[:, 0] == bond_triplets[:, 2])
     return bond_triplets[np.logical_not(self_bond_mask), :]
+
+
+def _compute_bounded_geometry(traj, triplets, distance_cutoff, distance_indices,
+                              angle_indices, freq=0.0, periodic=True):
+    """
+    Returns a tuple include (1) the mask for triplets that fulfill the distance
+    criteria frequently enough, (2) the actual distances calculated, and (3) the
+    angles between the triplets specified by angle_indices.
+    """
+    # First we calculate the requested distances
+    distances = compute_distances(traj, triplets[:, distance_indices], periodic=periodic)
+
+    # Now we discover which triplets meet the distance cutoff often enough
+    prevalence = np.mean(distances < distance_cutoff, axis=0)
+    mask = prevalence > freq
+
+    # Update data structures to ignore anything that isn't possible anymore
+    triplets = triplets.compress(mask, axis=0)
+    distances = distances.compress(mask, axis=0)
+
+    # Calculate angles using the law of cosines
+    abc_pairs = zip(angle_indices, angle_indices[1:] + angle_indices[:1])
+    abc_distances = []
+
+    # Calculate distances (if necessary)
+    for abc_pair in abc_pairs:
+        if set(abc_pair) == set(distance_indices):
+            abc_distances.append(distances)
+        else:
+            abc_distances = compute_distances(traj, triplets[:, abc_pair], periodic=periodic)
+
+    # Law of cosines calculation
+    numerator = abc_distances[0] ** 2 + abc_distances[1] ** 2 - abc_distances[2] ** 2
+    cosines = numerator / (2 * abc_distances[0] * abc_distances[1])
+    np.clip(cosines, -1, 1, out=cosines) # avoid NaN error
+    angles = np.arccos(cosines)
+
+    return mask, distances.compress(mask, axis=0), angles
 
 
 def _get_or_minus1(f):
