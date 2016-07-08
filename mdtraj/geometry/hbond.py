@@ -61,6 +61,8 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False
         Exclude solvent molecules from consideration.
     periodic : bool, default=True
         Set to True to calculate displacements and angles across periodic box boundaries.
+    sidechain_only : bool, default=False
+        Set to True to only consider sidechain-sidechain interactions.
 
     Returns
     -------
@@ -160,6 +162,8 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_o
         Exclude solvent molecules from consideration
     periodic : bool, default=True
         Set to True to calculate displacements and angles across periodic box boundaries.
+    sidechain_only : bool, default=False
+        Set to True to only consider sidechain-sidechain interactions.
 
     Returns
     -------
