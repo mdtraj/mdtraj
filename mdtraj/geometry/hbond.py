@@ -26,7 +26,6 @@
 ##############################################################################
 
 from __future__ import print_function, division
-import itertools
 import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import compute_distances, compute_angles
