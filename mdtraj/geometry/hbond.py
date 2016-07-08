@@ -38,7 +38,7 @@ __all__ = ['wernet_nilsson', 'baker_hubbard', 'kabsch_sander']
 # Functions
 ##############################################################################
 
-def wernet_nilsson(traj, exclude_water=True, periodic=True):
+def wernet_nilsson(traj, exclude_water=True, sidechain_only=False, periodic=True):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle according to the criterion outlined in [1].
     As opposed to Baker-Hubbard, this is a "cone" criterion where the
@@ -123,7 +123,8 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
                          'information')
 
     # Get the possible donor-hydrogen...acceptor triplets
-    bond_triplets = _get_bond_triplets(traj.topology, exclude_water=exclude_water)
+    bond_triplets = _get_bond_triplets(traj.topology,
+        exclude_water=exclude_water, sidechain_only=sidechain_only)
 
     # Compute geometry
     mask, distances, angles = _compute_bounded_geometry(traj, bond_triplets,
@@ -138,7 +139,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
     return bond_triplets[mask, :]
 
 
-def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
+def baker_hubbard(traj, freq=0.1, exclude_water=True, sidechain_only=False, periodic=True):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle.
 
@@ -222,7 +223,8 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
                          'information')
 
     # Get the possible donor-hydrogen...acceptor triplets
-    bond_triplets = _get_bond_triplets(traj.topology, exclude_water=exclude_water)
+    bond_triplets = _get_bond_triplets(traj.topology,
+        exclude_water=exclude_water, sidechain_only=sidechain_only)
 
     mask, distances, angles = _compute_bounded_geometry(traj, bond_triplets,
         distance_cutoff, [1, 2], [0, 1, 2], freq=freq, periodic=periodic)
@@ -313,16 +315,30 @@ def kabsch_sander(traj):
     return matrices
 
 
-def _get_bond_triplets(topology, exclude_water=True):
-    def get_donors(e0, e1):
-        elems = set((e0, e1))
-        bonditer = topology.bonds
-        atoms = [(b[0], b[1]) for b in bonditer if set((b[0].element.symbol, b[1].element.symbol)) == elems]
+def _get_bond_triplets(topology, exclude_water=True, sidechain_only=False):
+    def can_participate(atom):
+        # Filter waters
+        if exclude_water and atom.residue.is_water:
+            return False
+        # Filter non-sidechain atoms
+        if sidechain_only and not atom.is_sidechain:
+            return False
+        # Otherwise, accept it
+        return True
 
+    def get_donors(e0, e1):
+        # Find all matching bonds
+        elems = set((e0, e1))
+        atoms = [(one, two) for one, two in topology.bonds
+            if set((one.element.symbol, two.element.symbol)) == elems]
+
+        # Filter non-participating atoms
+        atoms = [atom for atom in atoms
+            if can_participate(atom[0]) and can_participate(atom[1])]
+
+        # Get indices for the remaining atoms
         indices = []
         for a0, a1 in atoms:
-            if exclude_water and (a0.residue.name == 'HOH' or a1.residue.name == 'HOH'):
-                continue
             pair = (a0.index, a1.index)
             # make sure to get the pair in the right order, so that the index
             # for e0 comes before e1
@@ -341,10 +357,9 @@ def _get_bond_triplets(topology, exclude_water=True):
         # no possible pairs and return nothing
         return [np.zeros((0, 3), dtype=int) for _ in range(traj.n_frames)]
 
-    if not exclude_water:
-        acceptors = [a.index for a in topology.atoms if a.element.symbol == 'O' or a.element.symbol == 'N']
-    else:
-        acceptors = [a.index for a in topology.atoms if (a.element.symbol == 'O' and a.residue.name != 'HOH') or a.element.symbol == 'N']
+    acceptor_elements = frozenset(('O', 'N'))
+    acceptors = [a.index for a in topology.atoms
+        if a.element.symbol in acceptor_elements and can_participate(a)]
 
     # Make acceptors a 2-D numpy array
     acceptors = np.array(acceptors)[:, np.newaxis]
