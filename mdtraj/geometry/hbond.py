@@ -131,13 +131,16 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False
     mask, distances, angles = _compute_bounded_geometry(traj, bond_triplets,
         distance_cutoff, [0, 2], [2, 0, 1], periodic=periodic)
 
+    # Update triplets under consideration
+    bond_triplets = bond_triplets[mask]
+
     # Calculate the true cutoffs for distances
     cutoffs = distance_cutoff - angle_const * (angles * 180.0 / np.pi) ** 2
 
     # Find triplets that meet the criteria
-    mask[mask] = np.logical_and(distances < cutoffs, angles < angle_cutoff)
+    presence = np.logical_and(distances < cutoffs, angles < angle_cutoff)
 
-    return bond_triplets[mask, :]
+    return [bond_triplets[present] for present in presence]
 
 
 def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_only=False):
