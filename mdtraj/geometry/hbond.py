@@ -130,7 +130,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False
         distance_cutoff, [0, 2], [2, 0, 1], periodic=periodic)
 
     # Calculate the true cutoffs for distances
-    cutoffs = distance_cutoff - angle_const * angles ** 2
+    cutoffs = distance_cutoff - angle_const * (angles * 180.0 / np.pi) ** 2
 
     # Find triplets that meet the criteria
     mask[mask] = np.logical_and(distances < cutoffs, angles < angle_cutoff)
@@ -354,7 +354,7 @@ def _get_bond_triplets(topology, exclude_water=True, sidechain_only=False):
     if len(xh_donors) == 0:
         # if there are no hydrogens or protein in the trajectory, we get
         # no possible pairs and return nothing
-        return [np.zeros((0, 3), dtype=int) for _ in range(traj.n_frames)]
+        return np.zeros((0, 3), dtype=int)
 
     acceptor_elements = frozenset(('O', 'N'))
     acceptors = [a.index for a in topology.atoms
