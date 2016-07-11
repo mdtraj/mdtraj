@@ -132,7 +132,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False
         distance_cutoff, [0, 2], [2, 0, 1], periodic=periodic)
 
     # Update triplets under consideration
-    bond_triplets = bond_triplets[mask]
+    bond_triplets = bond_triplets.compress(mask, axis=0)
 
     # Calculate the true cutoffs for distances
     cutoffs = distance_cutoff - angle_const * (angles * 180.0 / np.pi) ** 2
@@ -140,7 +140,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False
     # Find triplets that meet the criteria
     presence = np.logical_and(distances < cutoffs, angles < angle_cutoff)
 
-    return [bond_triplets[present] for present in presence]
+    return [bond_triplets.compress(present, axis=0) for present in presence]
 
 
 def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_only=False):
@@ -239,7 +239,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_o
     presence = np.logical_and(distances < distance_cutoff, angles > angle_cutoff)
     mask[mask] = np.mean(presence, axis=0) > freq
 
-    return bond_triplets[mask, :]
+    return bond_triplets.compress(mask, axis=0)
 
 
 def kabsch_sander(traj):
@@ -410,8 +410,8 @@ def _compute_bounded_geometry(traj, triplets, distance_cutoff, distance_indices,
                 periodic=periodic))
 
     # Law of cosines calculation
-    numerator = abc_distances[0] ** 2 + abc_distances[1] ** 2 - abc_distances[2] ** 2
-    cosines = numerator / (2 * abc_distances[0] * abc_distances[1])
+    a, b, c = abc_distances
+    cosines = (a ** 2 + b ** 2 - c ** 2) / (2 * a * b)
     np.clip(cosines, -1, 1, out=cosines) # avoid NaN error
     angles = np.arccos(cosines)
 
