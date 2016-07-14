@@ -266,6 +266,8 @@ cdef class TNGTrajectoryFile(object):
                 os.unlink(filename)
             else:
                 raise IOError('"%s" already exists' % filename)
+        if self.mode == 'r' and not os.path.exists(filename):
+            raise IOError('"%s" does not exist' % filename)
         if tng_util_trajectory_open(filename, self.mode, & self._traj) == TNG_SUCCESS:
             self.is_open = True
         else:
