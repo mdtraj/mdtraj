@@ -1,6 +1,27 @@
+cdef extern from "include/fastio.h":
+    IF UNAME_SYSNAME == "Windows":
+        ctypedef HANDLE fio_fd
+    ELSE:
+        ctypedef int fio_fd
+
+
 cdef extern from "include/dcdplugin.h":
     ctypedef struct dcdhandle:
-        pass
+        fio_fd fd
+        int natoms
+        int nsets
+        int setsread
+        int istart
+        int nsavc
+        double delta
+        int nfixed
+        float *x, *y, *z
+        int *freeind
+        float *fixedcoords
+        int reverse
+        int charmm
+        int first
+        int with_unitcell
 
     dcdhandle* open_dcd_read(char *path, char *filetype, int *natoms, int* nsets)
     int read_next_timestep(dcdhandle *v, int natoms, molfile_timestep_t *ts)
