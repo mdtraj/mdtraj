@@ -4,9 +4,13 @@ import mdtraj as md
 from mdtraj.testing import get_fn, eq
 from mdtraj.geometry import compute_drid
 import scipy.special
-from scipy.stats import nanmean
 from scipy.spatial.distance import euclidean, pdist, squareform
 
+# To keep backwards compatibility
+try:
+    from scipy.stats import nanmean
+except ImportError:
+    from numpy import nanmean
 
 def test_drid_1():
     n_frames = 1
