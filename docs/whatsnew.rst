@@ -6,6 +6,9 @@ These are new features and improvements of note in each release.
 v1.8 (Development)
 ------------------
 
+- The minimum required version of numpy is now 1.8 due to changes in
+  scipy 0.18
+
 v1.7.2 (May 2, 2016)
 --------------------
 
