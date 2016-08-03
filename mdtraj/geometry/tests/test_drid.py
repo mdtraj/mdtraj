@@ -6,6 +6,11 @@ from mdtraj.geometry import compute_drid
 import scipy.special
 from scipy.spatial.distance import euclidean, pdist, squareform
 
+# To keep backwards compatibility
+try:
+    from scipy.stats import nanmean
+except ImportError:
+    from numpy import nanmean
 
 def test_drid_1():
     n_frames = 1
@@ -57,9 +62,9 @@ def test_drid_2():
         recip[bonds[:, 0], bonds[:, 1]] = np.nan
         recip[bonds[:, 1], bonds[:, 0]] = np.nan
 
-        mean = np.nanmean(recip, axis=0)
-        second = np.nanmean((recip - mean)**2, axis=0)**(0.5)
-        third =  scipy.special.cbrt(np.nanmean((recip - mean)**3, axis=0))
+        mean = nanmean(recip, axis=0)
+        second = nanmean((recip - mean)**2, axis=0)**(0.5)
+        third =  scipy.special.cbrt(nanmean((recip - mean)**3, axis=0))
         
         np.testing.assert_array_almost_equal(got[i, :, 0], mean, decimal=5)
         np.testing.assert_array_almost_equal(got[i, :, 1], second, decimal=5)
