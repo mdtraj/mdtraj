@@ -592,6 +592,9 @@ cdef class XTCTrajectoryFile(object):
         else:
             raise IOError('Invalid argument')
 
+        if absolute < 0 or absolute > len(self.offsets):
+            raise IOError('out of bounds: given absolute position: {}'.format(absolute))
+
         pos = self.offsets[absolute]
         status = xdrlib.xdr_seek(self.fh, pos, SEEK_SET)
         if status != _EXDROK:
