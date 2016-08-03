@@ -27,6 +27,7 @@
 ##############################################################################
 
 import os
+import warnings
 import numpy as np
 cimport numpy as np
 np.import_array()
@@ -68,8 +69,8 @@ cdef ERROR_MESSAGES = {
 ##############################################################################
 
 @FormatRegistry.register_loader('.dcd')
-def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
-    """load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None)
+def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None, as_namd=False):
+    """load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None, as_namd=False)
 
     Load an DCD file from disk.
 
@@ -95,6 +96,8 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
         Use this option to load only a single frame from a trajectory on disk.
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
+     as_namd : bool, default=False
+        Read/write timestep (delta) in header in NAMD internal units.
 
     Examples
     --------
@@ -131,7 +134,7 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
 
-    with DCDTrajectoryFile(filename) as f:
+    with DCDTrajectoryFile(filename, as_namd=as_namd) as f:
         if frame is not None:
             f.seek(frame)
             n_frames = 1
@@ -141,7 +144,7 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
 
 
 cdef class DCDTrajectoryFile:
-    """DCDTrajectoryFile(filename, mode='r', force_overwrite=True)
+    """DCDTrajectoryFile(filename, mode='r', force_overwrite=True, as_namd=False)
 
     Interface for reading and writing to a CHARMM/NAMD DCD file.
     This is a file-like object, that both reading or writing depending
@@ -160,6 +163,8 @@ cdef class DCDTrajectoryFile:
     force_overwrite : bool
         In mode='w', how do you want to behave if a file by the name of `filename`
         already exists? if `force_overwrite=True`, it will be overwritten.
+    as_namd : bool, default=False
+        Read/write timestep (delta) in header in NAMD internal units.
 
     Examples
     --------
@@ -194,19 +199,20 @@ cdef class DCDTrajectoryFile:
     cdef dcdhandle* fh
     cdef char* mode
     cdef char* filename
-    cdef int is_open, _needs_write_initialization
+    cdef int is_open, _needs_write_initialization, as_namd
     cdef molfile_timestep_t* timestep
     # does this file have unitcell info? set during _initialize_write
     # for mode='w' to 0 or 1.
     cdef int with_unitcell
     cdef readonly char* distance_unit
 
-    def __cinit__(self, char* filename, char* mode='r', force_overwrite=True):
+    def __cinit__(self, char* filename, char* mode='r', force_overwrite=True, as_namd=False):
         """Open a DCD Trajectory File
         """
         self.distance_unit = 'angstroms'
         self.is_open = False
         self.mode = mode
+        self.as_namd = as_namd
 
         # Note: we need to copy this string, see issue #206
         self.filename = <char*>malloc(strlen(filename)+1)
@@ -388,7 +394,17 @@ cdef class DCDTrajectoryFile:
 
         if stride is None:
             stride = 1
-        time = (stride*np.arange(len(xyz))) + initial
+
+        # delta --> step_duration, nsavc --> save_frequency, istart --> starting_step
+        time = self.fh.delta*(self.fh.nsavc*(stride*np.arange(len(xyz)) + initial) + self.fh.istart)
+
+        if self.as_namd:
+            # to convert from NAMD's format to ps
+            time *= 48.88821/1000
+        
+        if (not self.as_namd and not np.isclose(self.fh.delta % 1, 0)) or \
+               (self.as_namd and not np.isclose((self.fh.delta*48.88821) % 1, 0)):
+            warnings.warn("Timestep read as %s; Consider use of `as_namd`" % self.fh.delta)
 
         return Trajectory(xyz=xyz, topology=topology, time=time,
                           unitcell_lengths=box_length,
@@ -538,6 +554,7 @@ cdef class DCDTrajectoryFile:
             Organized analogously to cell_lengths. Gives the alpha, beta and
             gamma angles respectively. By convention for
             this trajectory format, the angles should be in units of degrees.
+
         """
         if str(self.mode) != 'w':
             raise ValueError('write() is only available when the file is opened in mode="w"')
