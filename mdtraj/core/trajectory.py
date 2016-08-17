@@ -371,6 +371,10 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         topkwargs.pop("top", None)
         kwargs["top"] = _parse_topology(kwargs["top"], **topkwargs)
 
+    # "Peel" single-member lists
+    if len(filename_or_filenames) == 1:
+        filename_or_filenames = filename_or_filenames[0]
+
     # grab the extension of the filename
     if isinstance(filename_or_filenames, string_types):  # If a single filename
         extension = _get_extension(filename_or_filenames)
