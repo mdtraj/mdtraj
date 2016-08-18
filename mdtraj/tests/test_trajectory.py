@@ -133,6 +133,14 @@ def test_slice():
 
 
 
+def test_slice2():
+    t = md.load(get_fn('traj.h5'))
+    # with copying
+    yield lambda: t[0] == t[[0,1]][0]
+    # without copying (in place)
+    yield lambda: t.slice(key=[0], copy=False) == t.slice(key=[0,1], copy=True)[0]
+
+
 def test_slice_top():
     geom1 = md.load(get_fn('6HISs_protonation_state1.pdb.gz'))
     geom2 = md.load(get_fn('5HISs_protonation_state2.pdb.gz'))

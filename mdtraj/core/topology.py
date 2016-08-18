@@ -1032,10 +1032,11 @@ class Topology(object):
             pairs = self._unique_pairs(a_indices, b_indices)
         return pairs
 
-    def select_top(self, topB, selection=None, invert=False):
-        r"""Returns the set of atom-indices of the intersection of self with a second topology topB.
-        "Intersection" means that for each atom "A" of self returned by this method, there is
-        another atom topB that satisfies:
+    def select_intersection(self, topB, selection=None, invert=False):
+        r"""Return the atom-indices representing the intersection of self with a second topology topB .
+
+        "Intersection" means that for every atom of self present in in atom-indices ("A") there is
+        another atom in topB that satisfies:
             A.name = B.name
             A.residue.name = B.residue.name
             A.residue.index = B.residue.index
@@ -1058,7 +1059,7 @@ class Topology(object):
         Returns
         -------
         indices : np.ndarray (N,)
-            An array of the indices of the selected atoms.
+            An array of the indices of the atoms of A that also appear in topB
         """
 
         if not isinstance(topB,Topology):
