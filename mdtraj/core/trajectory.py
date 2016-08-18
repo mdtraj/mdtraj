@@ -371,10 +371,6 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         topkwargs.pop("top", None)
         kwargs["top"] = _parse_topology(kwargs["top"], **topkwargs)
 
-    # "Peel" single-member lists
-    if len(filename_or_filenames) == 1:
-        filename_or_filenames = filename_or_filenames[0]
-
     # grab the extension of the filename
     if isinstance(filename_or_filenames, string_types):  # If a single filename
         extension = _get_extension(filename_or_filenames)
@@ -399,9 +395,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                 if i != 0:
                     t.topology = None
                 trajectories.append(t)
-            return trajectories[0].join(trajectories[1:],
-                                        discard_overlapping_frames=discard_overlapping_frames,
-                                        check_topology=False)
+            return join(trajectories, check_topology=False,
+                        discard_overlapping_frames=discard_overlapping_frames)
 
     try:
         #loader = _LoaderRegistry[extension][0]
@@ -410,7 +405,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
                       'was found. I can only load files '
                       'with extensions in %s' % (filename, extension, FormatRegistry.loaders.keys()))
-    
+
     if extension in _TOPOLOGY_EXTS:
         # this is a little hack that makes calling load() more predictable. since
         # most of the loaders take a kwargs "top" except for load_hdf5, (since
