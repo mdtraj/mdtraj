@@ -32,13 +32,28 @@ from mdtraj.geometry import _geometry
 
 __all__ = ['shrake_rupley']
 
-# these van der waals radii are taken from GROMACS 4.5.3
-# and the file share/gromacs/top/vdwradii.dat
-#using the the same vdw radii for P and S based upon
-#http://en.wikipedia.org/wiki/Van_der_Waals_radius
-_ATOMIC_RADII = {'C': 0.15,  'F': 0.12,  'H': 0.04,
-                 'N': 0.110, 'O': 0.105, 'S': 0.16,
-                 'P': 0.16}
+# These van der waals radii are taken from
+# https://en.wikipedia.org/wiki/Atomic_radii_of_the_elements_(data_page)
+# which references 
+# A. Bondi (1964). "van der Waals Volumes and Radii". J. Phys. Chem. 68: 441. doi:10.1021/j100785a001 and doi:10.1021/jp8111556. 
+# M. Mantina et al. (2009). "Consistent van der Waals Radii for the Whole Main Group". J. Phys. Chem. A. 113 (19): 5806–12. doi:10.1021/jp8111556
+# They also now match up with the values in current GROMACS 5.1.4
+# found in share/top/vdwradii.dat.
+
+_ATOMIC_RADII = {'H'  : 0.120, 'He' : 0.140, 'Li' : 0.182, 'Be' : 0.153,
+                 'B'  : 0.192, 'C'  : 0.170, 'N'  : 0.155, 'O'  : 0.152,
+                 'F'  : 0.147, 'Ne' : 0.154, 'Na' : 0.227, 'Mg' : 0.173,
+                 'Al' : 0.184, 'Si' : 0.210, 'P'  : 0.180, 'S'  : 0.180,
+                 'Cl' : 0.175, 'Ar' : 0.188, 'K'  : 0.275, 'Ca' : 0.231,
+                 'Sc' : 0.211, 'Ni' : 0.163, 'Cu' : 0.140, 'Zn' : 0.139,
+                 'Ga' : 0.187, 'Ge' : 0.211, 'As' : 0.185, 'Se' : 0.190,
+                 'Br' : 0.185, 'Kr' : 0.202, 'Rb' : 0.303, 'Sr' : 0.249,
+                 'Pd' : 0.163, 'Ag' : 0.172, 'Cd' : 0.158, 'In' : 0.193,
+                 'Sn' : 0.217, 'Sb' : 0.206, 'Te' : 0.206, 'I'  : 0.198,
+                 'Xe' : 0.216, 'Cs' : 0.343, 'Ba' : 0.268, 'Pt' : 0.175,
+                 'Au' : 0.166, 'Hg' : 0.155, 'Tl' : 0.196, 'Pb' : 0.202,
+                 'Bi' : 0.207, 'Po' : 0.197, 'At' : 0.202, 'Rn' : 0.220,
+                 'Fr' : 0.348, 'Ra' : 0.283, 'U'  : 0.186}
 
 ##############################################################################
 # Functions
