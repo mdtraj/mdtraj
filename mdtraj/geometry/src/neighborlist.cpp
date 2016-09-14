@@ -57,12 +57,11 @@ public:
                      periodicBoxVectors[1][0] != 0.0 || periodicBoxVectors[1][2] != 0.0 ||
                      periodicBoxVectors[2][0] != 0.0 || periodicBoxVectors[2][1] != 0.0);
         if (usePeriodic) {
-            ny = (int) floorf(periodicBoxVectors[1][1]/voxelSizeY+0.5f);
-            nz = (int) floorf(periodicBoxVectors[2][2]/voxelSizeZ+0.5f);
+            ny = max(1, (int) floorf(periodicBoxVectors[1][1]/voxelSizeY+0.5f));
+            nz = max(1, (int) floorf(periodicBoxVectors[2][2]/voxelSizeZ+0.5f));
             voxelSizeY = periodicBoxVectors[1][1]/ny;
             voxelSizeZ = periodicBoxVectors[2][2]/nz;
-        }
-        else {
+        } else {
             ny = max(1, (int) floorf((maxy-miny)/voxelSizeY+0.5f));
             nz = max(1, (int) floorf((maxz-minz)/voxelSizeZ+0.5f));
             if (maxy > miny)
