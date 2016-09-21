@@ -48,6 +48,11 @@ _res2 = topology2.add_residue('res', topology2.add_chain())
 topology2.add_atom('H', element.hydrogen, _res2)
 topology2.add_atom('H', element.hydrogen, _res2)
 
+# set up a mock topologies with a single chlorine and sulfur atom
+topology3 = md.Topology()
+topology4 = md.Topology()
+topology3.add_atom('Cl', element.chlorine, topology3.add_residue('res', topology3.add_chain()))
+topology4.add_atom('S', element.sulfur, topology4.add_residue('res', topology4.add_chain()))
 
 ##############################################################################
 # Tests
@@ -93,20 +98,20 @@ def test_sasa_2():
     t = md.load(get_fn('frame0.h5'))
     val1 = np.sum(md.geometry.shrake_rupley(t[0])) # calculate only frame 0
     val2 = np.sum(md.geometry.shrake_rupley(t)[0]) # calculate on all frames
-    true_frame_0_sasa = 2.859646797180176
+    true_frame_0_sasa = 3.5556480884552
 
     assert_approx_equal(true_frame_0_sasa, val1)
     assert_approx_equal(true_frame_0_sasa, val2)
 
 
 def test_sasa_3():
-    traj_ref = np.loadtxt(get_fn('g_sas_ref.dat'))
+    traj_ref = np.loadtxt(get_fn('gmx_sasa.dat'))
     traj = md.load(get_fn('frame0.h5'))
     traj_sasa = md.geometry.shrake_rupley(traj, probe_radius=0.14, n_sphere_points = 960)
 
     # the algorithm used by gromacs' g_sas is slightly different than the one
     # used here, so the results are not exactly the same
-    assert_array_almost_equal(traj_sasa, traj_ref, decimal=2)
+    assert_array_almost_equal(traj_sasa, traj_ref, decimal=1)
 
 
 def test_sasa_4():
@@ -133,3 +138,23 @@ def test_sasa_4():
     value = md.shrake_rupley(t, mode='residue')
     yield lambda: _test_atom_group(t, value)
 
+def test_sasa_5():
+    # Test if you can change atom radii effectively without breaking things
+    traj_chlorine = md.Trajectory(xyz=np.zeros((1,1,3)), topology=topology3)
+    traj_sulfur = md.Trajectory(xyz=np.zeros((1,1,3)), topology=topology4)
+
+    probe_radius = 0.14
+    change_radii = {'Cl' : 0.175}
+    calc_area_chlorine = np.sum(md.geometry.shrake_rupley(traj_chlorine, probe_radius=probe_radius, change_radii=change_radii))
+    calc_area_sulfur = np.sum(md.geometry.shrake_rupley(traj_sulfur, probe_radius=probe_radius, change_radii=change_radii))
+    true_area_chlorine = 4 * np.pi * (0.175 + probe_radius)**2
+    # This atom should remain unchanged
+    true_area_sulfur = 4 * np.pi * (_ATOMIC_RADII['S'] + probe_radius)**2
+    # And calc_area_chlorine should be different from this value
+    prev_area_chlorine = 4 * np.pi * (_ATOMIC_RADII['Cl'] + probe_radius)**2
+
+    assert_approx_equal(calc_area_chlorine, true_area_chlorine)
+    # Also ensure that rest of dict is not gettting deleted
+    assert_approx_equal(calc_area_sulfur, true_area_sulfur)
+    # Finally, ensure that we are not changing _ATOMIC_RADII
+    assert prev_area_chlorine != calc_area_chlorine
