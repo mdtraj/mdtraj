@@ -159,7 +159,7 @@ def _construct_atom_dict(topology):
     return atom_dict
 
 
-def _atom_sequence(top, atom_names, residue_offsets=None):
+def _atom_sequence(top, atom_names, residue_offsets=None, chains=None):
     """Find sequences of atom indices corresponding to desired atoms.
 
     This method can be used to find sets of atoms corresponding to specific
@@ -178,6 +178,9 @@ def _atom_sequence(top, atom_names, residue_offsets=None):
         Array of integer offsets for each atom. These are used to refer
         to atoms forward or backward in the chain relative to the current
         residue
+    chains : list of int
+        Which chains to select atoms from. If None, will default
+        to looping through all chains in the molecule.
 
     Notes
     -----
@@ -206,12 +209,17 @@ def _atom_sequence(top, atom_names, residue_offsets=None):
         top = top.topology
     atom_dict = _construct_atom_dict(top)
 
+    if chains is None:
+        chains = top.chains
+    else:
+        chains = [top.chain(i) for i in chains] 
+
     atom_indices = []
     found_residue_ids = []
     # py3k criticial list(zip(, not just zip(, since we iterate multiple
     # times through it
     atoms_and_offsets = list(zip(atom_names, residue_offsets))
-    for chain in top.chains:
+    for chain in chains:
         cid = chain.index
         for residue in chain.residues:
             rid = residue.index
@@ -316,56 +324,63 @@ CHI4_ATOMS = [["CG", "CD", "NE", "CZ"],
               ["CG", "CD", "CE", "NZ"]]
 
 
-def indices_phi(top):
+def indices_phi(top, chains=None):
     """Calculate indices for phi dihedral angles
 
     Parameters
     ----------
     top : Topology
         Topology for which you want dihedral indices
+    chains: list of int
+        Chains to obtain dihedral indices for
 
     Returns
     -------
     indices : np.ndarray, shape=(n_phi, 4)
         The indices of the atoms involved in each of ths phi angles
     """
-    return _atom_sequence(top, PHI_ATOMS)[1]
+    return _atom_sequence(top, PHI_ATOMS, chains)[1]
 
 
-def indices_psi(top):
+def indices_psi(top, chains=None):
     """Calculate indices for psi dihedral angles
 
     Parameters
     ----------
     top : Topology
         Topology for which you want dihedral indices
+    chains: list of int
+        Chains to obtain dihedral indices for
 
     Returns
     -------
     indices : np.ndarray, shape=(n_psi, 4)
         The indices of the atoms involved in each of ths psi angles
     """
-    return _atom_sequence(top, PSI_ATOMS)[1]
+    return _atom_sequence(top, PSI_ATOMS, chains)[1]
 
 
-def indices_omega(top):
+def indices_omega(top, chains=None):
     """Calculate indices for omega dihedral angles
 
     Parameters
     ----------
     top : Topology
         Topology for which you want dihedral indices
+    chains: list of int
+        Chains to obtain dihedral indices for
 
     Returns
     -------
     indices : np.ndarray, shape=(n_omega, 4)
         The indices of the atoms involved in each of ths omega angles
     """
-    return _atom_sequence(top, OMEGA_ATOMS)[1]
+    return _atom_sequence(top, OMEGA_ATOMS, chains)[1]
 
 
-def _indices_chi(top, chi_atoms):
-    rids, indices = zip(*(_atom_sequence(top, atoms) for atoms in chi_atoms))
+def _indices_chi(top, chi_atoms, chains=None):
+    rids, indices = zip(*(_atom_sequence(top, atoms, chains) \
+                        for atoms in chi_atoms))
     id_sort = np.argsort(np.concatenate(rids))
     if not any(x.size for x in indices):
         return np.empty(shape=(0, 4), dtype=np.int)
@@ -373,39 +388,43 @@ def _indices_chi(top, chi_atoms):
     return indices
 
 
-def indices_chi1(top):
+def indices_chi1(top, chains=None):
     """Calculate indices for chi1 dihedral angles
 
     Parameters
     ----------
     top : Topology
         Topology for which you want dihedral indices
+    chains: list of int
+        Chains to obtain dihedral indices for
 
     Returns
     -------
     indices : np.ndarray, shape=(n_chi1, 4)
         The indices of the atoms involved in each of ths chi1 angles
     """
-    return _indices_chi(top, CHI1_ATOMS)
+    return _indices_chi(top, CHI1_ATOMS, chains)
 
 
-def indices_chi2(top):
+def indices_chi2(top, chains=None):
     """Calculate indices for chi2 dihedral angles
 
     Parameters
     ----------
     top : Topology
         Topology for which you want dihedral indices
+    chains: list of int
+        Chains to obtain dihedral indices for
 
     Returns
     -------
     indices : np.ndarray, shape=(n_chi2, 4)
         The indices of the atoms involved in each of ths chi2 angles
     """
-    return _indices_chi(top, CHI2_ATOMS)
+    return _indices_chi(top, CHI2_ATOMS, chains)
 
 
-def indices_chi3(top):
+def indices_chi3(top, chains=None):
     """Calculate indices for chi3 dihedral angles
 
     Parameters
@@ -418,26 +437,28 @@ def indices_chi3(top):
     indices : np.ndarray, shape=(n_chi3, 4)
         The indices of the atoms involved in each of ths chi3 angles
     """
-    return _indices_chi(top, CHI3_ATOMS)
+    return _indices_chi(top, CHI3_ATOMS, chains)
 
 
-def indices_chi4(top):
+def indices_chi4(top, chains=None):
     """Calculate indices for chi4 dihedral angles
 
     Parameters
     ----------
     top : Topology
         Topology for which you want dihedral indices
+    chains: list of int
+        Chains to obtain dihedral indices for
 
     Returns
     -------
     indices : np.ndarray, shape=(n_chi4, 4)
         The indices of the atoms involved in each of ths chi4 angles
     """
-    return _indices_chi(top, CHI4_ATOMS)
+    return _indices_chi(top, CHI4_ATOMS, chains)
 
 
-def compute_phi(traj, periodic=True, opt=True):
+def compute_phi(traj, periodic=True, opt=True, chains=None):
     """Calculate the phi torsions of a trajectory.
 
     Parameters
@@ -450,6 +471,9 @@ def compute_phi(traj, periodic=True, opt=True):
         using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
+    chains : list of int, default=None
+        List of chains in the topology to compute angles for.
+        If None, will default to all chains
 
     Returns
     -------
@@ -459,13 +483,13 @@ def compute_phi(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    indices = indices_phi(traj.topology)
+    indices = indices_phi(traj.topology, chains)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
 
 
-def compute_psi(traj, periodic=True, opt=True):
+def compute_psi(traj, periodic=True, opt=True, chains=None):
     """Calculate the psi torsions of a trajectory.
 
     Parameters
@@ -478,6 +502,9 @@ def compute_psi(traj, periodic=True, opt=True):
         using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
+    chains : list of int, default=None
+        List of chains in the topology to compute angles for.
+        If None, will default to all chains
 
     Returns
     -------
@@ -487,13 +514,13 @@ def compute_psi(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    indices = indices_psi(traj.topology)
+    indices = indices_psi(traj.topology, chains)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
 
 
-def compute_chi1(traj, periodic=True, opt=True):
+def compute_chi1(traj, periodic=True, opt=True, chains=None):
     """Calculate the chi1 torsions of a trajectory. chi1 is the first side chain torsion angle
     formed between the 4 atoms over the CA-CB axis.
 
@@ -507,6 +534,9 @@ def compute_chi1(traj, periodic=True, opt=True):
         using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
+    chains : list of int, default=None
+        List of chains in the topology to compute angles for.
+        If None, will default to all chains
 
     Returns
     -------
@@ -516,14 +546,14 @@ def compute_chi1(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    indices = indices_chi1(traj.topology)
+    indices = indices_chi1(traj.topology, chains)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     all_chi = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
     return indices, all_chi
 
 
-def compute_chi2(traj, periodic=True, opt=True):
+def compute_chi2(traj, periodic=True, opt=True, chains=None):
     """Calculate the chi2 torsions of a trajectory. chi2 is the second side chain torsion angle
     formed between the corresponding 4 atoms  over the CB-CG axis.
 
@@ -537,6 +567,9 @@ def compute_chi2(traj, periodic=True, opt=True):
         using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
+    chains : list of int, default=None
+        List of chains in the topology to compute angles for.
+        If None, will default to all chains
 
     Returns
     -------
@@ -547,14 +580,14 @@ def compute_chi2(traj, periodic=True, opt=True):
         the frames.
     """
 
-    indices = indices_chi2(traj.topology)
+    indices = indices_chi2(traj.topology, chains)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     all_chi = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
     return indices, all_chi
 
 
-def compute_chi3(traj, periodic=True, opt=True):
+def compute_chi3(traj, periodic=True, opt=True, chains=None):
     """Calculate the chi3 torsions of a trajectory. chi3 is the third side chain torsion angle
     formed between the corresponding 4 atoms over the CG-CD axis
     (only the residues ARG, GLN, GLU, LYS & MET have these atoms)
@@ -569,6 +602,9 @@ def compute_chi3(traj, periodic=True, opt=True):
         using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
+    chains : list of int, default=None
+        List of chains in the topology to compute angles for.
+        If None, will default to all chains
 
     Returns
     -------
@@ -578,14 +614,14 @@ def compute_chi3(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    indices = indices_chi3(traj.topology)
+    indices = indices_chi3(traj.topology, chains)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     all_chi = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
     return indices, all_chi
 
 
-def compute_chi4(traj, periodic=True, opt=True):
+def compute_chi4(traj, periodic=True, opt=True, chains=None):
     """Calculate the chi4 torsions of a trajectory. chi4 is the fourth side chain torsion angle
     formed between the corresponding 4 atoms over the CD-CE or CD-NE axis
     (only ARG & LYS residues have these atoms)
@@ -600,6 +636,9 @@ def compute_chi4(traj, periodic=True, opt=True):
         using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
+    chains : list of int, default=None
+        List of chains in the topology to compute angles for.
+        If None, will default to all chains
 
     Returns
     -------
@@ -609,14 +648,14 @@ def compute_chi4(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    indices = indices_chi4(traj.topology)
+    indices = indices_chi4(traj.topology, chains)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     all_chi = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
     return indices, all_chi
 
 
-def compute_omega(traj, periodic=True, opt=True):
+def compute_omega(traj, periodic=True, opt=True, chains=None):
     """Calculate the omega torsions of a trajectory.
 
     Parameters
@@ -629,6 +668,9 @@ def compute_omega(traj, periodic=True, opt=True):
         using the minimum image convention.
     opt : bool, default=True
         Use an optimized native library to calculate angles.
+    chains : list of int, default=None
+        List of chains in the topology to compute angles for.
+        If None, will default to all chains
 
     Returns
     -------
@@ -638,7 +680,7 @@ def compute_omega(traj, periodic=True, opt=True):
         The value of the dihedral angle for each of the angles in each of
         the frames.
     """
-    indices = indices_omega(traj.topology)
+    indices = indices_omega(traj.topology, chains)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     return indices, compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
