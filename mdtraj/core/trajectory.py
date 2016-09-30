@@ -367,7 +367,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     """
 
     if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
-        kwargs["top"] = _parse_topology(kwargs["top"])
+        topkwargs = kwargs.copy()
+        topkwargs.pop("top", None)
+        kwargs["top"] = _parse_topology(kwargs["top"], **topkwargs)
 
     # grab the extension of the filename
     if isinstance(filename_or_filenames, string_types):  # If a single filename
@@ -393,9 +395,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
                 if i != 0:
                     t.topology = None
                 trajectories.append(t)
-            return trajectories[0].join(trajectories[1:],
-                                        discard_overlapping_frames=discard_overlapping_frames,
-                                        check_topology=False)
+            return join(trajectories, check_topology=False,
+                        discard_overlapping_frames=discard_overlapping_frames)
 
     try:
         #loader = _LoaderRegistry[extension][0]
@@ -415,6 +416,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         if 'top' in kwargs:
             warnings.warn('top= kwarg ignored since file contains topology information')
             kwargs.pop('top', None)
+    else:
+        # standard_names is a valid keyword argument only for files containing topologies
+        kwargs.pop('standard_names', None)
 
     if loader.__name__ not in ['load_dtr']:
         _assert_files_exist(filename_or_filenames)
@@ -478,9 +482,6 @@ def iterload(filename, chunk=100, **kwargs):
     if extension not in _TOPOLOGY_EXTS:
         topology = _parse_topology(top)
 
-    if chunk % stride != 0:
-        raise ValueError('Stride must be a divisor of chunk. stride=%d does not go '
-                         'evenly into chunk=%d' % (stride, chunk))
     if chunk == 0:
         # If chunk was 0 then we want to avoid filetype-specific code
         # in case of undefined behavior in various file parsers.
