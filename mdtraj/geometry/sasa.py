@@ -89,7 +89,7 @@ _ATOMIC_RADII = {'H'   : 0.120, 'He'  : 0.140, 'Li'  : 0.076, 'Be' : 0.059,
 ##############################################################################
 
 
-def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', change_radii=None):
+def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', change_radii=None, get_mapping=False):
     """Compute the solvent accessible surface area of each atom or residue in each simulation frame.
 
     Parameters
@@ -109,6 +109,10 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
         A partial or complete dict containing the radii to change from the 
         defaults. Should take the form {"Symbol" : radii_in_nm }, e.g. 
         {"Cl" : 0.175 } to change the radii of Chlorine to 175 pm.
+    get_mapping : bool, optional
+        Instead of returning only the areas, also return the indices of the
+        atoms or the residue-to-atom mapping. If True, will return a tuple
+        that contains the areas and the mapping (np.array, shape=(n_atoms)).
 
     Returns
     -------
@@ -182,4 +186,7 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
 
     _geometry._sasa(xyz, radii, int(n_sphere_points), atom_mapping, out)
 
-    return out
+    if get_mapping == True:
+        return out, atom_mapping
+    else:
+        return out
