@@ -161,7 +161,7 @@ def _parse_psf_section(psf):
             line = psf.readline().strip()
     return title, pointers, data
     
-eef load_psf(fname, **kwargs):
+def load_psf(fname, **kwargs):
     """Load a CHARMM or XPLOR PSF file from disk
 
     Parameters
