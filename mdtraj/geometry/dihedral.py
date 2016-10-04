@@ -159,7 +159,7 @@ def _construct_atom_dict(topology):
     return atom_dict
 
 
-def _atom_sequence(top, atom_names, residue_offsets=None, chains=None):
+def _atom_sequence(top, atom_names, chains=None, residue_offsets=None):
     """Find sequences of atom indices corresponding to desired atoms.
 
     This method can be used to find sets of atoms corresponding to specific
@@ -174,13 +174,13 @@ def _atom_sequence(top, atom_names, residue_offsets=None, chains=None):
         behavior is deprecated.
     atom_names : np.ndarray, shape=(4), dtype='str'
         Array of atoms to in each dihedral angle.
+    chains : list of int
+        Which chains to select atoms from. If None, will default
+        to looping through all chains in the molecule.
     residue_offsets : np.ndarray, optional, shape=(4), dtype='int'
         Array of integer offsets for each atom. These are used to refer
         to atoms forward or backward in the chain relative to the current
         residue
-    chains : list of int
-        Which chains to select atoms from. If None, will default
-        to looping through all chains in the molecule.
 
     Notes
     -----
