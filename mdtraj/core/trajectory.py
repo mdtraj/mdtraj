@@ -1890,6 +1890,45 @@ class Trajectory(object):
                              .format(atoms_cutoff))
         return anchor_molecules, other_molecules
 
+    def make_molecules_whole(self, inplace=False, sorted_bonds=None):
+        """Only make molecules whole
+
+        Parameters
+        ----------
+        inplace : bool
+            If False, a new Trajectory is created and returned.
+            If True, this Trajectory is modified directly.
+        sorted_bonds : array of shape (n_bonds, 2)
+            Pairs of atom indices that define bonds, in sorted order.
+            If not specified, these will be determined from the trajectory's
+            topology.
+
+        See Also
+        --------
+        image_molecules()
+        """
+        unitcell_vectors = self.unitcell_vectors
+        if unitcell_vectors is None:
+            raise ValueError('This Trajectory does not define a periodic unit cell')
+
+        if inplace:
+            result = self
+        else:
+            result = Trajectory(xyz=self.xyz, topology=self.topology,
+                                time=self.time,
+                                unitcell_lengths=self.unitcell_lengths,
+                                unitcell_angles=self.unitcell_angles)
+
+        if sorted_bonds is None:
+            sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
+            sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds])
+
+        box = np.asarray(result.unitcell_vectors, order='c')
+        _geometry.whole_molecules(result.xyz, box, sorted_bonds)
+        if not inplace:
+            return result
+        return self
+
     def image_molecules(self, inplace=False, anchor_molecules=None, other_molecules=None, sorted_bonds=None, make_whole=True):
         """Recenter and apply periodic boundary conditions to the molecules in each frame of the trajectory.
 
