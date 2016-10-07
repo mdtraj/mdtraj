@@ -1903,12 +1903,29 @@ class Trajectory(object):
         inplace : bool, default=False
             If False, a new Trajectory is created and returned.  If True, this Trajectory
             is modified directly.
+        anchor_molecules : list of array of int
+            Atom indices for each molecule that should be treated as an "anchor".
+            These molecules will be centered in the box and put near each other.
+            If not specified, anchor molecules are guessed using a heuristic.
+        other_molecules : list of array of int
+            Atom indices for molecules that are not anchors. If not specified,
+            these will be molecules other than the anchor molecules
+        sorted_bonds : array of shape (n_bonds, 2)
+            Pairs of atom indices that define bonds, in sorted order.
+            If not specified, these will be determined from the trajectory's
+            topology. Only relevant if ``make_whole`` is True.
+        make_whole : bool
+            Whether to make molecules whole.
 
         Returns
         -------
         traj : md.Trajectory
             The return value is either ``self`` or the new trajectory,
             depending on the value of ``inplace``.
+
+        See Also
+        --------
+        Trajectory.guess_anchor_molecules
         """
         unitcell_vectors = self.unitcell_vectors
         if unitcell_vectors is None:
