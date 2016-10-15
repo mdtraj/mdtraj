@@ -52,7 +52,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         compute the contacts between, or 'all'. The string 'all' will
         select all pairs of residues separated by two or more residues
         (i.e. the i to i+1 and i to i+2 pairs will be excluded).
-    scheme : {'ca', 'closest', 'closest-heavy'}
+    scheme : {'ca', 'closest', 'closest-heavy', 'sidechain', 'sidechain-heavy'}
         scheme to determine the distance between two residues:
             'ca' : distance between two residues is given by the distance
                 between their alpha carbons
@@ -60,6 +60,10 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
                 two atoms in the residues
             'closest-heavy' : distance is the closest distance between
                 any two non-hydrogen atoms in the residues
+            'sidechain' : distance is the closest distance between any
+                two atoms in residue sidechains
+            'sidechain-heavy' : distance is the closest distance between
+                any two non-hydrogen atoms in residue sidechains
     ignore_nonprotein : bool
         When using `contact==all`, don't compute contacts between
         "residues" which are not protein (i.e. do not contain an alpha
@@ -137,8 +141,8 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
     # now the bulk of the function. This will calculate atom distances and then
     # re-work them in the required scheme to get residue distances
     scheme = scheme.lower()
-    if scheme not in ['ca', 'closest', 'closest-heavy']:
-        raise ValueError('scheme must be one of [ca, closest, closest-heavy]')
+    if scheme not in ['ca', 'closest', 'closest-heavy', 'sidechain', 'sidechain-heavy']:
+        raise ValueError('scheme must be one of [ca, closest, closest-heavy, sidechain, sidechain-heavy]')
 
     if scheme == 'ca':
         filtered_residue_pairs = []
@@ -191,6 +195,17 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
             index = int(np.sum(n_atom_pairs_per_residue_pair[:i]))
             n = n_atom_pairs_per_residue_pair[i]
             distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
+
+    elif scheme in ['sidechain', 'sidechain-heavy']:
+        if scheme == 'sidechain':
+            residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain]
+                                  for residue in traj.topology.residues]
+        elif scheme == 'sidechain-heavy':
+            # then remove the hydrogens from the above list
+            residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain and not (atom.element == element.hydrogen)]
+                                  for residue in traj.topology.residues]
+
+        residue_lens = [len(ainds) for ainds in residue_membership]
 
     else:
         raise ValueError('This is not supposed to happen!')
