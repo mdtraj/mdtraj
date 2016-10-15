@@ -167,13 +167,20 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         distances = md.compute_distances(traj, atom_pairs, periodic=periodic)
 
 
-    elif scheme in ['closest', 'closest-heavy']:
+    elif scheme in ['closest', 'closest-heavy', 'sidechain', 'sidechain-heavy']:
         if scheme == 'closest':
             residue_membership = [[atom.index for atom in residue.atoms]
                                   for residue in traj.topology.residues]
         elif scheme == 'closest-heavy':
             # then remove the hydrogens from the above list
             residue_membership = [[atom.index for atom in residue.atoms if not (atom.element == element.hydrogen)]
+                                  for residue in traj.topology.residues]
+        elif scheme == 'sidechain':
+            residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain]
+                                  for residue in traj.topology.residues]
+        elif scheme == 'sidechain-heavy':
+            # then remove the hydrogens from the above list
+            residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain and not (atom.element == element.hydrogen)]
                                   for residue in traj.topology.residues]
 
         residue_lens = [len(ainds) for ainds in residue_membership]
@@ -195,17 +202,6 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
             index = int(np.sum(n_atom_pairs_per_residue_pair[:i]))
             n = n_atom_pairs_per_residue_pair[i]
             distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
-
-    elif scheme in ['sidechain', 'sidechain-heavy']:
-        if scheme == 'sidechain':
-            residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain]
-                                  for residue in traj.topology.residues]
-        elif scheme == 'sidechain-heavy':
-            # then remove the hydrogens from the above list
-            residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain and not (atom.element == element.hydrogen)]
-                                  for residue in traj.topology.residues]
-
-        residue_lens = [len(ainds) for ainds in residue_membership]
 
     else:
         raise ValueError('This is not supposed to happen!')
