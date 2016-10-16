@@ -693,7 +693,10 @@ def test_image_molecules():
     # Image inplace
     t_new.image_molecules(inplace=True)
     # Image with specified atom indices
-    t.image_molecules(inplace=True, anchor_atom_indices=range(22))
+    molecules = t.topology.find_molecules()
+    t.image_molecules(inplace=True, anchor_molecules=molecules[0])
+    t.image_molecules(inplace=True, anchor_molecules=molecules[0:3])
+
 
 def test_load_pdb_no_standard_names():
     # Minimal test. Standard_names=False will force load_pdb.py
