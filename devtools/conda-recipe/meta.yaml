@@ -37,6 +37,7 @@ test:
     - nbformat
     - ipykernel
     - scikit-learn
+    - pyqt ==4 # workaround for broken upstream dependency on PyQT4
 
   commands:
     - nosetests mdtraj -v -s
