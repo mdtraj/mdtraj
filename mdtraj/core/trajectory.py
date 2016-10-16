@@ -1857,7 +1857,7 @@ class Trajectory(object):
     def _have_unitcell(self):
         return self._unitcell_lengths is not None and self._unitcell_angles is not None
 
-    def image_molecules(self, inplace=False):
+    def image_molecules(self, inplace=False, anchor_molecules=None):
         """Recenter and apply periodic boundary conditions to the molecules in each frame of the trajectory.
 
         This method is useful for visualizing a trajectory in which molecules were not wrapped
@@ -1870,6 +1870,10 @@ class Trajectory(object):
         inplace : bool, default=False
             If False, a new Trajectory is created and returned.  If True, this Trajectory
             is modified directly.
+        anchor_molecules : array-like, shape=(n_mols), default=None
+            If `None`, anchor molecules will be identified automatically.
+            If specified, the molecules (list of sets of Atom objects) will be used as
+            anchor molecules.
 
         Returns
         -------
@@ -1891,16 +1895,23 @@ class Trajectory(object):
                 unitcell_lengths=self.unitcell_lengths, unitcell_angles=self.unitcell_angles)
         sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
 
-        # Select the anchor molecules.
+        # Select the anchor molecules intelligently if not specified.
 
         molecules.sort(key=lambda x: -len(x))
-        atoms_cutoff = max(len(molecules[int(0.1*len(molecules))]), int(0.1*len(molecules[0])))
-        anchor_molecules = [m for m in molecules if len(m) > atoms_cutoff]
-        other_molecules = [m for m in molecules if len(m) <= atoms_cutoff]
-        num_anchors = len(anchor_molecules)
+        if anchor_molecules is None:
+            atoms_cutoff = max(len(molecules[int(0.1*len(molecules))]), int(0.1*len(molecules[0])))
+            anchor_molecules = [m for m in molecules if len(m) > atoms_cutoff]
+            other_molecules = [m for m in molecules if len(m) <= atoms_cutoff]
+        else:
+            if not hasattr(anchor_molecules, 'index'):
+                # Promote to list
+                anchor_molecules = [ anchor_molecules ]
+            other_molecules = [m for m in molecules if m not in anchor_molecules]
+
         anchor_atom_indices = []
         for mol in anchor_molecules:
             anchor_atom_indices += [atom.index for atom in mol]
+        num_anchors = len(anchor_molecules)
 
         # Loop over frames and process each one.
 

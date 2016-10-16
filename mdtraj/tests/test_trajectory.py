@@ -685,6 +685,19 @@ def test_smooth():
 
     eq(output, test)
 
+def test_image_molecules():
+    # Load trajectory with periodic box
+    t = md.load(get_fn('alanine-dipeptide-explicit.dcd'), top=get_fn('alanine-dipeptide-explicit.pdb'))
+    # Image to new trajectory
+    t_new = t.image_molecules(inplace=False)
+    # Image inplace
+    t_new.image_molecules(inplace=True)
+    # Image with specified atom indices
+    molecules = t.topology.find_molecules()
+    t.image_molecules(inplace=True, anchor_molecules=molecules[0])
+    t.image_molecules(inplace=True, anchor_molecules=molecules[0:3])
+
+
 def test_load_pdb_no_standard_names():
     # Minimal test. Standard_names=False will force load_pdb.py
     # to NOT replace any non-standard atom or residue names in the topology
