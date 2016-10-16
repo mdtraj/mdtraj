@@ -5,6 +5,7 @@ These are new features and improvements of note in each release.
 
 v1.8 (Development)
 ------------------
+- ``compute_contacts`` now supports ``sidechain`` and ``sidechain-heavyatom`` modes (#1182)
 
 v1.7.2 (May 2, 2016)
 --------------------
