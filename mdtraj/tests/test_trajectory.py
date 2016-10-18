@@ -697,9 +697,7 @@ def test_image_molecules():
     # Image with specified anchor molecules
     molecules = t.topology.find_molecules()
     anchor_molecules = molecules[0:3]
-    anchor_molecules_atom_indices = [np.fromiter((a.index for a in mol), dtype=np.int32) for mol in molecules if mol in anchor_molecules]
-    other_molecules_atom_indices  = [np.fromiter((a.index for a in mol), dtype=np.int32) for mol in molecules if mol not in anchor_molecules]
-    t.image_molecules(inplace=True, anchor_molecules=anchor_molecules_atom_indices, other_molecules=other_molecules_atom_indices)
+    t.image_molecules(inplace=True, anchor_molecules=anchor_molecules)
 
 def test_load_pdb_no_standard_names():
     # Minimal test. Standard_names=False will force load_pdb.py
