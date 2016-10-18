@@ -1860,12 +1860,10 @@ class Trajectory(object):
     def guess_anchor_molecules(self):
         """Guess anchor molecules for imaging
 
-
         Returns
         -------
-        anchor_molecules : list of array of int
-            List of sets of atom indicies
-        other_molecules : list of array of int
+        anchor_molecules : list of atom sets
+            List of anchor molecules
         """
         if self._topology is None:
             raise ValueError('Trajectory must have a Topology that defines molecules')
@@ -1875,12 +1873,7 @@ class Trajectory(object):
         molecules.sort(key=lambda x: -len(x))
         atoms_cutoff = max(len(molecules[int(0.1*len(molecules))]),
                            int(0.1*len(molecules[0])))
-        anchor_molecules = [np.fromiter((a.index for a in mol), dtype=np.int32)
-                            for mol in molecules
-                            if len(mol) > atoms_cutoff]
-        other_molecules = [np.fromiter((a.index for a in mol), dtype=np.int32)
-                           for mol in molecules
-                           if len(mol) <= atoms_cutoff]
+        anchor_molecules = [mol for mol in molecules if len(mol) > atoms_cutoff]
         num_anchors = len(anchor_molecules)
         if num_anchors == 0:
             raise ValueError("Could not find any anchor molecules. Based on "
@@ -1888,7 +1881,7 @@ class Trajectory(object):
                              "more than {} atoms. Perhaps your topology "
                              "doesn't give an acurate bond graph?"
                              .format(atoms_cutoff))
-        return anchor_molecules, other_molecules
+        return anchor_molecules
 
     def make_molecules_whole(self, inplace=False, sorted_bonds=None):
         """Only make molecules whole
@@ -1942,12 +1935,12 @@ class Trajectory(object):
         inplace : bool, default=False
             If False, a new Trajectory is created and returned.  If True, this Trajectory
             is modified directly.
-        anchor_molecules : list of array of int
-            Atom indices for each molecule that should be treated as an "anchor".
+        anchor_molecules : list of atom sets, optional, default=None
+            Molecule that should be treated as an "anchor".
             These molecules will be centered in the box and put near each other.
             If not specified, anchor molecules are guessed using a heuristic.
-        other_molecules : list of array of int
-            Atom indices for molecules that are not anchors. If not specified,
+        other_molecules : list of atom sets, optional, default=None
+            Molecules that are not anchors. If not specified,
             these will be molecules other than the anchor molecules
         sorted_bonds : array of shape (n_bonds, 2)
             Pairs of atom indices that define bonds, in sorted order.
@@ -1970,11 +1963,17 @@ class Trajectory(object):
         if unitcell_vectors is None:
             raise ValueError('This Trajectory does not define a periodic unit cell')
 
-        if anchor_molecules is None != other_molecules is None:
-            raise ValueError("Please specify both anchor_molecules and"
-                             "other_molecules or neither")
-        if anchor_molecules is None and other_molecules is None:
-            anchor_molecules, other_molecules = self.guess_anchor_molecules()
+        if anchor_molecules is None:
+            anchor_molecules = self.guess_anchor_molecules()
+
+        if other_molecules is None:
+            # Determine other molecules by which molecules are not anchor molecules
+            molecules = self._topology.find_molecules()
+            other_molecules = [mol for mol in molecules if mol not in anchor_molecules]
+
+        # Expand molecules into atom indices
+        anchor_molecules_atom_indices = [np.fromiter((a.index for a in mol), dtype=np.int32) for mol in anchor_molecules]
+        other_molecules_atom_indices  = [np.fromiter((a.index for a in mol), dtype=np.int32) for mol in other_molecules]
 
         if inplace:
             result = self
@@ -1989,7 +1988,7 @@ class Trajectory(object):
             sorted_bonds = None
 
         box = np.asarray(result.unitcell_vectors, order='c')
-        _geometry.image_molecules(result.xyz, box, anchor_molecules, other_molecules, sorted_bonds)
+        _geometry.image_molecules(result.xyz, box, anchor_molecules_atom_indices, other_molecules_atom_indices, sorted_bonds)
         if not inplace:
             return result
         return self
