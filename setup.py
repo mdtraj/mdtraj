@@ -219,7 +219,7 @@ def geometry_extensions():
             sources=['mdtraj/geometry/src/sasa.cpp',
                      'mdtraj/geometry/src/dssp.cpp',
                      'mdtraj/geometry/src/geometry.cpp',
-                     'mdtraj/geometry/src/_geometry.pyx'],
+                     'mdtraj/geometry/src/_geometry.pyx',],
             include_dirs=['mdtraj/geometry/include',
                           'mdtraj/geometry/src/kernels'],
             define_macros=define_macros,
@@ -250,7 +250,6 @@ def geometry_extensions():
             libraries=compiler.compiler_libraries_openmp,
             language='c++'),
         ]
-
 
 extensions = format_extensions()
 extensions.extend(rmsd_extensions())
