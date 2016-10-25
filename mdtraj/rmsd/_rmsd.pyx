@@ -125,7 +125,10 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
         in target.
     """
     # import time
+    cdef bool atom_indices_is_none = False
+
     if atom_indices is None:
+        atom_indices_is_none = True
         atom_indices = slice(None)
     else:
         atom_indices = ensure_type(np.asarray(atom_indices), dtype=np.int, ndim=1, name='atom_indices')
@@ -168,7 +171,7 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
     ref_xyz_frame = np.asarray(reference.xyz[frame, ref_atom_indices, :], order='C', dtype=np.float32)
 
     # t0 = time.time()
-    if precentered and (reference._rmsd_traces is not None) and (target._rmsd_traces is not None) and atom_indices == slice(None):
+    if precentered and (reference._rmsd_traces is not None) and (target._rmsd_traces is not None) and atom_indices_is_none:
         target_g = np.asarray(target._rmsd_traces, order='C', dtype=np.float32)
         ref_g = reference._rmsd_traces[frame]
     else:
