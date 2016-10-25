@@ -26,6 +26,7 @@
 ##############################################################################
 
 import cython
+import warnings
 import numpy as np
 from mdtraj.utils import ensure_type
 
@@ -175,6 +176,10 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
         target_g = np.asarray(target._rmsd_traces, order='C', dtype=np.float32)
         ref_g = reference._rmsd_traces[frame]
     else:
+        if precentered:
+            warnings.warn(
+                'in rmsd(), precentered is ignored when atom_indices != None',
+                RuntimeWarning)
         target_g = np.empty(target_n_frames, dtype=np.float32)
         inplace_center_and_trace_atom_major(&target_xyz[0,0,0], &target_g[0], target_n_frames, n_atoms)
         inplace_center_and_trace_atom_major(&ref_xyz_frame[0, 0], &ref_g, 1, n_atoms)
