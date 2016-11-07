@@ -49,9 +49,10 @@ void dist(const float* xyz, const int* pairs, float* distance_out,
 #endif
         for (int j = 0; j < n_pairs; j++) {
             // Compute the displacement.
-
-            fvec4 pos1(xyz + 3*pairs[2*j + 0]);
-            fvec4 pos2(xyz + 3*pairs[2*j + 1]);
+            int offset1 = 3*pairs[2*j + 0];
+            fvec4 pos1(xyz[offset1], xyz[offset1+1], xyz[offset1+2], 0);
+            int offset2 = 3*pairs[2*j + 1];
+            fvec4 pos2(xyz[offset2], xyz[offset2+1], xyz[offset2+2], 0);
             fvec4 r12 = pos2-pos1;
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
             r12 -= round(r12*inv_box_size)*box_size;
