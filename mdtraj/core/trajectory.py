@@ -1857,32 +1857,6 @@ class Trajectory(object):
     def _have_unitcell(self):
         return self._unitcell_lengths is not None and self._unitcell_angles is not None
 
-    def guess_anchor_molecules(self):
-        """Guess anchor molecules for imaging
-
-        Returns
-        -------
-        anchor_molecules : list of atom sets
-            List of anchor molecules
-        """
-        if self._topology is None:
-            raise ValueError('Trajectory must have a Topology that defines molecules')
-        molecules = self._topology.find_molecules()
-
-        # Select the anchor molecules.
-        molecules.sort(key=lambda x: -len(x))
-        atoms_cutoff = max(len(molecules[int(0.1*len(molecules))]),
-                           int(0.1*len(molecules[0])))
-        anchor_molecules = [mol for mol in molecules if len(mol) > atoms_cutoff]
-        num_anchors = len(anchor_molecules)
-        if num_anchors == 0:
-            raise ValueError("Could not find any anchor molecules. Based on "
-                             "our heuristic, those should be molecules with "
-                             "more than {} atoms. Perhaps your topology "
-                             "doesn't give an acurate bond graph?"
-                             .format(atoms_cutoff))
-        return anchor_molecules
-
     def make_molecules_whole(self, inplace=False, sorted_bonds=None):
         """Only make molecules whole
 
@@ -1957,14 +1931,14 @@ class Trajectory(object):
 
         See Also
         --------
-        Trajectory.guess_anchor_molecules
+        Topology.guess_anchor_molecules
         """
         unitcell_vectors = self.unitcell_vectors
         if unitcell_vectors is None:
             raise ValueError('This Trajectory does not define a periodic unit cell')
 
         if anchor_molecules is None:
-            anchor_molecules = self.guess_anchor_molecules()
+            anchor_molecules = self.topology.guess_anchor_molecules()
 
         if other_molecules is None:
             # Determine other molecules by which molecules are not anchor molecules
