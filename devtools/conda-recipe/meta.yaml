@@ -28,8 +28,6 @@ test:
     - nose
     - scripttest
     - networkx
-    - ipython-notebook
-    - ipywidgets
     - matplotlib
     - pandas
     - openmm  # [not (win32 or (win and py2k))]
