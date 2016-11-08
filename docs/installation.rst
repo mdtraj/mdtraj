@@ -5,7 +5,7 @@ Installation
 
 We recommend that you install ``mdtraj`` with ``conda``. ::
 
-  $ conda install -c omnia mdtraj
+  $ conda install -c conda-forge mdtraj
 
 You can install also ``mdtraj`` with ``pip``, if you prefer. ::
 
