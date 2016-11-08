@@ -1118,6 +1118,10 @@ class Topology(object):
         -------
         anchor_molecules : list of atom sets
             List of anchor molecules
+
+        See Also
+        --------
+        Trajectory.image_molecules
         """
         molecules = self.find_molecules()
 
