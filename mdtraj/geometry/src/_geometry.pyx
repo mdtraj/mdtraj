@@ -82,18 +82,10 @@ cdef extern from "sasa.h":
               const float* atom_radii, const int n_sphere_points,
               const int* atom_mapping, const int n_groups, float* out) nogil
 
-cdef extern from "hardware.h":
-    int processorSupportsSSE41()
 
 ##############################################################################
 # Wrappers
 ##############################################################################
-
-def _processor_supports_sse41():
-    """Does the current processor support SSE4.1 instructions?"""
-    warnings.warn(('_processor_supports_sse41 is depicrated, and will be '
-                  'removed in MDTraj 1.4'), DeprecationWarning)
-    return processorSupportsSSE41()
 
 def _dist(float[:, :, ::1] xyz,
           int[:, ::1] pairs,
