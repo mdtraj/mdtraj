@@ -3,9 +3,11 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.8 (Development)
-------------------
+v1.8 (November 9, 2016)
+-----------------------
 
+- PR #1202: ``mdtraj.html`` has been removed. We recommend using
+  ``nglview`` for visualizing MDTraj trajectory objects.
 - PR #1204: Fix search functionality with docs
 - PR #1167: Fix corner case in distancekernel.h
 - PR #1190: Fix issue with rmsd precentered = True and atom_indices != None
@@ -27,8 +29,6 @@ v1.8 (Development)
 - PR #1132: Fix bug in hoomdxml reader
 - PR #1125: Support Gromacs TNG files
 - PR #1123: Add md.join(trajs)
-- PR #1202: ``mdtraj.html`` has been deprecated. We recommend using
-  ``nglview`` for visualizing MDTraj trajectory objects.
 
 v1.7.2 (May 2, 2016)
 --------------------
