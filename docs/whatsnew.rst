@@ -27,6 +27,8 @@ v1.8 (Development)
 - PR #1132: Fix bug in hoomdxml reader
 - PR #1125: Support Gromacs TNG files
 - PR #1123: Add md.join(trajs)
+- PR #1202: ``mdtraj.html`` has been deprecated. We recommend using
+  ``nglview`` for visualizing MDTraj trajectory objects.
 
 v1.7.2 (May 2, 2016)
 --------------------
