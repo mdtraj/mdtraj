@@ -119,10 +119,14 @@ def format_extensions():
     if sys.platform == 'win32':
         # Conda puts the zlib headers in ./Library/... on windows
         # If you're not using conda, good luck!
-        # (on linux, zlib is a dependency of python and its headers/libraries
-        #  go in the normal ./include ./lib directories)
         zlib_include_dirs += ["{}/Library/include".format(sys.prefix)]
         zlib_library_dirs += ["{}/Library/lib".format(sys.prefix)]
+    else:
+        # On linux (and mac(?)) these paths should work for a standard
+        # install of python+zlib or a conda install of python+zlib
+        zlib_include_dirs += ["{}/include".format(sys.prefix)]
+        zlib_library_dirs += ["{}/lib".format(sys.prefix)]
+
     tng = Extension('mdtraj.formats.tng',
                     sources=glob('mdtraj/formats/tng/src/compression/*.c') +
                                 ['mdtraj/formats/tng/src/lib/tng_io.c',
