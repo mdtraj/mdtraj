@@ -190,8 +190,6 @@ def test_average_structure():
         sum2 += rmsd_qcp(average, traj.xyz[i])
     assert sum2 < sum1
 
-test_average_structure()
-
 # def test_align_displace():
 #     t = md.load(get_fn('traj.h5'))
 #     t.center_coordinates()
