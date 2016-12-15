@@ -25,7 +25,7 @@ import numpy as np
 
 import mdtraj as md
 from mdtraj.testing import get_fn, eq
-from mdtraj.geometry.alignment import rmsd_qcp, compute_translation_and_rotation
+from mdtraj.geometry.alignment import rmsd_qcp, compute_translation_and_rotation, compute_average_structure
 
 
 def test_trajectory_rmsd():
@@ -177,6 +177,20 @@ def test_rmsd_ref_ainds():
 
     assert np.all(dist2 > dist1)
 
+
+def test_average_structure():
+    traj = md.load(get_fn('frame0.dcd'), top=get_fn('frame0.pdb'))
+    average = compute_average_structure(traj.xyz)
+    
+    # The mean RMSD to the average structure should be less than to any individual frame.
+    sum1 = 0
+    sum2 = 0
+    for i in range(traj.n_frames):
+        sum1 += rmsd_qcp(traj.xyz[0], traj.xyz[i])
+        sum2 += rmsd_qcp(average, traj.xyz[i])
+    assert sum2 < sum1
+
+test_average_structure()
 
 # def test_align_displace():
 #     t = md.load(get_fn('traj.h5'))
