@@ -369,6 +369,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
         topkwargs = kwargs.copy()
         topkwargs.pop("top", None)
+        topkwargs.pop("atom_indices", None)
+        topkwargs.pop("frame", None)
         kwargs["top"] = _parse_topology(kwargs["top"], **topkwargs)
 
     # grab the extension of the filename

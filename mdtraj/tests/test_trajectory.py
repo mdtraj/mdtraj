@@ -704,3 +704,17 @@ def test_load_pdb_no_standard_names():
     # to NOT replace any non-standard atom or residue names in the topology
     md.load(get_fn('native2.pdb'), standard_names=False)
     md.load_pdb(get_fn('native2.pdb'), standard_names=False)
+
+def test_load_with_atom_indices():
+    t1 = md.load(get_fn('frame0.xtc'), top=get_fn('frame0.gro'), atom_indices=[5])
+    t2 = md.load(get_fn('frame0.xtc'), top=get_fn('frame0.gro'))
+    t2 = t2.atom_slice([5])
+    eq(t1.xyz, t2.xyz)
+    eq(t1.time, t2.time)
+
+def test_load_with_frame():
+    t1 = md.load(get_fn('frame0.xtc'), top=get_fn('frame0.pdb'), frame=3)
+    t2 = md.load(get_fn('frame0.xtc'), top=get_fn('frame0.pdb'))
+    t2 = t2.slice([3])
+    eq(t1.xyz, t2.xyz)
+    eq(t1.time, t2.time)
