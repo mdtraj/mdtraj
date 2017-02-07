@@ -1,5 +1,7 @@
 import os
 import shutil
+import sys
+
 from mdtraj import version
 
 if version.release:
@@ -8,5 +10,5 @@ else:
     docversion = 'development'
 
 os.mkdir("docs/_deploy")
-shutil.copytree("docs/_build/html", "docs/_deploy/{docversion}"
-                .format(docversion=docversion))
+shutil.copytree("{prefix}/share/mdtraj-docs".format(prefix=sys.prefix),
+                "docs/_deploy/{docversion}".format(docversion=docversion))

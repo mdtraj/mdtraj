@@ -1,0 +1,31 @@
+package:
+  name: mdtraj-docs
+  version: {{GIT_DESCRIBE_TAG}}+{{GIT_DESCRIBE_NUMBER}}.{{GIT_DESCRIBE_HASH}}
+
+source:
+  path: ../../
+
+requirements:
+  build:
+    - python
+    - mdtraj =={{GIT_DESCRIBE_TAG}}+{{GIT_DESCRIBE_NUMBER}}.{{GIT_DESCRIBE_HASH}}
+    # - sphinx_rtd_theme==0.1.9
+    # - msmb_theme==1.2.0
+    - sphinx
+    - matplotlib
+    - ipython-notebook
+    - jinja2
+    - runipy
+    - openmm
+    - pytables
+    - scikit-learn
+    - nose
+    - pandas
+    - numpydoc
+  skip_compile_pyc:
+    - share/mdtraj-docs/examples/*/*.py
+
+about:
+  home: http://mdtraj.org
+  license: GNU Lesser General Public License v2 or later (LGPLv2+)
+  summary: A modern, open library for the analysis of molecular dynamics trajectories (docs)
