@@ -15,7 +15,7 @@ install:
   - conda config --add channels omnia
 
 script:
-  conda build --quiet devtools/conda-recipe
+  conda build --quiet devtools/mdtraj-recipe devtools/mdtraj-docs-recipe
   && devtools/travis-ci/build_docs.sh
 
 os:

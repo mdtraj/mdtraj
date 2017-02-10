@@ -1,12 +1,11 @@
 package:
   name: mdtraj
-  version: {{ GIT_DESCRIBE_TAG }}
+  version: {{GIT_DESCRIBE_TAG}}+{{GIT_DESCRIBE_NUMBER}}.{{GIT_DESCRIBE_HASH}}
 
 source:
   path: ../../
 
 build:
-  number: {{ GIT_DESCRIBE_NUMBER }}
   script: python setup.py install --single-version-externally-managed --record record.txt
   entry_points:
     - mdconvert = mdtraj.scripts.mdconvert:entry_point
