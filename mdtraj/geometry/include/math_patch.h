@@ -1,11 +1,14 @@
 // Math functions for old versions of visual studio
-
+#ifndef __MATH_PATH_H_
+#define __MATH_PATH_H_
 #ifdef _MSC_VER
 #if _MSC_VER < 1900 // prior to vs2015
-float roundf(float x) {
+#pragma once
+inline float roundf(float x) {
    return x >= 0.0f ? floorf(x + 0.5f) : ceilf(x - 0.5f);
 }
-double cbrt(double x) {
+
+inline double cbrt(double x) {
     if (x<0)
         return -1.0 * pow(-1.0 * x, 1.0/3.0);
     else
@@ -17,4 +20,7 @@ double cbrt(double x) {
 #define isnan(x) ((x)!=(x))
 #endif // isnan
 
+#else // use C99 compliant header.
+#include <math.h>
 #endif // _MSC_VER
+#endif // __MATH_PATH_H_
