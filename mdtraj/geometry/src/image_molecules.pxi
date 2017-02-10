@@ -7,6 +7,10 @@ from libcpp.vector cimport vector
 
 ctypedef np.npy_intp intp
 
+cdef extern from "math_patch.h" nogil:
+    float roundf(float x)
+    float floorf(float x)
+
 cdef void make_whole(float[:,::1] frame_positions,
                 float[:,::1] frame_unitcell_vectors,
                 intp[:,:] sorted_bonds) nogil:

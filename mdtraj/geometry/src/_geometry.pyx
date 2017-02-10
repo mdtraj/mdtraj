@@ -23,9 +23,6 @@
 ##############################################################################
 
 import sys
-import warnings
-import cython
-import numpy as np
 
 ##############################################################################
 # Headers
@@ -74,8 +71,6 @@ cdef extern from "geometry.h" nogil:
     void find_closest_contact(const float* positions, const int* group1, const int* group2,
                               int n_group1, int n_group2, const float* box_vectors_pointer,
                               int* atom1, int* atom2, float* distance)
-    float roundf(float x)
-    float floorf(float x)
 
 cdef extern from "sasa.h":
     void sasa(const int n_frames, const int n_atoms, const float* xyzlist,
