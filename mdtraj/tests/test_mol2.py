@@ -121,3 +121,7 @@ def test_mol2_status_bits():
     trj = md.load_mol2(get_fn('status-bits.mol2'))
     eq(trj.topology.n_atoms, 18)
     eq(trj.topology.n_bonds, 18)
+
+def test_mol2_without_bonds():
+    trj = md.load_mol2(get_fn('li.mol2'))
+    assert trj.topology.n_bonds == 0
