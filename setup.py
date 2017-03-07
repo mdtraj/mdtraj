@@ -146,6 +146,16 @@ def format_extensions():
                                   'mdtraj/formats/dcd/'],
                     extra_compile_args=compiler_args)
 
+    mae = Extension('mdtraj.formats.mae',
+                    sources=['mdtraj/formats/mae/src/maeffplugin.cpp',
+                             'mdtraj/formats/mae/mae.pyx'],
+                    # TODO: Refactor molfile
+                    include_dirs=["mdtraj/formats/dcd/include/",
+                                  'mdtraj/formats/mae/include/'],
+                    extra_compile_args=compiler_args,
+                    language='c++',
+                    )
+
     binpos = Extension('mdtraj.formats.binpos',
                        sources=['mdtraj/formats/binpos/src/binposplugin.c',
                                 'mdtraj/formats/binpos/binpos.pyx'],
@@ -163,7 +173,7 @@ def format_extensions():
                     extra_compile_args=compiler_args,
                     libraries=extra_cpp_libraries)
 
-    return [xtc, trr, tng, dcd, binpos, dtr]
+    return [xtc, trr, tng, dcd, binpos, dtr, mae]
 
 
 def rmsd_extensions():
