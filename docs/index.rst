@@ -29,7 +29,6 @@ trajectories between formats.
    new_to_python
    examples/index
    whatsnew
-   Forums <http://discourse.mdtraj.org>
 
 API Reference
 -------------
