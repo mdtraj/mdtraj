@@ -100,7 +100,7 @@ def test_contact_2():
 def test_contact_3():
     pdb = md.load(get_fn('bpti.pdb'))
     beta=20
-    dists, pairs = compute_contacts(pdb, soft_min=True, beta=beta)
+    dists, pairs = md.compute_contacts(pdb, soft_min=True, soft_min_beta=beta)
 
     maps = md.geometry.squareform(dists, pairs)
     for i, (r0, r1) in enumerate(pairs):
