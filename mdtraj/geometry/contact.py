@@ -40,7 +40,50 @@ __all__ = ['compute_contacts', 'squareform']
 # Code
 ##############################################################################
 
-def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonprotein=True, periodic=True):
+##############################################################################
+# MDTraj: A Python Library for Loading, Saving, and Manipulating
+#         Molecular Dynamics Trajectories.
+# Copyright 2012-2013 Stanford University and the Authors
+#
+# Authors: Christian Schwantes
+# Contributors: Robert McGibbon
+#
+# MDTraj is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 2.1
+# of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
+
+##############################################################################
+# Imports
+##############################################################################
+
+from __future__ import print_function, division
+import numpy as np
+from mdtraj.utils import ensure_type
+from mdtraj.utils.six import string_types
+from mdtraj.utils.six.moves import xrange
+from mdtraj.core import element
+import mdtraj as md
+import itertools
+
+__all__ = ['compute_contacts', 'squareform']
+
+##############################################################################
+# Code
+##############################################################################
+
+def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonprotein=True, periodic=True,
+                     diffrentialable_scheme=False, beta=20):
     """Compute the distance between pairs of residues in a trajectory.
 
     Parameters
@@ -71,6 +114,14 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
     periodic : bool, default=True
         If periodic is True and the trajectory contains unitcell information,
         we will compute distances under the minimum image convention.
+    diffrentialable_scheme : bool, default=False
+        If diffrentialable_scheme is true, we will use a diffrentiable version of
+        the scheme. The exact expression used
+         is d = \frac{\beta}{log\sum_i{exp(\frac{\beta}{d_i}})} where
+         beta is user parameter which defaults to 500
+    beta : float, default=20
+        The value of beta to use for the diffrentiable_contact distance option.
+        Very large values might cause small contact distances to go to 0.
 
     Returns
     -------
@@ -201,7 +252,10 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         for i in xrange(n_residue_pairs):
             index = int(np.sum(n_atom_pairs_per_residue_pair[:i]))
             n = n_atom_pairs_per_residue_pair[i]
-            distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
+            if not diffrentialable_scheme:
+                distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
+            else:
+                distances[:, i] = beta / np.log(np.sum(np.exp(beta/atom_distances[:, index : index + n]), axis=1))
 
     else:
         raise ValueError('This is not supposed to happen!')
