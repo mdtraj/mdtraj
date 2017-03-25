@@ -219,7 +219,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
                 distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
             else:
                 distances[:, i] = soft_min_beta / \
-                                  np.log(np.sum(np.exp(soft_min_beta/ \
+                                  np.log(np.sum(np.exp(soft_min_beta/
                                                        atom_distances[:, index : index + n]), axis=1))
 
     else:
