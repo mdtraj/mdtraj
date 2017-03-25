@@ -23,13 +23,12 @@
 from __future__ import print_function
 import re
 import ast
-import sys
 from copy import deepcopy
 from collections import namedtuple
 from mdtraj.utils.six import PY2
 from mdtraj.utils.external.pyparsing import (Word, ParserElement, MatchFirst,
     Keyword, opAssoc, quotedString, alphas, alphanums, infixNotation, Group,
-    Optional, ParseException)
+    Optional, ParseException, delimitedList)
 from mdtraj.utils.external.astor import codegen
 ParserElement.enablePackrat()
 
@@ -246,14 +245,27 @@ class RangeCondition(object):
         tokens = tokens[0]
         _check_n_tokens(tokens, 4, 'range condition')
         assert tokens[2] == 'to'
-        self._from, self._center, self._to = tokens[0], tokens[1], tokens[3]
-        if isinstance(self._from, Literal):
+        self._field, self._from, self._to = tokens[0], tokens[1], tokens[3]
+        if isinstance(self._field, Literal):
             raise ValueError("Can't test literal in range.")
 
     def ast(self):
-        return ast.Compare(left=self._center.ast(), ops=[ast.LtE(), ast.LtE()],
-                           comparators=[self._from.ast(), self._to.ast()])
+        return ast.Compare(left=self._from.ast(), ops=[ast.LtE(), ast.LtE()],
+                           comparators=[self._field.ast(), self._to.ast()])
 
+class InListCondition(object):
+    def __init__(self, tokens):
+        tokens = tokens[0]
+        _check_n_tokens(tokens, 2, '"in list" condition')
+        assert tokens[2] == 'to'
+        self._field, self._list = tokens[0], tokens[1]
+        print(tokens)
+        if isinstance(self._field, Literal):
+            raise ValueError("Can't test literal in range.")
+
+    def ast(self):
+        return ast.Compare(left=self._field.ast(), ops=[ast.In],
+                           comparators=[self._list.ast()])
 
 class parse_selection(object):
     """Parse an atom selection expression
@@ -328,7 +340,11 @@ class parse_selection(object):
         )
         range_condition.setParseAction(RangeCondition)
 
-        expression = range_condition | implicit_equality | base_expression
+        # matches expression such as `resname GLU ASP ARG`
+        in_list_condition = Group(base_expression + delimitedList(literal, delim=',', combine=True))
+        in_list_condition.setParseAction(InListCondition)
+
+        expression = range_condition | in_list_condition | base_expression
         logical_expr = infixNotation(
             expression,
             infix(UnaryInfixOperand) +
