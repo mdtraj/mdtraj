@@ -96,5 +96,17 @@ def test_contact_2():
         for t in range(pdb.n_frames):
             eq(maps[t, r0, r1], dists[t, i])
 
+
+def test_contact_3():
+    pdb = md.load(get_fn('bpti.pdb'))
+    beta=20
+    dists, pairs = md.compute_contacts(pdb, soft_min=True, soft_min_beta=beta)
+
+    maps = md.geometry.squareform(dists, pairs)
+    for i, (r0, r1) in enumerate(pairs):
+        for t in range(pdb.n_frames):
+            assert np.allclose(beta/np.log(np.sum(np.exp(beta/maps[t, r0, r1]))), dists[t, i])
+
+
 if __name__ == '__main__':
     test_contact()
