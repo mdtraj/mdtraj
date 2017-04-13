@@ -3,9 +3,10 @@
 [![Linux Build Status](https://travis-ci.org/mdtraj/mdtraj.svg?branch=master)](https://travis-ci.org/mdtraj/mdtraj)
 [![Windows Build status](https://ci.appveyor.com/api/projects/status/sqjgx3jh14vuxks5/branch/master?svg=true)](https://ci.appveyor.com/project/rmcgibbo/mdtraj/branch/master)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.svg)](https://pypi.python.org/pypi/mdtraj)
-[![Binstar Badge](https://binstar.org/omnia/mdtraj/badges/version.svg)](https://binstar.org/omnia/mdtraj)
+[![Anaconda-Server Version](https://anaconda.org/omnia/mdtraj/badges/version.svg)](https://anaconda.org/omnia/mdtraj)
+[![Anaconda-Server Downloads](https://anaconda.org/omnia/mdtraj/badges/downloads.svg)](https://anaconda.org/omnia/mdtraj)
 [![Research software impact](http://depsy.org/api/package/pypi/mdtraj/badge.svg)](http://depsy.org/package/python/mdtraj)
-[![Downloads](https://img.shields.io/pypi/dm/mdtraj.svg)](https://pypi.python.org/pypi/mdtraj)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/mdtraj.svg)](https://pypi.python.org/pypi/mdtraj)
 
 Read, write and analyze MD trajectories with only a few lines of Python code.
 

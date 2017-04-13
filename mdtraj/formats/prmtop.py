@@ -85,7 +85,7 @@ def _get_pointer_value(pointer_label, raw_data):
     return float(raw_data['POINTERS'][index])
 
 
-def load_prmtop(filename):
+def load_prmtop(filename, **kwargs):
     """Load an AMBER prmtop topology file from disk.
 
     Parameters

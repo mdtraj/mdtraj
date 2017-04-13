@@ -40,9 +40,9 @@ matrix:
 deploy:
   - provider: s3
     access_key_id:
-      secure: "ZJrGD3DMlnokMNL2IAro43fdILptst27+UNH1tcma5NFSXGYRpUYAk+uFdjtj5WR2bi0g81UFmsGd421SfDzJe9WY+zcNlBTNlushi0+8KOTXBVr38n8z03mUMz2wnGTYmOg5z0kBHQ+xBVuX9Hz9FM9CVbWZczCWpTTiem35W4="
+      secure: "W6YkOUOWIGXFP3YDkoGXh2M3bIS1/KYEy+EjPPOpeeX6MiTWkJz56ClV8kB+j+s1qPd+So3LUDXT4WW1qH2fftMlDSCnlwWPjtz45lSyOP7vOFeuLMm7hRWyDAPaQYumEN1rY7TlcB3YjC4AQKlPmILyKH7mGBWAgbumMs9pHtI="
     secret_access_key:
-      secure: "lEpUy2/GD2PnpBcv1KV2qt5mzRPbe4hPJwqlCuYDYvLFLMTrl+v5d+R8IyZ1KMX5eRBTPdP2i2sVbyRH/rwCaeRl6btYcsLWmpydfovPP7KyL3dlSWxtquOZCi0wfjlK7H5RwZHUb0870XhdPrAPT04plbiqVHzlSqBhfVTbHB0="
+      secure: "ks3zwG//xUNMfAyFQSxJ/iD+fkO/VkMayGP/wZLpePJOWH3nZQkPeNhpk9xoq2jMUI8wNCY3jrQi0sj2NETReBq0WjVpx6H1UwnT3hu4NvwyW7256+RSRTWMzGBoLiClCKQ2Uu7guJKSvoRZim0p+LNSZqSf+c+P6FVs5QjlouA="
     bucket: "mdtraj.org"
     region: us-west-1
     skip_cleanup: true

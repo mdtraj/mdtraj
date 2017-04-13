@@ -764,7 +764,7 @@ class AmberNetCDFRestartFile(object):
             v.units = 'degree'
         if set_time:
             v = ncfile.createVariable('time', 'd', ('time',))
-            v.units = 'picoseconds'
+            v.units = 'picosecond'
         self.flush()
 
     def __enter__(self):

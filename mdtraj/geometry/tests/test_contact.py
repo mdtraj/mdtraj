@@ -38,17 +38,25 @@ def test_contact_0():
     ca, ca_pairs = md.compute_contacts(pdb, contacts, scheme='ca')
     closest, closest_pairs = md.compute_contacts(pdb, contacts, scheme='closest')
     closest_heavy, closest_heavy_pairs = md.compute_contacts(pdb, contacts, scheme='closest-heavy')
+    sidechain, sidechain_pairs = md.compute_contacts(pdb, contacts, scheme='sidechain')
+    sidechain_heavy, sidechain_heavy_pairs = md.compute_contacts(pdb, contacts, scheme='sidechain-heavy')
 
     ref_ca = np.loadtxt(get_fn('cc_ca.dat'))
     ref_closest = np.loadtxt(get_fn('cc_closest.dat'))
     ref_closest_heavy = np.loadtxt(get_fn('cc_closest-heavy.dat'))
+    ref_sidechain = np.loadtxt(get_fn('cc_sidechain.dat'))
+    ref_sidechain_heavy = np.loadtxt(get_fn('cc_sidechain-heavy.dat'))
 
     eq(ref_ca, ca.flatten())
     eq(ref_closest, closest.flatten())
     eq(ref_closest_heavy, closest_heavy.flatten())
+    eq(ref_sidechain, sidechain.flatten())
+    eq(ref_sidechain_heavy, sidechain_heavy.flatten())
     eq(contacts, ca_pairs)
     eq(contacts, closest_pairs)
     eq(contacts, closest_heavy_pairs)
+    eq(contacts, sidechain_pairs)
+    eq(contacts, sidechain_heavy_pairs)
 
 
 def test_contact_1():
@@ -87,6 +95,18 @@ def test_contact_2():
     for i, (r0, r1) in enumerate(pairs):
         for t in range(pdb.n_frames):
             eq(maps[t, r0, r1], dists[t, i])
+
+
+def test_contact_3():
+    pdb = md.load(get_fn('bpti.pdb'))
+    beta=20
+    dists, pairs = md.compute_contacts(pdb, soft_min=True, soft_min_beta=beta)
+
+    maps = md.geometry.squareform(dists, pairs)
+    for i, (r0, r1) in enumerate(pairs):
+        for t in range(pdb.n_frames):
+            assert np.allclose(beta/np.log(np.sum(np.exp(beta/maps[t, r0, r1]))), dists[t, i])
+
 
 if __name__ == '__main__':
     test_contact()

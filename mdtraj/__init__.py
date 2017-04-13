@@ -43,7 +43,7 @@ from mdtraj.formats.psf import load_psf
 from mdtraj.formats.mol2 import load_mol2
 from mdtraj.formats.amberrst import load_restrt, load_ncrestrt
 from mdtraj.formats.lammpstrj import load_lammpstrj
-from mdtraj.formats.dtr import load_dtr
+from mdtraj.formats.dtr import load_dtr, load_stk
 from mdtraj.formats.xyzfile import load_xyz
 from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.formats.tng import load_tng

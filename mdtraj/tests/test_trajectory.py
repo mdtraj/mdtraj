@@ -685,8 +685,36 @@ def test_smooth():
 
     eq(output, test)
 
+def test_image_molecules():
+    # Load trajectory with periodic box
+    t = md.load(get_fn('alanine-dipeptide-explicit.dcd'), top=get_fn('alanine-dipeptide-explicit.pdb'))
+    # Image to new trajectory
+    t_new = t.image_molecules(inplace=False)
+    # Image inplace without making molecules whole
+    t.image_molecules(inplace=True, make_whole=False)
+    # Image inplace with making molecules whole
+    t.image_molecules(inplace=True, make_whole=True)
+    # Image with specified anchor molecules
+    molecules = t.topology.find_molecules()
+    anchor_molecules = molecules[0:3]
+    t.image_molecules(inplace=True, anchor_molecules=anchor_molecules)
+
 def test_load_pdb_no_standard_names():
     # Minimal test. Standard_names=False will force load_pdb.py
     # to NOT replace any non-standard atom or residue names in the topology
     md.load(get_fn('native2.pdb'), standard_names=False)
     md.load_pdb(get_fn('native2.pdb'), standard_names=False)
+
+def test_load_with_atom_indices():
+    t1 = md.load(get_fn('frame0.xtc'), top=get_fn('frame0.gro'), atom_indices=[5])
+    t2 = md.load(get_fn('frame0.xtc'), top=get_fn('frame0.gro'))
+    t2 = t2.atom_slice([5])
+    eq(t1.xyz, t2.xyz)
+    eq(t1.time, t2.time)
+
+def test_load_with_frame():
+    t1 = md.load(get_fn('frame0.xtc'), top=get_fn('frame0.pdb'), frame=3)
+    t2 = md.load(get_fn('frame0.xtc'), top=get_fn('frame0.pdb'))
+    t2 = t2.slice([3])
+    eq(t1.xyz, t2.xyz)
+    eq(t1.time, t2.time)

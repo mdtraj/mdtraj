@@ -56,10 +56,10 @@ prints out ::
 If everything looks good, go ahead and install ``mdtraj`` using the ``conda``
 package manager. ::
 
-  conda install -c omnia mdtraj
+  conda install -c conda-forge mdtraj
 
-The ``omnia`` "channel" provides a variety of packages for biomolecular
-simulation and analysis.
+The ``conda-forge`` "channel" provides a variety of packages supported by the
+Python community.
 
 
 Starting MDTraj with IPython/Jupyter

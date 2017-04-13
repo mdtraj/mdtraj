@@ -170,15 +170,15 @@ cdef class DCDTrajectoryFile:
     >>> f.close()
 
     >>> # read all of the data with automatic closing of the file
-    >>> with DCDTrajectoryFile('mytrajectory.dcd') as f:
+    >>> with DCDTrajectoryFile('mytrajectory.dcd', 'r') as f:
     >>>    xyz, cell_lengths, cell_angles = f.read()
 
     >>> # write some xyz coordinates to a new file
-    >>> with DCDTrajectoryFile('mytrajectory2.dcd. 'w') as f:
+    >>> with DCDTrajectoryFile('mytrajectory2.dcd', 'w') as f:
     >>>     f.write(np.random.randn(10,3,3))
 
     >>> # write frames one at a time
-    >>> with DCDTrajectoryFile('mytrajectory2.dcd. 'w') as f:
+    >>> with DCDTrajectoryFile('mytrajectory2.dcd', 'w') as f:
     >>>     n_frames, n_atoms = 5, 10
     >>>     for i in range(n_frames):
     >>>         f.write(np.random.randn(n_atoms, 3))

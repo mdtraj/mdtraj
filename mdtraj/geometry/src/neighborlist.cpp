@@ -57,12 +57,11 @@ public:
                      periodicBoxVectors[1][0] != 0.0 || periodicBoxVectors[1][2] != 0.0 ||
                      periodicBoxVectors[2][0] != 0.0 || periodicBoxVectors[2][1] != 0.0);
         if (usePeriodic) {
-            ny = (int) floorf(periodicBoxVectors[1][1]/voxelSizeY+0.5f);
-            nz = (int) floorf(periodicBoxVectors[2][2]/voxelSizeZ+0.5f);
+            ny = max(1, (int) floorf(periodicBoxVectors[1][1]/voxelSizeY+0.5f));
+            nz = max(1, (int) floorf(periodicBoxVectors[2][2]/voxelSizeZ+0.5f));
             voxelSizeY = periodicBoxVectors[1][1]/ny;
             voxelSizeZ = periodicBoxVectors[2][2]/nz;
-        }
-        else {
+        } else {
             ny = max(1, (int) floorf((maxy-miny)/voxelSizeY+0.5f));
             nz = max(1, (int) floorf((maxz-minz)/voxelSizeZ+0.5f));
             if (maxy > miny)
@@ -165,7 +164,7 @@ public:
             dIndexZ = min(nz/2, dIndexZ);
         }
         const float* centerAtomPos = &atomLocations[3*atomIndex];
-        fvec4 centerPosVec(centerAtomPos);
+        fvec4 centerPosVec(centerAtomPos[0], centerAtomPos[1], centerAtomPos[2], 0);
 
         // Loop over voxels along the z axis.
 
@@ -304,7 +303,7 @@ public:
                         if (index >= atomIndex)
                             continue;
 
-                        fvec4 atomPos(&atomLocations[3*index]);
+                        fvec4 atomPos(atomLocations[3*index], atomLocations[3*index+1], atomLocations[3*index+2], 0);
                         fvec4 delta = atomPos-centerPosVec;
                         if (periodicRectangular)
                             delta -= round(delta*invBoxSize)*boxSize;
@@ -358,10 +357,10 @@ vector<vector<int> > _compute_neighborlist(const float* atomLocations, int numAt
 
     // Identify the range of atom positions along each axis.
 
-    fvec4 minPos(&atomLocations[0]);
+    fvec4 minPos(atomLocations[0], atomLocations[1], atomLocations[2], 0);
     fvec4 maxPos = minPos;
     for (int i = 0; i < numAtoms; i++) {
-        fvec4 pos(&atomLocations[3*i]);
+        fvec4 pos(atomLocations[3*i], atomLocations[3*i+1], atomLocations[3*i+2], 0);
         minPos = min(minPos, pos);
         maxPos = max(maxPos, pos);
     }

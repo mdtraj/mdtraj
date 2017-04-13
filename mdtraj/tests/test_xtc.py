@@ -258,6 +258,12 @@ def test_seek_natoms9():
         eq(f.read(1)[0].squeeze(), xyz[0])
 
 
+@raises(IOError)
+def test_seek_out_of_bounds():
+    with XTCTrajectoryFile(get_fn('frame0.xtc'), 'r') as fh:
+        fh.seek(10000000)
+
+
 def test_ragged_1():
     # try first writing no box vectors,, and then adding some
     xyz = np.random.randn(100, 5, 3)
@@ -275,10 +281,10 @@ def test_ragged_2():
     time = np.random.randn(100)
     box = np.random.randn(100, 3, 3)
 
-    #from mdtraj.formats import HDF5TrajectoryFile
     with XTCTrajectoryFile(temp, 'w', force_overwrite=True) as f:
         f.write(xyz, time=time, box=box)
         assert_raises(ValueError, lambda: f.write(xyz))
+
 
 def test_short_traj():
     with XTCTrajectoryFile(temp, 'w') as f:

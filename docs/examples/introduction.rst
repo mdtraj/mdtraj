@@ -55,6 +55,6 @@ Saving the trajectory back to disk is easy. ::
 The trajectory contains a reference to a topology object, which can come in handy. For example, if you want to save a copy of your trajectory with
 only alpha carbons present, you can do that pretty easily. ::
 
-  >>> atom_to_keep = [a.index for a in t.topology.atoms if a.name == 'CA']
+  >>> atoms_to_keep = [a.index for a in t.topology.atoms if a.name == 'CA']
   >>> t.restrict_atoms(atoms_to_keep)  # this acts inplace on the trajectory
   >>> t.save('CA-only.h5')

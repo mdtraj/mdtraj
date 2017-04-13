@@ -104,9 +104,12 @@ def load_mol2(filename):
     atoms_mdtraj["resSeq"] = np.ones(len(atoms), 'int')
     atoms_mdtraj["chainID"] = np.ones(len(atoms), 'int')
 
-    bonds_mdtraj = bonds[["id0", "id1"]].values
-    offset = bonds_mdtraj.min()  # Should this just be 1???
-    bonds_mdtraj -= offset
+    if bonds is not None:
+        bonds_mdtraj = bonds[["id0", "id1"]].values
+        offset = bonds_mdtraj.min()  # Should this just be 1???
+        bonds_mdtraj -= offset
+    else:
+        bonds_mdtraj = None
 
     top = Topology.from_dataframe(atoms_mdtraj, bonds_mdtraj)
 
@@ -159,11 +162,15 @@ def mol2_to_dataframes(filename):
     status_bit_regex = "BACKBONE|DICT|INTERRES|\|"
     data["@<TRIPOS>BOND\n"] = [re.sub(status_bit_regex, lambda _: "", s)
                                for s in data["@<TRIPOS>BOND\n"]]
-    csv = StringIO()
-    csv.writelines(data["@<TRIPOS>BOND\n"][1:])
-    csv.seek(0)
-    bonds_frame = pd.read_table(csv, names=["bond_id", "id0", "id1", "bond_type"],
-        index_col=0, header=None, sep="\s*", engine='python')
+
+    if len(data["@<TRIPOS>BOND\n"]) > 1:
+        csv = StringIO()
+        csv.writelines(data["@<TRIPOS>BOND\n"][1:])
+        csv.seek(0)
+        bonds_frame = pd.read_table(csv, names=["bond_id", "id0", "id1", "bond_type"],
+            index_col=0, header=None, sep="\s*", engine='python')
+    else:
+        bonds_frame = None
 
     csv = StringIO()
     csv.writelines(data["@<TRIPOS>ATOM\n"][1:])

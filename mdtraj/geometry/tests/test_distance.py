@@ -153,3 +153,19 @@ def _verify_closest_contact(traj):
     nearest = np.argmin(dists)
     eq(float(dists[nearest]), contact[2], decimal=5)
     assert((pairs[nearest,0] == contact[0] and pairs[nearest,1] == contact[1]) or (pairs[nearest,0] == contact[1] and pairs[nearest,1] == contact[0]))
+
+def test_distance_nan():
+    xyz = np.array([[1,1,1], [2,1,1], [np.nan, np.nan, np.nan]]).reshape(1,3,3)
+    dists = md.compute_distances(md.Trajectory(xyz=xyz, topology=None), [[0,1]])
+    assert np.isfinite(dists).all()
+
+def test_closest_contact_nan_pos():
+    box_size = np.array([3.0, 4.0, 5.0])
+    xyz = np.asarray(np.random.randn(2, 20, 3), dtype=np.float32)
+    xyz *= box_size
+    # Set the last frame to nan
+    xyz[-1] = np.nan
+    # Slice of the last frame, so nans should not cause troubles.
+    xyz = xyz[:-1]
+    traj = md.Trajectory(xyz=xyz, topology=None)
+    _verify_closest_contact(traj)

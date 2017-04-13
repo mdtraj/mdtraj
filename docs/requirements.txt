@@ -1,3 +1,4 @@
+sphinx
 matplotlib
 ipython-notebook
 jinja2

@@ -1111,6 +1111,34 @@ class Topology(object):
             molecules[atom_molecule[atom.index]].add(atom)
         return molecules
 
+    def guess_anchor_molecules(self):
+        """Guess anchor molecules for imaging
+
+        Returns
+        -------
+        anchor_molecules : list of atom sets
+            List of anchor molecules
+
+        See Also
+        --------
+        Trajectory.image_molecules
+        """
+        molecules = self.find_molecules()
+
+        # Select the anchor molecules.
+        molecules.sort(key=lambda x: -len(x))
+        atoms_cutoff = max(len(molecules[int(0.1*len(molecules))]),
+                           int(0.1*len(molecules[0])))
+        anchor_molecules = [mol for mol in molecules if len(mol) > atoms_cutoff]
+        num_anchors = len(anchor_molecules)
+        if num_anchors == 0:
+            raise ValueError("Could not find any anchor molecules. Based on "
+                             "our heuristic, those should be molecules with "
+                             "more than {} atoms. Perhaps your topology "
+                             "doesn't give an acurate bond graph?"
+                             .format(atoms_cutoff))
+        return anchor_molecules
+
 
 class Chain(object):
     """A Chain object represents a chain within a Topology.
@@ -1424,3 +1452,4 @@ class Atom(object):
 
     def __repr__(self):
         return str(self)
+
