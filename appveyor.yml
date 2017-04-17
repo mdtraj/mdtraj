@@ -26,9 +26,11 @@ install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
   - conda config --add channels omnia
   - conda update -yq --all
-  - conda install -yq conda-build jinja2
-
+  - conda install -yq --no-update-dependencies conda-build jinja2
+  
 build: false
 
 test_script:
-  - "%CMD_IN_ENV% conda build --quiet devtools\\conda-recipe"
+  - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
+  - dir %PYTHON%\\Scripts
+  - "%CMD_IN_ENV% conda-build --quiet devtools\\conda-recipe"
