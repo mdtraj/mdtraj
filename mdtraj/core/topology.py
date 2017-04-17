@@ -234,14 +234,6 @@ class Topology(object):
     def __deepcopy__(self, *args):
         return self.copy()
 
-    def __hash__(self):
-        hash_value = hash(tuple(self._chains))
-        hash_value ^= hash(tuple(self._atoms))
-        hash_value ^= hash(tuple(self._bonds))
-        hash_value ^= hash(tuple(self._residues))
-
-        return hash_value
-
     def join(self, other):
         """Join two topologies together
 
@@ -505,6 +497,14 @@ class Topology(object):
         g.add_nodes_from(self.atoms)
         g.add_edges_from(self.bonds)
         return g
+
+    def __hash__(self):
+        hash_value = hash(tuple(self._chains))
+        hash_value ^= hash(tuple(self._residues))
+        hash_value ^= hash(tuple(self._atoms))
+        hash_value ^= hash(tuple(self._bonds))
+
+        return hash_value
 
     def __eq__(self, other):
         """Are two topologies equal?
@@ -1248,6 +1248,18 @@ class Chain(object):
         """Get the number of atoms in this Chain"""
         return sum(r.n_atoms for r in self._residues)
 
+    def __eq__(self, other):
+        if not isinstance(other, Chain):
+            return False
+        if self is other:
+            return True
+        return (self.index == other.index and
+                self._residues == other.residues)
+
+    def __hash__(self, *args, **kwargs):
+        hash_value = hash(tuple(self._residues)) ^ hash(self.index)
+        return hash_value
+
 
 class Residue(object):
     """A Residue object represents a residue within a Topology.
@@ -1371,6 +1383,24 @@ class Residue(object):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        if not isinstance(other, Residue):
+            return False
+        if self is other:
+            return True
+        return (self.name == other.name and
+                self.index == other.index and
+                self.resSeq == other.resSeq and
+                self.chain == other.chain and
+                self._atoms == other._atoms)
+
+    def __hash__(self):
+        # we can not hash atoms here, because they are hashed in Chain
+        hash_value = hash(self.name)
+        hash_value ^= hash(self.index)
+        hash_value ^= hash(self.resSeq)
+        return hash_value
+
 
 class Atom(object):
     """An Atom object represents a residue within a Topology.
@@ -1429,6 +1459,10 @@ class Atom(object):
 
     def __eq__(self, other):
         """ Check whether two Atom objects are equal. """
+        if not isinstance(other, Atom):
+            return False
+        if self is other:
+            return True
         if self.name != other.name:
             return False
         if self.index != other.index:
@@ -1445,7 +1479,8 @@ class Atom(object):
 
     def __hash__(self):
         """A quick comparison. """
-        return self.index
+        hash_value = hash(self.index) ^ hash(self.element) ^ hash(self.residue)
+        return hash_value
 
     def __str__(self):
         return '%s-%s' % (self.residue, self.name)
