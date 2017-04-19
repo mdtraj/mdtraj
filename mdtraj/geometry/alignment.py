@@ -70,7 +70,7 @@ class Transformation(object):
 
         """
         return coordinates.dot(self.rotation) + self.translation
-        
+
 
     def __call__self(self, coordinates):
         return self.transform(coordinates)
@@ -289,10 +289,10 @@ def compute_average_structure(xyz):
     n_frames = xyz.shape[0]
     n_atoms = xyz.shape[1]
     candidate = xyz[0]
-    
+
     # In practice there is usually negligible improvement after the second iteration.
     # We do three just to be safe.
-    
+
     for iteration in range(3):
         average = np.zeros((n_atoms, 3))
         for frame in range(n_frames):
