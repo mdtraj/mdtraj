@@ -69,8 +69,8 @@ class Transformation(object):
             xyz coordinates after being rotated and translated
 
         """
-        mu1 = coordinates.mean(0)
-        return coordinates.dot(self.rotation) + self.translation - mu1.dot(self.rotation)
+        return coordinates.dot(self.rotation) + self.translation
+
 
     def __call__self(self, coordinates):
         return self.transform(coordinates)
@@ -138,8 +138,6 @@ def compute_translation_and_rotation(mobile, target):
     mu1 = mobile.mean(0)
     mu2 = target.mean(0)
 
-    translation = mu2
-
     mobile = mobile - mu1
     target = target - mu2
 
@@ -149,6 +147,8 @@ def compute_translation_and_rotation(mobile, target):
     if is_reflection:
         V[:, -1] = -V[:, -1]
     rotation = np.dot(V, W_tr)
+
+    translation = mu2 - mu1.dot(rotation)
 
     return translation, rotation
 
@@ -269,3 +269,33 @@ def rmsd_qcp(conformation1, conformation2):
     max_eigenvalue = scipy.optimize.newton(f, E0, df)
     rmsd = np.sqrt(np.abs(2.0 * (E0 - max_eigenvalue) / n_atoms))
     return rmsd
+
+def compute_average_structure(xyz):
+    """Compute the average structure from a set of frames.
+
+    The frames are first aligned to minimize the RMSD from the average structure,
+    and then the average is returned.
+
+    Parameters
+    ----------
+    xyz : ndarray, shape = (n_frames, n_atoms, 3)
+        xyz coordinates of each atom in each frame
+
+    Returns
+    -------
+    average : ndarray, shape = (n_atoms, 3)
+        the average structure
+    """
+    n_frames = xyz.shape[0]
+    n_atoms = xyz.shape[1]
+    candidate = xyz[0]
+
+    # In practice there is usually negligible improvement after the second iteration.
+    # We do three just to be safe.
+
+    for iteration in range(3):
+        average = np.zeros((n_atoms, 3))
+        for frame in range(n_frames):
+            average += transform(xyz[frame], candidate)
+        candidate = average/n_frames
+    return candidate

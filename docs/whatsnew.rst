@@ -3,8 +3,37 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.8 (Development)
+v1.9 (Development)
 ------------------
+
+- PR #1254: Fixed/updated alignment code to be more general.
+
+v1.8 (November 9, 2016)
+-----------------------
+
+- PR #1202: ``mdtraj.html`` has been removed. We recommend using
+  ``nglview`` for visualizing MDTraj trajectory objects.
+- PR #1204: Fix search functionality with docs
+- PR #1167: Fix corner case in distancekernel.h
+- PR #1190: Fix issue with rmsd precentered = True and atom_indices != None
+- PR #1106: Speed up image_molecules
+- PR #1182: Add 'sidechain' and 'sidechain-heavy' options to compute_contacts
+- PR #1180: Handle unexpected keyword arguments gracefully in psf and prmtop parsers
+- PR #1171: Remove unnecessary restriction on iterload
+- PR #1170: Load single-element path lists without a copy
+- PR #1165: There should never be zero bins in Voxels class
+- PR #1158: Update deprecated use of scipy.stats.nanmean
+- PR #1153: [formats/XTC] in case of an out of bounds seek, raise IOError
+- PR #1161: Fix typos in examples
+- PR #1130: Automatically test examples to make sure they work
+- PR #1155: Update wording for simulation-with-openmm.ipynb
+- PR #1146: Ensure box vectors have right dtype
+- PR #1145: Check that file exists before trying to open it
+- PR #1139: Optimize baker_hubbard and wernet_nilsson functions
+- PR #1137: Allow standard_names as a keyword argument to md.load()
+- PR #1132: Fix bug in hoomdxml reader
+- PR #1125: Support Gromacs TNG files
+- PR #1123: Add md.join(trajs)
 
 v1.7.2 (May 2, 2016)
 --------------------

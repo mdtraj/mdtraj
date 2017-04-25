@@ -51,7 +51,7 @@ except ValueError:
 
 
 ##########################
-VERSION = "1.8.0.dev0"
+VERSION = "1.9.0.dev0"
 ISRELEASED = False
 __version__ = VERSION
 ##########################
@@ -119,10 +119,14 @@ def format_extensions():
     if sys.platform == 'win32':
         # Conda puts the zlib headers in ./Library/... on windows
         # If you're not using conda, good luck!
-        # (on linux, zlib is a dependency of python and its headers/libraries
-        #  go in the normal ./include ./lib directories)
         zlib_include_dirs += ["{}/Library/include".format(sys.prefix)]
         zlib_library_dirs += ["{}/Library/lib".format(sys.prefix)]
+    else:
+        # On linux (and mac(?)) these paths should work for a standard
+        # install of python+zlib or a conda install of python+zlib
+        zlib_include_dirs += ["{}/include".format(sys.prefix)]
+        zlib_library_dirs += ["{}/lib".format(sys.prefix)]
+
     tng = Extension('mdtraj.formats.tng',
                     sources=glob('mdtraj/formats/tng/src/compression/*.c') +
                                 ['mdtraj/formats/tng/src/lib/tng_io.c',
@@ -219,9 +223,12 @@ def geometry_extensions():
             sources=['mdtraj/geometry/src/sasa.cpp',
                      'mdtraj/geometry/src/dssp.cpp',
                      'mdtraj/geometry/src/geometry.cpp',
-                     'mdtraj/geometry/src/_geometry.pyx'],
+                     'mdtraj/geometry/src/_geometry.pyx',],
             include_dirs=['mdtraj/geometry/include',
                           'mdtraj/geometry/src/kernels'],
+            depends=['mdtraj/geometry/src/kernels/anglekernels.h',
+                     'mdtraj/geometry/src/kernels/dihedralkernels.h',
+                     'mdtraj/geometry/src/kernels/distancekernels.h'],
             define_macros=define_macros,
             extra_compile_args=compiler_args,
             libraries=extra_cpp_libraries,
@@ -250,7 +257,6 @@ def geometry_extensions():
             libraries=compiler.compiler_libraries_openmp,
             language='c++'),
         ]
-
 
 extensions = format_extensions()
 extensions.extend(rmsd_extensions())
@@ -287,7 +293,7 @@ setup(name='mdtraj',
                                        'reference/ala_dipeptide_trj/not_hashed/*',
                                        'reference/frame0.dtr/*',
                                        'reference/frame0.dtr/not_hashed/*',],
-                    'mdtraj.html': ['static/*']},
+                    },
       exclude_package_data={'mdtraj.testing': ['reference/ala_dipeptide_trj',
                                                'reference/ala_dipeptide_trj/not_hashed',
                                                'reference/frame0.dtr',

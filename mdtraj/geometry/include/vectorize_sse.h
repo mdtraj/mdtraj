@@ -136,7 +136,16 @@ public:
     fvec4(float v) : val(_mm_set1_ps(v)) {}
     fvec4(float v1, float v2, float v3, float v4) : val(_mm_set_ps(v4, v3, v2, v1)) {}
     fvec4(__m128 v) : val(v) {}
+
+    /*  Note on the initialization of fvec4 with a pointer
+        --------------------------------------------------------
+        The constructor below loads a four-element array. You need to be careful about
+        checking that all four elements lead to valid memory, especially when working
+        with 3-vectors (xyz). If the fourth element is a NaN or unallocated, you'll get
+        incorrect results or crashes.
+    */
     fvec4(const float* v) : val(_mm_loadu_ps(v)) {}
+
     operator __m128() const {
         return val;
     }

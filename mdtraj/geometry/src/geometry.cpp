@@ -79,8 +79,10 @@ void dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_mat
         for (int j = 0; j < n_pairs; j++) {
             // Compute the displacement.
 
-            fvec4 pos1(xyz + 3*pairs[2*j + 0]);
-            fvec4 pos2(xyz + 3*pairs[2*j + 1]);
+            int offset1 = 3*pairs[2*j + 0];
+            fvec4 pos1(xyz[offset1], xyz[offset1+1], xyz[offset1+2], 0);
+            int offset2 = 3*pairs[2*j + 1];
+            fvec4 pos2(xyz[offset2], xyz[offset2+1], xyz[offset2+2], 0);
             fvec4 r12 = pos2-pos1;
             r12 -= box_vec3*round(r12[2]*recip_box_size[2]);
             r12 -= box_vec2*round(r12[1]*recip_box_size[1]);
@@ -141,17 +143,19 @@ void find_closest_contact(const float* positions, const int* group1, const int* 
     fvec4 box_vec1, box_vec2, box_vec3;
     float recip_box_size[3];
     if (box_vectors_pointer != NULL) {
-        box_vec1 = fvec4(box_vectors_pointer);
-        box_vec2 = fvec4(box_vectors_pointer+3);
-        box_vec3 = fvec4(box_vectors_pointer+6);
+        box_vec1 = fvec4(box_vectors_pointer[0], box_vectors_pointer[1], box_vectors_pointer[2], 0);
+        box_vec2 = fvec4(box_vectors_pointer[3], box_vectors_pointer[4], box_vectors_pointer[5], 0);
+        box_vec3 = fvec4(box_vectors_pointer[6], box_vectors_pointer[7], box_vectors_pointer[8], 0);
         recip_box_size[0] = 1.0f/box_vectors_pointer[0];
         recip_box_size[1] = 1.0f/box_vectors_pointer[4];
         recip_box_size[2] = 1.0f/box_vectors_pointer[8];
     }
     for (int i = 0; i < n_group1; i++) {
-        fvec4 pos1(positions + 3*group1[i]);
+        int offset1 = 3*group1[i];
+        fvec4 pos1(positions[offset1], positions[offset1+1], positions[offset1+2], 0);
         for (int j = 0; j < n_group2; j++) {
-            fvec4 pos2(positions + 3*group2[j]);
+            int offset2 = 3*group2[j];
+            fvec4 pos2(positions[offset2], positions[offset2+1], positions[offset2+2], 0);
             fvec4 delta = pos1-pos2;
             if (box_vectors_pointer != NULL) {
                 delta -= box_vec3*floorf(delta[2]*recip_box_size[2]+0.5f);
@@ -176,7 +180,7 @@ void find_closest_contact(const float* positions, const int* group1, const int* 
 static float ks_donor_acceptor(const float* xyz, const float* hcoords, const int* nco_indices, int donor, int acceptor) {
     fvec4 coupling(-2.7888f, -2.7888f, 2.7888f, 2.7888f); // 332 (kcal*A/mol) * 0.42 * 0.2 * (1nm / 10 A)
     fvec4 r_n(xyz[3*nco_indices[3*donor]], xyz[3*nco_indices[3*donor]+1], xyz[3*nco_indices[3*donor]+2], 0);
-    fvec4 r_h(&hcoords[4*donor]);
+    fvec4 r_h(hcoords[4*donor], hcoords[4*donor+1], hcoords[4*donor+2], 0);
     fvec4 r_c(xyz[3*nco_indices[3*acceptor+1]], xyz[3*nco_indices[3*acceptor+1]+1], xyz[3*nco_indices[3*acceptor+1]+2], 0);
     fvec4 r_o(xyz[3*nco_indices[3*acceptor+2]], xyz[3*nco_indices[3*acceptor+2]+1], xyz[3*nco_indices[3*acceptor+2]+2], 0);
     fvec4 r_ho = r_h-r_o;

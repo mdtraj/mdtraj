@@ -1,8 +1,13 @@
 package:
-  name: mdtraj-dev
-  version: "0.0.0"
+  name: mdtraj
+  version: {{ GIT_DESCRIBE_TAG }}
+
+source:
+  path: ../../
 
 build:
+  number: {{ GIT_DESCRIBE_NUMBER }}
+  script: python setup.py install --single-version-externally-managed --record record.txt
   entry_points:
     - mdconvert = mdtraj.scripts.mdconvert:entry_point
     - mdinspect = mdtraj.scripts.mdinspect:entry_point
@@ -12,6 +17,7 @@ requirements:
     - python
     - cython
     - numpy x.x
+    - msinttypes #  [win and py2k]
     - setuptools
     - zlib
 
@@ -28,8 +34,6 @@ test:
     - nose
     - scripttest
     - networkx
-    - ipython-notebook
-    - ipywidgets
     - matplotlib
     - pandas
     - openmm  # [not (win32 or (win and py2k))]
@@ -38,11 +42,12 @@ test:
     - ipykernel
     - scikit-learn
 
+  source_files:
+    - examples/*
+
   commands:
     - nosetests mdtraj -v -s
-    - cd {{SRC_DIR}}
-    - cd examples
-    - nosetests test_examples.py -v -s # [not (win32 or (win and py2k))]
+    - cd examples && nosetests test_examples.py -v -s # [not (win32 or (win and py2k))]
 
 about:
   home: http://mdtraj.org
