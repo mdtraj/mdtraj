@@ -29,7 +29,7 @@ __all__ = ['baker_hubbard', 'shrake_rupley', 'kabsch_sander', 'compute_distances
            'compute_contacts', 'compute_drid', 'compute_center_of_mass',
            'wernet_nilsson', 'compute_dssp', 'compute_neighbors', 'compute_neighborlist',
            'compute_rdf', 'compute_nematic_order', 'compute_inertia_tensor',
-           'find_closest_contact',
+           'find_closest_contact', 'compute_directors',
 
            # from thermodynamic_properties
            'dipole_moments', 'static_dielectric', 'isothermal_compressability_kappa_T',
