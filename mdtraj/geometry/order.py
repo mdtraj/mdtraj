@@ -59,6 +59,10 @@ def compute_nematic_order(traj, indices='chains'):
     S2 : np.ndarray, shape=(traj.n_frames,), dtype=float64
         Nematic order parameter values in every frame.
 
+    See also
+    --------
+    compute_directors
+
     References
     ----------
     .. [1] Allen, M. P.; Tildesley , D. J. (1987), "Computer Simulation of
@@ -104,17 +108,12 @@ def compute_nematic_order(traj, indices='chains'):
     return S2
 
 
-def compute_directors(traj, indices):
+def compute_directors(traj, indices='chains'):
     """Compute the characteristic vector describing the orientation of each group
 
     In this definition, the long molecular axis is found from the inertia
-    tensor, I_{ab], and is taken to be the eigenvector associated with the
-    smallest eigenvalue of I_{ab}.
-
-    Note that since there is no preferred orientation, the director n is equal
-    to -n. Therefore, care should be taken to ensure the director is pointing in
-    the direction you think it is, e.g., by contraining it to hemisphere that
-    makes physical sense.
+    tensor, :math:`I_{ab}`, and is taken to be the eigenvector associated with the
+    smallest eigenvalue of :math:`I_{ab}`.
 
     See [1] for brief summary and discussion on other methods to obtain the
     director.
@@ -123,6 +122,10 @@ def compute_directors(traj, indices):
     ----------
     traj : Trajectory
         Trajectory to compute orientation of.
+    indices : {'chains', 'residues', list of lists}, optional, default='chains'
+        The group to consider. Users can pass their own indices as a list of
+        lists with the "shape" (n_compounds, len(each_compound)).
+        Recognized string keywords are 'chains' and 'residues'.
 
     Returns
     -------
@@ -131,7 +134,17 @@ def compute_directors(traj, indices):
 
     See also
     --------
+    compute_nematic_order
     compute_inertia_tensor
+
+    Notes
+    -----
+    Since there is no preferred orientation of the director, the director
+    :math:`n` has the same meaning as :math:`-n`.
+    Therefore, care should be taken to ensure the director is pointing in
+    the direction you think it is, e.g., by contraining it to a hemisphere that
+    makes physical sense.
+
 
     References
     ----------
