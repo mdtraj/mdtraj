@@ -113,3 +113,4 @@ Order Parameters
     :toctree: api/generated/
 
     compute_nematic_order
+    compute_directors
