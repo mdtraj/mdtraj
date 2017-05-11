@@ -397,7 +397,7 @@ class LAMMPSTrajectoryFile(object):
                 self._xyz_columns = [columns[keywords[0]], columns[keywords[1]], columns[keywords[2]]]
             except KeyError:
                 raise IOError("Invalid .lammpstrj file. Must contain 'id', "
-                              "'type', 'x*', 'y*' and 'z*' entries.")
+                              "'type', 'x*', 'y*' and 'z*' entries. \n {} \n {}".format(columns, column_headers))
         self._line_counter += 4
         # --- end header ---
 
