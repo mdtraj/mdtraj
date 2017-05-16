@@ -123,14 +123,14 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
         avoid potential errors in geometry calculations. Set this variable to
         ``True`` in order to skip this heuristic check.
     standard_names : bool, default=True
-        If True, non-standard atomnames and residuenames are standardized to conform 
+        If True, non-standard atomnames and residuenames are standardized to conform
         with the current PDB format version. If set to false, this step is skipped.
 
     Returns
     -------
     trajectory : md.Trajectory
         The resulting trajectory, as an md.Trajectory object.
-        
+
     Examples
     --------
     >>> import mdtraj as md
@@ -148,7 +148,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
             'you supplied %s' % type(filename))
 
     atom_indices = cast_indices(atom_indices)
-    
+
     filename = str(filename)
     with PDBTrajectoryFile(filename, standard_names=standard_names) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
@@ -215,7 +215,7 @@ class PDBTrajectoryFile(object):
         If opened in write mode, and a file by the name of `filename` already
         exists on disk, should we overwrite it?
     standard_names : bool, default=True
-        If True, non-standard atomnames and residuenames are standardized to conform 
+        If True, non-standard atomnames and residuenames are standardized to conform
         with the current PDB format version. If set to false, this step is skipped.
 
     Attributes
@@ -276,7 +276,7 @@ class PDBTrajectoryFile(object):
 
         self._open = True
 
-    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, 
+    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None,
               unitcell_angles=None, bfactors=None):
         """Write a PDB file to disk
 
@@ -309,7 +309,7 @@ class PDBTrajectoryFile(object):
             raise ValueError('Particle position is NaN')
         if np.any(np.isinf(positions)):
             raise ValueError('Particle position is infinite')
-        
+
         self._last_topology = topology  # Hack to save the topology of the last frame written, allows us to output CONECT entries in write_footer()
 
         if bfactors is None:
@@ -319,7 +319,7 @@ class PDBTrajectoryFile(object):
                 raise ValueError("bfactors must be in (-10, 100)")
 
             bfactors = ['{0:5.2f}'.format(b) for b in bfactors]
-        
+
         atomIndex = 1
         posIndex = 0
         if modelIndex is not None:
@@ -348,7 +348,7 @@ class PDBTrajectoryFile(object):
                         atomIndex % 100000, atomName, resName, chainName,
                         (res.resSeq) % 10000, _format_83(coords[0]),
                         _format_83(coords[1]), _format_83(coords[2]),
-                        bfactors[posIndex], atom.segment_id[:4], symbol[-2:])
+                        bfactors[posIndex], symbol[-2:])
                     assert len(line) == 80, 'Fixed width overflow detected'
                     print(line, file=self._file)
                     posIndex += 1
@@ -408,9 +408,9 @@ class PDBTrajectoryFile(object):
                 elif atom1.name == 'SG' and atom2.name == 'SG' and atom1.residue.name == 'CYS' and atom2.residue.name == 'CYS':
                     conectBonds.append((atom1, atom2))
         if len(conectBonds) > 0:
-            
+
             # Work out the index used in the PDB file for each atom.
-            
+
             atomIndex = {}
             nextAtomIndex = 0
             prevChain = None
@@ -421,9 +421,9 @@ class PDBTrajectoryFile(object):
                         prevChain = atom.residue.chain
                     atomIndex[atom] = nextAtomIndex
                     nextAtomIndex += 1
-            
+
             # Record which other atoms each atom is bonded to.
-            
+
             atomBonds = {}
             for atom1, atom2 in conectBonds:
                 index1 = atomIndex[atom1]
@@ -434,9 +434,9 @@ class PDBTrajectoryFile(object):
                     atomBonds[index2] = []
                 atomBonds[index1].append(index2)
                 atomBonds[index2].append(index1)
-            
+
             # Write the CONECT records.
-            
+
             for index1 in sorted(atomBonds):
                 bonded = atomBonds[index1]
                 while len(bonded) > 4:
@@ -518,7 +518,7 @@ class PDBTrajectoryFile(object):
                 resName = residue.get_name()
                 if resName in PDBTrajectoryFile._residueNameReplacements and self._standard_names:
                     resName = PDBTrajectoryFile._residueNameReplacements[resName]
-                r = self._topology.add_residue(resName, c, residue.number, residue.segment_id)
+                r = self._topology.add_residue(resName, c, residue.number)
                 if resName in PDBTrajectoryFile._atomNameReplacements and self._standard_names:
                     atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
                 else:

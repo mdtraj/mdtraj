@@ -89,8 +89,16 @@ def _topology_from_subset(topology, atom_indices):
         newChain = newTopology.add_chain()
         for residue in chain._residues:
             resSeq = getattr(residue, 'resSeq', None) or residue.index
-            newResidue = newTopology.add_residue(residue.name, newChain,
-                                                 resSeq, residue.segment_id)
+            if hasattr(residue, 'segment_id'):
+                # Try using MDTraj Topology object
+                newResidue = newTopology.add_residue(residue.name, newChain,
+                                                    resSeq, residue.segment_id)
+            else:
+                # The OpenMM Topology lacks segment_id
+                segment_id = ''
+                newResidue = newTopology.add_residue(residue.name, newChain,
+                                                    resSeq, segment_id)
+
             for atom in residue._atoms:
                 if atom.index in atom_indices:
                     try:  # OpenMM Topology objects don't have serial attributes, so we have to check first.
