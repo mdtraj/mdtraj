@@ -386,7 +386,7 @@ cdef class TRRTrajectoryFile:
             chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
                         self.min_chunk_size)
 
-            xyz, time, step, box, lambd, vel, forces = self._read(chunk, atom_indices)
+            xyz, time, step, box, lambd = self._read(chunk, atom_indices)
             if len(xyz) <= 0:
                 break
 
@@ -473,7 +473,13 @@ cdef class TRRTrajectoryFile:
 
         self.frame_counter += i
 
-        return xyz, time, step, box, lambd
+        return_list = [xyz, time, step, box, lambd]
+        if get_velocities:
+            return_list.append(vel)
+        if get_forces:
+            return_list.append(forces)
+
+        return tuple(return_list)
 
     def write(self, xyz, time=None, step=None, box=None, lambd=None):
         """write(xyz, time=None, step=None, box=None, lambd=None)
@@ -548,7 +554,10 @@ cdef class TRRTrajectoryFile:
                np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time not None,
                np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step not None,
                np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box not None,
-               np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] lambd not None):
+               np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] lambd not None,
+               np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] vel=None,
+               np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] forces=None,
+              ):
 
         cdef int n_frames = len(xyz)
         cdef int n_atoms = xyz.shape[1]
@@ -557,9 +566,24 @@ cdef class TRRTrajectoryFile:
         # all same length
         assert n_frames == len(box) == len(step) == len(time) == len(lambd)
 
+        if vel is not None:
+            assert n_frames == len(vel)
+        if forces is not None:
+            assert n_frames == len(forces)
+
         for i in range(n_frames):
-            status = trrlib.write_trr(self.fh, n_atoms, step[i], time[i], lambd[i],
-                <trrlib.matrix>&box[i, 0, 0], <trrlib.rvec*>&xyz[i, 0, 0], NULL, NULL)
+            if vel is not None:
+                write_vel = <trrlib.rvec*>&vel[i, 0, 0]
+            else:
+                write_vel = NULL
+            if forces is not None:
+                write_forces = <trrlib.rvec*>&forces[i, 0, 0]
+            else:
+                write_forces = NULL
+            status = trrlib.write_trr(self.fh, n_atoms, step[i], time[i], 
+                                      lambd[i], <trrlib.matrix>&box[i, 0, 0], 
+                                      <trrlib.rvec*>&xyz[i, 0, 0], 
+                                      write_vel, write_forces)
             if status != _EXDROK:
                 raise RuntimeError('TRR write error: %s' % status)
 
