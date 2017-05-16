@@ -119,12 +119,6 @@ def test_residue():
     for i in range(residue.n_atoms):
         assert residue.atom(i) == atoms[i]
 
-def test_segment_id():
-    top = md.load(get_fn('ala_ala_ala.pdb')).topology
-    assert next(top.residues).segment_id == "AAL", "Segment id is not being assigned correctly for ala_ala_ala.psf"
-    df = top.to_dataframe()[0]
-    assert len(df["segmentID"] == "AAL")==len(df), "Segment id is not being assigned correctly to topology data frame ala_ala_ala.psf"
-
 def test_nonconsective_resSeq():
     t = md.load(get_fn('nonconsecutive_resSeq.pdb'))
     yield lambda : eq(np.array([r.resSeq for r in t.top.residues]), np.array([1, 3, 5]))
