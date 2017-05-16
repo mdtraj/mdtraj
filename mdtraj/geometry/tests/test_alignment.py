@@ -31,6 +31,8 @@ offset = 1.0 * np.random.normal(size=(3))
 rotation = np.array([[1,0,0],[0,0,-1],[0,1,0]])
 xyz2 = rotation.dot(xyz1.T).T + offset
 xyz3 = xyz1 + np.random.normal(size=xyz1.shape)
+extra_points = np.array([[1, 2, 3],[4,5,6],[7,8,9],[10,11,12],[13,14,15]])
+xyz4 = rotation.dot(np.concatenate([xyz1, extra_points]).T).T + offset
 
 def test_rmsd_zero():
     rmsd_kabsch = alignment.rmsd_kabsch(xyz1, xyz2)
@@ -48,3 +50,11 @@ def test_transform():
     xyz2_prime = T.transform(xyz2)
 
     eq(xyz1, xyz2_prime)
+
+def test_transform2():
+    # For testing transform on all points when only subset for align
+    xyz1_len = np.shape(xyz1)[0]
+    T = alignment.compute_transformation(xyz4[0:xyz1_len,:], xyz1)
+    xyz4_prime = T.transform(xyz4)
+
+    eq(xyz1, xyz4_prime[0:xyz1_len,:])

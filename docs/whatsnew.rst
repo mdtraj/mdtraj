@@ -6,6 +6,8 @@ These are new features and improvements of note in each release.
 v1.9 (Development)
 ------------------
 
+- PR #1254: Fixed/updated alignment code to be more general.
+
 v1.8 (November 9, 2016)
 -----------------------
 
