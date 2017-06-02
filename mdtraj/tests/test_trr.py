@@ -199,3 +199,37 @@ def test_seek():
         f.seek(-5, 1)
         eq(f.tell(), 1)
         eq(f.read(1)[0][0], reference[1])
+
+def test_get_velocities():
+    """Write data with velocities and read it back"""
+    # NOTE: this is a test of a hidden API
+    xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
+    vel = np.array(np.random.randn(500,50,3), dtype=np.float32)
+    box = np.array(np.random.randn(500,3,3), dtype=np.float32)
+    time = np.array(np.random.randn(500), dtype=np.float32)
+    step = np.array(np.arange(500), dtype=np.int32)
+    lambd = np.array(np.random.randn(500), dtype=np.float32)
+
+    with TRRTrajectoryFile(temp, 'w') as f:
+        f._write(xyz=xyz, time=time, step=step, box=box, lambd=lambd, vel=vel)
+    with TRRTrajectoryFile(temp) as f:
+        xyz2, time2, step2, box2, lambd2, vel2 = f._read(
+            n_frames=500, atom_indices=None, get_velocities=True,
+            get_forces=False
+        )
+
+    yield lambda: eq(xyz, xyz2)
+    yield lambda: eq(vel, vel2)
+    yield lambda: eq(time, time2)
+    yield lambda: eq(step, step2)
+    yield lambda: eq(lambd, lambd2)
+
+def test_get_forces():
+    """Write data with forces and read it back"""
+    # NOTE: this is a test of a hidden API
+    raise SkipTest
+
+def test_get_velocities_and_forces():
+    """Write data with velocities and forces, and ead it back"""
+    # NOTE: this is a test of a hidden API
+    raise SkipTest
