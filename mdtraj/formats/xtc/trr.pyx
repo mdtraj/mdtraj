@@ -369,8 +369,12 @@ cdef class TRRTrajectoryFile:
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
-            xyz, time, step, box, lambd = self._read(int(n_frames), atom_indices)
-            xyz, time, step, box, lambd = xyz[::stride], time[::stride], step[::stride], box[::stride], lambd[::stride]
+            # vel and forces will be `None` here, but must be unpacked
+            xyz, time, step, box, lambd, vel, forces = \
+                    self._read(int(n_frames), atom_indices)
+            xyz, time, step, box, lambd = (xyz[::stride], time[::stride],
+                                           step[::stride], box[::stride],
+                                           lambd[::stride])
             if np.all(np.logical_and(box < 1e-10, box > -1e-10)):
                 box = None
             return xyz, time, step, box, lambd
@@ -386,7 +390,8 @@ cdef class TRRTrajectoryFile:
             chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
                         self.min_chunk_size)
 
-            xyz, time, step, box, lambd = self._read(chunk, atom_indices)
+            xyz, time, step, box, lambd, vel, forces = \
+                    self._read(chunk, atom_indices)
             if len(xyz) <= 0:
                 break
 
@@ -476,8 +481,12 @@ cdef class TRRTrajectoryFile:
         return_list = [xyz, time, step, box, lambd]
         if get_velocities:
             return_list.append(vel)
+        else:
+            return_list.append(None)
         if get_forces:
             return_list.append(forces)
+        else:
+            return_list.append(None)
 
         return tuple(return_list)
 

@@ -214,16 +214,17 @@ def test_get_velocities():
     with TRRTrajectoryFile(temp, 'w') as f:
         f._write(xyz=xyz, time=time, step=step, box=box, lambd=lambd, vel=vel)
     with TRRTrajectoryFile(temp) as f:
-        xyz2, time2, step2, box2, lambd2, vel2 = f._read(
+        xyz2, time2, step2, box2, lambd2, vel2, forces2= f._read(
             n_frames=500, atom_indices=None, get_velocities=True,
             get_forces=False
         )
 
     yield lambda: eq(xyz, xyz2)
-    yield lambda: eq(vel, vel2)
     yield lambda: eq(time, time2)
     yield lambda: eq(step, step2)
     yield lambda: eq(lambd, lambd2)
+    yield lambda: eq(vel, vel2)
+    yield lambda: eq(None, forces2)
 
 
 def test_get_forces():
@@ -240,16 +241,17 @@ def test_get_forces():
         f._write(xyz=xyz, time=time, step=step, box=box, lambd=lambd,
                  forces=forces)
     with TRRTrajectoryFile(temp) as f:
-        xyz2, time2, step2, box2, lambd2, forces2 = f._read(
+        xyz2, time2, step2, box2, lambd2, vel2, forces2 = f._read(
             n_frames=500, atom_indices=None, get_velocities=False,
             get_forces=True
         )
 
     yield lambda: eq(xyz, xyz2)
-    yield lambda: eq(forces, forces2)
     yield lambda: eq(time, time2)
     yield lambda: eq(step, step2)
     yield lambda: eq(lambd, lambd2)
+    yield lambda: eq(None, vel2)
+    yield lambda: eq(forces, forces2)
 
 
 def test_get_velocities_and_forces():
