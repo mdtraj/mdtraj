@@ -282,11 +282,9 @@ def test_get_velocities_and_forces():
     yield lambda: eq(lambd, lambd2)
 
 
-def test_read_velocities_and_forces_do_not_exist():
+def test_read_velocities_do_not_exist():
     """Requesting velocities from a file that does not have them"""
     # NOTE: this is a test of a hidden API
-    # the expected behavior here is all zeros
-    all_zeros = np.zeros(shape=(500,50,3), dtype=np.float32)
     xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
     box = np.array(np.random.randn(500,3,3), dtype=np.float32)
     time = np.array(np.random.randn(500), dtype=np.float32)
@@ -296,14 +294,23 @@ def test_read_velocities_and_forces_do_not_exist():
     with TRRTrajectoryFile(temp, 'w') as f:
         f.write(xyz=xyz, time=time, step=step, box=box, lambd=lambd)
     with TRRTrajectoryFile(temp) as f:
-        xyz2, time2, step2, box2, lambd2, vel2, forces2 = f._read(
-            n_frames=500, atom_indices=None, get_velocities=True,
-            get_forces=True
-        )
+        assert_raises(RuntimeError, f._read, n_frames=500,
+                      atom_indices=None, get_velocities=True,
+                      get_forces=False)
 
-    yield lambda: eq(xyz, xyz2)
-    yield lambda: eq(all_zeros, vel2)
-    yield lambda: eq(all_zeros, forces2)
-    yield lambda: eq(time, time2)
-    yield lambda: eq(step, step2)
-    yield lambda: eq(lambd, lambd2)
+def test_read_forces_do_not_exist():
+    """Requesting forces from a file that does not have them"""
+    # NOTE: this is a test of a hidden API
+    xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
+    box = np.array(np.random.randn(500,3,3), dtype=np.float32)
+    time = np.array(np.random.randn(500), dtype=np.float32)
+    step = np.array(np.arange(500), dtype=np.int32)
+    lambd = np.array(np.random.randn(500), dtype=np.float32)
+
+    with TRRTrajectoryFile(temp, 'w') as f:
+        f.write(xyz=xyz, time=time, step=step, box=box, lambd=lambd)
+    with TRRTrajectoryFile(temp) as f:
+        assert_raises(RuntimeError, f._read, n_frames=500,
+                      atom_indices=None, get_velocities=False,
+                      get_forces=True)
+
