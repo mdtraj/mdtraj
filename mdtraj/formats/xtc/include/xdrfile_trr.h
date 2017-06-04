@@ -43,11 +43,6 @@ extern "C" {
   /* This function returns the number of atoms in the xtc file in *natoms */
   extern int read_trr_natoms(char *fn,int *natoms);
   extern int read_trr_nframes(char* fn, unsigned long *nframes);
-
-  /* This function determines whether a trr file includes velocities or
-   * forces */
-  extern int check_trr_has_velocities_forces(char *fn, int *has_vel,
-                                             int *has_force);
   
   /* Read one frame of an open xtc file. If either of x,v,f,box are
      NULL the arrays will be read from the file but not used.  */

@@ -488,24 +488,6 @@ int read_trr_natoms(char *fn,int *natoms)
 	return exdrOK;
 }
 
-int check_trr_has_velocities_forces(char *fn, int *has_vel, int *has_force)
-{
-    XDRFILE *xd;
-    t_trnheader sh;
-    int result;
-
-    xd = xdrfile_open(fn, "r");
-    if (xd == NULL) 
-        return exdrFILENOTFOUND;
-    if ((result = do_trnheader(xd, 1, &sh)) != exdrOK)
-        return result;
-    xdrfile_close(xd);
-    *has_vel = sh.v_size;
-    *has_force = sh.f_size;
-
-    return exdrOK;
-}
-
 int read_trr_nframes(char *fn, unsigned long *nframes) {
     XDRFILE *xd;
     int result, step;
