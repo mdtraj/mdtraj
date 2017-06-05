@@ -37,7 +37,8 @@ __all__ = ['wernet_nilsson', 'baker_hubbard', 'kabsch_sander']
 # Functions
 ##############################################################################
 
-def wernet_nilsson(traj, exclude_water=True, include_water_solute=False, periodic=True, sidechain_only=False):
+def wernet_nilsson(traj, exclude_water=True, include_water_solute=False, 
+        periodic=True, sidechain_only=False):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle according to the criterion outlined in [1].
     As opposed to Baker-Hubbard, this is a "cone" criterion where the
@@ -145,7 +146,8 @@ def wernet_nilsson(traj, exclude_water=True, include_water_solute=False, periodi
     return [bond_triplets.compress(present, axis=0) for present in presence]
 
 
-def baker_hubbard(traj, freq=0.1, exclude_water=True, include_water_solute=False, periodic=True, sidechain_only=False):
+def baker_hubbard(traj, freq=0.1, exclude_water=True, 
+        include_water_solute=False, periodic=True, sidechain_only=False):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle.
 
@@ -324,7 +326,8 @@ def kabsch_sander(traj):
     return matrices
 
 
-def _get_bond_triplets(topology, exclude_water=True, include_water_solute=False, sidechain_only=False):
+def _get_bond_triplets(topology, exclude_water=True, 
+        include_water_solute=False, sidechain_only=False):
     def can_participate(atom):
         # Filter waters
         if exclude_water and atom.residue.is_water:
