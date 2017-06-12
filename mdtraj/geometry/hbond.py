@@ -365,9 +365,12 @@ def _get_bond_triplets(topology, exclude_water=True,
     xh_donors = np.array(nh_donors + oh_donors)
 
     if len(xh_donors) == 0:
+        if not include_water_solute:
         # if there are no hydrogens or protein in the trajectory, we get
         # no possible pairs and return nothing
-        return np.zeros((0, 3), dtype=int)
+            return np.zeros((0, 3), dtype=int)
+        else:
+            xh_donors = np.zeros((0, 2), dtype=int)
 
     acceptor_elements = frozenset(('O', 'N'))
     acceptors = [a.index for a in topology.atoms
@@ -392,7 +395,7 @@ def _get_bond_triplets(topology, exclude_water=True,
     
             # Filter non-participating atoms
             atoms = [atom for atom in atoms
-                if atom[0].residue.is_water() and atom[1].residue.is_water()]
+                if atom[0].residue.is_water and atom[1].residue.is_water]
     
             # Get indices for the remaining atoms
             indices = []
@@ -408,12 +411,13 @@ def _get_bond_triplets(topology, exclude_water=True,
 
         # For water donating to solute
         exclude_water = False
-        oh_donors = get_water_donors('O', 'H')
+        oh_donors = np.array(get_water_donors('O', 'H'))
 
         if len(oh_donors) == 0:
             # if there are no hydrogens or protein in the trajectory, we get
             # no possible pairs and return nothing
-            return np.zeros((0, 3), dtype=int)
+            #return np.zeros((0, 3), dtype=int)
+            oh_donors = np.zeros((1, 2), dtype=int)
         exclude_water = True
         acceptors = [a.index for a in topology.atoms
             if a.element.symbol in acceptor_elements and can_participate(a)]
@@ -423,7 +427,7 @@ def _get_bond_triplets(topology, exclude_water=True,
 
         # Generate the cartesian product of the donors and acceptors
         oh_donors_repeated = np.repeat(oh_donors, acceptors.shape[0], axis=0)
-        acceptors_tiled = np.tile(acceptors, (xh_donors.shape[0], 1))
+        acceptors_tiled = np.tile(acceptors, (oh_donors.shape[0], 1))
         water_solute_triplets = np.hstack((oh_donors_repeated, 
             acceptors_tiled))
 
@@ -436,7 +440,8 @@ def _get_bond_triplets(topology, exclude_water=True,
         if len(xh_donors) == 0:
             # if there are no hydrogens or protein in the trajectory, we get
             # no possible pairs and return nothing
-            return np.zeros((0, 3), dtype=int)
+            #return np.zeros((0, 3), dtype=int)
+            xh_donors = np.zeros((1, 2), dtype=int)
         exclude_water = False
         water_acceptor_elements = frozenset(('O'))
         water_acceptors = [a.index for a in topology.atoms
@@ -444,15 +449,18 @@ def _get_bond_triplets(topology, exclude_water=True,
             and a.residue.is_water]
 
         # Make acceptors a 2-D numpy array
-        acceptors = np.array(acceptors)[:, np.newaxis]
+        water_acceptors = np.array(water_acceptors)[:, np.newaxis]
 
         # Generate the cartesian product of the donors and acceptors
-        xh_donors_repeated = np.repeat(xh_donors, acceptors.shape[0], axis=0)
+        xh_donors_repeated = np.repeat(xh_donors, water_acceptors.shape[0], axis=0)
         water_acceptors_tiled = np.tile(water_acceptors, (xh_donors.shape[0], 1))
         solute_water_triplets = np.hstack((xh_donors_repeated, 
             water_acceptors_tiled))
-        bond_triplets = np.array(bond_triplets + water_solute_triplet
-                + solute_water_triplets)
+        # Doesn't work well with zero-element arrays
+        #bond_triplets = np.array(bond_triplets + water_solute_triplets
+                #+ solute_water_triplets)
+        bond_triplets = np.vstack((bond_triplets, water_solute_triplets, solute_water_triplets))
+        #bond_triplets = np.array(water_solute_triplets)
 
 
     # Filter out self-bonds
