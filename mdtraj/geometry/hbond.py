@@ -456,11 +456,7 @@ def _get_bond_triplets(topology, exclude_water=True,
         water_acceptors_tiled = np.tile(water_acceptors, (xh_donors.shape[0], 1))
         solute_water_triplets = np.hstack((xh_donors_repeated, 
             water_acceptors_tiled))
-        # Doesn't work well with zero-element arrays
-        #bond_triplets = np.array(bond_triplets + water_solute_triplets
-                #+ solute_water_triplets)
         bond_triplets = np.vstack((bond_triplets, water_solute_triplets, solute_water_triplets))
-        #bond_triplets = np.array(water_solute_triplets)
 
 
     # Filter out self-bonds
