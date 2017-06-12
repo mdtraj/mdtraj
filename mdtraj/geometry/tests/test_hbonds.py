@@ -145,3 +145,23 @@ def test_wernet_nilsson_1():
             # to make sure the criterion is giving back totally implausible stuff
             if len(hbonds) > 0:
                 assert np.all(md.compute_distances(t[frame], hbonds[:, [0,2]]) < 0.5)
+def test_water_solute():
+    # Compare hbonding for water-water and water-solute
+    t = md.load(get_fn('DSPCbilayer.pdb'))
+
+    # No water, yes water-solute
+    hbonds1 = md.baker_hubbard(t, exclude_water=True, include_water_solute=True) 
+    assert np.shape(hbonds1)[0] > 0 
+
+    # No water, no water-solute
+    hbonds2 = md.baker_hubbard(t, exclude_water=True, include_water_solute=False)
+    assert np.shape(hbonds2)[0] == 0
+
+    # Yes water, yes water-solute (water-solute is redundant)
+    hbonds3 = md.baker_hubbard(t, exclude_water=False, include_water_solute=True)
+    assert np.shape(hbonds3)[0] > 0
+
+    # Yes water, no water-solute (water-solute is overriden by exclude_water)
+    hbonds4 = md.baker_hubbard(t, exclude_water=False, include_water_solute=False)
+    assert np.shape(hbonds4)[0] == np.shape(hbonds3)[0]
+    
