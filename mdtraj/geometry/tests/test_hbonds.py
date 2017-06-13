@@ -160,6 +160,7 @@ def test_water_solute():
     # Yes water, yes water-solute (water-solute is redundant)
     hbonds3 = md.baker_hubbard(t, exclude_water=False, include_water_solute=True)
     assert np.shape(hbonds3)[0] > 0
+    assert np.shape(hbonds3)[0] > np.shape(hbonds1)[0]
 
     # Yes water, no water-solute (water-solute is overriden by exclude_water)
     hbonds4 = md.baker_hubbard(t, exclude_water=False, include_water_solute=False)
