@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: Christoph Klein
-# Contributors:
+# Contributors: Tim Moore
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@ from __future__ import print_function
 import numpy as np
 
 import mdtraj as md
-from mdtraj.testing import get_fn, eq, assert_raises
+from mdtraj.testing import get_fn, eq, assert_raises, assert_allclose
 from mdtraj.geometry import order
 
 
@@ -98,3 +98,26 @@ def test_nematic_order_args():
     assert_raises(ValueError, lambda: order.compute_nematic_order(TRAJ2, indices=[[1, [2]], [2]]))
     assert_raises(ValueError, lambda: order.compute_nematic_order(TRAJ2, indices=[1, 2, 3]))
 
+
+def test_order_from_traj():
+    """Made a perfectly aligned monolayer, should have S2 = 1
+    """
+    traj = md.load(get_fn('alkane-monolayer.pdb'))
+    indices = [list(range(1900+x, 1900+x+36)) for x in range(0, 64*36, 36)]
+    s2 = md.compute_nematic_order(traj, indices=indices)
+    assert_allclose(1.0, s2)
+
+
+def test_directors_angle_from_traj():
+    """All chains in example system aligned along z axis
+    """
+    traj = md.load(get_fn('alkane-monolayer.pdb'))
+    # only use the carbons for this calculation since they are excactly aligned
+    # with the z-axis, and the hydrogens can throw things off just a bit
+    indices = [list(range(1900+x, 1900+x+30, 3)) for x in range(0, 64*36, 36)]
+    directors = md.compute_directors(traj, indices=indices)
+    for axis, target_angle in zip(np.eye(3), [90.0, 90.0, 0.0]):
+        dotproducts = np.tensordot(directors, axis, axes=1)
+        angles = np.degrees(np.arccos(dotproducts))
+        angles = np.minimum(angles, 180-angles)  # make vector point in positive z
+        assert_allclose(target_angle, angles)

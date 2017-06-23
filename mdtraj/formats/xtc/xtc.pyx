@@ -290,7 +290,7 @@ cdef class XTCTrajectoryFile(object):
                            coefs_[1]*self.n_atoms) / (coefs_[2] * self.n_atoms +
                                                       coefs_[0])
 
-        return approx_n_frames
+        return max(approx_n_frames, 1)
 
     def __dealloc__(self):
         self.close()
@@ -621,6 +621,7 @@ cdef class XTCTrajectoryFile(object):
                                   dtype=np.int64, count=n_frames)
         else:
             offsets = np.empty(self.approx_n_frames, dtype=np.int64)
+            assert len(offsets) >= 1
 
             try:
                 # skip header
