@@ -10,7 +10,7 @@ void inplace_center_and_trace_atom_major(float* coords, float* traces, const int
        Also compute the traces of the centered conformations, which are necessary
        for RMSD.
     */ 
-    size_t i, k;
+    long long i, k;
     float* confp;
     __m128d sx_, sy_, sz_, trace_;
     __m128 mux_, muy_, muz_;
