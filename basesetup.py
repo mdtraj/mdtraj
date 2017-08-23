@@ -249,6 +249,16 @@ release = {release}
                            release=isreleased))
 
 
+def numpy_include_dir():
+    """Get the path of numpy headers."""
+    try:
+        import numpy as np
+    except ImportError:
+        print("Cannot build mdtraj extensions without numpy installed.")
+        sys.exit(1)
+    return np.get_include()
+
+
 class StaticLibrary(Extension):
     def __init__(self, *args, **kwargs):
         self.export_include = kwargs.pop('export_include', [])
@@ -256,14 +266,19 @@ class StaticLibrary(Extension):
 
 
 class build_ext(_build_ext):
-    def initialize_options(self):
-        _build_ext.initialize_options(self)
-        import pkg_resources
-        dir = pkg_resources.resource_filename('numpy', 'core/include')
-        assert os.path.exists(dir), "Numpy include dir not found"
-        self.include_dirs = [dir]
+    def __init__(self, dist):
+        """Initializes the `build_ext` object.
+
+        Parameters
+        ----------
+        dist : A `Distribution` object
+            This object is passed in by setuptools.setup
+        """
+        super(build_ext, self).__init__(dist)
+        self._numpy_include_dir = numpy_include_dir()
 
     def build_extension(self, ext):
+        ext.include_dirs.append(self._numpy_include_dir)
         if isinstance(ext, StaticLibrary):
             self.build_static_extension(ext)
         else:
