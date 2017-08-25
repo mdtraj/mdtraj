@@ -10,7 +10,7 @@ import numpy as np
 from mdtraj.utils import enter_temp_directory
 from mdtraj.testing import get_fn, eq, SkipTest
 from mdtraj.geometry.dihedral import (compute_chi1, compute_chi2, compute_chi3,
-    compute_chi4, compute_omega, compute_phi, compute_psi)
+                                      compute_chi4, compute_omega, compute_phi, compute_psi, compute_chi5)
 
 traj = md.load(get_fn('2EQQ.pdb'))
 
@@ -60,7 +60,9 @@ CHI3_ATOMS = [["CB", "CG", "CD", "NE"],
 CHI4_ATOMS = [["CG", "CD", "NE", "CZ"],
             ["CG", "CD", "CE", "NZ"]]
 
-for n, chi_atoms in enumerate([CHI1_ATOMS, CHI2_ATOMS, CHI3_ATOMS, CHI4_ATOMS]):
+CHI5_ATOMS = ["CD", "NE", "CZ", "NH1"]
+
+for n, chi_atoms in enumerate([CHI1_ATOMS, CHI2_ATOMS, CHI3_ATOMS, CHI4_ATOMS, CHI5_ATOMS]):
     indices, angles = [], []
     for r in range(1, cmd.count_atoms('name ca')+1):
         r_indices, r_angles = None, None
@@ -109,9 +111,11 @@ cmd.quit()''')
         shutil.rmtree(tempdir)
 
     indices, angles = zip(*[compute_chi1(traj, opt=False), compute_chi2(traj, opt=False),
-                            compute_chi3(traj, opt=False), compute_chi4(traj, opt=False)])
+                            compute_chi3(traj, opt=False), compute_chi4(traj, opt=False),
+                            compute_chi5(traj, opt=False)])
     indices_opt, angles_opt = zip(*[compute_chi1(traj, opt=True), compute_chi2(traj, opt=True),
-                                    compute_chi3(traj, opt=True), compute_chi4(traj, opt=True)])
+                                    compute_chi3(traj, opt=True), compute_chi4(traj, opt=True),
+                                    compute_chi5(traj, opt=True)])
 
     for x, y in zip(indices, ref_indices):
         eq(x, y)
@@ -145,7 +149,7 @@ def test_dihedral_1():
     pymol = find_executable('pymol')
     if pymol is None:
         raise SkipTest("pymol executable not found")
-    
+
     xyz = '''MODEL        0
 ATOM      1    A ACE     1       4.300  13.100   8.600  1.00  0.00
 ATOM      2    B ACE     1       5.200  13.600   8.800  1.00  0.00
@@ -157,7 +161,7 @@ from pymol import cmd
 with open('output.txt', 'w') as f:
     f.write('%f' % cmd.get_dihedral('1/A', '1/B', '1/C', '1/D'))
 '''
-    
+
     with enter_temp_directory():
         with open('xyz.pdb', 'w') as f:
             f.write(xyz)
@@ -170,7 +174,7 @@ with open('output.txt', 'w') as f:
         t = md.load('xyz.pdb')
 
     mdtraj_value = md.compute_dihedrals(t, [[0,1,2,3]])[0,0]
-    
+
     np.testing.assert_array_almost_equal(pymol_value, mdtraj_value)
 
 
