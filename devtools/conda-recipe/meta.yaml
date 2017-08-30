@@ -17,18 +17,14 @@ requirements:
     - python
     - setuptools
     - cython
-    - numpy 1.8.*  # [not (win and (py35 or py36))]
-    - numpy 1.9.*  # [win and py35]
-    - numpy 1.11.*  # [win and py36]
+    - numpy
     - zlib 1.2.8
     - msinttypes  # [win and py27]
 
   run:
     - python
     - setuptools
-    - numpy >=1.8  # [not (win and (py35 or py36))]
-    - numpy >=1.9  # [win and py35]
-    - numpy >=1.11  # [win and py36]
+    - numpy
     - scipy
     - pandas
     - pytables
@@ -39,7 +35,7 @@ test:
     - networkx
     - matplotlib
     - openmm  # [not (win32 or (win and py2k))]
-    - shiftx2  # [linux]
+    - shiftx2  # [linux and py2k]
     - nbformat
     - ipykernel
     - scikit-learn
