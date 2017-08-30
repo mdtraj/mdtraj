@@ -24,18 +24,18 @@ os:
 
 env:
   - CONDA_PY=2.7 CONDA_NPY=1.7
-  - CONDA_PY=2.7 CONDA_NPY=1.12
+  - CONDA_PY=2.7
   - CONDA_PY=3.5 CONDA_NPY=1.11
-  - CONDA_PY=3.6 CONDA_NPY=1.12
+  - CONDA_PY=3.6
 
 # Do include/exclude to add "DOCDEPLOY" to one matrix entry.
 matrix:
   exclude:
     - os: linux
-      env: CONDA_PY=3.6 CONDA_NPY=1.12
+      env: CONDA_PY=3.6
   include:
     - os: linux
-      env: CONDA_PY=3.6 CONDA_NPY=1.12 DOCDEPLOY=YES
+      env: CONDA_PY=3.6 DOCDEPLOY=YES
 
 deploy:
   - provider: s3
