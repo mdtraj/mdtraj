@@ -15,41 +15,56 @@ build:
 requirements:
   build:
     - python
-    - cython
-    - numpy x.x
-    - msinttypes #  [win and py2k]
     - setuptools
-    - zlib
+    - cython
+    - numpy 1.8.*  # [not (win and (py35 or py36))]
+    - numpy 1.9.*  # [win and py35]
+    - numpy 1.11.*  # [win and py36]
+    - zlib 1.2.8
+    - msinttypes  # [win and py27]
 
   run:
     - python
     - setuptools
-    - numpy x.x
-    - pandas
+    - numpy >=1.8  # [not (win and (py35 or py36))]
+    - numpy >=1.9  # [win and py35]
+    - numpy >=1.11  # [win and py36]
     - scipy
+    - pandas
     - pytables
 
 test:
   requires:
-    - nose
-    - scripttest
+    - pytest
     - networkx
     - matplotlib
-    - pandas
     - openmm  # [not (win32 or (win and py2k))]
-    - shiftx2 # [linux]
+    - shiftx2  # [linux]
     - nbformat
     - ipykernel
     - scikit-learn
 
   source_files:
     - examples/*
+    - pytest.ini
+    - tests/*
+
+  imports:
+    - mdtraj
 
   commands:
-    - nosetests mdtraj -v -s
-    - cd examples && nosetests test_examples.py -v -s # [not (win32 or (win and py2k))]
+    - pytest
 
 about:
-  home: http://mdtraj.org
-  license: GNU Lesser General Public License v2 or later (LGPLv2+)
-  summary: A modern, open library for the analysis of molecular dynamics trajectories (development snapshot)
+  home: https://github.com/mdtraj/mdtraj
+  license: LGPL-2.1
+  summary: "A modern, open library for the analysis of molecular dynamics trajectories"
+  description: |
+    MDTraj is a python library that allows users to manipulate molecular dynamics
+    (MD) trajectories and perform a variety of analyses, including fast RMSD,
+    solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj
+    is the wide variety of molecular dynamics trajectory file formats which are
+    supported, including RCSB pdb, GROMACS xtc, tng, and trr, CHARMM / NAMD dcd, AMBER
+    binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
+  doc_url: http://mdtraj.org/
+  dev_url: https://github.com/mdtraj/mdtraj

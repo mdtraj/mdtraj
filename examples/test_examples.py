@@ -2,21 +2,30 @@
 Execute each notebook as a test, reporting an error if any cell throws an exception.
 Adapted from https://gist.github.com/minrk/2620876.
 """
+
 import os
-import sys
 
 import nbformat
+import pytest
 from jupyter_client import KernelManager
 
-def test_examples():
-    for f in os.listdir('.'):
-        if f.endswith('.ipynb'):
-            yield check_one_notebook, f
+test_dir = os.path.dirname(os.path.abspath(__file__))
+examples = [fn for fn in os.listdir(test_dir) if fn.endswith('.ipynb')]
 
-def check_one_notebook(filename):
-    with open(filename) as f:
+
+@pytest.fixture(params=examples)
+def example_fn(request):
+    cwd = os.path.abspath('.')
+    os.chdir(test_dir)
+    yield request.param
+    os.chdir(cwd)
+
+
+def test_example_notebook(example_fn):
+    with open(example_fn) as f:
         nb = nbformat.reads(f.read(), nbformat.NO_CONVERT)
     run_notebook(nb)
+
 
 def run_notebook(nb):
     km = KernelManager()
@@ -27,7 +36,7 @@ def run_notebook(nb):
     # simple ping:
     kc.execute("pass")
     shell.get_msg()
-    
+
     failures = 0
     for cell in nb.cells:
         if cell.cell_type != 'code':
