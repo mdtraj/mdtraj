@@ -165,7 +165,7 @@ def test_write_2(tmpdir):
 
 def test_read_error_0(tmpdir):
     tmpfn = '{}/traj.xtc'.format(tmpdir)
-    with pytest.raises(OSError):
+    with pytest.raises(IOError):
         with XTCTrajectoryFile(tmpfn, 'r') as f:
                 f.read()
 
