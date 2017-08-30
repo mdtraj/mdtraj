@@ -24,17 +24,11 @@
 through time in the AMBER NetCDF format
 """
 
-##############################################################################
-# Imports
-##############################################################################
 
 from __future__ import print_function, division
-from mdtraj.formats.dcd import DCDTrajectoryFile
-from mdtraj.reporters.basereporter import _BaseReporter
+from ..formats.dcd import DCDTrajectoryFile
+from .basereporter import _BaseReporter
 
-##############################################################################
-# Imports
-##############################################################################
 
 class DCDReporter(_BaseReporter):
     """DCDReporter stores a molecular dynamics trajectory in the CHARMM / NAMD
