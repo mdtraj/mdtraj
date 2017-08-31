@@ -15,6 +15,12 @@ examples = [fn for fn in os.listdir(test_dir) if fn.endswith('.ipynb')]
 
 @pytest.fixture(params=examples)
 def example_fn(request):
+    if 'openmm' in request.param:
+        try:
+            from simtk.openmm import app
+        except ImportError:
+            pytest.skip("Openmm required for example notebook `{}`".format(request.param))
+
     cwd = os.path.abspath('.')
     os.chdir(test_dir)
     yield request.param
