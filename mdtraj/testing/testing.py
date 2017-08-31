@@ -115,6 +115,7 @@ def eq(o1, o2, decimal=6, err_msg=''):
     """
     if isinstance(o1, integer_types) and isinstance(o2, integer_types) and PY2:
         eq_(long(o1), long(o2))
+        return True
 
     assert (type(o1) is type(o2)), 'o1 and o2 not the same type: %s %s' % (type(o1), type(o2))
 
