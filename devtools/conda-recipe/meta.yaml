@@ -49,7 +49,7 @@ test:
     - mdtraj
 
   commands:
-    - pytest
+    - pytest tests/test_nmr.py
 
 about:
   home: https://github.com/mdtraj/mdtraj
