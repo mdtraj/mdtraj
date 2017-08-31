@@ -1,6 +1,6 @@
 sphinx
 matplotlib
-ipython-notebook
+jupyter
 jinja2
 runipy
 openmm

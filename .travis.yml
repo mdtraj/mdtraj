@@ -1,5 +1,6 @@
 language: c
 sudo: false
+dist: precise
 
 addons:
   apt:
@@ -19,34 +20,9 @@ script:
   && devtools/travis-ci/build_docs.sh
 
 os:
-  - osx
   - linux
 
 env:
   - CONDA_PY=2.7 CONDA_NPY=1.7
-  - CONDA_PY=2.7 CONDA_NPY=1.11
-  - CONDA_PY=3.4 CONDA_NPY=1.10
-  - CONDA_PY=3.5 CONDA_NPY=1.11
+  - CONDA_PY=2.7
 
-# Do include/exclude to add "DOCDEPLOY" to one matrix entry.
-matrix:
-  exclude:
-    - os: linux
-      env: CONDA_PY=3.5 CONDA_NPY=1.11
-  include:
-    - os: linux
-      env: CONDA_PY=3.5 CONDA_NPY=1.11 DOCDEPLOY=YES
-
-deploy:
-  - provider: s3
-    access_key_id:
-      secure: "W6YkOUOWIGXFP3YDkoGXh2M3bIS1/KYEy+EjPPOpeeX6MiTWkJz56ClV8kB+j+s1qPd+So3LUDXT4WW1qH2fftMlDSCnlwWPjtz45lSyOP7vOFeuLMm7hRWyDAPaQYumEN1rY7TlcB3YjC4AQKlPmILyKH7mGBWAgbumMs9pHtI="
-    secret_access_key:
-      secure: "ks3zwG//xUNMfAyFQSxJ/iD+fkO/VkMayGP/wZLpePJOWH3nZQkPeNhpk9xoq2jMUI8wNCY3jrQi0sj2NETReBq0WjVpx6H1UwnT3hu4NvwyW7256+RSRTWMzGBoLiClCKQ2Uu7guJKSvoRZim0p+LNSZqSf+c+P6FVs5QjlouA="
-    bucket: "mdtraj.org"
-    region: us-west-1
-    skip_cleanup: true
-    local_dir: docs/_deploy/
-    on:
-      branch: master
-      condition: "-n $DOCDEPLOY"

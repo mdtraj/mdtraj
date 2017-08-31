@@ -287,17 +287,7 @@ setup(name='mdtraj',
       # See http://article.gmane.org/gmane.comp.python.distutils.devel/24218
       # install_requires=['numpy>=1.6'],
 
-      package_data={'mdtraj.formats.pdb': ['data/*'],
-                    'mdtraj.testing': ['reference/*',
-                                       'reference/ala_dipeptide_trj/*',
-                                       'reference/ala_dipeptide_trj/not_hashed/*',
-                                       'reference/frame0.dtr/*',
-                                       'reference/frame0.dtr/not_hashed/*',],
-                    },
-      exclude_package_data={'mdtraj.testing': ['reference/ala_dipeptide_trj',
-                                               'reference/ala_dipeptide_trj/not_hashed',
-                                               'reference/frame0.dtr',
-                                               'reference/frame0.dtr/not_hashed',]},
+      package_data={'mdtraj.formats.pdb': ['data/*'], },
       zip_safe=False,
       entry_points={'console_scripts':
           ['mdconvert = mdtraj.scripts.mdconvert:entry_point',

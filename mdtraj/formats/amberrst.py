@@ -566,6 +566,9 @@ class AmberNetCDFRestartFile(object):
             raise IOError('The file was opened in mode=%s. Reading is not '
                           'allowed.' % self._mode)
 
+        if self._closed:
+            raise IOError("The file has been closed!")
+
         if 'coordinates' not in self._handle.variables:
             raise ValueError('No coordinates found in the NetCDF file.')
 

@@ -220,8 +220,7 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq, residue.segment_id)
                 for atom in residue.atoms:
-                    out.add_atom(atom.name, atom.element, r,
-                                 serial=atom.serial)
+                    out.add_atom(atom.name, atom.element, r, serial=atom.serial)
 
         for a1, a2 in self.bonds:
             out.add_bond(a1, a2)
@@ -1248,6 +1247,9 @@ class Chain(object):
         """Get the number of atoms in this Chain"""
         return sum(r.n_atoms for r in self._residues)
 
+    def __hash__(self):
+        return self.index
+
 
 class Residue(object):
     """A Residue object represents a residue within a Topology.
@@ -1370,6 +1372,9 @@ class Residue(object):
 
     def __repr__(self):
         return str(self)
+
+    def __hash__(self):
+        return hash((self.name, self.index, self.resSeq, self.segment_id))
 
 
 class Atom(object):
