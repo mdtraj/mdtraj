@@ -8,18 +8,14 @@ environment:
 
   matrix:
     - PYTHON: "C:\\Miniconda3"
-      CONDA_PY: "35"
-      CONDA_NPY: "1.10"
+      CONDA_PY: "36"
     - PYTHON: "C:\\Miniconda3"
       CONDA_PY: "27"
-      CONDA_NPY: "1.10"
     - PYTHON: "C:\\Miniconda3-x64"
       CONDA_PY: "27"
-      CONDA_NPY: "1.10"
       ARCH: "64"
     - PYTHON: "C:\\Miniconda3-x64"
-      CONDA_PY: "35"
-      CONDA_NPY: "1.10"
+      CONDA_PY: "36"
       ARCH: "64"
 
 install:
