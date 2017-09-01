@@ -340,9 +340,8 @@ class parse_selection(object):
         base_expression = MatchFirst([selection_keyword, literal])
 
         # range condition matches expressions such as 'mass 1 to 20'
-        # TODO: switch to selection_keyword?
         range_condition = Group(
-            base_expression + literal + Keyword('to') + literal
+            selection_keyword + literal + Keyword('to') + literal
         )
         range_condition.setParseAction(RangeCondition)
 
