@@ -21,9 +21,6 @@
 #############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
 
 from __future__ import print_function, absolute_import
 import os
@@ -31,8 +28,9 @@ import sys
 from distutils.version import LooseVersion
 from distutils.spawn import find_executable as _find_executable
 import numpy as np
+import pandas as pd
+import subprocess
 
-from mdtraj.utils import import_
 from mdtraj.utils import enter_temp_directory
 
 ##############################################################################
@@ -133,28 +131,24 @@ def chemical_shifts_shiftx2(trj, pH=5.0, temperature=298.00):
        "SHIFTX2: significantly improved protein chemical shift
        prediction." J. Biomol. NMR, 50, 1 43-57 (2011)
     """
-    pd = import_('pandas')
     binary = find_executable(SHIFTX2)
     if binary is None:
-        raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_shiftx2` requires the external program SHIFTX2, available at http://www.shiftx2.ca/' % ', '.join(SHIFTX2))
+        raise OSError('External command not found. Looked for {} in PATH. '
+                      '`chemical_shifts_shiftx2` requires the external program SHIFTX2, '
+                      'available at http://www.shiftx2.ca/'.format(', '.join(SHIFTX2)))
 
     results = []
     with enter_temp_directory():
         for i in range(trj.n_frames):
             fn = './trj%d.pdb' % i
             trj[i].save(fn)
-            cmd = "%s -b %s -p %.1f -t %.2f" % (binary, fn, pH, temperature)
-            return_flag = os.system(cmd)
+            subprocess.check_call([binary,
+                                   '-b', fn,
+                                   '-p', "{:.1f}".format(pH),
+                                   '-t', "{:.2f}".format(temperature),
+                                   ])
 
-            if return_flag != 0:
-                raise(IOError("Could not successfully execute command '%s', check your ShiftX2 installation or your input trajectory." % cmd))
-
-        for i in range(trj.n_frames):
-            try:
-                d = pd.read_csv("./trj%d.pdb.cs" % i)
-            except IOError:
-                print(os.listdir('.'), file=sys.stderr)
-                raise
+            d = pd.read_csv("./trj%d.pdb.cs" % i)
             d.rename(columns={"NUM": "resSeq", "RES": "resName", "ATOMNAME": "name"}, inplace=True)
             d["frame"] = i
             results.append(d)
@@ -200,7 +194,6 @@ def chemical_shifts_ppm(trj):
        shift predictor for the assessment of protein conformational ensembles."
        J Biomol NMR. 2012 Nov;54(3):257-65.
     """
-    pd = import_('pandas')
     binary = find_executable(PPM)
 
     first_resSeq = trj.top.residue(0).resSeq
@@ -277,7 +270,6 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
        NMR chemical shift prediction by means of an artificial neural network."
        J. Biomol. NMR, 48, 13-22 (2010)
     """
-    pd = import_('pandas')
     binary = find_executable(SPARTA_PLUS)
     if binary is None:
         raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_spartaplus` requires the external program SPARTA+, available at http://spin.niddk.nih.gov/bax/software/SPARTA+/' % ', '.join(SPARTA_PLUS))

@@ -1118,10 +1118,13 @@ class Trajectory(object):
         xyz = self.xyz[key]
         time = self.time[key]
         unitcell_lengths, unitcell_angles = None, None
+        rmsd_traces = None
         if self.unitcell_angles is not None:
             unitcell_angles = self.unitcell_angles[key]
         if self.unitcell_lengths is not None:
             unitcell_lengths = self.unitcell_lengths[key]
+        if self._rmsd_traces is not None:
+            rmsd_traces = self._rmsd_traces
 
         if copy:
             xyz = xyz.copy()
@@ -1132,6 +1135,8 @@ class Trajectory(object):
                 unitcell_angles = unitcell_angles.copy()
             if self.unitcell_lengths is not None:
                 unitcell_lengths = unitcell_lengths.copy()
+            if rmsd_traces is not None :
+                rmsd_traces = rmsd_traces.copy()
         else:
             topology = self._topology
 
@@ -1139,9 +1144,9 @@ class Trajectory(object):
             xyz, topology, time, unitcell_lengths=unitcell_lengths,
             unitcell_angles=unitcell_angles)
 
-        if self._rmsd_traces is not None:
-            newtraj._rmsd_traces = np.array(self._rmsd_traces[key],
-                                            ndmin=1, copy=True)
+        if rmsd_traces is not None:
+            newtraj._rmsd_traces = rmsd_traces
+
         return newtraj
 
     def __init__(self, xyz, topology, time=None, unitcell_lengths=None, unitcell_angles=None):
@@ -1271,6 +1276,7 @@ class Trajectory(object):
                 '.gro': self.save_gro,
                 '.rst7' : self.save_amberrst7,
                 '.tng' : self.save_tng,
+                '.dtr': self.save_dtr,
             }
 
     def save(self, filename, **kwargs):
