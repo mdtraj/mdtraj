@@ -319,3 +319,10 @@ def test_literal(gbp):
     eq(name_og1_0, ref_og1)
     eq(name_og1_1, ref_og1)
     eq(name_og1_2, ref_og1)
+
+def test_in():
+    sp = parse_selection("resname ALA ASP GLU")
+    eq(sp.source, "(atom.residue.name in ['ALA', 'ASP', 'GLU'])")
+
+    sp = parse_selection("resid 100 101 102")
+    eq(sp.source, "(atom.residue.index in [100, 101, 102])")

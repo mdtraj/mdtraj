@@ -23,12 +23,13 @@
 from __future__ import print_function
 import re
 import ast
+import sys
 from copy import deepcopy
 from collections import namedtuple
 from mdtraj.utils.six import PY2
 from mdtraj.utils.external.pyparsing import (Word, ParserElement, MatchFirst,
     Keyword, opAssoc, quotedString, alphas, alphanums, infixNotation, Group,
-    Optional, ParseException, delimitedList)
+    ParseException, OneOrMore)
 from mdtraj.utils.external.astor import codegen
 ParserElement.enablePackrat()
 
@@ -253,19 +254,31 @@ class RangeCondition(object):
         return ast.Compare(left=self._from.ast(), ops=[ast.LtE(), ast.LtE()],
                            comparators=[self._field.ast(), self._to.ast()])
 
+
 class InListCondition(object):
     def __init__(self, tokens):
         tokens = tokens[0]
-        _check_n_tokens(tokens, 2, '"in list" condition')
-        assert tokens[2] == 'to'
-        self._field, self._list = tokens[0], tokens[1]
-        print(tokens)
-        if isinstance(self._field, Literal):
-            raise ValueError("Can't test literal in range.")
+        self._field = tokens[0]
+
+        if len(tokens) == 2:
+            # Implicit equality
+            self.implicit_equality = True
+        elif len(tokens) > 2:
+            self.implicit_equality = False
+        else:
+            raise ValueError("Not enough tokens for `in` condition")
+
+        self.compare_to = tokens[1:]
 
     def ast(self):
-        return ast.Compare(left=self._field.ast(), ops=[ast.In],
-                           comparators=[self._list.ast()])
+        if self.implicit_equality:
+            return ast.Compare(left=self._field.ast(), ops=[ast.Eq()],
+                               comparators=[e.ast() for e in self.compare_to])
+        else:
+            comparator = ast.List([e.ast() for e in self.compare_to], ast.Load())
+            return ast.Compare(left=self._field.ast(), ops=[ast.In()],
+                               comparators=[comparator])
+
 
 class parse_selection(object):
     """Parse an atom selection expression
@@ -326,22 +339,16 @@ class parse_selection(object):
         selection_keyword.setParseAction(SelectionKeyword)
         base_expression = MatchFirst([selection_keyword, literal])
 
-        # the grammar includes implicit equality comparisons
-        # between adjacent expressions:
-        # i.e. 'name CA' --> 'name == CA'
-        implicit_equality = Group(
-            base_expression + Optional(Keyword('=='), '==') + base_expression
-        )
-        implicit_equality.setParseAction(BinaryInfixOperand)
-
         # range condition matches expressions such as 'mass 1 to 20'
+        # TODO: switch to selection_keyword?
         range_condition = Group(
             base_expression + literal + Keyword('to') + literal
         )
         range_condition.setParseAction(RangeCondition)
 
-        # matches expression such as `resname GLU ASP ARG`
-        in_list_condition = Group(base_expression + delimitedList(literal, delim=',', combine=True))
+        # matches expression such as `resname GLU ASP ARG` and also
+        # handles implicit equality `resname ALA`
+        in_list_condition = Group(selection_keyword + OneOrMore(literal))
         in_list_condition.setParseAction(InListCondition)
 
         expression = range_condition | in_list_condition | base_expression
@@ -401,7 +408,6 @@ class parse_selection(object):
 parse_selection = parse_selection()
 
 if __name__ == '__main__':
-    import sys
     exp = parse_selection(sys.argv[1])
     print(exp.source)
     print(ast.dump(exp.astnode))
