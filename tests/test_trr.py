@@ -208,9 +208,9 @@ def test_seek(get_fn):
 def test_get_velocities():
     """Write data with velocities and read it back"""
     # NOTE: this is a test of a hidden API
-    xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    vel = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    box = np.array(np.random.randn(500,3,3), dtype=np.float32)
+    xyz = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    vel = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    box = np.array(np.random.randn(500, 3, 3), dtype=np.float32)
     time = np.array(np.random.randn(500), dtype=np.float32)
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
@@ -218,25 +218,25 @@ def test_get_velocities():
     with TRRTrajectoryFile(temp, 'w') as f:
         f._write(xyz=xyz, time=time, step=step, box=box, lambd=lambd, vel=vel)
     with TRRTrajectoryFile(temp) as f:
-        xyz2, time2, step2, box2, lambd2, vel2, forces2= f._read(
+        xyz2, time2, step2, box2, lambd2, vel2, forces2 = f._read(
             n_frames=500, atom_indices=None, get_velocities=True,
             get_forces=False
         )
 
-    yield lambda: eq(xyz, xyz2)
-    yield lambda: eq(time, time2)
-    yield lambda: eq(step, step2)
-    yield lambda: eq(lambd, lambd2)
-    yield lambda: eq(vel, vel2)
-    yield lambda: eq(None, forces2)
+    eq(xyz, xyz2)
+    eq(time, time2)
+    eq(step, step2)
+    eq(lambd, lambd2)
+    eq(vel, vel2)
+    eq(None, forces2)
 
 
 def test_get_forces():
     """Write data with forces and read it back"""
     # NOTE: this is a test of a hidden API
-    xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    forces = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    box = np.array(np.random.randn(500,3,3), dtype=np.float32)
+    xyz = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    forces = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    box = np.array(np.random.randn(500, 3, 3), dtype=np.float32)
     time = np.array(np.random.randn(500), dtype=np.float32)
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
@@ -250,21 +250,21 @@ def test_get_forces():
             get_forces=True
         )
 
-    yield lambda: eq(xyz, xyz2)
-    yield lambda: eq(time, time2)
-    yield lambda: eq(step, step2)
-    yield lambda: eq(lambd, lambd2)
-    yield lambda: eq(None, vel2)
-    yield lambda: eq(forces, forces2)
+    eq(xyz, xyz2)
+    eq(time, time2)
+    eq(step, step2)
+    eq(lambd, lambd2)
+    eq(None, vel2)
+    eq(forces, forces2)
 
 
 def test_get_velocities_and_forces():
     """Write data with velocities and forces, and read it back"""
     # NOTE: this is a test of a hidden API
-    xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    vel = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    forces = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    box = np.array(np.random.randn(500,3,3), dtype=np.float32)
+    xyz = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    vel = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    forces = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    box = np.array(np.random.randn(500, 3, 3), dtype=np.float32)
     time = np.array(np.random.randn(500), dtype=np.float32)
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
@@ -278,20 +278,20 @@ def test_get_velocities_and_forces():
             get_forces=True
         )
 
-    yield lambda: eq(xyz, xyz2)
-    yield lambda: eq(vel, vel2)
-    yield lambda: eq(forces, forces2)
-    yield lambda: eq(time, time2)
-    yield lambda: eq(step, step2)
-    yield lambda: eq(lambd, lambd2)
+    eq(xyz, xyz2)
+    eq(vel, vel2)
+    eq(forces, forces2)
+    eq(time, time2)
+    eq(step, step2)
+    eq(lambd, lambd2)
 
 
 def test_get_velocities_forces_atom_indices_1():
     # NOTE: this is a test of a hidden API
-    xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    vel = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    forces = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    box = np.array(np.random.randn(500,3,3), dtype=np.float32)
+    xyz = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    vel = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    forces = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    box = np.array(np.random.randn(500, 3, 3), dtype=np.float32)
     time = np.array(np.random.randn(500), dtype=np.float32)
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
@@ -305,20 +305,20 @@ def test_get_velocities_forces_atom_indices_1():
             get_velocities=True, get_forces=True
         )
 
-    yield lambda: eq(xyz[:, [0,1,2]], xyz2)
-    yield lambda: eq(vel[:, [0,1,2]], vel2)
-    yield lambda: eq(forces[:, [0,1,2]], forces2)
-    yield lambda: eq(time, time2)
-    yield lambda: eq(step, step2)
-    yield lambda: eq(lambd, lambd2)
+    eq(xyz[:, [0, 1, 2]], xyz2)
+    eq(vel[:, [0, 1, 2]], vel2)
+    eq(forces[:, [0, 1, 2]], forces2)
+    eq(time, time2)
+    eq(step, step2)
+    eq(lambd, lambd2)
 
 
 def test_get_velocities_forces_atom_indices_2():
     # NOTE: this is a test of a hidden API
-    xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    vel = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    forces = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    box = np.array(np.random.randn(500,3,3), dtype=np.float32)
+    xyz = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    vel = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    forces = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    box = np.array(np.random.randn(500, 3, 3), dtype=np.float32)
     time = np.array(np.random.randn(500), dtype=np.float32)
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
@@ -332,19 +332,20 @@ def test_get_velocities_forces_atom_indices_2():
             get_velocities=True, get_forces=True
         )
 
-    yield lambda: eq(xyz[:, ::2], xyz2)
-    yield lambda: eq(vel[:, ::2], vel2)
-    yield lambda: eq(forces[:, ::2], forces2)
-    yield lambda: eq(time, time2)
-    yield lambda: eq(step, step2)
-    yield lambda: eq(lambd, lambd2)
+    eq(xyz[:, ::2], xyz2)
+    eq(vel[:, ::2], vel2)
+    eq(forces[:, ::2], forces2)
+    eq(time, time2)
+    eq(step, step2)
+    eq(lambd, lambd2)
     pass
+
 
 def test_read_velocities_do_not_exist():
     """Requesting velocities from a file that does not have them"""
     # NOTE: this is a test of a hidden API
-    xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    box = np.array(np.random.randn(500,3,3), dtype=np.float32)
+    xyz = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    box = np.array(np.random.randn(500, 3, 3), dtype=np.float32)
     time = np.array(np.random.randn(500), dtype=np.float32)
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
@@ -352,16 +353,15 @@ def test_read_velocities_do_not_exist():
     with TRRTrajectoryFile(temp, 'w') as f:
         f.write(xyz=xyz, time=time, step=step, box=box, lambd=lambd)
     with TRRTrajectoryFile(temp) as f:
-        assert_raises(RuntimeError, f._read, n_frames=500,
-                      atom_indices=None, get_velocities=True,
-                      get_forces=False)
+        with pytest.raises(RuntimeError):
+            f._read(n_frames=500, atom_indices=None, get_velocities=True, get_forces=False)
 
 
 def test_read_forces_do_not_exist():
     """Requesting forces from a file that does not have them"""
     # NOTE: this is a test of a hidden API
-    xyz = np.array(np.random.randn(500,50,3), dtype=np.float32)
-    box = np.array(np.random.randn(500,3,3), dtype=np.float32)
+    xyz = np.array(np.random.randn(500, 50, 3), dtype=np.float32)
+    box = np.array(np.random.randn(500, 3, 3), dtype=np.float32)
     time = np.array(np.random.randn(500), dtype=np.float32)
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
@@ -369,7 +369,5 @@ def test_read_forces_do_not_exist():
     with TRRTrajectoryFile(temp, 'w') as f:
         f.write(xyz=xyz, time=time, step=step, box=box, lambd=lambd)
     with TRRTrajectoryFile(temp) as f:
-        assert_raises(RuntimeError, f._read, n_frames=500,
-                      atom_indices=None, get_velocities=False,
-                      get_forces=True)
-
+        with pytest.raises(RuntimeError):
+            f._read(n_frames=500, atom_indices=None, get_velocities=False, get_forces=True)
