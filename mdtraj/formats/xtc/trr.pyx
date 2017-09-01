@@ -225,18 +225,18 @@ cdef class TRRTrajectoryFile:
                 raise IOError('Malformed TRR file. Number of atoms <= 0. '
                               'Are you sure this is a valid GROMACS TRR file?')
 
-            # check for velocities/forces; store number found
-            self.has_velocities = -1
-            self.has_forces = -1
-            self.has_velocities, self.has_forces = \
-                    self._check_has_velocities_forces(filename)
-            if self.has_velocities < 0 or self.has_forces < 0:
-                raise RuntimeError("Could not determine whether velocities"
-                                   + " or forces are present!")
-
             self.fh = trrlib.xdrfile_open(filename, b'r')
             if self.fh is NULL:
                 raise IOError('File not found: "%s"' % filename)
+
+            # check for velocities/forces; store number found
+            self.has_velocities = -1
+            self.has_forces = -1
+            self.has_velocities, self.has_forces = self._check_has_velocities_forces()
+            if self.has_velocities < 0 or self.has_forces < 0:
+                raise RuntimeError("Could not determine whether velocities"
+                                   " or forces are present!")
+
             self.approx_n_frames = self._estimate_n_frames_from_filesize(os.stat(filename).st_size)
 
             self.min_chunk_size = max(kwargs.pop('min_chunk_size', 100), 1)
@@ -261,16 +261,22 @@ cdef class TRRTrajectoryFile:
         self.is_open = True
         self.mode = mode
 
-    @staticmethod
-    def _check_has_velocities_forces(filename):
+    def _check_has_velocities_forces(self):
         # return values are nonzero if the file contains velocities/forces
-        cdef trrlib.XDRFILE* fh
         cdef trrlib.t_trnheader header
-        fh = trrlib.xdrfile_open(filename, b'r')
-        trrlib.do_trnheader(fh, 1, &header)
+        cdef int frame_size, header_size
+        cdef int64_t n_frames, old_pos
+
+        old_pos = xdrlib.xdr_tell(self.fh)
+        try:
+            xdrlib.xdr_seek(self.fh, 0, SEEK_SET)
+            if trrlib.do_trnheader(self.fh, 1, &header) != 0:
+                raise RuntimeError("could not read header of first frame!")
+        finally:
+            xdrlib.xdr_seek(self.fh, old_pos, SEEK_SET)
+
         has_velocities = header.v_size
         has_forces = header.f_size
-        trrlib.xdrfile_close(fh)
         return has_velocities, has_forces
 
     def _estimate_n_frames_from_filesize(self, filesize):
