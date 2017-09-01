@@ -280,12 +280,8 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
         for i in range(trj.n_frames):
             trj[i].save("./trj%d.pdb" % i)
 
-        cmd = "%s -in %s -out trj0_pred.tab" % (binary, ' '.join("trj%d.pdb" % i for i in range(trj.n_frames)))
-
-        return_flag = os.system(cmd)
-
-        if return_flag != 0:
-            raise(IOError("Could not successfully execute command '%s', check your SPARTA+ installation or your input trajectory." % cmd))
+        subprocess.check_call([binary, '-in'] + ["trj{}.pdb".format(i) for i in range(trj.n_frames)]
+                              + ['-out', 'trj0_pred.tab'])
 
         lines_to_skip = _get_lines_to_skip("trj0_pred.tab")
 
