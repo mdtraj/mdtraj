@@ -280,7 +280,7 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
         for i in range(trj.n_frames):
             trj[i].save("./trj%d.pdb" % i)
 
-        cmd = "%s -in %s" % (binary, ' '.join("trj%d.pdb" % i for i in range(trj.n_frames)))
+        cmd = "%s -in %s -out trj0_pred.tab" % (binary, ' '.join("trj%d.pdb" % i for i in range(trj.n_frames)))
 
         return_flag = os.system(cmd)
 
