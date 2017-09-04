@@ -3,6 +3,13 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v2.0 (Development)
+------------------
+
+This is the current development version of MDTraj. 
+Despite the major version number increase, this release
+will maintain backwards compatibility with version 1.x
+
 v1.9 (September 3, 2017)
 ------------------------
 
