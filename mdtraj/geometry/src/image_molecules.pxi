@@ -24,9 +24,13 @@ cdef void make_whole(float[:,::1] frame_positions,
         atom2 = sorted_bonds[j, 1]
         for k in range(3):
             delta[k] = frame_positions[atom2, k]  - frame_positions[atom1, k]
-            offset[k] = frame_unitcell_vectors[2, k]*roundf(delta[2]/frame_unitcell_vectors[2,2])
-            offset[k] += frame_unitcell_vectors[1, k]*roundf((delta[1]-offset[1])/frame_unitcell_vectors[1,1])
-            offset[k] += frame_unitcell_vectors[0, k]*roundf((delta[0]-offset[0])/frame_unitcell_vectors[0,0])
+        offset[0] = frame_unitcell_vectors[2, 0]*roundf(delta[2]/frame_unitcell_vectors[2,2])
+        offset[1] = frame_unitcell_vectors[2, 1]*roundf(delta[2]/frame_unitcell_vectors[2,2])
+        offset[2] = frame_unitcell_vectors[2, 2]*roundf(delta[2]/frame_unitcell_vectors[2,2])
+        offset[0] += frame_unitcell_vectors[1, 0]*roundf((delta[1]-offset[1])/frame_unitcell_vectors[1,1])
+        offset[1] += frame_unitcell_vectors[1, 1]*roundf((delta[1]-offset[1])/frame_unitcell_vectors[1,1])
+        offset[0] += frame_unitcell_vectors[0, 0]*roundf((delta[0]-offset[0])/frame_unitcell_vectors[0,0])
+        for k in range(3):     
             frame_positions[atom2, k] = frame_positions[atom2, k] - offset[k]
 
 cdef void anchor_dists(float[:,::1] frame_positions,

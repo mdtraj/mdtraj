@@ -22,3 +22,8 @@ md.mdp  # A template gromacs mdp file for equilibration and production runs
 `well-mixed.hoomdxml` is a HOOMD-Blue XML file of a a coarse-grained free fatty acid +
 cholesterol + water system containing 200 free fatty acid and 200 cholesterol chains.
 `test_hoomdxml.dcd` is 21 frames of an MD trajectory of the system in `well-mixed.hoomdxml`
+
+`t783_orig.pdb` contains a snapshot from a simulation of bromodomain 1 (PDB code
+ 2OSS) that has the protein coordinates wrapped into the periodic box.
+`t783_whole.pdb` is the same structure once correctly imaged. This plus the file
+ above are used to test issue #1272.
