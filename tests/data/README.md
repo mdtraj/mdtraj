@@ -26,4 +26,4 @@ cholesterol + water system containing 200 free fatty acid and 200 cholesterol ch
 `t783_orig.pdb` contains a snapshot from a simulation of bromodomain 1 (PDB code
  2OSS) that has the protein coordinates wrapped into the periodic box.
 `t783_whole.pdb` is the same structure once correctly imaged. This plus the file
- above are used to test issue #1272.
+ above are used to test issue #1274.
