@@ -172,6 +172,6 @@ _AMINO_ACID_CODES =  {'ACE': None, 'NME':  None, '00C': 'C', '01W':  'X', '02K':
 'L', 'WPA':  'F', 'WRP': 'W',  'WVL': 'V', 'X2W':  'E', 'XCN': 'C',  'XCP': 'X',
 'XDT': 'T', 'XPL':  'O', 'XPR': 'P', 'XSN': 'N', 'XX1':  'K', 'YCM': 'C', 'YOF':
 'Y', 'YTH':  'T', 'Z01': 'A',  'ZAL': 'A', 'ZCL':  'F', 'ZFB': 'X',  'ZU0': 'T',
-'ZZJ': 'A'}
+'ZZJ': 'A', 'ASH':  'D', 'ARN': 'R', 'HID': 'H', 'HIE':  'H', 'TYM': 'Y'}
 
 _PROTEIN_RESIDUES = frozenset(_AMINO_ACID_CODES.keys())
