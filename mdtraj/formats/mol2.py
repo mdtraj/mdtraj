@@ -85,7 +85,7 @@ def load_mol2(filename):
     >>> traj = md.load_mol2('mysystem.mol2')
     """
     from mdtraj.core.trajectory import Trajectory
-    from mdtraj.core.topology import Topology
+    from mdtraj.core.topology import Topology, Single, Double, Triple, Aromatic, Amide
 
     atoms, bonds = mol2_to_dataframes(filename)
 
@@ -104,10 +104,26 @@ def load_mol2(filename):
     atoms_mdtraj["resSeq"] = np.ones(len(atoms), 'int')
     atoms_mdtraj["chainID"] = np.ones(len(atoms), 'int')
 
+    bond_type_map = {
+        '1': Single,
+        '2': Double,
+        '3': Triple,
+        'am': Amide,
+        'ar': Aromatic
+    }
     if bonds is not None:
         bonds_mdtraj = bonds[["id0", "id1"]].values
         offset = bonds_mdtraj.min()  # Should this just be 1???
         bonds_mdtraj -= offset
+        # Create the bond augment information
+        n_bonds = bonds_mdtraj.shape[0]
+        bond_augment = np.zeros([n_bonds, 2], dtype=float)
+        # Add bond type information
+        bond_augment[:, 0] = [float(bond_type_map[bond_value]) for bond_value in bonds["bond_type"].values]
+        # Add Bond "order" information, this is not known from Mol2 files
+        bond_augment[:, 1] = [0.0 for _ in range(n_bonds)]
+        # Augment array, dtype is cast to minimal representation of float
+        bonds_mdtraj = np.append(bonds_mdtraj, bond_augment, axis=-1)
     else:
         bonds_mdtraj = None
 
@@ -119,8 +135,6 @@ def load_mol2(filename):
     traj = Trajectory(xyzlist, top)
 
     return traj
-
-
 
 
 def mol2_to_dataframes(filename):
@@ -188,8 +202,6 @@ def _parse_mol2_sections(x):
     if x.startswith('@<TRIPOS>'):
         _parse_mol2_sections.key = x
     return _parse_mol2_sections.key
-
-
 
 
 gaff_elements = {
