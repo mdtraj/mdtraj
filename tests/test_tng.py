@@ -23,7 +23,7 @@ def test_load_topology(get_fn):
     top = traj.topology
     eq(5, top.n_residues)
     eq(10, top.n_bonds)
-    bonds = list(top.bonds)
+    bonds = [(a, b) for a, b in top.bonds]
     for res in top.residues:
         eq('HOH', res.name)
         eq(3, res.n_atoms)

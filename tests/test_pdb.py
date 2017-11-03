@@ -196,7 +196,7 @@ def test_3nch_conect(get_fn):
     # This has conect entries that use all available digits, good failure case.
     t1 = load_pdb(get_fn('3nch.pdb.gz'))
     top, bonds = t1.top.to_dataframe()
-    bonds = dict(((a, b), 1) for (a, b) in bonds)
+    bonds = dict(((a, b), 1) for (a, b, _, _) in bonds)
     eq(bonds[19782, 19783], 1)  # Check that last SO4 molecule has right bonds
     eq(bonds[19782, 19784], 1)  # Check that last SO4 molecule has right bonds
     eq(bonds[19782, 19785], 1)  # Check that last SO4 molecule has right bonds

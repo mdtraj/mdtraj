@@ -1559,10 +1559,11 @@ Amide = Amide()
 
 def float_to_bond_type(bond_float):
     """
+    Convert a float to known bond type class, or None if no matched class if found
 
     Parameters
     ----------
-    bond_float: float
+    bond_float : float
         Representation of built in bond types as a float,
         Maps this float to specific bond class, if the float has no map, None is returned instead
 
@@ -1592,9 +1593,6 @@ class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
     type : int on [1,3] domain or None
     """
 
-
-    _STR_TO_BOND_TYPE = {value: key for key, value in _BOND_TYPE_TO_STR.items()}
-
     def __new__(cls, atom1, atom2, type=None, order=None):
         """Construct a new Bond.  You should call add_bond()
         on the Topology instead of calling this directly.
@@ -1603,35 +1601,10 @@ class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
         """
         bond = super(Bond, cls).__new__(cls, atom1, atom2)
         assert isinstance(type, Singleton) or type is None, "Type must be None or a Singleton"
-        assert 1 <= order <= 3 or order is None, "Order must be int between 1 to 3 or None"
+        assert order is None or 1 <= order <= 3, "Order must be int between 1 to 3 or None"
         bond.type = type
         bond.order = order
         return bond
-
-    @classmethod
-    def from_numpy(cls, np_bond):
-        """
-        Create a bond from a numpy structured array of dtype
-        , often created from a bond using `to_numpy`
-        function.
-
-        Parameters
-        ----------
-        np_bond: numpy.ndarray
-            Structured numpy array
-
-        Returns
-        -------
-        bond : mdtraj.topology.Bond
-            New Bond from the array
-        """
-        atom1 = np_bond['atom1']
-        atom2 = np_bond['atom2']
-        bond_type = cls._STR_TO_BOND_TYPE[np_bond['type']]
-        order = np_bond['order']
-        if order == 0:
-            order = None
-        out = cls(atom1, atom2, )
 
     def __getnewargs__(self):
         """
@@ -1648,10 +1621,14 @@ class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
             return False
         if {other[0], other[1]} != {self[0], self[1]}:
             return False
-        if other.type != self.type:
-            return False
-        if other.order != self.order:
-            return False
+        # Optional consideration, but this is more like metadata on the bond,
+        # If the above checks out, but the below does not, then there are
+        # now two bonds between the same atoms, which makes no sense
+
+        # if other.type != self.type:
+        #     return False
+        # if other.order != self.order:
+        #     return False
         return True
 
     def __repr__(self):
@@ -1668,4 +1645,37 @@ class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
 
     def __hash__(self):
         # Set of atoms making up bonds, the type, and the order
-        return hash(({(self[0], self[1])}, self.type, self.order))
+        return hash((self[0], self[1], self.type, self.order))
+
+    def __gt__(self, other):
+        # Condition both equal
+        if self.__eq__(other):
+            return False
+        if self[0].index > other[0].index:
+            return True
+        elif self[0].index < other[0].index:
+            return False
+        # Condition 0th index equal
+        if self[1].index > other[1].index:
+            return True
+        elif self[1].index < other[1].index:
+            return False
+        # This is a bond between the same atoms
+        return False
+
+    def __lt__(self, other):
+        # Condition both equal
+        if self.__eq__(other):
+            return False
+        if self[0].index < other[0].index:
+            return True
+        elif self[0].index > other[0].index:
+            return False
+        # Condition 0th index equal
+        if self[1].index < other[1].index:
+            return True
+        elif self[1].index > other[1].index:
+            return False
+        # This is a bond between the same atoms
+        return False
+
