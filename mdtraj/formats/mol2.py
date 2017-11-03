@@ -137,6 +137,8 @@ def load_mol2(filename):
     return traj
 
 
+
+
 def mol2_to_dataframes(filename):
     """Convert a GAFF (or sybyl) mol2 file to a pair of pandas dataframes.
 
@@ -202,6 +204,8 @@ def _parse_mol2_sections(x):
     if x.startswith('@<TRIPOS>'):
         _parse_mol2_sections.key = x
     return _parse_mol2_sections.key
+
+
 
 
 gaff_elements = {
