@@ -22,8 +22,7 @@ install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
   - conda config --add channels omnia
   - conda config --add channels conda-forge # hightest priority 
-  - conda update conda -yq
-  - conda install -yq conda-build
+  - conda install -yq conda=4.3 conda-build
 
 build: false
 
