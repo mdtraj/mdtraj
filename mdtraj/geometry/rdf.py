@@ -30,7 +30,7 @@ from mdtraj.geometry.distance import compute_distances
 __all__ = ['compute_rdf']
 
 
-def compute_rdf(traj, pairs=None, r_range=None, bin_width=0.005, n_bins=None,
+def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
                 periodic=True, opt=True):
     """Compute radial distribution functions for pairs in every frame.
 
@@ -38,7 +38,7 @@ def compute_rdf(traj, pairs=None, r_range=None, bin_width=0.005, n_bins=None,
     ----------
     traj : Trajectory
         Trajectory to compute radial distribution function in.
-    pairs : array-like, shape=(n_pairs, 2), dtype=int, optional, default=None
+    pairs : array-like, shape=(n_pairs, 2), dtype=int
         Each row gives the indices of two atoms.
     r_range : array-like, shape=(2,), optional, default=(0.0, 1.0)
         Minimum and maximum radii.

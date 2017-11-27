@@ -3,10 +3,41 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.9 (Development)
+v2.0 (Development)
 ------------------
 
-- PR #1254: Fixed/updated alignment code to be more general.
+This is the current development version of MDTraj. 
+Despite the major version number increase, this release
+will maintain backwards compatibility with version 1.x
+
+v1.9 (September 3, 2017)
+------------------------
+
+- [xtc] ``approx_nframes`` returns at least one (#1265)
+- Make ``compute_directors`` user-facing (#1260)
+- Add differentiable contacts option (#1247)
+- Remove link to forum (#1237)
+- Skip renumbering if no bonds in mol2 (#1238)
+- Add a bunch of Van Der Waals values (#1174)
+- [geometry] Fix compatibility with old visual studio for Python 2.7 (#1233)
+- Implement ``compute_average_structure`` (#1221)
+- Fix import of ``load_stk`` (#1231)
+- Fix bugs in load with atom_indices and frame args (#1227)
+- Fix conda test running (#1228)
+- Amber restart file convention (#1223)
+- Install path for zlib on linux too (#1208)
+- Fix transform calculation and Transform object to be more general (#1254)
+- Add O1 as alternative definition for water oxygen (#1257)
+- Fix precentering overflow error in center.c (#1283)
+- Add chi5 angle computation (#1291)
+- Fix the build bug caused by incorrect plumbing of the numpy include path
+- into ``cflags`` (#1290)
+- Make RDF ``pairs`` argument required (#1288)
+- Refresh tests (#1266)
+- Remove PyPI downloads badge (#1293)
+- Extracting velocities/forces from TRR files (hidden API) (#1294)
+- Add "in" selection to selection language (#1268)
+- Handle a single frame being passed to sparta+ (#1295)
 
 v1.8 (November 9, 2016)
 -----------------------
