@@ -54,6 +54,7 @@ import numpy as np
 import os
 import xml.etree.ElementTree as etree
 from collections import namedtuple
+from functools import total_ordering
 
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import (_PROTEIN_RESIDUES, _WATER_RESIDUES,
@@ -1580,6 +1581,7 @@ def float_to_bond_type(bond_float):
     return None
 
 
+@total_ordering
 class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
     """A Bond representation of a bond between two Atoms within a Topology
 
@@ -1644,34 +1646,27 @@ class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
         return hash((self[0], self[1], self.type, self.order))
 
     def __gt__(self, other):
-        # Condition both equal
-        if self.__eq__(other):
-            return False
-        if self[0].index > other[0].index:
+        # Uses the total_ordering to handle all other comparators
+        if not isinstance(other, Bond):
+            raise TypeError("Bond inequalities can only be compared with other bonds")
+        # Hierarchy of parameters: Atom1 index -> Atom2 index -> type -> order
+        # Use advantage of the namedtuple to check indices
+        if self > other:
             return True
-        elif self[0].index < other[0].index:
-            return False
-        # Condition 0th index equal
-        if self[1].index > other[1].index:
-            return True
-        elif self[1].index < other[1].index:
-            return False
-        # This is a bond between the same atoms
+        elif self == other:  # let the self < other fall to the default
+            if self.type == other.type:
+                # Trap the None object
+                self_order = self.order if self.order is not None else 0
+                other_order = other.order if other.order is not None else 0
+                if self_order > other_order:  # let self.order < other.order
+                    return True
+                # Don't check self.order == other.order as no more hierarchy of things to check
+            else:
+                # Trap the None object
+                self_type = float(self.type) if self.type is not None else 0.0
+                other_type = float(other.type) if other.type is not None else 0.0
+                if self_type > other_type:  # let self.type < other.type fall to default
+                    return True
         return False
 
-    def __lt__(self, other):
-        # Condition both equal
-        if self.__eq__(other):
-            return False
-        if self[0].index < other[0].index:
-            return True
-        elif self[0].index > other[0].index:
-            return False
-        # Condition 0th index equal
-        if self[1].index < other[1].index:
-            return True
-        elif self[1].index > other[1].index:
-            return False
-        # This is a bond between the same atoms
-        return False
 

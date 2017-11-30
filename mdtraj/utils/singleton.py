@@ -7,6 +7,7 @@ pickling/unpickling
 
 class Singleton(object):
     _inst = None
+
     def __new__(cls):
         if cls._inst is None:
             cls._inst = super(Singleton, cls).__new__(cls)
@@ -14,3 +15,6 @@ class Singleton(object):
 
     def __reduce__(self):
         return repr(self)
+
+    def __float__(self):
+        return 0.0
