@@ -1615,19 +1615,20 @@ class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
         """
         return self[0], self[1], self.type, self.order
 
+    @property
+    def _equality_tuple(self):
+        # Hierarchy of parameters: Atom1 index -> Atom2 index -> type -> order
+        return (self[0].index, self[1].index,
+                self.order if self.order is not None else 0,
+                float(self.type) if self.type is not None else 0.0)
+
     def __deepcopy__(self, memo):
         return Bond(self[0], self[1], self.type, self.order)
 
     def __eq__(self, other):
         if not isinstance(other, Bond):
             return False
-        if {other[0], other[1]} != {self[0], self[1]}:
-            return False
-        if other.type != self.type:
-            return False
-        if other.order != self.order:
-            return False
-        return True
+        return self._equality_tuple == other._equality_tuple
 
     def __repr__(self):
         s = "Bond(%s, %s" % (self[0], self[1])
@@ -1649,24 +1650,6 @@ class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
         # Uses the total_ordering to handle all other comparators
         if not isinstance(other, Bond):
             raise TypeError("Bond inequalities can only be compared with other bonds")
-        # Hierarchy of parameters: Atom1 index -> Atom2 index -> type -> order
-        # Use advantage of the namedtuple to check indices
-        if self > other:
-            return True
-        elif self == other:  # let the self < other fall to the default
-            if self.type == other.type:
-                # Trap the None object
-                self_order = self.order if self.order is not None else 0
-                other_order = other.order if other.order is not None else 0
-                if self_order > other_order:  # let self.order < other.order
-                    return True
-                # Don't check self.order == other.order as no more hierarchy of things to check
-            else:
-                # Trap the None object
-                self_type = float(self.type) if self.type is not None else 0.0
-                other_type = float(other.type) if other.type is not None else 0.0
-                if self_type > other_type:  # let self.type < other.type fall to default
-                    return True
-        return False
+        return self._equality_tuple > other._equality_tuple
 
 
