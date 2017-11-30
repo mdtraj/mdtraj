@@ -143,7 +143,11 @@ def test_nonconsective_resSeq(get_fn):
 
 def test_pickle(get_fn):
     # test pickling of topology (bug #391)
-    pickle.loads(pickle.dumps(md.load(get_fn('bpti.pdb')).topology))
+    topology_without_bond_order = md.load(get_fn('bpti.pdb')).topology
+    topology_with_bond_order = md.load(get_fn('imatinib.mol2')).topology
+    for top in [topology_with_bond_order, topology_without_bond_order]:
+        loaded_top = pickle.loads(pickle.dumps(top))
+        assert loaded_top == top
 
 
 def test_atoms_by_name(get_fn):
