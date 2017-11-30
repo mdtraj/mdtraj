@@ -25,8 +25,7 @@ def example_fn(request):
         try:
             from simtk.openmm import app
         except ImportError:
-            pytest.skip("Openmm required for example notebook `{}`".format(
-                request.param))
+            pytest.skip("Openmm required for example notebook `{}`".format(request.param))
 
     cwd = os.path.abspath('.')
     os.chdir(test_dir)
