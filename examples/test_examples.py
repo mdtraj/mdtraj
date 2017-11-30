@@ -2,15 +2,21 @@
 Execute each notebook as a test, reporting an error if any cell throws an exception.
 Adapted from https://gist.github.com/minrk/2620876.
 """
-
+from __future__ import print_function
 import os
+import sys
 
 import nbformat
 import pytest
 from jupyter_client import KernelManager
+from queue import Empty
+
+FLAKEY_LIST = ['centroids.ipynb']
+TIMEOUT = 60  # seconds
 
 test_dir = os.path.dirname(os.path.abspath(__file__))
-examples = [fn for fn in os.listdir(test_dir) if fn.endswith('.ipynb')]
+examples = [pytest.mark.flaky(fn) if fn in FLAKEY_LIST else fn
+            for fn in os.listdir(test_dir) if fn.endswith('.ipynb')]
 
 
 @pytest.fixture(params=examples)
@@ -19,7 +25,8 @@ def example_fn(request):
         try:
             from simtk.openmm import app
         except ImportError:
-            pytest.skip("Openmm required for example notebook `{}`".format(request.param))
+            pytest.skip("Openmm required for example notebook `{}`".format(
+                request.param))
 
     cwd = os.path.abspath('.')
     os.chdir(test_dir)
@@ -48,13 +55,18 @@ def run_notebook(nb):
         if cell.cell_type != 'code':
             continue
         kc.execute(cell.source)
-        # wait for finish, maximum 20s
-        reply = shell.get_msg(timeout=60)['content']
+        try:
+            # wait for finish, w/ timeout
+            reply = shell.get_msg(timeout=TIMEOUT)['content']
+        except Empty:
+            raise Exception(
+                'Timeout (%.1f) when executing the following %s cell: "%s"' %
+                (TIMEOUT, cell.cell_type, cell.source.strip()))
         if reply['status'] == 'error':
             failures += 1
-            print("\nFAILURE:")
-            print('\n'.join(reply['traceback']))
-            print()
+            print("\nFAILURE:", file=sys.stderr)
+            print('\n'.join(reply['traceback']), file=sys.stderr)
+            print(file=sys.stderr)
 
     kc.stop_channels()
     km.shutdown_kernel()
