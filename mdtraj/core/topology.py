@@ -1621,14 +1621,10 @@ class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
             return False
         if {other[0], other[1]} != {self[0], self[1]}:
             return False
-        # Optional consideration, but this is more like metadata on the bond,
-        # If the above checks out, but the below does not, then there are
-        # now two bonds between the same atoms, which makes no sense
-
-        # if other.type != self.type:
-        #     return False
-        # if other.order != self.order:
-        #     return False
+        if other.type != self.type:
+            return False
+        if other.order != self.order:
+            return False
         return True
 
     def __repr__(self):
