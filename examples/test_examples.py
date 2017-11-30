@@ -9,7 +9,7 @@ import sys
 import nbformat
 import pytest
 from jupyter_client import KernelManager
-from queue import Empty
+from six.moves.queue import Empty
 
 FLAKEY_LIST = ['centroids.ipynb']
 TIMEOUT = 60  # seconds
