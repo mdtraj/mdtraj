@@ -8,11 +8,12 @@ addons:
       - csh
 
 install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install md5sha1sum; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew install md5sha1sum; fi
   - source devtools/travis-ci/install_miniconda.sh
   - source devtools/travis-ci/install_sparta.sh
   - source devtools/travis-ci/install_ppm.sh
   - conda config --add channels omnia
+  - conda config --add channels conda-forge # hightest priority 
 
 script:
   conda build --quiet devtools/conda-recipe
