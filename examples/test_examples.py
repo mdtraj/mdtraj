@@ -11,7 +11,7 @@ import pytest
 from jupyter_client import KernelManager
 from six.moves.queue import Empty
 
-FLAKEY_LIST = ['centroids.ipynb']
+FLAKEY_LIST = ['centroids.ipynb', 'native-contact.ipynb']
 TIMEOUT = 60  # seconds
 
 test_dir = os.path.dirname(os.path.abspath(__file__))
