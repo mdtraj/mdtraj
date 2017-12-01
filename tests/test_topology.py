@@ -43,16 +43,18 @@ needs_openmm = pytest.mark.skipif(not HAVE_OPENMM, reason='needs OpenMM')
 @needs_openmm
 def test_topology_openmm(get_fn):
     topology = md.load(get_fn('1bpi.pdb')).topology
+    topology_with_bond_order = md.load(get_fn('imatinib.mol2')).topology
 
     # the openmm trajectory doesn't have the distinction
     # between resSeq and index, so if they're out of whack
     # in the openmm version, that cant be preserved
-    for residue in topology.residues:
-        residue.resSeq = residue.index
-    mm = topology.to_openmm()
-    assert isinstance(mm, app.Topology)
-    topology2 = md.Topology.from_openmm(mm)
-    eq(topology, topology2)
+    for top in [topology, topology_with_bond_order]:
+        for residue in top.residues:
+            residue.resSeq = residue.index
+        mm = top.to_openmm()
+        assert isinstance(mm, app.Topology)
+        topology2 = md.Topology.from_openmm(mm)
+        eq(top, topology2)
 
 
 @needs_openmm
@@ -141,7 +143,11 @@ def test_nonconsective_resSeq(get_fn):
 
 def test_pickle(get_fn):
     # test pickling of topology (bug #391)
-    pickle.loads(pickle.dumps(md.load(get_fn('bpti.pdb')).topology))
+    topology_without_bond_order = md.load(get_fn('bpti.pdb')).topology
+    topology_with_bond_order = md.load(get_fn('imatinib.mol2')).topology
+    for top in [topology_with_bond_order, topology_without_bond_order]:
+        loaded_top = pickle.loads(pickle.dumps(top))
+        assert loaded_top == top
 
 
 def test_atoms_by_name(get_fn):
