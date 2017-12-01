@@ -54,7 +54,6 @@ import numpy as np
 import os
 import xml.etree.ElementTree as etree
 from collections import namedtuple
-from functools import total_ordering
 
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import (_PROTEIN_RESIDUES, _WATER_RESIDUES,
@@ -1581,7 +1580,6 @@ def float_to_bond_type(bond_float):
     return None
 
 
-@total_ordering
 class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
     """A Bond representation of a bond between two Atoms within a Topology
 
@@ -1674,3 +1672,7 @@ class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __getstate__(self):
+        # This is required for pickle because the parent class
+        # does not properly return a state
+        return self.__dict__
