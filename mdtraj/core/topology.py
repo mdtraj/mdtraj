@@ -1619,8 +1619,8 @@ class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
     def _equality_tuple(self):
         # Hierarchy of parameters: Atom1 index -> Atom2 index -> type -> order
         return (self[0].index, self[1].index,
-                self.order if self.order is not None else 0,
-                float(self.type) if self.type is not None else 0.0)
+                float(self.type) if self.type is not None else 0.0,
+                self.order if self.order is not None else 0)
 
     def __deepcopy__(self, memo):
         return Bond(self[0], self[1], self.type, self.order)
@@ -1646,10 +1646,31 @@ class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
         # Set of atoms making up bonds, the type, and the order
         return hash((self[0], self[1], self.type, self.order))
 
-    def __gt__(self, other):
-        # Uses the total_ordering to handle all other comparators
+    @staticmethod
+    def _other_is_bond(other):
+        # Ensure other type for inequalities is a bond
         if not isinstance(other, Bond):
             raise TypeError("Bond inequalities can only be compared with other bonds")
+
+    def __gt__(self, other):
+        # Cannot use total_ordering because namedtuple
+        # has its own __gt__, __lt__, etc. methods, which
+        # supersede total_ordering
+        self._other_is_bond(other)
         return self._equality_tuple > other._equality_tuple
 
+    def __ge__(self, other):
+        self._other_is_bond(other)
+        return self._equality_tuple >= other._equality_tuple
+
+    def __lt__(self, other):
+        self._other_is_bond(other)
+        return self._equality_tuple < other._equality_tuple
+
+    def __le__(self, other):
+        self._other_is_bond(other)
+        return self._equality_tuple <= other._equality_tuple
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
