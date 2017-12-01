@@ -39,6 +39,7 @@ test:
     - nbformat
     - ipykernel
     - scikit-learn
+    - pytest-ignore-flaky
 
   source_files:
     - examples/*
