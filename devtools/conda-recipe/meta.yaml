@@ -39,6 +39,7 @@ test:
     - nbformat
     - ipykernel
     - scikit-learn
+    - pytest-ignore-flaky
 
   source_files:
     - examples/*
@@ -49,7 +50,7 @@ test:
     - mdtraj
 
   commands:
-    - pytest
+    - pytest  --ignore-flaky
 
 about:
   home: https://github.com/mdtraj/mdtraj
