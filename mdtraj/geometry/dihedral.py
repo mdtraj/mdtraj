@@ -32,7 +32,7 @@ from mdtraj.geometry import _geometry, distance
 import warnings
 
 __all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega',
-           'compute_chi1', 'compute_chi2', 'compute_chi3', 'compute_chi4',
+           'compute_chi1', 'compute_chi2', 'compute_chi3', 'compute_chi4','compute_chi5',
            'indices_phi', 'indices_psi', 'indices_omega',
            'indices_chi1', 'indices_chi2', 'indices_chi3', 'indices_chi4', 'indices_chi5']
 
@@ -315,7 +315,7 @@ CHI3_ATOMS = [["CB", "CG", "CD", "NE"],
 CHI4_ATOMS = [["CG", "CD", "NE", "CZ"],
               ["CG", "CD", "CE", "NZ"]]
 
-CHI5_ATOMS = ["CD", "NE", "CZ", "NH1"]
+CHI5_ATOMS = [["CD", "NE", "CZ", "NH1"]]
 
 
 def indices_phi(top):
