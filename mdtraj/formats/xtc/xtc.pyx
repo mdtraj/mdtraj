@@ -384,7 +384,7 @@ cdef class XTCTrajectoryFile(object):
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
-            if stride > 1 and self._offsets is not None:
+            if stride is not None and int(stride) > 1 and self._offsets is not None:
                 xyz, time, step, box = self._read_with_stride(int(n_frames), atom_indices, stride)
             else:
                 xyz, time, step, box = self._read(int(n_frames), atom_indices)
