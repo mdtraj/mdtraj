@@ -495,9 +495,6 @@ cdef class XTCTrajectoryFile(object):
 
         # absolute positions
         stride = np.arange(self.frame_counter, min(self.frame_counter + n_frames, len(self)), stride)
-        print('stride array:', stride)
-        print('stride array shape:', stride.shape)
-        #assert len(stride) == n_frames, len(stride)
         n_frames = len(stride)
 
         cdef int i = 0
@@ -531,7 +528,6 @@ cdef class XTCTrajectoryFile(object):
         cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
         for i, frame_index in enumerate(stride):
-            print('seek to ', frame_index)
             self.seek(frame_index)
 
             # read
@@ -546,7 +542,6 @@ cdef class XTCTrajectoryFile(object):
             if status != _EXDRENDOFFILE and status != _EXDROK:
                 raise RuntimeError('XTC read error: %s' % _EXDR_ERROR_MESSAGES.get(status, 'unknown'))
             self.frame_counter = frame_index  # set absolute position
-            print('frame counter:', self.frame_counter)
 
         return xyz, time, step, box
 
