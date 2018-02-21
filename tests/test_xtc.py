@@ -70,6 +70,56 @@ def test_read_stride_n_frames(get_fn, fn_xtc):
     assert eq(time, iofile['time'][::3])
 
 
+def test_read_stride_offsets(get_fn, fn_xtc):
+    # read xtc with stride and offsets
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    for s in (1, 2, 3, 4, 5):
+        with XTCTrajectoryFile(fn_xtc) as f:
+            f.offsets # pre-compute byte offsets between frames
+            xyz, time, step, box = f.read(stride=s)
+        assert eq(xyz, iofile['xyz'][::s])
+        assert eq(step, iofile['step'][::s])
+        assert eq(box, iofile['box'][::s])
+        assert eq(time, iofile['time'][::s])
+
+
+def test_read_stride_n_frames_offsets(get_fn, fn_xtc):
+    # read xtc with stride with n_frames and offsets
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    for s in (1, 2, 3, 4, 5):
+        with XTCTrajectoryFile(fn_xtc) as f:
+            f.offsets # pre-compute byte offsets between frames
+            xyz, time, step, box = f.read(n_frames=1000, stride=s)
+        assert eq(xyz, iofile['xyz'][::s])
+        assert eq(step, iofile['step'][::s])
+        assert eq(box, iofile['box'][::s])
+        assert eq(time, iofile['time'][::s])
+
+
+def test_read_stride_switching(get_fn, fn_xtc):
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    with XTCTrajectoryFile(fn_xtc) as f:
+        f.offsets  # pre-compute byte offsets between frames
+        # read the first 10 frames with stride of 2
+        s = 2
+        n_frames = 10
+        xyz, time, step, box = f.read(n_frames=n_frames, stride=s)
+        assert eq(xyz, iofile['xyz'][:n_frames:s])
+        assert eq(step, iofile['step'][:n_frames:s])
+        assert eq(box, iofile['box'][:n_frames:s])
+        assert eq(time, iofile['time'][:n_frames:s])
+        # now read the rest with stride 3, should start from frame index 8.
+        # eg. np.arange(0, 10, 2)[-1] == 8
+        s = 3
+        offset = f.tell()
+        assert offset == 8
+        xyz, time, step, box = f.read(n_frames=None, stride=s)
+        assert eq(xyz, iofile['xyz'][offset::s])
+        assert eq(step, iofile['step'][offset::s])
+        assert eq(box, iofile['box'][offset::s])
+        assert eq(time, iofile['time'][offset::s])
+
+
 def test_read_atomindices_1(get_fn, fn_xtc):
     iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
     with XTCTrajectoryFile(fn_xtc) as f:
