@@ -380,21 +380,22 @@ cdef class XTCTrajectoryFile(object):
             raise ValueError('read() is only available when file is opened in mode="r"')
         if not self.is_open:
             raise IOError('file must be open to read from it.')
+        stride = int(stride) if stride is not None else 1
         if n_frames is not None:
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
-            if stride is not None and int(stride) > 1 and self._offsets is not None:
+            if stride > 1 and self._offsets is not None:
                 xyz, time, step, box = self._read_with_stride(int(n_frames), atom_indices, stride)
             else:
-                xyz, time, step, box = self._read(int(n_frames), atom_indices)
+                xyz, time, step, box = self._read(int(n_frames) * stride, atom_indices)
                 xyz, time, step, box = xyz[::stride], time[::stride], step[::stride], box[::stride]
             if np.all(np.logical_and(box < 1e-10, box > -1e-10)):
                 box = None
             return xyz, time, step, box
 
         # read everything with stride
-        if stride is not None and int(stride) > 1 and self._offsets is not None:
+        if stride > 1 and self._offsets is not None:
             n_frames = len(self._offsets)
             xyz, time, step, box = self._read_with_stride(int(n_frames), atom_indices, stride)
             if np.all(np.logical_and(box < 1e-10, box > -1e-10)):
@@ -433,8 +434,7 @@ cdef class XTCTrajectoryFile(object):
 
     def _read(self, int64_t n_frames, atom_indices):
         """Read a specified number of XTC frames from the buffer"""
-
-        cdef int i = 0
+        cdef int64_t i = 0
         cdef int status = _EXDROK
         cdef int n_atoms_to_read
 
@@ -494,10 +494,10 @@ cdef class XTCTrajectoryFile(object):
             n_frames = len(self)
 
         # absolute positions
-        stride = np.arange(self.frame_counter, min(self.frame_counter + n_frames, len(self)), stride)
+        stride = np.arange(self.frame_counter, min(self.frame_counter + n_frames * stride, len(self)), stride)
         n_frames = len(stride)
 
-        cdef int i = 0
+        cdef int64_t i = 0
         cdef int status = _EXDROK
         cdef int n_atoms_to_read
 
