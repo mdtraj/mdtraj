@@ -34,11 +34,12 @@ test:
     - pytest
     - networkx
     - matplotlib
-    - openmm  # [not (win32 or (win and py2k))]
+    - openmm >=7.1  # [not (win32 or (win and py2k))]
     - shiftx2  # [linux and py2k]
     - nbformat
     - ipykernel
     - scikit-learn
+    - pytest-ignore-flaky
 
   source_files:
     - examples/*
@@ -49,7 +50,7 @@ test:
     - mdtraj
 
   commands:
-    - pytest
+    - pytest  --ignore-flaky
 
 about:
   home: https://github.com/mdtraj/mdtraj
