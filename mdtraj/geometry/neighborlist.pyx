@@ -73,7 +73,8 @@ def compute_neighborlist(traj, cutoff, frame=0, periodic=True):
     cdef float* box_matrix_pointer
     cdef int is_periodic = periodic and (traj.unitcell_vectors is not None)
     if is_periodic:
-        box_matrix = np.asarray(traj.unitcell_vectors[frame], order='c')
+        unitcell_vectors = ensure_type(traj.unitcell_vectors[frame], dtype=np.float32, ndim=3, name='unitcell_vectors', warn_on_cast=False)
+        box_matrix = np.asarray(unitcell_vectors, order='c')
         box_matrix_pointer = &box_matrix[0,0]
     else:
         box_matrix_pointer = NULL
