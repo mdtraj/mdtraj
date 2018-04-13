@@ -27,6 +27,7 @@
 
 from __future__ import print_function, division
 import numpy as np
+from mdtraj.utils import ensure_type
 
 from libcpp.vector cimport vector
 
@@ -73,7 +74,10 @@ def compute_neighborlist(traj, cutoff, frame=0, periodic=True):
     cdef float* box_matrix_pointer
     cdef int is_periodic = periodic and (traj.unitcell_vectors is not None)
     if is_periodic:
-        unitcell_vectors = ensure_type(traj.unitcell_vectors[frame], dtype=np.float32, ndim=3, name='unitcell_vectors', warn_on_cast=False)
+        unitcell_vectors = ensure_type(traj.unitcell_vectors[frame],
+                                       dtype=np.float32, ndim=2,
+                                       name='unitcell_vectors',
+                                       warn_on_cast=False)
         box_matrix = np.asarray(unitcell_vectors, order='c')
         box_matrix_pointer = &box_matrix[0,0]
     else:
