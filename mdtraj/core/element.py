@@ -239,7 +239,7 @@ def get_by_symbol(symbol):
 # The radii for Ions (Na, K, Cl, Ca, Mg, and Cs are based on the CHARMM27
 # Rmin/2 parameters for (SOD, POT, CLA, CAL, MG, CES) by default.
 
-virtual =        Element(  0,"virtual site","VS", 0.0, 0.0)
+virtual =        Element(  0,"virtual_site","VS", 0.0, 0.0)
 hydrogen =       Element(  1,"hydrogen","H", 1.007947, 0.12)
 deuterium =      Element(  1,"deuterium","D", 2.0135532127, 0.12)
 helium =         Element(  2,"helium","He", 4.003, 0.14)
