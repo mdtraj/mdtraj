@@ -26,7 +26,6 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function
 import os
 import numpy as np
 cimport numpy as np
@@ -479,7 +478,6 @@ cdef class DCDTrajectoryFile:
                 # seek to frame index
                 status = self.seek(frame_index, whence=0)
                 if status != _DCD_SUCCESS:
-                    print('seek failed')
                     break
 
             if atom_indices is None:
@@ -499,7 +497,6 @@ cdef class DCDTrajectoryFile:
 
             if status != _DCD_SUCCESS:
                 # if the frame was not successfully read, then we're done
-                print('read failed')
                 break
 
         if np.all(cell_lengths < 1e-10):
