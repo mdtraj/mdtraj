@@ -26,6 +26,7 @@
 # Imports
 ##############################################################################
 
+from __future__ import print_function
 import os
 import numpy as np
 cimport numpy as np
@@ -39,7 +40,6 @@ from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
 from dcdlib cimport open_dcd_write, close_file_write, write_timestep
 from dcdlib cimport dcd_nsets, dcd_rewind
-
 
 ##############################################################################
 # Globals
@@ -287,6 +287,7 @@ cdef class DCDTrajectoryFile:
             Seeking beyond the end of a file is not supported
         """
         cdef int i, status
+        status = _DCD_SUCCESS
         if str(self.mode) != 'r':
             raise NotImplementedError("seek is only supported in mode='r'")
 
@@ -308,9 +309,11 @@ cdef class DCDTrajectoryFile:
         # TODO: seek with a byte offset, which can be computed from frame and header sizes.
         # TODO: avoid this branch, do everything absolute.
         if advance is not None:
-            self.frame_counter += advance
             for i in range(advance):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
+                if status != _DCD_SUCCESS:
+                    raise IOError("Error seeking in %s to position %s" % (self.filename, self.frame_counter + i))
+            self.frame_counter += advance
         elif absolute is not None:
             result = dcd_rewind(self.fh)
             if result != 0:
@@ -318,6 +321,8 @@ cdef class DCDTrajectoryFile:
 
             for i in range(absolute):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
+                if status != _DCD_SUCCESS:
+                    raise IOError("Error seeking in %s to position %s" % (self.filename, i))
             self.frame_counter = absolute
         return status
 
@@ -433,7 +438,7 @@ cdef class DCDTrajectoryFile:
         if str(self.mode) != 'r':
             raise ValueError('read() is only available when the file is opened in mode="r"')
         if not self.is_open:
-            raise IOError("file is not open")
+            raise IOError('file is not open')
 
         cdef int _n_frames, n_atoms_to_read
         if n_frames is None:
@@ -474,6 +479,7 @@ cdef class DCDTrajectoryFile:
                 # seek to frame index
                 status = self.seek(frame_index, whence=0)
                 if status != _DCD_SUCCESS:
+                    print('seek failed')
                     break
 
             if atom_indices is None:
@@ -483,7 +489,6 @@ cdef class DCDTrajectoryFile:
                 self.timestep.coords = &framebuffer[0,0]
                 status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
                 xyz[i, :, :] = framebuffer[atom_indices, :]
-
             self.frame_counter += 1
             cell_lengths[i, 0] = self.timestep.A
             cell_lengths[i, 1] = self.timestep.B
@@ -494,6 +499,7 @@ cdef class DCDTrajectoryFile:
 
             if status != _DCD_SUCCESS:
                 # if the frame was not successfully read, then we're done
+                print('read failed')
                 break
 
         if np.all(cell_lengths < 1e-10):
@@ -523,7 +529,7 @@ cdef class DCDTrajectoryFile:
             return xyz, cell_lengths, cell_angles
 
         # If we got some other status, thats a "real" error.
-        raise IOError("Error: %s", ERROR_MESSAGES(status))
+        raise IOError("Error: %s", ERROR_MESSAGES[status])
 
     def write(self, xyz, cell_lengths=None, cell_angles=None):
         """write(xyz, cell_lengths=None, cell_angles=None)
@@ -610,4 +616,5 @@ cdef class DCDTrajectoryFile:
 
             if status != _DCD_SUCCESS:
                 raise IOError("DCD Error: %s" % ERROR_MESSAGES(status))
+
 FormatRegistry.register_fileobject('.dcd')(DCDTrajectoryFile)

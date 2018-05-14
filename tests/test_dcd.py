@@ -60,17 +60,21 @@ def test_read_stride(get_fn):
     assert eq(box_angles1[::2], box_angles2)
 
 
-def test_read_stride_2(get_fn):
+def test_read_strides(get_fn):
     # Read dcd with stride when n_frames is supplied (different code path)
     fn_dcd = get_fn('frame0.dcd')
     with DCDTrajectoryFile(fn_dcd) as f:
         xyz1, box_lengths1, box_angles1 = f.read()
-    with DCDTrajectoryFile(fn_dcd) as f:
-        xyz2, box_lengths2, box_angles2 = f.read(n_frames=1000, stride=2)
 
-    assert eq(xyz1[::2], xyz2)
-    assert eq(box_lengths1[::2], box_lengths2)
-    assert eq(box_angles1[::2], box_angles2)
+    n_frames = 50
+    for s in (2, 3, 5, 10, 100):
+        with DCDTrajectoryFile(fn_dcd) as f:
+            xyz2, box_lengths2, box_angles2 = f.read(n_frames=n_frames, stride=s)
+        to_read = n_frames * s
+        np.testing.assert_equal(xyz2, xyz1[:to_read:s], 'failed for stride: %s' % s)
+        assert eq(xyz1[:to_read:s], xyz2), ('failed for stride %s' %s)
+        assert eq(box_lengths1[:to_read:s], box_lengths2)
+        assert eq(box_angles1[:to_read:s], box_angles2)
 
 
 def test_read_3(get_fn):
@@ -260,7 +264,6 @@ def test_seek(get_fn):
         xyz = f.read(1)[0][0]
         eq(xyz, reference[1])
         eq(f.tell(), 2)
-
         f.seek(0)
         eq(f.tell(), 0)
         xyz = f.read(1)[0][0]
