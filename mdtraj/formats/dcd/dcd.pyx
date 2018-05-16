@@ -38,7 +38,7 @@ from libc.string cimport strcpy, strlen
 from dcdlib cimport molfile_timestep_t, dcdhandle
 from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
 from dcdlib cimport open_dcd_write, close_file_write, write_timestep
-from dcdlib cimport dcd_nsets, dcd_rewind
+from dcdlib cimport dcd_rewind
 
 
 ##############################################################################
@@ -166,7 +166,7 @@ cdef class DCDTrajectoryFile:
     >>> # read a single frame, and then read the remaining frames
     >>> f = DCDTrajectoryFile('mytrajectory.dcd', 'r')
     >>> f.read(n_frames=1)  # read a single frame from the file
-    >>> xyzf.read()            # read all of the remaining frames
+    >>> xyz.read()            # read all of the remaining frames
     >>> f.close()
 
     >>> # read all of the data with automatic closing of the file
@@ -190,7 +190,7 @@ cdef class DCDTrajectoryFile:
 
     # n_atoms and n_frames hold the number of atoms and the number of frames
     # in the file, as read off the header of the DCD file during read mode
-    cdef int frame_counter, n_atoms, n_frames
+    cdef int n_atoms, n_frames
     cdef dcdhandle* fh
     cdef char* mode
     cdef char* filename
@@ -221,8 +221,6 @@ cdef class DCDTrajectoryFile:
                 raise IOError("Could not open file: %s" % filename)
             assert self.n_atoms > 0, 'DCD Corruption: n_atoms was not positive'
             assert self.n_frames >= 0, 'DCD corruption: n_frames < 0'
-            # we're at the beginning of the file now
-            self.frame_counter = 0
             self.is_open = True
         elif str(mode) == 'w':
             self._needs_write_initialization = 1
@@ -291,22 +289,22 @@ cdef class DCDTrajectoryFile:
             raise NotImplementedError("seek is only supported in mode='r'")
 
         advance, absolute = None, None
+        current_pos = self.tell()
         if whence == 0 and offset >= 0:
-            if offset >= self.frame_counter:
-                advance = offset - self.frame_counter
+            if offset >= current_pos:
+                advance = offset - current_pos
             else:
                 absolute = offset
         elif whence == 1 and offset >= 0:
             advance = offset
         elif whence == 1 and offset < 0:
-            absolute = offset + self.frame_counter
+            absolute = offset + current_pos
         elif whence == 2 and offset <= 0:
             raise NotImplementedError('offsets from the end are not supported yet')
         else:
             raise IOError('Invalid argument')
 
         if advance is not None:
-            self.frame_counter += advance
             for i in range(advance):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
         elif absolute is not None:
@@ -316,7 +314,6 @@ cdef class DCDTrajectoryFile:
 
             for i in range(absolute):
                 status = read_next_timestep(self.fh, self.n_atoms, NULL)
-            self.frame_counter = absolute
 
     def tell(self):
         """Current file position
@@ -326,7 +323,7 @@ cdef class DCDTrajectoryFile:
         offset : int
             The current frame in the file.
         """
-        return int(self.frame_counter)
+        return self.fh.setsread
 
     def __enter__(self):
         "Support the context manager protocol"
@@ -347,8 +344,8 @@ cdef class DCDTrajectoryFile:
         frame and updating the header information.
         """
         if not self.is_open:
-            raise ValueError('I/O operation on closed file')
-        return dcd_nsets(self.fh)
+            raise RuntimeError('I/O operation on closed file')
+        return self.fh.nsets
 
     def read_as_traj(self, topology, n_frames=None, stride=None, atom_indices=None):
         """read_as_traj(topology, n_frames=None, stride=None, atom_indices=None)
@@ -378,7 +375,7 @@ cdef class DCDTrajectoryFile:
         if atom_indices is not None:
             topology = topology.subset(atom_indices)
 
-        initial = int(self.frame_counter)
+        initial = self.tell()
         xyz, box_length, box_angle = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
         if len(xyz) == 0:
             return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
@@ -436,7 +433,7 @@ cdef class DCDTrajectoryFile:
         if n_frames is None:
             # if the user specifies n_frames=None, they want to read to the
             # end of the file
-            _n_frames = self.n_frames - self.frame_counter
+            _n_frames = self.n_frames - self.tell()
         else:
             _n_frames = int(n_frames)
 
@@ -476,7 +473,6 @@ cdef class DCDTrajectoryFile:
                 status = read_next_timestep(self.fh, self.n_atoms, self.timestep)
                 xyz[i, :, :] = framebuffer[atom_indices, :]
 
-            self.frame_counter += 1
             cell_lengths[i, 0] = self.timestep.A
             cell_lengths[i, 1] = self.timestep.B
             cell_lengths[i, 2] = self.timestep.C
@@ -489,7 +485,8 @@ cdef class DCDTrajectoryFile:
                 break
 
             for j in range(_stride - 1):
-                status = read_next_timestep(self.fh, self.n_atoms, NULL)
+                if read_next_timestep(self.fh, self.n_atoms, NULL) != _DCD_SUCCESS:
+                    break
 
         if np.all(cell_lengths < 1e-10):
             # in the DCD C code, if there's unitcell information inside the
@@ -510,6 +507,8 @@ cdef class DCDTrajectoryFile:
             # user asked to read more frames than were in the file, we need
             # to truncate the return arrays -- we don't want to return them
             # a big stack of zeros.
+            # Note that a successful read prior an erroneous seek should not truncate,
+            # this is why we do not assign the status of the seek operation.
             xyz = xyz[0:i]
             if cell_lengths is not None and cell_angles is not None:
                 cell_lengths = cell_lengths[0:i]
