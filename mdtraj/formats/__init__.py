@@ -16,4 +16,4 @@ from .dtr import DTRTrajectoryFile
 from .gro import GroTrajectoryFile
 from .xyzfile import XYZTrajectoryFile
 from .tng import TNGTrajectoryFile
-from .formats.mae import MAETrajectoryFile
+from .mae import MAETrajectoryFile
