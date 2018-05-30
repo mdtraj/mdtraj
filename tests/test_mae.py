@@ -4,7 +4,7 @@
 # Copyright 2012-2017 Stanford University and the Authors
 #
 # Authors: Robert McGibbon
-# Contributors: Jason Swails, Matthew Harrigan
+# Contributors: Jason Swails, Matthew Harrigan, Carlos Xavier Hernandez
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
