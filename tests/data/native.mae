@@ -1,0 +1,117 @@
+{
+  s_m_m2io_version
+  :::
+  2.0.0
+}
+f_m_ct {
+  s_m_title
+  r_chorus_box_ax
+  r_chorus_box_ay
+  r_chorus_box_az
+  r_chorus_box_bx
+  r_chorus_box_by
+  r_chorus_box_bz
+  r_chorus_box_cx
+  r_chorus_box_cy
+  r_chorus_box_cz
+  :::
+  ""
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  m_atom[0] {
+    # First column is atom index #
+    i_m_mmod_type
+    r_m_x_coord
+    r_m_y_coord
+    r_m_z_coord
+    i_m_residue_number
+    s_m_insertion_code
+    s_m_mmod_res
+    s_m_chain_name
+    i_m_color
+    r_m_charge1
+    r_m_charge2
+    s_m_pdb_residue_name
+    s_m_pdb_atom_name
+    s_m_grow_name
+    i_m_atomic_number
+    i_m_formal_charge
+    i_m_visibility
+    s_m_pdb_segment_name
+    :::
+    :::
+  }
+  ffio_ff {
+    :::
+    ffio_sites[22] {
+      s_ffio_type
+      r_ffio_charge
+      r_ffio_mass
+      :::
+      1 pseudo 0 1.008
+      2 pseudo 0 12.011
+      3 pseudo 0 1.008
+      4 pseudo 0 1.008
+      5 pseudo 0 12.011
+      6 pseudo 0 15.999
+      7 pseudo 0 14.007
+      8 pseudo 0 1.008
+      9 pseudo 0 12.011
+      10 pseudo 0 1.008
+      11 pseudo 0 12.011
+      12 pseudo 0 1.008
+      13 pseudo 0 1.008
+      14 pseudo 0 1.008
+      15 pseudo 0 12.011
+      16 pseudo 0 15.999
+      17 pseudo 0 14.007
+      18 pseudo 0 1.008
+      19 pseudo 0 12.011
+      20 pseudo 0 1.008
+      21 pseudo 0 1.008
+      22 pseudo 0 1.008
+      :::
+    }
+    ffio_pseudo[22] {
+      r_ffio_x_coord
+      r_ffio_y_coord
+      r_ffio_z_coord
+      s_ffio_pdb_residue_name
+      s_ffio_chain_name
+      s_ffio_pdb_segment_name
+      i_ffio_residue_number
+      :::
+      1 4.3 13.1 8.6 1HH3 X "" 1
+      2 5.2 13.6 8.8 " CH3" X "" 1
+      3 4.9 14.3 9.6 2HH3 X "" 1
+      4 5.6 14.2 7.9 3HH3 X "" 1
+      5 6.1 12.5 9.4 " C  " X "" 1
+      6 6.4 12.5 10.6 " O  " X "" 1
+      7 6.6 11.6 8.5 " N  " X "" 2
+      8 6.5 11.6 7.5 " H  " X "" 2
+      9 7.3 10.4 9.1 " CA " X "" 2
+      10 7.9 10.7 10 " HA " X "" 2
+      11 6.2 9.5 9.6 " CB " X "" 2
+      12 5.7 9.1 8.8 " HB1" X "" 2
+      13 6.6 8.7 10.2 " HB2" X "" 2
+      14 5.4 10 10.2 " HB3" X "" 2
+      15 8.4 9.8 8.2 " C  " X "" 2
+      16 8.4 9.9 7 " O  " X "" 2
+      17 9.3 9 8.8 " N  " X "" 3
+      18 9.1 9 9.8 " H  " X "" 3
+      19 10.5 8.4 8.3 " CH3" X "" 3
+      20 10.7 7.7 9.1 1HH3 X "" 3
+      21 10.4 8 7.3 2HH3 X "" 3
+      22 11.3 9.1 8.3 3HH3 X "" 3
+      :::
+    }
+  }
+}
+
