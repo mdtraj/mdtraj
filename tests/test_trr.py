@@ -100,7 +100,7 @@ def test_read_stride_n_frames_offsets(get_fn):
         with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
             f.offsets # pre-compute byte offsets between frames
             xyz_s, time_s, step_s, box_s, lamb_s = f.read(n_frames=1000, stride=s)
-        assert eq(xyz_s, xyz[::s])
+        assert eq(xyz_s, xyz[::s], err_msg='stride=%s' % s)
         assert eq(step_s, step[::s])
         assert eq(box_s, box[::s])
         assert eq(time_s, time[::s])
@@ -120,9 +120,9 @@ def test_read_stride_switching(get_fn):
         assert eq(box_s, box[:n_frames*s:s])
         assert eq(time_s, time[:n_frames*s:s])
         # now read the rest with stride 3, should start from frame index 8.
-        # eg. np.arange(0, n_frames*s, 2)[-1] == 18
+        # eg. np.arange(0, n_frames*s + 1, 2)[-1] == 18
         offset = f.tell()
-        assert offset == 18
+        assert offset == 20
         s = 3
         xyz_s, time_s, step_s, box_s, lamb_s = f.read(n_frames=None, stride=s)
         assert eq(xyz_s, xyz[offset::s])
