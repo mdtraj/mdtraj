@@ -453,9 +453,11 @@ cdef class XTCTrajectoryFile(object):
             np.empty((n_frames), dtype=np.float32)
 
         # only used if atom_indices is given
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer
+        if atom_indices is not None:
+            framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
-        # striding dummy, only used if efficient_striding is false.
+        # striding dummy, only used if efficient_striding is false or at the end of the file.
         cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz_stride = \
             np.empty((1, n_atoms_to_read, 3), dtype=np.float32)
         cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time_stride = \
@@ -466,6 +468,7 @@ cdef class XTCTrajectoryFile(object):
             np.empty((1, 3, 3), dtype=np.float32)
         cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] prec_stride = \
             np.empty((1), dtype=np.float32)
+
         while (i < n_frames) and (status != _EXDRENDOFFILE):
             if atom_indices is None:
                 status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[i],
@@ -616,8 +619,8 @@ cdef class XTCTrajectoryFile(object):
         else:
             raise IOError('Invalid argument')
 
-        if absolute < 0 or absolute > len(self.offsets):
-            raise IOError('out of bounds: given absolute position: {}'.format(absolute))
+        if absolute < 0 or absolute >= len(self.offsets):
+            raise IOError('XTC Seek out of bounds: given absolute position: {}'.format(absolute))
 
         pos = self.offsets[absolute]
         status = xdrlib.xdr_seek(self.fh, pos, SEEK_SET)
