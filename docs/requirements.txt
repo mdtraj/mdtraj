@@ -1,4 +1,5 @@
 sphinx
+sphinx_rtd_theme
 matplotlib
 jupyter
 jinja2
