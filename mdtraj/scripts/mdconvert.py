@@ -207,7 +207,7 @@ def parse_args():
                      ext(args.output)))
 
     if args.atom_indices is not None and not os.path.isfile(args.atom_indices):
-        parser.error('no such file: %s' % fn)
+        parser.error('no such file: %s' % args.atom_indices)
 
     if args.stride <= 0:
         parser.error('stride must be positive')
