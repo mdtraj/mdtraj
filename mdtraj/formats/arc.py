@@ -327,6 +327,7 @@ class ArcTrajectoryFile(object):
                                 [float(s[3]), float(s[4]), float(s[5])]
                 )
                 line = self._fh.readline()
+                s = line.split()
                 self._line_counter += 1
             except ValueError:
                 pass
