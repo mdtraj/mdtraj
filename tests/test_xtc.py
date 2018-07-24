@@ -109,9 +109,9 @@ def test_read_stride_switching(get_fn, fn_xtc):
         assert eq(box, iofile['box'][:n_frames*s:s])
         assert eq(time, iofile['time'][:n_frames*s:s])
         # now read the rest with stride 3, should start from frame index 8.
-        # eg. np.arange(0, n_frames*s, 2)[-1] == 18
+        # eg. np.arange(0, n_frames*s + 1, 2)[-1] == 20
         offset = f.tell()
-        assert offset == 18
+        assert offset == 20
         s = 3
         xyz, time, step, box = f.read(n_frames=None, stride=s)
         assert eq(xyz, iofile['xyz'][offset::s])
