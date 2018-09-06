@@ -3,6 +3,11 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.9.3 (Development)
+------------------
+
+- Nothing to see here
+
 v1.9.2 (July 30, 2018)
 ------------------
 We're please to announce the release of MDTraj 1.9.2. This version has a number of bug fixes and improvements for trajectory parsing and conversion. 
