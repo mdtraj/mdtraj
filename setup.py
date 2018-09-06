@@ -51,8 +51,8 @@ except ValueError:
 
 
 ##########################
-VERSION = "1.9.2"
-ISRELEASED = True
+VERSION = "1.9.3"
+ISRELEASED = False
 __version__ = VERSION
 ##########################
 
