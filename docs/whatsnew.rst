@@ -3,12 +3,25 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v2.0 (Development)
+v1.9.2 (July 30, 2018)
 ------------------
+We're please to announce the release of MDTraj 1.9.2. This version has a number of bug fixes and improvements for trajectory parsing and conversion. 
 
-This is the current development version of MDTraj. 
-Despite the major version number increase, this release
-will maintain backwards compatibility with version 1.x
+
+- Fix bug in TINKER ARC reader (#1371)
+- Improved mdconvert error message (#1368)
+- Striding relative to current position in XTC and TRR (#1364)
+- Return last successful read frame for DCD (#1358)
+- Handle stride like numpy for DCDs (#1352)
+- Fix pickling of virtual site's element field (#1350)
+- Compile geometry extension with OpenMP (#1349)
+- Ensure correct dtype in neighborlist box vectors (#1344)
+- Added support for prm7 topology file extension (#1334)
+- Added efficient stride handling fo TRR (#1332)
+- Use byte offsets between frames for stride of XTCs (#1331)
+- Updated the calculation of chi5 (#1322, #1323)
+- Added testing against conda-forge channel (#1310)
+- Port [OpenMM bond order](https://github.com/pandegroup/openmm/pull/1668) representation into MDTraj. Implements the `Bond` class to Topology and updates the Mol2 reader to use bond_order field (#1308)
 
 v1.9 (September 3, 2017)
 ------------------------
