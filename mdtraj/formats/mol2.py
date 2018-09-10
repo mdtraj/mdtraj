@@ -99,7 +99,7 @@ def load_mol2(filename):
     # If this is a sybyl mol2, there should be NAN (null) values
     if atoms_mdtraj.element.isnull().any():
         # If this is a sybyl mol2, I think this works generally.
-        atoms_mdtraj["element"] = atoms.atype.apply(lambda x: x.strip(".")[0])
+        atoms_mdtraj["element"] = atoms.atype.apply(lambda x: x.split(".")[0])
 
     atoms_mdtraj["resSeq"] = np.ones(len(atoms), 'int')
     atoms_mdtraj["chainID"] = np.ones(len(atoms), 'int')
