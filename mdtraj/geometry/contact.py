@@ -96,7 +96,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         to a residue without an alpha carbon (e.g. HOH) is ignored from the
         input contacts list, meanings that the indexing of the
         output `distances` may not match up with the indexing of the input
-        `contacts`. But the indexing of `distance` *will* match up with
+        `contacts`. But the indexing of `distances` *will* match up with
         the indexing of `residue_pairs`
 
     Examples
