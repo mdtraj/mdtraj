@@ -106,6 +106,10 @@ def compute_rdf_t(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
     else:
         n_bins = int((r_range[1] - r_range[0]) / bin_width)
 
+    # Add self pairs to `pairs`
+    pairs_set = list(set(pairs[:, 0]))
+    pairs = np.vstack([np.vstack([pairs_set, pairs_set]).T, pairs])
+
     distances = compute_distances_t(traj, pairs, periodic=periodic, opt=False)
 
     g_r = np.zeros(shape=(len(traj), n_bins))
