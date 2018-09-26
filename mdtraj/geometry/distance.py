@@ -282,7 +282,6 @@ def _distance_mic(xyz, pairs, box_vectors, orthogonal):
 def _distance_mic_0(xyz, pairs, box_vectors, orthogonal):
     out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
     for i in range(len(xyz)):
-        print(i)
         bv1, bv2, bv3 = _reduce_box_vectors(box_vectors[i].T)
 
         for j, (a,b) in enumerate(pairs):
