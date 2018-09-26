@@ -29,7 +29,7 @@ from mdtraj.utils.six.moves import range
 from . import _geometry
 
 
-__all__ = ['compute_distances', 'compute_displacements',
+__all__ = ['compute_distances', 'compute_distances_t', 'compute_displacements',
            'compute_center_of_mass', 'find_closest_contact']
 
 
@@ -85,7 +85,7 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
         return _distance(xyz, pairs)
 
 
-def compute_distances_0(traj, atom_pairs, periodic=True, opt=True):
+def compute_distances_t(traj, atom_pairs, periodic=True, opt=True):
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     pairs = ensure_type(atom_pairs, dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2), warn_on_cast=False)
     if not np.all(np.logical_and(pairs < traj.n_atoms, pairs >= 0)):

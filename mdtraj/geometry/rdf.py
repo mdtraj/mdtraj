@@ -25,7 +25,7 @@ from __future__ import print_function, division
 import numpy as np
 
 from mdtraj.utils import ensure_type
-from mdtraj.geometry.distance import compute_distances
+from mdtraj.geometry.distance import compute_distances, compute_distances_t
 
 __all__ = ['compute_rdf', 'compute_rdf_t']
 
@@ -106,7 +106,7 @@ def compute_rdf_t(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
     else:
         n_bins = int((r_range[1] - r_range[0]) / bin_width)
 
-    distances = compute_distances_0(traj, pairs, periodic=periodic, opt=False)
+    distances = compute_distances_t(traj, pairs, periodic=periodic, opt=False)
 
     g_r = np.zeros(shape=(np.shape(distances)[0], 200))
     for n, frame_distances in enumerate(distances):
