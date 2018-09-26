@@ -108,7 +108,7 @@ def compute_rdf_t(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
 
     distances = compute_distances_t(traj, pairs, periodic=periodic, opt=False)
 
-    g_r = np.zeros(shape=(np.shape(distances)[0], 200))
+    g_r = np.zeros(shape=(len(traj), n_bins))
     for n, frame_distances in enumerate(distances):
         g_r[n, :], edges = np.histogram(frame_distances, range=r_range, bins=n_bins)
 #     NULL, edges = np.histogram(distances, range=r_range, bins=n_bins)
