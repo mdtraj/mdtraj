@@ -286,10 +286,10 @@ def _distance_mic_0(xyz, pairs, box_vectors, orthogonal):
 
         for j, (a,b) in enumerate(pairs):
             r12 = xyz[i,b,:] - xyz[i,a,:]
+            r12 += xyz[i,a,:] - xyz[0,a,:]
             r12 -= bv3*round(r12[2]/bv3[2]);
             r12 -= bv2*round(r12[1]/bv2[1]);
             r12 -= bv1*round(r12[0]/bv1[0]);
-            r12 += xyz[i,a,:] - xyz[0,a,:]
             dist = np.linalg.norm(r12)
             if not orthogonal:
                 for ii in range(-1, 2):
