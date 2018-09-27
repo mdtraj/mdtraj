@@ -93,7 +93,7 @@ def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
     return r, g_r
 
 
-def compute_rdf_t(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
+def compute_rdf_t(traj, pairs, period_length=None, r_range=None, bin_width=0.005, n_bins=None,
                 periodic=True, opt=True):
     if r_range is None:
         r_range = np.array([0.0, 1.0])
@@ -106,16 +106,22 @@ def compute_rdf_t(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
     else:
         n_bins = int((r_range[1] - r_range[0]) / bin_width)
 
+    if period_length is None:
+        period_length = traj.n_frames
+
     # Add self pairs to `pairs`
     pairs_set = list(set(pairs[:, 0]))
     pairs = np.vstack([np.vstack([pairs_set, pairs_set]).T, pairs])
 
     distances = compute_distances_t(traj, pairs, periodic=periodic, opt=False)
 
-    g_r = np.zeros(shape=(len(traj), n_bins))
-    for n, frame_distances in enumerate(distances):
-        g_r[n, :], edges = np.histogram(frame_distances, range=r_range, bins=n_bins)
-#     NULL, edges = np.histogram(distances, range=r_range, bins=n_bins)
+    g_r = np.zeros(shape=(period_length, n_bins))
+    for frame_number, frame_distances in enumerate(distances):
+        n = int(frame_number % period_length)
+        distances = compute_distances_t(traj, pairs, periodic=periodic, opt=False)
+        tmp, edges = np.histogram(frame_distances, range=r_range, bins=n_bins)
+        g_r[n, :] = tmp
+    g_r /= int(traj.n_frames / period_length)
     r = 0.5 * (edges[1:] + edges[:-1])
 
     # Normalize by volume of the spherical shell.
@@ -125,9 +131,8 @@ def compute_rdf_t(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
     # of doing the calculations matches the implementation in other packages like
     # AmberTools' cpptraj and gromacs g_rdf.
     V = (4 / 3) * np.pi * (np.power(edges[1:], 3) - np.power(edges[:-1], 3))
-    norm = len(pairs) / traj.n_frames * np.sum(1.0 / traj.unitcell_volumes) * V
+    norm = len(pairs) / (traj.n_frames / period_length) * np.sum(1.0 / traj.unitcell_volumes) * V
 
-    for n, frame_distances in enumerate(distances):
-        g_r[n, :] = g_r[n, :] / norm
-    #g_r = g_r.astype(np.float64) / norm  # From int64.
+    g_r[n, :] = g_r[n, :] / norm
+
     return r, g_r
