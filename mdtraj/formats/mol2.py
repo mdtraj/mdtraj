@@ -119,7 +119,7 @@ def load_mol2(filename):
         n_bonds = bonds_mdtraj.shape[0]
         bond_augment = np.zeros([n_bonds, 2], dtype=float)
         # Add bond type information
-        bond_augment[:, 0] = [float(bond_type_map[bond_value]) for bond_value in bonds["bond_type"].values]
+        bond_augment[:, 0] = [float(bond_type_map[str(bond_value)]) for bond_value in bonds["bond_type"].values]
         # Add Bond "order" information, this is not known from Mol2 files
         bond_augment[:, 1] = [0.0 for _ in range(n_bonds)]
         # Augment array, dtype is cast to minimal representation of float
