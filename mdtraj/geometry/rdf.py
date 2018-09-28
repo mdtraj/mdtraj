@@ -25,9 +25,9 @@ from __future__ import print_function, division
 import numpy as np
 
 from mdtraj.utils import ensure_type
-from mdtraj.geometry.distance import compute_distances
+from mdtraj.geometry.distance import compute_distances, compute_distances_t
 
-__all__ = ['compute_rdf']
+__all__ = ['compute_rdf', 'compute_rdf_t']
 
 
 def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
@@ -90,4 +90,49 @@ def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
     V = (4 / 3) * np.pi * (np.power(edges[1:], 3) - np.power(edges[:-1], 3))
     norm = len(pairs) * np.sum(1.0 / traj.unitcell_volumes) * V
     g_r = g_r.astype(np.float64) / norm  # From int64.
+    return r, g_r
+
+
+def compute_rdf_t(traj, pairs, period_length=None, r_range=None, bin_width=0.005, n_bins=None,
+                periodic=True, opt=True):
+    if r_range is None:
+        r_range = np.array([0.0, 1.0])
+    r_range = ensure_type(r_range, dtype=np.float64, ndim=1, name='r_range',
+                          shape=(2,), warn_on_cast=False)
+    if n_bins is not None:
+        n_bins = int(n_bins)
+        if n_bins <= 0:
+            raise ValueError('`n_bins` must be a positive integer')
+    else:
+        n_bins = int((r_range[1] - r_range[0]) / bin_width)
+
+    if period_length is None:
+        period_length = traj.n_frames
+
+    # Add self pairs to `pairs`
+    pairs_set = list(set(pairs[:, 0]))
+    pairs = np.vstack([np.vstack([pairs_set, pairs_set]).T, pairs])
+
+    g_r = np.zeros(shape=(period_length, n_bins))
+    num_chunks = int(np.floor(traj.n_frames / period_length))
+
+    for num_chunk in range(num_chunks):
+        sub_traj = traj[num_chunk*period_length:(num_chunk+1)*period_length]
+        frame_distances = compute_distances_t(sub_traj, 0*num_chunk*period_length, pairs, periodic=periodic, opt=False)
+        for n, distances in enumerate(frame_distances):
+            tmp, edges = np.histogram(distances, range=r_range, bins=n_bins)
+            g_r[n, :] += tmp
+    r = 0.5 * (edges[1:] + edges[:-1])
+
+    # Normalize by volume of the spherical shell.
+    # See discussion https://github.com/mdtraj/mdtraj/pull/724. There might be
+    # a less biased way to accomplish this. The conclusion was that this could
+    # be interesting to try, but is likely not hugely consequential. This method
+    # of doing the calculations matches the implementation in other packages like
+    # AmberTools' cpptraj and gromacs g_rdf.
+    V = (4 / 3) * np.pi * (np.power(edges[1:], 3) - np.power(edges[:-1], 3))
+    norm = len(pairs) / (period_length) * np.sum(1.0 / traj.unitcell_volumes) * V
+
+    g_r /= norm
+
     return r, g_r

@@ -29,7 +29,7 @@ from mdtraj.utils.six.moves import range
 from . import _geometry
 
 
-__all__ = ['compute_distances', 'compute_displacements',
+__all__ = ['compute_distances', 'compute_distances_t', 'compute_displacements',
            'compute_center_of_mass', 'find_closest_contact']
 
 
@@ -75,6 +75,35 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
             return out
         else:
             return _distance_mic(xyz, pairs, box.transpose(0, 2, 1), orthogonal)
+
+    # either there are no unitcell vectors or they dont want to use them
+    if opt:
+        out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+        _geometry._dist(xyz, pairs, out)
+        return out
+    else:
+        return _distance(xyz, pairs)
+
+
+def compute_distances_t(traj, t, atom_pairs, periodic=True, opt=True):
+    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
+    pairs = ensure_type(atom_pairs, dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2), warn_on_cast=False)
+    if not np.all(np.logical_and(pairs < traj.n_atoms, pairs >= 0)):
+        raise ValueError('atom_pairs must be between 0 and %d' % traj.n_atoms)
+
+    if len(pairs) == 0:
+        return np.zeros((len(xyz), 0), dtype=np.float32)
+
+    if periodic and traj._have_unitcell:
+        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3),
+                          warn_on_cast=False)
+        orthogonal = np.allclose(traj.unitcell_angles, 90)
+        if opt:
+            out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+            _geometry._dist_mic(xyz, pairs, box.transpose(0, 2, 1).copy(), out, orthogonal)
+            return out
+        else:
+            return _distance_mic_0(xyz, t, pairs, box.transpose(0, 2, 1), orthogonal)
 
     # either there are no unitcell vectors or they dont want to use them
     if opt:
@@ -234,6 +263,30 @@ def _distance_mic(xyz, pairs, box_vectors, orthogonal):
 
         for j, (a,b) in enumerate(pairs):
             r12 = xyz[i,b,:] - xyz[i,a,:]
+            r12 -= bv3*round(r12[2]/bv3[2]);
+            r12 -= bv2*round(r12[1]/bv2[1]);
+            r12 -= bv1*round(r12[0]/bv1[0]);
+            dist = np.linalg.norm(r12)
+            if not orthogonal:
+                for ii in range(-1, 2):
+                    v1 = bv1*ii
+                    for jj in range(-1, 2):
+                        v12 = bv2*jj + v1
+                        for kk in range(-1, 2):
+                            new_r12 = r12 + v12 + bv3*kk
+                            dist = min(dist, np.linalg.norm(new_r12))
+            out[i, j] = dist
+    return out
+
+
+def _distance_mic_0(xyz, t, pairs, box_vectors, orthogonal):
+    out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+    for i in range(len(xyz)):
+        bv1, bv2, bv3 = _reduce_box_vectors(box_vectors[i].T)
+
+        for j, (a,b) in enumerate(pairs):
+            r12 = xyz[i,b,:] - xyz[i,a,:]
+            r12 += xyz[i,a,:] - xyz[t,a,:]
             r12 -= bv3*round(r12[2]/bv3[2]);
             r12 -= bv2*round(r12[1]/bv2[1]);
             r12 -= bv1*round(r12[0]/bv1[0]);
