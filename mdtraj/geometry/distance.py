@@ -103,7 +103,7 @@ def compute_distances_t(traj, t, atom_pairs, periodic=True, opt=True):
             _geometry._dist_mic(xyz, pairs, box.transpose(0, 2, 1).copy(), out, orthogonal)
             return out
         else:
-            return _distance_mic_0(xyz, t, pairs, box.transpose(0, 2, 1), orthogonal)
+            return _distance_mic_t(xyz, t, pairs, box.transpose(0, 2, 1), orthogonal)
 
     # either there are no unitcell vectors or they dont want to use them
     if opt:
@@ -279,7 +279,7 @@ def _distance_mic(xyz, pairs, box_vectors, orthogonal):
     return out
 
 
-def _distance_mic_0(xyz, t, pairs, box_vectors, orthogonal):
+def _distance_mic_t(xyz, t, pairs, box_vectors, orthogonal):
     out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
     for i in range(len(xyz)):
         bv1, bv2, bv3 = _reduce_box_vectors(box_vectors[i].T)

@@ -117,6 +117,7 @@ def compute_rdf_t(traj, pairs, period_length=None, r_range=None, bin_width=0.005
     num_chunks = int(np.floor(traj.n_frames / period_length))
 
     for num_chunk in range(num_chunks):
+        print(num_chunk, num_chunks)
         sub_traj = traj[num_chunk*period_length:(num_chunk+1)*period_length]
         frame_distances = compute_distances_t(sub_traj, 0*num_chunk*period_length, pairs, periodic=periodic, opt=False)
         for n, distances in enumerate(frame_distances):
