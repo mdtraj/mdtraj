@@ -85,7 +85,7 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
         return _distance(xyz, pairs)
 
 
-def compute_distances_t(traj, atom_pairs, periodic=True, opt=True):
+def compute_distances_t(traj, t, atom_pairs, periodic=True, opt=True):
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     pairs = ensure_type(atom_pairs, dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2), warn_on_cast=False)
     if not np.all(np.logical_and(pairs < traj.n_atoms, pairs >= 0)):
@@ -103,7 +103,7 @@ def compute_distances_t(traj, atom_pairs, periodic=True, opt=True):
             _geometry._dist_mic(xyz, pairs, box.transpose(0, 2, 1).copy(), out, orthogonal)
             return out
         else:
-            return _distance_mic_0(xyz, pairs, box.transpose(0, 2, 1), orthogonal)
+            return _distance_mic_0(xyz, t, pairs, box.transpose(0, 2, 1), orthogonal)
 
     # either there are no unitcell vectors or they dont want to use them
     if opt:
@@ -279,14 +279,14 @@ def _distance_mic(xyz, pairs, box_vectors, orthogonal):
     return out
 
 
-def _distance_mic_0(xyz, pairs, box_vectors, orthogonal):
+def _distance_mic_0(xyz, t, pairs, box_vectors, orthogonal):
     out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
     for i in range(len(xyz)):
         bv1, bv2, bv3 = _reduce_box_vectors(box_vectors[i].T)
 
         for j, (a,b) in enumerate(pairs):
             r12 = xyz[i,b,:] - xyz[i,a,:]
-            r12 += xyz[i,a,:] - xyz[0,a,:]
+            r12 += xyz[i,a,:] - xyz[t,a,:]
             r12 -= bv3*round(r12[2]/bv3[2]);
             r12 -= bv2*round(r12[1]/bv2[1]);
             r12 -= bv1*round(r12[0]/bv1[0]);
