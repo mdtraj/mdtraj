@@ -142,6 +142,13 @@ def test_mol2_without_bonds(get_fn):
     assert trj.topology.n_bonds == 0
 
 
+
+def test_mol2_element_name(get_fn):
+    trj = md.load_mol2(get_fn('cl.mol2'))
+    top, bonds = trj.top.to_dataframe()
+    assert top.iloc[0]['element'] == 'Cl'
+
+    
 @pytest.mark.parametrize('mol2_file', [('li.mol2'),
 ('lysozyme-ligand-tripos.mol2'), ('imatinib.mol2'),
 ('status-bits.mol2'),('adp.mol2')])
