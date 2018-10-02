@@ -18,7 +18,7 @@ requirements:
     - setuptools
     - cython
     - numpy
-    - zlib 1.2.8
+    - zlib
     - msinttypes  # [win and py27]
 
   run:
