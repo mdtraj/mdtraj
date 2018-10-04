@@ -37,7 +37,7 @@ test:
     - pytest
     - networkx
     - matplotlib
-    - openmm >=7.1  # [(not (win32 or (win and py2k))) or py37]
+    - openmm >=7.1  # [not (win32 or (win and py2k) or py37)]
     - shiftx2  # [linux and py2k]
     - cpptraj
     - nbformat
