@@ -150,7 +150,8 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
 
     # Error checks
     assert (target.xyz.ndim == 3) and (reference.xyz.ndim == 3) and (target.xyz.shape[2]) == 3 and (reference.xyz.shape[2] == 3)
-    if not (target.xyz.shape[1]  == reference.xyz.shape[1]):
+    if not ((target.xyz.shape[1]  == reference.xyz.shape[1]) or
+            (len(ref_atom_indices) == len(atom_indices))):
         raise ValueError("Input trajectories must have same number of atoms. "
                          "found %d and %d." % (target.xyz.shape[1], reference.xyz.shape[1]))
     if frame >= reference.xyz.shape[0]:
