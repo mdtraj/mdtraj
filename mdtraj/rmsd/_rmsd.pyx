@@ -128,8 +128,6 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
     # import time
     cdef bool atom_indices_is_none = False
 
-    # Error checks
-
     if atom_indices is None:
         atom_indices_is_none = True
         atom_indices = slice(None)
