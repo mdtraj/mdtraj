@@ -282,9 +282,10 @@ def test_hex(get_fn):
    pdb.save(temp)
 
 
-def test_dummy_pdb_box_detection(get_fn):
-    with warnings.catch_warnings(record=True) as war:
-        warnings.filterwarnings('always', category=UserWarning)
-        traj = load(get_fn('2koc.pdb'))
-    assert 'Unlikely unit cell' in str(war[0].message)
+def test_dummy_pdb_box_detection(get_fn, recwarn):
+    traj = load(get_fn('2koc.pdb'))
+    assert len(recwarn) == 1
+    w = recwarn.pop(UserWarning)
+    assert 'Unlikely unit cell' in str(w.message)
     assert traj.unitcell_lengths is None, 'Expected dummy box to be deleted'
+
