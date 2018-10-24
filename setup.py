@@ -22,7 +22,7 @@ from basesetup import (write_version_py, build_ext,
 try:
     import numpy
     import Cython
-    if Cython.__version__ < '0.19':
+    if Cython.__version__ < '0.28':
         raise ImportError
     from Cython.Build import cythonize
 except ImportError:

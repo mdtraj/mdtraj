@@ -17,12 +17,16 @@ environment:
     - PYTHON: "C:\\Miniconda3-x64"
       CONDA_PY: "36"
       ARCH: "64"
+    - PYTHON: "C:\\Miniconda3-x64"
+      CONDA_PY: "37"
+      ARCH: "64"
+
 
 install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
   - conda config --add channels omnia
   - conda config --add channels conda-forge # hightest priority 
-  - conda install -yq conda=4.3 conda-build
+  - conda install -yq conda=4.5 conda-build
 
 build: false
 
