@@ -175,3 +175,6 @@ _AMINO_ACID_CODES =  {'ACE': None, 'NME':  None, '00C': 'C', '01W':  'X', '02K':
 'ZZJ': 'A'}
 
 _PROTEIN_RESIDUES = frozenset(_AMINO_ACID_CODES.keys())
+
+_NUCLEIC_RESIDUES = frozenset(['DG', 'DC', 'DT', 'DA', 'DI',
+                               'G', 'C', 'T', 'A', 'U', 'I'])

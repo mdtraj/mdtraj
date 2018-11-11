@@ -57,7 +57,7 @@ from collections import namedtuple
 
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import (_PROTEIN_RESIDUES, _WATER_RESIDUES,
-                                       _AMINO_ACID_CODES)
+                                       _AMINO_ACID_CODES, _NUCLEIC_RESIDUES)
 from mdtraj.core.selection import parse_selection
 from mdtraj.utils import ilen, import_, ensure_type
 from mdtraj.utils.six import string_types
@@ -1416,7 +1416,7 @@ class Residue(object):
     @property
     def is_nucleic(self):
         """Whether the residue is one found in nucleic acids."""
-        raise NotImplementedError
+        return self.name in _NUCLEIC_RESIDUES
 
     def __str__(self):
         return '%s%s' % (self.name, self.resSeq)
