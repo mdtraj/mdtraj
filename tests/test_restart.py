@@ -38,7 +38,7 @@ os.close(fd2)
 
 def teardown_module(module):
     """remove the temporary file created by tests in this file
-    this gets automatically called by nose"""
+    this gets automatically called by pytest"""
     if os.path.exists(temp1): os.unlink(temp1)
     if os.path.exists(temp2): os.unlink(temp2)
 

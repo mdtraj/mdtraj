@@ -30,14 +30,14 @@ Testing Your Installation
 -------------------------
 
 Running the tests is a great way to verify that everything is working. The test
-suite uses `nose <https://nose.readthedocs.org/en/latest/>`_, which you can pick
+suite uses `pytest <https://pytest.readthedocs.org/en/latest/>`_, which you can pick
 up via ``pip`` if you don't already have it. ::
 
-  pip install nose
+  pip install pytest
 
 Then, to run the tests, execute the command ::
 
-  nosetests mdtraj -v
+  pytesttests mdtraj -v
 
 Compiling From Source
 ---------------------

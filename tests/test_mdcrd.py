@@ -32,7 +32,7 @@ fd, temp = tempfile.mkstemp(suffix='.mdcrd')
 
 def teardown_module(module):
     """remove the temporary file created by tests in this file
-    this gets automatically called by nose"""
+    this gets automatically called by pytest"""
     os.close(fd)
     os.unlink(temp)
 

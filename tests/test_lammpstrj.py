@@ -33,7 +33,7 @@ from mdtraj.testing import eq
 fd, temp = tempfile.mkstemp(suffix='.lammpstrj')
 def teardown_module(module):
     """Remove the temporary file created by tests in this file
-    this gets automatically called by nose. """
+    this gets automatically called by pytest. """
     os.close(fd)
     os.unlink(temp)
 
