@@ -37,7 +37,7 @@ up via ``pip`` if you don't already have it. ::
 
 Then, to run the tests, execute the command ::
 
-  pytesttests mdtraj -v
+  pytest mdtraj -v
 
 Compiling From Source
 ---------------------
