@@ -30,7 +30,8 @@ from . import _geometry
 
 
 __all__ = ['compute_distances', 'compute_displacements',
-           'compute_center_of_mass', 'find_closest_contact']
+           'compute_center_of_mass', 'compute_center_of_geometry',
+           'find_closest_contact']
 
 
 
@@ -130,6 +131,28 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
         _geometry._dist_displacement(xyz, pairs, out)
         return out
     return _displacement(xyz, pairs)
+
+
+def compute_center_of_geometry(traj):
+    """Compute the center of geometry for each frame.
+
+     Parameters
+    ----------
+    traj : Trajectory
+        Trajectory to compute center of geometry for
+
+     Returns
+    -------
+    com : np.ndarray, shape=(n_frames, 3)
+         Coordinates of the center of mass for each frame
+
+    """
+
+    centers = np.zeros((traj.n_frames, 3))
+
+    for i, x in enumerate(traj.xyz):
+        centers[i, :] = x.astype('float64').T.mean(axis=1) 
+    return centers
 
 
 def compute_center_of_mass(traj):
