@@ -133,28 +133,6 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
     return _displacement(xyz, pairs)
 
 
-def compute_center_of_geometry(traj):
-    """Compute the center of geometry for each frame.
-
-     Parameters
-    ----------
-    traj : Trajectory
-        Trajectory to compute center of geometry for
-
-     Returns
-    -------
-    com : np.ndarray, shape=(n_frames, 3)
-         Coordinates of the center of mass for each frame
-
-    """
-
-    centers = np.zeros((traj.n_frames, 3))
-
-    for i, x in enumerate(traj.xyz):
-        centers[i, :] = x.astype('float64').T.mean(axis=1) 
-    return centers
-
-
 def compute_center_of_mass(traj):
     """Compute the center of mass for each frame.
 
@@ -176,6 +154,28 @@ def compute_center_of_mass(traj):
     for i, x in enumerate(traj.xyz):
         com[i, :] = x.astype('float64').T.dot(masses)
     return com
+
+
+def compute_center_of_geometry(traj):
+    """Compute the center of geometry for each frame.
+
+    Parameters
+    ----------
+    traj : Trajectory
+        Trajectory to compute center of geometry for
+
+    Returns
+    -------
+    com : np.ndarray, shape=(n_frames, 3)
+         Coordinates of the center of geometry for each frame
+
+    """
+
+    centers = np.zeros((traj.n_frames, 3))
+
+    for i, x in enumerate(traj.xyz):
+        centers[i, :] = x.astype('float64').T.mean(axis=1) 
+    return centers
 
 
 def find_closest_contact(traj, group1, group2, frame=0, periodic=True):
