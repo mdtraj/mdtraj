@@ -98,7 +98,7 @@ def test_center_of_geometry():
     center_test = mdtraj.geometry.distance.compute_center_of_geometry(traj)
 
     center_actual = np.array([
-        [1 / 3, 1 / 3, 0.0],
+        [1.0 / 3, 1.0 / 3, 0.0],
         [1.5 / 3, 1.5 / 3, 0.0],
     ])
 
