@@ -91,13 +91,14 @@ class XTCReporter(_BaseReporter):
             raise ImportError('OpenMM not found.')
 
     def report(self, simulation, state):
-        """
-            Generate a report
+        """Generate a report.
 
-            :param simulation: simulation to generate the report for
-            :type simulation: :py:class:`simtk.openmm.app.Simulation`
-            :param state: current state of the simulation
-            :type state: :py:class:`simtk.openmm.State`
+        Parameters
+        ----------
+        simulation : simtk.openmm.app.Simulation
+            The Simulation to generate a report for
+        state : simtk.openmm.State
+            The current state of the simulation
         """
         if not self._is_intialized:
             self._initialize(simulation)
