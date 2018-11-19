@@ -733,4 +733,12 @@ cdef class XTCTrajectoryFile(object):
             self.offsets # invokes _calc_len_and_offsets
         return int(self.n_frames)
 
+    def flush(self):
+        if str(self.mode) != 'w':
+            raise RuntimeError('could not flush file opened only for reading')
+        cdef int status = xdrlib.xdr_flush(self.fh)
+        if status != 0:
+            raise IOError('could not flush xtc file. Status: %s' % status)
+
+
 FormatRegistry.register_fileobject('.xtc')(XTCTrajectoryFile)

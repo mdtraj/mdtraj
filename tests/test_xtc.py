@@ -350,3 +350,18 @@ def test_short_traj(tmpdir):
         f.write(np.random.uniform(size=(5, 100000, 3)))
     with XTCTrajectoryFile(tmpfn, 'r') as f:
         assert len(f) == 5, len(f)
+
+
+def test_flush(tmpdir):
+    import sys
+    if sys.platform.startswith('win'):
+        raise pytest.skip('Can not open file being written again due to file locking.')
+    tmpfn = '{}/traj.xtc'.format(tmpdir)
+    data = np.random.random((5, 100, 3))
+    with XTCTrajectoryFile(tmpfn, 'w') as f:
+        f.write(data)
+        f.flush()
+        # note that f is still open, so we can now try to read the contents flushed to disk.
+        with XTCTrajectoryFile(tmpfn, 'r') as f2:
+            out = f2.read()
+        np.testing.assert_allclose(out[0], data, atol=1E-3)
