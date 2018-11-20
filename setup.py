@@ -282,7 +282,7 @@ setup(name='mdtraj',
       classifiers=CLASSIFIERS.splitlines(),
       packages=find_packages(),
       cmdclass={'build_ext': build_ext},
-      ext_modules=cythonize(extensions, language_level=3),
+      ext_modules=cythonize(extensions),
 
       # setup_requires really doesn't work sufficently well with `pip install`
       # to use. See https://github.com/mdtraj/mdtraj/issues/984. Also
