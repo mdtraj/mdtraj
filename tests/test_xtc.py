@@ -353,7 +353,9 @@ def test_short_traj(tmpdir):
         assert len(f) == 5, len(f)
 
 
-@pytest.mark.skipif(sys.platform.startswith('win'), reason='Can not open file being written again due to file locking.' )
+not_on_win = pytest.mark.skipif(sys.platform.startswith('win'),
+                                reason='Can not open file being written again due to file locking.')
+@not_on_win
 def test_flush(tmpdir):
     tmpfn = '{}/traj.xtc'.format(tmpdir)
     data = np.random.random((5, 100, 3))
