@@ -176,5 +176,7 @@ _AMINO_ACID_CODES =  {'ACE': None, 'NME':  None, '00C': 'C', '01W':  'X', '02K':
 
 _PROTEIN_RESIDUES = frozenset(_AMINO_ACID_CODES.keys())
 
-_NUCLEIC_RESIDUES = frozenset(['DG', 'DC', 'DT', 'DA', 'DI',
-                               'G', 'C', 'T', 'A', 'U', 'I'])
+_NUCLEIC_ACID_CODES = {'DG': 'G', 'DC': 'C', 'DT': 'T', 'DA': 'A', 'DI': 'I',
+'G': 'G', 'C': 'C', 'T': 'T', 'A': 'A', 'U': 'U', 'I': 'I' }
+
+_NUCLEIC_RESIDUES = frozenset(_NUCLEIC_ACID_CODES.keys())

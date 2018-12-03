@@ -57,7 +57,8 @@ from collections import namedtuple
 
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import (_PROTEIN_RESIDUES, _WATER_RESIDUES,
-                                       _AMINO_ACID_CODES, _NUCLEIC_RESIDUES)
+                                       _AMINO_ACID_CODES,
+                                       _NUCLEIC_ACID_CODES, _NUCLEIC_RESIDUES)
 from mdtraj.core.selection import parse_selection
 from mdtraj.utils import ilen, import_, ensure_type
 from mdtraj.utils.six import string_types
@@ -298,7 +299,8 @@ class Topology(object):
            A FASTA string for each chain specified.
         """
         fasta = lambda c: "".join([res.code for res in c.residues
-                                   if res.is_protein and res.code is not None])
+                                   if (res.is_protein or res.is_nucleic)
+                                   and res.code is not None])
         if chain is not None:
             if not isinstance(chain, int):
                 raise ValueError('chain must be an Integer.')
@@ -1398,6 +1400,8 @@ class Residue(object):
         """Get the one letter code for this Residue"""
         if self.is_protein:
             return _AMINO_ACID_CODES[self.name]
+        elif self.is_nucleic:
+            return _NUCLEIC_ACID_CODES[self.name]
         else:
             return None
 
