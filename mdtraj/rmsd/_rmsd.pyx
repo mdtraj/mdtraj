@@ -140,6 +140,10 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
 
     if ref_atom_indices is None:
         ref_atom_indices = atom_indices
+    else:
+        if len(ref_atom_indices) != len(atom_indices):
+            raise ValueError("atom_indices and ref_atom_indices must have same number of atom indices. "
+                             "found %d and %d." % (len(atom_indices), len(ref_atom_indices)))
 
     if not isinstance(ref_atom_indices, slice):
         ref_atom_indices = ensure_type(np.asarray(ref_atom_indices), dtype=np.int, ndim=1, name='ref_atom_indices')
@@ -150,7 +154,8 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
 
     # Error checks
     assert (target.xyz.ndim == 3) and (reference.xyz.ndim == 3) and (target.xyz.shape[2]) == 3 and (reference.xyz.shape[2] == 3)
-    if not (target.xyz.shape[1]  == reference.xyz.shape[1]):
+    if not ((target.xyz.shape[1]  == reference.xyz.shape[1]) or
+            (len(ref_atom_indices) == len(atom_indices))):
         raise ValueError("Input trajectories must have same number of atoms. "
                          "found %d and %d." % (target.xyz.shape[1], reference.xyz.shape[1]))
     if frame >= reference.xyz.shape[0]:
