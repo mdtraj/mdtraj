@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
+import sys
 
 import numpy as np
 from mdtraj import io
@@ -350,3 +351,18 @@ def test_short_traj(tmpdir):
         f.write(np.random.uniform(size=(5, 100000, 3)))
     with XTCTrajectoryFile(tmpfn, 'r') as f:
         assert len(f) == 5, len(f)
+
+
+not_on_win = pytest.mark.skipif(sys.platform.startswith('win'),
+                                reason='Can not open file being written again due to file locking.')
+@not_on_win
+def test_flush(tmpdir):
+    tmpfn = '{}/traj.xtc'.format(tmpdir)
+    data = np.random.random((5, 100, 3))
+    with XTCTrajectoryFile(tmpfn, 'w') as f:
+        f.write(data)
+        f.flush()
+        # note that f is still open, so we can now try to read the contents flushed to disk.
+        with XTCTrajectoryFile(tmpfn, 'r') as f2:
+            out = f2.read()
+        np.testing.assert_allclose(out[0], data, atol=1E-3)

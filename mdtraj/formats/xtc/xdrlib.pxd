@@ -21,3 +21,4 @@ ctypedef np.npy_int64 int64_t
 cdef extern from "include/xdr_seek.h":
     int64_t xdr_tell(XDRFILE *xd)
     int xdr_seek(XDRFILE *xd, int64_t pos, int whence)
+    int xdr_flush(XDRFILE* xd)
