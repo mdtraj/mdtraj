@@ -7,13 +7,9 @@ environment:
     PYTHONUNBUFFERED: 1
 
   matrix:
-    - PYTHON: "C:\\Miniconda36"
-      CONDA_PY: "27"
     - PYTHON: "C:\\Miniconda36-x64"
       CONDA_PY: "27"
       ARCH: "64"
-    - PYTHON: "C:\\Miniconda36"
-      CONDA_PY: "36"
     - PYTHON: "C:\\Miniconda3-x64"
       CONDA_PY: "36"
       ARCH: "64"
