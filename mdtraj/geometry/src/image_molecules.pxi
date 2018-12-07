@@ -4,8 +4,7 @@
 import numpy as np
 cimport numpy as np
 from libcpp.vector cimport vector
-
-ctypedef np.npy_intp intp
+from libc.stdint cimport int32_t, int64_t
 
 cdef extern from "math_patch.h" nogil:
     float roundf(float x)
@@ -13,7 +12,7 @@ cdef extern from "math_patch.h" nogil:
 
 cdef void make_whole(float[:,::1] frame_positions,
                 float[:,::1] frame_unitcell_vectors,
-                intp[:,:] sorted_bonds) nogil:
+                int32_t[:,:] sorted_bonds) nogil:
     # Fix each molecule to ensure the periodic boundary conditions are not
     # splitting it into pieces.
     cdef int atom1, atom2, j, k
