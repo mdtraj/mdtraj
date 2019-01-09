@@ -99,7 +99,23 @@ def load_mol2(filename):
     # If this is a sybyl mol2, there should be NAN (null) values
     if atoms_mdtraj.element.isnull().any():
         # If this is a sybyl mol2, I think this works generally.
-        atoms_mdtraj["element"] = atoms.atype.apply(lambda x: x.split(".")[0])
+        # Argument x is being passed as a list with only one element.
+        def to_element(x):
+            if isinstance(x, (list, tuple)):
+                assert len(x) == 1
+                x = x[0]
+
+            if '.' in x:  # orbital-hybridizations in SYBL
+                return x.split('.')[0]
+            try:
+                # check if we can convert the whole str to an Element,
+                # if not, we only pass the first letter.
+                from mdtraj.core.element import Element
+                Element.getBySymbol(x)
+            except KeyError:
+                return to_element(x[0])
+            return x
+        atoms_mdtraj["element"] = atoms.atype.apply(to_element)
 
     atoms_mdtraj["resSeq"] = np.ones(len(atoms), 'int')
     atoms_mdtraj["chainID"] = np.ones(len(atoms), 'int')
@@ -184,14 +200,14 @@ def mol2_to_dataframes(filename):
         csv.writelines(data["@<TRIPOS>BOND\n"][1:])
         csv.seek(0)
         bonds_frame = pd.read_table(csv, names=["bond_id", "id0", "id1", "bond_type"],
-            index_col=0, header=None, sep=r"\s*", engine='python')
+            index_col=0, header=None, sep="\s+", engine='python')
     else:
         bonds_frame = None
 
     csv = StringIO()
     csv.writelines(data["@<TRIPOS>ATOM\n"][1:])
     csv.seek(0)
-    atoms_frame = pd.read_csv(csv, sep=r"\s*", engine='python',  header=None)
+    atoms_frame = pd.read_csv(csv, sep="\s+", engine='python',  header=None)
     ncols = atoms_frame.shape[1]
     names=["serial", "name", "x", "y", "z", "atype", "code", "resName", "charge", "status"]
     atoms_frame.columns = names[:ncols]

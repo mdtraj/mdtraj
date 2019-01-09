@@ -78,10 +78,7 @@ compiler = CompilerDetection(disable_openmp)
 compiler.initialize()
 
 extra_cpp_libraries = []
-if sys.platform == 'darwin':
-    extra_cpp_libraries.append('stdc++')
-    os.environ['CXX'] = 'clang++'
-    os.environ['CC'] = 'clang'
+
 if sys.platform == 'win32':
     extra_cpp_libraries.append('Ws2_32')
     # For determining if a path is relative (for dtr)

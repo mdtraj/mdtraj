@@ -36,7 +36,7 @@ fd, temp = tempfile.mkstemp(suffix='.pdb')
 os.close(fd)
 def teardown_module(module):
     """remove the temporary file created by tests in this file
-    this gets automatically called by nose"""
+    this gets automatically called by pytest"""
     os.unlink(temp)
 
 def test_pdbread(get_fn):
