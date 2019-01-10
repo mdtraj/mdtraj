@@ -56,7 +56,7 @@ test:
     - mdtraj
 
   commands:
-    - pytest  --ignore-flaky
+    - pytest  -v --ignore-flaky
 
 about:
   home: https://github.com/mdtraj/mdtraj
