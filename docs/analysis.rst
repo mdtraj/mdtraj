@@ -19,7 +19,6 @@ Root-mean-square deviation (RMSD)
     :toctree: api/generated/
 
     rmsd
-    rmsf
     lprmsd
     Trajectory.superpose
 

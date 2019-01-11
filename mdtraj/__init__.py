@@ -51,7 +51,7 @@ from .formats.tng import load_tng
 
 
 from .core import element
-from ._rmsd import rmsd, rmsf
+from ._rmsd import rmsd
 from ._lprmsd import lprmsd
 from .core.topology import Topology, Single, Double, Triple, Amide, Aromatic
 from .geometry import *

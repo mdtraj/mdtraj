@@ -194,26 +194,3 @@ def test_average_structure(get_fn):
         sum1 += rmsd_qcp(traj.xyz[0], traj.xyz[i])
         sum2 += rmsd_qcp(average, traj.xyz[i])
     assert sum2 < sum1
-
-def test_trajectory_rmsf(get_fn):
-    t = md.load(get_fn('traj.h5'))
-    for parallel in [True, False]:
-        calculated = md.rmsf(t, t, 0, parallel=parallel)
-        t.superpose(t, 0)
-        avg_xyz = np.average(t.xyz, axis=0)
-        reference = np.sqrt(3*np.mean((t.xyz - avg_xyz)**2, axis=(0, 2)))
-        assert np.sum(np.abs(calculated)) > 0 # check trivial error
-        eq(calculated, reference, decimal=3)
-
-def test_trajectory_rmsf_aligned(get_fn):
-    t = md.load(get_fn('traj.h5'))
-    for parallel in [True, False]:
-        # testing different set of atoms for alignment and RMSF calculation
-        atom_indices = range(int(t.n_atoms/2))
-        rmsf_indices = range(int(t.n_atoms/2), t.n_atoms)
-        t.superpose(t, 99, atom_indices=atom_indices, parallel=False)
-        calculated = md.rmsf(t, None, atom_indices=rmsf_indices, parallel=parallel)
-        avg_xyz = np.average(t.xyz, axis=0)
-        reference = np.sqrt(3*np.mean((t.xyz - avg_xyz)**2, axis=(0, 2)))[rmsf_indices]
-        assert np.sum(np.abs(calculated)) > 0 # check trivial error
-        eq(calculated, reference, decimal=3)
