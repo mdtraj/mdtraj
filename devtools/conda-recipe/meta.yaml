@@ -38,7 +38,9 @@ test:
     - networkx
     - matplotlib
     - openmm >=7.1  # [not (win32 or (win and py2k) or py37)]
-    - shiftx2  # [linux and py2k]
+    # - shiftx2  # [linux and py2k]
+    # shiftx2 omnia seems to be broken, cc https://github.com/omnia-md/conda-recipes/pull/932
+
     # do not install cpptraj on osx, because the current version from omnia is linked against an old runtime.
     # and not avail on win
     #- cpptraj  # [not (osx or win32) ]
