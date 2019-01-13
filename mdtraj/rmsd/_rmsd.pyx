@@ -388,7 +388,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
 
     if parallel:
         for j in prange(n_atoms, nogil=True):
-            for i in prange(target_n_frames):
+            for i in range(target_n_frames):
                 fluctuations[j] += ((target_displaced_xyz[i, j, 0] - avg_xyz_frame[j, 0])**2 +
                                     (target_displaced_xyz[i, j, 1] - avg_xyz_frame[j, 1])**2 +
                                     (target_displaced_xyz[i, j, 2] - avg_xyz_frame[j, 2])**2) / target_n_frames
