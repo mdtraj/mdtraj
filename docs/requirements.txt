@@ -1,4 +1,5 @@
 sphinx
+sphinx_rtd_theme
 matplotlib
 jupyter
 jinja2
@@ -6,6 +7,6 @@ runipy
 openmm
 pytables
 scikit-learn
-nose
+pytest
 pandas
 numpydoc

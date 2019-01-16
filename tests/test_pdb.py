@@ -36,7 +36,7 @@ fd, temp = tempfile.mkstemp(suffix='.pdb')
 os.close(fd)
 def teardown_module(module):
     """remove the temporary file created by tests in this file
-    this gets automatically called by nose"""
+    this gets automatically called by pytest"""
     os.unlink(temp)
 
 def test_pdbread(get_fn):
@@ -163,7 +163,7 @@ def test_pdbstructure_1():
         [ 38.949,  -6.825,  12.002],
         [ 37.557,  -7.514,  12.922]
     ])
-    
+
     res = pdbstructure.Residue("CYS", 42)
     for l in pdb_lines:
         res._add_atom(pdbstructure.Atom(l))
@@ -182,7 +182,7 @@ def test_pdbstructure_3():
     expected = [1, 2, 3]
     for i, c in enumerate(loc):
         eq(expected[i], c)
-        
+
 def test_pdb_from_url():
     # load pdb from URL
     t1 = load_pdb('http://www.rcsb.org/pdb/files/4ZUO.pdb.gz')
@@ -196,7 +196,7 @@ def test_3nch_conect(get_fn):
     # This has conect entries that use all available digits, good failure case.
     t1 = load_pdb(get_fn('3nch.pdb.gz'))
     top, bonds = t1.top.to_dataframe()
-    bonds = dict(((a, b), 1) for (a, b) in bonds)
+    bonds = dict(((a, b), 1) for (a, b, _, _) in bonds)
     eq(bonds[19782, 19783], 1)  # Check that last SO4 molecule has right bonds
     eq(bonds[19782, 19784], 1)  # Check that last SO4 molecule has right bonds
     eq(bonds[19782, 19785], 1)  # Check that last SO4 molecule has right bonds
@@ -207,17 +207,17 @@ def test_3nch_serial_resSeq(get_fn):
     # If you use zero-based indexing, this PDB has quite large gaps in residue and atom numbering, so it's a good test case.  See #528
     # Gold standard values obtained via
     # cat 3nch.pdb |grep ATM|tail -n 5
-    # HETATM19787  S   SO4 D 804      -4.788  -9.395  22.515  1.00121.87           S  
-    # HETATM19788  O1  SO4 D 804      -3.815  -9.511  21.425  1.00105.97           O  
-    # HETATM19789  O2  SO4 D 804      -5.989  -8.733  21.999  1.00116.13           O  
-    # HETATM19790  O3  SO4 D 804      -5.130 -10.726  23.043  1.00108.74           O  
-    # HETATM19791  O4  SO4 D 804      -4.210  -8.560  23.575  1.00112.54           O  
+    # HETATM19787  S   SO4 D 804      -4.788  -9.395  22.515  1.00121.87           S
+    # HETATM19788  O1  SO4 D 804      -3.815  -9.511  21.425  1.00105.97           O
+    # HETATM19789  O2  SO4 D 804      -5.989  -8.733  21.999  1.00116.13           O
+    # HETATM19790  O3  SO4 D 804      -5.130 -10.726  23.043  1.00108.74           O
+    # HETATM19791  O4  SO4 D 804      -4.210  -8.560  23.575  1.00112.54           O
     t1 = load_pdb(get_fn('3nch.pdb.gz'))
     top, bonds = t1.top.to_dataframe()
-    
+
     top2 = Topology.from_dataframe(top, bonds)
     eq(t1.top, top2)
-    
+
     top = top.set_index('serial')  # Index by the actual data in the PDB
     eq(str(top.ix[19791]["name"]), "O4")
     eq(str(top.ix[19787]["name"]), "S")
@@ -236,7 +236,7 @@ def test_1vii_url_and_gz(get_fn):
     eq(t1.n_frames, t2.n_frames)
     eq(t1.n_frames, t3.n_frames)
     eq(t1.n_frames, t4.n_frames)
-    
+
     eq(t1.n_atoms, t2.n_atoms)
     eq(t1.n_atoms, t3.n_atoms)
     eq(t1.n_atoms, t4.n_atoms)
@@ -254,7 +254,7 @@ def test_segment_id(get_fn):
     # check that all segment ids are set correctly after a new pdb file is written
     for ridx,(r1,r2) in enumerate(zip(pdb.top.residues,pdb2.top.residues)):
         assert r1.segment_id == r2.segment_id, "segment_id of residue %i (0-indexed) in ala_ala_ala.pdb does not agree with value in after being written out to a new pdb file"%(ridx)
-    
+
 
 def test_bfactors(get_fn):
     pdb = load_pdb(get_fn('native.pdb'))
@@ -271,7 +271,7 @@ def test_bfactors(get_fn):
     # check formatting has a space at the beginning and not at the end
     frmt = np.array([(s[0] == ' ') and (s[-1] != ' ') for s in str_bfactors1])
     assert np.all(frmt)
-    
+
     # make sure the numbers are actually the same
     eq(bfactors0, flt_bfactors1)
 
@@ -282,8 +282,10 @@ def test_hex(get_fn):
    pdb.save(temp)
 
 
-def test_dummy_pdb_box_detection(get_fn):
-    with warnings.catch_warnings(record=True) as war:
-        traj = load(get_fn('2koc.pdb'))
-    assert 'Unlikely unit cell' in str(war[0].message)
+def test_dummy_pdb_box_detection(get_fn, recwarn):
+    traj = load(get_fn('2koc.pdb'))
+    assert len(recwarn) == 1
+    w = recwarn.pop(UserWarning)
+    assert 'Unlikely unit cell' in str(w.message)
     assert traj.unitcell_lengths is None, 'Expected dummy box to be deleted'
+

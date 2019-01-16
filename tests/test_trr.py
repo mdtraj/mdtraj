@@ -24,6 +24,7 @@ from mdtraj.formats import TRRTrajectoryFile
 import os, tempfile
 import numpy as np
 from mdtraj.testing import eq
+from mdtraj import io
 import pytest
 
 fd, temp = tempfile.mkstemp(suffix='.trr')
@@ -32,7 +33,7 @@ os.close(fd)
 
 def teardown_module(module):
     """remove the temporary file created by tests in this file
-    this gets automatically called by nose"""
+    this gets automatically called by pytest"""
     os.unlink(temp)
 
 
@@ -75,6 +76,59 @@ def test_read_stride_n_frames(get_fn):
     assert eq(step[::3], step3)
     assert eq(box[::3], box3)
     assert eq(time[::3], time3)
+
+
+def test_read_stride_offsets(get_fn):
+    # read xtc with stride and offsets
+    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+        xyz, time, step, box, lambd = f.read()
+    for s in (1, 2, 3, 4, 5):
+        with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+            f.offsets # pre-compute byte offsets between frames
+            xyz_s, time_s, step_s, box_s, lamb_s = f.read(stride=s)
+        assert eq(xyz_s, xyz[::s])
+        assert eq(step_s, step[::s])
+        assert eq(box_s, box[::s])
+        assert eq(time_s, time[::s])
+
+
+def test_read_stride_n_frames_offsets(get_fn):
+    # read trr with stride with n_frames and offsets
+    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+        xyz, time, step, box, lambd = f.read()
+    for s in (1, 2, 3, 4, 5):
+        with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+            f.offsets # pre-compute byte offsets between frames
+            xyz_s, time_s, step_s, box_s, lamb_s = f.read(n_frames=1000, stride=s)
+        assert eq(xyz_s, xyz[::s], err_msg='stride=%s' % s)
+        assert eq(step_s, step[::s])
+        assert eq(box_s, box[::s])
+        assert eq(time_s, time[::s])
+
+
+def test_read_stride_switching(get_fn):
+    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+        xyz, time, step, box, lambd = f.read()
+    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+        f.offsets  # pre-compute byte offsets between frames
+        # read the first 10 frames with stride of 2
+        s = 2
+        n_frames = 10
+        xyz_s, time_s, step_s, box_s, lamb_s = f.read(n_frames=n_frames, stride=s)
+        assert eq(xyz_s, xyz[:n_frames*s:s])
+        assert eq(step_s, step[:n_frames*s:s])
+        assert eq(box_s, box[:n_frames*s:s])
+        assert eq(time_s, time[:n_frames*s:s])
+        # now read the rest with stride 3, should start from frame index 8.
+        # eg. np.arange(0, n_frames*s + 1, 2)[-1] == 18
+        offset = f.tell()
+        assert offset == 20
+        s = 3
+        xyz_s, time_s, step_s, box_s, lamb_s = f.read(n_frames=None, stride=s)
+        assert eq(xyz_s, xyz[offset::s])
+        assert eq(step_s, step[offset::s])
+        assert eq(box_s, box[offset::s])
+        assert eq(time_s, time[offset::s])
 
 
 def test_write_read():

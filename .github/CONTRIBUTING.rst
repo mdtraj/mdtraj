@@ -18,8 +18,8 @@ Tests
 -----
 
 Writing unit tests in a dynamic language like Python is very important.
-Writing tests is annoying, but it pays off big time. `Nose
-<https://nose.readthedocs.org/en/latest/>`_ makes writing tests pretty
+Writing tests is annoying, but it pays off big time. `PyTest
+<https://pytest.readthedocs.org/en/latest/>`_ makes writing tests pretty
 easy, and MDTraj has some testing infrastructure to make it easier. We will
 probably refuse your pull-request if it doesn't include tests.
 
@@ -50,7 +50,7 @@ for ``XTCTrajectoryFormat.read()`` is below. Note that the signature comes
 before the 1 line summary. ::
 
     """read(n_frames=None, stride=1, atom_indices=None)
-    
+
     Read data from an XTC file
 
     Parameters
@@ -76,5 +76,5 @@ before the 1 line summary. ::
     box : np.ndarray, shape=(n_frames, 3, 3), dtype=np.float32
         The box vectors in each frame.
     """
- 
+
 .. vim: tw=75

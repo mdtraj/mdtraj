@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
+import sys
 
 import numpy as np
 from mdtraj import io
@@ -68,6 +69,56 @@ def test_read_stride_n_frames(get_fn, fn_xtc):
     assert eq(step, iofile['step'][::3])
     assert eq(box, iofile['box'][::3])
     assert eq(time, iofile['time'][::3])
+
+
+def test_read_stride_offsets(get_fn, fn_xtc):
+    # read xtc with stride and offsets
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    for s in (1, 2, 3, 4, 5):
+        with XTCTrajectoryFile(fn_xtc) as f:
+            f.offsets # pre-compute byte offsets between frames
+            xyz, time, step, box = f.read(stride=s)
+        assert eq(xyz, iofile['xyz'][::s])
+        assert eq(step, iofile['step'][::s])
+        assert eq(box, iofile['box'][::s])
+        assert eq(time, iofile['time'][::s])
+
+
+def test_read_stride_n_frames_offsets(get_fn, fn_xtc):
+    # read xtc with stride with n_frames and offsets
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    for s in (1, 2, 3, 4, 5):
+        with XTCTrajectoryFile(fn_xtc) as f:
+            f.offsets # pre-compute byte offsets between frames
+            xyz, time, step, box = f.read(n_frames=1000, stride=s)
+        assert eq(xyz, iofile['xyz'][::s])
+        assert eq(step, iofile['step'][::s])
+        assert eq(box, iofile['box'][::s])
+        assert eq(time, iofile['time'][::s])
+
+
+def test_read_stride_switching(get_fn, fn_xtc):
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    with XTCTrajectoryFile(fn_xtc) as f:
+        f.offsets  # pre-compute byte offsets between frames
+        # read the first 10 frames with stride of 2
+        s = 2
+        n_frames = 10
+        xyz, time, step, box = f.read(n_frames=n_frames, stride=s)
+        assert eq(xyz, iofile['xyz'][:n_frames*s:s])
+        assert eq(step, iofile['step'][:n_frames*s:s])
+        assert eq(box, iofile['box'][:n_frames*s:s])
+        assert eq(time, iofile['time'][:n_frames*s:s])
+        # now read the rest with stride 3, should start from frame index 8.
+        # eg. np.arange(0, n_frames*s + 1, 2)[-1] == 20
+        offset = f.tell()
+        assert offset == 20
+        s = 3
+        xyz, time, step, box = f.read(n_frames=None, stride=s)
+        assert eq(xyz, iofile['xyz'][offset::s])
+        assert eq(step, iofile['step'][offset::s])
+        assert eq(box, iofile['box'][offset::s])
+        assert eq(time, iofile['time'][offset::s])
 
 
 def test_read_atomindices_1(get_fn, fn_xtc):
@@ -300,3 +351,18 @@ def test_short_traj(tmpdir):
         f.write(np.random.uniform(size=(5, 100000, 3)))
     with XTCTrajectoryFile(tmpfn, 'r') as f:
         assert len(f) == 5, len(f)
+
+
+not_on_win = pytest.mark.skipif(sys.platform.startswith('win'),
+                                reason='Can not open file being written again due to file locking.')
+@not_on_win
+def test_flush(tmpdir):
+    tmpfn = '{}/traj.xtc'.format(tmpdir)
+    data = np.random.random((5, 100, 3))
+    with XTCTrajectoryFile(tmpfn, 'w') as f:
+        f.write(data)
+        f.flush()
+        # note that f is still open, so we can now try to read the contents flushed to disk.
+        with XTCTrajectoryFile(tmpfn, 'r') as f2:
+            out = f2.read()
+        np.testing.assert_allclose(out[0], data, atol=1E-3)

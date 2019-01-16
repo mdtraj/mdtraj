@@ -39,6 +39,16 @@ def test_load_mol2(get_fn):
 
     ref_top, ref_bonds = ref_trj.top.to_dataframe()
     top, bonds = trj.top.to_dataframe()
+    # PDB Does not have bond order, ensure that the equality fails
+    try:
+        eq(bonds, ref_bonds)
+    except AssertionError:
+        # This is what we wanted to happen, its fine
+        pass
+    else:
+        raise AssertionError("Reference bonds with no bond order should not equal Mol2 bonds with bond order")
+    # Strip bond order info since PDB does not have it
+    bonds[:, -2:] = np.zeros([bonds.shape[0], 2])
     eq(bonds, ref_bonds)
 
 
@@ -130,3 +140,17 @@ def test_mol2_status_bits(get_fn):
 def test_mol2_without_bonds(get_fn):
     trj = md.load_mol2(get_fn('li.mol2'))
     assert trj.topology.n_bonds == 0
+
+
+
+def test_mol2_element_name(get_fn):
+    trj = md.load_mol2(get_fn('cl.mol2'))
+    top, bonds = trj.top.to_dataframe()
+    assert top.iloc[0]['element'] == 'Cl'
+
+    
+@pytest.mark.parametrize('mol2_file', [('li.mol2'),
+('lysozyme-ligand-tripos.mol2'), ('imatinib.mol2'),
+('status-bits.mol2'),('adp.mol2')])
+def test_load_all_mol2(mol2_file, get_fn):
+    trj = md.load_mol2(get_fn(mol2_file))

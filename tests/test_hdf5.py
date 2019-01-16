@@ -39,7 +39,7 @@ needs_units = pytest.mark.skipif(not HAVE_UNITS, reason='requires simtk.units')
 fd, temp = tempfile.mkstemp(suffix='.h5')
 def teardown_module(module):
     """remove the temporary file created by tests in this file
-    this gets automatically called by nose"""
+    this gets automatically called by pytest"""
     os.close(fd)
     os.unlink(temp)
 
@@ -252,13 +252,13 @@ def test_do_overwrite():
     with HDF5TrajectoryFile(temp, 'w', force_overwrite=True) as f:
         f.write(np.random.randn(10,5,3))
 
-        
+
 def test_vsite_elements(get_fn):
     #  Test case for issue #265
     pdb_filename = get_fn('GG-tip4pew.pdb')
     trj = md.load(pdb_filename)
     trj.save_hdf5(temp)
-    
+
     trj2 = md.load(temp, top=pdb_filename)
 
 def test_dont_overwrite():

@@ -22,7 +22,7 @@ from basesetup import (write_version_py, build_ext,
 try:
     import numpy
     import Cython
-    if Cython.__version__ < '0.19':
+    if Cython.__version__ < '0.28':
         raise ImportError
     from Cython.Build import cythonize
 except ImportError:
@@ -51,7 +51,7 @@ except ValueError:
 
 
 ##########################
-VERSION = "2.0.0.dev0"
+VERSION = "1.9.3"
 ISRELEASED = False
 __version__ = VERSION
 ##########################
@@ -78,10 +78,7 @@ compiler = CompilerDetection(disable_openmp)
 compiler.initialize()
 
 extra_cpp_libraries = []
-if sys.platform == 'darwin':
-    extra_cpp_libraries.append('stdc++')
-    os.environ['CXX'] = 'clang++'
-    os.environ['CC'] = 'clang'
+
 if sys.platform == 'win32':
     extra_cpp_libraries.append('Ws2_32')
     # For determining if a path is relative (for dtr)
@@ -214,9 +211,12 @@ def rmsd_extensions():
 
 def geometry_extensions():
     compiler.initialize()
-    compiler_args = (compiler.compiler_args_sse2 + compiler.compiler_args_sse3 +
-                     compiler.compiler_args_opt + compiler.compiler_args_warn)
+    compiler_args = (
+        compiler.compiler_args_openmp +
+        compiler.compiler_args_sse2 + compiler.compiler_args_sse3 +
+        compiler.compiler_args_opt + compiler.compiler_args_warn)
     define_macros = None
+    compiler_libraries = compiler.compiler_libraries_openmp + extra_cpp_libraries
 
     return [
         Extension('mdtraj.geometry._geometry',
@@ -231,7 +231,7 @@ def geometry_extensions():
                      'mdtraj/geometry/src/kernels/distancekernels.h'],
             define_macros=define_macros,
             extra_compile_args=compiler_args,
-            libraries=extra_cpp_libraries,
+            libraries=compiler_libraries,
             language='c++'),
         Extension('mdtraj.geometry.drid',
             sources=["mdtraj/geometry/drid.pyx",
@@ -240,6 +240,7 @@ def geometry_extensions():
             include_dirs=["mdtraj/geometry/include"],
             define_macros=define_macros,
             extra_compile_args=compiler_args,
+            libraries=compiler_libraries,
             language='c++'),
         Extension('mdtraj.geometry.neighbors',
             sources=["mdtraj/geometry/neighbors.pyx",
@@ -247,14 +248,15 @@ def geometry_extensions():
             include_dirs=["mdtraj/geometry/include",],
             define_macros=define_macros,
             extra_compile_args=compiler_args,
+            libraries=compiler_libraries,
             language='c++'),
         Extension('mdtraj.geometry.neighborlist',
             sources=["mdtraj/geometry/neighborlist.pyx",
                      "mdtraj/geometry/src/neighborlist.cpp"],
             include_dirs=["mdtraj/geometry/include",],
             define_macros=define_macros,
-            extra_compile_args=compiler_args+compiler.compiler_args_openmp,
-            libraries=compiler.compiler_libraries_openmp,
+            extra_compile_args=compiler_args,
+            libraries=compiler_libraries,
             language='c++'),
         ]
 
