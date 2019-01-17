@@ -48,3 +48,8 @@ int xdr_seek(XDRFILE *xd, int64_t pos, int whence)
 
 	return exdrOK;
 }
+
+int xdr_flush(XDRFILE* xdr)
+{
+    return fflush(xdr->fp);
+}

@@ -22,7 +22,7 @@ from basesetup import (write_version_py, build_ext,
 try:
     import numpy
     import Cython
-    if Cython.__version__ < '0.19':
+    if Cython.__version__ < '0.28':
         raise ImportError
     from Cython.Build import cythonize
 except ImportError:
@@ -78,10 +78,7 @@ compiler = CompilerDetection(disable_openmp)
 compiler.initialize()
 
 extra_cpp_libraries = []
-if sys.platform == 'darwin':
-    extra_cpp_libraries.append('stdc++')
-    os.environ['CXX'] = 'clang++'
-    os.environ['CC'] = 'clang'
+
 if sys.platform == 'win32':
     extra_cpp_libraries.append('Ws2_32')
     # For determining if a path is relative (for dtr)

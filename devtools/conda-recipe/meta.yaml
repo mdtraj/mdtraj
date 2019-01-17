@@ -18,7 +18,7 @@ requirements:
     - setuptools
     - cython
     - numpy
-    - zlib 1.2.8
+    - zlib
     - msinttypes  # [win and py27]
 
   run:
@@ -34,11 +34,16 @@ requirements:
 
 test:
   requires:
-    - pytest
+    - pytest <4.1
     - networkx
     - matplotlib
-    - openmm >=7.1  # [not (win32 or (win and py2k))]
-    - shiftx2  # [linux and py2k]
+    - openmm >=7.1  # [not (win32 or (win and py2k) or py37)]
+    # - shiftx2  # [linux and py2k]
+    # shiftx2 omnia seems to be broken, cc https://github.com/omnia-md/conda-recipes/pull/932
+
+    # do not install cpptraj on osx, because the current version from omnia is linked against an old runtime.
+    # and not avail on win
+    #- cpptraj  # [not (osx or win32) ]
     - nbformat
     - ipykernel
     - scikit-learn
@@ -53,7 +58,7 @@ test:
     - mdtraj
 
   commands:
-    - pytest  --ignore-flaky
+    - pytest -v --ignore-flaky
 
 about:
   home: https://github.com/mdtraj/mdtraj

@@ -1,3 +1,9 @@
 graft examples
-graft mdtraj
+
 include basesetup.py
+
+recursive-include mdtraj *.h *.hxx *.hpp *.c *.cpp *.cxx *.pxd *.pyx *.pxi
+
+prune __pycache__
+prune *.pyc
+

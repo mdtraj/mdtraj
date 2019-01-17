@@ -12,5 +12,6 @@
 
 int64_t xdr_tell(XDRFILE *xd);
 int xdr_seek(XDRFILE *xd, int64_t pos, int whence);
+int xdr_flush(XDRFILE* xd);
 
 #endif

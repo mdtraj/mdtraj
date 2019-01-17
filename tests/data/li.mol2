@@ -6,7 +6,7 @@ NO_CHARGES
 @<TRIPOS>CRYSIN
    10.0000    10.0000    10.0000    90.0000    90.0000    90.0000  1  1
 @<TRIPOS>ATOM
-       1 Li           0.0000     0.0000     0.0000 opls_404      1 RES     
+       1 Li           0.0000     0.0000     0.0000 Li      1 RES     
 @<TRIPOS>BOND
 @<TRIPOS>SUBSTRUCTURE
        1 RES             1 RESIDUE    0 **** ROOT      0
