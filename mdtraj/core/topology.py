@@ -336,7 +336,7 @@ class Topology(object):
         for chain in self.chains:
             c = out.addChain()
             for residue in chain.residues:
-                r = out.addResidue(residue.name, c, id=residue.resSeq)
+                r = out.addResidue(residue.name, c, id=str(residue.resSeq))
                 for atom in residue.atoms:
                     if atom.element is elem.virtual:
                         element = None
