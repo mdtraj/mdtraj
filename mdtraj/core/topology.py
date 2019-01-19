@@ -338,7 +338,7 @@ class Topology(object):
         for chain in self.chains:
             c = out.addChain()
             for residue in chain.residues:
-                r = out.addResidue(residue.name, c)
+                r = out.addResidue(residue.name, c, id=str(residue.resSeq))
                 for atom in residue.atoms:
                     if atom.element is elem.virtual:
                         element = None
@@ -391,7 +391,10 @@ class Topology(object):
         for chain in value.chains():
             c = out.add_chain()
             for residue in chain.residues():
-                r = out.add_residue(residue.name, c)
+                try:
+                    r = out.add_residue(residue.name, c, resSeq=int(residue.id))
+                except ValueError:
+                    r = out.add_residue(residue.name, c)
                 for atom in residue.atoms():
                     if atom.element is None:
                         element = elem.virtual

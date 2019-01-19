@@ -10,10 +10,10 @@ environment:
     - PYTHON: "C:\\Miniconda36-x64"
       CONDA_PY: "27"
       ARCH: "64"
-    - PYTHON: "C:\\Miniconda3-x64"
+    - PYTHON: "C:\\Miniconda36-x64"
       CONDA_PY: "36"
       ARCH: "64"
-    - PYTHON: "C:\\Miniconda3-x64"
+    - PYTHON: "C:\\Miniconda36-x64"
       CONDA_PY: "37"
       ARCH: "64"
 
@@ -27,4 +27,5 @@ install:
 build: false
 
 test_script:
+  - "%CMD_IN_ENV% activate base"
   - "%CMD_IN_ENV% conda build --quiet devtools\\conda-recipe"
