@@ -7,12 +7,19 @@ extern "C" {
 void dist_mic(const float* xyz, const int* pairs, const float* box_matrix,
               float* distance_out, float* displacement_out,
               const int n_frames, const int n_atoms, const int n_pairs);
+void dist_mic_t(const float* xyz, const int* pairs, const float* box_matrix,
+                float* distance_out, float* displacement_out,
+                const int n_frames, const int n_atoms, const int n_pairs);
 
 void dist(const float* xyz, const int* pairs, float* distance_out,
           float* displacement_out, const int n_frames, const int n_atoms,
           const int n_pairs);
 
 void dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_matrix,
+                        float* distance_out, float* displacement_out,
+                        const int n_frames, const int n_atoms, const int n_pairs);
+
+void dist_mic_triclinic_t(const float* xyz, const int* pairs, const float* box_matrix,
                         float* distance_out, float* displacement_out,
                         const int n_frames, const int n_atoms, const int n_pairs);
 

@@ -100,7 +100,7 @@ def compute_distances_t(traj, t, atom_pairs, periodic=True, opt=True):
         orthogonal = np.allclose(traj.unitcell_angles, 90)
         if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
-            _geometry._dist_mic(xyz, pairs, box.transpose(0, 2, 1).copy(), out, orthogonal)
+            _geometry._dist_mic_t(xyz, pairs, box.transpose(0, 2, 1).copy(), out, orthogonal)
             return out
         else:
             return _distance_mic_t(xyz, t, pairs, box.transpose(0, 2, 1), orthogonal)
