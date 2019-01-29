@@ -100,10 +100,10 @@ def compute_distances_t(traj, t, atom_pairs, periodic=True, opt=True):
         orthogonal = np.allclose(traj.unitcell_angles, 90)
         if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
-            _geometry._dist_mic_t(xyz, pairs, box.transpose(0, 2, 1).copy(), out, orthogonal)
+            _geometry._dist_mic_t(xyz, pairs, times, box.transpose(0, 2, 1).copy(), out, orthogonal)
             return out
         else:
-            return _distance_mic_t(xyz, t, pairs, box.transpose(0, 2, 1), orthogonal)
+            return _distance_mic_t(xyz, t, pairs, times, box.transpose(0, 2, 1), orthogonal)
 
     # either there are no unitcell vectors or they dont want to use them
     if opt:
@@ -279,27 +279,12 @@ def _distance_mic(xyz, pairs, box_vectors, orthogonal):
     return out
 
 
-def _distance_mic_t(xyz, t, pairs, box_vectors, orthogonal):
+def _distance_mic_t(xyz, t, pairs, times, box_vectors, orthogonal):
     out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
-    for i in range(len(xyz)):
-        bv1, bv2, bv3 = _reduce_box_vectors(box_vectors[i].T)
-
-        for j, (a,b) in enumerate(pairs):
-            r12 = xyz[i,b,:] - xyz[i,a,:]
-            r12 += xyz[i,a,:] - xyz[t,a,:]
-            r12 -= bv3*round(r12[2]/bv3[2]);
-            r12 -= bv2*round(r12[1]/bv2[1]);
-            r12 -= bv1*round(r12[0]/bv1[0]);
-            dist = np.linalg.norm(r12)
-            if not orthogonal:
-                for ii in range(-1, 2):
-                    v1 = bv1*ii
-                    for jj in range(-1, 2):
-                        v12 = bv2*jj + v1
-                        for kk in range(-1, 2):
-                            new_r12 = r12 + v12 + bv3*kk
-                            dist = min(dist, np.linalg.norm(new_r12))
-            out[i, j] = dist
+    for time, pair in zip(times, pairs):
+        r12 = xyz[time[1], pair[1], :] - xyz[time[0], pair[0], :]
+        dist = np.linalg.norm(r12)
+        out[i, j] = dist
     return out
 
 
