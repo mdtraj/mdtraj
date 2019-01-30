@@ -135,6 +135,10 @@ void dist_t(const float* xyz, const int* pairs, const int* times,
 {
     bool store_displacement = (displacement_out != NULL);
     bool store_distance = (distance_out != NULL);
+#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
+    fvec4 box_size(box_matrix[0], box_matrix[4], box_matrix[8], 0);
+    fvec4 inv_box_size(1.0f/box_matrix[0], 1.0f/box_matrix[4], 1.0f/box_matrix[8], 0);
+#endif
     for (int k = 0; k < n_pairs; k++) {
         // Find where in xyz to find the appropriate coordinates
         int time_offset1 = times[2*k + 0] * n_atoms * 3;
@@ -146,6 +150,9 @@ void dist_t(const float* xyz, const int* pairs, const int* times,
         fvec4 pos1(xyz[offset1], xyz[offset1+1], xyz[offset1+2], 0);
         fvec4 pos2(xyz[offset2], xyz[offset2+1], xyz[offset2+2], 0);
         fvec4 r12 = pos2-pos1;
+#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
+        r12 -= round(r12*inv_box_size)*box_size;
+#endif
 
         // Store results.
 

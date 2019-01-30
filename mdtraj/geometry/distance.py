@@ -85,9 +85,10 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
         return _distance(xyz, pairs)
 
 
-def compute_distances_t(traj, t, atom_pairs, periodic=True, opt=True):
+def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     pairs = ensure_type(atom_pairs, dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2), warn_on_cast=False)
+    times = ensure_type(time_pairs, dtype=np.int32, ndim=2, name='time_pairs', shape=(None, 2), warn_on_cast=False)
     if not np.all(np.logical_and(pairs < traj.n_atoms, pairs >= 0)):
         raise ValueError('atom_pairs must be between 0 and %d' % traj.n_atoms)
 
@@ -103,7 +104,7 @@ def compute_distances_t(traj, t, atom_pairs, periodic=True, opt=True):
             _geometry._dist_mic_t(xyz, pairs, times, box.transpose(0, 2, 1).copy(), out, orthogonal)
             return out
         else:
-            return _distance_mic_t(xyz, t, pairs, times, box.transpose(0, 2, 1), orthogonal)
+            return _distance_mic_t(xyz, pairs, times, box.transpose(0, 2, 1), orthogonal)
 
     # either there are no unitcell vectors or they dont want to use them
     if opt:
@@ -279,12 +280,12 @@ def _distance_mic(xyz, pairs, box_vectors, orthogonal):
     return out
 
 
-def _distance_mic_t(xyz, t, pairs, times, box_vectors, orthogonal):
-    out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
-    for time, pair in zip(times, pairs):
+def _distance_mic_t(xyz, pairs, times, box_vectors, orthogonal):
+    out = np.empty((pairs.shape[0]), dtype=np.float32)
+    for i, (time, pair) in enumerate(zip(times, pairs)):
         r12 = xyz[time[1], pair[1], :] - xyz[time[0], pair[0], :]
         dist = np.linalg.norm(r12)
-        out[i, j] = dist
+        out[i] = dist
     return out
 
 
