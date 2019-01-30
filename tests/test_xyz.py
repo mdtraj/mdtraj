@@ -34,7 +34,7 @@ fd_gz, temp_gz = tempfile.mkstemp(suffix='.xyz.gz')
 
 def teardown_module(module):
     """Remove the temporary file created by tests in this file
-    this gets automatically called by nose. """
+    this gets automatically called by pytest. """
     os.close(fd)
     os.unlink(temp)
 

@@ -7,6 +7,6 @@ runipy
 openmm
 pytables
 scikit-learn
-nose
+pytest
 pandas
 numpydoc
