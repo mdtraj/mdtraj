@@ -100,8 +100,10 @@ def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
                           warn_on_cast=False)
         orthogonal = np.allclose(traj.unitcell_angles, 90)
         if opt:
-            out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+            out = np.empty((times.shape[0], pairs.shape[0]), dtype=np.float32)
+            #out = np.empty((xyz.shape[0], pairs.shape[0], times.shape[0]), dtype=np.float32)
             _geometry._dist_mic_t(xyz, pairs, times, box.transpose(0, 2, 1).copy(), out, orthogonal)
+            out = out.reshape((times.shape[0], pairs.shape[0]))
             return out
         else:
             return _distance_mic_t(xyz, pairs, times, box.transpose(0, 2, 1), orthogonal)

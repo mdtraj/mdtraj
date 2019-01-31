@@ -113,21 +113,28 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None, bin_widt
     #pairs_set = list(set(pairs[:, 0]))
     #pairs = np.vstack([np.vstack([pairs_set, pairs_set]).T, pairs])
 
-    g_r = np.zeros(shape=(period_length, n_bins))
+    g_r_t = np.zeros(shape=(len(times), n_bins))
     num_chunks = int(np.floor(traj.n_frames / period_length))
 
-    #for num_chunk in range(num_chunks):
-    #    print(num_chunk, num_chunks)
-    #    sub_traj = traj[num_chunk*period_length:(num_chunk+1)*period_length]
-    #    frame_distances = compute_distances_t(sub_traj, pairs, times, periodic=periodic, opt=opt)
-    #    for n, distances in enumerate(frame_distances):
-    #        tmp, edges = np.histogram(distances, range=r_range, bins=n_bins)
-    #        g_r[n, :] += tmp
-    #r = 0.5 * (edges[1:] + edges[:-1])
-    distances = compute_distances_t(traj, pairs, times, periodic=periodic, opt=opt)
+    # Returns shape (len(times), len(pairs))
+    frame_distances = compute_distances_t(traj, pairs, times, periodic=periodic, opt=opt)
+
+    for n, distances in enumerate(frame_distances):
+        tmp, edges = np.histogram(distances, range=r_range, bins=n_bins)
+        g_r_t[n, :] += tmp
+    r = 0.5 * (edges[1:] + edges[:-1])
+#    for num_chunk in range(num_chunks):
+#        print(num_chunk, num_chunks)
+#        sub_traj = traj[num_chunk*period_length:(num_chunk+1)*period_length]
+#        frame_distances = compute_distances_t(sub_traj, pairs, times, periodic=periodic, opt=opt)
+#        for n, distances in enumerate(frame_distances):
+#            tmp, edges = np.histogram(distances, range=r_range, bins=n_bins)
+#            g_r[num_chunk, :] += tmp
+#    r = 0.5 * (edges[1:] + edges[:-1])
+    #distances = compute_distances_t(traj, pairs, times, periodic=periodic, opt=opt)
     #for n, distances in enumerate(frame_distances):
-    g_r, edges = np.histogram(distances, range=r_range, bins=n_bins)
-    #g_r[n, :] += tmp
+    #g_r, edges = np.histogram(distances, range=r_range, bins=n_bins)
+    #    g_r[n, :] += tmp
     r = 0.5 * (edges[1:] + edges[:-1])
 
     # Normalize by volume of the spherical shell.
@@ -139,6 +146,6 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None, bin_widt
     V = (4 / 3) * np.pi * (np.power(edges[1:], 3) - np.power(edges[:-1], 3))
     norm = len(pairs) / (period_length) * np.sum(1.0 / traj.unitcell_volumes) * V
 
-    g_r = g_r.astype(np.float64) / norm  # From int64.
+    g_r_t = g_r_t.astype(np.float64) / norm  # From int64.
 
-    return r, g_r
+    return r, g_r_t

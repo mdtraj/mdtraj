@@ -88,18 +88,17 @@ def compare_gromacs_xvg(ref_filename, r, g_r):
     eq(g_r, g_r0, decimal=2)
 
 def test_rdf_t(get_fn):
-    traj = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))[:4]
-    ref_pairs = traj.top.select_pairs('all', 'all')
-    pairs = ref_pairs
-    times = np.vstack([np.zeros(np.shape(pairs)[0]), np.zeros(np.shape(pairs)[0])]).T
+    #traj = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))[:100]
+    traj = md.load('10fs.xtc', top='10fs.gro', stride=10)
+    pairs = traj.top.select_pairs('name O', 'name O')
+    times = [[i, 0] for i in range(50)]
 
-    for n in range(1, traj.n_frames):
-        times = np.vstack([times, np.vstack([n*np.ones(np.shape(ref_pairs)[0]), n*np.zeros(np.shape(ref_pairs)[0])]).T])
-        pairs = np.vstack([pairs, ref_pairs])
-    r, g_r = md.compute_rdf_t(traj, pairs, times, n_bins=1000, periodic=True, opt=False)
+    r, g_r_t = md.compute_rdf_t(traj, pairs, times, r_range=(0, 1), periodic=True, opt=True)
     import matplotlib.pyplot as plt
     plt.figure()
-    plt.semilogy(r, g_r)
-    plt.ylim((0.01, 100))
+    for i in range(int(g_r_t.shape[0])):
+        plt.plot(r, g_r_t[i], label='{}'.format(i*0.1), alpha=float(1-i/50), linewidth=1)
+    plt.ylim((0, 5))
+    plt.xlabel('no')
+    plt.ylabel('no')
     plt.savefig('tmp.pdf')
-    assert False
