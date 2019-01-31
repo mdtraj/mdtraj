@@ -88,17 +88,11 @@ def compare_gromacs_xvg(ref_filename, r, g_r):
     eq(g_r, g_r0, decimal=2)
 
 def test_rdf_t(get_fn):
-    #traj = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))[:100]
-    traj = md.load('10fs.xtc', top='10fs.gro', stride=10)
+    traj = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))
     pairs = traj.top.select_pairs('name O', 'name O')
-    times = [[i, 0] for i in range(50)]
+    times = list()
+    for j in range(100):
+        for i in range(4):
+            times.append([j*4+i, j*4])
 
     r, g_r_t = md.compute_rdf_t(traj, pairs, times, r_range=(0, 1), periodic=True, opt=True)
-    import matplotlib.pyplot as plt
-    plt.figure()
-    for i in range(int(g_r_t.shape[0])):
-        plt.plot(r, g_r_t[i], label='{}'.format(i*0.1), alpha=float(1-i/50), linewidth=1)
-    plt.ylim((0, 5))
-    plt.xlabel('no')
-    plt.ylabel('no')
-    plt.savefig('tmp.pdf')
