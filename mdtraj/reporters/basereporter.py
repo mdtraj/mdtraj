@@ -173,9 +173,6 @@ class _BaseReporter(object):
                 dof -= 3
             self._dof = dof
 
-        if simulation.topology.getUnitCellDimensions() is None:
-            self._cell = False
-
     def describeNextReport(self, simulation):
         """Get information about the next report this object will generate.
 
