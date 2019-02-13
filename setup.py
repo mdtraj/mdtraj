@@ -9,38 +9,16 @@ binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 """
 
 from __future__ import print_function, absolute_import
+
 DOCLINES = __doc__.split("\n")
 
-import os
 import sys
 from glob import glob
 from setuptools import setup, Extension, find_packages
+
 sys.path.insert(0, '.')
 from basesetup import (write_version_py, build_ext,
                        StaticLibrary, CompilerDetection)
-
-try:
-    import numpy
-    import Cython
-    if Cython.__version__ < '0.28':
-        raise ImportError
-    from Cython.Build import cythonize
-except ImportError:
-    print('-'*80, file=sys.stderr)
-    print('''Error: building mdtraj requires numpy and cython>=0.19
-
-Try running the command ``pip install numpy cython`` or
-``conda install numpy cython``.
-
-or see http://docs.scipy.org/doc/numpy/user/install.html and
-http://cython.org/ for more information.
-
-If you're feeling lost, we recommend downloading the (free) Anaconda python
-distribution https://www.continuum.io/downloads, because it comes with
-these components included.''', file=sys.stderr)
-    print('-'*80, file=sys.stderr)
-    sys.exit(1)
-
 
 try:
     # add an optional --disable-openmp to disable OpenMP support
@@ -260,6 +238,7 @@ def geometry_extensions():
             language='c++'),
         ]
 
+
 extensions = format_extensions()
 extensions.extend(rmsd_extensions())
 extensions.extend(geometry_extensions())
@@ -279,16 +258,10 @@ setup(name='mdtraj',
       classifiers=CLASSIFIERS.splitlines(),
       packages=find_packages(),
       cmdclass={'build_ext': build_ext},
-      ext_modules=cythonize(extensions),
-
-      # setup_requires really doesn't work sufficently well with `pip install`
-      # to use. See https://github.com/mdtraj/mdtraj/issues/984. Also
-      # setup_requires=['setuptools>=18', 'cython>=0.22', 'numpy>=1.6'],
-
-      # Also, install_requires is no better, especially with numpy.
-      # See http://article.gmane.org/gmane.comp.python.distutils.devel/24218
-      # install_requires=['numpy>=1.6'],
-
+      ext_modules=extensions,
+      install_requires=['numpy>=1.6',
+                        'scipy',
+                        ],
       package_data={'mdtraj.formats.pdb': ['data/*'], },
       zip_safe=False,
       entry_points={'console_scripts':
