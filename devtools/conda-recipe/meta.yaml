@@ -7,7 +7,7 @@ source:
 
 build:
   number: {{ GIT_DESCRIBE_NUMBER }}
-  script: python setup.py install --single-version-externally-managed --record record.txt
+  script: python -m pip install . 
   entry_points:
     - mdconvert = mdtraj.scripts.mdconvert:entry_point
     - mdinspect = mdtraj.scripts.mdinspect:entry_point
@@ -20,6 +20,7 @@ requirements:
     - numpy
     - zlib
     - msinttypes  # [win and py27]
+    - pip
 
   run:
     - python
