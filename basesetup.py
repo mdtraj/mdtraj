@@ -257,10 +257,16 @@ class StaticLibrary(Extension):
 
 class build_ext(_build_ext):
 
-    def build_extension(self, ext):
-        import numpy as np
-
+    @staticmethod
+    def _add_np_inc(ext):
+        try:
+            import numpy as np
+        except ImportError:
+            raise RuntimeError('Install using pip with dependency resolution turned ON.')
         ext.include_dirs.append(np.get_include())
+
+    def build_extension(self, ext):
+        self._add_np_inc(ext)
         if isinstance(ext, StaticLibrary):
             self.build_static_extension(ext)
         else:
@@ -273,6 +279,7 @@ class build_ext(_build_ext):
         self.extensions = _extensions
 
     def build_static_extension(self, ext):
+        self._add_np_inc(ext)
         from distutils import log
 
         sources = ext.sources
@@ -357,3 +364,24 @@ class build_ext(_build_ext):
         except Exception as e:
             pass
         return filename
+
+
+class LazyList(list):
+    """evaluates list lazily upon first access
+    pattern taken from http://tinyurl.com/qb8478q"""
+
+    def __init__(self, callback):
+        self._list, self.callback = None, callback
+
+    def c_list(self):
+        if self._list is None: self._list = self.callback()
+        return self._list
+
+    def __iter__(self):
+        for e in self.c_list(): yield e
+
+    def __getitem__(self, ii):
+        return self.c_list()[ii]
+
+    def __len__(self):
+        return len(self.c_list())

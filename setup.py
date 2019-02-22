@@ -18,7 +18,7 @@ from setuptools import setup, Extension, find_packages
 
 sys.path.insert(0, '.')
 from basesetup import (write_version_py, build_ext,
-                       StaticLibrary, CompilerDetection)
+                       StaticLibrary, CompilerDetection, LazyList)
 
 try:
     # add an optional --disable-openmp to disable OpenMP support
@@ -243,6 +243,7 @@ extensions = format_extensions()
 extensions.extend(rmsd_extensions())
 extensions.extend(geometry_extensions())
 
+
 write_version_py(VERSION, ISRELEASED, 'mdtraj/version.py')
 
 setup(name='mdtraj',
@@ -258,7 +259,7 @@ setup(name='mdtraj',
       classifiers=CLASSIFIERS.splitlines(),
       packages=find_packages(),
       cmdclass={'build_ext': build_ext},
-      ext_modules=extensions,
+      ext_modules=get_extensions(),
       install_requires=['numpy>=1.6',
                         'scipy',
                         ],
