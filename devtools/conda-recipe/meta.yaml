@@ -1,5 +1,3 @@
-{% set pep517 = os.getenv('MDTRAJ_TEST_PEP517', False) %}
-
 package:
   name: mdtraj
   version: {{ GIT_DESCRIBE_TAG }}
@@ -9,7 +7,6 @@ source:
 
 build:
   number: {{ GIT_DESCRIBE_NUMBER }}
-  script: python -m pip install -vv .
   entry_points:
     - mdconvert = mdtraj.scripts.mdconvert:entry_point
     - mdinspect = mdtraj.scripts.mdinspect:entry_point
@@ -20,8 +17,8 @@ requirements:
   build:
     - python
     - setuptools
-    - cython  # [pep517]
-    - numpy  # [pep517]
+    - cython  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
+    - numpy  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
     - zlib
     - msinttypes  # [win and py27]
     - pip
@@ -39,11 +36,11 @@ test:
     - pytest
     - networkx
     - matplotlib
-    - openmm >=7.1  # [not (win32 or (win and py2k) or py37)]
+    #- openmm >=7.1  # [not (win32 or (win and py2k) or py37)]
     - shiftx2  # [linux and py2k]
     # do not install cpptraj on osx, because the current version from omnia is linked against an old runtime.
     # and not avail on win
-    - cpptraj  # [not (osx or win32) ]
+    #- cpptraj  # [not (osx or win32) ]
     - nbformat
     - ipykernel
     - scikit-learn
