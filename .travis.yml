@@ -13,8 +13,8 @@ install:
   - source devtools/travis-ci/install_sparta.sh
   - source devtools/travis-ci/install_ppm.sh
   - conda config --add channels omnia
-  - conda config --add channels conda-forge # hightest priority 
-  - git fetch --unshallow
+  - conda config --add channels conda-forge # hightest priority
+  - git fetch --unshallow --tags
 
 script:
   conda build --quiet devtools/conda-recipe
