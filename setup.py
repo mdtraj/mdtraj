@@ -18,7 +18,7 @@ from setuptools import setup, Extension, find_packages
 
 sys.path.insert(0, '.')
 from basesetup import (write_version_py, build_ext,
-                       StaticLibrary, CompilerDetection, LazyList)
+                       StaticLibrary, CompilerDetection)
 
 try:
     # add an optional --disable-openmp to disable OpenMP support
