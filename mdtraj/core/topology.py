@@ -53,6 +53,7 @@ import itertools
 import numpy as np
 import os
 import xml.etree.ElementTree as etree
+from collections import namedtuple
 
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import (_PROTEIN_RESIDUES, _WATER_RESIDUES,
@@ -60,6 +61,7 @@ from mdtraj.core.residue_names import (_PROTEIN_RESIDUES, _WATER_RESIDUES,
 from mdtraj.core.selection import parse_selection
 from mdtraj.utils import ilen, import_, ensure_type
 from mdtraj.utils.six import string_types
+from mdtraj.utils.singleton import Singleton
 
 ##############################################################################
 # Utilities
@@ -105,10 +107,13 @@ def _topology_from_subset(topology, atom_indices):
     if not hasattr(bondsiter, '__iter__'):
         bondsiter = bondsiter()
 
-    for atom1, atom2 in bondsiter:
+    for bond in bondsiter:
         try:
+            atom1, atom2 = bond
             newTopology.add_bond(old_atom_to_new_atom[atom1],
-                                 old_atom_to_new_atom[atom2])
+                                 old_atom_to_new_atom[atom2],
+                                 type=bond.type,
+                                 order=bond.order)
         except KeyError:
             pass
             # we only put bonds into the new topology if both of their partners
@@ -155,6 +160,8 @@ class Topology(object):
         Iterator over all Residues in the Chain.
     atoms : generator
         Iterator over all Atoms in the Chain.
+    bonds : generator
+        Iterator over all Bonds in the Topology
 
     Examples
     --------
@@ -220,11 +227,11 @@ class Topology(object):
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq, residue.segment_id)
                 for atom in residue.atoms:
-                    out.add_atom(atom.name, atom.element, r,
-                                 serial=atom.serial)
+                    out.add_atom(atom.name, atom.element, r, serial=atom.serial)
 
-        for a1, a2 in self.bonds:
-            out.add_bond(a1, a2)
+        for bond in self.bonds:
+            a1, a2 = bond
+            out.add_bond(a1, a2, type=bond.type, order=bond.order)
 
         return out
 
@@ -270,8 +277,9 @@ class Topology(object):
                                      serial=atom.serial)
                     atom_mapping[atom] = a
 
-        for a1, a2 in other.bonds:
-            out.add_bond(atom_mapping[a1], atom_mapping[a2])
+        for bond in other.bonds:
+            a1, a2 = bond
+            out.add_bond(atom_mapping[a1], atom_mapping[a2], type=bond.type, order=bond.order)
 
         return out
 
@@ -318,11 +326,17 @@ class Topology(object):
 
         out = app.Topology()
         atom_mapping = {}
+        bond_mapping = {Single: app.Single,
+                        Double: app.Double,
+                        Triple: app.Triple,
+                        Amide: app.Amide,
+                        Aromatic: app.Aromatic,
+                        None: None}
 
         for chain in self.chains:
             c = out.addChain()
             for residue in chain.residues:
-                r = out.addResidue(residue.name, c)
+                r = out.addResidue(residue.name, c, id=str(residue.resSeq))
                 for atom in residue.atoms:
                     if atom.element is elem.virtual:
                         element = None
@@ -331,8 +345,9 @@ class Topology(object):
                     a = out.addAtom(atom.name, element, r)
                     atom_mapping[atom] = a
 
-        for a1, a2 in self.bonds:
-            out.addBond(atom_mapping[a1], atom_mapping[a2])
+        for bond in self.bonds:
+            a1, a2 = bond
+            out.addBond(atom_mapping[a1], atom_mapping[a2], type=bond_mapping[bond.type], order=bond.order)
 
         if traj is not None:
             angles = traj.unitcell_angles[0]
@@ -357,6 +372,12 @@ class Topology(object):
             mdtraj topology.
         """
         app = import_('simtk.openmm.app')
+        bond_mapping = {app.Single: Single,
+                        app.Double: Double,
+                        app.Triple: Triple,
+                        app.Amide: Amide,
+                        app.Aromatic: Aromatic,
+                        None: None}
 
         if not isinstance(value, app.Topology):
             raise TypeError('value must be an OpenMM Topology. '
@@ -368,7 +389,10 @@ class Topology(object):
         for chain in value.chains():
             c = out.add_chain()
             for residue in chain.residues():
-                r = out.add_residue(residue.name, c)
+                try:
+                    r = out.add_residue(residue.name, c, resSeq=int(residue.id))
+                except ValueError:
+                    r = out.add_residue(residue.name, c)
                 for atom in residue.atoms():
                     if atom.element is None:
                         element = elem.virtual
@@ -377,8 +401,9 @@ class Topology(object):
                     a = out.add_atom(atom.name, element, r)
                     atom_mapping[atom] = a
 
-        for a1, a2 in value.bonds():
-            out.add_bond(atom_mapping[a1], atom_mapping[a2])
+        for bond in value.bonds():
+            a1, a2 = bond
+            out.add_bond(atom_mapping[a1], atom_mapping[a2], type=bond_mapping[bond.type], order=bond.order)
 
         return out
 
@@ -389,9 +414,10 @@ class Topology(object):
         -------
         atoms : pandas.DataFrame
             The atoms in the topology, represented as a data frame.
-        bonds : np.ndarray
-            The bonds in this topology, represented as an n_bonds x 2 array
-            of the indices of the atoms involved in each bond.
+        bonds : np.ndarray, shape=(n_bonds, 4), dtype=float, Optional
+            The bonds in this topology, represented as an n_bonds x 4 array indicating the two atom indices of the bond,
+            the bond type, and bond order, cast to floats as the type is mapped from the classes to fractional.
+            The atom indices and order are integers cast to float
         """
         pd = import_('pandas')
         data = [(atom.serial, atom.name, atom.element.symbol,
@@ -401,7 +427,18 @@ class Topology(object):
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
                                             "resSeq", "resName", "chainID","segmentID"])
 
-        bonds = np.array([(a.index, b.index) for (a, b) in self.bonds])
+        bonds = np.zeros([len(self._bonds), 4], dtype=float)
+        for index, bond in enumerate(self.bonds):
+            if bond.order is None:
+                order = 0.0
+            else:
+                order = bond.order
+            try:
+                bond_type = float(bond.type)
+            except TypeError:
+                # Trap the None case
+                bond_type = 0.0
+            bonds[index] = bond.atom1.index, bond.atom2.index, bond_type, order
         return atoms, bonds
 
     @classmethod
@@ -417,12 +454,14 @@ class Topology(object):
             "resName" (name of the residue), "chainID" (index of the chain),
             and optionally "segmentID", following the same conventions
             as wwPDB 3.0 format.
-        bonds : np.ndarray, shape=(n_bonds, 2), dtype=int, optional
-            The bonds in the topology, represented as an n_bonds x 2 array
-            of the indices of the atoms involved in each bond. Specifiying
-            bonds here is optional. To create standard protein bonds, you can
-            use `create_standard_bonds` to "fill in" the bonds on your newly
-            created Topology object
+        bonds : np.ndarray, shape=(n_bonds, 4) or (n_bonds, 2), dtype=float, Optional
+            The bonds in the topology, represented as a n_bonds x 4 or n_bonds x 2
+            size array of the indices of the atoms involved, type, and order of each
+            bond, represented as floats. Type and order are optional. Specifying bonds
+            here is optional. To create standard protein bonds, you can use
+            `create_standard_bonds` to "fill in" the bonds on your newly created
+            Topology object, although type and order of bond are not computed if
+            that method is used.
 
         See Also
         --------
@@ -431,7 +470,7 @@ class Topology(object):
         pd = import_('pandas')
 
         if bonds is None:
-            bonds = np.zeros((0, 2))
+            bonds = np.zeros([0, 4], dtype=float)
 
         for col in ["name", "element", "resSeq",
                     "resName", "chainID", "serial"]:
@@ -476,8 +515,19 @@ class Topology(object):
                     out._atoms[atom_index] = a
                     r._atoms.append(a)
 
-        for ai1, ai2 in bonds:
-            out.add_bond(out.atom(ai1), out.atom(ai2))
+        for bond in bonds:
+            ai1 = int(bond[0])
+            ai2 = int(bond[1])
+            try:
+                bond_type = float_to_bond_type(bond[2])
+                bond_order = int(bond[3])
+                if bond_order == 0:
+                    bond_order = None
+            except IndexError:
+                # Does not exist
+                bond_type = None
+                bond_order = None
+            out.add_bond(out.atom(ai1), out.atom(ai2), bond_type, bond_order)
 
         out._numAtoms = out.n_atoms
         return out
@@ -552,15 +602,11 @@ class Topology(object):
             return False
 
         # the bond ordering is somewhat ambiguous, so try and fix it for comparison
-        self_sorted_bonds = sorted([(a1.index, b1.index)
-                                    for (a1, b1) in self.bonds])
-        other_sorted_bonds = sorted([(a2.index, b2.index)
-                                     for (a2, b2) in other.bonds])
+        self_sorted_bonds = sorted([bond for bond in self.bonds])
+        other_sorted_bonds = sorted([bond for bond in other.bonds])
 
-        for i in range(len(self._bonds)):
-            (a1, b1) = self_sorted_bonds[i]
-            (a2, b2) = other_sorted_bonds[i]
-            if (a1 != a2) or (b1 != b2):
+        for i, bond in enumerate(self_sorted_bonds):
+            if bond != other_sorted_bonds[i]:
                 return False
 
         return True
@@ -634,7 +680,7 @@ class Topology(object):
         residue._atoms.append(atom)
         return atom
 
-    def add_bond(self, atom1, atom2):
+    def add_bond(self, atom1, atom2, type=None, order=None):
         """Create a new bond and add it to the Topology.
 
         Parameters
@@ -643,11 +689,15 @@ class Topology(object):
             The first Atom connected by the bond
         atom2 : mdtraj.topology.Atom
             The second Atom connected by the bond
+        type : mdtraj.topology.Singleton or None, Default: None, Optional
+            Bond type of the bond, or None if not known/provided
+        order : 1, 2, 3 or None, Default: None, Optional
+            Characteristic order of the bond if known, defaults None
         """
         if atom1.index < atom2.index:
-            self._bonds.append((atom1, atom2))
+            self._bonds.append(Bond(atom1, atom2, type=type, order=order))
         else:
-            self._bonds.append((atom2, atom1))
+            self._bonds.append(Bond(atom2, atom1, type=type, order=order))
 
     def chain(self, index):
         """Get a specific chain by index.  These indices
@@ -777,8 +827,11 @@ class Topology(object):
 
         Returns
         -------
-        atomiter : generator
-            Iterator over all tuple of Atoms in the Trajectory involved in a bond.
+        bonditer : generator
+            Iterator over all bonds between Atoms in the Trajectory.
+            Each bond can then be iterated to get the atoms.
+            I.e.: `for atom1, atom2 in Topology.bonds` yields iterator over pairs of Atoms
+                  `for bond in Topology.bonds` yields iterator over bonds
         """
         return iter(self._bonds)
 
@@ -1135,7 +1188,7 @@ class Topology(object):
             raise ValueError("Could not find any anchor molecules. Based on "
                              "our heuristic, those should be molecules with "
                              "more than {} atoms. Perhaps your topology "
-                             "doesn't give an acurate bond graph?"
+                             "doesn't give an accurate bond graph?"
                              .format(atoms_cutoff))
         return anchor_molecules
 
@@ -1247,6 +1300,9 @@ class Chain(object):
     def n_atoms(self):
         """Get the number of atoms in this Chain"""
         return sum(r.n_atoms for r in self._residues)
+
+    def __hash__(self):
+        return self.index
 
 
 class Residue(object):
@@ -1371,6 +1427,9 @@ class Residue(object):
     def __repr__(self):
         return str(self)
 
+    def __hash__(self):
+        return hash((self.name, self.index, self.resSeq, self.segment_id))
+
 
 class Atom(object):
     """An Atom object represents a residue within a Topology.
@@ -1453,3 +1512,170 @@ class Atom(object):
     def __repr__(self):
         return str(self)
 
+
+# Enumerated values for bond type
+
+class Single(Singleton):
+    def __repr__(self):
+        return 'Single'
+
+    def __float__(self):
+        return 1.0
+Single = Single()
+
+
+class Double(Singleton):
+    def __repr__(self):
+        return 'Double'
+
+    def __float__(self):
+        return 2.0
+Double = Double()
+
+
+class Triple(Singleton):
+    def __repr__(self):
+        return 'Triple'
+
+    def __float__(self):
+        return 3.0
+Triple = Triple()
+
+
+class Aromatic(Singleton):
+    def __repr__(self):
+        return 'Aromatic'
+
+    def __float__(self):
+        return 1.5
+Aromatic = Aromatic()
+
+
+class Amide(Singleton):
+    def __repr__(self):
+        return 'Amide'
+
+    def __float__(self):
+        return 1.25
+Amide = Amide()
+
+
+def float_to_bond_type(bond_float):
+    """
+    Convert a float to known bond type class, or None if no matched class if found
+
+    Parameters
+    ----------
+    bond_float : float
+        Representation of built in bond types as a float,
+        Maps this float to specific bond class, if the float has no map, None is returned instead
+
+    Returns
+    -------
+    bond_type : mdtraj.topology.Singleton subclass or None
+        Bond type matched to the float if known
+        If no match is found, returns None (which is also a valid type for the Bond class)
+    """
+    all_bond_types = [Single, Double, Triple, Aromatic, Amide]
+    for bond_type in all_bond_types:
+        if float(bond_type) == float(bond_float):
+            return bond_type
+    return None
+
+
+class Bond(namedtuple('Bond', ['atom1', 'atom2'])):
+    """A Bond representation of a bond between two Atoms within a Topology
+
+    Attributes
+    ----------
+    atom1 : mdtraj.topology.Atom
+        The first atom in the bond
+    atom2 : mdtraj.topology.Atom
+        The second atom in the bond
+    order : instance of mdtraj.topology.Singleton or None
+    type : int on [1,3] domain or None
+    """
+
+    def __new__(cls, atom1, atom2, type=None, order=None):
+        """Construct a new Bond.  You should call add_bond()
+        on the Topology instead of calling this directly.
+
+        Must use __new__ constructor since this is an immutable class
+        """
+        bond = super(Bond, cls).__new__(cls, atom1, atom2)
+        assert isinstance(type, Singleton) or type is None, "Type must be None or a Singleton"
+        assert order is None or 1 <= order <= 3, "Order must be int between 1 to 3 or None"
+        bond.type = type
+        bond.order = order
+        return bond
+
+    def __getnewargs__(self):
+        """
+        Support for pickle protocol 2:
+        http://docs.python.org/2/library/pickle.html#pickling-and-unpickling-normal-class-instances
+        """
+        return self[0], self[1], self.type, self.order
+
+    @property
+    def _equality_tuple(self):
+        # Hierarchy of parameters: Atom1 index -> Atom2 index -> type -> order
+        return (self[0].index, self[1].index,
+                float(self.type) if self.type is not None else 0.0,
+                self.order if self.order is not None else 0)
+
+    def __deepcopy__(self, memo):
+        return Bond(self[0], self[1], self.type, self.order)
+
+    def __eq__(self, other):
+        if not isinstance(other, Bond):
+            return False
+        return self._equality_tuple == other._equality_tuple
+
+    def __repr__(self):
+        s = "Bond(%s, %s" % (self[0], self[1])
+        if self.type is not None:
+            s = "%s, type=%s" % (s, self.type)
+        if self.order is not None:
+            s = "%s, order=%d" % (s, self.order)
+        s += ")"
+        return s
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __hash__(self):
+        # Set of atoms making up bonds, the type, and the order
+        return hash((self[0], self[1], self.type, self.order))
+
+    @staticmethod
+    def _other_is_bond(other):
+        # Ensure other type for inequalities is a bond
+        if not isinstance(other, Bond):
+            raise TypeError("Bond inequalities can only be compared with other bonds")
+
+    def __gt__(self, other):
+        # Cannot use total_ordering because namedtuple
+        # has its own __gt__, __lt__, etc. methods, which
+        # supersede total_ordering
+        self._other_is_bond(other)
+        return self._equality_tuple > other._equality_tuple
+
+    def __ge__(self, other):
+        self._other_is_bond(other)
+        return self._equality_tuple >= other._equality_tuple
+
+    def __lt__(self, other):
+        self._other_is_bond(other)
+        return self._equality_tuple < other._equality_tuple
+
+    def __le__(self, other):
+        self._other_is_bond(other)
+        return self._equality_tuple <= other._equality_tuple
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __getstate__(self):
+        # This is required for pickle because the parent class
+        # does not properly return a state
+        return self.__dict__

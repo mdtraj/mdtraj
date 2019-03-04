@@ -75,7 +75,7 @@ from mdtraj.geometry import _geometry
 __all__ = ['open', 'load', 'iterload', 'load_frame', 'load_topology', 'join',
            'Trajectory']
 # supported extensions for constructing topologies
-_TOPOLOGY_EXTS = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
+_TOPOLOGY_EXTS = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7', '.prm7',
                   '.psf', '.mol2', '.hoomdxml', '.gro', '.arc', '.hdf5']
 
 
@@ -141,7 +141,7 @@ def load_topology(filename, **kwargs):
     filename : str
         Path to a file containing a system topology. The following extensions
         are supported: '.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
-            '.psf', '.mol2', '.hoomdxml'
+            '.prm7', '.psf', '.mol2', '.hoomdxml'
 
     Returns
     -------
@@ -168,7 +168,7 @@ def _parse_topology(top, **kwargs):
     if isinstance(top, string_types) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):
         _traj = load_frame(top, 0, **kwargs)
         topology = _traj.topology
-    elif isinstance(top, string_types) and (ext in ['.prmtop', '.parm7']):
+    elif isinstance(top, string_types) and (ext in ['.prmtop', '.parm7', '.prm7']):
         topology = load_prmtop(top, **kwargs)
     elif isinstance(top, string_types) and (ext in ['.psf']):
         topology = load_psf(top, **kwargs)
@@ -511,7 +511,7 @@ def iterload(filename, chunk=100, **kwargs):
                     traj = f.read_as_traj(n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
 
                 if len(traj) == 0:
-                    raise StopIteration()
+                    return
 
                 yield traj
 
@@ -1118,10 +1118,13 @@ class Trajectory(object):
         xyz = self.xyz[key]
         time = self.time[key]
         unitcell_lengths, unitcell_angles = None, None
+        rmsd_traces = None
         if self.unitcell_angles is not None:
             unitcell_angles = self.unitcell_angles[key]
         if self.unitcell_lengths is not None:
             unitcell_lengths = self.unitcell_lengths[key]
+        if self._rmsd_traces is not None:
+            rmsd_traces = self._rmsd_traces
 
         if copy:
             xyz = xyz.copy()
@@ -1132,6 +1135,8 @@ class Trajectory(object):
                 unitcell_angles = unitcell_angles.copy()
             if self.unitcell_lengths is not None:
                 unitcell_lengths = unitcell_lengths.copy()
+            if rmsd_traces is not None :
+                rmsd_traces = rmsd_traces.copy()
         else:
             topology = self._topology
 
@@ -1139,9 +1144,9 @@ class Trajectory(object):
             xyz, topology, time, unitcell_lengths=unitcell_lengths,
             unitcell_angles=unitcell_angles)
 
-        if self._rmsd_traces is not None:
-            newtraj._rmsd_traces = np.array(self._rmsd_traces[key],
-                                            ndmin=1, copy=True)
+        if rmsd_traces is not None:
+            newtraj._rmsd_traces = rmsd_traces
+
         return newtraj
 
     def __init__(self, xyz, topology, time=None, unitcell_lengths=None, unitcell_angles=None):
@@ -1271,6 +1276,7 @@ class Trajectory(object):
                 '.gro': self.save_gro,
                 '.rst7' : self.save_amberrst7,
                 '.tng' : self.save_tng,
+                '.dtr': self.save_dtr,
             }
 
     def save(self, filename, **kwargs):

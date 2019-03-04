@@ -3,10 +3,59 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.9 (Development)
+v1.9.3 (Development)
 ------------------
 
-- PR #1254: Fixed/updated alignment code to be more general.
+- Nothing to see here
+
+v1.9.2 (July 30, 2018)
+------------------
+We're please to announce the release of MDTraj 1.9.2. This version has a number of bug fixes and improvements for trajectory parsing and conversion. 
+
+
+- Fix bug in TINKER ARC reader (#1371)
+- Improved mdconvert error message (#1368)
+- Striding relative to current position in XTC and TRR (#1364)
+- Return last successful read frame for DCD (#1358)
+- Handle stride like numpy for DCDs (#1352)
+- Fix pickling of virtual site's element field (#1350)
+- Compile geometry extension with OpenMP (#1349)
+- Ensure correct dtype in neighborlist box vectors (#1344)
+- Added support for prm7 topology file extension (#1334)
+- Added efficient stride handling fo TRR (#1332)
+- Use byte offsets between frames for stride of XTCs (#1331)
+- Updated the calculation of chi5 (#1322, #1323)
+- Added testing against conda-forge channel (#1310)
+- Port [OpenMM bond order](https://github.com/pandegroup/openmm/pull/1668) representation into MDTraj. Implements the `Bond` class to Topology and updates the Mol2 reader to use bond_order field (#1308)
+
+v1.9 (September 3, 2017)
+------------------------
+
+- [xtc] ``approx_nframes`` returns at least one (#1265)
+- Make ``compute_directors`` user-facing (#1260)
+- Add differentiable contacts option (#1247)
+- Remove link to forum (#1237)
+- Skip renumbering if no bonds in mol2 (#1238)
+- Add a bunch of Van Der Waals values (#1174)
+- [geometry] Fix compatibility with old visual studio for Python 2.7 (#1233)
+- Implement ``compute_average_structure`` (#1221)
+- Fix import of ``load_stk`` (#1231)
+- Fix bugs in load with atom_indices and frame args (#1227)
+- Fix conda test running (#1228)
+- Amber restart file convention (#1223)
+- Install path for zlib on linux too (#1208)
+- Fix transform calculation and Transform object to be more general (#1254)
+- Add O1 as alternative definition for water oxygen (#1257)
+- Fix precentering overflow error in center.c (#1283)
+- Add chi5 angle computation (#1291)
+- Fix the build bug caused by incorrect plumbing of the numpy include path
+- into ``cflags`` (#1290)
+- Make RDF ``pairs`` argument required (#1288)
+- Refresh tests (#1266)
+- Remove PyPI downloads badge (#1293)
+- Extracting velocities/forces from TRR files (hidden API) (#1294)
+- Add "in" selection to selection language (#1268)
+- Handle a single frame being passed to sparta+ (#1295)
 
 v1.8 (November 9, 2016)
 -----------------------

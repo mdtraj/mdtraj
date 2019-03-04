@@ -1,11 +1,12 @@
 sphinx
+sphinx_rtd_theme
 matplotlib
-ipython-notebook
+jupyter
 jinja2
 runipy
 openmm
 pytables
 scikit-learn
-nose
+pytest
 pandas
 numpydoc

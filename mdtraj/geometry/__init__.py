@@ -25,7 +25,7 @@ from __future__ import print_function, division
 __all__ = ['baker_hubbard', 'shrake_rupley', 'kabsch_sander', 'compute_distances',
            'compute_displacements', 'compute_angles', 'compute_dihedrals',
            'compute_phi', 'compute_psi', 'compute_chi1', 'compute_chi2',
-           'compute_chi3', 'compute_chi4', 'compute_omega', 'compute_rg',
+           'compute_chi3', 'compute_chi4','compute_chi5', 'compute_omega', 'compute_rg',
            'compute_contacts', 'compute_drid', 'compute_center_of_mass',
            'wernet_nilsson', 'compute_dssp', 'compute_neighbors', 'compute_neighborlist',
            'compute_rdf', 'compute_nematic_order', 'compute_inertia_tensor',
@@ -36,17 +36,17 @@ __all__ = ['baker_hubbard', 'shrake_rupley', 'kabsch_sander', 'compute_distances
            'thermal_expansion_alpha_P',  'density'
            ]
 
-from mdtraj.geometry.rg import *
-from mdtraj.geometry.angle import *
-from mdtraj.geometry.distance import *
-from mdtraj.geometry.dihedral import *
-from mdtraj.geometry.hbond import *
-from mdtraj.geometry.sasa import *
-from mdtraj.geometry.contact import *
-from mdtraj.geometry.drid import *
-from mdtraj.geometry.dssp import *
-from mdtraj.geometry.neighbors import *
-from mdtraj.geometry.neighborlist import *
-from mdtraj.geometry.thermodynamic_properties import *
-from mdtraj.geometry.rdf import *
-from mdtraj.geometry.order import *
+from .rg import *
+from .angle import *
+from .distance import *
+from .dihedral import *
+from .hbond import *
+from .sasa import *
+from .contact import *
+from .drid import *
+from .dssp import *
+from .neighbors import *
+from .neighborlist import *
+from .thermodynamic_properties import *
+from .rdf import *
+from .order import *
