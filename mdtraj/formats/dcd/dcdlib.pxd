@@ -33,4 +33,4 @@ cdef extern from "include/molfile_plugin.h":
       float *coords  # coordinates of all atoms, arranged xyzxyzxyz
       float *velocities  # space for velocities of all atoms; same layout
       float A, B, C, alpha, beta, gamma
-
+      float physical_time

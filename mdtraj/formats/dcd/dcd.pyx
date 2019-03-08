@@ -376,16 +376,12 @@ cdef class DCDTrajectoryFile:
             topology = topology.subset(atom_indices)
 
         initial = self.tell()
-        xyz, box_length, box_angle = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
+        xyz, box_length, box_angle, time = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
         if len(xyz) == 0:
             return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
 
         in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
         in_units_of(box_length, self.distance_unit, Trajectory._distance_unit, inplace=True)
-
-        if stride is None:
-            stride = 1
-        time = (stride*np.arange(len(xyz))) + initial
 
         return Trajectory(xyz=xyz, topology=topology, time=time,
                           unitcell_lengths=box_length,
@@ -423,6 +419,8 @@ cdef class DCDTrajectoryFile:
             gamma angles respectively in entries `cell_angles[i,0]`,
             `cell_angles[i,1]`, `cell_angles[i,2]`. By convention, the cell
             angles in the dcd file are stored in units of degrees.
+        time: np.ndarray, shape=(n_frames), dtype=float32
+            Physical simulation time
         """
         if str(self.mode) != 'r':
             raise ValueError('read() is only available when the file is opened in mode="r"')
@@ -457,6 +455,7 @@ cdef class DCDTrajectoryFile:
         cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((_n_frames, n_atoms_to_read, 3), dtype=np.float32)
         cdef np.ndarray[dtype=np.float32_t, ndim=2] cell_lengths = np.zeros((_n_frames, 3), dtype=np.float32)
         cdef np.ndarray[dtype=np.float32_t, ndim=2] cell_angles = np.zeros((_n_frames, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=1] time = np.zeros(_n_frames, dtype=np.float32)
 
         # only used if atom_indices is given
         cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
@@ -480,6 +479,8 @@ cdef class DCDTrajectoryFile:
             cell_angles[i, 1] = self.timestep.beta
             cell_angles[i, 2] = self.timestep.gamma
 
+            time[i] = self.timestep.physical_time
+
             if status != _DCD_SUCCESS:
                 # if the frame was not successfully read, then we're done
                 break
@@ -498,11 +499,8 @@ cdef class DCDTrajectoryFile:
             cell_angles = None
 
         if status == _DCD_SUCCESS:
-            # if we're done either because of we read all of the n_frames
-            # requested succcessfully, return
-            return xyz, cell_lengths, cell_angles
-
-        if status == _DCD_EOF:
+            pass
+        elif status == _DCD_EOF:
             # if we're doing because we reached a normal EOF (perhaps the)
             # user asked to read more frames than were in the file, we need
             # to truncate the return arrays -- we don't want to return them
@@ -513,11 +511,14 @@ cdef class DCDTrajectoryFile:
             if cell_lengths is not None and cell_angles is not None:
                 cell_lengths = cell_lengths[0:i]
                 cell_angles = cell_angles[0:i]
+        else:
+            # If we got some other status, thats a "real" error.
+            raise IOError("Error: %s", ERROR_MESSAGES(status))
 
-            return xyz, cell_lengths, cell_angles
+        if np.all(time == 0):
+            time = np.arange(self.tell() - i, self.tell())
+        return xyz, cell_lengths, cell_angles, time
 
-        # If we got some other status, thats a "real" error.
-        raise IOError("Error: %s", ERROR_MESSAGES(status))
 
     def write(self, xyz, cell_lengths=None, cell_angles=None):
         """write(xyz, cell_lengths=None, cell_angles=None)

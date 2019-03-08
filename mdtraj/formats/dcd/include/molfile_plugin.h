@@ -171,6 +171,8 @@ typedef struct {
 
 #if vmdplugin_ABIVERSION > 10
   double physical_time; /**< physical time point associated with this frame */
+#else
+#error abi too old
 #endif
 
 #if defined(DESRES_READ_TIMESTEP2)
