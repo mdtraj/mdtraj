@@ -45,6 +45,7 @@ def test_read_2(get_fn):
     assert eq(xyz1, xyz2)
     assert eq(box_lengths1, box_lengths2)
     assert eq(box_angles1, box_angles2)
+    assert eq(time1, time2)
 
 
 def test_read_stride(get_fn):
@@ -72,6 +73,7 @@ def test_read_stride_2(get_fn):
     assert eq(xyz1[::2], xyz2)
     assert eq(box_lengths1[::2], box_lengths2)
     assert eq(box_angles1[::2], box_angles2)
+    assert eq(time1[::2], time2)
 
 
 def test_read_3(get_fn):
@@ -98,12 +100,14 @@ def test_read_4(get_fn):
         eq(xyz_ref[np.newaxis, i], xyz)
         eq(box_lengths_ref[np.newaxis, i], box_lenths)
         eq(box_angles_ref[np.newaxis, i], box_angles)
+        eq(time_ref[np.newaxis, i], t)
 
     xyz_rest, box_rest, angles_rest, t_rest = reader.read()
     i = len(xyz_ref) // 2
     assert eq(xyz_ref[i:], xyz_rest)
     assert eq(box_lengths_ref[i:], box_rest)
     assert eq(box_angles_ref[i:], angles_rest)
+    assert eq(time_ref[i:], t_rest)
 
     assert len(xyz_ref) == i + len(xyz_rest)
 
@@ -201,6 +205,16 @@ def test_write_4(tmpdir):
     assert eq(xyz, xyz2)
     assert eq(box_lengths, box_lengths2)
     assert eq(box_angles, box_angles2)
+
+
+def test_write_time(tmpdir):
+    fn = '{}/x.dcd'.format(tmpdir)
+    xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
+
+    with DCDTrajectoryFile(fn, 'w') as f:
+        with pytest.raises(ValueError):
+            f.write(xyz, time=np.arange(10))
+        f.write(xyz, time=np.arange(0, len(xyz)/2, .5))
 
 
 def test_do_overwrite(tmpdir):
