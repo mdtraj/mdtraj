@@ -427,7 +427,8 @@ cdef class DCDTrajectoryFile:
         if not self.is_open:
             raise IOError("file is not open")
 
-        cdef int _n_frames, n_atoms_to_read, _stride
+        cdef int _n_frames, n_atoms_to_read, \
+            _stride = 1 if stride is None else stride
         if n_frames is None:
             # if the user specifies n_frames=None, they want to read to the
             # end of the file
@@ -441,15 +442,10 @@ cdef class DCDTrajectoryFile:
             n_atoms_to_read = len(np.arange(self.n_atoms)[atom_indices])
         else:
             if min(atom_indices) < 0:
-                raise ValueError('atom_indices should be zero indexed. you gave an index less than zerp')
+                raise ValueError('atom_indices should be zero indexed. you gave an index less than zero')
             if max(atom_indices) >= self.n_atoms:
                 raise ValueError('atom indices should be zero indexed. you gave an index bigger than the number of atoms')
             n_atoms_to_read = len(atom_indices)
-
-        if stride is None:
-            _stride = 1
-        else:
-            _stride = stride
 
         # malloc space to put the data that we're going to read off the disk
         cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((_n_frames, n_atoms_to_read, 3), dtype=np.float32)
@@ -460,7 +456,7 @@ cdef class DCDTrajectoryFile:
         # only used if atom_indices is given
         cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
-        cdef int i, j
+        cdef int i, j = 0
         cdef int status = _DCD_SUCCESS
 
         for i in range(_n_frames):
@@ -480,6 +476,8 @@ cdef class DCDTrajectoryFile:
             cell_angles[i, 2] = self.timestep.gamma
 
             time[i] = self.timestep.physical_time
+            if time[i] == 0.0 or time[i] == np.inf:
+                time[i] = self.tell()
 
             if status != _DCD_SUCCESS:
                 # if the frame was not successfully read, then we're done
@@ -507,16 +505,16 @@ cdef class DCDTrajectoryFile:
             # a big stack of zeros.
             # Note that a successful read prior an erroneous seek should not truncate,
             # this is why we do not assign the status of the seek operation.
+            print('eof reached, pos=', i)
             xyz = xyz[0:i]
             if cell_lengths is not None and cell_angles is not None:
                 cell_lengths = cell_lengths[0:i]
                 cell_angles = cell_angles[0:i]
+            time = time[:i]
         else:
             # If we got some other status, thats a "real" error.
             raise IOError("Error: %s", ERROR_MESSAGES(status))
 
-        if np.all(time == 0):
-            time = np.arange(self.tell() - i, self.tell())
         return xyz, cell_lengths, cell_angles, time
 
 

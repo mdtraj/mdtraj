@@ -30,7 +30,7 @@ import pytest
 
 def test_read(get_fn):
     fn_dcd = get_fn('frame0.dcd')
-    xyz, box_lengths, box_angles = DCDTrajectoryFile(fn_dcd).read()
+    xyz, box_lengths, box_angles, time = DCDTrajectoryFile(fn_dcd).read()
     xyz2 = io.loadh(get_fn('frame0.dcd.h5'), 'xyz')
 
     eq(xyz, xyz2)
@@ -39,8 +39,8 @@ def test_read(get_fn):
 def test_read_2(get_fn):
     # check nframes
     fn_dcd = get_fn('frame0.dcd')
-    xyz1, box_lengths1, box_angles1 = DCDTrajectoryFile(fn_dcd).read()
-    xyz2, box_lengths2, box_angles2 = DCDTrajectoryFile(fn_dcd).read(10000)
+    xyz1, box_lengths1, box_angles1, time1 = DCDTrajectoryFile(fn_dcd).read()
+    xyz2, box_lengths2, box_angles2, time2 = DCDTrajectoryFile(fn_dcd).read(10000)
 
     assert eq(xyz1, xyz2)
     assert eq(box_lengths1, box_lengths2)
@@ -51,22 +51,23 @@ def test_read_stride(get_fn):
     # Read dcd with stride
     fn_dcd = get_fn('frame0.dcd')
     with DCDTrajectoryFile(fn_dcd) as f:
-        xyz1, box_lengths1, box_angles1 = f.read()
+        xyz1, box_lengths1, box_angles1, time1 = f.read()
     with DCDTrajectoryFile(fn_dcd) as f:
-        xyz2, box_lengths2, box_angles2 = f.read(stride=2)
+        xyz2, box_lengths2, box_angles2, time2 = f.read(stride=2)
 
     assert eq(xyz1[::2], xyz2)
     assert eq(box_lengths1[::2], box_lengths2)
     assert eq(box_angles1[::2], box_angles2)
+    assert eq(time1[::2], time2)
 
 
 def test_read_stride_2(get_fn):
     # Read dcd with stride when n_frames is supplied (different code path)
     fn_dcd = get_fn('frame0.dcd')
     with DCDTrajectoryFile(fn_dcd) as f:
-        xyz1, box_lengths1, box_angles1 = f.read()
+        xyz1, box_lengths1, box_angles1, time1 = f.read()
     with DCDTrajectoryFile(fn_dcd) as f:
-        xyz2, box_lengths2, box_angles2 = f.read(n_frames=1000, stride=2)
+        xyz2, box_lengths2, box_angles2, time2 = f.read(n_frames=1000, stride=2)
 
     assert eq(xyz1[::2], xyz2)
     assert eq(box_lengths1[::2], box_lengths2)
@@ -76,11 +77,11 @@ def test_read_stride_2(get_fn):
 def test_read_3(get_fn):
     # Check streaming read of frames 1 at a time
     fn_dcd = get_fn('frame0.dcd')
-    xyz_ref, box_lengths_ref, box_angles_ref = DCDTrajectoryFile(fn_dcd).read()
+    xyz_ref, box_lengths_ref, box_angles_ref, time_ref = DCDTrajectoryFile(fn_dcd).read()
 
     reader = DCDTrajectoryFile(fn_dcd)
     for i in range(len(xyz_ref)):
-        xyz, box_lenths, box_angles = reader.read(1)
+        xyz, box_lenths, box_angles, t = reader.read(1)
         eq(xyz_ref[np.newaxis, i], xyz)
         eq(box_lengths_ref[np.newaxis, i], box_lenths)
         eq(box_angles_ref[np.newaxis, i], box_angles)
@@ -89,16 +90,16 @@ def test_read_3(get_fn):
 def test_read_4(get_fn):
     # Check streaming read followed by reading the 'rest'
     fn_dcd = get_fn('frame0.dcd')
-    xyz_ref, box_lengths_ref, box_angles_ref = DCDTrajectoryFile(fn_dcd).read()
+    xyz_ref, box_lengths_ref, box_angles_ref, time_ref = DCDTrajectoryFile(fn_dcd).read()
 
     reader = DCDTrajectoryFile(fn_dcd)
     for i in range(len(xyz_ref) // 2):
-        xyz, box_lenths, box_angles = reader.read(1)
+        xyz, box_lenths, box_angles, t = reader.read(1)
         eq(xyz_ref[np.newaxis, i], xyz)
         eq(box_lengths_ref[np.newaxis, i], box_lenths)
         eq(box_angles_ref[np.newaxis, i], box_angles)
 
-    xyz_rest, box_rest, angles_rest = reader.read()
+    xyz_rest, box_rest, angles_rest, t_rest = reader.read()
     i = len(xyz_ref) // 2
     assert eq(xyz_ref[i:], xyz_rest)
     assert eq(box_lengths_ref[i:], box_rest)
@@ -110,9 +111,9 @@ def test_read_4(get_fn):
 def test_read_5(get_fn):
     fn_dcd = get_fn('frame0.dcd')
     with DCDTrajectoryFile(fn_dcd) as f:
-        xyz_ref, box_lengths_ref, box_angles_ref = f.read()
+        xyz_ref, box_lengths_ref, box_angles_ref, time_ref = f.read()
     with DCDTrajectoryFile(fn_dcd) as f:
-        xyz, box_lengths, box_angles = f.read(atom_indices=[1, 2, 5])
+        xyz, box_lengths, box_angles, time = f.read(atom_indices=[1, 2, 5])
 
     assert eq(xyz_ref[:, [1, 2, 5], :], xyz)
 
@@ -120,9 +121,9 @@ def test_read_5(get_fn):
 def test_read_6(get_fn):
     fn_dcd = get_fn('frame0.dcd')
     with DCDTrajectoryFile(fn_dcd) as f:
-        xyz_ref, box_lengths_ref, box_angles_ref = f.read()
+        xyz_ref, box_lengths_ref, box_angles_ref, time = f.read()
     with DCDTrajectoryFile(fn_dcd) as f:
-        xyz, box_lengths, box_angles = f.read(atom_indices=slice(None, None, 2))
+        xyz, box_lengths, box_angles, time = f.read(atom_indices=slice(None, None, 2))
 
     assert eq(xyz_ref[:, ::2, :], xyz)
 
@@ -138,7 +139,6 @@ def test_write_0(tmpdir, get_fn):
         xyz2 = f.read()[0]
 
     eq(xyz, xyz2)
-
 
 def test_write_1(tmpdir):
     fn = '{}/x.dcd'.format(tmpdir)
@@ -164,7 +164,7 @@ def test_write_2(tmpdir):
     f.close()
 
     f = DCDTrajectoryFile(fn)
-    xyz2, box_lengths2, box_angles2 = f.read()
+    xyz2, box_lengths2, box_angles2 , time = f.read()
     f.close()
 
     assert eq(xyz, xyz2)
@@ -195,7 +195,7 @@ def test_write_4(tmpdir):
     f.close()
 
     f = DCDTrajectoryFile(fn)
-    xyz2, box_lengths2, box_angles2 = f.read()
+    xyz2, box_lengths2, box_angles2 , time = f.read()
     f.close()
 
     assert eq(xyz, xyz2)
