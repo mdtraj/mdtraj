@@ -509,7 +509,9 @@ cdef class DCDTrajectoryFile:
             # If we got some other status, thats a "real" error.
             raise IOError("Error: %s", ERROR_MESSAGES(status))
 
-        time = _stride * np.arange(start, stop=i - 1, step=self.fh.delta)
+        time = self.fh.delta * np.arange(start, stop=self.tell(), step=_stride)
+        assert len(time) == len(xyz)
+
         return xyz, cell_lengths, cell_angles, time
 
 
