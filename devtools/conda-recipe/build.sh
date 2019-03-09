@@ -7,4 +7,4 @@ if [[ -n MDTRAJ_TEST_PEP517 ]]; then
 fi
 
 env | sort
-pip install -vv --no-deps .
+pip install -vv .
