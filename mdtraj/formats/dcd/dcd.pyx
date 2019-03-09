@@ -505,10 +505,11 @@ cdef class DCDTrajectoryFile:
             # a big stack of zeros.
             # Note that a successful read prior an erroneous seek should not truncate,
             # this is why we do not assign the status of the seek operation.
-            xyz = xyz[:i]
+            print('eof reached, pos=', i)
+            xyz = xyz[0:i]
             if cell_lengths is not None and cell_angles is not None:
-                cell_lengths = cell_lengths[:i]
-                cell_angles = cell_angles[:i]
+                cell_lengths = cell_lengths[0:i]
+                cell_angles = cell_angles[0:i]
             time = time[:i]
         else:
             # If we got some other status, thats a "real" error.
@@ -517,7 +518,7 @@ cdef class DCDTrajectoryFile:
         return xyz, cell_lengths, cell_angles, time
 
 
-    def write(self, xyz, cell_lengths=None, cell_angles=None, time=None):
+    def write(self, xyz, cell_lengths=None, cell_angles=None):
         """write(xyz, cell_lengths=None, cell_angles=None)
 
         Write one or more frames of data to the DCD file
@@ -535,8 +536,6 @@ cdef class DCDTrajectoryFile:
             Organized analogously to cell_lengths. Gives the alpha, beta and
             gamma angles respectively. By convention for
             this trajectory format, the angles should be in units of degrees.
-        time : np.ndarray, shape=(nframes,), dtype=float32, optional
-            physical time of each frame.
         """
         if str(self.mode) != 'w':
             raise ValueError('write() is only available when the file is opened in mode="w"')
@@ -560,8 +559,6 @@ cdef class DCDTrajectoryFile:
         cell_angles = ensure_type(cell_angles, dtype=np.float32, ndim=2, name='cell_angles',
                                   can_be_none=True, shape=(n_frames, 3), add_newaxis_on_deficient_ndim=True,
                                   warn_on_cast=False)
-        time = ensure_type(time, dtype=np.float32, ndim=1, name='time', can_be_none=True,
-                           shape=(n_frames,), warn_on_cast=False)
 
         if self._needs_write_initialization:
             self._initialize_write(xyz.shape[1], (cell_lengths is not None) and (cell_angles is not None))
@@ -575,12 +572,11 @@ cdef class DCDTrajectoryFile:
                 raise ValueError("The file that you're saving to was created without "
                     "unitcell information.")
 
-        self._write(xyz, cell_lengths, cell_angles, time)
+        self._write(xyz, cell_lengths, cell_angles)
 
     cdef _write(self, np.ndarray[np.float32_t, ndim=3, mode="c"] xyz,
                 np.ndarray[np.float32_t, ndim=2, mode="c"] cell_lengths,
-                np.ndarray[np.float32_t, ndim=2, mode="c"] cell_angles,
-                np.ndarray[np.float32_t, ndim=1, mode="c"] time):
+                np.ndarray[np.float32_t, ndim=2, mode="c"] cell_angles):
         if str(self.mode) != 'w':
             raise ValueError('_write() is only available when the file is opened in mode="w"')
 
@@ -597,8 +593,6 @@ cdef class DCDTrajectoryFile:
                 self.timestep.alpha = cell_angles[i, 0]
                 self.timestep.beta  = cell_angles[i, 1]
                 self.timestep.gamma = cell_angles[i, 2]
-            if time is not None:
-                self.timestep.physical_time = time[i]
             # when the dcd handle is opened during initialize_write,
             # it passes the flag for whether the unitcell information is written
             # to disk or not. So when we don't have unitcell information being
@@ -609,5 +603,4 @@ cdef class DCDTrajectoryFile:
 
             if status != _DCD_SUCCESS:
                 raise IOError("DCD Error: %s" % ERROR_MESSAGES(status))
-
 FormatRegistry.register_fileobject('.dcd')(DCDTrajectoryFile)
