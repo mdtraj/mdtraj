@@ -100,11 +100,11 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     >>> import mdtraj as md
     >>> traj = md.load_dcd('output.dcd', top='topology.pdb')
-    >>> print traj
+    >>> print(traj)
     <mdtraj.Trajectory with 500 frames, 423 atoms at 0x110740a90>
 
     >>> traj2 = md.load_dcd('output.dcd', stride=2, top='topology.pdb')
-    >>> print traj2
+    >>> print(traj2)
     <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>
 
     Returns
@@ -451,13 +451,13 @@ cdef class DCDTrajectoryFile:
         cdef np.ndarray[dtype=np.float32_t, ndim=3] xyz = np.zeros((_n_frames, n_atoms_to_read, 3), dtype=np.float32)
         cdef np.ndarray[dtype=np.float32_t, ndim=2] cell_lengths = np.zeros((_n_frames, 3), dtype=np.float32)
         cdef np.ndarray[dtype=np.float32_t, ndim=2] cell_angles = np.zeros((_n_frames, 3), dtype=np.float32)
-        cdef np.ndarray[dtype=np.float32_t, ndim=1] time = np.zeros(_n_frames, dtype=np.float32)
 
         # only used if atom_indices is given
         cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
         cdef int i, j = 0
         cdef int status = _DCD_SUCCESS
+        start = self.tell()
 
         for i in range(_n_frames):
             if atom_indices is None:
@@ -474,10 +474,6 @@ cdef class DCDTrajectoryFile:
             cell_angles[i, 0] = self.timestep.alpha
             cell_angles[i, 1] = self.timestep.beta
             cell_angles[i, 2] = self.timestep.gamma
-
-            time[i] = self.timestep.physical_time
-            if time[i] == 0.0 or time[i] == np.inf:
-                time[i] = self.tell()
 
             if status != _DCD_SUCCESS:
                 # if the frame was not successfully read, then we're done
@@ -505,16 +501,15 @@ cdef class DCDTrajectoryFile:
             # a big stack of zeros.
             # Note that a successful read prior an erroneous seek should not truncate,
             # this is why we do not assign the status of the seek operation.
-            print('eof reached, pos=', i)
-            xyz = xyz[0:i]
+            xyz = xyz[:i]
             if cell_lengths is not None and cell_angles is not None:
-                cell_lengths = cell_lengths[0:i]
-                cell_angles = cell_angles[0:i]
-            time = time[:i]
+                cell_lengths = cell_lengths[:i]
+                cell_angles = cell_angles[:i]
         else:
             # If we got some other status, thats a "real" error.
             raise IOError("Error: %s", ERROR_MESSAGES(status))
 
+        time = _stride * np.arange(start, stop=i - 1, step=self.fh.delta)
         return xyz, cell_lengths, cell_angles, time
 
 
@@ -603,4 +598,5 @@ cdef class DCDTrajectoryFile:
 
             if status != _DCD_SUCCESS:
                 raise IOError("DCD Error: %s" % ERROR_MESSAGES(status))
+
 FormatRegistry.register_fileobject('.dcd')(DCDTrajectoryFile)
