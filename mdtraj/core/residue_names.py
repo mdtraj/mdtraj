@@ -176,7 +176,27 @@ _AMINO_ACID_CODES =  {'ACE': None, 'NME':  None, '00C': 'C', '01W':  'X', '02K':
 
 _PROTEIN_RESIDUES = frozenset(_AMINO_ACID_CODES.keys())
 
-_NUCLEIC_ACID_CODES = {'DG': 'G', 'DC': 'C', 'DT': 'T', 'DA': 'A', 'DI': 'I',
-'G': 'G', 'C': 'C', 'T': 'T', 'A': 'A', 'U': 'U', 'I': 'I' }
+# nucleic acid variants based on parmed
+_NUCLEIC_VARIANTS = {
+    'G': ['DG', 'DG5', 'DG3', 'DGN',  # DNA
+          'G', 'G5', 'G3', 'GN', 'RG', 'RG3', 'RG5', 'RGN',  # RNA
+          'GUA', 'GF2', 'M2G', 'YYG', '7MG', 'OMG', '2MG'],  # misc
+    'C': ['DC', 'DC5', 'DC3', 'DCN', 'DCP',  # DNA
+          'C', 'CP', 'C5', 'C3', 'CN', 'RC', 'RC3', 'RC5', 'RCN',  # RNA
+          'CYT', 'CFZ', '5MC', 'OMC'],  # misc
+    'A': ['DA', 'DA5', 'DA3', 'DAN', 'DAP',  # DNA
+          'A', 'AP', 'A5', 'A3', 'AN', 'RA', 'RA3', 'RA5', 'RAN',  # RNA
+          'ADE', 'AF2', '1MA'],  # misc
+    'T': ['DT', 'DT5', 'DT3', 'DTN',  # DNA
+          'T', 'T5', 'T3', 'TN', 'RT', 'RT3', 'RT5', 'RTN',  # RNA
+          'THY'],  # misc
+    'U': ['U', 'U5', 'U3', 'UN', 'RU', 'RU3', 'RU5', 'RUN',
+           'UFT', '5MU', 'H2U', 'PSU'],
+    'I': ['DI', 'I']  # can't find evidence it exists in Amber variants
+ }
+
+_NUCLEIC_ACID_CODES = {code: short
+                       for short, codes in _NUCLEIC_VARIANTS.items()
+                       for code in codes}
 
 _NUCLEIC_RESIDUES = frozenset(_NUCLEIC_ACID_CODES.keys())
