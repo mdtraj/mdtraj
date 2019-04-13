@@ -176,9 +176,58 @@ _AMINO_ACID_CODES =  {'ACE': None, 'NME':  None, '00C': 'C', '01W':  'X', '02K':
 
 _PROTEIN_RESIDUES = frozenset(_AMINO_ACID_CODES.keys())
 
-_DNA_RESIDUES = ['DA', 'DT', 'DC', 'DG', 'DI']
-_RNA_RESIDUES = ['A', 'U', 'C', 'G', 'I']
-_NUCLEIC_VARIANTS = {key: [key] for key in _DNA_RESIDUES + _RNA_RESIDUES}
+def residues_and_codes(variant_dicts, create_codes=True, code_dict=None):
+    """
+    Create set of nucleic residues and dict of 1-letter codes.
+
+    Parameters
+    ----------
+    variant_dicts : list of dict
+        Variant dictionaries (mapping canonical residue code to list of
+        variants) to use
+    create_codes : (list of) bool
+        Which variants dicts (based on order) to use for creating one-letter
+        codes; if not a list, the single value is used for all (default
+        True)
+    code_dict : dict
+        Mapping of alias to 1-letter code to override algorithmic
+        generation.
+    """
+    # create_codes should be a list of bool
+    try:
+        _ = iter(create_codes)
+    except TypeError:
+        create_codes = [create_codes] * len(variant_dicts)
+
+    # inner sum over the values in one dict, outer sum over dicts
+    residues = frozenset(
+        sum([sum(list(dct.values()), [])
+             for dct in variant_dicts], [])
+    )
+
+    #  one_letter_dict
+    all_std_names = sum([list(dct.keys()) for dct in variant_dicts], [])
+    one_letter_dict = {name: name[-1] for name in all_std_names}
+
+    # pick the variant dicts where we want the codes; get codes
+    do_one_letter = [
+        dct
+        for (dct, one_letter) in zip(variant_dicts, create_codes)
+        if one_letter]
+    codes = {alias: one_letter_dict[parent]
+             for dct in do_one_letter
+             for parent, aliases in dct.items()
+             for alias in aliases}
+
+    if code_dict is not None:
+        codes.update(code_dict)
+
+    return residues, codes
+
+
+_NUCLEIC_VARIANTS = {key: [key]
+                     for key in ['DG', 'DA', 'DT', 'DC', 'DI',
+                                 'G', 'A', 'U', 'C', 'I']}
 
 _AMBER_VARIANTS = {
     'DA': ['DAN', 'DA5', 'DA3'],
@@ -197,7 +246,9 @@ _PROTONATED_VARIANTS = {
     'DC': ['DCP']
 }
 
-_NUCLEIC_ACID_CODES = {key: key[-1]
-                       for key in _DNA_RESIDUES + _RNA_RESIDUES}
-
-_NUCLEIC_RESIDUES = frozenset(_NUCLEIC_ACID_CODES.keys())
+_NUCLEIC_RESIDUES, _NUCLEIC_ACID_CODES = residues_and_codes(
+    variant_dicts=[_NUCLEIC_VARIANTS,
+                   _AMBER_VARIANTS,
+                   _PROTONATED_VARIANTS],
+    create_codes=True
+)
