@@ -176,27 +176,28 @@ _AMINO_ACID_CODES =  {'ACE': None, 'NME':  None, '00C': 'C', '01W':  'X', '02K':
 
 _PROTEIN_RESIDUES = frozenset(_AMINO_ACID_CODES.keys())
 
-# nucleic acid variants based on parmed
-_NUCLEIC_VARIANTS = {
-    'G': ['DG', 'DG5', 'DG3', 'DGN',  # DNA
-          'G', 'G5', 'G3', 'GN', 'RG', 'RG3', 'RG5', 'RGN',  # RNA
-          'GUA', 'GF2', 'M2G', 'YYG', '7MG', 'OMG', '2MG'],  # misc
-    'C': ['DC', 'DC5', 'DC3', 'DCN', 'DCP',  # DNA
-          'C', 'CP', 'C5', 'C3', 'CN', 'RC', 'RC3', 'RC5', 'RCN',  # RNA
-          'CYT', 'CFZ', '5MC', 'OMC'],  # misc
-    'A': ['DA', 'DA5', 'DA3', 'DAN', 'DAP',  # DNA
-          'A', 'AP', 'A5', 'A3', 'AN', 'RA', 'RA3', 'RA5', 'RAN',  # RNA
-          'ADE', 'AF2', '1MA'],  # misc
-    'T': ['DT', 'DT5', 'DT3', 'DTN',  # DNA
-          'T', 'T5', 'T3', 'TN', 'RT', 'RT3', 'RT5', 'RTN',  # RNA
-          'THY'],  # misc
-    'U': ['U', 'U5', 'U3', 'UN', 'RU', 'RU3', 'RU5', 'RUN',
-           'UFT', '5MU', 'H2U', 'PSU'],
-    'I': ['DI', 'I']  # can't find evidence it exists in Amber variants
- }
+_DNA_RESIDUES = ['DA', 'DT', 'DC', 'DG', 'DI']
+_RNA_RESIDUES = ['A', 'U', 'C', 'G', 'I']
+_NUCLEIC_VARIANTS = {key: [key] for key in _DNA_RESIDUES + _RNA_RESIDUES}
 
-_NUCLEIC_ACID_CODES = {code: short
-                       for short, codes in _NUCLEIC_VARIANTS.items()
-                       for code in codes}
+_AMBER_VARIANTS = {
+    'DA': ['DAN', 'DA5', 'DA3'],
+    'DT': ['DTN', 'DT5', 'DT3'],
+    'DC': ['DCN', 'DC5', 'DC3'],
+    'DG': ['DGN', 'DG5', 'DG3'],
+    'A': ['AN', 'A5', 'A3', 'RAN', 'RA5', 'RA3'],
+    'U': ['UN', 'U5', 'U3', 'RUN', 'RU5', 'RU3'],
+    'C': ['CN', 'C5', 'C3', 'RCN', 'RC5', 'RC3'],
+    'G': ['GN', 'G5', 'G3', 'RGN', 'RG5', 'RG3'],
+}
+
+# protonated forms originally listed in ParmEd
+_PROTONATED_VARIANTS = {
+    'DA': ['DAP'],
+    'DC': ['DCP']
+}
+
+_NUCLEIC_ACID_CODES = {key: key[-1]
+                       for key in _DNA_RESIDUES + _RNA_RESIDUES}
 
 _NUCLEIC_RESIDUES = frozenset(_NUCLEIC_ACID_CODES.keys())
