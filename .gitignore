@@ -58,3 +58,4 @@ build.log
 
 # export of libtheolib
 /mdtraj/core/lib/*
+*~

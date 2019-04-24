@@ -19,27 +19,32 @@ sys.path.insert(0, '.')
 from basesetup import (write_version_py, build_ext,
                        StaticLibrary, CompilerDetection)
 
-try:
-    import numpy
-    import Cython
-    if Cython.__version__ < '0.28':
-        raise ImportError
-    from Cython.Build import cythonize
-except ImportError:
-    print('-'*80, file=sys.stderr)
-    print('''Error: building mdtraj requires numpy and cython>=0.19
+import numpy as np
+from Cython.Build import cythonize
 
-Try running the command ``pip install numpy cython`` or
-``conda install numpy cython``.
 
-or see http://docs.scipy.org/doc/numpy/user/install.html and
-http://cython.org/ for more information.
 
-If you're feeling lost, we recommend downloading the (free) Anaconda python
-distribution https://www.continuum.io/downloads, because it comes with
-these components included.''', file=sys.stderr)
-    print('-'*80, file=sys.stderr)
-    sys.exit(1)
+# try:
+#     import numpy
+#     import Cython
+#     if Cython.__version__ < '0.28':
+#         raise ImportError
+#     from Cython.Build import cythonize
+# except ImportError:
+#     print('-'*80, file=sys.stderr)
+#     print('''Error: building mdtraj requires numpy and cython>=0.19
+#
+# Try running the command ``pip install numpy cython`` or
+# ``conda install numpy cython``.
+#
+# or see http://docs.scipy.org/doc/numpy/user/install.html and
+# http://cython.org/ for more information.
+#
+# If you're feeling lost, we recommend downloading the (free) Anaconda python
+# distribution https://www.continuum.io/downloads, because it comes with
+# these components included.''', file=sys.stderr)
+#     print('-'*80, file=sys.stderr)
+#     sys.exit(1)
 
 
 try:
@@ -288,6 +293,15 @@ setup(name='mdtraj',
       # Also, install_requires is no better, especially with numpy.
       # See http://article.gmane.org/gmane.comp.python.distutils.devel/24218
       # install_requires=['numpy>=1.6'],
+
+      install_requires=[
+          'numpy',
+          'scipy',
+          'pandas',
+          'tables',
+      ],
+
+      include_dirs=[np.get_include()],
 
       package_data={'mdtraj.formats.pdb': ['data/*'], },
       zip_safe=False,
