@@ -1,0 +1,4 @@
+# core
+pip >= 19.1
+wheel
+twine
