@@ -7,9 +7,9 @@ is the wide variety of molecular dynamics trajectory file formats which are
 supported, including RCSB pdb, GROMACS xtc, tng, and trr, CHARMM / NAMD dcd, AMBER
 binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 """
-
 from __future__ import print_function, absolute_import
 
+import numpy as np
 DOCLINES = __doc__.split("\n")
 
 import sys

@@ -2,9 +2,10 @@
 requires = [
     "setuptools",
     "wheel",
-    "numpy=='1.8';python_version<='3.4'",
-    "numpy=='1.9';python_version=='3.5'",
-    "numpy=='1.12.1';python_version=='3.6'",
-    "numpy=='1.13';python_version>='3.7'",
+    #"numpy=='1.8';python_version<='3.4'",
+    #"numpy=='1.9';python_version=='3.5'",
+    #"numpy=='1.12.1';python_version=='3.6'",
+    #"numpy=='1.13';python_version>='3.7'",
+    "numpy",
     "Cython>0.28",
 ]
