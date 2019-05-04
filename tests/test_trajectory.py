@@ -723,7 +723,7 @@ def test_add_remove_atoms(get_fn):
     # Now delete the atoms again
     for r in list(top.residues)[::-1]:
         if r.name != 'HOH': continue
-        atoms = list(r.atoms) 
+        atoms = list(r.atoms)
         top.delete_atom_by_index(atoms[-1].index)
     roundtrip_atoms = list(top.atoms)[:]
     # Ensure the atoms are the same after a round trip of adding / deleting

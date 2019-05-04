@@ -666,7 +666,7 @@ class Topology(object):
             The Residue to add it to
         index : int
             If provided, the desired index for this atom
-            within the topology. Existing atoms with 
+            within the topology. Existing atoms with
             indices >= index will be pushed back.
         rindex : int
             If provided, the desired position for this atom
@@ -1181,7 +1181,7 @@ class Topology(object):
         """
         if len(self._bonds) == 0 and any(res.n_atoms > 1 for res in self._residues):
             raise ValueError('Cannot identify molecules because this Topology does not include bonds')
-        
+
         # Make a list of every other atom to which each atom is connected.
 
         num_atoms = self.n_atoms
