@@ -62,7 +62,7 @@ def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb(get_fn, tmpdir):
     tar.close()
 
     with open("./v0.3/database.pickle", 'rb') as f:
-        database = pickle.load(f)
+        database = pickle.load(f, encoding='latin-1')
 
     for key in database:
         gaff_filename = "./v0.3/mol2files_gaff/%s.mol2" % key
