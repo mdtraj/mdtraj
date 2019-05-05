@@ -9,12 +9,20 @@ binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 """
 from __future__ import print_function, absolute_import
 
+import sys
+from glob import glob
 import numpy as np
+
+try:
+    import Cython as _c
+    if _c.__version__ < '0.29':
+       raise ImportError
+except ImportError:
+    print('mdtrajs setup depends on Cython (>=0.29)')
+    sys.exit(1)
 
 DOCLINES = __doc__.split("\n")
 
-import sys
-from glob import glob
 from setuptools import setup, Extension, find_packages
 
 sys.path.insert(0, '.')
