@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-if [[ -n MDTRAJ_TEST_PEP517 ]]; then
+if [[ ${MDTRAJ_TEST_PEP517} = "YES" ]]; then
     echo "testing for PEP517, enable pip installing dependencies"
     export PIP_NO_INDEX=false
     export PIP_NO_DEPENDENCIES=false
@@ -7,4 +7,4 @@ if [[ -n MDTRAJ_TEST_PEP517 ]]; then
 fi
 
 env | sort
-pip install -vv .
+pip install -v .
