@@ -10,6 +10,7 @@ binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 from __future__ import print_function, absolute_import
 
 import numpy as np
+
 DOCLINES = __doc__.split("\n")
 
 import sys
@@ -243,6 +244,9 @@ extensions = format_extensions()
 extensions.extend(rmsd_extensions())
 extensions.extend(geometry_extensions())
 
+# most extensions use numpy, add headers for it.
+for e in extensions:
+    e.include_dirs.append(np.get_include())
 
 write_version_py(VERSION, ISRELEASED, 'mdtraj/version.py')
 

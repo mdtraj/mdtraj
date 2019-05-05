@@ -257,16 +257,7 @@ class StaticLibrary(Extension):
 
 class build_ext(_build_ext):
 
-    @staticmethod
-    def _add_np_inc(ext):
-        try:
-            import numpy as np
-        except ImportError:
-            raise RuntimeError('Install using pip with dependency resolution turned ON.')
-        ext.include_dirs.append(np.get_include())
-
     def build_extension(self, ext):
-        self._add_np_inc(ext)
         if isinstance(ext, StaticLibrary):
             self.build_static_extension(ext)
         else:
@@ -279,7 +270,6 @@ class build_ext(_build_ext):
         self.extensions = _extensions
 
     def build_static_extension(self, ext):
-        self._add_np_inc(ext)
         from distutils import log
 
         sources = ext.sources
