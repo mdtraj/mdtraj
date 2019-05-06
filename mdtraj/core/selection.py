@@ -32,7 +32,8 @@ from pyparsing import (Word, ParserElement, MatchFirst,
     ParseException, OneOrMore)
 from astor import code_gen
 
-ParserElement.enablePackrat()
+# this number arises from the current selection language, if the cache size is exceeded, it hurts performance a bit.
+ParserElement.enablePackrat(cache_size_limit=304)
 
 __all__ = ['parse_selection']
 
@@ -365,8 +366,6 @@ class parse_selection(object):
         self.transformer = _RewriteNames()
 
     def __call__(self, selection):
-        print('locals:\n',locals())
-        print('globals:\n',globals())
         if not self.is_initialized:
             self._initialize()
 
