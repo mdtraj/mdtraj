@@ -17,8 +17,8 @@ requirements:
   build:
     - python
     - setuptools
-    - cython  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
-    - numpy  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
+    - cython
+    - numpy
     - zlib
     - msinttypes  # [win and py27]
     - pip
