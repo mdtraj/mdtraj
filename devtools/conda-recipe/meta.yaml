@@ -44,7 +44,7 @@ test:
     - nbformat
     - ipykernel
     - scikit-learn
-    - pytest-ignore-flaky
+    - pytest-ignore-flaky =1
     - pandas
     - pytables
 
