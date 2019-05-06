@@ -27,10 +27,11 @@ import sys
 from copy import deepcopy
 from collections import namedtuple
 from mdtraj.utils.six import PY2
-from mdtraj.utils.external.pyparsing import (Word, ParserElement, MatchFirst,
+from pyparsing import (Word, ParserElement, MatchFirst,
     Keyword, opAssoc, quotedString, alphas, alphanums, infixNotation, Group,
     ParseException, OneOrMore)
-from mdtraj.utils.external.astor import codegen
+from astor import code_gen
+
 ParserElement.enablePackrat()
 
 __all__ = ['parse_selection']
@@ -364,6 +365,8 @@ class parse_selection(object):
         self.transformer = _RewriteNames()
 
     def __call__(self, selection):
+        print('locals:\n',locals())
+        print('globals:\n',globals())
         if not self.is_initialized:
             self._initialize()
 
@@ -394,7 +397,7 @@ class parse_selection(object):
                                       kw_defaults=[])
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
-        source = codegen.to_source(astnode)
+        source = code_gen.to_source(astnode, pretty_source=lambda src: ''.join(src[:-1]))
 
         expr = eval(
             compile(ast.fix_missing_locations(func), '<string>', mode='eval'),
