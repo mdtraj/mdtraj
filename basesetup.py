@@ -249,16 +249,6 @@ release = {release}
                            release=isreleased))
 
 
-def numpy_include_dir():
-    """Get the path of numpy headers."""
-    try:
-        import numpy as np
-    except ImportError:
-        print("Cannot build mdtraj extensions without numpy installed.")
-        sys.exit(1)
-    return np.get_include()
-
-
 class StaticLibrary(Extension):
     def __init__(self, *args, **kwargs):
         self.export_include = kwargs.pop('export_include', [])
@@ -268,7 +258,6 @@ class StaticLibrary(Extension):
 class build_ext(_build_ext):
 
     def build_extension(self, ext):
-        ext.include_dirs.append(numpy_include_dir())
         if isinstance(ext, StaticLibrary):
             self.build_static_extension(ext)
         else:

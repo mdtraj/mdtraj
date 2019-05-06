@@ -7,40 +7,27 @@ is the wide variety of molecular dynamics trajectory file formats which are
 supported, including RCSB pdb, GROMACS xtc, tng, and trr, CHARMM / NAMD dcd, AMBER
 binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 """
-
 from __future__ import print_function, absolute_import
-DOCLINES = __doc__.split("\n")
 
-import os
 import sys
 from glob import glob
+import numpy as np
+
+try:
+    import Cython as _c
+    if _c.__version__ < '0.29':
+       raise ImportError
+except ImportError:
+    print('mdtrajs setup depends on Cython (>=0.29)')
+    sys.exit(1)
+
+DOCLINES = __doc__.split("\n")
+
 from setuptools import setup, Extension, find_packages
+
 sys.path.insert(0, '.')
 from basesetup import (write_version_py, build_ext,
                        StaticLibrary, CompilerDetection)
-
-try:
-    import numpy
-    import Cython
-    if Cython.__version__ < '0.28':
-        raise ImportError
-    from Cython.Build import cythonize
-except ImportError:
-    print('-'*80, file=sys.stderr)
-    print('''Error: building mdtraj requires numpy and cython>=0.19
-
-Try running the command ``pip install numpy cython`` or
-``conda install numpy cython``.
-
-or see http://docs.scipy.org/doc/numpy/user/install.html and
-http://cython.org/ for more information.
-
-If you're feeling lost, we recommend downloading the (free) Anaconda python
-distribution https://www.continuum.io/downloads, because it comes with
-these components included.''', file=sys.stderr)
-    print('-'*80, file=sys.stderr)
-    sys.exit(1)
-
 
 try:
     # add an optional --disable-openmp to disable OpenMP support
@@ -260,9 +247,14 @@ def geometry_extensions():
             language='c++'),
         ]
 
+
 extensions = format_extensions()
 extensions.extend(rmsd_extensions())
 extensions.extend(geometry_extensions())
+
+# most extensions use numpy, add headers for it.
+for e in extensions:
+    e.include_dirs.append(np.get_include())
 
 write_version_py(VERSION, ISRELEASED, 'mdtraj/version.py')
 
@@ -279,16 +271,10 @@ setup(name='mdtraj',
       classifiers=CLASSIFIERS.splitlines(),
       packages=find_packages(),
       cmdclass={'build_ext': build_ext},
-      ext_modules=cythonize(extensions),
-
-      # setup_requires really doesn't work sufficently well with `pip install`
-      # to use. See https://github.com/mdtraj/mdtraj/issues/984. Also
-      # setup_requires=['setuptools>=18', 'cython>=0.22', 'numpy>=1.6'],
-
-      # Also, install_requires is no better, especially with numpy.
-      # See http://article.gmane.org/gmane.comp.python.distutils.devel/24218
-      # install_requires=['numpy>=1.6'],
-
+      ext_modules=extensions,
+      install_requires=['numpy>=1.6',
+                        'scipy',
+                        ],
       package_data={'mdtraj.formats.pdb': ['data/*'], },
       zip_safe=False,
       entry_points={'console_scripts':
