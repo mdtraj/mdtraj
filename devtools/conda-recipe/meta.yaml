@@ -24,7 +24,7 @@ requirements:
     - numpy  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
     - zlib
     - msinttypes  # [win and py27]
-    - pip >= 19
+    - pip >=19
 
   run:
     - python
