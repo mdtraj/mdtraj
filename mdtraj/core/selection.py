@@ -288,7 +288,7 @@ class parse_selection(object):
     Parameters
     ----------
     selection_string : str
-        Selection string, a string in the MDTraj atom selection grammer.
+        Selection string, a string in the MDTraj atom selection grammar.
 
     Returns
     -------
