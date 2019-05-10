@@ -11,15 +11,6 @@ from __future__ import print_function, absolute_import
 
 import sys
 from glob import glob
-import numpy as np
-
-try:
-    import Cython as _c
-    if _c.__version__ < '0.29':
-       raise ImportError
-except ImportError:
-    print('mdtrajs setup depends on Cython (>=0.29)')
-    sys.exit(1)
 
 DOCLINES = __doc__.split("\n")
 
@@ -248,17 +239,10 @@ def geometry_extensions():
         ]
 
 
-extensions = format_extensions()
-extensions.extend(rmsd_extensions())
-extensions.extend(geometry_extensions())
-
-# most extensions use numpy, add headers for it.
-for e in extensions:
-    e.include_dirs.append(np.get_include())
-
 write_version_py(VERSION, ISRELEASED, 'mdtraj/version.py')
 
-setup(name='mdtraj',
+metadata = \
+    dict(name='mdtraj',
       author='Robert McGibbon',
       author_email='rmcgibbo@gmail.com',
       description=DOCLINES[0],
@@ -271,7 +255,6 @@ setup(name='mdtraj',
       classifiers=CLASSIFIERS.splitlines(),
       packages=find_packages(),
       cmdclass={'build_ext': build_ext},
-      ext_modules=extensions,
       install_requires=['numpy>=1.6',
                         'scipy',
                         ],
@@ -281,3 +264,19 @@ setup(name='mdtraj',
           ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
            'mdinspect = mdtraj.scripts.mdinspect:entry_point']},
 )
+
+
+if __name__ == '__main__':
+    if not 'egg_info' in sys.argv:
+        extensions = format_extensions()
+        extensions.extend(rmsd_extensions())
+        extensions.extend(geometry_extensions())
+
+        # most extensions use numpy, add headers for it.
+        import numpy as np
+        for e in extensions:
+            e.include_dirs.append(np.get_include())
+        from Cython.Build import cythonize
+        metadata['ext_modules'] = cythonize(extensions)
+
+    setup(**metadata)
