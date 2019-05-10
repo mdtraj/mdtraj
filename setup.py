@@ -281,6 +281,6 @@ if __name__ == '__main__':
         for e in extensions:
             e.include_dirs.append(np.get_include())
         from Cython.Build import cythonize
-        metadata['ext_modules'] = cythonize(extensions)
+        metadata['ext_modules'] = cythonize(extensions, language_level=sys.version_info[0])
 
     setup(**metadata)
