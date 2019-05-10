@@ -18,7 +18,7 @@ from setuptools import setup, Extension, find_packages
 
 sys.path.insert(0, '.')
 from basesetup import (write_version_py, build_ext,
-                       StaticLibrary, CompilerDetection)
+                       StaticLibrary, CompilerDetection, parse_setuppy_commands)
 
 try:
     # add an optional --disable-openmp to disable OpenMP support
@@ -267,7 +267,11 @@ metadata = \
 
 
 if __name__ == '__main__':
-    if not 'egg_info' in sys.argv:
+    # Don't use numpy if we are just - non-build actions are required to succeed
+    # without NumPy for example when pip is used to install Scipy when
+    # NumPy is not yet present in the system.
+    run_build = parse_setuppy_commands()
+    if run_build:
         extensions = format_extensions()
         extensions.extend(rmsd_extensions())
         extensions.extend(geometry_extensions())
