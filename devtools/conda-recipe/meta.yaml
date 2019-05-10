@@ -15,13 +15,16 @@ build:
 
 requirements:
   build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+  host:
     - python
     - setuptools
     - cython  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
     - numpy  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
     - zlib
     - msinttypes  # [win and py27]
-    - pip
+    - pip >=19
 
   run:
     - python
@@ -38,13 +41,14 @@ test:
     - matplotlib
     - openmm >=7.1  # [not (win32 or (win and py2k) or py37)]
     - shiftx2  # [linux and py2k]
-    # do not install cpptraj on osx, because the current version from omnia is linked against an old runtime.
-    # and not avail on win
-    - cpptraj  # [not (osx or win32 or win64)]
+    # 1. do not install cpptraj on osx, because the current version from omnia is linked against an old runtime.
+    #    and not avail on win
+    # 2. do not install cpptraj on linux either, until https://github.com/omnia-md/conda-recipes/issues/945 is fixed
+    #- cpptraj  # [not (osx or win32 or win64)]
     - nbformat
     - ipykernel
     - scikit-learn
-    - pytest-ignore-flaky
+    - pytest-ignore-flaky =1
     - pandas
     - pytables
 
