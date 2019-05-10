@@ -277,10 +277,22 @@ if __name__ == '__main__':
         extensions.extend(geometry_extensions())
 
         # most extensions use numpy, add headers for it.
-        import numpy as np
+        try:
+            import Cython as _c
+            from Cython.Build import cythonize
+            if _c.__version__ < '0.29':
+                raise ImportError
+        except ImportError:
+            print('mdtrajs setup depends on Cython (>=0.29). Install it prior invoking setup.py')
+            sys.exit(1)
+        try:
+            import numpy as np
+        except ImportError:
+            print('mdtrajs setup depends on NumPy. Install it prior invoking setup.py')
+            sys.exit(1)
+
         for e in extensions:
             e.include_dirs.append(np.get_include())
-        from Cython.Build import cythonize
         metadata['ext_modules'] = cythonize(extensions, language_level=sys.version_info[0])
 
     setup(**metadata)
