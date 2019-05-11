@@ -261,19 +261,19 @@ cdef class TNGTrajectoryFile(object):
         self.distance_unit = 'nanometers'
         self.filename = filename
         self.mode = mode[0]
-        if self.mode == 'w' and os.path.exists(filename):
+        if self.mode == b'w' and os.path.exists(filename):
             if force_overwrite:
                 os.unlink(filename)
             else:
                 raise IOError('"%s" already exists' % filename)
-        if self.mode == 'r' and not os.path.exists(filename):
+        if self.mode == b'r' and not os.path.exists(filename):
             raise IOError('"%s" does not exist' % filename)
         if tng_util_trajectory_open(filename, self.mode, & self._traj) == TNG_SUCCESS:
             self.is_open = True
         else:
             raise Exception("An error ocurred opening the file.")
         cdef int64_t exponent;
-        if self.mode == 'r':
+        if self.mode == b'r':
             if tng_num_particles_get(self._traj, & self.n_atoms) != TNG_SUCCESS:
                 raise Exception("something went wrong during obtaining num particles")
             
@@ -512,7 +512,7 @@ cdef class TNGTrajectoryFile(object):
         --------
         read_as_traj : Returns a Trajectory object
         """
-        if not self.mode == 'r':
+        if not self.mode == b'r':
             raise ValueError(
                 'read() is only available when file is opened in mode="r"')
         if not self.is_open:
@@ -568,7 +568,7 @@ cdef class TNGTrajectoryFile(object):
             The periodic box vectors of the simulation in each frame, in nanometers.
             If not supplied, all box vectors will be recorded as (0,0,0).
         """
-        if self.mode != 'w':
+        if self.mode != b'w':
             raise ValueError('write() is only available when the file is opened in mode="w"')
 
         # do typechecking, and then dispatch to the c level function
@@ -639,7 +639,7 @@ cdef class TNGTrajectoryFile(object):
         cdef int status
         cdef int64_t pos, absolute
 
-        if self.mode != 'r':
+        if self.mode != b'r':
             raise NotImplementedError('seek() only available in mode="r" currently')
         if whence == 0 and offset >= 0:
             self._pos = offset
@@ -658,7 +658,7 @@ cdef class TNGTrajectoryFile(object):
         offset : int
             The current frame in the file.
         """
-        if self.mode != 'r':
+        if self.mode != b'r':
             raise NotImplementedError('tell() only available in mode="r" currently')
         return int(self._pos)
 
