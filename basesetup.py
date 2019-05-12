@@ -5,6 +5,8 @@ import json
 import shutil
 import subprocess
 import tempfile
+import warnings
+
 from setuptools import Extension
 from distutils.dep_util import newer_group
 from distutils.errors import DistutilsExecError, DistutilsSetupError
@@ -354,3 +356,62 @@ class build_ext(_build_ext):
         except Exception as e:
             pass
         return filename
+
+
+def parse_setuppy_commands():
+    """Check the commands and respond appropriately.
+    Return a boolean value for whether or not to run the build or not (avoid
+    parsing Cython and template files if False).
+
+    Adopted from scipy setup
+    """
+    args = sys.argv[1:]
+
+    if not args:
+        # User forgot to give an argument probably, let setuptools handle that.
+        return True
+
+    info_commands = ['--help-commands', '--name', '--version', '-V',
+                     '--fullname', '--author', '--author-email',
+                     '--maintainer', '--maintainer-email', '--contact',
+                     '--contact-email', '--url', '--license', '--description',
+                     '--long-description', '--platforms', '--classifiers',
+                     '--keywords', '--provides', '--requires', '--obsoletes']
+
+    for command in info_commands:
+        if command in args:
+            return False
+
+    # Note that 'alias', 'saveopts' and 'setopt' commands also seem to work
+    # fine as they are, but are usually used together with one of the commands
+    # below and not standalone.  Hence they're not added to good_commands.
+    good_commands = ('develop', 'sdist', 'build', 'build_ext', 'build_py',
+                     'build_clib', 'build_scripts', 'bdist_wheel', 'bdist_rpm',
+                     'bdist_wininst', 'bdist_msi', 'bdist_mpkg',
+                     'build_sphinx')
+
+    for command in good_commands:
+        if command in args:
+            return True
+
+    # The following commands are supported, but we need to show more
+    # useful messages to the user
+    if 'install' in args:
+        return True
+
+    if '--help' in args or '-h' in sys.argv[1]:
+        return False
+
+    # Commands that do more than print info, but also don't need Cython and
+    # template parsing.
+    other_commands = ['egg_info', 'install_egg_info', 'rotate']
+    for command in other_commands:
+        if command in args:
+            return False
+
+    # If we got here, we didn't detect what setup.py command was given
+    warnings.warn("Unrecognized setuptools command ('{}'), proceeding with "
+                  "generating Cython sources and expanding templates".format(
+                  ' '.join(sys.argv[1:])))
+    return True
+

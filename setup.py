@@ -11,15 +11,6 @@ from __future__ import print_function, absolute_import
 
 import sys
 from glob import glob
-import numpy as np
-
-try:
-    import Cython as _c
-    if _c.__version__ < '0.29':
-       raise ImportError
-except ImportError:
-    print('mdtrajs setup depends on Cython (>=0.29)')
-    sys.exit(1)
 
 DOCLINES = __doc__.split("\n")
 
@@ -27,7 +18,7 @@ from setuptools import setup, Extension, find_packages
 
 sys.path.insert(0, '.')
 from basesetup import (write_version_py, build_ext,
-                       StaticLibrary, CompilerDetection)
+                       StaticLibrary, CompilerDetection, parse_setuppy_commands)
 
 try:
     # add an optional --disable-openmp to disable OpenMP support
@@ -248,17 +239,10 @@ def geometry_extensions():
         ]
 
 
-extensions = format_extensions()
-extensions.extend(rmsd_extensions())
-extensions.extend(geometry_extensions())
-
-# most extensions use numpy, add headers for it.
-for e in extensions:
-    e.include_dirs.append(np.get_include())
-
 write_version_py(VERSION, ISRELEASED, 'mdtraj/version.py')
 
-setup(name='mdtraj',
+metadata = \
+    dict(name='mdtraj',
       author='Robert McGibbon',
       author_email='rmcgibbo@gmail.com',
       description=DOCLINES[0],
@@ -271,7 +255,6 @@ setup(name='mdtraj',
       classifiers=CLASSIFIERS.splitlines(),
       packages=find_packages(),
       cmdclass={'build_ext': build_ext},
-      ext_modules=extensions,
       install_requires=['numpy>=1.6',
                         'scipy',
                         ],
@@ -281,3 +264,35 @@ setup(name='mdtraj',
           ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
            'mdinspect = mdtraj.scripts.mdinspect:entry_point']},
 )
+
+
+if __name__ == '__main__':
+    # Don't use numpy if we are just - non-build actions are required to succeed
+    # without NumPy for example when pip is used to install Scipy when
+    # NumPy is not yet present in the system.
+    run_build = parse_setuppy_commands()
+    if run_build:
+        extensions = format_extensions()
+        extensions.extend(rmsd_extensions())
+        extensions.extend(geometry_extensions())
+
+        # most extensions use numpy, add headers for it.
+        try:
+            import Cython as _c
+            from Cython.Build import cythonize
+            if _c.__version__ < '0.29':
+                raise ImportError
+        except ImportError:
+            print('mdtrajs setup depends on Cython (>=0.29). Install it prior invoking setup.py')
+            sys.exit(1)
+        try:
+            import numpy as np
+        except ImportError:
+            print('mdtrajs setup depends on NumPy. Install it prior invoking setup.py')
+            sys.exit(1)
+
+        for e in extensions:
+            e.include_dirs.append(np.get_include())
+        metadata['ext_modules'] = cythonize(extensions, language_level=sys.version_info[0])
+
+    setup(**metadata)

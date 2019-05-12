@@ -642,7 +642,7 @@ cdef class XTCTrajectoryFile(object):
             assert filesize % byte_offset == 0, ("filesize(%i) not divideable"
                                                  " by bytes per frames(%i)"
                                                  % (filesize, byte_offset))
-            n_frames = filesize / byte_offset
+            n_frames = filesize // byte_offset
             offsets = np.fromiter((i*byte_offset for i in range(n_frames)),
                                   dtype=np.int64, count=n_frames)
         else:
