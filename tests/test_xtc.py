@@ -134,12 +134,13 @@ def test_read_atomindices_1(get_fn, fn_xtc):
 def test_read_atomindices_w_stride(get_fn, fn_xtc):
     # test case for bug: https://github.com/mdtraj/mdtraj/issues/1394
     iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
-    with XTCTrajectoryFile(fn_xtc) as f:
-        xyz, time, step, box = f.read(atom_indices=[0, 1, 2], stride=2)
-    assert eq(xyz, iofile['xyz'][:, [0, 1, 2]][::2])
-    assert eq(step, iofile['step'][::2])
-    assert eq(box, iofile['box'][::2])
-    assert eq(time, iofile['time'][::2])
+    for stride in (1, 2, 3, 5, 7):
+        with XTCTrajectoryFile(fn_xtc) as f:
+            xyz, time, step, box = f.read(atom_indices=[0, 1, 2], stride=stride)
+        assert eq(xyz, iofile['xyz'][:, [0, 1, 2]][::stride])
+        assert eq(step, iofile['step'][::stride])
+        assert eq(box, iofile['box'][::stride])
+        assert eq(time, iofile['time'][::stride])
 
 
 def test_read_atomindices_2(get_fn, fn_xtc):
