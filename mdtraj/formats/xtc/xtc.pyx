@@ -444,13 +444,13 @@ cdef class XTCTrajectoryFile(object):
         cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz = \
             np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
         cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time = \
-            np.empty((n_frames), dtype=np.float32)
+            np.empty(n_frames, dtype=np.float32)
         cdef np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step = \
-            np.empty((n_frames), dtype=np.int32)
+            np.empty(n_frames, dtype=np.int32)
         cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box = \
             np.empty((n_frames, 3, 3), dtype=np.float32)
         cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] prec = \
-            np.empty((n_frames), dtype=np.float32)
+            np.empty(n_frames, dtype=np.float32)
 
         # only used if atom_indices is given
         cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer
@@ -458,16 +458,18 @@ cdef class XTCTrajectoryFile(object):
             framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
         # striding dummy, only used if efficient_striding is false or at the end of the file.
-        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz_stride = \
-            np.empty((1, n_atoms_to_read, 3), dtype=np.float32)
-        cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time_stride = \
-            np.empty((1), dtype=np.float32)
-        cdef np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step_stride = \
-            np.empty((1), dtype=np.int32)
-        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box_stride = \
-            np.empty((1, 3, 3), dtype=np.float32)
-        cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] prec_stride = \
-            np.empty((1), dtype=np.float32)
+        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz_stride
+        cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time_stride
+        cdef np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step_stride
+        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box_stride
+        cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] prec_stride
+
+        if stride > 1 and not efficient_striding:
+            xyz_stride = np.empty((1, self.n_atoms, 3), dtype=np.float32)
+            time_stride = np.empty(1, dtype=np.float32)
+            step_stride = np.empty(1, dtype=np.int32)
+            box_stride = np.empty((1, 3, 3), dtype=np.float32)
+            prec_stride = np.empty(1, dtype=np.float32)
 
         while (i < n_frames) and (status != _EXDRENDOFFILE):
             if atom_indices is None:
