@@ -9,7 +9,7 @@ v1.9.4 (Development)
 - Nothing to see here
 
 
-v1.9.3 (May 16, 2019)
+v1.9.3 (May 17, 2019)
 ---------------------
 
 - Fix CI (#1416, #1420, #1444)
