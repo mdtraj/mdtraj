@@ -53,7 +53,7 @@ def test_load_no_ions(get_fn):
         eq(bond[1].index - bond[0].index, 1)
 
 def test_correct_ordering(get_fn):
-    top = load(get_fn('water-box.hoomdxml')).topology
+    traj = load(get_fn('water-box.hoomdxml'))
     sodium = traj.top.select("name 'Na'")
     sodium_slice = traj.atom_slice(sodium)
     assert np.isclose(sodium_slice.xyz, np.array([[[30, 30, 30]]])).all()
