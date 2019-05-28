@@ -15,7 +15,7 @@ FLAKEY_LIST = ['centroids.ipynb', 'native-contact.ipynb', 'hbonds.ipynb']
 TIMEOUT = 60  # seconds
 
 test_dir = os.path.dirname(os.path.abspath(__file__))
-examples = [pytest.param(fn, marks=pytest.mark.flaky()) if fn in FLAKEY_LIST else fn
+examples = [pytest.param(fn, marks=pytest.mark.flaky) if fn in FLAKEY_LIST else fn
             for fn in os.listdir(test_dir) if fn.endswith('.ipynb')]
 
 

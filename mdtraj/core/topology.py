@@ -655,6 +655,68 @@ class Topology(object):
         chain._residues.append(residue)
         return residue
 
+    def insert_atom(self, name, element, residue, index=None, rindex=None, serial=None):
+        """Create a new Atom and insert it into the Topology at a specific position.
+
+        Parameters
+        ----------
+        name : str
+            The name of the atom to add
+        element : mdtraj.element.Element
+            The element of the atom to add
+        residue : mdtraj.topology.Residue
+            The Residue to add it to
+        index : int
+            If provided, the desired index for this atom
+            within the topology. Existing atoms with
+            indices >= index will be pushed back.
+        rindex : int
+            If provided, the desired position for this atom
+            within the residue
+        serial : int
+            Serial number associated with the atom.
+            This has nothing to do with the actual ordering
+            and is solely for PDB labeling purposes.
+
+        Returns
+        -------
+        atom : mdtraj.topology.Atom
+            the newly created Atom
+        """
+        if element is None:
+            element = elem.virtual
+        if index is None:
+            atom = Atom(name, element, self._numAtoms, residue, serial=serial)
+            self._atoms.append(atom)
+        else:
+            atom = Atom(name, element, index, residue, serial=serial)
+            for i in range(index, len(self._atoms)):
+                self._atoms[i].index += 1
+            self._atoms.insert(index, atom)
+        self._numAtoms += 1
+        if rindex is None:
+            residue._atoms.append(atom)
+        else:
+            residue._atoms.insert(rindex, atom)
+        return atom
+
+    def delete_atom_by_index(self, index):
+        """Delete an Atom from the topology.
+
+        Parameters
+        ----------
+        index : int
+            The index of the atom to be removed.
+        """
+        a = self._atoms[index]
+        if a.index != index:
+            raise RuntimeError("Index of selected atom does not match order in topology.")
+        for i in range(index+1, len(self._atoms)):
+            self._atoms[i].index -= 1
+        a.residue._atoms.remove(a)
+        self._atoms.remove(a)
+        self._numAtoms -= 1
+
     def add_atom(self, name, element, residue, serial=None):
         """Create a new Atom and add it to the Topology.
 
@@ -1121,7 +1183,7 @@ class Topology(object):
         """
         if len(self._bonds) == 0 and any(res.n_atoms > 1 for res in self._residues):
             raise ValueError('Cannot identify molecules because this Topology does not include bonds')
-        
+
         # Make a list of every other atom to which each atom is connected.
 
         num_atoms = self.n_atoms

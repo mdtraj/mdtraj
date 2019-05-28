@@ -90,15 +90,15 @@ def test_reporter(tmpdir, get_fn):
         eq(got.kineticEnergy.shape, (50,))
         eq(got.coordinates.shape, (50, 22, 3))
         eq(got.velocities.shape, (50, 22, 3))
-        eq(got.cell_lengths, None)
-        eq(got.cell_angles, None)
+        eq(got.cell_lengths.shape, (50, 3))
+        eq(got.cell_angles.shape, (50, 3))
         eq(got.time, 0.002 * 2 * (1 + np.arange(50)))
         assert f.topology == md.load(get_fn('native.pdb')).top
 
     with NetCDFTrajectoryFile(ncfile) as f:
         xyz, time, cell_lengths, cell_angles = f.read()
-        eq(cell_lengths, None)
-        eq(cell_angles, None)
+        eq(cell_lengths.shape, (50, 3))
+        eq(cell_angles.shape, (50, 3))
         eq(time, 0.002 * 2 * (1 + np.arange(50)))
 
     hdf5_traj = md.load(hdf5file)
@@ -108,7 +108,6 @@ def test_reporter(tmpdir, get_fn):
 
     # we don't have to convert units here, because md.load already
     # handles that
-    assert hdf5_traj.unitcell_vectors is None
     eq(hdf5_traj.xyz, netcdf_traj.xyz)
     eq(hdf5_traj.unitcell_vectors, netcdf_traj.unitcell_vectors)
     eq(hdf5_traj.time, netcdf_traj.time)
@@ -116,7 +115,7 @@ def test_reporter(tmpdir, get_fn):
 
     eq(dcd_traj.xyz, hdf5_traj.xyz)
     eq(xtc_traj.xyz, dcd_traj.xyz, decimal=3)
-    # yield lambda: eq(dcd_traj.unitcell_vectors, hdf5_traj.unitcell_vectors)
+    eq(dcd_traj.unitcell_vectors, hdf5_traj.unitcell_vectors)
 
 
 def test_reporter_subset(tmpdir, get_fn):

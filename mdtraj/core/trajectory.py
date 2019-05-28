@@ -1880,7 +1880,7 @@ class Trajectory(object):
 
         See Also
         --------
-        image_molecules()
+        image_molecules
         """
         unitcell_vectors = self.unitcell_vectors
         if unitcell_vectors is None:
