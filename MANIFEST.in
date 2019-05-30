@@ -1,6 +1,7 @@
 graft examples
 
 include basesetup.py
+include pyproject.toml
 
 recursive-include mdtraj *.h *.hxx *.hpp *.c *.cpp *.cxx *.pxd *.pyx *.pxi
 

@@ -42,8 +42,10 @@ Then, to run the tests, execute the command ::
 Compiling From Source
 ---------------------
 
-To compile MDTraj from source, you'll need ``cython`` in addition to the
-normal, runtime dependencies. Check ``devtools/conda-recipe/meta.yaml`` for
-a complete list of build and run dependencies.
+To compile MDTraj from source, you should use pip as well::
+
+  git clone https://github.com/mdtraj/mdtraj
+  cd mdtraj
+  pip install -e .
 
 .. vim: tw=75
