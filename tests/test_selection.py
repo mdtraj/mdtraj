@@ -202,7 +202,7 @@ def test_bool():
 def test_nested_bool():
     sp = parse_selection("nothing and water or all")
     eq(sp.source,
-       "((False and atom.residue.is_water) or True)")
+       "(False and atom.residue.is_water or True)")
 
     sp = parse_selection("nothing and (water or all)")
     eq(sp.source,
@@ -239,7 +239,7 @@ def test_not():
     eq(sp.source, "(not atom.residue.is_protein)")
 
     sp = parse_selection("not not protein")
-    eq(sp.source, "(not (not atom.residue.is_protein))")
+    eq(sp.source, "(not not atom.residue.is_protein)")
 
     sp = parse_selection('!protein')
     eq(sp.source, "(not atom.residue.is_protein)")
@@ -250,7 +250,7 @@ def test_re():
     eq(sp.source, "(re.match('C.*', atom.name) is not None)")
 
     sp = parse_selection("(name =~ 'C.*') and all")
-    eq(sp.source, "((re.match('C.*', atom.name) is not None) and True)")
+    eq(sp.source, "(re.match('C.*', atom.name) is not None and True)")
 
 
 # def test_within():
@@ -260,7 +260,7 @@ def test_re():
 
 
 def test_quotes():
-    should_be = "((atom.name == 'CA') and (atom.residue.name == 'ALA'))"
+    should_be = "(atom.name == 'CA' and atom.residue.name == 'ALA')"
 
     sp = parse_selection("name CA and resname ALA")
     eq(sp.source, should_be)
@@ -285,7 +285,7 @@ def test_top(ala):
 
 def test_top_2(ala):
     expr = ala.topology.select_expression("name O and water")
-    eq(expr, "[atom.index for atom in topology.atoms if ((atom.name == 'O') "
+    eq(expr, "[atom.index for atom in topology.atoms if (atom.name == 'O' "
              "and atom.residue.is_water)]")
 
 
