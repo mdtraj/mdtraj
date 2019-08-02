@@ -11,11 +11,11 @@ import pytest
 from jupyter_client import KernelManager
 from six.moves.queue import Empty
 
-FLAKEY_LIST = ['centroids.ipynb', 'native-contact.ipynb']
+FLAKEY_LIST = ['centroids.ipynb', 'native-contact.ipynb', 'hbonds.ipynb']
 TIMEOUT = 60  # seconds
 
 test_dir = os.path.dirname(os.path.abspath(__file__))
-examples = [pytest.mark.flaky(fn) if fn in FLAKEY_LIST else fn
+examples = [pytest.param(fn, marks=pytest.mark.flaky) if fn in FLAKEY_LIST else fn
             for fn in os.listdir(test_dir) if fn.endswith('.ipynb')]
 
 

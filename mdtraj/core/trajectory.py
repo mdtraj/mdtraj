@@ -511,7 +511,7 @@ def iterload(filename, chunk=100, **kwargs):
                     traj = f.read_as_traj(n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
 
                 if len(traj) == 0:
-                    raise StopIteration()
+                    return
 
                 yield traj
 
@@ -1880,7 +1880,7 @@ class Trajectory(object):
 
         See Also
         --------
-        image_molecules()
+        image_molecules
         """
         unitcell_vectors = self.unitcell_vectors
         if unitcell_vectors is None:

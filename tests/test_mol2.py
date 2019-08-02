@@ -62,7 +62,7 @@ def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb(get_fn, tmpdir):
     tar.close()
 
     with open("./v0.3/database.pickle", 'rb') as f:
-        database = pickle.load(f)
+        database = pickle.load(f, encoding='latin-1')
 
     for key in database:
         gaff_filename = "./v0.3/mol2files_gaff/%s.mol2" % key
@@ -140,3 +140,17 @@ def test_mol2_status_bits(get_fn):
 def test_mol2_without_bonds(get_fn):
     trj = md.load_mol2(get_fn('li.mol2'))
     assert trj.topology.n_bonds == 0
+
+
+
+def test_mol2_element_name(get_fn):
+    trj = md.load_mol2(get_fn('cl.mol2'))
+    top, bonds = trj.top.to_dataframe()
+    assert top.iloc[0]['element'] == 'Cl'
+
+    
+@pytest.mark.parametrize('mol2_file', [('li.mol2'),
+('lysozyme-ligand-tripos.mol2'), ('imatinib.mol2'),
+('status-bits.mol2'),('adp.mol2')])
+def test_load_all_mol2(mol2_file, get_fn):
+    trj = md.load_mol2(get_fn(mol2_file))

@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
+import sys
 
 import numpy as np
 from mdtraj import io
@@ -37,6 +38,9 @@ def pdb(get_fn):
     return get_fn('native.pdb')
 
 
+strides = (1, 2, 3, 4, 5, 7, 10, 11)
+
+
 def test_read_chunk1(get_fn, fn_xtc):
     with XTCTrajectoryFile(fn_xtc, 'r', chunk_size_multiplier=0.5) as f:
         xyz, time, step, box = f.read()
@@ -51,29 +55,31 @@ def test_read_chunk1(get_fn, fn_xtc):
 def test_read_stride(get_fn, fn_xtc):
     # read xtc with stride
     iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
-    with XTCTrajectoryFile(fn_xtc) as f:
-        xyz, time, step, box = f.read(stride=3)
-    assert eq(xyz, iofile['xyz'][::3])
-    assert eq(step, iofile['step'][::3])
-    assert eq(box, iofile['box'][::3])
-    assert eq(time, iofile['time'][::3])
+    for s in strides:
+        with XTCTrajectoryFile(fn_xtc) as f:
+            xyz, time, step, box = f.read(stride=s)
+        assert eq(xyz, iofile['xyz'][::s])
+        assert eq(step, iofile['step'][::s])
+        assert eq(box, iofile['box'][::s])
+        assert eq(time, iofile['time'][::s])
 
 
 def test_read_stride_n_frames(get_fn, fn_xtc):
     # read xtc with stride with n_frames
     iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
-    with XTCTrajectoryFile(fn_xtc) as f:
-        xyz, time, step, box = f.read(n_frames=1000, stride=3)
-    assert eq(xyz, iofile['xyz'][::3])
-    assert eq(step, iofile['step'][::3])
-    assert eq(box, iofile['box'][::3])
-    assert eq(time, iofile['time'][::3])
+    for s in strides:
+        with XTCTrajectoryFile(fn_xtc) as f:
+            xyz, time, step, box = f.read(n_frames=1000, stride=s)
+        assert eq(xyz, iofile['xyz'][::s])
+        assert eq(step, iofile['step'][::s])
+        assert eq(box, iofile['box'][::s])
+        assert eq(time, iofile['time'][::s])
 
 
 def test_read_stride_offsets(get_fn, fn_xtc):
     # read xtc with stride and offsets
     iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
-    for s in (1, 2, 3, 4, 5):
+    for s in strides:
         with XTCTrajectoryFile(fn_xtc) as f:
             f.offsets # pre-compute byte offsets between frames
             xyz, time, step, box = f.read(stride=s)
@@ -86,7 +92,7 @@ def test_read_stride_offsets(get_fn, fn_xtc):
 def test_read_stride_n_frames_offsets(get_fn, fn_xtc):
     # read xtc with stride with n_frames and offsets
     iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
-    for s in (1, 2, 3, 4, 5):
+    for s in strides:
         with XTCTrajectoryFile(fn_xtc) as f:
             f.offsets # pre-compute byte offsets between frames
             xyz, time, step, box = f.read(n_frames=1000, stride=s)
@@ -96,7 +102,7 @@ def test_read_stride_n_frames_offsets(get_fn, fn_xtc):
         assert eq(time, iofile['time'][::s])
 
 
-def test_read_stride_switching(get_fn, fn_xtc):
+def test_read_stride_switching_offsets(get_fn, fn_xtc):
     iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
     with XTCTrajectoryFile(fn_xtc) as f:
         f.offsets  # pre-compute byte offsets between frames
@@ -128,6 +134,18 @@ def test_read_atomindices_1(get_fn, fn_xtc):
     assert eq(step, iofile['step'])
     assert eq(box, iofile['box'])
     assert eq(time, iofile['time'])
+
+
+def test_read_atomindices_w_stride(get_fn, fn_xtc):
+    # test case for bug: https://github.com/mdtraj/mdtraj/issues/1394
+    iofile = io.loadh(get_fn('frame0.xtc.h5'), deferred=False)
+    for stride in strides:
+        with XTCTrajectoryFile(fn_xtc) as f:
+            xyz, time, step, box = f.read(atom_indices=[0, 1, 2], stride=stride)
+        assert eq(xyz, iofile['xyz'][:, [0, 1, 2]][::stride])
+        assert eq(step, iofile['step'][::stride])
+        assert eq(box, iofile['box'][::stride])
+        assert eq(time, iofile['time'][::stride])
 
 
 def test_read_atomindices_2(get_fn, fn_xtc):
@@ -350,3 +368,18 @@ def test_short_traj(tmpdir):
         f.write(np.random.uniform(size=(5, 100000, 3)))
     with XTCTrajectoryFile(tmpfn, 'r') as f:
         assert len(f) == 5, len(f)
+
+
+not_on_win = pytest.mark.skipif(sys.platform.startswith('win'),
+                                reason='Can not open file being written again due to file locking.')
+@not_on_win
+def test_flush(tmpdir):
+    tmpfn = '{}/traj.xtc'.format(tmpdir)
+    data = np.random.random((5, 100, 3))
+    with XTCTrajectoryFile(tmpfn, 'w') as f:
+        f.write(data)
+        f.flush()
+        # note that f is still open, so we can now try to read the contents flushed to disk.
+        with XTCTrajectoryFile(tmpfn, 'r') as f2:
+            out = f2.read()
+        np.testing.assert_allclose(out[0], data, atol=1E-3)

@@ -705,3 +705,26 @@ def test_load_with_frame(get_fn):
     t2 = t2.slice([3])
     eq(t1.xyz, t2.xyz)
     eq(t1.time, t2.time)
+
+
+def test_add_remove_atoms(get_fn):
+    t = md.load(get_fn('aaqaa-wat.pdb'))
+    top = t.topology
+    old_atoms = list(top.atoms)[:]
+    # Add an atom 'MW' at the end of each water molecule
+    for r in list(top.residues)[::-1]:
+        if r.name != 'HOH': continue
+        atoms = list(r.atoms)
+        midx = atoms[-1].index+1
+        top.insert_atom('MW',None,r,index=midx)
+    mwidx = [a.index for a in list(top.atoms) if a.name == 'MW']
+    # Check to see whether the 'MW' atoms have the correct index
+    assert mwidx == [183+4*i for i in range(83)]
+    # Now delete the atoms again
+    for r in list(top.residues)[::-1]:
+        if r.name != 'HOH': continue
+        atoms = list(r.atoms)
+        top.delete_atom_by_index(atoms[-1].index)
+    roundtrip_atoms = list(top.atoms)[:]
+    # Ensure the atoms are the same after a round trip of adding / deleting
+    assert old_atoms == roundtrip_atoms

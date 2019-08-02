@@ -13,7 +13,8 @@ install:
   - source devtools/travis-ci/install_sparta.sh
   - source devtools/travis-ci/install_ppm.sh
   - conda config --add channels omnia
-  - conda config --add channels conda-forge # hightest priority 
+  - conda config --add channels conda-forge # hightest priority
+  - git fetch --unshallow --tags
 
 script:
   conda build --quiet devtools/conda-recipe
@@ -26,17 +27,21 @@ os:
 env:
   - CONDA_PY=2.7 CONDA_NPY=1.7
   - CONDA_PY=2.7
-  - CONDA_PY=3.5 CONDA_NPY=1.11
   - CONDA_PY=3.6
+  - CONDA_PY=3.7
 
 # Do include/exclude to add "DOCDEPLOY" to one matrix entry.
 matrix:
-  exclude:
-    - os: linux
-      env: CONDA_PY=3.6
+  #exclude:
+  #  - os: linux
+  #    env: CONDA_PY=3.6
   include:
     - os: linux
       env: CONDA_PY=3.6 DOCDEPLOY=YES
+    - os: linux
+      env: CONDA_PY=2.7 MDTRAJ_TEST_PEP517=YES
+    - os: linux
+      env: CONDA_PY=3.7 MDTRAJ_TEST_PEP517=YES
 
 deploy:
   - provider: s3

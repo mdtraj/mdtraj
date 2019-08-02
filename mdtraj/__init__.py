@@ -25,6 +25,7 @@
 trajectories in a variety of formats, including Gromacs XTC & TRR, CHARMM/NAMD
 DCD, AMBER BINPOS, PDB, and HDF5.
 """
+import numpy as _  # silence cython related numpy warnings, see github.com/numpy/numpy/pull/432
 
 from .formats.registry import FormatRegistry
 from .formats.xtc import load_xtc
@@ -50,7 +51,7 @@ from .formats.tng import load_tng
 
 
 from .core import element
-from ._rmsd import rmsd
+from ._rmsd import rmsd, rmsf
 from ._lprmsd import lprmsd
 from .core.topology import Topology, Single, Double, Triple, Amide, Aromatic
 from .geometry import *
