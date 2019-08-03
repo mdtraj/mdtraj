@@ -189,6 +189,31 @@ def compute_inertia_tensor(traj):
     return A * eyes - B
 
 
+def compute_gyration_tensor(traj):
+    """Compute the gyration tensor of a trajectory.
+
+    For each frame,
+        S_{nm} = sum_{i_atoms} r^{i}_m r^{i}_n
+
+    Parameters
+    ----------
+    traj : Trajectory
+        Trajectory to compute gyration tensor of.
+
+    Returns
+    -------
+    S_xy:  np.ndarray, shape=(traj.n_frames, 3, 3), dtype=float64
+        Gyration tensors for each frame.
+
+    """
+    xyz = trj.xyz
+    center_of_geom = np.expand_dims(xyz.mean(axis=0), axis=1)
+    xyz -= center_of_geom
+
+    return np.array([snap.T.dot(snap)/snap.shape[0] for snap in xyz])
+
+    
+
 def _get_indices(traj, indices):
     if isinstance(indices, string_types):
         if indices.lower() == 'chains':
