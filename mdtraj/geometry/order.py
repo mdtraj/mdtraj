@@ -206,7 +206,7 @@ def compute_gyration_tensor(traj):
         Gyration tensors for each frame.
 
     """
-    xyz = trj.xyz
+    xyz = traj.xyz
     center_of_geom = np.expand_dims(xyz.mean(axis=0), axis=1)
     xyz -= center_of_geom
 
