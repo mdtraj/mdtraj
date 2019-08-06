@@ -209,8 +209,7 @@ def compute_gyration_tensor(traj):
     xyz = traj.xyz
     center_of_geom = np.expand_dims(xyz.mean(axis=0), axis=1)
     xyz -= center_of_geom
-
-    return np.array([snap.T.dot(snap)/snap.shape[0] for snap in xyz])
+    return np.einsum('...ji,...jk->...ik', xyz, xyz)
 
     
 
