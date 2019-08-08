@@ -32,7 +32,7 @@ from mdtraj.utils import ensure_type
 from mdtraj.utils.six import string_types
 
 
-__all__ = ['compute_nematic_order', 'compute_inertia_tensor', 'compute_directors']
+__all__ = ['compute_nematic_order', 'compute_inertia_tensor', 'compute_directors', 'compute_gyration_tensor']
 
 
 def compute_nematic_order(traj, indices='chains'):
@@ -209,7 +209,7 @@ def compute_gyration_tensor(traj):
     xyz = traj.xyz
     center_of_geom = np.expand_dims(compute_center_of_geometry(traj), axis=1)
     xyz -= center_of_geom
-    return np.einsum('...ji,...jk->...ik', xyz, xyz)
+    return np.einsum('...ji,...jk->...ik', xyz, xyz) / traj.n_atoms
 
     
 
@@ -364,7 +364,7 @@ def _compute_inertia_tensor_slow(traj):
 def _compute_gyration_tensor_slow(traj):
     """Compute the gyration tensor of a trajectory. """
     xyz = traj.xyz
-    center_of_geom = np.expand_dims(xyz.mean(axis=0), axis=1)
+    center_of_geom = np.expand_dims(compute_center_of_geometry(traj), axis=1)
     centered_xyz = xyz - center_of_geom
 
     S_nm = np.zeros(shape=(traj.n_frames, 3, 3), dtype=np.float64)
