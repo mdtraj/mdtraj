@@ -30,7 +30,7 @@ __all__ = ['baker_hubbard', 'shrake_rupley', 'kabsch_sander', 'compute_distances
            'compute_center_of_mass', 'compute_center_of_geometry',
            'wernet_nilsson', 'compute_dssp', 'compute_neighbors',
            'compute_neighborlist', 'compute_rdf', 'compute_nematic_order',
-           'compute_inertia_tensor', 'find_closest_contact',
+           'compute_inertia_tensor', 'compute_gyration_tensor', 'find_closest_contact',
            'compute_directors',
 
            # from thermodynamic_properties
