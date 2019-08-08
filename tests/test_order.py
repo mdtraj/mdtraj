@@ -103,6 +103,13 @@ def test_inertia(traj1, traj2, traj3):
     assert eq(order.compute_inertia_tensor(traj3),
               order._compute_inertia_tensor_slow(traj3))
 
+def test_gyration(traj1, traj2, traj3):
+    assert eq(order.compute_gyration_tensor(traj1),
+              order._compute_gyration_tensor_slow(traj1))
+    assert eq(order.compute_gyration_tensor(traj2),
+              order._compute_gyration_tensor_slow(traj2))
+    assert eq(order.compute_gyration_tensor(traj3),
+              order._compute_gyration_tensor_slow(traj3))
 
 def test_nematic_order_args(traj2):
     with pytest.raises(ValueError):
