@@ -21,10 +21,8 @@ environment:
 install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
   - conda config --add channels omnia
-  - conda config --add channels conda-forge # hightest priority 
-  # installing conda 4.4 because of permission error
-  # see https://github.com/conda/conda/issues/8155
-  - conda install -yq conda=4.4 conda-build
+  - conda config --add channels conda-forge # highest priority 
+  - conda install -yq conda conda-build
 
 build: false
 
