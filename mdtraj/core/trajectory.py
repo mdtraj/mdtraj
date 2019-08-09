@@ -1965,7 +1965,7 @@ class Trajectory(object):
 
         if make_whole and sorted_bonds is None:
             sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds])
+            sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds], dtype=np.int32)
         elif not make_whole:
             sorted_bonds = None
 
