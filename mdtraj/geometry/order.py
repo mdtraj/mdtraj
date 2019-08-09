@@ -193,7 +193,10 @@ def compute_gyration_tensor(traj):
     """Compute the gyration tensor of a trajectory.
 
     For each frame,
-        S_{nm} = sum_{i_atoms} r^{i}_m r^{i}_n
+
+    .. math::
+
+        S_{xy} = sum_{i_atoms} r^{i}_x r^{i}_y
 
     Parameters
     ----------
@@ -204,11 +207,14 @@ def compute_gyration_tensor(traj):
     -------
     S_xy:  np.ndarray, shape=(traj.n_frames, 3, 3), dtype=float64
         Gyration tensors for each frame.
+    
+    References
+    ----------
+    .. [1] https://isg.nist.gov/deepzoomweb/measurement3Ddata_help#shape-metrics-formulas
 
     """
-    xyz = traj.xyz
     center_of_geom = np.expand_dims(compute_center_of_geometry(traj), axis=1)
-    xyz -= center_of_geom
+    xyz = traj.xyz - center_of_geom
     return np.einsum('...ji,...jk->...ik', xyz, xyz) / traj.n_atoms
 
     
