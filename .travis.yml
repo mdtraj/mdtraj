@@ -9,6 +9,8 @@ addons:
 
 install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew install md5sha1sum; fi
+  # https://github.com/trinityrnaseq/trinityrnaseq/blob/master/.travis.yml#L62-L65
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then softwareupdate --list; softwareupdate --install "Command Line Tools (macOS High Sierra version 10.13) for Xcode-10.1"; fi    
   - source devtools/travis-ci/install_miniconda.sh
   - source devtools/travis-ci/install_sparta.sh
   - source devtools/travis-ci/install_ppm.sh
@@ -25,7 +27,6 @@ os:
   - linux
 
 env:
-  - CONDA_PY=2.7 CONDA_NPY=1.7
   - CONDA_PY=2.7
   - CONDA_PY=3.6
   - CONDA_PY=3.7
