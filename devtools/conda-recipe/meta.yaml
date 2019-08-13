@@ -23,7 +23,7 @@ requirements:
     - cython  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
     - numpy  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
     - zlib
-    - msinttypes  # [win and py27]
+    - msinttypes  # [win]
     - pip >=19
 
   run:
