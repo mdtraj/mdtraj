@@ -94,7 +94,7 @@ def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
 
 
 def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None, bin_width=0.005, n_bins=None,
-                periodic=True, opt=True):
+                self_correlation=True, periodic=True, opt=True):
     if r_range is None:
         r_range = np.array([0.0, 1.0])
     r_range = ensure_type(r_range, dtype=np.float64, ndim=1, name='r_range',
@@ -110,8 +110,9 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None, bin_widt
         period_length = traj.n_frames
 
     # Add self pairs to `pairs`
-    pairs_set = list(set(pairs[:, 0]))
-    pairs = np.vstack([np.vstack([pairs_set, pairs_set]).T, pairs])
+    if self_correlation:
+        pairs_set = list(set(pairs[:, 0]))
+        pairs = np.vstack([np.vstack([pairs_set, pairs_set]).T, pairs])
 
     g_r_t = np.zeros(shape=(len(times), n_bins))
     num_chunks = int(np.floor(traj.n_frames / period_length))
