@@ -111,7 +111,7 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None, bin_widt
 
     # Add self pairs to `pairs`
     if self_correlation:
-        pairs_set = list(set(pairs[:, 0]))
+        pairs_set = np.unique(pairs)
         pairs = np.vstack([np.vstack([pairs_set, pairs_set]).T, pairs])
 
     g_r_t = np.zeros(shape=(len(times), n_bins))
