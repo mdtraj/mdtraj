@@ -775,7 +775,7 @@ cdef class TRRTrajectoryFile(object):
             header_size = xdrlib.xdr_tell(self.fh)
             frame_size = sum((<int*> &header)[i] for i in range(1, 11))
 
-            size = file_size / (frame_size + header_size)
+            size = file_size // (frame_size + header_size)
             offsets = np.empty(size, dtype=np.int64)
             n_frames = 1
             offsets[0] = 0

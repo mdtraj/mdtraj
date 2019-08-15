@@ -105,8 +105,7 @@ class AmberRestartFile(object):
 
     See Also
     --------
-    md.AmberNetCDFRestartFile : Low level interface to AMBER NetCDF-format
-    restart files
+    md.AmberNetCDFRestartFile : Low level interface to AMBER NetCDF-format restart files
     """
     distance_unit = 'angstroms'
 

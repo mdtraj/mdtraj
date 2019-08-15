@@ -25,12 +25,13 @@ from __future__ import print_function, division
 __all__ = ['baker_hubbard', 'shrake_rupley', 'kabsch_sander', 'compute_distances',
            'compute_displacements', 'compute_angles', 'compute_dihedrals',
            'compute_phi', 'compute_psi', 'compute_chi1', 'compute_chi2',
-           'compute_chi3', 'compute_chi4','compute_chi5', 'compute_omega', 'compute_rg',
-           'compute_contacts', 'compute_drid', 'compute_center_of_mass',
-           'wernet_nilsson', 'compute_dssp', 'compute_neighbors', 'compute_neighborlist',
-           'compute_rdf', 'compute_rdf_t', 'compute_nematic_order', 'compute_inertia_tensor',
-           'find_closest_contact', 'compute_directors',
-
+           'compute_chi3', 'compute_chi4','compute_chi5', 'compute_omega',
+           'compute_rg', 'compute_contacts', 'compute_drid',
+           'compute_center_of_mass', 'compute_center_of_geometry',
+           'wernet_nilsson', 'compute_dssp', 'compute_neighbors',
+           'compute_neighborlist', 'compute_rdf', 'compute_nematic_order',
+           'compute_inertia_tensor', 'compute_gyration_tensor', 'find_closest_contact',
+           'compute_directors',
            # from thermodynamic_properties
            'dipole_moments', 'static_dielectric', 'isothermal_compressability_kappa_T',
            'thermal_expansion_alpha_P',  'density'

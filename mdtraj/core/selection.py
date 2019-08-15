@@ -27,11 +27,13 @@ import sys
 from copy import deepcopy
 from collections import namedtuple
 from mdtraj.utils.six import PY2
-from mdtraj.utils.external.pyparsing import (Word, ParserElement, MatchFirst,
+from pyparsing import (Word, ParserElement, MatchFirst,
     Keyword, opAssoc, quotedString, alphas, alphanums, infixNotation, Group,
     ParseException, OneOrMore)
-from mdtraj.utils.external.astor import codegen
-ParserElement.enablePackrat()
+from astor import code_gen
+
+# this number arises from the current selection language, if the cache size is exceeded, it hurts performance a bit.
+ParserElement.enablePackrat(cache_size_limit=304)
 
 __all__ = ['parse_selection']
 
@@ -286,7 +288,7 @@ class parse_selection(object):
     Parameters
     ----------
     selection_string : str
-        Selection string, a string in the MDTraj atom selection grammer.
+        Selection string, a string in the MDTraj atom selection grammar.
 
     Returns
     -------
@@ -394,7 +396,7 @@ class parse_selection(object):
                                       kw_defaults=[])
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
-        source = codegen.to_source(astnode)
+        source = code_gen.to_source(astnode, pretty_source=lambda src: ''.join(src[:-1]))
 
         expr = eval(
             compile(ast.fix_missing_locations(func), '<string>', mode='eval'),

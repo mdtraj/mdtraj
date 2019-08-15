@@ -113,7 +113,7 @@ def load_mol2(filename):
                 from mdtraj.core.element import Element
                 Element.getBySymbol(x)
             except KeyError:
-                return to_element(x[0])
+                return x[0]
             return x
         atoms_mdtraj["element"] = atoms.atype.apply(to_element)
 

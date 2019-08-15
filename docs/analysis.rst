@@ -42,6 +42,14 @@ Secondary Structure
     compute_dssp
 
 
+Shape Metrics
+-------------------
+.. autosummary::
+    :toctree: api/generated/
+
+    compute_gyration_tensor
+
+
 Surface Area, Radius of Gyration and Inertia
 --------------------------------------------
 .. autosummary::
