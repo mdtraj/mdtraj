@@ -19,7 +19,7 @@ void inplace_center_and_trace_atom_major(float* coords, float* traces, const int
     __m128 x, y, z, x2, y2, z2;
 
     #ifdef _OPENMP
-    #pragma omp parallel for default(none) shared(coords, traces, n_frames, n_atoms) \
+    #pragma omp parallel for shared(coords, traces) \
         private(sx_, sy_, sz_, trace_, mux_, muy_, muz_, sxf, syf, szf, \
         confp, i, x, y, z, x2, y2, z2, sx, sy, sz, trace)
     #endif
