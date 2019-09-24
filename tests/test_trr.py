@@ -219,6 +219,18 @@ def test_ragged_2():
             f.write(xyz)
 
 
+def test_malformed_trr():
+    with open(temp, 'w') as tmpf:
+        tmpf.write("foo")  # verty badly malformed TRR
+
+    with pytest.raises(OSError):
+        TRRTrajectoryFile(temp)
+
+    psutil = pytest.importorskip("psutil")
+    open_files = psutil.Process().open_files()
+    assert open_files == []
+
+
 def test_tell(get_fn):
     with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
         eq(f.tell(), 0)
