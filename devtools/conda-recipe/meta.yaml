@@ -53,6 +53,7 @@ test:
     - pytest-ignore-flaky =1
     - pandas
     - pytables
+    - psutil
 
   source_files:
     - examples/*
