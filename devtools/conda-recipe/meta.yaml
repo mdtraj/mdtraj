@@ -10,8 +10,6 @@ build:
   entry_points:
     - mdconvert = mdtraj.scripts.mdconvert:entry_point
     - mdinspect = mdtraj.scripts.mdinspect:entry_point
-  script_env:
-   - MDTRAJ_TEST_PEP517
 
 requirements:
   build:
@@ -20,8 +18,8 @@ requirements:
   host:
     - python
     - setuptools
-    - cython  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
-    - numpy  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
+    - cython
+    - numpy
     - zlib
     - msinttypes  # [win and py27]
     - pip >=19
@@ -54,6 +52,7 @@ test:
     - pandas
     - pytables
     - psutil
+    - conda-verify
 
   source_files:
     - examples/*

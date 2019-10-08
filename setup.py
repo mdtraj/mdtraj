@@ -283,9 +283,10 @@ if __name__ == '__main__':
             import Cython as _c
             from Cython.Build import cythonize
             if _c.__version__ < '0.29':
-                raise ImportError
-        except ImportError:
+                raise ImportError("Too old")
+        except ImportError as e:
             print('mdtrajs setup depends on Cython (>=0.29). Install it prior invoking setup.py')
+            print(e)
             sys.exit(1)
         try:
             import numpy as np
