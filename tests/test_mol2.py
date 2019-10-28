@@ -151,6 +151,6 @@ def test_mol2_element_name(get_fn):
     
 @pytest.mark.parametrize('mol2_file', [('li.mol2'),
 ('lysozyme-ligand-tripos.mol2'), ('imatinib.mol2'),
-('status-bits.mol2'),('adp.mol2')])
+('status-bits.mol2'), ('adp.mol2'), ('water_acn.mol2')])
 def test_load_all_mol2(mol2_file, get_fn):
     trj = md.load_mol2(get_fn(mol2_file))
