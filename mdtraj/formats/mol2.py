@@ -118,6 +118,8 @@ def load_mol2(filename):
             return x
         atoms_mdtraj["element"] = atoms.atype.apply(to_element)
 
+    # Check if elements inferred from atoms.atype are valid
+    # If not, try to infer elements from atoms.name
     try:
         atoms_mdtraj['element'].apply(elem.get_by_symbol)
     except KeyError:
@@ -127,13 +129,6 @@ def load_mol2(filename):
         except KeyError:
             raise KeyError('Invalid element passed to atoms DataFrame')
 
-    # Check if valid elements were inferred from atoms.atype
-    # If not, try to infer elements from atoms.name
-    #if atoms_mdtraj.element.isnull().any():
-    #    atoms_mdtraj["element"] = atoms.name.apply(to_element)
-
-    resnames = list(set([i for i in atoms['resName']]))
-    res_seq_dict = {resname: index for index, resname in enumerate(resnames)}
     atoms_mdtraj['resSeq'] = atoms['code']
     atoms_mdtraj["chainID"] = np.ones(len(atoms), 'int')
 
