@@ -56,6 +56,7 @@ import re
 from mdtraj.utils import import_
 from mdtraj.utils.six.moves import cStringIO as StringIO
 from mdtraj.formats.registry import FormatRegistry
+from mdtraj.core import element as elem
 
 __all__ = ['load_mol2', "mol2_to_dataframes"]
 
@@ -113,20 +114,27 @@ def load_mol2(filename):
                 from mdtraj.core.element import Element
                 Element.getBySymbol(x)
             except KeyError:
-                return None
+                return x[0]
             return x
         atoms_mdtraj["element"] = atoms.atype.apply(to_element)
 
+    try:
+        atoms_mdtraj['element'].apply(elem.get_by_symbol)
+    except KeyError:
+        try:
+            atoms_mdtraj["element"] = atoms.name.apply(to_element)
+            atoms_mdtraj['element'].apply(elem.get_by_symbol)
+        except KeyError:
+            raise KeyError('Invalid element passed to atoms DataFrame')
+
     # Check if valid elements were inferred from atoms.atype
     # If not, try to infer elements from atoms.name
-    if atoms_mdtraj.element.isnull().any():
-        atoms_mdtraj["element"] = atoms.name.apply(to_element)
+    #if atoms_mdtraj.element.isnull().any():
+    #    atoms_mdtraj["element"] = atoms.name.apply(to_element)
 
     resnames = list(set([i for i in atoms['resName']]))
     res_seq_dict = {resname: index for index, resname in enumerate(resnames)}
-    #atoms_mdtraj['resSeq'] = np.array([res_seq_dict[i] for i in atoms_mdtraj['resName']])
     atoms_mdtraj['resSeq'] = atoms['code']
-    #atoms_mdtraj["resSeq"] = np.ones(len(atoms), 'int')
     atoms_mdtraj["chainID"] = np.ones(len(atoms), 'int')
 
     bond_type_map = {
