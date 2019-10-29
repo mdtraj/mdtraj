@@ -405,7 +405,7 @@ class GroTrajectoryFile(object):
             if serial is None:
                 serial = atom.index
             if serial >= 100000:
-                serial -= 100000
+                serial %= 100000
             lines.append(fmt % (residue.resSeq, residue.name, atom.name, serial,
                                 coordinates[i, 0], coordinates[i, 1], coordinates[i, 2]))
 
