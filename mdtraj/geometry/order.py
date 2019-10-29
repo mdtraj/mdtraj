@@ -32,7 +32,7 @@ from mdtraj.utils import ensure_type
 from mdtraj.utils.six import string_types
 
 
-__all__ = ['compute_nematic_order', 'compute_inertia_tensor', 'compute_directors', 'compute_gyration_tensor']
+__all__ = ['compute_nematic_order', 'compute_inertia_tensor', 'compute_directors']
 
 
 def compute_nematic_order(traj, indices='chains'):
@@ -187,36 +187,6 @@ def compute_inertia_tensor(traj):
     A = np.einsum("i, kij->k", masses, xyz ** 2).reshape(traj.n_frames, 1, 1)
     B = np.einsum("ij..., ...jk->...ki", masses[:, np.newaxis] * xyz.T, xyz)
     return A * eyes - B
-
-
-def compute_gyration_tensor(traj):
-    """Compute the gyration tensor of a trajectory.
-
-    For each frame,
-
-    .. math::
-
-        S_{xy} = sum_{i_atoms} r^{i}_x r^{i}_y
-
-    Parameters
-    ----------
-    traj : Trajectory
-        Trajectory to compute gyration tensor of.
-
-    Returns
-    -------
-    S_xy:  np.ndarray, shape=(traj.n_frames, 3, 3), dtype=float64
-        Gyration tensors for each frame.
-    
-    References
-    ----------
-    .. [1] https://isg.nist.gov/deepzoomweb/measurement3Ddata_help#shape-metrics-formulas
-
-    """
-    center_of_geom = np.expand_dims(compute_center_of_geometry(traj), axis=1)
-    xyz = traj.xyz - center_of_geom
-    return np.einsum('...ji,...jk->...ik', xyz, xyz) / traj.n_atoms
-
     
 
 def _get_indices(traj, indices):
@@ -366,25 +336,3 @@ def _compute_inertia_tensor_slow(traj):
         I_ab[n, 2, 0] = I_ab[n, 0, 2]
         I_ab[n, 2, 1] = I_ab[n, 1, 2]
     return I_ab
-
-def _compute_gyration_tensor_slow(traj):
-    """Compute the gyration tensor of a trajectory. """
-    xyz = traj.xyz
-    center_of_geom = np.expand_dims(compute_center_of_geometry(traj), axis=1)
-    centered_xyz = xyz - center_of_geom
-
-    S_nm = np.zeros(shape=(traj.n_frames, 3, 3), dtype=np.float64)
-    for n, xyz in enumerate(centered_xyz):
-        N = xyz.shape[0]
-        for r in xyz:
-            S_nm[n, 0, 0] += r[0] * r[0]
-            S_nm[n, 1, 1] += r[1] * r[1]
-            S_nm[n, 2, 2] += r[2] * r[2]
-            S_nm[n, 0, 1] += r[0] * r[1]
-            S_nm[n, 0, 2] += r[0] * r[2]
-            S_nm[n, 1, 2] += r[1] * r[2]
-        S_nm[n, 1, 0] = S_nm[n, 0, 1]
-        S_nm[n, 2, 0] = S_nm[n, 0, 2]
-        S_nm[n, 2, 1] = S_nm[n, 1, 2]
-        S_nm[n, :, :] /= N
-    return S_nm
