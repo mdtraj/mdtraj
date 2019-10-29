@@ -32,7 +32,7 @@ __all__ = ['compute_gyration_tensor', 'principal_moments', 'asphericity', 'acyli
 def compute_gyration_tensor(traj):
     """Compute the gyration tensor of a trajectory.
 
-    For each frame,
+    For every frame,
 
     .. math::
 
