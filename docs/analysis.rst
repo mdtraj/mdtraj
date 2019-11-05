@@ -42,6 +42,19 @@ Secondary Structure
     compute_dssp
 
 
+Shape Metrics
+-------------------
+.. autosummary::
+    :toctree: api/generated/
+
+    compute_gyration_tensor
+    principal_moments
+    asphericity
+    acylindricity
+    relative_shape_antisotropy
+
+
+
 Surface Area, Radius of Gyration and Inertia
 --------------------------------------------
 .. autosummary::

@@ -27,7 +27,7 @@ from pkg_resources import parse_version
 import numpy as np
 NP18 = parse_version(np.__version__) >= parse_version('1.8.0')
 
-from mdtraj.geometry.distance import compute_center_of_mass
+from mdtraj.geometry.distance import compute_center_of_mass, compute_center_of_geometry
 from mdtraj.utils import ensure_type
 from mdtraj.utils.six import string_types
 
@@ -187,7 +187,7 @@ def compute_inertia_tensor(traj):
     A = np.einsum("i, kij->k", masses, xyz ** 2).reshape(traj.n_frames, 1, 1)
     B = np.einsum("ij..., ...jk->...ki", masses[:, np.newaxis] * xyz.T, xyz)
     return A * eyes - B
-
+    
 
 def _get_indices(traj, indices):
     if isinstance(indices, string_types):

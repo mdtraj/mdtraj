@@ -480,8 +480,10 @@ int read_trr_natoms(char *fn,int *natoms)
 	xd = xdrfile_open(fn,"r");
 	if (NULL == xd)
 		return exdrFILENOTFOUND;
-	if ((result = do_trnheader(xd,1,&sh)) != exdrOK)
+	if ((result = do_trnheader(xd,1,&sh)) != exdrOK) {
+                xdrfile_close(xd);
 		return result;
+        }
 	xdrfile_close(xd);
 	*natoms = sh.natoms;
 	
@@ -504,16 +506,16 @@ int read_trr_nframes(char *fn, unsigned long *nframes) {
     if (NULL == xd)
         return exdrFILENOTFOUND;
 
-	do {
-		result = read_trr(xd, natoms, &step, &time, &lambda,
-						  box, x, NULL, NULL);
-		if (exdrENDOFFILE != result) {
-			(*nframes)++;
-		}
-	} while (result == exdrOK);
+    do {
+            result = read_trr(xd, natoms, &step, &time, &lambda,
+                                              box, x, NULL, NULL);
+            if (exdrENDOFFILE != result) {
+                    (*nframes)++;
+            }
+    } while (result == exdrOK);
 
-	xdrfile_close(xd);
-	free(x);
+    xdrfile_close(xd);
+    free(x);
     return exdrOK;
 }
 

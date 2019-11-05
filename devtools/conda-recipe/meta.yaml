@@ -10,8 +10,6 @@ build:
   entry_points:
     - mdconvert = mdtraj.scripts.mdconvert:entry_point
     - mdinspect = mdtraj.scripts.mdinspect:entry_point
-  script_env:
-   - MDTRAJ_TEST_PEP517
 
 requirements:
   build:
@@ -20,8 +18,8 @@ requirements:
   host:
     - python
     - setuptools
-    - cython  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
-    - numpy  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
+    - cython
+    - numpy
     - zlib
     - msinttypes  # [win and py27]
     - pip >=19
@@ -33,6 +31,8 @@ requirements:
     - scipy
     # Fix pytables on windows. See https://github.com/conda-forge/pytables-feedstock/issues/31#issuecomment-410695814
     - snappy  # [win]
+    - pyparsing
+    - astor
 
 test:
   requires:
@@ -51,6 +51,8 @@ test:
     - pytest-ignore-flaky =1
     - pandas
     - pytables
+    - psutil
+    - conda-verify
 
   source_files:
     - examples/*
