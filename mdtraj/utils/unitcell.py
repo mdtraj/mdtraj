@@ -174,3 +174,46 @@ def box_vectors_to_lengths_and_angles(a, b, c):
     gamma = gamma * 180.0 / np.pi
 
     return a_length, b_length, c_length, alpha, beta, gamma
+
+def lengths_and_angles_to_tilt_factors(a_length, b_length, c_length, 
+        alpha, beta, gamma):
+    """
+    Parameters
+    ----------
+    a_length : scalar or np.ndarray
+        length of Bravais unit vector **a**
+    b_length : scalar or np.ndarray
+        length of Bravais unit vector **b**
+    c_length : scalar or np.ndarray
+        length of Bravais unit vector **c**
+    alpha : scalar or np.ndarray
+        angle between vectors **b** and **c**, in degrees.
+    beta : scalar or np.ndarray
+        angle between vectors **c** and **a**, in degrees.
+    gamma : scalar or np.ndarray
+        angle between vectors **a** and **b**, in degrees.
+
+    Returns
+    ------
+    lx : scalar
+        Extent in x direction
+    ly : scalar
+        Extent in y direction
+    lz : scalar
+        Extent in z direction
+    xy : scalar
+        Unit vector **b** tilt with respect to **a**
+    xz : scalar
+        Unit vector of **c** tilt with respect to **a**
+    yz : scalar
+        Unit vector of **c** tilt with respect to **b**
+    """
+    lx = a_length
+    xy = b_length * np.cos(np.deg2rad(gamma))
+    xz = c_length * np.cos(np.deg2rad(beta))
+    ly = np.sqrt(b_length**2 - xy**2)
+    yz = (b_length*c_length*np.cos(np.deg2rad(alpha)) - xy*xz) / ly
+    lz = np.sqrt(c_length**2 - xz**2 - yz**2)
+
+    return np.array([lx, ly, lz, xy, xz, yz])
+
