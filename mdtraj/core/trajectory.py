@@ -501,9 +501,14 @@ def iterload(filename, chunk=100, **kwargs):
         for i in range(0, len(t), chunk):
             yield t[i:i+chunk]
     elif extension in ('.gsd'):
-        t = load(filename, stride=stride, atom_indices=atom_indices)
-        for i in range(0, len(t), chunk):
-            yield t[i:i+chunk]
+        i = 0
+        while True:
+            traj = load(filename, stride=stride, atom_indices=atom_indices,
+                    start=i, n_frames=chunk)
+            if len(traj) ==0 :
+                return
+            i += chunk
+            yield traj
     else:
         with (lambda x: open(x, n_atoms=topology.n_atoms)
               if extension in ('.crd', '.mdcrd')

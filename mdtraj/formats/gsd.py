@@ -113,20 +113,6 @@ def load_gsd_topology(filename):
 
     return top
 
-
-def read_snapshot(snapshot, topology, atom_indices=None):
-    """ Parse relevant information from a single HOOMD snapshot (frame) """
-    xyz = snapshot.particles.position
-    if atom_indices is not None:
-        xyz = xyz[atom_indices]
-    lx, ly, lz, xy, xz, yz = snapshot.configuration.box
-    box_vectors=[[lx, xy*ly, xz*lz],
-                            [0.0, ly, yz*lz],
-                            [0.0, 0.0,lz]]
-    time = snapshot.configuration.step
-
-    return xyz, box_vectors, time
-
 def hoomdtraj_to_traj(f, topology, start=None, n_frames=None, 
         stride=None, atom_indices=None):
     """ Convert HOOMDTrajectory to MDtraj Trajectory 
@@ -169,11 +155,26 @@ def hoomdtraj_to_traj(f, topology, start=None, n_frames=None,
     all_coords = np.array(all_coords)
     all_vectors = np.array(all_vectors)
     all_times = np.array(all_times)
+    if len(all_coords) == 0:
+        return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), 
+                topology=topology)
 
     t = Trajectory(xyz=all_coords, topology=topology, time=all_times)
     t.unitcell_vectors = all_vectors
     return t
 
+def read_snapshot(snapshot, topology, atom_indices=None):
+    """ Parse relevant information from a single HOOMD snapshot (frame) """
+    xyz = snapshot.particles.position
+    if atom_indices is not None:
+        xyz = xyz[atom_indices]
+    lx, ly, lz, xy, xz, yz = snapshot.configuration.box
+    box_vectors=[[lx, xy*ly, xz*lz],
+                            [0.0, ly, yz*lz],
+                            [0.0, 0.0,lz]]
+    time = snapshot.configuration.step
+
+    return xyz, box_vectors, time
 
 def write_gsd(filename, xyz, top, cell_lengths=None, cell_angles=None):
     """Write one or more frames of data to a gsd file.
