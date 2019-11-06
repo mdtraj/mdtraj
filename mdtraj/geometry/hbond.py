@@ -37,8 +37,7 @@ __all__ = ['wernet_nilsson', 'baker_hubbard', 'kabsch_sander']
 # Functions
 ##############################################################################
 
-def wernet_nilsson(traj, exclude_water=True, include_water_solute=False, 
-        periodic=True, sidechain_only=False):
+def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle according to the criterion outlined in [1].
     As opposed to Baker-Hubbard, this is a "cone" criterion where the
@@ -60,8 +59,6 @@ def wernet_nilsson(traj, exclude_water=True, include_water_solute=False,
         An mdtraj trajectory. It must contain topology information.
     exclude_water : bool, default=True
         Exclude solvent molecules from consideration.
-    include_water_solute : bool, default=False
-        Include solvent-solute hydrogen bonds from consideration.
     periodic : bool, default=True
         Set to True to calculate displacements and angles across periodic box boundaries.
     sidechain_only : bool, default=False
@@ -128,7 +125,7 @@ def wernet_nilsson(traj, exclude_water=True, include_water_solute=False,
 
     # Get the possible donor-hydrogen...acceptor triplets
     bond_triplets = _get_bond_triplets(traj.topology,
-        exclude_water=exclude_water, include_water_solute=include_water_solute, sidechain_only=sidechain_only)
+        exclude_water=exclude_water, sidechain_only=sidechain_only)
 
     # Compute geometry
     mask, distances, angles = _compute_bounded_geometry(traj, bond_triplets,
@@ -146,8 +143,7 @@ def wernet_nilsson(traj, exclude_water=True, include_water_solute=False,
     return [bond_triplets.compress(present, axis=0) for present in presence]
 
 
-def baker_hubbard(traj, freq=0.1, exclude_water=True, 
-        include_water_solute=False, periodic=True, sidechain_only=False):
+def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_only=False):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle.
 
@@ -167,8 +163,6 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True,
         frames in the trajectory.
     exclude_water : bool, default=True
         Exclude solvent molecules from consideration
-    include_water_solute : bool, default=False
-        Include solvent-solute hydrogen bonds from consideration.
     periodic : bool, default=True
         Set to True to calculate displacements and angles across periodic box boundaries.
     sidechain_only : bool, default=False
@@ -236,7 +230,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True,
 
     # Get the possible donor-hydrogen...acceptor triplets
     bond_triplets = _get_bond_triplets(traj.topology,
-        exclude_water=exclude_water, include_water_solute=include_water_solute, sidechain_only=sidechain_only)
+        exclude_water=exclude_water, sidechain_only=sidechain_only)
 
     mask, distances, angles = _compute_bounded_geometry(traj, bond_triplets,
         distance_cutoff, [1, 2], [0, 1, 2], freq=freq, periodic=periodic)
@@ -326,8 +320,7 @@ def kabsch_sander(traj):
     return matrices
 
 
-def _get_bond_triplets(topology, exclude_water=True, 
-        include_water_solute=False, sidechain_only=False):
+def _get_bond_triplets(topology, exclude_water=True, sidechain_only=False):
     def can_participate(atom):
         # Filter waters
         if exclude_water and atom.residue.is_water:
@@ -365,12 +358,9 @@ def _get_bond_triplets(topology, exclude_water=True,
     xh_donors = np.array(nh_donors + oh_donors)
 
     if len(xh_donors) == 0:
-        if not include_water_solute:
         # if there are no hydrogens or protein in the trajectory, we get
         # no possible pairs and return nothing
-            return np.zeros((0, 3), dtype=int)
-        else:
-            xh_donors = np.zeros((0, 2), dtype=int)
+        return np.zeros((0, 3), dtype=int)
 
     acceptor_elements = frozenset(('O', 'N'))
     acceptors = [a.index for a in topology.atoms
@@ -383,81 +373,6 @@ def _get_bond_triplets(topology, exclude_water=True,
     xh_donors_repeated = np.repeat(xh_donors, acceptors.shape[0], axis=0)
     acceptors_tiled = np.tile(acceptors, (xh_donors.shape[0], 1))
     bond_triplets = np.hstack((xh_donors_repeated, acceptors_tiled))
-
-    # AY: Get water-solute interactions only if water is excluded and 
-    # water-solute is included
-    if exclude_water and include_water_solute:
-        def get_water_donors(e0, e1):
-            # Find all matching bonds
-            elems = set((e0, e1))
-            atoms = [(one, two) for one, two in topology.bonds
-                if set((one.element.symbol, two.element.symbol)) == elems]
-    
-            # Filter non-participating atoms
-            atoms = [atom for atom in atoms
-                if atom[0].residue.is_water and atom[1].residue.is_water]
-    
-            # Get indices for the remaining atoms
-            indices = []
-            for a0, a1 in atoms:
-                pair = (a0.index, a1.index)
-                # make sure to get the pair in the right order, so that the index
-                # for e0 comes before e1
-                if a0.element.symbol == e1:
-                    pair = pair[::-1]
-                indices.append(pair)
-
-            return indices
-
-        # For water donating to solute
-        exclude_water = False
-        oh_donors = np.array(get_water_donors('O', 'H'))
-
-        if len(oh_donors) == 0:
-            # if there are no hydrogens or protein in the trajectory, we get
-            # no possible pairs and return nothing
-            #return np.zeros((0, 3), dtype=int)
-            oh_donors = np.zeros((1, 2), dtype=int)
-        exclude_water = True
-        acceptors = [a.index for a in topology.atoms
-            if a.element.symbol in acceptor_elements and can_participate(a)]
-
-        # Make acceptors a 2-D numpy array
-        acceptors = np.array(acceptors)[:, np.newaxis]
-
-        # Generate the cartesian product of the donors and acceptors
-        oh_donors_repeated = np.repeat(oh_donors, acceptors.shape[0], axis=0)
-        acceptors_tiled = np.tile(acceptors, (oh_donors.shape[0], 1))
-        water_solute_triplets = np.hstack((oh_donors_repeated, 
-            acceptors_tiled))
-
-        # For solute donating to water
-        exclude_water = True
-        nh_donors = get_donors('N', 'H')
-        oh_donors = get_donors('O', 'H')
-        xh_donors = np.array(nh_donors + oh_donors)
-
-        if len(xh_donors) == 0:
-            # if there are no hydrogens or protein in the trajectory, we get
-            # no possible pairs and return nothing
-            #return np.zeros((0, 3), dtype=int)
-            xh_donors = np.zeros((1, 2), dtype=int)
-        exclude_water = False
-        water_acceptor_elements = frozenset(('O'))
-        water_acceptors = [a.index for a in topology.atoms
-            if a.element.symbol in water_acceptor_elements 
-            and a.residue.is_water]
-
-        # Make acceptors a 2-D numpy array
-        water_acceptors = np.array(water_acceptors)[:, np.newaxis]
-
-        # Generate the cartesian product of the donors and acceptors
-        xh_donors_repeated = np.repeat(xh_donors, water_acceptors.shape[0], axis=0)
-        water_acceptors_tiled = np.tile(water_acceptors, (xh_donors.shape[0], 1))
-        solute_water_triplets = np.hstack((xh_donors_repeated, 
-            water_acceptors_tiled))
-        bond_triplets = np.vstack((bond_triplets, water_solute_triplets, solute_water_triplets))
-
 
     # Filter out self-bonds
     self_bond_mask = (bond_triplets[:, 0] == bond_triplets[:, 2])

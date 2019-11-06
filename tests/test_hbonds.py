@@ -135,4 +135,4 @@ def test_wernet_nilsson_1(get_fn):
             # assert that the donor-acceptor distance is less than 0.5 nm, just
             # to make sure the criterion is giving back totally implausible stuff
             if len(hbonds) > 0:
-                assert np.all(md.compute_distances(t[frame], hbonds[:, [0,2]]) < 0.5)
+                assert np.all(md.compute_distances(t[frame], hbonds[:, [0, 2]]) < 0.5)
