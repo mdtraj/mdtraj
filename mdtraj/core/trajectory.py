@@ -1665,6 +1665,9 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filenames, if its already there
         """
+        if os.path.exists(filename) and not force_overwrite:
+            raise IOError('"%s" already exists' % filename)
+        
         self._check_valid_unitcell()
         write_gsd(filename, self.xyz, self.topology, 
                 cell_lengths=self.unitcell_lengths,

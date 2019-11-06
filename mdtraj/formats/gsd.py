@@ -98,6 +98,7 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
                     stride=stride, atom_indices=atom_indices)
 
 def load_gsd_topology(filename):
+    """ Create an MDTraj.Topology from a GSD file """
     with gsd.hoomd.open(filename, 'rb') as gsdfile:
         top = Topology()
         generic_chain = top.add_chain()
