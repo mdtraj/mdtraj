@@ -53,6 +53,7 @@ test:
     - pytables
     - psutil
     - conda-verify
+    - gsd
 
   source_files:
     - examples/*
@@ -75,6 +76,6 @@ about:
     solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj
     is the wide variety of molecular dynamics trajectory file formats which are
     supported, including RCSB pdb, GROMACS xtc, tng, and trr, CHARMM / NAMD dcd, AMBER
-    binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
+    binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc, MDTraj HDF5, HOOMD gsd.
   doc_url: http://mdtraj.org/
   dev_url: https://github.com/mdtraj/mdtraj
