@@ -182,6 +182,7 @@ def write_gsd(filename, xyz, top, cell_lengths=None, cell_angles=None):
 
     Parameters
     ----------
+    filename : str
     xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
         The cartesian coordinates of the atoms to write. 
     top : mdtraj.Topology
