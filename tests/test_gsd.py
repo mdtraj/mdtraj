@@ -30,6 +30,7 @@ import pytest
 def test_read(get_fn):
     filename = get_fn('out.gsd')
     traj = mdtraj.load(filename)
+
     assert len(traj) == 1000
     assert traj.top.n_atoms == 80
     assert traj.top.n_bonds == 70
@@ -40,15 +41,19 @@ def test_read_start(get_fn):
     filename = get_fn('out.gsd')
     traj = mdtraj.load(filename)
     other = mdtraj.load(filename, start=2)
+
     eq(traj[2].xyz, other[0].xyz)
     eq(traj[2].unitcell_lengths, other[0].unitcell_lengths)
+    assert traj.top == other.top
 
 def test_read_frame(get_fn):
     filename = get_fn('out.gsd')
     traj = mdtraj.load(filename)
     other = mdtraj.load(filename, frame=2)
+
     eq(traj[2].xyz, other[0].xyz)
     eq(traj[2].unitcell_lengths, other[0].unitcell_lengths)
+    assert traj.top == other.top
 
 def test_read_stride(get_fn):
     filename = get_fn('out.gsd')
@@ -60,6 +65,8 @@ def test_read_stride(get_fn):
 
     eq(traj[10].xyz, other[1].xyz)
     eq(traj[10].unitcell_lengths, other[1].unitcell_lengths)
+
+    assert traj.top == other.top
 
 def test_read_variable_top_error(get_fn):
     filename = get_fn('variable_top.gsd')
@@ -74,8 +81,7 @@ def test_write(get_fn, tmpdir):
     traj.save(fn)
     other = mdtraj.load(fn)
 
-    assert traj.top.n_atoms == other.top.n_atoms
-    assert traj.top.n_bonds == other.top.n_bonds
+    assert traj.top == other.top
     eq(other.xyz, traj.xyz)
     eq(other.unitcell_lengths, traj.unitcell_lengths)
 
@@ -86,8 +92,7 @@ def test_write_frame(get_fn, tmpdir):
     traj[2].save(fn)
     other = mdtraj.load(fn)
 
-    assert traj.top.n_atoms == other.top.n_atoms
-    assert traj.top.n_bonds == other.top.n_bonds
+    assert traj.top == other.top
     eq(traj[2].xyz, other.xyz)
     eq(traj[2].unitcell_lengths, other.unitcell_lengths)
 
