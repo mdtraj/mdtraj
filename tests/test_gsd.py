@@ -61,6 +61,12 @@ def test_read_stride(get_fn):
     eq(traj[10].xyz, other[1].xyz)
     eq(traj[10].unitcell_lengths, other[1].unitcell_lengths)
 
+def test_read_variable_top_error(get_fn):
+    filename = get_fn('variable_top.gsd')
+    with pytest.raises(IOError):
+        traj = mdtraj.load(filename)
+
+
 def test_write(get_fn, tmpdir):
     filename = get_fn('out.gsd')
     traj = mdtraj.load(filename)

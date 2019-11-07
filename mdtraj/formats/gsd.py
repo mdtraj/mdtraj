@@ -86,7 +86,7 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
 
     with gsd.hoomd.open(filename, 'rb') as f:
         if frame is not None:
-            xyz, vectors, time = read_snapshot(f[frame], 
+            xyz, vectors, time = read_snapshot(frame, f[frame], 
                     topology, atom_indices=atom_indices)
             t = Trajectory(xyz=np.array(xyz), topology=topology, 
                     time=np.array([time]))
@@ -97,13 +97,15 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
             return hoomdtraj_to_traj(f, topology, start=start, n_frames=n_frames,
                     stride=stride, atom_indices=atom_indices)
 
-def load_gsd_topology(filename):
+def load_gsd_topology(filename, frame=0):
     """ Create an MDTraj.Topology from a GSD file 
     
     Parameters
     ----------
     filename : str
         String filename of GSD trajectory file.
+    frame : int, 0 
+        Frame of GSD file to parse topology
 
     Returns
     -------
@@ -120,12 +122,12 @@ def load_gsd_topology(filename):
         top = Topology()
         generic_chain = top.add_chain()
         generic_residue = top.add_residue('A', generic_chain)
-        all_particle_types = gsdfile[0].particles.types
-        for particle_type_id in gsdfile[0].particles.typeid:
+        all_particle_types = gsdfile[frame].particles.types
+        for particle_type_id in gsdfile[frame].particles.typeid:
             top.add_atom(all_particle_types[particle_type_id], virtual_site,
                     generic_residue)
 
-        for bond in gsdfile[0].bonds.group:
+        for bond in gsdfile[frame].bonds.group:
             atom1, atom2 = bond[0], bond[1]
             top.add_bond(top.atom(atom1), top.atom(atom2))
 
@@ -163,8 +165,8 @@ def hoomdtraj_to_traj(f, topology, start=None, n_frames=None,
         stride = 1
 
     all_coords, all_times, all_vectors = [], [], []
-    for snapshot in f[start : start+n_frames : stride]:
-        xyz, box_vectors, time = read_snapshot(snapshot, topology, 
+    for i, snapshot in enumerate(f[start : start+n_frames : stride], start=start):
+        xyz, box_vectors, time = read_snapshot(i, snapshot, topology, 
                 atom_indices=atom_indices)
         all_coords.append(xyz)
         all_vectors.append(box_vectors)
@@ -181,11 +183,13 @@ def hoomdtraj_to_traj(f, topology, start=None, n_frames=None,
     t.unitcell_vectors = all_vectors
     return t
 
-def read_snapshot(snapshot, topology, atom_indices=None):
+def read_snapshot(frame, snapshot, topology, atom_indices=None):
     """ Parse relevant information from a single HOOMD snapshot (frame) 
     
     Parameters
     ----------
+    frame : int
+        Frame index to read
     snapshot : gsd.hoomd.Snapshot
     topology : mdtraj.Topology
     atom_indices : array_like, optional
@@ -205,11 +209,10 @@ def read_snapshot(snapshot, topology, atom_indices=None):
     given topology, an IOError will be raised.
     
     """
+
+    _check_topology(frame, snapshot, topology)
     xyz = snapshot.particles.position
-    if xyz.shape[0] != topology.n_atoms:
-        raise IOError("GSD frame {} ".format(snapshot.configuration.step) + 
-        "has inconsistent number of atoms compared to its topology, " + 
-        "this is unsupported in MDTraj.")
+
     if atom_indices is not None:
         xyz = xyz[atom_indices]
     lx, ly, lz, xy, xz, yz = snapshot.configuration.box
@@ -288,3 +291,15 @@ def _process_bonds(top):
 
     return (unique_bond_types, bondtype_ids, bond_groups)
 
+def _check_topology(frame, snapshot, topology):
+    """ Verify snapshot topology matches given MDTraj topology 
+    
+    Notes
+    -----
+    Only looks for N particles and N bonds for speed purposes"""
+    error_msg = ("GSD frame {} ".format(frame) + 
+            "has inconsistent topology compared to given topology, " + 
+            "this is unsupported in MDTraj.")
+    if (snapshot.particles.N != topology.n_atoms or
+            snapshot.bonds.N != topology.n_bonds):
+        raise IOError(error_msg)
