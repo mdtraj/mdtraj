@@ -28,7 +28,6 @@ from __future__ import print_function, division
 
 import numpy as np
 
-import gsd.hoomd
 
 from mdtraj.core.topology import Topology
 from mdtraj.core.element import virtual_site
@@ -73,6 +72,7 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
 
     """
     from mdtraj.core.trajectory import Trajectory, _parse_topology
+    import gsd.hoomd
 
     if not isinstance(filename, string_types):
         raise TypeError('filename must be of type string for load_gsd. '
@@ -99,6 +99,7 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
 
 def load_gsd_topology(filename):
     """ Create an MDTraj.Topology from a GSD file """
+    import gsd.hoomd
     with gsd.hoomd.open(filename, 'rb') as gsdfile:
         top = Topology()
         generic_chain = top.add_chain()
@@ -192,6 +193,7 @@ def write_gsd(filename, xyz, top, cell_lengths=None, cell_angles=None):
         The angles (\alpha, \beta, \gamma) defining the unit cell for
         each frame. (Units of degrees).
     """
+    import gsd.hoomd
     xyz = ensure_type(xyz, np.float32, 3, 'xyz', can_be_none=False,
             shape=(None, None, 3), warn_on_cast=False,
             add_newaxis_on_deficient_ndim=True)
