@@ -108,6 +108,12 @@ def load_gsd_topology(filename):
     Returns
     -------
     top : mdtraj.Topology
+
+    Notes
+    -----
+    GSD files support systems with variable topologies.
+    For compatibility with MDTraj, only the topology from GSD frame 0 is
+    used to construct the MDTraj topology.
     """
     import gsd.hoomd
     with gsd.hoomd.open(filename, 'rb') as gsdfile:
@@ -192,9 +198,18 @@ def read_snapshot(snapshot, topology, atom_indices=None):
     box_vectors : list, (3, 3)
     time : int
         Step of hoomd snapshot
+
+    Notes
+    -----
+    If the GSD file has a variable topology compared to the
+    given topology, an IOError will be raised.
     
     """
     xyz = snapshot.particles.position
+    if xyz.shape[0] != topology.n_atoms:
+        raise IOError("GSD frame {} ".format(snapshot.configuration.step) + 
+        "has inconsistent number of atoms compared to its topology, " + 
+        "this is unsupported in MDTraj.")
     if atom_indices is not None:
         xyz = xyz[atom_indices]
     lx, ly, lz, xy, xz, yz = snapshot.configuration.box
