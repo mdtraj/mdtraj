@@ -45,7 +45,7 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
     """Load a GSD trajectory file.
 
     Parameters
-    ----------
+    -----------
     filename : str
         String filename of GSD trajectory file.
     top : {str, Trajectory, Topology}, None
@@ -98,7 +98,17 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
                     stride=stride, atom_indices=atom_indices)
 
 def load_gsd_topology(filename):
-    """ Create an MDTraj.Topology from a GSD file """
+    """ Create an MDTraj.Topology from a GSD file 
+    
+    Parameters
+    ----------
+    filename : str
+        String filename of GSD trajectory file.
+
+    Returns
+    -------
+    top : mdtraj.Topology
+    """
     import gsd.hoomd
     with gsd.hoomd.open(filename, 'rb') as gsdfile:
         top = Topology()
@@ -134,7 +144,7 @@ def hoomdtraj_to_traj(f, topology, start=None, n_frames=None,
             from the file.
 
     Returns
-    ------
+    --------
     traj : mdtraj.Trajectory object
     
     """
@@ -166,7 +176,24 @@ def hoomdtraj_to_traj(f, topology, start=None, n_frames=None,
     return t
 
 def read_snapshot(snapshot, topology, atom_indices=None):
-    """ Parse relevant information from a single HOOMD snapshot (frame) """
+    """ Parse relevant information from a single HOOMD snapshot (frame) 
+    
+    Parameters
+    ----------
+    snapshot : gsd.hoomd.Snapshot
+    topology : mdtraj.Topology
+    atom_indices : array_like, optional
+            If not none, then read only a subset of the atoms coordinates
+            from the file.
+
+    Returns
+    --------
+    xyz : np.ndarray, (n, 3)
+    box_vectors : list, (3, 3)
+    time : int
+        Step of hoomd snapshot
+    
+    """
     xyz = snapshot.particles.position
     if atom_indices is not None:
         xyz = xyz[atom_indices]
