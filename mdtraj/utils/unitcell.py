@@ -194,7 +194,7 @@ def lengths_and_angles_to_tilt_factors(a_length, b_length, c_length,
         angle between vectors **a** and **b**, in degrees.
 
     Returns
-    ------
+    -------
     lx : scalar
         Extent in x direction
     ly : scalar
