@@ -6,13 +6,15 @@ from mdtraj.utils.validation import ensure_type, cast_indices, check_random_stat
 from mdtraj.utils.unit import in_units_of
 from mdtraj.utils.rotation import rotation_matrix_from_quaternion, uniform_quaternion
 from mdtraj.utils.unitcell import (lengths_and_angles_to_box_vectors,
-                       box_vectors_to_lengths_and_angles)
+                       box_vectors_to_lengths_and_angles,
+                       lengths_and_angles_to_tilt_factors)
 from mdtraj.utils.contextmanagers import timing, enter_temp_directory
 from mdtraj.utils.zipped import open_maybe_zipped
 
 __all__ = ["ensure_type", "import_", "in_units_of",
            "lengths_and_angles_to_box_vectors",
            "box_vectors_to_lengths_and_angles",
+           "tilt_factors_to_angles",
            "ilen", "timing", "cast_indices", "check_random_state",
            "rotation_matrix_from_quaternion", "uniform_quaternion",
            "enter_temp_directory", "timing", "deprecated"]

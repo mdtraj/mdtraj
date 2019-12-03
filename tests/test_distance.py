@@ -73,6 +73,7 @@ def test_3():
 def test_0p():
     a = compute_distances(ptraj, pairs, periodic=True, opt=True)
     b = compute_distances(ptraj, pairs, periodic=True, opt=False)
+    print(a, b)
     eq(a, b, decimal=3)
 
 
@@ -94,6 +95,7 @@ def test_2p():
 def test_3p():
     a = compute_distances(ptraj, pairs, periodic=True, opt=True)
     b = compute_displacements(ptraj, pairs, periodic=True, opt=True)
+    print(a,  b)
     eq(a, np.sqrt(np.sum(np.square(b), axis=2)))
 
 

@@ -31,8 +31,8 @@ __all__ = ['baker_hubbard', 'shrake_rupley', 'kabsch_sander', 'compute_distances
            'wernet_nilsson', 'compute_dssp', 'compute_neighbors',
            'compute_neighborlist', 'compute_rdf', 'compute_rdf_t', 'compute_nematic_order',
            'compute_inertia_tensor', 'compute_gyration_tensor', 'find_closest_contact',
-           'compute_directors',
-           # from thermodynamic_properties
+           'compute_directors', 'principal_moments', 'asphericity', 'acylindricity', 
+           'relative_shape_antisotropy',
            'dipole_moments', 'static_dielectric', 'isothermal_compressability_kappa_T',
            'thermal_expansion_alpha_P',  'density'
            ]
@@ -51,3 +51,4 @@ from .neighborlist import *
 from .thermodynamic_properties import *
 from .rdf import *
 from .order import *
+from .shape import *
