@@ -1926,7 +1926,7 @@ class Trajectory(object):
 
         if sorted_bonds is None:
             sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds])
+            sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds], dtype=np.int32)
 
         box = np.asarray(result.unitcell_vectors, order='c')
         _geometry.whole_molecules(result.xyz, box, sorted_bonds)
