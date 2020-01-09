@@ -21,7 +21,6 @@ requirements:
     - cython
     - numpy
     - zlib
-    - msinttypes  # [win and py27]
     - pip >=19
 
   run:
@@ -39,7 +38,6 @@ test:
     - pytest
     - networkx
     - matplotlib
-    - openmm >=7.1  # [not (win32 or (win and py2k) or py37)]
     - shiftx2  # [linux and py2k]
     # 1. do not install cpptraj on osx, because the current version from omnia is linked against an old runtime.
     #    and not avail on win
