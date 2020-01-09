@@ -6,7 +6,7 @@ jobs:
 
   strategy:
     matrix:
-      Python36:
+      Python37:
         CONDA_PY: '3.7'
         CONDA_NPY: '1.14'
       Python38:
