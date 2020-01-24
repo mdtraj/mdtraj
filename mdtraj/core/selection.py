@@ -392,8 +392,8 @@ class parse_selection(object):
         else:
             args = [ast.arg(arg='atom', annotation=None)]
             signature = ast.arguments(args=args, vararg=None, kwarg=None,
-                                      kwonlyargs=[], defaults=[],
-                                      kw_defaults=[])
+                                      posonlyargs=[], kwonlyargs=[],
+                                      defaults=[], kw_defaults=[])
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
         source = code_gen.to_source(astnode, pretty_source=lambda src: ''.join(src[:-1]))
