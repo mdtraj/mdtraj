@@ -59,7 +59,7 @@ class _RewriteNames(ast.NodeTransformer):
         _safe_names = {'None': None, 'True': True, 'False': False}
         if node.id in _safe_names:
             if sys.version_info >= (3, 4):
-                return ast.NameConstant(value=_safe_names[node.id])
+                return ast.NameConstant(value=_safe_names[node.id], kind=None)
             return node
 
         # all other bare names are taken to be string literals. Thus something
