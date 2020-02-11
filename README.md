@@ -2,8 +2,8 @@
 
 [![Build Status](https://dev.azure.com/rmcgibbo/mdtraj/_apis/build/status/mdtraj.mdtraj?branchName=master)](https://dev.azure.com/rmcgibbo/mdtraj/_build/latest?definitionId=1&branchName=master)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.svg)](https://pypi.python.org/pypi/mdtraj)
-[![Anaconda-Server Version](https://anaconda.org/omnia/mdtraj/badges/version.svg)](https://anaconda.org/omnia/mdtraj)
-[![Anaconda-Server Downloads](https://anaconda.org/omnia/mdtraj/badges/downloads.svg)](https://anaconda.org/omnia/mdtraj)
+[![Anaconda-Server Version](https://anaconda.org/conda-forge/mdtraj/badges/version.svg)](https://anaconda.org/conda-forge/mdtraj)
+[![Anaconda-Server Downloads](https://anaconda.org/conda-forge/mdtraj/badges/downloads.svg)](https://anaconda.org/conda-forge/mdtraj)
 [![DOI for Citing MDTraj](https://img.shields.io/badge/DOI-10.1016%2Fj.bpj.2015.08.015-blue.svg)](http://doi.org/10.1016/j.bpj.2015.08.015)
 
 Read, write and analyze MD trajectories with only a few lines of Python code.
