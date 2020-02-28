@@ -163,10 +163,11 @@ exit(status)
     def _detect_openmp(self):
         self._print_support_start('OpenMP')
         extra_postargs = ['/openmp'] if self.msvc else ['-fopenmp']
-        hasopenmp = self.hasfunction('omp_get_num_threads()', extra_postargs=extra_postargs)
+        args = dict(extra_postargs=extra_postargs, include='<omp.h>')
+        hasopenmp = self.hasfunction('omp_get_num_threads()', **args)
         needs_gomp = False
         if not hasopenmp:
-            hasopenmp = self.hasfunction('omp_get_num_threads()', extra_postargs=extra_postargs, libraries=['gomp'])
+            hasopenmp = self.hasfunction('omp_get_num_threads()', libraries=['gomp'], **args)
             needs_gomp = hasopenmp
         self._print_support_end('OpenMP', hasopenmp)
         return hasopenmp, needs_gomp
