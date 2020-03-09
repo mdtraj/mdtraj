@@ -106,6 +106,8 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
         Each row gives the indices of two atoms.
     times : array-like, shape=(any, 2), dtype=int
         Each row gives the indices of two frames.
+    period_length : int, optional, default=None
+        The length of each chunk of frames to consider when time-averaging
     r_range : array-like, shape=(2,), optional, default=(0.0, 1.0)
         Minimum and maximum radii.
     bin_width : float, optional, default=0.005
@@ -113,6 +115,8 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
     n_bins : int, optional, default=None
         The number of bins. If specified, this will override the `bin_width`
          parameter.
+    self_correlation : bool, default=True
+        Whether or not to include the self-correlation, the case of i=j
     periodic : bool, default=True
         If `periodic` is True and the trajectory contains unitcell
         information, we will compute distances under the minimum image
