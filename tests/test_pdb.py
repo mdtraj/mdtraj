@@ -219,10 +219,10 @@ def test_3nch_serial_resSeq(get_fn):
     eq(t1.top, top2)
 
     top = top.set_index('serial')  # Index by the actual data in the PDB
-    eq(str(top.ix[19791]["name"]), "O4")
-    eq(str(top.ix[19787]["name"]), "S")
-    eq(str(top.ix[19787]["resName"]), "SO4")
-    eq(int(top.ix[19787]["resSeq"]), 804)
+    eq(str(top.loc[19791]["name"]), "O4")
+    eq(str(top.loc[19787]["name"]), "S")
+    eq(str(top.loc[19787]["resName"]), "SO4")
+    eq(int(top.loc[19787]["resSeq"]), 804)
 
 def test_1ncw(get_fn):
     t1 = load_pdb(get_fn('1ncw.pdb.gz'))

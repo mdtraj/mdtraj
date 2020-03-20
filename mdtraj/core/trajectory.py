@@ -56,6 +56,7 @@ from mdtraj.formats.mol2 import load_mol2
 from mdtraj.formats.gro import load_gro
 from mdtraj.formats.arc import load_arc
 from mdtraj.formats.hoomdxml import load_hoomdxml
+from mdtraj.formats.gsd import write_gsd, load_gsd_topology
 from mdtraj.core.topology import Topology
 from mdtraj.core.residue_names import _SOLVENT_TYPES
 from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_vectors,
@@ -76,7 +77,7 @@ __all__ = ['open', 'load', 'iterload', 'load_frame', 'load_topology', 'join',
            'Trajectory']
 # supported extensions for constructing topologies
 _TOPOLOGY_EXTS = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7', '.prm7',
-                  '.psf', '.mol2', '.hoomdxml', '.gro', '.arc', '.hdf5']
+                  '.psf', '.mol2', '.hoomdxml', '.gro', '.arc', '.hdf5', '.gsd']
 
 
 ##############################################################################
@@ -141,7 +142,7 @@ def load_topology(filename, **kwargs):
     filename : str
         Path to a file containing a system topology. The following extensions
         are supported: '.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
-            '.prm7', '.psf', '.mol2', '.hoomdxml'
+            '.prm7', '.psf', '.mol2', '.hoomdxml', '.gsd'
 
     Returns
     -------
@@ -180,6 +181,8 @@ def _parse_topology(top, **kwargs):
         topology = load_arc(top, **kwargs).topology
     elif isinstance(top, string_types) and (ext in ['.hoomdxml']):
         topology = load_hoomdxml(top, **kwargs).topology
+    elif isinstance(top, string_types) and (ext in ['.gsd']):
+        topology = load_gsd_topology(top, **kwargs)
     elif isinstance(top, Trajectory):
         topology = top.topology
     elif isinstance(top, Topology):
@@ -497,7 +500,15 @@ def iterload(filename, chunk=100, **kwargs):
         t = load(filename, stride=stride, atom_indices=atom_indices)
         for i in range(0, len(t), chunk):
             yield t[i:i+chunk]
-
+    elif extension in ('.gsd'):
+        i = 0
+        while True:
+            traj = load(filename, stride=stride, atom_indices=atom_indices,
+                    start=i, n_frames=chunk)
+            if len(traj) ==0 :
+                return
+            i += chunk
+            yield traj
     else:
         with (lambda x: open(x, n_atoms=topology.n_atoms)
               if extension in ('.crd', '.mdcrd')
@@ -1277,6 +1288,7 @@ class Trajectory(object):
                 '.rst7' : self.save_amberrst7,
                 '.tng' : self.save_tng,
                 '.dtr': self.save_dtr,
+                '.gsd': self.save_gsd,
             }
 
     def save(self, filename, **kwargs):
@@ -1643,6 +1655,24 @@ class Trajectory(object):
         with TNGTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(self.xyz, time=self.time, box=self.unitcell_vectors)
 
+    def save_gsd(self, filename, force_overwrite=True):
+        """Save trajectory to HOOMD GSD format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filenames, if its already there
+        """
+        if os.path.exists(filename) and not force_overwrite:
+            raise IOError('"%s" already exists' % filename)
+        
+        self._check_valid_unitcell()
+        write_gsd(filename, self.xyz, self.topology, 
+                cell_lengths=self.unitcell_lengths,
+                cell_angles=self.unitcell_angles)
+
     def center_coordinates(self, mass_weighted=False):
         """Center each trajectory frame at the origin (0,0,0).
 
@@ -1896,7 +1926,7 @@ class Trajectory(object):
 
         if sorted_bonds is None:
             sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds])
+            sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds], dtype=np.int32)
 
         box = np.asarray(result.unitcell_vectors, order='c')
         _geometry.whole_molecules(result.xyz, box, sorted_bonds)

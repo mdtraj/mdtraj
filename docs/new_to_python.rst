@@ -102,10 +102,6 @@ Python resources:
 
 Getting help:
 
-    `MDTraj Discussion Forums <http://discourse.mdtraj.org/>`_
-        You can ask questions in our discussion forums. It is generally quite
-        responsive.
-
     `MDTraj Github Issue Tracker <https://github.com/mdtraj/mdtraj/issues>`_
         The development activity for MDTraj takes place openly on github. This
         is the best way to contact the developers directly, and participate

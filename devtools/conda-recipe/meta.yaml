@@ -10,8 +10,6 @@ build:
   entry_points:
     - mdconvert = mdtraj.scripts.mdconvert:entry_point
     - mdinspect = mdtraj.scripts.mdinspect:entry_point
-  script_env:
-   - MDTRAJ_TEST_PEP517
 
 requirements:
   build:
@@ -20,8 +18,8 @@ requirements:
   host:
     - python
     - setuptools
-    - cython  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
-    - numpy  # [not os.getenv('MDTRAJ_TEST_PEP517', False)]
+    - cython
+    - numpy
     - zlib
     - msinttypes  # [win and py27]
     - pip >=19
@@ -53,6 +51,9 @@ test:
     - pytest-ignore-flaky =1
     - pandas
     - pytables
+    - psutil
+    - conda-verify
+    - gsd
 
   source_files:
     - examples/*
@@ -75,6 +76,6 @@ about:
     solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj
     is the wide variety of molecular dynamics trajectory file formats which are
     supported, including RCSB pdb, GROMACS xtc, tng, and trr, CHARMM / NAMD dcd, AMBER
-    binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
+    binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc, MDTraj HDF5, HOOMD gsd.
   doc_url: http://mdtraj.org/
   dev_url: https://github.com/mdtraj/mdtraj

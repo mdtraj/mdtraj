@@ -353,6 +353,16 @@ def _get_bond_triplets(topology, exclude_water=True, sidechain_only=False):
 
         return indices
 
+    # Check that there are bonds in topology
+    nbonds = 0
+    for _bond in topology.bonds:
+        nbonds += 1
+        break # Only need to find one hit for this check (not robust)
+    if nbonds == 0:
+        raise ValueError('No bonds found in topology. Try using '
+                         'traj._topology.create_standard_bonds() to create bonds '
+                         'using our PDB standard bond definitions.')
+        
     nh_donors = get_donors('N', 'H')
     oh_donors = get_donors('O', 'H')
     xh_donors = np.array(nh_donors + oh_donors)
