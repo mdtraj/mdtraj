@@ -40,7 +40,7 @@ Authors
 - Fabian Paul
 - Kirill Shmilovich +
 - Lucian Krapp +
-- sroet +
+- Sander Roet +
 - David W.H. Swenson
 - Ray A. Matsumoto
 - Jack Greisman
