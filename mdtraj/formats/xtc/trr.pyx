@@ -758,8 +758,8 @@ cdef class TRRTrajectoryFile(object):
 
     def _calc_len_and_offsets(self):
         """read byte offsets from TRR file directly"""
-        cdef int status, i, frame_size, frame_offset, header_size
-        cdef int64_t file_size
+        cdef int status, i, frame_size, header_size
+        cdef int64_t file_size, frame_offset
         cdef unsigned long n_frames
         cdef np.ndarray[ndim=1, dtype=np.npy_int64] offsets
         cdef trrlib.t_trnheader header
@@ -775,7 +775,7 @@ cdef class TRRTrajectoryFile(object):
             header_size = xdrlib.xdr_tell(self.fh)
             frame_size = sum((<int*> &header)[i] for i in range(1, 11))
 
-            size = file_size / (frame_size + header_size)
+            size = file_size // (frame_size + header_size)
             offsets = np.empty(size, dtype=np.int64)
             n_frames = 1
             offsets[0] = 0

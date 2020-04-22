@@ -28,7 +28,9 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 from mdtraj.utils import ensure_type
+
 cimport cython
+from cython.parallel import prange
 
 __all__ = ['compute_drid']
 
@@ -122,7 +124,7 @@ cdef _drid(float[:, :, ::1] xyz, int32_t[::1] atom_indices,
     assert n_dims == 3
 
     for i in range(n_frames):
-        for j in range(n_atom_indices):
+        for j in prange(n_atom_indices, nogil=True):
             drid_moments(&xyz[i, 0, 0], atom_indices[j], &partners[j,0],
                          n_partners[j], &result[i, j, 0])
 

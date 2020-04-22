@@ -20,6 +20,8 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
+import numpy as np
+
 from mdtraj.testing import eq
 from mdtraj import load
 
@@ -49,3 +51,9 @@ def test_load_no_ions(get_fn):
     eq(top.n_chains, top.n_residues)
     for bond in top.bonds:  # atoms bonded to adjacent atoms by index
         eq(bond[1].index - bond[0].index, 1)
+
+def test_correct_ordering(get_fn):
+    traj = load(get_fn('water-box.hoomdxml'))
+    sodium = traj.top.select("name 'Na'")
+    sodium_slice = traj.atom_slice(sodium)
+    assert np.isclose(sodium_slice.xyz, np.array([[[30, 30, 30]]])).all()

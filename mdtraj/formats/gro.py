@@ -322,7 +322,7 @@ class GroTrajectoryFile(object):
 
                 topology.add_atom(thisatomname, element=element, residue=residue,
                                   serial=thisatomnum)
-
+        topology.create_standard_bonds()
         return n_atoms, topology
 
     def _read_frame(self):

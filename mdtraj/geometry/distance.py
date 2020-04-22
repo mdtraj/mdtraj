@@ -30,8 +30,8 @@ from . import _geometry
 
 
 __all__ = ['compute_distances', 'compute_distances_t', 'compute_displacements',
-           'compute_center_of_mass', 'find_closest_contact']
-
+           'compute_center_of_mass', 'compute_center_of_geometry',
+           'find_closest_contact']
 
 
 def compute_distances(traj, atom_pairs, periodic=True, opt=True):
@@ -100,8 +100,9 @@ def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
                           warn_on_cast=False)
         orthogonal = np.allclose(traj.unitcell_angles, 90)
         if opt:
-            out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+            out = np.empty((times.shape[0], pairs.shape[0]), dtype=np.float32)
             _geometry._dist_mic_t(xyz, pairs, times, box.transpose(0, 2, 1).copy(), out, orthogonal)
+            out = out.reshape((times.shape[0], pairs.shape[0]))
             return out
         else:
             return _distance_mic_t(xyz, pairs, times, box.transpose(0, 2, 1), orthogonal)
@@ -142,6 +143,8 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
     pairs = ensure_type(np.asarray(atom_pairs), dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2), warn_on_cast=False)
     if not np.all(np.logical_and(pairs < traj.n_atoms, pairs >= 0)):
         raise ValueError('atom_pairs must be between 0 and %d' % traj.n_atoms)
+    if len(pairs) == 0:  # If pairs is an empty slice of an array
+        return np.zeros((len(xyz), 0, 3), dtype=np.float32)
 
     if periodic and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3),
@@ -183,6 +186,28 @@ def compute_center_of_mass(traj):
     for i, x in enumerate(traj.xyz):
         com[i, :] = x.astype('float64').T.dot(masses)
     return com
+
+
+def compute_center_of_geometry(traj):
+    """Compute the center of geometry for each frame.
+
+    Parameters
+    ----------
+    traj : Trajectory
+        Trajectory to compute center of geometry for
+
+    Returns
+    -------
+    com : np.ndarray, shape=(n_frames, 3)
+         Coordinates of the center of geometry for each frame
+
+    """
+
+    centers = np.zeros((traj.n_frames, 3))
+
+    for i, x in enumerate(traj.xyz):
+        centers[i, :] = x.astype('float64').T.mean(axis=1)
+    return centers
 
 
 def find_closest_contact(traj, group1, group2, frame=0, periodic=True):

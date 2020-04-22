@@ -248,6 +248,9 @@ class NetCDFTrajectoryFile(object):
 
         if n_frames is None:
             n_frames = np.inf
+        elif stride is not None:
+            # 'n_frames' frames should be read in total
+            n_frames *= stride
 
         total_n_frames = self.n_frames
         frame_slice = slice(self._frame_index, self._frame_index + min(n_frames, total_n_frames), stride)
