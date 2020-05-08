@@ -560,7 +560,7 @@ def test_iterload_chunk_dcd():
     skip_frames = 3
     frames_chunk = 2
 
-    for traj_chunk in md.iterload(file, top=top, stride=3, chunk=2):
+    for traj_chunk in md.iterload(file, top=top, stride=skip_frames, chunk=frames_chunk):
         break
 
     eq(len(traj_chunk), frames_chunk)
