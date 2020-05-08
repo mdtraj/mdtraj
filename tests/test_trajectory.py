@@ -552,7 +552,8 @@ def test_iterload_skip(ref_traj, get_fn):
 
             
 def test_iterload_chunk_dcd():
-    #Makes sure that the actual chunk size corresponds to the number of frames specified (for dcd files)
+    # Makes sure that the actual chunk size yielded by iterload corresponds to the number of 
+    # frames specified when calling it (for dcd files).
     file = "data/alanine-dipeptide-explicit.dcd"
     top = "data/alanine-dipeptide-explicit.pdb"
 
