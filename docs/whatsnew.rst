@@ -8,7 +8,7 @@ v1.9.5 (Development)
 
 - Nothing to see here
 
-v1.9.4 (April 19, 2020)
+v1.9.4 (May 10, 2020)
 -----------------------
 
 - Update some pandas calls for v1.0 (#1536)
