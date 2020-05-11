@@ -3,11 +3,6 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.9.5 (Development)
---------------------
-
-- Nothing to see here
-
 v1.9.4 (May 10, 2020)
 -----------------------
 
