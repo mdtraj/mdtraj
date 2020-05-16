@@ -32,7 +32,7 @@ requirements:
     # Fix pytables on windows. See https://github.com/conda-forge/pytables-feedstock/issues/31#issuecomment-410695814
     - snappy  # [win]
     - pyparsing
-    - astor
+    - astunparse
 
 test:
   requires:
