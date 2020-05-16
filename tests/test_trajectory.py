@@ -550,22 +550,27 @@ def test_iterload_skip(ref_traj, get_fn):
             eq(t_ref.time[skip:], t.time)
             eq(t_ref.topology, t.topology)
 
-            
-def test_iterload_chunk_dcd():
-    # Makes sure that the actual chunk size yielded by iterload corresponds to the number of 
+
+def test_iterload_chunk_dcd(get_fn):
+    # Makes sure that the actual chunk size yielded by iterload corresponds to the number of
     # frames specified when calling it (for dcd files).
-    file = "data/alanine-dipeptide-explicit.dcd"
-    top = "data/alanine-dipeptide-explicit.pdb"
+    file = get_fn("alanine-dipeptide-explicit.dcd")
+    top = get_fn("alanine-dipeptide-explicit.pdb")
 
     skip_frames = 3
     frames_chunk = 2
 
-    for traj_chunk in md.iterload(file, top=top, stride=skip_frames, chunk=frames_chunk):
-        break
-
-    eq(len(traj_chunk), frames_chunk)
-
+    full = md.load(file, top=top, stride=skip_frames)
+    length = len(full)
     
+
+    chunks = []
+    for traj_chunk in md.iterload(file, top=top, stride=skip_frames, chunk=frames_chunk):        
+        chunks.append(traj_chunk)
+    joined = md.join(chunks)
+    assert len(full) == len(joined)
+    assert eq(full.xyz, joined.xyz)
+
 
 def test_save_load(write_traj, get_fn):
     # this cycles all the known formats you can save to, and then tries
