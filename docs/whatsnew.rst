@@ -3,10 +3,57 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.9.4 (Development)
+v1.9.5 (Development)
 --------------------
 
 - Nothing to see here
+
+
+v1.9.4 (May 10, 2020)
+-----------------------
+
+- Update some pandas calls for v1.0 (#1536)
+- Fix TRR file offset (#1534)
+- Update selection for Python 3.8 compatibility (#1523)
+- Ensure bonds exist before using them (#1512, #1513)
+- Let compute_displacements handle empty atom_pairs (#1515)
+- Add GSD reader and writer (#1494)
+- Fix stride parameter for .netcdf files (#1501)
+- Ensure that the license file is packaged in the sdist (#1498)
+- Right-justify atom symbol when writing PDB files (#1459)
+- Add calculations for shape metrics (#1471)
+- Fix residue parsing in MOL2 reader (#1490)
+- Set up "stale" bot
+- Use AZP for CI (#1484, #1536)
+- Fix leaving malformed TRR files open (#1482)
+- Fix various OpenMP issues (#1476, #1477, #1488, #1508, #1529)
+- Add gyration tensor calculation (#1467)
+- Fix some type conversions (#1466, #1511)
+- Remove bundled dependencies astor and pyparsing (#1452)
+- Correct ordering in hoomdxml files (#1453)
+
+Authors
+~~~~~~~
+
+- Robert T. McGibbon
+- Martin K. Scherer
+- Alex Yang +
+- Fabian Paul
+- Kirill Shmilovich +
+- Lucian Krapp +
+- Sander Roet +
+- David W.H. Swenson
+- Ray A. Matsumoto
+- Jack Greisman
+- Marius van Niekerk +
+- Patrick Kunzmann +
+- Matthew W. Thompson
+- Justin R. Porter
+- Richard Banh +
+- sefalkner +
+
+A total of 16 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
 
 
 v1.9.3 (May 17, 2019)
@@ -43,17 +90,17 @@ Authors
 ~~~~~~~
 
 - Carlos Hernández
-- John Chodera +
-- Jack Greisman +
-- jgilaber +
-- Sunhwan Jo +
-- Ray A. Matsumoto +
+- John Chodera
+- Jack Greisman
+- jgilaber
+- Sunhwan Jo
+- Ray A. Matsumoto
 - Robert T. McGibbon
-- João Rodrigues +
+- João Rodrigues
 - Shyam Saladi
 - Martin K. Scherer
 - David W.H. Swenson
-- Matthew W. Thompson +
+- Matthew W. Thompson
 - Lee-Ping Wang
 
 A total of 12 people contributed to this release.
