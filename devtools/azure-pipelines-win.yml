@@ -9,14 +9,16 @@ jobs:
         CONDA_PY: '3.7'
         
   steps:
-  - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+  - powershell: |
+      Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+      Write-Host "##vso[task.prependpath]$env:CONDA\Library\bin"
     displayName: Add conda to PATH
   - script: |
       ECHO ON
-      set PYTHONUNBUFFERED=1
+      set PYTHONUNBUFFERED=1      
       conda.exe config --add channels omnia
       conda.exe config --add channels conda-forge
-      conda.exe install -yq conda=4.4 conda-build=3.17.8 ripgrep=11.0.2
+      conda.exe install -yq conda=4.6.14 conda-build=3.19.2 ripgrep=11.0.2
     displayName: 'Install dependencies'
     continueOnError: false
   - script: |      
