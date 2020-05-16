@@ -34,3 +34,4 @@ jobs:
   - bash: conda build devtools/conda-recipe
     displayName: 'Build and test'
     continueOnError: false
+
