@@ -30,7 +30,7 @@ from mdtraj.utils.six import PY2
 from pyparsing import (Word, ParserElement, MatchFirst,
     Keyword, opAssoc, quotedString, alphas, alphanums, infixNotation, Group,
     ParseException, OneOrMore)
-from astor import code_gen
+import astunparse
 
 # this number arises from the current selection language, if the cache size is exceeded, it hurts performance a bit.
 ParserElement.enablePackrat(cache_size_limit=304)
@@ -396,7 +396,7 @@ class parse_selection(object):
                                       defaults=[], kw_defaults=[])
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
-        source = code_gen.to_source(astnode, pretty_source=lambda src: ''.join(src[:-1]))
+        source = astunparse.unparse(astnode)
 
         expr = eval(
             compile(ast.fix_missing_locations(func), '<string>', mode='eval'),

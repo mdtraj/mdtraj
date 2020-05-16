@@ -517,9 +517,9 @@ def iterload(filename, chunk=100, **kwargs):
                 f.seek(skip)
             while True:
                 if extension not in _TOPOLOGY_EXTS:
-                    traj = f.read_as_traj(topology, n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
+                    traj = f.read_as_traj(topology, n_frames=chunk, stride=stride, atom_indices=atom_indices, **kwargs)
                 else:
-                    traj = f.read_as_traj(n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
+                    traj = f.read_as_traj(n_frames=chunk, stride=stride, atom_indices=atom_indices, **kwargs)
 
                 if len(traj) == 0:
                     return

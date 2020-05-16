@@ -257,7 +257,7 @@ metadata = \
       cmdclass={'build_ext': build_ext},
       install_requires=['numpy>=1.6',
                         'scipy',
-                        'astor',
+                        'astunparse',
                         'pyparsing',
                         ],
       package_data={'mdtraj.formats.pdb': ['data/*'], },
