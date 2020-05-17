@@ -371,7 +371,7 @@ def _indices_chi(top, chi_atoms):
     id_sort = np.argsort(np.concatenate(rids))
     if not any(x.size for x in indices):
         return np.empty(shape=(0, 4), dtype=np.int)
-    indices = np.vstack(x for x in indices if x.size)[id_sort]
+    indices = np.vstack([x for x in indices if x.size])[id_sort]
     return indices
 
 
