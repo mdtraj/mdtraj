@@ -29,7 +29,7 @@ from __future__ import print_function, division
 import os
 import warnings
 from copy import deepcopy
-from collections import Iterable
+from collections.abc import Iterable
 import numpy as np
 import functools
 
@@ -1667,9 +1667,9 @@ class Trajectory(object):
         """
         if os.path.exists(filename) and not force_overwrite:
             raise IOError('"%s" already exists' % filename)
-        
+
         self._check_valid_unitcell()
-        write_gsd(filename, self.xyz, self.topology, 
+        write_gsd(filename, self.xyz, self.topology,
                 cell_lengths=self.unitcell_lengths,
                 cell_angles=self.unitcell_angles)
 
