@@ -110,6 +110,13 @@ def test_baker_hubbard_2(get_fn):
     eq(len(np.unique(rows)), len(rows))
 
 
+def test_baker_hubbard_3(get_fn):
+    #different distance cutoffs->different hydrogen bonds found
+    t = md.load(get_fn('2waters_baker_hubbard.pdb'))
+    eq(np.zeros((0,3), dtype=int), md.baker_hubbard(t, exclude_water=False, distance_cutoff = 0.18))
+    eq(np.array([[0, 1, 3]]), md.baker_hubbard(t, exclude_water=False))
+
+
 def test_wernet_nilsson_0(get_fn):
     # no hydrogens in this file -> no hydrogen bonds
     t0 = md.load(get_fn('1bpi.pdb'))
