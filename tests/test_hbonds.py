@@ -114,6 +114,7 @@ def test_baker_hubbard_3(get_fn):
     #different distance cutoffs->different hydrogen bonds found
     t = md.load(get_fn('2waters_baker_hubbard.pdb'))
     eq(np.zeros((0,3), dtype=int), md.baker_hubbard(t, exclude_water=False, distance_cutoff = 0.18))
+    eq(np.zeros((0,3), dtype=int), md.baker_hubbard(t, exclude_water=False, angle_cutoff=180))
     eq(np.array([[0, 1, 3]]), md.baker_hubbard(t, exclude_water=False))
 
 

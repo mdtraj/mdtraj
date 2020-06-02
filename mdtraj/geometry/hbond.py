@@ -144,7 +144,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False
 
 
 def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_only=False,
-                  distance_cutoff=0.25, angle_cutoff=2.0*np.pi/3.0):
+                  distance_cutoff=0.25, angle_cutoff=120):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle.
 
@@ -172,8 +172,8 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_o
         Distance cutoff of Donor-H...Acceptor contact in nanometers. 
         The criterion employed is any contact that is shorter than the distance cutoff.
         with an distance_cutoff is accepted.
-    angle_cutoff : float, default=2.0 * np.pi / 3.0
-        Angle cutoff of the angle theta in radians. 
+    angle_cutoff : float, default=120
+        Angle cutoff of the angle theta in degrees. 
         The criterion employed is any contact with an angle theta greater than the
         angle_cutoff is accepted.
 
@@ -227,6 +227,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_o
         proteins." Progress in Biophysics and Molecular Biology
         44.2 (1984): 97-179.
     """
+    angle_cutoff = np.radians(angle_cutoff)
 
     if traj.topology is None:
         raise ValueError('baker_hubbard requires that traj contain topology '
