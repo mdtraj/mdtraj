@@ -717,7 +717,7 @@ class HDF5TrajectoryFile(object):
             name='cell_angles', shape=(n_frames, 3), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         velocities = ensure_type(velocities, dtype=np.float32, ndim=3,
-            name='velocoties', shape=(n_frames, n_atoms, 3), can_be_none=True,
+            name='velocities', shape=(n_frames, n_atoms, 3), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         kineticEnergy = ensure_type(kineticEnergy, dtype=np.float32, ndim=1,
             name='kineticEnergy', shape=(n_frames,), can_be_none=True,
