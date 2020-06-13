@@ -138,3 +138,145 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
     return msdFromMandG(M, G_a, G_b, nrealatoms, 0, NULL);
 }
 
+
+float msd_atom_major(const int nrealatoms, const int npaddedatoms,
+                     const float* a, const float* b, const float G_a, const float G_b,
+                     int computeRot, float rot[9]) {
+    /* Computes the mean-square-deviation between two centered structures in
+     * atom-major format.
+     *
+     * Structure setup for this function:
+     *
+     *   If this file is compiled with -DALIGNED, structures are stored atom
+     *   major obeying two constraints:
+     *       - if the number of atoms is not divisible by four, the structure is padded out
+     *         with dummy atoms with zero in each coordinate up to an even multiple of 4 atoms.
+     *       - the structure is aligned to a 16-byte boundary
+     *
+     *   the layout in memory for a structure of 7 atoms would look like this (read row-major):
+     *
+     *       x0 y0 z0
+     *       x1 y1 z1
+     *       x2 y2 x2
+     *       x3 y3 x3
+     *       x4 y4 x4
+     *       x5 y5 x5
+     *       x6 y6 x6
+     *        0  0  0
+     *
+     *   if your structure has a number of atoms that is not a multiple of 4, you must
+     *   pad it out to a multiple of 4 using zeros (using anything other than zero will
+     *   make the calculation go wrong).
+     *
+     * On the other hand, when this file is compiled without -DALIGNED, then 
+     * there are no 16 byte alignment or dummy atom requirements, and the
+     * "npaddedatoms" argument is ignored.
+     *
+     *   arguments:
+     *       nrealatoms:   the *actual* number of atoms in the structure
+     *
+     *       npaddedatoms: the number of atoms in the structure including padding atoms;
+     *                     should equal nrealatoms rounded up to the next multiple of 4.
+     *                     THIS IS ONLY USED IF COMPILED WITH -DALIGNED
+     *
+     *       a:            pointer to start of first structure (A). should be aligned to
+     *                     a 16-byte boundary if compiled with -DALIGNED
+     *
+     *       b:            pointer to start of second structure (B). should be aligned to
+     *                     a 16-byte boundary if compiled with -DALIGNED
+     *
+     *       G_a:          trace of A'A
+     *
+     *       G_b:          trace of B'B
+     *
+     *       computeRot:   if 0, the rotation matrix will not be computed. Otherwise, it
+     *                     will be computed and stored in rot
+     *
+     *       rot:          output variable where the rotation matrix will be stored,
+     *                     if computeRot != 0.
+     */
+    int niters, k;
+    static const int masks[4][4] = {
+        {1, 1, 1, 1},
+        {1, 0, 0, 0},
+        {1, 1, 0, 0},
+        {1, 1, 1, 0}
+    };
+    int const *mask;
+
+    /* Will have 3 garbage elements at the end */
+    _ALIGNED(16) float M[12];
+    __m128 xx,xy,xz,yx,yy,yz,zx,zy,zz;
+    __m128 ax,ay,az,bx,by,bz;
+    __m128 t0,t1,t2;
+
+    if (a==b && G_a==G_b) {
+        if (computeRot) {
+            rot[0] = rot[4] = rot[8] = 1.0;
+            rot[1] = rot[2] = rot[3] = rot[5] = rot[6] = rot[7] = 0.0;
+        }
+        return 0.0f;
+    }
+
+    niters = (nrealatoms + 4-1) / 4;
+    mask = masks[nrealatoms%4];
+    
+    xx = xy = xz = yx = yy = yz = zx = zy = zz = _mm_setzero_ps();
+    for (k = 0; k < niters; k++) {
+        if (k == niters - 1) {
+            /* x  y  z  */
+            /* 0  1  2  */
+            /* 3  4  5  */
+            /* 6  7  8  */
+            /* 9  10 11 */
+            ax = float32x4_t{mask[0] ? a[0] : 0, mask[1] ? a[3] : 0, mask[2] ? a[6] : 0, mask[3] ? a[9] : 0};
+            ay = float32x4_t{mask[0] ? a[1] : 0, mask[1] ? a[4] : 0, mask[2] ? a[7] : 0, mask[3] ? a[10] : 0};
+            az = float32x4_t{mask[0] ? a[2] : 0, mask[1] ? a[5] : 0, mask[2] ? a[8] : 0, mask[3] ? a[11] : 0};
+
+            bx = float32x4_t{mask[0] ? b[0] : 0, mask[1] ? b[3] : 0, mask[2] ? b[6] : 0, mask[3] ? b[9] : 0};
+            by = float32x4_t{mask[0] ? b[1] : 0, mask[1] ? b[4] : 0, mask[2] ? b[7] : 0, mask[3] ? b[10] : 0};
+            bz = float32x4_t{mask[0] ? b[2] : 0, mask[1] ? b[5] : 0, mask[2] ? b[8] : 0, mask[3] ? b[11] : 0};
+        }
+        else {
+            aos_deinterleaved_loadu(b,&bx,&by,&bz);
+            aos_deinterleaved_loadu(a,&ax,&ay,&az);
+        }
+
+        t0 = bx;
+        t1 = by;
+        t2 = bz;
+        t0 = _mm_mul_ps(t0,ax);
+        t1 = _mm_mul_ps(t1,ax);
+        t2 = _mm_mul_ps(t2,ax);
+        xx = _mm_add_ps(xx,t0);
+        xy = _mm_add_ps(xy,t1);
+        xz = _mm_add_ps(xz,t2);
+
+        t0 = bx;
+        t1 = by;
+        t2 = bz;
+        t0 = _mm_mul_ps(t0,ay);
+        t1 = _mm_mul_ps(t1,ay);
+        t2 = _mm_mul_ps(t2,ay);
+        yx = _mm_add_ps(yx,t0);
+        yy = _mm_add_ps(yy,t1);
+        yz = _mm_add_ps(yz,t2);
+
+        bx = _mm_mul_ps(bx,az);
+        by = _mm_mul_ps(by,az);
+        bz = _mm_mul_ps(bz,az);
+        zx = _mm_add_ps(zx,bx);
+        zy = _mm_add_ps(zy,by);
+        zz = _mm_add_ps(zz,bz);
+
+        a += 12;
+        b += 12;
+    }
+    REDUCTION_EPILOGUE(xx, xy, xz, yx, yy, yz, zx, zy, zz, t0, t1, t2);
+
+    _mm_store_ps(M  , xx);
+    _mm_store_ps(M+4, yy);
+    _mm_store_ps(M+8, zz);
+    return msdFromMandG(M, G_a, G_b, nrealatoms, computeRot, rot);
+}
+
