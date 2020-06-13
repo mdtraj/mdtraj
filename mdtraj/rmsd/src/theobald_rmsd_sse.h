@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
-#include "util_arm.h"
+#include "util_sse.h"
 #include "theobald_rmsd.h"
 #include "stdio.h"
 
