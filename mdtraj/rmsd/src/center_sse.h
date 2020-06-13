@@ -1,4 +1,4 @@
-#include "util.h"
+#include "util_sse.h"
 
 void inplace_center_and_trace_atom_major(
     float* coords,
