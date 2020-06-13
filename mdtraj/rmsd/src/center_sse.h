@@ -1,8 +1,11 @@
 #include "util.h"
-#include "stdio.h"
 
-void inplace_center_and_trace_atom_major(float* coords, float* traces, const int n_frames, const int n_atoms)
-{
+void inplace_center_and_trace_atom_major(
+    float* coords,
+    float* traces,
+    const int n_frames,
+    const int n_atoms
+) {
     /* Center a trajectory containing multiple conformations inplace.
        The coordinates are store in float, but the accumulation is done in
        double.

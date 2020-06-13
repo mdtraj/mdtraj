@@ -4,9 +4,6 @@
 static INLINE void aos_interleaved_store(float* p, float32x4_t x, float32x4_t y, float32x4_t z) {    
     vst3q_f32(p, float32x4x3_t{x, y, z});
 }
-static INLINE void aos_interleaved_storeu(float* p, float32x4_t x, float32x4_t y, float32x4_t z) {    
-    return aos_interleaved_store(p, x, y, z);
-}
 
 static INLINE float32x4x3_t aos_deinterleaved_load(const float* S) {
     return vld3q_f32(S);
