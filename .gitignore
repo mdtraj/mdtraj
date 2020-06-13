@@ -57,3 +57,4 @@ mdtraj/tests/.ipynb_checkpoints
 mdtraj/geometry/drid.cpp
 .cache
 build.log
+mdtraj/rmsd/_rmsd.cpp
