@@ -8,7 +8,8 @@ static INLINE void aos_interleaved_storeu(float* p, float32x4_t x, float32x4_t y
     return aos_interleaved_store(p, x, y, z);
 }
 
-static INLINE void aos_deinterleaved_load(const float* S, float32x4_t* x, float32x4_t* y, float32x4_t* z) {
+static INLINE float32x4x3_t aos_deinterleaved_load(const float* S) {
+    return vld3q_f32(S);
 
 }
 
