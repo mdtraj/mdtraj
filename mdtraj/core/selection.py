@@ -27,11 +27,13 @@ import sys
 from copy import deepcopy
 from collections import namedtuple
 from mdtraj.utils.six import PY2
-from mdtraj.utils.external.pyparsing import (Word, ParserElement, MatchFirst,
+from pyparsing import (Word, ParserElement, MatchFirst,
     Keyword, opAssoc, quotedString, alphas, alphanums, infixNotation, Group,
-    Optional, ParseException)
-from mdtraj.utils.external.astor import codegen
-ParserElement.enablePackrat()
+    ParseException, OneOrMore)
+import astunparse
+
+# this number arises from the current selection language, if the cache size is exceeded, it hurts performance a bit.
+ParserElement.enablePackrat(cache_size_limit=304)
 
 __all__ = ['parse_selection']
 
@@ -57,7 +59,7 @@ class _RewriteNames(ast.NodeTransformer):
         _safe_names = {'None': None, 'True': True, 'False': False}
         if node.id in _safe_names:
             if sys.version_info >= (3, 4):
-                return ast.NameConstant(value=_safe_names[node.id])
+                return ast.NameConstant(value=_safe_names[node.id], kind=None)
             return node
 
         # all other bare names are taken to be string literals. Thus something
@@ -246,13 +248,38 @@ class RangeCondition(object):
         tokens = tokens[0]
         _check_n_tokens(tokens, 4, 'range condition')
         assert tokens[2] == 'to'
-        self._from, self._center, self._to = tokens[0], tokens[1], tokens[3]
-        if isinstance(self._from, Literal):
+        self._field, self._from, self._to = tokens[0], tokens[1], tokens[3]
+        if isinstance(self._field, Literal):
             raise ValueError("Can't test literal in range.")
 
     def ast(self):
-        return ast.Compare(left=self._center.ast(), ops=[ast.LtE(), ast.LtE()],
-                           comparators=[self._from.ast(), self._to.ast()])
+        return ast.Compare(left=self._from.ast(), ops=[ast.LtE(), ast.LtE()],
+                           comparators=[self._field.ast(), self._to.ast()])
+
+
+class InListCondition(object):
+    def __init__(self, tokens):
+        tokens = tokens[0]
+        self._field = tokens[0]
+
+        if len(tokens) == 2:
+            # Implicit equality
+            self.implicit_equality = True
+        elif len(tokens) > 2:
+            self.implicit_equality = False
+        else:
+            raise ValueError("Not enough tokens for `in` condition")
+
+        self.compare_to = tokens[1:]
+
+    def ast(self):
+        if self.implicit_equality:
+            return ast.Compare(left=self._field.ast(), ops=[ast.Eq()],
+                               comparators=[e.ast() for e in self.compare_to])
+        else:
+            comparator = ast.List([e.ast() for e in self.compare_to], ast.Load())
+            return ast.Compare(left=self._field.ast(), ops=[ast.In()],
+                               comparators=[comparator])
 
 
 class parse_selection(object):
@@ -261,7 +288,7 @@ class parse_selection(object):
     Parameters
     ----------
     selection_string : str
-        Selection string, a string in the MDTraj atom selection grammer.
+        Selection string, a string in the MDTraj atom selection grammar.
 
     Returns
     -------
@@ -314,21 +341,18 @@ class parse_selection(object):
         selection_keyword.setParseAction(SelectionKeyword)
         base_expression = MatchFirst([selection_keyword, literal])
 
-        # the grammar includes implicit equality comparisons
-        # between adjacent expressions:
-        # i.e. 'name CA' --> 'name == CA'
-        implicit_equality = Group(
-            base_expression + Optional(Keyword('=='), '==') + base_expression
-        )
-        implicit_equality.setParseAction(BinaryInfixOperand)
-
         # range condition matches expressions such as 'mass 1 to 20'
         range_condition = Group(
-            base_expression + literal + Keyword('to') + literal
+            selection_keyword + literal + Keyword('to') + literal
         )
         range_condition.setParseAction(RangeCondition)
 
-        expression = range_condition | implicit_equality | base_expression
+        # matches expression such as `resname GLU ASP ARG` and also
+        # handles implicit equality `resname ALA`
+        in_list_condition = Group(selection_keyword + OneOrMore(literal))
+        in_list_condition.setParseAction(InListCondition)
+
+        expression = range_condition | in_list_condition | base_expression
         logical_expr = infixNotation(
             expression,
             infix(UnaryInfixOperand) +
@@ -368,11 +392,11 @@ class parse_selection(object):
         else:
             args = [ast.arg(arg='atom', annotation=None)]
             signature = ast.arguments(args=args, vararg=None, kwarg=None,
-                                      kwonlyargs=[], defaults=[],
-                                      kw_defaults=[])
+                                      posonlyargs=[], kwonlyargs=[],
+                                      defaults=[], kw_defaults=[])
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
-        source = codegen.to_source(astnode)
+        source = astunparse.unparse(astnode)
 
         expr = eval(
             compile(ast.fix_missing_locations(func), '<string>', mode='eval'),
@@ -385,7 +409,6 @@ class parse_selection(object):
 parse_selection = parse_selection()
 
 if __name__ == '__main__':
-    import sys
     exp = parse_selection(sys.argv[1])
     print(exp.source)
     print(ast.dump(exp.astnode))

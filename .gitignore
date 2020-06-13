@@ -29,7 +29,6 @@ var
 sdist
 develop-eggs
 .installed.cfg
-lib
 lib64
 
 # Installer logs
@@ -53,8 +52,10 @@ nosetests.xml
 
 # PyCharm
 .idea
-mdtraj/tests/.ipynb_checkpoints
-mdtraj/geometry/drid.cpp
+
 .cache
 build.log
 mdtraj/rmsd/_rmsd.cpp
+# export of libtheolib
+/mdtraj/core/lib/*
+

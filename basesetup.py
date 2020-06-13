@@ -5,6 +5,8 @@ import json
 import shutil
 import subprocess
 import tempfile
+import warnings
+
 from setuptools import Extension
 from distutils.dep_util import newer_group
 from distutils.errors import DistutilsExecError, DistutilsSetupError
@@ -162,10 +164,12 @@ exit(status)
 
     def _detect_openmp(self):
         self._print_support_start('OpenMP')
-        hasopenmp = self.hasfunction('omp_get_num_threads()', extra_postargs=['-fopenmp', '/openmp'])
-        needs_gomp = hasopenmp
+        extra_postargs = ['/openmp'] if self.msvc else ['-fopenmp']
+        args = dict(extra_postargs=extra_postargs, include='<omp.h>')
+        hasopenmp = self.hasfunction('omp_get_num_threads()', **args)
+        needs_gomp = False
         if not hasopenmp:
-            hasopenmp = self.hasfunction('omp_get_num_threads()', libraries=['gomp'])
+            hasopenmp = self.hasfunction('omp_get_num_threads()', libraries=['gomp'], **args)
             needs_gomp = hasopenmp
         self._print_support_end('OpenMP', hasopenmp)
         return hasopenmp, needs_gomp
@@ -227,37 +231,36 @@ def git_version():
     return GIT_REVISION
 
 
-def write_version_py(VERSION, ISRELEASED, filename='mdtraj/version.py'):
+def write_version_py(version, isreleased, filename):
     cnt = """
-# THIS FILE IS GENERATED FROM MDTRAJ SETUP.PY
-short_version = '%(version)s'
-version = '%(version)s'
-full_version = '%(full_version)s'
-git_revision = '%(git_revision)s'
-release = %(isrelease)s
-
-if not release:
-    version = full_version
+# This file is generated in setup.py at build time.
+version = '{version}'
+short_version = '{short_version}'
+full_version = '{full_version}'
+git_revision = '{git_revision}'
+release = {release}
 """
-    # Adding the git rev number needs to be done inside write_version_py(),
-    # otherwise the import of numpy.version messes up the build under Python 3.
-    FULLVERSION = VERSION
+    # git_revision
     if os.path.exists('.git'):
-        GIT_REVISION = git_version()
+        git_revision = git_version()
     else:
-        GIT_REVISION = 'Unknown'
+        git_revision = 'Unknown'
 
-    if not ISRELEASED:
-        FULLVERSION += '.dev-' + GIT_REVISION[:7]
+    # short_version, full_version
+    if isreleased:
+        full_version = version
+        short_version = version
+    else:
+        full_version = ("{version}+{git_revision}"
+                        .format(version=version, git_revision=git_revision))
+        short_version = version
 
-    a = open(filename, 'w')
-    try:
-        a.write(cnt % {'version': VERSION,
-                       'full_version': FULLVERSION,
-                       'git_revision': GIT_REVISION,
-                       'isrelease': str(ISRELEASED)})
-    finally:
-        a.close()
+    with open(filename, 'w') as f:
+        f.write(cnt.format(version=version,
+                           short_version=short_version,
+                           full_version=full_version,
+                           git_revision=git_revision,
+                           release=isreleased))
 
 
 class StaticLibrary(Extension):
@@ -267,11 +270,6 @@ class StaticLibrary(Extension):
 
 
 class build_ext(_build_ext):
-    def initialize_options(self):
-        _build_ext.initialize_options(self)
-        import pkg_resources
-        dir = pkg_resources.resource_filename('numpy', 'core/include')
-        self.include_dirs = [dir]
 
     def build_extension(self, ext):
         if isinstance(ext, StaticLibrary):
@@ -291,9 +289,9 @@ class build_ext(_build_ext):
         sources = ext.sources
         if sources is None or not isinstance(sources, (list, tuple)):
             raise DistutilsSetupError(
-                  ("in 'ext_modules' option (extension '%s'), " +
-                   "'sources' must be present and must be " +
-                   "a list of source filenames") % ext.name)
+                ("in 'ext_modules' option (extension '%s'), " +
+                 "'sources' must be present and must be " +
+                 "a list of source filenames") % ext.name)
         sources = list(sources)
 
         ext_path = self.get_ext_fullpath(ext.name)
@@ -309,12 +307,12 @@ class build_ext(_build_ext):
         for undef in ext.undef_macros:
             macros.append((undef,))
         objects = self.compiler.compile(sources,
-                                         output_dir=self.build_temp,
-                                         macros=macros,
-                                         include_dirs=ext.include_dirs,
-                                         debug=self.debug,
-                                         extra_postargs=extra_args,
-                                         depends=ext.depends)
+                                        output_dir=self.build_temp,
+                                        macros=macros,
+                                        include_dirs=ext.include_dirs,
+                                        debug=self.debug,
+                                        extra_postargs=extra_args,
+                                        depends=ext.depends)
         self._built_objects = objects[:]
         if ext.extra_objects:
             objects.extend(ext.extra_objects)
@@ -326,19 +324,34 @@ class build_ext(_build_ext):
         output_dir = os.path.dirname(ext_path)
 
         if (self.compiler.static_lib_format.startswith('lib') and
-            libname.startswith('lib')):
+                libname.startswith('lib')):
             libname = libname[3:]
+
+        # 1. copy to build directory
+        # 1. copy to src tree for develop mode
+        import re
+        src_tree_output_dir = re.match('build.*(mdtraj.*)', output_dir).group(1)
+
+        if not os.path.exists(src_tree_output_dir):
+            os.makedirs(src_tree_output_dir)
 
         if not os.path.exists(output_dir):
             # necessary for windows
             os.makedirs(output_dir)
 
+        assert os.path.isdir(src_tree_output_dir)
+
         self.compiler.create_static_lib(objects,
-            output_libname=libname,
-            output_dir=output_dir,
-            target_lang=language)
+                                        output_libname=libname,
+                                        output_dir=output_dir,
+                                        target_lang=language)
+
+        lib_path = self.compiler.library_filename(libname, output_dir=output_dir)
+
+        shutil.copy(lib_path, src_tree_output_dir)
 
         for item in ext.export_include:
+            shutil.copy(item, src_tree_output_dir)
             shutil.copy(item, output_dir)
 
     def get_ext_filename(self, ext_name):
@@ -355,3 +368,62 @@ class build_ext(_build_ext):
         except Exception as e:
             pass
         return filename
+
+
+def parse_setuppy_commands():
+    """Check the commands and respond appropriately.
+    Return a boolean value for whether or not to run the build or not (avoid
+    parsing Cython and template files if False).
+
+    Adopted from scipy setup
+    """
+    args = sys.argv[1:]
+
+    if not args:
+        # User forgot to give an argument probably, let setuptools handle that.
+        return True
+
+    info_commands = ['--help-commands', '--name', '--version', '-V',
+                     '--fullname', '--author', '--author-email',
+                     '--maintainer', '--maintainer-email', '--contact',
+                     '--contact-email', '--url', '--license', '--description',
+                     '--long-description', '--platforms', '--classifiers',
+                     '--keywords', '--provides', '--requires', '--obsoletes']
+
+    for command in info_commands:
+        if command in args:
+            return False
+
+    # Note that 'alias', 'saveopts' and 'setopt' commands also seem to work
+    # fine as they are, but are usually used together with one of the commands
+    # below and not standalone.  Hence they're not added to good_commands.
+    good_commands = ('develop', 'sdist', 'build', 'build_ext', 'build_py',
+                     'build_clib', 'build_scripts', 'bdist_wheel', 'bdist_rpm',
+                     'bdist_wininst', 'bdist_msi', 'bdist_mpkg',
+                     'build_sphinx')
+
+    for command in good_commands:
+        if command in args:
+            return True
+
+    # The following commands are supported, but we need to show more
+    # useful messages to the user
+    if 'install' in args:
+        return True
+
+    if '--help' in args or '-h' in sys.argv[1]:
+        return False
+
+    # Commands that do more than print info, but also don't need Cython and
+    # template parsing.
+    other_commands = ['egg_info', 'install_egg_info', 'rotate']
+    for command in other_commands:
+        if command in args:
+            return False
+
+    # If we got here, we didn't detect what setup.py command was given
+    warnings.warn("Unrecognized setuptools command ('{}'), proceeding with "
+                  "generating Cython sources and expanding templates".format(
+                  ' '.join(sys.argv[1:])))
+    return True
+

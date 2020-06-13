@@ -1,7 +1,9 @@
 .. _faq:
 
-Frequently Asked Questions
-==========================
+.. This page isn't relevant anymore and has been removed from toctree
+
+FAQs
+====
 
 1. *Why am I seeing weird "symbol not found" errors while trying to import
    mdtraj?*

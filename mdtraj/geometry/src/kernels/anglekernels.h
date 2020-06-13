@@ -1,4 +1,3 @@
-
 /**
  *  Compute the angle between triples of atoms in every frame of
  *  xyz.
@@ -24,52 +23,38 @@
  *  segfault if they're not.
  */
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-int angle_mic(const float* xyz, const int* triplets,
-            const float* box_matrix, float* out,
-            const int n_frames, const int n_atoms, const int n_angles)
+#ifdef COMPILE_WITH_TRICLINIC
+void angle_mic_triclinic(const float* xyz, const int* triplets,
+               const float* box_matrix, float* out,
+               const int n_frames, const int n_atoms, const int n_angles)
 #else
-int angle(const float* xyz, const int* triplets, float* out,
-          const int n_frames, const int n_atoms, const int n_angles)
+void angle_mic(const float* xyz, const int* triplets,
+               const float* box_matrix, float* out,
+               const int n_frames, const int n_atoms, const int n_angles)
+#endif
+#else
+void angle(const float* xyz, const int* triplets, float* out,
+           const int n_frames, const int n_atoms, const int n_angles)
 #endif
 {
-  int i, j;
-  __m128 r_m, r_n, r_o, u_prime, u, v_prime, v;
+    std::vector<float> distances(2*n_frames);
+    std::vector<float> displacements(6*n_frames);
+    for (int i = 0; i < n_angles; i++) {
+        int pairs[4] = {triplets[3*i+1], triplets[3*i], triplets[3*i+1], triplets[3*i+2]};
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-  __m128 hinv[3];
-  __m128 h[3];
+#ifdef COMPILE_WITH_TRICLINIC
+        dist_mic_triclinic(xyz, pairs, box_matrix, &distances[0], &displacements[0], n_frames, n_atoms, 2);
+#else
+        dist_mic(xyz, pairs, box_matrix, &distances[0], &displacements[0], n_frames, n_atoms, 2);
 #endif
-
-  for (i = 0; i < n_frames; i++) {
-#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-    loadBoxMatrix(box_matrix, &h, &hinv);
+#else
+        dist(xyz, pairs, &distances[0], &displacements[0], n_frames, n_atoms, 2);
 #endif
-
-    for (j = 0; j < n_angles; j++) {
-      r_m = load_float3(xyz + 3*triplets[3*j + 0]);
-      r_o = load_float3(xyz + 3*triplets[3*j + 1]);
-      r_n = load_float3(xyz + 3*triplets[3*j + 2]);
-
-      u_prime = _mm_sub_ps(r_m, r_o);
-      v_prime = _mm_sub_ps(r_n, r_o);
-
-#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-      u_prime = minimum_image(u_prime, &h, &hinv);
-      v_prime = minimum_image(v_prime, &h, &hinv);
-#endif
-
-      /* normalize the vectors u_prime and v_prime */
-      u = _mm_div_ps(u_prime, _mm_sqrt_ps(_mm_dp_ps2(u_prime, u_prime, 0x7F)));
-      v = _mm_div_ps(v_prime, _mm_sqrt_ps(_mm_dp_ps2(v_prime, v_prime, 0x7F)));
-
-      /* compute the arccos of the dot product, and store the result. */
-      *(out++) = (float) acos(CLIP(_mm_cvtss_f32(_mm_dp_ps2(u, v, 0x71)), -1, 1));
+        for (int j = 0; j < n_frames; j++) {
+            fvec4 v1(displacements[6*j], displacements[6*j+1], displacements[6*j+2], 0);
+            fvec4 v2(displacements[6*j+3], displacements[6*j+4], displacements[6*j+5], 0);
+            float angle = (float) acos(dot3(v1, v2)/(distances[2*j]*distances[2*j+1]));
+            out[n_angles*j + i] = angle;
+        }
     }
-    /* advance to the next frame */
-    xyz += n_atoms*3;
-#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-    box_matrix += 9;
-#endif
-  }
-
-  return 1;
 }

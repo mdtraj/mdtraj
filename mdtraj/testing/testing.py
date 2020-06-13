@@ -26,19 +26,15 @@
 ##############################################################################
 
 from __future__ import print_function, division
+
 import ast
-import os
 import sys
-import functools
+
 import numpy as np
 from numpy.testing import (assert_allclose, assert_almost_equal,
-  assert_approx_equal, assert_array_almost_equal, assert_array_almost_equal_nulp,
-  assert_array_equal, assert_array_less, assert_array_max_ulp, assert_equal,
-  assert_raises, assert_string_equal, assert_warns)
-from numpy.testing.decorators import skipif, slow
-from nose.tools import ok_, eq_, raises
-from nose import SkipTest
-from pkg_resources import resource_filename
+                           assert_approx_equal, assert_array_almost_equal, assert_array_almost_equal_nulp,
+                           assert_array_equal, assert_array_less, assert_array_max_ulp, assert_equal,
+                           assert_raises, assert_string_equal, assert_warns)
 
 # py2/3 compatibility
 from mdtraj.utils.six import iteritems, integer_types, PY2
@@ -59,45 +55,32 @@ try:
 except ImportError:
     pass
 
-
 __all__ = ['assert_allclose', 'assert_almost_equal', 'assert_approx_equal',
            'assert_array_almost_equal', 'assert_array_almost_equal_nulp',
            'assert_array_equal', 'assert_array_less', 'assert_array_max_ulp',
-           'assert_equal', 'assert_raises', 'assert_string_equal', 'assert_warns',
-           'get_fn', 'eq', 'assert_dict_equal', 'assert_sparse_matrix_equal',
-           'expected_failure', 'SkipTest', 'ok_', 'eq_', 'raises', 'skipif', 'slow']
-
-##############################################################################
-# functions
-##############################################################################
+           'assert_equal', 'assert_raises',
+           'assert_string_equal', 'assert_warns', 'get_fn', 'eq',
+           'assert_dict_equal', 'assert_sparse_matrix_equal', ]
 
 
-def get_fn(name):
-    """Get the full path to one of the reference files shipped for testing
-
-    In the source distribution, these files are in ``MDTraj/testing/reference``,
-    but on installation, they're moved to somewhere in the user's python
-    site-packages directory.
+def eq_(a, b, msg=None):
+    """Shorthand for 'assert a == b, "%r != %r" % (a, b)
 
     Parameters
     ----------
-    name : str
-        Name of the file to load (with respect to the reference/ folder).
-
-    Examples
-    --------
-    >>> import mdtraj as md
-    >>> t = md.load(get_fn('2EQQ.pdb'))
-    >>> eq(t.n_frames, 20)    # this runs the assert, using the eq() func.
+    a : object
+        The first object
+    b : object
+        The second object
+    msg : string
+        Optional assertion message. Why are you using this function then??
     """
+    if not a == b:
+        raise AssertionError(msg or "%r != %r" % (a, b))
 
-    fn = resource_filename('mdtraj', os.path.join('testing', 'reference', name))
 
-    if not os.path.exists(fn):
-        raise ValueError('Sorry! %s does not exists. If you just '
-            'added it, you\'ll have to re install' % fn)
-
-    return fn
+def get_fn(name):
+    raise NotImplementedError("Testing reference data is no longer included in the MDTraj package")
 
 
 def eq(o1, o2, decimal=6, err_msg=''):
@@ -132,7 +115,7 @@ def eq(o1, o2, decimal=6, err_msg=''):
     """
     if isinstance(o1, integer_types) and isinstance(o2, integer_types) and PY2:
         eq_(long(o1), long(o2))
-        return
+        return True
 
     assert (type(o1) is type(o2)), 'o1 and o2 not the same type: %s %s' % (type(o1), type(o2))
 
@@ -167,6 +150,7 @@ def eq(o1, o2, decimal=6, err_msg=''):
 
     return True
 
+
 def assert_dict_equal(t1, t2, decimal=6):
     """Assert two dicts are equal. This method should actually
     work for any dict of numpy arrays/objects
@@ -185,7 +169,7 @@ def assert_dict_equal(t1, t2, decimal=6):
     for key, val in iteritems(t1):
         # compare numpy arrays using numpy.testing
         if isinstance(val, np.ndarray) or ('pandas' in sys.modules and isinstance(t1, pd.DataFrame)):
-            if val.dtype.kind ==  'f':
+            if val.dtype.kind == 'f':
                 # compare floats for almost equality
                 assert_array_almost_equal(val, t2[key], decimal)
             else:
@@ -215,27 +199,3 @@ def assert_sparse_matrix_equal(m1, m2, decimal=6):
     # even though its called assert_array_almost_equal, it will
     # work for scalars
     assert_array_almost_equal((m1 - m2).sum(), 0, decimal=decimal)
-
-
-# decorator to mark tests as expected failure
-def expected_failure(test):
-    @functools.wraps(test)
-    def inner(*args, **kwargs):
-        try:
-            test(*args, **kwargs)
-        except BaseException:
-            raise SkipTest
-        else:
-            raise AssertionError('Failure expected')
-    return inner
-
-
-# decorator to skip tests
-def skip(reason):
-    def wrap(test):
-        @functools.wraps(test)
-        def inner(*args, **kwargs):
-            raise SkipTest
-            print("After f(*args)")
-        return inner
-    return wrap

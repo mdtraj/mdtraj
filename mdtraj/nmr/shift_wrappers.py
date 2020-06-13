@@ -20,20 +20,16 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 #############################################################################
 
-
-##############################################################################
-# Imports
-##############################################################################
-
 from __future__ import print_function, absolute_import
+
 import os
-import sys
-from distutils.version import LooseVersion
+import subprocess
 from distutils.spawn import find_executable as _find_executable
+from distutils.version import LooseVersion
+
 import numpy as np
 
-from mdtraj.utils import import_
-from mdtraj.utils import enter_temp_directory
+from mdtraj.utils import enter_temp_directory, import_
 
 ##############################################################################
 # Globals
@@ -136,25 +132,22 @@ def chemical_shifts_shiftx2(trj, pH=5.0, temperature=298.00):
     pd = import_('pandas')
     binary = find_executable(SHIFTX2)
     if binary is None:
-        raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_shiftx2` requires the external program SHIFTX2, available at http://www.shiftx2.ca/' % ', '.join(SHIFTX2))
+        raise OSError('External command not found. Looked for {} in PATH. '
+                      '`chemical_shifts_shiftx2` requires the external program SHIFTX2, '
+                      'available at http://www.shiftx2.ca/'.format(', '.join(SHIFTX2)))
 
     results = []
     with enter_temp_directory():
         for i in range(trj.n_frames):
             fn = './trj%d.pdb' % i
             trj[i].save(fn)
-            cmd = "%s -b %s -p %.1f -t %.2f" % (binary, fn, pH, temperature)
-            return_flag = os.system(cmd)
+            subprocess.check_call([binary,
+                                   '-b', fn,
+                                   '-p', "{:.1f}".format(pH),
+                                   '-t', "{:.2f}".format(temperature),
+                                   ])
 
-            if return_flag != 0:
-                raise(IOError("Could not successfully execute command '%s', check your ShiftX2 installation or your input trajectory." % cmd))
-
-        for i in range(trj.n_frames):
-            try:
-                d = pd.read_csv("./trj%d.pdb.cs" % i)
-            except IOError:
-                print(os.listdir('.'), file=sys.stderr)
-                raise
+            d = pd.read_csv("./trj%d.pdb.cs" % i)
             d.rename(columns={"NUM": "resSeq", "RES": "resName", "ATOMNAME": "name"}, inplace=True)
             d["frame"] = i
             results.append(d)
@@ -217,7 +210,7 @@ def chemical_shifts_ppm(trj):
         if return_flag != 0:
             raise(IOError("Could not successfully execute command '%s', check your PPM installation or your input trajectory." % cmd))
 
-        d = pd.read_table("./bb_details.dat", index_col=False, header=None, sep="\s*").drop([3], axis=1)
+        d = pd.read_table("./bb_details.dat", index_col=False, header=None, sep="\s+").drop([3], axis=1)
 
         d = d.rename(columns={0: "resSeq", 1: "resName", 2: "name"})
         d["resSeq"] += first_resSeq - 1  # Fix bug in PPM that reindexes to 1
@@ -288,18 +281,14 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
         for i in range(trj.n_frames):
             trj[i].save("./trj%d.pdb" % i)
 
-        cmd = "%s -in %s" % (binary, ' '.join("trj%d.pdb" % i for i in range(trj.n_frames)))
-
-        return_flag = os.system(cmd)
-
-        if return_flag != 0:
-            raise(IOError("Could not successfully execute command '%s', check your SPARTA+ installation or your input trajectory." % cmd))
+        subprocess.check_call([binary, '-in'] + ["trj{}.pdb".format(i) for i in range(trj.n_frames)]
+                              + ['-out', 'trj0_pred.tab'])
 
         lines_to_skip = _get_lines_to_skip("trj0_pred.tab")
 
         results = []
         for i in range(trj.n_frames):
-            d = pd.read_table("./trj%d_pred.tab" % i, names=names, header=None, sep="\s*", skiprows=lines_to_skip)
+            d = pd.read_table("./trj%d_pred.tab" % i, names=names, header=None, sep="\s+", skiprows=lines_to_skip)
             d["frame"] = i
             results.append(d)
 

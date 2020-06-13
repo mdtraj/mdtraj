@@ -183,6 +183,7 @@ cdef class BINPOSTrajectoryFile:
     cdef int min_chunk_size
     cdef int chunk_size_multiplier
     cdef int is_open
+    cdef int force_overwrite
     cdef long int frame_counter
     cdef char* mode
     cdef char* filename
@@ -199,6 +200,7 @@ cdef class BINPOSTrajectoryFile:
         self.is_open = False
         self.frame_counter = 0
         self.n_frames = -1
+        self.force_overwrite = force_overwrite
 
         if str(mode) == 'r':
             self.n_atoms = 0
@@ -236,7 +238,13 @@ cdef class BINPOSTrajectoryFile:
         self.mode = mode
 
     def _initialize_write(self, n_atoms):
-        self.fh = open_binpos_write(self.filename, "binpos", n_atoms)
+        force_overwrite = self.force_overwrite
+        filename = self.filename
+        if force_overwrite and os.path.exists(filename):
+            os.unlink(filename)
+        if not force_overwrite and os.path.exists(filename):
+            raise IOError('"%s" already exists' % filename)
+        self.fh = open_binpos_write(filename, "binpos", n_atoms)
         self.n_atoms = n_atoms
         self.is_open = True
 

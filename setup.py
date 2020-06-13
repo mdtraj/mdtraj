@@ -4,43 +4,26 @@ MDTraj is a python library that allows users to manipulate molecular dynamics
 (MD) trajectories and perform a variety of analyses, including fast RMSD,
 solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj
 is the wide variety of molecular dynamics trajectory file formats which are
-supported, including RCSB pdb, GROMACS xtc and trr, CHARMM / NAMD dcd, AMBER
+supported, including RCSB pdb, GROMACS xtc, tng, and trr, CHARMM / NAMD dcd, AMBER
 binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 """
-
 from __future__ import print_function, absolute_import
-DOCLINES = __doc__.split("\n")
 
-import os
 import sys
 import platform
 from setuptools import setup, Extension, find_packages
 sys.path.insert(0, '.')
 from basesetup import (write_version_py, build_ext,
                        StaticLibrary, CompilerDetection)
+from glob import glob
 
-try:
-    import numpy
-    import Cython
-    if Cython.__version__ < '0.19':
-        raise ImportError
-    from Cython.Build import cythonize
-except ImportError:
-    print('-'*80, file=sys.stderr)
-    print('''Error: building mdtraj requires numpy and cython>=0.19
+DOCLINES = __doc__.split("\n")
 
-Try running the command ``pip install numpy cython`` or
-``conda install numpy cython``.
+from setuptools import setup, Extension, find_packages
 
-or see http://docs.scipy.org/doc/numpy/user/install.html and
-http://cython.org/ for more information.
-
-If you're feeling lost, we recommend downloading the (free) Anaconda python
-distribution https://www.continuum.io/downloads, because it comes with
-these components included.''', file=sys.stderr)
-    print('-'*80, file=sys.stderr)
-    sys.exit(1)
-
+sys.path.insert(0, '.')
+from basesetup import (write_version_py, build_ext,
+                       StaticLibrary, CompilerDetection, parse_setuppy_commands)
 
 try:
     # add an optional --disable-openmp to disable OpenMP support
@@ -51,7 +34,7 @@ except ValueError:
 
 
 ##########################
-VERSION = "1.6.0.dev1"
+VERSION = "1.9.5"
 ISRELEASED = False
 __version__ = VERSION
 ##########################
@@ -78,10 +61,7 @@ compiler = CompilerDetection(disable_openmp)
 compiler.initialize()
 
 extra_cpp_libraries = []
-if sys.platform == 'darwin':
-    extra_cpp_libraries.append('stdc++')
-    os.environ['CXX'] = 'clang++'
-    os.environ['CC'] = 'clang'
+
 if sys.platform == 'win32':
     extra_cpp_libraries.append('Ws2_32')
     # For determining if a path is relative (for dtr)
@@ -114,6 +94,31 @@ def format_extensions():
                                   'mdtraj/formats/xtc/'],
                     extra_compile_args=compiler_args)
 
+    zlib_include_dirs = []
+    zlib_library_dirs = []
+    if sys.platform == 'win32':
+        # Conda puts the zlib headers in ./Library/... on windows
+        # If you're not using conda, good luck!
+        zlib_include_dirs += ["{}/Library/include".format(sys.prefix)]
+        zlib_library_dirs += ["{}/Library/lib".format(sys.prefix)]
+    else:
+        # On linux (and mac(?)) these paths should work for a standard
+        # install of python+zlib or a conda install of python+zlib
+        zlib_include_dirs += ["{}/include".format(sys.prefix)]
+        zlib_library_dirs += ["{}/lib".format(sys.prefix)]
+
+    tng = Extension('mdtraj.formats.tng',
+                    sources=glob('mdtraj/formats/tng/src/compression/*.c') +
+                                ['mdtraj/formats/tng/src/lib/tng_io.c',
+                                 'mdtraj/formats/tng/src/lib/md5.c',
+                                 'mdtraj/formats/tng/tng.pyx'],
+                    include_dirs=['mdtraj/formats/tng/include']
+                                 + zlib_include_dirs,
+                    define_macros=[('USE_ZLIB', 1)],
+                    library_dirs=zlib_library_dirs,
+                    libraries=['z'],
+                    )
+
     dcd = Extension('mdtraj.formats.dcd',
                     sources=['mdtraj/formats/dcd/src/dcdplugin.c',
                              'mdtraj/formats/dcd/dcd.pyx'],
@@ -138,7 +143,7 @@ def format_extensions():
                     extra_compile_args=compiler_args,
                     libraries=extra_cpp_libraries)
 
-    return [xtc, trr, dcd, binpos, dtr]
+    return [xtc, trr, tng, dcd, binpos, dtr]
 
 
 def rmsd_extensions():
@@ -194,32 +199,36 @@ def rmsd_extensions():
 
 def geometry_extensions():
     compiler.initialize()
-    compiler_args = (compiler.compiler_args_sse2 + compiler.compiler_args_sse3 +
-                     compiler.compiler_args_opt + compiler.compiler_args_warn)
+    compiler_args = (
+        compiler.compiler_args_openmp +
+        compiler.compiler_args_sse2 + compiler.compiler_args_sse3 +
+        compiler.compiler_args_opt + compiler.compiler_args_warn)
     define_macros = None
+    compiler_libraries = compiler.compiler_libraries_openmp + extra_cpp_libraries
 
     return [
         Extension('mdtraj.geometry._geometry',
-            sources=['mdtraj/geometry/src/geometry.c',
-                     'mdtraj/geometry/src/sasa.c',
+            sources=['mdtraj/geometry/src/sasa.cpp',
                      'mdtraj/geometry/src/dssp.cpp',
-                     'mdtraj/geometry/src/_geometry.pyx'],
+                     'mdtraj/geometry/src/geometry.cpp',
+                     'mdtraj/geometry/src/_geometry.pyx',],
             include_dirs=['mdtraj/geometry/include',
                           'mdtraj/geometry/src/kernels'],
+            depends=['mdtraj/geometry/src/kernels/anglekernels.h',
+                     'mdtraj/geometry/src/kernels/dihedralkernels.h',
+                     'mdtraj/geometry/src/kernels/distancekernels.h'],
             define_macros=define_macros,
             extra_compile_args=compiler_args,
-            libraries=extra_cpp_libraries,
+            libraries=compiler_libraries,
             language='c++'),
         Extension('mdtraj.geometry.drid',
             sources=["mdtraj/geometry/drid.pyx",
-                     "mdtraj/geometry/src/dridkernels.c",
-                     "mdtraj/geometry/src/cephes/cbrt.c",
-                     "mdtraj/geometry/src/cephes/isnan.c",
-                     "mdtraj/geometry/src/moments.c"],
-            include_dirs=["mdtraj/geometry/include",
-                          "mdtraj/geometry/include/cephes"],
+                     "mdtraj/geometry/src/dridkernels.cpp",
+                     "mdtraj/geometry/src/moments.cpp"],
+            include_dirs=["mdtraj/geometry/include"],
             define_macros=define_macros,
             extra_compile_args=compiler_args,
+            libraries=compiler_libraries,
             language='c++'),
         Extension('mdtraj.geometry.neighbors',
             sources=["mdtraj/geometry/neighbors.pyx",
@@ -227,17 +236,23 @@ def geometry_extensions():
             include_dirs=["mdtraj/geometry/include",],
             define_macros=define_macros,
             extra_compile_args=compiler_args,
+            libraries=compiler_libraries,
+            language='c++'),
+        Extension('mdtraj.geometry.neighborlist',
+            sources=["mdtraj/geometry/neighborlist.pyx",
+                     "mdtraj/geometry/src/neighborlist.cpp"],
+            include_dirs=["mdtraj/geometry/include",],
+            define_macros=define_macros,
+            extra_compile_args=compiler_args,
+            libraries=compiler_libraries,
             language='c++'),
         ]
 
 
-extensions = format_extensions()
-extensions.extend(rmsd_extensions())
-extensions.extend(geometry_extensions())
+write_version_py(VERSION, ISRELEASED, 'mdtraj/version.py')
 
-write_version_py(VERSION, ISRELEASED)
-
-setup(name='mdtraj',
+metadata = \
+    dict(name='mdtraj',
       author='Robert McGibbon',
       author_email='rmcgibbo@gmail.com',
       description=DOCLINES[0],
@@ -250,29 +265,47 @@ setup(name='mdtraj',
       classifiers=CLASSIFIERS.splitlines(),
       packages=find_packages(),
       cmdclass={'build_ext': build_ext},
-      ext_modules=cythonize(extensions),
-
-      # setup_requires really doesn't work sufficently well with `pip install`
-      # to use. See https://github.com/mdtraj/mdtraj/issues/984. Also
-      # setup_requires=['setuptools>=18', 'cython>=0.22', 'numpy>=1.6'],
-
-      # Also, install_requires is no better, especially with numpy.
-      # See http://article.gmane.org/gmane.comp.python.distutils.devel/24218
-      # install_requires=['numpy>=1.6'],
-
-      package_data={'mdtraj.formats.pdb': ['data/*'],
-                    'mdtraj.testing': ['reference/*',
-                                       'reference/ala_dipeptide_trj/*',
-                                       'reference/ala_dipeptide_trj/not_hashed/*',
-                                       'reference/frame0.dtr/*',
-                                       'reference/frame0.dtr/not_hashed/*',],
-                    'mdtraj.html': ['static/*']},
-      exclude_package_data={'mdtraj.testing': ['reference/ala_dipeptide_trj',
-                                               'reference/ala_dipeptide_trj/not_hashed',
-                                               'reference/frame0.dtr',
-                                               'reference/frame0.dtr/not_hashed',]},
+      install_requires=['numpy>=1.6',
+                        'scipy',
+                        'astunparse',
+                        'pyparsing',
+                        ],
+      package_data={'mdtraj.formats.pdb': ['data/*'], },
       zip_safe=False,
       entry_points={'console_scripts':
           ['mdconvert = mdtraj.scripts.mdconvert:entry_point',
            'mdinspect = mdtraj.scripts.mdinspect:entry_point']},
 )
+
+
+if __name__ == '__main__':
+    # Don't use numpy if we are just - non-build actions are required to succeed
+    # without NumPy for example when pip is used to install Scipy when
+    # NumPy is not yet present in the system.
+    run_build = parse_setuppy_commands()
+    if run_build:
+        extensions = format_extensions()
+        extensions.extend(rmsd_extensions())
+        extensions.extend(geometry_extensions())
+
+        # most extensions use numpy, add headers for it.
+        try:
+            import Cython as _c
+            from Cython.Build import cythonize
+            if _c.__version__ < '0.29':
+                raise ImportError("Too old")
+        except ImportError as e:
+            print('mdtrajs setup depends on Cython (>=0.29). Install it prior invoking setup.py')
+            print(e)
+            sys.exit(1)
+        try:
+            import numpy as np
+        except ImportError:
+            print('mdtrajs setup depends on NumPy. Install it prior invoking setup.py')
+            sys.exit(1)
+
+        for e in extensions:
+            e.include_dirs.append(np.get_include())
+        metadata['ext_modules'] = cythonize(extensions, language_level=sys.version_info[0])
+
+    setup(**metadata)

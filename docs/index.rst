@@ -1,61 +1,26 @@
 MDTraj
 ======
 
-*Read, write and analyze MD trajectories with only a few lines of Python code.*
+Read, write and analyze MD trajectories with only a few lines of Python
+code.
 
-MDTraj is a python library that allows users to manipulate `molecular dynamics (MD) <http://en.wikipedia.org/wiki/Molecular_dynamics>`_ trajectories.
-Extensive :ref:`trajectory analysis <analysis>` routines are implemented. With MDTraj,
-you can
+MDTraj is a python library that allows users to manipulate `molecular
+dynamics (MD) <http://en.wikipedia.org/wiki/Molecular_dynamics>`_
+trajectories.  Features include:
 
- - Read and write from **every MD format imaginable** (``pdb``, ``xtc``, ``trr``,
-   ``dcd``, ``binpos``, ``netcdf``, ``mdcrd``, ``prmtop``, ...)
- - Run **blazingly fast** RMSD calculations (4x the speed of the original
-   `Theobald QCP <http://theobald.brandeis.edu/qcp/>`_).
- - Use tons of :ref:`analysis <analysis>` functions like bonds/angles/dihedrals,
-   hydrogen bonding identification, secondary structure assignment, NMR observables.
- - **Lightweight API**, with a focus on **speed** and vectorized operations.
+ - Wide MD format support, including ``pdb``, ``xtc``,
+   ``trr``, ``dcd``, ``binpos``, ``netcdf``, ``mdcrd``, ``prmtop``, and
+   more.
+ - Extremely fast RMSD calculations (4x the speed of the original `Theobald
+   QCP <http://theobald.brandeis.edu/qcp/>`_).
+ - Extensive :ref:`analysis <analysis>` functions including those that
+   compute bonds, angles, dihedrals, hydrogen bonds, secondary structure,
+   and NMR observables.
+ - Lightweight, Pythonic API.
 
-The library also ships with a flexible command-line application for converting
-trajectories between formats. When you install MDTraj, the script will be
-installed under the name ``mdconvert``.
+MDTraj includes a command-line application, ``mdconvert``, for converting
+trajectories between formats. 
 
-.. raw:: html
-
-  <div>
-      <h2 style="display: inline; float:left; margin-left:5em">
-          <a href="https://github.com/mdtraj/mdtraj/releases/latest">
-          Download the Code</a>
-      </h2>
-      <h2 style="display: inline; float:right; margin-right:5em">
-          <a href="examples/index.html">
-          See it in Action</a>
-      </h2>
-      <div style="clear:both"></div>
-      <h2 style="display: inline; float:left; margin-left:7em">
-          <a href="http://discourse.mdtraj.org/">
-          Get Help</a>
-      </h2>
-      <h2 style="display: inline; float:right; margin-right:7em">
-          <a href="https://github.com/mdtraj/mdtraj/issues">
-          Get Involved</a>
-      </h2>
-  </div>
-  <br/>
-  <iframe id="player" type="text/html" width="500" height="300" style="display:block; margin:auto"
-  src="http://www.youtube.com/embed/Lwy2Hdsr518"/>
-  frameborder="0"></iframe>
-  <br/><br/>
-
-
-.. raw:: html
-
-   <div style="display:none">
-
-
---------------------------------------------------------------------------------
-
-Documentation
--------------
 
 .. toctree::
    :maxdepth: 1
@@ -64,9 +29,6 @@ Documentation
    new_to_python
    examples/index
    whatsnew
-   faq
-   viewer
-   Discussion Forums <http://discourse.mdtraj.org>
 
 API Reference
 -------------
@@ -75,8 +37,8 @@ API Reference
    :maxdepth: 1
 
    load_functions
-   atom_selection
    analysis
+   atom_selection
    api/trajectory_files
    api/reporters
    api/utils
@@ -90,27 +52,24 @@ Developing
    :maxdepth: 1
 
    hdf5_format
-   building_docs
-   style
 
-
---------------------------------------------------------------------------------
-
-.. raw:: html
-
-   </div>
 
 
 Citation |DOI for Citing MDTraj|
 --------------------------------
 
-MDTraj is research software. If you make use of MDTraj in scientific publications, please cite it. The BibTeX reference is
+MDTraj is research software. If you make use of MDTraj in scientific
+publications, please cite it. The BibTeX reference is
 
 ::
 
     @article{McGibbon2015MDTraj,
-        title = {MDTraj: A Modern Open Library for the Analysis of Molecular Dynamics Trajectories},
-        author = {McGibbon, Robert T. and Beauchamp, Kyle A. and Harrigan, Matthew P. and Klein, Christoph and Swails, Jason M. and Hern{\'a}ndez, Carlos X.  and Schwantes, Christian R. and Wang, Lee-Ping and Lane, Thomas J. and Pande, Vijay S.},
+        title = {MDTraj: A Modern Open Library for the Analysis of
+        Molecular Dynamics Trajectories},
+        author = {McGibbon, Robert T. and Beauchamp, Kyle A. and Harrigan,
+        Matthew P. and Klein, Christoph and Swails, Jason M. and
+        Hern{\'a}ndez, Carlos X.  and Schwantes, Christian R. and Wang,
+        Lee-Ping and Lane, Thomas J. and Pande, Vijay S.},
         journal = {Biophysical Journal},
         volume = {109},
         number = {8},
@@ -122,9 +81,14 @@ MDTraj is research software. If you make use of MDTraj in scientific publication
 
 License
 -------
-MDTraj is licensed under the Lesser GNU General Public License (LGPL v2.1+).
+
+MDTraj is licensed under the Lesser GNU General Public License (LGPL
+v2.1+).
 
 
 
 .. |DOI for Citing MDTraj| image:: https://img.shields.io/badge/DOI-10.1016%2Fj.bpj.2015.08.015-blue.svg
    :target: http://doi.org/10.1016/j.bpj.2015.08.015
+
+.. vim: tw=75
+

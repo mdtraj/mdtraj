@@ -33,14 +33,14 @@ from mdtraj.utils.six.moves import xrange
 from mdtraj.core import element
 import mdtraj as md
 import itertools
-
 __all__ = ['compute_contacts', 'squareform']
 
 ##############################################################################
 # Code
 ##############################################################################
 
-def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonprotein=True):
+def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonprotein=True, periodic=True,
+                     soft_min=False, soft_min_beta=20):
     """Compute the distance between pairs of residues in a trajectory.
 
     Parameters
@@ -52,7 +52,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         compute the contacts between, or 'all'. The string 'all' will
         select all pairs of residues separated by two or more residues
         (i.e. the i to i+1 and i to i+2 pairs will be excluded).
-    scheme : {'ca', 'closest', 'closest-heavy'}
+    scheme : {'ca', 'closest', 'closest-heavy', 'sidechain', 'sidechain-heavy'}
         scheme to determine the distance between two residues:
             'ca' : distance between two residues is given by the distance
                 between their alpha carbons
@@ -60,10 +60,27 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
                 two atoms in the residues
             'closest-heavy' : distance is the closest distance between
                 any two non-hydrogen atoms in the residues
+            'sidechain' : distance is the closest distance between any
+                two atoms in residue sidechains
+            'sidechain-heavy' : distance is the closest distance between
+                any two non-hydrogen atoms in residue sidechains
     ignore_nonprotein : bool
         When using `contact==all`, don't compute contacts between
         "residues" which are not protein (i.e. do not contain an alpha
         carbon).
+    periodic : bool, default=True
+        If periodic is True and the trajectory contains unitcell information,
+        we will compute distances under the minimum image convention.
+    soft_min : bool, default=False
+        If soft_min is true, we will use a diffrentiable version of
+        the scheme. The exact expression used
+         is d = \frac{\beta}{log\sum_i{exp(\frac{\beta}{d_i}})} where
+         beta is user parameter which defaults to 20nm. The expression
+         we use is copied from the plumed mindist calculator.
+         http://plumed.github.io/doc-v2.0/user-doc/html/mindist.html
+    soft_min_beta : float, default=20nm
+        The value of beta to use for the soft_min distance option.
+        Very large values might cause small contact distances to go to 0.
 
     Returns
     -------
@@ -79,7 +96,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         to a residue without an alpha carbon (e.g. HOH) is ignored from the
         input contacts list, meanings that the indexing of the
         output `distances` may not match up with the indexing of the input
-        `contacts`. But the indexing of `distance` *will* match up with
+        `contacts`. But the indexing of `distances` *will* match up with
         the indexing of `residue_pairs`
 
     Examples
@@ -134,10 +151,14 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
     # now the bulk of the function. This will calculate atom distances and then
     # re-work them in the required scheme to get residue distances
     scheme = scheme.lower()
-    if scheme not in ['ca', 'closest', 'closest-heavy']:
-        raise ValueError('scheme must be one of [ca, closest, closest-heavy]')
+    if scheme not in ['ca', 'closest', 'closest-heavy', 'sidechain', 'sidechain-heavy']:
+        raise ValueError('scheme must be one of [ca, closest, closest-heavy, sidechain, sidechain-heavy]')
 
     if scheme == 'ca':
+        if soft_min:
+            import warnings
+            warnings.warn("The soft_min=True option with scheme=ca gives"
+                          "the same results as soft_min=False")
         filtered_residue_pairs = []
         atom_pairs = []
 
@@ -157,16 +178,23 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
                 raise ValueError('More than 1 alpha carbon detected in residue %d or %d' % (r0, r1))
 
         residue_pairs = np.array(filtered_residue_pairs)
-        distances = md.compute_distances(traj, atom_pairs)
+        distances = md.compute_distances(traj, atom_pairs, periodic=periodic)
 
 
-    elif scheme in ['closest', 'closest-heavy']:
+    elif scheme in ['closest', 'closest-heavy', 'sidechain', 'sidechain-heavy']:
         if scheme == 'closest':
             residue_membership = [[atom.index for atom in residue.atoms]
                                   for residue in traj.topology.residues]
         elif scheme == 'closest-heavy':
             # then remove the hydrogens from the above list
             residue_membership = [[atom.index for atom in residue.atoms if not (atom.element == element.hydrogen)]
+                                  for residue in traj.topology.residues]
+        elif scheme == 'sidechain':
+            residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain]
+                                  for residue in traj.topology.residues]
+        elif scheme == 'sidechain-heavy':
+            # then remove the hydrogens from the above list
+            residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain and not (atom.element == element.hydrogen)]
                                   for residue in traj.topology.residues]
 
         residue_lens = [len(ainds) for ainds in residue_membership]
@@ -177,7 +205,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
             atom_pairs.extend(list(itertools.product(residue_membership[pair[0]], residue_membership[pair[1]])))
             n_atom_pairs_per_residue_pair.append(residue_lens[pair[0]] * residue_lens[pair[1]])
 
-        atom_distances = md.compute_distances(traj, atom_pairs)
+        atom_distances = md.compute_distances(traj, atom_pairs, periodic=periodic)
 
         # now squash the results based on residue membership
         n_residue_pairs = len(residue_pairs)
@@ -187,7 +215,12 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         for i in xrange(n_residue_pairs):
             index = int(np.sum(n_atom_pairs_per_residue_pair[:i]))
             n = n_atom_pairs_per_residue_pair[i]
-            distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
+            if not soft_min:
+                distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
+            else:
+                distances[:, i] = soft_min_beta / \
+                                  np.log(np.sum(np.exp(soft_min_beta/
+                                                       atom_distances[:, index : index + n]), axis=1))
 
     else:
         raise ValueError('This is not supposed to happen!')

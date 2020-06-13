@@ -1,43 +1,79 @@
 package:
-  name: mdtraj-dev
-  version: "1.6.1.dev1"
+  name: mdtraj
+  version: {{ GIT_DESCRIBE_TAG }}
+
+source:
+  path: ../../
 
 build:
+  number: {{ GIT_DESCRIBE_NUMBER }}
   entry_points:
     - mdconvert = mdtraj.scripts.mdconvert:entry_point
     - mdinspect = mdtraj.scripts.mdinspect:entry_point
 
 requirements:
   build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+  host:
     - python
-    - cython
-    - numpy x.x
     - setuptools
+    - cython
+    - numpy
+    - zlib
+    - pip >=19
 
   run:
     - python
     - setuptools
-    - numpy x.x
-    - pandas
+    - numpy
     - scipy
-    - pytables
+    # Fix pytables on windows. See https://github.com/conda-forge/pytables-feedstock/issues/31#issuecomment-410695814
+    - snappy  # [win]
+    - pyparsing
+    - astunparse
 
 test:
   requires:
-    - nose
-    - scripttest
+    - pytest
     - networkx
-    - ipython-notebook
-    - ipywidgets
     - matplotlib
+    - shiftx2  # [linux and py2k]
+    # 1. do not install cpptraj on osx, because the current version from omnia is linked against an old runtime.
+    #    and not avail on win
+    # 2. do not install cpptraj on linux either, until https://github.com/omnia-md/conda-recipes/issues/945 is fixed
+    #- cpptraj  # [not (osx or win32 or win64)]
+    - nbformat
+    - ipykernel
+    - scikit-learn
+    - pytest-ignore-flaky =1
     - pandas
-    # Hack to install shiftx2 on travis
-    {{ '- shiftx2' if environ.get('TRAVIS', False) == 'true' else "" }}
+    - pytables
+    - psutil
+    - conda-verify
+    - gsd
+
+  source_files:
+    - examples/*
+    - pytest.ini
+    - tests/*
+
+  imports:
+    - mdtraj
 
   commands:
-    - nosetests mdtraj -v -s
+    - pytest -v --ignore-flaky
 
 about:
-  home: http://mdtraj.org
-  license: GNU Lesser General Public License v2 or later (LGPLv2+)
-  summary: A modern, open library for the analysis of molecular dynamics trajectories (development snapshot)
+  home: https://github.com/mdtraj/mdtraj
+  license: LGPL-2.1
+  summary: "A modern, open library for the analysis of molecular dynamics trajectories"
+  description: |
+    MDTraj is a python library that allows users to manipulate molecular dynamics
+    (MD) trajectories and perform a variety of analyses, including fast RMSD,
+    solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj
+    is the wide variety of molecular dynamics trajectory file formats which are
+    supported, including RCSB pdb, GROMACS xtc, tng, and trr, CHARMM / NAMD dcd, AMBER
+    binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc, MDTraj HDF5, HOOMD gsd.
+  doc_url: http://mdtraj.org/
+  dev_url: https://github.com/mdtraj/mdtraj

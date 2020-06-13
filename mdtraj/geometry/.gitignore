@@ -1,3 +1,3 @@
-drid.c
-neighbors.cpp
-src/_geometry.cpp
+/drid.cpp
+/neighbors.cpp
+/neighborlist.cpp

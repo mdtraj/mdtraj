@@ -25,57 +25,40 @@
 trajectories in a variety of formats, including Gromacs XTC & TRR, CHARMM/NAMD
 DCD, AMBER BINPOS, PDB, and HDF5.
 """
+import numpy as _  # silence cython related numpy warnings, see github.com/numpy/numpy/pull/432
 
-from mdtraj.formats.registry import FormatRegistry
-from mdtraj.formats.xtc import load_xtc
-from mdtraj.formats.trr import load_trr
-from mdtraj.formats.hdf5 import load_hdf5
-from mdtraj.formats.lh5 import load_lh5
-from mdtraj.formats.netcdf import load_netcdf
-from mdtraj.formats.mdcrd import load_mdcrd
-from mdtraj.formats.dcd import load_dcd
-from mdtraj.formats.binpos import load_binpos
-from mdtraj.formats.pdb import load_pdb
-from mdtraj.formats.arc import load_arc
-from mdtraj.formats.openmmxml import load_xml
-from mdtraj.formats.prmtop import load_prmtop
-from mdtraj.formats.psf import load_psf
-from mdtraj.formats.mol2 import load_mol2
-from mdtraj.formats.amberrst import load_restrt, load_ncrestrt
-from mdtraj.formats.lammpstrj import load_lammpstrj
-from mdtraj.formats.dtr import load_dtr
-from mdtraj.formats.xyzfile import load_xyz
-from mdtraj.formats.hoomdxml import load_hoomdxml
+from .formats.registry import FormatRegistry
+from .formats.xtc import load_xtc
+from .formats.trr import load_trr
+from .formats.hdf5 import load_hdf5
+from .formats.lh5 import load_lh5
+from .formats.netcdf import load_netcdf
+from .formats.mdcrd import load_mdcrd
+from .formats.dcd import load_dcd
+from .formats.binpos import load_binpos
+from .formats.pdb import load_pdb
+from .formats.arc import load_arc
+from .formats.openmmxml import load_xml
+from .formats.prmtop import load_prmtop
+from .formats.psf import load_psf
+from .formats.mol2 import load_mol2
+from .formats.amberrst import load_restrt, load_ncrestrt
+from .formats.lammpstrj import load_lammpstrj
+from .formats.dtr import load_dtr, load_stk
+from .formats.xyzfile import load_xyz
+from .formats.hoomdxml import load_hoomdxml
+from .formats.tng import load_tng
 
 
-from mdtraj.core import element
-from mdtraj._rmsd import rmsd
-from mdtraj._lprmsd import lprmsd
-from mdtraj.core.topology import Topology
-from mdtraj.geometry import *
-from mdtraj.core.trajectory import *
-from mdtraj.nmr import *
-import mdtraj.reporters
+from .core import element
+from ._rmsd import rmsd, rmsf
+from ._lprmsd import lprmsd
+from .core.topology import Topology, Single, Double, Triple, Amide, Aromatic
+from .geometry import *
+from .core.trajectory import *
+from .nmr import *
 
-def test(label='full', verbose=2, extra_argv=None, doctests=False):
-    """Run tests for mdtraj using nose.
-
-    Parameters
-    ----------
-    label : {'fast', 'full'}
-        Identifies the tests to run. The fast tests take about 10 seconds,
-        and the full test suite takes about two minutes (as of this writing).
-    verbose : int, optional
-        Verbosity value for test outputs, in the range 1-10. Default is 2.
-    """
-    import mdtraj
-    from mdtraj.testing.nosetester import MDTrajTester
-    tester = MDTrajTester(mdtraj)
-    return tester.test(label=label, verbose=verbose, extra_argv=extra_argv)
-# prevent nose from discovering this function, or otherwise when its run
-# the test suite in an infinite loop
-test.__test__ = False
-
+from . import reporters
 
 def capi():
     import os

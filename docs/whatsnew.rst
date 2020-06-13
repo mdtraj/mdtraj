@@ -1,16 +1,255 @@
-***********
 What's New?
-***********
+===========
 
 These are new features and improvements of note in each release.
 
-v1.6 (Development)
+v1.9.5 (Development)
+--------------------
+
+- Nothing to see here
+
+
+v1.9.4 (May 10, 2020)
+-----------------------
+
+- Update some pandas calls for v1.0 (#1536)
+- Fix TRR file offset (#1534)
+- Update selection for Python 3.8 compatibility (#1523)
+- Ensure bonds exist before using them (#1512, #1513)
+- Let compute_displacements handle empty atom_pairs (#1515)
+- Add GSD reader and writer (#1494)
+- Fix stride parameter for .netcdf files (#1501)
+- Ensure that the license file is packaged in the sdist (#1498)
+- Right-justify atom symbol when writing PDB files (#1459)
+- Add calculations for shape metrics (#1471)
+- Fix residue parsing in MOL2 reader (#1490)
+- Set up "stale" bot
+- Use AZP for CI (#1484, #1536)
+- Fix leaving malformed TRR files open (#1482)
+- Fix various OpenMP issues (#1476, #1477, #1488, #1508, #1529)
+- Add gyration tensor calculation (#1467)
+- Fix some type conversions (#1466, #1511)
+- Remove bundled dependencies astor and pyparsing (#1452)
+- Correct ordering in hoomdxml files (#1453)
+
+Authors
+~~~~~~~
+
+- Robert T. McGibbon
+- Martin K. Scherer
+- Alex Yang +
+- Fabian Paul
+- Kirill Shmilovich +
+- Lucian Krapp +
+- Sander Roet +
+- David W.H. Swenson
+- Ray A. Matsumoto
+- Jack Greisman
+- Marius van Niekerk +
+- Patrick Kunzmann +
+- Matthew W. Thompson
+- Justin R. Porter
+- Richard Banh +
+- sefalkner +
+
+A total of 16 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+
+v1.9.3 (May 17, 2019)
+---------------------
+
+- Fix CI (#1416, #1420, #1444)
+- Add compute_center_of_geometry (#1405)
+- Fix a test failure in test_reporters.py caused by merge of #1431 (#1443)
+
+- Reporters no longer override user request to write unit cell information (#1431)
+- Add XTCReporter for OpenMM (#1403)
+- [xtc] Fix bugs in striding with atom_indices and seek+stride (#1449)
+
+- Avoid infinite recursion error in mol2 parser (#1426)
+- [formats/mol2] add more checks to element parsing (#1407)
+- Replace strip() with split() in `mol2.py` (#1378)
+
+- Use and set resSeq attribute in Topology.to_openmm() and from_openmm() (#1424)
+- fix parallel reduction error (#1419)
+- Fixes 'Buffer dtype mismatch' error on 64-bit Windows (#1409)
+
+- add RMSF analysis (#1414)
+- allow RMSD calls when ref_atom_indices and atom_indices are used (#1392)
+- Notebook tests: `from __future__` must come first (#1401)
+
+- [setup] do not enforce clang/std++ on osx (#1400)
+- silence cython related numpy warnings (#1391)
+- Prep py37, some bugfixes (#1388)
+- Ensure 'bond_value' is a string (#1382)
+- fix typo in docs (#1381)
+
+
+Authors
+~~~~~~~
+
+- Carlos Hernández
+- John Chodera
+- Jack Greisman
+- jgilaber
+- Sunhwan Jo
+- Ray A. Matsumoto
+- Robert T. McGibbon
+- João Rodrigues
+- Shyam Saladi
+- Martin K. Scherer
+- David W.H. Swenson
+- Matthew W. Thompson
+- Lee-Ping Wang
+
+A total of 12 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+
+v1.9.2 (July 30, 2018)
+----------------------
+We're please to announce the release of MDTraj 1.9.2. This version has a number of bug fixes and improvements for trajectory parsing and conversion.
+
+
+- Fix bug in TINKER ARC reader (#1371)
+- Improved mdconvert error message (#1368)
+- Striding relative to current position in XTC and TRR (#1364)
+- Return last successful read frame for DCD (#1358)
+- Handle stride like numpy for DCDs (#1352)
+- Fix pickling of virtual site's element field (#1350)
+- Compile geometry extension with OpenMP (#1349)
+- Ensure correct dtype in neighborlist box vectors (#1344)
+- Added support for prm7 topology file extension (#1334)
+- Added efficient stride handling fo TRR (#1332)
+- Use byte offsets between frames for stride of XTCs (#1331)
+- Updated the calculation of chi5 (#1322, #1323)
+- Added testing against conda-forge channel (#1310)
+- Port [OpenMM bond order](https://github.com/pandegroup/openmm/pull/1668) representation into MDTraj. Implements the `Bond` class to Topology and updates the Mol2 reader to use bond_order field (#1308)
+
+Authors
+~~~~~~~
+
+- Carlos Hernández
+- Guillermo Pérez-Hernández
+- Matthew Harrigan
+- Lester Hedges +
+- Robert T. McGibbon
+- Levi Naden +
+- Fabian Paul
+- Justin R. Porter
+- Martin K. Scherer
+- Xianqiang Sun +
+- David W.H. Swenson +
+- Lee-Ping Wang
+
+A total of 11 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+
+v1.9 (September 3, 2017)
+------------------------
+
+- [xtc] ``approx_nframes`` returns at least one (#1265)
+- Make ``compute_directors`` user-facing (#1260)
+- Add differentiable contacts option (#1247)
+- Remove link to forum (#1237)
+- Skip renumbering if no bonds in mol2 (#1238)
+- Add a bunch of Van Der Waals values (#1174)
+- [geometry] Fix compatibility with old visual studio for Python 2.7 (#1233)
+- Implement ``compute_average_structure`` (#1221)
+- Fix import of ``load_stk`` (#1231)
+- Fix bugs in load with atom_indices and frame args (#1227)
+- Fix conda test running (#1228)
+- Amber restart file convention (#1223)
+- Install path for zlib on linux too (#1208)
+- Fix transform calculation and Transform object to be more general (#1254)
+- Add O1 as alternative definition for water oxygen (#1257)
+- Fix precentering overflow error in center.c (#1283)
+- Add chi5 angle computation (#1291)
+- Fix the build bug caused by incorrect plumbing of the numpy include path
+- into ``cflags`` (#1290)
+- Make RDF ``pairs`` argument required (#1288)
+- Refresh tests (#1266)
+- Remove PyPI downloads badge (#1293)
+- Extracting velocities/forces from TRR files (hidden API) (#1294)
+- Add "in" selection to selection language (#1268)
+- Handle a single frame being passed to sparta+ (#1295)
+
+v1.8 (November 9, 2016)
+-----------------------
+
+- PR #1202: ``mdtraj.html`` has been removed. We recommend using
+  ``nglview`` for visualizing MDTraj trajectory objects.
+- PR #1204: Fix search functionality with docs
+- PR #1167: Fix corner case in distancekernel.h
+- PR #1190: Fix issue with rmsd precentered = True and atom_indices != None
+- PR #1106: Speed up image_molecules
+- PR #1182: Add 'sidechain' and 'sidechain-heavy' options to compute_contacts
+- PR #1180: Handle unexpected keyword arguments gracefully in psf and prmtop parsers
+- PR #1171: Remove unnecessary restriction on iterload
+- PR #1170: Load single-element path lists without a copy
+- PR #1165: There should never be zero bins in Voxels class
+- PR #1158: Update deprecated use of scipy.stats.nanmean
+- PR #1153: [formats/XTC] in case of an out of bounds seek, raise IOError
+- PR #1161: Fix typos in examples
+- PR #1130: Automatically test examples to make sure they work
+- PR #1155: Update wording for simulation-with-openmm.ipynb
+- PR #1146: Ensure box vectors have right dtype
+- PR #1145: Check that file exists before trying to open it
+- PR #1139: Optimize baker_hubbard and wernet_nilsson functions
+- PR #1137: Allow standard_names as a keyword argument to md.load()
+- PR #1132: Fix bug in hoomdxml reader
+- PR #1125: Support Gromacs TNG files
+- PR #1123: Add md.join(trajs)
+
+v1.7.2 (May 2, 2016)
+--------------------
+
+- Small fix to developer tools so docs get uploaded.
+
+v1.7 (May 2, 2016)
 ------------------
-- ``formats.hdf5.ensure_mode`` was removed to eliminate the use of a function depreciated in Python 3.5. (#990)
+
+We're please to announce the release of MDTraj 1.7. In addition to the
+usual fixes and improvements, MDTraj has gained the ability to image
+molecules in trajectories. So far, it's worked very well even on
+complicated systems like multi-molecule proteins. Look forward to future
+enhancements to this new feature! Some other highlights include:
+
+- New ``compute_neighborlist()`` function (#1057)
+- Add option to skip standardization of atom and residue names during
+  ``load_pdb`` (#1061)
+- Function for imaging molecules (#1058)
+- New optional argument ``periodic`` for ``compute_contacts`` (#1072)
+- Refresh documentation (#1067, #1074, #1075)
+- Rewrite geometry code in modern c++ (#1077)
+- Fix issue with ``Topoplogy.from_openmm`` (#1089)
+
+
+v1.6 (February 15, 2016)
+------------------------
+
+MDTraj 1.6 contains a good mix of bug fixes and enhancements. Some
+highlights include:
+
+- Improved performance for ``compute_contacts`` (#995)
+- Improved performance for ``Topology.select_pairs`` (#1000)
+- Fast random access to xtc and trr files (#1038)
+- xyz files support the ``__len__`` attribute (#998)
+- ``segment_id`` is a new residue attribute (#1002)
+- Expose ``FormatRegistry`` as a public api (#1039)
+- Perform a heuristic check for valid unit cells when reading pdb files (#974)
+- pdb file parsing uses the last model ``CONNECT`` records for bonds, not the first (#980)
+- No longer force all warnings to be emitted (#1013 #1030)
+- Always respect the ``force_overwrite`` argument in save methods (#878)
+- Fix interop with ``scipy.cluster`` (#997)
+- ``formats.hdf5.ensure_mode`` was removed (#990)
 
 
 v1.5.1 (November 6, 2015)
 -------------------------
+
 MDTraj 1.5.1 is a small bugfix release to correct two issues introduced in the
 immediately preceeding 1.5.0 release.
 
@@ -258,3 +497,5 @@ v0.5.0 (January 3, 2014)
 - Full support for computing all of the chi angles
 - Add seek/tell methods to all of the trajectory file objects
 - New top level memory efficient ``iterload`` method for chunked trajectory loading
+
+.. vim: tw=75

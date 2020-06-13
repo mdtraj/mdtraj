@@ -216,7 +216,7 @@ class ArcTrajectoryFile(object):
         """
         from mdtraj.core.trajectory import Trajectory
         if atom_indices is not None:
-            topology = topology.subset(atom_indices)
+            topology = self.topology.subset(atom_indices)
 
         initial = int(self._frame_index)
         xyz, abc, ang = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
@@ -290,7 +290,7 @@ class ArcTrajectoryFile(object):
                 self._read()
 
         coords = np.array(coords)
-        if None in lengths:
+        if any(l is None for l in lengths):
             lengths = angles = None
         else:
             lengths = np.array(lengths)
@@ -327,6 +327,7 @@ class ArcTrajectoryFile(object):
                                 [float(s[3]), float(s[4]), float(s[5])]
                 )
                 line = self._fh.readline()
+                s = line.split()
                 self._line_counter += 1
             except ValueError:
                 pass

@@ -4,7 +4,7 @@
 # Copyright 2012-2015 Stanford University and the Authors
 #
 # Authors: Christoph Klein
-# Contributors:
+# Contributors: Tim Moore
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -27,12 +27,12 @@ from pkg_resources import parse_version
 import numpy as np
 NP18 = parse_version(np.__version__) >= parse_version('1.8.0')
 
-from mdtraj.geometry.distance import compute_center_of_mass
+from mdtraj.geometry.distance import compute_center_of_mass, compute_center_of_geometry
 from mdtraj.utils import ensure_type
 from mdtraj.utils.six import string_types
 
 
-__all__ = ['compute_nematic_order', 'compute_inertia_tensor']
+__all__ = ['compute_nematic_order', 'compute_inertia_tensor', 'compute_directors']
 
 
 def compute_nematic_order(traj, indices='chains'):
@@ -58,6 +58,10 @@ def compute_nematic_order(traj, indices='chains'):
     -------
     S2 : np.ndarray, shape=(traj.n_frames,), dtype=float64
         Nematic order parameter values in every frame.
+
+    See also
+    --------
+    compute_directors
 
     References
     ----------
@@ -87,36 +91,8 @@ def compute_nematic_order(traj, indices='chains'):
     This water box is essentially isotropic and has a mean S2 of ~0.042.
 
     """
-    if isinstance(indices, string_types):
-        if indices.lower() == 'chains':
-            group = list(traj.top.chains)
-        elif indices.lower() == 'residues':
-            group = list(traj.top.residues)
-        else:
-            raise ValueError('Invalid selection: {0}'.format(indices))
-        indices = [[at.index for at in compound.atoms] for compound in group]
-    else:
-        # TODO: Clean way to ensure that indices is a list of lists of ints?
-        # This may be easier than I'm thinking but `ensure_type` won't work
-        # since sub-lists of variable lengths should be allowed.
-        # E.g. [[1, 2], [3, 4, 5], [6, 7]] should be valid.
-        if isinstance(indices, (list, tuple)):
-            for sublist in indices:
-                if not isinstance(sublist, (list, tuple)):
-                    raise ValueError('Invalid selection: {0}'.format(indices))
-                for index in sublist:
-                    if not isinstance(index, int):
-                        raise ValueError('Indices must be integers: {0}'.format(indices))
-        else:
-            raise ValueError('Invalid selection: {0}'.format(indices))
-
     # Compute the directors for each compound for each frame.
-    all_directors = np.empty(shape=(traj.n_frames, len(indices), 3),
-                             dtype=np.float64)
-    for i, ids in enumerate(indices):
-        sub_traj = traj.atom_slice(ids)
-        director = _compute_director(sub_traj)
-        all_directors[:, i, :] = director
+    all_directors = compute_directors(traj, indices)
 
     # From the directors, compute the Q-tensor and nematic order parameter, S2.
     Q_ab = _compute_Q_tensor(all_directors)
@@ -130,6 +106,59 @@ def compute_nematic_order(traj, indices='chains'):
             w = np.linalg.eigvals(Q)
             S2[n] = w.max()
     return S2
+
+
+def compute_directors(traj, indices='chains'):
+    """Compute the characteristic vector describing the orientation of each group
+
+    In this definition, the long molecular axis is found from the inertia
+    tensor, :math:`I_{ab}`, and is taken to be the eigenvector associated with the
+    smallest eigenvalue of :math:`I_{ab}`.
+
+    See [1] for brief summary and discussion on other methods to obtain the
+    director.
+
+    Parameters
+    ----------
+    traj : Trajectory
+        Trajectory to compute orientation of.
+    indices : {'chains', 'residues', list of lists}, optional, default='chains'
+        The group to consider. Users can pass their own indices as a list of
+        lists with the "shape" (n_compounds, len(each_compound)).
+        Recognized string keywords are 'chains' and 'residues'.
+
+    Returns
+    -------
+    directors : np.ndarray, shape=(traj.n_frames, len(indices), 3), dtype=float64
+        Characteristic vectors describing the trajectory for each frame.
+
+    See also
+    --------
+    compute_nematic_order
+    compute_inertia_tensor
+
+    Notes
+    -----
+    Since there is no preferred orientation of the director, the director
+    :math:`n` has the same meaning as :math:`-n`.
+    Therefore, care should be taken to ensure the director is pointing in
+    the direction you think it is, e.g., by contraining it to a hemisphere that
+    makes physical sense.
+
+
+    References
+    ----------
+    .. [1] http://cmt.dur.ac.uk/sjc/thesis_dlc/node65.html
+
+    """
+    indices = _get_indices(traj, indices)
+    all_directors = np.empty(shape=(traj.n_frames, len(indices), 3),
+                             dtype=np.float64)
+    for i, ids in enumerate(indices):
+        sub_traj = traj.atom_slice(ids)
+        director = _compute_director(sub_traj)
+        all_directors[:, i, :] = director
+    return all_directors
 
 
 def compute_inertia_tensor(traj):
@@ -158,6 +187,32 @@ def compute_inertia_tensor(traj):
     A = np.einsum("i, kij->k", masses, xyz ** 2).reshape(traj.n_frames, 1, 1)
     B = np.einsum("ij..., ...jk->...ki", masses[:, np.newaxis] * xyz.T, xyz)
     return A * eyes - B
+    
+
+def _get_indices(traj, indices):
+    if isinstance(indices, string_types):
+        if indices.lower() == 'chains':
+            group = list(traj.top.chains)
+        elif indices.lower() == 'residues':
+            group = list(traj.top.residues)
+        else:
+            raise ValueError('Invalid selection: {0}'.format(indices))
+        indices = [[at.index for at in compound.atoms] for compound in group]
+    else:
+        # TODO: Clean way to ensure that indices is a list of lists of ints?
+        # This may be easier than I'm thinking but `ensure_type` won't work
+        # since sub-lists of variable lengths should be allowed.
+        # E.g. [[1, 2], [3, 4, 5], [6, 7]] should be valid.
+        if isinstance(indices, (list, tuple)):
+            for sublist in indices:
+                if not isinstance(sublist, (list, tuple)):
+                    raise ValueError('Invalid selection: {0}'.format(indices))
+                for index in sublist:
+                    if not isinstance(index, int):
+                        raise ValueError('Indices must be integers: {0}'.format(indices))
+        else:
+            raise ValueError('Invalid selection: {0}'.format(indices))
+    return indices
 
 
 def _compute_Q_tensor(all_directors):

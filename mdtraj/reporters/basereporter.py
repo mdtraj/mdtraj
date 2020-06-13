@@ -29,7 +29,7 @@ from __future__ import print_function, division
 # stdlib
 import math
 # ours
-from mdtraj.core.topology import _topology_from_subset
+from mdtraj.core.topology import _topology_from_subset, Topology
 from mdtraj.utils import unitcell
 from mdtraj.utils.six import PY3
 if PY3:
@@ -153,11 +153,12 @@ class _BaseReporter(object):
 
             self._atomSlice = self._atomSubset
             if hasattr(self._traj_file, 'topology'):
-                self._traj_file.topology = _topology_from_subset(simulation.topology, self._atomSubset)
+                self._traj_file.topology = _topology_from_subset(
+                    Topology.from_openmm(simulation.topology), self._atomSubset)
         else:
             self._atomSlice = slice(None)
             if hasattr(self._traj_file, 'topology'):
-                self._traj_file.topology = simulation.topology
+                self._traj_file.topology = Topology.from_openmm(simulation.topology)
 
 
         system = simulation.system
@@ -171,9 +172,6 @@ class _BaseReporter(object):
             if any(type(system.getForce(i)) == mm.CMMotionRemover for i in range(system.getNumForces())):
                 dof -= 3
             self._dof = dof
-
-        if simulation.topology.getUnitCellDimensions() is None:
-            self._cell = False
 
     def describeNextReport(self, simulation):
         """Get information about the next report this object will generate.

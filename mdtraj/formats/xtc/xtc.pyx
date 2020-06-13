@@ -25,20 +25,24 @@
 ###############################################################################
 # Imports
 ###############################################################################
+from __future__ import print_function
 
 import os
 import warnings
-import cython
 import xdrlib
-cimport cython
 import numpy as np
 cimport numpy as np
 np.import_array()
+
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
+
 cimport xdrlib
+
 from libc.stdio cimport SEEK_SET, SEEK_CUR
+from libc.math cimport ceil
+
 ctypedef np.npy_int64   int64_t
 
 
@@ -83,7 +87,7 @@ cdef int DIM = 3
 # 3. step (int)
 # 4. time (float)
 cdef int XTC_HDR_SIZE = 3*sizeof(np.int32_t) + sizeof(np.float32_t)
-cdef int XTC_SHORT_HEADER_SIZE = XTC_HDR_SIZE + DIM**2 * sizeof(np.float32_t) + 4 
+cdef int XTC_SHORT_HEADER_SIZE = XTC_HDR_SIZE + DIM**2 * sizeof(np.float32_t) + 4
 cdef int XTC_SHORT_BYTES_PER_ATOM = DIM*sizeof(np.float32_t)
 
 # constant for 'regular' XTCs (> 10 atoms):
@@ -262,7 +266,8 @@ cdef class XTCTrajectoryFile(object):
         elif str(mode) == 'w':
             if force_overwrite and os.path.exists(filename):
                 os.unlink(filename)
-
+            if not force_overwrite and os.path.exists(filename):
+                raise IOError('"%s" already exists' % filename)
             self.fh = xdrlib.xdrfile_open(filename, 'w')
             if self.fh is NULL:
                 raise IOError('Unable to open file "%s"' % filename)
@@ -288,7 +293,7 @@ cdef class XTCTrajectoryFile(object):
                            coefs_[1]*self.n_atoms) / (coefs_[2] * self.n_atoms +
                                                       coefs_[0])
 
-        return approx_n_frames
+        return max(approx_n_frames, 1)
 
     def __dealloc__(self):
         self.close()
@@ -369,6 +374,8 @@ cdef class XTCTrajectoryFile(object):
             The step in the simulation corresponding to each frame
         box : np.ndarray, shape=(n_frames, 3, 3), dtype=np.float32
             The box vectors in each frame.
+        status: int
+            either _EXDROK or _EXDRENDOFFILE
 
         See Also
         --------
@@ -378,33 +385,27 @@ cdef class XTCTrajectoryFile(object):
             raise ValueError('read() is only available when file is opened in mode="r"')
         if not self.is_open:
             raise IOError('file must be open to read from it.')
-
+        stride = int(stride) if stride is not None else 1
         if n_frames is not None:
             # if they supply the number of frames they want, that's easy
             if not int(n_frames) == n_frames:
                 raise ValueError('n_frames must be an int, you supplied "%s"' % n_frames)
-            xyz, time, step, box = self._read(int(n_frames), atom_indices)
-            xyz, time, step, box = xyz[::stride], time[::stride], step[::stride], box[::stride]
+            xyz, time, step, box, status = self._read(int(n_frames), atom_indices, stride)
             if np.all(np.logical_and(box < 1e-10, box > -1e-10)):
                 box = None
             return xyz, time, step, box
 
-        # TODO: use offsets if stride is set
-
         # if they want ALL of the remaining frames, we need to guess at the
-        # chunk size, and then check the exit status to make sure we're really 
+        # chunk size, and then check the exit status to make sure we're really
         # at the EOF
         all_xyz, all_time, all_step, all_box = [], [], [], []
-
-        while True:
+        status = _EXDROK
+        while status == _EXDROK:
             # guess the size of the chunk to read, based on how many frames we
             # think are in the file and how many we've currently read
-            chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
+            chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier / stride)),
                         self.min_chunk_size)
-
-            xyz, time, step, box = self._read(chunk, atom_indices)
-            if len(xyz) <= 0:
-                break
+            xyz, time, step, box, status = self._read(chunk, atom_indices, stride)
 
             all_xyz.append(xyz)
             all_time.append(time)
@@ -412,21 +413,21 @@ cdef class XTCTrajectoryFile(object):
             all_box.append(box)
 
         if len(all_xyz) == 0:
-            return np.array([]), np.array([]), np.array([]), np.array([])
-        all_xyz = np.concatenate(all_xyz)[::stride]
-        all_time = np.concatenate(all_time)[::stride]
-        all_step = np.concatenate(all_step)[::stride]
-        all_box =  np.concatenate(all_box)[::stride]
+            return np.empty(0), np.empty(0), np.empty(0), np.empty(0)
+        all_xyz = np.concatenate(all_xyz)
+        all_time = np.concatenate(all_time)
+        all_step = np.concatenate(all_step)
+        all_box =  np.concatenate(all_box)
         if np.all(np.logical_and(all_box < 1e-10, all_box > -1e-10)):
             all_box = None
         return all_xyz, all_time, all_step, all_box
 
-    def _read(self, int64_t n_frames, atom_indices):
+    def _read(self, int64_t n_frames, atom_indices, stride):
         """Read a specified number of XTC frames from the buffer"""
-
-        cdef int i = 0
-        cdef int status = _EXDROK
-        cdef int n_atoms_to_read
+        cdef int64_t n_read_frames = 0
+        cdef int status, status_seek = _EXDROK
+        cdef unsigned int n_atoms_to_read
+        cdef char efficient_striding = stride > 1 and self._offsets is not None
 
         if atom_indices is None:
             n_atoms_to_read = self.n_atoms
@@ -443,40 +444,77 @@ cdef class XTCTrajectoryFile(object):
         cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz = \
             np.empty((n_frames, n_atoms_to_read, 3), dtype=np.float32)
         cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time = \
-            np.empty((n_frames), dtype=np.float32)
+            np.empty(n_frames, dtype=np.float32)
         cdef np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step = \
-            np.empty((n_frames), dtype=np.int32)
+            np.empty(n_frames, dtype=np.int32)
         cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box = \
             np.empty((n_frames, 3, 3), dtype=np.float32)
         cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] prec = \
-            np.empty((n_frames), dtype=np.float32)
+            np.empty(n_frames, dtype=np.float32)
 
         # only used if atom_indices is given
-        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer = np.zeros((self.n_atoms, 3), dtype=np.float32)
+        cdef np.ndarray[dtype=np.float32_t, ndim=2] framebuffer
+        if atom_indices is not None:
+            framebuffer = np.empty((self.n_atoms, 3), dtype=np.float32)
 
-        while (i < n_frames) and (status != _EXDRENDOFFILE):
+        # striding dummy, only used if efficient_striding is false or at the end of the file.
+        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] xyz_stride
+        cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] time_stride
+        cdef np.ndarray[ndim=1, dtype=np.int32_t, mode='c'] step_stride
+        cdef np.ndarray[ndim=3, dtype=np.float32_t, mode='c'] box_stride
+        cdef np.ndarray[ndim=1, dtype=np.float32_t, mode='c'] prec_stride
+
+        if stride > 1 and not efficient_striding:
+            xyz_stride = np.empty((1, self.n_atoms, 3), dtype=np.float32)
+            time_stride = np.empty(1, dtype=np.float32)
+            step_stride = np.empty(1, dtype=np.int32)
+            box_stride = np.empty((1, 3, 3), dtype=np.float32)
+            prec_stride = np.empty(1, dtype=np.float32)
+
+        while (n_read_frames < n_frames) and (status != _EXDRENDOFFILE):
             if atom_indices is None:
-                status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[i],
-                                         &time[i], <xdrlib.matrix>&box[i,0,0], <xdrlib.rvec*>&xyz[i,0,0], &prec[i])
+                status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[n_read_frames],
+                                         &time[n_read_frames], <xdrlib.matrix>&box[n_read_frames,0,0], <xdrlib.rvec*>&xyz[n_read_frames,0,0], &prec[n_read_frames])
             else:
-                status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[i],
-                                         &time[i], <xdrlib.matrix>&box[i,0,0], <xdrlib.rvec*>&framebuffer[0,0], &prec[i])
-                xyz[i, :, :] = framebuffer[atom_indices, :]
+                status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step[n_read_frames],
+                                         &time[n_read_frames], <xdrlib.matrix>&box[n_read_frames,0,0], <xdrlib.rvec*>&framebuffer[0,0], &prec[n_read_frames])
+                xyz[n_read_frames, :, :] = framebuffer[atom_indices, :]
 
             if status != _EXDRENDOFFILE and status != _EXDROK:
                 raise RuntimeError('XTC read error: %s' % _EXDR_ERROR_MESSAGES.get(status, 'unknown'))
-            i += 1
+            else:
+                # we have successfully read a frame!
+                n_read_frames += 1
+
+                if stride > 1:
+                    # Can we seek within bounds?
+                    if efficient_striding:
+                        if self.frame_counter + stride < len(self):
+                            self.seek(stride, whence=1)
+                        else:
+                            # deliberately dont set eof status as last frame is valid!
+                            status = _EXDRENDOFFILE
+                            n_read_frames += 1
+                    else:
+                        for _ in range(stride - 1):
+                            seek_status = xdrlib.read_xtc(self.fh, self.n_atoms, <int*> &step_stride[0],
+                                                          &time_stride[0], <xdrlib.matrix> &box_stride[0,0,0],
+                                                          <xdrlib.rvec*>&xyz_stride[0,0,0], &prec_stride[0])
+                            if seek_status != _EXDROK:
+                                break
 
         if status == _EXDRENDOFFILE:
-            xyz = xyz[:i-1]
-            box = box[:i-1]
-            time = time[:i-1]
-            step = step[:i-1]
+            xyz = xyz[:n_read_frames-1]
+            box = box[:n_read_frames-1]
+            time = time[:n_read_frames-1]
+            step = step[:n_read_frames-1]
 
-        self.frame_counter += i
+        # if we are using seek, the frame_counter already points to the right absolute position,
+        # otherwise we increment the counter relatively
+        if not efficient_striding:
+            self.frame_counter += len(xyz)
 
-        return xyz, time, step, box
-
+        return xyz, time, step, box, status
 
     def write(self, xyz, time=None, step=None, box=None):
         """write(xyz, time=None, step=None, box=None)
@@ -590,11 +628,13 @@ cdef class XTCTrajectoryFile(object):
         else:
             raise IOError('Invalid argument')
 
+        if absolute < 0 or absolute >= len(self.offsets):
+            raise IOError('XTC Seek out of bounds: given absolute position: {}'.format(absolute))
+
         pos = self.offsets[absolute]
         status = xdrlib.xdr_seek(self.fh, pos, SEEK_SET)
         if status != _EXDROK:
             raise RuntimeError('XTC seek error: %s' % status)
-
         self.frame_counter = absolute
 
     def _calc_len_and_offsets(self):
@@ -611,11 +651,12 @@ cdef class XTCTrajectoryFile(object):
             assert filesize % byte_offset == 0, ("filesize(%i) not divideable"
                                                  " by bytes per frames(%i)"
                                                  % (filesize, byte_offset))
-            n_frames = filesize / byte_offset
+            n_frames = filesize // byte_offset
             offsets = np.fromiter((i*byte_offset for i in range(n_frames)),
                                   dtype=np.int64, count=n_frames)
         else:
             offsets = np.empty(self.approx_n_frames, dtype=np.int64)
+            assert len(offsets) >= 1
 
             try:
                 # skip header
@@ -635,14 +676,18 @@ cdef class XTCTrajectoryFile(object):
                     # relative seek
                     status = xdrlib.xdr_seek(self.fh, byte_offset + XTC_HEADER_SIZE, SEEK_CUR)
                     if status != 0:
-                        raise RuntimeError("error during seek:" % status)
+                        offset = byte_offset + XTC_HEADER_SIZE
+                        last_pos = xdrlib.xdr_tell(self.fh)
+                        raise RuntimeError("error during seek: status code "
+                                           "fseek=%s; offset=%s, last_pos=%s"
+                                           % (status, offset, last_pos))
 
                     # return value == # ints read, so we're finished
                     if xdrlib.xdrfile_read_int(&byte_offset, 1, self.fh) == 0:
                         break
 
                     if n_frames == len(offsets):
-                        new_len = int(len(offsets)*1.2)
+                        new_len = int(ceil(len(offsets)*1.2))
                         offsets = resize(offsets, new_len)
 
                     offsets[n_frames] = xdrlib.xdr_tell(self.fh) - 4 - XTC_HEADER_SIZE
@@ -696,5 +741,13 @@ cdef class XTCTrajectoryFile(object):
         if self.n_frames == -1:
             self.offsets # invokes _calc_len_and_offsets
         return int(self.n_frames)
+
+    def flush(self):
+        if str(self.mode) != 'w':
+            raise RuntimeError('could not flush file opened only for reading')
+        cdef int status = xdrlib.xdr_flush(self.fh)
+        if status != 0:
+            raise IOError('could not flush xtc file. Status: %s' % status)
+
 
 FormatRegistry.register_fileobject('.xtc')(XTCTrajectoryFile)

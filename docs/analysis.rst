@@ -2,7 +2,7 @@
 
 .. currentmodule:: mdtraj
 
-Analysis Functions
+Analysis Reference
 ==================
 
 Trajectory analysis is the heart of MDTraj. These functions can be used to run
@@ -19,6 +19,7 @@ Root-mean-square deviation (RMSD)
     :toctree: api/generated/
 
     rmsd
+    rmsf
     lprmsd
     Trajectory.superpose
 
@@ -39,6 +40,19 @@ Secondary Structure
     :toctree: api/generated/
 
     compute_dssp
+
+
+Shape Metrics
+-------------------
+.. autosummary::
+    :toctree: api/generated/
+
+    compute_gyration_tensor
+    principal_moments
+    asphericity
+    acylindricity
+    relative_shape_antisotropy
+
 
 
 Surface Area, Radius of Gyration and Inertia
@@ -113,3 +127,4 @@ Order Parameters
     :toctree: api/generated/
 
     compute_nematic_order
+    compute_directors

@@ -1,5 +1,5 @@
-Command-line trajectory conversion: ``mdconvert``
-=================================================
+``mdconvert``
+=============
 
 ``mdconvert`` is a command-line script installed with MDTraj to convert
 molecular dynamics trajectories between formats. The DCD, XTC, TRR,

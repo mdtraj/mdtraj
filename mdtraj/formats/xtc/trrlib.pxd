@@ -23,7 +23,8 @@ cdef extern from "include/xdrfile_trr.h":
 
 cdef extern from "include/trr_header.h":
     ctypedef struct t_trnheader:
-        pass
+        int v_size
+        int f_size
 
     # header
     int do_trnheader(XDRFILE *xd, int bRead, t_trnheader *sh)

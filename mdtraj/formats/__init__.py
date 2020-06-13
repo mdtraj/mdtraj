@@ -1,15 +1,18 @@
-from mdtraj.formats.arc import ArcTrajectoryFile
-from mdtraj.formats.dcd import DCDTrajectoryFile
-from mdtraj.formats.binpos import BINPOSTrajectoryFile
-from mdtraj.formats.xtc import XTCTrajectoryFile
-from mdtraj.formats.trr import TRRTrajectoryFile
-from mdtraj.formats.hdf5 import HDF5TrajectoryFile
-from mdtraj.formats.netcdf import NetCDFTrajectoryFile
-from mdtraj.formats.pdb import PDBTrajectoryFile
-from mdtraj.formats.lh5 import LH5TrajectoryFile
-from mdtraj.formats.mdcrd import MDCRDTrajectoryFile
-from mdtraj.formats.amberrst import AmberRestartFile, AmberNetCDFRestartFile
-from mdtraj.formats.lammpstrj import LAMMPSTrajectoryFile
-from mdtraj.formats.dtr import DTRTrajectoryFile
-from mdtraj.formats.gro import GroTrajectoryFile
-from mdtraj.formats.xyzfile import XYZTrajectoryFile
+from __future__ import absolute_import
+
+from .arc import ArcTrajectoryFile
+from .dcd import DCDTrajectoryFile
+from .binpos import BINPOSTrajectoryFile
+from .xtc import XTCTrajectoryFile
+from .trr import TRRTrajectoryFile
+from .hdf5 import HDF5TrajectoryFile
+from .netcdf import NetCDFTrajectoryFile
+from .pdb import PDBTrajectoryFile
+from .lh5 import LH5TrajectoryFile
+from .mdcrd import MDCRDTrajectoryFile
+from .amberrst import AmberRestartFile, AmberNetCDFRestartFile
+from .lammpstrj import LAMMPSTrajectoryFile
+from .dtr import DTRTrajectoryFile
+from .gro import GroTrajectoryFile
+from .xyzfile import XYZTrajectoryFile
+from .tng import TNGTrajectoryFile

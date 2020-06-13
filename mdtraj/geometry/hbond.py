@@ -26,7 +26,6 @@
 ##############################################################################
 
 from __future__ import print_function, division
-from itertools import product
 import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import compute_distances, compute_angles
@@ -38,8 +37,7 @@ __all__ = ['wernet_nilsson', 'baker_hubbard', 'kabsch_sander']
 # Functions
 ##############################################################################
 
-
-def wernet_nilsson(traj, exclude_water=True, periodic=True):
+def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle according to the criterion outlined in [1].
     As opposed to Baker-Hubbard, this is a "cone" criterion where the
@@ -63,6 +61,8 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
         Exclude solvent molecules from consideration.
     periodic : bool, default=True
         Set to True to calculate displacements and angles across periodic box boundaries.
+    sidechain_only : bool, default=False
+        Set to True to only consider sidechain-sidechain interactions.
 
     Returns
     -------
@@ -123,55 +123,28 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True):
         raise ValueError('wernet_nilsson requires that traj contain topology '
                          'information')
 
-    def get_donors(e0, e1):
-        elems = set((e0, e1))
-        bonditer = traj.topology.bonds
-        atoms = [(b[0], b[1]) for b in bonditer if set((b[0].element.symbol, b[1].element.symbol)) == elems]
+    # Get the possible donor-hydrogen...acceptor triplets
+    bond_triplets = _get_bond_triplets(traj.topology,
+        exclude_water=exclude_water, sidechain_only=sidechain_only)
 
-        indices = []
-        for a0, a1 in atoms:
-            if exclude_water and (a0.residue.name == 'HOH' or a1.residue.name == 'HOH'):
-                continue
-            pair = (a0.index, a1.index)
-            # make sure to get the pair in the right order, so that the index
-            # for e0 comes before e1
-            if a0.element.symbol == e1:
-                pair = pair[::-1]
-            indices.append(pair)
+    # Compute geometry
+    mask, distances, angles = _compute_bounded_geometry(traj, bond_triplets,
+        distance_cutoff, [0, 2], [2, 0, 1], periodic=periodic)
 
-        return indices
+    # Update triplets under consideration
+    bond_triplets = bond_triplets.compress(mask, axis=0)
 
-    nh_donors = get_donors('N', 'H')
-    oh_donors = get_donors('O', 'H')
-    xh_donors = np.array(nh_donors + oh_donors)
+    # Calculate the true cutoffs for distances
+    cutoffs = distance_cutoff - angle_const * (angles * 180.0 / np.pi) ** 2
 
-    if len(xh_donors) == 0:
-        # if there are no hydrogens or protein in the trajectory, we get
-        # no possible pairs and return nothing
-        return [np.zeros((0, 3), dtype=int) for _ in range(traj.n_frames)]
+    # Find triplets that meet the criteria
+    presence = np.logical_and(distances < cutoffs, angles < angle_cutoff)
 
-    if not exclude_water:
-        acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O' or a.element.symbol == 'N']
-    else:
-        acceptors = [a.index for a in traj.topology.atoms if (a.element.symbol == 'O' and a.residue.name != 'HOH') or a.element.symbol == 'N']
-
-    # This is used to compute the angles
-    angle_triplets = np.array([(e[0][1], e[0][0], e[1]) for e in product(xh_donors, acceptors) if e[0][0] != e[1]])
-    distance_pairs = angle_triplets[:, [0, 2]]  # possible O..acceptor pairs
-
-    angles = compute_angles(traj, angle_triplets, periodic=periodic) * 180.0 / np.pi  # degrees
-    distances = compute_distances(traj, distance_pairs, periodic=periodic, opt=True)
-    cutoffs = distance_cutoff - angle_const * angles ** 2
-
-    mask = np.logical_and(distances < cutoffs, angles < angle_cutoff)
-
-    # The triplets that are returned are O-H ... O, different
-    # from what's used to compute the angles.
-    angle_triplets2 = angle_triplets[:, [1, 0, 2]]
-    return [angle_triplets2[i] for i in mask]
+    return [bond_triplets.compress(present, axis=0) for present in presence]
 
 
-def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
+def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_only=False,
+                  distance_cutoff=0.25, angle_cutoff=120):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle.
 
@@ -193,6 +166,16 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
         Exclude solvent molecules from consideration
     periodic : bool, default=True
         Set to True to calculate displacements and angles across periodic box boundaries.
+    sidechain_only : bool, default=False
+        Set to True to only consider sidechain-sidechain interactions.
+    distance_cutoff : float, default=0.25
+        Distance cutoff of Donor-H...Acceptor contact in nanometers. 
+        The criterion employed is any contact that is shorter than the distance cutoff.
+        with an distance_cutoff is accepted.
+    angle_cutoff : float, default=120
+        Angle cutoff of the angle theta in degrees. 
+        The criterion employed is any contact with an angle theta greater than the
+        angle_cutoff is accepted.
 
     Returns
     -------
@@ -244,59 +227,24 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True):
         proteins." Progress in Biophysics and Molecular Biology
         44.2 (1984): 97-179.
     """
-    # Cutoff criteria: these could be exposed as function arguments, or
-    # modified if there are better definitions than the this one based only
-    # on distances and angles
-    distance_cutoff = 0.25            # nanometers
-    angle_cutoff = 2.0 * np.pi / 3.0  # radians
+    angle_cutoff = np.radians(angle_cutoff)
 
     if traj.topology is None:
         raise ValueError('baker_hubbard requires that traj contain topology '
                          'information')
 
-    def get_donors(e0, e1):
-        elems = set((e0, e1))
-        bonditer = traj.topology.bonds
-        atoms = [(b[0], b[1]) for b in bonditer if set((b[0].element.symbol, b[1].element.symbol)) == elems]
+    # Get the possible donor-hydrogen...acceptor triplets
+    bond_triplets = _get_bond_triplets(traj.topology,
+        exclude_water=exclude_water, sidechain_only=sidechain_only)
 
-        indices = []
-        for a0, a1 in atoms:
-            if exclude_water and (a0.residue.name == 'HOH' or a1.residue.name == 'HOH'):
-                continue
-            pair = (a0.index, a1.index)
-            # make sure to get the pair in the right order, so that the index
-            # for e0 comes before e1
-            if a0.element.symbol == e1:
-                pair = pair[::-1]
-            indices.append(pair)
+    mask, distances, angles = _compute_bounded_geometry(traj, bond_triplets,
+        distance_cutoff, [1, 2], [0, 1, 2], freq=freq, periodic=periodic)
 
-        return indices
+    # Find triplets that meet the criteria
+    presence = np.logical_and(distances < distance_cutoff, angles > angle_cutoff)
+    mask[mask] = np.mean(presence, axis=0) > freq
 
-    nh_donors = get_donors('N', 'H')
-    oh_donors = get_donors('O', 'H')
-    xh_donors = np.concatenate((nh_donors, oh_donors))
-
-    if len(xh_donors) == 0:
-        # if there are no hydrogens or protein in the trajectory, we get
-        # no possible pairs and return nothing
-        return np.zeros((0, 3), dtype=int)
-
-    if not exclude_water:
-        acceptors = [a.index for a in traj.topology.atoms if a.element.symbol == 'O' or a.element.symbol == 'N']
-    else:
-        acceptors = [a.index for a in traj.topology.atoms if (a.element.symbol == 'O' and a.residue.name != 'HOH') or a.element.symbol == 'N']
-
-    angle_triplets = np.array([(e[0][0], e[0][1], e[1]) for e in product(xh_donors, acceptors)])
-    distance_pairs = angle_triplets[:, [1, 2]]  # possible H..acceptor pairs
-
-    angles = compute_angles(traj, angle_triplets, periodic=periodic)
-    distances = compute_distances(traj, distance_pairs, periodic=periodic)
-
-    mask = np.logical_and(distances < distance_cutoff, angles > angle_cutoff)
-    # frequency of occurance of each hydrogen bond in the trajectory
-    occurance = np.sum(mask, axis=0).astype(np.double) / traj.n_frames
-
-    return angle_triplets[occurance > freq]
+    return bond_triplets.compress(mask, axis=0)
 
 
 def kabsch_sander(traj):
@@ -337,7 +285,7 @@ def kabsch_sander(traj):
 
     References
     ----------
-    .. [1] Kabsch W, Sander C (1983). "Dictionary of protein secondary structure: pattern recognition of hydrogen-bonded and geometrical features". Biopolymers 22 (12): 2577-637. dio:10.1002/bip.360221211
+    .. [1] Kabsch W, Sander C (1983). "Dictionary of protein secondary structure: pattern recognition of hydrogen-bonded and geometrical features". Biopolymers 22 (12): 2577-637. doi:10.1002/bip.360221211
     """
     if traj.topology is None:
         raise ValueError('kabsch_sander requires topology')
@@ -375,6 +323,114 @@ def kabsch_sander(traj):
             (data, indices, indptr), shape=(n_residues, n_residues)).T)
 
     return matrices
+
+
+def _get_bond_triplets(topology, exclude_water=True, sidechain_only=False):
+    def can_participate(atom):
+        # Filter waters
+        if exclude_water and atom.residue.is_water:
+            return False
+        # Filter non-sidechain atoms
+        if sidechain_only and not atom.is_sidechain:
+            return False
+        # Otherwise, accept it
+        return True
+
+    def get_donors(e0, e1):
+        # Find all matching bonds
+        elems = set((e0, e1))
+        atoms = [(one, two) for one, two in topology.bonds
+            if set((one.element.symbol, two.element.symbol)) == elems]
+
+        # Filter non-participating atoms
+        atoms = [atom for atom in atoms
+            if can_participate(atom[0]) and can_participate(atom[1])]
+
+        # Get indices for the remaining atoms
+        indices = []
+        for a0, a1 in atoms:
+            pair = (a0.index, a1.index)
+            # make sure to get the pair in the right order, so that the index
+            # for e0 comes before e1
+            if a0.element.symbol == e1:
+                pair = pair[::-1]
+            indices.append(pair)
+
+        return indices
+
+    # Check that there are bonds in topology
+    nbonds = 0
+    for _bond in topology.bonds:
+        nbonds += 1
+        break # Only need to find one hit for this check (not robust)
+    if nbonds == 0:
+        raise ValueError('No bonds found in topology. Try using '
+                         'traj._topology.create_standard_bonds() to create bonds '
+                         'using our PDB standard bond definitions.')
+        
+    nh_donors = get_donors('N', 'H')
+    oh_donors = get_donors('O', 'H')
+    xh_donors = np.array(nh_donors + oh_donors)
+
+    if len(xh_donors) == 0:
+        # if there are no hydrogens or protein in the trajectory, we get
+        # no possible pairs and return nothing
+        return np.zeros((0, 3), dtype=int)
+
+    acceptor_elements = frozenset(('O', 'N'))
+    acceptors = [a.index for a in topology.atoms
+        if a.element.symbol in acceptor_elements and can_participate(a)]
+
+    # Make acceptors a 2-D numpy array
+    acceptors = np.array(acceptors)[:, np.newaxis]
+
+    # Generate the cartesian product of the donors and acceptors
+    xh_donors_repeated = np.repeat(xh_donors, acceptors.shape[0], axis=0)
+    acceptors_tiled = np.tile(acceptors, (xh_donors.shape[0], 1))
+    bond_triplets = np.hstack((xh_donors_repeated, acceptors_tiled))
+
+    # Filter out self-bonds
+    self_bond_mask = (bond_triplets[:, 0] == bond_triplets[:, 2])
+    return bond_triplets[np.logical_not(self_bond_mask), :]
+
+
+def _compute_bounded_geometry(traj, triplets, distance_cutoff, distance_indices,
+                              angle_indices, freq=0.0, periodic=True):
+    """
+    Returns a tuple include (1) the mask for triplets that fulfill the distance
+    criteria frequently enough, (2) the actual distances calculated, and (3) the
+    angles between the triplets specified by angle_indices.
+    """
+    # First we calculate the requested distances
+    distances = compute_distances(traj, triplets[:, distance_indices], periodic=periodic)
+
+    # Now we discover which triplets meet the distance cutoff often enough
+    prevalence = np.mean(distances < distance_cutoff, axis=0)
+    mask = prevalence > freq
+
+    # Update data structures to ignore anything that isn't possible anymore
+    triplets = triplets.compress(mask, axis=0)
+    distances = distances.compress(mask, axis=1)
+
+    # Calculate angles using the law of cosines
+    abc_pairs = zip(angle_indices, angle_indices[1:] + angle_indices[:1])
+    abc_distances = []
+
+    # Calculate distances (if necessary)
+    for abc_pair in abc_pairs:
+        if set(abc_pair) == set(distance_indices):
+            abc_distances.append(distances)
+        else:
+            abc_distances.append(compute_distances(traj, triplets[:, abc_pair],
+                periodic=periodic))
+
+    # Law of cosines calculation
+    a, b, c = abc_distances
+    cosines = (a ** 2 + b ** 2 - c ** 2) / (2 * a * b)
+    np.clip(cosines, -1, 1, out=cosines) # avoid NaN error
+    angles = np.arccos(cosines)
+
+    return mask, distances, angles
 
 
 def _get_or_minus1(f):

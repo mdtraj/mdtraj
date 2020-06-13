@@ -94,7 +94,7 @@ def _is_url(url):
 @FormatRegistry.register_loader('.pdb')
 @FormatRegistry.register_loader('.pdb.gz')
 def load_pdb(filename, stride=None, atom_indices=None, frame=None,
-             no_boxchk=False):
+             no_boxchk=False, standard_names=True ):
     """Load a RCSB Protein Data Bank file from disk.
 
     Parameters
@@ -122,12 +122,15 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
         filled in instead. This check will filter out those false unit cells and
         avoid potential errors in geometry calculations. Set this variable to
         ``True`` in order to skip this heuristic check.
+    standard_names : bool, default=True
+        If True, non-standard atomnames and residuenames are standardized to conform
+        with the current PDB format version. If set to false, this step is skipped.
 
     Returns
     -------
     trajectory : md.Trajectory
         The resulting trajectory, as an md.Trajectory object.
-        
+
     Examples
     --------
     >>> import mdtraj as md
@@ -145,9 +148,9 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
             'you supplied %s' % type(filename))
 
     atom_indices = cast_indices(atom_indices)
-    
+
     filename = str(filename)
-    with PDBTrajectoryFile(filename) as f:
+    with PDBTrajectoryFile(filename, standard_names=standard_names) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
         if frame is not None:
             coords = f.positions[[frame], atom_slice, :]
@@ -192,7 +195,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
         if particle_density > 1000:
             warnings.warn('Unlikely unit cell vectors detected in PDB file likely '
                           'resulting from a dummy CRYST1 record. Discarding unit '
-                          'cell vectors.')
+                          'cell vectors.', category=UserWarning)
             traj._unitcell_lengths = traj._unitcell_angles = None
 
     return traj
@@ -211,6 +214,9 @@ class PDBTrajectoryFile(object):
     force_overwrite : bool
         If opened in write mode, and a file by the name of `filename` already
         exists on disk, should we overwrite it?
+    standard_names : bool, default=True
+        If True, non-standard atomnames and residuenames are standardized to conform
+        with the current PDB format version. If set to false, this step is skipped.
 
     Attributes
     ----------
@@ -235,13 +241,14 @@ class PDBTrajectoryFile(object):
     _atomNameReplacements = {}
     _chain_names = [chr(ord('A') + i) for i in range(26)]
 
-    def __init__(self, filename, mode='r', force_overwrite=True):
+    def __init__(self, filename, mode='r', force_overwrite=True, standard_names=True):
         self._open = False
         self._file = None
         self._topology = None
         self._positions = None
         self._mode = mode
         self._last_topology = None
+        self._standard_names = standard_names
 
         if mode == 'r':
             PDBTrajectoryFile._loadNameReplacementTables()
@@ -269,7 +276,7 @@ class PDBTrajectoryFile(object):
 
         self._open = True
 
-    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None, 
+    def write(self, positions, topology, modelIndex=None, unitcell_lengths=None,
               unitcell_angles=None, bfactors=None):
         """Write a PDB file to disk
 
@@ -302,7 +309,7 @@ class PDBTrajectoryFile(object):
             raise ValueError('Particle position is NaN')
         if np.any(np.isinf(positions)):
             raise ValueError('Particle position is infinite')
-        
+
         self._last_topology = topology  # Hack to save the topology of the last frame written, allows us to output CONECT entries in write_footer()
 
         if bfactors is None:
@@ -312,7 +319,7 @@ class PDBTrajectoryFile(object):
                 raise ValueError("bfactors must be in (-10, 100)")
 
             bfactors = ['{0:5.2f}'.format(b) for b in bfactors]
-        
+
         atomIndex = 1
         posIndex = 0
         if modelIndex is not None:
@@ -337,7 +344,7 @@ class PDBTrajectoryFile(object):
                         symbol = atom.element.symbol
                     else:
                         symbol = ' '
-                    line = "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%-2s  " % (
+                    line = "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s  " % ( # Right-justify atom symbol
                         atomIndex % 100000, atomName, resName, chainName,
                         (res.resSeq) % 10000, _format_83(coords[0]),
                         _format_83(coords[1]), _format_83(coords[2]),
@@ -401,9 +408,9 @@ class PDBTrajectoryFile(object):
                 elif atom1.name == 'SG' and atom2.name == 'SG' and atom1.residue.name == 'CYS' and atom2.residue.name == 'CYS':
                     conectBonds.append((atom1, atom2))
         if len(conectBonds) > 0:
-            
+
             # Work out the index used in the PDB file for each atom.
-            
+
             atomIndex = {}
             nextAtomIndex = 0
             prevChain = None
@@ -414,9 +421,9 @@ class PDBTrajectoryFile(object):
                         prevChain = atom.residue.chain
                     atomIndex[atom] = nextAtomIndex
                     nextAtomIndex += 1
-            
+
             # Record which other atoms each atom is bonded to.
-            
+
             atomBonds = {}
             for atom1, atom2 in conectBonds:
                 index1 = atomIndex[atom1]
@@ -427,9 +434,9 @@ class PDBTrajectoryFile(object):
                     atomBonds[index2] = []
                 atomBonds[index1].append(index2)
                 atomBonds[index2].append(index1)
-            
+
             # Write the CONECT records.
-            
+
             for index1 in sorted(atomBonds):
                 bonded = atomBonds[index1]
                 while len(bonded) > 4:
@@ -509,10 +516,10 @@ class PDBTrajectoryFile(object):
             c = self._topology.add_chain()
             for residue in chain.iter_residues():
                 resName = residue.get_name()
-                if resName in PDBTrajectoryFile._residueNameReplacements:
+                if resName in PDBTrajectoryFile._residueNameReplacements and self._standard_names:
                     resName = PDBTrajectoryFile._residueNameReplacements[resName]
                 r = self._topology.add_residue(resName, c, residue.number, residue.segment_id)
-                if resName in PDBTrajectoryFile._atomNameReplacements:
+                if resName in PDBTrajectoryFile._atomNameReplacements and self._standard_names:
                     atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
                 else:
                     atomReplacements = {}
@@ -523,7 +530,7 @@ class PDBTrajectoryFile(object):
                     atomName = atomName.strip()
                     element = atom.element
                     if element is None:
-                        element = self._guess_element(atomName, residue)
+                        element = PDBTrajectoryFile._guess_element(atomName, residue.name, len(residue))
 
                     newAtom = self._topology.add_atom(atomName, element, r, serial=atom.serial_number)
                     atomByNumber[atom.serial_number] = newAtom
@@ -599,7 +606,8 @@ class PDBTrajectoryFile(object):
                 PDBTrajectoryFile._parseResidueAtoms(residue, atoms)
                 PDBTrajectoryFile._atomNameReplacements[name] = atoms
 
-    def _guess_element(self, atom_name, residue):
+    @staticmethod
+    def _guess_element(atom_name, residue_name, residue_length):
         "Try to guess the element name"
 
         upper = atom_name.upper()
@@ -617,7 +625,7 @@ class PDBTrajectoryFile(object):
             element = elem.potassium
         elif upper.startswith('ZN'):
             element = elem.zinc
-        elif len(residue) == 1 and upper.startswith('CA'):
+        elif residue_length == 1 and upper.startswith('CA'):
             element = elem.calcium
 
         # TJL has edited this. There are a few issues here. First,
@@ -625,15 +633,15 @@ class PDBTrajectoryFile(object):
         # below. Second, there is additional parsing code in
         # pdbstructure.py, and I am unsure why it doesn't get used
         # here...
-        elif len(residue) > 1 and upper.startswith('CE'):
+        elif residue_length > 1 and upper.startswith('CE'):
             element = elem.carbon  # (probably) not Celenium...
-        elif len(residue) > 1 and upper.startswith('CD'):
+        elif residue_length > 1 and upper.startswith('CD'):
             element = elem.carbon  # (probably) not Cadmium...
-        elif residue.name in ['TRP', 'ARG', 'GLN', 'HIS'] and upper.startswith('NE'):
+        elif residue_name in ['TRP', 'ARG', 'GLN', 'HIS'] and upper.startswith('NE'):
             element = elem.nitrogen  # (probably) not Neon...
-        elif residue.name in ['ASN'] and upper.startswith('ND'):
+        elif residue_name in ['ASN'] and upper.startswith('ND'):
             element = elem.nitrogen  # (probably) not ND...
-        elif residue.name == 'CYS' and upper.startswith('SG'):
+        elif residue_name == 'CYS' and upper.startswith('SG'):
             element = elem.sulfur  # (probably) not SG...
         else:
             try:

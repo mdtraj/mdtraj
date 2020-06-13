@@ -1,0 +1,32 @@
+stages:
+- stage: Test
+  jobs:
+  - template: ./devtools/azure-pipelines-linux.yml
+  - template: ./devtools/azure-pipelines-osx.yml
+  - template: ./devtools/azure-pipelines-win.yml
+
+- stage: DocDeploy  
+  condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
+  variables:
+    CCACHE_DIR: $(Pipeline.Workspace)/ccache
+  jobs:
+    - job:
+      steps:
+        - bash: |
+            sudo apt-get install ccache -y    
+            echo "##vso[task.prependpath]/usr/lib/ccache"
+          displayName: Install ccache and update PATH to use linked versions of gcc, cc, etc
+
+        - bash: echo "##vso[task.prependpath]$CONDA/bin"
+          displayName: Add conda to PATH
+
+        - bash: devtools/travis-ci/build_docs.sh
+          displayName: 'Build docs'
+          continueOnError: false
+
+        - bash: |
+            echo "Deploy docs"
+            aws configure list            
+          env:
+            AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+            AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)

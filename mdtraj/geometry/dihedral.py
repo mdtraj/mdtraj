@@ -32,9 +32,9 @@ from mdtraj.geometry import _geometry, distance
 import warnings
 
 __all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega',
-           'compute_chi1', 'compute_chi2', 'compute_chi3', 'compute_chi4',
+           'compute_chi1', 'compute_chi2', 'compute_chi3', 'compute_chi4','compute_chi5',
            'indices_phi', 'indices_psi', 'indices_omega',
-           'indices_chi1', 'indices_chi2', 'indices_chi3', 'indices_chi4']
+           'indices_chi1', 'indices_chi2', 'indices_chi3', 'indices_chi4', 'indices_chi5']
 
 ##############################################################################
 # Functions
@@ -113,19 +113,12 @@ def compute_dihedrals(traj, indices, periodic=True, opt=True):
     if len(quartets) == 0:
         return np.zeros((len(xyz), 0), dtype=np.float32)
 
-    if periodic and traj._have_unitcell:
-        if opt and not np.allclose(traj.unitcell_angles, 90):
-            warnings.warn('Optimized dihedral calculation does not work for non-orthorhombic '
-                          'unit cells and periodic boundary conditions. Falling back to much '
-                          'slower pure-Python implementation. Set periodic=False or opt=False '
-                          'to disable this message.')
-            opt = False
-
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
     if periodic and traj._have_unitcell:
         box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
         if opt:
-            _geometry._dihedral_mic(xyz, quartets, box, out)
+            orthogonal = np.allclose(traj.unitcell_angles, 90)
+            _geometry._dihedral_mic(xyz, quartets, box.transpose(0, 2, 1).copy(), out, orthogonal)
             return out
         else:
             _dihedral(traj, quartets, periodic, out)
@@ -322,6 +315,8 @@ CHI3_ATOMS = [["CB", "CG", "CD", "NE"],
 CHI4_ATOMS = [["CG", "CD", "NE", "CZ"],
               ["CG", "CD", "CE", "NZ"]]
 
+CHI5_ATOMS = [["CD", "NE", "CZ", "NH1"]]
+
 
 def indices_phi(top):
     """Calculate indices for phi dihedral angles
@@ -376,7 +371,7 @@ def _indices_chi(top, chi_atoms):
     id_sort = np.argsort(np.concatenate(rids))
     if not any(x.size for x in indices):
         return np.empty(shape=(0, 4), dtype=np.int)
-    indices = np.vstack(x for x in indices if x.size)[id_sort]
+    indices = np.vstack([x for x in indices if x.size])[id_sort]
     return indices
 
 
@@ -442,6 +437,22 @@ def indices_chi4(top):
         The indices of the atoms involved in each of ths chi4 angles
     """
     return _indices_chi(top, CHI4_ATOMS)
+
+
+def indices_chi5(top):
+    """Calculate indices for chi5 dihedral angles
+
+    Parameters
+    ----------
+    top : Topology
+        Topology for which you want dihedral indices
+
+    Returns
+    -------
+    indices : np.ndarray, shape=(n_chi5, 4)
+        The indices of the atoms involved in each of ths chi4 angles
+    """
+    return _indices_chi(top, CHI5_ATOMS)
 
 
 def compute_phi(traj, periodic=True, opt=True):
@@ -617,6 +628,37 @@ def compute_chi4(traj, periodic=True, opt=True):
         the frames.
     """
     indices = indices_chi4(traj.topology)
+    if len(indices) == 0:
+        return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
+    all_chi = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)
+    return indices, all_chi
+
+
+def compute_chi5(traj, periodic=True, opt=True):
+    """Calculate the chi5 torsions of a trajectory. chi5 is the fiths side chain torsion angle
+    formed between the corresponding 4 atoms over the NE-CZ axis
+    (only ARG residues have these atoms)
+
+    Parameters
+    ----------
+    traj : Trajectory
+        Trajectory for which you want dihedrals.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will treat dihedrals that cross periodic images
+        using the minimum image convention.
+    opt : bool, default=True
+        Use an optimized native library to calculate angles.
+
+    Returns
+    -------
+    indices : np.ndarray, shape=(n_chi, 4)
+        The indices of the atoms involved in each of the chi dihedral angles
+    angles : np.ndarray, shape=(n_frames, n_chi)
+        The value of the dihedral angle for each of the angles in each of
+        the frames.
+    """
+    indices = indices_chi5(traj.topology)
     if len(indices) == 0:
         return indices, np.empty(shape=(len(traj), 0), dtype=np.float32)
     all_chi = compute_dihedrals(traj, indices, periodic=periodic, opt=opt)

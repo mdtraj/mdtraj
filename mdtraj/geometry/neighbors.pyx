@@ -101,13 +101,15 @@ def compute_neighbors(traj, cutoff, query_indices, haystack_indices=None,
     cdef int[::1] frame_neighbors_mview
     cdef int is_periodic = periodic and (traj.unitcell_vectors is not None)
     if is_periodic:
-        box_matrix = np.asarray(traj.unitcell_vectors, order='c')
-        box_matrix_pointer = &box_matrix[0,0,0]
+        unitcell_vectors = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', warn_on_cast=False)
+        box_matrix = np.asarray(unitcell_vectors, order='c')
     else:
         box_matrix_pointer = NULL
 
     results = []  # list of numpy arrays
     for i in range(n_frames):
+        if is_periodic:
+            box_matrix_pointer = &box_matrix[i,0,0]
         frame_neighbors = _compute_neighbors(
             &xyz[i,0,0], traj.xyz.shape[1], cutoff, query_indices_,
             haystack_indices_, box_matrix_pointer)

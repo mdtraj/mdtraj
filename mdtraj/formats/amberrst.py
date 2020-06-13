@@ -105,8 +105,7 @@ class AmberRestartFile(object):
 
     See Also
     --------
-    md.AmberNetCDFRestartFile : Low level interface to AMBER NetCDF-format
-    restart files
+    md.AmberNetCDFRestartFile : Low level interface to AMBER NetCDF-format restart files
     """
     distance_unit = 'angstroms'
 
@@ -566,6 +565,9 @@ class AmberNetCDFRestartFile(object):
             raise IOError('The file was opened in mode=%s. Reading is not '
                           'allowed.' % self._mode)
 
+        if self._closed:
+            raise IOError("The file has been closed!")
+
         if 'coordinates' not in self._handle.variables:
             raise ValueError('No coordinates found in the NetCDF file.')
 
@@ -764,7 +766,7 @@ class AmberNetCDFRestartFile(object):
             v.units = 'degree'
         if set_time:
             v = ncfile.createVariable('time', 'd', ('time',))
-            v.units = 'picoseconds'
+            v.units = 'picosecond'
         self.flush()
 
     def __enter__(self):

@@ -75,7 +75,7 @@ def compute_dssp(traj, simplified=True):
     ----------
     .. [1] Kabsch W, Sander C (1983). "Dictionary of protein secondary
        structure: pattern recognition of hydrogen-bonded and geometrical
-       features". Biopolymers 22 (12): 2577-637. dio:10.1002/bip.360221211
+       features". Biopolymers 22 (12): 2577-637. doi:10.1002/bip.360221211
     """
     if traj.topology is None:
         raise ValueError('kabsch_sander requires topology')
