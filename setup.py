@@ -13,6 +13,7 @@ DOCLINES = __doc__.split("\n")
 
 import os
 import sys
+import platform
 from setuptools import setup, Extension, find_packages
 sys.path.insert(0, '.')
 from basesetup import (write_version_py, build_ext,
@@ -141,15 +142,19 @@ def format_extensions():
 
 
 def rmsd_extensions():
-    compiler_args = (compiler.compiler_args_openmp + compiler.compiler_args_sse2 +
-                     compiler.compiler_args_sse3 + compiler.compiler_args_opt +
-                     compiler.compiler_args_warn)
+    compiler_args = (compiler.compiler_args_openmp + compiler.compiler_args_opt +
+                        compiler.compiler_args_warn)
+    if platform.uname().processor == "aarch64":
+        compiler_args += compiler.compiler_args_neon
+    else:
+        # Assumes x86_64
+        compiler_args += (compiler.compiler_args_sse2 + compiler.compiler_args_sse3)
     compiler_libraries = compiler.compiler_libraries_openmp
 
     libtheobald = StaticLibrary(
         'mdtraj.core.lib.libtheobald',
         sources=[
-            'mdtraj/rmsd/src/theobald_rmsd.c',
+            'mdtraj/rmsd/src/theobald_rmsd.cpp',
             'mdtraj/rmsd/src/center.c'],
         include_dirs=[
             'mdtraj/rmsd/include'],
@@ -162,18 +167,19 @@ def rmsd_extensions():
 
     rmsd = Extension('mdtraj._rmsd',
                      sources=[
-                         'mdtraj/rmsd/src/theobald_rmsd.c',
-                         'mdtraj/rmsd/src/rotation.c',
+                         'mdtraj/rmsd/src/theobald_rmsd.cpp',
+                         'mdtraj/rmsd/src/rotation.cpp',
                          'mdtraj/rmsd/src/center.c',
                          'mdtraj/rmsd/_rmsd.pyx'],
                      include_dirs=['mdtraj/rmsd/include'],
                      extra_compile_args=compiler_args,
-                     libraries=compiler_libraries)
+                     libraries=compiler_libraries,
+                     language="c++")
 
     lprmsd = Extension('mdtraj._lprmsd',
                        sources=[
-                           'mdtraj/rmsd/src/theobald_rmsd.c',
-                           'mdtraj/rmsd/src/rotation.c',
+                           'mdtraj/rmsd/src/theobald_rmsd.cpp',
+                           'mdtraj/rmsd/src/rotation.cpp',
                            'mdtraj/rmsd/src/center.c',
                            'mdtraj/rmsd/src/fancy_index.cpp',
                            'mdtraj/rmsd/src/Munkres.cpp',
