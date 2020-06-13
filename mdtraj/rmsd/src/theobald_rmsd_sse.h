@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
-#include <arm_neon.h>
 #include "util_arm.h"
 #include "theobald_rmsd.h"
 #include "stdio.h"
