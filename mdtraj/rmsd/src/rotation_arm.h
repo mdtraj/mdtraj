@@ -22,82 +22,53 @@
 
 #include "stdio.h"
 #include <assert.h>
-#include "util.h"
-#include "theobald_rmsd.h"
+#include "msvccompat.h"
+#include "util_arm.h"
 #include "rotation.h"
 #include "msvccompat.h"
 
-static INLINE __m128 _mm_add3_ps(__m128 a, __m128 b, __m128 c) {
-    return _mm_add_ps(_mm_add_ps(a, b), c);
+
+INLINE float32x4_t add3(float32x4_t a, float32x4_t b, float32x4_t c) {
+    return vaddq_f32(vaddq_f32(a, b), c);
 }
 
-void sgemm33(const float A[9], const float B[9], float out[9]) {
-    int i, j, k;
-    float o;
-
-    for (i = 0; i < 3; i++) {
-        for (j = 0; j < 3; j++) {
-            o = 0.0f;
-            for (k = 0; k < 3; k++)
-                o += A[i*3 + k] * B[k*3 + j];
-            out[i*3 + j] = o;
-        }
-    }
-}
 
 void rot_atom_major(const int n_atoms, float* a, const float rot[9])
 {
-    /* Apply rotation matrix `rot` to conformation `a`. If this file
-       is compiled with -DALIGNED, then `a` is assumed to be aligned on a
-       16-byte boundary and n_atoms must be a multiple of four.
-       Otherwise, no alignment requirements exist.
+    /* Apply rotation matrix `rot` to conformation `a`.
     */
 
     unsigned int k;
     unsigned int n_iters = 0;
-#ifndef ALIGNED
     float x, y, z;
-#endif
-    __m128 ax, ay, az, tx, ty, tz;
-    __m128 rXX = _mm_load1_ps(rot + 0);
-    __m128 rXY = _mm_load1_ps(rot + 1);
-    __m128 rXZ = _mm_load1_ps(rot + 2);
-    __m128 rYX = _mm_load1_ps(rot + 3);
-    __m128 rYY = _mm_load1_ps(rot + 4);
-    __m128 rYZ = _mm_load1_ps(rot + 5);
-    __m128 rZX = _mm_load1_ps(rot + 6);
-    __m128 rZY = _mm_load1_ps(rot + 7);
-    __m128 rZZ = _mm_load1_ps(rot + 8);
 
-#ifdef ALIGNED
-    /* npaddedatoms must be a multiple of 4 */
-    assert(n_atoms % 4 == 0);
-    n_iters = n_atoms >> 2;
-#else
+    float32x4x3_t axyz;
+    float32x4_t tx, ty, tz;
+    float32x4_t rXX = vld1q_dup_f32(rot + 0);
+    float32x4_t rXY = vld1q_dup_f32(rot + 1);
+    float32x4_t rXZ = vld1q_dup_f32(rot + 2);
+    float32x4_t rYX = vld1q_dup_f32(rot + 3);
+    float32x4_t rYY = vld1q_dup_f32(rot + 4);
+    float32x4_t rYZ = vld1q_dup_f32(rot + 5);
+    float32x4_t rZX = vld1q_dup_f32(rot + 6);
+    float32x4_t rZY = vld1q_dup_f32(rot + 7);
+    float32x4_t rZZ = vld1q_dup_f32(rot + 8);
+
     n_iters = n_atoms / 4;
-#endif
 
     for (k = 0; k < n_iters; k++) {
         /* load four atoms at a time */
-#ifdef ALIGNED
-        aos_deinterleaved_load(a,&ax,&ay,&az);
-#else
-        aos_deinterleaved_loadu(a,&ax,&ay,&az);
-#endif
+        axyz = aos_deinterleaved_load(a);
 
-        tx = _mm_add3_ps(_mm_mul_ps(ax, rXX), _mm_mul_ps(ay, rYX), _mm_mul_ps(az, rZX));
-        ty = _mm_add3_ps(_mm_mul_ps(ax, rXY), _mm_mul_ps(ay, rYY), _mm_mul_ps(az, rZY));
-        tz = _mm_add3_ps(_mm_mul_ps(ax, rXZ), _mm_mul_ps(ay, rYZ), _mm_mul_ps(az, rZZ));
+        tx = add3(vmulq_f32(axyz.val[0], rXX), vmulq_f32(axyz.val[1], rYX), vmulq_f32(axyz.val[2], rZX));
+        ty = add3(vmulq_f32(axyz.val[0], rXY), vmulq_f32(axyz.val[1], rYY), vmulq_f32(axyz.val[2], rZY));
+        tz = add3(vmulq_f32(axyz.val[0], rXZ), vmulq_f32(axyz.val[1], rYZ), vmulq_f32(axyz.val[2], rZZ));
 
-#ifdef ALIGNED
         aos_interleaved_store(a, tx, ty, tz);
-#else
-        aos_interleaved_storeu(a, tx, ty, tz);
-#endif
+
         a += 12;
     }
 
-#ifndef ALIGNED
     /* Epilogue to process the last atoms that are past the last multiple of */
     /* four */
     for (k = 0; k < n_atoms % 4; k++) {
@@ -108,7 +79,6 @@ void rot_atom_major(const int n_atoms, float* a, const float rot[9])
         a[3*k + 1] = x*rot[1] + y*rot[4] + z*rot[7];
         a[3*k + 2] = x*rot[2] + y*rot[5] + z*rot[8];
     }
-#endif
 }
 
 
@@ -142,41 +112,41 @@ float rot_msd_atom_major(const int n_real_atoms, const int n_padded_atoms,
     double sum_displacement = 0.0; /* accumulate the sum-squared-displacement here */
     float sum4 = 0; /* a single sum-squared-displacement for 4 values */
 
-    __m128 ax, ay, az, bx, by, bz, tx, ty, tz, dx, dy, dz, acculm;
-    __m128 rXX = _mm_load1_ps(rot + 0);
-    __m128 rXY = _mm_load1_ps(rot + 1);
-    __m128 rXZ = _mm_load1_ps(rot + 2);
-    __m128 rYX = _mm_load1_ps(rot + 3);
-    __m128 rYY = _mm_load1_ps(rot + 4);
-    __m128 rYZ = _mm_load1_ps(rot + 5);
-    __m128 rZX = _mm_load1_ps(rot + 6);
-    __m128 rZY = _mm_load1_ps(rot + 7);
-    __m128 rZZ = _mm_load1_ps(rot + 8);
+    float32x4x3_t axyz, bxyz;    
+    float32x4_t tx, ty, tz, dx, dy, dz, acculm;
+    float32x4_t rXX = vld1q_dup_f32(rot + 0);
+    float32x4_t rXY = vld1q_dup_f32(rot + 1);
+    float32x4_t rXZ = vld1q_dup_f32(rot + 2);
+    float32x4_t rYX = vld1q_dup_f32(rot + 3);
+    float32x4_t rYY = vld1q_dup_f32(rot + 4);
+    float32x4_t rYZ = vld1q_dup_f32(rot + 5);
+    float32x4_t rZX = vld1q_dup_f32(rot + 6);
+    float32x4_t rZY = vld1q_dup_f32(rot + 7);
+    float32x4_t rZZ = vld1q_dup_f32(rot + 8);
     n_iters = (n_padded_atoms >> 2);
     assert(n_padded_atoms % 4 == 0);
 
     for (i = 0; i < n_iters; i++) {
         /* load four atoms at a time */
-        aos_deinterleaved_load(a,&ax,&ay,&az);
-        aos_deinterleaved_load(b,&bx,&by,&bz);
+        axyz = aos_deinterleaved_load(a);
+        bxyz = aos_deinterleaved_load(b);
 
         /* rotated coordinates of the 4 atoms */
-        tx = _mm_add3_ps(_mm_mul_ps(ax, rXX), _mm_mul_ps(ay, rYX), _mm_mul_ps(az, rZX));
-        ty = _mm_add3_ps(_mm_mul_ps(ax, rXY), _mm_mul_ps(ay, rYY), _mm_mul_ps(az, rZY));
-        tz = _mm_add3_ps(_mm_mul_ps(ax, rXZ), _mm_mul_ps(ay, rYZ), _mm_mul_ps(az, rZZ));
+        tx = add3(vmulq_f32(axyz.val[0], rXX), vmulq_f32(axyz.val[1], rYX), vmulq_f32(axyz.val[2], rZX));
+        ty = add3(vmulq_f32(axyz.val[0], rXY), vmulq_f32(axyz.val[1], rYY), vmulq_f32(axyz.val[2], rZY));
+        tz = add3(vmulq_f32(axyz.val[0], rXZ), vmulq_f32(axyz.val[1], rYZ), vmulq_f32(axyz.val[2], rZZ));
 
         /* difference */
-        dx = _mm_sub_ps(bx, tx);
-        dy = _mm_sub_ps(by, ty);
-        dz = _mm_sub_ps(bz, tz);
+        dx = vsubq_f32(bxyz.val[0], tx);
+        dy = vsubq_f32(bxyz.val[1], ty);
+        dz = vsubq_f32(bxyz.val[2], tz);
 
         /* sum up (bx-tx)^2 + (by-ty)^2 + (bz-tz)^2 over a block of 4 atoms */
         /* and accumulate the result into sum_displacement */
-        acculm = _mm_add3_ps(_mm_mul_ps(dx, dx), _mm_mul_ps(dy, dy), _mm_mul_ps(dz, dz));
-        /* horizontal add of all 4 elemenets in acculm */
-        acculm = _mm_add_ps(acculm, _mm_movehl_ps(acculm, acculm));
-        acculm = _mm_add_ss(acculm, _mm_shuffle_ps(acculm, acculm, 1));
-        _mm_store_ss(&sum4, acculm);
+        acculm = add3(vmulq_f32(dx, dx), vmulq_f32(dy, dy), vmulq_f32(dz, dz));
+        /* horizontal add of all 4 elemenets in acculm */    
+        float32x4_t tmp = vpaddq_f32(acculm,acculm); /* tmp = a01 a23 a01 a23 */
+        sum4 = vgetq_lane_f32(tmp, 0) + vgetq_lane_f32(tmp, 1);
         sum_displacement += sum4;
         a += 12;
         b += 12;

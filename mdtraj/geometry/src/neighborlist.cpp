@@ -20,7 +20,7 @@
  * License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "vectorize_sse.h"
+#include "vectorize.h"
 #include <algorithm>
 #include <cmath>
 #include <vector>

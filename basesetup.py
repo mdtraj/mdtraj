@@ -50,10 +50,16 @@ class CompilerDetection(object):
             self.openmp_enabled, openmp_needs_gomp = self._detect_openmp()
         self.sse3_enabled = self._detect_sse3() if not self.msvc else True
         self.sse41_enabled = self._detect_sse41() if not self.msvc else True
+        self.neon_enabled = self._detect_neon() if not self.msvc else False        
 
         self.compiler_args_sse2 = ['-msse2'] if not self.msvc else ['/arch:SSE2']
         self.compiler_args_sse3 = ['-mssse3'] if (self.sse3_enabled and not self.msvc) else []
+        self.compiler_args_neon = []
         self.compiler_args_warn = ['-Wno-unused-function', '-Wno-unreachable-code', '-Wno-sign-compare'] if not self.msvc else []
+
+        if self.neon_enabled:
+            self.compiler_args_sse2 = []
+            self.compiler_args_sse3 = []
 
         self.compiler_args_sse41, self.define_macros_sse41 = [], []
         if self.sse41_enabled:
@@ -188,6 +194,14 @@ exit(status)
                            include='<smmintrin.h>',
                            extra_postargs=['-msse4'])
         self._print_support_end('SSE4.1', result)
+        return result
+
+    def _detect_neon(self):
+        """Does this compiler support NEON intrinsics (ARM64)
+        """
+        self._print_support_start("NEON")
+        result = self.hasfunction("int16x4_t acc = vdup_n_s16(0);", include="<arm_neon.h>")
+        self._print_support_end("NEON", result)
         return result
 
 ################################################################################
