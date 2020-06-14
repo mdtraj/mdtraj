@@ -10,11 +10,6 @@ binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 from __future__ import print_function, absolute_import
 
 import sys
-import platform
-from setuptools import setup, Extension, find_packages
-sys.path.insert(0, '.')
-from basesetup import (write_version_py, build_ext,
-                       StaticLibrary, CompilerDetection)
 from glob import glob
 
 DOCLINES = __doc__.split("\n")
@@ -147,48 +142,40 @@ def format_extensions():
 
 
 def rmsd_extensions():
-    compiler_args = (compiler.compiler_args_openmp + compiler.compiler_args_opt +
-                        compiler.compiler_args_warn)
-    compiler_args_nopenmp = compiler.compiler_args_opt + compiler.compiler_args_warn
-
-    if platform.uname().processor == "aarch64":
-        compiler_args += compiler.compiler_args_neon
-        compiler_args_nopenmp += compiler.compiler_args_neon
-    else:
-        # Assumes x86_64
-        compiler_args += (compiler.compiler_args_sse2 + compiler.compiler_args_sse3)
-        compiler_args_nopenmp += (compiler.compiler_args_sse2 + compiler.compiler_args_sse3)
-
+    compiler_args = (compiler.compiler_args_openmp + compiler.compiler_args_sse2 +
+                     compiler.compiler_args_sse3 + compiler.compiler_args_opt +
+                     compiler.compiler_args_warn)
     compiler_libraries = compiler.compiler_libraries_openmp
 
     libtheobald = StaticLibrary(
         'mdtraj.core.lib.libtheobald',
         sources=[
-            'mdtraj/rmsd/src/theobald_rmsd.cpp',
-            'mdtraj/rmsd/src/center.cpp'],
+            'mdtraj/rmsd/src/theobald_rmsd.c',
+            'mdtraj/rmsd/src/center.c'],
         include_dirs=[
             'mdtraj/rmsd/include'],
         export_include=['mdtraj/rmsd/include/theobald_rmsd.h',
                         'mdtraj/rmsd/include/center.h'],
         # don't enable OpenMP
-        extra_compile_args=compiler_args_nopenmp)
+        extra_compile_args=(compiler.compiler_args_sse2 +
+                            compiler.compiler_args_sse3 +
+                            compiler.compiler_args_opt))
 
     rmsd = Extension('mdtraj._rmsd',
                      sources=[
-                         'mdtraj/rmsd/src/theobald_rmsd.cpp',
-                         'mdtraj/rmsd/src/rotation.cpp',
-                         'mdtraj/rmsd/src/center.cpp',
+                         'mdtraj/rmsd/src/theobald_rmsd.c',
+                         'mdtraj/rmsd/src/rotation.c',
+                         'mdtraj/rmsd/src/center.c',
                          'mdtraj/rmsd/_rmsd.pyx'],
                      include_dirs=['mdtraj/rmsd/include'],
                      extra_compile_args=compiler_args,
-                     libraries=compiler_libraries,
-                     language="c++")
+                     libraries=compiler_libraries)
 
     lprmsd = Extension('mdtraj._lprmsd',
                        sources=[
-                           'mdtraj/rmsd/src/theobald_rmsd.cpp',
-                           'mdtraj/rmsd/src/rotation.cpp',
-                           'mdtraj/rmsd/src/center.cpp',
+                           'mdtraj/rmsd/src/theobald_rmsd.c',
+                           'mdtraj/rmsd/src/rotation.c',
+                           'mdtraj/rmsd/src/center.c',
                            'mdtraj/rmsd/src/fancy_index.cpp',
                            'mdtraj/rmsd/src/Munkres.cpp',
                            'mdtraj/rmsd/src/euclidean_permutation.cpp',
