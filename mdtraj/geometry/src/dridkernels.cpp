@@ -23,10 +23,9 @@
 #include "math.h"
 #include "stdlib.h"
 #include "dridkernels.h"
-#include "vectorize_sse.h"
+#include "vectorize.h"
 #include "msvccompat.h"
 #include "moments.h"
-#include <pmmintrin.h>
 #include "math_patch.h"
 
 void drid_moments(float* coords, int32_t index, int32_t* partners, int32_t n_partners, double* moments)

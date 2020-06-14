@@ -150,12 +150,13 @@ def rmsd_extensions():
     libtheobald = StaticLibrary(
         'mdtraj.core.lib.libtheobald',
         sources=[
-            'mdtraj/rmsd/src/theobald_rmsd.c',
-            'mdtraj/rmsd/src/center.c'],
+            'mdtraj/rmsd/src/theobald_rmsd.cpp',
+            'mdtraj/rmsd/src/center.cpp'],
         include_dirs=[
             'mdtraj/rmsd/include'],
         export_include=['mdtraj/rmsd/include/theobald_rmsd.h',
                         'mdtraj/rmsd/include/center.h'],
+        language="c++",
         # don't enable OpenMP
         extra_compile_args=(compiler.compiler_args_sse2 +
                             compiler.compiler_args_sse3 +
@@ -163,19 +164,20 @@ def rmsd_extensions():
 
     rmsd = Extension('mdtraj._rmsd',
                      sources=[
-                         'mdtraj/rmsd/src/theobald_rmsd.c',
-                         'mdtraj/rmsd/src/rotation.c',
-                         'mdtraj/rmsd/src/center.c',
+                         'mdtraj/rmsd/src/theobald_rmsd.cpp',
+                         'mdtraj/rmsd/src/rotation.cpp',
+                         'mdtraj/rmsd/src/center.cpp',
                          'mdtraj/rmsd/_rmsd.pyx'],
                      include_dirs=['mdtraj/rmsd/include'],
                      extra_compile_args=compiler_args,
-                     libraries=compiler_libraries)
+                     libraries=compiler_libraries,
+                     language="c++")
 
     lprmsd = Extension('mdtraj._lprmsd',
                        sources=[
-                           'mdtraj/rmsd/src/theobald_rmsd.c',
-                           'mdtraj/rmsd/src/rotation.c',
-                           'mdtraj/rmsd/src/center.c',
+                           'mdtraj/rmsd/src/theobald_rmsd.cpp',
+                           'mdtraj/rmsd/src/rotation.cpp',
+                           'mdtraj/rmsd/src/center.cpp',
                            'mdtraj/rmsd/src/fancy_index.cpp',
                            'mdtraj/rmsd/src/Munkres.cpp',
                            'mdtraj/rmsd/src/euclidean_permutation.cpp',

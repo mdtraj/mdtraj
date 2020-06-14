@@ -10,7 +10,7 @@ static INLINE float32x4x3_t aos_deinterleaved_load(const float* S) {
 
 }
 
-#define REDUCTION_EPILOGUE(xx, xy, xz, yx, yy, yz, zx, zy, zz, t0, t1, t2) \
+#define REDUCTION_EPILOGUE(xx, xy, xz, yx, yy, yz, zx, zy, zz) \
   xx = vpaddq_f32(xx,xy); /* xx = xx01 xx23 xy01 xy23 */\
   xz = vpaddq_f32(xz,yx); /* xz = xz01 xz23 yx01 yx23 */\
   yy = vpaddq_f32(yy,yz); /* yy = yy01 yy23 yz01 yz23 */\

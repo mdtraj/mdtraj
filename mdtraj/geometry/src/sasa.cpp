@@ -23,11 +23,11 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
-#include <pmmintrin.h>
+//#include <pmmintrin.h>
 
 #include "sasa.h"
 #include "msvccompat.h"
-#include "vectorize_sse.h"
+#include "vectorize.h"
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif

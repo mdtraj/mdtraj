@@ -129,7 +129,7 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
         bTz += 4;
     }
     /* Epilogue - reduce 4 wide vectors to one wide */
-    REDUCTION_EPILOGUE(xx, xy, xz, yx, yy, yz, zx, zy, zz, t0, t1, t2);
+    REDUCTION_EPILOGUE(xx, xy, xz, yx, yy, yz, zx, zy, zz);
 
     vst1q_f32(M  , xx);
     vst1q_f32(M+4, yy);
@@ -249,14 +249,14 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
         yy = vmlaq_f32(yy, bxyz.val[1], axyz.val[1]);
         yz = vmlaq_f32(yz, bxyz.val[2], axyz.val[1]);
 
-        yx = vmlaq_f32(zx, bxyz.val[0], axyz.val[2]);
-        yy = vmlaq_f32(zy, bxyz.val[1], axyz.val[2]);
-        yz = vmlaq_f32(zz, bxyz.val[2], axyz.val[2]);
+        zx = vmlaq_f32(zx, bxyz.val[0], axyz.val[2]);
+        zy = vmlaq_f32(zy, bxyz.val[1], axyz.val[2]);
+        zz = vmlaq_f32(zz, bxyz.val[2], axyz.val[2]);
 
         a += 12;
         b += 12;
     }
-    REDUCTION_EPILOGUE(xx, xy, xz, yx, yy, yz, zx, zy, zz, t0, t1, t2);
+    REDUCTION_EPILOGUE(xx, xy, xz, yx, yy, yz, zx, zy, zz);
 
     vst1q_f32(M  , xx);
     vst1q_f32(M+4, yy);

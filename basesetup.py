@@ -57,6 +57,10 @@ class CompilerDetection(object):
         self.compiler_args_neon = []
         self.compiler_args_warn = ['-Wno-unused-function', '-Wno-unreachable-code', '-Wno-sign-compare'] if not self.msvc else []
 
+        if self.neon_enabled:
+            self.compiler_args_sse2 = []
+            self.compiler_args_sse3 = []
+
         self.compiler_args_sse41, self.define_macros_sse41 = [], []
         if self.sse41_enabled:
             self.define_macros_sse41 = [('__SSE4__', 1), ('__SSE4_1__', 1)]
