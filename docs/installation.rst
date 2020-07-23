@@ -26,19 +26,6 @@ MDTraj supports Python 2.7 or Python 3.4+ (recommended) on Mac, Linux, and
 Windows.
 
 
-Testing Your Installation
--------------------------
-
-Running the tests is a great way to verify that everything is working. The test
-suite uses `pytest <https://pytest.readthedocs.org/en/latest/>`_, which you can pick
-up via ``pip`` if you don't already have it. ::
-
-  pip install pytest
-
-Then, to run the tests, execute the command ::
-
-  pytest mdtraj -v
-
 Compiling From Source
 ---------------------
 
@@ -48,4 +35,19 @@ To compile MDTraj from source, you should use pip as well::
   cd mdtraj
   pip install -e .
 
-.. vim: tw=75
+
+Testing Your Installation
+-------------------------
+
+Running the tests is a great way to verify that everything is working. The test
+suite uses `pytest <https://pytest.readthedocs.org/en/latest/>`_, which you can pick
+up via ``pip`` if you don't already have it. ::
+
+  pip install pytest
+
+Then, to run the tests, execute the commands ::
+
+  git clone https://github.com/mdtraj/mdtraj.git
+  cd mdtraj
+  # If using conda, make sure to have your conda environment active
+  py.test
