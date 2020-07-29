@@ -94,9 +94,9 @@ def ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=No
         return None
 
     if not isinstance(val, np.ndarray):
-        if isinstance(val, collections.Iterable):
+        if isinstance(val, collections.abc.Iterable):
             # If they give us an iterator, let's try...
-            if isinstance(val, collections.Sequence):
+            if isinstance(val, collections.abc.Sequence):
                 # sequences are easy. these are like lists and stuff
                 val = np.array(val, dtype=dtype)
             else:
@@ -170,7 +170,7 @@ def cast_indices(indices):
 
     if not len(indices) == len(set(indices)):
         raise ValueError("indices must be unique.")
-        
+
     out = np.asarray(indices)
     if not issubclass(out.dtype.type, np.integer):
         raise ValueError('indices must be of an integer type. %s is not an integer type' % out.dtype)

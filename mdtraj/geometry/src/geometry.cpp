@@ -21,7 +21,7 @@
 /*=======================================================================*/
 
 #include "geometry.h"
-#include "vectorize_sse.h"
+#include "vectorize.h"
 #include <cstddef>
 #include <math.h>
 #include <float.h>

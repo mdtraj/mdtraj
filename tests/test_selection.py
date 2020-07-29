@@ -129,7 +129,7 @@ def test_binary_2():
 
 def test_simple():
     sp = parse_selection("protein")
-    eq(sp.source, "atom.residue.is_protein")
+    eq(sp.source, "atom.residue.is_protein\n")
     assert sp.expr(tt.atom(0))
     assert sp.expr(tt.atom(1))
     assert not sp.expr(tt.atom(2))
@@ -137,7 +137,7 @@ def test_simple():
 
 def test_alias():
     sp = parse_selection("waters")
-    eq(sp.source, "atom.residue.is_water")
+    eq(sp.source, "atom.residue.is_water\n")
     assert sp.expr(tt.atom(3))
     assert sp.expr(tt.atom(4))
     assert not sp.expr(tt.atom(0))
@@ -192,43 +192,43 @@ def test_raises2():
 
 def test_bool():
     sp = parse_selection("protein or water")
-    eq(sp.source, "(atom.residue.is_protein or atom.residue.is_water)")
+    eq(sp.source, "(atom.residue.is_protein or atom.residue.is_water)\n")
 
-    sp = parse_selection("protein or water or all")
+    sp = parse_selection("protein or water or all\n")
     eq(sp.source,
-       "(atom.residue.is_protein or atom.residue.is_water or True)")
+       "(atom.residue.is_protein or atom.residue.is_water or True)\n")
 
 
 def test_nested_bool():
     sp = parse_selection("nothing and water or all")
     eq(sp.source,
-       "(False and atom.residue.is_water or True)")
+       "((False and atom.residue.is_water) or True)\n")
 
     sp = parse_selection("nothing and (water or all)")
     eq(sp.source,
-       "(False and (atom.residue.is_water or True))")
+       "(False and (atom.residue.is_water or True))\n")
 
 
 def test_values():
     sp = parse_selection("resid 4")
-    eq(sp.source, "(atom.residue.index == 4)")
+    eq(sp.source, "(atom.residue.index == 4)\n")
 
     sp = parse_selection("chainid 4")
-    eq(sp.source, "(atom.residue.chain.index == 4)")
+    eq(sp.source, "(atom.residue.chain.index == 4)\n")
 
     sp = parse_selection("resid > 4")
-    eq(sp.source, "(atom.residue.index > 4)")
+    eq(sp.source, "(atom.residue.index > 4)\n")
 
     sp = parse_selection("resid gt 4")
-    eq(sp.source, "(atom.residue.index > 4)")
+    eq(sp.source, "(atom.residue.index > 4)\n")
 
     sp = parse_selection("resid 5 to 8")
-    eq(sp.source, "(5 <= atom.residue.index <= 8)")
+    eq(sp.source, "(5 <= atom.residue.index <= 8)\n")
 
 
 def test_element():
     sp = parse_selection("element 'O'")
-    eq(sp.source, "(atom.element.symbol == 'O')")
+    eq(sp.source, "(atom.element.symbol == 'O')\n")
 
     sp = parse_selection("mass 5.5 to 12.3")
     eq(sp.astnode, pnode("(5.5 <= atom.element.mass <= 12.3)"))
@@ -236,21 +236,21 @@ def test_element():
 
 def test_not():
     sp = parse_selection("not protein")
-    eq(sp.source, "(not atom.residue.is_protein)")
+    eq(sp.source, "(not atom.residue.is_protein)\n")
 
     sp = parse_selection("not not protein")
-    eq(sp.source, "(not not atom.residue.is_protein)")
+    eq(sp.source, "(not (not atom.residue.is_protein))\n")
 
     sp = parse_selection('!protein')
-    eq(sp.source, "(not atom.residue.is_protein)")
+    eq(sp.source, "(not atom.residue.is_protein)\n")
 
 
 def test_re():
     sp = parse_selection("name =~ 'C.*'")
-    eq(sp.source, "(re.match('C.*', atom.name) is not None)")
+    eq(sp.source, "(re.match('C.*', atom.name) is not None)\n")
 
     sp = parse_selection("(name =~ 'C.*') and all")
-    eq(sp.source, "(re.match('C.*', atom.name) is not None and True)")
+    eq(sp.source, "((re.match('C.*', atom.name) is not None) and True)\n")
 
 
 # def test_within():
@@ -260,7 +260,7 @@ def test_re():
 
 
 def test_quotes():
-    should_be = "(atom.name == 'CA' and atom.residue.name == 'ALA')"
+    should_be = "((atom.name == 'CA') and (atom.residue.name == 'ALA'))\n"
 
     sp = parse_selection("name CA and resname ALA")
     eq(sp.source, should_be)
@@ -285,8 +285,7 @@ def test_top(ala):
 
 def test_top_2(ala):
     expr = ala.topology.select_expression("name O and water")
-    eq(expr, "[atom.index for atom in topology.atoms if (atom.name == 'O' "
-             "and atom.residue.is_water)]")
+    eq(expr, "[atom.index for atom in topology.atoms if ((atom.name == 'O') and atom.residue.is_water)\n]")
 
 
 def test_backbone(gbp):
@@ -322,7 +321,7 @@ def test_literal(gbp):
 
 def test_in():
     sp = parse_selection("resname ALA ASP GLU")
-    eq(sp.source, "(atom.residue.name in ['ALA', 'ASP', 'GLU'])")
+    eq(sp.source, "(atom.residue.name in ['ALA', 'ASP', 'GLU'])\n")
 
     sp = parse_selection("resid 100 101 102")
-    eq(sp.source, "(atom.residue.index in [100, 101, 102])")
+    eq(sp.source, "(atom.residue.index in [100, 101, 102])\n")
