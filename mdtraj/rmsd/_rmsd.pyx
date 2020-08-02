@@ -134,8 +134,7 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
     else:
         atom_indices = ensure_type(np.asarray(atom_indices), dtype=np.int, ndim=1, name='atom_indices')
         if not np.all((atom_indices >= 0) *
-                              (atom_indices < target.xyz.shape[1]) *
-                              (atom_indices < reference.xyz.shape[1])):
+                              (atom_indices < target.xyz.shape[1])):
             raise ValueError("atom_indices must be valid positive indices")
 
     if ref_atom_indices is None:
@@ -148,7 +147,6 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
     if not isinstance(ref_atom_indices, slice):
         ref_atom_indices = ensure_type(np.asarray(ref_atom_indices), dtype=np.int, ndim=1, name='ref_atom_indices')
         if not np.all((ref_atom_indices >= 0) *
-                              (ref_atom_indices < target.xyz.shape[1]) *
                               (ref_atom_indices < reference.xyz.shape[1])):
             raise ValueError("ref_atom_indices must be valid positive indices")
 
