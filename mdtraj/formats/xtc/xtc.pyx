@@ -403,7 +403,12 @@ cdef class XTCTrajectoryFile(object):
         while status == _EXDROK:
             # guess the size of the chunk to read, based on how many frames we
             # think are in the file and how many we've currently read
-            chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier / stride)),
+            estimated_remaining_frames = self.approx_n_frames - self.frame_counter
+            if self.frame_counter > self.approx_n_frames:
+                # that might have gone negative -- aparently we think we're past the end of the trajectory?
+                print("WARNING: self.frame_counter=", self.frame_counter, "self.approx_n_frames=", self.approx_n_frames)
+                estimated_remaining_frames = 0
+            chunk = max(int(estimated_remaining_frames * self.chunk_size_multiplier / stride),
                         self.min_chunk_size)
             print("========================")
             print("self.approx_n_frames", self.approx_n_frames)
@@ -519,7 +524,10 @@ cdef class XTCTrajectoryFile(object):
         # if we are using seek, the frame_counter already points to the right absolute position,
         # otherwise we increment the counter relatively
         if not efficient_striding:
+            print("self.frame_counter = ", self.frame_counter)
+            print("self.frame_counter += ", len(xyz))
             self.frame_counter += len(xyz)
+            print("now self.frame_counter == ", self.frame_counter)
 
         return xyz, time, step, box, status
 
@@ -629,7 +637,9 @@ cdef class XTCTrajectoryFile(object):
         if whence == 0 and offset >= 0:
             absolute = offset
         elif whence == 1:
+            print("seeking: offset=", offset, "frame_counter = ", self.frame_counter)
             absolute = offset + self.frame_counter
+            print("absolute = ", absolute)
         elif whence == 2 and offset <= 0:
             raise NotImplementedError('offsets from the end are not supported yet')
         else:
@@ -641,9 +651,10 @@ cdef class XTCTrajectoryFile(object):
         pos = self.offsets[absolute]
         status = xdrlib.xdr_seek(self.fh, pos, SEEK_SET)
         if status != _EXDROK:
-            raise RuntimeError('XTC seek error: %s' % status)
+            raise RuntimeError('XTC seek error: %s' % status)   
         self.frame_counter = absolute
-
+        print("setting frame_counter = ", self.frame_counter)
+        
     def _calc_len_and_offsets(self):
         cdef int byte_offset, status
         cdef int64_t n_frames, filesize
