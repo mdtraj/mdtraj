@@ -224,7 +224,7 @@ cdef class XTCTrajectoryFile(object):
     """
     cdef xdrlib.XDRFILE* fh
     cdef str filename
-    cdef int64_t n_atoms          # number of atoms in the file
+    cdef int n_atoms          # number of atoms in the file
     cdef int64_t n_frames # number of frames in the file, cached
     cdef int64_t frame_counter    # current position in the file, in read mode
     cdef char is_open          # is the file handle currently open?
@@ -645,7 +645,7 @@ cdef class XTCTrajectoryFile(object):
         self.frame_counter = absolute
 
     def _calc_len_and_offsets(self):
-        cdef int64_t byte_offset, status
+        cdef int byte_offset, status
         cdef int64_t n_frames, filesize
         cdef np.ndarray[dtype=int64_t, ndim=1] offsets
 
