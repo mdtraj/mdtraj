@@ -62,7 +62,7 @@ test:
     - mdtraj
 
   commands:
-    - pytest -v --ignore-flaky
+    - pytest -vvv --ignore-flaky
 
 about:
   home: https://github.com/mdtraj/mdtraj
