@@ -224,14 +224,14 @@ cdef class XTCTrajectoryFile(object):
     """
     cdef xdrlib.XDRFILE* fh
     cdef str filename
-    cdef int n_atoms          # number of atoms in the file
+    cdef int64_t n_atoms          # number of atoms in the file
     cdef int64_t n_frames # number of frames in the file, cached
     cdef int64_t frame_counter    # current position in the file, in read mode
     cdef char is_open          # is the file handle currently open?
     cdef int64_t approx_n_frames  # appriximate number of frames in the file, as guessed based on its size
     cdef char* mode           # mode in which the file is open, either 'r' or 'w'
-    cdef int min_chunk_size
-    cdef float chunk_size_multiplier
+    cdef int64_t min_chunk_size
+    cdef double chunk_size_multiplier
     cdef char with_unitcell    # used in mode='w' to know if we're writing unitcells or nor
     cdef readonly char* distance_unit
     cdef np.ndarray _offsets
@@ -405,6 +405,13 @@ cdef class XTCTrajectoryFile(object):
             # think are in the file and how many we've currently read
             chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier / stride)),
                         self.min_chunk_size)
+            print("========================")
+            print("self.approx_n_frames", self.approx_n_frames)
+            print("self.frame_counter", self.frame_counter)
+            print("self.chunk_size_multiplier", self.chunk_size_multiplier)
+            print("stride", stride)
+            print("chunk", chunk)
+            print("========================")
             xyz, time, step, box, status = self._read(chunk, atom_indices, stride)
 
             all_xyz.append(xyz)
@@ -638,7 +645,7 @@ cdef class XTCTrajectoryFile(object):
         self.frame_counter = absolute
 
     def _calc_len_and_offsets(self):
-        cdef int byte_offset, status
+        cdef int64_t byte_offset, status
         cdef int64_t n_frames, filesize
         cdef np.ndarray[dtype=int64_t, ndim=1] offsets
 
