@@ -52,6 +52,7 @@ test:
     - psutil
     - conda-verify
     - gsd
+    - pytest-timeout
 
   source_files:
     - examples/*
@@ -62,7 +63,7 @@ test:
     - mdtraj
 
   commands:
-    - pytest -vvv --ignore-flaky
+    - pytest -vvv --ignore-flaky --timeout=300
 
 about:
   home: https://github.com/mdtraj/mdtraj
