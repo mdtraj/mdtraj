@@ -252,6 +252,11 @@ def test_subset(get_fn):
     t2 = t1.subset([1, 2, 3])
     assert t2.n_residues == 1
 
+def test_subset_re_index_residues(get_fn):
+    t1 = md.load(get_fn('2EQQ.pdb')).top
+    t2 = t1.subset(t1.select('resid 0 2'))
+    np.testing.assert_array_equal([0, 1], [rr.index for rr in t2.residues])
+
 
 def test_molecules(get_fn):
     top = md.load(get_fn('4OH9.pdb')).topology
