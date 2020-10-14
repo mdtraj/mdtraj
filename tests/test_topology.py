@@ -63,6 +63,16 @@ def test_topology_openmm_boxes(get_fn):
     mmtop = traj.topology.to_openmm(traj=traj)
     box = mmtop.getUnitCellDimensions() / u.nanometer
 
+def test_topology_sliced_residue_indices(get_fn):
+    full = md.load(get_fn('1bpi.pdb'))
+    residues = full.top.select("resid 1 to 10")
+    sliced = full.atom_slice(residues)
+    idx = [res.index for res in sliced.top.residues][-1]
+    assert idx == sliced.top.n_residues-1
+    # Now see if this works
+    _ = sliced.topology.residue(idx)
+
+
 
 def test_topology_pandas(get_fn):
     topology = md.load(get_fn('native.pdb')).topology
@@ -277,3 +287,14 @@ def test_copy_and_hash(get_fn):
     assert hash(tuple(t1._residues)) == hash(tuple(t2._residues))
 
     assert hash(t1) == hash(t2)
+
+
+def test_topology_sliced_residue_indices(get_fn):
+    # https://github.com/mdtraj/mdtraj/issues/1585
+    full = md.load(get_fn('1bpi.pdb'))
+    residues = full.top.select("resid 1 to 10")
+    sliced = full.atom_slice(residues)
+    idx = [res.index for res in sliced.top.residues][-1]
+    assert idx == sliced.top.n_residues-1
+    # Now see if this works
+    _ = sliced.topology.residue(idx)
