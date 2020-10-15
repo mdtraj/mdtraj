@@ -27,7 +27,7 @@ jobs:
       source devtools/travis-ci/install_ppm.sh
       conda config --add channels omnia
       conda config --add channels conda-forge # hightest priority
-      conda install -y conda=4.7.12 conda-build=3.18.9
+      conda install -y conda=4.8.5 conda-build=3.20.4
     displayName: 'Install dependencies'
     continueOnError: false
 
