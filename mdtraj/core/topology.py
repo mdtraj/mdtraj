@@ -121,7 +121,6 @@ def _topology_from_subset(topology, atom_indices):
             # we only put bonds into the new topology if both of their partners
             # were indexed and thus HAVE a new atom
 
-
     # Delete empty residues
     newTopology._residues = [r for r in newTopology._residues if len(r._atoms) > 0]
     for chain in newTopology._chains:
@@ -133,6 +132,13 @@ def _topology_from_subset(topology, atom_indices):
     # Re-set the numAtoms and numResidues
     newTopology._numAtoms = ilen(newTopology.atoms)
     newTopology._numResidues = ilen(newTopology.residues)
+
+    # Reset the chain indices
+    for i, chain in enumerate(newTopology.chains):
+        chain.index = i
+    # Reset the residue indices
+    for i, res in enumerate(newTopology.residues):
+        res.index = i
 
     return newTopology
 

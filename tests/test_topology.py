@@ -277,3 +277,14 @@ def test_copy_and_hash(get_fn):
     assert hash(tuple(t1._residues)) == hash(tuple(t2._residues))
 
     assert hash(t1) == hash(t2)
+
+
+def test_topology_sliced_residue_indices(get_fn):
+    # https://github.com/mdtraj/mdtraj/issues/1585
+    full = md.load(get_fn('1bpi.pdb'))
+    residues = full.top.select("resid 1 to 10")
+    sliced = full.atom_slice(residues)
+    idx = [res.index for res in sliced.top.residues][-1]
+    assert idx == sliced.top.n_residues-1
+    # Now see if this works
+    _ = sliced.topology.residue(idx)
