@@ -24,9 +24,9 @@ stages:
           displayName: 'Build docs'
           continueOnError: false
 
-        - bash: |
-            echo "Deploy docs"
-            aws configure list            
-          env:
-            AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
-            AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+        #- bash: |
+        #    echo "Deploy docs"
+        #    aws configure list            
+        #  env:
+        #    AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+        #    AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
