@@ -14,3 +14,4 @@ setuptools
 pandas
 numpydoc
 wheel
+python==3.7
