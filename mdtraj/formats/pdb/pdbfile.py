@@ -420,10 +420,10 @@ class PDBTrajectoryFile(object):
             nextAtomIndex = 0
             prevChain = None
             for chain in self._last_topology.chains:
+                if chain != prevChain:
+                    nextAtomIndex += 1
+                    prevChain = chain
                 for atom in chain.atoms:
-                    if atom.residue.chain != prevChain:
-                        nextAtomIndex += 1
-                        prevChain = atom.residue.chain
                     atomIndex[atom] = nextAtomIndex
                     nextAtomIndex += 1
 
