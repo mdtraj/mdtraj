@@ -406,11 +406,12 @@ class PDBTrajectoryFile(object):
                             'A', 'G', 'C', 'U', 'I', 'DA', 'DG', 'DC', 'DT', 'DI', 'HOH']
         conectBonds = []
         if self._last_topology is not None:
+            atoms = list(self._last_topology.atoms)
             for atom1, atom2 in self._last_topology.bonds:
                 if atom1.residue.name not in standardResidues or atom2.residue.name not in standardResidues:
-                    conectBonds.append((atom1, atom2))
+                    conectBonds.append((atoms[atom1.index], atoms[atom2.index]))
                 elif atom1.name == 'SG' and atom2.name == 'SG' and atom1.residue.name == 'CYS' and atom2.residue.name == 'CYS':
-                    conectBonds.append((atom1, atom2))
+                    conectBonds.append((atoms[atom1.index], atoms[atom2.index]))
         if len(conectBonds) > 0:
 
             # Work out the index used in the PDB file for each atom.

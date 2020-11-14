@@ -21,6 +21,7 @@
 # #############################################################################
 
 import ast
+from tempfile import NamedTemporaryFile
 
 import mdtraj
 import numpy as np
@@ -281,6 +282,14 @@ def test_top(ala):
 
     wat = ala.topology.select("water")
     eq(np.asarray(wat), np.arange(22, 2269))
+
+
+def test_atom_slice(get_fn):
+    traj = mdtraj.load(get_fn("test_atomslice.h5"))
+    solute = traj.topology.select("not water")
+    new_traj = traj.atom_slice(solute, inplace=False)
+    with NamedTemporaryFile(suffix=".pdb") as temp:
+        new_traj[0].save(temp.name)
 
 
 def test_top_2(ala):
