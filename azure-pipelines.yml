@@ -26,7 +26,10 @@ stages:
 
         - bash: |
             echo "Deploy docs"
-            aws configure list            
+            aws configure list
+            python devtools/travis-ci/set_doc_version.py
+            find docs/_deploy
+            aws s3 sync docs/_deploy/ s3://mdtraj
           env:
             AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
             AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)

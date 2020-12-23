@@ -344,8 +344,12 @@ class PDBTrajectoryFile(object):
                         symbol = atom.element.symbol
                     else:
                         symbol = ' '
+                    if atom.serial is not None:
+                        atomSerial = atom.serial
+                    else:
+                        atomSerial = atomIndex
                     line = "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s  " % ( # Right-justify atom symbol
-                        atomIndex % 100000, atomName, resName, chainName,
+                        atomSerial % 100000, atomName, resName, chainName,
                         (res.resSeq) % 10000, _format_83(coords[0]),
                         _format_83(coords[1]), _format_83(coords[2]),
                         bfactors[posIndex], atom.segment_id[:4], symbol[-2:])
@@ -354,7 +358,7 @@ class PDBTrajectoryFile(object):
                     posIndex += 1
                     atomIndex += 1
                 if resIndex == len(residues)-1:
-                    print("TER   %5d      %3s %s%4d" % (atomIndex, resName, chainName, res.resSeq), file=self._file)
+                    print("TER   %5d      %3s %s%4d" % (atomSerial+1, resName, chainName, res.resSeq), file=self._file)
                     atomIndex += 1
 
         if modelIndex is not None:

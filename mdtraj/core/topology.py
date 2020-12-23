@@ -92,14 +92,16 @@ def _topology_from_subset(topology, atom_indices):
         newChain = newTopology.add_chain()
         for residue in chain._residues:
             resSeq = getattr(residue, 'resSeq', None) or residue.index
-            newResidue = newTopology.add_residue(residue.name, newChain,
-                                                 resSeq, residue.segment_id)
+            newResidue = None
             for atom in residue._atoms:
                 if atom.index in atom_indices:
                     try:  # OpenMM Topology objects don't have serial attributes, so we have to check first.
                         serial = atom.serial
                     except AttributeError:
                         serial = None
+                    if newResidue is None:
+                        newResidue = newTopology.add_residue(residue.name, newChain,
+                                                             resSeq, residue.segment_id)
                     newAtom = newTopology.add_atom(atom.name, atom.element,
                                                    newResidue, serial=serial)
                     old_atom_to_new_atom[atom] = newAtom
@@ -120,7 +122,6 @@ def _topology_from_subset(topology, atom_indices):
             # we only put bonds into the new topology if both of their partners
             # were indexed and thus HAVE a new atom
 
-
     # Delete empty residues
     newTopology._residues = [r for r in newTopology._residues if len(r._atoms) > 0]
     for chain in newTopology._chains:
@@ -132,6 +133,13 @@ def _topology_from_subset(topology, atom_indices):
     # Re-set the numAtoms and numResidues
     newTopology._numAtoms = ilen(newTopology.atoms)
     newTopology._numResidues = ilen(newTopology.residues)
+
+    # Reset the chain indices
+    for i, chain in enumerate(newTopology.chains):
+        chain.index = i
+    # Reset the residue indices
+    for i, res in enumerate(newTopology.residues):
+        res.index = i
 
     return newTopology
 

@@ -252,6 +252,11 @@ def test_subset(get_fn):
     t2 = t1.subset([1, 2, 3])
     assert t2.n_residues == 1
 
+def test_subset_re_index_residues(get_fn):
+    t1 = md.load(get_fn('2EQQ.pdb')).top
+    t2 = t1.subset(t1.select('resid 0 2'))
+    np.testing.assert_array_equal([0, 1], [rr.index for rr in t2.residues])
+
 
 def test_molecules(get_fn):
     top = md.load(get_fn('4OH9.pdb')).topology
@@ -272,3 +277,14 @@ def test_copy_and_hash(get_fn):
     assert hash(tuple(t1._residues)) == hash(tuple(t2._residues))
 
     assert hash(t1) == hash(t2)
+
+
+def test_topology_sliced_residue_indices(get_fn):
+    # https://github.com/mdtraj/mdtraj/issues/1585
+    full = md.load(get_fn('1bpi.pdb'))
+    residues = full.top.select("resid 1 to 10")
+    sliced = full.atom_slice(residues)
+    idx = [res.index for res in sliced.top.residues][-1]
+    assert idx == sliced.top.n_residues-1
+    # Now see if this works
+    _ = sliced.topology.residue(idx)
