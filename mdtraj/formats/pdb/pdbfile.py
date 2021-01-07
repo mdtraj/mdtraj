@@ -344,7 +344,7 @@ class PDBTrajectoryFile(object):
                         symbol = atom.element.symbol
                     else:
                         symbol = ' '
-                    if atom.serial is not None and len(topology.chains) < 2:
+                    if atom.serial is not None and len(topology._chains) < 2:
                         # We can't do this for more than 1 chain
                         # to prevent issue 1611
                         atomSerial = atom.serial
