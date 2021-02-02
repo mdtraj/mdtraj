@@ -31,7 +31,8 @@ requirements:
     # Fix pytables on windows. See https://github.com/conda-forge/pytables-feedstock/issues/31#issuecomment-410695814
     - snappy  # [win]
     - pyparsing
-    - astunparse
+    - astunparse<=1.6.2 # [py==38]
+    - astunparse # [py!=38]
 
 test:
   requires:
