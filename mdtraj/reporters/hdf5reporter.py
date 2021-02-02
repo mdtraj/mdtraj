@@ -70,7 +70,7 @@ class HDF5Reporter(_BaseReporter):
     atomSubset : array_like, default=None
         Only write a subset of the atoms, with these (zero based) indices
         to the file. If None, *all* of the atoms will be written to disk.
-    enforcePeriodicBox: bool
+    enforcePeriodicBox: bool or None
         Specifies whether particle positions should be translated so the
         center of every molecule lies in the same periodic box. If None
         (the default), it will automatically decide whether to translate
