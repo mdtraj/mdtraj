@@ -62,7 +62,8 @@ class _BaseReporter(object):
 
     def __init__(self, file, reportInterval, coordinates=True, time=True,
                  cell=True, potentialEnergy=True, kineticEnergy=True,
-                 temperature=True, velocities=False, atomSubset=None):
+                 temperature=True, velocities=False, atomSubset=None,
+                 enforcePeriodicBox=None):
         """Create an OpenMM reporter
 
         Parameters
@@ -122,6 +123,7 @@ class _BaseReporter(object):
         self._needEnergy = potentialEnergy or kineticEnergy or temperature
         self._atomSubset = atomSubset
         self._atomSlice = None
+        self._enforcePeriodicBox = enforcePeriodicBox
 
         if not OPENMM_IMPORTED:
             raise ImportError('OpenMM not found.')
@@ -190,7 +192,7 @@ class _BaseReporter(object):
             energies respectively.
         """
         steps = self._reportInterval - simulation.currentStep % self._reportInterval
-        return (steps, self._coordinates, self._velocities, False, self._needEnergy)
+        return (steps, self._coordinates, self._velocities, False, self._needEnergy, self._enforcePeriodicBox)
 
     def report(self, simulation, state):
         """Generate a report.
