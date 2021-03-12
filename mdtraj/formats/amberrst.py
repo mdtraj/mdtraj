@@ -301,7 +301,7 @@ class AmberRestartFile(object):
         coordinates, time, cell_lengths, cell_angles = self._parse(lines)
 
         if atom_indices is not None:
-            atom_slice = ensure_type(atom_indices, dtype=np.int, ndim=1,
+            atom_slice = ensure_type(atom_indices, dtype=int, ndim=1,
                                      name='atom_indices', warn_on_cast=False)
             if not np.all(atom_slice) >= 0:
                 raise ValueError('Entries in atom_slice must be >= 0')
@@ -589,7 +589,7 @@ class AmberNetCDFRestartFile(object):
             raise ValueError('NetCDF restart has ConventionVersion %s. Only '
                              'Version 1.0 is supported.' % convention_version)
         if atom_indices is not None:
-            atom_slice = ensure_type(atom_indices, dtype=np.int, ndim=1,
+            atom_slice = ensure_type(atom_indices, dtype=int, ndim=1,
                                      name='atom_indices', warn_on_cast=False)
             if not np.all(atom_slice) >= 0:
                 raise ValueError('Entries in atom_slice must be >= 0')

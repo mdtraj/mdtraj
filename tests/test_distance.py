@@ -162,10 +162,10 @@ def test_closest_contact():
 
 
 def _verify_closest_contact(traj):
-    group1 = np.array([i for i in range(N_ATOMS // 2)], dtype=np.int)
-    group2 = np.array([i for i in range(N_ATOMS // 2, N_ATOMS)], dtype=np.int)
+    group1 = np.array([i for i in range(N_ATOMS // 2)], dtype=int)
+    group2 = np.array([i for i in range(N_ATOMS // 2, N_ATOMS)], dtype=int)
     contact = find_closest_contact(traj, group1, group2)
-    pairs = np.array([(i, j) for i in group1 for j in group2], dtype=np.int)
+    pairs = np.array([(i, j) for i in group1 for j in group2], dtype=int)
     dists = md.compute_distances(traj, pairs, True)[0]
     dists2 = md.compute_distances(traj, pairs, False)[0]
     nearest = np.argmin(dists)

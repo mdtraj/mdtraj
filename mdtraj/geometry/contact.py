@@ -143,7 +143,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
             raise ValueError('No acceptable residue pairs found')
 
     else:
-        residue_pairs = ensure_type(np.asarray(contacts), dtype=np.int, ndim=2, name='contacts',
+        residue_pairs = ensure_type(np.asarray(contacts), dtype=int, ndim=2, name='contacts',
                                shape=(None, 2), warn_on_cast=False)
         if not np.all((residue_pairs >= 0) * (residue_pairs < traj.n_residues)):
             raise ValueError('contacts requests a residue that is not in the permitted range')
@@ -257,7 +257,7 @@ def squareform(distances, residue_pairs):
         raise ValueError('distances must be a 2d array')
 
     residue_pairs = ensure_type(
-        residue_pairs, dtype=np.int, ndim=2, name='residue_pars',
+        residue_pairs, dtype=int, ndim=2, name='residue_pars',
         shape=(None, 2), warn_on_cast=False)
 
     if not np.all(residue_pairs >= 0):
