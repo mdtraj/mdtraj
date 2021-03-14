@@ -578,7 +578,7 @@ class HDF5TrajectoryFile(object):
             # get all of the atoms
             atom_slice = slice(None)
         else:
-            atom_slice = ensure_type(atom_indices, dtype=np.int, ndim=1,
+            atom_slice = ensure_type(atom_indices, dtype=int, ndim=1,
                                      name='atom_indices', warn_on_cast=False)
             if not np.all(atom_slice < self._handle.root.coordinates.shape[1]):
                 raise ValueError('As a zero-based index, the entries in '
