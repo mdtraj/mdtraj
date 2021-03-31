@@ -117,7 +117,15 @@ def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
         raise ValueError('atom_pairs must be between 0 and %d' % traj.n_atoms)
 
     if len(pairs) == 0:
-        return np.zeros((len(xyz), 0), dtype=np.float32dist_mic_t(xyz, pairs, times, box.transpose(0, 2, 1).copy(), out, orthogonal)
+        return np.zeros((len(xyz), 0), dtype=np.float32)
+
+    if periodic and traj._have_unitcell:
+        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3),
+                          warn_on_cast=False)
+        orthogonal = np.allclose(traj.unitcell_angles, 90)
+        if opt:
+            out = np.empty((times.shape[0], pairs.shape[0]), dtype=np.float32)
+            _geometry._dist_mic_t(xyz, pairs, times, box.transpose(0, 2, 1).copy(), out, orthogonal)
             out = out.reshape((times.shape[0], pairs.shape[0]))
             return out
         else:
