@@ -26,7 +26,7 @@ import numpy as np
 import mdtraj as md
 
 from mdtraj.testing import eq, assert_allclose
-from mdtraj.geometry.distance import compute_distances, compute_displacements, find_closest_contact
+from mdtraj.geometry.distance import compute_distances, compute_distances_t, compute_displacements, find_closest_contact
 from mdtraj.geometry.distance import _displacement_mic, _displacement
 
 N_FRAMES = 20
@@ -34,6 +34,7 @@ N_ATOMS = 20
 
 xyz = np.asarray(np.random.randn(N_FRAMES, N_ATOMS, 3), dtype=np.float32)
 pairs = np.array(list(itertools.combinations(range(N_ATOMS), 2)), dtype=np.int32)
+times = np.array([[i, 0] for i in range(N_FRAMES)], dtype=np.int32)
 
 ptraj = md.Trajectory(xyz=xyz, topology=None)
 ptraj.unitcell_vectors = np.ascontiguousarray(np.random.randn(N_FRAMES, 3, 3) + 2 * np.eye(3, 3), dtype=np.float32)
@@ -190,3 +191,20 @@ def test_closest_contact_nan_pos():
     xyz = xyz[:-1]
     traj = md.Trajectory(xyz=xyz, topology=None)
     _verify_closest_contact(traj)
+
+def test_distances_t():
+    a = compute_distances_t(ptraj, pairs, times, periodic=False, opt=True)
+    b = compute_distances_t(ptraj, pairs, times, periodic=False, opt=True)
+    eq(a, b)
+
+def _run_amber_traj_t(traj, ext_ref):
+    # Test triclinic case where simple approach in Tuckerman text does not
+    # always work
+    distopt = compute_distances_t(traj, atom_pairs=[[0, 9999]], time_pairs=[[0, 2]], opt=True)
+    distslw = compute_distances_t(traj, atom_pairs=[[0, 9999]], time_pairs=[[0, 2]], opt=False)
+
+def test_amber_t(get_fn):
+    ext_ref = np.array([17.4835, 22.2418, 24.2910, 22.5505, 12.8686, 22.1090,
+                        7.4472, 22.4253, 19.8283, 20.6935]) / 10
+    traj = md.load(get_fn('test_good.nc'), top=get_fn('test.parm7'))
+    _run_amber_traj_t(traj, ext_ref)
