@@ -87,7 +87,7 @@ void dist(const float* xyz, const int* pairs, float* distance_out,
 }
 
 /**
- * Compute the distance/displacement  between pairs of atoms in every frame
+ * Compute the distance/displacement between pairs of atoms at t=0 and t=t for every frame
  * of xyz.
  *
  * Two versions of this function can be compiled, one of which takes an extra

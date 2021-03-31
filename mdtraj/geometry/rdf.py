@@ -96,12 +96,12 @@ def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
 def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
                   bin_width=0.005, n_bins=None, self_correlation=True,
                   periodic=True, opt=True):
-    """Compute a time-dependent radial distribution.
+    """Compute time-dependent radial distribution functions.
 
     Parameters
     ----------
     traj : Trajectory
-        Trajectory to compute radial distribution function in.
+        Trajectory to compute time-dependent radial distribution function in.
     pairs : array-like, shape=(n_pairs, 2), dtype=int
         Each row gives the indices of two atoms.
     times : array-like, shape=(any, 2), dtype=int

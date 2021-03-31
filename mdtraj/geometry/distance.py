@@ -86,6 +86,30 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
 
 
 def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
+    """Compute the distances between pairs of atoms from times 0 to t.
+
+    Parameters
+    ----------
+    traj : Trajectory
+        An mtraj trajectory.
+    atom_pairs : np.ndarray, shape=(num_pairs, 2), dtype=int
+        Each row gives the indices of two atoms involved in the interaction.
+    time_pairs : nd.array
+        Each row gives the indices of two frames.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will compute distances under the minimum image
+        convention.
+    opt : bool, default=True
+        Use an optimized native library to calculate distances. Our optimized
+        SSE minimum image convention calculation implementation is over 1000x
+        faster than the naive numpy implementation.
+
+    Returns
+    -------
+    distances : np.ndarray, shape=(n_frames, num_pairs), dtype=float
+        The distance between each pair of atoms at t=0 and t=t.
+    """
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     pairs = ensure_type(atom_pairs, dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2), warn_on_cast=False)
     times = ensure_type(time_pairs, dtype=np.int32, ndim=2, name='time_pairs', shape=(None, 2), warn_on_cast=False)
@@ -93,15 +117,7 @@ def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
         raise ValueError('atom_pairs must be between 0 and %d' % traj.n_atoms)
 
     if len(pairs) == 0:
-        return np.zeros((len(xyz), 0), dtype=np.float32)
-
-    if periodic and traj._have_unitcell:
-        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3),
-                          warn_on_cast=False)
-        orthogonal = np.allclose(traj.unitcell_angles, 90)
-        if opt:
-            out = np.empty((times.shape[0], pairs.shape[0]), dtype=np.float32)
-            _geometry._dist_mic_t(xyz, pairs, times, box.transpose(0, 2, 1).copy(), out, orthogonal)
+        return np.zeros((len(xyz), 0), dtype=np.float32dist_mic_t(xyz, pairs, times, box.transpose(0, 2, 1).copy(), out, orthogonal)
             out = out.reshape((times.shape[0], pairs.shape[0]))
             return out
         else:
