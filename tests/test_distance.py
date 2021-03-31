@@ -192,9 +192,11 @@ def test_closest_contact_nan_pos():
     traj = md.Trajectory(xyz=xyz, topology=None)
     _verify_closest_contact(traj)
 
-def test_distances_t():
-    a = compute_distances_t(ptraj, pairs, times, periodic=False, opt=True)
-    b = compute_distances_t(ptraj, pairs, times, periodic=False, opt=True)
+def test_distances_t(get_fn):
+    # This will fail until _distance_mic_t is implemented
+    # TODO: Add case for checking when periodic=False
+    a = compute_distances_t(ptraj, pairs, times, periodic=True, opt=True)
+    b = compute_distances_t(ptraj, pairs, times, periodic=True, opt=False)
     eq(a, b)
 
 def _run_amber_traj_t(traj, ext_ref):
