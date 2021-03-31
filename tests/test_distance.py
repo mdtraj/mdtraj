@@ -194,10 +194,13 @@ def test_closest_contact_nan_pos():
 
 def test_distances_t(get_fn):
     # This will fail until _distance_mic_t is implemented
-    # TODO: Add case for checking when periodic=False
     a = compute_distances_t(ptraj, pairs, times, periodic=True, opt=True)
     b = compute_distances_t(ptraj, pairs, times, periodic=True, opt=False)
     eq(a, b)
+    # TODO: Add case for checking when periodic=False
+    c = compute_distances_t(ptraj, pairs, times, periodic=False, opt=True)
+    d = compute_distances_t(ptraj, pairs, times, periodic=False, opt=False)
+    eq(c, d)
 
 def _run_amber_traj_t(traj, ext_ref):
     # Test triclinic case where simple approach in Tuckerman text does not
