@@ -93,7 +93,7 @@ def compute_neighborlist(traj, cutoff, frame=0, periodic=True):
     for i in range(n_atoms):
         if atom_neighbors[i].size() > 0:
             atom_neighbors_mview = <int[:atom_neighbors[i].size()]> (<int*> (&atom_neighbors[i][0]))
-            neighbors.append(np.array(atom_neighbors_mview, dtype=np.int, copy=True))
+            neighbors.append(np.array(atom_neighbors_mview, dtype=int, copy=True))
         else:
-            neighbors.append(np.empty(0, dtype=np.int))
+            neighbors.append(np.empty(0, dtype=int))
     return neighbors

@@ -230,7 +230,7 @@ def _atom_sequence(top, atom_names, residue_offsets=None):
     found_residue_ids = np.array(found_residue_ids)
 
     if len(atom_indices) == 0:
-        atom_indices = np.empty(shape=(0, 4), dtype=np.int)
+        atom_indices = np.empty(shape=(0, 4), dtype=int)
 
     return found_residue_ids, atom_indices
 
@@ -370,8 +370,8 @@ def _indices_chi(top, chi_atoms):
     rids, indices = zip(*(_atom_sequence(top, atoms) for atoms in chi_atoms))
     id_sort = np.argsort(np.concatenate(rids))
     if not any(x.size for x in indices):
-        return np.empty(shape=(0, 4), dtype=np.int)
-    indices = np.vstack(x for x in indices if x.size)[id_sort]
+        return np.empty(shape=(0, 4), dtype=int)
+    indices = np.vstack([x for x in indices if x.size])[id_sort]
     return indices
 
 

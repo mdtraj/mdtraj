@@ -18,11 +18,19 @@ def test_munkres_0():
     eq(result, true)
 
 
+def test_lprmsd_null():
+    ref = random.randn(1, 10, 3).astype(np.float32)
+    new = np.copy(ref)
+
+    value = lprmsd(Trajectory(xyz=new, topology=None), Trajectory(xyz=ref, topology=None))
+    eq(value, np.array([0.0], dtype=np.float32), decimal=3)
+
+
 def test_lprmsd_0():
     # remap a permutation of all the atoms with no rotation
     ref = random.randn(1, 10, 3).astype(np.float32)
     mapping = random.permutation(10)
-    print('true mapping', mapping)
+
     new = ref[:, mapping]
 
     value = lprmsd(Trajectory(xyz=new, topology=None), Trajectory(xyz=ref, topology=None))

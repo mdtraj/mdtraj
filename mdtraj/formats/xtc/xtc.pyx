@@ -403,7 +403,7 @@ cdef class XTCTrajectoryFile(object):
         while status == _EXDROK:
             # guess the size of the chunk to read, based on how many frames we
             # think are in the file and how many we've currently read
-            chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier)),
+            chunk = max(abs(int((self.approx_n_frames - self.frame_counter) * self.chunk_size_multiplier / stride)),
                         self.min_chunk_size)
             xyz, time, step, box, status = self._read(chunk, atom_indices, stride)
 
@@ -425,7 +425,8 @@ cdef class XTCTrajectoryFile(object):
     def _read(self, int64_t n_frames, atom_indices, stride):
         """Read a specified number of XTC frames from the buffer"""
         cdef int64_t n_read_frames = 0
-        cdef int status, status_seek = _EXDROK
+        cdef int status = _EXDROK
+        cdef int status_seek = _EXDROK
         cdef unsigned int n_atoms_to_read
         cdef char efficient_striding = stride > 1 and self._offsets is not None
 

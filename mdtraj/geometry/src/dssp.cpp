@@ -16,13 +16,13 @@
 #include <map>
 #include <algorithm>
 #include "geometry.h"
-#include "vectorize_sse.h"
+#include "vectorize.h"
 
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 #define CLIP(X, X_min, X_max) (MIN(MAX(X, X_min), X_max))
 
-#include <pmmintrin.h>
+//#include <pmmintrin.h>
 #include "msvccompat.h"
 #include <math.h>
 

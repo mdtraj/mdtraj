@@ -6,11 +6,11 @@ jobs:
 
   strategy:
     matrix:
-      Python36:
-        CONDA_PY: '3.6'
-        CONDA_NPY: '1.11'
       Python37:
         CONDA_PY: '3.7'
+        CONDA_NPY: '1.14'
+      Python38:
+        CONDA_PY: '3.8'
         CONDA_NPY: '1.17'
     maxParallel: 10
 
@@ -27,10 +27,11 @@ jobs:
       source devtools/travis-ci/install_ppm.sh
       conda config --add channels omnia
       conda config --add channels conda-forge # hightest priority
-      conda install -y conda=4.7.12 conda-build=3.18.9
+      conda install -y conda=4.8.5 conda-build=3.20.4
     displayName: 'Install dependencies'
     continueOnError: false
 
   - bash: conda build devtools/conda-recipe
     displayName: 'Build and test'
     continueOnError: false
+

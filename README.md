@@ -43,4 +43,4 @@ different licenses. See those files for their specific terms.
 
 #### Contributing
 
-If you'd like to contribute to `mdtraj` you're most welcome! It’s people like you who make it such a great tool. Generally, the library is mostly in "maintance mode" -- we are not specifically planning to add major new features. Bug-fixes, additional testing and documentation, and small features that integrate well with the existing library are most appreciated!
+If you'd like to contribute to `mdtraj` you're most welcome! It’s people like you who make it such a great tool. Generally, the library is mostly in "maintenance mode" -- we are not specifically planning to add major new features. Bug-fixes, additional testing and documentation, and small features that integrate well with the existing library are most appreciated!

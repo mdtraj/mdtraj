@@ -21,7 +21,6 @@ requirements:
     - cython
     - numpy
     - zlib
-    - msinttypes  # [win and py27]
     - pip >=19
 
   run:
@@ -32,14 +31,14 @@ requirements:
     # Fix pytables on windows. See https://github.com/conda-forge/pytables-feedstock/issues/31#issuecomment-410695814
     - snappy  # [win]
     - pyparsing
-    - astor
+    - astunparse<=1.6.2 # [py==38]
+    - astunparse # [py!=38]
 
 test:
   requires:
     - pytest
     - networkx
     - matplotlib
-    - openmm >=7.1  # [not (win32 or (win and py2k) or py37)]
     - shiftx2  # [linux and py2k]
     # 1. do not install cpptraj on osx, because the current version from omnia is linked against an old runtime.
     #    and not avail on win

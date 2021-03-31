@@ -1,8 +1,7 @@
 #include <cmath>
 #include <vector>
-#include <pmmintrin.h>
 #include "msvccompat.h"
-#include "vectorize_sse.h"
+#include "vectorize.h"
 #include "neighbors.hpp"
 #include "math_patch.h"
 
