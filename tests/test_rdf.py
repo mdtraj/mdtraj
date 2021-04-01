@@ -120,17 +120,19 @@ def test_rdf_t(get_fn, periodic, opt):
 #    _, rdf_O_H = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times)
 #    assert eq(np.ones(20), np.mean(rdf_O_H, axis=0)[-20:], decimal=1)
 
-def test_compare_rdf_t_at_0(get_fn):
+@pytest.mark.parametrize('periodic, opt', [(True, True), (True, False), (False, True), (False, False)])
+def test_compare_rdf_t_at_0(get_fn, periodic, opt):
     # Compute g(r, t) at t = 0 and compare to g(r)
+    frames = 2
     traj = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))
     pairs = traj.top.select_pairs('name O', 'name O')
     times = list()
-    for j in range(traj.n_frames):
+    for j in range(frames):
         times.append([j, j])
 
-    r_t, g_r_t = md.compute_rdf_t(traj, pairs, times, self_correlation=False, periodic=True, opt=True)
+    r_t, g_r_t = md.compute_rdf_t(traj, pairs, times, self_correlation=False, periodic=periodic, opt=opt)
     mean_g_r_t = np.mean(g_r_t, axis=0)
-    r, g_r = md.compute_rdf(traj, pairs, periodic=True, opt=True)
+    r, g_r = md.compute_rdf(traj[:frames], pairs, periodic=periodic, opt=periodic)
 
     assert eq(r_t, r)
     assert eq(mean_g_r_t, g_r, decimal=1)
