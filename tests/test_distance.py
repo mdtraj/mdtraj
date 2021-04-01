@@ -197,10 +197,19 @@ def test_distances_t(get_fn):
     a = compute_distances_t(ptraj, pairs, times, periodic=True, opt=True)
     b = compute_distances_t(ptraj, pairs, times, periodic=True, opt=False)
     eq(a, b)
-    # TODO: Add case for checking when periodic=False
     c = compute_distances_t(ptraj, pairs, times, periodic=False, opt=True)
     d = compute_distances_t(ptraj, pairs, times, periodic=False, opt=False)
     eq(c, d)
+
+def test_distances_t_at_0(get_fn):
+    times = np.array([[0, 0]], dtype=np.int32)
+    # This will fail until _distance_mic_t is implemented
+    a = compute_distances_t(ptraj, pairs, times, periodic=True, opt=True)
+    b = compute_distances_t(ptraj, pairs, times, periodic=True, opt=False)
+    c = compute_distances(ptraj[:1], pairs, periodic=True, opt=True)
+    d = compute_distances(ptraj[:1], pairs, periodic=True, opt=False)
+    eq(a, c)
+    eq(b, d)
 
 def _run_amber_traj_t(traj, ext_ref):
     # Test triclinic case where simple approach in Tuckerman text does not
