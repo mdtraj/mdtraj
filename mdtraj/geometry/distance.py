@@ -137,7 +137,7 @@ def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
         _geometry._dist_t(xyz, pairs, times, out)
         return out
     else:
-        return _distance(xyz, pairs)
+        return _distance_t(xyz, pairs, times)
 
 
 def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
@@ -282,6 +282,18 @@ def _distance(xyz, pairs):
     return (delta ** 2.).sum(-1) ** 0.5
 
 
+def _distance_t(xyz, pairs, times):
+    "Distance between pairs of points in specified frames"
+    # TODO: Speed this up
+    out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+    for i, time in enumerate(times):
+        for j, pair in enumerate(pairs):
+            diff = np.linalg.norm(xyz[time[0]][pair[0]] - xyz[time[1]][pair[1]])
+            out[i][j] = diff
+
+    return out
+
+
 def _displacement(xyz, pairs):
     "Displacement vector between pairs of points in each frame"
     value = np.diff(xyz[:, pairs], axis=2)[:, :, 0]
@@ -330,11 +342,32 @@ def _distance_mic(xyz, pairs, box_vectors, orthogonal):
 
 
 def _distance_mic_t(xyz, pairs, times, box_vectors, orthogonal):
-    out = np.empty((pairs.shape[0]), dtype=np.float32)
-    for i, (time, pair) in enumerate(zip(times, pairs)):
-        r12 = xyz[time[1], pair[1], :] - xyz[time[0], pair[0], :]
-        dist = np.linalg.norm(r12)
-        out[i] = dist
+    """Distance between pairs of points in each frame under the minimum image
+    convention for periodic boundary conditions.
+
+    The computation follows scheme B.9 in Tukerman, M. "Statistical
+    Mechanics: Theory and Molecular Simulation", 2010.
+
+    This is a slow pure python implementation, mostly for testing.
+    """
+    out = np.empty((times.shape[0], pairs.shape[0]), dtype=np.float32)
+    for i, (a,b) in enumerate(times):
+        bv1, bv2, bv3 = _reduce_box_vectors(box_vectors[i].T)
+        for j, (c,d) in enumerate(pairs):
+            r12 = xyz[a,c] - xyz[b,d]
+            r12 -= bv3*round(r12[2]/bv3[2]);
+            r12 -= bv2*round(r12[1]/bv2[1]);
+            r12 -= bv1*round(r12[0]/bv1[0]);
+            dist = np.linalg.norm(r12)
+            if not orthogonal:
+                for ii in range(-1, 2):
+                    v1 = bv1*ii
+                    for jj in range(-1, 2):
+                        v12 = bv2*jj + v1
+                        for kk in range(-1, 2):
+                            new_r12 = r12 + v12 + bv3*kk
+                            dist = min(dist, np.linalg.norm(new_r12))
+            out[i, j] = dist
     return out
 
 
