@@ -132,8 +132,9 @@ void dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_mat
     }
 }
 
-void dist_mic_triclinic_t(const float* xyz, const int* pairs, const float* box_matrix,
-                        float* distance_out, float* displacement_out, const int n_frames,
+void dist_mic_triclinic_t(const float* xyz, const int* pairs, const int* times,
+                        const float* box_matrix, float* distance_out, 
+                        float* displacement_out, const int n_frames,
                         const int n_atoms, const int n_pairs) {
     bool store_displacement = (displacement_out != NULL);
     bool store_distance = (distance_out != NULL);
@@ -150,9 +151,13 @@ void dist_mic_triclinic_t(const float* xyz, const int* pairs, const float* box_m
         for (int j = 0; j < n_pairs; j++) {
             // Compute the displacement.
 
-            int offset1 = 3*pairs[2*j + 0];
+            int time_offset1 = 3*n_atoms*times[2*i + 0];
+            int time_offset2 = 3*n_atoms*times[2*i + 1];
+            int pair_offset1 = 3*pairs[2*j + 0];
+            int pair_offset2 = 3*pairs[2*j + 1];
+            int offset1 = time_offset1 + pair_offset1;
+            int offset2 = time_offset2 + pair_offset2;
             fvec4 pos1(xyz[offset1], xyz[offset1+1], xyz[offset1+2], 0);
-            int offset2 = 3*pairs[2*j + 1];
             fvec4 pos2(xyz[offset2], xyz[offset2+1], xyz[offset2+2], 0);
             fvec4 r12 = pos2-pos1;
             r12 -= box_vec3*round(r12[2]*recip_box_size[2]);
@@ -198,7 +203,7 @@ void dist_mic_triclinic_t(const float* xyz, const int* pairs, const float* box_m
 
         // Advance to the next frame.
 
-        xyz += n_atoms*3;
+        //xyz += n_atoms*3;
         box_matrix += 9;
     }
 }

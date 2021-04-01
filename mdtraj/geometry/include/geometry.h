@@ -25,7 +25,8 @@ void dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_mat
                         float* distance_out, float* displacement_out,
                         const int n_frames, const int n_atoms, const int n_pairs);
 
-void dist_mic_triclinic_t(const float* xyz, const int* pairs, const float* box_matrix,
+void dist_mic_triclinic_t(const float* xyz, const int* pairs, const int* times, 
+                        const float* box_matrix,
                         float* distance_out, float* displacement_out,
                         const int n_frames, const int n_atoms, const int n_pairs);
 

@@ -135,11 +135,11 @@ void dist_t(const float* xyz, const int* pairs, const int* times,
 {
     bool store_displacement = (displacement_out != NULL);
     bool store_distance = (distance_out != NULL);
-#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-    fvec4 box_size(box_matrix[0], box_matrix[4], box_matrix[8], 0);
-    fvec4 inv_box_size(1.0f/box_matrix[0], 1.0f/box_matrix[4], 1.0f/box_matrix[8], 0);
-#endif
     for (int i = 0; i < n_times; i++) {
+#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
+        fvec4 box_size(box_matrix[0], box_matrix[4], box_matrix[8], 0);
+        fvec4 inv_box_size(1.0f/box_matrix[0], 1.0f/box_matrix[4], 1.0f/box_matrix[8], 0);
+#endif
 
         for (int j = 0; j < n_pairs; j++) {
             // Find where in xyz to find the appropriate coordinates
@@ -173,6 +173,8 @@ void dist_t(const float* xyz, const int* pairs, const int* times,
                 distance_out++;
             }
         }
+#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
+        box_matrix += 9;
+#endif
     }
 }
-
