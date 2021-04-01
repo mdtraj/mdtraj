@@ -285,7 +285,7 @@ def _distance(xyz, pairs):
 def _distance_t(xyz, pairs, times):
     "Distance between pairs of points in specified frames"
     # TODO: Speed this up
-    out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+    out = np.empty((times.shape[0], pairs.shape[0]), dtype=np.float32)
     for i, time in enumerate(times):
         for j, pair in enumerate(pairs):
             diff = np.linalg.norm(xyz[time[0]][pair[0]] - xyz[time[1]][pair[1]])
