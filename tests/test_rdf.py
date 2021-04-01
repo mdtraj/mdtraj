@@ -100,25 +100,24 @@ def test_rdf_t(get_fn, periodic, opt):
 
     #assert g_r_t.shape == (8, 200)
 
-#@pytest.mark.parametrize('time_diff', [0, 2, 4])
-#def test_rdf_t_norm(get_fn, time_diff):
-#    # Check if the tail of g(r,t) at t=0 and t=time_diff is normalized to ~1.0
-#    traj = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))
-#
-#    pairs = traj.top.select_pairs('all', 'all')
-#    times = list()
-#    for j in range(traj.n_frames):
-#        if (j + time_diff) > traj.n_frames:
-#            continue
-#        times.append([j, j+time_diff])
-#
-#    pairs = traj.top.select_pairs('name O', 'name O')
-#    _, rdf_O_O = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times)
-#    assert eq(np.ones(20), np.mean(rdf_O_O, axis=0)[-20:], decimal=1)
-#
-#    pairs = traj.top.select_pairs('name O', "name =~ 'H.*'")
-#    _, rdf_O_H = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times)
-#    assert eq(np.ones(20), np.mean(rdf_O_H, axis=0)[-20:], decimal=1)
+@pytest.mark.parametrize('time_diff', [0, 2, 4])
+def test_rdf_t_norm(get_fn, time_diff):
+    # Check if the tail of g(r,t) at t=0 and t=time_diff is normalized to ~1.0
+    traj = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))
+
+    times = list()
+    for j in range(traj.n_frames):
+        if (j + time_diff) > traj.n_frames:
+            continue
+        times.append([j, j+time_diff])
+
+    pairs = traj.top.select_pairs('name O', 'name O')
+    _, rdf_O_O = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times)
+    assert eq(np.ones(20), np.mean(rdf_O_O, axis=0)[-20:], decimal=1)
+
+    pairs = traj.top.select_pairs('name O', "name =~ 'H.*'")
+    _, rdf_O_H = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times)
+    assert eq(np.ones(20), np.mean(rdf_O_H, axis=0)[-20:], decimal=1)
 
 @pytest.mark.parametrize('periodic, opt', [(True, True), (True, False), (False, True), (False, False)])
 def test_compare_rdf_t_at_0(get_fn, periodic, opt):
