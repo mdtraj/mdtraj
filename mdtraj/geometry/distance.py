@@ -133,7 +133,7 @@ def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
 
     # either there are no unitcell vectors or they dont want to use them
     if opt:
-        out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+        out = np.empty((times.shape[0], pairs.shape[0]), dtype=np.float32)
         _geometry._dist_t(xyz, pairs, times, out)
         return out
     else:
