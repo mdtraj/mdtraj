@@ -127,7 +127,7 @@ def acylindricity(traj):
     return c
 
 def relative_shape_anisotropy(traj):
-    """Compute the acylindricity of a trajectory.
+    """Compute the relative shape anisotropy of a trajectory.
 
     For each frame compute the principal moments then,
 
