@@ -94,7 +94,7 @@ def test_shape_metrics(traj4):
     rg = md.compute_rg(traj4)
     
     kappa_actual = (b**2 + 0.75*c**2)/(rg**4)
-    kappa_computed = shape.relative_shape_antisotropy(traj4)
+    kappa_computed = shape.relative_shape_anisotropy(traj4)
 
     assert eq(kappa_actual,kappa_computed)
 
