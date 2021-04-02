@@ -137,6 +137,9 @@ void dist_t(const float* xyz, const int* pairs, const int* times,
     bool store_distance = (distance_out != NULL);
     for (int i = 0; i < n_times; i++) {
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
+        // Based on first index of time pair
+        int box_offset = times[2*i + 0] * 9;
+        box_matrix += box_offset;
         fvec4 box_size(box_matrix[0], box_matrix[4], box_matrix[8], 0);
         fvec4 inv_box_size(1.0f/box_matrix[0], 1.0f/box_matrix[4], 1.0f/box_matrix[8], 0);
 #endif
@@ -173,8 +176,11 @@ void dist_t(const float* xyz, const int* pairs, const int* times,
                 distance_out++;
             }
         }
+//#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
+//        box_matrix += 9;
+//#endif
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-        box_matrix += 9;
+        box_matrix -= box_offset;
 #endif
     }
 }

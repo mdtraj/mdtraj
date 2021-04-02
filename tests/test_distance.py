@@ -34,7 +34,7 @@ N_ATOMS = 20
 
 xyz = np.asarray(np.random.randn(N_FRAMES, N_ATOMS, 3), dtype=np.float32)
 pairs = np.array(list(itertools.combinations(range(N_ATOMS), 2)), dtype=np.int32)
-times = np.array([[i, 0] for i in range(N_FRAMES)], dtype=np.int32)
+times = np.array([[i, 0] for i in range(N_FRAMES)[::2]], dtype=np.int32)
 
 ptraj = md.Trajectory(xyz=xyz, topology=None)
 ptraj.unitcell_vectors = np.ascontiguousarray(np.random.randn(N_FRAMES, 3, 3) + 2 * np.eye(3, 3), dtype=np.float32)
@@ -193,7 +193,6 @@ def test_closest_contact_nan_pos():
     _verify_closest_contact(traj)
 
 def test_distances_t(get_fn):
-    # This will fail until _distance_mic_t is implemented
     a = compute_distances_t(ptraj, pairs, times, periodic=True, opt=True)
     b = compute_distances_t(ptraj, pairs, times, periodic=True, opt=False)
     eq(a, b)
@@ -203,7 +202,6 @@ def test_distances_t(get_fn):
 
 def test_distances_t_at_0(get_fn):
     times = np.array([[0, 0]], dtype=np.int32)
-    # This will fail until _distance_mic_t is implemented
     a = compute_distances_t(ptraj, pairs, times, periodic=True, opt=True)
     b = compute_distances_t(ptraj, pairs, times, periodic=True, opt=False)
     c = compute_distances(ptraj[:1], pairs, periodic=True, opt=True)

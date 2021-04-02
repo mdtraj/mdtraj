@@ -352,7 +352,7 @@ def _distance_mic_t(xyz, pairs, times, box_vectors, orthogonal):
     """
     out = np.empty((times.shape[0], pairs.shape[0]), dtype=np.float32)
     for i, (a,b) in enumerate(times):
-        bv1, bv2, bv3 = _reduce_box_vectors(box_vectors[i].T)
+        bv1, bv2, bv3 = _reduce_box_vectors(box_vectors[a].T)
         for j, (c,d) in enumerate(pairs):
             r12 = xyz[a,c] - xyz[b,d]
             r12 -= bv3*round(r12[2]/bv3[2]);

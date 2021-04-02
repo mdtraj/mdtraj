@@ -140,6 +140,9 @@ void dist_mic_triclinic_t(const float* xyz, const int* pairs, const int* times,
     bool store_distance = (distance_out != NULL);
     for (int i = 0; i < n_frames; i++) {
         // Load the periodic box vectors and make sure they're in reduced form.
+        // Get box from frame of first index of time pair
+        int box_offset = times[2*i + 0] * 9;
+        box_matrix += box_offset;
 
         fvec4 box_vec1(box_matrix[0], box_matrix[3], box_matrix[6], 0);
         fvec4 box_vec2(box_matrix[1], box_matrix[4], box_matrix[7], 0);
@@ -204,7 +207,9 @@ void dist_mic_triclinic_t(const float* xyz, const int* pairs, const int* times,
         // Advance to the next frame.
 
         //xyz += n_atoms*3;
-        box_matrix += 9;
+        //box_matrix += 9;
+        // Reset box offset
+        box_matrix -= box_offset;
     }
 }
 
