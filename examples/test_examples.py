@@ -5,6 +5,7 @@ Adapted from https://gist.github.com/minrk/2620876.
 from __future__ import print_function
 import os
 import sys
+from distutils.spawn import find_executable as _find_executable
 
 import nbformat
 import pytest
@@ -12,11 +13,20 @@ from jupyter_client import KernelManager
 from six.moves.queue import Empty
 
 FLAKEY_LIST = ['centroids.ipynb', 'native-contact.ipynb', 'hbonds.ipynb']
+SPARTA_PLUS = ['sparta+', 'SPARTA+', 'SPARTA+.linux']
 TIMEOUT = 60  # seconds
 
 test_dir = os.path.dirname(os.path.abspath(__file__))
 examples = [pytest.param(fn, marks=pytest.mark.flaky) if fn in FLAKEY_LIST else fn
             for fn in os.listdir(test_dir) if fn.endswith('.ipynb')]
+
+
+def find_executable(names):
+    for possible in names:
+        result = _find_executable(possible)
+        if result is not None:
+            return result
+    return None
 
 
 @pytest.fixture(params=examples)
@@ -26,6 +36,10 @@ def example_fn(request):
             from simtk.openmm import app
         except ImportError:
             pytest.skip("Openmm required for example notebook `{}`".format(request.param))
+
+    if "nmr" in request.param:
+        if find_executable(SPARTA_PLUS) is None:
+            pytest.skip("Sparta+ not found for example notebook `{}`".format(request.param))
 
     cwd = os.path.abspath('.')
     os.chdir(test_dir)

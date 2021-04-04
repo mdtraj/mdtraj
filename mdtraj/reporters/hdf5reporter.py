@@ -70,6 +70,12 @@ class HDF5Reporter(_BaseReporter):
     atomSubset : array_like, default=None
         Only write a subset of the atoms, with these (zero based) indices
         to the file. If None, *all* of the atoms will be written to disk.
+    enforcePeriodicBox: bool or None
+        Specifies whether particle positions should be translated so the
+        center of every molecule lies in the same periodic box. If None
+        (the default), it will automatically decide whether to translate
+        molecules based on whether the system being simulated uses periodic
+        boundary conditions.
 
     Notes
     -----
@@ -94,9 +100,11 @@ class HDF5Reporter(_BaseReporter):
 
     def __init__(self, file, reportInterval, coordinates=True, time=True,
                  cell=True, potentialEnergy=True, kineticEnergy=True,
-                 temperature=True, velocities=False, atomSubset=None):
+                 temperature=True, velocities=False, atomSubset=None,
+                 enforcePeriodicBox=None):
         """Create a HDF5Reporter.
         """
         super(HDF5Reporter, self).__init__(file, reportInterval,
             coordinates, time, cell, potentialEnergy, kineticEnergy,
-            temperature, velocities, atomSubset)
+            temperature, velocities, atomSubset,
+            enforcePeriodicBox)
