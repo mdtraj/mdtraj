@@ -1,4 +1,5 @@
-{ buildPythonPackage
+{ lib
+, buildPythonPackage
 , fetchPypi
 , setuptools
 , cython
@@ -20,7 +21,6 @@
 , sphinx_rtd_theme
 , sphinx
 , pytestCheckHook
-, pytest-xdist
 ,}:
 
 let
@@ -37,13 +37,30 @@ let
       sphinx_rtd_theme
     ];
     # no tests
-    doCheck = false;    
+    doCheck = false;
   };
+  filterSrcByPrefix = src: prefixList:
+    lib.cleanSourceWith {
+      filter = (path: type:
+        let relPath = lib.removePrefix (toString ./. + "/") (toString path);
+        in lib.any (prefix: lib.hasPrefix prefix relPath) prefixList);
+      inherit src;
+    };
+
 in
 buildPythonPackage {
   pname = "mdtraj";
   version = "0.0";
-  src = ./.;
+  src = filterSrcByPrefix ./. [
+    "docs"
+    "examples"
+    "mdtraj"
+    "tests"
+    "pytest.ini"
+    "setup.py"
+    "basesetup.py"
+  ];
+
 
   buildInputs = [
     setuptools
@@ -60,7 +77,6 @@ buildPythonPackage {
   ];
 
   checkInputs = [
-    pytest-xdist
     pytestCheckHook
 
     matplotlib

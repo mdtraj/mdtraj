@@ -1,6 +1,6 @@
 ## MDTraj: a modern, open library for the analysis of molecular dynamics trajectories
 
-[![Build Status](https://dev.azure.com/rmcgibbo/mdtraj/_apis/build/status/mdtraj.mdtraj?branchName=master)](https://dev.azure.com/rmcgibbo/mdtraj/_build/latest?definitionId=1&branchName=master)
+[![Build Status](https://github.com/mdtraj/mdtraj/actions/workflows/main.yaml/badge.svg)](https://github.com/mdtraj/mdtraj/actions)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.svg)](https://pypi.python.org/pypi/mdtraj)
 [![Anaconda-Server Version](https://anaconda.org/conda-forge/mdtraj/badges/version.svg)](https://anaconda.org/conda-forge/mdtraj)
 [![Anaconda-Server Downloads](https://anaconda.org/conda-forge/mdtraj/badges/downloads.svg)](https://anaconda.org/conda-forge/mdtraj)
