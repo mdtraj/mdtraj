@@ -7,6 +7,5 @@ if version.release:
 else:
     docversion = 'development'
 
-os.mkdir("docs/_deploy")
-shutil.copytree("docs/_build/html", "docs/_deploy/{docversion}"
-                .format(docversion=docversion))
+os.makedirs("docs/_deploy", exist_ok=True)
+shutil.copytree("docs/_build/html", f"docs/_deploy/{docversion}")
