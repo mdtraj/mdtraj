@@ -65,7 +65,7 @@ class _RewriteNames(ast.NodeTransformer):
         # all other bare names are taken to be string literals. Thus something
         # like parse_selection('name CA') properly resolves CA as a string
         # literal, not a barename to be loaded from the global scope!
-        return ast.Str(s=node.id)
+        return ast.Str(s=node.id, kind=None)
 
 
 def _chain(*attrs):
