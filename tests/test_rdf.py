@@ -106,17 +106,18 @@ def test_rdf_t_norm(get_fn, time_diff):
     traj = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))
 
     times = list()
-    for j in range(traj.n_frames):
+    #for j in range(traj.n_frames):
+    for j in range(100):
         if (j + time_diff) > traj.n_frames:
             continue
         times.append([j, j+time_diff])
 
     pairs = traj.top.select_pairs('name O', 'name O')
-    _, rdf_O_O = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times)
+    r_t, rdf_O_O = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times)
     assert eq(np.ones(20), np.mean(rdf_O_O, axis=0)[-20:], decimal=1)
 
     pairs = traj.top.select_pairs('name O', "name =~ 'H.*'")
-    _, rdf_O_H = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times)
+    r_t, rdf_O_H = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times)
     assert eq(np.ones(20), np.mean(rdf_O_H, axis=0)[-20:], decimal=1)
 
 @pytest.mark.parametrize('periodic, opt', [(True, True), (True, False), (False, True), (False, False)])
