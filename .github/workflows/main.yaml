@@ -52,7 +52,7 @@ jobs:
     - run: |
         nix-env -f '<nixpkgs>' -iA awscli2
 
-        echo "<html><head><meta http-equiv=\"refresh\" content=\"0; url=./$VERSION\"></head></html>" > index.html
+        echo "<html><head><meta http-equiv=\"refresh\" content=\"0; url=./$VERSION/index.html\"></head></html>" > index.html
 
         aws s3 sync html s3://mdtraj/$VERSION
         aws s3 cp index.html s3://mdtraj
