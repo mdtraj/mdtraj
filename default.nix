@@ -61,7 +61,6 @@ buildPythonPackage {
     "basesetup.py"
   ];
 
-
   buildInputs = [
     setuptools
     cython
@@ -107,7 +106,8 @@ buildPythonPackage {
   '';
 
   postInstall = ''
-    mkdir -p $out/share/docs
+    mkdir -p $out/share/docs/root
     (cd docs && make html && cp -r _build/html $out/share/docs)
+    cp docs/versions.json docs/index.html $out/share/docs/root/
   '';
 }
