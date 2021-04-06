@@ -203,11 +203,6 @@ void dist_mic_triclinic_t(const float* xyz, const int* pairs, const int* times,
                 distance_out++;
             }
         }
-
-        // Advance to the next frame.
-
-        //xyz += n_atoms*3;
-        //box_matrix += 9;
         // Reset box offset
         box_matrix -= box_offset;
     }

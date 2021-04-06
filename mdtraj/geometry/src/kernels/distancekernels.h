@@ -176,9 +176,7 @@ void dist_t(const float* xyz, const int* pairs, const int* times,
                 distance_out++;
             }
         }
-//#ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
-//        box_matrix += 9;
-//#endif
+// Reset box_matrix
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
         box_matrix -= box_offset;
 #endif

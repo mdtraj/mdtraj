@@ -98,7 +98,7 @@ def test_rdf_t(get_fn, periodic, opt):
 
     r, g_r_t = md.compute_rdf_t(traj, pairs, times, r_range=(0, 1), periodic=periodic, opt=opt)
 
-    #assert g_r_t.shape == (8, 200)
+    assert g_r_t.shape == (8, 200)
 
 @pytest.mark.parametrize('time_diff', [0, 2, 4])
 def test_rdf_t_norm(get_fn, time_diff):
@@ -106,7 +106,6 @@ def test_rdf_t_norm(get_fn, time_diff):
     traj = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))
 
     times = list()
-    #for j in range(traj.n_frames):
     for j in range(100):
         if (j + time_diff) > traj.n_frames:
             continue
