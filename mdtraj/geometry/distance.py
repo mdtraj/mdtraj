@@ -107,7 +107,7 @@ def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
 
     Returns
     -------
-    distances : np.ndarray, shape=(len(time_pairs), num_atom_pairs), dtype=float
+    distances : np.ndarray, shape=(num_times, num_atom_pairs), dtype=float
         The distance between each pair of atoms at t=t1 and t=t2.
     """
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
@@ -287,7 +287,6 @@ def _distance(xyz, pairs):
 
 def _distance_t(xyz, pairs, times):
     "Distance between pairs of points in specified frames"
-    # TODO: Speed this up
     frame1 = xyz[:, pairs[:,0]][times[:,0]]
     frame2 = xyz[:, pairs[:,1]][times[:,1]]
     out = np.linalg.norm(frame1-frame2, axis=2)
@@ -343,7 +342,7 @@ def _distance_mic(xyz, pairs, box_vectors, orthogonal):
 
 
 def _distance_mic_t(xyz, pairs, times, box_vectors, orthogonal):
-    """Distance between pairs of points in each frame under the minimum image
+    """Distance between pairs of points between specified frames under the minimum image
     convention for periodic boundary conditions.
 
     The computation follows scheme B.9 in Tukerman, M. "Statistical
