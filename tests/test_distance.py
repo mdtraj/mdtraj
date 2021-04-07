@@ -22,6 +22,7 @@
 
 import time
 import itertools
+import pytest
 import numpy as np
 import mdtraj as md
 
@@ -191,6 +192,17 @@ def test_closest_contact_nan_pos():
     xyz = xyz[:-1]
     traj = md.Trajectory(xyz=xyz, topology=None)
     _verify_closest_contact(traj)
+
+
+def test_distance_t_inputs():
+    incorrect_pairs = np.array((0, ptraj.n_atoms+1))
+    with pytest.raises(ValueError):
+        compute_distances_t(ptraj, incorrect_pairs, times)
+
+    incorrect_times = np.array((0, ptraj.n_frames+1))
+    with pytest.raises(ValueError):
+        compute_distances_t(ptraj, pairs, incorrect_times)
+
 
 def test_distances_t(get_fn):
     a = compute_distances_t(ptraj, pairs, times, periodic=True, opt=True)

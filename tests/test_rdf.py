@@ -136,6 +136,20 @@ def test_compare_rdf_t_at_0(get_fn, periodic, opt):
     assert eq(r_t, r)
     assert eq(mean_g_r_t, g_r, decimal=1)
 
+
+@pytest.mark.parametrize('periodic, opt', [(True, True), (True, False), (False, True), (False, False)])
+def test_amber_rdf_t(get_fn, periodic, opt):
+    # Test triclinic case where simple approach in Tuckerman text does not
+    # always work
+    ext_ref = np.array([17.4835, 22.2418, 24.2910, 22.5505, 12.8686, 22.1090,
+                        7.4472, 22.4253, 19.8283, 20.6935]) / 10
+    traj = md.load(get_fn('test_good.nc'), top=get_fn('test.parm7'))
+    pairs = [[0, 9999]]
+    time_pairs = [[0, 2]]
+    r_t, g_r_t = md.compute_rdf_t(traj, pairs, time_pairs, 
+            self_correlation=False, periodic=periodic, opt=opt)
+
+
 @pytest.mark.skip('Binning does not match up with gromacs currently.')
 def test_compare_gromacs_rdf_t(get_fn):
     traj = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))

@@ -96,12 +96,15 @@ def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
 def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
                   bin_width=0.005, n_bins=None, self_correlation=True,
                   periodic=True, opt=True):
-    """Compute time-dependent radial distribution functions.
+    """Compute time-dependent radial distribution functions, g(r, t).
+    The time-dependent radial distribution function is calculated between pairs of time points.
+    For example, g(r, 0) is equal to the time-independent radial distribution function, g(r).
+    Please see https://doi.org/10.1103/PhysRev.95.249 for further reference.
 
     Parameters
     ----------
     traj : Trajectory
-        Trajectory to compute time-dependent radial distribution function in.
+        Trajectory to compute time-dependent radial distribution function on.
     pairs : array-like, shape=(n_pairs, 2), dtype=int
         Each row gives the indices of two atoms.
     times : array-like, shape=(any, 2), dtype=int
@@ -129,7 +132,7 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
     r : np.ndarray, shape=(np.diff(r_range) / bin_width - 1), dtype=float
         Radii values corresponding to the centers of the bins.
     g_r_t : np.ndarray, shape=(len(times), np.diff(r_range) / bin_width - 1), dtype=float
-        Radial distribution function values at r.
+        Radial distribution function values at r for each time pair.
 
     See also
     --------
