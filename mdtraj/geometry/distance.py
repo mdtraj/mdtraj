@@ -94,7 +94,7 @@ def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
         An mtraj trajectory.
     atom_pairs : np.ndarray, shape=(num_atom_pairs, 2), dtype=int
         Each row gives the indices of two atoms involved in the interaction.
-    time_pairs : nd.array, shape=(num_times, 2)
+    time_pairs : nd.array, shape=(num_times, 2), dtype=int
         Each row gives the indices of two frames.
     periodic : bool, default=True
         If `periodic` is True and the trajectory contains unitcell
@@ -107,7 +107,7 @@ def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
 
     Returns
     -------
-    distances : np.ndarray, shape=(n_frames, num_atom_pairs), dtype=float
+    distances : np.ndarray, shape=(len(time_pairs), num_atom_pairs), dtype=float
         The distance between each pair of atoms at t=t1 and t=t2.
     """
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
@@ -288,11 +288,9 @@ def _distance(xyz, pairs):
 def _distance_t(xyz, pairs, times):
     "Distance between pairs of points in specified frames"
     # TODO: Speed this up
-    out = np.empty((times.shape[0], pairs.shape[0]), dtype=np.float32)
-    for i, time in enumerate(times):
-        for j, pair in enumerate(pairs):
-            diff = np.linalg.norm(xyz[time[0]][pair[0]] - xyz[time[1]][pair[1]])
-            out[i][j] = diff
+    frame1 = xyz[:, pairs[:,0]][times[:,0]]
+    frame2 = xyz[:, pairs[:,1]][times[:,1]]
+    out = np.linalg.norm(frame1-frame2, axis=2)
 
     return out
 
@@ -371,6 +369,7 @@ def _distance_mic_t(xyz, pairs, times, box_vectors, orthogonal):
                             new_r12 = r12 + v12 + bv3*kk
                             dist = min(dist, np.linalg.norm(new_r12))
             out[i, j] = dist
+
     return out
 
 
