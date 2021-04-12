@@ -113,6 +113,7 @@ def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
     xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
     pairs = ensure_type(atom_pairs, dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2), warn_on_cast=False)
     times = ensure_type(time_pairs, dtype=np.int32, ndim=2, name='time_pairs', shape=(None, 2), warn_on_cast=False)
+
     if not np.all(np.logical_and(pairs < traj.n_atoms, pairs >= 0)):
         raise ValueError('atom_pairs must be between 0 and %d' % traj.n_atoms)
 
@@ -345,7 +346,7 @@ def _distance_mic_t(xyz, pairs, times, box_vectors, orthogonal):
     """Distance between pairs of points between specified frames under the minimum image
     convention for periodic boundary conditions.
 
-    The computation follows scheme B.9 in Tukerman, M. "Statistical
+    The computation is modified from scheme B.9 in Tukerman, M. "Statistical
     Mechanics: Theory and Molecular Simulation", 2010.
 
     This is a slow pure python implementation, mostly for testing.

@@ -196,11 +196,11 @@ def test_closest_contact_nan_pos():
 
 def test_distance_t_inputs():
     incorrect_pairs = np.array((0, ptraj.n_atoms+1))
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match='atom_pairs'):
         compute_distances_t(ptraj, incorrect_pairs, times)
 
     incorrect_times = np.array((0, ptraj.n_frames+1))
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match='time_pairs'):
         compute_distances_t(ptraj, pairs, incorrect_times)
 
 
