@@ -289,3 +289,14 @@ def test_dummy_pdb_box_detection(get_fn, recwarn):
     assert 'Unlikely unit cell' in str(w.message)
     assert traj.unitcell_lengths is None, 'Expected dummy box to be deleted'
 
+
+def test_multichain_load_cycle(get_fn):
+    # Issue 1611, make sure that save/load works for more than 1 chain
+    pdb = load(get_fn('issue_1611.pdb'))
+    bonds = [(bond.atom1.index, bond.atom2.index)
+             for bond in pdb.topology.bonds]
+    pdb.save(temp)
+    pdb2 = load_pdb(temp)
+    bonds2 = [(bond.atom1.index, bond.atom2.index)
+              for bond in pdb2.topology.bonds]
+    assert len(bonds) == len(bonds2)
