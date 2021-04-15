@@ -163,7 +163,7 @@ def compute_center_of_mass(traj, select=None):
     else:
         atoms_of_interest = traj.topology.select(select)
 
-        masses = np.array([traj.top.atom[i].element.mass for i in atoms_of_interest])
+        masses = np.array([traj.top.atom(i).element.mass for i in atoms_of_interest])
         masses /= masses.sum()
 
         xyz = traj.xyz[:, atoms_of_interest]
