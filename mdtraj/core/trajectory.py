@@ -1059,7 +1059,7 @@ class Trajectory(object):
         return self.__class__(xyz, deepcopy(self._topology), time=time,
             unitcell_lengths=lengths, unitcell_angles=angles)
 
-    def stack(self, other, keepIds=False):
+    def stack(self, other, keepIds=True):
         """Stack two trajectories along the atom axis
 
         This method joins trajectories along the atom axis, giving a new trajectory
@@ -1087,7 +1087,7 @@ class Trajectory(object):
         ----------
         other : Trajectory
             The other trajectory to join
-        keepIds : bool, optional, default=False
+        keepIds : bool, optional, default=True
             see ```mdtraj.core.topology.Topology.join``` method documentation
 
         See Also

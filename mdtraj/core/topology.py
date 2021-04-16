@@ -257,15 +257,15 @@ class Topology(object):
 
         return hash_value
 
-    def join(self, other, keepIds=False):
+    def join(self, other, keepIds=True):
         """Join two topologies together
 
         Parameters
         ----------
         other : Topology
             Another topology object
-        keepIds : bool, optional, default=False
-            if False (default) the residue numbers (resSeq) of the
+        keepIds : bool, optional, default=True
+            if False the residue numbers (resSeq) of the
             topology that is joined are updated in order to
             continue from the last resSeq of this topology
 
