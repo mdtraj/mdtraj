@@ -29,8 +29,8 @@ except ValueError:
 
 
 ##########################
-VERSION = "1.9.5"
-ISRELEASED = True
+VERSION = "1.9.6-dev"
+ISRELEASED = False
 __version__ = VERSION
 ##########################
 
@@ -259,8 +259,7 @@ metadata = \
       cmdclass={'build_ext': build_ext},
       install_requires=['numpy>=1.6',
                         'scipy',
-                        "astunparse; python_version!='3.8'",
-                        "astunparse<1.6.3; python_version=='3.8'",
+                        'astunparse',
                         'pyparsing',
                         ],
       package_data={'mdtraj.formats.pdb': ['data/*'], },

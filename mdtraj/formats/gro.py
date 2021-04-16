@@ -55,6 +55,7 @@ import itertools
 from re import sub, match, findall
 # import element as elem
 import numpy as np
+import warnings
 
 import mdtraj as md
 from mdtraj.utils import in_units_of, cast_indices, ensure_type
@@ -301,7 +302,9 @@ class GroTrajectoryFile(object):
                 (thisresnum, thisresname, thisatomname, thisatomnum) = \
                     [line[i*5:i*5+5].strip() for i in range(4)]
                 thisresnum, thisatomnum = map(int, (thisresnum, thisatomnum))
-                if residue is None or residue.resSeq != thisresnum:
+                if residue is None or residue.resSeq != thisresnum or residue.name != thisresname:
+                    if residue is not None and residue.name != thisresname:
+                        warnings.warn("WARNING: two consecutive residues with same number (%s, %s)" % (thisresname, residue.name))
                     if thisresname in pdb.PDBTrajectoryFile._residueNameReplacements:
                         thisresname = pdb.PDBTrajectoryFile._residueNameReplacements[thisresname]
                     residue = topology.add_residue(thisresname, chain, resSeq=thisresnum)

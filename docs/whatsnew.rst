@@ -3,10 +3,23 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.9.5 (Development)
+Unreleased
+----------
+ - Fix compatibility with all versions of astunparse (03753d736e30f15f8f210434e689e9ff664bb611)
+ - Rework CI to be simpler and more maintainable
+ - Fix deployment of the documentation to the website
+
+
+v1.9.5 (Jan 4, 2021)
 --------------------
 
-- Nothing to see here
+ - Fix memory allocation when opening XTC trajectory on OSX Catalina (#1594)
+ - Write out serial instead of index in pdbs (#1584)
+ - Fix residue idx sliced traj (#1586)
+ - Update shift_wrappers.py (#1579)
+ - Rsmd atom_indices checks fix (#1571)
+ - Port to aarch64 (#1562)
+ - Add compatibility with pandas 1.0
 
 
 v1.9.4 (May 10, 2020)

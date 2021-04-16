@@ -1,0 +1,16 @@
+ATOM      1  O1  HOH A   1       4.012   4.851   0.586  1.00  0.00           O
+ATOM      2  H1  HOH A   1       4.826   4.387   0.302  1.00  0.00           H
+ATOM      3  H2  HOH A   1       3.243   4.622   0.021  1.00  0.00           H
+ATOM      4  C1  MOL B   1       3.024   3.160   3.102  1.00  0.00           C
+ATOM      5  O1  MOL B   1       4.131   3.989   3.088  1.00  0.00           O
+ATOM      6  H1  MOL B   1       2.484   3.163   4.060  1.00  0.00           H
+ATOM      7  H2  MOL B   1       3.406   2.119   2.930  1.00  0.00           H
+ATOM      8  H3  MOL B   1       2.305   3.360   2.302  1.00  0.00           H
+ATOM      9  H4  MOL B   1       3.955   4.912   3.354  1.00  0.00           H
+CONECT    4    5    6    7    8
+CONECT    5    4    9
+CONECT    6    4
+CONECT    7    4
+CONECT    8    4
+CONECT    9    5
+END
