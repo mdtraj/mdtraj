@@ -302,12 +302,12 @@ def test_topology_join(get_fn):
     eq(top_1.atom(0).element, out_topology.atom(0).element)
     eq(top_2.atom(-1).element, out_topology.atom(-1).element)
 
-def test_topology_join_keepIds(get_fn):
+def test_topology_join_keep_resSeq(get_fn):
     top_1 = md.load(get_fn('2EQQ.pdb')).topology
     top_2 = md.load(get_fn('4OH9.pdb')).topology
 
-    out_topology_keepId_True = top_1.join(top_2, keepIds=True)
-    out_topology_keepId_False = top_1.join(top_2, keepIds=False)
+    out_topology_keepId_True = top_1.join(top_2, keep_resSeq=True)
+    out_topology_keepId_False = top_1.join(top_2, keep_resSeq=False)
 
     out_resSeq_keepId_True = [residue.resSeq for residue in out_topology_keepId_True.residues]
     out_resSeq_keepId_False = [residue.resSeq for residue in out_topology_keepId_False.residues]
