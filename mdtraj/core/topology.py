@@ -257,14 +257,14 @@ class Topology(object):
 
         return hash_value
 
-    def join(self, other, keepIds=True):
+    def join(self, other, keep_resSeq=True):
         """Join two topologies together
 
         Parameters
         ----------
         other : Topology
             Another topology object
-        keepIds : bool, optional, default=True
+        keep_resSeq : bool, optional, default=True
             if False the residue numbers (resSeq) of the
             topology that is joined are updated in order to
             continue from the last resSeq of this topology
@@ -282,14 +282,14 @@ class Topology(object):
         #I need this in order to have the resSeq of the
         #new residues to continue from the one of the
         #las residue of this topology
-        if not keepIds:
+        if not keep_resSeq:
             out_resSeq = out.atom(-1).residue.resSeq
 
         atom_mapping = {}
         for chain in other.chains:
             c = out.add_chain()
             for residue in chain.residues:
-                if keepIds:
+                if keep_resSeq:
                     out_resSeq = residue.resSeq
                 else:
                     out_resSeq += 1
