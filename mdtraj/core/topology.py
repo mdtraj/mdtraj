@@ -521,21 +521,24 @@ class Topology(object):
 
             for ri in np.unique(chain_atoms['resSeq']):
                 residue_atoms = chain_atoms[chain_atoms['resSeq'] == ri]
-                rnames = residue_atoms['resName']
-                residue_name = np.array(rnames)[0]
-                segids = residue_atoms['segmentID']
-                segment_id = np.array(segids)[0]
-                if not np.all(rnames == residue_name):
-                    raise ValueError('All of the atoms with residue index %d '
-                                     'do not share the same residue name' % ri)
-                r = out.add_residue(residue_name, c, ri,segment_id)
 
-                for atom_index, atom in residue_atoms.iterrows():
-                    atom_index = int(atom_index)  # Fixes bizarre hashing issue on Py3K.  See #545
-                    a = Atom(atom['name'], elem.get_by_symbol(atom['element']),
-                             atom_index, r, serial=atom['serial'])
-                    out._atoms[atom_index] = a
-                    r._atoms.append(a)
+                #This part is in order to preserve the order of the residues (because unique sorts the
+                # output utomatically)
+                _, rnames_index = np.unique(residue_atoms['resName'], return_index=True)
+                
+                for residue_name in np.array(residue_atoms['resName'])[np.sort(rnames_index)]:
+                    tmp_residue_atoms = residue_atoms[residue_atoms['resName'] == residue_name]
+                    segids = residue_atoms['segmentID']
+                    segment_id = np.array(segids)[0]
+                
+                    r = out.add_residue(residue_name, c, ri,segment_id)
+
+                    for atom_index, atom in tmp_residue_atoms.iterrows():
+                        atom_index = int(atom_index)  # Fixes bizarre hashing issue on Py3K.  See #545
+                        a = Atom(atom['name'], elem.get_by_symbol(atom['element']),
+                                atom_index, r, serial=atom['serial'])
+                        out._atoms[atom_index] = a
+                        r._atoms.append(a)
 
         for bond in bonds:
             ai1 = int(bond[0])
