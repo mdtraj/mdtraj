@@ -515,30 +515,30 @@ class Topology(object):
                              'starting from zero.')
         out._atoms = [None for i in range(len(atoms))]
 
-        for ci in np.unique(atoms['chainID']):
-            chain_atoms = atoms[atoms['chainID'] == ci]
-            c = out.add_chain()
+        c = None
+        r = None
+        previous_chainID = None
+        previous_resName = None
+        previous_resSeq = None
+        for atom_index, atom in atoms.iterrows():
 
-            for ri in np.unique(chain_atoms['resSeq']):
-                residue_atoms = chain_atoms[chain_atoms['resSeq'] == ri]
+            int(atom_index) # Fixes bizarre hashing issue on Py3K.  See #545
 
-                #This part is in order to preserve the order of the residues (because unique sorts the
-                # output utomatically)
-                _, rnames_index = np.unique(residue_atoms['resName'], return_index=True)
+            if atom['chainID'] != previous_chainID:
+                previous_chainID = atom['chainID']
                 
-                for residue_name in np.array(residue_atoms['resName'])[np.sort(rnames_index)]:
-                    tmp_residue_atoms = residue_atoms[residue_atoms['resName'] == residue_name]
-                    segids = residue_atoms['segmentID']
-                    segment_id = np.array(segids)[0]
-                
-                    r = out.add_residue(residue_name, c, ri,segment_id)
+                c = out.add_chain()
 
-                    for atom_index, atom in tmp_residue_atoms.iterrows():
-                        atom_index = int(atom_index)  # Fixes bizarre hashing issue on Py3K.  See #545
-                        a = Atom(atom['name'], elem.get_by_symbol(atom['element']),
+            if atom['resSeq'] != previous_resSeq or atom['resName'] != previous_resName:
+                previous_resSeq = atom['resSeq']
+                previous_resName = atom['resName']
+
+                r = out.add_residue(atom['resName'], c, atom['resSeq'], atom['segmentID'])
+
+            a = Atom(atom['name'], elem.get_by_symbol(atom['element']),
                                 atom_index, r, serial=atom['serial'])
-                        out._atoms[atom_index] = a
-                        r._atoms.append(a)
+            out._atoms[atom_index] = a
+            r._atoms.append(a)
 
         for bond in bonds:
             ai1 = int(bond[0])
