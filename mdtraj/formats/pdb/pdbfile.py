@@ -49,7 +49,7 @@ from datetime import date
 import gzip
 import numpy as np
 import xml.etree.ElementTree as etree
-from copy import copy
+from copy import copy, deepcopy
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
 from mdtraj.core.topology import Topology
 from mdtraj.utils import ilen, cast_indices, in_units_of, open_maybe_zipped
@@ -165,7 +165,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
         topology = f.topology
         if atom_indices is not None:
             #to avoid modifying the topology if given as input
-            topology = copy.deepcopy(topology)
+            topology = deepcopy(topology)
             topology = topology.subset(atom_indices)
 
         if f.unitcell_angles is not None and f.unitcell_lengths is not None:

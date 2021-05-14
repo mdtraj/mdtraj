@@ -28,6 +28,7 @@ import mdtraj as md
 import mdtraj.utils
 from mdtraj.utils import six
 from mdtraj.core import element
+import mdtraj.core.trajectory
 import pytest
 import mdtraj.formats
 from collections import namedtuple
@@ -627,7 +628,13 @@ def test_length(get_fn):
 
     for file in files:
         opened = md.open(get_fn(file))
-        loaded = md.load(get_fn(file), top=get_fn('native.pdb'))
+
+        if '.' + file.split('.', 1)[-1] in mdtraj.core.trajectory._TOPOLOGY_EXTS:
+            top = file
+        else:
+            top = 'native.pdb'
+
+        loaded = md.load(get_fn(file), top=get_fn(top))
         assert len(opened) == len(loaded)
 
 

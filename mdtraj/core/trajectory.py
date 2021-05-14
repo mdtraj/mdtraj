@@ -391,6 +391,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     topkwargs.pop("top", None)
     topkwargs.pop("atom_indices", None)
     topkwargs.pop("frame", None)
+    topkwargs.pop("stride", None)
+    topkwargs.pop("start", None)
     kwargs["top"] = _parse_topology(kwargs.get("top", filename_or_filenames[0]), **topkwargs)
 
     #get the right loader
@@ -409,13 +411,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         _assert_files_or_dirs_exist(filename_or_filenames)
 
 
-    #if some atom indices are requested make a subset topology
-    if kwargs.get("atom_indices", None) is not None:
-        subset_topology = kwargs["top"].subset(kwargs["atom_indices"])
-
-    else:
-        subset_topology = kwargs["top"]
-
+    if extension not in _TOPOLOGY_EXTS:
+        # standard_names is a valid keyword argument only for files containing topologies
+        kwargs.pop('standard_names', None)
 
     trajectories = []
     tmp_file = filename_or_filenames.pop(0)
@@ -430,15 +428,22 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         #this part and have a more consistent interface and a faster load function
         t = loader(tmp_file, **kwargs)
         
-    except TypeError:
+    except TypeError as e:
+
+        #Don't want to intercept legit
+        #TypeErrors
+        if "got an unexpected keyword argument 'top'" not in str(e):
+            raise
+
         kwargs.pop('top', None)
 
         t = loader(tmp_file, **kwargs)
 
-    finally:
-
-        t.topology = subset_topology
-        trajectories.append(t)
+    #in case only a part of the atoms where selected
+    #I get the right topology to laret share with the
+    #other frames
+    subset_topology = t.topology
+    trajectories.append(t)
 
 
     # we know the topology is equal because we sent the same topology
