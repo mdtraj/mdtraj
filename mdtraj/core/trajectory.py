@@ -166,7 +166,11 @@ def _parse_topology(top, **kwargs):
     else:
         ext = None  # might not be a string
 
-    if isinstance(top, string_types) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):
+    if isinstance(top, Topology):
+        topology = top
+    elif isinstance(top, Trajectory):
+        topology = top.topology
+    elif isinstance(top, string_types) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):
         _traj = load_frame(top, 0, **kwargs)
         topology = _traj.topology
     elif isinstance(top, string_types) and (ext in ['.prmtop', '.parm7', '.prm7']):
@@ -183,10 +187,6 @@ def _parse_topology(top, **kwargs):
         topology = load_hoomdxml(top, **kwargs).topology
     elif isinstance(top, string_types) and (ext in ['.gsd']):
         topology = load_gsd_topology(top, **kwargs)
-    elif isinstance(top, Trajectory):
-        topology = top.topology
-    elif isinstance(top, Topology):
-        topology = top
     elif isinstance(top, string_types):
         raise IOError('The topology is loaded by filename extension, and the '
                       'detected "%s" format is not supported. Supported topology '
