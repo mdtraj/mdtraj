@@ -418,6 +418,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
 
     trajectories = []
+    tmp_file = filename_or_filenames.pop(0)
     try:
         # this is a little hack that makes calling load() more predictable. since
         # most of the loaders take a kwargs "top" except for load_hdf5, (since
@@ -427,12 +428,12 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         # it.
         #TODO make all the loaders accept a pre parsed topology (top) in order to avoid
         #this part and have a more consistent interface and a faster load function
-        t = loader(filename_or_filenames.pop(0), **kwargs)
+        t = loader(tmp_file, **kwargs)
         
     except TypeError:
         kwargs.pop('top', None)
 
-        t = loader(filename_or_filenames.pop(0), **kwargs)
+        t = loader(tmp_file, **kwargs)
 
     finally:
 
