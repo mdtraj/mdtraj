@@ -369,69 +369,96 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         The resulting trajectory, as an md.Trajectory object.
     """
 
-    if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
-        topkwargs = kwargs.copy()
-        topkwargs.pop("top", None)
-        topkwargs.pop("atom_indices", None)
-        topkwargs.pop("frame", None)
-        kwargs["top"] = _parse_topology(kwargs["top"], **topkwargs)
+    # If a single filename make a list out of it in
+    #order to have an easier function later on
+    if isinstance(filename_or_filenames, string_types):
+        filename_or_filenames = [filename_or_filenames]
+    
+    
+    extensions = [_get_extension(f) for f in filename_or_filenames]
+    extension = extensions[0]
+    #Make the needed checks
+    if len(set(extensions)) == 0:
+        raise ValueError('No trajectories specified. '
+                            'filename_or_filenames was an empty list')
+    elif len(set(extensions)) > 1:
+        raise TypeError("Each filename must have the same extension. "
+                        "Received: %s" % ', '.join(set(extensions)))
 
-    # grab the extension of the filename
-    if isinstance(filename_or_filenames, string_types):  # If a single filename
-        extension = _get_extension(filename_or_filenames)
-        filename = filename_or_filenames
-    else:  # If multiple filenames, take the first one.
-        extensions = [_get_extension(f) for f in filename_or_filenames]
-        if len(set(extensions)) == 0:
-            raise ValueError('No trajectories specified. '
-                             'filename_or_filenames was an empty list')
-        elif len(set(extensions)) > 1:
-            raise TypeError("Each filename must have the same extension. "
-                            "Received: %s" % ', '.join(set(extensions)))
-        else:
-            # we know the topology is equal because we sent the same topology
-            # kwarg in. Therefore, we explictly throw away the topology on all
-            # but the first trajectory and use check_topology=False on the join.
-            # Throwing the topology away explictly allows a large number of pdb
-            # files to be read in without using ridiculous amounts of memory.
-            trajectories = []
-            for (i, f) in enumerate(filename_or_filenames):
-                t = load(f, **kwargs)
-                if i != 0:
-                    t.topology = None
-                trajectories.append(t)
-            return join(trajectories, check_topology=False,
-                        discard_overlapping_frames=discard_overlapping_frames)
+    #pre-loads the topology from PDB for major performance boost.
+    topkwargs = kwargs.copy()
+    #if top is not given try with one of the trajectory files
+    topkwargs.pop("top", None)
+    topkwargs.pop("atom_indices", None)
+    topkwargs.pop("frame", None)
+    kwargs["top"] = _parse_topology(kwargs.get("top", filename_or_filenames[0]), **topkwargs)
 
+    #get the right loader
     try:
         #loader = _LoaderRegistry[extension][0]
         loader = FormatRegistry.loaders[extension]
     except KeyError:
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
-                      'was found. I can only load files '
-                      'with extensions in %s' % (filename, extension, FormatRegistry.loaders.keys()))
+                    'was found. I can only load files '
+                    'with extensions in %s' % (
+                        filename_or_filenames[0], extension, FormatRegistry.loaders.keys()))
 
-    if extension in _TOPOLOGY_EXTS:
+    if loader.__name__ not in ['load_dtr']:
+            _assert_files_exist(filename_or_filenames)
+    else:
+        _assert_files_or_dirs_exist(filename_or_filenames)
+
+
+    #if some atom indices are requested make a subset topology
+    if kwargs.get("atom_indices", None) is not None:
+        subset_topology = kwargs["top"].subset(kwargs["atom_indices"])
+
+    else:
+        subset_topology = kwargs["top"]
+
+
+    trajectories = []
+    try:
         # this is a little hack that makes calling load() more predictable. since
         # most of the loaders take a kwargs "top" except for load_hdf5, (since
         # it saves the topology inside the file), we often end up calling
         # load_hdf5 via this function with the top kwarg specified. but then
         # there would be a signature binding error. it's easier just to ignore
         # it.
-        if 'top' in kwargs:
-            warnings.warn('top= kwarg ignored since file contains topology information')
-            kwargs.pop('top', None)
-    else:
-        # standard_names is a valid keyword argument only for files containing topologies
-        kwargs.pop('standard_names', None)
+        #TODO make all the loaders accept a pre parsed topology (top) in order to avoid
+        #this part and have a more consistent interface and a faster load function
+        t = loader(filename_or_filenames.pop(0), **kwargs)
+        
+    except TypeError:
+        kwargs.pop('top', None)
 
-    if loader.__name__ not in ['load_dtr']:
-        _assert_files_exist(filename_or_filenames)
-    else:
-        _assert_files_or_dirs_exist(filename_or_filenames)
+        t = loader(filename_or_filenames.pop(0), **kwargs)
 
-    value = loader(filename, **kwargs)
-    return value
+    finally:
+
+        t.topology = subset_topology
+        trajectories.append(t)
+
+
+    # we know the topology is equal because we sent the same topology
+    # kwarg in. Therefore, we explictly throw away the topology on all
+    # but the first trajectory by making them all point to kwargs["top"]
+    # (many pointers to the same topology)
+    #  and use check_topology=False on the join.
+    # Throwing the topology away explictly allows a large number of pdb
+    # files to be read in without using ridiculous amounts of memory.
+    for f in filename_or_filenames:
+        t = loader(f, **kwargs)
+        
+        t.topology = subset_topology
+        trajectories.append(t)
+
+
+    if len(trajectories) == 1: #if only one file was given there is nothing to join
+        return trajectories[0]
+
+    return join(trajectories, check_topology=False,
+                discard_overlapping_frames=discard_overlapping_frames)
 
 
 def iterload(filename, chunk=100, **kwargs):
