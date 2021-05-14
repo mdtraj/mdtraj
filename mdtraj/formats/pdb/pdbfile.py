@@ -125,7 +125,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
     standard_names : bool, default=True
         If True, non-standard atomnames and residuenames are standardized to conform
         with the current PDB format version. If set to false, this step is skipped.
-    topology : mdtraj.core.Topology, default=None
+    top : mdtraj.core.Topology, default=None
         if you give a topology as input the topology won't be parsed from the pdb file
         it saves time if you have to parse a big number of files
 
