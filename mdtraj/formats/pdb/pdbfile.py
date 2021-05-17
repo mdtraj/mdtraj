@@ -164,8 +164,8 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
 
         topology = f.topology
         if atom_indices is not None:
-            #to avoid modifying the topology if given as input
-            topology = deepcopy(topology)
+            # The input topology shouldn't be modified because
+            # subset makes a copy inside the function
             topology = topology.subset(atom_indices)
 
         if f.unitcell_angles is not None and f.unitcell_lengths is not None:

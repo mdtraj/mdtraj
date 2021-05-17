@@ -359,7 +359,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     >>> print traj2
     <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>
 
-    >>> traj3 = md.load_hdf5('output.xtc', atom_indices=[0,1] top='topology.pdb')
+    >>> traj3 = md.load_hdf5('output.xtc', atom_indices=[0,1], top='topology.pdb')
     >>> print traj3
     <mdtraj.Trajectory with 500 frames, 2 atoms at 0x18236e4a0>
 
@@ -438,6 +438,17 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         kwargs.pop('top', None)
 
         t = loader(tmp_file, **kwargs)
+
+    except ValueError as e:
+
+        if 'xyz must be shape' in str(e):
+
+            raise ValueError('The topology and the trajectory files might not contain the same atoms\n'
+            'The input topology must contain all atoms even if '
+            'you want to select a subset of them with atom_indices'
+            ) from e
+
+        raise
 
     # In case only a part of the atoms were selected
     # I get the right topology to later share with the
