@@ -435,6 +435,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         if "got an unexpected keyword argument 'top'" not in str(e):
             raise
 
+        warnings.warn('top= kwargs ignored since this file parser does not support it')
+
         kwargs.pop('top', None)
 
         t = loader(tmp_file, **kwargs)
