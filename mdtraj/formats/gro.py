@@ -86,7 +86,7 @@ def load_gro(filename, stride=None, atom_indices=None, frame=None, top=None):
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
     top : mdtraj.core.Topology, default=None
-        if you give a topology as input the topology won't be parsed from the pdb file
+        if you give a topology as input the topology won't be parsed from the gro file
         it saves time if you have to parse a big number of files
     """
     from mdtraj.core.trajectory import _parse_topology, Trajectory
@@ -116,7 +116,7 @@ class GroTrajectoryFile(object):
         If opened in write mode, and a file by the name of `filename` already
         exists on disk, should we overwrite it?
     top : mdtraj.core.Topology, default=None
-        if you give a topology as input the topology won't be parsed from the pdb file
+        if you give a topology as input the topology won't be parsed from the gro file
         it saves time if you have to parse a big number of files
 
     Attributes

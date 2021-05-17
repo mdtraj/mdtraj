@@ -439,9 +439,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
         t = loader(tmp_file, **kwargs)
 
-    #in case only a part of the atoms where selected
-    #I get the right topology to laret share with the
-    #other frames
+    # In case only a part of the atoms were selected
+    # I get the right topology to later share with the
+    # other frames
     subset_topology = t.topology
     trajectories.append(t)
 

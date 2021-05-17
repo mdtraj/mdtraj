@@ -544,7 +544,7 @@ class PDBTrajectoryFile(object):
         self._unitcell_angles = pdb.get_unit_cell_angles()
 
 
-        #load the topology if none is given
+        # Load the topology if None is given
         if self._topology is None:
             self._topology = Topology()
 

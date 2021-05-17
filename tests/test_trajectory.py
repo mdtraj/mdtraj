@@ -629,7 +629,7 @@ def test_length(get_fn):
     for file in files:
         opened = md.open(get_fn(file))
 
-        if '.' + file.split('.', 1)[-1] in mdtraj.core.trajectory._TOPOLOGY_EXTS:
+        if '.' + file.rsplit('.', 1)[-1] in mdtraj.core.trajectory._TOPOLOGY_EXTS:
             top = file
         else:
             top = 'native.pdb'
