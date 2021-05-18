@@ -452,24 +452,34 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
         raise
 
-    # In case only a part of the atoms were selected
-    # I get the right topology to later share with the
-    # other frames
-    subset_topology = t.topology
     trajectories.append(t)
 
+    # Only do this extra copy and monkey patching if needed
+    if ('top' in kwargs) and (
+        kwargs.get('atom_indices', None) is not None) and (
+        len(filename_or_filenames) > 1):
 
-    # we know the topology is equal because we sent the same topology
+        # In case only a part of the atoms were selected
+        # I get the right topology that
+        # kwargs['top'].subset shall return
+        subset_topology = trajectories[0].topology
+
+        # Little monkey-patch to prevent further subsetting Topologies
+        # this modified version of the topology will never exit this function
+        kwargs['top'].subset = lambda self, atom_indices : subset_topology
+        
+
+
+    # We know the topology is equal because we send the same topology
     # kwarg in. Therefore, we explictly throw away the topology on all
-    # but the first trajectory by making them all point to kwargs["top"]
-    # (many pointers to the same topology)
+    # but the first trajectory by making them all point to None
     #  and use check_topology=False on the join.
     # Throwing the topology away explictly allows a large number of pdb
     # files to be read in without using ridiculous amounts of memory.
     for f in filename_or_filenames:
         t = loader(f, **kwargs)
         
-        t.topology = subset_topology
+        t.topology = None
         trajectories.append(t)
 
 
