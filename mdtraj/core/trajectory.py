@@ -458,7 +458,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     # modify the output topology
     if ('top' in kwargs) and (
         kwargs.get('atom_indices', None) is not None) and (
-        len(filename_or_filenames) > 1):
+        len(filename_or_filenames) > 0):
 
         # In case only a part of the atoms were selected
         # I get the right topology that
@@ -467,7 +467,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
         # Little monkey-patch to prevent further subsetting Topologies
         # this modified version of the topology will never exit this function
-        kwargs['top'].subset = lambda self, atom_indices : subset_topology
+        kwargs['top'].subset = lambda atom_indices : subset_topology
         
 
 
