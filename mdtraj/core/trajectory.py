@@ -454,7 +454,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     trajectories.append(t)
 
-    # Only do this extra copy and monkey patching if needed
+    # Only do this monkey patching if needed in order not to
+    # modify the output topology
     if ('top' in kwargs) and (
         kwargs.get('atom_indices', None) is not None) and (
         len(filename_or_filenames) > 1):
