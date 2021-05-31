@@ -288,3 +288,35 @@ def test_topology_sliced_residue_indices(get_fn):
     assert idx == sliced.top.n_residues-1
     # Now see if this works
     _ = sliced.topology.residue(idx)
+
+def test_topology_join(get_fn):
+    top_1 = md.load(get_fn('2EQQ.pdb')).topology
+    top_2 = md.load(get_fn('4OH9.pdb')).topology
+
+    out_topology = top_1.join(top_2)
+
+    eq(out_topology.n_atoms, top_1.n_atoms + top_2.n_atoms)
+    eq(out_topology.n_residues, top_1.n_residues + top_2.n_residues)
+    eq(top_1.atom(0).residue.name, out_topology.atom(0).residue.name)
+    eq(top_2.atom(-1).residue.name, out_topology.atom(-1).residue.name)
+    eq(top_1.atom(0).element, out_topology.atom(0).element)
+    eq(top_2.atom(-1).element, out_topology.atom(-1).element)
+
+def test_topology_join_keep_resSeq(get_fn):
+    top_1 = md.load(get_fn('2EQQ.pdb')).topology
+    top_2 = md.load(get_fn('4OH9.pdb')).topology
+
+    out_topology_keepId_True = top_1.join(top_2, keep_resSeq=True)
+    out_topology_keepId_False = top_1.join(top_2, keep_resSeq=False)
+
+    out_resSeq_keepId_True = [residue.resSeq for residue in out_topology_keepId_True.residues]
+    out_resSeq_keepId_False = [residue.resSeq for residue in out_topology_keepId_False.residues]
+
+    expected_resSeq_keepId_True = (
+        [residue.resSeq for residue in top_1.residues
+            ] + [
+                residue.resSeq for residue in top_2.residues])
+    expected_resSeq_keepId_False = list(range(1, len(expected_resSeq_keepId_True) + 1))
+
+    eq(out_resSeq_keepId_True, expected_resSeq_keepId_True)
+    eq(out_resSeq_keepId_False, expected_resSeq_keepId_False)

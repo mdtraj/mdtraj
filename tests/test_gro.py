@@ -94,6 +94,10 @@ def test_load(get_fn):
         eq(list(t.top.atoms), list(tref.top.atoms))
         eq(t.unitcell_vectors, tref.unitcell_vectors)
 
+    #if there are 2 residues with same renum but different resname
+    t = md.load(get_fn('two_residues_same_resnum.gro'))
+    eq(t.n_residues, 2)
+
 
 def test_against_gmx(get_fn, tmpdir):
     t1 = md.load(get_fn('frame0.pdb'))

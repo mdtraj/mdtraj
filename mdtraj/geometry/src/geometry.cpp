@@ -132,6 +132,82 @@ void dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_mat
     }
 }
 
+void dist_mic_triclinic_t(const float* xyz, const int* pairs, const int* times,
+                        const float* box_matrix, float* distance_out, 
+                        float* displacement_out, const int n_frames,
+                        const int n_atoms, const int n_pairs) {
+    bool store_displacement = (displacement_out != NULL);
+    bool store_distance = (distance_out != NULL);
+    for (int i = 0; i < n_frames; i++) {
+        // Load the periodic box vectors and make sure they're in reduced form.
+        // Get box from frame of first index of time pair
+        int box_offset = times[2*i + 0] * 9;
+        box_matrix += box_offset;
+
+        fvec4 box_vec1(box_matrix[0], box_matrix[3], box_matrix[6], 0);
+        fvec4 box_vec2(box_matrix[1], box_matrix[4], box_matrix[7], 0);
+        fvec4 box_vec3(box_matrix[2], box_matrix[5], box_matrix[8], 0);
+        box_vec3 -= box_vec2*roundf(box_vec3[1]/box_vec2[1]);
+        box_vec3 -= box_vec1*roundf(box_vec3[0]/box_vec1[0]);
+        box_vec2 -= box_vec1*roundf(box_vec2[0]/box_vec1[0]);
+        float recip_box_size[3] = {1.0f/box_vec1[0], 1.0f/box_vec2[1], 1.0f/box_vec3[2]};
+        for (int j = 0; j < n_pairs; j++) {
+            // Compute the displacement.
+
+            int time_offset1 = 3*n_atoms*times[2*i + 0];
+            int time_offset2 = 3*n_atoms*times[2*i + 1];
+            int pair_offset1 = 3*pairs[2*j + 0];
+            int pair_offset2 = 3*pairs[2*j + 1];
+            int offset1 = time_offset1 + pair_offset1;
+            int offset2 = time_offset2 + pair_offset2;
+            fvec4 pos1(xyz[offset1], xyz[offset1+1], xyz[offset1+2], 0);
+            fvec4 pos2(xyz[offset2], xyz[offset2+1], xyz[offset2+2], 0);
+            fvec4 r12 = pos2-pos1;
+            r12 -= box_vec3*round(r12[2]*recip_box_size[2]);
+            r12 -= box_vec2*round(r12[1]*recip_box_size[1]);
+            r12 -= box_vec1*round(r12[0]*recip_box_size[0]);
+
+            // We need to consider 27 possible periodic copies.
+
+            float min_dist2 = FLT_MAX;
+            fvec4 min_r = r12;
+            for (int x = -1; x < 2; x++) {
+                fvec4 ra = r12 + box_vec1*x;
+                for (int y = -1; y < 2; y++) {
+                    fvec4 rb = ra + box_vec2*y;
+                    for (int z = -1; z < 2; z++) {
+                        fvec4 rc = rb + box_vec3*z;
+                        float dist2 = dot3(rc, rc);
+                        if (dist2 <= min_dist2) {
+                            min_dist2 = dist2;
+                            min_r = rc;
+                        }
+                    }
+                }
+            }
+
+            // Store results.
+
+            if (store_displacement) {
+                float temp[4];
+                min_r.store(temp);
+                *displacement_out = temp[0];
+                displacement_out++;
+                *displacement_out = temp[1];
+                displacement_out++;
+                *displacement_out = temp[2];
+                displacement_out++;
+            }
+            if (store_distance) {
+                *distance_out = sqrtf(min_dist2);
+                distance_out++;
+            }
+        }
+        // Reset box offset
+        box_matrix -= box_offset;
+    }
+}
+
 /**
  * Identify the closest contact between two groups of atoms.
  */

@@ -1,0 +1,24 @@
+<html><head>
+<!-- redirect to /development after 3 seconds, in case something fails or
+    the user has javascript disabled -->
+<meta http-equiv="refresh" content="3;URL='/development'"/>
+
+<script type="text/javascript">
+// download the versions.json file and redirect to the URL associated
+// with the entry that has latest=true
+var xhr = new XMLHttpRequest();
+xhr.open('GET', encodeURI('versions.json'));
+xhr.onload = function() {
+    if (xhr.status === 200) {
+        var versions = JSON.parse(xhr.responseText);
+        for (var key in versions) {
+            if (versions[key]['latest']) {
+                var latest = versions[key];
+                window.location.replace(latest['url']);
+            }
+        }
+    }
+}
+xhr.send();
+</script>
+</head></html>
