@@ -3,11 +3,27 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-Unreleased
-----------
+v1.9.6 (April 20, 2021)
+-----------------------
  - Fix compatibility with all versions of astunparse (03753d736e30f15f8f210434e689e9ff664bb611)
  - Rework CI to be simpler and more maintainable
  - Fix deployment of the documentation to the website
+ - Don't use serials for more than 1 chain (#1612)
+ - Added ``enforcePeriodicBox`` option for HDF5Reporter (#1622)
+ - Add time-dependent distance and RDF functions (#1633)
+ - Add ``select`` option to ``compute_center_of_mass()`` (#1640)
+ - ``Topology.join()`` can optionally updates resSeq of new residues (#1639)
+
+A total of 7 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Robert T. McGibbon
+- Sander Roet
+- Ray A. Matsumoto
+- Maurice Karrenbrock +
+- Kirill Shmilovich
+- Heyi Liang +
+- Matthew W. Thompson
 
 
 v1.9.5 (Jan 4, 2021)
