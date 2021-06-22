@@ -17,7 +17,7 @@ With MDTraj, you can
 
 For details, see the website at [mdtraj.org](http://mdtraj.org). To get involved,
 take a look at the [github issue tracker](https://github.com/mdtraj/mdtraj/issues)
-and/or the user forums [discourse.mdtraj.org](http://discourse.mdtraj.org).
+and/or the [gitter room](https://gitter.im/mdtraj/community).
 
 ####  Citation
 
