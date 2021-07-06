@@ -306,6 +306,10 @@ class GroTrajectoryFile(object):
         residue = None
         atomReplacements = {}
 
+        # This is needed because sometimes
+        # residue names get replaced and this
+        # brings to wrong residue parsing
+        old_resname = None
         for ln, line in enumerate(self._file):
             if ln == 1:
                 n_atoms = int(line.strip())
@@ -313,9 +317,10 @@ class GroTrajectoryFile(object):
                 (thisresnum, thisresname, thisatomname, thisatomnum) = \
                     [line[i*5:i*5+5].strip() for i in range(4)]
                 thisresnum, thisatomnum = map(int, (thisresnum, thisatomnum))
-                if residue is None or residue.resSeq != thisresnum or residue.name != thisresname:
-                    if residue is not None and residue.name != thisresname:
-                        warnings.warn("WARNING: two consecutive residues with same number (%s, %s)" % (thisresname, residue.name))
+                if residue is None or residue.resSeq != thisresnum or old_resname != thisresname:
+                    if residue is not None and thisresnum == residue.resSeq:
+                        warnings.warn("WARNING: two consecutive residues with same number (%s, %s)" % (thisresname, old_resname))
+                    old_resname = thisresname
                     if thisresname in pdb.PDBTrajectoryFile._residueNameReplacements:
                         thisresname = pdb.PDBTrajectoryFile._residueNameReplacements[thisresname]
                     residue = topology.add_residue(thisresname, chain, resSeq=thisresnum)
