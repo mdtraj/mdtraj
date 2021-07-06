@@ -83,6 +83,14 @@ def test_topology_pandas_TIP4PEW(get_fn):
     eq(topology, topology2)
 
 
+def test_topology_pandas_2residues_same_resSeq(get_fn):
+    topology = md.load(get_fn('two_residues_same_resnum.gro')).topology
+    atoms, bonds = topology.to_dataframe()
+
+    topology2 = md.Topology.from_dataframe(atoms, bonds)
+    eq(topology, topology2)
+
+
 def test_topology_numbers(get_fn):
     topology = md.load(get_fn('1bpi.pdb')).topology
     assert len(list(topology.atoms)) == topology.n_atoms
