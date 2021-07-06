@@ -43,6 +43,15 @@ def test_pdbread(get_fn):
     pdb = get_fn('native.pdb')
     p = load(pdb)
 
+def test_pdbread_with_input_top(get_fn):
+    pdb = get_fn('native.pdb')
+    p_1 = load(pdb)
+
+    p_2 = load(pdb, top=pdb)
+
+    eq(p_1.xyz, p_2.xyz)
+    eq(p_1.topology, p_2.topology)
+
 
 def test_pdbwrite(get_fn):
     pdb = get_fn('native.pdb')
@@ -300,3 +309,13 @@ def test_multichain_load_cycle(get_fn):
     bonds2 = [(bond.atom1.index, bond.atom2.index)
               for bond in pdb2.topology.bonds]
     assert len(bonds) == len(bonds2)
+
+def test_load_pdb_input_top(get_fn):
+
+    pdb = get_fn('native.pdb')
+    p_1 = load_pdb(pdb)
+
+    p_2 = load_pdb(pdb, top=p_1.topology)
+
+    eq(p_1.xyz, p_2.xyz)
+    eq(p_1.topology, p_2.topology)
