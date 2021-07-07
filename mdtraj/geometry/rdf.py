@@ -159,11 +159,14 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
         pairs = np.vstack([np.vstack([pairs_set, pairs_set]).T, pairs])
 
     g_r_t = []
+    weights = []
     num_chunks = int(np.floor(traj.n_frames / period_length))
-    num_concurrent_pairs = 20000
+    # Splits pairs into smaller chunks so that frame_distances is not excesivly large
+    num_concurrent_pairs = 100000
     for i in range(np.ceil(len(pairs)/num_concurrent_pairs).astype("int")):
         temp_g_r_t = np.zeros(shape=(len(times), n_bins))
         pairs_set = pairs[i*num_concurrent_pairs:(i+1)*num_concurrent_pairs]
+        weights.append(len(pairs_set)/num_concurrent_pairs)
         
         # Returns shape (len(times), len(pairs_set))
         frame_distances = compute_distances_t(traj, pairs_set, times, periodic=periodic, opt=opt)
@@ -180,6 +183,6 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
         temp_g_r_t = temp_g_r_t.astype(np.float64) / norm  # From int64.
         g_r_t.append(temp_g_r_t)
 
-    g_r_t_final = np.mean(g_r_t, axis=0)
+    g_r_t_final = np.average(g_r_t, axis=0, weights=weights)
     
     return r, g_r_t_final
