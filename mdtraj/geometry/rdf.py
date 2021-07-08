@@ -160,7 +160,7 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
 
     g_r_t = []
     weights = []
-    num_chunks = int(np.floor(traj.n_frames / period_length))
+
     # Splits pairs into smaller chunks so that frame_distances is not excesivly large
     num_concurrent_pairs = 100000
     for i in range(np.ceil(len(pairs)/num_concurrent_pairs).astype("int")):
