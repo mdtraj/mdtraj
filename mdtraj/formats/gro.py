@@ -69,7 +69,7 @@ from mdtraj.formats.registry import FormatRegistry
 ##############################################################################
 
 @FormatRegistry.register_loader('.gro')
-def load_gro(filename, stride=None, atom_indices=None, frame=None):
+def load_gro(filename, stride=None, atom_indices=None, frame=None, top=None):
     """Load a GROMACS GRO file.
 
     Parameters
@@ -85,10 +85,13 @@ def load_gro(filename, stride=None, atom_indices=None, frame=None):
         Use this option to load only a single frame from a trajectory on disk.
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
+    top : mdtraj.core.Topology, default=None
+        if you give a topology as input the topology won't be parsed from the gro file
+        it saves time if you have to parse a big number of files
     """
     from mdtraj.core.trajectory import _parse_topology, Trajectory
 
-    with GroTrajectoryFile(filename, 'r') as f:
+    with GroTrajectoryFile(filename, 'r', top=top) as f:
         topology = f.topology
         if frame is not None:
             f.seek(frame)
@@ -112,6 +115,9 @@ class GroTrajectoryFile(object):
     force_overwrite : bool
         If opened in write mode, and a file by the name of `filename` already
         exists on disk, should we overwrite it?
+    top : mdtraj.core.Topology, default=None
+        if you give a topology as input the topology won't be parsed from the gro file
+        it saves time if you have to parse a big number of files
 
     Attributes
     ----------
@@ -126,17 +132,22 @@ class GroTrajectoryFile(object):
     """
     distance_unit = 'nanometers'
 
-    def __init__(self, filename, mode='r', force_overwrite=True):
+    def __init__(self, filename, mode='r', force_overwrite=True, top=None):
         self._open = False
         self._file = None
         self._mode = mode
+
+        self.topology = top
 
         if mode == 'r':
             self._open = True
             self._frame_index = 0
             self._file = open(filename, 'r')
             try:
-                self.n_atoms, self.topology = self._read_topology()
+                if self.topology is None:
+                    self.n_atoms, self.topology = self._read_topology()
+                else:
+                    self.n_atoms = self.topology.n_atoms
             finally:
                 self._file.seek(0)
         elif mode == 'w':
@@ -295,6 +306,10 @@ class GroTrajectoryFile(object):
         residue = None
         atomReplacements = {}
 
+        # This is needed because sometimes
+        # residue names get replaced and this
+        # brings to wrong residue parsing
+        old_resname = None
         for ln, line in enumerate(self._file):
             if ln == 1:
                 n_atoms = int(line.strip())
@@ -302,9 +317,10 @@ class GroTrajectoryFile(object):
                 (thisresnum, thisresname, thisatomname, thisatomnum) = \
                     [line[i*5:i*5+5].strip() for i in range(4)]
                 thisresnum, thisatomnum = map(int, (thisresnum, thisatomnum))
-                if residue is None or residue.resSeq != thisresnum or residue.name != thisresname:
-                    if residue is not None and residue.name != thisresname:
-                        warnings.warn("WARNING: two consecutive residues with same number (%s, %s)" % (thisresname, residue.name))
+                if residue is None or residue.resSeq != thisresnum or old_resname != thisresname:
+                    if residue is not None and thisresnum == residue.resSeq:
+                        warnings.warn("WARNING: two consecutive residues with same number (%s, %s)" % (thisresname, old_resname))
+                    old_resname = thisresname
                     if thisresname in pdb.PDBTrajectoryFile._residueNameReplacements:
                         thisresname = pdb.PDBTrajectoryFile._residueNameReplacements[thisresname]
                     residue = topology.add_residue(thisresname, chain, resSeq=thisresnum)
