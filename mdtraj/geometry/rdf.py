@@ -93,9 +93,9 @@ def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
     return r, g_r
 
 
-def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
-                  bin_width=0.005, n_bins=None, self_correlation=True,
-                  periodic=True, opt=True):
+def compute_rdf_t(traj, pairs, times, num_concurrent_pairs = 100000, 
+                  period_length=None, r_range=None, bin_width=0.005, 
+                  n_bins=None, self_correlation=True, periodic=True, opt=True):
     """Compute time-dependent radial distribution functions, g(r, t).
     The time-dependent radial distribution function is calculated between pairs of time points.
     For example, g(r, 0) is equal to the time-independent radial distribution function, g(r).
@@ -161,8 +161,7 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
     g_r_t = []
     weights = []
 
-    # Splits pairs into smaller chunks so that frame_distances is not excesivly large
-    num_concurrent_pairs = 100000
+    # Splits pairs into smaller chunks so that frame_distances is not excessively large
     for i in range(np.ceil(len(pairs)/num_concurrent_pairs).astype("int")):
         temp_g_r_t = np.zeros(shape=(len(times), n_bins))
         pairs_set = pairs[i*num_concurrent_pairs:(i+1)*num_concurrent_pairs]
