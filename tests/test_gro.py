@@ -98,6 +98,18 @@ def test_load(get_fn):
     t = md.load(get_fn('two_residues_same_resnum.gro'))
     eq(t.n_residues, 2)
 
+def test_load_with_given_top(get_fn):
+    gro = get_fn('frame0.gro')
+    t = md.load(gro, top=gro)
+    tref = md.load(gro)
+                 
+    eq(t.xyz, tref.xyz)
+    eq(t.top, tref.top)
+    eq(list(t.top.atoms), list(tref.top.atoms))
+    eq(t.unitcell_vectors, tref.unitcell_vectors)
+
+
+
 
 def test_against_gmx(get_fn, tmpdir):
     t1 = md.load(get_fn('frame0.pdb'))
