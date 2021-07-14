@@ -168,7 +168,7 @@ def test_compare_rdf_t_master(get_fn):
 
     times = list()
     for j in range(100):
-        times.append([j, j])
+        times.append([0, j])
 
     pairs = traj.top.select_pairs('name O', 'name O')
     r_t, rdf_O_O = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times)
