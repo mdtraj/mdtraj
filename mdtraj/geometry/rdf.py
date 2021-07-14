@@ -109,6 +109,8 @@ def compute_rdf_t(traj, pairs, times, num_concurrent_pairs = 100000,
         Each row gives the indices of two atoms.
     times : array-like, shape=(any, 2), dtype=int
         Each row gives the indices of two frames.
+    num_concurrent_pairs : int, default=100000
+        Number of atom pairs analyzed at a time.
     period_length : int, optional, default=None
         The length of each chunk of frames to consider when time-averaging
     r_range : array-like, shape=(2,), optional, default=(0.0, 1.0)
