@@ -178,3 +178,18 @@ def test_compare_rdf_t_master(get_fn):
 
     assert eq(r_t, master_r_t)
     assert eq(rdf_O_O, master_g_r_t, decimal=5)
+
+def test_compare_n_concurrent_pairs(get_fn):
+    traj = md.load(get_fn('tip3p_300K_1ATM.xtc'), top=get_fn('tip3p_300K_1ATM.pdb'))
+
+    times = list()
+    for j in range(100):
+        times.append([0, j])
+
+    pairs = traj.top.select_pairs('name O', 'name O')
+
+    r_t_1, rdf_O_O_1 = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times, n_concurrent_pairs=100000)
+    r_t_2, rdf_O_O_2 = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times, n_concurrent_pairs=314159)
+
+    assert eq(r_t_1, r_t_2)
+    assert eq(rdf_O_O_1, rdf_O_O_2)
