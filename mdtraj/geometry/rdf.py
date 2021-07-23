@@ -93,7 +93,7 @@ def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
     return r, g_r
 
 
-def compute_rdf_t(traj, pairs, times, num_concurrent_pairs = 100000, 
+def compute_rdf_t(traj, pairs, times, n_concurrent_pairs = 100000, 
                   period_length=None, r_range=None, bin_width=0.005, 
                   n_bins=None, self_correlation=True, periodic=True, opt=True):
     """Compute time-dependent radial distribution functions, g(r, t).
@@ -109,7 +109,7 @@ def compute_rdf_t(traj, pairs, times, num_concurrent_pairs = 100000,
         Each row gives the indices of two atoms.
     times : array-like, shape=(any, 2), dtype=int
         Each row gives the indices of two frames.
-    num_concurrent_pairs : int, default=100000
+    n_concurrent_pairs : int, default=100000
         Number of atom pairs analyzed at a time.
     period_length : int, optional, default=None
         The length of each chunk of frames to consider when time-averaging
@@ -160,14 +160,15 @@ def compute_rdf_t(traj, pairs, times, num_concurrent_pairs = 100000,
         pairs_set = np.unique(pairs)
         pairs = np.vstack([np.vstack([pairs_set, pairs_set]).T, pairs])
 
-    g_r_t = []
-    weights = []
+    n_small_chunks = np.ceil(len(pairs)/n_concurrent_pairs).astype("int")
+    g_r_t = np.zeros((n_small_chunks, len(times), n_bins))
+    weights = np.zeros(n_small_chunks)
 
     # Splits pairs into smaller chunks so that frame_distances is not excessively large
-    for i in range(np.ceil(len(pairs)/num_concurrent_pairs).astype("int")):
-        temp_g_r_t = np.zeros(shape=(len(times), n_bins))
-        pairs_set = pairs[i*num_concurrent_pairs:(i+1)*num_concurrent_pairs]
-        weights.append(len(pairs_set)/num_concurrent_pairs)
+    for i in range(n_small_chunks):
+        temp_g_r_t = np.zeros((len(times), n_bins))
+        pairs_set = pairs[i*n_concurrent_pairs:(i+1)*n_concurrent_pairs]
+        weights[i] = len(pairs_set)/n_concurrent_pairs
         
         # Returns shape (len(times), len(pairs_set))
         frame_distances = compute_distances_t(traj, pairs_set, times, periodic=periodic, opt=opt)
@@ -182,7 +183,7 @@ def compute_rdf_t(traj, pairs, times, num_concurrent_pairs = 100000,
         norm = len(pairs_set) / (period_length) * np.sum(1.0 / traj.unitcell_volumes) * V
 
         temp_g_r_t = temp_g_r_t.astype(np.float64) / norm  # From int64.
-        g_r_t.append(temp_g_r_t)
+        g_r_t[i] = temp_g_r_t
 
     g_r_t_final = np.average(g_r_t, axis=0, weights=weights)
     
