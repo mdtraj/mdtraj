@@ -93,9 +93,9 @@ def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
     return r, g_r
 
 
-def compute_rdf_t(traj, pairs, times, n_concurrent_pairs = 100000, 
-                  period_length=None, r_range=None, bin_width=0.005, 
-                  n_bins=None, self_correlation=True, periodic=True, opt=True):
+def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None, 
+                  bin_width=0.005, n_bins=None, self_correlation=True, 
+                  periodic=True, n_concurrent_pairs = 100000, opt=True):
     """Compute time-dependent radial distribution functions, g(r, t).
     The time-dependent radial distribution function is calculated between pairs of time points.
     For example, g(r, 0) is equal to the time-independent radial distribution function, g(r).
@@ -109,8 +109,6 @@ def compute_rdf_t(traj, pairs, times, n_concurrent_pairs = 100000,
         Each row gives the indices of two atoms.
     times : array-like, shape=(any, 2), dtype=int
         Each row gives the indices of two frames.
-    n_concurrent_pairs : int, default=100000
-        Number of atom pairs analyzed at a time.
     period_length : int, optional, default=None
         The length of each chunk of frames to consider when time-averaging
     r_range : array-like, shape=(2,), optional, default=(0.0, 1.0)
@@ -126,6 +124,8 @@ def compute_rdf_t(traj, pairs, times, n_concurrent_pairs = 100000,
         If `periodic` is True and the trajectory contains unitcell
         information, we will compute distances under the minimum image
         convention.
+    n_concurrent_pairs : int, default=100000
+        Number of atom pairs analyzed at a time.
     opt : bool, default=True
         Use an optimized native library to compute the pair wise distances.
 
