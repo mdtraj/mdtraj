@@ -563,10 +563,10 @@ def test_iterload_chunk_dcd(get_fn):
 
     full = md.load(file, top=top, stride=skip_frames)
     length = len(full)
-    
+
 
     chunks = []
-    for traj_chunk in md.iterload(file, top=top, stride=skip_frames, chunk=frames_chunk):        
+    for traj_chunk in md.iterload(file, top=top, stride=skip_frames, chunk=frames_chunk):
         chunks.append(traj_chunk)
     joined = md.join(chunks)
     assert len(full) == len(joined)
@@ -756,3 +756,13 @@ def test_add_remove_atoms(get_fn):
     roundtrip_atoms = list(top.atoms)[:]
     # Ensure the atoms are the same after a round trip of adding / deleting
     assert old_atoms == roundtrip_atoms
+
+
+@pytest.mark.parametrize("indices", [[2, 1, 0], [0, 1, 2, 2]])
+def test_non_continious_atom_slice(indices, get_fn):
+    pdb = md.load(get_fn('native2.pdb'), no_boxchk=True)
+    pdb_slice0 = pdb.atom_slice([0, 1, 2])
+    with pytest.warns(UserWarning, match="Atom indices"):
+        pdb_slice1 = pdb.atom_slice(indices)
+    assert (pdb_slice0.xyz == pdb_slice1.xyz).all()
+    assert list(pdb_slice0.topology.atoms) == list(pdb_slice1.topology.atoms)

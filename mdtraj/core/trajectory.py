@@ -373,8 +373,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     #order to have an easier function later on
     if isinstance(filename_or_filenames, string_types):
         filename_or_filenames = [filename_or_filenames]
-    
-    
+
+
     extensions = [_get_extension(f) for f in filename_or_filenames]
     extension = extensions[0]
     #Make the needed checks
@@ -427,7 +427,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         #TODO make all the loaders accept a pre parsed topology (top) in order to avoid
         #this part and have a more consistent interface and a faster load function
         t = loader(tmp_file, **kwargs)
-        
+
     except TypeError as e:
 
         #Don't want to intercept legit
@@ -468,7 +468,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         # Little monkey-patch to prevent further subsetting Topologies
         # this modified version of the topology will never exit this function
         kwargs['top'].subset = lambda atom_indices : subset_topology
-        
+
 
 
     # We know the topology is equal because we send the same topology
@@ -479,7 +479,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     # files to be read in without using ridiculous amounts of memory.
     for f in filename_or_filenames:
         t = loader(f, **kwargs)
-        
+
         t.topology = None
         trajectories.append(t)
 
@@ -1800,7 +1800,12 @@ class Trajectory(object):
         --------
         stack : stack multiple trajectories along the atom axis
         """
-        xyz = np.array(self.xyz[:, atom_indices], order='C')
+        indices = np.unique(np.array(atom_indices))
+        if (len(indices) != len(atom_indices) or
+            np.not_equal(indices, atom_indices).any()):
+            s = "Atom indices were made unique and sorted before atom slicing"
+            warnings.warn(s, UserWarning)
+        xyz = np.array(self.xyz[:, indices], order='C')
         topology = None
         if self._topology is not None:
             topology = self._topology.subset(atom_indices)
