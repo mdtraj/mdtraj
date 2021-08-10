@@ -49,7 +49,7 @@ from datetime import date
 import gzip
 import numpy as np
 import xml.etree.ElementTree as etree
-from copy import copy
+from copy import copy, deepcopy
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
 from mdtraj.core.topology import Topology
 from mdtraj.utils import ilen, cast_indices, in_units_of, open_maybe_zipped
@@ -94,7 +94,7 @@ def _is_url(url):
 @FormatRegistry.register_loader('.pdb')
 @FormatRegistry.register_loader('.pdb.gz')
 def load_pdb(filename, stride=None, atom_indices=None, frame=None,
-             no_boxchk=False, standard_names=True ):
+             no_boxchk=False, standard_names=True, top=None):
     """Load a RCSB Protein Data Bank file from disk.
 
     Parameters
@@ -125,6 +125,9 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
     standard_names : bool, default=True
         If True, non-standard atomnames and residuenames are standardized to conform
         with the current PDB format version. If set to false, this step is skipped.
+    top : mdtraj.core.Topology, default=None
+        if you give a topology as input the topology won't be parsed from the pdb file
+        it saves time if you have to parse a big number of files
 
     Returns
     -------
@@ -150,7 +153,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
     atom_indices = cast_indices(atom_indices)
 
     filename = str(filename)
-    with PDBTrajectoryFile(filename, standard_names=standard_names) as f:
+    with PDBTrajectoryFile(filename, standard_names=standard_names, top=top) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
         if frame is not None:
             coords = f.positions[[frame], atom_slice, :]
@@ -161,6 +164,8 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
 
         topology = f.topology
         if atom_indices is not None:
+            # The input topology shouldn't be modified because
+            # subset makes a copy inside the function
             topology = topology.subset(atom_indices)
 
         if f.unitcell_angles is not None and f.unitcell_lengths is not None:
@@ -217,6 +222,9 @@ class PDBTrajectoryFile(object):
     standard_names : bool, default=True
         If True, non-standard atomnames and residuenames are standardized to conform
         with the current PDB format version. If set to false, this step is skipped.
+    top : mdtraj.core.Topology, default=None
+        if you give a topology as input the topology won't be parsed from the pdb file
+        it saves time if you have to parse a big number of files
 
     Attributes
     ----------
@@ -241,10 +249,10 @@ class PDBTrajectoryFile(object):
     _atomNameReplacements = {}
     _chain_names = [chr(ord('A') + i) for i in range(26)]
 
-    def __init__(self, filename, mode='r', force_overwrite=True, standard_names=True):
+    def __init__(self, filename, mode='r', force_overwrite=True, standard_names=True, top=None):
         self._open = False
         self._file = None
-        self._topology = None
+        self._topology = top
         self._positions = None
         self._mode = mode
         self._last_topology = None
@@ -513,33 +521,8 @@ class PDBTrajectoryFile(object):
         if not self._mode == 'r':
             raise ValueError('file not opened for reading')
 
-        self._topology = Topology()
-
         pdb = PdbStructure(self._file, load_all_models=True)
 
-        atomByNumber = {}
-        for chain in pdb.iter_chains():
-            c = self._topology.add_chain()
-            for residue in chain.iter_residues():
-                resName = residue.get_name()
-                if resName in PDBTrajectoryFile._residueNameReplacements and self._standard_names:
-                    resName = PDBTrajectoryFile._residueNameReplacements[resName]
-                r = self._topology.add_residue(resName, c, residue.number, residue.segment_id)
-                if resName in PDBTrajectoryFile._atomNameReplacements and self._standard_names:
-                    atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
-                else:
-                    atomReplacements = {}
-                for atom in residue.atoms:
-                    atomName = atom.get_name()
-                    if atomName in atomReplacements:
-                        atomName = atomReplacements[atomName]
-                    atomName = atomName.strip()
-                    element = atom.element
-                    if element is None:
-                        element = PDBTrajectoryFile._guess_element(atomName, residue.name, len(residue))
-
-                    newAtom = self._topology.add_atom(atomName, element, r, serial=atom.serial_number)
-                    atomByNumber[atom.serial_number] = newAtom
 
         # load all of the positions (from every model)
         _positions = []
@@ -559,23 +542,54 @@ class PDBTrajectoryFile(object):
         ## The atom positions read from the PDB file
         self._unitcell_lengths = pdb.get_unit_cell_lengths()
         self._unitcell_angles = pdb.get_unit_cell_angles()
-        self._topology.create_standard_bonds()
-        self._topology.create_disulfide_bonds(self.positions[0])
 
-        # Add bonds based on CONECT records.
-        connectBonds = []
-        for connect in pdb.models[-1].connects:
-            i = connect[0]
-            for j in connect[1:]:
-                if i in atomByNumber and j in atomByNumber:
-                    connectBonds.append((atomByNumber[i], atomByNumber[j]))
-        if len(connectBonds) > 0:
-            # Only add bonds that don't already exist.
-            existingBonds = set(self._topology.bonds)
-            for bond in connectBonds:
-                if bond not in existingBonds and (bond[1], bond[0]) not in existingBonds:
-                    self._topology.add_bond(bond[0], bond[1])
-                    existingBonds.add(bond)
+
+        # Load the topology if None is given
+        if self._topology is None:
+            self._topology = Topology()
+
+            atomByNumber = {}
+            for chain in pdb.iter_chains():
+                c = self._topology.add_chain()
+                for residue in chain.iter_residues():
+                    resName = residue.get_name()
+                    if resName in PDBTrajectoryFile._residueNameReplacements and self._standard_names:
+                        resName = PDBTrajectoryFile._residueNameReplacements[resName]
+                    r = self._topology.add_residue(resName, c, residue.number, residue.segment_id)
+                    if resName in PDBTrajectoryFile._atomNameReplacements and self._standard_names:
+                        atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
+                    else:
+                        atomReplacements = {}
+                    for atom in residue.atoms:
+                        atomName = atom.get_name()
+                        if atomName in atomReplacements:
+                            atomName = atomReplacements[atomName]
+                        atomName = atomName.strip()
+                        element = atom.element
+                        if element is None:
+                            element = PDBTrajectoryFile._guess_element(atomName, residue.name, len(residue))
+
+                        newAtom = self._topology.add_atom(atomName, element, r, serial=atom.serial_number)
+                        atomByNumber[atom.serial_number] = newAtom
+
+        
+            self._topology.create_standard_bonds()
+            self._topology.create_disulfide_bonds(self.positions[0])
+
+            # Add bonds based on CONECT records.
+            connectBonds = []
+            for connect in pdb.models[-1].connects:
+                i = connect[0]
+                for j in connect[1:]:
+                    if i in atomByNumber and j in atomByNumber:
+                        connectBonds.append((atomByNumber[i], atomByNumber[j]))
+            if len(connectBonds) > 0:
+                # Only add bonds that don't already exist.
+                existingBonds = set(self._topology.bonds)
+                for bond in connectBonds:
+                    if bond not in existingBonds and (bond[1], bond[0]) not in existingBonds:
+                        self._topology.add_bond(bond[0], bond[1])
+                        existingBonds.add(bond)
 
     @staticmethod
     def _loadNameReplacementTables():

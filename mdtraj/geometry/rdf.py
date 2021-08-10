@@ -93,9 +93,9 @@ def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
     return r, g_r
 
 
-def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
-                  bin_width=0.005, n_bins=None, self_correlation=True,
-                  periodic=True, opt=True):
+def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None, 
+                  bin_width=0.005, n_bins=None, self_correlation=True, 
+                  periodic=True, n_concurrent_pairs = 100000, opt=True):
     """Compute time-dependent radial distribution functions, g(r, t).
     The time-dependent radial distribution function is calculated between pairs of time points.
     For example, g(r, 0) is equal to the time-independent radial distribution function, g(r).
@@ -124,6 +124,8 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
         If `periodic` is True and the trajectory contains unitcell
         information, we will compute distances under the minimum image
         convention.
+    n_concurrent_pairs : int, default=100000
+        Number of atom pairs analyzed at a time.
     opt : bool, default=True
         Use an optimized native library to compute the pair wise distances.
 
@@ -158,21 +160,31 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
         pairs_set = np.unique(pairs)
         pairs = np.vstack([np.vstack([pairs_set, pairs_set]).T, pairs])
 
-    g_r_t = np.zeros(shape=(len(times), n_bins))
-    num_chunks = int(np.floor(traj.n_frames / period_length))
+    n_small_chunks = np.ceil(len(pairs)/n_concurrent_pairs).astype("int")
+    g_r_t = np.zeros((n_small_chunks, len(times), n_bins))
+    weights = np.zeros(n_small_chunks)
 
-    # Returns shape (len(times), len(pairs))
-    frame_distances = compute_distances_t(traj, pairs, times, periodic=periodic, opt=opt)
+    # Splits pairs into smaller chunks so that frame_distances is not excessively large
+    for i in range(n_small_chunks):
+        temp_g_r_t = np.zeros((len(times), n_bins))
+        pairs_set = pairs[i*n_concurrent_pairs:(i+1)*n_concurrent_pairs]
+        weights[i] = len(pairs_set)/n_concurrent_pairs
+        
+        # Returns shape (len(times), len(pairs_set))
+        frame_distances = compute_distances_t(traj, pairs_set, times, periodic=periodic, opt=opt)
 
-    for n, distances in enumerate(frame_distances):
-        tmp, edges = np.histogram(distances, range=r_range, bins=n_bins)
-        g_r_t[n, :] += tmp
-    r = 0.5 * (edges[1:] + edges[:-1])
+        for n, distances in enumerate(frame_distances):
+            tmp, edges = np.histogram(distances, range=r_range, bins=n_bins)
+            temp_g_r_t[n, :] += tmp
+        r = 0.5 * (edges[1:] + edges[:-1])
 
-    # Normalize by volume of the spherical shell (see above)
-    V = (4 / 3) * np.pi * (np.power(edges[1:], 3) - np.power(edges[:-1], 3))
-    norm = len(pairs) / (period_length) * np.sum(1.0 / traj.unitcell_volumes) * V
+        # Normalize by volume of the spherical shell (see above)
+        V = (4 / 3) * np.pi * (np.power(edges[1:], 3) - np.power(edges[:-1], 3))
+        norm = len(pairs_set) / (period_length) * np.sum(1.0 / traj.unitcell_volumes) * V
 
-    g_r_t = g_r_t.astype(np.float64) / norm  # From int64.
+        temp_g_r_t = temp_g_r_t.astype(np.float64) / norm  # From int64.
+        g_r_t[i] = temp_g_r_t
 
-    return r, g_r_t
+    g_r_t_final = np.average(g_r_t, axis=0, weights=weights)
+    
+    return r, g_r_t_final
