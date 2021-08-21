@@ -39,14 +39,19 @@ import numpy as np
 
 try:
     # openmm
-    import simtk.unit as units
-    import simtk.openmm as mm
+    import openmm.unit as units
+    import openmm as mm
     OPENMM_IMPORTED = True
 except ImportError:
-    # if someone tries to import all of mdtraj but doesn't
-    # OpenMM installed, we don't want that to choke. It should
-    # only choke if they actually try to USE the reporter
-    OPENMM_IMPORTED = False
+    try:
+        import simtk.unit as units
+        import simtk.openmm as mm
+        OPENMM_IMPORTED = True
+    except ImportError:
+        # if someone tries to import all of mdtraj but doesn't
+        # OpenMM installed, we don't want that to choke. It should
+        # only choke if they actually try to USE the reporter
+        OPENMM_IMPORTED = False
 
 ##############################################################################
 # Classes
