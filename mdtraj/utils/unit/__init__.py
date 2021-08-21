@@ -38,9 +38,12 @@ from mdtraj.utils.unit import unit_definitions
 from mdtraj.utils import import_, six
 UNIT_DEFINITIONS = unit_definitions
 try:
-    import simtk.unit as simtk_unit
+    import openmm.unit as simtk_unit
 except ImportError:
-    pass
+    try:
+        import simtk.unit as simtk_unit
+    except ImportError:
+        pass
 
 __all__ = ['in_units_of']
 
