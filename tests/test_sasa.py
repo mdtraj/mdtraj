@@ -149,3 +149,29 @@ def test_sasa_5():
     np.testing.assert_approx_equal(calc_area_sulfur, true_area_sulfur)
     # Finally, ensure that we are not changing _ATOMIC_RADII
     assert prev_area_chlorine != calc_area_chlorine
+
+def test_sasa_6(get_fn):
+    #Test the atom selection
+    t = md.load(get_fn('frame0.h5'))
+    atoms_resid1 = t.top.select("resid 1").astype(int)
+    atoms_resid0_2 = t.top.select("resid 0 2").astype(int)
+
+    # Mode="atom"
+    sasa_all_atoms = md.geometry.shrake_rupley(t)
+    sasa_all_atoms_w_selection = md.geometry.shrake_rupley(t, atom_indices=atoms_resid1)
+
+    # The computed SASA values are the same as in "normal" mode
+    np.testing.assert_array_almost_equal(sasa_all_atoms[:,atoms_resid1],
+                                         sasa_all_atoms_w_selection[:,atoms_resid1])
+    # The uncomputed SASA values are all NaN
+    np.testing.assert_equal(np.unique(sasa_all_atoms_w_selection[:,atoms_resid0_2]),0)
+
+    # Mode="residues"
+    sasa_all_residues = md.geometry.shrake_rupley(t, mode="residue")
+    sasa_all_residues_w_selection = md.geometry.shrake_rupley(t, atom_indices=atoms_resid1, mode="residue")
+
+    # The computed SASA values are the same as in "normal" mode
+    np.testing.assert_array_almost_equal(sasa_all_residues[:,1],
+                                         sasa_all_residues_w_selection[:,1])
+    # The uncomputed SASA values are all NaN
+    np.testing.assert_equal(np.unique(sasa_all_residues_w_selection[:, [0,2]]), 0)
