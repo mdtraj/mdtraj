@@ -89,7 +89,7 @@ _ATOMIC_RADII = {'H'   : 0.120, 'He'  : 0.140, 'Li'  : 0.076, 'Be' : 0.059,
 ##############################################################################
 
 
-def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', change_radii=None, get_mapping=False):
+def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', change_radii=None, get_mapping=False, atom_indices=None):
     """Compute the solvent accessible surface area of each atom or residue in each simulation frame.
 
     Parameters
@@ -113,6 +113,15 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
         Instead of returning only the areas, also return the indices of the
         atoms or the residue-to-atom mapping. If True, will return a tuple
         that contains the areas and the mapping (np.array, shape=(n_atoms)).
+    atom_indices : iterable, optional
+        Selection of atoms indices for which the SASA will be computed.
+        Default is all atoms, but a sub-selection of atoms can be
+        passed here. This selection doesn't affect what
+        atoms are considered accessibility blockers, it only affects
+        for what atoms the SASA is computed. E.g. you can pass a lipid-embedded
+        protein (s.t. the lipids are considered blockers) but only compute
+        SASA for the protein using atom_selection = traj.top.select("protein").
+        The excluded atoms/residues get a SASA value 0
 
     Returns
     -------
@@ -170,6 +179,12 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
         raise ValueError('mode must be one of "residue", "atom". "%s" supplied' %
                          mode)
 
+    if atom_indices is None:
+        atom_selection_mask = np.ones(traj.n_atoms, dtype=np.int32)
+    else:
+        #atom_selection_mask = ensure_type(atom_selection, int, ndim=1, name="atom_selection")
+        atom_selection_mask = np.array([[1 if ii in atom_indices else 0][0] for ii in range(traj.n_atoms)], dtype=np.int32)
+
     modified_radii = {}
     if change_radii is not None:
         # in case _ATOMIC_RADII is in use elsehwere...
@@ -184,7 +199,7 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
         atom_radii = [_ATOMIC_RADII[atom.element.symbol] for atom in traj.topology.atoms]
     radii = np.array(atom_radii, np.float32) + probe_radius
 
-    _geometry._sasa(xyz, radii, int(n_sphere_points), atom_mapping, out)
+    _geometry._sasa(xyz, radii, int(n_sphere_points), atom_mapping, atom_selection_mask, out)
 
     if get_mapping == True:
         return out, atom_mapping
