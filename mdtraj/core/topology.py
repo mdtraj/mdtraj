@@ -1559,7 +1559,7 @@ class Atom(object):
     @property
     def is_backbone(self):
         """Whether the atom is in the backbone of a protein residue"""
-        return (self.name in set(['C', 'CA', 'N', 'O', 'HA', 'H'])
+        return (self.name in set(['C', 'CA', 'N', 'O'])
                 and self.residue.is_protein)
 
     @property
