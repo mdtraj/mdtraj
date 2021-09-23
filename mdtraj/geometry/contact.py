@@ -194,7 +194,12 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
                                   for residue in traj.topology.residues]
         elif scheme == 'sidechain-heavy':
             # then remove the hydrogens from the above list
-            residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain and not (atom.element == element.hydrogen)]
+            if 'GLY' in [residue.name for residue in traj.topology.residues]:
+              import warnings
+              warnings.warn('selected topology includes at least one glycine residue, which has no heavy atoms in its sidechain. The distances involving glycine residues '
+                            'will be computed using the sidechain hydrogen instead.')
+            residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain and not (atom.element == element.hydrogen)] if not residue.name == 'GLY'
+                                  else [atom.index for atom in residue.atoms if atom.is_sidechain]
                                   for residue in traj.topology.residues]
 
         residue_lens = [len(ainds) for ainds in residue_membership]

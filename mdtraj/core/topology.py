@@ -1565,7 +1565,7 @@ class Atom(object):
     @property
     def is_sidechain(self):
         """Whether the atom is in the sidechain of a protein residue"""
-        return (self.name not in set(['C', 'CA', 'N', 'O'])
+        return (self.name not in set(['C', 'CA', 'N', 'O', 'HA', 'H'])
                 and self.residue.is_protein)
 
     @property
