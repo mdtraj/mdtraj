@@ -328,3 +328,6 @@ def test_topology_join_keep_resSeq(get_fn):
 
     eq(out_resSeq_keepId_True, expected_resSeq_keepId_True)
     eq(out_resSeq_keepId_False, expected_resSeq_keepId_False)
+
+def test_chimera_indexing(get_fn):
+    md.load(get_fn('chimera_indexing.pdb'))   # this should just not fail
