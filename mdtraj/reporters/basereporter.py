@@ -39,14 +39,19 @@ import numpy as np
 
 try:
     # openmm
-    import simtk.unit as units
-    import simtk.openmm as mm
+    import openmm.unit as units
+    import openmm as mm
     OPENMM_IMPORTED = True
 except ImportError:
-    # if someone tries to import all of mdtraj but doesn't
-    # OpenMM installed, we don't want that to choke. It should
-    # only choke if they actually try to USE the reporter
-    OPENMM_IMPORTED = False
+    try:
+        import simtk.unit as units
+        import simtk.openmm as mm
+        OPENMM_IMPORTED = True
+    except ImportError:
+        # if someone tries to import all of mdtraj but doesn't
+        # OpenMM installed, we don't want that to choke. It should
+        # only choke if they actually try to USE the reporter
+        OPENMM_IMPORTED = False
 
 ##############################################################################
 # Classes
@@ -62,7 +67,8 @@ class _BaseReporter(object):
 
     def __init__(self, file, reportInterval, coordinates=True, time=True,
                  cell=True, potentialEnergy=True, kineticEnergy=True,
-                 temperature=True, velocities=False, atomSubset=None):
+                 temperature=True, velocities=False, atomSubset=None,
+                 enforcePeriodicBox=None):
         """Create an OpenMM reporter
 
         Parameters
@@ -122,6 +128,7 @@ class _BaseReporter(object):
         self._needEnergy = potentialEnergy or kineticEnergy or temperature
         self._atomSubset = atomSubset
         self._atomSlice = None
+        self._enforcePeriodicBox = enforcePeriodicBox
 
         if not OPENMM_IMPORTED:
             raise ImportError('OpenMM not found.')
@@ -190,7 +197,7 @@ class _BaseReporter(object):
             energies respectively.
         """
         steps = self._reportInterval - simulation.currentStep % self._reportInterval
-        return (steps, self._coordinates, self._velocities, False, self._needEnergy)
+        return (steps, self._coordinates, self._velocities, False, self._needEnergy, self._enforcePeriodicBox)
 
     def report(self, simulation, state):
         """Generate a report.

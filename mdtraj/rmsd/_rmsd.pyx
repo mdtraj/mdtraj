@@ -132,7 +132,7 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
         atom_indices_is_none = True
         atom_indices = slice(None)
     else:
-        atom_indices = ensure_type(np.asarray(atom_indices), dtype=np.int, ndim=1, name='atom_indices')
+        atom_indices = ensure_type(np.asarray(atom_indices), dtype=int, ndim=1, name='atom_indices')
         if not np.all((atom_indices >= 0) *
                               (atom_indices < target.xyz.shape[1])):
             raise ValueError("atom_indices must be valid positive indices")
@@ -145,7 +145,7 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
                              "found %d and %d." % (len(atom_indices), len(ref_atom_indices)))
 
     if not isinstance(ref_atom_indices, slice):
-        ref_atom_indices = ensure_type(np.asarray(ref_atom_indices), dtype=np.int, ndim=1, name='ref_atom_indices')
+        ref_atom_indices = ensure_type(np.asarray(ref_atom_indices), dtype=int, ndim=1, name='ref_atom_indices')
         if not np.all((ref_atom_indices >= 0) *
                               (ref_atom_indices < reference.xyz.shape[1])):
             raise ValueError("ref_atom_indices must be valid positive indices")
@@ -293,7 +293,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
         atom_indices_is_none = True
         atom_indices = slice(None)
     else:
-        atom_indices = ensure_type(np.asarray(atom_indices), dtype=np.int, ndim=1, name='atom_indices')
+        atom_indices = ensure_type(np.asarray(atom_indices), dtype=int, ndim=1, name='atom_indices')
         if not np.all((atom_indices >= 0) *
                               (atom_indices < target.xyz.shape[1]) *
                               (atom_indices < reference.xyz.shape[1])):
@@ -307,7 +307,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
                              "found %d and %d." % (len(atom_indices), len(ref_atom_indices)))
 
     if not isinstance(ref_atom_indices, slice):
-        ref_atom_indices = ensure_type(np.asarray(ref_atom_indices), dtype=np.int, ndim=1, name='ref_atom_indices')
+        ref_atom_indices = ensure_type(np.asarray(ref_atom_indices), dtype=int, ndim=1, name='ref_atom_indices')
         if not np.all((ref_atom_indices >= 0) *
                               (ref_atom_indices < target.xyz.shape[1]) *
                               (ref_atom_indices < reference.xyz.shape[1])):
@@ -370,7 +370,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
             for i in range(target_n_frames):
                 msd_atom_major(n_atoms, n_atoms, &target_xyz[i, 0, 0], &ref_xyz_frame[0, 0], ref_g, target_g[i], 1, &rot[i, 0, 0])
                 rot_atom_major(n_atoms, &target_displaced_xyz[i, 0, 0], &rot[i, 0, 0])
-    
+
     if parallel:
         for j in prange(n_atoms, nogil=True):
             for i in range(target_n_frames):

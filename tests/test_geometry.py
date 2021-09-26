@@ -75,6 +75,16 @@ def test_center_of_mass():
 
     eq(com_actual, com_test, decimal=4)
 
+    #test with selection string
+    com_test = mdtraj.geometry.distance.compute_center_of_mass(traj, select='index 0')
+
+    com_actual = np.array([
+        [1.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0],
+    ])
+
+    eq(com_actual, com_test, decimal=4)
+
 
 def test_center_of_geometry():
     top = md.Topology()

@@ -203,7 +203,8 @@ def chemical_shifts_ppm(trj):
 
     with enter_temp_directory():
         trj.save("./trj.pdb")
-        cmd = "%s -pdb trj.pdb -mode detail" % binary
+        #-para old is on order to use newer ppm versions
+        cmd = "%s -pdb trj.pdb -mode detail -para old" % binary
 
         return_flag = os.system(cmd)
 

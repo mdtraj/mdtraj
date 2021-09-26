@@ -146,6 +146,24 @@ MESSAGES = {
 # functions
 ##############################################################################
 
+def _chain_import(modules):
+    """Return the first of ``modules`` that can be imported.
+    """
+    error = None
+    for module in modules:
+        try:
+            return importlib.import_module(module)
+        except ImportError as e:
+            error = e  # keep it in the outer scope
+    # if nothing could be imported, raise the last error generated
+    raise error
+
+_MODULE_SYNONYMS = {
+    'simtk.unit': ['openmm.unit', 'simtk.unit'],
+    'simtk.openmm': ['openmm', 'simtk.openmm'],
+    'simtk.openmm.app': ['openmm.app', 'simtk.openmm.app'],
+}
+
 def import_(module):
     """Import a module, and issue a nice message to stderr if the module isn't installed.
 
@@ -171,8 +189,9 @@ def import_(module):
     >>> import tables
     >>> tables = import_('tables')
     """
+    modules = _MODULE_SYNONYMS.get(module, [module])
     try:
-        return importlib.import_module(module)
+        return _chain_import(modules)
     except ImportError as e:
         try:
             message = MESSAGES[module]

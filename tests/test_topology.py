@@ -83,6 +83,14 @@ def test_topology_pandas_TIP4PEW(get_fn):
     eq(topology, topology2)
 
 
+def test_topology_pandas_2residues_same_resSeq(get_fn):
+    topology = md.load(get_fn('two_residues_same_resnum.gro')).topology
+    atoms, bonds = topology.to_dataframe()
+
+    topology2 = md.Topology.from_dataframe(atoms, bonds)
+    eq(topology, topology2)
+
+
 def test_topology_numbers(get_fn):
     topology = md.load(get_fn('1bpi.pdb')).topology
     assert len(list(topology.atoms)) == topology.n_atoms
@@ -252,6 +260,11 @@ def test_subset(get_fn):
     t2 = t1.subset([1, 2, 3])
     assert t2.n_residues == 1
 
+def test_subset_re_index_residues(get_fn):
+    t1 = md.load(get_fn('2EQQ.pdb')).top
+    t2 = t1.subset(t1.select('resid 0 2'))
+    np.testing.assert_array_equal([0, 1], [rr.index for rr in t2.residues])
+
 
 def test_molecules(get_fn):
     top = md.load(get_fn('4OH9.pdb')).topology
@@ -272,3 +285,46 @@ def test_copy_and_hash(get_fn):
     assert hash(tuple(t1._residues)) == hash(tuple(t2._residues))
 
     assert hash(t1) == hash(t2)
+
+
+def test_topology_sliced_residue_indices(get_fn):
+    # https://github.com/mdtraj/mdtraj/issues/1585
+    full = md.load(get_fn('1bpi.pdb'))
+    residues = full.top.select("resid 1 to 10")
+    sliced = full.atom_slice(residues)
+    idx = [res.index for res in sliced.top.residues][-1]
+    assert idx == sliced.top.n_residues-1
+    # Now see if this works
+    _ = sliced.topology.residue(idx)
+
+def test_topology_join(get_fn):
+    top_1 = md.load(get_fn('2EQQ.pdb')).topology
+    top_2 = md.load(get_fn('4OH9.pdb')).topology
+
+    out_topology = top_1.join(top_2)
+
+    eq(out_topology.n_atoms, top_1.n_atoms + top_2.n_atoms)
+    eq(out_topology.n_residues, top_1.n_residues + top_2.n_residues)
+    eq(top_1.atom(0).residue.name, out_topology.atom(0).residue.name)
+    eq(top_2.atom(-1).residue.name, out_topology.atom(-1).residue.name)
+    eq(top_1.atom(0).element, out_topology.atom(0).element)
+    eq(top_2.atom(-1).element, out_topology.atom(-1).element)
+
+def test_topology_join_keep_resSeq(get_fn):
+    top_1 = md.load(get_fn('2EQQ.pdb')).topology
+    top_2 = md.load(get_fn('4OH9.pdb')).topology
+
+    out_topology_keepId_True = top_1.join(top_2, keep_resSeq=True)
+    out_topology_keepId_False = top_1.join(top_2, keep_resSeq=False)
+
+    out_resSeq_keepId_True = [residue.resSeq for residue in out_topology_keepId_True.residues]
+    out_resSeq_keepId_False = [residue.resSeq for residue in out_topology_keepId_False.residues]
+
+    expected_resSeq_keepId_True = (
+        [residue.resSeq for residue in top_1.residues
+            ] + [
+                residue.resSeq for residue in top_2.residues])
+    expected_resSeq_keepId_False = list(range(1, len(expected_resSeq_keepId_True) + 1))
+
+    eq(out_resSeq_keepId_True, expected_resSeq_keepId_True)
+    eq(out_resSeq_keepId_False, expected_resSeq_keepId_False)

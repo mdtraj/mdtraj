@@ -59,3 +59,5 @@ mdtraj/rmsd/_rmsd.cpp
 # export of libtheolib
 /mdtraj/core/lib/*
 
+result/
+result

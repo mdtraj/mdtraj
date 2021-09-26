@@ -29,10 +29,9 @@ from mdtraj.utils.six.moves import range
 from . import _geometry
 
 
-__all__ = ['compute_distances', 'compute_displacements',
+__all__ = ['compute_distances', 'compute_distances_t', 'compute_displacements',
            'compute_center_of_mass', 'compute_center_of_geometry',
            'find_closest_contact']
-
 
 
 def compute_distances(traj, atom_pairs, periodic=True, opt=True):
@@ -86,6 +85,65 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
         return _distance(xyz, pairs)
 
 
+def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
+    """Compute the distances between pairs of atoms at pairs of times.
+
+    Parameters
+    ----------
+    traj : Trajectory
+        An mtraj trajectory.
+    atom_pairs : np.ndarray, shape=(num_atom_pairs, 2), dtype=int
+        Each row gives the indices of two atoms involved in the interaction.
+    time_pairs : nd.array, shape=(num_times, 2), dtype=int
+        Each row gives the indices of two frames.
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will compute distances under the minimum image
+        convention.
+    opt : bool, default=True
+        Use an optimized native library to calculate distances. Our optimized
+        SSE minimum image convention calculation implementation is over 1000x
+        faster than the naive numpy implementation.
+
+    Returns
+    -------
+    distances : np.ndarray, shape=(num_times, num_atom_pairs), dtype=float
+        The distance between each pair of atoms at t=t1 and t=t2.
+    """
+    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
+    pairs = ensure_type(atom_pairs, dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2), warn_on_cast=False)
+    times = ensure_type(time_pairs, dtype=np.int32, ndim=2, name='time_pairs', shape=(None, 2), warn_on_cast=False)
+
+    if not np.all(np.logical_and(pairs < traj.n_atoms, pairs >= 0)):
+        raise ValueError('atom_pairs must be between 0 and %d' % traj.n_atoms)
+
+    if not np.all(np.logical_and(times < traj.n_frames, times >= 0)):
+        raise ValueError('time_pairs must be between 0 and %d' % traj.n_frames)
+
+    if len(pairs) == 0:
+        return np.zeros((len(xyz), 0), dtype=np.float32)
+
+    if periodic and traj._have_unitcell:
+        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3),
+                          warn_on_cast=False)
+        orthogonal = np.allclose(traj.unitcell_angles, 90)
+        if opt:
+            out = np.empty((times.shape[0], pairs.shape[0]), dtype=np.float32)
+            _geometry._dist_mic_t(xyz, pairs, times, box.transpose(0, 2, 1).copy(), out, orthogonal)
+            out = out.reshape((times.shape[0], pairs.shape[0]))
+            return out
+        else:
+            return _distance_mic_t(xyz, pairs, times, box.transpose(0, 2, 1), orthogonal)
+
+    # either there are no unitcell vectors or they dont want to use them
+    if opt:
+        out = np.empty((times.shape[0], pairs.shape[0]), dtype=np.float32)
+        _geometry._dist_t(xyz, pairs, times, out)
+        return out
+    else:
+        return _distance_t(xyz, pairs, times)
+
+
 def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
     """Compute the displacement vector between pairs of atoms in each frame of a trajectory.
 
@@ -135,25 +193,40 @@ def compute_displacements(traj, atom_pairs, periodic=True, opt=True):
     return _displacement(xyz, pairs)
 
 
-def compute_center_of_mass(traj):
+def compute_center_of_mass(traj, select=None):
     """Compute the center of mass for each frame.
 
     Parameters
     ----------
     traj : Trajectory
         Trajectory to compute center of mass for
+    select : str, optional, default=all
+        a mdtraj.Topology selection string that
+        defines the set of atoms of which to calculate
+        the center of mass, the default is all atoms
 
     Returns
     -------
     com : np.ndarray, shape=(n_frames, 3)
          Coordinates of the center of mass for each frame
     """
+    com = np.empty((traj.n_frames, 3))
 
-    com = np.zeros((traj.n_frames, 3))
-    masses = np.array([a.element.mass for a in traj.top.atoms])
-    masses /= masses.sum()
+    if select is None:
+        masses = np.array([a.element.mass for a in traj.top.atoms])
+        masses /= masses.sum()
 
-    for i, x in enumerate(traj.xyz):
+        xyz = traj.xyz
+
+    else:
+        atoms_of_interest = traj.topology.select(select)
+
+        masses = np.array([traj.top.atom(i).element.mass for i in atoms_of_interest])
+        masses /= masses.sum()
+
+        xyz = traj.xyz[:, atoms_of_interest]
+
+    for i, x in enumerate(xyz):
         com[i, :] = x.astype('float64').T.dot(masses)
     return com
 
@@ -228,6 +301,15 @@ def _distance(xyz, pairs):
     return (delta ** 2.).sum(-1) ** 0.5
 
 
+def _distance_t(xyz, pairs, times):
+    "Distance between pairs of points in specified frames"
+    frame1 = xyz[:, pairs[:,0]][times[:,0]]
+    frame2 = xyz[:, pairs[:,1]][times[:,1]]
+    out = np.linalg.norm(frame1-frame2, axis=2)
+
+    return out
+
+
 def _displacement(xyz, pairs):
     "Displacement vector between pairs of points in each frame"
     value = np.diff(xyz[:, pairs], axis=2)[:, :, 0]
@@ -272,6 +354,37 @@ def _distance_mic(xyz, pairs, box_vectors, orthogonal):
                             new_r12 = r12 + v12 + bv3*kk
                             dist = min(dist, np.linalg.norm(new_r12))
             out[i, j] = dist
+    return out
+
+
+def _distance_mic_t(xyz, pairs, times, box_vectors, orthogonal):
+    """Distance between pairs of points between specified frames under the minimum image
+    convention for periodic boundary conditions.
+
+    The computation is modified from scheme B.9 in Tukerman, M. "Statistical
+    Mechanics: Theory and Molecular Simulation", 2010.
+
+    This is a slow pure python implementation, mostly for testing.
+    """
+    out = np.empty((times.shape[0], pairs.shape[0]), dtype=np.float32)
+    for i, (a,b) in enumerate(times):
+        bv1, bv2, bv3 = _reduce_box_vectors(box_vectors[a].T)
+        for j, (c,d) in enumerate(pairs):
+            r12 = xyz[a,c] - xyz[b,d]
+            r12 -= bv3*round(r12[2]/bv3[2]);
+            r12 -= bv2*round(r12[1]/bv2[1]);
+            r12 -= bv1*round(r12[0]/bv1[0]);
+            dist = np.linalg.norm(r12)
+            if not orthogonal:
+                for ii in range(-1, 2):
+                    v1 = bv1*ii
+                    for jj in range(-1, 2):
+                        v12 = bv2*jj + v1
+                        for kk in range(-1, 2):
+                            new_r12 = r12 + v12 + bv3*kk
+                            dist = min(dist, np.linalg.norm(new_r12))
+            out[i, j] = dist
+
     return out
 
 

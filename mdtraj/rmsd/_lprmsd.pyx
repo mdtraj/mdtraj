@@ -229,9 +229,9 @@ def lprmsd(target, reference, int frame=0, atom_indices=None, permute_groups=Non
 
 def _validate_atom_indices(atom_indices, n_atoms):
     if atom_indices is None:
-        atom_indices = np.arange(n_atoms, dtype=np.int)
+        atom_indices = np.arange(n_atoms, dtype=int)
     else:
-        atom_indices = ensure_type(np.unique(atom_indices), dtype=np.int,
+        atom_indices = ensure_type(np.unique(atom_indices), dtype=int,
                                    ndim=1, name='atom_indices', warn_on_cast=False)
         if not np.all((atom_indices >= 0) * (atom_indices < n_atoms) * (atom_indices < n_atoms)):
             raise ValueError("atom_indices must be valid positive indices")
@@ -253,7 +253,7 @@ def _validate_permute_groups(permute_groups, atom_indices):
     if permute_groups is None:
         return [atom_indices]
 
-    permute_groups = [ensure_type(np.unique(group), dtype=np.int, ndim=1,
+    permute_groups = [ensure_type(np.unique(group), dtype=int, ndim=1,
                          warn_on_cast=False, name='permute_groups[%d]' % i) for \
                          i, group in enumerate(permute_groups)]
     for pgroup in permute_groups:

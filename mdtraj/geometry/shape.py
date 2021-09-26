@@ -26,7 +26,7 @@ import numpy as np
 
 from mdtraj.geometry.distance import compute_center_of_geometry
 
-__all__ = ['compute_gyration_tensor', 'principal_moments', 'asphericity', 'acylindricity', 'relative_shape_antisotropy']
+__all__ = ['compute_gyration_tensor', 'principal_moments', 'asphericity', 'acylindricity', 'relative_shape_antisotropy', 'relative_shape_anisotropy']
 
 
 def compute_gyration_tensor(traj):
@@ -126,8 +126,8 @@ def acylindricity(traj):
     c = pm[:,1] - pm[:,0]
     return c
 
-def relative_shape_antisotropy(traj):
-    """Compute the acylindricity of a trajectory.
+def relative_shape_anisotropy(traj):
+    """Compute the relative shape anisotropy of a trajectory.
 
     For each frame compute the principal moments then,
 
@@ -144,12 +144,14 @@ def relative_shape_antisotropy(traj):
     Returns
     -------
     c:  np.ndarray, shape=(traj.n_frames, 1), dtype=float64
-        Acylindricity of each frame of the trajectory.
+        Relative shape anisotropy of each frame of the trajectory.
 
     """
     pm = principal_moments(traj)
     kappa2 = 1.5 * np.square(pm).sum(axis=1) / np.square(pm.sum(axis=1)) - 0.5
     return kappa2
+
+relative_shape_antisotropy = relative_shape_anisotropy
 
 def _compute_gyration_tensor_slow(traj):
     """Compute the gyration tensor of a trajectory. """

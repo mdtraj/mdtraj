@@ -143,7 +143,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
             raise ValueError('No acceptable residue pairs found')
 
     else:
-        residue_pairs = ensure_type(np.asarray(contacts), dtype=np.int, ndim=2, name='contacts',
+        residue_pairs = ensure_type(np.asarray(contacts), dtype=int, ndim=2, name='contacts',
                                shape=(None, 2), warn_on_cast=False)
         if not np.all((residue_pairs >= 0) * (residue_pairs < traj.n_residues)):
             raise ValueError('contacts requests a residue that is not in the permitted range')
@@ -194,7 +194,12 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
                                   for residue in traj.topology.residues]
         elif scheme == 'sidechain-heavy':
             # then remove the hydrogens from the above list
-            residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain and not (atom.element == element.hydrogen)]
+            if 'GLY' in [residue.name for residue in traj.topology.residues]:
+              import warnings
+              warnings.warn('selected topology includes at least one glycine residue, which has no heavy atoms in its sidechain. The distances involving glycine residues '
+                            'will be computed using the sidechain hydrogen instead.')
+            residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain and not (atom.element == element.hydrogen)] if not residue.name == 'GLY'
+                                  else [atom.index for atom in residue.atoms if atom.is_sidechain]
                                   for residue in traj.topology.residues]
 
         residue_lens = [len(ainds) for ainds in residue_membership]
@@ -257,7 +262,7 @@ def squareform(distances, residue_pairs):
         raise ValueError('distances must be a 2d array')
 
     residue_pairs = ensure_type(
-        residue_pairs, dtype=np.int, ndim=2, name='residue_pars',
+        residue_pairs, dtype=int, ndim=2, name='residue_pars',
         shape=(None, 2), warn_on_cast=False)
 
     if not np.all(residue_pairs >= 0):
