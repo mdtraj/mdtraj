@@ -141,7 +141,7 @@ class PdbStructure(object):
         """
         # initialize models
         self._atom_num_fncs = {'hex': lambda s: int(s, bas=16),
-							   'chimera': lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36))}
+                               'chimera': lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36))}
         self._atom_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex'}
 
         self.load_all_models = load_all_models
@@ -208,7 +208,11 @@ class PdbStructure(object):
                 atoms = []
                 l = len(pdb_line) - 5
                 for pos in [p for p in [6, 11, 16, 21, 26] if(p <= l)]:
-                    atoms.append(self._read_atom_number(pdb_line[pos:pos + 5]))
+                    try:
+                        atoms.append(self._read_atom_number(pdb_line[pos:pos + 5]))
+                    except ValueError:
+                        # in case there are many trail spaces
+                        pass
 
                 self._current_model.connects.append(atoms)
         self._finalize()
