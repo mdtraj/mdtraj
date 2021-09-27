@@ -140,8 +140,8 @@ class PdbStructure(object):
              structure or trajectory, or just load the first model, to save memory.
         """
         # initialize models
-        self._atom_num_fncs = {'hex': (lambda s: int(s, bas=16)),
-                               'chimera': (lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36)))}
+        self._atom_num_fncs = {'hex': lambda s: int(s, bas=16),
+                               'chimera': lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36))}
         self._atom_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex'}
 
         self.load_all_models = load_all_models
@@ -156,7 +156,7 @@ class PdbStructure(object):
 
     def _load(self, input_stream):
         state = None
-        
+
         self._reset_atom_numbers()
         self._reset_residue_numbers()
 
@@ -206,17 +206,9 @@ class PdbStructure(object):
 
             elif (pdb_line.find("CONECT") == 0):
                 atoms = []
-                l = len(pdb_line.rstrip(' ')) - 5
+                l = len(pdb_line[:-1].rstrip(' ')) - 5   # :-1 to remove '\n' in the end so rstrip can work, -5 to leave space for +5 in the 'pos : pos+5'
                 for pos in [p for p in [6, 11, 16, 21, 26] if(p <= l)]:
-                    atoms.append(self._read_atom_number(pdb_line[pos:pos + 5]))
-#					connect_atom_id_str = pdb_line[pos:pos + 5]
-#					if(connect_atom_id_str != '     '):
-#						atoms.append(self._read_atom_number(connect_atom_id_str))
-#                    try:
-#                        atoms.append(self._read_atom_number())
-#                    except ValueError:
-#                        # in case there are many trail spaces
-#                        pass
+                    atoms.append(self._read_atom_number(pdb_line[pos : pos+5]))
 
                 self._current_model.connects.append(atoms)
         self._finalize()
