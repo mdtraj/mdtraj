@@ -48,6 +48,27 @@ import warnings
 import numpy as np
 from mdtraj.core import element
 
+_atom_num_fncs = {'hex': (lambda s: int(s, base=16)),
+                       'chimera': (lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36)))}
+_atom_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex'}
+_atom_num_nondec_mode = None   # is case we are reading raw lines not from a proper PDB
+
+def _read_atom_number(num_str, pdbstructure=None, mode=None):
+	try:
+		return int(num_str)
+	except ValueError:
+		# we need to figure out on the 1st try which mode to switch to. There are currently 2 options: VMD (hex) and Chimera (their own mode). Chimera starts with A0000, vmd with 186a0, 	so they are distinguishable.
+		if(pdbstructure is None):
+			if(_atom_num_nondec_mode is None):
+				_atom_num_nondec_mode = _atom_num_initial_nodec_vals[num_str]  # numbers are supposed to be read in order
+
+			return _atom_num_fncs[_atom_num_nondec_mode](num_str)
+		else:
+			if(self._atom_numbers_mode is None):  # if we are here 1st time (for the given model) then set the non-decimal mode
+				self._atom_numbers_mode = _atom_num_initial_nodec_vals[num_str]
+
+			return _atom_num_fncs[self._atom_numbers_mode](num_str)
+
 
 class PdbStructure(object):
     """
@@ -140,10 +161,6 @@ class PdbStructure(object):
              structure or trajectory, or just load the first model, to save memory.
         """
         # initialize models
-        self._atom_num_fncs = {'hex': (lambda s: int(s, base=16)),
-                               'chimera': (lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36)))}
-        self._atom_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex'}
-
         self.load_all_models = load_all_models
         self.models = []
         self._current_model = None
@@ -208,20 +225,10 @@ class PdbStructure(object):
                 atoms = []
                 l = len(pdb_line[:-1].rstrip(' ')) - 5   # :-1 to remove '\n' in the end so rstrip can work, -5 to leave space for +5 in the 'pos : pos+5'
                 for pos in [p for p in [6, 11, 16, 21, 26] if(p <= l)]:
-                    atoms.append(self._read_atom_number(pdb_line[pos : pos+5]))
+                    atoms.append(_read_atom_number(pdb_line[pos : pos+5], pdbstructure=self))
 
                 self._current_model.connects.append(atoms)
         self._finalize()
-
-    def _read_atom_number(self, num_str):
-        try:
-            return int(num_str)
-        except ValueError:
-            # we need to figure out on the 1st try which mode to switch to. There are currently 2 options: VMD (hex) and Chimera (their own mode). Chimera starts with A0000, vmd with 186a0, so they are distinguishable.
-            if(self._atom_numbers_mode is None):  # if we are here 1st time (for the given model) then set the non-decimal mode
-                self._atom_numbers_mode = self._atom_num_initial_nodec_vals[num_str]
-
-            return self._atom_num_fncs[self._atom_numbers_mode](num_str)
 
     def _reset_atom_numbers(self):
         self._atom_numbers_mode = None    # None, 'hex', 'chimera'
@@ -687,8 +694,7 @@ class Atom(object):
         # Start parsing fields from pdb line
         self.record_name = pdb_line[0:6].strip()
 
-        if(pdbstructure is not None):
-            self.serial_number = pdbstructure._read_atom_number(pdb_line[6:11])
+        self.serial_number = _read_atom_number(pdb_line[6:11], pdbstructure=pdbstructure)
 
         self.name_with_spaces = pdb_line[12:16]
         alternate_location_indicator = pdb_line[16]
