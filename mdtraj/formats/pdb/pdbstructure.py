@@ -58,16 +58,19 @@ def _read_atom_number(num_str, pdbstructure=None, mode=None):
 		return int(num_str)
 	except ValueError:
 		# we need to figure out on the 1st try which mode to switch to. There are currently 2 options: VMD (hex) and Chimera (their own mode). Chimera starts with A0000, vmd with 186a0, 	so they are distinguishable.
-		if(pdbstructure is None):
 			if(_atom_num_nondec_mode is None):
 				_atom_num_nondec_mode = _atom_num_initial_nodec_vals[num_str]  # numbers are supposed to be read in order
+			#if(pdbstructure is not None)
+		#		pdbstructure._atom_numbers_mode = _atom_num_nondec_mode
 
 			return _atom_num_fncs[_atom_num_nondec_mode](num_str)
-		else:
-			if(self._atom_numbers_mode is None):  # if we are here 1st time (for the given model) then set the non-decimal mode
-				self._atom_numbers_mode = _atom_num_initial_nodec_vals[num_str]
 
-			return _atom_num_fncs[self._atom_numbers_mode](num_str)
+#		if(pdbstructure is None):
+#		else:
+#			if(pdbstructure._atom_numbers_mode is None):  # if we are here 1st time (for the given model) then set the non-decimal mode
+#				pdbstructure._atom_numbers_mode = _atom_num_initial_nodec_vals[num_str]
+#
+#			return _atom_num_fncs[pdbstructure._atom_numbers_mode](num_str)
 
 
 class PdbStructure(object):
@@ -231,7 +234,7 @@ class PdbStructure(object):
         self._finalize()
 
     def _reset_atom_numbers(self):
-        self._atom_numbers_mode = None    # None, 'hex', 'chimera'
+       # self._atom_numbers_mode = None    # None, 'hex', 'chimera'
         self._next_atom_number = 1
 
     def _reset_residue_numbers(self):
