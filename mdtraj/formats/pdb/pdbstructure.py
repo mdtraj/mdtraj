@@ -140,8 +140,8 @@ class PdbStructure(object):
              structure or trajectory, or just load the first model, to save memory.
         """
         # initialize models
-        self._atom_num_fncs = {'hex': lambda s: int(s, bas=16),
-                               'chimera': lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36))}
+        self._atom_num_fncs = {'hex': (lambda s: int(s, base=16)),
+                               'chimera': (lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36)))}
         self._atom_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex'}
 
         self.load_all_models = load_all_models
@@ -687,7 +687,8 @@ class Atom(object):
         # Start parsing fields from pdb line
         self.record_name = pdb_line[0:6].strip()
 
-        self.serial_number = pdbstructure._read_atom_number(pdb_line[6:11])
+        if(pdbstructure is not None):
+            self.serial_number = pdbstructure._read_atom_number(pdb_line[6:11])
 
         self.name_with_spaces = pdb_line[12:16]
         alternate_location_indicator = pdb_line[16]
