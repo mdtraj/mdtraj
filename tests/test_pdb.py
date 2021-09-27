@@ -321,4 +321,4 @@ def test_load_pdb_input_top(get_fn):
     eq(p_1.topology, p_2.topology)
 
 def test_chimera_indexing(get_fn):
-    md.load(get_fn('chimera_indexing.pdb'))   # this should just not fail
+    load_pdb(get_fn('chimera_indexing.pdb'))   # this should just not fail
