@@ -512,7 +512,7 @@ class LAMMPSTrajectoryFile(object):
         if not types:
             # Make all particles the same type.
             types = np.ones(shape=(xyz.shape[1]))
-        types = ensure_type(types, np.int, 1, 'types', can_be_none=True,
+        types = ensure_type(types, int, 1, 'types', can_be_none=True,
                 shape=(xyz.shape[1], ), warn_on_cast=False,
                 add_newaxis_on_deficient_ndim=False)
 

@@ -143,7 +143,8 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False
     return [bond_triplets.compress(present, axis=0) for present in presence]
 
 
-def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_only=False):
+def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_only=False,
+                  distance_cutoff=0.25, angle_cutoff=120):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle.
 
@@ -167,6 +168,14 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_o
         Set to True to calculate displacements and angles across periodic box boundaries.
     sidechain_only : bool, default=False
         Set to True to only consider sidechain-sidechain interactions.
+    distance_cutoff : float, default=0.25
+        Distance cutoff of Donor-H...Acceptor contact in nanometers. 
+        The criterion employed is any contact that is shorter than the distance cutoff.
+        with an distance_cutoff is accepted.
+    angle_cutoff : float, default=120
+        Angle cutoff of the angle theta in degrees. 
+        The criterion employed is any contact with an angle theta greater than the
+        angle_cutoff is accepted.
 
     Returns
     -------
@@ -218,11 +227,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_o
         proteins." Progress in Biophysics and Molecular Biology
         44.2 (1984): 97-179.
     """
-    # Cutoff criteria: these could be exposed as function arguments, or
-    # modified if there are better definitions than the this one based only
-    # on distances and angles
-    distance_cutoff = 0.25            # nanometers
-    angle_cutoff = 2.0 * np.pi / 3.0  # radians
+    angle_cutoff = np.radians(angle_cutoff)
 
     if traj.topology is None:
         raise ValueError('baker_hubbard requires that traj contain topology '
@@ -353,6 +358,16 @@ def _get_bond_triplets(topology, exclude_water=True, sidechain_only=False):
 
         return indices
 
+    # Check that there are bonds in topology
+    nbonds = 0
+    for _bond in topology.bonds:
+        nbonds += 1
+        break # Only need to find one hit for this check (not robust)
+    if nbonds == 0:
+        raise ValueError('No bonds found in topology. Try using '
+                         'traj._topology.create_standard_bonds() to create bonds '
+                         'using our PDB standard bond definitions.')
+        
     nh_donors = get_donors('N', 'H')
     oh_donors = get_donors('O', 'H')
     xh_donors = np.array(nh_donors + oh_donors)

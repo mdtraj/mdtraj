@@ -130,13 +130,13 @@ def test_write_units2():
 
 @needs_units
 def test_write_units_mismatch():
-    velocoties = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.picosecond)
+    velocities = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.picosecond)
 
     with HDF5TrajectoryFile(temp, 'w') as f:
         # if you try to write coordinates that are unitted and not
         # in the correct units, we find that
         with pytest.raises(TypeError):
-            f.write(coordinates=velocoties)
+            f.write(coordinates=velocities)
 
 
 def test_topology(get_fn):

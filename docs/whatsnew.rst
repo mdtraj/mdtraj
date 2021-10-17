@@ -3,14 +3,142 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.9.3 (Development)
-------------------
+v1.9.6 (April 20, 2021)
+-----------------------
+ - Fix compatibility with all versions of astunparse (03753d736e30f15f8f210434e689e9ff664bb611)
+ - Rework CI to be simpler and more maintainable
+ - Fix deployment of the documentation to the website
+ - Don't use serials for more than 1 chain (#1612)
+ - Added ``enforcePeriodicBox`` option for HDF5Reporter (#1622)
+ - Add time-dependent distance and RDF functions (#1633)
+ - Add ``select`` option to ``compute_center_of_mass()`` (#1640)
+ - ``Topology.join()`` can optionally updates resSeq of new residues (#1639)
 
-- Nothing to see here
+A total of 7 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Robert T. McGibbon
+- Sander Roet
+- Ray A. Matsumoto
+- Maurice Karrenbrock +
+- Kirill Shmilovich
+- Heyi Liang +
+- Matthew W. Thompson
+
+
+v1.9.5 (Jan 4, 2021)
+--------------------
+
+ - Fix memory allocation when opening XTC trajectory on OSX Catalina (#1594)
+ - Write out serial instead of index in pdbs (#1584)
+ - Fix residue idx sliced traj (#1586)
+ - Update shift_wrappers.py (#1579)
+ - Rsmd atom_indices checks fix (#1571)
+ - Port to aarch64 (#1562)
+ - Add compatibility with pandas 1.0
+
+
+v1.9.4 (May 10, 2020)
+-----------------------
+
+- Update some pandas calls for v1.0 (#1536)
+- Fix TRR file offset (#1534)
+- Update selection for Python 3.8 compatibility (#1523)
+- Ensure bonds exist before using them (#1512, #1513)
+- Let compute_displacements handle empty atom_pairs (#1515)
+- Add GSD reader and writer (#1494)
+- Fix stride parameter for .netcdf files (#1501)
+- Ensure that the license file is packaged in the sdist (#1498)
+- Right-justify atom symbol when writing PDB files (#1459)
+- Add calculations for shape metrics (#1471)
+- Fix residue parsing in MOL2 reader (#1490)
+- Set up "stale" bot
+- Use AZP for CI (#1484, #1536)
+- Fix leaving malformed TRR files open (#1482)
+- Fix various OpenMP issues (#1476, #1477, #1488, #1508, #1529)
+- Add gyration tensor calculation (#1467)
+- Fix some type conversions (#1466, #1511)
+- Remove bundled dependencies astor and pyparsing (#1452)
+- Correct ordering in hoomdxml files (#1453)
+
+Authors
+~~~~~~~
+
+- Robert T. McGibbon
+- Martin K. Scherer
+- Alex Yang +
+- Fabian Paul
+- Kirill Shmilovich +
+- Lucian Krapp +
+- Sander Roet +
+- David W.H. Swenson
+- Ray A. Matsumoto
+- Jack Greisman
+- Marius van Niekerk +
+- Patrick Kunzmann +
+- Matthew W. Thompson
+- Justin R. Porter
+- Richard Banh +
+- sefalkner +
+
+A total of 16 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+
+v1.9.3 (May 17, 2019)
+---------------------
+
+- Fix CI (#1416, #1420, #1444)
+- Add compute_center_of_geometry (#1405)
+- Fix a test failure in test_reporters.py caused by merge of #1431 (#1443)
+
+- Reporters no longer override user request to write unit cell information (#1431)
+- Add XTCReporter for OpenMM (#1403)
+- [xtc] Fix bugs in striding with atom_indices and seek+stride (#1449)
+
+- Avoid infinite recursion error in mol2 parser (#1426)
+- [formats/mol2] add more checks to element parsing (#1407)
+- Replace strip() with split() in `mol2.py` (#1378)
+
+- Use and set resSeq attribute in Topology.to_openmm() and from_openmm() (#1424)
+- fix parallel reduction error (#1419)
+- Fixes 'Buffer dtype mismatch' error on 64-bit Windows (#1409)
+
+- add RMSF analysis (#1414)
+- allow RMSD calls when ref_atom_indices and atom_indices are used (#1392)
+- Notebook tests: `from __future__` must come first (#1401)
+
+- [setup] do not enforce clang/std++ on osx (#1400)
+- silence cython related numpy warnings (#1391)
+- Prep py37, some bugfixes (#1388)
+- Ensure 'bond_value' is a string (#1382)
+- fix typo in docs (#1381)
+
+
+Authors
+~~~~~~~
+
+- Carlos Hernández
+- John Chodera
+- Jack Greisman
+- jgilaber
+- Sunhwan Jo
+- Ray A. Matsumoto
+- Robert T. McGibbon
+- João Rodrigues
+- Shyam Saladi
+- Martin K. Scherer
+- David W.H. Swenson
+- Matthew W. Thompson
+- Lee-Ping Wang
+
+A total of 12 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
 
 v1.9.2 (July 30, 2018)
-------------------
-We're please to announce the release of MDTraj 1.9.2. This version has a number of bug fixes and improvements for trajectory parsing and conversion. 
+----------------------
+We're please to announce the release of MDTraj 1.9.2. This version has a number of bug fixes and improvements for trajectory parsing and conversion.
 
 
 - Fix bug in TINKER ARC reader (#1371)
@@ -27,6 +155,26 @@ We're please to announce the release of MDTraj 1.9.2. This version has a number 
 - Updated the calculation of chi5 (#1322, #1323)
 - Added testing against conda-forge channel (#1310)
 - Port [OpenMM bond order](https://github.com/pandegroup/openmm/pull/1668) representation into MDTraj. Implements the `Bond` class to Topology and updates the Mol2 reader to use bond_order field (#1308)
+
+Authors
+~~~~~~~
+
+- Carlos Hernández
+- Guillermo Pérez-Hernández
+- Matthew Harrigan
+- Lester Hedges +
+- Robert T. McGibbon
+- Levi Naden +
+- Fabian Paul
+- Justin R. Porter
+- Martin K. Scherer
+- Xianqiang Sun +
+- David W.H. Swenson +
+- Lee-Ping Wang
+
+A total of 11 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
 
 v1.9 (September 3, 2017)
 ------------------------

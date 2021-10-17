@@ -578,7 +578,7 @@ class HDF5TrajectoryFile(object):
             # get all of the atoms
             atom_slice = slice(None)
         else:
-            atom_slice = ensure_type(atom_indices, dtype=np.int, ndim=1,
+            atom_slice = ensure_type(atom_indices, dtype=int, ndim=1,
                                      name='atom_indices', warn_on_cast=False)
             if not np.all(atom_slice < self._handle.root.coordinates.shape[1]):
                 raise ValueError('As a zero-based index, the entries in '
@@ -717,7 +717,7 @@ class HDF5TrajectoryFile(object):
             name='cell_angles', shape=(n_frames, 3), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         velocities = ensure_type(velocities, dtype=np.float32, ndim=3,
-            name='velocoties', shape=(n_frames, n_atoms, 3), can_be_none=True,
+            name='velocities', shape=(n_frames, n_atoms, 3), can_be_none=True,
             warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
         kineticEnergy = ensure_type(kineticEnergy, dtype=np.float32, ndim=1,
             name='kineticEnergy', shape=(n_frames,), can_be_none=True,

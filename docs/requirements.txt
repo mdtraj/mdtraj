@@ -1,3 +1,5 @@
+pip
+setuptools
 sphinx
 sphinx_rtd_theme
 matplotlib
@@ -8,5 +10,8 @@ openmm
 pytables
 scikit-learn
 pytest
+setuptools
 pandas
 numpydoc
+wheel
+python==3.7

@@ -75,6 +75,45 @@ def test_center_of_mass():
 
     eq(com_actual, com_test, decimal=4)
 
+    #test with selection string
+    com_test = mdtraj.geometry.distance.compute_center_of_mass(traj, select='index 0')
+
+    com_actual = np.array([
+        [1.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0],
+    ])
+
+    eq(com_actual, com_test, decimal=4)
+
+
+def test_center_of_geometry():
+    top = md.Topology()
+    chain = top.add_chain()
+    resi = top.add_residue("NA", chain)
+    top.add_atom('H1', md.element.hydrogen, resi)
+    top.add_atom('H2', md.element.hydrogen, resi)
+    top.add_atom('O', md.element.oxygen, resi)
+
+    xyz = np.array([
+        [
+            # Frame 1 - Right triangle
+            [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]
+        ],
+        [
+            # Frame 2
+            [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.5, 0.5, 0.0]
+        ]
+    ])
+    traj = md.Trajectory(xyz, top)
+    center_test = mdtraj.geometry.distance.compute_center_of_geometry(traj)
+
+    center_actual = np.array([
+        [1.0 / 3, 1.0 / 3, 0.0],
+        [1.5 / 3, 1.5 / 3, 0.0],
+    ])
+
+    eq(center_actual, center_test, decimal=4)
+
 
 def test_dihedral_indices(get_fn):
     traj = md.load(get_fn('1bpi.pdb'))

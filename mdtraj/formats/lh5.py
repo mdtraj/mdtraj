@@ -324,7 +324,7 @@ class LH5TrajectoryFile(object):
         if atom_indices is None:
             atom_slice = slice(None)
         else:
-            atom_slice = ensure_type(atom_indices, dtype=np.int, ndim=1,
+            atom_slice = ensure_type(atom_indices, dtype=int, ndim=1,
                                      name='atom_indices', warn_on_cast=False)
 
         total_n_frames = len(self._handle.root.XYZList)

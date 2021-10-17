@@ -43,6 +43,15 @@ def test_pdbread(get_fn):
     pdb = get_fn('native.pdb')
     p = load(pdb)
 
+def test_pdbread_with_input_top(get_fn):
+    pdb = get_fn('native.pdb')
+    p_1 = load(pdb)
+
+    p_2 = load(pdb, top=pdb)
+
+    eq(p_1.xyz, p_2.xyz)
+    eq(p_1.topology, p_2.topology)
+
 
 def test_pdbwrite(get_fn):
     pdb = get_fn('native.pdb')
@@ -219,10 +228,10 @@ def test_3nch_serial_resSeq(get_fn):
     eq(t1.top, top2)
 
     top = top.set_index('serial')  # Index by the actual data in the PDB
-    eq(str(top.ix[19791]["name"]), "O4")
-    eq(str(top.ix[19787]["name"]), "S")
-    eq(str(top.ix[19787]["resName"]), "SO4")
-    eq(int(top.ix[19787]["resSeq"]), 804)
+    eq(str(top.loc[19791]["name"]), "O4")
+    eq(str(top.loc[19787]["name"]), "S")
+    eq(str(top.loc[19787]["resName"]), "SO4")
+    eq(int(top.loc[19787]["resSeq"]), 804)
 
 def test_1ncw(get_fn):
     t1 = load_pdb(get_fn('1ncw.pdb.gz'))
@@ -289,3 +298,24 @@ def test_dummy_pdb_box_detection(get_fn, recwarn):
     assert 'Unlikely unit cell' in str(w.message)
     assert traj.unitcell_lengths is None, 'Expected dummy box to be deleted'
 
+
+def test_multichain_load_cycle(get_fn):
+    # Issue 1611, make sure that save/load works for more than 1 chain
+    pdb = load(get_fn('issue_1611.pdb'))
+    bonds = [(bond.atom1.index, bond.atom2.index)
+             for bond in pdb.topology.bonds]
+    pdb.save(temp)
+    pdb2 = load_pdb(temp)
+    bonds2 = [(bond.atom1.index, bond.atom2.index)
+              for bond in pdb2.topology.bonds]
+    assert len(bonds) == len(bonds2)
+
+def test_load_pdb_input_top(get_fn):
+
+    pdb = get_fn('native.pdb')
+    p_1 = load_pdb(pdb)
+
+    p_2 = load_pdb(pdb, top=p_1.topology)
+
+    eq(p_1.xyz, p_2.xyz)
+    eq(p_1.topology, p_2.topology)

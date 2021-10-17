@@ -27,11 +27,13 @@ import sys
 from copy import deepcopy
 from collections import namedtuple
 from mdtraj.utils.six import PY2
-from mdtraj.utils.external.pyparsing import (Word, ParserElement, MatchFirst,
+from pyparsing import (Word, ParserElement, MatchFirst,
     Keyword, opAssoc, quotedString, alphas, alphanums, infixNotation, Group,
     ParseException, OneOrMore)
-from mdtraj.utils.external.astor import codegen
-ParserElement.enablePackrat()
+import astunparse
+
+# this number arises from the current selection language, if the cache size is exceeded, it hurts performance a bit.
+ParserElement.enablePackrat(cache_size_limit=304)
 
 __all__ = ['parse_selection']
 
@@ -57,13 +59,13 @@ class _RewriteNames(ast.NodeTransformer):
         _safe_names = {'None': None, 'True': True, 'False': False}
         if node.id in _safe_names:
             if sys.version_info >= (3, 4):
-                return ast.NameConstant(value=_safe_names[node.id])
+                return ast.NameConstant(value=_safe_names[node.id], kind=None)
             return node
 
         # all other bare names are taken to be string literals. Thus something
         # like parse_selection('name CA') properly resolves CA as a string
         # literal, not a barename to be loaded from the global scope!
-        return ast.Str(s=node.id)
+        return ast.Str(s=node.id, kind=None)
 
 
 def _chain(*attrs):
@@ -286,7 +288,7 @@ class parse_selection(object):
     Parameters
     ----------
     selection_string : str
-        Selection string, a string in the MDTraj atom selection grammer.
+        Selection string, a string in the MDTraj atom selection grammar.
 
     Returns
     -------
@@ -390,11 +392,11 @@ class parse_selection(object):
         else:
             args = [ast.arg(arg='atom', annotation=None)]
             signature = ast.arguments(args=args, vararg=None, kwarg=None,
-                                      kwonlyargs=[], defaults=[],
-                                      kw_defaults=[])
+                                      posonlyargs=[], kwonlyargs=[],
+                                      defaults=[], kw_defaults=[])
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
-        source = codegen.to_source(astnode)
+        source = astunparse.unparse(astnode)
 
         expr = eval(
             compile(ast.fix_missing_locations(func), '<string>', mode='eval'),

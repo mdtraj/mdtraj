@@ -248,6 +248,9 @@ class NetCDFTrajectoryFile(object):
 
         if n_frames is None:
             n_frames = np.inf
+        elif stride is not None:
+            # 'n_frames' frames should be read in total
+            n_frames *= stride
 
         total_n_frames = self.n_frames
         frame_slice = slice(self._frame_index, self._frame_index + min(n_frames, total_n_frames), stride)
@@ -260,7 +263,7 @@ class NetCDFTrajectoryFile(object):
             # get all of the atoms
             atom_slice = slice(None)
         else:
-            atom_slice = ensure_type(atom_indices, dtype=np.int, ndim=1,
+            atom_slice = ensure_type(atom_indices, dtype=int, ndim=1,
                                      name='atom_indices', warn_on_cast=False)
             if not np.all(atom_slice < self.n_atoms):
                 raise ValueError('As a zero-based index, the entries in '
@@ -274,7 +277,7 @@ class NetCDFTrajectoryFile(object):
             coordinates = self._handle.variables['coordinates'][frame_slice, atom_slice, :]
         else:
             raise ValueError('No coordinates found in the NetCDF file. The only '
-                             'variables in the file were %s' % 
+                             'variables in the file were %s' %
                              self._handle.variables.keys())
 
         if 'time' in self._handle.variables:

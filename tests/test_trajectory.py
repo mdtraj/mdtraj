@@ -28,6 +28,7 @@ import mdtraj as md
 import mdtraj.utils
 from mdtraj.utils import six
 from mdtraj.core import element
+import mdtraj.core.trajectory
 import pytest
 import mdtraj.formats
 from collections import namedtuple
@@ -551,6 +552,27 @@ def test_iterload_skip(ref_traj, get_fn):
             eq(t_ref.topology, t.topology)
 
 
+def test_iterload_chunk_dcd(get_fn):
+    # Makes sure that the actual chunk size yielded by iterload corresponds to the number of
+    # frames specified when calling it (for dcd files).
+    file = get_fn("alanine-dipeptide-explicit.dcd")
+    top = get_fn("alanine-dipeptide-explicit.pdb")
+
+    skip_frames = 3
+    frames_chunk = 2
+
+    full = md.load(file, top=top, stride=skip_frames)
+    length = len(full)
+    
+
+    chunks = []
+    for traj_chunk in md.iterload(file, top=top, stride=skip_frames, chunk=frames_chunk):        
+        chunks.append(traj_chunk)
+    joined = md.join(chunks)
+    assert len(full) == len(joined)
+    assert eq(full.xyz, joined.xyz)
+
+
 def test_save_load(write_traj, get_fn):
     # this cycles all the known formats you can save to, and then tries
     # to reload, using just a single-frame file.
@@ -606,7 +628,13 @@ def test_length(get_fn):
 
     for file in files:
         opened = md.open(get_fn(file))
-        loaded = md.load(get_fn(file), top=get_fn('native.pdb'))
+
+        if '.' + file.rsplit('.', 1)[-1] in mdtraj.core.trajectory._TOPOLOGY_EXTS:
+            top = file
+        else:
+            top = 'native.pdb'
+
+        loaded = md.load(get_fn(file), top=get_fn(top))
         assert len(opened) == len(loaded)
 
 
@@ -705,3 +733,26 @@ def test_load_with_frame(get_fn):
     t2 = t2.slice([3])
     eq(t1.xyz, t2.xyz)
     eq(t1.time, t2.time)
+
+
+def test_add_remove_atoms(get_fn):
+    t = md.load(get_fn('aaqaa-wat.pdb'))
+    top = t.topology
+    old_atoms = list(top.atoms)[:]
+    # Add an atom 'MW' at the end of each water molecule
+    for r in list(top.residues)[::-1]:
+        if r.name != 'HOH': continue
+        atoms = list(r.atoms)
+        midx = atoms[-1].index+1
+        top.insert_atom('MW',None,r,index=midx)
+    mwidx = [a.index for a in list(top.atoms) if a.name == 'MW']
+    # Check to see whether the 'MW' atoms have the correct index
+    assert mwidx == [183+4*i for i in range(83)]
+    # Now delete the atoms again
+    for r in list(top.residues)[::-1]:
+        if r.name != 'HOH': continue
+        atoms = list(r.atoms)
+        top.delete_atom_by_index(atoms[-1].index)
+    roundtrip_atoms = list(top.atoms)[:]
+    # Ensure the atoms are the same after a round trip of adding / deleting
+    assert old_atoms == roundtrip_atoms

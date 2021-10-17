@@ -29,7 +29,7 @@ from __future__ import print_function, division
 import os
 import warnings
 from copy import deepcopy
-from collections import Iterable
+from collections.abc import Iterable
 import numpy as np
 import functools
 
@@ -56,6 +56,7 @@ from mdtraj.formats.mol2 import load_mol2
 from mdtraj.formats.gro import load_gro
 from mdtraj.formats.arc import load_arc
 from mdtraj.formats.hoomdxml import load_hoomdxml
+from mdtraj.formats.gsd import write_gsd, load_gsd_topology
 from mdtraj.core.topology import Topology
 from mdtraj.core.residue_names import _SOLVENT_TYPES
 from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_vectors,
@@ -76,7 +77,7 @@ __all__ = ['open', 'load', 'iterload', 'load_frame', 'load_topology', 'join',
            'Trajectory']
 # supported extensions for constructing topologies
 _TOPOLOGY_EXTS = ['.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7', '.prm7',
-                  '.psf', '.mol2', '.hoomdxml', '.gro', '.arc', '.hdf5']
+                  '.psf', '.mol2', '.hoomdxml', '.gro', '.arc', '.hdf5', '.gsd']
 
 
 ##############################################################################
@@ -141,7 +142,7 @@ def load_topology(filename, **kwargs):
     filename : str
         Path to a file containing a system topology. The following extensions
         are supported: '.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
-            '.prm7', '.psf', '.mol2', '.hoomdxml'
+            '.prm7', '.psf', '.mol2', '.hoomdxml', '.gsd'
 
     Returns
     -------
@@ -165,7 +166,11 @@ def _parse_topology(top, **kwargs):
     else:
         ext = None  # might not be a string
 
-    if isinstance(top, string_types) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):
+    if isinstance(top, Topology):
+        topology = top
+    elif isinstance(top, Trajectory):
+        topology = top.topology
+    elif isinstance(top, string_types) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):
         _traj = load_frame(top, 0, **kwargs)
         topology = _traj.topology
     elif isinstance(top, string_types) and (ext in ['.prmtop', '.parm7', '.prm7']):
@@ -180,10 +185,8 @@ def _parse_topology(top, **kwargs):
         topology = load_arc(top, **kwargs).topology
     elif isinstance(top, string_types) and (ext in ['.hoomdxml']):
         topology = load_hoomdxml(top, **kwargs).topology
-    elif isinstance(top, Trajectory):
-        topology = top.topology
-    elif isinstance(top, Topology):
-        topology = top
+    elif isinstance(top, string_types) and (ext in ['.gsd']):
+        topology = load_gsd_topology(top, **kwargs)
     elif isinstance(top, string_types):
         raise IOError('The topology is loaded by filename extension, and the '
                       'detected "%s" format is not supported. Supported topology '
@@ -356,7 +359,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     >>> print traj2
     <mdtraj.Trajectory with 250 frames, 423 atoms at 0x11136e410>
 
-    >>> traj3 = md.load_hdf5('output.xtc', atom_indices=[0,1] top='topology.pdb')
+    >>> traj3 = md.load_hdf5('output.xtc', atom_indices=[0,1], top='topology.pdb')
     >>> print traj3
     <mdtraj.Trajectory with 500 frames, 2 atoms at 0x18236e4a0>
 
@@ -366,69 +369,126 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         The resulting trajectory, as an md.Trajectory object.
     """
 
-    if "top" in kwargs:  # If applicable, pre-loads the topology from PDB for major performance boost.
-        topkwargs = kwargs.copy()
-        topkwargs.pop("top", None)
-        topkwargs.pop("atom_indices", None)
-        topkwargs.pop("frame", None)
-        kwargs["top"] = _parse_topology(kwargs["top"], **topkwargs)
+    # If a single filename make a list out of it in
+    #order to have an easier function later on
+    if isinstance(filename_or_filenames, string_types):
+        filename_or_filenames = [filename_or_filenames]
+    
+    
+    extensions = [_get_extension(f) for f in filename_or_filenames]
+    extension = extensions[0]
+    #Make the needed checks
+    if len(set(extensions)) == 0:
+        raise ValueError('No trajectories specified. '
+                            'filename_or_filenames was an empty list')
+    elif len(set(extensions)) > 1:
+        raise TypeError("Each filename must have the same extension. "
+                        "Received: %s" % ', '.join(set(extensions)))
 
-    # grab the extension of the filename
-    if isinstance(filename_or_filenames, string_types):  # If a single filename
-        extension = _get_extension(filename_or_filenames)
-        filename = filename_or_filenames
-    else:  # If multiple filenames, take the first one.
-        extensions = [_get_extension(f) for f in filename_or_filenames]
-        if len(set(extensions)) == 0:
-            raise ValueError('No trajectories specified. '
-                             'filename_or_filenames was an empty list')
-        elif len(set(extensions)) > 1:
-            raise TypeError("Each filename must have the same extension. "
-                            "Received: %s" % ', '.join(set(extensions)))
-        else:
-            # we know the topology is equal because we sent the same topology
-            # kwarg in. Therefore, we explictly throw away the topology on all
-            # but the first trajectory and use check_topology=False on the join.
-            # Throwing the topology away explictly allows a large number of pdb
-            # files to be read in without using ridiculous amounts of memory.
-            trajectories = []
-            for (i, f) in enumerate(filename_or_filenames):
-                t = load(f, **kwargs)
-                if i != 0:
-                    t.topology = None
-                trajectories.append(t)
-            return join(trajectories, check_topology=False,
-                        discard_overlapping_frames=discard_overlapping_frames)
+    #pre-loads the topology from PDB for major performance boost.
+    topkwargs = kwargs.copy()
+    #if top is not given try with one of the trajectory files
+    topkwargs.pop("top", None)
+    topkwargs.pop("atom_indices", None)
+    topkwargs.pop("frame", None)
+    topkwargs.pop("stride", None)
+    topkwargs.pop("start", None)
+    kwargs["top"] = _parse_topology(kwargs.get("top", filename_or_filenames[0]), **topkwargs)
 
+    #get the right loader
     try:
         #loader = _LoaderRegistry[extension][0]
         loader = FormatRegistry.loaders[extension]
     except KeyError:
         raise IOError('Sorry, no loader for filename=%s (extension=%s) '
-                      'was found. I can only load files '
-                      'with extensions in %s' % (filename, extension, FormatRegistry.loaders.keys()))
+                    'was found. I can only load files '
+                    'with extensions in %s' % (
+                        filename_or_filenames[0], extension, FormatRegistry.loaders.keys()))
 
-    if extension in _TOPOLOGY_EXTS:
+    if loader.__name__ not in ['load_dtr']:
+            _assert_files_exist(filename_or_filenames)
+    else:
+        _assert_files_or_dirs_exist(filename_or_filenames)
+
+
+    if extension not in _TOPOLOGY_EXTS:
+        # standard_names is a valid keyword argument only for files containing topologies
+        kwargs.pop('standard_names', None)
+
+    trajectories = []
+    tmp_file = filename_or_filenames.pop(0)
+    try:
         # this is a little hack that makes calling load() more predictable. since
         # most of the loaders take a kwargs "top" except for load_hdf5, (since
         # it saves the topology inside the file), we often end up calling
         # load_hdf5 via this function with the top kwarg specified. but then
         # there would be a signature binding error. it's easier just to ignore
         # it.
-        if 'top' in kwargs:
-            warnings.warn('top= kwarg ignored since file contains topology information')
-            kwargs.pop('top', None)
-    else:
-        # standard_names is a valid keyword argument only for files containing topologies
-        kwargs.pop('standard_names', None)
+        #TODO make all the loaders accept a pre parsed topology (top) in order to avoid
+        #this part and have a more consistent interface and a faster load function
+        t = loader(tmp_file, **kwargs)
+        
+    except TypeError as e:
 
-    if loader.__name__ not in ['load_dtr']:
-        _assert_files_exist(filename_or_filenames)
-    else:
-        _assert_files_or_dirs_exist(filename_or_filenames)
+        #Don't want to intercept legit
+        #TypeErrors
+        if "got an unexpected keyword argument 'top'" not in str(e):
+            raise
 
-    value = loader(filename, **kwargs)
-    return value
+        warnings.warn('top= kwargs ignored since this file parser does not support it')
+
+        kwargs.pop('top', None)
+
+        t = loader(tmp_file, **kwargs)
+
+    except ValueError as e:
+
+        if 'xyz must be shape' in str(e):
+
+            raise ValueError('The topology and the trajectory files might not contain the same atoms\n'
+            'The input topology must contain all atoms even if '
+            'you want to select a subset of them with atom_indices'
+            ) from e
+
+        raise
+
+    trajectories.append(t)
+
+    # Only do this monkey patching if needed in order not to
+    # modify the output topology
+    if ('top' in kwargs) and (
+        kwargs.get('atom_indices', None) is not None) and (
+        len(filename_or_filenames) > 0):
+
+        # In case only a part of the atoms were selected
+        # I get the right topology that
+        # kwargs['top'].subset shall return
+        subset_topology = trajectories[0].topology
+
+        # Little monkey-patch to prevent further subsetting Topologies
+        # this modified version of the topology will never exit this function
+        kwargs['top'].subset = lambda atom_indices : subset_topology
+        
+
+
+    # We know the topology is equal because we send the same topology
+    # kwarg in. Therefore, we explictly throw away the topology on all
+    # but the first trajectory by making them all point to None
+    #  and use check_topology=False on the join.
+    # Throwing the topology away explictly allows a large number of pdb
+    # files to be read in without using ridiculous amounts of memory.
+    for f in filename_or_filenames:
+        t = loader(f, **kwargs)
+        
+        t.topology = None
+        trajectories.append(t)
+
+
+    if len(trajectories) == 1: #if only one file was given there is nothing to join
+        return trajectories[0]
+
+    return join(trajectories, check_topology=False,
+                discard_overlapping_frames=discard_overlapping_frames)
 
 
 def iterload(filename, chunk=100, **kwargs):
@@ -497,7 +557,15 @@ def iterload(filename, chunk=100, **kwargs):
         t = load(filename, stride=stride, atom_indices=atom_indices)
         for i in range(0, len(t), chunk):
             yield t[i:i+chunk]
-
+    elif extension in ('.gsd'):
+        i = 0
+        while True:
+            traj = load(filename, stride=stride, atom_indices=atom_indices,
+                    start=i, n_frames=chunk)
+            if len(traj) ==0 :
+                return
+            i += chunk
+            yield traj
     else:
         with (lambda x: open(x, n_atoms=topology.n_atoms)
               if extension in ('.crd', '.mdcrd')
@@ -506,9 +574,9 @@ def iterload(filename, chunk=100, **kwargs):
                 f.seek(skip)
             while True:
                 if extension not in _TOPOLOGY_EXTS:
-                    traj = f.read_as_traj(topology, n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
+                    traj = f.read_as_traj(topology, n_frames=chunk, stride=stride, atom_indices=atom_indices, **kwargs)
                 else:
-                    traj = f.read_as_traj(n_frames=chunk*stride, stride=stride, atom_indices=atom_indices, **kwargs)
+                    traj = f.read_as_traj(n_frames=chunk, stride=stride, atom_indices=atom_indices, **kwargs)
 
                 if len(traj) == 0:
                     return
@@ -1048,7 +1116,7 @@ class Trajectory(object):
         return self.__class__(xyz, deepcopy(self._topology), time=time,
             unitcell_lengths=lengths, unitcell_angles=angles)
 
-    def stack(self, other):
+    def stack(self, other, keep_resSeq=True):
         """Stack two trajectories along the atom axis
 
         This method joins trajectories along the atom axis, giving a new trajectory
@@ -1076,6 +1144,8 @@ class Trajectory(object):
         ----------
         other : Trajectory
             The other trajectory to join
+        keep_resSeq : bool, optional, default=True
+            see ```mdtraj.core.topology.Topology.join``` method documentation
 
         See Also
         --------
@@ -1087,7 +1157,7 @@ class Trajectory(object):
             raise ValueError('Number of frames in self (%d) is not equal '
                              'to number of frames in other (%d)' % (self.n_frames, other.n_frames))
         if self.topology is not None:
-            topology = self.topology.join(other.topology)
+            topology = self.topology.join(other.topology, keep_resSeq=keep_resSeq)
         else:
             topology = None
 
@@ -1277,6 +1347,7 @@ class Trajectory(object):
                 '.rst7' : self.save_amberrst7,
                 '.tng' : self.save_tng,
                 '.dtr': self.save_dtr,
+                '.gsd': self.save_gsd,
             }
 
     def save(self, filename, **kwargs):
@@ -1643,6 +1714,24 @@ class Trajectory(object):
         with TNGTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
             f.write(self.xyz, time=self.time, box=self.unitcell_vectors)
 
+    def save_gsd(self, filename, force_overwrite=True):
+        """Save trajectory to HOOMD GSD format
+
+        Parameters
+        ----------
+        filename : str
+            filesystem path in which to save the trajectory
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filenames, if its already there
+        """
+        if os.path.exists(filename) and not force_overwrite:
+            raise IOError('"%s" already exists' % filename)
+
+        self._check_valid_unitcell()
+        write_gsd(filename, self.xyz, self.topology,
+                cell_lengths=self.unitcell_lengths,
+                cell_angles=self.unitcell_angles)
+
     def center_coordinates(self, mass_weighted=False):
         """Center each trajectory frame at the origin (0,0,0).
 
@@ -1880,7 +1969,7 @@ class Trajectory(object):
 
         See Also
         --------
-        image_molecules()
+        image_molecules
         """
         unitcell_vectors = self.unitcell_vectors
         if unitcell_vectors is None:
@@ -1896,7 +1985,7 @@ class Trajectory(object):
 
         if sorted_bonds is None:
             sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds])
+            sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds], dtype=np.int32)
 
         box = np.asarray(result.unitcell_vectors, order='c')
         _geometry.whole_molecules(result.xyz, box, sorted_bonds)
@@ -1965,7 +2054,7 @@ class Trajectory(object):
 
         if make_whole and sorted_bonds is None:
             sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds])
+            sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds], dtype=np.int32)
         elif not make_whole:
             sorted_bonds = None
 

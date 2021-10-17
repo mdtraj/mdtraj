@@ -91,14 +91,16 @@ def _topology_from_subset(topology, atom_indices):
         newChain = newTopology.add_chain()
         for residue in chain._residues:
             resSeq = getattr(residue, 'resSeq', None) or residue.index
-            newResidue = newTopology.add_residue(residue.name, newChain,
-                                                 resSeq, residue.segment_id)
+            newResidue = None
             for atom in residue._atoms:
                 if atom.index in atom_indices:
                     try:  # OpenMM Topology objects don't have serial attributes, so we have to check first.
                         serial = atom.serial
                     except AttributeError:
                         serial = None
+                    if newResidue is None:
+                        newResidue = newTopology.add_residue(residue.name, newChain,
+                                                             resSeq, residue.segment_id)
                     newAtom = newTopology.add_atom(atom.name, atom.element,
                                                    newResidue, serial=serial)
                     old_atom_to_new_atom[atom] = newAtom
@@ -119,7 +121,6 @@ def _topology_from_subset(topology, atom_indices):
             # we only put bonds into the new topology if both of their partners
             # were indexed and thus HAVE a new atom
 
-
     # Delete empty residues
     newTopology._residues = [r for r in newTopology._residues if len(r._atoms) > 0]
     for chain in newTopology._chains:
@@ -131,6 +132,13 @@ def _topology_from_subset(topology, atom_indices):
     # Re-set the numAtoms and numResidues
     newTopology._numAtoms = ilen(newTopology.atoms)
     newTopology._numResidues = ilen(newTopology.residues)
+
+    # Reset the chain indices
+    for i, chain in enumerate(newTopology.chains):
+        chain.index = i
+    # Reset the residue indices
+    for i, res in enumerate(newTopology.residues):
+        res.index = i
 
     return newTopology
 
@@ -249,13 +257,17 @@ class Topology(object):
 
         return hash_value
 
-    def join(self, other):
+    def join(self, other, keep_resSeq=True):
         """Join two topologies together
 
         Parameters
         ----------
         other : Topology
             Another topology object
+        keep_resSeq : bool, optional, default=True
+            if False the residue numbers (resSeq) of the
+            topology that is joined are updated in order to
+            continue from the last resSeq of this topology
 
         Returns
         -------
@@ -267,11 +279,21 @@ class Topology(object):
             raise ValueError('other must be an instance of Topology to join')
         out = self.copy()
 
+        #I need this in order to have the resSeq of the
+        #new residues to continue from the one of the
+        #las residue of this topology
+        if not keep_resSeq:
+            out_resSeq = out.atom(-1).residue.resSeq
+
         atom_mapping = {}
         for chain in other.chains:
             c = out.add_chain()
             for residue in chain.residues:
-                r = out.add_residue(residue.name, c, residue.resSeq, residue.segment_id)
+                if keep_resSeq:
+                    out_resSeq = residue.resSeq
+                else:
+                    out_resSeq += 1
+                r = out.add_residue(residue.name, c, out_resSeq, residue.segment_id)
                 for atom in residue.atoms:
                     a = out.add_atom(atom.name, atom.element, r,
                                      serial=atom.serial)
@@ -336,7 +358,7 @@ class Topology(object):
         for chain in self.chains:
             c = out.addChain()
             for residue in chain.residues:
-                r = out.addResidue(residue.name, c)
+                r = out.addResidue(residue.name, c, id=str(residue.resSeq))
                 for atom in residue.atoms:
                     if atom.element is elem.virtual:
                         element = None
@@ -389,7 +411,10 @@ class Topology(object):
         for chain in value.chains():
             c = out.add_chain()
             for residue in chain.residues():
-                r = out.add_residue(residue.name, c)
+                try:
+                    r = out.add_residue(residue.name, c, resSeq=int(residue.id))
+                except ValueError:
+                    r = out.add_residue(residue.name, c)
                 for atom in residue.atoms():
                     if atom.element is None:
                         element = elem.virtual
@@ -490,27 +515,30 @@ class Topology(object):
                              'starting from zero.')
         out._atoms = [None for i in range(len(atoms))]
 
-        for ci in np.unique(atoms['chainID']):
-            chain_atoms = atoms[atoms['chainID'] == ci]
-            c = out.add_chain()
+        c = None
+        r = None
+        previous_chainID = None
+        previous_resName = None
+        previous_resSeq = None
+        for atom_index, atom in atoms.iterrows():
 
-            for ri in np.unique(chain_atoms['resSeq']):
-                residue_atoms = chain_atoms[chain_atoms['resSeq'] == ri]
-                rnames = residue_atoms['resName']
-                residue_name = np.array(rnames)[0]
-                segids = residue_atoms['segmentID']
-                segment_id = np.array(segids)[0]
-                if not np.all(rnames == residue_name):
-                    raise ValueError('All of the atoms with residue index %d '
-                                     'do not share the same residue name' % ri)
-                r = out.add_residue(residue_name, c, ri,segment_id)
+            int(atom_index) # Fixes bizarre hashing issue on Py3K.  See #545
 
-                for atom_index, atom in residue_atoms.iterrows():
-                    atom_index = int(atom_index)  # Fixes bizarre hashing issue on Py3K.  See #545
-                    a = Atom(atom['name'], elem.get_by_symbol(atom['element']),
-                             atom_index, r, serial=atom['serial'])
-                    out._atoms[atom_index] = a
-                    r._atoms.append(a)
+            if atom['chainID'] != previous_chainID:
+                previous_chainID = atom['chainID']
+                
+                c = out.add_chain()
+
+            if atom['resSeq'] != previous_resSeq or atom['resName'] != previous_resName:
+                previous_resSeq = atom['resSeq']
+                previous_resName = atom['resName']
+
+                r = out.add_residue(atom['resName'], c, atom['resSeq'], atom['segmentID'])
+
+            a = Atom(atom['name'], elem.get_by_symbol(atom['element']),
+                                atom_index, r, serial=atom['serial'])
+            out._atoms[atom_index] = a
+            r._atoms.append(a)
 
         for bond in bonds:
             ai1 = int(bond[0])
@@ -649,6 +677,68 @@ class Topology(object):
         self._numResidues += 1
         chain._residues.append(residue)
         return residue
+
+    def insert_atom(self, name, element, residue, index=None, rindex=None, serial=None):
+        """Create a new Atom and insert it into the Topology at a specific position.
+
+        Parameters
+        ----------
+        name : str
+            The name of the atom to add
+        element : mdtraj.element.Element
+            The element of the atom to add
+        residue : mdtraj.topology.Residue
+            The Residue to add it to
+        index : int
+            If provided, the desired index for this atom
+            within the topology. Existing atoms with
+            indices >= index will be pushed back.
+        rindex : int
+            If provided, the desired position for this atom
+            within the residue
+        serial : int
+            Serial number associated with the atom.
+            This has nothing to do with the actual ordering
+            and is solely for PDB labeling purposes.
+
+        Returns
+        -------
+        atom : mdtraj.topology.Atom
+            the newly created Atom
+        """
+        if element is None:
+            element = elem.virtual
+        if index is None:
+            atom = Atom(name, element, self._numAtoms, residue, serial=serial)
+            self._atoms.append(atom)
+        else:
+            atom = Atom(name, element, index, residue, serial=serial)
+            for i in range(index, len(self._atoms)):
+                self._atoms[i].index += 1
+            self._atoms.insert(index, atom)
+        self._numAtoms += 1
+        if rindex is None:
+            residue._atoms.append(atom)
+        else:
+            residue._atoms.insert(rindex, atom)
+        return atom
+
+    def delete_atom_by_index(self, index):
+        """Delete an Atom from the topology.
+
+        Parameters
+        ----------
+        index : int
+            The index of the atom to be removed.
+        """
+        a = self._atoms[index]
+        if a.index != index:
+            raise RuntimeError("Index of selected atom does not match order in topology.")
+        for i in range(index+1, len(self._atoms)):
+            self._atoms[i].index -= 1
+        a.residue._atoms.remove(a)
+        self._atoms.remove(a)
+        self._numAtoms -= 1
 
     def add_atom(self, name, element, residue, serial=None):
         """Create a new Atom and add it to the Topology.
@@ -1116,7 +1206,7 @@ class Topology(object):
         """
         if len(self._bonds) == 0 and any(res.n_atoms > 1 for res in self._residues):
             raise ValueError('Cannot identify molecules because this Topology does not include bonds')
-        
+
         # Make a list of every other atom to which each atom is connected.
 
         num_atoms = self.n_atoms
@@ -1475,7 +1565,7 @@ class Atom(object):
     @property
     def is_sidechain(self):
         """Whether the atom is in the sidechain of a protein residue"""
-        return (self.name not in set(['C', 'CA', 'N', 'O'])
+        return (self.name not in set(['C', 'CA', 'N', 'O', 'HA', 'H'])
                 and self.residue.is_protein)
 
     @property

@@ -5,6 +5,8 @@ import json
 import shutil
 import subprocess
 import tempfile
+import warnings
+
 from setuptools import Extension
 from distutils.dep_util import newer_group
 from distutils.errors import DistutilsExecError, DistutilsSetupError
@@ -48,10 +50,16 @@ class CompilerDetection(object):
             self.openmp_enabled, openmp_needs_gomp = self._detect_openmp()
         self.sse3_enabled = self._detect_sse3() if not self.msvc else True
         self.sse41_enabled = self._detect_sse41() if not self.msvc else True
+        self.neon_enabled = self._detect_neon() if not self.msvc else False        
 
         self.compiler_args_sse2 = ['-msse2'] if not self.msvc else ['/arch:SSE2']
         self.compiler_args_sse3 = ['-mssse3'] if (self.sse3_enabled and not self.msvc) else []
+        self.compiler_args_neon = []
         self.compiler_args_warn = ['-Wno-unused-function', '-Wno-unreachable-code', '-Wno-sign-compare'] if not self.msvc else []
+
+        if self.neon_enabled:
+            self.compiler_args_sse2 = []
+            self.compiler_args_sse3 = []
 
         self.compiler_args_sse41, self.define_macros_sse41 = [], []
         if self.sse41_enabled:
@@ -160,10 +168,12 @@ exit(status)
 
     def _detect_openmp(self):
         self._print_support_start('OpenMP')
-        hasopenmp = self.hasfunction('omp_get_num_threads()', extra_postargs=['-fopenmp', '/openmp'])
-        needs_gomp = hasopenmp
+        extra_postargs = ['/openmp'] if self.msvc else ['-fopenmp']
+        args = dict(extra_postargs=extra_postargs, include='<omp.h>')
+        hasopenmp = self.hasfunction('omp_get_num_threads()', **args)
+        needs_gomp = False
         if not hasopenmp:
-            hasopenmp = self.hasfunction('omp_get_num_threads()', libraries=['gomp'])
+            hasopenmp = self.hasfunction('omp_get_num_threads()', libraries=['gomp'], **args)
             needs_gomp = hasopenmp
         self._print_support_end('OpenMP', hasopenmp)
         return hasopenmp, needs_gomp
@@ -184,6 +194,14 @@ exit(status)
                            include='<smmintrin.h>',
                            extra_postargs=['-msse4'])
         self._print_support_end('SSE4.1', result)
+        return result
+
+    def _detect_neon(self):
+        """Does this compiler support NEON intrinsics (ARM64)
+        """
+        self._print_support_start("NEON")
+        result = self.hasfunction("int16x4_t acc = vdup_n_s16(0);", include="<arm_neon.h>")
+        self._print_support_end("NEON", result)
         return result
 
 ################################################################################
@@ -249,16 +267,6 @@ release = {release}
                            release=isreleased))
 
 
-def numpy_include_dir():
-    """Get the path of numpy headers."""
-    try:
-        import numpy as np
-    except ImportError:
-        print("Cannot build mdtraj extensions without numpy installed.")
-        sys.exit(1)
-    return np.get_include()
-
-
 class StaticLibrary(Extension):
     def __init__(self, *args, **kwargs):
         self.export_include = kwargs.pop('export_include', [])
@@ -268,7 +276,6 @@ class StaticLibrary(Extension):
 class build_ext(_build_ext):
 
     def build_extension(self, ext):
-        ext.include_dirs.append(numpy_include_dir())
         if isinstance(ext, StaticLibrary):
             self.build_static_extension(ext)
         else:
@@ -365,3 +372,62 @@ class build_ext(_build_ext):
         except Exception as e:
             pass
         return filename
+
+
+def parse_setuppy_commands():
+    """Check the commands and respond appropriately.
+    Return a boolean value for whether or not to run the build or not (avoid
+    parsing Cython and template files if False).
+
+    Adopted from scipy setup
+    """
+    args = sys.argv[1:]
+
+    if not args:
+        # User forgot to give an argument probably, let setuptools handle that.
+        return True
+
+    info_commands = ['--help-commands', '--name', '--version', '-V',
+                     '--fullname', '--author', '--author-email',
+                     '--maintainer', '--maintainer-email', '--contact',
+                     '--contact-email', '--url', '--license', '--description',
+                     '--long-description', '--platforms', '--classifiers',
+                     '--keywords', '--provides', '--requires', '--obsoletes']
+
+    for command in info_commands:
+        if command in args:
+            return False
+
+    # Note that 'alias', 'saveopts' and 'setopt' commands also seem to work
+    # fine as they are, but are usually used together with one of the commands
+    # below and not standalone.  Hence they're not added to good_commands.
+    good_commands = ('develop', 'sdist', 'build', 'build_ext', 'build_py',
+                     'build_clib', 'build_scripts', 'bdist_wheel', 'bdist_rpm',
+                     'bdist_wininst', 'bdist_msi', 'bdist_mpkg',
+                     'build_sphinx')
+
+    for command in good_commands:
+        if command in args:
+            return True
+
+    # The following commands are supported, but we need to show more
+    # useful messages to the user
+    if 'install' in args:
+        return True
+
+    if '--help' in args or '-h' in sys.argv[1]:
+        return False
+
+    # Commands that do more than print info, but also don't need Cython and
+    # template parsing.
+    other_commands = ['egg_info', 'install_egg_info', 'rotate']
+    for command in other_commands:
+        if command in args:
+            return False
+
+    # If we got here, we didn't detect what setup.py command was given
+    warnings.warn("Unrecognized setuptools command ('{}'), proceeding with "
+                  "generating Cython sources and expanding templates".format(
+                  ' '.join(sys.argv[1:])))
+    return True
+

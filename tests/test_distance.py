@@ -22,11 +22,12 @@
 
 import time
 import itertools
+import pytest
 import numpy as np
 import mdtraj as md
 
 from mdtraj.testing import eq, assert_allclose
-from mdtraj.geometry.distance import compute_distances, compute_displacements, find_closest_contact
+from mdtraj.geometry.distance import compute_distances, compute_distances_t, compute_displacements, find_closest_contact
 from mdtraj.geometry.distance import _displacement_mic, _displacement
 
 N_FRAMES = 20
@@ -34,6 +35,7 @@ N_ATOMS = 20
 
 xyz = np.asarray(np.random.randn(N_FRAMES, N_ATOMS, 3), dtype=np.float32)
 pairs = np.array(list(itertools.combinations(range(N_ATOMS), 2)), dtype=np.int32)
+times = np.array([[i, 0] for i in range(N_FRAMES)[::2]], dtype=np.int32)
 
 ptraj = md.Trajectory(xyz=xyz, topology=None)
 ptraj.unitcell_vectors = np.ascontiguousarray(np.random.randn(N_FRAMES, 3, 3) + 2 * np.eye(3, 3), dtype=np.float32)
@@ -73,6 +75,7 @@ def test_3():
 def test_0p():
     a = compute_distances(ptraj, pairs, periodic=True, opt=True)
     b = compute_distances(ptraj, pairs, periodic=True, opt=False)
+    print(a, b)
     eq(a, b, decimal=3)
 
 
@@ -94,6 +97,7 @@ def test_2p():
 def test_3p():
     a = compute_distances(ptraj, pairs, periodic=True, opt=True)
     b = compute_displacements(ptraj, pairs, periodic=True, opt=True)
+    print(a,  b)
     eq(a, np.sqrt(np.sum(np.square(b), axis=2)))
 
 
@@ -160,10 +164,10 @@ def test_closest_contact():
 
 
 def _verify_closest_contact(traj):
-    group1 = np.array([i for i in range(N_ATOMS // 2)], dtype=np.int)
-    group2 = np.array([i for i in range(N_ATOMS // 2, N_ATOMS)], dtype=np.int)
+    group1 = np.array([i for i in range(N_ATOMS // 2)], dtype=int)
+    group2 = np.array([i for i in range(N_ATOMS // 2, N_ATOMS)], dtype=int)
     contact = find_closest_contact(traj, group1, group2)
-    pairs = np.array([(i, j) for i in group1 for j in group2], dtype=np.int)
+    pairs = np.array([(i, j) for i in group1 for j in group2], dtype=int)
     dists = md.compute_distances(traj, pairs, True)[0]
     dists2 = md.compute_distances(traj, pairs, False)[0]
     nearest = np.argmin(dists)
@@ -188,3 +192,43 @@ def test_closest_contact_nan_pos():
     xyz = xyz[:-1]
     traj = md.Trajectory(xyz=xyz, topology=None)
     _verify_closest_contact(traj)
+
+
+def test_distance_t_inputs():
+    incorrect_pairs = np.array((0, ptraj.n_atoms+1))
+    with pytest.raises(ValueError, match='atom_pairs'):
+        compute_distances_t(ptraj, incorrect_pairs, times)
+
+    incorrect_times = np.array((0, ptraj.n_frames+1))
+    with pytest.raises(ValueError, match='time_pairs'):
+        compute_distances_t(ptraj, pairs, incorrect_times)
+
+
+def test_distances_t(get_fn):
+    a = compute_distances_t(ptraj, pairs, times, periodic=True, opt=True)
+    b = compute_distances_t(ptraj, pairs, times, periodic=True, opt=False)
+    eq(a, b)
+    c = compute_distances_t(ptraj, pairs, times, periodic=False, opt=True)
+    d = compute_distances_t(ptraj, pairs, times, periodic=False, opt=False)
+    eq(c, d)
+
+def test_distances_t_at_0(get_fn):
+    times = np.array([[0, 0]], dtype=np.int32)
+    a = compute_distances_t(ptraj, pairs, times, periodic=True, opt=True)
+    b = compute_distances_t(ptraj, pairs, times, periodic=True, opt=False)
+    c = compute_distances(ptraj[:1], pairs, periodic=True, opt=True)
+    d = compute_distances(ptraj[:1], pairs, periodic=True, opt=False)
+    eq(a, c)
+    eq(b, d)
+
+def _run_amber_traj_t(traj, ext_ref):
+    # Test triclinic case where simple approach in Tuckerman text does not
+    # always work
+    distopt = compute_distances_t(traj, atom_pairs=[[0, 9999]], time_pairs=[[0, 2]], opt=True)
+    distslw = compute_distances_t(traj, atom_pairs=[[0, 9999]], time_pairs=[[0, 2]], opt=False)
+
+def test_amber_t(get_fn):
+    ext_ref = np.array([17.4835, 22.2418, 24.2910, 22.5505, 12.8686, 22.1090,
+                        7.4472, 22.4253, 19.8283, 20.6935]) / 10
+    traj = md.load(get_fn('test_good.nc'), top=get_fn('test.parm7'))
+    _run_amber_traj_t(traj, ext_ref)
