@@ -74,7 +74,7 @@ def load_gro(filename, stride=None, atom_indices=None, frame=None, top=None):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Path to the GRO file on disk.
     stride : int, default=None
         Only read every stride-th model from the file
@@ -108,7 +108,7 @@ class GroTrajectoryFile(object):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         The filename to open. A path to a file on disk.
     mode : {'r', 'w'}
         The mode in which to open the file, either 'r' for read or 'w' for write.

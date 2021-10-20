@@ -65,13 +65,13 @@ def _load_desmond_traj(filename, top=None, stride=None, atom_indices=None, frame
     from mdtraj.core.trajectory import _parse_topology
     if top is None:
         raise ValueError('"top" argument is required for load_dtr')
-    if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_trr. '
+    if not isinstance(filename, (string_types, os.PathLike)):
+        raise TypeError('filename must be of type path-like for load_trr. '
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-    with DTRTrajectoryFile(filename) as f:
+    with DTRTrajectoryFile(str(filename)) as f:
         if frame is not None:
             f.seek(frame)
             n_frames = 1
@@ -115,8 +115,8 @@ def load_dtr(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     Parameters
     ----------
-    filename : str
-        String filename of dtr file that ends with clickme.dtr. Alternatively,
+    filename : path-like
+        Path of dtr file that ends with clickme.dtr. Alternatively,
         directory name can also be accepted.
     top : {str, Trajectory, Topology}
         dtr format does not contain topology information. Pass in either
@@ -174,9 +174,9 @@ def load_stk(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     Parameters
     ----------
-    filename : str
-        String filename of stk file.
-    top : {str, Trajectory, Topology}
+    filename : path-like
+        Path of stk file.
+    top : {path-like, Trajectory, Topology}
         stk format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
         information.
