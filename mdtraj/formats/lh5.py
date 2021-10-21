@@ -187,7 +187,7 @@ class LH5TrajectoryFile(object):
             self._frame_index = 0
             # do we need to write the header information?
             self._needs_initialization = True
-            if not str(filename).endswith('.lh5'):
+            if not os.fspath(filename).endswith('.lh5'):
                 warnings.warn('The .lh5 extension is recommended.')
         elif mode == 'r':
             self._frame_index = 0

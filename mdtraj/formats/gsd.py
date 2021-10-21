@@ -27,6 +27,7 @@
 from __future__ import print_function, division
 
 import numpy as np
+import os
 
 
 from mdtraj.core.topology import Topology
@@ -74,7 +75,7 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
     from mdtraj.core.trajectory import Trajectory, _parse_topology
     import gsd.hoomd
 
-    if not isinstance(filename, string_types):
+    if not isinstance(filename, (string_types, os.PathLike)):
         raise TypeError('filename must be of type path-like for load_gsd. '
                         'you supplied %s'.format(type(filename)))
 

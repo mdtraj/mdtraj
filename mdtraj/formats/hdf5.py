@@ -194,7 +194,7 @@ class HDF5TrajectoryFile(object):
             self._frame_index = 0
             # do we need to write the header information?
             self._needs_initialization = True
-            if not str(filename).endswith('.h5'):
+            if not os.fspath(filename).endswith('.h5'):
                 warnings.warn('The .h5 extension is recommended.')
 
         elif mode == 'a':

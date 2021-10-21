@@ -1485,7 +1485,7 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        with XTCTrajectoryFile(str(filename), 'w', force_overwrite=force_overwrite) as f:
+        with XTCTrajectoryFile(os.fspath(filename), 'w', force_overwrite=force_overwrite) as f:
             f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     time=self.time,
                     box=in_units_of(self.unitcell_vectors, Trajectory._distance_unit, f.distance_unit))
@@ -1505,7 +1505,7 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        with TRRTrajectoryFile(str(filename), 'w', force_overwrite=force_overwrite) as f:
+        with TRRTrajectoryFile(os.fspath(filename), 'w', force_overwrite=force_overwrite) as f:
             f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     time=self.time,
                     box=in_units_of(self.unitcell_vectors, Trajectory._distance_unit, f.distance_unit))
@@ -1521,7 +1521,7 @@ class Trajectory(object):
             Overwrite anything that exists at filenames, if its already there
         """
         self._check_valid_unitcell()
-        with DCDTrajectoryFile(str(filename), 'w', force_overwrite=force_overwrite) as f:
+        with DCDTrajectoryFile(os.fspath(filename), 'w', force_overwrite=force_overwrite) as f:
             f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
@@ -1537,7 +1537,7 @@ class Trajectory(object):
             Overwrite anything that exists at filenames, if its already there
         """
         self._check_valid_unitcell()
-        with DTRTrajectoryFile(str(filename), 'w', force_overwrite=force_overwrite) as f:
+        with DTRTrajectoryFile(os.fspath(filename), 'w', force_overwrite=force_overwrite) as f:
             f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles,
@@ -1553,7 +1553,7 @@ class Trajectory(object):
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        with BINPOSTrajectoryFile(str(filename), 'w', force_overwrite=force_overwrite) as f:
+        with BINPOSTrajectoryFile(os.fspath(filename), 'w', force_overwrite=force_overwrite) as f:
             f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit))
 
 
@@ -1711,7 +1711,7 @@ class Trajectory(object):
             Overwrite anything that exists at filename, if its already there
         """
         self._check_valid_unitcell()
-        with TNGTrajectoryFile(str(filename), 'w', force_overwrite=force_overwrite) as f:
+        with TNGTrajectoryFile(os.fspath(filename), 'w', force_overwrite=force_overwrite) as f:
             f.write(self.xyz, time=self.time, box=self.unitcell_vectors)
 
     def save_gsd(self, filename, force_overwrite=True):
