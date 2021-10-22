@@ -99,7 +99,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Path to the PDB file on disk. The string could be a URL. Valid URL
         schemes include http and ftp.
     stride : int, default=None
@@ -146,13 +146,12 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
     mdtraj.PDBTrajectoryFile : Low level interface to PDB files
     """
     from mdtraj import Trajectory
-    if not isinstance(filename, six.string_types):
-        raise TypeError('filename must be of type string for load_pdb. '
+    if not isinstance(filename, (six.string_types, os.PathLike)):
+        raise TypeError('filename must be of type string or path-like for load_pdb. '
             'you supplied %s' % type(filename))
 
     atom_indices = cast_indices(atom_indices)
 
-    filename = str(filename)
     with PDBTrajectoryFile(filename, standard_names=standard_names, top=top) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
         if frame is not None:
@@ -212,7 +211,7 @@ class PDBTrajectoryFile(object):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         The filename to open. A path to a file on disk.
     mode : {'r', 'w'}
         The mode in which to open the file, either 'r' for read or 'w' for write.

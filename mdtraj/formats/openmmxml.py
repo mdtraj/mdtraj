@@ -36,7 +36,7 @@ def load_xml(filename, top=None):
 
     Parameters
     ----------
-    filename : string
+    filename : path-like
         The path on disk to the XML file
     top : {str, Trajectory, Topology}
         The XML format does not contain topology information. Pass in either the

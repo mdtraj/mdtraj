@@ -71,8 +71,8 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
 
     Parameters
     ----------
-    filename : str
-        String filename of HDF Trajectory file.
+    filename : path-like
+        Path of HDF Trajectory file.
     stride : int, default=None
         Only read every stride-th frame
     atom_indices : array_like, optional
@@ -104,8 +104,8 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.HDF5TrajectoryFile :  Low level interface to HDF5 files
     """
-    if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_lh5. '
+    if not isinstance(filename, (string_types, os.PathLike)):
+        raise TypeError('filename must be of type path-like for load_lh5. '
             'you supplied %s' % type(filename))
 
     atom_indices = cast_indices(atom_indices)
@@ -137,7 +137,7 @@ class HDF5TrajectoryFile(object):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Path to the file to open
     mode :  {'r, 'w'}
         Mode in which to open the file. 'r' is for reading and 'w' is for
@@ -194,7 +194,7 @@ class HDF5TrajectoryFile(object):
             self._frame_index = 0
             # do we need to write the header information?
             self._needs_initialization = True
-            if not filename.endswith('.h5'):
+            if not os.fspath(filename).endswith('.h5'):
                 warnings.warn('The .h5 extension is recommended.')
 
         elif mode == 'a':

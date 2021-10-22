@@ -90,10 +90,10 @@ def _assert_files_exist(filenames):
 
     Parameters
     ----------
-    filenames : {str, [str]}
-        String or list of strings to check
+    filenames : {path-like, [path-like]}
+        Path or list of paths to check
     """
-    if isinstance(filenames, string_types):
+    if isinstance(filenames, (string_types, os.PathLike)):
         filenames = [filenames]
     for fn in filenames:
         if not (os.path.exists(fn) and os.path.isfile(fn)):
@@ -105,10 +105,10 @@ def _assert_files_or_dirs_exist(names):
 
     Parameters
     ----------
-    filenames : {str, [str]}
-        String or list of strings to check
+    filenames : {path-like, [path-like]}
+        Path or list of paths to check
     """
-    if isinstance(names, string_types):
+    if isinstance(names, (string_types, os.PathLike)):
         names = [names]
     for fn in names:
         if not (os.path.exists(fn) and \
@@ -139,7 +139,7 @@ def load_topology(filename, **kwargs):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Path to a file containing a system topology. The following extensions
         are supported: '.pdb', '.pdb.gz', '.h5','.lh5', '.prmtop', '.parm7',
             '.prm7', '.psf', '.mol2', '.hoomdxml', '.gsd'
@@ -161,7 +161,7 @@ def _parse_topology(top, **kwargs):
     topology : md.Topology
     """
 
-    if isinstance(top, string_types):
+    if isinstance(top, (string_types, os.PathLike)):
         ext = _get_extension(top)
     else:
         ext = None  # might not be a string
@@ -170,24 +170,24 @@ def _parse_topology(top, **kwargs):
         topology = top
     elif isinstance(top, Trajectory):
         topology = top.topology
-    elif isinstance(top, string_types) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):
+    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.pdb', '.pdb.gz', '.h5','.lh5']):
         _traj = load_frame(top, 0, **kwargs)
         topology = _traj.topology
-    elif isinstance(top, string_types) and (ext in ['.prmtop', '.parm7', '.prm7']):
+    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.prmtop', '.parm7', '.prm7']):
         topology = load_prmtop(top, **kwargs)
-    elif isinstance(top, string_types) and (ext in ['.psf']):
+    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.psf']):
         topology = load_psf(top, **kwargs)
-    elif isinstance(top, string_types) and (ext in ['.mol2']):
+    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.mol2']):
         topology = load_mol2(top, **kwargs).topology
-    elif isinstance(top, string_types) and (ext in ['.gro']):
+    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.gro']):
         topology = load_gro(top, **kwargs).topology
-    elif isinstance(top, string_types) and (ext in ['.arc']):
+    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.arc']):
         topology = load_arc(top, **kwargs).topology
-    elif isinstance(top, string_types) and (ext in ['.hoomdxml']):
+    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.hoomdxml']):
         topology = load_hoomdxml(top, **kwargs).topology
-    elif isinstance(top, string_types) and (ext in ['.gsd']):
+    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.gsd']):
         topology = load_gsd_topology(top, **kwargs)
-    elif isinstance(top, string_types):
+    elif isinstance(top, (string_types, os.PathLike)):
         raise IOError('The topology is loaded by filename extension, and the '
                       'detected "%s" format is not supported. Supported topology '
                       'formats include %s and "%s".' % (
@@ -220,7 +220,7 @@ def open(filename, mode='r', force_overwrite=True, **kwargs):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Path to the trajectory file on disk
     mode : {'r', 'w'}
         The mode in which to open the file, either 'r' for read or 'w' for
@@ -263,7 +263,7 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Path to the trajectory file on disk
     index : int
         Load the `index`-th frame from the specified file
@@ -324,7 +324,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     Parameters
     ----------
-    filename_or_filenames : {str, list of strings}
+    filename_or_filenames : {path-like, list of path-like objects}
         Filename or list of filenames containing trajectory files of a single format.
     discard_overlapping_frames : bool, default=False
         Look for overlapping frames between the last frame of one filename and
@@ -332,7 +332,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     Other Parameters
     ----------------
-    top : {str, Trajectory, Topology}
+    top : {path-like, Trajectory, Topology}
         Most trajectory formats do not contain topology information. Pass in
         either the path to a RCSB PDB file, a trajectory, or a topology to
         supply this information. This option is not required for the .h5, .lh5,
@@ -371,7 +371,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     # If a single filename make a list out of it in
     #order to have an easier function later on
-    if isinstance(filename_or_filenames, string_types):
+    if isinstance(filename_or_filenames, (string_types, os.PathLike)):
         filename_or_filenames = [filename_or_filenames]
     
     
@@ -499,7 +499,7 @@ def iterload(filename, chunk=100, **kwargs):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Path to the trajectory file on disk
     chunk : int
         Number of frames to load at once from disk per iteration.  If 0, load all.
@@ -1315,8 +1315,8 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filenames : {str, [str]}
-            Either a string or list of strings
+        filenames : {path-like, [path-like]}
+            Either a path or list of paths
 
         Other Parameters
         ----------------
@@ -1355,7 +1355,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory. The extension will
             be parsed and will control the format.
 
@@ -1387,7 +1387,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
@@ -1404,7 +1404,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
@@ -1419,7 +1419,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
@@ -1433,7 +1433,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
@@ -1480,12 +1480,12 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        with XTCTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+        with XTCTrajectoryFile(os.fspath(filename), 'w', force_overwrite=force_overwrite) as f:
             f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     time=self.time,
                     box=in_units_of(self.unitcell_vectors, Trajectory._distance_unit, f.distance_unit))
@@ -1500,12 +1500,12 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        with TRRTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+        with TRRTrajectoryFile(os.fspath(filename), 'w', force_overwrite=force_overwrite) as f:
             f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     time=self.time,
                     box=in_units_of(self.unitcell_vectors, Trajectory._distance_unit, f.distance_unit))
@@ -1515,13 +1515,13 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filenames, if its already there
         """
         self._check_valid_unitcell()
-        with DCDTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+        with DCDTrajectoryFile(os.fspath(filename), 'w', force_overwrite=force_overwrite) as f:
             f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles)
@@ -1531,13 +1531,13 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filenames, if its already there
         """
         self._check_valid_unitcell()
-        with DTRTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+        with DTRTrajectoryFile(os.fspath(filename), 'w', force_overwrite=force_overwrite) as f:
             f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
                     cell_angles=self.unitcell_angles,
@@ -1548,12 +1548,12 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
-        with BINPOSTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+        with BINPOSTrajectoryFile(os.fspath(filename), 'w', force_overwrite=force_overwrite) as f:
             f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit))
 
 
@@ -1562,7 +1562,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
@@ -1583,7 +1583,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if it's already there
@@ -1600,7 +1600,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the restart
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if it's already there
@@ -1637,7 +1637,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the restart
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if it's already there
@@ -1674,7 +1674,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if it's already there
@@ -1688,7 +1688,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             Path to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at that filename if it exists
@@ -1705,13 +1705,13 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
         """
         self._check_valid_unitcell()
-        with TNGTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
+        with TNGTrajectoryFile(os.fspath(filename), 'w', force_overwrite=force_overwrite) as f:
             f.write(self.xyz, time=self.time, box=self.unitcell_vectors)
 
     def save_gsd(self, filename, force_overwrite=True):
@@ -1719,7 +1719,7 @@ class Trajectory(object):
 
         Parameters
         ----------
-        filename : str
+        filename : path-like
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filenames, if its already there

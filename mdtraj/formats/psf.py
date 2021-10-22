@@ -166,7 +166,7 @@ def load_psf(fname, **kwargs):
 
     Parameters
     ----------
-    fname : str
+    fname : path-like
         Path to the PSF file on disk
 
     Returns

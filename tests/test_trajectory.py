@@ -22,6 +22,7 @@
 
 import sys
 import functools
+from pathlib import Path
 from mdtraj.testing import eq
 import numpy as np
 import mdtraj as md
@@ -183,6 +184,23 @@ def precision(fext):
 
 def precision2(fext1, fext2):
     return min(precision(fext1), precision(fext2))
+
+
+def test_read_path(ref_traj, get_fn):
+    top = get_fn('native.pdb')
+    t = md.load(Path(get_fn(ref_traj.fn)), top=top)
+
+
+def test_write_path(write_traj, get_fn):
+    if write_traj.fext in ('ncrst', 'rst7'):
+        pytest.skip("{} can only store 1 frame per file".format(write_traj.fext))
+    if write_traj.fext in ('mdcrd'):
+        pytest.skip("{} can only store rectilinear boxes".format(write_traj.fext))
+    t = md.load(get_fn('traj.h5'))
+    if t.unitcell_vectors is None:
+        if write_traj.fext in ('dtr', 'lammpstrj'):
+            pytest.skip("{} needs to write unitcells".format(write_traj.fext))
+    t.save(Path(write_traj.fn))
 
 
 def test_read_write(ref_traj, write_traj, get_fn):

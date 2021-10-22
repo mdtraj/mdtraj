@@ -66,7 +66,7 @@ def load_mol2(filename):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Path to the prmtop file on disk.
 
     Returns
@@ -172,7 +172,7 @@ def mol2_to_dataframes(filename):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Name of mol2 filename
 
     Returns

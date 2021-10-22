@@ -27,7 +27,7 @@ def open_maybe_zipped(filename, mode, force_overwrite=True):
     handle : file
         Open file handle.
     """
-    _, extension = os.path.splitext(filename.lower())
+    _, extension = os.path.splitext(str(filename).lower())
     if mode == 'r':
         if extension == '.gz':
             with gzip.GzipFile(filename, 'r') as gz_f:
