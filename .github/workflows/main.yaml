@@ -19,6 +19,9 @@ jobs:
            nixpkgs: "channel:nixos-21.05"
          - py: "python39"
            nixpkgs: "channel:nixos-21.05"
+         - py: "python310"
+           nixpkgs: "channel:nixos-21.05"
+
 
     runs-on: ubuntu-20.04
     steps:
