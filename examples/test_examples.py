@@ -74,10 +74,9 @@ def run_notebook(nb):
     km.start_kernel(stderr=open(os.devnull, 'w'))
     kc = km.client()
     kc.start_channels()
-    shell = kc.shell_channel
     # simple ping:
     kc.execute("pass")
-    shell.get_msg()
+    kc.get_shell_msg()
 
     failures = 0
     for cell in nb.cells:
@@ -86,7 +85,7 @@ def run_notebook(nb):
         kc.execute(cell.source)
         try:
             # wait for finish, w/ timeout
-            reply = shell.get_msg(timeout=TIMEOUT)['content']
+            reply = kc.get_shell_msg(timeout=TIMEOUT)['content']
         except Empty:
             raise Exception(
                 'Timeout (%.1f) when executing the following %s cell: "%s"' %
