@@ -49,7 +49,7 @@ jobs:
         nix_path: channel:nixos-20.09
     - uses: actions/download-artifact@v2
       with:
-        name: docs-python37
+        name: docs-python38
     - run: |
         nix-env -f '<nixpkgs>' -iA awscli2
 
