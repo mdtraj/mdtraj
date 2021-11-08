@@ -20,7 +20,7 @@ jobs:
          - py: "python39"
            nixpkgs: "channel:nixos-21.05"
          - py: "python310"
-           nixpkgs: "channel:nixos-21.05"
+           nixpkgs: "channel:nixos-unstable"
 
 
     runs-on: ubuntu-20.04
