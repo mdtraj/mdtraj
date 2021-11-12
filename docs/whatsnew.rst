@@ -3,6 +3,36 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.9.7 (November 12, 2021)
+-----------------------
+
+ - Replace discourse link with gitter link (904338b799842c103dcb9e306e6878a739a4d39f)
+ - Faster load function and more homogeneus file parser interface (#1648)
+ - Reduce memory usage of ``rdf_t`` (#1661)
+ - Update to new OpenMM namespace (#1668)
+ - Fix ``compute_contact`` bug with glycine sidechains (#1674)
+ - Fix errors in RMSF documentation (#1676)
+ - Handle path-like objects in place of filenames (#1680)
+ - Pin NumPy in pyproject.toml for Python 3.10 (#1681)
+ - Fix compilation errors on M1 Macs (#1684)
+ - Update Python versions in CI (#1686)
+ - Fix jupyter runners in CI (#1687)
+
+A total of 10 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Robert T. McGibbon
+- Sander Roet
+- Charlie Laughton +
+- Alexander Matthew Payne +
+- Tucker Burgin +
+- Maurice Karrenbrock
+- Luca Naef +
+- Jacob Lumpkins +
+- Ray A. Matsumoto
+- Matthew W. Thompson
+
+
 v1.9.6 (April 20, 2021)
 -----------------------
  - Fix compatibility with all versions of astunparse (03753d736e30f15f8f210434e689e9ff664bb611)
