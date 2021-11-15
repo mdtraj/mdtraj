@@ -32,13 +32,20 @@ from mdtraj.reporters import HDF5Reporter, NetCDFReporter, DCDReporter, XTCRepor
 from mdtraj.testing import eq
 
 try:
-    from simtk.unit import nanometers, kelvin, picoseconds, femtoseconds
-    from simtk.openmm import LangevinIntegrator, Platform
-    from simtk.openmm.app import PDBFile, ForceField, Simulation, CutoffNonPeriodic, CutoffPeriodic, HBonds, CheckpointReporter
+    from openmm.unit import nanometers, kelvin, picoseconds, femtoseconds
+    from openmm import LangevinIntegrator, Platform
+    from openmm.app import PDBFile, ForceField, Simulation, CutoffNonPeriodic, CutoffPeriodic, HBonds, CheckpointReporter
 
     HAVE_OPENMM = True
 except ImportError:
-    HAVE_OPENMM = False
+    try:  # Maybe OpenMM < 7.6
+        from simtk.unit import nanometers, kelvin, picoseconds, femtoseconds
+        from simtk.openmm import LangevinIntegrator, Platform
+        from simtk.openmm.app import PDBFile, ForceField, Simulation, CutoffNonPeriodic, CutoffPeriodic, HBonds, CheckpointReporter
+
+        HAVE_OPENMM = True
+    except ImportError:
+        HAVE_OPENMM = False
 
 # special pytest global to mark all tests in this module
 pytestmark = pytest.mark.skipif(not HAVE_OPENMM, reason='test_reporter.py needs OpenMM.')

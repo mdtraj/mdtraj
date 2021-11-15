@@ -144,7 +144,7 @@ class _BaseReporter(object):
 
         Parameters
         ----------
-        simulation : simtk.openmm.app.Simulation
+        simulation : openmm.app.Simulation
             The Simulation to generate a report for
         """
         if self._atomSubset is not None:
@@ -185,7 +185,7 @@ class _BaseReporter(object):
 
         Parameters
         ----------
-        simulation : simtk.openmm.app.Simulation
+        simulation : openmm.app.Simulation
             The Simulation to generate a report for
 
         Returns
@@ -204,9 +204,9 @@ class _BaseReporter(object):
 
         Parameters
         ----------
-        simulation : simtk.openmm.app.Simulation
+        simulation : openmm.app.Simulation
             The Simulation to generate a report for
-        state : simtk.openmm.State
+        state : openmm.State
             The current state of the simulation
         """
         if not self._is_intialized:

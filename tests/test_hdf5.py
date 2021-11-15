@@ -28,13 +28,19 @@ from mdtraj.formats import HDF5TrajectoryFile
 from mdtraj.testing import eq
 import pytest
 
+
 try:
-    from simtk import unit as units
+    from openmm import unit as units
     HAVE_UNITS = True
 except ImportError:
-    HAVE_UNITS = False
+    try:
+        from simtk import unit as units
+        HAVE_UNITS = True
+    except ImportError:
+        HAVE_UNITS = False
 
-needs_units = pytest.mark.skipif(not HAVE_UNITS, reason='requires simtk.units')
+needs_units = pytest.mark.skipif(not HAVE_UNITS, reason='requires openmm.units')
+
 
 fd, temp = tempfile.mkstemp(suffix='.h5')
 def teardown_module(module):
@@ -96,7 +102,7 @@ def test_write_inconsistent_2():
 
 @needs_units
 def test_write_units():
-    # simtk.units are automatically converted into MD units for storage on disk
+    # openmm.units are automatically converted into MD units for storage on disk
     coordinates = units.Quantity(np.random.randn(4, 10,3), units.angstroms)
     velocities = units.Quantity(np.random.randn(4, 10,3), units.angstroms/units.year)
 
