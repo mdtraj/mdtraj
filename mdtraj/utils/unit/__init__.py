@@ -151,7 +151,7 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
         return quantity
 
     if (('simtk.unit' in sys.modules or 'openmm.unit' in sys.modules) and
-        isinstance(quantity, simtk_unit.Quantity):
+        isinstance(quantity, simtk_unit.Quantity)):
         units_in = quantity.unit
         units_out = _str_to_unit(units_out, simtk=True)
         quantity = quantity._value
