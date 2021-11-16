@@ -37,13 +37,11 @@ from mdtraj.utils.unit.quantity import Quantity
 from mdtraj.utils.unit import unit_definitions
 from mdtraj.utils import import_, six
 UNIT_DEFINITIONS = unit_definitions
+
 try:
-    import openmm.unit as simtk_unit
+    import openmm.unit as openmm_unit
 except ImportError:
-    try:
-        import simtk.unit as simtk_unit
-    except ImportError:
-        pass
+    pass
 
 __all__ = ['in_units_of']
 
@@ -79,7 +77,7 @@ class _UnitContext(ast.NodeTransformer):
 _unit_context = _UnitContext()  # global instance of the visitor
 
 
-def _str_to_unit(unit_string, simtk=False):
+def _str_to_unit(unit_string, openmm=False):
     """eval() based transformer that extracts a openmm.unit object
     from a string description.
 
@@ -104,8 +102,8 @@ def _str_to_unit(unit_string, simtk=False):
 
     assert isinstance(unit_string, six.string_types)
     unit_definitions = UNIT_DEFINITIONS
-    if simtk:
-        unit_definitions = import_('simtk.unit').unit_definitions
+    if openmm:
+        unit_definitions = openmm_unit.unit_definitions
     parsed = ast.parse(unit_string, mode='eval')
     node = _unit_context.visit(parsed)
     fixed_node = ast.fix_missing_locations(node)
@@ -150,10 +148,10 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
     if quantity is None:
         return quantity
 
-    if (('simtk.unit' in sys.modules or 'openmm.unit' in sys.modules) and
-        isinstance(quantity, simtk_unit.Quantity)):
+    if ('openmm.unit' in sys.modules and
+        isinstance(quantity, openmm_unit.Quantity)):
         units_in = quantity.unit
-        units_out = _str_to_unit(units_out, simtk=True)
+        units_out = _str_to_unit(units_out, openmm=True)
         quantity = quantity._value
     elif isinstance(quantity, Quantity):
         units_in = quantity.unit
