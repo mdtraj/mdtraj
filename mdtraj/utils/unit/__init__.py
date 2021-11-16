@@ -21,8 +21,8 @@
 ##############################################################################
 """
 
-Unit processing for MDTraj. This subpackage is a port of simtk.unit from
-OpenMM. Unlike in simtk.openmm, the MDTraj library **does not pass around
+Unit processing for MDTraj. This subpackage is a port of openmm.unit from
+OpenMM. Unlike in openmm, the MDTraj library **does not pass around
 "united quantities"**
 
 The only publicly facing API from this package, for the purpose of MDTraj,
@@ -37,13 +37,11 @@ from mdtraj.utils.unit.quantity import Quantity
 from mdtraj.utils.unit import unit_definitions
 from mdtraj.utils import import_, six
 UNIT_DEFINITIONS = unit_definitions
+
 try:
-    import openmm.unit as simtk_unit
+    import openmm.unit as openmm_unit
 except ImportError:
-    try:
-        import simtk.unit as simtk_unit
-    except ImportError:
-        pass
+    pass
 
 __all__ = ['in_units_of']
 
@@ -71,7 +69,7 @@ class _UnitContext(ast.NodeTransformer):
         if not hasattr(unit_definitions, node.id):
             # also, let's take this opporunity to check that the node.id
             # (which supposed to be the name of the unit, like "nanometers")
-            # is actually an attribute in simtk.unit
+            # is actually an attribute in openmm.unit
             raise ValueError('%s is not a valid unit' % node.id)
 
         return ast.Attribute(value=ast.Name(id='unit_definitions', ctx=ast.Load()),
@@ -79,8 +77,8 @@ class _UnitContext(ast.NodeTransformer):
 _unit_context = _UnitContext()  # global instance of the visitor
 
 
-def _str_to_unit(unit_string, simtk=False):
-    """eval() based transformer that extracts a simtk.unit object
+def _str_to_unit(unit_string, openmm=False):
+    """eval() based transformer that extracts a openmm.unit object
     from a string description.
 
     Parameters
@@ -92,7 +90,7 @@ def _str_to_unit(unit_string, simtk=False):
     Examples
     --------
     >>> type(_str_to_unit('nanometers**2/meters*gigajoules'))
-    <class 'simtk.unit.unit.Unit'>
+    <class 'openmm.unit.unit.Unit'>
     >>> str(_str_to_unit('nanometers**2/meters*gigajoules'))
     'nanometer**2*gigajoule/meter'
 
@@ -104,8 +102,8 @@ def _str_to_unit(unit_string, simtk=False):
 
     assert isinstance(unit_string, six.string_types)
     unit_definitions = UNIT_DEFINITIONS
-    if simtk:
-        unit_definitions = import_('simtk.unit').unit_definitions
+    if openmm:
+        unit_definitions = openmm_unit.unit_definitions
     parsed = ast.parse(unit_string, mode='eval')
     node = _unit_context.visit(parsed)
     fixed_node = ast.fix_missing_locations(node)
@@ -118,11 +116,11 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
 
     Parameters
     ----------
-    quantity : {number, np.ndarray, simtk.unit.Quantity}
+    quantity : {number, np.ndarray, openmm.unit.Quantity}
         quantity can either be a unitted quantity -- i.e. instance of
-        simtk.unit.Quantity, or just a bare number or numpy array
+        openmm.unit.Quantity, or just a bare number or numpy array
     units_in : str
-        If you supply a quantity that's not a simtk.unit.Quantity, you should
+        If you supply a quantity that's not a openmm.unit.Quantity, you should
         tell me what units it is in. If you don't, i'm just going to echo you
         back your quantity without doing any unit checking.
     units_out : str
@@ -150,9 +148,10 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
     if quantity is None:
         return quantity
 
-    if 'simtk.unit' in sys.modules and isinstance(quantity, simtk_unit.Quantity):
+    if ('openmm.unit' in sys.modules and
+        isinstance(quantity, openmm_unit.Quantity)):
         units_in = quantity.unit
-        units_out = _str_to_unit(units_out, simtk=True)
+        units_out = _str_to_unit(units_out, openmm=True)
         quantity = quantity._value
     elif isinstance(quantity, Quantity):
         units_in = quantity.unit
