@@ -38,14 +38,7 @@ try:
 
     HAVE_OPENMM = True
 except ImportError:
-    try:  # Maybe OpenMM < 7.6
-        from simtk.unit import nanometers, kelvin, picoseconds, femtoseconds
-        from simtk.openmm import LangevinIntegrator, Platform
-        from simtk.openmm.app import PDBFile, ForceField, Simulation, CutoffNonPeriodic, CutoffPeriodic, HBonds, CheckpointReporter
-
-        HAVE_OPENMM = True
-    except ImportError:
-        HAVE_OPENMM = False
+    HAVE_OPENMM = False
 
 # special pytest global to mark all tests in this module
 pytestmark = pytest.mark.skipif(not HAVE_OPENMM, reason='test_reporter.py needs OpenMM.')

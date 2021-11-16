@@ -1269,12 +1269,8 @@ class Trajectory(object):
             for input to OpenMM
 
         """
-        try:
-            from openmm import Vec3
-            from openmm.unit import nanometer
-        except ImportError:  # OpenMM < 7.6
-            from simtk.openmm import Vec3
-            from simtk.unit import nanometer
+        from openmm import Vec3
+        from openmm.unit import nanometer
 
         Pos = []
         for xyzi in self.xyz[frame]:
@@ -1301,12 +1297,8 @@ class Trajectory(object):
             The periodic box vectors for this frame, formatted for input to
             OpenMM.
         """
-        try:
-            from openmm import Vec3
-            from openmm.unit import nanometer
-        except ImportError:  # OpenMM < 7.6
-            from simtk.openmm import Vec3
-            from simtk.unit import nanometer
+        from openmm import Vec3
+        from openmm.unit import nanometer
 
         vectors = self.unitcell_vectors[frame]
         if vectors is None:

@@ -33,11 +33,7 @@ try:
     from openmm import unit as units
     HAVE_UNITS = True
 except ImportError:
-    try:
-        from simtk import unit as units
-        HAVE_UNITS = True
-    except ImportError:
-        HAVE_UNITS = False
+    HAVE_UNITS = False
 
 needs_units = pytest.mark.skipif(not HAVE_UNITS, reason='requires openmm.units')
 

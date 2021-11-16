@@ -35,15 +35,11 @@ try:
     # openmm
     import openmm.unit as units
     OPENMM_IMPORTED = True
-except ImportError: # OpenMM < 7.6
-    try:
-        import simtk.unit as units
-        OPENMM_IMPORTED = True
-    except ImportError:
-        # if someone tries to import all of mdtraj but doesn't
-        # OpenMM installed, we don't want that to choke. It should
-        # only choke if they actually try to USE the reporter
-        OPENMM_IMPORTED = False
+except ImportError:
+    # if someone tries to import all of mdtraj but doesn't
+    # OpenMM installed, we don't want that to choke. It should
+    # only choke if they actually try to USE the reporter
+    OPENMM_IMPORTED = False
 
 
 class XTCReporter(_BaseReporter):

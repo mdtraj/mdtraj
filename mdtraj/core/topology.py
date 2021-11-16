@@ -342,9 +342,9 @@ class Topology(object):
         topology : openmm.app.Topology
            This topology, as an OpenMM topology
         """
-        app = import_('simtk.openmm.app')
-        mm = import_('simtk.openmm')
-        u = import_('simtk.unit')
+        app = import_('openmm.app')
+        mm = import_('openmm')
+        u = import_('openmm.unit')
 
         out = app.Topology()
         atom_mapping = {}
@@ -393,7 +393,7 @@ class Topology(object):
             An OpenMM topology that you wish to convert to a
             mdtraj topology.
         """
-        app = import_('simtk.openmm.app')
+        app = import_('openmm.app')
         bond_mapping = {app.Single: Single,
                         app.Double: Double,
                         app.Triple: Triple,

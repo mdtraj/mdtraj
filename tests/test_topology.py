@@ -34,12 +34,7 @@ try:
     import openmm.unit as u
     HAVE_OPENMM = True
 except ImportError:
-    try:  # Maybe OpenMM < 7.6
-        from simtk.openmm import app
-        import simtk.unit as u
-        HAVE_OPENMM = True
-    except ImportError:
-        HAVE_OPENMM = False
+    HAVE_OPENMM = False
 
 needs_openmm = pytest.mark.skipif(not HAVE_OPENMM, reason='needs OpenMM')
 
