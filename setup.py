@@ -101,7 +101,8 @@ def format_extensions():
         # install of python+zlib or a conda install of python+zlib
         zlib_include_dirs += ["{}/include".format(sys.prefix)]
         zlib_library_dirs += ["{}/lib".format(sys.prefix)]
-    zlib = any([glob(f"{i}/zlib.h") for i in zlib_include_dirs])
+    zlib = any([glob(f"{i}/**/zlib.h", recursive=True)
+                for i in zlib_include_dirs])
     # Protect against Issue 1699
     if zlib:
         def_macros = [("USE_ZLIB", 1)]
