@@ -101,7 +101,12 @@ def format_extensions():
         # install of python+zlib or a conda install of python+zlib
         zlib_include_dirs += ["{}/include".format(sys.prefix)]
         zlib_library_dirs += ["{}/lib".format(sys.prefix)]
-
+    zlib = any([glob(f"{i}/zlib.h") for i in zlib_include_dirs])
+    # Protect against Issue 1699
+    if zlib:
+        def_macros = [("USE_ZLIB", 1)]
+    else:
+        def_macros = None
     tng = Extension('mdtraj.formats.tng',
                     sources=glob('mdtraj/formats/tng/src/compression/*.c') +
                                 ['mdtraj/formats/tng/src/lib/tng_io.c',
@@ -109,7 +114,7 @@ def format_extensions():
                                  'mdtraj/formats/tng/tng.pyx'],
                     include_dirs=['mdtraj/formats/tng/include']
                                  + zlib_include_dirs,
-                    define_macros=[('USE_ZLIB', 1)],
+                    define_macros=def_macros,
                     library_dirs=zlib_library_dirs,
                     libraries=['z'],
                     )
