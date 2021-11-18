@@ -106,8 +106,11 @@ def format_extensions():
     # Protect against Issue 1699
     if zlib:
         def_macros = [("USE_ZLIB", 1)]
+        zlibraries = ['z']
     else:
         def_macros = None
+        zlibraries = None
+
     tng = Extension('mdtraj.formats.tng',
                     sources=glob('mdtraj/formats/tng/src/compression/*.c') +
                                 ['mdtraj/formats/tng/src/lib/tng_io.c',
@@ -117,7 +120,7 @@ def format_extensions():
                                  + zlib_include_dirs,
                     define_macros=def_macros,
                     library_dirs=zlib_library_dirs,
-                    libraries=['z'],
+                    libraries=zlibraries,
                     )
 
     dcd = Extension('mdtraj.formats.dcd',
