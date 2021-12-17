@@ -416,7 +416,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         kwargs.pop('standard_names', None)
 
     trajectories = []
-    tmp_file = filename_or_filenames.pop(0)
+    tmp_file = filename_or_filenames[0]
+    filename_or_filenames = filename_or_filenames[1:]  # ignore first file
     try:
         # this is a little hack that makes calling load() more predictable. since
         # most of the loaders take a kwargs "top" except for load_hdf5, (since
