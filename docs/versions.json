@@ -93,6 +93,18 @@
     "version": "1.9.5",
     "display": "1.9.5",
     "url": "http://www.mdtraj.org/1.9.5/index.html",
+    "latest": false
+  },
+  {
+    "version": "1.9.6",
+    "display": "1.9.6",
+    "url": "http://www.mdtraj.org/1.9.6/index.html",
+    "latest": false
+  },
+  {
+    "version": "1.9.7",
+    "display": "1.9.7",
+    "url": "http://www.mdtraj.org/1.9.7/index.html",
     "latest": true
   }
 ]
