@@ -10,7 +10,7 @@
     overlay = py-utils.lib.mkPythonOverlay (pkgs: {
       mdtraj = pkgs.callPackage ./. {
         # right now, only build docs on python39
-        buildDocs = pkgs.python.isPy39;
+        buildDocs = !pkgs.python.isPy310;
       };
     });
   } //

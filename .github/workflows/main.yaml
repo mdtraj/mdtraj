@@ -33,9 +33,9 @@ jobs:
       if: ${{ github.ref == 'refs/heads/master' && matrix.py == 'python39' }}
       run: |
         VERSION=$(nix eval --raw .#python3Packages.mdtraj.version)
-        nix shell nixpkgs#awscli2 aws s3 sync --quiet html s3://mdtraj/$VERSION
-        nix shell nixpkgs#awscli2 aws s3 cp --quiet root/index.html s3://mdtraj
-        nix shell nixpkgs#awscli2 aws s3 cp --quiet root/versions.json s3://mdtraj
+        nix shell nixpkgs#awscli2 aws s3 sync --quiet result/share/docs/html s3://mdtraj/$VERSION
+        nix shell nixpkgs#awscli2 aws s3 cp --quiet result/share/docs/root/index.html s3://mdtraj
+        nix shell nixpkgs#awscli2 aws s3 cp --quiet result/share/docs/root/versions.json s3://mdtraj
       env:
         AWS_DEFAULT_REGION: us-east-1
         AWS_ACCESS_KEY_ID: '${{ secrets.AWS_ACCESS_KEY_ID }}'
