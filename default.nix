@@ -21,7 +21,8 @@
 , sphinx_rtd_theme
 , sphinx
 , pytestCheckHook
-,}:
+, buildDocs
+}:
 
 let
   msmb-theme = buildPythonPackage rec {
@@ -50,7 +51,7 @@ let
 in
 buildPythonPackage {
   pname = "mdtraj";
-  version = "0.0";
+  version = "1.9.8.dev0";
   src = filterSrcByPrefix ./. [
     "docs"
     "examples"
@@ -84,7 +85,7 @@ buildPythonPackage {
     tables
     psutil
     gsd
-
+  ] ++ lib.optionals buildDocs [
     # for docs
     nbformat
     nbconvert
@@ -105,7 +106,7 @@ buildPythonPackage {
     rm -rf mdtraj/
   '';
 
-  postInstall = ''
+  postInstall = lib.optionalString buildDocs ''
     mkdir -p $out/share/docs/root
     (cd docs && make html && cp -r _build/html $out/share/docs)
     cp docs/versions.json docs/index.html $out/share/docs/root/

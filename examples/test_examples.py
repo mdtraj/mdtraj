@@ -8,9 +8,14 @@ import sys
 import socket
 from distutils.spawn import find_executable as _find_executable
 
-import nbformat
 import pytest
-from jupyter_client import KernelManager
+
+try:
+    import nbformat
+    from jupyter_client import KernelManager
+except:
+    pytest.skip("Skipping no nbformat/jupyter", allow_module_level=True)
+
 from six.moves.queue import Empty
 
 FLAKEY_LIST = ['centroids.ipynb', 'native-contact.ipynb', 'hbonds.ipynb']
