@@ -25,6 +25,7 @@ jobs:
       with:
         name: mdtraj
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+        pushFilter: "(-source$|nixpkgs.tar.gz$)"
     - name: Build
       run: nix build .#$PYTHON.pkgs.mdtraj --print-build-logs
       env:
@@ -36,7 +37,7 @@ jobs:
         nix shell nixpkgs#awscli2 -c aws s3 sync --quiet result/share/docs/html s3://mdtraj/$VERSION
 
         # List all versions in S3
-	nix shell nixpkgs#awscli2 -c aws s3 ls s3://mdtraj | grep PRE | grep -v development | awk '{print $2}' | python -c 'import sys, json; from distutils.version import LooseVersion; values = [x.strip().rstrip("/") for x in sys.stdin.readlines()]; values.sort(key=LooseVersion); print(json.dumps([{"version": x, "display": x.rstrip(".0"), "url": f"http://www.mdtraj.org/{x}/index.html", "latest": i==len(values)-1} for i, x in enumerate(values)], indent=2, sort_keys=True))' > versions.json
+        nix shell nixpkgs#awscli2 -c aws s3 ls s3://mdtraj | grep PRE | grep -v development | awk '{print $2}' | python -c 'import sys, json; from distutils.version import LooseVersion; values = [x.strip().rstrip("/") for x in sys.stdin.readlines()]; values.sort(key=LooseVersion); print(json.dumps([{"version": x, "display": x.rstrip(".0"), "url": f"http://www.mdtraj.org/{x}/index.html", "latest": i==len(values)-1} for i, x in enumerate(values)], indent=2, sort_keys=True))' > versions.json
         nix shell nixpkgs#awscli2 -c aws s3 cp --quiet versions.json s3://mdtraj
         nix shell nixpkgs#awscli2 -c aws s3 cp --quiet docs/index.html s3://mdtraj
       env:
