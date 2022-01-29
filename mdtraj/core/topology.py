@@ -636,8 +636,13 @@ class Topology(object):
 
         return True
 
-    def add_chain(self, chain_id = None):
+    def add_chain(self, chain_id=None):
         """Create a new Chain and add it to the Topology.
+
+        Parameters
+        ----------
+        chain_id : str
+            The PDB chainID of the Chain.
 
         Returns
         -------
@@ -1289,13 +1294,15 @@ class Chain(object):
         The index of the Chain within its Topology
     topology : mdtraj.Topology
         The Topology this Chain belongs to
+    chain_id : str
+        The PDB chainID of the Chain.
     residues : generator
         Iterator over all Residues in the Chain.
     atoms : generator
         Iterator over all Atoms in the Chain.
     """
 
-    def __init__(self, index, topology, chain_id = None):
+    def __init__(self, index, topology, chain_id=None):
         """Construct a new Chain.  You should call add_chain() on the Topology instead of calling this directly."""
         # The index of the Chain within its Topology
         self.index = index

@@ -332,7 +332,7 @@ class PDBTrajectoryFile(object):
         if modelIndex is not None:
             print("MODEL     %4d" % modelIndex, file=self._file)
         for (chainIndex, chain) in enumerate(topology.chains):
-            if chain.chain_id == None or chain.chain_id == '':
+            if not chain.chain_id:
                 chainName = self._chain_names[chainIndex % len(self._chain_names)]
             else:
                 chainName = chain.chain_id[0:1]
