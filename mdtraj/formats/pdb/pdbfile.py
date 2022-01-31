@@ -332,7 +332,10 @@ class PDBTrajectoryFile(object):
         if modelIndex is not None:
             print("MODEL     %4d" % modelIndex, file=self._file)
         for (chainIndex, chain) in enumerate(topology.chains):
-            chainName = self._chain_names[chainIndex % len(self._chain_names)]
+            if not chain.chain_id:
+                chainName = self._chain_names[chainIndex % len(self._chain_names)]
+            else:
+                chainName = chain.chain_id[0:1]
             residues = list(chain.residues)
             for (resIndex, res) in enumerate(residues):
                 if len(res.name) > 3:
@@ -549,7 +552,7 @@ class PDBTrajectoryFile(object):
 
             atomByNumber = {}
             for chain in pdb.iter_chains():
-                c = self._topology.add_chain()
+                c = self._topology.add_chain(chain.chain_id)
                 for residue in chain.iter_residues():
                     resName = residue.get_name()
                     if resName in PDBTrajectoryFile._residueNameReplacements and self._standard_names:
