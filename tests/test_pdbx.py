@@ -25,6 +25,16 @@ from mdtraj.testing import eq
 from mdtraj import load
 import math
 import tempfile
+import pytest
+
+try:
+    import openmm
+    HAVE_OPENMM = True
+except ImportError:
+    HAVE_OPENMM = False
+
+# special pytest global to mark all tests in this module
+pytestmark = pytest.mark.skipif(not HAVE_OPENMM, reason='test_pdbx.py needs OpenMM.')
 
 def test_convert(get_fn):
     for filename in ['2EQQ.pdb', '4OH9.pdb']:
