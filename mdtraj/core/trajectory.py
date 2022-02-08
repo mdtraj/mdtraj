@@ -373,8 +373,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     #order to have an easier function later on
     if isinstance(filename_or_filenames, (string_types, os.PathLike)):
         filename_or_filenames = [filename_or_filenames]
-    
-    
+
+
     extensions = [_get_extension(f) for f in filename_or_filenames]
     extension = extensions[0]
     #Make the needed checks
@@ -428,7 +428,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         #TODO make all the loaders accept a pre parsed topology (top) in order to avoid
         #this part and have a more consistent interface and a faster load function
         t = loader(tmp_file, **kwargs)
-        
+
     except TypeError as e:
 
         #Don't want to intercept legit
@@ -469,7 +469,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         # Little monkey-patch to prevent further subsetting Topologies
         # this modified version of the topology will never exit this function
         kwargs['top'].subset = lambda atom_indices : subset_topology
-        
+
 
 
     # We know the topology is equal because we send the same topology
@@ -480,7 +480,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     # files to be read in without using ridiculous amounts of memory.
     for f in filename_or_filenames:
         t = loader(f, **kwargs)
-        
+
         t.topology = None
         trajectories.append(t)
 
@@ -1270,8 +1270,8 @@ class Trajectory(object):
             for input to OpenMM
 
         """
-        from simtk.openmm import Vec3
-        from simtk.unit import nanometer
+        from openmm import Vec3
+        from openmm.unit import nanometer
 
         Pos = []
         for xyzi in self.xyz[frame]:
@@ -1298,8 +1298,8 @@ class Trajectory(object):
             The periodic box vectors for this frame, formatted for input to
             OpenMM.
         """
-        from simtk.openmm import Vec3
-        from simtk.unit import nanometer
+        from openmm import Vec3
+        from openmm.unit import nanometer
 
         vectors = self.unitcell_vectors[frame]
         if vectors is None:

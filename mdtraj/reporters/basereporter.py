@@ -43,15 +43,10 @@ try:
     import openmm as mm
     OPENMM_IMPORTED = True
 except ImportError:
-    try:
-        import simtk.unit as units
-        import simtk.openmm as mm
-        OPENMM_IMPORTED = True
-    except ImportError:
-        # if someone tries to import all of mdtraj but doesn't
-        # OpenMM installed, we don't want that to choke. It should
-        # only choke if they actually try to USE the reporter
-        OPENMM_IMPORTED = False
+    # if someone tries to import all of mdtraj but doesn't
+    # OpenMM installed, we don't want that to choke. It should
+    # only choke if they actually try to USE the reporter
+    OPENMM_IMPORTED = False
 
 ##############################################################################
 # Classes
@@ -144,7 +139,7 @@ class _BaseReporter(object):
 
         Parameters
         ----------
-        simulation : simtk.openmm.app.Simulation
+        simulation : openmm.app.Simulation
             The Simulation to generate a report for
         """
         if self._atomSubset is not None:
@@ -185,7 +180,7 @@ class _BaseReporter(object):
 
         Parameters
         ----------
-        simulation : simtk.openmm.app.Simulation
+        simulation : openmm.app.Simulation
             The Simulation to generate a report for
 
         Returns
@@ -204,9 +199,9 @@ class _BaseReporter(object):
 
         Parameters
         ----------
-        simulation : simtk.openmm.app.Simulation
+        simulation : openmm.app.Simulation
             The Simulation to generate a report for
-        state : simtk.openmm.State
+        state : openmm.State
             The current state of the simulation
         """
         if not self._is_intialized:

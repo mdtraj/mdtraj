@@ -50,7 +50,7 @@ def find_executable(names):
 def example_fn(request):
     if 'openmm' in request.param:
         try:
-            from simtk.openmm import app
+            from openmm import app
         except ImportError:
             pytest.skip("Openmm required for example notebook `{}`".format(request.param))
 

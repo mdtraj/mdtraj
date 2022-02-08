@@ -1,9 +1,9 @@
 """
 Notes
 -----
-The functions in this file use the MDTraj version of simtk.unit *internally*.
+The functions in this file use the MDTraj version of openmm.unit *internally*.
 However, all inputs and outputs are done with implicit units.  This is
-to avoid incompatibilities between versions of simtk.unit and MDTraj.utils.unit.
+to avoid incompatibilities between versions of openmm.unit and MDTraj.utils.unit.
 
 """
 import numpy as np

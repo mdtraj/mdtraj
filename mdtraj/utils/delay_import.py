@@ -90,16 +90,14 @@ MESSAGES = {
     http://netcdf4-python.googlecode.com/svn/trunk/docs/netCDF4-module.html
     ''',
 
-    'simtk.unit': '''
-    The code at {filename}:{line_number} requires the simtk.unit module,
+    'openmm.unit': '''
+    The code at {filename}:{line_number} requires the openmm.unit module,
     which is a python package for unit conversion.
 
-    simtk.unit is installed with OpenMM, which is available at http://openmm.org
-    It's also installable as a separate standalone package from
-    https://pypi.python.org/pypi/simtk.unit, and can be installed with the python
-    "pip" package mangers using:
+    openmm.unit is installed with OpenMM >= 7.6, which is available at  http://openmm.org
+    It can be installed with the "conda" package mangers using:
 
-    pip install simtk.unit
+    conda install -c conda-forge openmm
     ''',
 
     'scripttest': '''
@@ -114,12 +112,12 @@ MESSAGES = {
     # pip install scripttest
     ''',
 
-    'simtk.openmm.app': '''
-    The code at {filename}:{line_number} requires the simtk.openmm.app module, which is
+    'openmm.app': '''
+    The code at {filename}:{line_number} requires the openmm.app module, which is
     the python OpenMM application layer. OpenMM is a toolkit for molecular simulation
     using high performance GPU code.
 
-    simtk.openmm.app is installed with OpenMM, which is available at http://openmm.org
+    openmm.app is installed with OpenMM >= 7.6, which is available at http://openmm.org
     ''',
 
     'pandas': '''
@@ -146,29 +144,11 @@ MESSAGES = {
 # functions
 ##############################################################################
 
-def _chain_import(modules):
-    """Return the first of ``modules`` that can be imported.
-    """
-    error = None
-    for module in modules:
-        try:
-            return importlib.import_module(module)
-        except ImportError as e:
-            error = e  # keep it in the outer scope
-    # if nothing could be imported, raise the last error generated
-    raise error
-
-_MODULE_SYNONYMS = {
-    'simtk.unit': ['openmm.unit', 'simtk.unit'],
-    'simtk.openmm': ['openmm', 'simtk.openmm'],
-    'simtk.openmm.app': ['openmm.app', 'simtk.openmm.app'],
-}
-
 def import_(module):
     """Import a module, and issue a nice message to stderr if the module isn't installed.
 
     Currently, this function will print nice error messages for networkx,
-    tables, netCDF4, and simtk.unit, which are optional MDTraj dependencies.
+    tables, netCDF4, and openmm.unit, which are optional MDTraj dependencies.
 
     Parameters
     ----------
@@ -189,9 +169,8 @@ def import_(module):
     >>> import tables
     >>> tables = import_('tables')
     """
-    modules = _MODULE_SYNONYMS.get(module, [module])
     try:
-        return _chain_import(modules)
+        return importlib.import_module(module)
     except ImportError as e:
         try:
             message = MESSAGES[module]
