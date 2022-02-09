@@ -8,6 +8,9 @@
       debugpy = pySuper.debugpy.overridePythonAttrs (old: {
         doCheck = old.doCheck && !pySelf.python.isPy38;
       });
+      pyzmq = pySuper.pyzmq.overridePythonAttrs (old: {
+        doCheck = old.doCheck && !pySelf.python.isPy38;
+      });
       mdtraj = pySelf.callPackage ./. {
         # right now, only build docs on python39
         buildDocs = !pySelf.python.isPy310;
