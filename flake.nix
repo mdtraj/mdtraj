@@ -6,10 +6,10 @@
   outputs = { self, nixpkgs, utils, py-utils }: rec {
     overlay = py-utils.lib.mkPythonOverlay (pySelf: pySuper: {
       debugpy = pySuper.debugpy.overridePythonAttrs (old: {
-        doCheck = old.doCheck && !pySelf.python.isPy38;
+        doCheck = !pySelf.python.isPy38;
       });
       pyzmq = pySuper.pyzmq.overridePythonAttrs (old: {
-        doCheck = old.doCheck && !pySelf.python.isPy38;
+        doCheck = !pySelf.python.isPy38;
       });
       mdtraj = pySelf.callPackage ./. {
         # right now, only build docs on python39
