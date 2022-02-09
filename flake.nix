@@ -1,16 +1,19 @@
 {
-  inputs.nixpkgs.url = "github:rmcgibbo/nixpkgs/merge";
-  # convert back to nixos-unstable when https://github.com/NixOS/nixpkgs/pull/153116 goes through
-  # and https://github.com/NixOS/nixpkgs/pull/153108
-  # inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  inputs.py-utils.url = "github:rmcgibbo/python-flake-utils";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs.py-utils.url = "github:rmcgibbo/python-flake-utils/2arg";
   inputs.utils.url = "github:numtide/flake-utils";
 
-  outputs = { self, nixpkgs, utils, py-utils }: {
-    overlay = py-utils.lib.mkPythonOverlay (pkgs: {
-      mdtraj = pkgs.callPackage ./. {
+  outputs = { self, nixpkgs, utils, py-utils }: rec {
+    overlay = py-utils.lib.mkPythonOverlay (pySelf: pySuper: {
+      debugpy = pySuper.debugpy.overridePythonAttrs (old: {
+        doCheck = !pySelf.python.isPy38;
+      });
+      pyzmq = pySuper.pyzmq.overridePythonAttrs (old: {
+        doCheck = !pySelf.python.isPy38;
+      });
+      mdtraj = pySelf.callPackage ./. {
         # right now, only build docs on python39
-        buildDocs = !pkgs.python.isPy310;
+        buildDocs = !pySelf.python.isPy310;
       };
     });
   } //
