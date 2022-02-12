@@ -165,6 +165,9 @@ def compute_inertia_tensor(traj):
     """Compute the inertia tensor of a trajectory.
 
     For each frame,
+
+    .. math::
+
         I_{ab} = sum_{i_atoms} [m_i * (r_i^2 * d_{ab} - r_{ia} * r_{ib})]
 
     Parameters
