@@ -73,7 +73,7 @@ class CompilerDetection(object):
             if not self.msvc:
                 self.compiler_args_sse41 = ['-msse4']
 
-        if 'MDTRAJ_BUILD_DISABLE_INTRINSICS' in os.environ:
+        if os.environ.get('MDTRAJ_BUILD_DISABLE_INTRINSICS') == "1":
             self.disable_intrinsics = True
             print("Env var MDTRAJ_BUILD_DISABLE_INTRINSICS set")
         else:
