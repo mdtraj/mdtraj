@@ -54,7 +54,7 @@ class CompilerDetection(object):
         self.neon_enabled = self._detect_neon() if not self.msvc else False
 
         if self.msvc:
-             self.compiler_args_sse2 = '/arch:SSE2'
+             self.compiler_args_sse2 = ['/arch:SSE2']
         elif self.sse2_enabled:
              self.compiler_args_sse2 = ['-msse2']
         else:
