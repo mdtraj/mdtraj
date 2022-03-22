@@ -15,6 +15,10 @@
         # right now, only build docs on python39
         buildDocs = !pySelf.python.isPy310;
       };
+      mdtraj-generic = pySelf.callPackage ./. {
+        buildDocs = false;
+        enableNativeVectorIntrinsics = false;
+      };
     });
   } //
   utils.lib.eachDefaultSystem (system:

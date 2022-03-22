@@ -14,8 +14,13 @@ jobs:
       matrix:
         include:
          - py: "python38"
+           intrinsics: native
          - py: "python39"
+           intrinsics: native
          - py: "python310"
+           intrinsics: native
+         - py: "python310"
+           intrisics: generic
 
     runs-on: ubuntu-20.04
     steps:
@@ -27,9 +32,15 @@ jobs:
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
         pushFilter: "(-source$|nixpkgs.tar.gz$)"
     - name: Build
-      run: nix build .#$PYTHON.pkgs.mdtraj --print-build-logs
+      run: |
+        if [ "$INTRISICS" = "generic" ]; then
+          nix build .#$PYTHON.pkgs.mdtraj-generic --print-build-logs
+        else
+          nix build .#$PYTHON.pkgs.mdtraj --print-build-logs
+        fi
       env:
         PYTHON: ${{ matrix.py }}
+        INTRINSICS: ${{ matrix.intrinsics }}
     - name: Dev docs
       if: ${{ github.ref == 'refs/heads/master' && matrix.py == 'python39' }}
       run: |
