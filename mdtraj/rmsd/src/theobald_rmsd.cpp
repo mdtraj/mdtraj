@@ -39,15 +39,19 @@
 float msdFromMandG(const float M[9], const float G_x, const float G_y,
                    const int numAtoms, int computeRot, float rot[9]);
 
-#ifdef __ARM_NEON
+#ifdef __NO_INTRINSICS
+#include "theobald_rmsd_generic.h"
+#elif defined(__ARM_NEON)
 #include <arm_neon.h>
 #include "theobald_rmsd_arm.h"
-#else
+#elif defined(__SSE2__) 
 #include "theobald_rmsd_sse.h"
 #include <xmmintrin.h>
 #ifdef __SSE3__
 #include <pmmintrin.h>
 #endif
+#else
+#include "theobald_rmsd_generic.h"
 #endif
 #include "theobald_rmsd.h"
 
@@ -328,3 +332,6 @@ float msdFromMandG(const float M[9], const float G_x, const float G_y,
     }
     return ls_rmsd2;
 }
+
+
+
