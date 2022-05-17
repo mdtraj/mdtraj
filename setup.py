@@ -146,6 +146,7 @@ def rmsd_extensions():
                      compiler.compiler_args_sse3 + compiler.compiler_args_opt +
                      compiler.compiler_args_warn)
     compiler_libraries = compiler.compiler_libraries_openmp
+    define_macros = [("__NO_INTRINSICS",1)] if compiler.disable_intrinsics else None
 
     libtheobald = StaticLibrary(
         'mdtraj.core.lib.libtheobald',
@@ -169,6 +170,7 @@ def rmsd_extensions():
                          'mdtraj/rmsd/src/center.cpp',
                          'mdtraj/rmsd/_rmsd.pyx'],
                      include_dirs=['mdtraj/rmsd/include'],
+                     define_macros=define_macros,
                      extra_compile_args=compiler_args,
                      libraries=compiler_libraries,
                      language="c++")
@@ -183,6 +185,7 @@ def rmsd_extensions():
                            'mdtraj/rmsd/src/euclidean_permutation.cpp',
                            'mdtraj/rmsd/_lprmsd.pyx'],
                        language='c++',
+                       define_macros=define_macros,
                        include_dirs=['mdtraj/rmsd/include'],
                        extra_compile_args=compiler_args,
                        libraries=compiler_libraries + extra_cpp_libraries)
@@ -195,7 +198,7 @@ def geometry_extensions():
         compiler.compiler_args_openmp +
         compiler.compiler_args_sse2 + compiler.compiler_args_sse3 +
         compiler.compiler_args_opt + compiler.compiler_args_warn)
-    define_macros = None
+    define_macros = [("__NO_INTRINSICS",1)] if compiler.disable_intrinsics else None
     compiler_libraries = compiler.compiler_libraries_openmp + extra_cpp_libraries
 
     return [
