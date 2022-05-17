@@ -529,7 +529,7 @@ class Topology(object):
 
                 c = out.add_chain()
 
-            if atom['resSeq'] != previous_resSeq or atom['resName'] != previous_resName:
+            if atom['resSeq'] != previous_resSeq or atom['resName'] != previous_resName or c.n_atoms==0:
                 previous_resSeq = atom['resSeq']
                 previous_resName = atom['resName']
 
