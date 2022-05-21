@@ -10,3 +10,11 @@ requires = [
     "numpy; python_version>='3.11'",
     "Cython>0.28",
 ]
+
+[tool.cibuildwheel]
+build = [
+    "cp3*-manylinux_x86_64",
+    "cp3*-macosx_x86_64",
+]
+build-verbosity = "3"
+manylinux-x86_64-image = "manylinux2014"

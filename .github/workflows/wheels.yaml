@@ -1,0 +1,66 @@
+name: Wheel builder
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build_wheels:
+    name: Build wheels ${{ matrix.version }}-${{ matrix.buildplat[1] }}
+    runs-on: ${{ matrix.buildplat[0] }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - cp36
+          - cp37
+          - cp38
+          - cp39
+          - cp310
+        buildplat:
+          - [ubuntu-latest, manylinux_x86_64]
+          - [macos-latest, macosx_x86_64]
+          - [windows-latest, win_amd64]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.5.0
+        env:
+          CIBW_BUILD: ${{ matrix.version }}-${{ matrix.buildplat[1] }}
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+
+      - name: Install dependencies
+        run: pip install build
+
+      - name: Python info
+        run: |
+          which python
+          python --version
+          pip list
+
+      - name: Build sdist
+        run: |
+          python -m build --sdist
+          tree dist
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: ./dist/*.tar.gz
