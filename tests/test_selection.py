@@ -308,6 +308,33 @@ def test_sidechain(gbp):
     eq(np.asarray(is_sidechain), np.asarray(ref_sidechain))
 
 
+def test_chain(gbp):
+    # Make test topology with multiple chains
+    t = mdtraj.Topology()
+
+    cA = t.add_chain("A")
+    r1 = t.add_residue("ALA", cA, resSeq=1)
+    t.add_atom("CA", mdtraj.element.carbon, r1)
+    t.add_atom("H", mdtraj.element.hydrogen, r1)
+    cB = t.add_chain("B")
+    r2 = t.add_residue("HOH", cB, resSeq=2)
+    t.add_atom("O", mdtraj.element.oxygen, r2)
+    t.add_atom("H1", mdtraj.element.hydrogen, r2)
+    t.add_atom("H2", mdtraj.element.hydrogen, r2)
+
+
+    ref_chain_A = t.select("chainid 0")  # chain A
+    ref_chain_B = t.select("chainid 1")  # chain B
+
+    chain_A = t.select("chain A")
+    chain_B = t.select("chain B")
+
+    assert len(chain_A) == 2
+    assert len(chain_B) == 3
+    eq(np.asarray(chain_A), np.asarray(ref_chain_A))
+    eq(np.asarray(chain_B), np.asarray(ref_chain_B))
+
+
 def test_literal(gbp):
     name_og1_0 = gbp.topology.select('name "OG1"')
     name_og1_1 = gbp.topology.select("name 'OG1'")

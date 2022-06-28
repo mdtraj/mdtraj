@@ -122,6 +122,7 @@ class SelectionKeyword(object):
 
         # Atom.residue.chain.<attribute>
         (('chainid',), _chain('residue', 'chain', 'index')),
+        (('chain',), _chain('residue', 'chain', 'chain_id')),
 
         # Atom.element.<attribute>
         (('type', 'element', 'symbol'), _chain('element', 'symbol')),
