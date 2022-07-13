@@ -62,8 +62,8 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     Parameters
     ----------
-    filename : str
-        String filename of xyz trajectory file.
+    filename : path-like
+        Path of xyz trajectory file.
     top : {str, Trajectory, Topology}
         The xyz format does not contain topology information. Pass in
         either the path to a pdb file, a trajectory, or a topology to supply
@@ -96,8 +96,8 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_xyz')
 
-    if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_xyz. '
+    if not isinstance(filename, (string_types, os.PathLike)):
+        raise TypeError('filename must be of type path-like for load_xyz. '
                         'you supplied %s'.format(type(filename)))
 
     topology = _parse_topology(top)
@@ -124,7 +124,7 @@ class XYZTrajectoryFile(object):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         The filename to open. A path to a file on disk.
     mode : {'r', 'w'}
         The mode in which to open the file, either 'r' for read or 'w' for

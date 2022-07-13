@@ -33,7 +33,7 @@ if PY3:
     basestring = str
 try:
     # openmm
-    import simtk.unit as units
+    import openmm.unit as units
     OPENMM_IMPORTED = True
 except ImportError:
     # if someone tries to import all of mdtraj but doesn't
@@ -95,9 +95,9 @@ class XTCReporter(_BaseReporter):
 
         Parameters
         ----------
-        simulation : simtk.openmm.app.Simulation
+        simulation : openmm.app.Simulation
             The Simulation to generate a report for
-        state : simtk.openmm.State
+        state : openmm.State
             The current state of the simulation
         """
         if not self._is_intialized:

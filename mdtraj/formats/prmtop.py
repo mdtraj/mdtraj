@@ -90,7 +90,7 @@ def load_prmtop(filename, **kwargs):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Path to the prmtop file on disk.
 
     Returns

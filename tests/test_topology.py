@@ -30,9 +30,8 @@ import pytest
 from mdtraj.testing import eq
 
 try:
-    from simtk.openmm import app
-    import simtk.unit as u
-
+    from openmm import app
+    import openmm.unit as u
     HAVE_OPENMM = True
 except ImportError:
     HAVE_OPENMM = False

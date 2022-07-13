@@ -27,6 +27,7 @@
 from __future__ import print_function, division
 
 import numpy as np
+import os
 
 
 from mdtraj.core.topology import Topology
@@ -46,9 +47,9 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
 
     Parameters
     -----------
-    filename : str
-        String filename of GSD trajectory file.
-    top : {str, Trajectory, Topology}, None
+    filename : path-like
+        Path of GSD trajectory file.
+    top : {path-like, Trajectory, Topology}, None
         A pdb file, a trajectory, or a topology to supply topology information
         If None, topology information will be parsed from the GSD file
     start : int, None
@@ -74,8 +75,8 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
     from mdtraj.core.trajectory import Trajectory, _parse_topology
     import gsd.hoomd
 
-    if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_gsd. '
+    if not isinstance(filename, (string_types, os.PathLike)):
+        raise TypeError('filename must be of type path-like for load_gsd. '
                         'you supplied %s'.format(type(filename)))
 
     if top is not None:
@@ -102,8 +103,8 @@ def load_gsd_topology(filename, frame=0):
     
     Parameters
     ----------
-    filename : str
-        String filename of GSD trajectory file.
+    filename : path-like
+        Path of GSD trajectory file.
     frame : int, 0 
         Frame of GSD file to parse topology
 
@@ -228,7 +229,7 @@ def write_gsd(filename, xyz, top, cell_lengths=None, cell_angles=None):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
     xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
         The cartesian coordinates of the atoms to write. 
     top : mdtraj.Topology

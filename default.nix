@@ -21,7 +21,9 @@
 , sphinx_rtd_theme
 , sphinx
 , pytestCheckHook
-,}:
+, buildDocs
+, enableNativeVectorIntrinsics ? true
+}:
 
 let
   msmb-theme = buildPythonPackage rec {
@@ -50,7 +52,7 @@ let
 in
 buildPythonPackage {
   pname = "mdtraj";
-  version = "0.0";
+  version = "1.9.8.dev0";
   src = filterSrcByPrefix ./. [
     "docs"
     "examples"
@@ -60,6 +62,10 @@ buildPythonPackage {
     "setup.py"
     "basesetup.py"
   ];
+
+  preBuild = lib.optionalString (!enableNativeVectorIntrinsics) ''
+    export MDTRAJ_BUILD_DISABLE_INTRINSICS=1
+  '';
 
   buildInputs = [
     setuptools
@@ -84,7 +90,7 @@ buildPythonPackage {
     tables
     psutil
     gsd
-
+  ] ++ lib.optionals buildDocs [
     # for docs
     nbformat
     nbconvert
@@ -98,16 +104,20 @@ buildPythonPackage {
     "test_1vii_url_and_gz"
   ];
 
-  # Ensure mdconvert is on the PATH and don't
-  # let us import from the src directory
+  # 1. Ensure mdconvert is on the PATH and don't let us import from the src directory
+  # 2. If compiling without native intrisics, which is a rare configuration mostly for ppc64le,
+  #    don't run some tests that are slow.
   preCheck = ''
     export PATH=$out/bin:$PATH
     rm -rf mdtraj/
+
+    if [ "$MDTRAJ_BUILD_DISABLE_INTRINSICS" = "1" ]; then
+      rm tests/test_mdconvert.py tests/test_trajectory.py
+    fi
   '';
 
-  postInstall = ''
+  postInstall = lib.optionalString buildDocs ''
     mkdir -p $out/share/docs/root
     (cd docs && make html && cp -r _build/html $out/share/docs)
-    cp docs/versions.json docs/index.html $out/share/docs/root/
   '';
 }

@@ -39,8 +39,8 @@ import numpy as np
 
 try:
     # openmm
-    import simtk.unit as units
-    import simtk.openmm as mm
+    import openmm.unit as units
+    import openmm as mm
     OPENMM_IMPORTED = True
 except ImportError:
     # if someone tries to import all of mdtraj but doesn't
@@ -139,7 +139,7 @@ class _BaseReporter(object):
 
         Parameters
         ----------
-        simulation : simtk.openmm.app.Simulation
+        simulation : openmm.app.Simulation
             The Simulation to generate a report for
         """
         if self._atomSubset is not None:
@@ -180,7 +180,7 @@ class _BaseReporter(object):
 
         Parameters
         ----------
-        simulation : simtk.openmm.app.Simulation
+        simulation : openmm.app.Simulation
             The Simulation to generate a report for
 
         Returns
@@ -199,9 +199,9 @@ class _BaseReporter(object):
 
         Parameters
         ----------
-        simulation : simtk.openmm.app.Simulation
+        simulation : openmm.app.Simulation
             The Simulation to generate a report for
-        state : simtk.openmm.State
+        state : openmm.State
             The current state of the simulation
         """
         if not self._is_intialized:

@@ -1,8 +1,12 @@
 #include "rotation.h"
-#ifdef __ARM_NEON
+#ifdef __NO_INTRINSICS
+#include "rotation_generic.h"
+#elif defined(__ARM_NEON)
 #include "rotation_arm.h"
-#else
+#elif defined(__SSE2__) 
 #include "rotation_sse.h"
+#else
+#include "rotation_generic.h"
 #endif
 
 void sgemm33(const float A[9], const float B[9], float out[9]) {
