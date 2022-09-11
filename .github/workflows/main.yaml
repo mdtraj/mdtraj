@@ -21,6 +21,8 @@ jobs:
            intrinsics: native
          - py: "python311-dev"
            intrinsics: native
+         - py: "python311-dev"
+           intrinsics: generic
          - py: "python310"
            intrisics: generic
 
