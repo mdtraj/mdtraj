@@ -90,7 +90,7 @@ def _topology_from_subset(topology, atom_indices):
     for chain in topology._chains:
         newChain = newTopology.add_chain()
         for residue in chain._residues:
-            resSeq = getattr(residue, 'resSeq', None) or residue.index
+            resSeq = getattr(residue, 'resSeq', residue.index)
             newResidue = None
             for atom in residue._atoms:
                 if atom.index in atom_indices:
