@@ -301,6 +301,10 @@ if __name__ == '__main__':
 
         for e in extensions:
             e.include_dirs.append(np.get_include())
-        metadata['ext_modules'] = cythonize(extensions, language_level=sys.version_info[0])
+        metadata['ext_modules'] = cythonize(
+            extensions,
+            language_level=sys.version_info[0],
+            force=True,
+        )
 
     setup(**metadata)
