@@ -1,0 +1,19 @@
+name: mdtraj-test
+channels:
+  - jaimergp/label/unsupported-cudatoolkit-shim
+  - conda-forge
+dependencies:
+  # Core
+  - python
+  - cython
+  - numpy
+  - zlib
+  - pyparsing
+  - astunparse
+  - scipy
+  - networkx
+  - pandas
+  - pytables
+  - gsd
+  - pytest
+  - pytest-xdist
