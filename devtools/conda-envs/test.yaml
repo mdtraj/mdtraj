@@ -16,4 +16,3 @@ dependencies:
   - pytables
   - gsd
   - pytest
-  - pytest-xdist
