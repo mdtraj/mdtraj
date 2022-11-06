@@ -39,7 +39,7 @@ jobs:
     - name: Install conda environment
       uses: mamba-org/provision-with-micromamba@main
       with:
-        environment-file: devtools/conda-envs/test_env.yaml
+        environment-file: devtools/conda-envs/test.yaml
         extra-specs: |
           python=${{ matrix.python-version }}
 
