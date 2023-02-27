@@ -339,12 +339,12 @@ class Topology(object):
 
         Returns
         -------
-        topology : simtk.openmm.app.Topology
+        topology : openmm.app.Topology
            This topology, as an OpenMM topology
         """
-        app = import_('simtk.openmm.app')
-        mm = import_('simtk.openmm')
-        u = import_('simtk.unit')
+        app = import_('openmm.app')
+        mm = import_('openmm')
+        u = import_('openmm.unit')
 
         out = app.Topology()
         atom_mapping = {}
@@ -389,11 +389,11 @@ class Topology(object):
 
         Parameters
         ----------
-        value : simtk.openmm.app.Topology
+        value : openmm.app.Topology
             An OpenMM topology that you wish to convert to a
             mdtraj topology.
         """
-        app = import_('simtk.openmm.app')
+        app = import_('openmm.app')
         bond_mapping = {app.Single: Single,
                         app.Double: Double,
                         app.Triple: Triple,
@@ -526,10 +526,10 @@ class Topology(object):
 
             if atom['chainID'] != previous_chainID:
                 previous_chainID = atom['chainID']
-                
+
                 c = out.add_chain()
 
-            if atom['resSeq'] != previous_resSeq or atom['resName'] != previous_resName:
+            if atom['resSeq'] != previous_resSeq or atom['resName'] != previous_resName or c.n_atoms==0:
                 previous_resSeq = atom['resSeq']
                 previous_resName = atom['resName']
 
@@ -636,15 +636,20 @@ class Topology(object):
 
         return True
 
-    def add_chain(self):
+    def add_chain(self, chain_id=None):
         """Create a new Chain and add it to the Topology.
+
+        Parameters
+        ----------
+        chain_id : str
+            The PDB chainID of the Chain.
 
         Returns
         -------
         chain : mdtraj.topology.Chain
             the newly created Chain
         """
-        chain = Chain(len(self._chains), self)
+        chain = Chain(len(self._chains), self, chain_id)
         self._chains.append(chain)
         return chain
 
@@ -1289,19 +1294,23 @@ class Chain(object):
         The index of the Chain within its Topology
     topology : mdtraj.Topology
         The Topology this Chain belongs to
+    chain_id : str
+        The PDB chainID of the Chain.
     residues : generator
         Iterator over all Residues in the Chain.
     atoms : generator
         Iterator over all Atoms in the Chain.
     """
 
-    def __init__(self, index, topology):
+    def __init__(self, index, topology, chain_id=None):
         """Construct a new Chain.  You should call add_chain() on the Topology instead of calling this directly."""
         # The index of the Chain within its Topology
         self.index = index
         # The Topology this Chain belongs to
         self.topology = topology
         self._residues = []
+        # PDB format chainID
+        self.chain_id = chain_id
 
     @property
     def residues(self):

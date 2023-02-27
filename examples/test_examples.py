@@ -8,9 +8,14 @@ import sys
 import socket
 from distutils.spawn import find_executable as _find_executable
 
-import nbformat
 import pytest
-from jupyter_client import KernelManager
+
+try:
+    import nbformat
+    from jupyter_client import KernelManager
+except:
+    pytest.skip("Skipping no nbformat/jupyter", allow_module_level=True)
+
 from six.moves.queue import Empty
 
 FLAKEY_LIST = ['centroids.ipynb', 'native-contact.ipynb', 'hbonds.ipynb']
@@ -45,7 +50,7 @@ def find_executable(names):
 def example_fn(request):
     if 'openmm' in request.param:
         try:
-            from simtk.openmm import app
+            from openmm import app
         except ImportError:
             pytest.skip("Openmm required for example notebook `{}`".format(request.param))
 
@@ -74,10 +79,9 @@ def run_notebook(nb):
     km.start_kernel(stderr=open(os.devnull, 'w'))
     kc = km.client()
     kc.start_channels()
-    shell = kc.shell_channel
     # simple ping:
     kc.execute("pass")
-    shell.get_msg()
+    kc.get_shell_msg()
 
     failures = 0
     for cell in nb.cells:
@@ -86,7 +90,7 @@ def run_notebook(nb):
         kc.execute(cell.source)
         try:
             # wait for finish, w/ timeout
-            reply = shell.get_msg(timeout=TIMEOUT)['content']
+            reply = kc.get_shell_msg(timeout=TIMEOUT)['content']
         except Empty:
             raise Exception(
                 'Timeout (%.1f) when executing the following %s cell: "%s"' %

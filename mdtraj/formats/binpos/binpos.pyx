@@ -68,9 +68,9 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     Parameters
     ----------
-    filename : str
-        String filename of AMBER binpos file.
-    top : {str, Trajectory, Topology}
+    filename : path-like
+        Path of AMBER binpos file.
+    top : {path-like, Trajectory, Topology}
         The BINPOS format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
         information.
@@ -113,14 +113,14 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
     # we want to give the user an informative error message
     if top is None:
         raise ValueError('"top" argument is required for load_binpos')
-    if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_binpos. '
+    if not isinstance(filename, (string_types, os.PathLike)):
+        raise TypeError('filename must be of type path-like for load_binpos. '
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
 
-    with BINPOSTrajectoryFile(filename) as f:
+    with BINPOSTrajectoryFile(str(filename)) as f:
         if frame is not None:
             f.seek(frame)
             n_frames = 1

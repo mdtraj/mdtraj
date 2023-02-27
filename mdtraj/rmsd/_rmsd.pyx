@@ -208,19 +208,16 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
 def rmsf(target, reference, int frame=0, atom_indices=None,
          ref_atom_indices=None, bool parallel=True, bool precentered=False):
     """rmsf(target, reference, frame=0, atom_indices=None, parallel=True, precentered=False)
-
-    Compute RMSF of all conformations in target to a reference conformation.
-    Note, this will center the conformations in place.
-
+    
+    Compute RMSF of atom positions in target trajectory. This will center target conformations in place.
+    
     Parameters
     ----------
     target : md.Trajectory
-        For each conformation in this trajectory, compute the RMSF to
-        a particular 'reference' conformation in another trajectory
-        object.
+        Compute the RMSF of atom positions in target trajectory. 
     reference : md.Trajectory, or None
-        The object containing the reference conformation to measure distances
-        to. If not supplied, it is assumed that the trajectory is already aligned.
+        A trajectory with the same number of atoms as in the target to be used
+        as a reference. If None, the average xyz positions of each atom will be used.
     frame : int, default=0
         The index of the conformation in `reference` to measure
         distances to.
@@ -244,7 +241,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
         be unsafe; if you use Trajectory.center_coordinates and then modify
         the trajectory's coordinates, the center and traces will be out of
         date and the RMSFs will be incorrect.
-
+    
     Examples
     --------
     >>> import mdtraj as md                                      # doctest: +SKIP
@@ -252,34 +249,31 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
     >>> print rmsf                                               # doctest: +SKIP
     array([ 0.0,  0.03076187,  0.02549562, ...,  0.06230228,
         0.00666826,  0.24364147])
-
+    
     The calculation is slightly faster if you precenter the trajectory
-
     >>> trajectory.center_coordinates()
     >>> rmsf = md.rmsf(trajectory, trajectory, 0, precentered=True)
-
+    
     If the atoms used in alignment and RMSF calculations are different,
     align the trajectory before using this method.
-
     >>> trajectory.superpose(atom_indices=atom_indices)
     >>> rmsf = md.rmsf(trajectory, None, atom_indices=rmsf_atom_indices)
-
+    
     See Also
     --------
     Trajectory.center_coordinates
-
+    
     Notes
     -----
     This function uses OpenMP to parallelize the calculation across
     multiple cores. To control the number of threads launched by OpenMP,
     you can set the environment variable ``OMP_NUM_THREADS``.
-
+    
     Returns
     -------
-    rmsf : np.ndarray, shape=(target.n_frames,)
-        A 1-D numpy array of the optimal root-mean-square fluctuations from
-        the `frame`-th conformation in reference to each of the conformations
-        in target.
+    rmsf : np.ndarray, shape=(atom_indices,)
+        A 1-D numpy array of the optimal root-mean-square fluctuations of the
+       selected atoms.
     """
     # import time
     cdef bool atom_indices_is_none = False
