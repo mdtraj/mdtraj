@@ -54,6 +54,7 @@ import numpy as np
 import os
 import xml.etree.ElementTree as etree
 from collections import namedtuple
+import warnings
 
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import (_PROTEIN_RESIDUES, _WATER_RESIDUES,
@@ -84,6 +85,13 @@ def _topology_from_subset(topology, atom_indices):
     atom_indices : array_like, dtype=int
         The indices of the atoms to keep
     """
+    np_indices = np.array(atom_indices)
+    if len(np_indices) > 1:
+        if (np_indices[1:] - np_indices[:-1]).min() < 1:
+            warnings.warn('atom_indices are not monotonically increasing')
+        if len(np.unique(np_indices)) < len(np_indices):
+            warnings.warn('atom_indices are not unique')
+
     newTopology = Topology()
     old_atom_to_new_atom = {}
 
