@@ -967,8 +967,10 @@ class Trajectory(object):
         # combine with hashes of arrays
         hash_value ^= _hash_numpy_array(self._xyz)
         hash_value ^= _hash_numpy_array(self.time)
-        hash_value ^= _hash_numpy_array(self._unitcell_lengths)
-        hash_value ^= _hash_numpy_array(self._unitcell_angles)
+        if self._unitcell_lengths is not None:
+            hash_value ^= _hash_numpy_array(self._unitcell_lengths)
+        if self._unitcell_angles is not None:
+            hash_value ^= _hash_numpy_array(self._unitcell_angles)
         return hash_value
 
     def __eq__(self, other):

@@ -694,6 +694,11 @@ def test_hashing(get_fn):
     last_frame_hash = hash(frames[0])
     assert last_frame_hash != hashes[-1]
 
+    # test that trajectories without unitcell data can be hashed
+    t1 = md.load(get_fn('1bpi.pdb'))
+    t2 = md.load(get_fn('1bpi.pdb'))
+    assert hash(t1) == hash(t2)
+    
 
 def test_smooth(get_fn):
     from scipy.signal import lfilter, lfilter_zi, filtfilt, butter
