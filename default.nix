@@ -52,7 +52,7 @@ let
 in
 buildPythonPackage {
   pname = "mdtraj";
-  version = "1.9.8.dev0";
+  version = "1.9.8.dev0+lim";
   src = filterSrcByPrefix ./. [
     "docs"
     "examples"
