@@ -35,11 +35,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install conda environment
-      uses: mamba-org/provision-with-micromamba@main
+    - name: Set up conda environment
+      uses: mamba-org/setup-micromamba@v1
       with:
         environment-file: devtools/conda-envs/test.yaml
-        extra-specs: |
+        init-shell: >-
           python=${{ matrix.python-version }}
 
     - name: Install package
