@@ -39,7 +39,7 @@ jobs:
       uses: mamba-org/setup-micromamba@v1
       with:
         environment-file: devtools/conda-envs/test.yaml
-        init-shell: >-
+        create-args: >-
           python=${{ matrix.python-version }}
 
     - name: Install package
