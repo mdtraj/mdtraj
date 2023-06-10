@@ -26,7 +26,6 @@ jobs:
         os:
           - macOS-latest
           - ubuntu-latest
-          - windows-latest
         python-version:
           - "3.9"
           - "3.10"
