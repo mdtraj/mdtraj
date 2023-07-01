@@ -21,6 +21,7 @@ v1.9.8 (July 1, 2023)
 - Delete notes in issue-template by (#1778)
 - Fix hashing when unitcell data is not present (#1781)
 - Test on Python 3.11 (#1758)
+- Constrain GSD to version 2 (#1790)
 
 A total of 10 people contributed to this release.
 People with a "+" by their names contributed a patch for the first time.
