@@ -3,7 +3,7 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.9.8 (July 1, 2023)
+v1.9.8 (July 2, 2023)
 ---------------------
 
 - Patch util_arm.h for M1 (#1694)
