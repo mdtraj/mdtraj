@@ -7,14 +7,14 @@ Hello!
 
 For anybody wondering, the MDTraj repo is currently undergoing a transition to new maintainers;
 The Folding@home consortium (@FoldingAtHome) will now be taking over support, maintainence
-and management of MDTraj with @xuhuihuang leading the charge, and @apayne97 and myself (@sukritsingh)
-helping to manage and maintain as well. 
+and management of MDTraj with @xuhuihuang leading repo management, and @mattwthompson, @apayne97,
+and myself (@sukritsingh) helping to manage and maintain this repo more directly.
 
 Existing supporters, contributors, etc. are all welcome to contribute as much as they wish.
 The intention behind this transition is to ensure MDTraj receives continued support.
 
 As we are slowly transitioning to this new support, please bear with us as we slowly respond
-to issues, clean up any PRs, etc. 
+to issues, clean up any PRs, etc.
 
 I have opened a [Discussions page](https://github.com/mdtraj/mdtraj/discussions) on github
 for folks asking for help with code issues/not getting things working. Our hope is that the
