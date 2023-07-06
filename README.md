@@ -1,23 +1,31 @@
 ## Note on current project status
 
-Hi there!
+TLDR: MDTraj is currently undergoing a transition to new maintainers (the Folding@home consortium).
+Please bear with us as we slowly respond to issues and clean up.
 
-MDTraj is a project that I (@rmcgibbo) primarily developed between 2013 and 2016 while I was a
-graduate student. That was a long time ago! I've moved on, and no longer use MDTraj in my
-current role. Most of the other contributors from that time have similarly moved on. I do
-respond to github issues and pull requests from time to time, but my bandwidth is limited so
-don't expect to necessarily get a response on github issues from me. (Also **please** don't
-email me with support requests).
+Hello!
 
-MDTraj is looking for new maintainers! I would be happy to transfer ownership and responsibility
-of the code base to another group of maintainers. Please reach out to me if you're interested in
-taking over the project.
+For anybody wondering, the MDTraj repo is currently undergoing a transition to new maintainers;
+The Folding@home consortium (@FoldingAtHome) will now be taking over support, maintainence
+and management of MDTraj with @xuhuihuang leading repo management, and @mattwthompson, @apayne97,
+and myself (@sukritsingh) helping to manage and maintain this repo more directly.
+
+Existing supporters, contributors, etc. are all welcome to contribute as much as they wish.
+The intention behind this transition is to ensure MDTraj receives continued support.
+
+As we are slowly transitioning to this new support, please bear with us as we slowly respond
+to issues, clean up any PRs, etc.
+
+I have opened a [Discussions page](https://github.com/mdtraj/mdtraj/discussions) on github
+for folks asking for help with code issues/not getting things working. Our hope is that the
+issues page will be for discrete bugs, feature requests, related discussions etc., but this
+is very flexible!
 
 Best,
 
-Robert T. McGibbon (@rmcgibbo)
+Sukrit Singh (@sukritsingh)
 
-May 2, 2022
+July 6th, 2023
 
 --------------------------------
 
