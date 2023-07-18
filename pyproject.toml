@@ -2,10 +2,7 @@
 requires = [
     "setuptools",
     "wheel",
-    # Use oldest-supported-numpy which provides the oldest numpy version with
-    # wheels on PyPI
-    #
-    # See: https://github.com/scipy/oldest-supported-numpy/blob/main/setup.cfg
+    # provides the oldest numpy version with wheels on PyPI
     "oldest-supported-numpy",
-    "Cython=0.29",
+    "Cython==0.29",
 ]
