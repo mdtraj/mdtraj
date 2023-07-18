@@ -7,5 +7,5 @@ requires = [
     #
     # See: https://github.com/scipy/oldest-supported-numpy/blob/main/setup.cfg
     "oldest-supported-numpy",
-    "Cython>0.28",
+    "Cython=0.29",
 ]
