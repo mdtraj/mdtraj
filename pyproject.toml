@@ -4,5 +4,5 @@ requires = [
     "wheel",
     # provides the oldest numpy version with wheels on PyPI
     "oldest-supported-numpy",
-    "Cython==0.29.36",
+    "Cython~=0.29.36",
 ]
