@@ -11,6 +11,14 @@ v1.9.9 (July 20, 2023)
 - Announce maintainer update (#1795)
 - Use `oldest-supported-numpy` in `pyproject.toml` (#1751)
 
+A total of 4 people contributed to this release, including three new contributors.
+People with a "+" by their names contributed a patch for the first time.
+
+In-Ho Yi+
+Sukrit Singh+
+Jeremy Leung+
+Matthew W. Thompson
+
 v1.9.8 (July 2, 2023)
 ---------------------
 
@@ -31,7 +39,7 @@ v1.9.8 (July 2, 2023)
 - Test on Python 3.11 (#1758)
 - Constrain GSD to version 2 (#1790)
 
-A total of 10 people contributed to this release.
+A total of 15 people contributed to this release.
 People with a "+" by their names contributed a patch for the first time.
 
 - Robert T. McGibbon
