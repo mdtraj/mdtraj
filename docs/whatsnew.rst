@@ -3,6 +3,14 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.9.9 (July 20, 2023)
+---------------------
+
+- Pin `Cython~=0.29` in `pyproject.toml` (#1801)
+- Remove "stale" bot (#1758)
+- Announce maintainer update (#1795)
+- Use `oldest-supported-numpy` in `pyproject.toml` (#1751)
+
 v1.9.8 (July 2, 2023)
 ---------------------
 
