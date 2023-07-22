@@ -3,6 +3,9 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+Current Development
+-------------------
+
 v1.9.9 (July 22, 2023)
 ---------------------
 
