@@ -3,7 +3,7 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.9.9 (July 20, 2023)
+v1.9.9 (July 22, 2023)
 ---------------------
 
 - Pin `Cython~=0.29` in `pyproject.toml` (#1801)
