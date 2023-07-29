@@ -225,7 +225,7 @@ def read_snapshot(frame, snapshot, topology, atom_indices=None):
     return xyz, box_vectors, time
 
 def write_gsd(filename, xyz, top, cell_lengths=None, cell_angles=None):
-    """Write one or more frames of data to a gsd file.
+    r"""Write one or more frames of data to a gsd file.
 
     Parameters
     ----------

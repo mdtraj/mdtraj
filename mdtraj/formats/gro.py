@@ -391,7 +391,7 @@ class GroTrajectoryFile(object):
         time = None
         if 't=' in comment:
             # title string (free format string, optional time in ps after 't=')
-            time = float(findall('t= *(\d+\.\d+)',comment)[-1])
+            time = float(findall(r't= *(\d+\.\d+)', comment)[-1])
 
         # box vectors (free format, space separated reals), values: v1(x) v2(y)
         # v3(z) v1(y) v1(z) v2(x) v2(z) v3(x) v3(y), the last 6 values may be
@@ -497,7 +497,7 @@ def _isfloat(word):
     @return answer Boolean which specifies whether the string is any number
 
     """
-    return match('^[-+]?[0-9]*\.?[0-9]*([eEdD][-+]?[0-9]+)?$',word)
+    return match(r'^[-+]?[0-9]*\.?[0-9]*([eEdD][-+]?[0-9]+)?$',word)
 
 def _parse_gro_coord(line, firstDecimal, secondDecimal):
     """ Determines whether a line contains GROMACS data or not

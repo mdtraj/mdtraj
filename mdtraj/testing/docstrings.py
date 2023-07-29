@@ -123,7 +123,7 @@ def docstring_verifiers(module, error_on_none=False):
                 try:
                     f(*list(range(100)))
                 except TypeError as e:
-                    m = re.search('takes at most (\d+) positional arguments', str(e))
+                    m = re.search(r'takes at most (\d+) positional arguments', str(e))
                     if not m:
                         return
                     n_args = int(m.group(1))

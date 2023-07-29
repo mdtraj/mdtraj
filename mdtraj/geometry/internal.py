@@ -367,7 +367,7 @@ def get_dihedral_connectivity(ibonds):
 ################################################################################
 
 def get_wilson_B(conformation, **kwargs):
-    """Calculate the Wilson B matrix, which collects the derivatives of the
+    r"""Calculate the Wilson B matrix, which collects the derivatives of the
     redundant internal coordinates w/r/t the cartesian coordinates.
 
     .. math::

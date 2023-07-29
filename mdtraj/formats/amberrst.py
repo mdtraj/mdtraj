@@ -268,7 +268,7 @@ class AmberRestartFile(object):
                           unitcell_angles=cell_angles)
 
     def read(self, atom_indices=None):
-        """Read data from an AMBER ASCII restart file
+        r"""Read data from an AMBER ASCII restart file
 
         Parameters
         ----------
@@ -531,7 +531,7 @@ class AmberNetCDFRestartFile(object):
                           unitcell_angles=cell_angles)
 
     def read(self, atom_indices=None):
-        """Read data from an AMBER NetCDF restart file
+        r"""Read data from an AMBER NetCDF restart file
 
         Parameters
         ----------

@@ -54,3 +54,7 @@ jobs:
       if: always()
       run: |
         pytest --durations=10 tests/
+
+    - name: Lint
+      run: |
+        ruff check mdtraj

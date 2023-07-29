@@ -60,7 +60,7 @@ from mdtraj.core import topology
 from mdtraj.formats import pdb
 from mdtraj.core import element as elem
 
-FORMAT_RE_PATTERN = re.compile("([0-9]+)([a-zA-Z]+)([0-9]+)\.?([0-9]*)")
+FORMAT_RE_PATTERN = re.compile(r"([0-9]+)([a-zA-Z]+)([0-9]+)\.?([0-9]*)")
 
 __all__ = ['load_prmtop']
 

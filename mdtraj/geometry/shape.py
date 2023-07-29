@@ -77,7 +77,7 @@ def principal_moments(traj):
     return np.linalg.eigvalsh(gyration_tensor)
 
 def asphericity(traj):
-    """Compute the asphericity of a trajectory.
+    r"""Compute the asphericity of a trajectory.
 
     For each frame compute the principal moments then,
 
@@ -102,7 +102,7 @@ def asphericity(traj):
     return b
 
 def acylindricity(traj):
-    """Compute the acylindricity of a trajectory.
+    r"""Compute the acylindricity of a trajectory.
 
     For each frame compute the principal moments then,
 
@@ -127,7 +127,7 @@ def acylindricity(traj):
     return c
 
 def relative_shape_anisotropy(traj):
-    """Compute the relative shape anisotropy of a trajectory.
+    r"""Compute the relative shape anisotropy of a trajectory.
 
     For each frame compute the principal moments then,
 
