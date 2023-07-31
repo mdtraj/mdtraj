@@ -55,6 +55,8 @@ jobs:
       run: |
         pytest --durations=10 tests/
 
-    - name: Lint
-      run: |
-        ruff check mdtraj
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: chartboost/ruff-action@v1

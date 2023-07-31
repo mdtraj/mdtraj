@@ -16,4 +16,3 @@ dependencies:
   - pytables
   - gsd =2
   - pytest
-  - ruff
