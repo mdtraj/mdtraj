@@ -25,16 +25,32 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
-import numpy as np
-from mdtraj.utils import ensure_type
-from mdtraj.geometry import _geometry, distance
+
 import warnings
 
-__all__ = ['compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_omega',
-           'compute_chi1', 'compute_chi2', 'compute_chi3', 'compute_chi4','compute_chi5',
-           'indices_phi', 'indices_psi', 'indices_omega',
-           'indices_chi1', 'indices_chi2', 'indices_chi3', 'indices_chi4', 'indices_chi5']
+import numpy as np
+from mdtraj.geometry import _geometry, distance
+from mdtraj.utils import ensure_type
+
+__all__ = [
+    "compute_dihedrals",
+    "compute_phi",
+    "compute_psi",
+    "compute_omega",
+    "compute_chi1",
+    "compute_chi2",
+    "compute_chi3",
+    "compute_chi4",
+    "compute_chi5",
+    "indices_phi",
+    "indices_psi",
+    "indices_omega",
+    "indices_chi1",
+    "indices_chi2",
+    "indices_chi3",
+    "indices_chi4",
+    "indices_chi5",
+]
 
 ##############################################################################
 # Functions
@@ -105,20 +121,46 @@ def compute_dihedrals(traj, indices, periodic=True, opt=True):
         `n_dihedrals` torsion angles. The angles are measured in **radians**.
 
     """
-    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
-    quartets = ensure_type(indices, dtype=np.int32, ndim=2, name='indices', shape=(None, 4), warn_on_cast=False)
+    xyz = ensure_type(
+        traj.xyz,
+        dtype=np.float32,
+        ndim=3,
+        name="traj.xyz",
+        shape=(None, None, 3),
+        warn_on_cast=False,
+    )
+    quartets = ensure_type(
+        indices,
+        dtype=np.int32,
+        ndim=2,
+        name="indices",
+        shape=(None, 4),
+        warn_on_cast=False,
+    )
     if not np.all(np.logical_and(quartets < traj.n_atoms, quartets >= 0)):
-        raise ValueError('indices must be between 0 and %d' % traj.n_atoms)
+        raise ValueError("indices must be between 0 and %d" % traj.n_atoms)
 
     if len(quartets) == 0:
         return np.zeros((len(xyz), 0), dtype=np.float32)
 
     out = np.zeros((xyz.shape[0], quartets.shape[0]), dtype=np.float32)
     if periodic and traj._have_unitcell:
-        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
+        box = ensure_type(
+            traj.unitcell_vectors,
+            dtype=np.float32,
+            ndim=3,
+            name="unitcell_vectors",
+            shape=(len(xyz), 3, 3),
+        )
         if opt:
             orthogonal = np.allclose(traj.unitcell_angles, 90)
-            _geometry._dihedral_mic(xyz, quartets, box.transpose(0, 2, 1).copy(), out, orthogonal)
+            _geometry._dihedral_mic(
+                xyz,
+                quartets,
+                box.transpose(0, 2, 1).copy(),
+                out,
+                orthogonal,
+            )
             return out
         else:
             _dihedral(traj, quartets, periodic, out)
@@ -200,9 +242,11 @@ def _atom_sequence(top, atom_names, residue_offsets=None):
     atom_names = _strip_offsets(atom_names)
 
     if hasattr(top, "topology"):
-        warnings.warn("Passing a Trajectory object to _atom_sequence is"
-                      "deprecated. Please pass a Topology object",
-                      DeprecationWarning)
+        warnings.warn(
+            "Passing a Trajectory object to _atom_sequence is"
+            "deprecated. Please pass a Topology object",
+            DeprecationWarning,
+        )
         top = top.topology
     atom_dict = _construct_atom_dict(top)
 
@@ -216,14 +260,21 @@ def _atom_sequence(top, atom_names, residue_offsets=None):
         for residue in chain.residues:
             rid = residue.index
             # Check that desired residue_IDs are in dict
-            if all([rid + offset in atom_dict[cid]
-                    for offset in residue_offsets]):
+            if all([rid + offset in atom_dict[cid] for offset in residue_offsets]):
                 # Check that we find all atom names in dict
-                if all([atom in atom_dict[cid][rid + offset]
-                        for atom, offset in atoms_and_offsets]):
+                if all(
+                    [
+                        atom in atom_dict[cid][rid + offset]
+                        for atom, offset in atoms_and_offsets
+                    ],
+                ):
                     # Lookup desired atom indices and and add to list.
-                    atom_indices.append([atom_dict[cid][rid + offset][atom]
-                                         for atom, offset in atoms_and_offsets])
+                    atom_indices.append(
+                        [
+                            atom_dict[cid][rid + offset][atom]
+                            for atom, offset in atoms_and_offsets
+                        ],
+                    )
                     found_residue_ids.append(rid)
 
     atom_indices = np.array(atom_indices)
@@ -294,26 +345,34 @@ PHI_ATOMS = ["-C", "N", "CA", "C"]
 PSI_ATOMS = ["N", "CA", "C", "+N"]
 OMEGA_ATOMS = ["CA", "C", "+N", "+CA"]
 
-CHI1_ATOMS = [["N", "CA", "CB", "CG"],
-              ["N", "CA", "CB", "CG1"],
-              ["N", "CA", "CB", "SG"],
-              ["N", "CA", "CB", "OG"],
-              ["N", "CA", "CB", "OG1"]]
+CHI1_ATOMS = [
+    ["N", "CA", "CB", "CG"],
+    ["N", "CA", "CB", "CG1"],
+    ["N", "CA", "CB", "SG"],
+    ["N", "CA", "CB", "OG"],
+    ["N", "CA", "CB", "OG1"],
+]
 
-CHI2_ATOMS = [["CA", "CB", "CG", "CD"],
-              ["CA", "CB", "CG", "CD1"],
-              ["CA", "CB", "CG1", "CD1"],
-              ["CA", "CB", "CG", "OD1"],
-              ["CA", "CB", "CG", "ND1"],
-              ["CA", "CB", "CG", "SD"]]
+CHI2_ATOMS = [
+    ["CA", "CB", "CG", "CD"],
+    ["CA", "CB", "CG", "CD1"],
+    ["CA", "CB", "CG1", "CD1"],
+    ["CA", "CB", "CG", "OD1"],
+    ["CA", "CB", "CG", "ND1"],
+    ["CA", "CB", "CG", "SD"],
+]
 
-CHI3_ATOMS = [["CB", "CG", "CD", "NE"],
-              ["CB", "CG", "CD", "CE"],
-              ["CB", "CG", "CD", "OE1"],
-              ["CB", "CG", "SD", "CE"]]
+CHI3_ATOMS = [
+    ["CB", "CG", "CD", "NE"],
+    ["CB", "CG", "CD", "CE"],
+    ["CB", "CG", "CD", "OE1"],
+    ["CB", "CG", "SD", "CE"],
+]
 
-CHI4_ATOMS = [["CG", "CD", "NE", "CZ"],
-              ["CG", "CD", "CE", "NZ"]]
+CHI4_ATOMS = [
+    ["CG", "CD", "NE", "CZ"],
+    ["CG", "CD", "CE", "NZ"],
+]
 
 CHI5_ATOMS = [["CD", "NE", "CZ", "NH1"]]
 

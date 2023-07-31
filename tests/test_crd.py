@@ -24,8 +24,9 @@ import mdtraj as md
 import numpy as np
 from mdtraj.testing import eq
 
+
 def test_prmtop_with_overflow_mdcrd(get_fn):
-    traj = md.load(get_fn('overflow.crd'), top=get_fn('tz2.truncoct.parm7'))
+    traj = md.load(get_fn("overflow.crd"), top=get_fn("tz2.truncoct.parm7"))
     # Check that the coordinates that 'overflow' were parsed correctly
-    check = np.asarray([-0.131, -221.878, 2.631]) / 10.0 # To nanometers
+    check = np.asarray([-0.131, -221.878, 2.631]) / 10.0  # To nanometers
     eq(check, traj.xyz[-1][-7])

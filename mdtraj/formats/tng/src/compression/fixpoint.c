@@ -123,4 +123,3 @@ double Ptngc_i32x2_to_d(fix_t hi, fix_t lo)
     val=-val;
   return val;
 }
-

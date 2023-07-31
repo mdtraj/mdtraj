@@ -1,4 +1,4 @@
-/* -*- mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- 
+/* -*- mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*-
  *
  * $Id$
  *
@@ -26,11 +26,11 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 #include <stdlib.h>
 #include "xdrfile.h"
 #include "xdrfile_xtc.h"
-	
+
 #define MAGIC 1995
 
 enum { FALSE, TRUE };
@@ -38,7 +38,7 @@ enum { FALSE, TRUE };
 static int xtc_header(XDRFILE *xd,int *natoms,int *step,float *time,mybool bRead)
 {
 	int result,magic,n=1;
-	
+
 	/* Note: read is same as write. He he he */
 	magic  = MAGIC;
 	if ((result = xdrfile_write_int(&magic,n,xd)) != n)
@@ -56,7 +56,7 @@ static int xtc_header(XDRFILE *xd,int *natoms,int *step,float *time,mybool bRead
 		return exdrINT;
 	if ((result = xdrfile_write_float(time,n,xd)) != n)
 		return exdrFLOAT;
-	
+
 	return exdrOK;
 }
 
@@ -64,22 +64,22 @@ static int xtc_coord(XDRFILE *xd,int *natoms,matrix box,rvec *x,float *prec,
 					 mybool bRead)
 {
 	int i,j,result;
-    
+
 	/* box */
 	result = xdrfile_read_float(box[0],DIM*DIM,xd);
 	if (DIM*DIM != result)
 		return exdrFLOAT;
-	else 
+	else
 		{
 			if (bRead)
 				{
-					result = xdrfile_decompress_coord_float(x[0],natoms,prec,xd); 
+					result = xdrfile_decompress_coord_float(x[0],natoms,prec,xd);
 					if (result != *natoms)
 						return exdr3DX;
 				}
 			else
 				{
-					result = xdrfile_compress_coord_float(x[0],*natoms,*prec,xd); 
+					result = xdrfile_compress_coord_float(x[0],*natoms,*prec,xd);
 					if (result != *natoms)
 						return exdr3DX;
 				}
@@ -92,13 +92,13 @@ int read_xtc_natoms(char *fn,int *natoms)
 	XDRFILE *xd;
 	int step,result;
 	float time;
-	
+
 	xd = xdrfile_open(fn,"r");
 	if (NULL == xd)
 		return exdrFILENOTFOUND;
 	result = xtc_header(xd,natoms,&step,&time,TRUE);
 	xdrfile_close(xd);
-	
+
 	return result;
 }
 
@@ -137,10 +137,10 @@ int read_xtc(XDRFILE *xd,
 /* Read subsequent frames */
 {
 	int result;
-  
+
 	if ((result = xtc_header(xd,&natoms,step,time,TRUE)) != exdrOK)
 		return result;
-	  
+
 	if ((result = xtc_coord(xd,&natoms,box,x,prec,1)) != exdrOK)
 		return result;
 
@@ -153,12 +153,12 @@ int write_xtc(XDRFILE *xd,
 /* Write a frame to xtc file */
 {
 	int result;
-  
+
 	if ((result = xtc_header(xd,&natoms,&step,&time,FALSE)) != exdrOK)
 		return result;
 
 	if ((result = xtc_coord(xd,&natoms,box,x,&prec,0)) != exdrOK)
 		return result;
-  
+
 	return exdrOK;
 }

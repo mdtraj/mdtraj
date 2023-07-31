@@ -334,4 +334,3 @@ void Ptngc_comp_from_bwt(unsigned int *input, const int nvals, int index,
   free(p);
   free(c);
 }
-

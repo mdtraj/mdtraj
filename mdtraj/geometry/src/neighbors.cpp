@@ -34,13 +34,13 @@ std::vector<int> _compute_neighbors(
     std::vector<int>::const_iterator hit;
     for (hit = haystack_indices.begin(); hit != haystack_indices.end(); ++hit) {
         // Is this haystack atom within cutoff of _any_ query atom?
-        
+
         int i = *hit;
         fvec4 pos1(frame_xyz[3*i], frame_xyz[3*i+1], frame_xyz[3*i+2], 0);
         std::vector<int>::const_iterator qit;
         for (qit = query_indices.begin(); qit != query_indices.end(); ++qit) {
             // Compute distance from haystack atom *hit to query atom *qit
-            
+
             int j = *qit;
             if (i == j)
                 continue;
@@ -56,7 +56,7 @@ std::vector<int> _compute_neighbors(
             float dist2 = dot3(delta, delta);
             if (dist2 < cutoff2) {
                 // The haystack atom is within cutoff of this query atom.
-                
+
                 result.push_back(i);
                 break;
              }

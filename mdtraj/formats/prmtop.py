@@ -53,16 +53,16 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
+
 import re
 
+from mdtraj.core import element as elem
 from mdtraj.core import topology
 from mdtraj.formats import pdb
-from mdtraj.core import element as elem
 
-FORMAT_RE_PATTERN = re.compile("([0-9]+)([a-zA-Z]+)([0-9]+)\.?([0-9]*)")
+FORMAT_RE_PATTERN = re.compile(r"([0-9]+)([a-zA-Z]+)([0-9]+)\.?([0-9]*)")
 
-__all__ = ['load_prmtop']
+__all__ = ["load_prmtop"]
 
 ##############################################################################
 # Functions
@@ -70,7 +70,6 @@ __all__ = ['load_prmtop']
 
 
 def _get_pointer_value(pointer_label, raw_data):
-   
     POINTER_LABELS = """
     NATOM, NTYPES, NBONH, MBONA, NTHETH, MTHETA,
     NPHIH, MPHIA, NHPARM, NPARM, NEXT, NRES,
@@ -78,11 +77,11 @@ def _get_pointer_value(pointer_label, raw_data):
     NATYP, NPHB, IFPERT, NBPER, NGPER, NDPER,
     MBPER, MGPER, MDPER, IFBOX, NMXRS, IFCAP
     """
-    
-    POINTER_LABEL_LIST = POINTER_LABELS.replace(',', '').split()
-    
+
+    POINTER_LABEL_LIST = POINTER_LABELS.replace(",", "").split()
+
     index = POINTER_LABEL_LIST.index(pointer_label)
-    return float(raw_data['POINTERS'][index])
+    return float(raw_data["POINTERS"][index])
 
 
 def load_prmtop(filename, **kwargs):
@@ -105,7 +104,7 @@ def load_prmtop(filename, **kwargs):
     prmtop for systems with periodic boundary conditions. Because '.binpos'
     files do not store box dimensions, this means that unitcell information
     will be lost if you use .binpos + .prmtop files with MDTraj.
-    
+
     Examples
     --------
     >>> topology = md.load_prmtop('mysystem.prmtop')
@@ -115,44 +114,50 @@ def load_prmtop(filename, **kwargs):
     top = topology.Topology()
 
     prmtop_version = None
-    flags      = []
+    flags = []
     raw_format = {}
-    raw_data   = {}
+    raw_data = {}
     ignoring = False
 
-    with open(filename, 'r') as f:
+    with open(filename) as f:
         for line in f:
-            if line[0] == '%':
-                if line.startswith('%VERSION'):
+            if line[0] == "%":
+                if line.startswith("%VERSION"):
                     tag, prmtop_version = line.rstrip().split(None, 1)
 
-                elif line.startswith('%FLAG'):
+                elif line.startswith("%FLAG"):
                     tag, flag = line.rstrip().split(None, 1)
                     flags.append(flag)
                     raw_data[flag] = []
-                    ignoring = flag in ('TITLE', 'CTITLE')
+                    ignoring = flag in ("TITLE", "CTITLE")
 
-                elif line.startswith('%FORMAT'):
+                elif line.startswith("%FORMAT"):
                     format = line.rstrip()
-                    index0=format.index('(')
-                    index1=format.index(')')
-                    format = format[index0+1:index1]
+                    index0 = format.index("(")
+                    index1 = format.index(")")
+                    format = format[index0 + 1 : index1]
                     m = FORMAT_RE_PATTERN.search(format)
                     if m is None:
                         ignoring = True
                     else:
-                        raw_format[flags[-1]] = (format, m.group(1), m.group(2), m.group(3), m.group(4))
+                        raw_format[flags[-1]] = (
+                            format,
+                            m.group(1),
+                            m.group(2),
+                            m.group(3),
+                            m.group(4),
+                        )
 
-                elif line.startswith('%COMMENT'):
+                elif line.startswith("%COMMENT"):
                     continue
 
             elif not ignoring:
-                flag=flags[-1]
+                flag = flags[-1]
                 format, numItems, itemType, itemLength, itemPrecision = raw_format[flag]
-                iLength=int(itemLength)
+                iLength = int(itemLength)
                 line = line.rstrip()
                 for index in range(0, len(line), iLength):
-                    item = line[index:index+iLength]
+                    item = line[index : index + iLength]
                     if item:
                         raw_data[flag].append(item.strip())
 
@@ -162,59 +167,61 @@ def load_prmtop(filename, **kwargs):
     previous_residue = None
     c = top.add_chain()
 
-    n_atoms = int(_get_pointer_value('NATOM', raw_data))
+    n_atoms = int(_get_pointer_value("NATOM", raw_data))
 
     # built a dictionary telling us which atom belongs to which residue
     residue_pointer_dict = {}
-    res_pointers = raw_data['RESIDUE_POINTER']        
-    first_atom = [int(p)-1 for p in res_pointers] # minus 1 necessary
+    res_pointers = raw_data["RESIDUE_POINTER"]
+    first_atom = [int(p) - 1 for p in res_pointers]  # minus 1 necessary
     first_atom.append(n_atoms)
     res = 0
     for i in range(n_atoms):
-        while first_atom[res+1] <= i:
+        while first_atom[res + 1] <= i:
             res += 1
         residue_pointer_dict[i] = res
 
     # add each residue/atom to the topology object
     for index in range(n_atoms):
-
         res_number = residue_pointer_dict[index]
         if res_number != previous_residue:
-
             previous_residue = res_number
 
             # check
-            res_name = raw_data['RESIDUE_LABEL'][residue_pointer_dict[index]].strip()
+            res_name = raw_data["RESIDUE_LABEL"][residue_pointer_dict[index]].strip()
             if res_name in pdb.PDBTrajectoryFile._residueNameReplacements:
                 res_name = pdb.PDBTrajectoryFile._residueNameReplacements[res_name]
             r = top.add_residue(res_name, c)
 
             if res_name in pdb.PDBTrajectoryFile._atomNameReplacements:
-                atom_replacements = pdb.PDBTrajectoryFile._atomNameReplacements[res_name]
+                atom_replacements = pdb.PDBTrajectoryFile._atomNameReplacements[
+                    res_name
+                ]
             else:
                 atom_replacements = {}
 
-        atom_name = raw_data['ATOM_NAME'][index].strip()
+        atom_name = raw_data["ATOM_NAME"][index].strip()
         if atom_name in atom_replacements:
             atom_name = atom_replacements[atom_name]
 
         # Get the element from the prmtop file if available
-        if 'ATOMIC_NUMBER' in raw_data:
+        if "ATOMIC_NUMBER" in raw_data:
             try:
-                element = elem.Element.getByAtomicNumber(int(raw_data['ATOMIC_NUMBER'][index]))
+                element = elem.Element.getByAtomicNumber(
+                    int(raw_data["ATOMIC_NUMBER"][index]),
+                )
             except KeyError:
                 element = elem.virtual
         else:
             # Try to guess the element from the atom name.
 
             upper = atom_name.upper()
-            if upper.startswith('CL'):
+            if upper.startswith("CL"):
                 element = elem.chlorine
-            elif upper.startswith('NA'):
+            elif upper.startswith("NA"):
                 element = elem.sodium
-            elif upper.startswith('MG'):
+            elif upper.startswith("MG"):
                 element = elem.magnesium
-            elif upper.startswith('ZN'):
+            elif upper.startswith("ZN"):
                 element = elem.zinc
             else:
                 try:
@@ -229,14 +236,22 @@ def load_prmtop(filename, **kwargs):
     atoms = list(top.atoms)
 
     bond_list = []
-    for ii in range(0,len(bond_pointers),3):
-        if int(bond_pointers[ii])<0 or int(bond_pointers[ii+1])<0:
-            raise Exception("Found negative bonded atom pointers %s"
-                             % ((bond_pointers[ii],
-                                 bond_pointers[ii+1]),))
+    for ii in range(0, len(bond_pointers), 3):
+        if int(bond_pointers[ii]) < 0 or int(bond_pointers[ii + 1]) < 0:
+            raise Exception(
+                "Found negative bonded atom pointers %s"
+                % (
+                    (
+                        bond_pointers[ii],
+                        bond_pointers[ii + 1],
+                    ),
+                ),
+            )
 
         else:
-            bond_list.append((int(bond_pointers[ii])//3, int(bond_pointers[ii+1])//3))
+            bond_list.append(
+                (int(bond_pointers[ii]) // 3, int(bond_pointers[ii + 1]) // 3),
+            )
 
     for bond in bond_list:
         top.add_bond(atoms[bond[0]], atoms[bond[1]])

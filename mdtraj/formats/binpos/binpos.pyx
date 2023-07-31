@@ -26,22 +26,36 @@
 # Imports
 ###############################################################################
 
-import cython
 import warnings
+
+import cython
+
 cimport cython
-from libc.stdio cimport SEEK_SET, SEEK_CUR, SEEK_END
+from libc.stdio cimport SEEK_CUR, SEEK_END, SEEK_SET
+
 import os
+
 import numpy as np
+
 cimport numpy as np
+
 np.import_array()
-from mdtraj.utils import ensure_type, cast_indices, in_units_of
-from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
-from libc.stdlib cimport malloc, free
-from binposlib cimport molfile_timestep_t
-from binposlib cimport seek_timestep, tell_timestep;
-from binposlib cimport open_binpos_read, close_file_read, read_next_timestep
-from binposlib cimport open_binpos_write, close_file_write, write_timestep
+from mdtraj.utils import cast_indices, ensure_type, in_units_of
+from mdtraj.utils.six import string_types
+
+from binposlib cimport (
+    close_file_read,
+    close_file_write,
+    molfile_timestep_t,
+    open_binpos_read,
+    open_binpos_write,
+    read_next_timestep,
+    seek_timestep,
+    tell_timestep,
+    write_timestep,
+)
+from libc.stdlib cimport free, malloc
 
 ###############################################################################
 # Globals

@@ -27,22 +27,34 @@
 ##############################################################################
 
 import cython
+
 cimport cython
+
 import os
-import numpy as np
 import shutil
+
+import numpy as np
+
 cimport numpy as np
+
 np.import_array()
-from mdtraj.utils import ensure_type, cast_indices, in_units_of
-from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
-from libc.stdlib cimport malloc, free
-from dtrlib cimport molfile_timestep_t, molfile_timestep_metadata
-from dtrlib cimport open_file_read, close_file_read, read_timestep2
-from dtrlib cimport open_file_write, write_timestep, close_file_write
-from dtrlib cimport read_timestep_metadata, read_times
+from mdtraj.utils import cast_indices, ensure_type, in_units_of
+from mdtraj.utils.six import string_types
 
-
+from dtrlib cimport (
+    close_file_read,
+    close_file_write,
+    molfile_timestep_metadata,
+    molfile_timestep_t,
+    open_file_read,
+    open_file_write,
+    read_times,
+    read_timestep2,
+    read_timestep_metadata,
+    write_timestep,
+)
+from libc.stdlib cimport free, malloc
 
 ##############################################################################
 # Globals

@@ -19,7 +19,7 @@ trajectories.  Features include:
  - Lightweight, Pythonic API.
 
 MDTraj includes a command-line application, ``mdconvert``, for converting
-trajectories between formats. 
+trajectories between formats.
 
 
 .. toctree::
@@ -91,4 +91,3 @@ v2.1+).
    :target: http://doi.org/10.1016/j.bpj.2015.08.015
 
 .. vim: tw=75
-

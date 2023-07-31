@@ -796,4 +796,3 @@ void DECLSPECDLLEXPORT bwlzh_decompress_verbose(unsigned char *input, const int 
 {
   bwlzh_decompress_gen(input,nvals,vals,1);
 }
-

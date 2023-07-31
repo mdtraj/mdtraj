@@ -255,4 +255,3 @@ void Ptngc_comp_conv_from_mtf(unsigned int *valsmtf, const int nvals,
     }
   free(list);
 }
-

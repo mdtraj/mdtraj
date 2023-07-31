@@ -17,17 +17,22 @@ def _run_one_test(periodic, triclinic):
         unitcell_angles = np.array([80.0, 90.0, 100.0])
     else:
         unitcell_angles = None
-    traj = md.Trajectory(xyz=xyz, topology=None, unitcell_lengths=unitcell_lengths, unitcell_angles=unitcell_angles)
+    traj = md.Trajectory(
+        xyz=xyz,
+        topology=None,
+        unitcell_lengths=unitcell_lengths,
+        unitcell_angles=unitcell_angles,
+    )
     neighbors = md.compute_neighborlist(traj, cutoff)
     pairs = np.array([(i, j) for i in range(n_atoms) for j in range(n_atoms) if i < j])
     dists = md.compute_distances(traj, pairs, True, False)[0]
     for (i, j), d in zip(pairs, dists):
         if d < cutoff:
-            assert (j in neighbors[i])
-            assert (i in neighbors[j])
+            assert j in neighbors[i]
+            assert i in neighbors[j]
         else:
-            assert (j not in neighbors[i])
-            assert (i not in neighbors[j])
+            assert j not in neighbors[i]
+            assert i not in neighbors[j]
 
 
 def test_nonperiodic():

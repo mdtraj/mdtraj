@@ -22,23 +22,23 @@
 
 
 import numpy as np
-from mdtraj.formats import DCDTrajectoryFile
-from mdtraj import io
-from mdtraj.testing import eq
 import pytest
+from mdtraj import io
+from mdtraj.formats import DCDTrajectoryFile
+from mdtraj.testing import eq
 
 
 def test_read(get_fn):
-    fn_dcd = get_fn('frame0.dcd')
+    fn_dcd = get_fn("frame0.dcd")
     xyz, box_lengths, box_angles = DCDTrajectoryFile(fn_dcd).read()
-    xyz2 = io.loadh(get_fn('frame0.dcd.h5'), 'xyz')
+    xyz2 = io.loadh(get_fn("frame0.dcd.h5"), "xyz")
 
     eq(xyz, xyz2)
 
 
 def test_read_2(get_fn):
     # check nframes
-    fn_dcd = get_fn('frame0.dcd')
+    fn_dcd = get_fn("frame0.dcd")
     xyz1, box_lengths1, box_angles1 = DCDTrajectoryFile(fn_dcd).read()
     xyz2, box_lengths2, box_angles2 = DCDTrajectoryFile(fn_dcd).read(10000)
 
@@ -49,7 +49,7 @@ def test_read_2(get_fn):
 
 def test_read_stride(get_fn):
     # Read dcd with stride
-    fn_dcd = get_fn('frame0.dcd')
+    fn_dcd = get_fn("frame0.dcd")
     with DCDTrajectoryFile(fn_dcd) as f:
         xyz1, box_lengths1, box_angles1 = f.read()
     with DCDTrajectoryFile(fn_dcd) as f:
@@ -62,7 +62,7 @@ def test_read_stride(get_fn):
 
 def test_read_stride_2(get_fn):
     # Read dcd with stride when n_frames is supplied (different code path)
-    fn_dcd = get_fn('frame0.dcd')
+    fn_dcd = get_fn("frame0.dcd")
     with DCDTrajectoryFile(fn_dcd) as f:
         xyz1, box_lengths1, box_angles1 = f.read()
     with DCDTrajectoryFile(fn_dcd) as f:
@@ -75,7 +75,7 @@ def test_read_stride_2(get_fn):
 
 def test_read_3(get_fn):
     # Check streaming read of frames 1 at a time
-    fn_dcd = get_fn('frame0.dcd')
+    fn_dcd = get_fn("frame0.dcd")
     xyz_ref, box_lengths_ref, box_angles_ref = DCDTrajectoryFile(fn_dcd).read()
 
     reader = DCDTrajectoryFile(fn_dcd)
@@ -88,7 +88,7 @@ def test_read_3(get_fn):
 
 def test_read_4(get_fn):
     # Check streaming read followed by reading the 'rest'
-    fn_dcd = get_fn('frame0.dcd')
+    fn_dcd = get_fn("frame0.dcd")
     xyz_ref, box_lengths_ref, box_angles_ref = DCDTrajectoryFile(fn_dcd).read()
 
     reader = DCDTrajectoryFile(fn_dcd)
@@ -108,7 +108,7 @@ def test_read_4(get_fn):
 
 
 def test_read_5(get_fn):
-    fn_dcd = get_fn('frame0.dcd')
+    fn_dcd = get_fn("frame0.dcd")
     with DCDTrajectoryFile(fn_dcd) as f:
         xyz_ref, box_lengths_ref, box_angles_ref = f.read()
     with DCDTrajectoryFile(fn_dcd) as f:
@@ -118,7 +118,7 @@ def test_read_5(get_fn):
 
 
 def test_read_6(get_fn):
-    fn_dcd = get_fn('frame0.dcd')
+    fn_dcd = get_fn("frame0.dcd")
     with DCDTrajectoryFile(fn_dcd) as f:
         xyz_ref, box_lengths_ref, box_angles_ref = f.read()
     with DCDTrajectoryFile(fn_dcd) as f:
@@ -128,11 +128,11 @@ def test_read_6(get_fn):
 
 
 def test_write_0(tmpdir, get_fn):
-    fn_dcd = get_fn('frame0.dcd')
-    fn = '{}/x.dcd'.format(tmpdir)
+    fn_dcd = get_fn("frame0.dcd")
+    fn = f"{tmpdir}/x.dcd"
     with DCDTrajectoryFile(fn_dcd) as f:
         xyz = f.read()[0]
-    with DCDTrajectoryFile(fn, 'w') as f:
+    with DCDTrajectoryFile(fn, "w") as f:
         f.write(xyz)
     with DCDTrajectoryFile(fn) as f:
         xyz2 = f.read()[0]
@@ -141,10 +141,10 @@ def test_write_0(tmpdir, get_fn):
 
 
 def test_write_1(tmpdir):
-    fn = '{}/x.dcd'.format(tmpdir)
+    fn = f"{tmpdir}/x.dcd"
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
 
-    with DCDTrajectoryFile(fn, 'w') as f:
+    with DCDTrajectoryFile(fn, "w") as f:
         f.write(xyz)
     with DCDTrajectoryFile(fn) as f:
         xyz2 = f.read()[0]
@@ -153,13 +153,13 @@ def test_write_1(tmpdir):
 
 
 def test_write_2(tmpdir):
-    fn = '{}/x.dcd'.format(tmpdir)
+    fn = f"{tmpdir}/x.dcd"
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
     box_lengths = 25 * np.ones((500, 3), dtype=np.float32)
     box_angles = 90 * np.ones((500, 3), dtype=np.float32)
     box_lengths[0, 0] = 10.0
 
-    f = DCDTrajectoryFile(fn, 'w')
+    f = DCDTrajectoryFile(fn, "w")
     f.write(xyz, box_lengths, box_angles)
     f.close()
 
@@ -173,23 +173,23 @@ def test_write_2(tmpdir):
 
 
 def test_write_3(tmpdir):
-    fn = '{}/x.dcd'.format(tmpdir)
+    fn = f"{tmpdir}/x.dcd"
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
     box_lengths = 25 * np.ones((600, 3), dtype=np.float32)
 
-    with DCDTrajectoryFile(fn, 'w') as f:
+    with DCDTrajectoryFile(fn, "w") as f:
         with pytest.raises(ValueError):
             f.write(xyz, box_lengths)
 
 
 def test_write_4(tmpdir):
-    fn = '{}/x.dcd'.format(tmpdir)
+    fn = f"{tmpdir}/x.dcd"
     xyz = np.array(np.random.randn(500, 10, 3), dtype=np.float32)
     box_lengths = 25 * np.ones((500, 3), dtype=np.float32)
     box_angles = 90 * np.ones((500, 3), dtype=np.float32)
     box_lengths[0, 0] = 10.0
 
-    f = DCDTrajectoryFile(fn, 'w')
+    f = DCDTrajectoryFile(fn, "w")
     for i in range(len(xyz)):
         f.write(xyz[i], box_lengths[i], box_angles[i])
     f.close()
@@ -204,26 +204,26 @@ def test_write_4(tmpdir):
 
 
 def test_do_overwrite(tmpdir):
-    fn = '{}/x.dcd'.format(tmpdir)
-    with open(fn, 'w') as f:
-        f.write('a')
+    fn = f"{tmpdir}/x.dcd"
+    with open(fn, "w") as f:
+        f.write("a")
 
-    with DCDTrajectoryFile(fn, 'w', force_overwrite=True) as f:
+    with DCDTrajectoryFile(fn, "w", force_overwrite=True) as f:
         f.write(np.random.randn(10, 5, 3))
 
 
 def test_dont_overwrite(tmpdir):
-    fn = '{}/x.dcd'.format(tmpdir)
-    with open(fn, 'w') as f:
-        f.write('a')
+    fn = f"{tmpdir}/x.dcd"
+    with open(fn, "w") as f:
+        f.write("a")
 
     with pytest.raises(IOError):
-        with DCDTrajectoryFile(fn, 'w', force_overwrite=False) as f:
+        with DCDTrajectoryFile(fn, "w", force_overwrite=False) as f:
             f.write(np.random.randn(10, 5, 3))
 
 
 def test_read_closed(get_fn):
-    fn_dcd = get_fn('frame0.dcd')
+    fn_dcd = get_fn("frame0.dcd")
     with pytest.raises(IOError):
         f = DCDTrajectoryFile(fn_dcd)
         f.close()
@@ -231,16 +231,16 @@ def test_read_closed(get_fn):
 
 
 def test_write_closed(get_fn):
-    fn_dcd = get_fn('frame0.dcd')
+    fn_dcd = get_fn("frame0.dcd")
     with pytest.raises(IOError):
-        f = DCDTrajectoryFile(fn_dcd, 'w')
+        f = DCDTrajectoryFile(fn_dcd, "w")
         f.close()
         f.write(np.random.randn(10, 3, 3))
 
 
 def test_tell(get_fn):
-    fn_dcd = get_fn('frame0.dcd')
-    with DCDTrajectoryFile(get_fn('frame0.dcd')) as f:
+    fn_dcd = get_fn("frame0.dcd")
+    with DCDTrajectoryFile(get_fn("frame0.dcd")) as f:
         eq(f.tell(), 0)
 
         f.read(101)
@@ -251,8 +251,8 @@ def test_tell(get_fn):
 
 
 def test_seek(get_fn):
-    reference = DCDTrajectoryFile(get_fn('frame0.dcd')).read()[0]
-    with DCDTrajectoryFile(get_fn('frame0.dcd')) as f:
+    reference = DCDTrajectoryFile(get_fn("frame0.dcd")).read()[0]
+    with DCDTrajectoryFile(get_fn("frame0.dcd")) as f:
         eq(f.tell(), 0)
         eq(f.read(1)[0][0], reference[0])
         eq(f.tell(), 1)
@@ -278,12 +278,12 @@ def test_seek(get_fn):
 
 def test_ragged_1(tmpdir):
     # try first writing no cell angles/lengths, and then adding some
-    fn = '{}/x.dcd'.format(tmpdir)
+    fn = f"{tmpdir}/x.dcd"
     xyz = np.random.randn(100, 5, 3)
     cell_lengths = np.random.randn(100, 3)
     cell_angles = np.random.randn(100, 3)
 
-    with DCDTrajectoryFile(fn, 'w', force_overwrite=True) as f:
+    with DCDTrajectoryFile(fn, "w", force_overwrite=True) as f:
         f.write(xyz)
         with pytest.raises(ValueError):
             f.write(xyz, cell_lengths, cell_angles)
@@ -291,13 +291,13 @@ def test_ragged_1(tmpdir):
 
 def test_ragged_2(tmpdir):
     # try first writing no cell angles/lengths, and then adding some
-    fn = '{}/x.dcd'.format(tmpdir)
+    fn = f"{tmpdir}/x.dcd"
     xyz = np.random.randn(100, 5, 3)
     cell_lengths = np.random.randn(100, 3)
     cell_angles = np.random.randn(100, 3)
 
     # from mdtraj.formats import HDF5TrajectoryFile
-    with DCDTrajectoryFile(fn, 'w', force_overwrite=True) as f:
+    with DCDTrajectoryFile(fn, "w", force_overwrite=True) as f:
         f.write(xyz, cell_lengths, cell_angles)
         with pytest.raises(ValueError):
             f.write(xyz)

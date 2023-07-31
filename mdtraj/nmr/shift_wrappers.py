@@ -20,7 +20,6 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 #############################################################################
 
-from __future__ import print_function, absolute_import
 
 import os
 import subprocess
@@ -28,7 +27,6 @@ from distutils.spawn import find_executable as _find_executable
 from distutils.version import LooseVersion
 
 import numpy as np
-
 from mdtraj.utils import enter_temp_directory, import_
 
 ##############################################################################
@@ -37,11 +35,16 @@ from mdtraj.utils import enter_temp_directory, import_
 
 # Possible names for the external commands -- these are expected
 # to be found in the PATH.
-SHIFTX2 = ['shiftx2.py']
-SPARTA_PLUS = ['sparta+', 'SPARTA+', 'SPARTA+.linux']
-PPM = ['ppm_linux_64.exe']
+SHIFTX2 = ["shiftx2.py"]
+SPARTA_PLUS = ["sparta+", "SPARTA+", "SPARTA+.linux"]
+PPM = ["ppm_linux_64.exe"]
 
-__all__ = ['chemical_shifts_shiftx2', 'chemical_shifts_ppm', 'chemical_shifts_spartaplus', "reindex_dataframe_by_atoms"]
+__all__ = [
+    "chemical_shifts_shiftx2",
+    "chemical_shifts_ppm",
+    "chemical_shifts_spartaplus",
+    "reindex_dataframe_by_atoms",
+]
 
 
 def find_executable(names):
@@ -55,6 +58,7 @@ def find_executable(names):
 ##############################################################################
 # Code
 ##############################################################################
+
 
 def compute_chemical_shifts(trj, model="shiftx2", **kwargs):
     """Predict chemical shifts of a trajectory using ShiftX2.
@@ -92,7 +96,7 @@ def compute_chemical_shifts(trj, model="shiftx2", **kwargs):
     elif model == "sparta+":
         return chemical_shifts_spartaplus(trj, **kwargs)
     else:
-        raise(ValueError("model must be one of shiftx2, ppm, or sparta+"))
+        raise (ValueError("model must be one of shiftx2, ppm, or sparta+"))
 
 
 def chemical_shifts_shiftx2(trj, pH=5.0, temperature=298.00):
@@ -129,35 +133,54 @@ def chemical_shifts_shiftx2(trj, pH=5.0, temperature=298.00):
        "SHIFTX2: significantly improved protein chemical shift
        prediction." J. Biomol. NMR, 50, 1 43-57 (2011)
     """
-    pd = import_('pandas')
+    pd = import_("pandas")
     binary = find_executable(SHIFTX2)
     if binary is None:
-        raise OSError('External command not found. Looked for {} in PATH. '
-                      '`chemical_shifts_shiftx2` requires the external program SHIFTX2, '
-                      'available at http://www.shiftx2.ca/'.format(', '.join(SHIFTX2)))
+        raise OSError(
+            "External command not found. Looked for {} in PATH. "
+            "`chemical_shifts_shiftx2` requires the external program SHIFTX2, "
+            "available at http://www.shiftx2.ca/".format(", ".join(SHIFTX2)),
+        )
 
     results = []
     with enter_temp_directory():
         for i in range(trj.n_frames):
-            fn = './trj%d.pdb' % i
+            fn = "./trj%d.pdb" % i
             trj[i].save(fn)
-            subprocess.check_call([binary,
-                                   '-b', fn,
-                                   '-p', "{:.1f}".format(pH),
-                                   '-t', "{:.2f}".format(temperature),
-                                   ])
+            subprocess.check_call(
+                [
+                    binary,
+                    "-b",
+                    fn,
+                    "-p",
+                    f"{pH:.1f}",
+                    "-t",
+                    f"{temperature:.2f}",
+                ],
+            )
 
             d = pd.read_csv("./trj%d.pdb.cs" % i)
-            d.rename(columns={"NUM": "resSeq", "RES": "resName", "ATOMNAME": "name"}, inplace=True)
+            d.rename(
+                columns={"NUM": "resSeq", "RES": "resName", "ATOMNAME": "name"},
+                inplace=True,
+            )
             d["frame"] = i
             results.append(d)
 
     results = pd.concat(results)
 
-    if LooseVersion(pd.__version__) < LooseVersion('0.14.0'):
-        results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
+    if LooseVersion(pd.__version__) < LooseVersion("0.14.0"):
+        results = results.pivot_table(
+            rows=["resSeq", "name"],
+            cols="frame",
+            values="SHIFT",
+        )
     else:
-        results = results.pivot_table(index=["resSeq", "name"], columns="frame", values="SHIFT")
+        results = results.pivot_table(
+            index=["resSeq", "name"],
+            columns="frame",
+            values="SHIFT",
+        )
 
     return results
 
@@ -193,25 +216,38 @@ def chemical_shifts_ppm(trj):
        shift predictor for the assessment of protein conformational ensembles."
        J Biomol NMR. 2012 Nov;54(3):257-65.
     """
-    pd = import_('pandas')
+    pd = import_("pandas")
     binary = find_executable(PPM)
 
     first_resSeq = trj.top.residue(0).resSeq
 
     if binary is None:
-        raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_ppm` requires the external program PPM, available at http://spin.ccic.ohio-state.edu/index.php/download/index' % ', '.join(PPM))
+        raise OSError(
+            "External command not found. Looked for %s in PATH. `chemical_shifts_ppm` requires the external program PPM, available at http://spin.ccic.ohio-state.edu/index.php/download/index"
+            % ", ".join(PPM),
+        )
 
     with enter_temp_directory():
         trj.save("./trj.pdb")
-        #-para old is on order to use newer ppm versions
+        # -para old is on order to use newer ppm versions
         cmd = "%s -pdb trj.pdb -mode detail -para old" % binary
 
         return_flag = os.system(cmd)
 
         if return_flag != 0:
-            raise(IOError("Could not successfully execute command '%s', check your PPM installation or your input trajectory." % cmd))
+            raise (
+                OSError(
+                    "Could not successfully execute command '%s', check your PPM installation or your input trajectory."
+                    % cmd,
+                )
+            )
 
-        d = pd.read_table("./bb_details.dat", index_col=False, header=None, sep="\s+").drop([3], axis=1)
+        d = pd.read_table(
+            "./bb_details.dat",
+            index_col=False,
+            header=None,
+            sep=r"\s+",
+        ).drop([3], axis=1)
 
         d = d.rename(columns={0: "resSeq", 1: "resName", 2: "name"})
         d["resSeq"] += first_resSeq - 1  # Fix bug in PPM that reindexes to 1
@@ -231,7 +267,7 @@ def _get_lines_to_skip(filename):
         if line.find(format_string) != -1:
             return i + 2
 
-    raise(Exception("No format string found in SPARTA+ file!"))
+    raise (Exception("No format string found in SPARTA+ file!"))
 
 
 def chemical_shifts_spartaplus(trj, rename_HN=True):
@@ -271,25 +307,47 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
        NMR chemical shift prediction by means of an artificial neural network."
        J. Biomol. NMR, 48, 13-22 (2010)
     """
-    pd = import_('pandas')
+    pd = import_("pandas")
     binary = find_executable(SPARTA_PLUS)
     if binary is None:
-        raise OSError('External command not found. Looked for %s in PATH. `chemical_shifts_spartaplus` requires the external program SPARTA+, available at http://spin.niddk.nih.gov/bax/software/SPARTA+/' % ', '.join(SPARTA_PLUS))
+        raise OSError(
+            "External command not found. Looked for %s in PATH. `chemical_shifts_spartaplus` requires the external program SPARTA+, available at http://spin.niddk.nih.gov/bax/software/SPARTA+/"
+            % ", ".join(SPARTA_PLUS),
+        )
 
-    names = ["resSeq", "resName", "name", "SS_SHIFT", "SHIFT", "RC_SHIFT", "HM_SHIFT", "EF_SHIFT", "SIGMA"]
+    names = [
+        "resSeq",
+        "resName",
+        "name",
+        "SS_SHIFT",
+        "SHIFT",
+        "RC_SHIFT",
+        "HM_SHIFT",
+        "EF_SHIFT",
+        "SIGMA",
+    ]
 
     with enter_temp_directory():
         for i in range(trj.n_frames):
             trj[i].save("./trj%d.pdb" % i)
 
-        subprocess.check_call([binary, '-in'] + ["trj{}.pdb".format(i) for i in range(trj.n_frames)]
-                              + ['-out', 'trj0_pred.tab'])
+        subprocess.check_call(
+            [binary, "-in"]
+            + [f"trj{i}.pdb" for i in range(trj.n_frames)]
+            + ["-out", "trj0_pred.tab"],
+        )
 
         lines_to_skip = _get_lines_to_skip("trj0_pred.tab")
 
         results = []
         for i in range(trj.n_frames):
-            d = pd.read_table("./trj%d_pred.tab" % i, names=names, header=None, sep="\s+", skiprows=lines_to_skip)
+            d = pd.read_table(
+                "./trj%d_pred.tab" % i,
+                names=names,
+                header=None,
+                sep=r"\s+",
+                skiprows=lines_to_skip,
+            )
             d["frame"] = i
             results.append(d)
 
@@ -298,10 +356,18 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
     if rename_HN:
         results.name[results.name == "HN"] = "H"
 
-    if LooseVersion(pd.__version__) < LooseVersion('0.14.0'):
-        results = results.pivot_table(rows=["resSeq", "name"], cols="frame", values="SHIFT")
+    if LooseVersion(pd.__version__) < LooseVersion("0.14.0"):
+        results = results.pivot_table(
+            rows=["resSeq", "name"],
+            cols="frame",
+            values="SHIFT",
+        )
     else:
-        results = results.pivot_table(index=["resSeq", "name"], columns="frame", values="SHIFT")
+        results = results.pivot_table(
+            index=["resSeq", "name"],
+            columns="frame",
+            values="SHIFT",
+        )
 
     return results
 
@@ -338,6 +404,11 @@ def reindex_dataframe_by_atoms(trj, frame):
     new_frame = frame.copy()
 
     new_frame["serial"] = top.ix[new_frame.index].serial
-    new_frame = new_frame.dropna().reset_index().set_index("serial").drop(["resSeq", "name"], axis=1)
+    new_frame = (
+        new_frame.dropna()
+        .reset_index()
+        .set_index("serial")
+        .drop(["resSeq", "name"], axis=1)
+    )
 
     return new_frame

@@ -8,7 +8,7 @@ supported trajectory formats. The high level interface is provided by the
 .. currentmodule:: mdtraj.formats
 .. autosummary::
     :toctree: generated/
-    
+
     AmberNetCDFRestartFile
     AmberRestartFile
     ArcTrajectoryFile

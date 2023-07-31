@@ -96,4 +96,3 @@ void Ptngc_comp_conv_from_rle(unsigned int *rle,
         vals[i++]=v-2;
     }
 }
-

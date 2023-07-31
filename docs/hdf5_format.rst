@@ -246,7 +246,7 @@ a string and stored in the HDF5 file with an ASCII encoding.
 The topology stores a hierarchical description of the chains, residues,
 and atoms in the system. Each chain is associated with an ``index`` and
 a list of residues. Each residue is associated with a ``name``, an
-``index``, a ``resSeq`` index (not zero-indexed), and a list of ``atom``\ s. 
+``index``, a ``resSeq`` index (not zero-indexed), and a list of ``atom``\ s.
 Each ``atom`` is associated with a
 ``name``, an ``element``, and an ``index``. All of the indicies should
 be zero-based.
@@ -369,4 +369,3 @@ Since it's JSON, the whitespace is optional and just for readability.
                                'index': 2,
                                'resSeq': 3,
                                'name': 'NME'}]}]}
-

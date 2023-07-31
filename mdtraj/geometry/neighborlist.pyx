@@ -25,7 +25,8 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
+from __future__ import division, print_function
+
 import numpy as np
 from mdtraj.utils import ensure_type
 

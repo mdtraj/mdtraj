@@ -264,4 +264,3 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
 
     return msdFromMandG(M, G_a, G_b, nrealatoms, computeRot, rot);
 }
-

@@ -21,7 +21,6 @@
 ##############################################################################
 
 
-
 # Portions of this code were copied from the Numpy source
 # those portions are owned by the numpy developers, and released
 # under the following license:
@@ -74,24 +73,22 @@ True
 Functions
 ---------
 """
-from __future__ import print_function, division, absolute_import
 
 import io
 import os
 import warnings
+
 import numpy as np
 from mdtraj.utils import import_
-from mdtraj.utils.six import PY2, PY3, iteritems, StringIO
-if PY3:
-    basestring = str
-tables = import_('tables')
-TABLES2 = tables.__version__ < '3.0.0'
 
-__all__ = ['saveh', 'loadh']
+tables = import_("tables")
+TABLES2 = tables.__version__ < "3.0.0"
+
+__all__ = ["saveh", "loadh"]
 
 try:
-    COMPRESSION = tables.Filters(complevel=9, complib='zlib', shuffle=True)
-except Exception:  #type?
+    COMPRESSION = tables.Filters(complevel=9, complib="zlib", shuffle=True)
+except Exception:  # type?
     warnings.warn("Missing Zlib; no compression will used.")
     COMPRESSION = tables.Filters()
 
@@ -158,65 +155,79 @@ def saveh(file, *args, **kwargs):
     numpy.savez : Save several arrays into a single file in uncompressed ``.npz`` format.
     """
 
-
-    if isinstance(file, basestring):
+    if isinstance(file, str):
         if TABLES2:
-            handle = tables.openFile(file, 'a')
+            handle = tables.openFile(file, "a")
         else:
-            handle = tables.open_file(file, 'a')
+            handle = tables.open_file(file, "a")
         own_fid = True
     else:
         if not isinstance(file, tables.File):
-            raise TypeError('file must be either a string '
-                'or an open tables.File: %s' % file)
+            raise TypeError(
+                "file must be either a string " "or an open tables.File: %s" % file,
+            )
         handle = file
         own_fid = False
 
     # name all the arrays
     namedict = kwargs
     for i, val in enumerate(args):
-        key = 'arr_%d' % i
+        key = "arr_%d" % i
         if key in namedict.keys():
             if own_fid:
                 handle.close()
-            raise ValueError('Cannot use un-named variables '
-                ' and keyword %s' % key)
+            raise ValueError(
+                "Cannot use un-named variables " " and keyword %s" % key,
+            )
         namedict[key] = val
 
     # ensure that they don't already exist
     if TABLES2:
-        current_nodes = [e.name for e in handle.listNodes(where='/')]
+        current_nodes = [e.name for e in handle.listNodes(where="/")]
     else:
-        current_nodes = [e.name for e in handle.list_nodes(where='/')]
+        current_nodes = [e.name for e in handle.list_nodes(where="/")]
 
     for key in namedict.keys():
         if key in current_nodes:
             if TABLES2:
-                handle.removeNode('/', name=key)
+                handle.removeNode("/", name=key)
             else:
-                handle.remove_node('/', name=key)
+                handle.remove_node("/", name=key)
             # per discussion on github, https://github.com/rmcgibbo/mdtraj/issues/5
             # silent overwriting appears to be the desired functionality
             # raise IOError('Array already exists in file: %s' % key)
 
     # save all the arrays
     try:
-        for key, val in iteritems(namedict):
+        for key, val in namedict.items():
             if not isinstance(val, np.ndarray):
-                raise TypeError('Only numpy arrays can '
-                    'be saved: type(%s) is %s' % (key, type(val)))
+                raise TypeError(
+                    "Only numpy arrays can "
+                    "be saved: type(%s) is %s" % (key, type(val)),
+                )
             try:
                 atom = tables.Atom.from_dtype(val.dtype)
             except ValueError:
-                raise TypeError('Arrays of this dtype '
-                    'cannot be saved: %s' % val.dtype)
+                raise TypeError(
+                    "Arrays of this dtype " "cannot be saved: %s" % val.dtype,
+                )
 
             if TABLES2:
-                node = handle.createCArray(where='/', name=key, atom=atom,
-                                           shape=val.shape, filters=COMPRESSION)
+                node = handle.createCArray(
+                    where="/",
+                    name=key,
+                    atom=atom,
+                    shape=val.shape,
+                    filters=COMPRESSION,
+                )
             else:
-                node = handle.create_carray(where='/', name=key, atom=atom,
-                                           shape=val.shape, filters=COMPRESSION)
+                node = handle.create_carray(
+                    where="/",
+                    name=key,
+                    atom=atom,
+                    shape=val.shape,
+                    filters=COMPRESSION,
+                )
 
             node[:] = val
 
@@ -265,29 +276,31 @@ def loadh(file, name=Ellipsis, deferred=True):
     numpy.load : Load an array(s) or pickled objects from .npy, .npz, or pickled files.
     """
 
-    if isinstance(file, basestring):
+    if isinstance(file, str):
         if TABLES2:
-            handle = tables.openFile(file, mode='r')
+            handle = tables.openFile(file, mode="r")
         else:
-            handle = tables.open_file(file, mode='r')
+            handle = tables.open_file(file, mode="r")
         own_fid = True
     else:
         if not isinstance(file, tables.File):
-            raise TypeError('file must be either a string '
-                'or an open tables.File: %s' % file)
+            raise TypeError(
+                "file must be either a string " "or an open tables.File: %s" % file,
+            )
         handle = file
         own_fid = False
 
     # if name is a single string, deferred loading is not used
-    if isinstance(name, basestring):
+    if isinstance(name, str):
         try:
             if TABLES2:
-                node = handle.getNode(where='/', name=name)
+                node = handle.getNode(where="/", name=name)
             else:
-                node = handle.get_node(where='/', name=name)
+                node = handle.get_node(where="/", name=name)
         except tables.NoSuchNodeError:
-            raise KeyError('Node "%s" does not exist '
-                'in file %s' % (name, file))
+            raise KeyError(
+                'Node "%s" does not exist ' "in file %s" % (name, file),
+            )
 
         return_value = np.array(node[:])
         if own_fid:
@@ -297,9 +310,9 @@ def loadh(file, name=Ellipsis, deferred=True):
     if not deferred:
         result = {}
         if TABLES2:
-            iterator = handle.walkNodes(where='/')
+            iterator = handle.walkNodes(where="/")
         else:
-            iterator = handle.walk_nodes(where='/')
+            iterator = handle.walk_nodes(where="/")
         for node in iterator:
             if isinstance(node, tables.Array):
                 # note that we want to strip off the leading "/"
@@ -312,16 +325,24 @@ def loadh(file, name=Ellipsis, deferred=True):
     return DeferredTable(handle, own_fid)
 
 
-class DeferredTable(object):
+class DeferredTable:
     def __init__(self, handle, own_fid):
         self._handle = handle
 
         # get the paths of all of the nodes that are arrays (note that)
         # we're skipping Tables
         if TABLES2:
-            self._node_names = [node._v_pathname[1:] for node in handle.walkNodes(where='/') if isinstance(node, tables.Array)]
+            self._node_names = [
+                node._v_pathname[1:]
+                for node in handle.walkNodes(where="/")
+                if isinstance(node, tables.Array)
+            ]
         else:
-            self._node_names = [node._v_pathname[1:] for node in handle.walk_nodes(where='/') if isinstance(node, tables.Array)]
+            self._node_names = [
+                node._v_pathname[1:]
+                for node in handle.walk_nodes(where="/")
+                if isinstance(node, tables.Array)
+            ]
 
         self._loaded = {}
         self._own_fid = own_fid
@@ -329,14 +350,24 @@ class DeferredTable(object):
         repr_strings = []
         for name in self._node_names:
             if TABLES2:
-                repr_strings.append('  %s: [shape=%s, dtype=%s]' %
-                                    (name, handle.getNode(where='/', name=name).shape,
-                                     handle.getNode(where='/', name=name).dtype))
+                repr_strings.append(
+                    "  %s: [shape=%s, dtype=%s]"
+                    % (
+                        name,
+                        handle.getNode(where="/", name=name).shape,
+                        handle.getNode(where="/", name=name).dtype,
+                    ),
+                )
             else:
-                repr_strings.append('  %s: [shape=%s, dtype=%s]' %
-                                    (name, handle.get_node(where='/', name=name).shape,
-                                     handle.get_node(where='/', name=name).dtype))
-        self._repr_string = '{\n%s\n}' % ',\n'.join(repr_strings)
+                repr_strings.append(
+                    "  %s: [shape=%s, dtype=%s]"
+                    % (
+                        name,
+                        handle.get_node(where="/", name=name).shape,
+                        handle.get_node(where="/", name=name).dtype,
+                    ),
+                )
+        self._repr_string = "{\n%s\n}" % ",\n".join(repr_strings)
 
     def __repr__(self):
         return self._repr_string
@@ -345,17 +376,17 @@ class DeferredTable(object):
         self.close()
 
     def close(self):
-        if hasattr(self, '_own_fid') and self._own_fid:
+        if hasattr(self, "_own_fid") and self._own_fid:
             self._handle.close()
 
     def __getitem__(self, key):
         if key not in self._node_names:
-            raise KeyError('%s not in %s' % (key, self._node_names))
+            raise KeyError(f"{key} not in {self._node_names}")
         if key not in self._loaded:
             if TABLES2:
-                self._loaded[key] = self._handle.getNode(where='/', name=key)[:]
+                self._loaded[key] = self._handle.getNode(where="/", name=key)[:]
             else:
-                self._loaded[key] = self._handle.get_node(where='/', name=key)[:]
+                self._loaded[key] = self._handle.get_node(where="/", name=key)[:]
         return self._loaded[key]
 
     def iteritems(self):

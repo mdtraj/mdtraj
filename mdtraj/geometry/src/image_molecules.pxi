@@ -2,9 +2,11 @@
 # This file is lovingly included from _geometry.pyx
 
 import numpy as np
+
 cimport numpy as np
-from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
+from libcpp.vector cimport vector
+
 
 cdef extern from "math_patch.h" nogil:
     float roundf(float x)

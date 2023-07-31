@@ -71,4 +71,3 @@ std::vector<std::vector<int> >& permute_groups)
 
     return mapping;
 }
-

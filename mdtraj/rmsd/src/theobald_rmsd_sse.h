@@ -13,7 +13,7 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
      *
      *   Structure setup for this function:
      *
-     *   structures are stored axis major, and if this file is compiled with 
+     *   structures are stored axis major, and if this file is compiled with
      *   -DALIGNED, possibly with extra padding to ensure you meet two constraints:
      *       - the number of elements in a row must be a multiple of 4
      *       - the first element in each row must be aligned to a 16 byte boundary
@@ -31,7 +31,7 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
      *   pad it out to a multiple of 4 using zeros (using anything other than zero will
      *   make the calculation go wrong).
      *
-     * On the other hand, when this file is compiled without -DALIGNED, then 
+     * On the other hand, when this file is compiled without -DALIGNED, then
      * there are no 16 byte alignment or dummy atom requirements, and the
      * "npaddedatoms" argument is ignored.
      *
@@ -90,7 +90,7 @@ float msd_axis_major(const int nrealatoms, const int npaddedatoms, const int row
     niters = (nrealatoms + 4-1) / 4;
     mask = masks[nrealatoms%4];
 #endif
-    
+
     xx = xy = xz = yx = yy = yz = zx = zy = zz = _mm_setzero_ps();
     for (k = 0; k < niters; k++) {
 #ifdef ALIGNED
@@ -210,7 +210,7 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
      *   pad it out to a multiple of 4 using zeros (using anything other than zero will
      *   make the calculation go wrong).
      *
-     * On the other hand, when this file is compiled without -DALIGNED, then 
+     * On the other hand, when this file is compiled without -DALIGNED, then
      * there are no 16 byte alignment or dummy atom requirements, and the
      * "npaddedatoms" argument is ignored.
      *
@@ -269,13 +269,13 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
     niters = (nrealatoms + 4-1) / 4;
     mask = masks[nrealatoms%4];
 #endif
-    
+
     xx = xy = xz = yx = yy = yz = zx = zy = zz = _mm_setzero_ps();
     for (k = 0; k < niters; k++) {
 #ifdef ALIGNED
         aos_deinterleaved_load(b,&bx,&by,&bz);
         aos_deinterleaved_load(a,&ax,&ay,&az);
-#else 
+#else
         if (k == niters - 1) {
             /* x  y  z  */
             /* 0  1  2  */
@@ -333,4 +333,3 @@ float msd_atom_major(const int nrealatoms, const int npaddedatoms,
     _mm_store_ps(M+8, zz);
     return msdFromMandG(M, G_a, G_b, nrealatoms, computeRot, rot);
 }
-

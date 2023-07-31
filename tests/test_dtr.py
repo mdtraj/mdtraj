@@ -22,14 +22,15 @@
 
 
 import numpy as np
-from mdtraj.formats import DTRTrajectoryFile, DCDTrajectoryFile
-from mdtraj.testing import eq
 import pytest
+from mdtraj.formats import DCDTrajectoryFile, DTRTrajectoryFile
+from mdtraj.testing import eq
+
 
 def test_read(get_fn):
     # Test the default read and compare against reference trajectory in dcd format
-    fn_dtr = get_fn('frame0.dtr')
-    fn_dcd = get_fn('frame0.dcd')
+    fn_dtr = get_fn("frame0.dtr")
+    fn_dcd = get_fn("frame0.dcd")
     dtr_traj = DTRTrajectoryFile(fn_dtr)
     eq(len(dtr_traj), 501)
     xyz, times, cell_lens, cell_angles = dtr_traj.read()
@@ -41,9 +42,11 @@ def test_read(get_fn):
 
 def test_read_1(get_fn):
     # test read with n_frame
-    fn_dtr = get_fn('frame0.dtr')
+    fn_dtr = get_fn("frame0.dtr")
     xyz, times, cell_lens, cell_angles = DTRTrajectoryFile(fn_dtr).read()
-    xyz2, times2, cell_lens2, cell_angles2 = DTRTrajectoryFile(fn_dtr).read(n_frames=501)
+    xyz2, times2, cell_lens2, cell_angles2 = DTRTrajectoryFile(fn_dtr).read(
+        n_frames=501,
+    )
     eq(xyz, xyz2)
     eq(times, times2)
     eq(cell_lens, cell_lens2)
@@ -52,10 +55,12 @@ def test_read_1(get_fn):
 
 def test_read_2(get_fn):
     # test read with atom indices
-    fn_dtr = get_fn('frame0.dtr')
+    fn_dtr = get_fn("frame0.dtr")
     indices = np.array([0, 3, 12, 4])
     xyz, times, cell_lens, cell_angles = DTRTrajectoryFile(fn_dtr).read()
-    xyz2, times2, cell_lens2, cell_angles2 = DTRTrajectoryFile(fn_dtr).read(atom_indices=indices)
+    xyz2, times2, cell_lens2, cell_angles2 = DTRTrajectoryFile(fn_dtr).read(
+        atom_indices=indices,
+    )
     eq(xyz[:, indices, :], xyz2)
     eq(times, times2)
     eq(cell_lens, cell_lens2)
@@ -64,7 +69,7 @@ def test_read_2(get_fn):
 
 def test_read_3(get_fn):
     # Test read with n_frames
-    fn_dtr = get_fn('frame0.dtr')
+    fn_dtr = get_fn("frame0.dtr")
     dtr_traj = DTRTrajectoryFile(fn_dtr)
     dtr_traj.seek(1)
     xyz, times, cell_lens, cell_angles = dtr_traj.read(n_frames=900)
@@ -73,7 +78,7 @@ def test_read_3(get_fn):
 
 def test_read_stride(get_fn):
     # Read dtr with stride
-    fn_dtr = get_fn('frame0.dtr')
+    fn_dtr = get_fn("frame0.dtr")
     with DTRTrajectoryFile(fn_dtr) as f:
         xyz1, times1, box_lengths1, box_angles1 = f.read()
     with DTRTrajectoryFile(fn_dtr) as f:
@@ -87,7 +92,7 @@ def test_read_stride(get_fn):
 
 def test_read_4(get_fn):
     # Read dtr with stride and n_frames
-    fn_dtr = get_fn('frame0.dtr')
+    fn_dtr = get_fn("frame0.dtr")
     with DTRTrajectoryFile(fn_dtr) as f:
         xyz1, times1, box_lengths1, box_angles1 = f.read()
     with DTRTrajectoryFile(fn_dtr) as f:
@@ -101,8 +106,10 @@ def test_read_4(get_fn):
 
 def test_read_5(get_fn):
     # Check streaming read of frames 1 at a time
-    fn_dtr = get_fn('frame0.dtr')
-    xyz_ref, times_ref, box_lengths_ref, box_angles_ref = DTRTrajectoryFile(fn_dtr).read()
+    fn_dtr = get_fn("frame0.dtr")
+    xyz_ref, times_ref, box_lengths_ref, box_angles_ref = DTRTrajectoryFile(
+        fn_dtr,
+    ).read()
 
     reader = DTRTrajectoryFile(fn_dtr)
     for i in range(len(xyz_ref)):
@@ -115,8 +122,10 @@ def test_read_5(get_fn):
 
 def test_read_6(get_fn):
     # Check streaming read followed by reading the 'rest'
-    fn_dtr = get_fn('frame0.dtr')
-    xyz_ref, times_ref, box_lengths_ref, box_angles_ref = DTRTrajectoryFile(fn_dtr).read()
+    fn_dtr = get_fn("frame0.dtr")
+    xyz_ref, times_ref, box_lengths_ref, box_angles_ref = DTRTrajectoryFile(
+        fn_dtr,
+    ).read()
 
     reader = DTRTrajectoryFile(fn_dtr)
     for i in range(len(xyz_ref) // 2):
@@ -138,7 +147,7 @@ def test_read_6(get_fn):
 
 def test_read_7(get_fn):
     # Test two full reads
-    fn_dtr = get_fn('frame0.dtr')
+    fn_dtr = get_fn("frame0.dtr")
     reader = DTRTrajectoryFile(fn_dtr)
     xyz, times, cell_lens, cell_angles = reader.read()
     xyz, times, cell_lens, cell_angles = reader.read()
@@ -149,7 +158,7 @@ def test_read_7(get_fn):
 
 
 def test_read_8(get_fn):
-    fn_dtr = get_fn('frame0.dtr')
+    fn_dtr = get_fn("frame0.dtr")
     with DTRTrajectoryFile(fn_dtr) as f:
         xyz_ref, times_ref, box_lengths_ref, box_angles_ref = f.read()
     with DTRTrajectoryFile(fn_dtr) as f:
@@ -160,12 +169,16 @@ def test_read_8(get_fn):
 
 def test_write_1(tmpdir, get_fn):
     # Test write
-    fn_dtr = get_fn('frame0.dtr')
-    fn = '{}/x.dtr'.format(tmpdir)
+    fn_dtr = get_fn("frame0.dtr")
+    fn = f"{tmpdir}/x.dtr"
     xyz, times, cell_lens, cell_angles = DTRTrajectoryFile(fn_dtr).read()
     xyz += 1
-    DTRTrajectoryFile(fn, 'w').write(xyz, cell_lengths=cell_lens,
-                                     cell_angles=cell_angles, times=times)
+    DTRTrajectoryFile(fn, "w").write(
+        xyz,
+        cell_lengths=cell_lens,
+        cell_angles=cell_angles,
+        times=times,
+    )
 
     xyz2, times2, cell_lens2, cell_angles2 = DTRTrajectoryFile(fn).read()
 
@@ -177,17 +190,25 @@ def test_write_1(tmpdir, get_fn):
 
 def test_write_2(tmpdir, get_fn):
     # Test two separate write call
-    fn_dtr = get_fn('frame0.dtr')
-    fn = '{}/x.dtr'.format(tmpdir)
+    fn_dtr = get_fn("frame0.dtr")
+    fn = f"{tmpdir}/x.dtr"
     xyz, times, cell_lens, cell_angles = DTRTrajectoryFile(fn_dtr).read()
-    writer = DTRTrajectoryFile(fn, 'w')
-    writer.write(xyz, cell_lengths=cell_lens,
-                 cell_angles=cell_angles, times=times)
+    writer = DTRTrajectoryFile(fn, "w")
+    writer.write(
+        xyz,
+        cell_lengths=cell_lens,
+        cell_angles=cell_angles,
+        times=times,
+    )
 
     n_frames = len(xyz)
     times += 50.0
-    writer.write(xyz, cell_lengths=cell_lens,
-                 cell_angles=cell_angles, times=times)
+    writer.write(
+        xyz,
+        cell_lengths=cell_lens,
+        cell_angles=cell_angles,
+        times=times,
+    )
 
     writer.close()
 
@@ -202,18 +223,32 @@ def test_write_2(tmpdir, get_fn):
 
 def test_write_3(tmpdir):
     # Test a random write operation
-    xyz = np.array(np.random.uniform(low=-50, high=-50, size=(3, 17, 3)), dtype=np.float32)
+    xyz = np.array(
+        np.random.uniform(low=-50, high=-50, size=(3, 17, 3)),
+        dtype=np.float32,
+    )
     times = np.array([1, 23.0, 48.0], dtype=np.float64)
-    cell_lengths = np.array(np.random.uniform(low=100, high=200, size=(3, 3)), dtype=np.float32)
-    cell_angles = np.array([[90, 90, 90],
-                            [80, 100, 120],
-                            [120, 90, 80]],
-                           dtype=np.float32)
+    cell_lengths = np.array(
+        np.random.uniform(low=100, high=200, size=(3, 3)),
+        dtype=np.float32,
+    )
+    cell_angles = np.array(
+        [
+            [90, 90, 90],
+            [80, 100, 120],
+            [120, 90, 80],
+        ],
+        dtype=np.float32,
+    )
 
-    fn = '{}/x.dtr'.format(tmpdir)
-    with DTRTrajectoryFile(fn, 'w') as f:
-        f.write(xyz, cell_lengths=cell_lengths,
-                cell_angles=cell_angles, times=times)
+    fn = f"{tmpdir}/x.dtr"
+    with DTRTrajectoryFile(fn, "w") as f:
+        f.write(
+            xyz,
+            cell_lengths=cell_lengths,
+            cell_angles=cell_angles,
+            times=times,
+        )
     with DTRTrajectoryFile(fn) as f:
         xyz2, times2, cell_lengths2, cell_angles2 = f.read()
 
@@ -222,17 +257,27 @@ def test_write_3(tmpdir):
 
 def test_write_4(tmpdir):
     # Test write error
-    xyz = np.array(np.random.uniform(low=-50, high=-50, size=(3, 17, 3)), dtype=np.float32)
+    xyz = np.array(
+        np.random.uniform(low=-50, high=-50, size=(3, 17, 3)),
+        dtype=np.float32,
+    )
     times = np.array([1, 23.0, 48.0], dtype=np.float64)
-    cell_lengths = np.array(np.random.uniform(low=100, high=200, size=(3, 3)), dtype=np.float32)
-    cell_angles = np.array([[90, 90, 90],
-                            [80, 100, 120],
-                            [120, 90, 80]],
-                           dtype=np.float32)
+    cell_lengths = np.array(
+        np.random.uniform(low=100, high=200, size=(3, 3)),
+        dtype=np.float32,
+    )
+    cell_angles = np.array(
+        [
+            [90, 90, 90],
+            [80, 100, 120],
+            [120, 90, 80],
+        ],
+        dtype=np.float32,
+    )
 
     bad_times = np.array([21, 3.0, 48.0], dtype=np.float64)
-    fn = '{}/x.dtr'.format(tmpdir)
-    f = DTRTrajectoryFile(fn, 'w')
+    fn = f"{tmpdir}/x.dtr"
+    f = DTRTrajectoryFile(fn, "w")
     with pytest.raises(ValueError):
         f.write(xyz, cell_lengths=cell_lengths)
     with pytest.raises(ValueError):
@@ -240,13 +285,17 @@ def test_write_4(tmpdir):
     with pytest.raises(ValueError):
         f.write(xyz, times=times)
     with pytest.raises(ValueError):
-        f.write(xyz, cell_lengths=cell_lengths,
-                cell_angles=cell_angles, times=bad_times)
+        f.write(
+            xyz,
+            cell_lengths=cell_lengths,
+            cell_angles=cell_angles,
+            times=bad_times,
+        )
     f.close()
 
 
 def test_seek(get_fn):
-    fn_dtr = get_fn('frame0.dtr')
+    fn_dtr = get_fn("frame0.dtr")
     reference = DTRTrajectoryFile(fn_dtr).read()[0]
     with DTRTrajectoryFile(fn_dtr) as f:
         eq(f.tell(), 0)
@@ -273,7 +322,7 @@ def test_seek(get_fn):
 
 
 def test_read_closed(get_fn):
-    fn_dtr = get_fn('frame0.dtr')
+    fn_dtr = get_fn("frame0.dtr")
     with pytest.raises(IOError):
         f = DTRTrajectoryFile(fn_dtr)
         f.close()
@@ -281,7 +330,7 @@ def test_read_closed(get_fn):
 
 
 def test_tell(get_fn):
-    fn_dtr = get_fn('frame0.dtr')
+    fn_dtr = get_fn("frame0.dtr")
     with DTRTrajectoryFile(fn_dtr) as f:
         last = len(f)
         eq(f.tell(), 0)
@@ -294,4 +343,3 @@ def test_tell(get_fn):
 
         f.seek(600)
         eq(f.tell(), last)
-

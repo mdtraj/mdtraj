@@ -5,22 +5,29 @@ from distutils.spawn import find_executable
 import mdtraj as md
 import numpy as np
 import pytest
-from mdtraj.geometry.dihedral import (compute_chi1, compute_chi2, compute_chi3,
-                                      compute_chi4, compute_omega, compute_phi,
-                                      compute_psi, compute_chi5)
+from mdtraj.geometry.dihedral import (
+    compute_chi1,
+    compute_chi2,
+    compute_chi3,
+    compute_chi4,
+    compute_chi5,
+    compute_omega,
+    compute_phi,
+    compute_psi,
+)
 from mdtraj.testing import eq
 
 
 @pytest.fixture()
 def traj(get_fn):
-    return md.load(get_fn('2EQQ.pdb'))
+    return md.load(get_fn("2EQQ.pdb"))
 
 
 @pytest.fixture()
 def pymol():
-    pymol = find_executable('pymol')
+    pymol = find_executable("pymol")
     if pymol is None:
-        try_paths = ['/Applications/MacPyMOL.app/Contents/MacOS/MacPyMOL']
+        try_paths = ["/Applications/MacPyMOL.app/Contents/MacOS/MacPyMOL"]
         for path in try_paths:
             if os.path.exists(path):
                 pymol = path
@@ -55,7 +62,8 @@ def test_compute_chi(get_fn, tmpdir, pymol, traj):
     except ImportError:
         pytest.skip("jinja2 is required for this test")
 
-    pymol_script = Template('''
+    pymol_script = Template(
+        """
 import numpy as np
 from pymol import cmd, CmdException
 
@@ -96,27 +104,46 @@ for n, chi_atoms in enumerate([CHI1_ATOMS, CHI2_ATOMS, CHI3_ATOMS, CHI4_ATOMS, C
     np.savetxt("{{indices_fn}}.%d" % (n+1), indices, '%d')
     np.savetxt("{{angles_fn}}.%d" % (n+1), angles)
 
-cmd.quit()''')
+cmd.quit()""",
+    )
 
-    indices_fn = os.path.join(tmpdir, 'indices')
-    angles_fn = os.path.join(tmpdir, 'angles')
-    pymolscript_fn = os.path.join(tmpdir, 'pymolscript.py')
+    indices_fn = os.path.join(tmpdir, "indices")
+    angles_fn = os.path.join(tmpdir, "angles")
+    pymolscript_fn = os.path.join(tmpdir, "pymolscript.py")
 
-    with open(pymolscript_fn, 'w') as f:
-        f.write(pymol_script.render({'indices_fn': indices_fn,
-                                     'angles_fn': angles_fn}))
+    with open(pymolscript_fn, "w") as f:
+        f.write(
+            pymol_script.render(
+                {
+                    "indices_fn": indices_fn,
+                    "angles_fn": angles_fn,
+                },
+            ),
+        )
 
-    os.system('%s %s -cr %s' % (pymol, get_fn('2EQQ.pdb'), pymolscript_fn))
+    os.system("{} {} -cr {}".format(pymol, get_fn("2EQQ.pdb"), pymolscript_fn))
 
-    ref_indices = [np.loadtxt(indices_fn + '.%d' % i, dtype=int) for i in range(1, 5)]
-    ref_angles = [np.loadtxt(angles_fn + '.%d' % i) for i in range(1, 5)]
+    ref_indices = [np.loadtxt(indices_fn + ".%d" % i, dtype=int) for i in range(1, 5)]
+    ref_angles = [np.loadtxt(angles_fn + ".%d" % i) for i in range(1, 5)]
 
-    indices, angles = zip(*[compute_chi1(traj, opt=False), compute_chi2(traj, opt=False),
-                            compute_chi3(traj, opt=False), compute_chi4(traj, opt=False),
-                            compute_chi5(traj, opt=False)])
-    indices_opt, angles_opt = zip(*[compute_chi1(traj, opt=True), compute_chi2(traj, opt=True),
-                                    compute_chi3(traj, opt=True), compute_chi4(traj, opt=True),
-                                    compute_chi5(traj, opt=True)])
+    indices, angles = zip(
+        *[
+            compute_chi1(traj, opt=False),
+            compute_chi2(traj, opt=False),
+            compute_chi3(traj, opt=False),
+            compute_chi4(traj, opt=False),
+            compute_chi5(traj, opt=False),
+        ],
+    )
+    indices_opt, angles_opt = zip(
+        *[
+            compute_chi1(traj, opt=True),
+            compute_chi2(traj, opt=True),
+            compute_chi3(traj, opt=True),
+            compute_chi4(traj, opt=True),
+            compute_chi5(traj, opt=True),
+        ],
+    )
 
     for x, y in zip(indices, ref_indices):
         eq(x, y)
@@ -136,40 +163,44 @@ def test_compute_omega(traj):
 
 
 def test_shape_when_none(get_fn):
-    t = md.load(get_fn('frame0.h5'))
-    np.hstack((md.compute_phi(t)[1],
-               md.compute_psi(t)[1],
-               md.compute_chi1(t)[1],
-               md.compute_chi2(t)[1],
-               md.compute_chi3(t)[1],
-               md.compute_chi1(t)[1],
-               md.compute_omega(t)[1]))
+    t = md.load(get_fn("frame0.h5"))
+    np.hstack(
+        (
+            md.compute_phi(t)[1],
+            md.compute_psi(t)[1],
+            md.compute_chi1(t)[1],
+            md.compute_chi2(t)[1],
+            md.compute_chi3(t)[1],
+            md.compute_chi1(t)[1],
+            md.compute_omega(t)[1],
+        ),
+    )
 
 
 def test_dihedral_1(pymol, tmpdir):
-    xyz = '''MODEL        0
+    xyz = """MODEL        0
 ATOM      1    A ACE     1       4.300  13.100   8.600  1.00  0.00
 ATOM      2    B ACE     1       5.200  13.600   8.800  1.00  0.00
 ATOM      3    C ACE     1       4.900  14.300   9.600  1.00  0.00
 ATOM      4    D ACE     1       5.600  14.200   7.900  1.00  0.00
-    '''
-    script = '''
+    """
+    script = """
 from pymol import cmd
 with open('output.txt', 'w') as f:
     f.write('%f' % cmd.get_dihedral('1/A', '1/B', '1/C', '1/D'))
-'''
-    prevdir = os.path.abspath('.')
+"""
+    prevdir = os.path.abspath(".")
     try:
         os.chdir(tmpdir)
-        with open('xyz.pdb', 'w') as f:
+        with open("xyz.pdb", "w") as f:
             f.write(xyz)
-        with open('pymolscript.py', 'w') as f:
+        with open("pymolscript.py", "w") as f:
             f.write(script)
 
-        os.system('%s %s -cr %s' % (pymol, 'xyz.pdb', 'pymolscript.py'))
-        with open('output.txt') as f:
+        os.system("{} {} -cr {}".format(pymol, "xyz.pdb", "pymolscript.py"))
+        with open("output.txt") as f:
             pymol_value = np.deg2rad(float(f.read()))
-        t = md.load('xyz.pdb')
+        t = md.load("xyz.pdb")
     finally:
         os.chdir(prevdir)
 
@@ -181,10 +212,10 @@ with open('output.txt', 'w') as f:
 def test_dihedral_2chains(get_fn):
     # make sure that comput_phi is finding dihedrals from all of the chains
     # in a multi-chain topology
-    t = md.load_pdb(get_fn('4OH9.pdb'))
+    t = md.load_pdb(get_fn("4OH9.pdb"))
 
     # remove the water
-    water_indices = [a.index for a in t.top.atoms if a.residue.name != 'HOH']
+    water_indices = [a.index for a in t.top.atoms if a.residue.name != "HOH"]
     t.restrict_atoms(water_indices)
 
     # okay we've got two protein chains

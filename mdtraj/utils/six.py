@@ -33,15 +33,15 @@ PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
 if PY3:
-    string_types = str,
-    integer_types = int,
-    class_types = type,
+    string_types = (str,)
+    integer_types = (int,)
+    class_types = (type,)
     text_type = str
     binary_type = bytes
 
     MAXSIZE = sys.maxsize
 else:
-    string_types = basestring,
+    string_types = (basestring,)
     integer_types = (int, long)
     class_types = (type, types.ClassType)
     text_type = unicode
@@ -52,9 +52,10 @@ else:
         MAXSIZE = int((1 << 31) - 1)
     else:
         # It's possible to have sizeof(long) != sizeof(Py_ssize_t).
-        class X(object):
+        class X:
             def __len__(self):
                 return 1 << 31
+
         try:
             len(X())
         except OverflowError:
@@ -77,8 +78,7 @@ def _import_module(name):
     return sys.modules[name]
 
 
-class _LazyDescr(object):
-
+class _LazyDescr:
     def __init__(self, name):
         self.name = name
 
@@ -91,9 +91,8 @@ class _LazyDescr(object):
 
 
 class MovedModule(_LazyDescr):
-
     def __init__(self, name, old, new=None):
-        super(MovedModule, self).__init__(name)
+        super().__init__(name)
         if PY3:
             if new is None:
                 new = name
@@ -106,9 +105,8 @@ class MovedModule(_LazyDescr):
 
 
 class MovedAttribute(_LazyDescr):
-
     def __init__(self, name, old_mod, new_mod, old_attr=None, new_attr=None):
-        super(MovedAttribute, self).__init__(name)
+        super().__init__(name)
         if PY3:
             if new_mod is None:
                 new_mod = name
@@ -130,7 +128,6 @@ class MovedAttribute(_LazyDescr):
         return getattr(module, self.attr)
 
 
-
 class _MovedItems(types.ModuleType):
     """Lazy loading of moved objects"""
 
@@ -138,7 +135,13 @@ class _MovedItems(types.ModuleType):
 _moved_attributes = [
     MovedAttribute("cStringIO", "cStringIO", "io", "StringIO"),
     MovedAttribute("filter", "itertools", "builtins", "ifilter", "filter"),
-    MovedAttribute("filterfalse", "itertools", "itertools", "ifilterfalse", "filterfalse"),
+    MovedAttribute(
+        "filterfalse",
+        "itertools",
+        "itertools",
+        "ifilterfalse",
+        "filterfalse",
+    ),
     MovedAttribute("input", "__builtin__", "builtins", "raw_input", "input"),
     MovedAttribute("map", "itertools", "builtins", "imap", "map"),
     MovedAttribute("range", "__builtin__", "builtins", "xrange", "range"),
@@ -148,8 +151,13 @@ _moved_attributes = [
     MovedAttribute("UserString", "UserString", "collections"),
     MovedAttribute("xrange", "__builtin__", "builtins", "xrange", "range"),
     MovedAttribute("zip", "itertools", "builtins", "izip", "zip"),
-    MovedAttribute("zip_longest", "itertools", "itertools", "izip_longest", "zip_longest"),
-
+    MovedAttribute(
+        "zip_longest",
+        "itertools",
+        "itertools",
+        "izip_longest",
+        "zip_longest",
+    ),
     MovedModule("builtins", "__builtin__"),
     MovedModule("configparser", "ConfigParser"),
     MovedModule("copyreg", "copy_reg"),
@@ -176,15 +184,24 @@ _moved_attributes = [
     MovedModule("tkinter_tix", "Tix", "tkinter.tix"),
     MovedModule("tkinter_constants", "Tkconstants", "tkinter.constants"),
     MovedModule("tkinter_dnd", "Tkdnd", "tkinter.dnd"),
-    MovedModule("tkinter_colorchooser", "tkColorChooser",
-                "tkinter.colorchooser"),
-    MovedModule("tkinter_commondialog", "tkCommonDialog",
-                "tkinter.commondialog"),
+    MovedModule(
+        "tkinter_colorchooser",
+        "tkColorChooser",
+        "tkinter.colorchooser",
+    ),
+    MovedModule(
+        "tkinter_commondialog",
+        "tkCommonDialog",
+        "tkinter.commondialog",
+    ),
     MovedModule("tkinter_tkfiledialog", "tkFileDialog", "tkinter.filedialog"),
     MovedModule("tkinter_font", "tkFont", "tkinter.font"),
     MovedModule("tkinter_messagebox", "tkMessageBox", "tkinter.messagebox"),
-    MovedModule("tkinter_tksimpledialog", "tkSimpleDialog",
-                "tkinter.simpledialog"),
+    MovedModule(
+        "tkinter_tksimpledialog",
+        "tkSimpleDialog",
+        "tkinter.simpledialog",
+    ),
     MovedModule("urllib_parse", __name__ + ".moves.urllib_parse", "urllib.parse"),
     MovedModule("urllib_error", __name__ + ".moves.urllib_error", "urllib.error"),
     MovedModule("urllib", __name__ + ".moves.urllib", __name__ + ".moves.urllib"),
@@ -196,7 +213,6 @@ for attr in _moved_attributes:
 del attr
 
 moves = sys.modules[__name__ + ".moves"] = _MovedItems(__name__ + ".moves")
-
 
 
 class Module_six_moves_urllib_parse(types.ModuleType):
@@ -223,8 +239,12 @@ for attr in _urllib_parse_moved_attributes:
     setattr(Module_six_moves_urllib_parse, attr.name, attr)
 del attr
 
-sys.modules[__name__ + ".moves.urllib_parse"] = Module_six_moves_urllib_parse(__name__ + ".moves.urllib_parse")
-sys.modules[__name__ + ".moves.urllib.parse"] = Module_six_moves_urllib_parse(__name__ + ".moves.urllib.parse")
+sys.modules[__name__ + ".moves.urllib_parse"] = Module_six_moves_urllib_parse(
+    __name__ + ".moves.urllib_parse",
+)
+sys.modules[__name__ + ".moves.urllib.parse"] = Module_six_moves_urllib_parse(
+    __name__ + ".moves.urllib.parse",
+)
 
 
 class Module_six_moves_urllib_error(types.ModuleType):
@@ -240,8 +260,12 @@ for attr in _urllib_error_moved_attributes:
     setattr(Module_six_moves_urllib_error, attr.name, attr)
 del attr
 
-sys.modules[__name__ + ".moves.urllib_error"] = Module_six_moves_urllib_error(__name__ + ".moves.urllib_error")
-sys.modules[__name__ + ".moves.urllib.error"] = Module_six_moves_urllib_error(__name__ + ".moves.urllib.error")
+sys.modules[__name__ + ".moves.urllib_error"] = Module_six_moves_urllib_error(
+    __name__ + ".moves.urllib_error",
+)
+sys.modules[__name__ + ".moves.urllib.error"] = Module_six_moves_urllib_error(
+    __name__ + ".moves.urllib.error",
+)
 
 
 class Module_six_moves_urllib_request(types.ModuleType):
@@ -286,8 +310,12 @@ for attr in _urllib_request_moved_attributes:
     setattr(Module_six_moves_urllib_request, attr.name, attr)
 del attr
 
-sys.modules[__name__ + ".moves.urllib_request"] = Module_six_moves_urllib_request(__name__ + ".moves.urllib_request")
-sys.modules[__name__ + ".moves.urllib.request"] = Module_six_moves_urllib_request(__name__ + ".moves.urllib.request")
+sys.modules[__name__ + ".moves.urllib_request"] = Module_six_moves_urllib_request(
+    __name__ + ".moves.urllib_request",
+)
+sys.modules[__name__ + ".moves.urllib.request"] = Module_six_moves_urllib_request(
+    __name__ + ".moves.urllib.request",
+)
 
 
 class Module_six_moves_urllib_response(types.ModuleType):
@@ -304,8 +332,12 @@ for attr in _urllib_response_moved_attributes:
     setattr(Module_six_moves_urllib_response, attr.name, attr)
 del attr
 
-sys.modules[__name__ + ".moves.urllib_response"] = Module_six_moves_urllib_response(__name__ + ".moves.urllib_response")
-sys.modules[__name__ + ".moves.urllib.response"] = Module_six_moves_urllib_response(__name__ + ".moves.urllib.response")
+sys.modules[__name__ + ".moves.urllib_response"] = Module_six_moves_urllib_response(
+    __name__ + ".moves.urllib_response",
+)
+sys.modules[__name__ + ".moves.urllib.response"] = Module_six_moves_urllib_response(
+    __name__ + ".moves.urllib.response",
+)
 
 
 class Module_six_moves_urllib_robotparser(types.ModuleType):
@@ -319,12 +351,17 @@ for attr in _urllib_robotparser_moved_attributes:
     setattr(Module_six_moves_urllib_robotparser, attr.name, attr)
 del attr
 
-sys.modules[__name__ + ".moves.urllib_robotparser"] = Module_six_moves_urllib_robotparser(__name__ + ".moves.urllib_robotparser")
-sys.modules[__name__ + ".moves.urllib.robotparser"] = Module_six_moves_urllib_robotparser(__name__ + ".moves.urllib.robotparser")
+sys.modules[
+    __name__ + ".moves.urllib_robotparser"
+] = Module_six_moves_urllib_robotparser(__name__ + ".moves.urllib_robotparser")
+sys.modules[
+    __name__ + ".moves.urllib.robotparser"
+] = Module_six_moves_urllib_robotparser(__name__ + ".moves.urllib.robotparser")
 
 
 class Module_six_moves_urllib(types.ModuleType):
     """Create a six.moves.urllib namespace that resembles the Python 3 namespace"""
+
     parse = sys.modules[__name__ + ".moves.urllib_parse"]
     error = sys.modules[__name__ + ".moves.urllib_error"]
     request = sys.modules[__name__ + ".moves.urllib_request"]
@@ -332,7 +369,9 @@ class Module_six_moves_urllib(types.ModuleType):
     robotparser = sys.modules[__name__ + ".moves.urllib_robotparser"]
 
 
-sys.modules[__name__ + ".moves.urllib"] = Module_six_moves_urllib(__name__ + ".moves.urllib")
+sys.modules[__name__ + ".moves.urllib"] = Module_six_moves_urllib(
+    __name__ + ".moves.urllib",
+)
 
 
 def add_move(move):
@@ -348,7 +387,7 @@ def remove_move(name):
         try:
             del moves.__dict__[name]
         except KeyError:
-            raise AttributeError("no such move, %r" % (name,))
+            raise AttributeError(f"no such move, {name!r}")
 
 
 if PY3:
@@ -382,19 +421,24 @@ else:
 try:
     advance_iterator = next
 except NameError:
+
     def advance_iterator(it):
         return it.next()
+
+
 next = advance_iterator
 
 
 try:
     callable = callable
 except NameError:
+
     def callable(obj):
         return any("__call__" in klass.__dict__ for klass in type(obj).__mro__)
 
 
 if PY3:
+
     def get_unbound_function(unbound):
         return unbound
 
@@ -402,20 +446,22 @@ if PY3:
 
     Iterator = object
 else:
+
     def get_unbound_function(unbound):
         return unbound.im_func
 
     def create_bound_method(func, obj):
         return types.MethodType(func, obj, obj.__class__)
 
-    class Iterator(object):
-
+    class Iterator:
         def next(self):
             return type(self).__next__(self)
 
     callable = callable
-_add_doc(get_unbound_function,
-         """Get the function out of a possibly unbound function""")
+_add_doc(
+    get_unbound_function,
+    """Get the function out of a possibly unbound function""",
+)
 
 
 get_method_function = operator.attrgetter(_meth_func)
@@ -430,13 +476,16 @@ def iterkeys(d, **kw):
     """Return an iterator over the keys of a dictionary."""
     return iter(getattr(d, _iterkeys)(**kw))
 
+
 def itervalues(d, **kw):
     """Return an iterator over the values of a dictionary."""
     return iter(getattr(d, _itervalues)(**kw))
 
+
 def iteritems(d, **kw):
     """Return an iterator over the (key, value) pairs of a dictionary."""
     return iter(getattr(d, _iteritems)(**kw))
+
 
 def iterlists(d, **kw):
     """Return an iterator over the (key, [values]) pairs of a dictionary."""
@@ -444,14 +493,19 @@ def iterlists(d, **kw):
 
 
 if PY3:
+
     def b(s):
         return s.encode("latin-1")
+
     def u(s):
         return s
+
     unichr = chr
     if sys.version_info[1] <= 1:
+
         def int2byte(i):
             return bytes((i,))
+
     else:
         # This is about 2x faster than the implementation above on 3.2+
         int2byte = operator.methodcaller("to_bytes", 1, "big")
@@ -459,22 +513,31 @@ if PY3:
     indexbytes = operator.getitem
     iterbytes = iter
     import io
+
     StringIO = io.StringIO
     BytesIO = io.BytesIO
 else:
+
     def b(s):
         return s
+
     def u(s):
         return unicode(s, "unicode_escape")
+
     unichr = unichr
     int2byte = chr
+
     def byte2int(bs):
         return ord(bs[0])
+
     def indexbytes(buf, i):
         return ord(buf[i])
+
     def iterbytes(buf):
         return (ord(byte) for byte in buf)
+
     import StringIO
+
     StringIO = BytesIO = StringIO.StringIO
 _add_doc(b, """Byte literal""")
 _add_doc(u, """Text literal""")
@@ -482,19 +545,19 @@ _add_doc(u, """Text literal""")
 
 if PY3:
     import builtins
-    exec_ = getattr(builtins, "exec")
 
+    exec_ = getattr(builtins, "exec")
 
     def reraise(tp, value, tb=None):
         if value.__traceback__ is not tb:
             raise value.with_traceback(tb)
         raise value
 
-
     print_ = getattr(builtins, "print")
     del builtins
 
 else:
+
     def exec_(_code_, _globs_=None, _locs_=None):
         """Execute code in a namespace."""
         if _globs_ is None:
@@ -507,21 +570,23 @@ else:
             _locs_ = _globs_
         exec("""exec _code_ in _globs_, _locs_""")
 
-
-    exec_("""def reraise(tp, value, tb=None):
+    exec_(
+        """def reraise(tp, value, tb=None):
     raise tp, value, tb
-""")
-
+""",
+    )
 
     def print_(*args, **kwargs):
         """The new-style print function."""
         fp = kwargs.pop("file", sys.stdout)
         if fp is None:
             return
+
         def write(data):
             if not isinstance(data, basestring):
                 data = str(data)
             fp.write(data)
+
         want_unicode = False
         sep = kwargs.pop("sep", None)
         if sep is not None:
@@ -558,6 +623,7 @@ else:
             write(arg)
         write(end)
 
+
 _add_doc(reraise, """Reraise an exception.""")
 
 
@@ -565,13 +631,16 @@ def with_metaclass(meta, *bases):
     """Create a base class with a metaclass."""
     return meta("NewBase", bases, {})
 
+
 def add_metaclass(metaclass):
     """Class decorator for creating a class with a metaclass."""
+
     def wrapper(cls):
         orig_vars = cls.__dict__.copy()
-        orig_vars.pop('__dict__', None)
-        orig_vars.pop('__weakref__', None)
-        for slots_var in orig_vars.get('__slots__', ()):
+        orig_vars.pop("__dict__", None)
+        orig_vars.pop("__weakref__", None)
+        for slots_var in orig_vars.get("__slots__", ()):
             orig_vars.pop(slots_var)
         return metaclass(cls.__name__, cls.__bases__, orig_vars)
+
     return wrapper

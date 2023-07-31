@@ -29,43 +29,51 @@ https://github.com/mdtraj/mdtraj/wiki/HDF5-Trajectory-Format
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
-# stdlib
+
+import inspect
+import operator
 import os
 import warnings
-import inspect
+from collections import namedtuple
 from functools import wraps
 
-import operator
-from collections import namedtuple
 try:
     import simplejson as json
 except ImportError:
     import json
 
-# 3rd party
-import numpy as np
-
-# ours
-from mdtraj import version
 import mdtraj.core.element as elem
+import numpy as np
+from mdtraj import version
 from mdtraj.core.topology import Topology
-from mdtraj.utils import in_units_of, ensure_type, import_, cast_indices
-from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils import cast_indices, ensure_type, import_, in_units_of
+from mdtraj.utils.six import string_types
 
-__all__ = ['HDF5TrajectoryFile', 'load_hdf5']
+__all__ = ["HDF5TrajectoryFile", "load_hdf5"]
 
-Frames = namedtuple('Frames', ['coordinates', 'time', 'cell_lengths', 'cell_angles',
-                               'velocities', 'kineticEnergy', 'potentialEnergy',
-                               'temperature', 'alchemicalLambda'])
+Frames = namedtuple(
+    "Frames",
+    [
+        "coordinates",
+        "time",
+        "cell_lengths",
+        "cell_angles",
+        "velocities",
+        "kineticEnergy",
+        "potentialEnergy",
+        "temperature",
+        "alchemicalLambda",
+    ],
+)
 
 ##############################################################################
 # Code
 ##############################################################################
 
-@FormatRegistry.register_loader('.h5')
-@FormatRegistry.register_loader('.hdf5')
+
+@FormatRegistry.register_loader(".h5")
+@FormatRegistry.register_loader(".hdf5")
 def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     """Load an MDTraj hdf5 trajectory file from disk.
 
@@ -105,8 +113,10 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     mdtraj.HDF5TrajectoryFile :  Low level interface to HDF5 files
     """
     if not isinstance(filename, (string_types, os.PathLike)):
-        raise TypeError('filename must be of type path-like for load_lh5. '
-            'you supplied %s' % type(filename))
+        raise TypeError(
+            "filename must be of type path-like for load_lh5. "
+            "you supplied %s" % type(filename),
+        )
 
     atom_indices = cast_indices(atom_indices)
 
@@ -116,12 +126,16 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
             n_frames = 1
         else:
             n_frames = None
-        return f.read_as_traj(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
+        return f.read_as_traj(
+            n_frames=n_frames,
+            stride=stride,
+            atom_indices=atom_indices,
+        )
 
 
-@FormatRegistry.register_fileobject('.h5')
-@FormatRegistry.register_fileobject('.hdf5')
-class HDF5TrajectoryFile(object):
+@FormatRegistry.register_fileobject(".h5")
+@FormatRegistry.register_fileobject(".hdf5")
+class HDF5TrajectoryFile:
     """Interface for reading and writing to a MDTraj HDF5 molecular
     dynamics trajectory file, whose format is described
     `here <https://github.com/rmcgibbo/mdtraj/issues/36>`_.
@@ -164,23 +178,24 @@ class HDF5TrajectoryFile(object):
     --------
     mdtraj.load_hdf5 : High-level wrapper that returns a ``md.Trajectory``
     """
-    distance_unit = 'nanometers'
 
-    def __init__(self, filename, mode='r', force_overwrite=True, compression='zlib'):
+    distance_unit = "nanometers"
+
+    def __init__(self, filename, mode="r", force_overwrite=True, compression="zlib"):
         self._open = False  # is the file handle currently open?
         self.mode = mode  # the mode in which the file was opened?
 
-        if not mode in ['r', 'w', 'a']:
+        if not mode in ["r", "w", "a"]:
             raise ValueError("mode must be one of ['r', 'w', 'a']")
 
-        if mode == 'w' and not force_overwrite and os.path.exists(filename):
-            raise IOError('"%s" already exists' % filename)
+        if mode == "w" and not force_overwrite and os.path.exists(filename):
+            raise OSError('"%s" already exists' % filename)
 
         # import tables
-        self.tables = import_('tables')
+        self.tables = import_("tables")
 
-        if compression == 'zlib':
-            compression = self.tables.Filters(complib='zlib', shuffle=True, complevel=1)
+        if compression == "zlib":
+            compression = self.tables.Filters(complib="zlib", shuffle=True, complevel=1)
         elif compression is None:
             compression = None
         else:
@@ -189,22 +204,22 @@ class HDF5TrajectoryFile(object):
         self._handle = self._open_file(filename, mode=mode, filters=compression)
         self._open = True
 
-        if mode == 'w':
+        if mode == "w":
             # what frame are we currently reading or writing at?
             self._frame_index = 0
             # do we need to write the header information?
             self._needs_initialization = True
-            if not os.fspath(filename).endswith('.h5'):
-                warnings.warn('The .h5 extension is recommended.')
+            if not os.fspath(filename).endswith(".h5"):
+                warnings.warn("The .h5 extension is recommended.")
 
-        elif mode == 'a':
+        elif mode == "a":
             try:
                 self._frame_index = len(self._handle.root.coordinates)
                 self._needs_initialization = False
             except self.tables.NoSuchNodeError:
                 self._frame_index = 0
                 self._needs_initialization = True
-        elif mode == 'r':
+        elif mode == "r":
             self._frame_index = 0
             self._needs_initialization = False
 
@@ -215,7 +230,7 @@ class HDF5TrajectoryFile(object):
         This can be used for random or specific access to the underlying arrays
         on disk
         """
-        _check_mode(self.mode, ('r', 'a'))
+        _check_mode(self.mode, ("r", "a"))
         return self._handle.root
 
     #####################################################
@@ -225,14 +240,14 @@ class HDF5TrajectoryFile(object):
     @property
     def title(self):
         """User-defined title for the data represented in the file"""
-        if hasattr(self._handle.root._v_attrs, 'title'):
+        if hasattr(self._handle.root._v_attrs, "title"):
             return str(self._handle.root._v_attrs.title)
         return None
 
     @title.setter
     def title(self, value):
         """Set the user-defined title for the data represented in the file"""
-        _check_mode(self.mode, ('w', 'a'))
+        _check_mode(self.mode, ("w", "a"))
         self._handle.root._v_attrs.title = str(value)
 
     #####################################################
@@ -242,14 +257,14 @@ class HDF5TrajectoryFile(object):
     @property
     def application(self):
         "Suite of programs that created the file"
-        if hasattr(self._handle.root._v_attrs, 'application'):
+        if hasattr(self._handle.root._v_attrs, "application"):
             return str(self._handle.root._v_attrs.application)
         return None
 
     @application.setter
     def application(self, value):
         "Set the suite of programs that created the file"
-        _check_mode(self.mode, ('w', 'a'))
+        _check_mode(self.mode, ("w", "a"))
         self._handle.root._v_attrs.application = str(value)
 
     #####################################################
@@ -266,7 +281,7 @@ class HDF5TrajectoryFile(object):
             A topology object
         """
         try:
-            raw = self._get_node('/', name='topology')[0]
+            raw = self._get_node("/", name="topology")[0]
             if not isinstance(raw, string_types):
                 raw = raw.decode()
             topology_dict = json.loads(raw)
@@ -275,28 +290,44 @@ class HDF5TrajectoryFile(object):
 
         topology = Topology()
 
-        for chain_dict in sorted(topology_dict['chains'], key=operator.itemgetter('index')):
+        for chain_dict in sorted(
+            topology_dict["chains"],
+            key=operator.itemgetter("index"),
+        ):
             chain = topology.add_chain()
-            for residue_dict in sorted(chain_dict['residues'], key=operator.itemgetter('index')):
+            for residue_dict in sorted(
+                chain_dict["residues"],
+                key=operator.itemgetter("index"),
+            ):
                 try:
                     resSeq = residue_dict["resSeq"]
                 except KeyError:
                     resSeq = None
-                    warnings.warn('No resSeq information found in HDF file, defaulting to zero-based indices')
+                    warnings.warn(
+                        "No resSeq information found in HDF file, defaulting to zero-based indices",
+                    )
                 try:
                     segment_id = residue_dict["segmentID"]
                 except KeyError:
                     segment_id = ""
-                residue = topology.add_residue(residue_dict['name'], chain, resSeq=resSeq, segment_id=segment_id)
-                for atom_dict in sorted(residue_dict['atoms'], key=operator.itemgetter('index')):
+                residue = topology.add_residue(
+                    residue_dict["name"],
+                    chain,
+                    resSeq=resSeq,
+                    segment_id=segment_id,
+                )
+                for atom_dict in sorted(
+                    residue_dict["atoms"],
+                    key=operator.itemgetter("index"),
+                ):
                     try:
-                        element = elem.get_by_symbol(atom_dict['element'])
+                        element = elem.get_by_symbol(atom_dict["element"])
                     except KeyError:
                         element = elem.virtual
-                    topology.add_atom(atom_dict['name'], element, residue)
+                    topology.add_atom(atom_dict["name"], element, residue)
 
         atoms = list(topology.atoms)
-        for index1, index2 in topology_dict['bonds']:
+        for index1, index2 in topology_dict["bonds"]:
             topology.add_bond(atoms[index1], atoms[index2])
 
         return topology
@@ -310,7 +341,7 @@ class HDF5TrajectoryFile(object):
         topology_object : mdtraj.Topology
             A topology object
         """
-        _check_mode(self.mode, ('w', 'a'))
+        _check_mode(self.mode, ("w", "a"))
 
         # we want to be able to handle the openmm Topology object
         # here too, so if it's not an mdtraj topology we'll just guess
@@ -320,64 +351,69 @@ class HDF5TrajectoryFile(object):
 
         try:
             topology_dict = {
-                'chains': [],
-                'bonds': []
+                "chains": [],
+                "bonds": [],
             }
 
             for chain in topology_object.chains:
                 chain_dict = {
-                    'residues': [],
-                    'index': int(chain.index)
+                    "residues": [],
+                    "index": int(chain.index),
                 }
                 for residue in chain.residues:
                     residue_dict = {
-                        'index': int(residue.index),
-                        'name': str(residue.name),
-                        'atoms': [],
+                        "index": int(residue.index),
+                        "name": str(residue.name),
+                        "atoms": [],
                         "resSeq": int(residue.resSeq),
-                        "segmentID": str(residue.segment_id)
+                        "segmentID": str(residue.segment_id),
                     }
 
                     for atom in residue.atoms:
-
                         try:
                             element_symbol_string = str(atom.element.symbol)
                         except AttributeError:
                             element_symbol_string = ""
 
-                        residue_dict['atoms'].append({
-                            'index': int(atom.index),
-                            'name': str(atom.name),
-                            'element': element_symbol_string
-                        })
-                    chain_dict['residues'].append(residue_dict)
-                topology_dict['chains'].append(chain_dict)
+                        residue_dict["atoms"].append(
+                            {
+                                "index": int(atom.index),
+                                "name": str(atom.name),
+                                "element": element_symbol_string,
+                            },
+                        )
+                    chain_dict["residues"].append(residue_dict)
+                topology_dict["chains"].append(chain_dict)
 
             for atom1, atom2 in topology_object.bonds:
-                topology_dict['bonds'].append([
-                    int(atom1.index),
-                    int(atom2.index)
-                ])
+                topology_dict["bonds"].append(
+                    [
+                        int(atom1.index),
+                        int(atom2.index),
+                    ],
+                )
 
         except AttributeError as e:
-            raise AttributeError('topology_object fails to implement the'
-                'chains() -> residue() -> atoms() and bond() protocol. '
-                'Specifically, we encountered the following %s' % e)
+            raise AttributeError(
+                "topology_object fails to implement the"
+                "chains() -> residue() -> atoms() and bond() protocol. "
+                "Specifically, we encountered the following %s" % e,
+            )
 
         # actually set the tables
         try:
-            self._remove_node(where='/', name='topology')
+            self._remove_node(where="/", name="topology")
         except self.tables.NoSuchNodeError:
             pass
 
         data = json.dumps(topology_dict)
         if not isinstance(data, bytes):
-            data = data.encode('ascii')
+            data = data.encode("ascii")
 
-        if self.tables.__version__ >= '3.0.0':
-            self._handle.create_array(where='/', name='topology', obj=[data])
+        if self.tables.__version__ >= "3.0.0":
+            self._handle.create_array(where="/", name="topology", obj=[data])
         else:
-            self._handle.createArray(where='/', name='topology', object=[data])
+            self._handle.createArray(where="/", name="topology", object=[data])
 
     #####################################################
     # randomState global attribute (optional)
@@ -386,14 +422,14 @@ class HDF5TrajectoryFile(object):
     @property
     def randomState(self):
         "State of the creators internal random number generator at the start of the simulation"
-        if hasattr(self._handle.root._v_attrs, 'randomState'):
+        if hasattr(self._handle.root._v_attrs, "randomState"):
             return str(self._handle.root._v_attrs.randomState)
         return None
 
     @randomState.setter
     def randomState(self, value):
         "Set the state of the creators internal random number generator at the start of the simulation"
-        _check_mode(self.mode, ('w', 'a'))
+        _check_mode(self.mode, ("w", "a"))
         self._handle.root._v_attrs.randomState = str(value)
 
     #####################################################
@@ -403,14 +439,14 @@ class HDF5TrajectoryFile(object):
     @property
     def forcefield(self):
         "Description of the hamiltonian used. A short, human readable string, like AMBER99sbildn."
-        if hasattr(self._handle.root._v_attrs, 'forcefield'):
+        if hasattr(self._handle.root._v_attrs, "forcefield"):
             return str(self._handle.root._v_attrs.forcefield)
         return None
 
     @forcefield.setter
     def forcefield(self, value):
         "Set the description of the hamiltonian used. A short, human readable string, like AMBER99sbildn."
-        _check_mode(self.mode, ('w', 'a'))
+        _check_mode(self.mode, ("w", "a"))
         self._handle.root._v_attrs.forcefield = str(value)
 
     #####################################################
@@ -420,14 +456,14 @@ class HDF5TrajectoryFile(object):
     @property
     def reference(self):
         "A published reference that documents the program or parameters used to generate the data"
-        if hasattr(self._handle.root._v_attrs, 'reference'):
+        if hasattr(self._handle.root._v_attrs, "reference"):
             return str(self._handle.root._v_attrs.reference)
         return None
 
     @reference.setter
     def reference(self, value):
         "Set a published reference that documents the program or parameters used to generate the data"
-        _check_mode(self.mode, ('w', 'a'))
+        _check_mode(self.mode, ("w", "a"))
         self._handle.root._v_attrs.reference = str(value)
 
     #####################################################
@@ -446,7 +482,7 @@ class HDF5TrajectoryFile(object):
             distance of the constraint. If no constraint information
             is in the file, the return value is None.
         """
-        if hasattr(self._handle.root, 'constraints'):
+        if hasattr(self._handle.root, "constraints"):
             return self._handle.root.constraints[:]
         return None
 
@@ -461,20 +497,27 @@ class HDF5TrajectoryFile(object):
             the index of the two atoms involved in the constraints and the
             distance of the constraint.
         """
-        _check_mode(self.mode, ('w', 'a'))
+        _check_mode(self.mode, ("w", "a"))
 
-        dtype = np.dtype([
-                ('atom1', np.int32),
-                ('atom2', np.int32),
-                ('distance', np.float32)
-        ])
+        dtype = np.dtype(
+            [
+                ("atom1", np.int32),
+                ("atom2", np.int32),
+                ("distance", np.float32),
+            ],
+        )
         if not value.dtype == dtype:
-            raise ValueError('Constraints must be an array with dtype=%s. '
-                             'currently, I don\'t do any casting' % dtype)
+            raise ValueError(
+                "Constraints must be an array with dtype=%s. "
+                "currently, I don't do any casting" % dtype,
+            )
 
-        if not hasattr(self._handle.root, 'constraints'):
-            self._create_table(where='/', name='constraints',
-                               description=dtype)
+        if not hasattr(self._handle.root, "constraints"):
+            self._create_table(
+                where="/",
+                name="constraints",
+                description=dtype,
+            )
 
         self._handle.root.constraints.truncate(0)
         self._handle.root.constraints.append(value)
@@ -507,9 +550,10 @@ class HDF5TrajectoryFile(object):
         trajectory : Trajectory
             A trajectory object containing the loaded portion of the file.
         """
-        _check_mode(self.mode, ('r',))
+        _check_mode(self.mode, ("r",))
 
         from mdtraj.core.trajectory import Trajectory
+
         topology = self.topology
         if atom_indices is not None:
             topology = topology.subset(atom_indices)
@@ -519,12 +563,26 @@ class HDF5TrajectoryFile(object):
         if len(data) == 0:
             return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
 
-        in_units_of(data.coordinates, self.distance_unit, Trajectory._distance_unit, inplace=True)
-        in_units_of(data.cell_lengths, self.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(
+            data.coordinates,
+            self.distance_unit,
+            Trajectory._distance_unit,
+            inplace=True,
+        )
+        in_units_of(
+            data.cell_lengths,
+            self.distance_unit,
+            Trajectory._distance_unit,
+            inplace=True,
+        )
 
-        return Trajectory(xyz=data.coordinates, topology=topology, time=data.time,
-                          unitcell_lengths=data.cell_lengths,
-                          unitcell_angles=data.cell_angles)
+        return Trajectory(
+            xyz=data.coordinates,
+            topology=topology,
+            time=data.time,
+            unitcell_lengths=data.cell_lengths,
+            unitcell_angles=data.cell_angles,
+        )
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read one or more frames of data from the file
@@ -562,7 +620,7 @@ class HDF5TrajectoryFile(object):
             n units of "nanometers", "picoseconds", "kelvin", "degrees" and
             "kilojoules_per_mole".
         """
-        _check_mode(self.mode, ('r',))
+        _check_mode(self.mode, ("r",))
 
         if n_frames is None:
             n_frames = np.inf
@@ -570,7 +628,11 @@ class HDF5TrajectoryFile(object):
             stride = int(stride)
 
         total_n_frames = len(self._handle.root.coordinates)
-        frame_slice = slice(self._frame_index, min(self._frame_index + n_frames, total_n_frames), stride)
+        frame_slice = slice(
+            self._frame_index,
+            min(self._frame_index + n_frames, total_n_frames),
+            stride,
+        )
         if frame_slice.stop - frame_slice.start == 0:
             return []
 
@@ -578,24 +640,33 @@ class HDF5TrajectoryFile(object):
             # get all of the atoms
             atom_slice = slice(None)
         else:
-            atom_slice = ensure_type(atom_indices, dtype=int, ndim=1,
-                                     name='atom_indices', warn_on_cast=False)
+            atom_slice = ensure_type(
+                atom_indices,
+                dtype=int,
+                ndim=1,
+                name="atom_indices",
+                warn_on_cast=False,
+            )
             if not np.all(atom_slice < self._handle.root.coordinates.shape[1]):
-                raise ValueError('As a zero-based index, the entries in '
-                    'atom_indices must all be less than the number of atoms '
-                    'in the trajectory, %d' % self._handle.root.coordinates.shape[1])
+                raise ValueError(
+                    "As a zero-based index, the entries in "
+                    "atom_indices must all be less than the number of atoms "
+                    "in the trajectory, %d" % self._handle.root.coordinates.shape[1],
+                )
             if not np.all(atom_slice >= 0):
-                raise ValueError('The entries in atom_indices must be greater '
-                    'than or equal to zero')
+                raise ValueError(
+                    "The entries in atom_indices must be greater "
+                    "than or equal to zero",
+                )
 
         def get_field(name, slice, out_units, can_be_none=True):
             try:
-                node = self._get_node(where='/', name=name)
+                node = self._get_node(where="/", name=name)
                 data = node.__getitem__(slice)
                 in_units = node.attrs.units
                 if not isinstance(in_units, string_types):
                     in_units = in_units.decode()
-                data =  in_units_of(data, in_units, out_units)
+                data = in_units_of(data, in_units, out_units)
                 return data
             except self.tables.NoSuchNodeError:
                 if can_be_none:
@@ -603,24 +674,61 @@ class HDF5TrajectoryFile(object):
                 raise
 
         frames = Frames(
-            coordinates = get_field('coordinates', (frame_slice, atom_slice, slice(None)),
-                                    out_units='nanometers', can_be_none=False),
-            time = get_field('time', frame_slice, out_units='picoseconds'),
-            cell_lengths = get_field('cell_lengths', (frame_slice, slice(None)), out_units='nanometers'),
-            cell_angles = get_field('cell_angles', (frame_slice, slice(None)), out_units='degrees'),
-            velocities = get_field('velocities', (frame_slice, atom_slice, slice(None)), out_units='nanometers/picosecond'),
-            kineticEnergy = get_field('kineticEnergy', frame_slice, out_units='kilojoules_per_mole'),
-            potentialEnergy = get_field('potentialEnergy', frame_slice, out_units='kilojoules_per_mole'),
-            temperature = get_field('temperature', frame_slice, out_units='kelvin'),
-            alchemicalLambda = get_field('lambda', frame_slice, out_units='dimensionless')
+            coordinates=get_field(
+                "coordinates",
+                (frame_slice, atom_slice, slice(None)),
+                out_units="nanometers",
+                can_be_none=False,
+            ),
+            time=get_field("time", frame_slice, out_units="picoseconds"),
+            cell_lengths=get_field(
+                "cell_lengths",
+                (frame_slice, slice(None)),
+                out_units="nanometers",
+            ),
+            cell_angles=get_field(
+                "cell_angles",
+                (frame_slice, slice(None)),
+                out_units="degrees",
+            ),
+            velocities=get_field(
+                "velocities",
+                (frame_slice, atom_slice, slice(None)),
+                out_units="nanometers/picosecond",
+            ),
+            kineticEnergy=get_field(
+                "kineticEnergy",
+                frame_slice,
+                out_units="kilojoules_per_mole",
+            ),
+            potentialEnergy=get_field(
+                "potentialEnergy",
+                frame_slice,
+                out_units="kilojoules_per_mole",
+            ),
+            temperature=get_field("temperature", frame_slice, out_units="kelvin"),
+            alchemicalLambda=get_field(
+                "lambda",
+                frame_slice,
+                out_units="dimensionless",
+            ),
         )
 
-        self._frame_index += (frame_slice.stop - frame_slice.start)
+        self._frame_index += frame_slice.stop - frame_slice.start
         return frames
 
-    def write(self, coordinates, time=None, cell_lengths=None, cell_angles=None,
-                    velocities=None, kineticEnergy=None, potentialEnergy=None,
-                    temperature=None, alchemicalLambda=None):
+    def write(
+        self,
+        coordinates,
+        time=None,
+        cell_lengths=None,
+        cell_angles=None,
+        velocities=None,
+        kineticEnergy=None,
+        potentialEnergy=None,
+        temperature=None,
+        alchemicalLambda=None,
+    ):
         """Write one or more frames of data to the file
 
         This method saves data that is associated with one or more simulation
@@ -672,28 +780,28 @@ class HDF5TrajectoryFile(object):
             You may optionally specify the alchemical lambda in each frame. These
             have no units, but are generally between zero and one.
         """
-        _check_mode(self.mode, ('w', 'a'))
+        _check_mode(self.mode, ("w", "a"))
 
         # these must be either both present or both absent. since
         # we're going to throw an error if one is present w/o the other,
         # lets do it now.
         if cell_lengths is None and cell_angles is not None:
-            raise ValueError('cell_lengths were given, but no cell_angles')
+            raise ValueError("cell_lengths were given, but no cell_angles")
         if cell_lengths is not None and cell_angles is None:
-            raise ValueError('cell_angles were given, but no cell_lengths')
+            raise ValueError("cell_angles were given, but no cell_lengths")
 
         # if the input arrays are openmm.unit.Quantities, convert them
         # into md units. Note that this acts as a no-op if the user doesn't
         # have openmm.unit installed (e.g. they didn't install OpenMM)
-        coordinates = in_units_of(coordinates, None, 'nanometers')
-        time = in_units_of(time, None, 'picoseconds')
-        cell_lengths = in_units_of(cell_lengths, None, 'nanometers')
-        cell_angles = in_units_of(cell_angles, None, 'degrees')
-        velocities = in_units_of(velocities, None, 'nanometers/picosecond')
-        kineticEnergy = in_units_of(kineticEnergy, None, 'kilojoules_per_mole')
-        potentialEnergy = in_units_of(potentialEnergy, None, 'kilojoules_per_mole')
-        temperature = in_units_of(temperature, None, 'kelvin')
-        alchemicalLambda = in_units_of(alchemicalLambda, None, 'dimensionless')
+        coordinates = in_units_of(coordinates, None, "nanometers")
+        time = in_units_of(time, None, "picoseconds")
+        cell_lengths = in_units_of(cell_lengths, None, "nanometers")
+        cell_angles = in_units_of(cell_angles, None, "degrees")
+        velocities = in_units_of(velocities, None, "nanometers/picosecond")
+        kineticEnergy = in_units_of(kineticEnergy, None, "kilojoules_per_mole")
+        potentialEnergy = in_units_of(potentialEnergy, None, "kilojoules_per_mole")
+        temperature = in_units_of(temperature, None, "kelvin")
+        alchemicalLambda = in_units_of(alchemicalLambda, None, "dimensionless")
 
         # do typechecking and shapechecking on the arrays
         # this ensure_type method has a lot of options, but basically it lets
@@ -703,34 +811,100 @@ class HDF5TrajectoryFile(object):
         # realize that. obviously the default mode is that they want to
         # write multiple frames at a time, so the coordinate shape is
         # (n_frames, n_atoms, 3)
-        coordinates = ensure_type(coordinates, dtype=np.float32, ndim=3,
-            name='coordinates', shape=(None, None, 3), can_be_none=False,
-            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
-        n_frames, n_atoms, = coordinates.shape[0:2]
-        time = ensure_type(time, dtype=np.float32, ndim=1,
-            name='time', shape=(n_frames,), can_be_none=True,
-            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
-        cell_lengths = ensure_type(cell_lengths, dtype=np.float32, ndim=2,
-            name='cell_lengths', shape=(n_frames, 3), can_be_none=True,
-            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
-        cell_angles = ensure_type(cell_angles, dtype=np.float32, ndim=2,
-            name='cell_angles', shape=(n_frames, 3), can_be_none=True,
-            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
-        velocities = ensure_type(velocities, dtype=np.float32, ndim=3,
-            name='velocities', shape=(n_frames, n_atoms, 3), can_be_none=True,
-            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
-        kineticEnergy = ensure_type(kineticEnergy, dtype=np.float32, ndim=1,
-            name='kineticEnergy', shape=(n_frames,), can_be_none=True,
-            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
-        potentialEnergy = ensure_type(potentialEnergy, dtype=np.float32, ndim=1,
-            name='potentialEnergy', shape=(n_frames,), can_be_none=True,
-            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
-        temperature = ensure_type(temperature, dtype=np.float32, ndim=1,
-            name='temperature', shape=(n_frames,), can_be_none=True,
-            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
-        alchemicalLambda = ensure_type(alchemicalLambda, dtype=np.float32, ndim=1,
-            name='alchemicalLambda', shape=(n_frames,), can_be_none=True,
-            warn_on_cast=False, add_newaxis_on_deficient_ndim=True)
+        coordinates = ensure_type(
+            coordinates,
+            dtype=np.float32,
+            ndim=3,
+            name="coordinates",
+            shape=(None, None, 3),
+            can_be_none=False,
+            warn_on_cast=False,
+            add_newaxis_on_deficient_ndim=True,
+        )
+        (
+            n_frames,
+            n_atoms,
+        ) = coordinates.shape[0:2]
+        time = ensure_type(
+            time,
+            dtype=np.float32,
+            ndim=1,
+            name="time",
+            shape=(n_frames,),
+            can_be_none=True,
+            warn_on_cast=False,
+            add_newaxis_on_deficient_ndim=True,
+        )
+        cell_lengths = ensure_type(
+            cell_lengths,
+            dtype=np.float32,
+            ndim=2,
+            name="cell_lengths",
+            shape=(n_frames, 3),
+            can_be_none=True,
+            warn_on_cast=False,
+            add_newaxis_on_deficient_ndim=True,
+        )
+        cell_angles = ensure_type(
+            cell_angles,
+            dtype=np.float32,
+            ndim=2,
+            name="cell_angles",
+            shape=(n_frames, 3),
+            can_be_none=True,
+            warn_on_cast=False,
+            add_newaxis_on_deficient_ndim=True,
+        )
+        velocities = ensure_type(
+            velocities,
+            dtype=np.float32,
+            ndim=3,
+            name="velocities",
+            shape=(n_frames, n_atoms, 3),
+            can_be_none=True,
+            warn_on_cast=False,
+            add_newaxis_on_deficient_ndim=True,
+        )
+        kineticEnergy = ensure_type(
+            kineticEnergy,
+            dtype=np.float32,
+            ndim=1,
+            name="kineticEnergy",
+            shape=(n_frames,),
+            can_be_none=True,
+            warn_on_cast=False,
+            add_newaxis_on_deficient_ndim=True,
+        )
+        potentialEnergy = ensure_type(
+            potentialEnergy,
+            dtype=np.float32,
+            ndim=1,
+            name="potentialEnergy",
+            shape=(n_frames,),
+            can_be_none=True,
+            warn_on_cast=False,
+            add_newaxis_on_deficient_ndim=True,
+        )
+        temperature = ensure_type(
+            temperature,
+            dtype=np.float32,
+            ndim=1,
+            name="temperature",
+            shape=(n_frames,),
+            can_be_none=True,
+            warn_on_cast=False,
+            add_newaxis_on_deficient_ndim=True,
+        )
+        alchemicalLambda = ensure_type(
+            alchemicalLambda,
+            dtype=np.float32,
+            ndim=1,
+            name="alchemicalLambda",
+            shape=(n_frames,),
+            can_be_none=True,
+            warn_on_cast=False,
+            add_newaxis_on_deficient_ndim=True,
+        )
 
         # if this is our first call to write(), we need to create the headers
         # and the arrays in the underlying HDF5 file
@@ -744,7 +918,8 @@ class HDF5TrajectoryFile(object):
                 set_kineticEnergy=(kineticEnergy is not None),
                 set_potentialEnergy=(potentialEnergy is not None),
                 set_temperature=(temperature is not None),
-                set_alchemicalLambda=(alchemicalLambda is not None))
+                set_alchemicalLambda=(alchemicalLambda is not None),
+            )
             self._needs_initialization = False
 
             # we need to check that that the entries that the user is trying
@@ -753,109 +928,164 @@ class HDF5TrajectoryFile(object):
         try:
             # try to get the nodes for all of the fields that we have
             # which are not None
-            for name in ['coordinates', 'time', 'cell_angles', 'cell_lengths',
-                         'velocities', 'kineticEnergy', 'potentialEnergy', 'temperature']:
+            for name in [
+                "coordinates",
+                "time",
+                "cell_angles",
+                "cell_lengths",
+                "velocities",
+                "kineticEnergy",
+                "potentialEnergy",
+                "temperature",
+            ]:
                 contents = locals()[name]
                 if contents is not None:
-                    self._get_node(where='/', name=name).append(contents)
+                    self._get_node(where="/", name=name).append(contents)
                 if contents is None:
                     # for each attribute that they're not saving, we want
                     # to make sure the file doesn't explect it
                     try:
-                        self._get_node(where='/', name=name)
+                        self._get_node(where="/", name=name)
                         raise AssertionError()
                     except self.tables.NoSuchNodeError:
                         pass
 
-
             # lambda is different, since the name in the file is lambda
             # but the name in this python function is alchemicalLambda
-            name = 'lambda'
+            name = "lambda"
             if alchemicalLambda is not None:
-                self._get_node(where='/', name=name).append(alchemicalLambda)
+                self._get_node(where="/", name=name).append(alchemicalLambda)
             else:
                 try:
-                    self._get_node(where='/', name=name)
+                    self._get_node(where="/", name=name)
                     raise AssertionError()
                 except self.tables.NoSuchNodeError:
                     pass
 
         except self.tables.NoSuchNodeError:
-            raise ValueError("The file that you're trying to save to doesn't "
+            raise ValueError(
+                "The file that you're trying to save to doesn't "
                 "contain the field %s. You can always save a new trajectory "
                 "and have it contain this information, but I don't allow 'ragged' "
                 "arrays. If one frame is going to have %s information, then I expect "
                 "all of them to. So I can't save it for just these frames. Sorry "
-                "about that :)" % (name, name))
+                "about that :)" % (name, name),
+            )
         except AssertionError:
-            raise ValueError("The file that you're saving to expects each frame "
-                            "to contain %s information, but you did not supply it."
-                            "I don't allow 'ragged' arrays. If one frame is going "
-                            "to have %s information, then I expect all of them to. "
-                            % (name, name))
+            raise ValueError(
+                "The file that you're saving to expects each frame "
+                "to contain %s information, but you did not supply it."
+                "I don't allow 'ragged' arrays. If one frame is going "
+                "to have %s information, then I expect all of them to. " % (name, name),
+            )
 
         self._frame_index += n_frames
         self.flush()
 
-    def _initialize_headers(self, n_atoms, set_coordinates, set_time, set_cell,
-                            set_velocities, set_kineticEnergy, set_potentialEnergy,
-                            set_temperature, set_alchemicalLambda):
+    def _initialize_headers(
+        self,
+        n_atoms,
+        set_coordinates,
+        set_time,
+        set_cell,
+        set_velocities,
+        set_kineticEnergy,
+        set_potentialEnergy,
+        set_temperature,
+        set_alchemicalLambda,
+    ):
         self._n_atoms = n_atoms
 
-        self._handle.root._v_attrs.conventions = 'Pande'
-        self._handle.root._v_attrs.conventionVersion = '1.1'
-        self._handle.root._v_attrs.program = 'MDTraj'
+        self._handle.root._v_attrs.conventions = "Pande"
+        self._handle.root._v_attrs.conventionVersion = "1.1"
+        self._handle.root._v_attrs.program = "MDTraj"
         self._handle.root._v_attrs.programVersion = version.short_version
-        self._handle.root._v_attrs.title = 'title'
+        self._handle.root._v_attrs.title = "title"
 
         # if the client has not the title attribute themselves, we'll
         # set it to MDTraj as a default option.
-        if not hasattr(self._handle.root._v_attrs, 'application'):
-            self._handle.root._v_attrs.application = 'MDTraj'
+        if not hasattr(self._handle.root._v_attrs, "application"):
+            self._handle.root._v_attrs.application = "MDTraj"
 
         # create arrays that store frame level informat
         if set_coordinates:
-            self._create_earray(where='/', name='coordinates',
-                atom=self.tables.Float32Atom(), shape=(0, self._n_atoms, 3))
-            self._handle.root.coordinates.attrs['units'] = 'nanometers'
+            self._create_earray(
+                where="/",
+                name="coordinates",
+                atom=self.tables.Float32Atom(),
+                shape=(0, self._n_atoms, 3),
+            )
+            self._handle.root.coordinates.attrs["units"] = "nanometers"
 
         if set_time:
-            self._create_earray(where='/', name='time',
-                atom=self.tables.Float32Atom(), shape=(0,))
-            self._handle.root.time.attrs['units'] = 'picoseconds'
+            self._create_earray(
+                where="/",
+                name="time",
+                atom=self.tables.Float32Atom(),
+                shape=(0,),
+            )
+            self._handle.root.time.attrs["units"] = "picoseconds"
 
         if set_cell:
-            self._create_earray(where='/', name='cell_lengths',
-                atom=self.tables.Float32Atom(), shape=(0, 3))
-            self._create_earray(where='/', name='cell_angles',
-                atom=self.tables.Float32Atom(), shape=(0, 3))
-            self._handle.root.cell_lengths.attrs['units'] = 'nanometers'
-            self._handle.root.cell_angles.attrs['units'] = 'degrees'
+            self._create_earray(
+                where="/",
+                name="cell_lengths",
+                atom=self.tables.Float32Atom(),
+                shape=(0, 3),
+            )
+            self._create_earray(
+                where="/",
+                name="cell_angles",
+                atom=self.tables.Float32Atom(),
+                shape=(0, 3),
+            )
+            self._handle.root.cell_lengths.attrs["units"] = "nanometers"
+            self._handle.root.cell_angles.attrs["units"] = "degrees"
 
         if set_velocities:
-            self._create_earray(where='/', name='velocities',
-                atom=self.tables.Float32Atom(), shape=(0, self._n_atoms, 3))
-            self._handle.root.velocities.attrs['units'] = 'nanometers/picosecond'
+            self._create_earray(
+                where="/",
+                name="velocities",
+                atom=self.tables.Float32Atom(),
+                shape=(0, self._n_atoms, 3),
+            )
+            self._handle.root.velocities.attrs["units"] = "nanometers/picosecond"
 
         if set_kineticEnergy:
-            self._create_earray(where='/', name='kineticEnergy',
-                atom=self.tables.Float32Atom(), shape=(0,))
-            self._handle.root.kineticEnergy.attrs['units'] = 'kilojoules_per_mole'
+            self._create_earray(
+                where="/",
+                name="kineticEnergy",
+                atom=self.tables.Float32Atom(),
+                shape=(0,),
+            )
+            self._handle.root.kineticEnergy.attrs["units"] = "kilojoules_per_mole"
 
         if set_potentialEnergy:
-            self._create_earray(where='/', name='potentialEnergy',
-                atom=self.tables.Float32Atom(), shape=(0,))
-            self._handle.root.potentialEnergy.attrs['units'] = 'kilojoules_per_mole'
+            self._create_earray(
+                where="/",
+                name="potentialEnergy",
+                atom=self.tables.Float32Atom(),
+                shape=(0,),
+            )
+            self._handle.root.potentialEnergy.attrs["units"] = "kilojoules_per_mole"
 
         if set_temperature:
-            self._create_earray(where='/', name='temperature',
-                atom=self.tables.Float32Atom(), shape=(0,))
-            self._handle.root.temperature.attrs['units'] = 'kelvin'
+            self._create_earray(
+                where="/",
+                name="temperature",
+                atom=self.tables.Float32Atom(),
+                shape=(0,),
+            )
+            self._handle.root.temperature.attrs["units"] = "kelvin"
 
         if set_alchemicalLambda:
-            self._create_earray(where='/', name='lambda',
-                atom=self.tables.Float32Atom(), shape=(0,))
-            self._get_node('/', name='lambda').attrs['units'] = 'dimensionless'
+            self._create_earray(
+                where="/",
+                name="lambda",
+                atom=self.tables.Float32Atom(),
+                shape=(0,),
+            )
+            self._get_node("/", name="lambda").attrs["units"] = "dimensionless"
 
     def seek(self, offset, whence=0):
         """Move to a new file position
@@ -870,7 +1100,7 @@ class HDF5TrajectoryFile(object):
             2: move relative to the end of file, offset should be <= 0.
             Seeking beyond the end of a file is not supported
         """
-        _check_mode(self.mode, ('r',))
+        _check_mode(self.mode, ("r",))
 
         if whence == 0 and offset >= 0:
             self._frame_index = offset
@@ -879,7 +1109,7 @@ class HDF5TrajectoryFile(object):
         elif whence == 2 and offset <= 0:
             self._frame_index = len(self._handle.root.coordinates) + offset
         else:
-            raise IOError('Invalid argument')
+            raise OSError("Invalid argument")
 
     def tell(self):
         """Current file position
@@ -899,32 +1129,32 @@ class HDF5TrajectoryFile(object):
 
     @property
     def _get_node(self):
-        if self.tables.__version__ >= '3.0.0':
+        if self.tables.__version__ >= "3.0.0":
             return self._handle.get_node
         return self._handle.getNode
 
     @property
     def _create_earray(self):
-        if self.tables.__version__ >= '3.0.0':
+        if self.tables.__version__ >= "3.0.0":
             return self._handle.create_earray
         return self._handle.createEArray
 
     @property
     def _create_table(self):
-        if self.tables.__version__ >= '3.0.0':
+        if self.tables.__version__ >= "3.0.0":
             return self._handle.create_table
         return self._handle.createTable
 
     @property
     def _remove_node(self):
-        if self.tables.__version__ >= '3.0.0':
+        if self.tables.__version__ >= "3.0.0":
             return self._handle.remove_node
         return self._handle.removeNode
 
     @property
     def _open_file(self):
-        if self.tables.__version__ >= '3.0.0':
-           return self.tables.open_file
+        if self.tables.__version__ >= "3.0.0":
+            return self.tables.open_file
         return self.tables.openFile
 
     def close(self):
@@ -952,11 +1182,12 @@ class HDF5TrajectoryFile(object):
     def __len__(self):
         "Number of frames in the file"
         if not self._open:
-            raise ValueError('I/O operation on closed file')
+            raise ValueError("I/O operation on closed file")
         return len(self._handle.root.coordinates)
 
 
 def _check_mode(m, modes):
     if m not in modes:
-        raise ValueError('This operation is only available when a file '
-                         'is open in mode="%s".' % m)
+        raise ValueError(
+            "This operation is only available when a file " 'is open in mode="%s".' % m,
+        )

@@ -509,4 +509,3 @@ int DECLSPECDLLEXPORT Ptngc_unpack_array(struct coder *coder_inst,
     return Ptngc_unpack_array_xtc3(packed, output, length,natoms);
   return 1;
 }
-

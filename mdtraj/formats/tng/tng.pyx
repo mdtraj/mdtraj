@@ -1,19 +1,21 @@
 # cython: c_string_type=str, c_string_encoding=ascii
 
-from libc.stdio cimport printf
 from libc.stdint cimport int64_t
-from libc.stdlib cimport malloc, free
-
-from math import ceil
-from mdtraj.utils import ensure_type, cast_indices, in_units_of
-from mdtraj.utils.six import string_types
-from mdtraj.formats.registry import FormatRegistry
-from mdtraj.formats import PDBTrajectoryFile
-import mdtraj as md
+from libc.stdio cimport printf
+from libc.stdlib cimport free, malloc
 
 import os
+from math import ceil
+
+import mdtraj as md
 import numpy as np
+from mdtraj.formats import PDBTrajectoryFile
+from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils import cast_indices, ensure_type, in_units_of
+from mdtraj.utils.six import string_types
+
 cimport numpy as np
+
 np.import_array()
 
 __all__ = ['load_tng', 'TNGTrajectoryFile']
@@ -49,7 +51,7 @@ cdef extern from "tng/tng_io.h":
     tng_function_status tng_num_frames_get(
                 const tng_trajectory_t tng_data,
                 int64_t *n)
-    
+
     # Units
     tng_function_status tng_distance_unit_exponential_get(
                 const tng_trajectory_t tng_data,
@@ -100,7 +102,7 @@ cdef extern from "tng/tng_io.h":
     tng_function_status tng_frame_set_first_frame_time_set(
                 const tng_trajectory_t tng_data,
                 const double first_frame_time)
-    
+
     # Miscellaneous
     tng_function_status tng_num_frames_per_frame_set_get(
                 const tng_trajectory_t tng_data,
@@ -108,7 +110,7 @@ cdef extern from "tng/tng_io.h":
     tng_function_status tng_last_program_name_set(
                 const tng_trajectory_t tng_data,
                 const char *new_name)
-    
+
     # Topology
     tng_function_status tng_chain_name_of_particle_nr_get(
                 const tng_trajectory_t tng_data,
@@ -276,10 +278,10 @@ cdef class TNGTrajectoryFile(object):
         if self.mode == b'r':
             if tng_num_particles_get(self._traj, & self.n_atoms) != TNG_SUCCESS:
                 raise Exception("something went wrong during obtaining num particles")
-            
+
             if tng_num_frames_get(self._traj, & self.tot_n_frames) != TNG_SUCCESS:
                 raise Exception("error during len determination")
-     
+
             if tng_distance_unit_exponential_get(self._traj, &exponent) != TNG_SUCCESS:
                 raise Exception("Error reading distance unit exponent")
             self._distance_scale = 10.0**(exponent+9)
@@ -306,7 +308,7 @@ cdef class TNGTrajectoryFile(object):
             tng_util_trajectory_close(& self._traj)
             self.is_open = False
             self._pos = 0
-    
+
     def _read_topology(self):
         cdef char text[1024]
         cdef int64_t residue_id
@@ -314,9 +316,9 @@ cdef class TNGTrajectoryFile(object):
         last_residue_id = None
         top = md.Topology()
         PDBTrajectoryFile._loadNameReplacementTables()
-        
+
         # Loop over atoms, load the information for each one, and create the Topology
-        
+
         cdef int i
         for i in range(self.n_atoms):
             if tng_chain_name_of_particle_nr_get(self._traj, i, text, 1024) != TNG_SUCCESS:
@@ -358,9 +360,9 @@ cdef class TNGTrajectoryFile(object):
         for atom in top.atoms:
             if atom.element is None:
                 atom.element = PDBTrajectoryFile._guess_element(atom.name, atom.residue.name, atom.residue.n_atoms)
-        
+
         # Load bonds.
-        
+
         cdef int64_t n_bonds
         cdef int64_t* from_atoms
         cdef int64_t* to_atoms
@@ -379,12 +381,12 @@ cdef class TNGTrajectoryFile(object):
         # Set a default frame range
         cdef int k
         cdef char data_type
-        
+
         # handle atom_indices
         cdef int n_atoms_to_read = len(atom_indices)
 
         # Get the positions of all particles in the requested frame range.
-        
+
         cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] xyz = np.empty((n_atoms_to_read, 3), dtype=np.float32)
         cdef float* positions = NULL
         try:
@@ -400,7 +402,7 @@ cdef class TNGTrajectoryFile(object):
                 free(positions)
 
         # Get the time of each frame in the requested range.
-        
+
         cdef double frame_time
         if tng_util_time_of_frame_get(self._traj, self._pos, &frame_time) != TNG_SUCCESS:
             # This file doesn't specify times.
@@ -409,7 +411,7 @@ cdef class TNGTrajectoryFile(object):
             time = frame_time*1e12
 
         # Get the box shape of each frame in the requested range.
-        
+
         cdef np.ndarray[ndim=2, dtype=np.float32_t, mode='c'] box = np.empty((3, 3), dtype=np.float32)
         cdef void* box_shape = NULL
         cdef float* float_box
@@ -437,7 +439,7 @@ cdef class TNGTrajectoryFile(object):
         self._pos += 1
 
         return xyz, time, box
-    
+
     def read_as_traj(self, topology=None, n_frames=None, stride=None, atom_indices=None):
         """read_as_traj(topology, n_frames=None, stride=None, atom_indices=None)
 
@@ -533,7 +535,7 @@ cdef class TNGTrajectoryFile(object):
                 raise ValueError('atom_indices should be zero indexed. You gave an index less than zero')
             if max(atom_indices) >= self.n_atoms:
                 raise ValueError('atom indices should be zero indexed. You gave an index bigger than the number of atoms')
-        
+
         # Read the frames one at a time.
 
         all_xyz = np.empty((n_frames, len(atom_indices), 3), dtype=np.float32)

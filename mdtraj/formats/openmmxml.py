@@ -23,10 +23,10 @@
 import numpy as np
 from mdtraj.formats.registry import FormatRegistry
 
-__all__ = ['load_xml']
+__all__ = ["load_xml"]
 
 
-@FormatRegistry.register_loader('.xml')
+@FormatRegistry.register_loader(".xml")
 def load_xml(filename, top=None):
     """Load a single conformation from an OpenMM XML file.
 
@@ -47,9 +47,10 @@ def load_xml(filename, top=None):
     trajectory : md.Trajectory
         The resulting trajectory, as an md.Trajectory object.
     """
-    import xml.etree.cElementTree as etree
-    from mdtraj.core.trajectory import _parse_topology, Trajectory
-    
+    import xml.etree.ElementTree as etree
+
+    from mdtraj.core.trajectory import Trajectory, _parse_topology
+
     topology = _parse_topology(top)
 
     tree = etree.parse(filename)
@@ -57,19 +58,27 @@ def load_xml(filename, top=None):
     # get all of the positions from the XML into a list of tuples
     # then convert to a numpy array
     positions = []
-    for position in tree.getroot().find('Positions'):
-        positions.append((float(position.attrib['x']),
-                          float(position.attrib['y']),
-                          float(position.attrib['z'])))
+    for position in tree.getroot().find("Positions"):
+        positions.append(
+            (
+                float(position.attrib["x"]),
+                float(position.attrib["y"]),
+                float(position.attrib["z"]),
+            ),
+        )
 
     box = []
-    vectors = tree.getroot().find('PeriodicBoxVectors')
-    for name in ['A', 'B', 'C']:
-        box.append((float(vectors.find(name).attrib['x']),
-                    float(vectors.find(name).attrib['y']),
-                    float(vectors.find(name).attrib['z'])))
+    vectors = tree.getroot().find("PeriodicBoxVectors")
+    for name in ["A", "B", "C"]:
+        box.append(
+            (
+                float(vectors.find(name).attrib["x"]),
+                float(vectors.find(name).attrib["y"]),
+                float(vectors.find(name).attrib["z"]),
+            ),
+        )
 
     traj = Trajectory(xyz=np.array(positions), topology=topology)
-    traj.unitcell_vectors = np.array(box).reshape(1,3,3)
+    traj.unitcell_vectors = np.array(box).reshape(1, 3, 3)
 
     return traj

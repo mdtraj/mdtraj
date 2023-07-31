@@ -26,7 +26,7 @@ import pandas as pd
 import pytest
 from mdtraj.testing import eq
 
-temperature = 300.
+temperature = 300.0
 tip3p_charges = np.array([-0.834, 0.417, 0.417])
 
 """
@@ -92,7 +92,7 @@ def test_volume(get_fn):
     v = traj.unitcell_volumes.mean()
     reference = 7.92813  # From gromacs, see above comment
 
-    assert abs((v - reference) / reference) < 1E-3, "Volume tolerance not met!"
+    assert abs((v - reference) / reference) < 1e-3, "Volume tolerance not met!"
 
 
 def test_density(get_fn):
@@ -100,7 +100,7 @@ def test_density(get_fn):
     rho = md.geometry.density(traj).mean()
     reference = 973.651  # From gromacs, see above comment
 
-    assert abs((rho - reference) / reference) < 1E-3, "Density tolerance not met!"
+    assert abs((rho - reference) / reference) < 1e-3, "Density tolerance not met!"
 
 
 def test_dipole_moments(get_fn):
@@ -112,7 +112,10 @@ def test_dipole_moments(get_fn):
 
     # Now we screw up the molecule wholeness referencing all distances relative to atom zero.
     # E.g. [[0, 0], [0, 1], [0, 2], [0, 3]]...
-    atom_indices = np.array([np.zeros(traj.n_atoms), np.arange(traj.n_atoms)], dtype='int32').T
+    atom_indices = np.array(
+        [np.zeros(traj.n_atoms), np.arange(traj.n_atoms)],
+        dtype="int32",
+    ).T
     # Define coordinates relative to atom 0, PBC corrected.
     xyz = md.compute_displacements(traj, atom_indices, periodic=True)
     traj.xyz = xyz
@@ -129,7 +132,10 @@ def test_static_dielectric(get_fn):
 
     epsilon0 = md.geometry.static_dielectric(traj, charges, temperature)
     # E.g. [[0, 0], [0, 1], [0, 2], [0, 3]]...
-    atom_indices = np.array([np.zeros(traj.n_atoms), np.arange(traj.n_atoms)], dtype='int32').T
+    atom_indices = np.array(
+        [np.zeros(traj.n_atoms), np.arange(traj.n_atoms)],
+        dtype="int32",
+    ).T
     # Define coordinates relative to atom 0, PBC corrected.
     xyz = md.compute_displacements(traj, atom_indices, periodic=True)
     traj.xyz = xyz
@@ -139,16 +145,22 @@ def test_static_dielectric(get_fn):
 
     reference = 87.1818  # From gromacs, see above comment
 
-    assert abs((epsilon1 - reference) / reference) < 1E-3, "Dielectric tolerance not met!"
+    assert (
+        abs((epsilon1 - reference) / reference) < 1e-3
+    ), "Dielectric tolerance not met!"
 
 
 def test_kappa(get_fn):
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
     kappa = md.geometry.isothermal_compressability_kappa_T(traj, temperature)
-    reference = 2.05427E-10 * 1E5  # m^3 / J to 1 / bar.  Data from gromacs.  See above comment
+    reference = (
+        2.05427e-10 * 1e5
+    )  # m^3 / J to 1 / bar.  Data from gromacs.  See above comment
 
     # 20% tolerance.
-    assert abs((kappa - reference) / reference) < 2E-1, "Compressability tolerance not met!"
+    assert (
+        abs((kappa - reference) / reference) < 2e-1
+    ), "Compressability tolerance not met!"
 
 
 @pytest.mark.skip("Thermal expansion test doesn't work.")  # Not working
@@ -157,7 +169,11 @@ def test_alpha(get_fn):
     # Feel free to file a pull request with a working unit test :)
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
 
-    data = pd.read_table(get_fn('tip3p_300K_1ATM.tab'), names=["timestep", "energy"], sep=r"\s*")
+    data = pd.read_table(
+        get_fn("tip3p_300K_1ATM.tab"),
+        names=["timestep", "energy"],
+        sep=r"\s*",
+    )
     energy = data.energy.values
     alpha = md.geometry.thermal_expansion_alpha_P(traj, temperature, energy)
 

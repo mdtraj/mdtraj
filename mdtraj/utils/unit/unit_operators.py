@@ -46,17 +46,17 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from __future__ import print_function, absolute_import, division
 
 __author__ = "Christopher M. Bruns"
 __version__ = "0.5"
 
-from .unit import Unit, is_unit
 from .quantity import Quantity, is_quantity
+from .unit import Unit, is_unit
 
 # Attach methods of Unit class that return a Quantity to Unit class.
 # I put them here to avoid circular dependence in imports.
 # i.e. Quantity depends on Unit, but not vice versa
+
 
 def _unit_class_rdiv(self, other):
     """
@@ -66,12 +66,15 @@ def _unit_class_rdiv(self, other):
     of the inverse of self.
     """
     if is_unit(other):
-        raise NotImplementedError('programmer is surprised __rtruediv__ was called instead of __truediv__')
+        raise NotImplementedError(
+            "programmer is surprised __rtruediv__ was called instead of __truediv__",
+        )
     else:
         # print "R scalar / unit"
         unit = pow(self, -1.0)
         value = other
         return Quantity(value, unit).reduce_unit(self)
+
 
 Unit.__rtruediv__ = _unit_class_rdiv
 Unit.__rdiv__ = _unit_class_rdiv
@@ -98,7 +101,7 @@ def _unit_class_mul(self, other):
         else:
             Unit._multiplication_cache[self] = {}
         # print "unit * unit"
-        result1 = {} # dictionary of dimensionTuple: (BaseOrScaledUnit, exponent)
+        result1 = {}  # dictionary of dimensionTuple: (BaseOrScaledUnit, exponent)
         for unit, exponent in self.iter_base_or_scaled_units():
             d = unit.get_dimension_tuple()
             if d not in result1:
@@ -112,7 +115,7 @@ def _unit_class_mul(self, other):
             if unit not in result1[d]:
                 result1[d][unit] = 0
             result1[d][unit] += exponent
-        result2 = {} # stripped of zero exponents
+        result2 = {}  # stripped of zero exponents
         for d in result1:
             for unit in result1[d]:
                 exponent = result1[d][unit]
@@ -133,13 +136,16 @@ def _unit_class_mul(self, other):
         # return Quantity(other, self).reduce_unit(self)
         return Quantity(other, self)
 
+
 Unit.__mul__ = _unit_class_mul
 Unit.__rmul__ = Unit.__mul__
 Unit._multiplication_cache = {}
 
 
 # run module directly for testing
-if __name__=='__main__':
+if __name__ == "__main__":
     # Test the examples in the docstrings
-    import doctest, sys
+    import doctest
+    import sys
+
     doctest.testmod(sys.modules[__name__])

@@ -7,12 +7,12 @@ MDTraj contains a number of tools to help with development. These are located
 in :code:`mdtraj.utils`.
 
 
-Miscellanies 
+Miscellanies
 ------------
 
 .. autosummary::
     :toctree: generated/
-    
+
     import_
     in_units_of
     ilen
@@ -41,6 +41,6 @@ Rotations
 
 .. autosummary::
     :toctree: generated/
-    
+
     rotation_matrix_from_quaternion
     uniform_quaternion

@@ -1,10 +1,8 @@
-from __future__ import print_function
-import numpy as np
-
 import mdtraj as md
-from mdtraj.testing import eq
+import numpy as np
 from mdtraj import Trajectory, lprmsd
 from mdtraj._lprmsd import _munkres
+from mdtraj.testing import eq
 from mdtraj.utils import rotation_matrix_from_quaternion, uniform_quaternion
 
 random = np.random.RandomState(0)
@@ -12,9 +10,14 @@ random = np.random.RandomState(0)
 
 def test_munkres_0():
     result = _munkres(np.array([[7, 4, 3], [6, 8, 5], [9, 4, 4]], dtype=np.double))
-    true = np.array([[0, 0, 1],
-                     [1, 0, 0],
-                     [0, 1, 0]], dtype=np.int32)
+    true = np.array(
+        [
+            [0, 0, 1],
+            [1, 0, 0],
+            [0, 1, 0],
+        ],
+        dtype=np.int32,
+    )
     eq(result, true)
 
 
@@ -22,7 +25,10 @@ def test_lprmsd_null():
     ref = random.randn(1, 10, 3).astype(np.float32)
     new = np.copy(ref)
 
-    value = lprmsd(Trajectory(xyz=new, topology=None), Trajectory(xyz=ref, topology=None))
+    value = lprmsd(
+        Trajectory(xyz=new, topology=None),
+        Trajectory(xyz=ref, topology=None),
+    )
     eq(value, np.array([0.0], dtype=np.float32), decimal=3)
 
 
@@ -33,7 +39,10 @@ def test_lprmsd_0():
 
     new = ref[:, mapping]
 
-    value = lprmsd(Trajectory(xyz=new, topology=None), Trajectory(xyz=ref, topology=None))
+    value = lprmsd(
+        Trajectory(xyz=new, topology=None),
+        Trajectory(xyz=ref, topology=None),
+    )
     eq(value, np.array([0.0], dtype=np.float32), decimal=3)
 
 
@@ -44,7 +53,11 @@ def test_lprmsd_1():
     rot = rotation_matrix_from_quaternion(uniform_quaternion())
     new = ref[:, mapping].dot(rot)
 
-    value = lprmsd(Trajectory(xyz=new, topology=None), Trajectory(xyz=ref, topology=None), permute_groups=[[]])
+    value = lprmsd(
+        Trajectory(xyz=new, topology=None),
+        Trajectory(xyz=ref, topology=None),
+        permute_groups=[[]],
+    )
     assert value[0] < 1e-2
 
 
@@ -56,19 +69,32 @@ def test_lprmsd_2():
     rot = rotation_matrix_from_quaternion(uniform_quaternion())
     new = ref[:, mapping].dot(rot)
 
-    value = lprmsd(Trajectory(xyz=new, topology=None), Trajectory(xyz=ref, topology=None),
-                   permute_groups=[np.arange(10)])
+    value = lprmsd(
+        Trajectory(xyz=new, topology=None),
+        Trajectory(xyz=ref, topology=None),
+        permute_groups=[np.arange(10)],
+    )
     assert value[0] < 1e-2
 
 
 def test_lprmsd_3(get_fn):
     # resolve rotation and permutation togetehr
-    t1 = md.load(get_fn('alanine-dipeptide-explicit.pdb'))[0]
-    t2 = md.load(get_fn('alanine-dipeptide-explicit.pdb'))[0]
+    t1 = md.load(get_fn("alanine-dipeptide-explicit.pdb"))[0]
+    t2 = md.load(get_fn("alanine-dipeptide-explicit.pdb"))[0]
 
-    h2o_o_indices = [a.index for a in t1.topology.atoms if a.residue.name == 'HOH' and a.element.symbol == 'O'][0:20]
-    h2o_h_indices = [a.index for a in t1.topology.atoms if a.residue.name == 'HOH' and a.element.symbol == 'H'][0:20]
-    backbone_indices = [a.index for a in t1.topology.atoms if a.element.symbol in ['C', 'N']][:5]
+    h2o_o_indices = [
+        a.index
+        for a in t1.topology.atoms
+        if a.residue.name == "HOH" and a.element.symbol == "O"
+    ][0:20]
+    h2o_h_indices = [
+        a.index
+        for a in t1.topology.atoms
+        if a.residue.name == "HOH" and a.element.symbol == "H"
+    ][0:20]
+    backbone_indices = [
+        a.index for a in t1.topology.atoms if a.element.symbol in ["C", "N"]
+    ][:5]
 
     # scramble two groups of indices
     t2.xyz[:, random.permutation(h2o_o_indices)] = t2.xyz[:, h2o_o_indices]
@@ -81,21 +107,21 @@ def test_lprmsd_3(get_fn):
     rot = rotation_matrix_from_quaternion(uniform_quaternion())
     t2.xyz[0].dot(rot)
 
-    print('raw distinguishable indices', backbone_indices)
+    print("raw distinguishable indices", backbone_indices)
     atom_indices = np.concatenate((h2o_o_indices, backbone_indices))
     value = md.lprmsd(t2, t1, atom_indices=atom_indices, permute_groups=[h2o_o_indices])
     t1.xyz[:, h2o_o_indices] += random.randn(len(h2o_o_indices), 3)
 
-    print('final value', value)
+    print("final value", value)
     assert value[0] < 1e-2
 
 
 def test_lprmsd_4(get_fn):
-    t1 = md.load(get_fn('1bpi.pdb'))
+    t1 = md.load(get_fn("1bpi.pdb"))
     t1.xyz += 0.05 * random.randn(t1.n_frames, t1.n_atoms, 3)
-    t2 = md.load(get_fn('1bpi.pdb'))
+    t2 = md.load(get_fn("1bpi.pdb"))
     # some random indices
-    indices = random.permutation(t1.n_atoms)[:t1.n_atoms - 5]
+    indices = random.permutation(t1.n_atoms)[: t1.n_atoms - 5]
 
     got = md.lprmsd(t2, t1, atom_indices=indices, permute_groups=[[]])
     ref = md.rmsd(t2, t1, atom_indices=indices)
@@ -104,8 +130,8 @@ def test_lprmsd_4(get_fn):
 
 
 def test_lprmsd_5(get_fn):
-    t = md.load(get_fn('frame0.h5'))
-    t1 = md.load(get_fn('frame0.h5'))
+    t = md.load(get_fn("frame0.h5"))
+    t1 = md.load(get_fn("frame0.h5"))
 
     r = md.rmsd(t, t1, 0)
     a = md.lprmsd(t, t1, 0, permute_groups=[[]], superpose=True)

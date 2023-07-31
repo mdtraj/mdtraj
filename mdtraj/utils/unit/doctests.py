@@ -863,7 +863,6 @@ Examples
 
 """
 
-from __future__ import print_function
 
 __author__ = "Christopher M. Bruns"
 __version__ = "0.5"
@@ -871,18 +870,19 @@ __version__ = "0.5"
 # This unit code might be found in different packages...
 # So use local import
 from baseunit import BaseUnit
+from constants import *
+from quantity import Quantity, is_dimensionless, is_quantity
 from standard_dimensions import *
-from unit import is_unit, dimensionless
-from quantity import Quantity, is_quantity, is_dimensionless
+from unit import dimensionless, is_unit
 from unit_definitions import *
 from unit_math import *
-from constants import *
 
 # run module directly for testing
-if __name__=='__main__':
+if __name__ == "__main__":
     # Test the examples in the docstrings
-    import doctest, sys
+    import doctest
+    import sys
+
     (failed, passed) = doctest.testmod(sys.modules[__name__])
     # For use in automated testing, return number of failed tests as exit code
     exit(failed)
-

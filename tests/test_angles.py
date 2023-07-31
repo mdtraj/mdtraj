@@ -1,7 +1,8 @@
 import itertools
+
 import mdtraj as md
-from mdtraj.testing import eq
 import numpy as np
+from mdtraj.testing import eq
 
 
 def test_angle_pbc_0():

@@ -13,9 +13,9 @@ subset of the frames.
 
 After installing the library, it should be in your  ``$PATH``. You can check
 this from the command line with this command. ::
-  
+
   $ which mdconvert
-  
+
 
 Here's the ``mdconvert`` help text. ::
 

@@ -67,18 +67,19 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from __future__ import division, print_function, absolute_import
 
 __author__ = "Christopher M. Bruns"
 __version__ = "0.5"
 
 
-import math
 import copy
-from .standard_dimensions import *
-from .unit import Unit, is_unit, dimensionless
+import math
 
-class Quantity(object):
+from .standard_dimensions import *
+from .unit import Unit, dimensionless, is_unit
+
+
+class Quantity:
     """Physical quantity, such as 1.3 meters per second.
 
     Quantities contain both a value, such as 1.3; and a unit,
@@ -92,6 +93,7 @@ class Quantity(object):
       4 - lists of tuples of numbers, lists of lists of ... etc. of numbers
       5 - numpy.arrays
     """
+
     __array_priority__ = 99
 
     def __init__(self, value=None, unit=None):
@@ -103,7 +105,7 @@ class Quantity(object):
          - unit: (Unit) the physical unit, e.g. openmm.unit.meters.
         """
         # When no unit is specified, bend over backwards to handle all one-argument possibilities
-        if unit is None: # one argument version, copied from UList
+        if unit is None:  # one argument version, copied from UList
             if is_unit(value):
                 # Unit argument creates an empty list with that unit attached
                 unit = value
@@ -140,13 +142,16 @@ class Quantity(object):
                             unit = dimensionless
                         else:
                             unit = Quantity(first_item).unit
-                     # Notice that tuples, lists, and numpy.arrays can all be initialized with a list
+                    # Notice that tuples, lists, and numpy.arrays can all be initialized with a list
                     new_container = Quantity([], unit)
                     for item in value:
-                        new_container.append(Quantity(item)) # Strips off units into list new_container._value
+                        new_container.append(
+                            Quantity(item),
+                        )  # Strips off units into list new_container._value
                     # __class__ trick does not work for numpy.arrays
                     try:
                         import numpy
+
                         if isinstance(value, numpy.ndarray):
                             value = numpy.array(new_container._value)
                         else:
@@ -172,13 +177,13 @@ class Quantity(object):
 
     def __getstate__(self):
         state = dict()
-        state['_value'] = self._value
-        state['unit'] = self.unit
+        state["_value"] = self._value
+        state["unit"] = self.unit
         return state
 
     def __setstate__(self, state):
-        self._value = state['_value']
-        self.unit = state['unit']
+        self._value = state["_value"]
+        self.unit = state["unit"]
         return
 
     def __copy__(self):
@@ -207,16 +212,21 @@ class Quantity(object):
 
         Returns a string consisting of quantity number followed by unit abbreviation.
         """
-        return str(self._value) + ' ' + str(self.unit.get_symbol())
+        return str(self._value) + " " + str(self.unit.get_symbol())
 
     def __repr__(self):
-        """
-        """
-        return (Quantity.__name__ + '(value=' + repr(self._value) + ', unit=' +
-                str(self.unit) + ')')
+        """ """
+        return (
+            Quantity.__name__
+            + "(value="
+            + repr(self._value)
+            + ", unit="
+            + str(self.unit)
+            + ")"
+        )
 
     def format(self, format_spec):
-        return format_spec % self._value + ' ' + str(self.unit.get_symbol())
+        return format_spec % self._value + " " + str(self.unit.get_symbol())
 
     def __add__(self, other):
         """Add two Quantities.
@@ -232,7 +242,10 @@ class Quantity(object):
         """
         # can only add using like units
         if not self.unit.is_compatible(other.unit):
-            raise TypeError('Cannot add two quantities with incompatible units "%s" and "%s".' % (self.unit, other.unit))
+            raise TypeError(
+                'Cannot add two quantities with incompatible units "%s" and "%s".'
+                % (self.unit, other.unit),
+            )
         value = self._value + other.value_in_unit(self.unit)
         unit = self.unit
         return Quantity(value, unit)
@@ -250,14 +263,16 @@ class Quantity(object):
         Returns a new Quantity that is the difference of the two arguments.
         """
         if not self.unit.is_compatible(other.unit):
-            raise TypeError('Cannot subtract two quantities with incompatible units "%s" and "%s".' % (self.unit, other.unit))
+            raise TypeError(
+                'Cannot subtract two quantities with incompatible units "%s" and "%s".'
+                % (self.unit, other.unit),
+            )
         value = self._value - other.value_in_unit(self.unit)
         unit = self.unit
         return Quantity(value, unit)
 
     def __eq__(self, other):
-        """
-        """
+        """ """
         if not is_quantity(other):
             return False
         if not self.unit.is_compatible(other.unit):
@@ -265,8 +280,7 @@ class Quantity(object):
         return self.value_in_unit(other.unit) == other._value
 
     def __ne__(self, other):
-        """
-        """
+        """ """
         return not self == other
 
     def __lt__(self, other):
@@ -280,10 +294,13 @@ class Quantity(object):
 
     def __ge__(self, other):
         return self._value >= (other.value_in_unit(self.unit))
+
     def __gt__(self, other):
         return self._value > (other.value_in_unit(self.unit))
+
     def __le__(self, other):
         return self._value <= (other.value_in_unit(self.unit))
+
     def __lt__(self, other):
         return self._value < (other.value_in_unit(self.unit))
 
@@ -303,7 +320,7 @@ class Quantity(object):
             (unit, value_factor) = Quantity._reduce_cache[key]
         else:
             value_factor = 1.0
-            canonical_units = {} # dict of dimensionTuple: (Base/ScaledUnit, exponent)
+            canonical_units = {}  # dict of dimensionTuple: (Base/ScaledUnit, exponent)
             # Bias result toward guide units
             if guide_unit is not None:
                 for u, exponent in guide_unit.iter_base_or_scaled_units():
@@ -316,7 +333,9 @@ class Quantity(object):
                 if d not in canonical_units:
                     canonical_units[d] = [u, exponent]
                 else:
-                    value_factor *= (u.conversion_factor_to(canonical_units[d][0])**exponent)
+                    value_factor *= (
+                        u.conversion_factor_to(canonical_units[d][0]) ** exponent
+                    )
                     canonical_units[d][1] += exponent
             new_base_units = {}
             for d in canonical_units:
@@ -345,7 +364,7 @@ class Quantity(object):
             # __mul__ strips off dimensionless, if appropriate
             result = result * value_factor
         if unit.is_dimensionless():
-            assert unit is dimensionless # should have been set earlier in this method
+            assert unit is dimensionless  # should have been set earlier in this method
             if is_quantity(result):
                 result = copy.deepcopy(result._value)
         return result
@@ -381,11 +400,15 @@ class Quantity(object):
         multiplied by other.
         """
         if is_unit(other):
-            raise NotImplementedError('programmer is surprised __rmul__ was called instead of __mul__')
+            raise NotImplementedError(
+                "programmer is surprised __rmul__ was called instead of __mul__",
+            )
             # print "R unit * quantity"
         elif is_quantity(other):
             # print "R quantity * quantity"
-            raise NotImplementedError('programmer is surprised __rmul__ was called instead of __mul__')
+            raise NotImplementedError(
+                "programmer is surprised __rmul__ was called instead of __mul__",
+            )
         else:
             # print "scalar * quantity"
             return self._change_units_with_factor(self.unit, other, post_multiply=True)
@@ -405,7 +428,7 @@ class Quantity(object):
         elif is_quantity(other):
             # print "quantity / quantity"
             # Delegate quantity/quantity to (quantity/scalar)/unit
-            return (self/other._value) / other.unit
+            return (self / other._value) / other.unit
         else:
             # print "quantity / scalar"
             return self * pow(other, -1.0)
@@ -420,9 +443,13 @@ class Quantity(object):
         """
         if is_unit(other):
             # print "R unit / quantity"
-            raise NotImplementedError('programmer is surprised __rtruediv__ was called instead of __truediv__')
+            raise NotImplementedError(
+                "programmer is surprised __rtruediv__ was called instead of __truediv__",
+            )
         elif is_quantity(other):
-            raise NotImplementedError('programmer is surprised __rtruediv__ was called instead of __truediv__')
+            raise NotImplementedError(
+                "programmer is surprised __rtruediv__ was called instead of __truediv__",
+            )
         else:
             # print "R scalar / quantity"
             return other * pow(self, -1.0)
@@ -449,7 +476,7 @@ class Quantity(object):
         # There might be a conversion factor from taking the square root of the unit
         new_value = math.sqrt(self._value)
         new_unit = self.unit.sqrt()
-        unit_factor = self.unit.conversion_factor_to(new_unit*new_unit)
+        unit_factor = self.unit.conversion_factor_to(new_unit * new_unit)
         if unit_factor != 1.0:
             new_value *= math.sqrt(unit_factor)
         return Quantity(value=new_value, unit=new_unit)
@@ -471,7 +498,7 @@ class Quantity(object):
             mysum = self._value.sum(*args, **kwargs)
         except AttributeError:
             if args or kwargs:
-                raise TypeError('Unsupported arguments for Quantity.sum')
+                raise TypeError("Unsupported arguments for Quantity.sum")
             if len(self._value) == 0:
                 mysum = 0
             else:
@@ -496,7 +523,7 @@ class Quantity(object):
             mean = self._value.mean(*args, **kwargs)
         except AttributeError:
             if args or kwargs:
-                raise TypeError('Unsupported arguments for Quantity.mean')
+                raise TypeError("Unsupported arguments for Quantity.mean")
             mean = (self.sum() / len(self._value))._value
         return Quantity(mean, self.unit)
 
@@ -516,7 +543,7 @@ class Quantity(object):
             std = self._value.std(*args, **kwargs)
         except AttributeError:
             if args or kwargs:
-                raise TypeError('Unsupported arguments for Quantity.std')
+                raise TypeError("Unsupported arguments for Quantity.std")
             mean = self.mean()._value
             var = 0
             for val in self._value:
@@ -542,7 +569,7 @@ class Quantity(object):
             mymax = self._value.max(*args, **kwargs)
         except AttributeError:
             if args or kwargs:
-                raise TypeError('Unsupported arguments for Quantity.max')
+                raise TypeError("Unsupported arguments for Quantity.max")
             mymax = max(self._value)
         return Quantity(mymax, self.unit)
 
@@ -562,11 +589,11 @@ class Quantity(object):
             mymin = self._value.min(*args, **kwargs)
         except AttributeError:
             if args or kwargs:
-                raise TypeError('Unsupported arguments for Quantity.min')
+                raise TypeError("Unsupported arguments for Quantity.min")
             mymin = min(self._value)
         return Quantity(mymin, self.unit)
 
-    def reshape(self, shape, order='C'):
+    def reshape(self, shape, order="C"):
         """
         Same as numpy.ndarray.reshape, except the result is a Quantity with the
         same units as the current object rather than a plain numpy.ndarray
@@ -574,8 +601,9 @@ class Quantity(object):
         try:
             return Quantity(self._value.reshape(shape, order=order), self.unit)
         except AttributeError:
-            raise AttributeError('Only numpy array Quantity objects can be '
-                                 'reshaped')
+            raise AttributeError(
+                "Only numpy array Quantity objects can be " "reshaped",
+            )
 
     def __abs__(self):
         """
@@ -600,8 +628,7 @@ class Quantity(object):
         return Quantity(-(self._value), self.unit)
 
     def __nonzero__(self):
-        """Returns True if value underlying Quantity is zero, False otherwise.
-        """
+        """Returns True if value underlying Quantity is zero, False otherwise."""
         return bool(self._value)
 
     def __bool__(self):
@@ -609,10 +636,13 @@ class Quantity(object):
 
     def __complex__(self):
         return Quantity(complex(self._value), self.unit)
+
     def __float__(self):
         return Quantity(float(self._value), self.unit)
+
     def __int__(self):
         return Quantity(int(self._value), self.unit)
+
     def __long__(self):
         return Quantity(int(self._value), self.unit)
 
@@ -623,7 +653,7 @@ class Quantity(object):
         val = self.in_units_of(unit)
         if is_quantity(val):
             return val._value
-        else: # naked dimensionless
+        else:  # naked dimensionless
             return val
 
     def value_in_unit_system(self, system):
@@ -634,7 +664,7 @@ class Quantity(object):
         if is_quantity(result):
             return result._value
         else:
-            return result # dimensionless
+            return result  # dimensionless
 
     def in_unit_system(self, system):
         """
@@ -656,7 +686,12 @@ class Quantity(object):
           and  result = value * factor when post_multiply is True
         """
         if not self.unit.is_compatible(other_unit):
-            raise TypeError('Unit "%s" is not compatible with Unit "%s".' % (self.unit, other_unit))
+            raise TypeError(
+                'Unit "{}" is not compatible with Unit "{}".'.format(
+                    self.unit,
+                    other_unit,
+                ),
+            )
         f = self.unit.conversion_factor_to(other_unit)
         return self._change_units_with_factor(other_unit, f)
 
@@ -664,7 +699,7 @@ class Quantity(object):
         # numpy arrays cannot be compared with 1.0, so just "try"
         factor_is_identity = False
         try:
-            if (factor == 1.0):
+            if factor == 1.0:
                 factor_is_identity = True
         except ValueError:
             pass
@@ -675,14 +710,21 @@ class Quantity(object):
             try:
                 # multiply operator, if it exists, is preferred
                 if post_multiply:
-                    value = self._value * factor # works for number, numpy.array, or vec3, e.g.
+                    value = (
+                        self._value * factor
+                    )  # works for number, numpy.array, or vec3, e.g.
                 else:
-                    value = factor * self._value # works for number, numpy.array, or vec3, e.g.
+                    value = (
+                        factor * self._value
+                    )  # works for number, numpy.array, or vec3, e.g.
                 result = Quantity(value, new_unit)
             except TypeError:
                 value = copy.deepcopy(self._value)
-                result = Quantity(self._scale_sequence(value, factor, post_multiply), new_unit)
-        if (new_unit.is_dimensionless()):
+                result = Quantity(
+                    self._scale_sequence(value, factor, post_multiply),
+                    new_unit,
+                )
+        if new_unit.is_dimensionless():
             return result._value
         else:
             return result
@@ -690,32 +732,32 @@ class Quantity(object):
     def _scale_sequence(self, value, factor, post_multiply):
         try:
             if post_multiply:
-                value = value*factor
+                value = value * factor
             else:
-                value = factor*value
+                value = factor * value
         except TypeError:
             try:
                 if post_multiply:
                     if isinstance(value, tuple):
-                        value = tuple([x*factor for x in value])
+                        value = tuple([x * factor for x in value])
                     else:
                         for i in range(len(value)):
-                            value[i] = value[i]*factor
+                            value[i] = value[i] * factor
                 else:
                     if isinstance(value, tuple):
-                        value = tuple([factor*x for x in value])
+                        value = tuple([factor * x for x in value])
                     else:
                         for i in range(len(value)):
-                            value[i] = factor*value[i]
+                            value[i] = factor * value[i]
             except TypeError:
                 if isinstance(value, tuple):
-                    value = tuple([self._scale_sequence(x, factor, post_multiply) for x in value])
+                    value = tuple(
+                        [self._scale_sequence(x, factor, post_multiply) for x in value],
+                    )
                 else:
                     for i in range(len(value)):
                         value[i] = self._scale_sequence(value[i], factor, post_multiply)
         return value
-
-
 
     ####################################
     ### Sequence methods of Quantity ###
@@ -737,21 +779,24 @@ class Quantity(object):
 
     def __setitem__(self, key, value):
         # Delegate slices to one-at-a time ___setitem___
-        if isinstance(key, slice): # slice
+        if isinstance(key, slice):  # slice
             indices = key.indices(len(self))
             for value_idx, self_idx in enumerate(range(*indices)):
                 self[self_idx] = value[value_idx]
-        else: # single index
+        else:  # single index
             # Check unit compatibility
             if self.unit.is_dimensionless() and is_dimensionless(value):
-                pass # OK
+                pass  # OK
             elif not self.unit.is_compatible(value.unit):
-                raise TypeError('Unit "%s" is not compatible with Unit "%s".' % (self.unit, value.unit))
+                raise TypeError(
+                    'Unit "%s" is not compatible with Unit "%s".'
+                    % (self.unit, value.unit),
+                )
             self._value[key] = value / self.unit
             assert not is_quantity(self._value[key])
 
     def __delitem__(self, key):
-        del(self._value[key])
+        del self._value[key]
 
     def __contains__(self, item):
         return self._value.__contains__(item.value_in_unit(self.unit))
@@ -762,8 +807,10 @@ class Quantity(object):
 
     def count(self, item):
         return self._value.count(item.value_in_unit(self.unit))
+
     def index(self, item):
         return self._value.index(item.value_in_unit(self.unit))
+
     def append(self, item):
         if is_quantity(item):
             return self._value.append(item.value_in_unit(self.unit))
@@ -771,14 +818,19 @@ class Quantity(object):
             return self._value.append(item)
         else:
             raise TypeError("Cannot append item without units into list with units")
+
     def extend(self, rhs):
         self._value.extend(rhs.value_in_unit(self.unit))
+
     def insert(self, index, item):
         self._value.insert(index, item.value_in_unit(self.unit))
+
     def remove(self, item):
         self._value.remove(item)
+
     def pop(self, *args):
         return self._value.pop(*args) * self.unit
+
     # list.reverse will automatically delegate correctly
     # list.sort with no arguments will delegate correctly
     # list.sort with a comparison function cannot be done correctly
@@ -790,9 +842,9 @@ def is_quantity(x):
     """
     return isinstance(x, Quantity)
 
+
 def is_dimensionless(x):
-    """
-    """
+    """ """
     if is_unit(x):
         return x.is_dimensionless()
     elif is_quantity(x):
@@ -801,27 +853,31 @@ def is_dimensionless(x):
         # everything else in the universe is dimensionless
         return True
 
+
 # Strings can cause trouble
 # as can any container that has infinite levels of containment
 def _is_string(x):
-     # step 1) String is always a container
-     # and its contents are themselves containers.
-     if isinstance(x, str):
-         return True
-     try:
-         first_item = next(iter(x))
-         inner_item = next(iter(first_item))
-         if first_item is inner_item:
-             return True
-         else:
-             return False
-     except TypeError:
-         return False
-     except StopIteration:
-         return False
+    # step 1) String is always a container
+    # and its contents are themselves containers.
+    if isinstance(x, str):
+        return True
+    try:
+        first_item = next(iter(x))
+        inner_item = next(iter(first_item))
+        if first_item is inner_item:
+            return True
+        else:
+            return False
+    except TypeError:
+        return False
+    except StopIteration:
+        return False
+
 
 # run module directly for testing
-if __name__=='__main__':
+if __name__ == "__main__":
     # Test the examples in the docstrings
-    import doctest, sys
+    import doctest
+    import sys
+
     doctest.testmod(sys.modules[__name__])

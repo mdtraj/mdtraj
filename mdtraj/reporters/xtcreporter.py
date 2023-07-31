@@ -25,15 +25,17 @@ through time in the GROMACS XTC format
 """
 
 
-from __future__ import print_function, division
+from mdtraj.utils.six import PY3
+
 from ..formats.xtc import XTCTrajectoryFile
 from .basereporter import _BaseReporter
-from mdtraj.utils.six import PY3
+
 if PY3:
     basestring = str
 try:
     # openmm
     import openmm.unit as units
+
     OPENMM_IMPORTED = True
 except ImportError:
     # if someone tries to import all of mdtraj but doesn't
@@ -68,6 +70,7 @@ class XTCReporter(_BaseReporter):
 
     >>> traj = mdtraj.trajectory.load('traj.xtc')
     """
+
     @property
     def backend(self):
         return XTCTrajectoryFile
@@ -75,20 +78,30 @@ class XTCReporter(_BaseReporter):
     def __init__(self, file, reportInterval, atomSubset=None, append=False):
         if append:
             if isinstance(file, basestring):
-                with self.backend(file, 'r') as f:
+                with self.backend(file, "r") as f:
                     contents = f.read()
             elif isinstance(file, self.backend):
-                raise ValueError("Currently passing an XTCTrajectoryFile in append mode is not supported, please pass a string with the filename")
+                raise ValueError(
+                    "Currently passing an XTCTrajectoryFile in append mode is not supported, please pass a string with the filename",
+                )
             else:
                 raise TypeError("I don't know how to handle %s" % file)
-        super(XTCReporter, self).__init__(file, reportInterval,
-            coordinates=True, time=True, cell=True, potentialEnergy=False,
-            kineticEnergy=False, temperature=False, velocities=False,
-            atomSubset=atomSubset)
+        super().__init__(
+            file,
+            reportInterval,
+            coordinates=True,
+            time=True,
+            cell=True,
+            potentialEnergy=False,
+            kineticEnergy=False,
+            temperature=False,
+            velocities=False,
+            atomSubset=atomSubset,
+        )
         if append:
             self._traj_file.write(*contents)
         if not OPENMM_IMPORTED:
-            raise ImportError('OpenMM not found.')
+            raise ImportError("OpenMM not found.")
 
     def report(self, simulation, state):
         """Generate a report.
@@ -109,20 +122,24 @@ class XTCReporter(_BaseReporter):
         kwargs = {}
         if self._coordinates:
             coordinates = state.getPositions(asNumpy=True)[self._atomSlice]
-            coordinates = coordinates.value_in_unit(getattr(units, self._traj_file.distance_unit))
+            coordinates = coordinates.value_in_unit(
+                getattr(units, self._traj_file.distance_unit),
+            )
             args = (coordinates,)
 
         if self._time:
             time_step = state.getTime()
-            kwargs['time'] = time_step.value_in_unit(time_step.unit)
-            kwargs['step'] = simulation.currentStep
+            kwargs["time"] = time_step.value_in_unit(time_step.unit)
+            kwargs["step"] = simulation.currentStep
         if self._cell:
-            kwargs['box'] = state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(getattr(units, self._traj_file.distance_unit))
+            kwargs["box"] = state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(
+                getattr(units, self._traj_file.distance_unit),
+            )
         self._traj_file.write(*args, **kwargs)
         # flush the file to disk. it might not be necessary to do this every
         # report, but this is the most proactive solution. We don't want to
         # accumulate a lot of data in memory only to find out, at the very
         # end of the run, that there wasn't enough space on disk to hold the
         # data.
-        if hasattr(self._traj_file, 'flush'):
+        if hasattr(self._traj_file, "flush"):
             self._traj_file.flush()

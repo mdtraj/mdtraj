@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: latin-1 -*-
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
@@ -31,7 +30,6 @@ This file contains scripts for calculating scalar (J) Couplings from backbone di
 ##############################################################################
 
 import numpy as np
-
 from mdtraj.geometry import compute_phi
 
 ##############################################################################
@@ -39,8 +37,13 @@ from mdtraj.geometry import compute_phi
 ##############################################################################
 
 J3_HN_CB_coefficients = {  # See full citations below in docstring references.
-    "Bax2007": dict(phi0=+60 * np.pi/180., A=3.71, B=-0.59, C=0.08),  # From Table 1. in paper
-    }
+    "Bax2007": dict(
+        phi0=+60 * np.pi / 180.0,
+        A=3.71,
+        B=-0.59,
+        C=0.08,
+    ),  # From Table 1. in paper
+}
 
 J3_HN_CB_uncertainties = {
     # Values in [Hz]
@@ -48,8 +51,13 @@ J3_HN_CB_uncertainties = {
 }
 
 J3_HN_C_coefficients = {  # See full citations below in docstring references.
-    "Bax2007": dict(phi0=+180 * np.pi/180., A=4.36, B=-1.08, C=-0.01),  # From Table 1. in paper
-    }
+    "Bax2007": dict(
+        phi0=+180 * np.pi / 180.0,
+        A=4.36,
+        B=-1.08,
+        C=-0.01,
+    ),  # From Table 1. in paper
+}
 
 J3_HN_C_uncertainties = {
     # Values in [Hz]
@@ -57,25 +65,41 @@ J3_HN_C_uncertainties = {
 }
 
 J3_HN_HA_coefficients = {  # See full citations below in docstring references.
-    "Ruterjans1999": dict(phi0=-60 * np.pi/180., A=7.90, B=-1.05, C=0.65),  # From Table 1. in paper.
-    "Bax2007": dict(phi0=-60 * np.pi/180., A=8.4, B=-1.36, C=0.33),  # From Table 1. in paper
-    "Bax1997": dict(phi0=-60 * np.pi/180., A=7.09, B=-1.42, C=1.55),  # From Table 2. in paper
-    }
+    "Ruterjans1999": dict(
+        phi0=-60 * np.pi / 180.0,
+        A=7.90,
+        B=-1.05,
+        C=0.65,
+    ),  # From Table 1. in paper.
+    "Bax2007": dict(
+        phi0=-60 * np.pi / 180.0,
+        A=8.4,
+        B=-1.36,
+        C=0.33,
+    ),  # From Table 1. in paper
+    "Bax1997": dict(
+        phi0=-60 * np.pi / 180.0,
+        A=7.09,
+        B=-1.42,
+        C=1.55,
+    ),  # From Table 2. in paper
+}
 
 J3_HN_HA_uncertainties = {
     # Values in [Hz]
     "Ruterjans1999": 0.25,
     "Bax2007": 0.36,
-    "Bax1997": 0.39
+    "Bax1997": 0.39,
 }
 
 ##############################################################################
 # Functions
 ##############################################################################
 
+
 def _J3_function(phi, A, B, C, phi0):
     """Return a scalar couplings with a given choice of karplus coefficients.  USES RADIANS!"""
-    return A * np.cos(phi + phi0) ** 2. + B * np.cos(phi + phi0) + C
+    return A * np.cos(phi + phi0) ** 2.0 + B * np.cos(phi + phi0) + C
 
 
 def compute_J3_HN_HA(traj, model="Bax2007"):
@@ -128,7 +152,7 @@ def compute_J3_HN_HA(traj, model="Bax2007"):
     indices, phi = compute_phi(traj)
 
     if model not in J3_HN_HA_coefficients:
-        raise(KeyError("model must be one of %s" % J3_HN_HA_coefficients.keys()))
+        raise (KeyError("model must be one of %s" % J3_HN_HA_coefficients.keys()))
 
     J = _J3_function(phi, **J3_HN_HA_coefficients[model])
     return indices, J
@@ -173,7 +197,7 @@ def compute_J3_HN_C(traj, model="Bax2007"):
     indices, phi = compute_phi(traj)
 
     if model not in J3_HN_C_coefficients:
-        raise(KeyError("model must be one of %s" % J3_HN_C_coefficients.keys()))
+        raise (KeyError("model must be one of %s" % J3_HN_C_coefficients.keys()))
 
     J = _J3_function(phi, **J3_HN_C_coefficients[model])
     return indices, J
@@ -218,7 +242,7 @@ def compute_J3_HN_CB(traj, model="Bax2007"):
     indices, phi = compute_phi(traj)
 
     if model not in J3_HN_CB_coefficients:
-        raise(KeyError("model must be one of %s" % J3_HN_CB_coefficients.keys()))
+        raise (KeyError("model must be one of %s" % J3_HN_CB_coefficients.keys()))
 
     J = _J3_function(phi, **J3_HN_CB_coefficients[model])
     return indices, J
