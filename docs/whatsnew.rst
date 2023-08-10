@@ -3,9 +3,63 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-Development
------------
+Current Development
+-------------------
 
+v1.9.9 (July 22, 2023)
+---------------------
+
+- Pin `Cython~=0.29` in `pyproject.toml` (#1801)
+- Remove "stale" bot (#1758)
+- Announce maintainer update (#1795)
+- Use `oldest-supported-numpy` in `pyproject.toml` (#1751)
+
+A total of 4 people contributed to this release, including three new contributors.
+People with a "+" by their names contributed a patch for the first time.
+
+In-Ho Yi+
+Sukrit Singh+
+Jeremy Leung+
+Matthew W. Thompson
+
+v1.9.8 (July 2, 2023)
+---------------------
+
+- Patch util_arm.h for M1 (#1694)
+- Avoid side effects in mdtraj.load (#1706)
+- Add PDB chainID support (#1715)
+- Remove imports from ``simtk`` namespace (#1698)
+- Implement reading and writing PDBx/mmCIF (#1718)
+- Fix `compute_inertia_tensor` docstring (#1721)
+- Fix typo in docs (#1725)
+- Adds lower-level `compute_distances_core` function (#1728)
+- Implement generic C code paths for non-accelerated architectures (#1727)
+- Add note about project maintinance status (#1738)
+- Force new residue when creating new chain (#1740)
+- Warn if ``atom_indices`` are not monotonically increasing (#1766)
+- Delete notes in issue-template by (#1778)
+- Fix hashing when unitcell data is not present (#1781)
+- Test on Python 3.11 (#1758)
+- Constrain GSD to version 2 (#1790)
+
+A total of 15 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Robert T. McGibbon
+- Sander Roet
+- Peter Eastman
+- Charlie Laughton
+- Christoph Klein
+- Luca Naef +
+- Jacob Lumpkins +
+- Ray A. Matsumoto
+- Matthew W. Thompson
+- Moritz Hoffmann +
+- German P. Barletta +
+- Masataka Yamauchi +
+- Samuel Lotz +
+- Toni G +
+- Bojun Liu +
 
 v1.9.7 (November 12, 2021)
 -----------------------

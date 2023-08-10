@@ -29,7 +29,7 @@ except ValueError:
 
 
 ##########################
-VERSION = "1.9.8.dev0"  # please keep this in-sync with default.nix
+VERSION = "1.9.10.dev0"
 ISRELEASED = False
 __version__ = VERSION
 ##########################
@@ -301,6 +301,10 @@ if __name__ == '__main__':
 
         for e in extensions:
             e.include_dirs.append(np.get_include())
-        metadata['ext_modules'] = cythonize(extensions, language_level=sys.version_info[0])
+        metadata['ext_modules'] = cythonize(
+            extensions,
+            language_level=sys.version_info[0],
+            force=True,
+        )
 
     setup(**metadata)
