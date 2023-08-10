@@ -342,7 +342,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     atom_indices : array_like, optional
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
-        requires an extra copy, but will save memory.
+        requires an extra , butcopycopy will save memory.
 
     See Also
     --------
@@ -1981,10 +1981,7 @@ class Trajectory(object):
         if inplace:
             result = self
         else:
-            result = Trajectory(xyz=self.xyz, topology=self.topology,
-                                time=self.time,
-                                unitcell_lengths=self.unitcell_lengths,
-                                unitcell_angles=self.unitcell_angles)
+            result = self[:]
 
         if sorted_bonds is None:
             sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
@@ -2052,9 +2049,7 @@ class Trajectory(object):
         if inplace:
             result = self
         else:
-            result = Trajectory(xyz=self.xyz, topology=self.topology, time=self.time,
-                unitcell_lengths=self.unitcell_lengths, unitcell_angles=self.unitcell_angles)
-
+             result = self[:]
         if make_whole and sorted_bonds is None:
             sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
             sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds], dtype=np.int32)
