@@ -201,13 +201,16 @@ class PdbStructure(object):
                 self._unit_cell_angles = (float(pdb_line[33:40]), float(pdb_line[40:47]), float(pdb_line[47:54]))
 
             elif (pdb_line.find("CONECT") == 0):
-                atoms = [int(pdb_line[6:11])]
-                for pos in (11,16,21,26):
+                atoms = []
+                for pos in (6,11,16,21,26):
                     try:
                         atoms.append(int(pdb_line[pos:pos+5]))
                     except ValueError:
-                        # Optional field, don't worry if it isn't defined
-                        pass
+                        try:
+                            atoms.append(int(pdb_line[pos:pos+5], 16))
+                        except ValueError:
+                            # Optional field, don't worry if it isn't defined
+                            pass
 
                 self._current_model.connects.append(atoms)
         self._finalize()
