@@ -22,8 +22,11 @@ cdef void make_whole(float[:,::1] frame_positions,
         atom2 = sorted_bonds[j, 1]
         for k in range(3):
             delta[k] = frame_positions[atom2, k]  - frame_positions[atom1, k]
+        for k in range(3):
             offset[k] = frame_unitcell_vectors[2, k]*roundf(delta[2]/frame_unitcell_vectors[2,2])
+        for k in range(3):
             offset[k] += frame_unitcell_vectors[1, k]*roundf((delta[1]-offset[1])/frame_unitcell_vectors[1,1])
+        for k in range(3):
             offset[k] += frame_unitcell_vectors[0, k]*roundf((delta[0]-offset[0])/frame_unitcell_vectors[0,0])
             frame_positions[atom2, k] = frame_positions[atom2, k] - offset[k]
 
@@ -98,7 +101,9 @@ cdef void wrap_mols(float[:,::1] frame_positions,
             mol_offset[k] = mol_center[k]
         for k in range(3):
             mol_offset[k] = mol_center[k] - frame_unitcell_vectors[2, k]*floorf(mol_offset[2]/frame_unitcell_vectors[2,2])
+        for k in range(3):
             mol_offset[k] -= frame_unitcell_vectors[1, k]*floorf(mol_offset[1]/frame_unitcell_vectors[1,1])
+        for k in range(3):
             mol_offset[k] -= frame_unitcell_vectors[0, k]*floorf(mol_offset[0]/frame_unitcell_vectors[0,0])
 
         for j in range(n):
@@ -181,12 +186,12 @@ def image_molecules(xyz, box, anchor_molecules, other_molecules, sorted_bonds):
     anchor_molecule_offsets = np.zeros(n_anchors, dtype=np.int32)
     other_molecule_offsets = np.zeros(n_others, dtype=np.int32)
     n_anchor_atoms = 0
-    for i in range(n_anchor_atoms):
+    for i in range(n_anchors):
         n_anchor_atoms += len(anchor_molecules[i])
         anchor_molecule_offsets[i] = n_anchor_atoms
 
     n_other_atoms = 0
-    for i in range(n_other_atoms):
+    for i in range(n_others):
         n_other_atoms += len(other_molecules[i])
         other_molecule_offsets[i] = n_other_atoms
 
