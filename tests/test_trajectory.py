@@ -730,6 +730,8 @@ def test_image_molecules(get_fn):
     t.image_molecules(inplace=True, make_whole=False)
     # Image inplace with making molecules whole
     t.image_molecules(inplace=True, make_whole=True)
+    # Test for issue #1813
+    assert np.any(np.isnan(t.xyz)) == False
     # Image with specified anchor molecules
     molecules = t.topology.find_molecules()
     anchor_molecules = molecules[0:3]
