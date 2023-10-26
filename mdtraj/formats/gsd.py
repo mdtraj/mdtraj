@@ -85,7 +85,7 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
         topology = load_gsd_topology(filename)
     atom_indices = cast_indices(atom_indices)
 
-    with gsd.hoomd.open(filename, 'rb') as f:
+    with gsd.hoomd.open(filename, 'r') as f:
         if frame is not None:
             xyz, vectors, time = read_snapshot(frame, f[frame], 
                     topology, atom_indices=atom_indices)
@@ -263,7 +263,7 @@ def write_gsd(filename, xyz, top, cell_lengths=None, cell_angles=None):
     if top.n_bonds > 0:
         unique_bond_types, bondtype_ids, bond_groups = _process_bonds(top)
 
-    with gsd.hoomd.open(filename, 'wb') as hoomd_traj:
+    with gsd.hoomd.open(filename, 'w') as hoomd_traj:
         for i, coords in enumerate(xyz):
             gsd_frame = gsd.hoomd.Snapshot()
             gsd_frame.particles.N = top.n_atoms
