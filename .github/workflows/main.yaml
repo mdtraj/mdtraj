@@ -30,7 +30,11 @@ jobs:
           - "3.9"
           - "3.10"
           - "3.11"
-  
+
+    env:
+      PYTEST_ARGS: -nauto --durations=10
+      COV: --cov=mdtraj --cov-config=./.coveragerc --cov-append --cov-report=xml
+
     steps:
     - uses: actions/checkout@v3
 
@@ -53,4 +57,10 @@ jobs:
     - name: Run tests
       if: always()
       run: |
-        pytest --durations=10 tests/
+        pytest $PYTEST_ARGS $COV tests/
+      
+    - name: Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: true
