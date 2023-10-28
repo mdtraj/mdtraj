@@ -33,7 +33,7 @@ jobs:
 
     env:
       PYTEST_ARGS: -nauto --durations=10
-      COV: --cov=mdtraj --cov-config=.coveragerc --cov-append --cov-report=xml
+      COV: --cov=mdtraj --cov-config=./.coveragerc --cov-append --cov-report=xml
 
     steps:
     - uses: actions/checkout@v3
