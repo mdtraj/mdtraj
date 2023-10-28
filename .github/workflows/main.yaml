@@ -57,7 +57,7 @@ jobs:
     - name: Run tests
       if: always()
       run: |
-        pytest $PYTEST_ARGS $COV tests/
+        python -m pytest $PYTEST_ARGS $COV tests/
       
     - name: Codecov
       uses: codecov/codecov-action@v3
