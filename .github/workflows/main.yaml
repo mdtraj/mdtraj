@@ -51,13 +51,13 @@ jobs:
 
     - name: Environment Information
       run: |
-        conda info
-        conda list
+        mamba info
+        mamba list
 
     - name: Run tests
       if: always()
       run: |
-        python -m pytest $PYTEST_ARGS $COV tests/
+        pytest $PYTEST_ARGS $COV tests/
       
     - name: Codecov
       uses: codecov/codecov-action@v3

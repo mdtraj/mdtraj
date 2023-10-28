@@ -1,14 +1,9 @@
 [run]
-
-include =
-    *.egg/mdtraj*
-
 omit =
     *test_*.py
     *testing/*.py
     *utils/six.py
-    MDTraj/*
 
+[report]
 exclude_lines =
-    # Have to re-enable the standard pragma
     pragma: no cover
