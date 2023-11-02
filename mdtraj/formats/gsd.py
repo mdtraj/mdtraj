@@ -119,7 +119,7 @@ def load_gsd_topology(filename, frame=0):
     used to construct the MDTraj topology.
     """
     import gsd.hoomd
-    with gsd.hoomd.open(filename, 'rb') as gsdfile:
+    with gsd.hoomd.open(filename, 'r') as gsdfile:
         top = Topology()
         generic_chain = top.add_chain()
         generic_residue = top.add_residue('A', generic_chain)
