@@ -32,7 +32,7 @@ import os
 
 from mdtraj.core.topology import Topology
 from mdtraj.core.element import virtual_site
-from mdtraj.utils import (ensure_type, cast_indices, 
+from mdtraj.utils import (ensure_type, cast_indices,
         lengths_and_angles_to_tilt_factors)
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils.six import string_types
@@ -41,7 +41,7 @@ __all__ = ['load_gsd', 'write_gsd', 'load_gsd_topology']
 
 
 @FormatRegistry.register_loader('.gsd')
-def load_gsd(filename, top=None, start=None, n_frames=None, stride=None, 
+def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
         atom_indices=None, frame=None):
     """Load a GSD trajectory file.
 
@@ -57,7 +57,7 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
     n_frames : int, None
         Number of frames after `start` to convert
     stride : int
-        Read only every stride-th frame.   
+        Read only every stride-th frame.
     atom_indices : array_like, optional
         If not none, then read only a subset of the atoms coordinates from the
         file.
@@ -87,9 +87,9 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
 
     with gsd.hoomd.open(filename, 'r') as f:
         if frame is not None:
-            xyz, vectors, time = read_snapshot(frame, f[frame], 
+            xyz, vectors, time = read_snapshot(frame, f[frame],
                     topology, atom_indices=atom_indices)
-            t = Trajectory(xyz=np.array(xyz), topology=topology, 
+            t = Trajectory(xyz=np.array(xyz), topology=topology,
                     time=np.array([time]))
             t.unitcell_vectors = np.reshape(vectors, (-1,3,3))
             return t
@@ -99,13 +99,13 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
                     stride=stride, atom_indices=atom_indices)
 
 def load_gsd_topology(filename, frame=0):
-    """ Create an MDTraj.Topology from a GSD file 
-    
+    """ Create an MDTraj.Topology from a GSD file
+
     Parameters
     ----------
     filename : path-like
         Path of GSD trajectory file.
-    frame : int, 0 
+    frame : int, 0
         Frame of GSD file to parse topology
 
     Returns
@@ -134,10 +134,10 @@ def load_gsd_topology(filename, frame=0):
 
     return top
 
-def hoomdtraj_to_traj(f, topology, start=None, n_frames=None, 
+def hoomdtraj_to_traj(f, topology, start=None, n_frames=None,
         stride=None, atom_indices=None):
-    """ Convert HOOMDTrajectory to MDtraj Trajectory 
-   
+    """ Convert HOOMDTrajectory to MDtraj Trajectory
+
     Parameters
     ----------
     f : gsd.hoomd.HOOMDTrajectory object
@@ -147,7 +147,7 @@ def hoomdtraj_to_traj(f, topology, start=None, n_frames=None,
     n_frames : int, None
         Number of frames after `start` to convert
     stride : int
-        Read only every stride-th frame.   
+        Read only every stride-th frame.
     atom_indices : array_like, optional
             If not none, then read only a subset of the atoms coordinates
             from the file.
@@ -155,7 +155,7 @@ def hoomdtraj_to_traj(f, topology, start=None, n_frames=None,
     Returns
     --------
     traj : mdtraj.Trajectory object
-    
+
     """
     from mdtraj.core.trajectory import Trajectory
     if start is None:
@@ -167,7 +167,7 @@ def hoomdtraj_to_traj(f, topology, start=None, n_frames=None,
 
     all_coords, all_times, all_vectors = [], [], []
     for i, snapshot in enumerate(f[start : start+n_frames : stride], start=start):
-        xyz, box_vectors, time = read_snapshot(i, snapshot, topology, 
+        xyz, box_vectors, time = read_snapshot(i, snapshot, topology,
                 atom_indices=atom_indices)
         all_coords.append(xyz)
         all_vectors.append(box_vectors)
@@ -177,7 +177,7 @@ def hoomdtraj_to_traj(f, topology, start=None, n_frames=None,
     all_vectors = np.array(all_vectors)
     all_times = np.array(all_times)
     if len(all_coords) == 0:
-        return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), 
+        return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)),
                 topology=topology)
 
     t = Trajectory(xyz=all_coords, topology=topology, time=all_times)
@@ -185,13 +185,13 @@ def hoomdtraj_to_traj(f, topology, start=None, n_frames=None,
     return t
 
 def read_snapshot(frame, snapshot, topology, atom_indices=None):
-    """ Parse relevant information from a single HOOMD snapshot (frame) 
-    
+    """ Parse relevant information from a single HOOMD snapshot (frame)
+
     Parameters
     ----------
     frame : int
         Frame index to read
-    snapshot : gsd.hoomd.Snapshot
+    snapshot : gsd.hoomd.Frame
     topology : mdtraj.Topology
     atom_indices : array_like, optional
             If not none, then read only a subset of the atoms coordinates
@@ -208,7 +208,7 @@ def read_snapshot(frame, snapshot, topology, atom_indices=None):
     -----
     If the GSD file has a variable topology compared to the
     given topology, an IOError will be raised.
-    
+
     """
 
     _check_topology(frame, snapshot, topology)
@@ -231,10 +231,10 @@ def write_gsd(filename, xyz, top, cell_lengths=None, cell_angles=None):
     ----------
     filename : path-like
     xyz : np.ndarray, shape=(n_frames, n_atoms, 3)
-        The cartesian coordinates of the atoms to write. 
+        The cartesian coordinates of the atoms to write.
     top : mdtraj.Topology
     cell_lengths : np.ndarray, dtype=np.double, shape=(n_frames, 3)
-        The lengths (a,b,c) of the unit cell for each frame. 
+        The lengths (a,b,c) of the unit cell for each frame.
     cell_angles : np.ndarray, dtype=np.double, shape=(n_frames, 3)
         The angles (\alpha, \beta, \gamma) defining the unit cell for
         each frame. (Units of degrees).
@@ -265,9 +265,9 @@ def write_gsd(filename, xyz, top, cell_lengths=None, cell_angles=None):
 
     with gsd.hoomd.open(filename, 'w') as hoomd_traj:
         for i, coords in enumerate(xyz):
-            gsd_frame = gsd.hoomd.Snapshot()
+            gsd_frame = gsd.hoomd.Frame()
             gsd_frame.particles.N = top.n_atoms
-            gsd_frame.particles.position = coords 
+            gsd_frame.particles.position = coords
             gsd_frame.particles.types = unique_types
             gsd_frame.particles.typeid = atomtype_ids
             gsd_frame.bonds.N = top.n_bonds
@@ -283,23 +283,23 @@ def write_gsd(filename, xyz, top, cell_lengths=None, cell_angles=None):
 def _process_bonds(top):
     """ Identify and relate unique bondtypes to an index """
     sorted_bond_types = [tuple(sorted([b[0].name, b[1].name])) for b in top.bonds]
-    unique_bond_types = list(set("{}-{}".format(b[0], b[1]) 
+    unique_bond_types = list(set("{}-{}".format(b[0], b[1])
             for b in sorted_bond_types))
     bondtypes = {a:i for i, a in enumerate(unique_bond_types)}
-    bondtype_ids = [bondtypes["{}-{}".format(key[0], key[1])] 
+    bondtype_ids = [bondtypes["{}-{}".format(key[0], key[1])]
         for key in sorted_bond_types]
     bond_groups = [(b[0].index, b[1].index) for b in top.bonds]
 
     return (unique_bond_types, bondtype_ids, bond_groups)
 
 def _check_topology(frame, snapshot, topology):
-    """ Verify snapshot topology matches given MDTraj topology 
-    
+    """ Verify snapshot topology matches given MDTraj topology
+
     Notes
     -----
     Only looks for N particles and N bonds for speed purposes"""
-    error_msg = ("GSD frame {} ".format(frame) + 
-            "has inconsistent topology compared to given topology, " + 
+    error_msg = ("GSD frame {} ".format(frame) +
+            "has inconsistent topology compared to given topology, " +
             "this is unsupported in MDTraj.")
     if (snapshot.particles.N != topology.n_atoms or
             snapshot.bonds.N != topology.n_bonds):
