@@ -14,7 +14,7 @@ dependencies:
   - networkx
   - pandas
   - pytables
-  - gsd>=3
+  - gsd>=2.8
   - pytest
   - pytest-xdist
   - pytest-cov
