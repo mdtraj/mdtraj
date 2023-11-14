@@ -64,6 +64,8 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
                 two atoms in residue sidechains
             'sidechain-heavy' : distance is the closest distance between
                 any two non-hydrogen atoms in residue sidechains
+            'backbone' : distance is the closest distance between
+                any two atoms in residue backbone
     ignore_nonprotein : bool
         When using `contact==all`, don't compute contacts between
         "residues" which are not protein (i.e. do not contain an alpha
@@ -151,8 +153,9 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
     # now the bulk of the function. This will calculate atom distances and then
     # re-work them in the required scheme to get residue distances
     scheme = scheme.lower()
-    if scheme not in ['ca', 'closest', 'closest-heavy', 'sidechain', 'sidechain-heavy']:
-        raise ValueError('scheme must be one of [ca, closest, closest-heavy, sidechain, sidechain-heavy]')
+
+    if scheme not in ['ca', 'closest', 'closest-heavy', 'sidechain', 'sidechain-heavy', "backbone"]:
+        raise ValueError('scheme must be one of [ca, closest, closest-heavy, sidechain, sidechain-heavy, backbone]')
 
     if scheme == 'ca':
         if soft_min:
@@ -181,7 +184,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         distances = md.compute_distances(traj, atom_pairs, periodic=periodic)
 
 
-    elif scheme in ['closest', 'closest-heavy', 'sidechain', 'sidechain-heavy']:
+    elif scheme in ['closest', 'closest-heavy', 'sidechain', 'sidechain-heavy', "backbone"]:
         if scheme == 'closest':
             residue_membership = [[atom.index for atom in residue.atoms]
                                   for residue in traj.topology.residues]
@@ -191,6 +194,9 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
                                   for residue in traj.topology.residues]
         elif scheme == 'sidechain':
             residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain]
+                                  for residue in traj.topology.residues]
+        elif scheme == "backbone":
+            residue_membership = [[atom.index for atom in residue.atoms if atom.is_backbone]
                                   for residue in traj.topology.residues]
         elif scheme == 'sidechain-heavy':
             # then remove the hydrogens from the above list

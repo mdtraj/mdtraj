@@ -38,23 +38,27 @@ def test_contact_0(get_fn):
     closest_heavy, closest_heavy_pairs = md.compute_contacts(pdb, contacts, scheme='closest-heavy')
     sidechain, sidechain_pairs = md.compute_contacts(pdb, contacts, scheme='sidechain')
     sidechain_heavy, sidechain_heavy_pairs = md.compute_contacts(pdb, contacts, scheme='sidechain-heavy')
+    backbone, backbone_pairs = md.compute_contacts(pdb,contacts,scheme="backbone")
 
     ref_ca = np.loadtxt(get_fn('cc_ca.dat'))
     ref_closest = np.loadtxt(get_fn('cc_closest.dat'))
     ref_closest_heavy = np.loadtxt(get_fn('cc_closest-heavy.dat'))
     ref_sidechain = np.loadtxt(get_fn('cc_sidechain.dat'))
     ref_sidechain_heavy = np.loadtxt(get_fn('cc_sidechain-heavy.dat'))
+    ref_backbone = np.loadtxt(get_fn("backbone.dat"))
 
     eq(ref_ca, ca.flatten())
     eq(ref_closest, closest.flatten())
     eq(ref_closest_heavy, closest_heavy.flatten())
     eq(ref_sidechain, sidechain.flatten())
     eq(ref_sidechain_heavy, sidechain_heavy.flatten())
+    eq(ref_backbone,backbone.flatten())
     eq(contacts, ca_pairs)
     eq(contacts, closest_pairs)
     eq(contacts, closest_heavy_pairs)
     eq(contacts, sidechain_pairs)
     eq(contacts, sidechain_heavy_pairs)
+    eq(contacts, backbone_pairs)
 
 
 def test_contact_1(get_fn):
