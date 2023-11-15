@@ -154,7 +154,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
     # re-work them in the required scheme to get residue distances
     scheme = scheme.lower()
 
-    if scheme not in ['ca', 'closest', 'closest-heavy', 'sidechain', 'sidechain-heavy', "backbone"]:
+    if scheme not in ['ca', 'closest', 'closest-heavy', 'sidechain', 'sidechain-heavy', 'backbone']:
         raise ValueError('scheme must be one of [ca, closest, closest-heavy, sidechain, sidechain-heavy, backbone]')
 
     if scheme == 'ca':
@@ -184,7 +184,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         distances = md.compute_distances(traj, atom_pairs, periodic=periodic)
 
 
-    elif scheme in ['closest', 'closest-heavy', 'sidechain', 'sidechain-heavy', "backbone"]:
+    elif scheme in ['closest', 'closest-heavy', 'sidechain', 'sidechain-heavy', 'backbone']:
         if scheme == 'closest':
             residue_membership = [[atom.index for atom in residue.atoms]
                                   for residue in traj.topology.residues]
@@ -195,7 +195,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         elif scheme == 'sidechain':
             residue_membership = [[atom.index for atom in residue.atoms if atom.is_sidechain]
                                   for residue in traj.topology.residues]
-        elif scheme == "backbone":
+        elif scheme == 'backbone':
             residue_membership = [[atom.index for atom in residue.atoms if atom.is_backbone]
                                   for residue in traj.topology.residues]
         elif scheme == 'sidechain-heavy':
