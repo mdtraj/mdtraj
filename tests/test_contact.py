@@ -45,7 +45,7 @@ def test_contact_0(get_fn):
     ref_closest_heavy = np.loadtxt(get_fn('cc_closest-heavy.dat'))
     ref_sidechain = np.loadtxt(get_fn('cc_sidechain.dat'))
     ref_sidechain_heavy = np.loadtxt(get_fn('cc_sidechain-heavy.dat'))
-    ref_backbone = np.loadtxt(get_fn("backbone.dat"))
+    ref_backbone = np.loadtxt(get_fn("cc_backbone.dat"))
 
     eq(ref_ca, ca.flatten())
     eq(ref_closest, closest.flatten())
