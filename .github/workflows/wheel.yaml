@@ -25,9 +25,9 @@ jobs:
           - os: ubuntu-latest
             python: 311
             platform_id: manylinux_x86_64
-          - os: ubuntu-latest
-            python: 312
-            platform_id: manylinux_x86_64
+          # - os: ubuntu-latest
+          #   python: 312
+          #   platform_id: manylinux_x86_64
           # macos-x86-64
           - os: macos-latest
             python: 38
@@ -41,25 +41,25 @@ jobs:
           - os: macos-latest
             python: 311
             platform_id: macosx_x86_64
-          - os: macos-latest
-            python: 312
-            platform_id: macosx_x86_64
+          #- os: macos-latest
+          #  python: 312
+          #  platform_id: macosx_x86_64
           # win-64
-          - os: windows-2019
-            python: 38
-            platform_id: win_amd64
-          - os: windows-2019
-            python: 39
-            platform_id: win_amd64
-          - os: windows-2019
-            python: 310
-            platform_id: win_amd64
-          - os: windows-2019
-            python: 311
-            platform_id: win_amd64
-          - os: windows-2019
-            python: 312
-            platform_id: win_amd64
+          # - os: windows-2019
+          #   python: 38
+          #   platform_id: win_amd64
+          # - os: windows-2019
+          #   python: 39
+          #   platform_id: win_amd64
+          # - os: windows-2019
+          #   python: 310
+          #   platform_id: win_amd64
+          # - os: windows-2019
+          #   python: 311
+          #   platform_id: win_amd64
+          # - os: windows-2019
+          #   python: 312
+          #   platform_id: win_amd64
     steps:
       - uses: actions/checkout@v4
       - name: Build wheels
