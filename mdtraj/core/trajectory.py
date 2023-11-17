@@ -342,7 +342,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     atom_indices : array_like, optional
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
-        requires an extra , butcopycopy will save memory.
+        requires an extra copy, but will save memory.
 
     See Also
     --------

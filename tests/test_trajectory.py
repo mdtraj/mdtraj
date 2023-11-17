@@ -724,13 +724,13 @@ def test_image_molecules(get_fn):
     t = md.load(get_fn('alanine-dipeptide-explicit.dcd'), top=get_fn('alanine-dipeptide-explicit.pdb'))
     # Image to new trajectory
     t_new = t.image_molecules(inplace=False)
-    # Test for issue #1769
+    # Test that t_new and t are not the same object (issue #1769)
     assert t_new.xyz is not t.xyz
     # Image inplace without making molecules whole
     t.image_molecules(inplace=True, make_whole=False)
     # Image inplace with making molecules whole
     t.image_molecules(inplace=True, make_whole=True)
-    # Test for issue #1813
+    # Test coordinates in t are not corrupted to NaNs (issue #1813)
     assert np.any(np.isnan(t.xyz)) == False
     # Image with specified anchor molecules
     molecules = t.topology.find_molecules()
