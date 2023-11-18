@@ -27,11 +27,10 @@ import mdtraj as md
 import subprocess
 from mdtraj.testing import eq
 import pytest
-
-from distutils.spawn import find_executable
+import shutil
 
 needs_cpptraj = pytest.mark.skipif(
-    find_executable('cpptraj') is None,
+    shutil.which('cpptraj') is None,
     reason="This test requires cpptraj from AmberTools to be installed "
            "(http://ambermd.org)"
 )
