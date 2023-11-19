@@ -30,12 +30,13 @@ removing the functionality that is not needed.
 """
 
 from __future__ import print_function, division
-from distutils.version import StrictVersion
 from math import ceil
 import os
 import warnings
 
 import numpy as np
+from packaging.version import Version
+
 from mdtraj import version
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices, six
@@ -462,7 +463,7 @@ class AmberNetCDFRestartFile(object):
     def __init__(self, filename, mode='r', force_overwrite=False):
         self._closed = True
         self._mode = mode
-        if StrictVersion(import_('scipy.version').short_version) < StrictVersion('0.12.0'):
+        if Version(import_('scipy.version').short_version) < Version('0.12.0'):
             raise ImportError('MDTraj NetCDF support requires scipy>=0.12.0. '
                               'You have %s' % import_('scipy.version').short_version)
         netcdf = import_('scipy.io').netcdf_file
