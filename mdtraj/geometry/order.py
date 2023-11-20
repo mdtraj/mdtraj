@@ -22,10 +22,7 @@
 
 from __future__ import print_function, division
 
-from pkg_resources import parse_version
-
 import numpy as np
-NP18 = parse_version(np.__version__) >= parse_version('1.8.0')
 
 from mdtraj.geometry.distance import compute_center_of_mass, compute_center_of_geometry
 from mdtraj.utils import ensure_type
@@ -97,14 +94,9 @@ def compute_nematic_order(traj, indices='chains'):
     # From the directors, compute the Q-tensor and nematic order parameter, S2.
     Q_ab = _compute_Q_tensor(all_directors)
 
-    if NP18:  # Only works with numpy >= 1.8.
-        w = np.linalg.eigvals(Q_ab)
-        S2 = w.max(axis=1)
-    else:
-        S2 = np.empty(shape=traj.n_frames, dtype=np.float64)
-        for n, Q in enumerate(Q_ab):
-            w = np.linalg.eigvals(Q)
-            S2[n] = w.max()
+    w = np.linalg.eigvals(Q_ab)
+    S2 = w.max(axis=1)
+
     return S2
 
 
@@ -190,7 +182,7 @@ def compute_inertia_tensor(traj):
     A = np.einsum("i, kij->k", masses, xyz ** 2).reshape(traj.n_frames, 1, 1)
     B = np.einsum("ij..., ...jk->...ki", masses[:, np.newaxis] * xyz.T, xyz)
     return A * eyes - B
-    
+
 
 def _get_indices(traj, indices):
     if isinstance(indices, string_types):
@@ -247,15 +239,13 @@ def _compute_Q_tensor(all_directors):
 
     all_directors = ensure_type(all_directors, dtype=np.float64, ndim=3,
                                 name='directors', shape=(None, None, 3))
-    if NP18:
-        normed = all_directors / np.linalg.norm(all_directors, axis=2)[..., np.newaxis]
+
+    normed = all_directors / np.linalg.norm(all_directors, axis=2)[..., np.newaxis]
 
     Q_ab = np.zeros(shape=(all_directors.shape[0], 3, 3), dtype=np.float64)
-    for n, directors in enumerate(all_directors):
-        if NP18:
-            normed_vectors = normed[n]
-        else:
-            normed_vectors = directors / np.sqrt((directors ** 2.0).sum(-1))[..., np.newaxis]
+    for n in range(len(all_directors)):
+        normed_vectors = normed[n]
+
         for vector in normed_vectors:
             Q_ab[n, 0, 0] += 3.0 * vector[0] * vector[0] - 1
             Q_ab[n, 0, 1] += 3.0 * vector[0] * vector[1]
@@ -301,16 +291,12 @@ def _compute_director(traj):
     """
     inertia_tensor = compute_inertia_tensor(traj)
 
-    if NP18:  # Only works with numpy >= 1.8.
-        # TODO: Is there a cleaner way to do this broadcasting? Closer to this which
-        # does not work:    v[:, :, np.argmin(w, axis=1)]
-        w, v = np.linalg.eig(inertia_tensor)
-        directors = np.array([v[:, :, x][i] for i, x in enumerate(np.argmin(w, axis=1))])
-    else:
-        directors = np.empty(shape=(traj.n_frames, 3), dtype=np.float64)
-        for n, I_ab in enumerate(inertia_tensor):
-            w, v = np.linalg.eig(I_ab)
-            directors[n] = v[:, np.argmin(w)]
+    # Only works with numpy >= 1.8.
+    # TODO: Is there a cleaner way to do this broadcasting? Closer to this which
+    # does not work:    v[:, :, np.argmin(w, axis=1)]
+    w, v = np.linalg.eig(inertia_tensor)
+    directors = np.array([v[:, :, x][i] for i, x in enumerate(np.argmin(w, axis=1))])
+
     return directors
 
 
