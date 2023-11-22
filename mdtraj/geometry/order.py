@@ -243,9 +243,8 @@ def _compute_Q_tensor(all_directors):
     normed = all_directors / np.linalg.norm(all_directors, axis=2)[..., np.newaxis]
 
     Q_ab = np.zeros(shape=(all_directors.shape[0], 3, 3), dtype=np.float64)
-    for n in range(len(all_directors)):
-        normed_vectors = normed[n]
 
+    for n, normed_vectors in enumerate(normed):
         for vector in normed_vectors:
             Q_ab[n, 0, 0] += 3.0 * vector[0] * vector[0] - 1
             Q_ab[n, 0, 1] += 3.0 * vector[0] * vector[1]
@@ -256,7 +255,9 @@ def _compute_Q_tensor(all_directors):
             Q_ab[n, 2, 0] += 3.0 * vector[2] * vector[0]
             Q_ab[n, 2, 1] += 3.0 * vector[2] * vector[1]
             Q_ab[n, 2, 2] += 3.0 * vector[2] * vector[2] - 1
+
     Q_ab /= (2.0 * all_directors.shape[1])
+
     return Q_ab
 
 
