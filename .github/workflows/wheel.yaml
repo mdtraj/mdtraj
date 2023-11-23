@@ -3,71 +3,38 @@ name: Build and upload to PyPI
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build_wheels:
-    name: Build wheels for cp${{ matrix.python }}-${{ matrix.platform_id }}
+    name: Build wheels for Python ${{ matrix.python }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # linux-64
-          - os: ubuntu-latest
-            python: 38
-            platform_id: manylinux_x86_64
-          - os: ubuntu-latest
-            python: 39
-            platform_id: manylinux_x86_64
-          - os: ubuntu-latest
-            python: 310
-            platform_id: manylinux_x86_64
-          - os: ubuntu-latest
-            python: 311
-            platform_id: manylinux_x86_64
-          - os: ubuntu-latest
-            python: 312
-            platform_id: manylinux_x86_64
-          # macos-x86-64
-          - os: macos-latest
-            python: 38
-            platform_id: macosx_x86_64
-          - os: macos-latest
-            python: 39
-            platform_id: macosx_x86_64
-          - os: macos-latest
-            python: 310
-            platform_id: macosx_x86_64
-          - os: macos-latest
-            python: 311
-            platform_id: macosx_x86_64
-          - os: macos-latest
-            python: 312
-            platform_id: macosx_x86_64
-          # win-64
-          # - os: windows-2019
-          #   python: 38
-          #   platform_id: win_amd64
-          # - os: windows-2019
-          #   python: 39
-          #   platform_id: win_amd64
-          # - os: windows-2019
-          #   python: 310
-          #   platform_id: win_amd64
-          # - os: windows-2019
-          #   python: 311
-          #   platform_id: win_amd64
-          # - os: windows-2019
-          #   python: 312
-          #   platform_id: win_amd64
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        os: [ubuntu-latest, macos-latest]  # Windows missing zlib
     steps:
       - uses: actions/checkout@v4
+      - name: set build type
+        run: |
+          if [[ "${OSVER}" == "ubuntu-latest" ]]; then
+            echo "CIBW_BUILD=cp${PYVER//.}-manylinux_x86_64" >> $GITHUB_ENV
+          elif [[ "${OSVER}" == "macos-latest" ]]; then
+            # https://cibuildwheel.readthedocs.io/en/stable/faq/#universal2
+            echo "CIBW_BUILD=cp${PYVER//.}-macosx_universal2" >> $GITHUB_ENV
+          else
+            exit 1
+          fi
+        env:
+          PYVER: ${{ matrix.python }}
+          OSVER: ${{ matrix.os }}
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16
         env:
           CIBW_BUILD_VERBOSITY: 1
           CIBW_ARCHS: all
-          CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
+          CIBW_BUILD: ${{ env.CIBW_BUILD }}
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
@@ -76,8 +43,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - uses: actions/setup-python@v4
         name: Install Python
         with:
