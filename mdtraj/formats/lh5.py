@@ -31,7 +31,7 @@ import os
 import sys
 import numpy as np
 from mdtraj.core import element as elem
-from mdtraj.utils.six import iteritems, PY3, u
+from mdtraj.utils.six import iteritems, u
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import import_, ensure_type, in_units_of, cast_indices
 from mdtraj.formats.hdf5 import _check_mode
@@ -40,8 +40,6 @@ import warnings
 MAXINT16 = np.iinfo(np.int16).max
 MAXINT32 = np.iinfo(np.int32).max
 DEFAULT_PRECISION = 1000
-if PY3:
-    basestring = str
 
 __all__ = ['LH5TrajectoryFile', 'load_lh5']
 
@@ -65,7 +63,7 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
     registered_residues = {}
     for i in np.argsort(ResidueID):
         residue_name = ResidueNames[i]
-        if not isinstance(residue_name, basestring):
+        if not isinstance(residue_name, str):
             residue_name = residue_name.decode()
         if ResidueID[i] not in registered_residues:
             res = topology.add_residue(residue_name, chain0)
@@ -74,7 +72,7 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
     # register the atoms
     for i in np.argsort(AtomID):
         atom_name = AtomNames[i]
-        if not isinstance(atom_name, basestring):
+        if not isinstance(atom_name, str):
             atom_name = atom_name.decode()
         element_symbol = atom_name.lstrip('0123456789')[0]
 

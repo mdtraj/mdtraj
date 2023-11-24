@@ -79,9 +79,8 @@ import os
 import warnings
 import numpy as np
 from mdtraj.utils import import_
-from mdtraj.utils.six import PY2, PY3, iteritems, StringIO
-if PY3:
-    basestring = str
+from mdtraj.utils.six import iteritems, StringIO
+
 tables = import_('tables')
 
 __all__ = ['saveh', 'loadh']
@@ -156,7 +155,7 @@ def saveh(file, *args, **kwargs):
     """
 
 
-    if isinstance(file, basestring):
+    if isinstance(file, str):
         handle = tables.open_file(file, 'a')
         own_fid = True
     else:
@@ -249,7 +248,7 @@ def loadh(file, name=Ellipsis, deferred=True):
     numpy.load : Load an array(s) or pickled objects from .npy, .npz, or pickled files.
     """
 
-    if isinstance(file, basestring):
+    if isinstance(file, str):
         handle = tables.open_file(file, mode='r')
         own_fid = True
     else:
@@ -260,7 +259,7 @@ def loadh(file, name=Ellipsis, deferred=True):
         own_fid = False
 
     # if name is a single string, deferred loading is not used
-    if isinstance(name, basestring):
+    if isinstance(name, str):
         try:
             node = handle.get_node(where='/', name=name)
         except tables.NoSuchNodeError:

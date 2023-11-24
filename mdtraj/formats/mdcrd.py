@@ -30,7 +30,7 @@ import itertools
 import numpy as np
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils.six import string_types, PY3
+from mdtraj.utils.six import string_types
 from mdtraj.utils.six.moves import xrange
 
 __all__ = ['MDCRDTrajectoryFile', 'load_mdcrd']
@@ -386,8 +386,7 @@ class MDCRDTrajectoryFile(object):
             # this is the first write()
             self._n_atoms = xyz.shape[1]
             comment = 'TITLE : Created by MDTraj with %d atoms\n' % self._n_atoms
-            if PY3:
-                comment = comment.encode('ascii')
+            comment = comment.encode('ascii')
             self._fh.write(comment)
 
             if cell_lengths is None:
@@ -411,8 +410,7 @@ class MDCRDTrajectoryFile(object):
                 out = "%8.3f" % coord
                 if len(out) > 8:
                     raise ValueError('Overflow error')
-                if PY3:
-                    out = out.encode('ascii')
+                out = out.encode('ascii')
                 self._fh.write(out)
                 if (j+1) % 10 == 0:
                     self._fh.write(b"\n")
@@ -423,8 +421,7 @@ class MDCRDTrajectoryFile(object):
 
             if cell_lengths is not None:
                 line = "%8.3f %8.3f %8.3f\n" % tuple(cell_lengths[i])
-                if PY3:
-                    line = line.encode('ascii')
+                line = line.encode('ascii')
                 self._fh.write(line)
 
     def seek(self, offset, whence=0):

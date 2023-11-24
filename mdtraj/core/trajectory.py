@@ -62,7 +62,7 @@ from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_ve
                           box_vectors_to_lengths_and_angles, cast_indices,
                           deprecated)
 from mdtraj.utils.six.moves import xrange
-from mdtraj.utils.six import PY3, string_types
+from mdtraj.utils.six import string_types
 from mdtraj import _rmsd
 from mdtraj import FormatRegistry
 from mdtraj.geometry import distance
@@ -114,23 +114,11 @@ def _assert_files_or_dirs_exist(names):
                         (os.path.isfile(fn) or os.path.isdir(fn))):
             raise IOError('No such file: %s' % fn)
 
-if PY3:
-    def _hash_numpy_array(x):
-        hash_value = hash(x.shape)
-        hash_value ^= hash(x.strides)
-        hash_value ^= hash(x.data.tobytes())
-        return hash_value
-else:
-    def _hash_numpy_array(x):
-        writeable = x.flags.writeable
-        try:
-            x.flags.writeable = False
-            hash_value = hash(x.shape)
-            hash_value ^= hash(x.strides)
-            hash_value ^= hash(x.data)
-        finally:
-            x.flags.writeable = writeable
-        return hash_value
+def _hash_numpy_array(x):
+    hash_value = hash(x.shape)
+    hash_value ^= hash(x.strides)
+    hash_value ^= hash(x.data.tobytes())
+    return hash_value
 
 
 def load_topology(filename, **kwargs):

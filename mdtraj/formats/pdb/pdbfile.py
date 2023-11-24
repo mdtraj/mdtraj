@@ -57,17 +57,9 @@ from mdtraj.core import element as elem
 from mdtraj.utils import six
 from mdtraj import version
 import warnings
-if six.PY3:
-    from urllib.request import urlopen
-    from urllib.parse import urlparse
-    from urllib.parse import (uses_relative, uses_netloc, uses_params)
-else:
-    from urllib2 import urlopen
-    from urlparse import urlparse
-    from urlparse import uses_relative, uses_netloc, uses_params
-    # Ugly hack -- we don't always issue UserWarning in Py2, but we need to in
-    # this module
-    warnings.filterwarnings('always', category=UserWarning, module=__name__)
+from urllib.request import urlopen
+from urllib.parse import urlparse
+from urllib.parse import (uses_relative, uses_netloc, uses_params)
 
 _VALID_URLS = set(uses_relative + uses_netloc + uses_params)
 _VALID_URLS.discard('')
@@ -262,13 +254,8 @@ class PDBTrajectoryFile(object):
             if _is_url(filename):
                 self._file = urlopen(filename)
                 if filename.lower().endswith('.gz'):
-                    if six.PY3:
-                        self._file = gzip.GzipFile(fileobj=self._file)
-                    else:
-                        self._file = gzip.GzipFile(fileobj=six.StringIO(
-                            self._file.read()))
-                if six.PY3:
-                    self._file = six.StringIO(self._file.read().decode('utf-8'))
+                    self._file = gzip.GzipFile(fileobj=self._file)
+                self._file = six.StringIO(self._file.read().decode('utf-8'))
             else:
                 self._file = open_maybe_zipped(filename, 'r')
 
