@@ -85,10 +85,8 @@ def compute_dssp(traj, simplified=True):
 
     n_frames = xyz.shape[0]
     n_residues = nco_indices.shape[0]
-    if PY2:
-        array = np.fromiter(value, dtype=np.dtype('S2'))
-    else:
-        array = np.fromiter(value, dtype=np.dtype('U2'))
+
+    array = np.fromiter(value, dtype=np.dtype('U2'))
 
     array = array.reshape(n_frames, n_residues)
     array[:, np.logical_not(protein_indices)] = 'NA'

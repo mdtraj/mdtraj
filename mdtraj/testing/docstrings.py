@@ -75,10 +75,7 @@ def docstring_verifiers(module, error_on_none=False):
             A string represntation
         """
         if ismethod(f):
-            if PY2:
-                return '.'.join([getmodule(f).__name__, f.im_class.__name__, f.__name__])
-            else:
-                return '.'.join([getmodule(f).__name__, f.__self__.__class__.__name__, f.__name__])
+            return '.'.join([getmodule(f).__name__, f.im_class.__name__, f.__name__])
         if isfunction(f) or isbuiltin(f):
             return '.'.join([getmodule(f).__name__, f.__name__])
         if isclass(f):
