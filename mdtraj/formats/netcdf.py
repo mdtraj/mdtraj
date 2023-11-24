@@ -39,7 +39,6 @@ import warnings
 from datetime import datetime
 
 import numpy as np
-from packaging.version import Version
 from mdtraj import version
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices
@@ -127,9 +126,7 @@ class NetCDFTrajectoryFile(object):
     def __init__(self, filename, mode='r', force_overwrite=True):
         self._closed = True   # is the file currently closed?
         self._mode = mode      # what mode were we opened in
-        if Version(import_('scipy.version').short_version) < Version('0.12.0'):
-            raise ImportError('MDTraj NetCDF support requires scipy>=0.12.0. '
-                              'You have %s' % import_('scipy.version').short_version)
+
         netcdf = import_('scipy.io').netcdf_file
 
         if mode not in ['r', 'w']:
