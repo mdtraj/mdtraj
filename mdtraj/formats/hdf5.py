@@ -374,10 +374,7 @@ class HDF5TrajectoryFile(object):
         if not isinstance(data, bytes):
             data = data.encode('ascii')
 
-        if self.tables.__version__ >= '3.0.0':
-            self._handle.create_array(where='/', name='topology', obj=[data])
-        else:
-            self._handle.createArray(where='/', name='topology', object=[data])
+        self._handle.create_array(where='/', name='topology', obj=[data])
 
     #####################################################
     # randomState global attribute (optional)
@@ -899,33 +896,23 @@ class HDF5TrajectoryFile(object):
 
     @property
     def _get_node(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.get_node
-        return self._handle.getNode
+        return self._handle.get_node
 
     @property
     def _create_earray(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.create_earray
-        return self._handle.createEArray
+        return self._handle.create_earray
 
     @property
     def _create_table(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.create_table
-        return self._handle.createTable
+        return self._handle.create_table
 
     @property
     def _remove_node(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.remove_node
-        return self._handle.removeNode
+        return self._handle.remove_node
 
     @property
     def _open_file(self):
-        if self.tables.__version__ >= '3.0.0':
-           return self.tables.open_file
-        return self.tables.openFile
+        return self.tables.open_file
 
     def close(self):
         "Close the HDF5 file handle"

@@ -446,30 +446,20 @@ class LH5TrajectoryFile(object):
     # deprecation warnings if you dont use the new method names
     @property
     def _open_file(self):
-        if self.tables.__version__ >= '3.0.0':
-           return self.tables.open_file
-        return self.tables.openFile
+        return self.tables.open_file
 
     @property
     def _remove_node(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.remove_node
-        return self._handle.removeNode
+        return self._handle.remove_node
 
     @property
     def _create_carray(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.create_carray
-        return self._handle.createCArray
+        return self._handle.create_carray
 
     @property
     def _create_earray(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.create_earray
-        return self._handle.createEArray
+        return self._handle.create_earray
 
     @property
     def _get_node(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.get_node
-        return self._handle.getNode
+        return self._handle.get_node
