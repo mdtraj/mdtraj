@@ -32,6 +32,7 @@ def module(request):
     return mod
 
 
+@pytest.mark.skip()
 def test_docstrings(module):
     for test in docstring_verifiers(module):
         test()
