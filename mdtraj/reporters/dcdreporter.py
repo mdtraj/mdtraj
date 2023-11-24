@@ -24,8 +24,6 @@
 through time in the AMBER NetCDF format
 """
 
-
-from __future__ import print_function, division
 from ..formats.dcd import DCDTrajectoryFile
 from .basereporter import _BaseReporter
 

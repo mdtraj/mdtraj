@@ -43,7 +43,6 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
 
-from __future__ import print_function, division
 import os
 from datetime import date
 import gzip

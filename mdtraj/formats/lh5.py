@@ -27,7 +27,6 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
 import os
 import sys
 import numpy as np

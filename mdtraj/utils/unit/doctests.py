@@ -863,8 +863,6 @@ Examples
 
 """
 
-from __future__ import print_function
-
 __author__ = "Christopher M. Bruns"
 __version__ = "0.5"
 

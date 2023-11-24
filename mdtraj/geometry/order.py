@@ -20,8 +20,6 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-from __future__ import print_function, division
-
 import numpy as np
 
 from mdtraj.geometry.distance import compute_center_of_mass, compute_center_of_geometry

@@ -25,7 +25,6 @@
 # imports
 ##############################################################################
 
-from __future__ import print_function, division
 import warnings
 import numbers
 import numpy as np

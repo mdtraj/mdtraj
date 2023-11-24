@@ -25,8 +25,6 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
-# stdlib
 import math
 # ours
 from mdtraj.core.topology import _topology_from_subset, Topology

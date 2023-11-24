@@ -31,8 +31,6 @@ The code is heavily based on amber_netcdf_trajectory_tools.py by John Chodera.
 # imports
 ##############################################################################
 
-from __future__ import print_function, division
-# stdlib
 import os
 import socket
 import warnings

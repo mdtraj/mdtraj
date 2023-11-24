@@ -24,8 +24,6 @@
 through time in the GROMACS XTC format
 """
 
-
-from __future__ import print_function, division
 from ..formats.xtc import XTCTrajectoryFile
 from .basereporter import _BaseReporter
 from mdtraj.utils.six import PY3

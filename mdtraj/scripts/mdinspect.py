@@ -27,7 +27,6 @@ a work in progress. Contributions are encouraged.
 # Imports
 #------------------------------------------------------------------------------
 
-from __future__ import print_function
 import os
 import sys
 import warnings

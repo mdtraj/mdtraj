@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from .arc import ArcTrajectoryFile
 from .dcd import DCDTrajectoryFile
 from .binpos import BINPOSTrajectoryFile

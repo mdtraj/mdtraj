@@ -29,7 +29,6 @@ Amber NetCDF restart files. This code was taken from ParmEd and simplified by
 removing the functionality that is not needed.
 """
 
-from __future__ import print_function, division
 from math import ceil
 import os
 import warnings

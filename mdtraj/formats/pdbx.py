@@ -43,7 +43,6 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
 
-from __future__ import print_function, division
 import os
 import numpy as np
 from mdtraj.core.topology import Topology

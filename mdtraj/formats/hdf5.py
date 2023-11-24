@@ -29,8 +29,6 @@ https://github.com/mdtraj/mdtraj/wiki/HDF5-Trajectory-Format
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
-# stdlib
 import os
 import warnings
 import inspect

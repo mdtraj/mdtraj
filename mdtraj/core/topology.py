@@ -47,8 +47,6 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
-
 import itertools
 import numpy as np
 import os
