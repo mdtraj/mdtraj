@@ -34,7 +34,6 @@ import mdtraj.formats
 from collections import namedtuple
 
 on_win = (sys.platform == 'win32')
-on_py3 = (sys.version_info >= (3, 0))
 
 TrajObj = namedtuple('TrajObj', ['fobj', 'fext', 'fn'])
 file_objs = [
@@ -637,7 +636,7 @@ def test_length(get_fn):
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
              'frame0.dcd', '2EQQ.pdb',
              'frame0.binpos', 'frame0.xyz', 'frame0.tng']
-    if not (on_win and on_py3):
+    if not on_win:
         files.append('frame0.lh5')
 
     for file in files:

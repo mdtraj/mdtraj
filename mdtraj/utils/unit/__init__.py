@@ -54,7 +54,7 @@ class _UnitContext(ast.NodeTransformer):
     # contains "safe" operations. These are operations that can reasonably
     # appear in unit expressions
     allowed_ops = [ast.Expression, ast.BinOp, ast.Name, ast.Attribute,
-                   ast.Pow, ast.Div, ast.Mult, ast.Num]
+                   ast.Pow, ast.Div, ast.Mult, ast.Constant]
 
     def visit(self, node):
         if not any(isinstance(node, a) for a in self.allowed_ops):

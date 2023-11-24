@@ -56,14 +56,12 @@ class _RewriteNames(ast.NodeTransformer):
 
         _safe_names = {'None': None, 'True': True, 'False': False}
         if node.id in _safe_names:
-            if sys.version_info >= (3, 4):
-                return ast.NameConstant(value=_safe_names[node.id], kind=None)
-            return node
+            return ast.Constant(value=_safe_names[node.id], kind=None)
 
         # all other bare names are taken to be string literals. Thus something
         # like parse_selection('name CA') properly resolves CA as a string
         # literal, not a barename to be loaded from the global scope!
-        return ast.Str(s=node.id, kind=None)
+        return ast.Constant(s=node.id, kind=None)
 
 
 def _chain(*attrs):
@@ -380,7 +378,7 @@ class parse_selection(object):
         astnode = self.transformer.visit(deepcopy(parse_result[0].ast()))
 
         # Special check for a single literal
-        if isinstance(astnode, ast.Num) or isinstance(astnode, ast.Str):
+        if isinstance(astnode, ast.Constant):
             raise ValueError("Cannot use a single literal as a boolean.")
 
         args = [ast.arg(arg='atom', annotation=None)]
