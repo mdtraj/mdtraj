@@ -27,7 +27,6 @@ from mdtraj.testing import eq
 import numpy as np
 import mdtraj as md
 import mdtraj.utils
-from mdtraj.utils import six
 from mdtraj.core import element
 import mdtraj.core.trajectory
 import pytest
@@ -292,10 +291,7 @@ def test_float_atom_indices_exception(ref_traj, get_fn):
     try:
         md.load(get_fn(ref_traj.fn), atom_indices=[0.5, 1.3], top=top)
     except ValueError as e:
-        if six.PY3:
-            assert e.args[0] == 'indices must be of an integer type. float64 is not an integer type'
-        else:
-            assert e.message == 'indices must be of an integer type. float64 is not an integer type'
+        assert e.args[0] == 'indices must be of an integer type. float64 is not an integer type'
 
 
 def test_restrict_atoms(get_fn):

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import mdtraj as md
 import numpy as np
 import scipy.special
