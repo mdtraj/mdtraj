@@ -34,8 +34,6 @@ import numpy as np
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import (cast_indices, in_units_of, ensure_type,
                           open_maybe_zipped)
-from mdtraj.utils.six import string_types
-from mdtraj.utils.six.moves import xrange
 from mdtraj.version import version
 
 __all__ = ['XYZTrajectoryFile', 'load_xyz']
@@ -94,7 +92,7 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_xyz')
 
-    if not isinstance(filename, (string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type path-like for load_xyz. '
                         'you supplied %s'.format(type(filename)))
 
@@ -235,7 +233,7 @@ class XYZTrajectoryFile(object):
         if n_frames is None:
             frame_counter = itertools.count()
         else:
-            frame_counter = xrange(n_frames)
+            frame_counter = range(n_frames)
 
         if stride is None:
             stride = 1
@@ -275,7 +273,7 @@ class XYZTrajectoryFile(object):
         xyz = np.empty(shape=(self._n_atoms, 3))
         types = np.empty(shape=self._n_atoms, dtype=str)
 
-        for i in xrange(self._n_atoms):
+        for i in range(self._n_atoms):
             line = self._fh.readline()
             if line == '':
                 raise _EOF()
@@ -312,7 +310,7 @@ class XYZTrajectoryFile(object):
 
         if not types:
             # Make all particles the same type.
-            types = ['X' for _ in xrange(xyz.shape[1])]
+            types = ['X' for _ in range(xyz.shape[1])]
         xyz = ensure_type(xyz, np.float32, 3, 'xyz', can_be_none=False,
                         shape=(None, None, 3), warn_on_cast=False,
                         add_newaxis_on_deficient_ndim=True)

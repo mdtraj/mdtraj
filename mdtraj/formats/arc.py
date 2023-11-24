@@ -30,8 +30,6 @@ import itertools
 import numpy as np
 from mdtraj.utils import cast_indices, in_units_of
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils.six import string_types
-from mdtraj.utils.six.moves import xrange
 
 __all__ = ['ArcTrajectoryFile', 'load_arc']
 
@@ -73,7 +71,7 @@ def load_arc(filename, stride=None, atom_indices=None, frame=None):
     """
     from mdtraj.core.trajectory import _parse_topology
 
-    if not isinstance(filename, (string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type path-like for load_arc. '
             'you supplied %s' % type(filename))
 
@@ -264,7 +262,7 @@ class ArcTrajectoryFile(object):
         if n_frames is None:
             frame_counter = itertools.count()
         else:
-            frame_counter = xrange(n_frames)
+            frame_counter = range(n_frames)
 
         if stride is None:
             stride = 1
@@ -310,8 +308,8 @@ class ArcTrajectoryFile(object):
         self._line_counter += 1
 
         coords = np.empty((self._n_atoms, 3), dtype=np.float32)
-        bond_partners = [[] for i in xrange(self._n_atoms)]
-        atom_names = ['' for i in xrange(self._n_atoms)]
+        bond_partners = [[] for i in range(self._n_atoms)]
+        atom_names = ['' for i in range(self._n_atoms)]
         line = self._fh.readline()
         s = line.split()
         self._line_counter += 1

@@ -54,7 +54,7 @@ from mdtraj.core.topology import Topology
 from mdtraj.utils import ilen, cast_indices, in_units_of, open_maybe_zipped
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.core import element as elem
-from mdtraj.utils import six
+from io import StringIO
 from mdtraj import version
 import warnings
 from urllib.request import urlopen
@@ -137,7 +137,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
     mdtraj.PDBTrajectoryFile : Low level interface to PDB files
     """
     from mdtraj import Trajectory
-    if not isinstance(filename, (six.string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type string or path-like for load_pdb. '
             'you supplied %s' % type(filename))
 
@@ -255,7 +255,7 @@ class PDBTrajectoryFile(object):
                 self._file = urlopen(filename)
                 if filename.lower().endswith('.gz'):
                     self._file = gzip.GzipFile(fileobj=self._file)
-                self._file = six.StringIO(self._file.read().decode('utf-8'))
+                self._file = StringIO(self._file.read().decode('utf-8'))
             else:
                 self._file = open_maybe_zipped(filename, 'r')
 
@@ -466,7 +466,7 @@ class PDBTrajectoryFile(object):
             cycle through to choose chain names.
         """
         for item in values:
-            if not isinstance(item, six.string_types) and len(item) == 1:
+            if not isinstance(item, str) and len(item) == 1:
                 raise TypeError('Names must be a single character string')
         cls._chain_names = values
 

@@ -31,7 +31,6 @@ import os
 import sys
 import numpy as np
 from mdtraj.core import element as elem
-from mdtraj.utils.six import iteritems, u
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import import_, ensure_type, in_units_of, cast_indices
 from mdtraj.formats.hdf5 import _check_mode
@@ -209,7 +208,7 @@ class LH5TrajectoryFile(object):
             A topology object
         """
         if np.all(self._handle.root.AtomID[:] == 0) and (np.all(self._handle.root.AtomNames[:] == b'')
-            or np.all(self._handle.root.eAtomNames[:] == u(''))):
+            or np.all(self._handle.root.eAtomNames[:] == '')):
             return None
 
         return _topology_from_arrays(
@@ -241,7 +240,7 @@ class LH5TrajectoryFile(object):
             "ChainID": top.chainID.values,
             "ResidueID": top.resSeq.values + 1,
         }
-        for key, val in iteritems(data):
+        for key, val in data.items():
             node = self._get_node(where='/', name=key)[:] = val[:]
             node[:] = val[:]
 

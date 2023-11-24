@@ -38,12 +38,10 @@ from packaging.version import Version
 
 from mdtraj import version
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices, six
+from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices
 
 __all__ = ['AmberRestartFile', 'load_restrt', 'AmberNetCDFRestartFile',
            'load_ncrestrt']
-
-range = six.moves.range
 
 @FormatRegistry.register_loader('.rst7')
 @FormatRegistry.register_loader('.restrt')

@@ -35,7 +35,6 @@ import numpy as np
 cimport numpy as np
 np.import_array()
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
-from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
 from libc.stdlib cimport malloc, free
 from binposlib cimport molfile_timestep_t
@@ -113,7 +112,7 @@ def load_binpos(filename, top=None, stride=None, atom_indices=None, frame=None):
     # we want to give the user an informative error message
     if top is None:
         raise ValueError('"top" argument is required for load_binpos')
-    if not isinstance(filename, (string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type path-like for load_binpos. '
             'you supplied %s' % type(filename))
 

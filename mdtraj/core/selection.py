@@ -25,7 +25,6 @@ import ast
 import sys
 from copy import deepcopy
 from collections import namedtuple
-from mdtraj.utils.six import PY2
 from pyparsing import (Word, ParserElement, MatchFirst,
     Keyword, opAssoc, quotedString, alphas, alphanums, infixNotation, Group,
     ParseException, OneOrMore)
@@ -384,15 +383,10 @@ class parse_selection(object):
         if isinstance(astnode, ast.Num) or isinstance(astnode, ast.Str):
             raise ValueError("Cannot use a single literal as a boolean.")
 
-        if PY2:
-            args = [ast.Name(id='atom', ctx=ast.Param())]
-            signature = ast.arguments(args=args, vararg=None, kwarg=None,
-                                      defaults=[])
-        else:
-            args = [ast.arg(arg='atom', annotation=None)]
-            signature = ast.arguments(args=args, vararg=None, kwarg=None,
-                                      posonlyargs=[], kwonlyargs=[],
-                                      defaults=[], kw_defaults=[])
+        args = [ast.arg(arg='atom', annotation=None)]
+        signature = ast.arguments(args=args, vararg=None, kwarg=None,
+                                  posonlyargs=[], kwonlyargs=[],
+                                  defaults=[], kw_defaults=[])
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
         source = astunparse.unparse(astnode)

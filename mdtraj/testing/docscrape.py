@@ -40,8 +40,6 @@ import re
 import pydoc
 from warnings import warn
 
-from mdtraj.utils.six import StringIO, iteritems
-
 
 class Reader(object):
     """A line-based string reader.
@@ -404,7 +402,7 @@ class NumpyDocString(object):
         idx = self['index']
         out = []
         out += ['.. index:: %s' % idx.get('default','')]
-        for section, references in iteritems(idx):
+        for section, references in idx.items():
             if section == 'default':
                 continue
             out += ['   :%s: %s' % (section, ', '.join(references))]

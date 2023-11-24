@@ -24,6 +24,7 @@
 ##############################################################################
 # Imports
 ##############################################################################
+import operator
 import sys
 import types
 import warnings
@@ -32,7 +33,6 @@ import importlib
 from inspect import (isclass, ismodule, isfunction, ismethod,
                      getmembers, getdoc, getmodule, getargs, isbuiltin)
 from mdtraj.testing.docscrape import NumpyDocString
-from mdtraj.utils.six import get_function_code, get_function_closure, PY2
 
 __all__ = ['docstring_verifiers', 'import_all_modules']
 
@@ -133,7 +133,8 @@ def docstring_verifiers(module, error_on_none=False):
                         "docstring, %d" % (format(f), n_args, len(param_names)))
                 return
 
-            args = set(getargs(get_function_code(f)).args)
+            args = set(getargs(operator.attrgetter(f)).args)
+
             if 'self' in args:
                 args.remove('self')
             if 'cls' in args:

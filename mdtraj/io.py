@@ -79,7 +79,6 @@ import os
 import warnings
 import numpy as np
 from mdtraj.utils import import_
-from mdtraj.utils.six import iteritems, StringIO
 
 tables = import_('tables')
 
@@ -188,7 +187,7 @@ def saveh(file, *args, **kwargs):
 
     # save all the arrays
     try:
-        for key, val in iteritems(namedict):
+        for key, val in namedict.items():
             if not isinstance(val, np.ndarray):
                 raise TypeError('Only numpy arrays can '
                     'be saved: type(%s) is %s' % (key, type(val)))

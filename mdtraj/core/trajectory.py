@@ -61,8 +61,6 @@ from mdtraj.core.residue_names import _SOLVENT_TYPES
 from mdtraj.utils import (ensure_type, in_units_of, lengths_and_angles_to_box_vectors,
                           box_vectors_to_lengths_and_angles, cast_indices,
                           deprecated)
-from mdtraj.utils.six.moves import xrange
-from mdtraj.utils.six import string_types
 from mdtraj import _rmsd
 from mdtraj import FormatRegistry
 from mdtraj.geometry import distance
@@ -92,7 +90,7 @@ def _assert_files_exist(filenames):
     filenames : {path-like, [path-like]}
         Path or list of paths to check
     """
-    if isinstance(filenames, (string_types, os.PathLike)):
+    if isinstance(filenames, (str, os.PathLike)):
         filenames = [filenames]
     for fn in filenames:
         if not (os.path.exists(fn) and os.path.isfile(fn)):
@@ -107,7 +105,7 @@ def _assert_files_or_dirs_exist(names):
     filenames : {path-like, [path-like]}
         Path or list of paths to check
     """
-    if isinstance(names, (string_types, os.PathLike)):
+    if isinstance(names, (str, os.PathLike)):
         names = [names]
     for fn in names:
         if not (os.path.exists(fn) and \
@@ -148,7 +146,7 @@ def _parse_topology(top, **kwargs):
     topology : md.Topology
     """
 
-    if isinstance(top, (string_types, os.PathLike)):
+    if isinstance(top, (str, os.PathLike)):
         ext = _get_extension(top)
     else:
         ext = None  # might not be a string
@@ -157,24 +155,24 @@ def _parse_topology(top, **kwargs):
         topology = top
     elif isinstance(top, Trajectory):
         topology = top.topology
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.pdb', '.pdb.gz', '.pdbx', '.cif', '.h5','.lh5']):
+    elif isinstance(top, (str, os.PathLike)) and (ext in ['.pdb', '.pdb.gz', '.pdbx', '.cif', '.h5','.lh5']):
         _traj = load_frame(top, 0, **kwargs)
         topology = _traj.topology
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.prmtop', '.parm7', '.prm7']):
+    elif isinstance(top, (str, os.PathLike)) and (ext in ['.prmtop', '.parm7', '.prm7']):
         topology = load_prmtop(top, **kwargs)
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.psf']):
+    elif isinstance(top, (str, os.PathLike)) and (ext in ['.psf']):
         topology = load_psf(top, **kwargs)
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.mol2']):
+    elif isinstance(top, (str, os.PathLike)) and (ext in ['.mol2']):
         topology = load_mol2(top, **kwargs).topology
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.gro']):
+    elif isinstance(top, (str, os.PathLike)) and (ext in ['.gro']):
         topology = load_gro(top, **kwargs).topology
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.arc']):
+    elif isinstance(top, (str, os.PathLike)) and (ext in ['.arc']):
         topology = load_arc(top, **kwargs).topology
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.hoomdxml']):
+    elif isinstance(top, (str, os.PathLike)) and (ext in ['.hoomdxml']):
         topology = load_hoomdxml(top, **kwargs).topology
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in ['.gsd']):
+    elif isinstance(top, (str, os.PathLike)) and (ext in ['.gsd']):
         topology = load_gsd_topology(top, **kwargs)
-    elif isinstance(top, (string_types, os.PathLike)):
+    elif isinstance(top, (str, os.PathLike)):
         raise IOError('The topology is loaded by filename extension, and the '
                       'detected "%s" format is not supported. Supported topology '
                       'formats include %s and "%s".' % (
@@ -358,7 +356,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     # If a single filename make a list out of it in
     #order to have an easier function later on
-    if isinstance(filename_or_filenames, (string_types, os.PathLike)):
+    if isinstance(filename_or_filenames, (str, os.PathLike)):
         filename_or_filenames = [filename_or_filenames]
 
 
@@ -1450,7 +1448,7 @@ class Trajectory(object):
 
 
         with PDBTrajectoryFile(filename, 'w', force_overwrite=force_overwrite) as f:
-            for i in xrange(self.n_frames):
+            for i in range(self.n_frames):
 
                 if self._have_unitcell:
                     f.write(in_units_of(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
@@ -1613,7 +1611,7 @@ class Trajectory(object):
                         cell_lengths=lengths, cell_angles=self.unitcell_angles)
         else:
             fmt = '%s.%%0%dd' % (filename, len(str(self.n_frames)))
-            for i in xrange(self.n_frames):
+            for i in range(self.n_frames):
                 with AmberNetCDFRestartFile(fmt % (i+1), 'w', force_overwrite=force_overwrite) as f:
                     coordinates = in_units_of(self._xyz, Trajectory._distance_unit,
                                               AmberNetCDFRestartFile.distance_unit)
@@ -1650,7 +1648,7 @@ class Trajectory(object):
                         cell_lengths=lengths, cell_angles=self.unitcell_angles)
         else:
             fmt = '%s.%%0%dd' % (filename, len(str(self.n_frames)))
-            for i in xrange(self.n_frames):
+            for i in range(self.n_frames):
                 with AmberRestartFile(fmt % (i+1), 'w', force_overwrite=force_overwrite) as f:
                     coordinates = in_units_of(self._xyz, Trajectory._distance_unit,
                                               AmberRestartFile.distance_unit)

@@ -59,7 +59,6 @@ from mdtraj.core.residue_names import (_PROTEIN_RESIDUES, _WATER_RESIDUES,
                                        _AMINO_ACID_CODES)
 from mdtraj.core.selection import parse_selection
 from mdtraj.utils import ilen, import_, ensure_type
-from mdtraj.utils.six import string_types
 from mdtraj.utils.singleton import Singleton
 
 ##############################################################################
@@ -1157,12 +1156,12 @@ class Topology(object):
 
         """
         # Resolve selections using the atom selection DSL...
-        if isinstance(selection1, string_types):
+        if isinstance(selection1, str):
             a_indices = self.select(selection1)
         else:  # ...or use a provided array of indices.
             a_indices = ensure_type(selection1, dtype=np.int32, ndim=1,
                                     name='a_indices', warn_on_cast=False)
-        if isinstance(selection2, string_types):
+        if isinstance(selection2, str):
             b_indices = self.select(selection2)
         else:
             b_indices = ensure_type(selection2, dtype=np.int32, ndim=1,

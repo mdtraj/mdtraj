@@ -51,9 +51,8 @@
 import numpy as np
 import itertools
 import re
-
+from io import StringIO
 from mdtraj.utils import import_
-from mdtraj.utils.six.moves import cStringIO as StringIO
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.core import element as elem
 

@@ -34,9 +34,6 @@ from numpy.testing import (assert_allclose, assert_almost_equal,
                            assert_array_equal, assert_array_less, assert_array_max_ulp, assert_equal,
                            assert_raises, assert_string_equal, assert_warns)
 
-# py2/3 compatibility
-from mdtraj.utils.six import iteritems, integer_types, PY2
-
 # if the system doesn't have scipy, we'd like
 # this package to still work:
 # we'll just redefine isspmatrix as a function that always returns
@@ -111,10 +108,6 @@ def eq(o1, o2, decimal=6, err_msg=''):
     AssertionError
         If the tests fail
     """
-    if isinstance(o1, integer_types) and isinstance(o2, integer_types) and PY2:
-        eq_(long(o1), long(o2))
-        return True
-
     assert (type(o1) is type(o2)), 'o1 and o2 not the same type: %s %s' % (type(o1), type(o2))
 
     if isinstance(o1, dict):
@@ -164,7 +157,7 @@ def assert_dict_equal(t1, t2, decimal=6):
     # make sure the keys are the same
     eq_(list(t1.keys()), list(t2.keys()))
 
-    for key, val in iteritems(t1):
+    for key, val in t1.items():
         # compare numpy arrays using numpy.testing
         if isinstance(val, np.ndarray) or ('pandas' in sys.modules and isinstance(t1, pd.DataFrame)):
             if val.dtype.kind == 'f':

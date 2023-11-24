@@ -49,7 +49,6 @@ from mdtraj import version
 import mdtraj.core.element as elem
 from mdtraj.core.topology import Topology
 from mdtraj.utils import in_units_of, ensure_type, import_, cast_indices
-from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
 
 __all__ = ['HDF5TrajectoryFile', 'load_hdf5']
@@ -102,7 +101,7 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.HDF5TrajectoryFile :  Low level interface to HDF5 files
     """
-    if not isinstance(filename, (string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type path-like for load_lh5. '
             'you supplied %s' % type(filename))
 
@@ -265,7 +264,7 @@ class HDF5TrajectoryFile(object):
         """
         try:
             raw = self._get_node('/', name='topology')[0]
-            if not isinstance(raw, string_types):
+            if not isinstance(raw, str):
                 raw = raw.decode()
             topology_dict = json.loads(raw)
         except self.tables.NoSuchNodeError:
@@ -588,7 +587,7 @@ class HDF5TrajectoryFile(object):
                 node = self._get_node(where='/', name=name)
                 data = node.__getitem__(slice)
                 in_units = node.attrs.units
-                if not isinstance(in_units, string_types):
+                if not isinstance(in_units, str):
                     in_units = in_units.decode()
                 data =  in_units_of(data, in_units, out_units)
                 return data

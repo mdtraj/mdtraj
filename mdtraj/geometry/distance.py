@@ -22,7 +22,6 @@
 
 import numpy as np
 from mdtraj.utils import ensure_type
-from mdtraj.utils.six.moves import range
 from mdtraj.utils.unitcell import box_vectors_to_lengths_and_angles
 from . import _geometry
 

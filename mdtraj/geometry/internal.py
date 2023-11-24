@@ -31,7 +31,6 @@ This code is new and should be considered __unstable__
 
 import numpy as np
 from itertools import combinations
-from mdtraj.utils.six.moves import filter, xrange  # itertools
 import logging
 
 from mdtraj.geometry.distance import compute_distances

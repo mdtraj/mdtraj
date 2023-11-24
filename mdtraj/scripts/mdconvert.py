@@ -37,7 +37,6 @@ import numpy as np
 import mdtraj as md
 from mdtraj.core.trajectory import _parse_topology
 from mdtraj.utils import in_units_of
-from mdtraj.utils.six import iteritems
 
 ###############################################################################
 # Crappy class that should go elsewhere
@@ -299,7 +298,7 @@ def main(args, verbose=True):
                     # with slice notation
                     if args.index is not None:
                         _data = {}
-                        for k, v in iteritems(data):
+                        for k, v in data.items():
                             if isinstance(v, np.ndarray):
                                 # we don't want the dimensionality to go deficient
                                 if isinstance(args.index, int):
@@ -309,7 +308,7 @@ def main(args, verbose=True):
                             elif isinstance(v, md.Topology):
                                 _data[k] = v
                             else:
-                                raise RuntineError()
+                                raise RuntimeError()
                         data = _data
                         print(list(data.keys()))
                         n_frames = len(data['xyz'])

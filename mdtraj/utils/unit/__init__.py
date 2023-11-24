@@ -35,7 +35,7 @@ import sys
 import numpy as np
 from mdtraj.utils.unit.quantity import Quantity
 from mdtraj.utils.unit import unit_definitions
-from mdtraj.utils import import_, six
+from mdtraj.utils import import_
 UNIT_DEFINITIONS = unit_definitions
 
 try:
@@ -100,7 +100,7 @@ def _str_to_unit(unit_string, openmm=False):
     # "nanometers" into "unit.nanometers" and simulataniously check that
     # there's no nefarious stuff in the expression.
 
-    assert isinstance(unit_string, six.string_types)
+    assert isinstance(unit_string, str)
     unit_definitions = UNIT_DEFINITIONS
     if openmm:
         unit_definitions = openmm_unit.unit_definitions

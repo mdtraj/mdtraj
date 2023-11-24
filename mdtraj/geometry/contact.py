@@ -27,8 +27,6 @@
 
 import numpy as np
 from mdtraj.utils import ensure_type
-from mdtraj.utils.six import string_types
-from mdtraj.utils.six.moves import xrange
 from mdtraj.core import element
 import mdtraj as md
 import itertools
@@ -121,16 +119,16 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
     if traj.topology is None:
         raise ValueError('contact calculation requires a topology')
 
-    if isinstance(contacts, string_types):
+    if isinstance(contacts, str):
         if contacts.lower() != 'all':
             raise ValueError('(%s) is not a valid contacts specifier' % contacts.lower())
 
         residue_pairs = []
-        for i in xrange(traj.n_residues):
+        for i in range(traj.n_residues):
             residue_i = traj.topology.residue(i)
             if ignore_nonprotein and not any(a for a in residue_i.atoms if a.name.lower() == 'ca'):
                 continue
-            for j in xrange(i+3, traj.n_residues):
+            for j in range(i+3, traj.n_residues):
                 residue_j = traj.topology.residue(j)
                 if ignore_nonprotein and not any(a for a in residue_j.atoms if a.name.lower() == 'ca'):
                     continue
@@ -216,7 +214,7 @@ def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonpro
         distances = np.zeros((len(traj), n_residue_pairs), dtype=np.float32)
         n_atom_pairs_per_residue_pair = np.asarray(n_atom_pairs_per_residue_pair)
 
-        for i in xrange(n_residue_pairs):
+        for i in range(n_residue_pairs):
             index = int(np.sum(n_atom_pairs_per_residue_pair[:i]))
             n = n_atom_pairs_per_residue_pair[i]
             if not soft_min:
