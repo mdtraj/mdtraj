@@ -1,4 +1,35 @@
-## MDTraj: a modern, open library for the analysis of molecular dynamics trajectories
+## Note on current project status
+
+TLDR: MDTraj is currently undergoing a transition to new maintainers (the Folding@home consortium).
+Please bear with us as we slowly respond to issues and clean up.
+
+Hello!
+
+For anybody wondering, the MDTraj repo is currently undergoing a transition to new maintainers;
+The Folding@home consortium (@FoldingAtHome) will now be taking over support, maintainence
+and management of MDTraj with @xuhuihuang leading repo management, and @mattwthompson, @apayne97,
+and myself (@sukritsingh) helping to manage and maintain this repo more directly.
+
+Existing supporters, contributors, etc. are all welcome to contribute as much as they wish.
+The intention behind this transition is to ensure MDTraj receives continued support.
+
+As we are slowly transitioning to this new support, please bear with us as we slowly respond
+to issues, clean up any PRs, etc.
+
+I have opened a [Discussions page](https://github.com/mdtraj/mdtraj/discussions) on github
+for folks asking for help with code issues/not getting things working. Our hope is that the
+issues page will be for discrete bugs, feature requests, related discussions etc., but this
+is very flexible!
+
+Best,
+
+Sukrit Singh (@sukritsingh)
+
+July 6th, 2023
+
+--------------------------------
+
+## MDTraj: an open-source library for analysis of molecular dynamics trajectories
 
 [![Build Status](https://github.com/mdtraj/mdtraj/actions/workflows/main.yaml/badge.svg)](https://github.com/mdtraj/mdtraj/actions)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.svg)](https://pypi.python.org/pypi/mdtraj)
@@ -40,7 +71,3 @@ MDTraj is research software. If you make use of MDTraj in scientific publication
 GNU LGPL version 2.1, or at your option a later version of the license.
 Various sub-portions of this library may be independently distributed under
 different licenses. See those files for their specific terms.
-
-#### Contributing
-
-If you'd like to contribute to `mdtraj` you're most welcome! It’s people like you who make it such a great tool. Generally, the library is mostly in "maintenance mode" -- we are not specifically planning to add major new features. Bug-fixes, additional testing and documentation, and small features that integrate well with the existing library are most appreciated!

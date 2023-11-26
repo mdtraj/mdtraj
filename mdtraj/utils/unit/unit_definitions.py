@@ -1,17 +1,17 @@
 #!/bin/env python
 """
-Module simtk.unit.unit_definitions
+Module openmm.unit.unit_definitions
 
 This is part of the OpenMM molecular simulation toolkit originating from
 Simbios, the NIH National Center for Physics-Based Simulation of
 Biological Structures at Stanford, funded under the NIH Roadmap for
 Medical Research, grant U54 GM072970. See https://simtk.org.
 
-Portions copyright (c) 2012 Stanford University and the Authors.
+Portions copyright (c) 2012-2020 Stanford University and the Authors.
 Authors: Christopher M. Bruns
 Contributors: Peter Eastman
 
-Permission is hereby granted, free of charge, to any person obtaining a 
+Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
 to deal in the Software without restriction, including without limitation
 the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -30,7 +30,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from __future__ import division
+from __future__ import division, print_function, absolute_import
 
 __author__ = "Christopher M. Bruns"
 __version__ = "0.6"
@@ -42,6 +42,8 @@ from .unit_operators import * ; # needed for manipulation of units
 from .prefix import *
 import math
 import sys
+
+# Physical constants in this file are CODATA 2018 values from https://pml.nist.gov/cuu/Constants
 
 #####################
 ### DIMENSIONLESS ###
@@ -62,7 +64,7 @@ angstrom_base_unit.define_conversion_factor_to(meter_base_unit, 1e-10)
 angstroms = angstrom = Unit({angstrom_base_unit: 1.0})
 
 planck_length_base_unit = BaseUnit(length_dimension, "Planck length", "l_P")
-planck_length_base_unit.define_conversion_factor_to(meter_base_unit, 1.61625281e-35)
+planck_length_base_unit.define_conversion_factor_to(meter_base_unit, 1.616255e-35)
 
 inch_base_unit = BaseUnit(length_dimension, "inch", "in")
 inch_base_unit.define_conversion_factor_to(centimeter_base_unit, 2.5400)
@@ -79,6 +81,8 @@ yard = yards = Unit({yard_base_unit: 1.0})
 furlongs = furlong = yard.create_unit(scale=220.0, name="furlong", symbol="furlong")
 miles = mile = furlong.create_unit(scale=8.0, name="mile", symbol="mi")
 
+bohrs = bohr = angstrom.create_unit(scale=0.529177210903, name='bohr', symbol='r_0')
+
 ############
 ### MASS ###
 ############
@@ -89,7 +93,7 @@ grams = gram = Unit({gram_base_unit: 1.0})
 define_prefixed_units(gram_base_unit, module = sys.modules[__name__])
 
 planck_mass_base_unit = BaseUnit(mass_dimension, "Planck mass", "m_P")
-planck_mass_base_unit.define_conversion_factor_to(kilogram_base_unit, 2.1764411e-8)
+planck_mass_base_unit.define_conversion_factor_to(kilogram_base_unit, 2.176434e-8)
 
 # pound can be mass, force, or currency
 pound_mass_base_unit = BaseUnit(mass_dimension, "pound", "lb")
@@ -110,7 +114,7 @@ seconds = second = Unit({second_base_unit: 1.0})
 define_prefixed_units(second_base_unit, module = sys.modules[__name__])
 
 planck_time_base_unit = BaseUnit(time_dimension, "Planck time", "t_P")
-planck_time_base_unit.define_conversion_factor_to(second_base_unit, 5.3912427e-44)
+planck_time_base_unit.define_conversion_factor_to(second_base_unit, 5.391247e-44)
 
 minutes = minute = second.create_unit(scale=60.0, name="minute", symbol="min")
 hours = hour = minute.create_unit(scale=60.0, name="hour", symbol="hr")
@@ -130,7 +134,7 @@ kelvin_base_unit = BaseUnit(temperature_dimension, "kelvin", "K")
 kelvins = kelvin = Unit({kelvin_base_unit: 1.0})
 
 planck_temperature_base_unit = BaseUnit(temperature_dimension, "Planck temperature", "T_p")
-planck_temperature_base_unit.define_conversion_factor_to(kelvin_base_unit, 1.41678571e32)
+planck_temperature_base_unit.define_conversion_factor_to(kelvin_base_unit, 1.416784e32)
 
 ##############
 ### CHARGE ###
@@ -141,11 +145,11 @@ elementary_charges = elementary_charge = Unit({elementary_charge_base_unit: 1.0}
 
 coulomb_base_unit = BaseUnit(charge_dimension, "coulomb", "C")
 # Exact conversion factor
-coulomb_base_unit.define_conversion_factor_to(elementary_charge_base_unit, 6.24150962915265e18)
+coulomb_base_unit.define_conversion_factor_to(elementary_charge_base_unit, 6.241509074460763e18)
 coulombs = coulomb = Unit({coulomb_base_unit: 1.0})
 
 planck_charge_base_unit = BaseUnit(charge_dimension, "Planck charge", "q_P")
-planck_charge_base_unit.define_conversion_factor_to(elementary_charge_base_unit, 11.706237639840)
+planck_charge_base_unit.define_conversion_factor_to(elementary_charge_base_unit, 1/math.sqrt(7.2973525693e-3)) # Calculated from fine structure constant
 
 ##############
 ### AMOUNT ###
@@ -155,7 +159,7 @@ mole_base_unit = BaseUnit(amount_dimension, "mole", "mol")
 moles = mole = Unit({mole_base_unit: 1.0})
 
 single_item_amount_base_unit = BaseUnit(amount_dimension, "item", "")
-mole_base_unit.define_conversion_factor_to(single_item_amount_base_unit, 6.0221417930e23)
+mole_base_unit.define_conversion_factor_to(single_item_amount_base_unit, 6.02214076e23)
 items = item = Unit({single_item_amount_base_unit: 1.0})
 
 ##########################
@@ -235,6 +239,8 @@ joules = joule = Unit({joule_base_unit: 1.0})
 define_prefixed_units(joule_base_unit, module = sys.modules[__name__])
 erg_base_unit = ScaledUnit(1.0, dyne * centimeter, "erg", "erg")
 erg = ergs = Unit({erg_base_unit: 1.0})
+hartree_base_unit = ScaledUnit(4.3597447222071e-18, joule, "hartree", "Ha")
+hartree = hartrees = Unit({hartree_base_unit: 1.0})
 
 # In molecular simulations, "kilojoules" are in microscopic units
 # And you really only want to use kilojoules/mole.
@@ -303,20 +309,20 @@ mmHg = Unit({mmHg_base_unit: 1.0})
 
 ampere_base_unit = ScaledUnit(1.0, coulomb/second, "ampere", "A")
 
-si_unit_system = UnitSystem([\
-        meter_base_unit,\
-        kilogram_base_unit,\
-        second_base_unit,\
+si_unit_system = UnitSystem([
+        meter_base_unit,
+        kilogram_base_unit,
+        second_base_unit,
         ampere_base_unit,
         kelvin_base_unit,
         mole_base_unit,
         candela_base_unit,
         radian_base_unit])
 
-cgs_unit_system = UnitSystem([\
-        centimeter_base_unit,\
-        gram_base_unit,\
-        second_base_unit,\
+cgs_unit_system = UnitSystem([
+        centimeter_base_unit,
+        gram_base_unit,
+        second_base_unit,
         ampere_base_unit,
         kelvin_base_unit,
         mole_base_unit,
@@ -324,10 +330,10 @@ cgs_unit_system = UnitSystem([\
 
 dalton_base_unit = ScaledUnit(1.0, gram/mole, "dalton", "Da")
 
-md_unit_system = UnitSystem([\
-        nanometer_base_unit,\
+md_unit_system = UnitSystem([
+        nanometer_base_unit,
         dalton_base_unit,
-        picosecond_base_unit,\
+        picosecond_base_unit,
         elementary_charge_base_unit,
         kelvin_base_unit,
         mole_base_unit,

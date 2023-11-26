@@ -51,8 +51,8 @@ def load_arc(filename, stride=None, atom_indices=None, frame=None):
 
     Parameters
     ----------
-    filename : str
-        String filename of TINKER .arc file.
+    filename : path-like
+        Path of TINKER .arc file.
     stride : int, default=None
         Only read every stride-th frame
     atom_indices : array_like, optional
@@ -74,8 +74,8 @@ def load_arc(filename, stride=None, atom_indices=None, frame=None):
     """
     from mdtraj.core.trajectory import _parse_topology
 
-    if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_arc. '
+    if not isinstance(filename, (string_types, os.PathLike)):
+        raise TypeError('filename must be of type path-like for load_arc. '
             'you supplied %s' % type(filename))
 
     atom_indices = cast_indices(atom_indices)
@@ -110,7 +110,7 @@ class ArcTrajectoryFile(object):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         The filename to open. A path to a file on disk.
     mode : {'r'}
         The mode in which to open the file, only 'r' for read is supported.

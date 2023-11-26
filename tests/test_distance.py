@@ -27,7 +27,13 @@ import numpy as np
 import mdtraj as md
 
 from mdtraj.testing import eq, assert_allclose
-from mdtraj.geometry.distance import compute_distances, compute_distances_t, compute_displacements, find_closest_contact
+from mdtraj.geometry.distance import (
+    compute_distances_core,
+    compute_distances,
+    compute_distances_t,
+    compute_displacements,
+    find_closest_contact,
+)
 from mdtraj.geometry.distance import _displacement_mic, _displacement
 
 N_FRAMES = 20
@@ -53,6 +59,47 @@ def test_0():
     b = compute_distances(ptraj, pairs, periodic=False, opt=False)
     eq(a, b)
 
+def test_compute_distances_core_nonperiodic():
+
+    a = compute_distances(ptraj, pairs, periodic=False, opt=True)
+    b = compute_distances_core(ptraj.xyz,
+                               pairs,
+                               unitcell_vectors=ptraj.unitcell_vectors,
+                               periodic=False,
+                               opt=True,
+                               )
+    eq(a, b)
+
+    a = compute_distances(ptraj, pairs, periodic=False, opt=False)
+    b = compute_distances_core(ptraj.xyz,
+                               pairs,
+                               unitcell_vectors=ptraj.unitcell_vectors,
+                               periodic=False,
+                               opt=False,
+                               )
+    eq(a, b)
+
+def test_compute_distances_core_periodic():
+
+    # opt
+    a = compute_distances(ptraj, pairs, periodic=True, opt=True)
+    b = compute_distances_core(ptraj.xyz,
+                               pairs,
+                               unitcell_vectors=ptraj.unitcell_vectors,
+                               periodic=True,
+                               opt=True,
+                               )
+    eq(a, b, decimal=3)
+
+    # no-opt
+    a = compute_distances(ptraj, pairs, periodic=True, opt=False)
+    b = compute_distances_core(ptraj.xyz,
+                               pairs,
+                               unitcell_vectors=ptraj.unitcell_vectors,
+                               periodic=True,
+                               opt=False,
+                               )
+    eq(a, b, decimal=3)
 
 def test_1():
     a = compute_displacements(ptraj, pairs, periodic=False, opt=True)

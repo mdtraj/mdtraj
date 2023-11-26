@@ -71,8 +71,8 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
 
     Parameters
     ----------
-    filename : str
-        String filename of HDF Trajectory file.
+    filename : path-like
+        Path of HDF Trajectory file.
     stride : int, default=None
         Only read every stride-th frame
     atom_indices : array_like, optional
@@ -104,8 +104,8 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.HDF5TrajectoryFile :  Low level interface to HDF5 files
     """
-    if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_lh5. '
+    if not isinstance(filename, (string_types, os.PathLike)):
+        raise TypeError('filename must be of type path-like for load_lh5. '
             'you supplied %s' % type(filename))
 
     atom_indices = cast_indices(atom_indices)
@@ -137,7 +137,7 @@ class HDF5TrajectoryFile(object):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Path to the file to open
     mode :  {'r, 'w'}
         Mode in which to open the file. 'r' is for reading and 'w' is for
@@ -194,7 +194,7 @@ class HDF5TrajectoryFile(object):
             self._frame_index = 0
             # do we need to write the header information?
             self._needs_initialization = True
-            if not filename.endswith('.h5'):
+            if not os.fspath(filename).endswith('.h5'):
                 warnings.warn('The .h5 extension is recommended.')
 
         elif mode == 'a':
@@ -312,7 +312,7 @@ class HDF5TrajectoryFile(object):
         """
         _check_mode(self.mode, ('w', 'a'))
 
-        # we want to be able to handle the simtk.openmm Topology object
+        # we want to be able to handle the openmm Topology object
         # here too, so if it's not an mdtraj topology we'll just guess
         # that it's probably an openmm topology and convert
         if not isinstance(topology_object, Topology):
@@ -625,10 +625,10 @@ class HDF5TrajectoryFile(object):
 
         This method saves data that is associated with one or more simulation
         frames. Note that all of the arguments can either be raw numpy arrays
-        or unitted arrays (with simtk.unit.Quantity). If the arrays are unittted,
-        a unit conversion will be automatically done from the supplied units
-        into the proper units for saving on disk. You won't have to worry about
-        it.
+        or unitted arrays (with openmm.unit.Quantity). If the arrays are
+        unittted, a unit conversion will be automatically done from the
+        supplied units into the proper units for saving on disk. You won't have
+        to worry about it.
 
         Furthermore, if you wish to save a single frame of simulation data, you
         can do so naturally, for instance by supplying a 2d array for the
@@ -682,9 +682,9 @@ class HDF5TrajectoryFile(object):
         if cell_lengths is not None and cell_angles is None:
             raise ValueError('cell_angles were given, but no cell_lengths')
 
-        # if the input arrays are simtk.unit.Quantities, convert them
+        # if the input arrays are openmm.unit.Quantities, convert them
         # into md units. Note that this acts as a no-op if the user doesn't
-        # have simtk.unit installed (e.g. they didn't install OpenMM)
+        # have openmm.unit installed (e.g. they didn't install OpenMM)
         coordinates = in_units_of(coordinates, None, 'nanometers')
         time = in_units_of(time, None, 'picoseconds')
         cell_lengths = in_units_of(cell_lengths, None, 'nanometers')

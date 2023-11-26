@@ -92,6 +92,7 @@ def test_4ZUO(get_fn):
     atom = list(t.top.atoms)[1525]
     eq(atom.element.symbol, 'O')
     eq(atom.residue.name, 'GLY')
+    eq(atom.residue.chain.chain_id, 'A')
     eq(atom.index, 1525)
     eq(t.xyz[0, 1525], np.array([-25.423,  13.774, -25.234]) / 10)  # converting to NM
 

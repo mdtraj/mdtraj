@@ -37,9 +37,9 @@ import os
 import socket
 import warnings
 from datetime import datetime
-from distutils.version import StrictVersion
 
 import numpy as np
+from packaging.version import Version
 from mdtraj import version
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices
@@ -59,7 +59,7 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         filename of AMBER NetCDF file.
     top : {str, Trajectory, Topology}
         The NetCDF format does not contain topology information. Pass in either
@@ -113,7 +113,7 @@ class NetCDFTrajectoryFile(object):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         The name of the file to open
     mode : {'r', 'w'}, default='r'
         The mode in which to open the file. Valid options are 'r' and 'w' for
@@ -127,7 +127,7 @@ class NetCDFTrajectoryFile(object):
     def __init__(self, filename, mode='r', force_overwrite=True):
         self._closed = True   # is the file currently closed?
         self._mode = mode      # what mode were we opened in
-        if StrictVersion(import_('scipy.version').short_version) < StrictVersion('0.12.0'):
+        if Version(import_('scipy.version').short_version) < Version('0.12.0'):
             raise ImportError('MDTraj NetCDF support requires scipy>=0.12.0. '
                               'You have %s' % import_('scipy.version').short_version)
         netcdf = import_('scipy.io').netcdf_file

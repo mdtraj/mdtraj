@@ -32,11 +32,15 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.                                     *
  * -------------------------------------------------------------------------- */
 
-#if defined(__ARM_NEON)
+#ifdef __NO_INTRINSICS
+    #include "vectorize_generic.h"
+#elif defined(__ARM_NEON)
     #include "vectorize_neon.h"
-#else
+#elif defined(__SSE2__) 
     #include <pmmintrin.h>
     #include "vectorize_sse.h"
+#else
+    #include "vectorize_generic.h"
 #endif
 
-#endif /*OPENMM_VECTORIZE_H_*/
+#endif

@@ -32,9 +32,9 @@ from mdtraj.reporters import HDF5Reporter, NetCDFReporter, DCDReporter, XTCRepor
 from mdtraj.testing import eq
 
 try:
-    from simtk.unit import nanometers, kelvin, picoseconds, femtoseconds
-    from simtk.openmm import LangevinIntegrator, Platform
-    from simtk.openmm.app import PDBFile, ForceField, Simulation, CutoffNonPeriodic, CutoffPeriodic, HBonds, CheckpointReporter
+    from openmm.unit import nanometers, kelvin, picoseconds, femtoseconds
+    from openmm import LangevinIntegrator, Platform
+    from openmm.app import PDBFile, ForceField, Simulation, CutoffNonPeriodic, CutoffPeriodic, HBonds, CheckpointReporter
 
     HAVE_OPENMM = True
 except ImportError:

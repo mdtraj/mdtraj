@@ -121,7 +121,7 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Filename (string) of xtc trajectory.
     top : {str, Trajectory, Topology}
         The XTC format does not contain topology information. Pass in either the
@@ -158,14 +158,14 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_xtc')
 
-    if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_xtc. '
+    if not isinstance(filename, (string_types, os.PathLike)):
+        raise TypeError('filename must be of type path-like for load_xtc. '
                         'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
 
-    with XTCTrajectoryFile(filename, 'r') as f:
+    with XTCTrajectoryFile(str(filename), 'r') as f:
         if frame is not None:
             f.seek(frame)
             n_frames = 1
@@ -268,7 +268,7 @@ cdef class XTCTrajectoryFile(object):
                 os.unlink(filename)
             if not force_overwrite and os.path.exists(filename):
                 raise IOError('"%s" already exists' % filename)
-            self.fh = xdrlib.xdrfile_open(filename, 'w')
+            self.fh = xdrlib.xdrfile_open(str(filename), 'w')
             if self.fh is NULL:
                 raise IOError('Unable to open file "%s"' % filename)
         else:

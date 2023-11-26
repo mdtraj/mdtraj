@@ -122,9 +122,9 @@ def load_lh5(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         filename of AMBER NetCDF file.
-    top : {str, Trajectory, Topology}
+    top : {path-like, Trajectory, Topology}
         The NetCDF format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
         information.
@@ -160,7 +160,7 @@ class LH5TrajectoryFile(object):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Path to the file to open
     mode :  {'r, 'w'}
         Mode in which to open the file. 'r' is for reading and 'w' is for
@@ -187,7 +187,7 @@ class LH5TrajectoryFile(object):
             self._frame_index = 0
             # do we need to write the header information?
             self._needs_initialization = True
-            if not filename.endswith('.lh5'):
+            if not os.fspath(filename).endswith('.lh5'):
                 warnings.warn('The .lh5 extension is recommended.')
         elif mode == 'r':
             self._frame_index = 0

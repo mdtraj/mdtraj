@@ -1,6 +1,6 @@
 import itertools
 import os
-from distutils.spawn import find_executable
+import shutil
 
 import mdtraj as md
 import numpy as np
@@ -18,7 +18,7 @@ def traj(get_fn):
 
 @pytest.fixture()
 def pymol():
-    pymol = find_executable('pymol')
+    pymol = shutil.which('pymol')
     if pymol is None:
         try_paths = ['/Applications/MacPyMOL.app/Contents/MacOS/MacPyMOL']
         for path in try_paths:

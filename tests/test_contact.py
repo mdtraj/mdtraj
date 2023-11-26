@@ -104,3 +104,7 @@ def test_contact_3(get_fn):
     for i, (r0, r1) in enumerate(pairs):
         for t in range(pdb.n_frames):
             assert np.allclose(beta / np.log(np.sum(np.exp(beta / maps[t, r0, r1]))), dists[t, i])
+            
+def test_contact_4(get_fn):
+    pdb = md.load(get_fn('1am7_protein.pdb'))   # protonated and including at least one glycine residue (which has no heavy atoms in its sidechain)
+    contacts = md.compute_contacts(pdb, contacts='all', scheme='sidechain-heavy')   # test passes if this doesn't raise an exception

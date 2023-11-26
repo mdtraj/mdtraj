@@ -154,7 +154,7 @@ def load_tng(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         Filename (string) of tng trajectory.
     top : {str, Trajectory, Topology}, optional
         If the TNG file does not contain topology information, it must be provided
@@ -189,8 +189,8 @@ def load_tng(filename, top=None, stride=None, atom_indices=None, frame=None):
     """
     from mdtraj.core.trajectory import _parse_topology
 
-    if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_tng. '
+    if not isinstance(filename, (string_types, os.PathLike)):
+        raise TypeError('filename must be of type path-like for load_tng. '
                         'you supplied %s' % type(filename))
     if top is not None:
         topology = _parse_topology(top)
@@ -198,7 +198,7 @@ def load_tng(filename, top=None, stride=None, atom_indices=None, frame=None):
         topology = None
     atom_indices = cast_indices(atom_indices)
 
-    with TNGTrajectoryFile(filename, 'r') as f:
+    with TNGTrajectoryFile(str(filename), 'r') as f:
         if frame is not None:
             f.seek(frame)
             n_frames = 1

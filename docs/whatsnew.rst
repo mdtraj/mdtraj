@@ -3,6 +3,94 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+Current Development
+-------------------
+
+v1.9.9 (July 22, 2023)
+---------------------
+
+- Pin `Cython~=0.29` in `pyproject.toml` (#1801)
+- Remove "stale" bot (#1758)
+- Announce maintainer update (#1795)
+- Use `oldest-supported-numpy` in `pyproject.toml` (#1751)
+
+A total of 4 people contributed to this release, including three new contributors.
+People with a "+" by their names contributed a patch for the first time.
+
+In-Ho Yi+
+Sukrit Singh+
+Jeremy Leung+
+Matthew W. Thompson
+
+v1.9.8 (July 2, 2023)
+---------------------
+
+- Patch util_arm.h for M1 (#1694)
+- Avoid side effects in mdtraj.load (#1706)
+- Add PDB chainID support (#1715)
+- Remove imports from ``simtk`` namespace (#1698)
+- Implement reading and writing PDBx/mmCIF (#1718)
+- Fix `compute_inertia_tensor` docstring (#1721)
+- Fix typo in docs (#1725)
+- Adds lower-level `compute_distances_core` function (#1728)
+- Implement generic C code paths for non-accelerated architectures (#1727)
+- Add note about project maintinance status (#1738)
+- Force new residue when creating new chain (#1740)
+- Warn if ``atom_indices`` are not monotonically increasing (#1766)
+- Delete notes in issue-template by (#1778)
+- Fix hashing when unitcell data is not present (#1781)
+- Test on Python 3.11 (#1758)
+- Constrain GSD to version 2 (#1790)
+
+A total of 15 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Robert T. McGibbon
+- Sander Roet
+- Peter Eastman
+- Charlie Laughton
+- Christoph Klein
+- Luca Naef +
+- Jacob Lumpkins +
+- Ray A. Matsumoto
+- Matthew W. Thompson
+- Moritz Hoffmann +
+- German P. Barletta +
+- Masataka Yamauchi +
+- Samuel Lotz +
+- Toni G +
+- Bojun Liu +
+
+v1.9.7 (November 12, 2021)
+-----------------------
+
+ - Replace discourse link with gitter link (904338b799842c103dcb9e306e6878a739a4d39f)
+ - Faster load function and more homogeneus file parser interface (#1648)
+ - Reduce memory usage of ``rdf_t`` (#1661)
+ - Update to new OpenMM namespace (#1668)
+ - Fix ``compute_contact`` bug with glycine sidechains (#1674)
+ - Fix errors in RMSF documentation (#1676)
+ - Handle path-like objects in place of filenames (#1680)
+ - Pin NumPy in pyproject.toml for Python 3.10 (#1681)
+ - Fix compilation errors on M1 Macs (#1684)
+ - Update Python versions in CI (#1686)
+ - Fix jupyter runners in CI (#1687)
+
+A total of 10 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Robert T. McGibbon
+- Sander Roet
+- Charlie Laughton +
+- Alexander Matthew Payne +
+- Tucker Burgin +
+- Maurice Karrenbrock
+- Luca Naef +
+- Jacob Lumpkins +
+- Ray A. Matsumoto
+- Matthew W. Thompson
+
+
 v1.9.6 (April 20, 2021)
 -----------------------
  - Fix compatibility with all versions of astunparse (03753d736e30f15f8f210434e689e9ff664bb611)

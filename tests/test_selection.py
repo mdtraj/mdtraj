@@ -300,7 +300,7 @@ def test_backbone(gbp):
 
 def test_sidechain(gbp):
     ref_sidechain = gbp.topology.select("protein and not (name C or name CA "
-                                        "or name N or name O)")
+                                        "or name N or name O or name H or name HA)")
     sidechain = gbp.topology.select("sidechain")
     is_sidechain = gbp.topology.select("is_sidechain")
 

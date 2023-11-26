@@ -128,13 +128,13 @@ def load_trr(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_trr')
 
-    if not isinstance(filename, string_types):
+    if not isinstance(filename, (string_types, os.PathLike)):
         raise TypeError('filename must be of type string for load_trr. '
                         'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
-    with TRRTrajectoryFile(filename, 'r') as f:
+    with TRRTrajectoryFile(str(filename), 'r') as f:
         if frame is not None:
             f.seek(frame)
             n_frames = 1

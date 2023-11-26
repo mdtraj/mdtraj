@@ -22,7 +22,7 @@
 
 import os
 import subprocess
-from distutils.spawn import find_executable
+import shutil
 
 import mdtraj as md
 import pytest
@@ -30,9 +30,9 @@ from mdtraj.formats import psf
 from mdtraj.testing import eq
 from mdtraj.utils import enter_temp_directory
 
-VMD = find_executable('vmd')
+VMD = shutil.which('vmd')
 needs_vmd = pytest.mark.skipif(
-    not find_executable('vmd'),
+    not shutil.which('vmd'),
     reason='This test requires the VMD executable: http://www.ks.uiuc.edu/Research/vmd/'
 )
 

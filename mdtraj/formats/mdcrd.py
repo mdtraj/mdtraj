@@ -51,8 +51,8 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     Parameters
     ----------
-    filename : str
-        String filename of AMBER mdcrd file.
+    filename : path-like
+        Path of AMBER mdcrd file.
     top : {str, Trajectory, Topology}
         The BINPOS format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
@@ -85,8 +85,8 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_mdcrd')
 
-    if not isinstance(filename, string_types):
-        raise TypeError('filename must be of type string for load_mdcrd. '
+    if not isinstance(filename, (string_types, os.PathLike)):
+        raise TypeError('filename must be of type path-like for load_mdcrd. '
             'you supplied %s' % type(filename))
 
     topology = _parse_topology(top)
@@ -115,7 +115,7 @@ class MDCRDTrajectoryFile(object):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         The filename to open. A path to a file on disk.
     n_atoms : int
         The number of atoms in the system. This is _required_ when mode == 'r'

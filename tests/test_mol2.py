@@ -23,7 +23,7 @@
 import mdtraj as md
 from mdtraj.testing import eq
 from mdtraj.formats import mol2
-from distutils.spawn import find_executable
+import shutil
 import tarfile
 import pickle
 import os
@@ -52,7 +52,7 @@ def test_load_mol2(get_fn):
     eq(bonds, ref_bonds)
 
 
-@pytest.mark.skipif(find_executable('obabel') is None, reason='Requires obabel')
+@pytest.mark.skipif(shutil.which('obabel') is None, reason='Requires obabel')
 @pytest.mark.skipif(os.environ.get("TRAVIS", None) == 'true', reason="Skip on Travis.")
 def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb(get_fn, tmpdir):
     tar_filename = "freesolve_v0.3.tar.bz2"

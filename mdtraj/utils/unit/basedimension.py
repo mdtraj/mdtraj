@@ -1,5 +1,6 @@
+#!/bin/env python
 """
-Module simtk.unit.basedimension
+Module openmm.unit.basedimension
 
 BaseDimension class for use by units and quantities.
 BaseDimensions are things like "length" and "mass".
@@ -13,7 +14,7 @@ Portions copyright (c) 2012 Stanford University and the Authors.
 Authors: Christopher M. Bruns
 Contributors: Peter Eastman
 
-Permission is hereby granted, free of charge, to any person obtaining a 
+Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
 to deal in the Software without restriction, including without limitation
 the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -31,6 +32,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from __future__ import print_function, division
 
 __author__ = "Christopher M. Bruns"
 __version__ = "0.6"
@@ -39,7 +41,7 @@ __version__ = "0.6"
 class BaseDimension(object):
     '''
     A physical dimension such as length, mass, or temperature.
-    
+
     It is unlikely the user will need to create new ones.
     '''
     # Keep deterministic order of dimensions
@@ -54,30 +56,38 @@ class BaseDimension(object):
         'angle': 8,
     }
     _next_unused_index = 9
-    
+
     def __init__(self, name):
         """Create a new BaseDimension.
 
         Each new BaseDimension is assumed to be independent of all other BaseDimensions.
-        Use the existing BaseDimensions in simtk.dimension instead of creating
-        new ones.
+        Use the existing BaseDimensions instead of creating new ones.
         """
         self.name = name
         if not self.name in BaseDimension._index_by_name.keys():
             BaseDimension._index_by_name[name] = BaseDimension._next_unused_index
             BaseDimension._next_unused_index += 1
         self._index = BaseDimension._index_by_name[name]
-        
+
     def __lt__(self, other):
         """
         The implicit order of BaseDimensions is the order in which they were created.
         This method is used for using BaseDimensions as hash keys, and also affects
         the order in which units appear in multi-dimensional Quantities.
-        
+
         Returns True if self < other, False otherwise.
         """
         return self._index < other._index
-        
+
+    def __le__(self, other):
+        return self._index <= other._index
+
+    def __gt__(self, other):
+        return self._index > other._index
+
+    def __ge__(self, other):
+        return self._index >= other._index
+
     def __hash__(self):
         """
         Needed for using BaseDimensions as hash keys.
@@ -86,8 +96,19 @@ class BaseDimension(object):
 
     def __repr__(self):
         return 'BaseDimension("%s")' % self.name
+    
+    def __eq__(self, other):
+        if isinstance(other, BaseDimension):
+            return self._index == other._index
+        return False
+    
+    def __ne__(self, other):
+        if isinstance(other, BaseDimension):
+            return self._index != other._index
+        return False
 
 
+# run module directly for testing
 if __name__=='__main__':
     # Test the examples in the docstrings
     import doctest, sys

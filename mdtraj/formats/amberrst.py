@@ -30,12 +30,13 @@ removing the functionality that is not needed.
 """
 
 from __future__ import print_function, division
-from distutils.version import StrictVersion
 from math import ceil
 import os
 import warnings
 
 import numpy as np
+from packaging.version import Version
+
 from mdtraj import version
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices, six
@@ -54,7 +55,7 @@ def load_restrt(filename, top=None, atom_indices=None):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         name of the AMBER restart file
     top : {str, Trajectory, Topology}
         Pass in either the path to a file containing topology information (e.g.,
@@ -94,7 +95,7 @@ class AmberRestartFile(object):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         The name of the file to open
     mode : {'r', 'w'}, default='r'
         The mode in which to open the file. Valid options are 'r' or 'w' for
@@ -410,9 +411,9 @@ def load_ncrestrt(filename, top=None, atom_indices=None):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         name of the AMBER restart file
-    top : {str, Trajectory, Topology}
+    top : {path-like, Trajectory, Topology}
         Pass in either the path to a file containing topology information (e.g.,
         a PDB, an AMBER prmtop, or certain types of Trajectory objects) to
         supply the necessary topology information that is not present in these
@@ -448,7 +449,7 @@ class AmberNetCDFRestartFile(object):
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         The name of the file to open
     mode : {'r', 'w'}, default='r'
         The mode in which to open the file. Valid options are 'r' or 'w' for
@@ -462,7 +463,7 @@ class AmberNetCDFRestartFile(object):
     def __init__(self, filename, mode='r', force_overwrite=False):
         self._closed = True
         self._mode = mode
-        if StrictVersion(import_('scipy.version').short_version) < StrictVersion('0.12.0'):
+        if Version(import_('scipy.version').short_version) < Version('0.12.0'):
             raise ImportError('MDTraj NetCDF support requires scipy>=0.12.0. '
                               'You have %s' % import_('scipy.version').short_version)
         netcdf = import_('scipy.io').netcdf_file

@@ -26,12 +26,100 @@ from __future__ import print_function, division
 import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.utils.six.moves import range
+from mdtraj.utils.unitcell import box_vectors_to_lengths_and_angles
 from . import _geometry
 
-
-__all__ = ['compute_distances', 'compute_distances_t', 'compute_displacements',
+__all__ = ['compute_distances_core', 'compute_distances',
+           'compute_distances_t', 'compute_displacements',
            'compute_center_of_mass', 'compute_center_of_geometry',
            'find_closest_contact']
+
+def compute_distances_core(
+        positions,
+        atom_pairs,
+        unitcell_vectors = None,
+        periodic=True,
+        opt = True,
+):
+
+    """Compute the distances between pairs of atoms in each frame.
+
+    Parameters
+    ----------
+    positions : np.ndarray of shape=(n_frames, n_atoms, 3), dtype=float
+        The positions of all atoms for a given trajectory.
+
+    atom_pairs : np.ndarray of shape=(num_pairs, 2), dtype=int
+        Each row gives the indices of two atoms involved in the interaction.
+
+    unitcell_vectors : None or np.ndarray of shape(n_frames, 3 x 3), default=None
+        A numpy array that specifies the box vectors for all frames for a trajectory.
+
+    periodic : bool, default=True
+        If `periodic` is True and the trajectory contains unitcell
+        information, we will compute distances under the minimum image
+        convention.
+
+    opt : bool, default=True
+        Use an optimized native library to calculate distances. Our optimized
+        SSE minimum image convention calculation implementation is over 1000x
+        faster than the naive numpy implementation.
+
+    Returns
+    -------
+
+    distances : np.ndarray, shape=(n_frames, num_pairs), dtype=float
+        The distance, in each frame, between each pair of atoms.
+    """
+
+    xyz = ensure_type(positions, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
+    pairs = ensure_type(atom_pairs, dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2), warn_on_cast=False)
+    if not np.all(np.logical_and(pairs < positions.shape[1], pairs >= 0)):
+        raise ValueError('atom_pairs must be between 0 and %d' % traj.n_atoms)
+
+    if len(pairs) == 0:
+        return np.zeros((len(xyz), 0), dtype=np.float32)
+
+    if periodic and (unitcell_vectors is not None):
+
+        box = ensure_type(
+            unitcell_vectors,
+            dtype=np.float32,
+            ndim=3,
+            name='unitcell_vectors',
+            shape=(len(xyz), 3, 3),
+            warn_on_cast=False,
+        )
+
+        # convert to angles
+        unitcell_angles = []
+        for fr_unitcell_vectors in unitcell_vectors:
+            _, _, _, alpha, beta, gamma = box_vectors_to_lengths_and_angles(
+                fr_unitcell_vectors[0],
+                fr_unitcell_vectors[1],
+                fr_unitcell_vectors[2],
+            )
+            unitcell_angles.append(np.array([alpha, beta, gamma]))
+
+        orthogonal = np.allclose(np.array(unitcell_angles), 90)
+
+        if opt:
+
+            out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+            _geometry._dist_mic(xyz, pairs, box.transpose(0, 2, 1).copy(), out, orthogonal)
+            return out
+
+        else:
+
+            return _distance_mic(xyz, pairs, box.transpose(0, 2, 1), orthogonal)
+
+    # either there are no unitcell vectors or they dont want to use them
+    if opt:
+        out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
+        _geometry._dist(xyz, pairs, out)
+        return out
+    else:
+        return _distance(xyz, pairs)
 
 
 def compute_distances(traj, atom_pairs, periodic=True, opt=True):
@@ -57,33 +145,14 @@ def compute_distances(traj, atom_pairs, periodic=True, opt=True):
     distances : np.ndarray, shape=(n_frames, num_pairs), dtype=float
         The distance, in each frame, between each pair of atoms.
     """
-    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
-    pairs = ensure_type(atom_pairs, dtype=np.int32, ndim=2, name='atom_pairs', shape=(None, 2), warn_on_cast=False)
-    if not np.all(np.logical_and(pairs < traj.n_atoms, pairs >= 0)):
-        raise ValueError('atom_pairs must be between 0 and %d' % traj.n_atoms)
 
-    if len(pairs) == 0:
-        return np.zeros((len(xyz), 0), dtype=np.float32)
-
-    if periodic and traj._have_unitcell:
-        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3),
-                          warn_on_cast=False)
-        orthogonal = np.allclose(traj.unitcell_angles, 90)
-        if opt:
-            out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
-            _geometry._dist_mic(xyz, pairs, box.transpose(0, 2, 1).copy(), out, orthogonal)
-            return out
-        else:
-            return _distance_mic(xyz, pairs, box.transpose(0, 2, 1), orthogonal)
-
-    # either there are no unitcell vectors or they dont want to use them
-    if opt:
-        out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
-        _geometry._dist(xyz, pairs, out)
-        return out
-    else:
-        return _distance(xyz, pairs)
-
+    return compute_distances_core(
+        traj.xyz,
+        atom_pairs,
+        unitcell_vectors=traj.unitcell_vectors,
+        periodic=periodic,
+        opt=opt,
+    )
 
 def compute_distances_t(traj, atom_pairs, time_pairs, periodic=True, opt=True):
     """Compute the distances between pairs of atoms at pairs of times.

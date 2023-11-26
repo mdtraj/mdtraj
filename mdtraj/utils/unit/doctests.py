@@ -1,5 +1,7 @@
+#!/bin/env python
+
 """
-Module simtk.unit.doctests
+Module openmm.unit.doctests
 
 Lots of in-place doctests would no longer work after I rearranged
 so that specific unit definitions are defined late.  So those tests
@@ -15,7 +17,7 @@ Examples
 >>> furlong_base_unit.define_conversion_factor_to(meter_base_unit, 201.16800)
 >>> furlong_base_unit.conversion_factor_to(angstrom_base_unit)
 2011680000000.0
-        
+
 Examples
 
 >>> furlong_base_unit = BaseUnit(length_dimension, "furlong", "fur")
@@ -30,7 +32,7 @@ from unit.is_unit
 True
 >>> is_unit(5*meter)
 False
-    
+
 >>> c = 1.0*calories
 >>> c
 Quantity(value=1.0, unit=calorie)
@@ -39,12 +41,12 @@ Quantity(value=1.0, unit=calorie)
 >>> print(joule.conversion_factor_to(calorie))
 0.239005736138
 >>> c.in_units_of(joules)
-Quantity(value=4.1840000000000002, unit=joule)
+Quantity(value=4.184, unit=joule)
 >>> j = 1.0*joules
 >>> j
 Quantity(value=1.0, unit=joule)
 >>> j.in_units_of(calories)
-Quantity(value=0.23900573613766729, unit=calorie)
+Quantity(value=0.2390057361376673, unit=calorie)
 >>> j/joules
 1.0
 >>> print(j/calories)
@@ -56,7 +58,7 @@ Quantity(value=0.23900573613766729, unit=calorie)
 >>> c**2
 Quantity(value=1.0, unit=calorie**2)
 >>> (c**2).in_units_of(joule*joule)
-Quantity(value=17.505856000000001, unit=joule**2)
+Quantity(value=17.505856, unit=joule**2)
 
 >>> ScaledUnit(1000.0, kelvin, "kilokelvin", "kK")
 ScaledUnit(factor=1000.0, master=kelvin, name='kilokelvin', symbol='kK')
@@ -164,7 +166,7 @@ Examples
 
 >>> meter.is_compatible(centimeter)
 True
->>> meter.is_compatible(meter)     
+>>> meter.is_compatible(meter)
 True
 >>> meter.is_compatible(kelvin)
 False
@@ -250,29 +252,29 @@ Collections of numbers can also be used as values.
 >>> print(s4)
 ((1, 2, 3), (4, 5, 6)) cm
 >>> print(s4 / millimeters)
-[(10.0, 20.0, 30.0), (40.0, 50.0, 60.0)]
+((10.0, 20.0, 30.0), (40.0, 50.0, 60.0))
 >>> t = (1,2,3) * centimeters
 >>> print(t)
 (1, 2, 3) cm
 >>> print(t / millimeters)
-[10.0, 20.0, 30.0]
+(10.0, 20.0, 30.0)
 
 Numpy examples are commented out because not all systems have numpy installed
 # >>> import numpy
-# >>> 
+# >>>
 # >>> a = Quantity(numpy.array([1,2,3]), centimeters)
 # >>> print(a)
 # [1 2 3] cm
 # >>> print(a / millimeters)
 # [ 10.  20.  30.]
-# >>> 
+# >>>
 # >>> a2 = Quantity(numpy.array([[1,2,3],[4,5,6]]), centimeters)
 # >>> print(a2)
 # [[1 2 3]
 #  [4 5 6]] cm
 # >>> print(a2 / millimeters)
 # [[ 10.  20.  30.]
-#  [ 40.  50.  60.]]     
+#  [ 40.  50.  60.]]
 
 Addition, subtraction, multiplication, division, and powers of Quantities
 exhibit correct dimensional analysis and unit conversion.
@@ -291,12 +293,12 @@ The following examples are derived from the C++ Boost.Units examples at
 http://www.boost.org/doc/libs/1_37_0/doc/html/boost_units/Examples.html
 >>>
 >>> l = 2.0 * meters
->>> 
+>>>
 >>> print(l + 2.0 * nanometers)
 2.000000002 m
 >>> print(2.0 * nanometers + l)
 2000000002.0 nm
->>> 
+>>>
 >>> print(l)
 2.0 m
 >>> print(l+l)
@@ -408,25 +410,25 @@ True
 False
 >>> print(l1 > l2)
 False
->>> 
+>>>
 >>> def work(f, dx):
 ...   return f * dx
-... 
+...
 >>> F = 1.0 * kilogram * meter / second**2
 >>> dx = 1.0 * meter
 >>> E = work(F, dx)
->>> 
+>>>
 >>> print("F = ", F)
 F =  1.0 kg m/(s**2)
 >>> print("dx = ", dx)
 dx =  1.0 m
->>> 
+>>>
 >>> def idealGasLaw(P, V, T):
 ...     R = MOLAR_GAS_CONSTANT_R
 ...     print("P * V = ", P * V)
 ...     print("R * T = ", R * T)
 ...     return (P * V / (R * T)).in_units_of(mole)
-... 
+...
 >>> T = (273.0 + 37.0) * kelvin
 >>> P = 1.01325e5 * pascals
 >>> r = 0.5e-6 * meters
@@ -435,7 +437,7 @@ dx =  1.0 m
 P * V =  5.3053601125e-14 m**3 Pa
 R * T =  2577.48646608 J/mol
 >>> R = MOLAR_GAS_CONSTANT_R
->>> 
+>>>
 >>> print("r = ", r)
 r =  5e-07 m
 >>> print("P = ", P)
@@ -458,7 +460,7 @@ is_quantity(V) =  True
 57.2957795131 deg
 >>> print((1.0*angstroms).in_units_of(nanometers))
 0.1 nm
->>> 
+>>>
 >>> print((90*degrees)/radians)
 1.57079632679
 >>> print(sin(90*degrees))
@@ -473,7 +475,7 @@ True
 Traceback (most recent call last):
    ...
 TypeError: Unit "degree" is not compatible with Unit "nanometer".
->>> 
+>>>
 >>> x = 1.5 * nanometers
 >>> print(x / meters)
 1.5e-09
@@ -501,7 +503,7 @@ Examples
 10.0
 >>> print(x.value_in_unit_system(md_unit_system))
 100000000.0
->>> 
+>>>
 >>> y = 20 * millimeters / millisecond**2
 >>> print(y.value_in_unit_system(si_unit_system))
 20000.0
@@ -517,7 +519,7 @@ Examples
 Dimensionless quantities return their unmodified values.
 >>> Quantity(5, dimensionless).value_in_unit_system(md_unit_system)
 5
-        
+
 Examples
 
 >>> x = 2.3*meters
@@ -579,9 +581,9 @@ Examples
 >>> print(8.4 / x)
 2.0 /cm
 
-        
+
         Examples
-        
+
         >>> x = 4.3 * meters
         >>> print(x/centimeters)
         430.0
@@ -591,15 +593,15 @@ Examples
         >>> x/millimeter
         [10.0, 20.0, 30.0]
 
-        
+
         Examples
-        
+
         >>> x = 1.2*meters
         >>> print(5*x)
         6.0 m
-        
+
         Examples
-        
+
         >>> x = 1.2*meters
         >>> y = 72*centimeters
         >>> print(x*y)
@@ -618,42 +620,42 @@ Examples
         Quantity(value=2.0, unit=nanometer**2/(angstrom**2))
         >>> "%.1f" % q.reduce_unit()
         '200.0'
-        
+
         Examples
-        
+
         >>> 1.2*meters < 72*centimeters
         False
-        >>> meter != None
+        >>> meter is not None
         True
-        >>> meter == None
+        >>> meter is None
         False
-        
+
         Examples
-        
+
         >>> print(1.2 * meters - 72 * centimeters)
         0.48 m
-        
+
         Examples
-        
+
         >>> print(1.2 * meters + 72 * centimeters)
         1.92 m
-        
+
         Examples
-        
+
         >>> print(repr(1.2*meter))
         Quantity(value=1.2, unit=meter)
 
-        
+
         Examples
-        
+
         >>> print(5.0 * nanometers)
         5.0 nm
-        
+
         Examples
-        
+
         >>> Quantity(5.0, meters)
         Quantity(value=5.0, unit=meter)
-        
+
         >>> Quantity([1*angstrom,2*nanometer,3*angstrom])
         Quantity(value=[1, 20.0, 3], unit=angstrom)
         >>> Quantity((1,2,3))
@@ -682,14 +684,14 @@ Examples
         >>> Quantity(value=5.0, unit=100.0*meters)
         Quantity(value=500.0, unit=meter)
 
-        
+
         Examples
-        
+
         >>> x = 2.3*meters
         >>> y = x.in_units_of(centimeters)
         >>> print(y)
         230.0 cm
-        
+
         >>> x = 2.3*meters
         >>> print(x.in_units_of(centimeters))
         230.0 cm
@@ -697,9 +699,9 @@ Examples
         Traceback (most recent call last):
            ...
         TypeError: Unit "meter" is not compatible with Unit "second".
-        
+
         Examples
-        
+
         >>> x = 100.0 * millimeter
         >>> print(x)
         100.0 mm
@@ -723,22 +725,22 @@ Examples
         >>> q = 1.0 * md_kilocalorie/mole/angstrom
         >>> print(q.in_units_of(md_kilojoule/mole/nanometer))
         41.84 kJ/(nm mol)
-        
+
         Examples
-        
+
         >>> class Foo:
         ...     def bar(self):
         ...         print("bar")
-        ... 
+        ...
         >>> x = Foo()
         >>> x.bar()
         bar
         >>> y = x * nanometers
         >>> y.bar()
         bar
-    
+
     Examples
-    
+
     >>> print(meters * centimeters)
     centimeter*meter
     >>> print(meters * meters)
@@ -746,43 +748,43 @@ Examples
     >>> print(meter * meter )
     meter**2
 
-    
+
     Examples
-    
+
     >>> print(meter / 2)
     0.5 m
-     
+
     Examples
-     
+
     >>> define_prefixed_units(kelvin_base_unit, sys.modules["__main__"])
     >>> from __main__ import millikelvin
     >>> print(5.0 * millikelvin)
     5.0 mK
-    
-        
+
+
         Creating a new BaseUnit:
         >>> ms = milli * second_base_unit
         >>> ms
         BaseUnit(base_dim=BaseDimension("time"), name="millisecond", symbol="ms")
         >>> ms.conversion_factor_to(second_base_unit)
         0.001
-        
+
         Creating a new ScaledUnit:
         >>> mC = milli * ScaledUnit(4.184, joule, "calorie", "cal")
         >>> mC
-        ScaledUnit(factor=0.0041840000000000002, master=joule, name='millicalorie', symbol='mcal')
-        
+        ScaledUnit(factor=0.004184, master=joule, name='millicalorie', symbol='mcal')
+
         Creating a new Unit:
         >>> ms = milli * second
         >>> ms
         Unit({BaseUnit(base_dim=BaseDimension("time"), name="millisecond", symbol="ms"): 1.0})
-        
+
         Don't try a Quantity though:
         >>> ms = milli * (1.0 * second)
         Traceback (most recent call last):
            ...
         TypeError: Unit prefix "milli" can only be applied to a Unit, BaseUnit, or ScaledUnit.
-        
+
     Comparison of dimensionless quantities issue (fixed in svn 513)
     >>> x = Quantity(1.0, dimensionless)
     >>> y = Quantity(1.0, dimensionless)
@@ -793,7 +795,7 @@ Examples
     Formatting of Quantities
     >>> x = 5.439999999 * picosecond
     >>> x
-    Quantity(value=5.4399999990000003, unit=picosecond)
+    Quantity(value=5.439999999, unit=picosecond)
     >>> x.format("%.3f")
     '5.440 ps'
 
@@ -837,7 +839,7 @@ Examples
 # April 2010, thanks to John Chodera for reporting
     >>> try:
     ...     import numpy
-    ...     x = Quantity(numpy.array([1.,2.]), nanometer)            
+    ...     x = Quantity(numpy.array([1.,2.]), nanometer)
     ...     y = Quantity(numpy.array([3.,4.]), picosecond)
     ...     assert str(x/y) == '[ 0.33333333  0.5       ] nm/ps'
     ... except ImportError:
@@ -848,7 +850,7 @@ Examples
 # Thanks to Kyle Beauchamp July 2010
     >>> try:
     ...    import numpy
-    ...    from simtk.unit.quantity import _is_string
+    ...    from openmm.unit.quantity import _is_string
     ...    a = numpy.array([[1,2,3],[4,5,6]])
     ...    assert isinstance("", str)
     ...    assert _is_string("")
