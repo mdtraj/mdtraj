@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 import sys
 import socket
-from distutils.spawn import find_executable as _find_executable
+import shutil
 
 import pytest
 
@@ -40,7 +40,7 @@ def is_network_connected():
 
 def find_executable(names):
     for possible in names:
-        result = _find_executable(possible)
+        result = shutil.which(possible)
         if result is not None:
             return result
     return None
