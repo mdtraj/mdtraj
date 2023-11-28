@@ -43,3 +43,10 @@ def test_generator():
     a = md.compute_angles(ptraj, triplets)
     b = md.compute_angles(ptraj, triplets2)
     eq(a, b)
+
+def test_angle_180(get_fn):
+    # Test that linear coordinates yield 180 degrees, not "nan"
+    a = md.load(get_fn('mol.gro'))
+    b = md.compute_angles(a, [[0, 1, 2]])
+    assert not np.isnan(b[0][0])
+

@@ -100,5 +100,5 @@ def _angle(traj, angle_indices, periodic, out):
     # dimension
     u = u_prime / (u_norm[..., np.newaxis])
     v = v_prime / (v_norm[..., np.newaxis])
-
-    return np.arccos((u * v).sum(-1), out=out)
+    # use np.clip() to guard against errors when angles approach 180 degrees:
+    return np.arccos(np.clip((u * v).sum(-1), -1.0, 1.0), out=out)
