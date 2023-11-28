@@ -54,4 +54,4 @@ jobs:
     - name: Run tests
       if: always()
       run: |
-        pytest -nauto --durations=10 tests/
+        pytest -n auto --durations=10 tests/
