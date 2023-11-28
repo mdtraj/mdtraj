@@ -248,7 +248,7 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_o
 
 
 def kabsch_sander(traj):
-    """Compute the Kabsch-Sander hydrogen bond energy between each pair
+    r"""Compute the Kabsch-Sander hydrogen bond energy between each pair
     of residues in every frame.
 
     Hydrogen bonds are defined using an electrostatic definition, assuming
@@ -259,7 +259,7 @@ def kabsch_sander(traj):
 
     .. math::
 
-        E = 0.42 \cdot 0.2 \cdot 33.2 kcal/(mol \cdot nm) * \\
+        E = 0.42 \cdot 0.2 \cdot 33.2 kcal/(mol \cdot nm) * \
             (1/r_{ON} + 1/r_{CH} - 1/r_{OH} - 1/r_{CN})
 
     Parameters

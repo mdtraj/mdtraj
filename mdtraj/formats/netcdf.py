@@ -214,7 +214,7 @@ class NetCDFTrajectoryFile(object):
                           unitcell_angles=cell_angles)
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
-        """Read data from a molecular dynamics trajectory in the AMBER NetCDF
+        r"""Read data from a molecular dynamics trajectory in the AMBER NetCDF
         format.
 
         Parameters
@@ -320,7 +320,7 @@ class NetCDFTrajectoryFile(object):
         return coordinates, time, cell_lengths, cell_angles
 
     def write(self, coordinates, time=None, cell_lengths=None, cell_angles=None):
-        """Write one or more frames of a molecular dynamics trajectory to disk
+        r"""Write one or more frames of a molecular dynamics trajectory to disk
         in the AMBER NetCDF format.
 
         Parameters

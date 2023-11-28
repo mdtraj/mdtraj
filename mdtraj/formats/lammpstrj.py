@@ -234,7 +234,7 @@ class LAMMPSTrajectoryFile(object):
         return t
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
-        """Read data from a lammpstrj file.
+        r"""Read data from a lammpstrj file.
 
         Parameters
         ----------
@@ -426,7 +426,7 @@ class LAMMPSTrajectoryFile(object):
         return xyz, lengths, angles
 
     def write_box(self, lengths, angles, mins):
-        """Write the box lines in the header of a frame.
+        r"""Write the box lines in the header of a frame.
 
         Parameters
         ----------
@@ -473,7 +473,7 @@ class LAMMPSTrajectoryFile(object):
             self._fh.write('{0} {1} {2}\n'.format(zlo_bound, zhi_bound, yz))
 
     def write(self, xyz, cell_lengths, cell_angles=None, types=None, unit_set='real'):
-        """Write one or more frames of data to a lammpstrj file.
+        r"""Write one or more frames of data to a lammpstrj file.
 
         Parameters
         ----------

@@ -41,7 +41,7 @@ __all__ = ['compute_contacts', 'squareform']
 
 def compute_contacts(traj, contacts='all', scheme='closest-heavy', ignore_nonprotein=True, periodic=True,
                      soft_min=False, soft_min_beta=20):
-    """Compute the distance between pairs of residues in a trajectory.
+    r"""Compute the distance between pairs of residues in a trajectory.
 
     Parameters
     ----------
