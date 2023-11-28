@@ -6,3 +6,8 @@ requires = [
     "oldest-supported-numpy",
     "Cython~=0.29.36",
 ]
+
+[tool.ruff]
+select = [
+    "W605",  # invalid-escape-sequence
+]
