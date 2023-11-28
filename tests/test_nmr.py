@@ -34,7 +34,7 @@ def test_ppm(get_fn):
 
 
 @pytest.mark.skipif((not find_executable(SHIFTX2)) or (os.environ.get('TRAVIS', '') == 'true'),
-                    reason='SHIFTX2 binary not found or runningn on travis.')
+                    reason='SHIFTX2 binary not found or running on travis.')
 def test_shiftx2(get_fn):
     t = md.load(get_fn('2EQQ.pdb'))
     result = md.chemical_shifts_shiftx2(t)
