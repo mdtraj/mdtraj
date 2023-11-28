@@ -1981,6 +1981,8 @@ class Trajectory(object):
         if inplace:
             result = self
         else:
+            # This slice-based assignment ensures all numpy arrays in result
+            #  are copies, not views, of the corresponding items in self:
             result = self[:]
 
         if sorted_bonds is None:
