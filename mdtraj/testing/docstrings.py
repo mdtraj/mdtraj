@@ -130,7 +130,7 @@ def docstring_verifiers(module, error_on_none=False):
                         "docstring, %d" % (format(f), n_args, len(param_names)))
                 return
 
-            args = set(getargs(operator.attrgetter(f)).args)
+            args = set(getargs(f.__code__).args)
 
             if 'self' in args:
                 args.remove('self')
