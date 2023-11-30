@@ -2,6 +2,7 @@ import itertools
 import mdtraj as md
 from mdtraj.testing import eq
 import numpy as np
+import pytest
 
 
 def test_angle_pbc_0():
@@ -49,4 +50,4 @@ def test_angle_180(get_fn):
     a = md.load(get_fn('mol.gro'))
     b = md.compute_angles(a, [[0, 1, 2]])
     assert not np.isnan(b[0][0])
-
+    assert pytest.approx(b[[0]]) == np.pi
