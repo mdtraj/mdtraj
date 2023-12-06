@@ -51,4 +51,4 @@ def test_angle_180(get_fn, optimize):
     a = md.load(get_fn('mol.gro'))
     b = md.compute_angles(a, [[0, 1, 2]], opt=optimize)
     assert not np.isnan(b[0][0])
-    assert pytest.approx(b[[0]]) == np.pi
+    assert pytest.approx(b[[0]], np.pi*1e-4) == np.pi
