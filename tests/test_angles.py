@@ -45,9 +45,10 @@ def test_generator():
     b = md.compute_angles(ptraj, triplets2)
     eq(a, b)
 
-def test_angle_180(get_fn):
+@pytest.mark.parametrize("optimize", [True, False])
+def test_angle_180(get_fn, optimize):
     # Test that linear coordinates yield 180 degrees, not "nan"
     a = md.load(get_fn('mol.gro'))
-    b = md.compute_angles(a, [[0, 1, 2]])
+    b = md.compute_angles(a, [[0, 1, 2]], opt=optimize)
     assert not np.isnan(b[0][0])
     assert pytest.approx(b[[0]]) == np.pi
