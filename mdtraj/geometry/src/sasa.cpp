@@ -48,10 +48,10 @@
  *     a bunch of uniformly distributed points on a sphere
  * n_sphere_points : int
  *    the number of sphere points
- * atom_selection_mask : 1d array, shape[n_atoms]
- *    one index per atom indicating whether the SASA
- *    should be computed for this atom (`atom_selection_mask[i] = 1'
- *    or or not (`atom_selection_mask[i] = 0`)
+ * n_atom_indices : int
+ *    The number of atoms for which the SASA will be computed
+ * atom_indices : 1d array, shape[n_atom_indices]
+ *    The indices of the atoms for which the SASA should be computed
  * centered_sphere_points : WORK BUFFER 2d array, shape=[n_sphere_points, 3]
  *    empty memory that intermediate calculations can be stored in
  * neighbor_indices : WORK BUFFER 2d array, shape=[n_atoms]
@@ -174,7 +174,7 @@ static void generate_sphere_points(float* sphere_points, int n_points)
 
 void sasa(const int n_frames, const int n_atoms, const float* xyzlist,
           const float* atom_radii, const int n_sphere_points,
-          const int* atom_mapping, const int* atom_selection_mask, const int n_groups, float* out)
+          const int* atom_mapping, const int n_atom_indices, const int* atom_indices, const int n_groups, float* out)
 {
   /*
   // Calculate the accessible surface area of each atom in each frame of
@@ -197,10 +197,10 @@ void sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   //     mapping from atoms onto groups, over which to accumulate the sasa.
   //     If `atom_mapping[i] = j`, that means that the ith atom is in group
   //     j. The groups must be contiguous integers starting from 0 to n_groups-1.
-  // atom_selection_mask : 1d array, shape[n_atoms]
-  //     one index per atom indicating whether the SASA
-  //     should be computed for this atom (`atom_selection_mask[i] = 1'
-  //     or or not (`atom_selection_mask[i] = 0`)
+  // n_atom_indices : int
+  //     the number of atoms for which the SASA will be computed
+  // atom_indices : 1d array, shape[n_atom_indices]
+  //     The indices of the atoms for which the SASA should be computed
   // out : 2d array, shape=[n_frames, n_groups]
   //     the output buffer to place the results in. this array must be
   //     initialized with all zeros. out[i*n_groups + j] gives, in the `i`th frame
@@ -234,8 +234,8 @@ void sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   #pragma omp for
 #endif
   for (i = 0; i < n_frames; i++) {
-    asa_frame(xyzlist + i*n_atoms*3, n_atoms, atom_radii, sphere_points,
-	      n_sphere_points, wb1, wb2, atom_selection_mask, outframebuffer);
+    asa_frame(xyzlist + i*n_atoms*3, n_atom_indices, n_atoms, atom_radii, sphere_points,
+	      n_sphere_points, wb1, wb2, atom_indices, outframebuffer);
     outframe = out + (n_groups * i);
     for (j = 0; j < n_atoms; j++) {
         outframe[atom_mapping[j]] += outframebuffer[j];
