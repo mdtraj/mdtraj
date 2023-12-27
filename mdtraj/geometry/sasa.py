@@ -116,12 +116,12 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
     atom_indices : iterable, optional
         Selection of atoms indices for which the SASA will be computed.
         Default is all atoms, but a sub-selection of atoms can be
-        passed here. The sub-selection has to be in the range [0,traj.n_atoms]
+        passed here. The sub-selection has to be in the range [0,traj.n_atoms].
         This selection doesn't affect what atoms are considered
         accessibility blockers, it only affects for what atoms
         the SASA is computed. E.g. you can pass a lipid-embedded
         protein (s.t. the lipids are considered blockers) but only compute
-        SASA for the protein using atom_selection = traj.top.select("protein").
+        SASA for the protein using atom_indices = traj.top.select("protein").
         The excluded atoms/residues get a SASA-value of np.nan.
 
     Returns
@@ -205,7 +205,7 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
 
     _geometry._sasa(xyz, radii, int(n_sphere_points), atom_mapping, atom_indices, out)
 
-    # Cast 'None' for residues/atoms not covered by atom_indices
+    # Cast np.nan for residues/atoms not covered by atom_indices
     out[:, ~np.isin(np.unique(atom_mapping[np.arange(traj.n_atoms)]), np.unique(atom_mapping[atom_indices]))] = np.nan
 
     if get_mapping == True:

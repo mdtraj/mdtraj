@@ -26,7 +26,6 @@ import numpy as np
 from mdtraj import element
 from mdtraj.geometry.sasa import _ATOMIC_RADII
 from mdtraj.testing import eq
-from numpy.testing import assert_raises
 # set up a mock topology with 1 atom
 topology1 = md.Topology()
 topology1.add_atom('H', element.hydrogen, topology1.add_residue('res', topology1.add_chain()))
