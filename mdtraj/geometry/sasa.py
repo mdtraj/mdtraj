@@ -122,7 +122,7 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
         the SASA is computed. E.g. you can pass a lipid-embedded
         protein (s.t. the lipids are considered blockers) but only compute
         SASA for the protein using atom_selection = traj.top.select("protein").
-        The excluded atoms/residues get a SASA value 0.
+        The excluded atoms/residues get a SASA-value of np.nan.
 
     Returns
     -------
@@ -130,7 +130,8 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
         The accessible surface area of each atom or residue in every frame.
         If mode == 'atom', the second dimension will index the atoms in
         the trajectory, whereas if mode == 'residue', the second
-        dimension will index the residues.
+        dimension will index the residues. The residues/atoms excluded
+        from the computation via 'atom_indices' get a SASA-value of np.nan
 
     Notes
     -----
@@ -190,7 +191,7 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
 
     modified_radii = {}
     if change_radii is not None:
-        # in case _ATOMIC_RADII is in use elsehwere...
+        # in case _ATOMIC_RADII is in use elsewhere...
         modified_radii = deepcopy(_ATOMIC_RADII)
         # Now, modify the values specified in 'change_radii'
         for k, v in change_radii.items(): modified_radii[k] = v
@@ -203,6 +204,9 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
     radii = np.array(atom_radii, np.float32) + probe_radius
 
     _geometry._sasa(xyz, radii, int(n_sphere_points), atom_mapping, atom_indices, out)
+
+    # Cast 'None' for residues/atoms not covered by atom_indices
+    out[:, ~np.isin(np.unique(atom_mapping[np.arange(traj.n_atoms)]), np.unique(atom_mapping[atom_indices]))] = np.nan
 
     if get_mapping == True:
         return out, atom_mapping
