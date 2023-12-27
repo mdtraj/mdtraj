@@ -64,18 +64,14 @@
  *     the output buffer to place the results in -- the surface area of each
  *     atom
  */
-static void asa_frame(const float* frame, const int n_atoms, const float* atom_radii,
+static void asa_frame(const float* frame, const int n_atom_indices, const int n_atoms, const float* atom_radii,
                       const float* sphere_points, const int n_sphere_points,
-                      int* neighbor_indices, float* centered_sphere_points, const int* atom_selection_mask, float* areas)
+                      int* neighbor_indices, float* centered_sphere_points, const int* atom_indices, float* areas)
 {
     float constant = 4.0 * M_PI / n_sphere_points;
 
-    for (int i = 0; i < n_atoms; i++) {
-        // Skip atom if not in selection
-        int in_selection = atom_selection_mask[i];
-        if (in_selection == 0)
-            continue;
-
+    for (int ii = 0; ii < n_atom_indices; ii++) {
+        int i = atom_indices[ii];
         float atom_radius_i = atom_radii[i];
         fvec4 r_i(frame[i*3], frame[i*3+1], frame[i*3+2], 0);
 
