@@ -163,7 +163,7 @@ def test_sasa_6(get_fn):
     # The computed SASA values are the same as in "normal" mode
     np.testing.assert_array_almost_equal(sasa_all_atoms[:,atoms_resid1],
                                          sasa_all_atoms_w_selection[:,atoms_resid1])
-    # The uncomputed SASA values are all NaN
+    # The uncomputed SASA values are all 0
     np.testing.assert_equal(np.unique(sasa_all_atoms_w_selection[:,atoms_resid0_2]),0)
 
     # Mode="residues"
@@ -173,5 +173,5 @@ def test_sasa_6(get_fn):
     # The computed SASA values are the same as in "normal" mode
     np.testing.assert_array_almost_equal(sasa_all_residues[:,1],
                                          sasa_all_residues_w_selection[:,1])
-    # The uncomputed SASA values are all NaN
+    # The uncomputed SASA values are all 0
     np.testing.assert_equal(np.unique(sasa_all_residues_w_selection[:, [0,2]]), 0)
