@@ -116,12 +116,13 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
     atom_indices : iterable, optional
         Selection of atoms indices for which the SASA will be computed.
         Default is all atoms, but a sub-selection of atoms can be
-        passed here. This selection doesn't affect what
-        atoms are considered accessibility blockers, it only affects
-        for what atoms the SASA is computed. E.g. you can pass a lipid-embedded
+        passed here. The sub-selection has to be in the range [0,traj.n_atoms]
+        This selection doesn't affect what atoms are considered
+        accessibility blockers, it only affects for what atoms
+        the SASA is computed. E.g. you can pass a lipid-embedded
         protein (s.t. the lipids are considered blockers) but only compute
         SASA for the protein using atom_selection = traj.top.select("protein").
-        The excluded atoms/residues get a SASA value 0
+        The excluded atoms/residues get a SASA value 0.
 
     Returns
     -------
@@ -180,10 +181,12 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
                          mode)
 
     if atom_indices is None:
-        atom_selection_mask = np.ones(traj.n_atoms, dtype=np.int32)
+        atom_indices = np.arange(traj.n_atoms, dtype=np.int32)
     else:
-        #atom_selection_mask = ensure_type(atom_selection, int, ndim=1, name="atom_selection")
-        atom_selection_mask = np.array([[1 if ii in atom_indices else 0][0] for ii in range(traj.n_atoms)], dtype=np.int32)
+        atom_indices = np.array(atom_indices, dtype=np.int32)
+        if not set(atom_indices).issubset(np.arange(traj.n_atoms)):
+            raise ValueError('atom_indices must be within [0,traj.n_atoms]. '
+                             f'The following indices lie outside that range {sorted(set(atom_indices).difference(np.arange(traj.n_atoms)))}.')
 
     modified_radii = {}
     if change_radii is not None:
@@ -199,7 +202,7 @@ def shrake_rupley(traj, probe_radius=0.14, n_sphere_points=960, mode='atom', cha
         atom_radii = [_ATOMIC_RADII[atom.element.symbol] for atom in traj.topology.atoms]
     radii = np.array(atom_radii, np.float32) + probe_radius
 
-    _geometry._sasa(xyz, radii, int(n_sphere_points), atom_mapping, atom_selection_mask, out)
+    _geometry._sasa(xyz, radii, int(n_sphere_points), atom_mapping, atom_indices, out)
 
     if get_mapping == True:
         return out, atom_mapping
