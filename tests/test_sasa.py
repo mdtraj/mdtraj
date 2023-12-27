@@ -26,7 +26,7 @@ import numpy as np
 from mdtraj import element
 from mdtraj.geometry.sasa import _ATOMIC_RADII
 from mdtraj.testing import eq
-
+from numpy.testing import assert_raises
 # set up a mock topology with 1 atom
 topology1 = md.Topology()
 topology1.add_atom('H', element.hydrogen, topology1.add_residue('res', topology1.add_chain()))
@@ -175,3 +175,7 @@ def test_sasa_6(get_fn):
                                          sasa_all_residues_w_selection[:,1])
     # The uncomputed SASA values are all 0
     np.testing.assert_equal(np.unique(sasa_all_residues_w_selection[:, [0,2]]), 0)
+
+    # Test raises
+    with np.testing.assert_raises(ValueError):
+        md.geometry.shrake_rupley(t, atom_indices=[-1,-2])
