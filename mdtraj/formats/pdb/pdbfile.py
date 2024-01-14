@@ -51,7 +51,7 @@ import numpy as np
 import xml.etree.ElementTree as etree
 from copy import copy, deepcopy
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
-from mdtraj.core.topology import Topology
+from mdtraj.core.topology import Topology, Bond
 from mdtraj.utils import ilen, cast_indices, in_units_of, open_maybe_zipped
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.core import element as elem
@@ -418,9 +418,15 @@ class PDBTrajectoryFile(object):
                             'A', 'G', 'C', 'U', 'I', 'DA', 'DG', 'DC', 'DT', 'DI', 'HOH']
         conectBonds = []
         if self._last_topology is not None:
-            for atom1, atom2 in self._last_topology.bonds:
+            for bond in self._last_topology.bonds:
+                atom1, atom2 = bond[0], bond[1]
+                # Add bond repeats for hetatom bonds when bond order > 1
                 if atom1.residue.name not in standardResidues or atom2.residue.name not in standardResidues:
-                    conectBonds.append((atom1, atom2))
+                    if bond.order is not None:
+                        for bo in range(bond.order):
+                            conectBonds.append((atom1, atom2))
+                    else:
+                        conectBonds.append((atom1, atom2))
                 elif atom1.name == 'SG' and atom2.name == 'SG' and atom1.residue.name == 'CYS' and atom2.residue.name == 'CYS':
                     conectBonds.append((atom1, atom2))
         if len(conectBonds) > 0:
@@ -588,10 +594,27 @@ class PDBTrajectoryFile(object):
             if len(connectBonds) > 0:
                 # Only add bonds that don't already exist.
                 existingBonds = set(self._topology.bonds)
+                nonStdBonds = set()
                 for bond in connectBonds:
-                    if bond not in existingBonds and (bond[1], bond[0]) not in existingBonds:
-                        self._topology.add_bond(bond[0], bond[1])
-                        existingBonds.add(bond)
+                    if (bond[1], bond[0]) not in existingBonds:
+                        if bond not in existingBonds:
+                            self._topology.add_bond(bond[0], bond[1])
+                            existingBonds.add(bond)
+                            if bond not in nonStdBonds:
+                                nonStdBonds.add(bond)
+                        else:
+                            # Increase bond order of nonstandard bonds (i.e. between hetatoms)
+                            # if bond repeats in CONECT record.
+                            if bond in nonStdBonds:
+                                bid = self._topology._bonds.index(Bond(bond[0], bond[1]))
+                                order = self._topology._bonds[bid].order 
+                                if order == 3:
+                                    raise ValueError("CONECT records give bond order greater than 3")
+                                else:
+                                    if order is None:
+                                        order = 1
+                                    order += 1
+                                    self._topology._bonds[bid].order = order
 
     @staticmethod
     def _loadNameReplacementTables():
