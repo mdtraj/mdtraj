@@ -48,6 +48,21 @@ import warnings
 import numpy as np
 from mdtraj.core import element
 
+def _read_atom_number(num_str, pdbstructure=None, index_fnc=None):
+    try:
+        return int(num_str)
+    except ValueError:
+        if(index_fnc is None):
+            # we need to figure out on the 1st try which mode to switch to. There are currently 2 options: VMD (hex) and Chimera (their own mode). Chimera starts with A0000, vmd with 186a0,     so they are distinguishable.
+            if(pdbstructure is None):
+                return 0   # num_str is not decimal, no index_fnc to interpret it, no pdbstructure to say what it is or to provide current number of atoms. No way to figure out
+            else:
+                if(pdbstructure._atom_num_nondec_mode is None):
+                    pdbstructure._atom_num_nondec_mode = pdbstructure._atom_num_initial_nodec_vals[num_str]  # numbers are supposed to be read in order
+
+                return pdbstructure._atom_num_fncs[pdbstructure._atom_num_nondec_mode](num_str)
+        else:
+            return index_fnc(num_str)
 
 class PdbStructure(object):
     """
@@ -139,6 +154,11 @@ class PdbStructure(object):
          - load_all_models (bool) Whether to load every model of an NMR
              structure or trajectory, or just load the first model, to save memory.
         """
+        self._atom_num_fncs = {'hex': (lambda s: int(s, base=16)),
+                       'chimera': (lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36)))}
+        self._atom_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex'}
+        self._atom_num_nondec_mode = None   # None (decimal until changes), 'hex', 'chimera'
+
         # initialize models
         self.load_all_models = load_all_models
         self.models = []
@@ -152,7 +172,7 @@ class PdbStructure(object):
 
     def _load(self, input_stream):
         state = None
-        
+
         self._reset_atom_numbers()
         self._reset_residue_numbers()
 
@@ -201,19 +221,16 @@ class PdbStructure(object):
                 self._unit_cell_angles = (float(pdb_line[33:40]), float(pdb_line[40:47]), float(pdb_line[47:54]))
 
             elif (pdb_line.find("CONECT") == 0):
-                atoms = [int(pdb_line[6:11])]
-                for pos in (11,16,21,26):
-                    try:
-                        atoms.append(int(pdb_line[pos:pos+5]))
-                    except ValueError:
-                        # Optional field, don't worry if it isn't defined
-                        pass
+                atoms = []
+                l = len(pdb_line[:-1].rstrip(' ')) - 5   # :-1 to remove '\n' in the end so rstrip can work, -5 to leave space for +5 in the 'pos : pos+5'
+                for pos in [p for p in [6, 11, 16, 21, 26] if(p <= l)]:
+                    atoms.append(_read_atom_number(pdb_line[pos : pos+5], pdbstructure=self))
 
                 self._current_model.connects.append(atoms)
         self._finalize()
 
     def _reset_atom_numbers(self):
-        self._atom_numbers_are_hex = False
+        self._atom_num_nondec_mode = None    # None (decimal until changes), 'hex', 'chimera'
         self._next_atom_number = 1
 
     def _reset_residue_numbers(self):
@@ -637,7 +654,7 @@ class Residue(object):
 class Atom(object):
     """Atom represents one atom in a PDB structure.
     """
-    def __init__(self, pdb_line, pdbstructure=None):
+    def __init__(self, pdb_line, pdbstructure=None, indexing_fnc=None):
         """Create a new pdb.Atom from an ATOM or HETATM line.
 
         Example line:
@@ -675,19 +692,9 @@ class Atom(object):
         self.is_final_residue_in_chain = False
         # Start parsing fields from pdb line
         self.record_name = pdb_line[0:6].strip()
-        # VMD sometimes uses hex for atoms greater than 9,999
-        if pdbstructure is not None and pdbstructure._atom_numbers_are_hex:
-            self.serial_number = int(pdb_line[6:11], 16)
-        else:
-            try:
-                self.serial_number = int(pdb_line[6:11])
-            except ValueError:
-                try:
-                    self.serial_number = int(pdb_line[6:11], 16)
-                    pdbstructure._atom_numbers_are_hex = True
-                except ValueError:
-                    # Just give it the next number in sequence.
-                    self.serial_number = pdbstructure._next_atom_number
+
+        self.serial_number = _read_atom_number(pdb_line[6:11], pdbstructure=pdbstructure, index_fnc=indexing_fnc)
+
         self.name_with_spaces = pdb_line[12:16]
         alternate_location_indicator = pdb_line[16]
 
