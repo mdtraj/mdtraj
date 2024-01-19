@@ -606,7 +606,10 @@ class PDBTrajectoryFile(object):
                             # Increase bond order of nonstandard bonds (i.e. between hetatoms)
                             # if bond repeats in CONECT record.
                             if bond in nonStdBonds:
-                                bid = self._topology._bonds.index(Bond(bond[0], bond[1]))
+                                try:
+                                    bid = self._topology._bonds.index(Bond(bond[0], bond[1]))
+                                except ValueError:
+                                    bid = self._topology._bonds.index(Bond(bond[0], bond[1], order=2))
                                 order = self._topology._bonds[bid].order 
                                 if order == 3:
                                     raise ValueError("CONECT records give bond order greater than 3")
