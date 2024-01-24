@@ -158,20 +158,20 @@ def test_pdbstructure_0():
 
 def test_pdbstructure_1():
     pdb_lines = [
-         "ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N",
-         "ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C",
-         "ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C",
-         "ATOM    191  O   CYS A  42      41.181  -7.530  13.859  1.00 13.70           O",
-         "ATOM    192  CB  CYS A  42      38.949  -6.825  12.002  1.00  9.67           C",
-         "ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S"
+        "ATOM    188  N   CYS A  42      40.714  -5.292  12.123  1.00 11.29           N",
+        "ATOM    189  CA  CYS A  42      39.736  -5.883  12.911  1.00 10.01           C",
+        "ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C",
+        "ATOM    191  O   CYS A  42      41.181  -7.530  13.859  1.00 13.70           O",
+        "ATOM    192  CB  CYS A  42      38.949  -6.825  12.002  1.00  9.67           C",
+        "ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S"
          ]
     positions = np.array([
-        [ 40.714,  -5.292,  12.123],
-        [ 39.736,  -5.883,  12.911],
-        [ 40.339,  -6.654,  14.087],
-        [ 41.181,  -7.53,   13.859],
-        [ 38.949,  -6.825,  12.002],
-        [ 37.557,  -7.514,  12.922]
+        [ 40.714,  -5.292, 12.123],
+        [ 39.736,  -5.883, 12.911],
+        [ 40.339,  -6.654, 14.087],
+        [ 41.181,  -7.53,  13.859],
+        [ 38.949,  -6.825, 12.002],
+        [ 37.557,  -7.514, 12.922]
     ])
 
     res = pdbstructure.Residue("CYS", 42)
@@ -286,10 +286,10 @@ def test_bfactors(get_fn):
     eq(bfactors0, flt_bfactors1)
 
 def test_hex(get_fn):
-   pdb = load_pdb(get_fn('water_hex.pdb.gz'))
-   assert pdb.n_atoms == 100569
-   assert pdb.n_residues == 33523
-   pdb.save(temp)
+    pdb = load_pdb(get_fn('water_hex.pdb.gz'))
+    assert pdb.n_atoms == 100569
+    assert pdb.n_residues == 33523
+    pdb.save(temp)
 
 
 def test_dummy_pdb_box_detection(get_fn, recwarn):
@@ -312,7 +312,6 @@ def test_multichain_load_cycle(get_fn):
     assert len(bonds) == len(bonds2)
 
 def test_load_pdb_input_top(get_fn):
-
     pdb = get_fn('native.pdb')
     p_1 = load_pdb(pdb)
 
@@ -322,4 +321,7 @@ def test_load_pdb_input_top(get_fn):
     eq(p_1.topology, p_2.topology)
 
 def test_chimera_indexing(get_fn):
-    load_pdb(get_fn('chimera_indexing.pdb'))   # this should just not fail
+    load_pdb(get_fn('chimera_indexing.pdb'))  # this should just not fail
+
+def test_vmd_indexing(get_fn):
+    load_pdb(get_fn('vmd_indexing.pdb'))  # this should just not fail
