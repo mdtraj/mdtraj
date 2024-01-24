@@ -1431,7 +1431,7 @@ class Trajectory(object):
             f.write(xyz=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
                     types=[a.name for a in self.top.atoms])
 
-    def save_pdb(self, filename, force_overwrite=True, bfactors=None):
+    def save_pdb(self, filename, force_overwrite=True, bfactors=None, bond_orders=False):
         """Save trajectory to RCSB PDB format
 
         Parameters
@@ -1444,6 +1444,8 @@ class Trajectory(object):
             Save bfactors with pdb file. If the array is two dimensional it should
             contain a bfactor for each atom in each frame of the trajectory.
             Otherwise, the same bfactor will be saved in each frame.
+        bond_orders : bool, default=False
+            Specify bond orders by writing repeated bonds in CONECT records 
         """
         self._check_valid_unitcell()
 
@@ -1471,12 +1473,14 @@ class Trajectory(object):
                             modelIndex=i,
                             bfactors=bfactors[i],
                             unitcell_lengths=in_units_of(self.unitcell_lengths[i], Trajectory._distance_unit, f.distance_unit),
-                            unitcell_angles=self.unitcell_angles[i])
+                            unitcell_angles=self.unitcell_angles[i],
+                            bond_orders=bond_orders)
                 else:
                     f.write(in_units_of(self._xyz[i], Trajectory._distance_unit, f.distance_unit),
                             self.topology,
                             modelIndex=i,
-                            bfactors=bfactors[i])
+                            bfactors=bfactors[i],
+                            bond_orders=bond_orders)
 
     def save_xtc(self, filename, force_overwrite=True):
         """Save trajectory to Gromacs XTC format

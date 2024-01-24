@@ -284,7 +284,7 @@ class PDBTrajectoryFile(object):
         self._open = True
 
     def write(self, positions, topology, modelIndex=None, unitcell_lengths=None,
-              unitcell_angles=None, bfactors=None):
+              unitcell_angles=None, bfactors=None, bond_orders=False):
         """Write a PDB file to disk
 
         Parameters
@@ -303,6 +303,8 @@ class PDBTrajectoryFile(object):
         bfactors : array_like, default=None, shape=(n_atoms,)
             Save bfactors with pdb file. Should contain a single number for
             each atom in the topology
+        bond_orders : bool, default=False
+            Specify bond orders by writing repeated bonds in CONECT records
         """
         if not self._mode == 'w':
             raise ValueError('file not opened for writing')
@@ -318,6 +320,7 @@ class PDBTrajectoryFile(object):
             raise ValueError('Particle position is infinite')
 
         self._last_topology = topology  # Hack to save the topology of the last frame written, allows us to output CONECT entries in write_footer()
+        self.bond_orders = bond_orders
 
         if bfactors is None:
             bfactors = ['{0:5.2f}'.format(0.0)] * len(positions)
@@ -422,7 +425,7 @@ class PDBTrajectoryFile(object):
                 atom1, atom2 = bond[0], bond[1]
                 # Add bond repeats for hetatom bonds when bond order > 1
                 if atom1.residue.name not in standardResidues or atom2.residue.name not in standardResidues:
-                    if bond.order is not None:
+                    if self.bond_orders and bond.order is not None:
                         for bo in range(bond.order):
                             conectBonds.append((atom1, atom2))
                     else:
