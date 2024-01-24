@@ -106,11 +106,8 @@ def _read_residue_number(num_str, pdbstructure=None, index_fnc=None, curr_atom=N
     Try to check what the residue number is.
     """
     try:
-        print(f'a: {num_str}')
         if num_str in _residue_num_initial_nodec_vals.keys() or pdbstructure._next_residue_number > 9999:
             if num_str == "9999":
-                print(f'b: {pdbstructure}')
-                print(f'c: {pdbstructure_next_residue_number}')
                 # If on the cusp... move on...
                 return int(num_str)
             else:
@@ -126,18 +123,12 @@ def _read_residue_number(num_str, pdbstructure=None, index_fnc=None, curr_atom=N
             # The can be turned into decimal with "int()" so the "hex" mode will only be activated when _next_residue_number > 9999 (maximum in decimal) and current num_str isn't 9999.
             if pdbstructure is None:
                 try:
-                    print(f'd: {int(num_str)}')
                     return int(num_str)
                 except ValueError:
                     return 0  # num_str is not decimal, no index_fnc to interpret it, no pdbstructure to say what it is or to provide current number of atoms. No way to figure out
             else:
-                print(f'c: {pdbstructure}')
-
                 if pdbstructure._residue_num_nondec_mode is None:
-                    print(f'd: {pdbstructure._residue_num_initial_nodec_vals[num_str]}')
                     pdbstructure._residue_num_nondec_mode = pdbstructure._residue_num_initial_nodec_vals[num_str]  # convert to correct mode
-
-                print(f'e: {pdbstructure._residue_num_nondec_mode}')
 
                 try:
                     # Try and run the _residue_num_fncs
