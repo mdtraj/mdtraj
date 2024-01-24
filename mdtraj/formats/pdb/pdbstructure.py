@@ -51,7 +51,7 @@ from mdtraj.core import element
 
 def _read_atom_number(num_str, pdbstructure=None, index_fnc=None):
     try:
-        if pdbstructure._next_atom_number > 99999:
+        if num_str in pdbstructure._atom_num_initial_nodec_vals.keys() or pdb_structure._next_atom_number > 99999:
             raise OverflowError("Need to parse atom number using non-decimal residue modes.")
         else:
             return int(num_str)
@@ -80,11 +80,7 @@ def _overflow_residue_check(num_str, pdbstructure, curr_atom):
     """
     Function to check what the current residue is because it's overflowed. Lifted from the original PDB code down below.
     """
-    if (
-        pdbstructure._current_model is None
-        or pdbstructure._current_model._current_chain is None
-        or pdbstructure._current_model._current_chain._current_residue is None
-    ):
+    if (pdbstructure._current_model is None or pdbstructure._current_model._current_chain is None or pdbstructure._current_model._current_chain._current_residue is None):
         # This is the first residue in the model.
         return pdbstructure._next_residue_number
     else:
@@ -116,7 +112,7 @@ def _read_residue_number(num_str, pdbstructure=None, index_fnc=None, curr_atom=N
         else:
             #  Within "normal" pdb specifications
             return int(num_str)
-    except OverflowError:
+    except ValueError, OverflowError:
         if index_fnc is None:
             # we need to figure out on the 1st try which mode to switch to. There are currently 3 options: VMD (hex) and Chimera (their own 'hybrid36' mode) and Overflow (****).
             # Chimera starts with A000, vmd with 2710, and Overflow just shows ****.
