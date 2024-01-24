@@ -51,7 +51,7 @@ from mdtraj.core import element
 
 def _read_atom_number(num_str, pdbstructure=None, index_fnc=None):
     try:
-        if pdb_structure._next_atom_number > 99999:
+        if pdbstructure._next_atom_number > 99999:
             raise OverflowError("Need to parse atom number using non-decimal residue modes.")
         else:
             return int(num_str)
@@ -104,7 +104,7 @@ def _read_residue_number(num_str, pdbstructure=None, index_fnc=None, curr_atom=N
     Try to check what the residue number is.
     """
     try:
-        if pdb_structure._next_residue_number > 9999:
+        if pdbstructure._next_residue_number > 9999:
             if num_str == "9999":
                 # If on the cusp... move on...
                 return int(num_str)
