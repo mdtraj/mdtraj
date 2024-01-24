@@ -55,7 +55,7 @@ def _read_atom_number(num_str, pdbstructure=None, index_fnc=None):
             raise OverflowError("Need to parse atom number using non-decimal residue modes.")
         else:
             return int(num_str)
-    except OverflowError:
+    except (ValueError, OverflowError):
         if index_fnc is None:
             # we need to figure out on the 1st try which mode to switch to. There are currently 3 options: VMD (hex), Chimera (their own 'hybrid36' mode), and overflow (*****).
             # Chimera starts with A0000, vmd with 186a0, so they are distinguishable.
@@ -106,13 +106,11 @@ def _read_residue_number(num_str, pdbstructure=None, index_fnc=None, curr_atom=N
                 return int(num_str)
             else:
                 # This is all the cases where we're safely in the hex/chimera/overflow region
-                raise OverflowError(
-                    "Need to parse residue number using non-decimal residue modes."
-                )
+                raise OverflowError("Need to parse residue number using non-decimal residue modes.")
         else:
             #  Within "normal" pdb specifications
             return int(num_str)
-    except ValueError, OverflowError:
+    except (ValueError, OverflowError):
         if index_fnc is None:
             # we need to figure out on the 1st try which mode to switch to. There are currently 3 options: VMD (hex) and Chimera (their own 'hybrid36' mode) and Overflow (****).
             # Chimera starts with A000, vmd with 2710, and Overflow just shows ****.
