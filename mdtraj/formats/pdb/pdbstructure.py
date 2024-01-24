@@ -48,8 +48,8 @@ import warnings
 import numpy as np
 from mdtraj.core import element
 
-_residue_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex', '****': 'overflow'}
-_atom_num_initial_nodec_vals = {'A000': 'chimera', '2710': 'hex', '*****': 'overflow'}
+_residue_num_initial_nodec_vals = {'A000': 'chimera', '2710': 'hex', '****': 'overflow'}
+_atom_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex', '*****': 'overflow'}
 
 
 def _read_atom_number(num_str, pdbstructure=None, index_fnc=None):
@@ -58,15 +58,18 @@ def _read_atom_number(num_str, pdbstructure=None, index_fnc=None):
             raise OverflowError("Need to parse atom number using non-decimal residue modes.")
         else:
             return int(num_str)
-    except (ValueError, OverflowError):
+    except (AttributeError, ValueError, OverflowError):
         if index_fnc is None:
             # we need to figure out on the 1st try which mode to switch to. There are currently 3 options: VMD (hex), Chimera (their own 'hybrid36' mode), and overflow (*****).
             # Chimera starts with A0000, vmd with 186a0, so they are distinguishable.
             if pdbstructure is None:
-                return 0  # num_str is not decimal, no index_fnc to interpret it, no pdbstructure to say what it is or to provide current number of atoms. No way to figure out
+                try:
+                    return int(num_str)
+                except ValueError:
+                    return 0  # num_str is not decimal, no index_fnc to interpret it, no pdbstructure to say what it is or to provide current number of atoms. No way to figure out
             else:
                 if pdbstructure._atom_num_nondec_mode is None:
-                    pdbstructure._atom_num_nondec_mode = (pdbstructure._atom_num_initial_nodec_vals[num_str])  # numbers are supposed to be read in order
+                    pdbstructure._atom_num_nondec_mode = pdbstructure._atom_num_initial_nodec_vals[num_str]  # numbers are supposed to be read in order
                 try:
                     # Try and run the _atom_num_fncs on num_str
                     return pdbstructure._atom_num_fncs[pdbstructure._atom_num_nondec_mode](num_str)
@@ -102,11 +105,12 @@ def _read_residue_number(num_str, pdbstructure=None, index_fnc=None, curr_atom=N
     """
     Try to check what the residue number is.
     """
-    print(f'a: {num_str}')
-    print(f'b: {pdbstructure}')
     try:
+        print(f'a: {num_str}')
         if num_str in _residue_num_initial_nodec_vals.keys() or pdbstructure._next_residue_number > 9999:
             if num_str == "9999":
+                print(f'b: {pdbstructure}')
+                print(f'c: {pdbstructure_next_residue_number}')
                 # If on the cusp... move on...
                 return int(num_str)
             else:
@@ -115,13 +119,17 @@ def _read_residue_number(num_str, pdbstructure=None, index_fnc=None, curr_atom=N
         else:
             #  Within "normal" pdb specifications
             return int(num_str)
-    except (ValueError, OverflowError):
+    except (AttributeError, OverflowError, KeyError):
         if index_fnc is None:
             # we need to figure out on the 1st try which mode to switch to. There are currently 3 options: VMD (hex) and Chimera (their own 'hybrid36' mode) and Overflow (****).
             # Chimera starts with A000, vmd with 2710, and Overflow just shows ****.
             # The can be turned into decimal with "int()" so the "hex" mode will only be activated when _next_residue_number > 9999 (maximum in decimal) and current num_str isn't 9999.
             if pdbstructure is None:
-                return 0  # num_str is not decimal, no index_fnc to interpret it, no pdbstructure to say what it is or to provide current number of atoms. No way to figure out
+                try:
+                    print(f'd: {int(num_str)}')
+                    return int(num_str)
+                except ValueError:
+                    return 0  # num_str is not decimal, no index_fnc to interpret it, no pdbstructure to say what it is or to provide current number of atoms. No way to figure out
             else:
                 print(f'c: {pdbstructure}')
 
@@ -797,8 +805,7 @@ class Atom(object):
         self.residue_name = self.residue_name_with_spaces.strip()
 
         self.chain_id = pdb_line[21]
-        if pdbstructure is not None:
-            self.residue_number = _read_residue_number(pdb_line[22:26], pdbstructure, None, self)
+        self.residue_number = _read_residue_number(pdb_line[22:26], pdbstructure, None, self)
 
         self.insertion_code = pdb_line[26]
         # coordinates, occupancy, and temperature factor belong in Atom.Location object
