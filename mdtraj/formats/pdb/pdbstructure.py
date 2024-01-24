@@ -48,10 +48,13 @@ import warnings
 import numpy as np
 from mdtraj.core import element
 
+_residue_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex', '****': 'overflow'}
+_atom_num_initial_nodec_vals = {'A000': 'chimera', '2710': 'hex', '*****': 'overflow'}
+
 
 def _read_atom_number(num_str, pdbstructure=None, index_fnc=None):
     try:
-        if num_str in pdbstructure._atom_num_initial_nodec_vals.keys() or pdb_structure._next_atom_number > 99999:
+        if num_str in _atom_num_initial_nodec_vals.keys() or pdbstructure._next_atom_number > 99999:
             raise OverflowError("Need to parse atom number using non-decimal residue modes.")
         else:
             return int(num_str)
@@ -64,14 +67,14 @@ def _read_atom_number(num_str, pdbstructure=None, index_fnc=None):
             else:
                 if pdbstructure._atom_num_nondec_mode is None:
                     pdbstructure._atom_num_nondec_mode = (pdbstructure._atom_num_initial_nodec_vals[num_str])  # numbers are supposed to be read in order
+                try:
+                    # Try and run the _atom_num_fncs on num_str
+                    return pdbstructure._atom_num_fncs[pdbstructure._atom_num_nondec_mode](num_str)
+                except ValueError:
+                    # Didn't work, we need to change to overflow mode and guess with _next_atom_number.
+                    _atom_num_nondec_mode = "overflow"
+                    return pdbstructure._atom_num_fncs[pdbstructure._atom_num_nondec_mode](num_str)
 
-                    try:
-                        # Try and run the _atom_num_fncs on num_str
-                        return pdbstructure._atom_num_fncs[pdbstructure._atom_num_nondec_mode](num_str)
-                    except ValueError:
-                        # Didn't work, we need to change to overflow mode and guess with _next_atom_number.
-                        _atom_num_nondec_mode = "overflow"
-                        return pdbstructure._atom_num_fncs[pdbstructure._atom_num_nondec_mode](num_str)
         else:
             return index_fnc(num_str)
 
@@ -80,7 +83,7 @@ def _overflow_residue_check(num_str, pdbstructure, curr_atom):
     """
     Function to check what the current residue is because it's overflowed. Lifted from the original PDB code down below.
     """
-    if (pdbstructure._current_model is None or pdbstructure._current_model._current_chain is None or pdbstructure._current_model._current_chain._current_residue is None):
+    if pdbstructure._current_model is None or pdbstructure._current_model._current_chain is None or pdbstructure._current_model._current_chain._current_residue is None:
         # This is the first residue in the model.
         return pdbstructure._next_residue_number
     else:
@@ -99,8 +102,10 @@ def _read_residue_number(num_str, pdbstructure=None, index_fnc=None, curr_atom=N
     """
     Try to check what the residue number is.
     """
+    print(f'a: {num_str}')
+    print(f'b: {pdbstructure}')
     try:
-        if pdbstructure._next_residue_number > 9999:
+        if num_str in _residue_num_initial_nodec_vals.keys() or pdbstructure._next_residue_number > 9999:
             if num_str == "9999":
                 # If on the cusp... move on...
                 return int(num_str)
@@ -118,16 +123,21 @@ def _read_residue_number(num_str, pdbstructure=None, index_fnc=None, curr_atom=N
             if pdbstructure is None:
                 return 0  # num_str is not decimal, no index_fnc to interpret it, no pdbstructure to say what it is or to provide current number of atoms. No way to figure out
             else:
+                print(f'c: {pdbstructure}')
+
                 if pdbstructure._residue_num_nondec_mode is None:
+                    print(f'd: {pdbstructure._residue_num_initial_nodec_vals[num_str]}')
                     pdbstructure._residue_num_nondec_mode = pdbstructure._residue_num_initial_nodec_vals[num_str]  # convert to correct mode
 
-                    try:
-                        # Try and run the _residue_num_fncs
-                        return pdbstructure._residue_num_fncs[pdbstructure._residue_num_nondec_mode](num_str)
-                    except ValueError:
-                        # Didn't work, we need to change to overflow mode and guess with _next_residue_number
-                        pdbstructure._atom_num_nondec_mode = "overflow"
-                        return pdbstructure._residue_num_fncs[pdbstructure._residue_num_nondec_mode](num_str, pdbstructure, curr_atom)
+                print(f'e: {pdbstructure._residue_num_nondec_mode}')
+
+                try:
+                    # Try and run the _residue_num_fncs
+                    return pdbstructure._residue_num_fncs[pdbstructure._residue_num_nondec_mode](num_str)
+                except ValueError:
+                    # Didn't work, we need to change to overflow mode and guess with _next_residue_number
+                    pdbstructure._atom_num_nondec_mode = "overflow"
+                    return pdbstructure._residue_num_fncs[pdbstructure._residue_num_nondec_mode](num_str, pdbstructure, curr_atom)
         else:
             return index_fnc(num_str, pdbstructure, curr_atom)
 
@@ -222,9 +232,17 @@ class PdbStructure(object):
              structure or trajectory, or just load the first model, to save memory.
         """
         self._atom_num_fncs = {'hex': (lambda s: int(s, base=16)),
-                       'chimera': (lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36)))}
-        self._atom_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex'}
+                               'chimera': (lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36))),
+                               'overflow': (lambda s: self._next_atom_number)}
+        self._atom_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex', '*****': 'overflow'}
         self._atom_num_nondec_mode = None   # None (decimal until changes), 'hex', 'chimera'
+
+        self._residue_num_fncs = {'hex': (lambda s, y=None, z=None: int(s, base=16)),
+                                  'chimera': (lambda s, y=None, z=None: (int(s[0], base=36) * 10**3 + int(s[1:], base=36))),
+                                  'overflow': _overflow_residue_check}
+        self._residue_num_initial_nodec_vals = {'A000': 'chimera', '2710': 'hex', '****': 'overflow'}
+        self._residue_num_nondec_mode = None   # None (decimal until changes), 'hex', 'chimera'
+
 
         # initialize models
         self.load_all_models = load_all_models
@@ -297,11 +315,11 @@ class PdbStructure(object):
         self._finalize()
 
     def _reset_atom_numbers(self):
-        self._atom_num_nondec_mode = None    # None (decimal until changes), 'hex', 'chimera'
+        self._atom_num_nondec_mode = None    # None (decimal until changes), 'hex', 'chimera', 'overflow'
         self._next_atom_number = 1
 
     def _reset_residue_numbers(self):
-        self._residue_numbers_are_hex = False
+        self._residue_num_nondec_mode = None
         self._next_residue_number = 1
 
     def write(self, output_stream=sys.stdout):
@@ -779,31 +797,9 @@ class Atom(object):
         self.residue_name = self.residue_name_with_spaces.strip()
 
         self.chain_id = pdb_line[21]
-        if pdbstructure is not None and pdbstructure._residue_numbers_are_hex:
-            self.residue_number = int(pdb_line[22:26], 16)
-        else:
-            try:
-                self.residue_number = int(pdb_line[22:26])
-            except ValueError:
-                try:
-                    self.residue_number = int(pdb_line[22:26], 16)
-                    pdbstructure._residue_numbers_are_hex = True
-                except ValueError:
-                    # When VMD runs out of hex values it starts filling in the residue ID field with ****
-                    # Look at the most recent atoms to figure out whether this is a new residue or not.
-                    if pdbstructure._current_model is None or pdbstructure._current_model._current_chain is None or pdbstructure._current_model._current_chain._current_residue is None:
-                         # This is the first residue in the model.
-                        self.residue_number = pdbstructure._next_residue_number
-                    else:
-                        currentRes = pdbstructure._current_model._current_chain._current_residue
-                        if currentRes.name_with_spaces != self.residue_name_with_spaces:
-                            # The residue name has changed.
-                            self.residue_number = pdbstructure._next_residue_number
-                        elif self.name_with_spaces in currentRes.atoms_by_name:
-                            # There is already an atom with this name.
-                            self.residue_number = pdbstructure._next_residue_number
-                        else:
-                            self.residue_number = currentRes.number
+        if pdbstructure is not None:
+            self.residue_number = _read_residue_number(pdb_line[22:26], pdbstructure, None, self)
+
         self.insertion_code = pdb_line[26]
         # coordinates, occupancy, and temperature factor belong in Atom.Location object
         x = float(pdb_line[30:38])
