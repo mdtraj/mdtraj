@@ -160,6 +160,7 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
             coords = f.positions[::stride, atom_slice, :]
         assert coords.ndim == 3, 'internal shape error'
         n_frames = len(coords)
+        bfactors = f.bfactors
 
         topology = f.topology
         if atom_indices is not None:
@@ -186,6 +187,8 @@ def load_pdb(filename, stride=None, atom_indices=None, frame=None,
     traj = Trajectory(xyz=coords, time=time, topology=topology,
                       unitcell_lengths=unitcell_lengths,
                       unitcell_angles=unitcell_angles)
+    if bfactors is not None:
+        traj.bfactors = bfactors
 
     if not no_boxchk and traj.unitcell_lengths is not None:
         # Only one CRYST1 record is allowed, so only do this check for the first
@@ -253,6 +256,7 @@ class PDBTrajectoryFile(object):
         self._file = None
         self._topology = top
         self._positions = None
+        self._bfactors = None
         self._mode = mode
         self._last_topology = None
         self._standard_names = standard_names
@@ -320,12 +324,12 @@ class PDBTrajectoryFile(object):
         self._last_topology = topology  # Hack to save the topology of the last frame written, allows us to output CONECT entries in write_footer()
 
         if bfactors is None:
-            bfactors = ['{0:5.2f}'.format(0.0)] * len(positions)
+            bfactors = ['{0:6.2f}'.format(0.0)] * len(positions)
         else:
-            if (np.max(bfactors) >= 100) or (np.min(bfactors) <= -10):
-                raise ValueError("bfactors must be in (-10, 100)")
+            if (np.max(bfactors) >= 1000) or (np.min(bfactors) <= -10):
+                raise ValueError("bfactors must be in (-10, 1000)")
 
-            bfactors = ['{0:5.2f}'.format(b) for b in bfactors]
+            bfactors = ['{0:6.2f}'.format(b) for b in bfactors]
 
         atomIndex = 1
         posIndex = 0
@@ -360,9 +364,18 @@ class PDBTrajectoryFile(object):
                         atomSerial = atom.serial
                     else:
                         atomSerial = atomIndex
-                    line = "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s  " % ( # Right-justify atom symbol
+                    if isinstance(res.resSeq, int):
+                        if res.resSeq < 0:
+                            resSeq = res.resSeq
+                        else:
+                            resSeq = res.resSeq %10000
+                        resSeq = f"{resSeq:4d} "
+                    else:
+                        resSeq = f"{res.resSeq:>5s}"
+                    #line = "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s  " % ( # Right-justify atom symbol
+                    line = "ATOM  %5d %-4s %3s %1s%5s   %s%s%s  1.00%6s      %-4s%2s  " % ( # Right-justify atom symbol
                         atomSerial % 100000, atomName, resName, chainName,
-                        (res.resSeq) % 10000, _format_83(coords[0]),
+                        resSeq, _format_83(coords[0]),
                         _format_83(coords[1]), _format_83(coords[2]),
                         bfactors[posIndex], atom.segment_id[:4], symbol[-2:])
                     assert len(line) == 80, 'Fixed width overflow detected'
@@ -370,7 +383,8 @@ class PDBTrajectoryFile(object):
                     posIndex += 1
                     atomIndex += 1
                 if resIndex == len(residues)-1:
-                    print("TER   %5d      %3s %s%4d" % (atomSerial+1, resName, chainName, res.resSeq), file=self._file)
+                    print("TER   %5d      %3s %s%5s" % (atomSerial+1, resName, chainName, resSeq), file=self._file)
+                    # print("TER   %5d      %3s %s%4d" % (atomSerial+1, resName, chainName, res.resSeq), file=self._file)
                     atomIndex += 1
 
         if modelIndex is not None:
@@ -491,6 +505,12 @@ class PDBTrajectoryFile(object):
         return self._positions
 
     @property
+    def bfactors(self):
+        """The bfactors of all of the atoms in each frame. Available when a file is opened in mode='r'
+        """
+        return self._bfactors
+
+    @property
     def topology(self):
         """The topology from this PDB file. Available when a file is opened in mode='r'
         """
@@ -528,18 +548,24 @@ class PDBTrajectoryFile(object):
 
         # load all of the positions (from every model)
         _positions = []
+        _bfactors = []
         for model in pdb.iter_models(use_all_models=True):
             coords = []
+            bfactors = []
             for chain in model.iter_chains():
                 for residue in chain.iter_residues():
                     for atom in residue.atoms:
                         coords.append(atom.get_position())
+                        bfactors.append(atom.get_temperature_factor())
+
             _positions.append(coords)
+            _bfactors.append(bfactors)
 
         if not all(len(f) == len(_positions[0]) for f in _positions):
             raise ValueError('PDB Error: All MODELs must contain the same number of ATOMs')
 
         self._positions = np.array(_positions)
+        self._bfactors = np.array(_bfactors)
 
         ## The atom positions read from the PDB file
         self._unitcell_lengths = pdb.get_unit_cell_lengths()
@@ -555,9 +581,14 @@ class PDBTrajectoryFile(object):
                 c = self._topology.add_chain(chain.chain_id)
                 for residue in chain.iter_residues():
                     resName = residue.get_name()
+                    if residue.insertion_code == " ":
+                        resSeq = residue.number
+                    else:
+                        resSeq = f"{residue.number:4d}{residue.insertion_code}".strip()
                     if resName in PDBTrajectoryFile._residueNameReplacements and self._standard_names:
                         resName = PDBTrajectoryFile._residueNameReplacements[resName]
-                    r = self._topology.add_residue(resName, c, residue.number, residue.segment_id)
+                    #r = self._topology.add_residue(resName, c, residue.number, residue.segment_id)
+                    r = self._topology.add_residue(resName, c, resSeq, residue.segment_id)
                     if resName in PDBTrajectoryFile._atomNameReplacements and self._standard_names:
                         atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
                     else:

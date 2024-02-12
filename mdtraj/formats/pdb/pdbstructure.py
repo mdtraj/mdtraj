@@ -159,7 +159,7 @@ class PdbStructure(object):
         # Read one line at a time
         for pdb_line in input_stream:
             # Look for atoms
-            if (pdb_line.find("ATOM  ") == 0) or (pdb_line.find("HETATM") == 0):
+            if (pdb_line.find("ATOM ") == 0) or (pdb_line.find("HETATM") == 0):
                 if state  == 'NEW_MODEL':
                     new_number = self._current_model.number + 1
                     self._add_model(Model(new_number))
