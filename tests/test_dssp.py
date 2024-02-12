@@ -1,14 +1,14 @@
 import itertools
 import os
 import subprocess
-from distutils.spawn import find_executable
+import shutil
 
 import mdtraj as md
 import numpy as np
 import pytest
 
 DSSP_MSG = "This test requires mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
-needs_dssp = pytest.mark.skipif(not find_executable('mkdssp'), reason=DSSP_MSG)
+needs_dssp = pytest.mark.skipif(not shutil.which('mkdssp'), reason=DSSP_MSG)
 
 
 def call_dssp(dirname, traj, frame=0):
