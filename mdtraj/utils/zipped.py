@@ -1,10 +1,8 @@
-from __future__ import print_function, division, absolute_import
-
 import os
 import io
 import bz2
 import gzip
-from mdtraj.utils.six import PY2, StringIO
+from io import StringIO
 
 
 def open_maybe_zipped(filename, mode, force_overwrite=True):
@@ -41,13 +39,9 @@ def open_maybe_zipped(filename, mode, force_overwrite=True):
         if os.path.exists(filename) and not force_overwrite:
             raise IOError('"%s" already exists' % filename)
         if extension == '.gz':
-            if PY2:
-                return gzip.GzipFile(filename, 'w')
             binary_fh = gzip.GzipFile(filename, 'wb')
             return io.TextIOWrapper(binary_fh, encoding='utf-8')
         elif extension == '.bz2':
-            if PY2:
-                return bz2.BZ2File(filename, 'w')
             binary_fh = bz2.BZ2File(filename, 'wb')
             return io.TextIOWrapper(binary_fh, encoding='utf-8')
         else:

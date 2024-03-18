@@ -35,7 +35,7 @@ import sys
 import numpy as np
 from mdtraj.utils.unit.quantity import Quantity
 from mdtraj.utils.unit import unit_definitions
-from mdtraj.utils import import_, six
+from mdtraj.utils import import_
 UNIT_DEFINITIONS = unit_definitions
 
 try:
@@ -54,7 +54,7 @@ class _UnitContext(ast.NodeTransformer):
     # contains "safe" operations. These are operations that can reasonably
     # appear in unit expressions
     allowed_ops = [ast.Expression, ast.BinOp, ast.Name, ast.Attribute,
-                   ast.Pow, ast.Div, ast.Mult, ast.Num]
+                   ast.Pow, ast.Div, ast.Mult, ast.Constant]
 
     def visit(self, node):
         if not any(isinstance(node, a) for a in self.allowed_ops):
@@ -100,7 +100,7 @@ def _str_to_unit(unit_string, openmm=False):
     # "nanometers" into "unit.nanometers" and simulataniously check that
     # there's no nefarious stuff in the expression.
 
-    assert isinstance(unit_string, six.string_types)
+    assert isinstance(unit_string, str)
     unit_definitions = UNIT_DEFINITIONS
     if openmm:
         unit_definitions = openmm_unit.unit_definitions

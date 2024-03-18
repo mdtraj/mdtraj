@@ -20,13 +20,10 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-from __future__ import print_function, division
-
 import numpy as np
 
 from mdtraj.geometry.distance import compute_center_of_mass, compute_center_of_geometry
 from mdtraj.utils import ensure_type
-from mdtraj.utils.six import string_types
 
 
 __all__ = ['compute_nematic_order', 'compute_inertia_tensor', 'compute_directors']
@@ -185,7 +182,7 @@ def compute_inertia_tensor(traj):
 
 
 def _get_indices(traj, indices):
-    if isinstance(indices, string_types):
+    if isinstance(indices, str):
         if indices.lower() == 'chains':
             group = list(traj.top.chains)
         elif indices.lower() == 'residues':

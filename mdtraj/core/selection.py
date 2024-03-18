@@ -20,13 +20,11 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 # #############################################################################
 
-from __future__ import print_function
 import re
 import ast
 import sys
 from copy import deepcopy
 from collections import namedtuple
-from mdtraj.utils.six import PY2
 from pyparsing import (Word, ParserElement, MatchFirst,
     Keyword, opAssoc, quotedString, alphas, alphanums, infixNotation, Group,
     ParseException, OneOrMore)
@@ -58,14 +56,12 @@ class _RewriteNames(ast.NodeTransformer):
 
         _safe_names = {'None': None, 'True': True, 'False': False}
         if node.id in _safe_names:
-            if sys.version_info >= (3, 4):
-                return ast.NameConstant(value=_safe_names[node.id], kind=None)
-            return node
+            return ast.Constant(value=_safe_names[node.id], kind=None)
 
         # all other bare names are taken to be string literals. Thus something
         # like parse_selection('name CA') properly resolves CA as a string
         # literal, not a barename to be loaded from the global scope!
-        return ast.Str(s=node.id, kind=None)
+        return ast.Constant(s=node.id, kind=None)
 
 
 def _chain(*attrs):
@@ -382,18 +378,18 @@ class parse_selection(object):
         astnode = self.transformer.visit(deepcopy(parse_result[0].ast()))
 
         # Special check for a single literal
-        if isinstance(astnode, ast.Num) or isinstance(astnode, ast.Str):
-            raise ValueError("Cannot use a single literal as a boolean.")
+        # TODO: These classes are deprecated since 3.8 and replaced with ast.Constant,
+        # but that substitution breaks behavior
+        if isinstance(astnode, (ast.Num, ast.Str)):
+            raise ValueError(
+                "Cannot use a single literal as a boolean. "
+                f"Choked on node with value {astnode.value}"
+            )
 
-        if PY2:
-            args = [ast.Name(id='atom', ctx=ast.Param())]
-            signature = ast.arguments(args=args, vararg=None, kwarg=None,
-                                      defaults=[])
-        else:
-            args = [ast.arg(arg='atom', annotation=None)]
-            signature = ast.arguments(args=args, vararg=None, kwarg=None,
-                                      posonlyargs=[], kwonlyargs=[],
-                                      defaults=[], kw_defaults=[])
+        args = [ast.arg(arg='atom', annotation=None)]
+        signature = ast.arguments(args=args, vararg=None, kwarg=None,
+                                  posonlyargs=[], kwonlyargs=[],
+                                  defaults=[], kw_defaults=[])
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
         source = astunparse.unparse(astnode)

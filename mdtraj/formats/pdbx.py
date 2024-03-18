@@ -43,14 +43,12 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
 
-from __future__ import print_function, division
 import os
 import numpy as np
 from mdtraj.core.topology import Topology
 from mdtraj.utils import cast_indices, in_units_of, open_maybe_zipped
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils.unitcell import lengths_and_angles_to_box_vectors, box_vectors_to_lengths_and_angles
-from mdtraj.utils import six
 import warnings
 
 __all__ = ['load_pdbx', 'PDBxTrajectoryFile']
@@ -110,7 +108,7 @@ def load_pdbx(filename, stride=None, atom_indices=None, frame=None, no_boxchk=Fa
     mdtraj.PDBxTrajectoryFile : Low level interface to PDBx/mmCIF files
     """
     from mdtraj import Trajectory
-    if not isinstance(filename, (six.string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type string or path-like for load_pdb. '
                         'you supplied %s' % type(filename))
 

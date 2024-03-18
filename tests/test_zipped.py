@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, division
-
 import gzip
 import bz2
 from mdtraj.testing import eq

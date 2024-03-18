@@ -29,8 +29,6 @@ https://github.com/mdtraj/mdtraj/wiki/HDF5-Trajectory-Format
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
-# stdlib
 import os
 import warnings
 import inspect
@@ -51,7 +49,6 @@ from mdtraj import version
 import mdtraj.core.element as elem
 from mdtraj.core.topology import Topology
 from mdtraj.utils import in_units_of, ensure_type, import_, cast_indices
-from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
 
 __all__ = ['HDF5TrajectoryFile', 'load_hdf5']
@@ -104,7 +101,7 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.HDF5TrajectoryFile :  Low level interface to HDF5 files
     """
-    if not isinstance(filename, (string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type path-like for load_lh5. '
             'you supplied %s' % type(filename))
 
@@ -267,7 +264,7 @@ class HDF5TrajectoryFile(object):
         """
         try:
             raw = self._get_node('/', name='topology')[0]
-            if not isinstance(raw, string_types):
+            if not isinstance(raw, str):
                 raw = raw.decode()
             topology_dict = json.loads(raw)
         except self.tables.NoSuchNodeError:
@@ -374,10 +371,7 @@ class HDF5TrajectoryFile(object):
         if not isinstance(data, bytes):
             data = data.encode('ascii')
 
-        if self.tables.__version__ >= '3.0.0':
-            self._handle.create_array(where='/', name='topology', obj=[data])
-        else:
-            self._handle.createArray(where='/', name='topology', object=[data])
+        self._handle.create_array(where='/', name='topology', obj=[data])
 
     #####################################################
     # randomState global attribute (optional)
@@ -593,7 +587,7 @@ class HDF5TrajectoryFile(object):
                 node = self._get_node(where='/', name=name)
                 data = node.__getitem__(slice)
                 in_units = node.attrs.units
-                if not isinstance(in_units, string_types):
+                if not isinstance(in_units, str):
                     in_units = in_units.decode()
                 data =  in_units_of(data, in_units, out_units)
                 return data
@@ -899,33 +893,23 @@ class HDF5TrajectoryFile(object):
 
     @property
     def _get_node(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.get_node
-        return self._handle.getNode
+        return self._handle.get_node
 
     @property
     def _create_earray(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.create_earray
-        return self._handle.createEArray
+        return self._handle.create_earray
 
     @property
     def _create_table(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.create_table
-        return self._handle.createTable
+        return self._handle.create_table
 
     @property
     def _remove_node(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.remove_node
-        return self._handle.removeNode
+        return self._handle.remove_node
 
     @property
     def _open_file(self):
-        if self.tables.__version__ >= '3.0.0':
-           return self.tables.open_file
-        return self.tables.openFile
+        return self.tables.open_file
 
     def close(self):
         "Close the HDF5 file handle"

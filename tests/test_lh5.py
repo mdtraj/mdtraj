@@ -30,10 +30,9 @@ from mdtraj.testing import eq
 import pytest
 
 on_win = (sys.platform == 'win32')
-on_py3 = (sys.version_info >= (3, 0))
 
 # special pytest global to mark all tests in this module
-pytestmark = pytest.mark.skipif(on_win and on_py3, reason='lh5 not supported on windows on python 3')
+pytestmark = pytest.mark.skipif(on_win, reason='lh5 not supported on windows on python 3')
 
 fd, temp = tempfile.mkstemp(suffix='.lh5')
 

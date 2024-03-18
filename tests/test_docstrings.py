@@ -6,7 +6,6 @@ import pytest
 
 SKIP_MODULES = [
     r'mdtraj\.utils\.external',
-    r'mdtraj\.utils\.six',
     r'mdtraj\.utils\.unit\.unit_math',
     r'mdtraj\.utils\.unit\.baseunit',
     r'mdtraj\.utils\.unit\.prefix',

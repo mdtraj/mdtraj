@@ -27,12 +27,10 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
 import os
 import sys
 import numpy as np
 from mdtraj.core import element as elem
-from mdtraj.utils.six import iteritems, PY3, u
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import import_, ensure_type, in_units_of, cast_indices
 from mdtraj.formats.hdf5 import _check_mode
@@ -41,8 +39,6 @@ import warnings
 MAXINT16 = np.iinfo(np.int16).max
 MAXINT32 = np.iinfo(np.int32).max
 DEFAULT_PRECISION = 1000
-if PY3:
-    basestring = str
 
 __all__ = ['LH5TrajectoryFile', 'load_lh5']
 
@@ -66,7 +62,7 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
     registered_residues = {}
     for i in np.argsort(ResidueID):
         residue_name = ResidueNames[i]
-        if not isinstance(residue_name, basestring):
+        if not isinstance(residue_name, str):
             residue_name = residue_name.decode()
         if ResidueID[i] not in registered_residues:
             res = topology.add_residue(residue_name, chain0)
@@ -75,7 +71,7 @@ def _topology_from_arrays(AtomID, AtomNames, ChainID, ResidueID, ResidueNames):
     # register the atoms
     for i in np.argsort(AtomID):
         atom_name = AtomNames[i]
-        if not isinstance(atom_name, basestring):
+        if not isinstance(atom_name, str):
             atom_name = atom_name.decode()
         element_symbol = atom_name.lstrip('0123456789')[0]
 
@@ -212,7 +208,7 @@ class LH5TrajectoryFile(object):
             A topology object
         """
         if np.all(self._handle.root.AtomID[:] == 0) and (np.all(self._handle.root.AtomNames[:] == b'')
-            or np.all(self._handle.root.eAtomNames[:] == u(''))):
+            or np.all(self._handle.root.eAtomNames[:] == '')):
             return None
 
         return _topology_from_arrays(
@@ -244,7 +240,7 @@ class LH5TrajectoryFile(object):
             "ChainID": top.chainID.values,
             "ResidueID": top.resSeq.values + 1,
         }
-        for key, val in iteritems(data):
+        for key, val in data.items():
             node = self._get_node(where='/', name=key)[:] = val[:]
             node[:] = val[:]
 
@@ -446,30 +442,20 @@ class LH5TrajectoryFile(object):
     # deprecation warnings if you dont use the new method names
     @property
     def _open_file(self):
-        if self.tables.__version__ >= '3.0.0':
-           return self.tables.open_file
-        return self.tables.openFile
+        return self.tables.open_file
 
     @property
     def _remove_node(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.remove_node
-        return self._handle.removeNode
+        return self._handle.remove_node
 
     @property
     def _create_carray(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.create_carray
-        return self._handle.createCArray
+        return self._handle.create_carray
 
     @property
     def _create_earray(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.create_earray
-        return self._handle.createEArray
+        return self._handle.create_earray
 
     @property
     def _get_node(self):
-        if self.tables.__version__ >= '3.0.0':
-            return self._handle.get_node
-        return self._handle.getNode
+        return self._handle.get_node

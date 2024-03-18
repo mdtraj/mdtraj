@@ -20,7 +20,5 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-
-from __future__ import print_function, division
 from mdtraj.testing.testing import *
 from mdtraj.testing.docstrings import *

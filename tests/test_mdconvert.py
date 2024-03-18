@@ -40,7 +40,6 @@ import pytest
 import subprocess
 
 on_win = (sys.platform == 'win32')
-on_py3 = (sys.version_info >= (3, 0))
 
 
 @pytest.fixture()
@@ -94,7 +93,7 @@ extensions = [
 
 @pytest.fixture(params=extensions, ids=lambda x: 'from-' + x)
 def extension(request):
-    if on_win and on_py3 and request.param == 'lh5':
+    if on_win and request.param == 'lh5':
         pytest.skip('No lh5 on windows py3')
     return request.param
 
