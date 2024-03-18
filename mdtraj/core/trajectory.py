@@ -1966,10 +1966,9 @@ class Trajectory(object):
         if inplace:
             result = self
         else:
-            result = Trajectory(xyz=self.xyz, topology=self.topology,
-                                time=self.time,
-                                unitcell_lengths=self.unitcell_lengths,
-                                unitcell_angles=self.unitcell_angles)
+            # This slice-based assignment ensures all numpy arrays in result
+            #  are copies, not views, of the corresponding items in self:
+            result = self[:]
 
         if sorted_bonds is None:
             sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
@@ -2037,9 +2036,7 @@ class Trajectory(object):
         if inplace:
             result = self
         else:
-            result = Trajectory(xyz=self.xyz, topology=self.topology, time=self.time,
-                unitcell_lengths=self.unitcell_lengths, unitcell_angles=self.unitcell_angles)
-
+             result = self[:]
         if make_whole and sorted_bonds is None:
             sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
             sorted_bonds = np.asarray([[b0.index, b1.index] for b0, b1 in sorted_bonds], dtype=np.int32)
