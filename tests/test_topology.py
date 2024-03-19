@@ -327,3 +327,19 @@ def test_topology_join_keep_resSeq(get_fn):
 
     eq(out_resSeq_keepId_True, expected_resSeq_keepId_True)
     eq(out_resSeq_keepId_False, expected_resSeq_keepId_False)
+
+def test_preserve_chain_id(get_fn): 
+    # This pdb has three chains, A, B and C.  
+    traj = md.load(get_fn("1vii_sustiva_water.pdb"))
+    sub_traj = traj.atom_slice(traj.top.select('chainid 1'))
+    eq(sub_traj.top._chains[0].chain_id, 'B')
+
+def test_preserve_resseq(get_fn): 
+    traj = md.load(get_fn("1vii_sustiva_water.pdb"))
+    sub_traj = traj.atom_slice(traj.top.select('chainid 0 and resSeq 2'))
+    eq(sub_traj.top._residues[0].resSeq, 2)
+
+def test_preserve_serial(get_fn): 
+    traj = md.load(get_fn("1vii_sustiva_water.pdb"))
+    sub_traj = traj.atom_slice(traj.top.select('chainid 0 and index 2')) # serial = 3
+    eq(sub_traj.top._atoms[0].serial, 3)
