@@ -53,7 +53,14 @@ void angle(const float* xyz, const int* triplets, float* out,
         for (int j = 0; j < n_frames; j++) {
             fvec4 v1(displacements[6*j], displacements[6*j+1], displacements[6*j+2], 0);
             fvec4 v2(displacements[6*j+3], displacements[6*j+4], displacements[6*j+5], 0);
-            float angle = (float) acos(dot3(v1, v2)/(distances[2*j]*distances[2*j+1]));
+            float cosine = (float) dot3(v1, v2)/(distances[2*j]*distances[2*j+1]);
+            if (cosine < -1.0f) {
+                cosine = -1.0f;
+            }
+            if (cosine > 1.0f) {
+               cosine = 1.0f;
+            }
+            float angle = (float) acos(cosine);
             out[n_angles*j + i] = angle;
         }
     }
