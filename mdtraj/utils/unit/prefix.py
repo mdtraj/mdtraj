@@ -162,9 +162,9 @@ def define_prefixed_units(base_unit, module=sys.modules[__name__]):
         name = new_base_unit.name
         new_unit = Unit({new_base_unit: 1.0})
         # Create base_unit attribute, needed for creating UnitSystems
-        module.__dict__[
-            name + "_base_unit"
-        ] = new_base_unit  # e.g. "kilometer_base_unit"
+        module.__dict__[name + "_base_unit"] = (
+            new_base_unit  # e.g. "kilometer_base_unit"
+        )
         # Create attribue in this module
         module.__dict__[name] = new_unit  # e.g. "kilometer"
         # And plural version

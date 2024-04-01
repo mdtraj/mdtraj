@@ -249,13 +249,15 @@ def compute_contacts(
                     "will be computed using the sidechain hydrogen instead.",
                 )
             residue_membership = [
-                [
-                    atom.index
-                    for atom in residue.atoms
-                    if atom.is_sidechain and not (atom.element == element.hydrogen)
-                ]
-                if not residue.name == "GLY"
-                else [atom.index for atom in residue.atoms if atom.is_sidechain]
+                (
+                    [
+                        atom.index
+                        for atom in residue.atoms
+                        if atom.is_sidechain and not (atom.element == element.hydrogen)
+                    ]
+                    if not residue.name == "GLY"
+                    else [atom.index for atom in residue.atoms if atom.is_sidechain]
+                )
                 for residue in traj.topology.residues
             ]
 

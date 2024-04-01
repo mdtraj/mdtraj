@@ -1,5 +1,6 @@
 """gro.py: Used for loading Gromacs GRO files.
 """
+
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.

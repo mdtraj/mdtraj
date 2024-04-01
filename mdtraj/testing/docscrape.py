@@ -1,6 +1,7 @@
 """Extract reference documentation from the NumPy source tree.
 
 """
+
 # This code is copied directly from numpy
 # numpy / doc / sphinxext / docscrape.py
 # Copyright (c) 2005-2011, NumPy Developers.

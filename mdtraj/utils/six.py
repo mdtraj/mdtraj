@@ -351,12 +351,12 @@ for attr in _urllib_robotparser_moved_attributes:
     setattr(Module_six_moves_urllib_robotparser, attr.name, attr)
 del attr
 
-sys.modules[
-    __name__ + ".moves.urllib_robotparser"
-] = Module_six_moves_urllib_robotparser(__name__ + ".moves.urllib_robotparser")
-sys.modules[
-    __name__ + ".moves.urllib.robotparser"
-] = Module_six_moves_urllib_robotparser(__name__ + ".moves.urllib.robotparser")
+sys.modules[__name__ + ".moves.urllib_robotparser"] = (
+    Module_six_moves_urllib_robotparser(__name__ + ".moves.urllib_robotparser")
+)
+sys.modules[__name__ + ".moves.urllib.robotparser"] = (
+    Module_six_moves_urllib_robotparser(__name__ + ".moves.urllib.robotparser")
+)
 
 
 class Module_six_moves_urllib(types.ModuleType):

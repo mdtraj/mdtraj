@@ -6,6 +6,7 @@ However, all inputs and outputs are done with implicit units.  This is
 to avoid incompatibilities between versions of openmm.unit and MDTraj.utils.unit.
 
 """
+
 import mdtraj as md
 import mdtraj.utils.unit.unit_definitions as u
 import numpy as np
