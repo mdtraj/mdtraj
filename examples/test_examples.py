@@ -2,17 +2,17 @@
 Execute each notebook as a test, reporting an error if any cell throws an exception.
 Adapted from https://gist.github.com/minrk/2620876.
 """
-
+import sys
 import os
-import socket
 import shutil
+import socket
 
 import pytest
 
 try:
     import nbformat
     from jupyter_client import KernelManager
-except:
+except Exception:
     pytest.skip("Skipping no nbformat/jupyter", allow_module_level=True)
 
 from queue import Empty
@@ -52,7 +52,7 @@ def find_executable(names):
 def example_fn(request):
     if "openmm" in request.param:
         try:
-            from openmm import app
+            from openmm import app  # noqa: F401
         except ImportError:
             pytest.skip(
                 f"Openmm required for example notebook `{request.param}`",

@@ -40,7 +40,7 @@ import sys
 from .baseunit import BaseUnit
 from .prefix import *  # needed for manipulation of units
 from .standard_dimensions import *
-from .unit import ScaledUnit, Unit, UnitSystem, dimensionless
+from .unit import ScaledUnit, Unit, UnitSystem
 from .unit_operators import *
 
 # Physical constants in this file are CODATA 2018 values from https://pml.nist.gov/cuu/Constants

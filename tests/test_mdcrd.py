@@ -24,8 +24,9 @@
 import os
 import tempfile
 
-import mdtraj as md
 import numpy as np
+
+import mdtraj as md
 from mdtraj.formats import MDCRDTrajectoryFile
 from mdtraj.testing import eq
 

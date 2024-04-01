@@ -22,6 +22,7 @@
 
 
 import numpy as np
+
 from mdtraj.utils import ensure_type
 from mdtraj.utils.unitcell import box_vectors_to_lengths_and_angles
 
@@ -471,10 +472,6 @@ def find_closest_contact(traj, group1, group2, frame=0, periodic=True):
     return _geometry._find_closest_contact(xyz, atoms1, atoms2, box)
 
 
-##############################################################################
-# pure python implementation of the core routines
-##############################################################################
-
 
 def _distance(xyz, pairs):
     "Distance between pairs of points in each frame"
@@ -498,11 +495,7 @@ def _displacement(xyz, pairs):
         xyz.shape[0],
         pairs.shape[0],
         3,
-    ), "v.shape {}, xyz.shape {}, pairs.shape {}".format(
-        str(value.shape),
-        str(xyz.shape),
-        str(pairs.shape),
-    )
+    ), f"v.shape {str(value.shape)}, xyz.shape {str(xyz.shape)}, pairs.shape {str(pairs.shape)}"
     return value
 
 

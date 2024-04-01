@@ -21,29 +21,13 @@
 # #############################################################################
 
 
-import re
 import ast
 import re
 import sys
 from collections import namedtuple
 from copy import deepcopy
 
-from pyparsing import (
-    Word,
-    ParserElement,
-    MatchFirst,
-    Keyword,
-    opAssoc,
-    quotedString,
-    alphas,
-    alphanums,
-    infixNotation,
-    Group,
-    ParseException,
-    OneOrMore,
-)
 import astunparse
-from mdtraj.utils.six import PY2
 from pyparsing import (
     Group,
     Keyword,
@@ -433,7 +417,7 @@ class parse_selection:
         if isinstance(astnode, (ast.Num, ast.Str)):
             raise ValueError(
                 "Cannot use a single literal as a boolean. "
-                f"Choked on node with value {astnode.value}"
+                f"Choked on node with value {astnode.value}",
             )
 
         args = [ast.arg(arg="atom", annotation=None)]

@@ -25,16 +25,9 @@
 This file contains scripts for calculating scalar (J) Couplings from backbone dihedrals.
 """
 
-##############################################################################
-# Imports
-##############################################################################
-
 import numpy as np
-from mdtraj.geometry import compute_phi
 
-##############################################################################
-# Globals
-##############################################################################
+from mdtraj.geometry import compute_phi
 
 J3_HN_CB_coefficients = {  # See full citations below in docstring references.
     "Bax2007": dict(
@@ -91,10 +84,6 @@ J3_HN_HA_uncertainties = {
     "Bax2007": 0.36,
     "Bax1997": 0.39,
 }
-
-##############################################################################
-# Functions
-##############################################################################
 
 
 def _J3_function(phi, A, B, C, phi0):

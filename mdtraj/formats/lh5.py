@@ -32,13 +32,11 @@ import sys
 import warnings
 
 import numpy as np
+
 from mdtraj.core import element as elem
-from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils import import_, ensure_type, in_units_of, cast_indices
 from mdtraj.formats.hdf5 import _check_mode
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, import_, in_units_of
-from mdtraj.utils.six import PY3, iteritems, u
 
 MAXINT16 = np.iinfo(np.int16).max
 MAXINT32 = np.iinfo(np.int32).max

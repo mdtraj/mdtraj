@@ -21,8 +21,9 @@
 ##############################################################################
 
 
-import mdtraj as md
 import numpy as np
+
+import mdtraj as md
 from mdtraj.geometry.alignment import compute_average_structure, rmsd_qcp
 from mdtraj.testing import eq
 

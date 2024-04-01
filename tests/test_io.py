@@ -26,6 +26,7 @@ import unittest
 
 import numpy as np
 import tables
+
 from mdtraj import io
 from mdtraj.testing import eq
 

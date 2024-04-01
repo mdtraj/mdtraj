@@ -25,11 +25,6 @@
 # Imports
 ##############################################################################
 
-<<<<<<< HEAD
-from __future__ import absolute_import, division, print_function
-
-=======
->>>>>>> origin/master
 import numpy as np
 from mdtraj.utils import ensure_type
 

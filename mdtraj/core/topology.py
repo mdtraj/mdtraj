@@ -43,10 +43,6 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
-
 import itertools
 import os
 import warnings
@@ -54,6 +50,7 @@ import xml.etree.ElementTree as etree
 from collections import namedtuple
 
 import numpy as np
+
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import (
     _AMINO_ACID_CODES,
@@ -61,13 +58,8 @@ from mdtraj.core.residue_names import (
     _WATER_RESIDUES,
 )
 from mdtraj.core.selection import parse_selection
-from mdtraj.utils import ilen, import_, ensure_type
+from mdtraj.utils import ensure_type, ilen, import_
 from mdtraj.utils.singleton import Singleton
-from mdtraj.utils.six import string_types
-
-##############################################################################
-# Utilities
-##############################################################################
 
 
 def _topology_from_subset(topology, atom_indices):
@@ -160,10 +152,6 @@ def _topology_from_subset(topology, atom_indices):
 
     return newTopology
 
-
-##############################################################################
-# Classes
-##############################################################################
 
 
 class Topology:
@@ -486,8 +474,8 @@ class Topology:
         atoms : pandas.DataFrame
             The atoms in the topology, represented as a data frame.
         bonds : np.ndarray, shape=(n_bonds, 4), dtype=float, Optional
-            The bonds in this topology, represented as an n_bonds x 4 array indicating the two atom indices of the bond,
-            the bond type, and bond order, cast to floats as the type is mapped from the classes to fractional.
+            The bonds in this topology, represented as an n_bonds x 4 array indicating the two atom indices of the
+            bond, the bond type, and bond order, cast to floats as the type is mapped from the classes to fractional.
             The atom indices and order are integers cast to float
         """
         pd = import_("pandas")
@@ -1268,7 +1256,11 @@ class Topology:
             a_indices = self.select(selection1)
         else:  # ...or use a provided array of indices.
             a_indices = ensure_type(
-                selection1, dtype=np.int32, ndim=1, name="a_indices", warn_on_cast=False
+                selection1,
+                dtype=np.int32,
+                ndim=1,
+                name="a_indices",
+                warn_on_cast=False,
             )
         if isinstance(selection2, str):
             b_indices = self.select(selection2)
@@ -1420,8 +1412,8 @@ class Topology:
             raise ValueError(
                 "Could not find any anchor molecules. Based on "
                 "our heuristic, those should be molecules with "
-                "more than {} atoms. Perhaps your topology "
-                "doesn't give an accurate bond graph?".format(atoms_cutoff),
+                f"more than {atoms_cutoff} atoms. Perhaps your topology "
+                "doesn't give an accurate bond graph?",
             )
         return anchor_molecules
 

@@ -51,22 +51,13 @@
 # Written by Jason Swails <jason.swails@gmail.com> 9/8/2014
 # This code was mostly stolen and stripped down from ParmEd
 
-##############################################################################
-# Imports
-##############################################################################
-
 
 from mdtraj.core import element as elem
 from mdtraj.core import topology
-from mdtraj.core import topology, element as elem
 from mdtraj.formats import pdb
 from mdtraj.utils.unit import unit_definitions as u
 
 __all__ = ["load_psf"]
-
-##############################################################################
-# Functions
-##############################################################################
 
 
 class PSFError(Exception):

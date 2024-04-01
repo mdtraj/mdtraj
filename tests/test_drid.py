@@ -1,8 +1,9 @@
-import mdtraj as md
 import numpy as np
 import scipy.special
-from mdtraj.geometry import compute_drid
 from scipy.spatial.distance import euclidean, pdist, squareform
+
+import mdtraj as md
+from mdtraj.geometry import compute_drid
 
 # To keep backwards compatibility
 try:

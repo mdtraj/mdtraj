@@ -22,9 +22,10 @@
 from xml.etree import cElementTree
 
 import numpy as np
+
 from mdtraj.core.element import virtual_site
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils import ensure_type, ilen, import_
+from mdtraj.utils import import_
 
 __all__ = ["load_hoomdxml"]
 

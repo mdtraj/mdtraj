@@ -1,7 +1,8 @@
 import re
 
-import mdtraj
 import pytest
+
+import mdtraj
 from mdtraj.testing.docstrings import docstring_verifiers, import_all_modules
 
 SKIP_MODULES = [

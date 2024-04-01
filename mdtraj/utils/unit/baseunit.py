@@ -98,11 +98,7 @@ class BaseUnit:
         return self.name
 
     def __repr__(self):
-        return 'BaseUnit(base_dim={}, name="{}", symbol="{}")'.format(
-            self.dimension,
-            self.name,
-            self.symbol,
-        )
+        return f'BaseUnit(base_dim={self.dimension}, name="{self.name}", symbol="{self.symbol}")'
 
     def define_conversion_factor_to(self, other, factor):
         """
@@ -172,7 +168,7 @@ class BaseUnit:
             raise TypeError(
                 "Cannot get conversion for BaseUnits with different dimensions.",
             )
-        if not other.name in self._conversion_factor_to_by_name:
+        if other.name not in self._conversion_factor_to_by_name:
             raise LookupError(
                 f'No conversion defined from BaseUnit "{self}" to "{other}".',
             )

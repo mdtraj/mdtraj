@@ -21,6 +21,7 @@
 ##############################################################################
 
 import numpy as np
+
 from mdtraj import io
 from mdtraj.formats import BINPOSTrajectoryFile, DCDTrajectoryFile
 from mdtraj.testing import eq

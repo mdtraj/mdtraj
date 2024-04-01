@@ -24,6 +24,7 @@ import math
 import tempfile
 
 import pytest
+
 from mdtraj import load
 from mdtraj.formats import PDBxTrajectoryFile
 from mdtraj.testing import eq

@@ -23,10 +23,11 @@
 
 import itertools
 
-import mdtraj as md
-import mdtraj.geometry
 import numpy as np
 import pytest
+
+import mdtraj as md
+import mdtraj.geometry
 from mdtraj.testing import eq
 
 RUN_PERFORMANCE_TESTS = False

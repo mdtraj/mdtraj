@@ -7,10 +7,10 @@ to avoid incompatibilities between versions of openmm.unit and MDTraj.utils.unit
 
 """
 
+import numpy as np
+
 import mdtraj as md
 import mdtraj.utils.unit.unit_definitions as u
-import numpy as np
-from mdtraj.utils.unit import in_units_of
 
 # Units taken from http://en.wikipedia.org/wiki/Boltzmann_constant on Nov. 2.
 kB = 1.3806488e-23 * u.joule / u.kelvin

@@ -25,11 +25,11 @@
 # Imports
 ##############################################################################
 
-import os
 import itertools
 import os
 
 import numpy as np
+
 from mdtraj.formats.registry import FormatRegistry
 
 __all__ = ["LAMMPSTrajectoryFile", "load_lammpstrj"]
@@ -92,7 +92,7 @@ def load_lammpstrj(
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
             "filename must be of type path-like for load_lammpstrj. "
-            "you supplied %s".format(type(filename))
+            "you supplied %s",
         )
 
     topology = _parse_topology(top)
@@ -161,7 +161,7 @@ class LAMMPSTrajectoryFile:
             self._is_open = True
         else:
             raise ValueError(
-                'mode must be one of "r" or "w". ' 'you supplied "{}"'.format(mode),
+                'mode must be one of "r" or "w". ' f'you supplied "{mode}"',
             )
 
     def close(self):
@@ -388,12 +388,9 @@ class LAMMPSTrajectoryFile:
             lengths, angles = self.parse_box("orthogonal")
         else:
             raise OSError(
-                'lammpstrj parse error on line {:d} of "{:s}". '
+                f'lammpstrj parse error on line {self._line_counter:d} of "{self._filename:s}". '
                 "This file does not appear to be a valid "
-                "lammpstrj file.".format(
-                    self._line_counter,
-                    self._filename,
-                ),
+                "lammpstrj file.",
             )
 
         column_headers = self._fh.readline().split()[2:]  # ITEM: ATOMS ...
@@ -451,12 +448,9 @@ class LAMMPSTrajectoryFile:
                 ]
             except Exception:
                 raise OSError(
-                    'lammpstrj parse error on line {:d} of "{:s}". '
+                    f'lammpstrj parse error on line {self._line_counter:d} of "{self._filename:s}". '
                     "This file does not appear to be a valid "
-                    "lammpstrj file.".format(
-                        self._line_counter,
-                        self._filename,
-                    ),
+                    "lammpstrj file.",
                 )
             self._line_counter += 1
         # --- end body ---
@@ -603,13 +597,7 @@ class LAMMPSTrajectoryFile:
             self._fh.write("ITEM: ATOMS id type xu yu zu\n")
             for j, coord in enumerate(xyz[i]):
                 self._fh.write(
-                    "{:d} {:d} {:8.3f} {:8.3f} {:8.3f}\n".format(
-                        j + 1,
-                        types[j],
-                        coord[0],
-                        coord[1],
-                        coord[2],
-                    ),
+                    f"{j + 1:d} {types[j]:d} {coord[0]:8.3f} {coord[1]:8.3f} {coord[2]:8.3f}\n",
                 )
             # --- end body ---
 

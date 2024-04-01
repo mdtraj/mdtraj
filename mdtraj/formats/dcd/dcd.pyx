@@ -27,17 +27,28 @@
 ##############################################################################
 
 import os
+
 import numpy as np
+
 cimport numpy as np
+
 np.import_array()
-from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.formats.registry import FormatRegistry
-from libc.stdlib cimport malloc, free
+from mdtraj.utils import cast_indices, ensure_type, in_units_of
+
+from dcdlib cimport (
+    close_file_read,
+    close_file_write,
+    dcd_rewind,
+    dcdhandle,
+    molfile_timestep_t,
+    open_dcd_read,
+    open_dcd_write,
+    read_next_timestep,
+    write_timestep,
+)
+from libc.stdlib cimport free, malloc
 from libc.string cimport strcpy, strlen
-from dcdlib cimport molfile_timestep_t, dcdhandle
-from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
-from dcdlib cimport open_dcd_write, close_file_write, write_timestep
-from dcdlib cimport dcd_rewind
 
 import numpy as np
 

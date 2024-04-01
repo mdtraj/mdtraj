@@ -148,7 +148,7 @@ class NumpyDocString:
         return self._parsed_data[key]
 
     def __setitem__(self, key, val):
-        if not key in self._parsed_data:
+        if key not in self._parsed_data:
             warn("Unknown section %s" % key)
         else:
             self._parsed_data[key] = val
@@ -485,7 +485,7 @@ class FunctionDoc(NumpyDocString):
                 argspec = inspect.formatargspec(*argspec)
                 argspec = argspec.replace("*", r"\*")
                 signature = f"{func_name}{argspec}"
-            except TypeError as e:
+            except TypeError:
                 signature = "%s()" % func_name
             self["Signature"] = signature
 
@@ -509,7 +509,7 @@ class FunctionDoc(NumpyDocString):
         }
 
         if self._role:
-            if not self._roles in roles:
+            if self._roles not in roles:
                 print("Warning: invalid role %s" % self._role)
             out += ".. {}:: {}\n    \n\n".format(
                 roles.get(self._role, ""),

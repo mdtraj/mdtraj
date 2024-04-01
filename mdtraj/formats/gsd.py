@@ -24,13 +24,13 @@
 # Imports
 ##############################################################################
 
-import numpy as np
 import os
 
 import numpy as np
+
 from mdtraj.core.element import virtual_site
-from mdtraj.utils import ensure_type, cast_indices, lengths_and_angles_to_tilt_factors
 from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils import cast_indices, ensure_type, lengths_and_angles_to_tilt_factors
 
 __all__ = ["load_gsd", "write_gsd", "load_gsd_topology"]
 
@@ -75,12 +75,13 @@ def load_gsd(
 
     """
     import gsd.hoomd
+
     from mdtraj.core.trajectory import Trajectory, _parse_topology
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
             "filename must be of type path-like for load_gsd. "
-            "you supplied %s".format(type(filename))
+            "you supplied %s",
         )
 
     if top is not None:
@@ -92,7 +93,10 @@ def load_gsd(
     with gsd.hoomd.open(filename, "r") as f:
         if frame is not None:
             xyz, vectors, time = read_snapshot(
-                frame, f[frame], topology, atom_indices=atom_indices
+                frame,
+                f[frame],
+                topology,
+                atom_indices=atom_indices,
             )
             t = Trajectory(xyz=np.array(xyz), topology=topology, time=np.array([time]))
             t.unitcell_vectors = np.reshape(vectors, (-1, 3, 3))
@@ -151,7 +155,12 @@ def load_gsd_topology(filename, frame=0):
 
 
 def hoomdtraj_to_traj(
-    f, topology, start=None, n_frames=None, stride=None, atom_indices=None
+    f,
+    topology,
+    start=None,
+    n_frames=None,
+    stride=None,
+    atom_indices=None,
 ):
     """Convert HOOMDTrajectory to MDtraj Trajectory
 
@@ -186,7 +195,10 @@ def hoomdtraj_to_traj(
     all_coords, all_times, all_vectors = [], [], []
     for i, snapshot in enumerate(f[start : start + n_frames : stride], start=start):
         xyz, box_vectors, time = read_snapshot(
-            i, snapshot, topology, atom_indices=atom_indices
+            i,
+            snapshot,
+            topology,
+            atom_indices=atom_indices,
         )
         all_coords.append(xyz)
         all_vectors.append(box_vectors)
@@ -333,11 +345,9 @@ def write_gsd(filename, xyz, top, cell_lengths=None, cell_angles=None):
 def _process_bonds(top):
     """Identify and relate unique bondtypes to an index"""
     sorted_bond_types = [tuple(sorted([b[0].name, b[1].name])) for b in top.bonds]
-    unique_bond_types = list(set("{}-{}".format(b[0], b[1]) for b in sorted_bond_types))
+    unique_bond_types = list({f"{b[0]}-{b[1]}" for b in sorted_bond_types})
     bondtypes = {a: i for i, a in enumerate(unique_bond_types)}
-    bondtype_ids = [
-        bondtypes["{}-{}".format(key[0], key[1])] for key in sorted_bond_types
-    ]
+    bondtype_ids = [bondtypes[f"{key[0]}-{key[1]}"] for key in sorted_bond_types]
     bond_groups = [(b[0].index, b[1].index) for b in top.bonds]
 
     return (unique_bond_types, bondtype_ids, bond_groups)
@@ -350,9 +360,9 @@ def _check_topology(frame, snapshot, topology):
     -----
     Only looks for N particles and N bonds for speed purposes"""
     error_msg = (
-        "GSD frame {} ".format(frame)
+        f"GSD frame {frame} "
         + "has inconsistent topology compared to given topology, "
         + "this is unsupported in MDTraj."
     )
     if snapshot.particles.N != topology.n_atoms or snapshot.bonds.N != topology.n_bonds:
-        raise IOError(error_msg)
+        raise OSError(error_msg)

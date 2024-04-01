@@ -21,6 +21,7 @@
 ##############################################################################
 
 import numpy as np
+
 from mdtraj.geometry.distance import compute_center_of_geometry
 
 __all__ = [

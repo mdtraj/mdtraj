@@ -1,11 +1,11 @@
 import itertools
 import os
 import subprocess
-import shutil
 
-import mdtraj as md
 import numpy as np
 import pytest
+
+import mdtraj as md
 
 DSSP_MSG = (
     "This test requires mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"

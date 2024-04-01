@@ -34,9 +34,9 @@ import ast
 import sys
 
 import numpy as np
+
 from mdtraj.utils import import_
 from mdtraj.utils.unit import unit_definitions
-from mdtraj.utils import import_
 
 UNIT_DEFINITIONS = unit_definitions
 

@@ -44,17 +44,16 @@
 """Load an md.Topology from tripos mol2 files.
 """
 
-##############################################################################
-# Imports
-##############################################################################
 
-import numpy as np
 import itertools
 import re
 from io import StringIO
-from mdtraj.utils import import_
-from mdtraj.formats.registry import FormatRegistry
+
+import numpy as np
+
 from mdtraj.core import element as elem
+from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils import import_
 
 __all__ = ["load_mol2", "mol2_to_dataframes"]
 

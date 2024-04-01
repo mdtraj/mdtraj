@@ -25,11 +25,11 @@
 # Imports
 ##############################################################################
 
-import os
 import itertools
 import os
 
 import numpy as np
+
 from mdtraj.formats.registry import FormatRegistry
 
 __all__ = ["ArcTrajectoryFile", "load_arc"]
@@ -71,12 +71,11 @@ def load_arc(filename, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.ArcTrajectoryFile :  Low level interface to TINKER .arc files
     """
-    from mdtraj.core.trajectory import _parse_topology
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
             "filename must be of type path-like for load_arc. "
-            "you supplied %s" % type(filename)
+            "you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)

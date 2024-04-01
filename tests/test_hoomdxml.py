@@ -21,6 +21,7 @@
 ##############################################################################
 
 import numpy as np
+
 from mdtraj import load
 from mdtraj.testing import eq
 

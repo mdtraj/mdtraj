@@ -25,11 +25,11 @@
 # Imports
 ##############################################################################
 
-import os
 import itertools
 import os
 
 import numpy as np
+
 from mdtraj.formats.registry import FormatRegistry
 
 __all__ = ["MDCRDTrajectoryFile", "load_mdcrd"]
@@ -76,7 +76,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.MDCRDTrajectoryFile :  Low level interface to MDCRD files
     """
-    from mdtraj.core.trajectory import Trajectory, _parse_topology
+    from mdtraj.core.trajectory import _parse_topology
 
     # we make it not required in the signature, but required here. although this
     # is a little wierd, its good because this function is usually called by a
@@ -88,7 +88,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
             "filename must be of type path-like for load_mdcrd. "
-            "you supplied %s" % type(filename)
+            "you supplied %s" % type(filename),
         )
 
     topology = _parse_topology(top)

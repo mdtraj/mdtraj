@@ -1,7 +1,8 @@
 import pickle
 
-import mdtraj as md
 import pytest
+
+import mdtraj as md
 from mdtraj import element
 from mdtraj.testing import eq
 

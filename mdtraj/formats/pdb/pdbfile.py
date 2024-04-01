@@ -43,24 +43,22 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
 
-import os
-from datetime import date
 import gzip
 import os
 import warnings
 import xml.etree.ElementTree as etree
-from copy import copy, deepcopy
-from mdtraj.formats.pdb.pdbstructure import PdbStructure
-from mdtraj.core.topology import Topology
-from mdtraj.utils import ilen, cast_indices, in_units_of, open_maybe_zipped
-from mdtraj.formats.registry import FormatRegistry
-from mdtraj.core import element as elem
+from copy import copy
+from datetime import date
 from io import StringIO
-from mdtraj import version
-import warnings
+from urllib.parse import urlparse, uses_netloc, uses_params, uses_relative
 from urllib.request import urlopen
-from urllib.parse import urlparse
-from urllib.parse import uses_relative, uses_netloc, uses_params
+
+from mdtraj import version
+from mdtraj.core import element as elem
+from mdtraj.core.topology import Topology
+from mdtraj.formats.pdb.pdbstructure import PdbStructure
+from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils import cast_indices, ilen, in_units_of, open_maybe_zipped
 
 _VALID_URLS = set(uses_relative + uses_netloc + uses_params)
 _VALID_URLS.discard("")
@@ -149,7 +147,7 @@ def load_pdb(
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
             "filename must be of type string or path-like for load_pdb. "
-            "you supplied %s" % type(filename)
+            "you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)

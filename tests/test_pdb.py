@@ -24,10 +24,10 @@
 import os
 import re
 import tempfile
-import warnings
 
 import numpy as np
 import pytest
+
 from mdtraj import Topology, load, load_pdb
 from mdtraj.formats.pdb import pdbstructure
 from mdtraj.formats.pdb.pdbstructure import PdbStructure

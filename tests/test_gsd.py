@@ -21,8 +21,9 @@
 ##############################################################################
 
 
-import mdtraj
 import pytest
+
+import mdtraj
 from mdtraj.testing import eq
 
 

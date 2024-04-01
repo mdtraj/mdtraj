@@ -1,4 +1,3 @@
-import gzip
 import bz2
 import gzip
 

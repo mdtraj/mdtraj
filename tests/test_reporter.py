@@ -23,9 +23,10 @@
 import os
 import shutil
 
-import mdtraj as md
 import numpy as np
 import pytest
+
+import mdtraj as md
 from mdtraj.formats import HDF5TrajectoryFile, NetCDFTrajectoryFile
 from mdtraj.reporters import DCDReporter, HDF5Reporter, NetCDFReporter, XTCReporter
 from mdtraj.testing import eq

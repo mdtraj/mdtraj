@@ -73,11 +73,11 @@ True
 Functions
 ---------
 """
-import io
 import os
 import warnings
 
 import numpy as np
+
 from mdtraj.utils import import_
 
 tables = import_("tables")
@@ -205,7 +205,11 @@ def saveh(file, *args, **kwargs):
                 )
 
             node = handle.create_carray(
-                where="/", name=key, atom=atom, shape=val.shape, filters=COMPRESSION
+                where="/",
+                name=key,
+                atom=atom,
+                shape=val.shape,
+                filters=COMPRESSION,
             )
 
             node[:] = val
@@ -318,7 +322,7 @@ class DeferredTable:
                     name,
                     handle.get_node(where="/", name=name).shape,
                     handle.get_node(where="/", name=name).dtype,
-                )
+                ),
             )
         self._repr_string = "{\n%s\n}" % ",\n".join(repr_strings)
 

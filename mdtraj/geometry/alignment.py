@@ -37,6 +37,7 @@ Acta Crystallogr A 61(4):478-480.
 
 import numpy as np
 import scipy.optimize
+
 from mdtraj.utils import ensure_type
 
 

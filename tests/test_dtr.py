@@ -23,6 +23,7 @@
 
 import numpy as np
 import pytest
+
 from mdtraj.formats import DCDTrajectoryFile, DTRTrajectoryFile
 from mdtraj.testing import eq
 

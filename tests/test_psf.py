@@ -22,10 +22,10 @@
 
 import os
 import subprocess
-import shutil
+
+import pytest
 
 import mdtraj as md
-import pytest
 from mdtraj.formats import psf
 from mdtraj.testing import eq
 from mdtraj.utils import enter_temp_directory
@@ -110,7 +110,7 @@ def test_against_vmd(pdb, get_fn):
     assert len(top_paths) >= 0
     top = os.path.abspath(top_paths[0]).replace(" ", "\\ ")
 
-    TEMPLATE = """
+    TEMPLATE = f"""
 package require psfgen
 topology {top}
 pdbalias residue HIS HSE
@@ -121,10 +121,7 @@ guesscoord
 writepdb out.pdb
 writepsf out.psf
 exit
-    """.format(
-        top=top,
-        pdb=pdb,
-    )
+    """
 
     with enter_temp_directory():
         with open("script.tcl", "w") as f:

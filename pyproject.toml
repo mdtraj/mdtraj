@@ -6,3 +6,16 @@ requires = [
     "oldest-supported-numpy",
     "Cython~=0.29.36",
 ]
+
+[tool.ruff]
+line-length=119
+
+[tool.ruff.lint]
+select = [
+    "F",
+    "I",
+    "E",
+    "W",
+    "UP",
+    "NPY",
+]

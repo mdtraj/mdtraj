@@ -20,25 +20,13 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-
-##############################################################################
-# Imports
-##############################################################################
-
 import numpy as np
-from mdtraj.utils import ensure_type
-from mdtraj.geometry import compute_distances, compute_angles
-from mdtraj.geometry import _geometry
 
-import numpy as np
-from mdtraj.geometry import _geometry, compute_angles, compute_distances
+from mdtraj.geometry import _geometry, compute_distances
 from mdtraj.utils import ensure_type
 
 __all__ = ["wernet_nilsson", "baker_hubbard", "kabsch_sander"]
 
-##############################################################################
-# Functions
-##############################################################################
 
 
 def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False):

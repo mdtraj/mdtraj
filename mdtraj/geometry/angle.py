@@ -21,25 +21,14 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
 
 
 import numpy as np
-from mdtraj.utils import ensure_type
-from mdtraj.geometry import _geometry, distance
-import warnings
 
-import numpy as np
 from mdtraj.geometry import _geometry, distance
 from mdtraj.utils import ensure_type
 
 __all__ = ["compute_angles"]
-
-##############################################################################
-# Functions
-##############################################################################
 
 
 def compute_angles(traj, angle_indices, periodic=True, opt=True):

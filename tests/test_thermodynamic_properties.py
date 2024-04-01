@@ -20,10 +20,11 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-import mdtraj as md
 import numpy as np
 import pandas as pd
 import pytest
+
+import mdtraj as md
 from mdtraj.testing import eq
 
 temperature = 300.0

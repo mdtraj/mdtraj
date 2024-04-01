@@ -24,16 +24,20 @@ import os
 import sys
 import tempfile
 
-import mdtraj as md
 import numpy as np
 import pytest
+
+import mdtraj as md
 from mdtraj.formats import LH5TrajectoryFile
 from mdtraj.testing import eq
 
-on_win = (sys.platform == 'win32')
+on_win = sys.platform == "win32"
 
 # special pytest global to mark all tests in this module
-pytestmark = pytest.mark.skipif(on_win, reason='lh5 not supported on windows on python 3')
+pytestmark = pytest.mark.skipif(
+    on_win,
+    reason="lh5 not supported on windows on python 3",
+)
 
 fd, temp = tempfile.mkstemp(suffix=".lh5")
 

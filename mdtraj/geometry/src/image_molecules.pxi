@@ -210,10 +210,10 @@ def image_molecules(xyz, box, anchor_molecules, other_molecules, sorted_bonds):
     for i, om in enumerate(other_molecules):
         other_molecule_indices[offset:other_molecule_offsets[i]] = om
         offset = other_molecule_offsets[i]
-    
+
     for i in range(xyz.shape[0]):
-        image_frame(xyz[i], box[i], anchor_molecule_indices, 
-                    anchor_molecule_offsets, other_molecule_indices, 
+        image_frame(xyz[i], box[i], anchor_molecule_indices,
+                    anchor_molecule_offsets, other_molecule_indices,
                     other_molecule_offsets, sorted_bonds)
 
 def whole_molecules(xyz, box, sorted_bonds):

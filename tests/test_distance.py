@@ -22,9 +22,10 @@
 
 import itertools
 
-import mdtraj as md
 import numpy as np
 import pytest
+
+import mdtraj as md
 from mdtraj.geometry.distance import (
     _displacement,
     _displacement_mic,

@@ -21,22 +21,15 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
-
-import numpy as np
-from mdtraj.core import element
-from mdtraj.utils import ensure_type
-from mdtraj.core import element
-import mdtraj as md
 import itertools
 
-__all__ = ["compute_contacts", "squareform"]
+import numpy as np
 
-##############################################################################
-# Code
-##############################################################################
+import mdtraj as md
+from mdtraj.core import element
+from mdtraj.utils import ensure_type
+
+__all__ = ["compute_contacts", "squareform"]
 
 
 def compute_contacts(
@@ -132,7 +125,7 @@ def compute_contacts(
     if isinstance(contacts, str):
         if contacts.lower() != "all":
             raise ValueError(
-                "(%s) is not a valid contacts specifier" % contacts.lower()
+                "(%s) is not a valid contacts specifier" % contacts.lower(),
             )
 
         residue_pairs = []

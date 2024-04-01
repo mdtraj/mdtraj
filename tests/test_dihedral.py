@@ -1,10 +1,10 @@
 import itertools
 import os
-import shutil
 
-import mdtraj as md
 import numpy as np
 import pytest
+
+import mdtraj as md
 from mdtraj.geometry.dihedral import (
     compute_chi1,
     compute_chi2,

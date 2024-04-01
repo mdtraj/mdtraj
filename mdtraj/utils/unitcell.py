@@ -161,7 +161,7 @@ def box_vectors_to_lengths_and_angles(a, b, c):
         raise TypeError("Shape is messed up.")
     if not a.shape[-1] == 3:
         raise TypeError("The last dimension must be length 3")
-    if not (a.ndim in [1, 2]):
+    if a.ndim not in [1, 2]:
         raise ValueError(
             "vectors must be 1d or 2d (for a vectorized "
             "operation on multiple frames)",

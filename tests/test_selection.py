@@ -22,9 +22,10 @@
 
 import ast
 
-import mdtraj
 import numpy as np
 import pytest
+
+import mdtraj
 from mdtraj.core.selection import parse_selection
 from mdtraj.testing import eq
 

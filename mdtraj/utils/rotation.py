@@ -29,6 +29,7 @@
 ##############################################################################
 
 import numpy as np
+
 from mdtraj.utils import check_random_state
 
 __all__ = ["rotation_matrix_from_quaternion", "uniform_quaternion"]

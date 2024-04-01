@@ -328,7 +328,7 @@ class Unit:
             result = False
         else:
             result = self_dims == other_dims
-        if not self in Unit._is_compatible_cache:
+        if self not in Unit._is_compatible_cache:
             Unit._is_compatible_cache[self] = {}
         Unit._is_compatible_cache[self][other] = result
         return result
@@ -403,7 +403,7 @@ class Unit:
             else:
                 canonical_units[d] = unit
         factor *= 10**powers_of_ten
-        if not self in Unit._conversion_factor_cache:
+        if self not in Unit._conversion_factor_cache:
             Unit._conversion_factor_cache[self] = {}
         Unit._conversion_factor_cache[self][other] = factor
         return factor

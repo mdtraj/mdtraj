@@ -21,17 +21,11 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
 
-
-import numpy as np
-from mdtraj.utils import ensure_type
-from mdtraj.geometry import _geometry, distance
 import warnings
 
 import numpy as np
+
 from mdtraj.geometry import _geometry, distance
 from mdtraj.utils import ensure_type
 
@@ -54,10 +48,6 @@ __all__ = [
     "indices_chi4",
     "indices_chi5",
 ]
-
-##############################################################################
-# Functions
-##############################################################################
 
 
 def _dihedral(traj, indices, periodic, out=None):

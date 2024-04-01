@@ -64,7 +64,7 @@ class BaseDimension:
         Use the existing BaseDimensions instead of creating new ones.
         """
         self.name = name
-        if not self.name in BaseDimension._index_by_name.keys():
+        if self.name not in BaseDimension._index_by_name.keys():
             BaseDimension._index_by_name[name] = BaseDimension._next_unused_index
             BaseDimension._next_unused_index += 1
         self._index = BaseDimension._index_by_name[name]

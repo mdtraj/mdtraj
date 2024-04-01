@@ -38,10 +38,6 @@ import numpy as np
 cimport numpy as np
 
 np.import_array()
-<<<<<<< HEAD
-=======
-from mdtraj.utils import ensure_type, cast_indices, in_units_of
->>>>>>> origin/master
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, in_units_of
 from mdtraj.utils.six import string_types

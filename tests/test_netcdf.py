@@ -24,13 +24,11 @@ import os
 import subprocess
 import tempfile
 from distutils.spawn import find_executable
-from mdtraj.testing import eq
-import pytest
-import shutil
 
-import mdtraj as md
 import numpy as np
 import pytest
+
+import mdtraj as md
 from mdtraj.formats import NetCDFTrajectoryFile
 from mdtraj.testing import eq
 

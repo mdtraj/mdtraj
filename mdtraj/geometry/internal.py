@@ -25,18 +25,12 @@
 This code is new and should be considered __unstable__
 """
 
-##############################################################################
-# Imports
-##############################################################################
-
-import numpy as np
-from itertools import combinations
-import logging
 
 import logging
 from itertools import combinations
 
 import numpy as np
+
 from mdtraj.geometry.angle import compute_angles
 from mdtraj.geometry.dihedral import compute_dihedrals
 from mdtraj.geometry.distance import compute_distances
@@ -69,11 +63,7 @@ __all__ = [
 ]
 
 
-################################################################################
 # Get actual coordinates
-################################################################################
-
-
 def get_redundant_internal_coordinates(trajectory, **kwargs):
     """Compute internal coordinates from the cartesian coordinates
 
@@ -234,10 +224,8 @@ def get_nonredundant_internal_coordinates(trajectory, conformation, get_operator
         return np.dot(redundant, activespace)
 
 
-################################################################################
-# Compte the connectivity, getting lists of atom indices which form bonds, bond
+# Comupte the connectivity, getting lists of atom indices which form bonds, bond
 # angles and dihedrals
-################################################################################
 def get_connectivity(conf):
     """Get the indices of all the bonds/angles/dihedrals
 
@@ -304,11 +292,9 @@ def get_bond_connectivity(conf):
         # after stripping off any digits
 
         elements[i] = atom_names[i].strip("123456789 ")[0]
-        if not elements[i] in COVALENT_RADII.keys():
+        if elements[i] not in COVALENT_RADII.keys():
             raise ValueError(
-                "I don't know about this AtomName: {}".format(
-                    atom_names[i],
-                ),
+                f"I don't know about this AtomName: {atom_names[i]}",
             )
 
     distance_mtx = squareform(pdist(xyz))
@@ -389,11 +375,6 @@ def get_dihedral_connectivity(ibonds):
 
     return np.array(idihedrals)
 
-
-################################################################################
-# Compute derivatives of internal coordinates w.r.t to cartesian coordinates
-# these methods only operate on a single frame
-################################################################################
 
 
 def get_wilson_B(conformation, **kwargs):

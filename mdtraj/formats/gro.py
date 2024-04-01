@@ -45,27 +45,19 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
 
-##############################################################################
-# Imports
-##############################################################################
-
 
 import itertools
 import os
-import sys
 import warnings
 from re import findall, match, sub
 
-import mdtraj as md
 import numpy as np
+
+import mdtraj as md
 from mdtraj.core import element as elem
 from mdtraj.formats import pdb
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, in_units_of
-
-##############################################################################
-# Code
-##############################################################################
 
 
 @FormatRegistry.register_loader(".gro")
@@ -89,7 +81,6 @@ def load_gro(filename, stride=None, atom_indices=None, frame=None, top=None):
         if you give a topology as input the topology won't be parsed from the gro file
         it saves time if you have to parse a big number of files
     """
-    from mdtraj.core.trajectory import Trajectory, _parse_topology
 
     with GroTrajectoryFile(filename, "r", top=top) as f:
         topology = f.topology
@@ -577,10 +568,6 @@ class GroTrajectoryFile:
         "Support the context manager protocol"
         self.close()
 
-
-##############################################################################
-# Utilities
-##############################################################################
 
 
 def _isint(word):

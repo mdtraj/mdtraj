@@ -29,10 +29,8 @@ Amber NetCDF restart files. This code was taken from ParmEd and simplified by
 removing the functionality that is not needed.
 """
 
-from math import ceil
 import os
 import warnings
-from distutils.version import StrictVersion
 from math import ceil
 
 import numpy as np
@@ -40,7 +38,7 @@ from packaging.version import Version
 
 from mdtraj import version
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices
+from mdtraj.utils import cast_indices, ensure_type, import_, in_units_of
 
 __all__ = [
     "AmberRestartFile",
@@ -549,7 +547,7 @@ class AmberNetCDFRestartFile:
         if Version(import_("scipy.version").short_version) < Version("0.12.0"):
             raise ImportError(
                 "MDTraj NetCDF support requires scipy>=0.12.0. "
-                "You have %s" % import_("scipy.version").short_version
+                "You have %s" % import_("scipy.version").short_version,
             )
         netcdf = import_("scipy.io").netcdf_file
 

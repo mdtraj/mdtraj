@@ -21,30 +21,26 @@
 ##############################################################################
 
 
+import importlib
+
 ##############################################################################
 # Imports
 ##############################################################################
-import operator
-import sys
-import types
-import warnings
 import pkgutil
-import importlib
+import warnings
 from inspect import (
+    getargs,
+    getdoc,
+    getmembers,
+    getmodule,
+    isbuiltin,
     isclass,
-    ismodule,
     isfunction,
     ismethod,
-    getmembers,
-    getdoc,
-    getmodule,
-    getargs,
-    isbuiltin,
+    ismodule,
 )
-from mdtraj.testing.docscrape import NumpyDocString
 
 from mdtraj.testing.docscrape import NumpyDocString
-from mdtraj.utils.six import get_function_code
 
 __all__ = ["docstring_verifiers", "import_all_modules"]
 

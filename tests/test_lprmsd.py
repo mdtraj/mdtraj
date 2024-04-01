@@ -1,7 +1,6 @@
 import numpy as np
 
 import mdtraj as md
-import numpy as np
 from mdtraj import Trajectory, lprmsd
 from mdtraj._lprmsd import _munkres
 from mdtraj.testing import eq

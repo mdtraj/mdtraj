@@ -869,11 +869,8 @@ __version__ = "0.5"
 
 # This unit code might be found in different packages...
 # So use local import
-from baseunit import BaseUnit
 from constants import *
-from quantity import Quantity, is_dimensionless, is_quantity
 from standard_dimensions import *
-from unit import dimensionless, is_unit
 from unit_definitions import *
 from unit_math import *
 

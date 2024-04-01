@@ -22,9 +22,7 @@
 
 import numpy as np
 
-NP18 = parse_version(np.__version__) >= parse_version("1.8.0")
-
-from mdtraj.geometry.distance import compute_center_of_geometry, compute_center_of_mass
+from mdtraj.geometry.distance import compute_center_of_mass
 from mdtraj.utils import ensure_type
 
 __all__ = ["compute_nematic_order", "compute_inertia_tensor", "compute_directors"]
@@ -240,7 +238,11 @@ def _compute_Q_tensor(all_directors):
     """
 
     all_directors = ensure_type(
-        all_directors, dtype=np.float64, ndim=3, name="directors", shape=(None, None, 3)
+        all_directors,
+        dtype=np.float64,
+        ndim=3,
+        name="directors",
+        shape=(None, None, 3),
     )
 
     normed = all_directors / np.linalg.norm(all_directors, axis=2)[..., np.newaxis]
@@ -304,11 +306,7 @@ def _compute_director(traj):
     return directors
 
 
-#####################################################
 # Pure python reference implementations for testing #
-#####################################################
-
-
 def _compute_inertia_tensor_slow(traj):
     """Compute the inertia tensor of a trajectory."""
     center_of_mass = np.expand_dims(compute_center_of_mass(traj), axis=1)

@@ -21,11 +21,10 @@
 ##############################################################################
 
 import numpy as np
+import pytest
 
 import mdtraj as md
 import mdtraj.geometry
-import numpy as np
-import pytest
 from mdtraj.testing import eq
 
 """

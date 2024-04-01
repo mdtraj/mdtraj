@@ -1,4 +1,5 @@
 import numpy as np
+
 from mdtraj.testing import eq
 from mdtraj.utils import rotation_matrix_from_quaternion, uniform_quaternion
 

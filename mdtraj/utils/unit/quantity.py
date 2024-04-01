@@ -687,10 +687,7 @@ class Quantity:
         """
         if not self.unit.is_compatible(other_unit):
             raise TypeError(
-                'Unit "{}" is not compatible with Unit "{}".'.format(
-                    self.unit,
-                    other_unit,
-                ),
+                f'Unit "{self.unit}" is not compatible with Unit "{other_unit}".',
             )
         f = self.unit.conversion_factor_to(other_unit)
         return self._change_units_with_factor(other_unit, f)

@@ -20,31 +20,18 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-
-###############################################################################
-# Imports
-###############################################################################
-
 import functools
 import glob
-import operator
 import os
 import sys
 import warnings
 from argparse import ArgumentParser
 
-import mdtraj as md
 import numpy as np
+
+import mdtraj as md
 from mdtraj.core.trajectory import _parse_topology
 from mdtraj.utils import in_units_of
-
-###############################################################################
-# Crappy class that should go elsewhere
-###############################################################################
-
-###############################################################################
-# Globals
-###############################################################################
 
 formats = {
     ".dcd": md.formats.DCDTrajectoryFile,
@@ -93,10 +80,6 @@ units = {
     ".pdb": "angstroms",
 }
 
-###############################################################################
-# Utility Functions
-###############################################################################
-
 
 ext = lambda fn: os.path.splitext(fn)[1]
 
@@ -125,10 +108,6 @@ def index(str):
 
     return slice(start, end, step)
 
-
-###############################################################################
-# Code
-###############################################################################
 
 
 def parse_args():
@@ -251,14 +230,14 @@ def parse_args():
     args.input = input
 
     for fn in args.input:
-        if not ext(fn) in formats:
+        if ext(fn) not in formats:
             parser.error(f"{fn}: '{ext(fn)}' is not a known extension")
 
     extensions = list(map(ext, args.input))
     if any(e != extensions[0] for e in extensions):
         parser.error("all input trajectories do not have the same extension")
 
-    if not ext(args.output) in formats:
+    if ext(args.output) not in formats:
         parser.error(
             "%s: '%s' is not a known extension"
             % (

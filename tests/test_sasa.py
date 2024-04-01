@@ -21,8 +21,9 @@
 ##############################################################################
 
 
-import mdtraj as md
 import numpy as np
+
+import mdtraj as md
 from mdtraj import element
 from mdtraj.geometry.sasa import _ATOMIC_RADII
 from mdtraj.testing import eq

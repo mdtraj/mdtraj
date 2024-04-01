@@ -25,14 +25,14 @@
 # Imports
 ##############################################################################
 
-from datetime import date
 import itertools
 import os
 from datetime import date
 
 import numpy as np
+
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils import cast_indices, in_units_of, ensure_type, open_maybe_zipped
+from mdtraj.utils import cast_indices, ensure_type, in_units_of, open_maybe_zipped
 from mdtraj.version import version
 
 __all__ = ["XYZTrajectoryFile", "load_xyz"]
@@ -82,7 +82,7 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.XYZTrajectoryFile :  Low level interface to xyz files
     """
-    from mdtraj.core.trajectory import Trajectory, _parse_topology
+    from mdtraj.core.trajectory import _parse_topology
 
     # We make `top` required. Although this is a little weird, its good because
     # this function is usually called by a dispatch from load(), where top comes
@@ -94,7 +94,7 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
             "filename must be of type path-like for load_xyz. "
-            "you supplied %s".format(type(filename))
+            "you supplied %s",
         )
 
     topology = _parse_topology(top)
@@ -156,7 +156,7 @@ class XYZTrajectoryFile:
             self._is_open = True
         else:
             raise ValueError(
-                'mode must be one of "r" or "w". ' 'you supplied "{}"'.format(mode),
+                'mode must be one of "r" or "w". ' f'you supplied "{mode}"',
             )
 
     def close(self):
@@ -291,12 +291,9 @@ class XYZTrajectoryFile:
                 xyz[i] = [float(x) for x in split_line[1:4]]
             except Exception:
                 raise OSError(
-                    'xyz parse error on line {:d} of "{:s}". '
+                    f'xyz parse error on line {self._line_counter:d} of "{self._filename:s}". '
                     "This file does not appear to be a valid "
-                    "xyz file.".format(
-                        self._line_counter,
-                        self._filename,
-                    ),
+                    "xyz file.",
                 )
             self._line_counter += 1
         # --- end body ---
@@ -343,12 +340,7 @@ class XYZTrajectoryFile:
 
             for j, coord in enumerate(xyz[i]):
                 self._fh.write(
-                    "{} {:8.3f} {:8.3f} {:8.3f}\n".format(
-                        types[j],
-                        coord[0],
-                        coord[1],
-                        coord[2],
-                    ),
+                    f"{types[j]} {coord[0]:8.3f} {coord[1]:8.3f} {coord[2]:8.3f}\n",
                 )
 
     def seek(self, offset, whence=0):

@@ -118,23 +118,18 @@ class CompilerDetection:
 
     def hasfunction(self, funcname, include=None, libraries=None, extra_postargs=None):
         # running in a separate subshell lets us prevent unwanted stdout/stderr
-        part1 = """
+        part1 = f"""
 from __future__ import print_function
 import os
 import json
 from distutils.ccompiler import new_compiler
 from distutils.sysconfig import customize_compiler, get_config_vars
 
-FUNCNAME = json.loads('{funcname}')
-INCLUDE = json.loads('{include}')
-LIBRARIES = json.loads('{libraries}')
-EXTRA_POSTARGS = json.loads('{extra_postargs}')
-        """.format(
-            funcname=json.dumps(funcname),
-            include=json.dumps(include),
-            libraries=json.dumps(libraries or []),
-            extra_postargs=json.dumps(extra_postargs),
-        )
+FUNCNAME = json.loads('{json.dumps(funcname)}')
+INCLUDE = json.loads('{json.dumps(include)}')
+LIBRARIES = json.loads('{json.dumps(libraries or [])}')
+EXTRA_POSTARGS = json.loads('{json.dumps(extra_postargs)}')
+        """
 
         part2 = """
 get_config_vars()  # DON'T REMOVE ME
@@ -301,10 +296,7 @@ release = {release}
         full_version = version
         short_version = version
     else:
-        full_version = "{version}+{git_revision}".format(
-            version=version,
-            git_revision=git_revision,
-        )
+        full_version = f"{version}+{git_revision}"
         short_version = version
 
     with open(filename, "w") as f:

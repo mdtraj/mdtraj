@@ -28,15 +28,13 @@ a work in progress. Contributions are encouraged.
 # ------------------------------------------------------------------------------
 
 
-import functools
-import operator
 import os
-import sys
 import warnings
 from argparse import ArgumentParser
 
-import mdtraj as md
 import numpy as np
+
+import mdtraj as md
 from mdtraj.core.trajectory import _parse_topology
 from mdtraj.geometry.internal import COVALENT_RADII
 from mdtraj.utils import ilen, import_
@@ -226,7 +224,7 @@ class Inspector:
 
         # which atoms have a nonbonded interaction. exluce atoms interacting
         # with themselves or with atoms they're bonded to.
-        nonbond_mask = np.logical_not(np.eye(self.t.n_atoms, dtype=np.bool))
+        nonbond_mask = np.logical_not(np.eye(self.t.n_atoms, dtype=bool))
         for a, b in self.t.topology.bonds:
             nonbond_mask[a.index, b.index] = False
             nonbond_mask[b.index, a.index] = False

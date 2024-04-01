@@ -1,6 +1,7 @@
-import mdtraj as md
 import numpy as np
 import pytest
+
+import mdtraj as md
 from mdtraj.formats import TNGTrajectoryFile
 from mdtraj.testing import eq
 

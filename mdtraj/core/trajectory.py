@@ -21,11 +21,6 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
-
-
 import functools
 import os
 import warnings
@@ -33,6 +28,7 @@ from collections.abc import Iterable
 from copy import deepcopy
 
 import numpy as np
+
 from mdtraj import FormatRegistry, _rmsd
 from mdtraj.core.residue_names import _SOLVENT_TYPES
 from mdtraj.core.topology import Topology
@@ -61,29 +57,15 @@ from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.formats.mol2 import load_mol2
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
-from mdtraj.formats.mol2 import load_mol2
-from mdtraj.formats.gro import load_gro
-from mdtraj.formats.arc import load_arc
-from mdtraj.formats.hoomdxml import load_hoomdxml
-from mdtraj.formats.gsd import write_gsd, load_gsd_topology
-from mdtraj.core.topology import Topology
-from mdtraj.core.residue_names import _SOLVENT_TYPES
+from mdtraj.geometry import _geometry, distance
 from mdtraj.utils import (
-    ensure_type,
-    in_units_of,
-    lengths_and_angles_to_box_vectors,
     box_vectors_to_lengths_and_angles,
     cast_indices,
     deprecated,
+    ensure_type,
+    in_units_of,
+    lengths_and_angles_to_box_vectors,
 )
-from mdtraj import _rmsd
-from mdtraj import FormatRegistry
-from mdtraj.geometry import distance
-from mdtraj.geometry import _geometry
-
-##############################################################################
-# Globals
-##############################################################################
 
 __all__ = [
     "open",
@@ -111,11 +93,6 @@ _TOPOLOGY_EXTS = [
     ".hdf5",
     ".gsd",
 ]
-
-
-##############################################################################
-# Utilities
-##############################################################################
 
 
 def _assert_files_exist(filenames):
@@ -213,7 +190,7 @@ def _parse_topology(top, **kwargs):
     elif isinstance(top, (str, os.PathLike)) and (ext in [".gsd"]):
         topology = load_gsd_topology(top, **kwargs)
     elif isinstance(top, (str, os.PathLike)):
-        raise IOError(
+        raise OSError(
             "The topology is loaded by filename extension, and the "
             'detected "%s" format is not supported. Supported topology '
             'formats include %s and "%s".'
@@ -221,7 +198,7 @@ def _parse_topology(top, **kwargs):
                 ext,
                 ", ".join(['"%s"' % e for e in _TOPOLOGY_EXTS[:-1]]),
                 _TOPOLOGY_EXTS[-1],
-            )
+            ),
         )
     else:
         raise TypeError("A topology is required. You supplied top=%s" % str(top))
@@ -236,10 +213,6 @@ def _get_extension(filename):
         return extension2 + extension
     return extension
 
-
-##############################################################################
-# Utilities
-##############################################################################
 
 
 def open(filename, mode="r", force_overwrite=True, **kwargs):
@@ -1807,7 +1780,7 @@ class Trajectory:
             if not np.all(self.unitcell_angles == 90):
                 raise ValueError(
                     "Only rectilinear boxes can be saved to mdcrd files. "
-                    "Your angles are {}".format(self.unitcell_angles),
+                    f"Your angles are {self.unitcell_angles}",
                 )
 
         with MDCRDTrajectoryFile(
@@ -1895,7 +1868,9 @@ class Trajectory:
             fmt = "%s.%%0%dd" % (filename, len(str(self.n_frames)))
             for i in range(self.n_frames):
                 with AmberNetCDFRestartFile(
-                    fmt % (i + 1), "w", force_overwrite=force_overwrite
+                    fmt % (i + 1),
+                    "w",
+                    force_overwrite=force_overwrite,
                 ) as f:
                     coordinates = in_units_of(
                         self._xyz,
@@ -1954,7 +1929,9 @@ class Trajectory:
             fmt = "%s.%%0%dd" % (filename, len(str(self.n_frames)))
             for i in range(self.n_frames):
                 with AmberRestartFile(
-                    fmt % (i + 1), "w", force_overwrite=force_overwrite
+                    fmt % (i + 1),
+                    "w",
+                    force_overwrite=force_overwrite,
                 ) as f:
                     coordinates = in_units_of(
                         self._xyz,

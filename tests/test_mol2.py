@@ -20,21 +20,16 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-import mdtraj as md
-from mdtraj.testing import eq
-from mdtraj.formats import mol2
-import shutil
-import tarfile
-import pickle
 import os
 import pickle
 import tarfile
 from distutils.spawn import find_executable
 
-import mdtraj as md
 import numpy as np
 import pytest
 import scipy.sparse
+
+import mdtraj as md
 from mdtraj.formats import mol2
 from mdtraj.testing import eq
 
@@ -78,10 +73,7 @@ def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb(get_fn, tmpdir):
         pdb_filename = "./v0.3/mol2files_gaff/%s.pdb" % key
         sybyl_filename = "./v0.3/mol2files_sybyl/%s.mol2" % key
 
-        cmd = "obabel -imol2 {} -opdb > {} 2>/dev/null".format(
-            sybyl_filename,
-            pdb_filename,
-        )
+        cmd = f"obabel -imol2 {sybyl_filename} -opdb > {pdb_filename} 2>/dev/null"
         assert os.system(cmd) == 0
 
         t_pdb = md.load(pdb_filename)

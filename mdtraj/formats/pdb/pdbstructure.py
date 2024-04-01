@@ -46,6 +46,7 @@ import sys
 import warnings
 
 import numpy as np
+
 from mdtraj.core import element
 
 
@@ -345,7 +346,7 @@ class Model:
     def _add_chain(self, chain):
         self.chains.append(chain)
         self._current_chain = chain
-        if not chain.chain_id in self.chains_by_id:
+        if chain.chain_id not in self.chains_by_id:
             self.chains_by_id[chain.chain_id] = chain
 
     def get_chain(self, chain_id):
@@ -561,7 +562,7 @@ class Residue:
     def _add_atom(self, atom):
         """ """
         alt_loc = atom.alternate_location_indicator
-        if not alt_loc in self.locations:
+        if alt_loc not in self.locations:
             self.locations[alt_loc] = Residue.Location(
                 alt_loc,
                 atom.residue_name_with_spaces,
@@ -942,13 +943,7 @@ class Atom:
             self.residue_number,
             self.insertion_code,
         )
-        numbers = "{:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}      ".format(
-            self.x,
-            self.y,
-            self.z,
-            self.occupancy,
-            self.temperature_factor,
-        )
+        numbers = f"{self.x:8.3f}{self.y:8.3f}{self.z:8.3f}{self.occupancy:6.2f}{self.temperature_factor:6.2f}      "
         end = "%-4s%2s" % (
             self.segment_id,
             self.element_symbol,

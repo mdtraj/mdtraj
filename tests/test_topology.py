@@ -24,9 +24,10 @@ import os
 import pickle
 import tempfile
 
-import mdtraj as md
 import numpy as np
 import pytest
+
+import mdtraj as md
 from mdtraj.testing import eq
 
 try:

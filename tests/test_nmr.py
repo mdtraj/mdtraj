@@ -1,16 +1,11 @@
-import numpy as np
-import mdtraj as md
-from mdtraj.testing import eq
-from mdtraj.nmr.shift_wrappers import find_executable, SPARTA_PLUS, PPM, SHIFTX2
-import pytest
 import os
 
-import mdtraj as md
 import numpy as np
 import pytest
+
+import mdtraj as md
 from mdtraj.nmr.shift_wrappers import PPM, SHIFTX2, SPARTA_PLUS, find_executable
 from mdtraj.testing import eq
-from mdtraj.utils import six
 
 
 @pytest.mark.skipif(
@@ -44,8 +39,10 @@ def test_ppm(get_fn):
     #       2     ASN   CA    999.000  53.004  51.168  51.802  53.081  54.098  52.820  52.379  51.856  53.034  52.754  54.134  54.222  51.210  52.207  50.824  54.459  53.605  54.211  53.688  52.344  53.004  51.168  51.802  53.081  54.098  52.820  52.379  51.856  53.034  52.754  54.134  54.222  51.210  52.207  50.824  54.459  53.605  54.211  53.688  52.344
 
 
-@pytest.mark.skipif((not find_executable(SHIFTX2)) or (os.environ.get('TRAVIS', '') == 'true'),
-                    reason='SHIFTX2 binary not found or running on travis.')
+@pytest.mark.skipif(
+    (not find_executable(SHIFTX2)) or (os.environ.get("TRAVIS", "") == "true"),
+    reason="SHIFTX2 binary not found or running on travis.",
+)
 def test_shiftx2(get_fn):
     t = md.load(get_fn("2EQQ.pdb"))
     result = md.chemical_shifts_shiftx2(t)

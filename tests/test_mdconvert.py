@@ -33,9 +33,10 @@ import os
 import subprocess
 import sys
 
-import mdtraj as md
 import numpy as np
 import pytest
+
+import mdtraj as md
 from mdtraj import element
 from mdtraj.testing import eq
 
@@ -105,8 +106,8 @@ extensions = [
 
 @pytest.fixture(params=extensions, ids=lambda x: "from-" + x)
 def extension(request):
-    if on_win and request.param == 'lh5':
-        pytest.skip('No lh5 on windows py3')
+    if on_win and request.param == "lh5":
+        pytest.skip("No lh5 on windows py3")
     return request.param
 
 

@@ -21,6 +21,7 @@
 ##############################################################################
 
 import numpy as np
+
 from mdtraj.geometry.distance import compute_distances, compute_distances_t
 from mdtraj.utils import ensure_type
 

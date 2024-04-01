@@ -20,17 +20,12 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-
-##############################################################################
-# Imports
-##############################################################################
-
 import math
+
+import numpy as np
 
 from mdtraj.core.topology import Topology, _topology_from_subset
 from mdtraj.utils import unitcell
-
-import numpy as np
 
 try:
     # openmm
@@ -43,10 +38,6 @@ except ImportError:
     # OpenMM installed, we don't want that to choke. It should
     # only choke if they actually try to USE the reporter
     OPENMM_IMPORTED = False
-
-##############################################################################
-# Classes
-##############################################################################
 
 
 class _BaseReporter:
@@ -111,7 +102,7 @@ class _BaseReporter:
             self._traj_file = self.backend(file, "w")
         elif isinstance(file, self.backend):
             self._traj_file = file
-            if not file.mode in ["w", "a"]:
+            if file.mode not in ["w", "a"]:
                 raise ValueError('file must be open in "w" or "a" mode')
         else:
             raise TypeError("I don't know how to handle %s" % file)

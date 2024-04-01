@@ -1,7 +1,5 @@
-import mdtraj as md
-from mdtraj.utils import ensure_type
-from mdtraj.geometry.hbond import _prep_kabsch_sander_arrays
 from mdtraj.geometry import _geometry
+from mdtraj.geometry.hbond import _prep_kabsch_sander_arrays
 
 SIMPLIFIED_CODE_TRANSLATION = str.maketrans("HGIEBTS ", "HHHEECCC")
 

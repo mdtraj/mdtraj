@@ -26,6 +26,7 @@ import shutil
 import subprocess
 
 import numpy as np
+
 from mdtraj.utils import enter_temp_directory, import_
 
 ##############################################################################
@@ -167,7 +168,9 @@ def chemical_shifts_shiftx2(trj, pH=5.0, temperature=298.00):
             results.append(d)
 
     return pd.concat(results).pivot_table(
-        index=["resSeq", "name"], columns="frame", values="SHIFT"
+        index=["resSeq", "name"],
+        columns="frame",
+        values="SHIFT",
     )
 
 
@@ -343,7 +346,9 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
         results.name[results.name == "HN"] = "H"
 
     return results.pivot_table(
-        index=["resSeq", "name"], columns="frame", values="SHIFT"
+        index=["resSeq", "name"],
+        columns="frame",
+        values="SHIFT",
     )
 
 

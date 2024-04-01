@@ -26,6 +26,7 @@ from itertools import combinations
 
 import numpy as np
 import pytest
+
 from mdtraj.testing import eq
 from mdtraj.utils import (
     box_vectors_to_lengths_and_angles,

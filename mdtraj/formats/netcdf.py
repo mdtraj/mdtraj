@@ -32,6 +32,7 @@ import warnings
 from datetime import datetime
 
 import numpy as np
+
 from mdtraj import version
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, import_, in_units_of
@@ -78,7 +79,7 @@ def load_netcdf(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.NetCDFTrajectoryFile :  Low level interface to NetCDF files
     """
-    from mdtraj.core.trajectory import Trajectory, _parse_topology
+    from mdtraj.core.trajectory import _parse_topology
 
     if top is None:
         raise ValueError('"top" argument is required for load_netcdf')

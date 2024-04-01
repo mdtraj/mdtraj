@@ -2,9 +2,10 @@ import os
 import os.path
 import tempfile
 
-import mdtraj as md
 import numpy as np
 import pytest
+
+import mdtraj as md
 
 
 def test_1(get_fn):

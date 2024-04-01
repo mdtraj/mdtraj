@@ -32,21 +32,19 @@ https://github.com/mdtraj/mdtraj/wiki/HDF5-Trajectory-Format
 import os
 import warnings
 from collections import namedtuple
-from functools import wraps
 
 try:
     import simplejson as json
 except ImportError:
     import json
 
-import mdtraj.core.element as elem
 import numpy as np
+
+import mdtraj.core.element as elem
 from mdtraj import version
 from mdtraj.core.topology import Topology
-from mdtraj.utils import in_units_of, ensure_type, import_, cast_indices
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, import_, in_units_of
-from mdtraj.utils.six import string_types
 
 __all__ = ["HDF5TrajectoryFile", "load_hdf5"]
 
@@ -113,7 +111,7 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
             "filename must be of type path-like for load_lh5. "
-            "you supplied %s" % type(filename)
+            "you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)
@@ -183,7 +181,7 @@ class HDF5TrajectoryFile:
         self._open = False  # is the file handle currently open?
         self.mode = mode  # the mode in which the file was opened?
 
-        if not mode in ["r", "w", "a"]:
+        if mode not in ["r", "w", "a"]:
             raise ValueError("mode must be one of ['r', 'w', 'a']")
 
         if mode == "w" and not force_overwrite and os.path.exists(filename):

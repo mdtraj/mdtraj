@@ -72,11 +72,7 @@ class NotebookDirective(Directive):
         nb_abs_path = f"{setup.confdir}/../{nb_rel_path}"
         nb_abs_path = os.path.abspath(nb_abs_path)
         nb_name = os.path.basename(nb_rel_path).split(".")[0]
-        dest_dir = "{}/{}/{}".format(
-            setup.app.builder.outdir,
-            os.path.dirname(nb_rel_path),
-            nb_name,
-        )
+        dest_dir = f"{setup.app.builder.outdir}/{os.path.dirname(nb_rel_path)}/{nb_name}"
         fmt = {"wd": dest_dir, "name": nb_name}
 
         if not os.path.exists(dest_dir):
