@@ -1,8 +1,18 @@
 # cython: c_string_type=str, c_string_encoding=ascii
 
 from libc.stdint cimport int64_t
+<<<<<<< HEAD
 from libc.stdio cimport printf
 from libc.stdlib cimport free, malloc
+=======
+from libc.stdlib cimport malloc, free
+
+from math import ceil
+from mdtraj.utils import ensure_type, cast_indices, in_units_of
+from mdtraj.formats.registry import FormatRegistry
+from mdtraj.formats import PDBTrajectoryFile
+import mdtraj as md
+>>>>>>> origin/master
 
 import os
 from math import ceil
@@ -191,7 +201,7 @@ def load_tng(filename, top=None, stride=None, atom_indices=None, frame=None):
     """
     from mdtraj.core.trajectory import _parse_topology
 
-    if not isinstance(filename, (string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type path-like for load_tng. '
                         'you supplied %s' % type(filename))
     if top is not None:

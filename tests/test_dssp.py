@@ -1,7 +1,7 @@
 import itertools
 import os
 import subprocess
-from distutils.spawn import find_executable
+import shutil
 
 import mdtraj as md
 import numpy as np

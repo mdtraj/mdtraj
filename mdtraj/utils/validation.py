@@ -32,6 +32,11 @@ import warnings
 
 import numpy as np
 from mdtraj.utils.six.moves import zip_longest
+import warnings
+import numbers
+import numpy as np
+import collections
+from itertools import zip_longest
 
 ##############################################################################
 # functions / classes

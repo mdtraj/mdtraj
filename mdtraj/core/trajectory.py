@@ -61,17 +61,25 @@ from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.formats.mol2 import load_mol2
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
-from mdtraj.geometry import _geometry, distance
+from mdtraj.formats.mol2 import load_mol2
+from mdtraj.formats.gro import load_gro
+from mdtraj.formats.arc import load_arc
+from mdtraj.formats.hoomdxml import load_hoomdxml
+from mdtraj.formats.gsd import write_gsd, load_gsd_topology
+from mdtraj.core.topology import Topology
+from mdtraj.core.residue_names import _SOLVENT_TYPES
 from mdtraj.utils import (
-    box_vectors_to_lengths_and_angles,
-    cast_indices,
-    deprecated,
     ensure_type,
     in_units_of,
     lengths_and_angles_to_box_vectors,
+    box_vectors_to_lengths_and_angles,
+    cast_indices,
+    deprecated,
 )
-from mdtraj.utils.six import PY3, string_types
-from mdtraj.utils.six.moves import xrange
+from mdtraj import _rmsd
+from mdtraj import FormatRegistry
+from mdtraj.geometry import distance
+from mdtraj.geometry import _geometry
 
 ##############################################################################
 # Globals
@@ -118,7 +126,7 @@ def _assert_files_exist(filenames):
     filenames : {path-like, [path-like]}
         Path or list of paths to check
     """
-    if isinstance(filenames, (string_types, os.PathLike)):
+    if isinstance(filenames, (str, os.PathLike)):
         filenames = [filenames]
     for fn in filenames:
         if not (os.path.exists(fn) and os.path.isfile(fn)):
@@ -133,33 +141,18 @@ def _assert_files_or_dirs_exist(names):
     filenames : {path-like, [path-like]}
         Path or list of paths to check
     """
-    if isinstance(names, (string_types, os.PathLike)):
+    if isinstance(names, (str, os.PathLike)):
         names = [names]
     for fn in names:
         if not (os.path.exists(fn) and (os.path.isfile(fn) or os.path.isdir(fn))):
             raise OSError("No such file: %s" % fn)
 
 
-if PY3:
-
-    def _hash_numpy_array(x):
-        hash_value = hash(x.shape)
-        hash_value ^= hash(x.strides)
-        hash_value ^= hash(x.data.tobytes())
-        return hash_value
-
-else:
-
-    def _hash_numpy_array(x):
-        writeable = x.flags.writeable
-        try:
-            x.flags.writeable = False
-            hash_value = hash(x.shape)
-            hash_value ^= hash(x.strides)
-            hash_value ^= hash(x.data)
-        finally:
-            x.flags.writeable = writeable
-        return hash_value
+def _hash_numpy_array(x):
+    hash_value = hash(x.shape)
+    hash_value ^= hash(x.strides)
+    hash_value ^= hash(x.data.tobytes())
+    return hash_value
 
 
 def load_topology(filename, **kwargs):
@@ -189,7 +182,7 @@ def _parse_topology(top, **kwargs):
     topology : md.Topology
     """
 
-    if isinstance(top, (string_types, os.PathLike)):
+    if isinstance(top, (str, os.PathLike)):
         ext = _get_extension(top)
     else:
         ext = None  # might not be a string
@@ -198,29 +191,29 @@ def _parse_topology(top, **kwargs):
         topology = top
     elif isinstance(top, Trajectory):
         topology = top.topology
-    elif isinstance(top, (string_types, os.PathLike)) and (
+    elif isinstance(top, (str, os.PathLike)) and (
         ext in [".pdb", ".pdb.gz", ".pdbx", ".cif", ".h5", ".lh5"]
     ):
         _traj = load_frame(top, 0, **kwargs)
         topology = _traj.topology
-    elif isinstance(top, (string_types, os.PathLike)) and (
+    elif isinstance(top, (str, os.PathLike)) and (
         ext in [".prmtop", ".parm7", ".prm7"]
     ):
         topology = load_prmtop(top, **kwargs)
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in [".psf"]):
+    elif isinstance(top, (str, os.PathLike)) and (ext in [".psf"]):
         topology = load_psf(top, **kwargs)
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in [".mol2"]):
+    elif isinstance(top, (str, os.PathLike)) and (ext in [".mol2"]):
         topology = load_mol2(top, **kwargs).topology
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in [".gro"]):
+    elif isinstance(top, (str, os.PathLike)) and (ext in [".gro"]):
         topology = load_gro(top, **kwargs).topology
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in [".arc"]):
+    elif isinstance(top, (str, os.PathLike)) and (ext in [".arc"]):
         topology = load_arc(top, **kwargs).topology
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in [".hoomdxml"]):
+    elif isinstance(top, (str, os.PathLike)) and (ext in [".hoomdxml"]):
         topology = load_hoomdxml(top, **kwargs).topology
-    elif isinstance(top, (string_types, os.PathLike)) and (ext in [".gsd"]):
+    elif isinstance(top, (str, os.PathLike)) and (ext in [".gsd"]):
         topology = load_gsd_topology(top, **kwargs)
-    elif isinstance(top, (string_types, os.PathLike)):
-        raise OSError(
+    elif isinstance(top, (str, os.PathLike)):
+        raise IOError(
             "The topology is loaded by filename extension, and the "
             'detected "%s" format is not supported. Supported topology '
             'formats include %s and "%s".'
@@ -228,7 +221,7 @@ def _parse_topology(top, **kwargs):
                 ext,
                 ", ".join(['"%s"' % e for e in _TOPOLOGY_EXTS[:-1]]),
                 _TOPOLOGY_EXTS[-1],
-            ),
+            )
         )
     else:
         raise TypeError("A topology is required. You supplied top=%s" % str(top))
@@ -414,7 +407,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     # If a single filename make a list out of it in
     # order to have an easier function later on
-    if isinstance(filename_or_filenames, (string_types, os.PathLike)):
+    if isinstance(filename_or_filenames, (str, os.PathLike)):
         filename_or_filenames = [filename_or_filenames]
 
     extensions = [_get_extension(f) for f in filename_or_filenames]
@@ -1643,7 +1636,8 @@ class Trajectory:
             bfactors = [None] * self.n_frames
 
         with PDBTrajectoryFile(filename, "w", force_overwrite=force_overwrite) as f:
-            for i in xrange(self.n_frames):
+            for i in range(self.n_frames):
+
                 if self._have_unitcell:
                     f.write(
                         in_units_of(
@@ -1899,11 +1893,9 @@ class Trajectory:
                 )
         else:
             fmt = "%s.%%0%dd" % (filename, len(str(self.n_frames)))
-            for i in xrange(self.n_frames):
+            for i in range(self.n_frames):
                 with AmberNetCDFRestartFile(
-                    fmt % (i + 1),
-                    "w",
-                    force_overwrite=force_overwrite,
+                    fmt % (i + 1), "w", force_overwrite=force_overwrite
                 ) as f:
                     coordinates = in_units_of(
                         self._xyz,
@@ -1960,11 +1952,9 @@ class Trajectory:
                 )
         else:
             fmt = "%s.%%0%dd" % (filename, len(str(self.n_frames)))
-            for i in xrange(self.n_frames):
+            for i in range(self.n_frames):
                 with AmberRestartFile(
-                    fmt % (i + 1),
-                    "w",
-                    force_overwrite=force_overwrite,
+                    fmt % (i + 1), "w", force_overwrite=force_overwrite
                 ) as f:
                     coordinates = in_units_of(
                         self._xyz,
@@ -2311,13 +2301,9 @@ class Trajectory:
         if inplace:
             result = self
         else:
-            result = Trajectory(
-                xyz=self.xyz,
-                topology=self.topology,
-                time=self.time,
-                unitcell_lengths=self.unitcell_lengths,
-                unitcell_angles=self.unitcell_angles,
-            )
+            # This slice-based assignment ensures all numpy arrays in result
+            #  are copies, not views, of the corresponding items in self:
+            result = self[:]
 
         if sorted_bonds is None:
             sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
@@ -2401,14 +2387,7 @@ class Trajectory:
         if inplace:
             result = self
         else:
-            result = Trajectory(
-                xyz=self.xyz,
-                topology=self.topology,
-                time=self.time,
-                unitcell_lengths=self.unitcell_lengths,
-                unitcell_angles=self.unitcell_angles,
-            )
-
+            result = self[:]
         if make_whole and sorted_bonds is None:
             sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
             sorted_bonds = np.asarray(

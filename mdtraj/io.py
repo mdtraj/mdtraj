@@ -73,13 +73,14 @@ True
 Functions
 ---------
 """
-
 import io
 import os
 import warnings
 
 import numpy as np
 from mdtraj.utils import import_
+
+tables = import_("tables")
 
 tables = import_("tables")
 TABLES2 = tables.__version__ < "3.0.0"
@@ -156,10 +157,7 @@ def saveh(file, *args, **kwargs):
     """
 
     if isinstance(file, str):
-        if TABLES2:
-            handle = tables.openFile(file, "a")
-        else:
-            handle = tables.open_file(file, "a")
+        handle = tables.open_file(file, "a")
         own_fid = True
     else:
         if not isinstance(file, tables.File):
@@ -182,17 +180,11 @@ def saveh(file, *args, **kwargs):
         namedict[key] = val
 
     # ensure that they don't already exist
-    if TABLES2:
-        current_nodes = [e.name for e in handle.listNodes(where="/")]
-    else:
-        current_nodes = [e.name for e in handle.list_nodes(where="/")]
+    current_nodes = [e.name for e in handle.list_nodes(where="/")]
 
     for key in namedict.keys():
         if key in current_nodes:
-            if TABLES2:
-                handle.removeNode("/", name=key)
-            else:
-                handle.remove_node("/", name=key)
+            handle.remove_node("/", name=key)
             # per discussion on github, https://github.com/rmcgibbo/mdtraj/issues/5
             # silent overwriting appears to be the desired functionality
             # raise IOError('Array already exists in file: %s' % key)
@@ -212,22 +204,9 @@ def saveh(file, *args, **kwargs):
                     "Arrays of this dtype " "cannot be saved: %s" % val.dtype,
                 )
 
-            if TABLES2:
-                node = handle.createCArray(
-                    where="/",
-                    name=key,
-                    atom=atom,
-                    shape=val.shape,
-                    filters=COMPRESSION,
-                )
-            else:
-                node = handle.create_carray(
-                    where="/",
-                    name=key,
-                    atom=atom,
-                    shape=val.shape,
-                    filters=COMPRESSION,
-                )
+            node = handle.create_carray(
+                where="/", name=key, atom=atom, shape=val.shape, filters=COMPRESSION
+            )
 
             node[:] = val
 
@@ -277,10 +256,7 @@ def loadh(file, name=Ellipsis, deferred=True):
     """
 
     if isinstance(file, str):
-        if TABLES2:
-            handle = tables.openFile(file, mode="r")
-        else:
-            handle = tables.open_file(file, mode="r")
+        handle = tables.open_file(file, mode="r")
         own_fid = True
     else:
         if not isinstance(file, tables.File):
@@ -293,10 +269,7 @@ def loadh(file, name=Ellipsis, deferred=True):
     # if name is a single string, deferred loading is not used
     if isinstance(name, str):
         try:
-            if TABLES2:
-                node = handle.getNode(where="/", name=name)
-            else:
-                node = handle.get_node(where="/", name=name)
+            node = handle.get_node(where="/", name=name)
         except tables.NoSuchNodeError:
             raise KeyError(
                 'Node "%s" does not exist ' "in file %s" % (name, file),
@@ -309,10 +282,7 @@ def loadh(file, name=Ellipsis, deferred=True):
 
     if not deferred:
         result = {}
-        if TABLES2:
-            iterator = handle.walkNodes(where="/")
-        else:
-            iterator = handle.walk_nodes(where="/")
+        iterator = handle.walk_nodes(where="/")
         for node in iterator:
             if isinstance(node, tables.Array):
                 # note that we want to strip off the leading "/"
@@ -331,42 +301,25 @@ class DeferredTable:
 
         # get the paths of all of the nodes that are arrays (note that)
         # we're skipping Tables
-        if TABLES2:
-            self._node_names = [
-                node._v_pathname[1:]
-                for node in handle.walkNodes(where="/")
-                if isinstance(node, tables.Array)
-            ]
-        else:
-            self._node_names = [
-                node._v_pathname[1:]
-                for node in handle.walk_nodes(where="/")
-                if isinstance(node, tables.Array)
-            ]
+        self._node_names = [
+            node._v_pathname[1:]
+            for node in handle.walk_nodes(where="/")
+            if isinstance(node, tables.Array)
+        ]
 
         self._loaded = {}
         self._own_fid = own_fid
 
         repr_strings = []
         for name in self._node_names:
-            if TABLES2:
-                repr_strings.append(
-                    "  %s: [shape=%s, dtype=%s]"
-                    % (
-                        name,
-                        handle.getNode(where="/", name=name).shape,
-                        handle.getNode(where="/", name=name).dtype,
-                    ),
+            repr_strings.append(
+                "  %s: [shape=%s, dtype=%s]"
+                % (
+                    name,
+                    handle.get_node(where="/", name=name).shape,
+                    handle.get_node(where="/", name=name).dtype,
                 )
-            else:
-                repr_strings.append(
-                    "  %s: [shape=%s, dtype=%s]"
-                    % (
-                        name,
-                        handle.get_node(where="/", name=name).shape,
-                        handle.get_node(where="/", name=name).dtype,
-                    ),
-                )
+            )
         self._repr_string = "{\n%s\n}" % ",\n".join(repr_strings)
 
     def __repr__(self):
@@ -383,10 +336,7 @@ class DeferredTable:
         if key not in self._node_names:
             raise KeyError(f"{key} not in {self._node_names}")
         if key not in self._loaded:
-            if TABLES2:
-                self._loaded[key] = self._handle.getNode(where="/", name=key)[:]
-            else:
-                self._loaded[key] = self._handle.get_node(where="/", name=key)[:]
+            self._loaded[key] = self._handle.get_node(where="/", name=key)[:]
         return self._loaded[key]
 
     def iteritems(self):

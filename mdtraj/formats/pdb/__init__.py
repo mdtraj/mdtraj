@@ -20,5 +20,4 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-
 from mdtraj.formats.pdb.pdbfile import PDBTrajectoryFile, load_pdb

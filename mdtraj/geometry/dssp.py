@@ -1,30 +1,11 @@
-##############################################################################
-# Imports
-##############################################################################
-
 import mdtraj as md
-import numpy as np
-from mdtraj.geometry import _geometry
-from mdtraj.geometry.hbond import _prep_kabsch_sander_arrays
 from mdtraj.utils import ensure_type
-from mdtraj.utils.six import PY2
+from mdtraj.geometry.hbond import _prep_kabsch_sander_arrays
+from mdtraj.geometry import _geometry
 
-if PY2:
-    from string import maketrans
-else:
-    maketrans = str.maketrans
+SIMPLIFIED_CODE_TRANSLATION = str.maketrans("HGIEBTS ", "HHHEECCC")
 
-##############################################################################
-# GLOBALS
-##############################################################################
-
-SIMPLIFIED_CODE_TRANSLATION = maketrans("HGIEBTS ", "HHHEECCC")
 __all__ = ["compute_dssp"]
-
-
-##############################################################################
-# CODE
-##############################################################################
 
 
 def compute_dssp(traj, simplified=True):
@@ -95,10 +76,8 @@ def compute_dssp(traj, simplified=True):
 
     n_frames = xyz.shape[0]
     n_residues = nco_indices.shape[0]
-    if PY2:
-        array = np.fromiter(value, dtype=np.dtype("S2"))
-    else:
-        array = np.fromiter(value, dtype=np.dtype("U2"))
+
+    array = np.fromiter(value, dtype=np.dtype("U2"))
 
     array = array.reshape(n_frames, n_residues)
     array[:, np.logical_not(protein_indices)] = "NA"

@@ -43,8 +43,15 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
 
-
 import os
+import numpy as np
+from mdtraj.core.topology import Topology
+from mdtraj.utils import cast_indices, in_units_of, open_maybe_zipped
+from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils.unitcell import (
+    lengths_and_angles_to_box_vectors,
+    box_vectors_to_lengths_and_angles,
+)
 import warnings
 
 import numpy as np
@@ -121,10 +128,10 @@ def load_pdbx(
     """
     from mdtraj import Trajectory
 
-    if not isinstance(filename, ((str,), os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
             "filename must be of type string or path-like for load_pdb. "
-            "you supplied %s" % type(filename),
+            "you supplied %s" % type(filename)
         )
 
     atom_indices = cast_indices(atom_indices)

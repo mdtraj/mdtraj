@@ -26,18 +26,10 @@ This module provides the ability to read and write AMBER NetCDF trajectories.
 
 The code is heavily based on amber_netcdf_trajectory_tools.py by John Chodera.
 """
-
-##############################################################################
-# imports
-##############################################################################
-
-
-# stdlib
 import os
 import socket
 import warnings
 from datetime import datetime
-from distutils.version import StrictVersion
 
 import numpy as np
 from mdtraj import version
@@ -131,6 +123,12 @@ class NetCDFTrajectoryFile:
     """
 
     distance_unit = "angstroms"
+
+    def __init__(self, filename, mode="r", force_overwrite=True):
+        self._closed = True  # is the file currently closed?
+        self._mode = mode  # what mode were we opened in
+
+        netcdf = import_("scipy.io").netcdf_file
 
     def __init__(self, filename, mode="r", force_overwrite=True):
         self._closed = True  # is the file currently closed?

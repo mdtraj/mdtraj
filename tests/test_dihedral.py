@@ -1,6 +1,6 @@
 import itertools
 import os
-from distutils.spawn import find_executable
+import shutil
 
 import mdtraj as md
 import numpy as np

@@ -24,10 +24,6 @@
 Code to delay the import of a moldule, and give a nice error message if
 the module is not installed. for dealing with dependencies.
 """
-##############################################################################
-# imports
-##############################################################################
-
 
 import importlib
 import inspect
@@ -36,10 +32,6 @@ import sys
 import textwrap
 
 __all__ = ["import_"]
-
-##############################################################################
-# globals
-##############################################################################
 
 MESSAGES = {
     "networkx": """

@@ -26,6 +26,9 @@
 ##############################################################################
 
 
+import numpy as np
+from mdtraj.utils import ensure_type
+from mdtraj.geometry import _geometry, distance
 import warnings
 
 import numpy as np

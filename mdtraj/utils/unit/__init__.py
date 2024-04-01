@@ -36,7 +36,7 @@ import sys
 import numpy as np
 from mdtraj.utils import import_
 from mdtraj.utils.unit import unit_definitions
-from mdtraj.utils.unit.quantity import Quantity
+from mdtraj.utils import import_
 
 UNIT_DEFINITIONS = unit_definitions
 
@@ -65,7 +65,7 @@ class _UnitContext(ast.NodeTransformer):
         ast.Pow,
         ast.Div,
         ast.Mult,
-        ast.Num,
+        ast.Constant,
     ]
 
     def visit(self, node):

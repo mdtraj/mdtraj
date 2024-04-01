@@ -25,12 +25,10 @@
 # imports
 ##############################################################################
 
-
 import ast
 import sys
 
 import numpy as np
-from mdtraj.utils.six import PY2, integer_types, iteritems
 from numpy.testing import (
     assert_allclose,
     assert_almost_equal,
@@ -134,11 +132,7 @@ def eq(o1, o2, decimal=6, err_msg=""):
     AssertionError
         If the tests fail
     """
-    if isinstance(o1, integer_types) and isinstance(o2, integer_types) and PY2:
-        eq_(long(o1), long(o2))
-        return True
-
-    assert type(o1) is type(o2), "o1 and o2 not the same type: {} {}".format(
+    assert type(o1) is type(o2), "o1 and o2 not the same type: %s %s" % (
         type(o1),
         type(o2),
     )
@@ -190,7 +184,7 @@ def assert_dict_equal(t1, t2, decimal=6):
     # make sure the keys are the same
     eq_(list(t1.keys()), list(t2.keys()))
 
-    for key, val in iteritems(t1):
+    for key, val in t1.items():
         # compare numpy arrays using numpy.testing
         if isinstance(val, np.ndarray) or (
             "pandas" in sys.modules and isinstance(t1, pd.DataFrame)

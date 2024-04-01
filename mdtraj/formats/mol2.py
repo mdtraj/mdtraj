@@ -48,15 +48,13 @@
 # Imports
 ##############################################################################
 
-
+import numpy as np
 import itertools
 import re
-
-import numpy as np
-from mdtraj.core import element as elem
-from mdtraj.formats.registry import FormatRegistry
+from io import StringIO
 from mdtraj.utils import import_
-from mdtraj.utils.six.moves import cStringIO as StringIO
+from mdtraj.formats.registry import FormatRegistry
+from mdtraj.core import element as elem
 
 __all__ = ["load_mol2", "mol2_to_dataframes"]
 

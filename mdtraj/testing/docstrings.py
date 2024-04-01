@@ -24,23 +24,24 @@
 ##############################################################################
 # Imports
 ##############################################################################
-
-import importlib
-import pkgutil
+import operator
 import sys
 import types
 import warnings
+import pkgutil
+import importlib
 from inspect import (
-    getargs,
-    getdoc,
-    getmembers,
-    getmodule,
-    isbuiltin,
     isclass,
+    ismodule,
     isfunction,
     ismethod,
-    ismodule,
+    getmembers,
+    getdoc,
+    getmodule,
+    getargs,
+    isbuiltin,
 )
+from mdtraj.testing.docscrape import NumpyDocString
 
 from mdtraj.testing.docscrape import NumpyDocString
 from mdtraj.utils.six import get_function_code
@@ -86,9 +87,7 @@ def docstring_verifiers(module, error_on_none=False):
             A string represntation
         """
         if ismethod(f):
-            return ".".join(
-                [getmodule(f).__name__, f.__self__.__class__.__name__, f.__name__],
-            )
+            return ".".join([getmodule(f).__name__, f.im_class.__name__, f.__name__])
         if isfunction(f) or isbuiltin(f):
             return ".".join([getmodule(f).__name__, f.__name__])
         if isclass(f):
@@ -146,7 +145,8 @@ def docstring_verifiers(module, error_on_none=False):
                     )
                 return
 
-            args = set(getargs(get_function_code(f)).args)
+            args = set(getargs(f.__code__).args)
+
             if "self" in args:
                 args.remove("self")
             if "cls" in args:

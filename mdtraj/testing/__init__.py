@@ -21,5 +21,6 @@
 ##############################################################################
 
 
+from mdtraj.testing.testing import *
 from mdtraj.testing.docstrings import *
 from mdtraj.testing.testing import *

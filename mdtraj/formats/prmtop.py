@@ -53,7 +53,6 @@
 # Imports
 ##############################################################################
 
-
 import re
 
 from mdtraj.core import element as elem

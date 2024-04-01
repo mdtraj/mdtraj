@@ -25,6 +25,10 @@
 # Imports
 ##############################################################################
 
+from copy import deepcopy
+import numpy as np
+from mdtraj.utils import ensure_type
+from mdtraj.geometry import _geometry
 
 from copy import deepcopy
 

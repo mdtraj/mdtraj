@@ -29,6 +29,9 @@ This code is new and should be considered __unstable__
 # Imports
 ##############################################################################
 
+import numpy as np
+from itertools import combinations
+import logging
 
 import logging
 from itertools import combinations

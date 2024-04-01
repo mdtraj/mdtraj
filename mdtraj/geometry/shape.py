@@ -20,7 +20,6 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-
 import numpy as np
 from mdtraj.geometry.distance import compute_center_of_geometry
 

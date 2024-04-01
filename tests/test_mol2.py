@@ -20,6 +20,12 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
+import mdtraj as md
+from mdtraj.testing import eq
+from mdtraj.formats import mol2
+import shutil
+import tarfile
+import pickle
 import os
 import pickle
 import tarfile

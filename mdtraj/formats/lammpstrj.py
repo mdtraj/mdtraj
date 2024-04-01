@@ -25,20 +25,12 @@
 # Imports
 ##############################################################################
 
-
+import os
 import itertools
 import os
 
 import numpy as np
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils import (
-    cast_indices,
-    ensure_type,
-    in_units_of,
-    lengths_and_angles_to_box_vectors,
-)
-from mdtraj.utils.six import string_types
-from mdtraj.utils.six.moves import xrange
 
 __all__ = ["LAMMPSTrajectoryFile", "load_lammpstrj"]
 
@@ -97,10 +89,10 @@ def load_lammpstrj(
     # informative error message.
     if top is None:
         raise ValueError('"top" argument is required for load_lammpstrj')
-    if not isinstance(filename, (string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
             "filename must be of type path-like for load_lammpstrj. "
-            "you supplied %s".format(type(filename)),
+            "you supplied %s".format(type(filename))
         )
 
     topology = _parse_topology(top)
@@ -291,7 +283,7 @@ class LAMMPSTrajectoryFile:
         if n_frames is None:
             frame_counter = itertools.count()
         else:
-            frame_counter = xrange(n_frames)
+            frame_counter = range(n_frames)
 
         if stride is None:
             stride = 1
@@ -446,7 +438,7 @@ class LAMMPSTrajectoryFile:
         types = np.empty(shape=self._n_atoms, dtype="int")
 
         # --- begin body ---
-        for _ in xrange(self._n_atoms):
+        for _ in range(self._n_atoms):
             line = self._fh.readline()
             if line == "":
                 raise _EOF()

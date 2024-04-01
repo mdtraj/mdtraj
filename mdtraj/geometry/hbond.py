@@ -25,6 +25,10 @@
 # Imports
 ##############################################################################
 
+import numpy as np
+from mdtraj.utils import ensure_type
+from mdtraj.geometry import compute_distances, compute_angles
+from mdtraj.geometry import _geometry
 
 import numpy as np
 from mdtraj.geometry import _geometry, compute_angles, compute_distances

@@ -24,7 +24,6 @@
 through time in the AMBER NetCDF format
 """
 
-
 from ..formats.dcd import DCDTrajectoryFile
 from .basereporter import _BaseReporter
 

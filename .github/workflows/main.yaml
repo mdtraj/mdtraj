@@ -27,12 +27,12 @@ jobs:
           - macOS-latest
           - ubuntu-latest
         python-version:
-          - "3.9"
           - "3.10"
           - "3.11"
-
+          - "3.12"
+  
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up conda environment
       uses: mamba-org/setup-micromamba@v1
@@ -53,4 +53,4 @@ jobs:
     - name: Run tests
       if: always()
       run: |
-        pytest --durations=10 tests/
+        pytest -n auto --durations=10 tests/

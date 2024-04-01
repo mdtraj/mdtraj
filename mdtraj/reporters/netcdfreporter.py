@@ -28,7 +28,6 @@ through time in the AMBER NetCDF format
 # Imports
 ##############################################################################
 
-
 from mdtraj.formats.netcdf import NetCDFTrajectoryFile
 from mdtraj.reporters.basereporter import _BaseReporter
 

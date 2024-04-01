@@ -58,6 +58,7 @@
 
 from mdtraj.core import element as elem
 from mdtraj.core import topology
+from mdtraj.core import topology, element as elem
 from mdtraj.formats import pdb
 from mdtraj.utils.unit import unit_definitions as u
 

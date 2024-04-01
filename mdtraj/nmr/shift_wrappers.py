@@ -22,9 +22,8 @@
 
 
 import os
+import shutil
 import subprocess
-from distutils.spawn import find_executable as _find_executable
-from distutils.version import LooseVersion
 
 import numpy as np
 from mdtraj.utils import enter_temp_directory, import_
@@ -49,7 +48,7 @@ __all__ = [
 
 def find_executable(names):
     for possible in names:
-        result = _find_executable(possible)
+        result = shutil.which(possible)
         if result is not None:
             return result
     return None
@@ -167,22 +166,9 @@ def chemical_shifts_shiftx2(trj, pH=5.0, temperature=298.00):
             d["frame"] = i
             results.append(d)
 
-    results = pd.concat(results)
-
-    if LooseVersion(pd.__version__) < LooseVersion("0.14.0"):
-        results = results.pivot_table(
-            rows=["resSeq", "name"],
-            cols="frame",
-            values="SHIFT",
-        )
-    else:
-        results = results.pivot_table(
-            index=["resSeq", "name"],
-            columns="frame",
-            values="SHIFT",
-        )
-
-    return results
+    return pd.concat(results).pivot_table(
+        index=["resSeq", "name"], columns="frame", values="SHIFT"
+    )
 
 
 def chemical_shifts_ppm(trj):
@@ -356,20 +342,9 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
     if rename_HN:
         results.name[results.name == "HN"] = "H"
 
-    if LooseVersion(pd.__version__) < LooseVersion("0.14.0"):
-        results = results.pivot_table(
-            rows=["resSeq", "name"],
-            cols="frame",
-            values="SHIFT",
-        )
-    else:
-        results = results.pivot_table(
-            index=["resSeq", "name"],
-            columns="frame",
-            values="SHIFT",
-        )
-
-    return results
+    return results.pivot_table(
+        index=["resSeq", "name"], columns="frame", values="SHIFT"
+    )
 
 
 def reindex_dataframe_by_atoms(trj, frame):
