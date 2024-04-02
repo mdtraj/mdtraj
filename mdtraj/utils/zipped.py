@@ -4,8 +4,6 @@ import io
 import os
 from io import StringIO
 
-from mdtraj.utils.six import StringIO
-
 
 def open_maybe_zipped(filename, mode, force_overwrite=True):
     """Open a file in text (not binary) mode, transparently handling

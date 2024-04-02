@@ -98,7 +98,10 @@ def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb(get_fn, tmpdir):
         # eq(top_gaff.name.values, top_sybyl.name.values)  # THEY CAN HAVE DIFFERENT NAMES, so this isn't TRUE!
 
         def make_bonds_comparable(bond_array):
-            """Create a bond connectivity matrix from a numpy array of atom pairs.  Avoids having to compare the order in which bonds are listed."""
+            """
+            Create a bond connectivity matrix from a numpy array of atom pairs.  Avoids having to
+            compare the order in which bonds are listed.
+            """
             n_bonds = len(bond_array)
             data = np.ones(n_bonds)
             i = bond_array[:, 0]
@@ -135,7 +138,7 @@ def test_mol2_dataframe_status(get_fn):
 
 
 def test_mol2_warnings(get_fn):
-    trj = md.load_mol2(get_fn("lysozyme-ligand-tripos.mol2"))
+    md.load_mol2(get_fn("lysozyme-ligand-tripos.mol2"))
 
 
 def test_mol2_status_bits(get_fn):
@@ -167,7 +170,7 @@ def test_mol2_element_name(get_fn):
     ],
 )
 def test_load_all_mol2(mol2_file, get_fn):
-    trj = md.load_mol2(get_fn(mol2_file))
+    md.load_mol2(get_fn(mol2_file))
 
 
 def test_mol2_n_residues(get_fn):

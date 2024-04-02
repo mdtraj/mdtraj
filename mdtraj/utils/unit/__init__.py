@@ -30,13 +30,14 @@ is "in_units_of", which does unit conversion of numbers or numpy arrays
 where the input and output units are passed as strings.
 
 """
+
 import ast
 import sys
 
 import numpy as np
 
-from mdtraj.utils import import_
 from mdtraj.utils.unit import unit_definitions
+from mdtraj.utils.unit.quantity import Quantity
 
 UNIT_DEFINITIONS = unit_definitions
 
@@ -71,8 +72,7 @@ class _UnitContext(ast.NodeTransformer):
     def visit(self, node):
         if not any(isinstance(node, a) for a in self.allowed_ops):
             raise ValueError(
-                "Invalid unit expression. Contains dissallowed "
-                "operation %s" % node.__class__.__name__,
+                "Invalid unit expression. Contains dissallowed " "operation %s" % node.__class__.__name__,
             )
         return super().visit(node)
 

@@ -44,8 +44,7 @@ def teardown_module(module):
 
 
 def test_pdbread(get_fn):
-    pdb = get_fn("native.pdb")
-    p = load(pdb)
+    load(get_fn("native.pdb"))
 
 
 def test_pdbread_with_input_top(get_fn):
@@ -108,11 +107,7 @@ def test_4ZUO(get_fn):
     eq(atom.name, "O")
     eq(atom.residue.name, "HIS")
     eq(
-        [
-            (a1.index, a2.index)
-            for a1, a2 in t.top.bonds
-            if a1.index == 1493 or a2.index == 1493
-        ],
+        [(a1.index, a2.index) for a1, a2 in t.top.bonds if a1.index == 1493 or a2.index == 1493],
         [(1492, 1493), (1493, 5129)],
     )
 
@@ -234,7 +229,8 @@ def test_3nch_conect(get_fn):
 
 
 def test_3nch_serial_resSeq(get_fn):
-    # If you use zero-based indexing, this PDB has quite large gaps in residue and atom numbering, so it's a good test case.  See #528
+    # If you use zero-based indexing, this PDB has quite large gaps in residue and atom numbering,
+    # so it's a good test case.  See #528
     # Gold standard values obtained via
     # cat 3nch.pdb |grep ATM|tail -n 5
     # HETATM19787  S   SO4 D 804      -4.788  -9.395  22.515  1.00121.87           S
@@ -256,7 +252,7 @@ def test_3nch_serial_resSeq(get_fn):
 
 
 def test_1ncw(get_fn):
-    t1 = load_pdb(get_fn("1ncw.pdb.gz"))
+    load_pdb(get_fn("1ncw.pdb.gz"))
 
 
 def test_1vii_url_and_gz(get_fn):
@@ -283,15 +279,14 @@ def test_segment_id(get_fn):
     # check that all segment ids are set correctly
     for ridx, r in enumerate(pdb.top.residues):
         assert r.segment_id == correct_segment_id, (
-            "residue %i (0-indexed) does not have segment_id set correctly from ala_ala_ala.pdb"
-            % (ridx)
+            "residue %i (0-indexed) does not have segment_id set correctly from ala_ala_ala.pdb" % (ridx)
         )
 
     # check that all segment ids are set correctly after a new pdb file is written
     for ridx, (r1, r2) in enumerate(zip(pdb.top.residues, pdb2.top.residues)):
         assert r1.segment_id == r2.segment_id, (
-            "segment_id of residue %i (0-indexed) in ala_ala_ala.pdb does not agree with value in after being written out to a new pdb file"
-            % (ridx)
+            f"segment_id of residue {ridx} (0-indexed) in ala_ala_ala.pdb does not "
+            "agree with value in after being written out to a new pdb file"
         )
 
 
@@ -304,7 +299,7 @@ def test_bfactors(get_fn):
     with open(temp) as fh:
         atom_lines = [line for line in fh.readlines() if re.search(r"^ATOM", line)]
 
-    str_bfactors1 = [l[60:66] for l in atom_lines]
+    str_bfactors1 = [line[60:66] for line in atom_lines]
     flt_bfactors1 = np.array([float(i) for i in str_bfactors1])
 
     # check formatting has a space at the beginning and not at the end

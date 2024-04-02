@@ -51,7 +51,10 @@ from numpy.testing import (
 try:
     from scipy.sparse import isspmatrix
 except ImportError:
-    isspmatrix = lambda x: False
+
+    def isspmatrix(x):
+        return False
+
 
 try:
     # need special logic to check for equality of pandas DataFrames.
@@ -183,9 +186,7 @@ def assert_dict_equal(t1, t2, decimal=6):
 
     for key, val in t1.items():
         # compare numpy arrays using numpy.testing
-        if isinstance(val, np.ndarray) or (
-            "pandas" in sys.modules and isinstance(t1, pd.DataFrame)
-        ):
+        if isinstance(val, np.ndarray) or ("pandas" in sys.modules and isinstance(t1, pd.DataFrame)):
             if val.dtype.kind == "f":
                 # compare floats for almost equality
                 assert_array_almost_equal(val, t2[key], decimal)

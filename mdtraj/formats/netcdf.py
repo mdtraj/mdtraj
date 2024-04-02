@@ -26,12 +26,14 @@ This module provides the ability to read and write AMBER NetCDF trajectories.
 
 The code is heavily based on amber_netcdf_trajectory_tools.py by John Chodera.
 """
+
 import os
 import socket
 import warnings
 from datetime import datetime
 
 import numpy as np
+from packaging.version import Version
 
 from mdtraj import version
 from mdtraj.formats.registry import FormatRegistry
@@ -128,20 +130,13 @@ class NetCDFTrajectoryFile:
     def __init__(self, filename, mode="r", force_overwrite=True):
         self._closed = True  # is the file currently closed?
         self._mode = mode  # what mode were we opened in
-
-        netcdf = import_("scipy.io").netcdf_file
-
-    def __init__(self, filename, mode="r", force_overwrite=True):
-        self._closed = True  # is the file currently closed?
-        self._mode = mode  # what mode were we opened in
-        if StrictVersion(import_("scipy.version").short_version) < StrictVersion(
-            "0.12.0",
-        ):
+        if Version(import_("scipy.version").short_version) < Version("0.12.0"):
             raise ImportError(
                 "MDTraj NetCDF support requires scipy>=0.12.0. "
                 "You have %s" % import_("scipy.version").short_version,
             )
-        netcdf = import_("scipy.io").netcdf_file
+
+        netcdf = import_("scipy.io").netcdf_file  # noqa: F841
 
         if mode not in ["r", "w"]:
             raise ValueError("mode must be one of ['r', 'w']")
@@ -314,8 +309,7 @@ class NetCDFTrajectoryFile:
                 )
             if not np.all(atom_slice >= 0):
                 raise ValueError(
-                    "The entries in atom_indices must be greater "
-                    "than or equal to zero",
+                    "The entries in atom_indices must be greater " "than or equal to zero",
                 )
 
         if "coordinates" in self._handle.variables:
@@ -451,20 +445,14 @@ class NetCDFTrajectoryFile:
         )
 
         # are we dealing with a periodic system?
-        if (cell_lengths is None and cell_angles is not None) or (
-            cell_lengths is not None and cell_angles is None
-        ):
+        if (cell_lengths is None and cell_angles is not None) or (cell_lengths is not None and cell_angles is None):
             provided, neglected = "cell_lengths", "cell_angles"
             if cell_lengths is None:
                 provided, neglected = neglected, provided
             raise ValueError(
-                'You provided the variable "%s", but neglected to '
-                'provide "%s". They either BOTH must be provided, or '
-                "neither. Having one without the other is meaningless"
-                % (
-                    provided,
-                    neglected,
-                ),
+                f'You provided the variable "{provided}", but neglected to '
+                f'provide "{neglected}". They either BOTH must be provided, or '
+                "neither. Having one without the other is meaningless",
             )
 
         if self._needs_initialization:
@@ -491,8 +479,7 @@ class NetCDFTrajectoryFile:
                 self._handle.variables["cell_angles"][frame_slice, :] = cell_angles
         except KeyError as e:
             raise ValueError(
-                "The file that you're trying to save to doesn't "
-                "contain the field %s." % str(e),
+                "The file that you're trying to save to doesn't " "contain the field %s." % str(e),
             )
 
         # check for missing attributes

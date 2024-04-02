@@ -31,6 +31,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+
 __author__ = "Christopher M. Bruns"
 __version__ = "0.5"
 
@@ -566,9 +567,9 @@ class ScaledUnit:
         """
         Returns a sorted tuple of (BaseDimension, exponent) pairs, that can be used as a dictionary key.
         """
-        l = list(self.iter_base_dimensions())
-        l.sort()
-        return tuple(l)
+        line = list(self.iter_base_dimensions())
+        line.sort()
+        return tuple(line)
 
     def get_conversion_factor_to_base_units(self):
         return self.factor

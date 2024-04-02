@@ -121,7 +121,7 @@ def test_vsite_elements(get_fn):
     trj = md.load(pdb_filename)
     trj.save_lh5(temp)
 
-    trj2 = md.load(temp, top=pdb_filename)
+    md.load(temp, top=pdb_filename)
 
 
 def test_do_overwrite_0():

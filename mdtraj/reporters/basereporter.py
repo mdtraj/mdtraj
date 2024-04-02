@@ -142,8 +142,7 @@ class _BaseReporter:
         if self._atomSubset is not None:
             if not min(self._atomSubset) >= 0:
                 raise ValueError(
-                    "atomSubset must be zero indexed. "
-                    "the smallest allowable value is zero",
+                    "atomSubset must be zero indexed. " "the smallest allowable value is zero",
                 )
             if not max(self._atomSubset) < simulation.system.getNumParticles():
                 raise ValueError(
@@ -173,10 +172,7 @@ class _BaseReporter:
                 if system.getParticleMass(i) > 0 * units.dalton:
                     dof += 3
             dof -= system.getNumConstraints()
-            if any(
-                type(system.getForce(i)) == mm.CMMotionRemover
-                for i in range(system.getNumForces())
-            ):
+            if any(type(system.getForce(i)) == mm.CMMotionRemover for i in range(system.getNumForces())):
                 dof -= 3
             self._dof = dof
 
@@ -248,9 +244,7 @@ class _BaseReporter:
         if self._kineticEnergy:
             kwargs["kineticEnergy"] = state.getKineticEnergy()
         if self._temperature:
-            kwargs["temperature"] = (
-                2 * state.getKineticEnergy() / (self._dof * units.MOLAR_GAS_CONSTANT_R)
-            )
+            kwargs["temperature"] = 2 * state.getKineticEnergy() / (self._dof * units.MOLAR_GAS_CONSTANT_R)
         if self._velocities:
             kwargs["velocities"] = state.getVelocities(asNumpy=True)[self._atomSlice, :]
 
@@ -271,9 +265,7 @@ class _BaseReporter:
          - state (State) The current state of the simulation
         """
         if self._needEnergy:
-            energy = (
-                state.getKineticEnergy() + state.getPotentialEnergy()
-            ).value_in_unit(units.kilojoules_per_mole)
+            energy = (state.getKineticEnergy() + state.getPotentialEnergy()).value_in_unit(units.kilojoules_per_mole)
             if math.isnan(energy):
                 raise ValueError("Energy is NaN")
             if math.isinf(energy):

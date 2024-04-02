@@ -25,10 +25,7 @@ This module implements the MDTraj HDF5 format described at
 https://github.com/mdtraj/mdtraj/wiki/HDF5-Trajectory-Format
 """
 
-##############################################################################
-# Imports
-##############################################################################
-
+import operator
 import os
 import warnings
 from collections import namedtuple
@@ -62,10 +59,6 @@ Frames = namedtuple(
         "alchemicalLambda",
     ],
 )
-
-##############################################################################
-# Code
-##############################################################################
 
 
 @FormatRegistry.register_loader(".h5")
@@ -110,8 +103,7 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     """
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_lh5. "
-            "you supplied %s" % type(filename),
+            "filename must be of type path-like for load_lh5. " "you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)
@@ -501,8 +493,7 @@ class HDF5TrajectoryFile:
         )
         if not value.dtype == dtype:
             raise ValueError(
-                "Constraints must be an array with dtype=%s. "
-                "currently, I don't do any casting" % dtype,
+                "Constraints must be an array with dtype=%s. " "currently, I don't do any casting" % dtype,
             )
 
         if not hasattr(self._handle.root, "constraints"):
@@ -551,7 +542,9 @@ class HDF5TrajectoryFile:
         if atom_indices is not None:
             topology = topology.subset(atom_indices)
 
-        initial = int(self._frame_index)
+        # initial frame index
+        _ = int(self._frame_index)
+
         data = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
         if len(data) == 0:
             return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
@@ -648,8 +641,7 @@ class HDF5TrajectoryFile:
                 )
             if not np.all(atom_slice >= 0):
                 raise ValueError(
-                    "The entries in atom_indices must be greater "
-                    "than or equal to zero",
+                    "The entries in atom_indices must be greater " "than or equal to zero",
                 )
 
         def get_field(name, slice, out_units, can_be_none=True):
@@ -958,18 +950,18 @@ class HDF5TrajectoryFile:
         except self.tables.NoSuchNodeError:
             raise ValueError(
                 "The file that you're trying to save to doesn't "
-                "contain the field %s. You can always save a new trajectory "
+                f"contain the field {name}. You can always save a new trajectory "
                 "and have it contain this information, but I don't allow 'ragged' "
-                "arrays. If one frame is going to have %s information, then I expect "
+                f"arrays. If one frame is going to have {name} information, then I expect "
                 "all of them to. So I can't save it for just these frames. Sorry "
-                "about that :)" % (name, name),
+                "about that :)",
             )
         except AssertionError:
             raise ValueError(
                 "The file that you're saving to expects each frame "
-                "to contain %s information, but you did not supply it."
+                f"to contain {name} information, but you did not supply it."
                 "I don't allow 'ragged' arrays. If one frame is going "
-                "to have %s information, then I expect all of them to. " % (name, name),
+                f"to have {name} information, then I expect all of them to. ",
             )
 
         self._frame_index += n_frames

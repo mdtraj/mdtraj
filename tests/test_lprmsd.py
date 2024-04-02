@@ -83,19 +83,9 @@ def test_lprmsd_3(get_fn):
     t1 = md.load(get_fn("alanine-dipeptide-explicit.pdb"))[0]
     t2 = md.load(get_fn("alanine-dipeptide-explicit.pdb"))[0]
 
-    h2o_o_indices = [
-        a.index
-        for a in t1.topology.atoms
-        if a.residue.name == "HOH" and a.element.symbol == "O"
-    ][0:20]
-    h2o_h_indices = [
-        a.index
-        for a in t1.topology.atoms
-        if a.residue.name == "HOH" and a.element.symbol == "H"
-    ][0:20]
-    backbone_indices = [
-        a.index for a in t1.topology.atoms if a.element.symbol in ["C", "N"]
-    ][:5]
+    h2o_o_indices = [a.index for a in t1.topology.atoms if a.residue.name == "HOH" and a.element.symbol == "O"][0:20]
+    h2o_h_indices = [a.index for a in t1.topology.atoms if a.residue.name == "HOH" and a.element.symbol == "H"][0:20]
+    backbone_indices = [a.index for a in t1.topology.atoms if a.element.symbol in ["C", "N"]][:5]
 
     # scramble two groups of indices
     t2.xyz[:, random.permutation(h2o_o_indices)] = t2.xyz[:, h2o_o_indices]

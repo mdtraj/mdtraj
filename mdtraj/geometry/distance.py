@@ -93,7 +93,7 @@ def compute_distances_core(
         warn_on_cast=False,
     )
     if not np.all(np.logical_and(pairs < positions.shape[1], pairs >= 0)):
-        raise ValueError("atom_pairs must be between 0 and %d" % traj.n_atoms)
+        raise ValueError(f"atom_pairs must be between 0 and {positions.shape[0]}")
 
     if len(pairs) == 0:
         return np.zeros((len(xyz), 0), dtype=np.float32)
@@ -472,7 +472,6 @@ def find_closest_contact(traj, group1, group2, frame=0, periodic=True):
     return _geometry._find_closest_contact(xyz, atoms1, atoms2, box)
 
 
-
 def _distance(xyz, pairs):
     "Distance between pairs of points in each frame"
     delta = np.diff(xyz[:, pairs], axis=2)[:, :, 0]
@@ -582,7 +581,8 @@ def _displacement_mic(xyz, pairs, box_vectors, orthogonal):
     out = np.empty((xyz.shape[0], pairs.shape[0], 3), dtype=np.float32)
     for i in range(len(xyz)):
         bv1, bv2, bv3 = _reduce_box_vectors(box_vectors[i].T)
-        hinv = np.linalg.inv(np.array([bv1, bv2, bv3]).T)
+        # hinv, not used
+        _ = np.linalg.inv(np.array([bv1, bv2, bv3]).T)
 
         for j, (a, b) in enumerate(pairs):
             r12 = xyz[i, b, :] - xyz[i, a, :]

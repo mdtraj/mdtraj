@@ -2,10 +2,12 @@
 Execute each notebook as a test, reporting an error if any cell throws an exception.
 Adapted from https://gist.github.com/minrk/2620876.
 """
-import sys
+
 import os
 import shutil
 import socket
+import sys
+from queue import Empty
 
 import pytest
 
@@ -14,8 +16,6 @@ try:
     from jupyter_client import KernelManager
 except Exception:
     pytest.skip("Skipping no nbformat/jupyter", allow_module_level=True)
-
-from queue import Empty
 
 FLAKEY_LIST = ["centroids.ipynb", "native-contact.ipynb", "hbonds.ipynb"]
 SPARTA_PLUS = ["sparta+", "SPARTA+", "SPARTA+.linux"]
@@ -99,8 +99,7 @@ def run_notebook(nb):
             reply = kc.get_shell_msg(timeout=TIMEOUT)["content"]
         except Empty:
             raise Exception(
-                'Timeout (%.1f) when executing the following %s cell: "%s"'
-                % (TIMEOUT, cell.cell_type, cell.source.strip()),
+                f'Timeout ({TIMEOUT:.1f}) when executing the following {cell.cell_type} cell: "{cell.source.strip()}"',
             )
         if reply["status"] == "error":
             failures += 1

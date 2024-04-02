@@ -31,6 +31,7 @@ import os
 import numpy as np
 
 from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils.validation import cast_indices, ensure_type, in_units_of
 
 __all__ = ["LAMMPSTrajectoryFile", "load_lammpstrj"]
 
@@ -91,8 +92,7 @@ def load_lammpstrj(
         raise ValueError('"top" argument is required for load_lammpstrj')
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_lammpstrj. "
-            "you supplied %s",
+            "filename must be of type path-like for load_lammpstrj. " "you supplied %s",
         )
 
     topology = _parse_topology(top)
@@ -425,8 +425,7 @@ class LAMMPSTrajectoryFile:
                 ]
             except KeyError:
                 raise OSError(
-                    "Invalid .lammpstrj file. Must contain 'id', "
-                    "'type', 'x*', 'y*' and 'z*' entries.",
+                    "Invalid .lammpstrj file. Must contain 'id', " "'type', 'x*', 'y*' and 'z*' entries.",
                 )
         self._line_counter += 4
         # --- end header ---
@@ -443,9 +442,7 @@ class LAMMPSTrajectoryFile:
             try:
                 atom_index = int(split_line[self._atom_index_column])
                 types[atom_index - 1] = int(split_line[self._atom_type_column])
-                xyz[atom_index - 1] = [
-                    float(split_line[column]) for column in self._xyz_columns
-                ]
+                xyz[atom_index - 1] = [float(split_line[column]) for column in self._xyz_columns]
             except Exception:
                 raise OSError(
                     f'lammpstrj parse error on line {self._line_counter:d} of "{self._filename:s}". '

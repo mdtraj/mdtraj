@@ -309,9 +309,9 @@ def test_dihedral_performance():
     import time
 
     t1 = time.time()
-    r1 = md.geometry.compute_dihedrals(t, indices, opt=False)
+    md.geometry.compute_dihedrals(t, indices, opt=False)
     t2 = time.time()
-    r2 = md.geometry.compute_dihedrals(t, indices, opt=True)
+    md.geometry.compute_dihedrals(t, indices, opt=True)
     t3 = time.time()
 
     print("\ndihedral performance:")
@@ -331,9 +331,9 @@ def test_angle_performance():
     import time
 
     t1 = time.time()
-    r1 = md.geometry.compute_angles(t, indices, opt=False)
+    _ = md.geometry.compute_angles(t, indices, opt=False)
     t2 = time.time()
-    r2 = md.geometry.compute_angles(t, indices, opt=True)
+    _ = md.geometry.compute_angles(t, indices, opt=True)
     t3 = time.time()
 
     print("\nangle performance:")

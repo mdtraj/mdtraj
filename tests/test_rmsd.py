@@ -236,9 +236,7 @@ def test_trajectory_rmsf_aligned(get_fn):
         t.superpose(t, 99, atom_indices=atom_indices, parallel=False)
         calculated = md.rmsf(t, None, atom_indices=rmsf_indices, parallel=parallel)
         avg_xyz = np.average(t.xyz, axis=0)
-        reference = np.sqrt(3 * np.mean((t.xyz - avg_xyz) ** 2, axis=(0, 2)))[
-            rmsf_indices
-        ]
+        reference = np.sqrt(3 * np.mean((t.xyz - avg_xyz) ** 2, axis=(0, 2)))[rmsf_indices]
         assert np.sum(np.abs(calculated)) > 0  # check trivial error
         eq(calculated, reference, decimal=3)
 
@@ -260,7 +258,8 @@ def test_rmsd_atom_indices_vs_ref_indices():
     top_2.add_chain()
     top_2.add_residue("RS2", top_2.chain(1))
     top_2.add_atom("A2", "H", top_2.residue(1))
-    # here the 2nd chain in the top_2 is rmsd-compatible to the one in the top_1 so we should be able to compute rsmd between them.
+    # here the 2nd chain in the top_2 is rmsd-compatible to the one in the top_1
+    # so we should be able to compute rsmd between them.
 
     trj_1 = md.Trajectory(np.random.RandomState(0).randn(n_frames, n_atoms_1, 3), top_1)
     trj_2 = md.Trajectory(np.random.RandomState(0).randn(n_frames, n_atoms_2, 3), top_2)

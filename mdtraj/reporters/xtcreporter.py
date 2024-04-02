@@ -77,10 +77,12 @@ class XTCReporter(_BaseReporter):
                     contents = f.read()
             elif isinstance(file, self.backend):
                 raise ValueError(
-                    "Currently passing an XTCTrajectoryFile in append mode is not supported, please pass a string with the filename",
+                    "Currently passing an XTCTrajectoryFile in append mode is not supported, "
+                    "please pass a string with the filename",
                 )
             else:
-                raise TypeError("I don't know how to handle %s" % file)
+                raise TypeError(f"I don't know how to handle {file}")
+
         super().__init__(
             file,
             reportInterval,

@@ -53,6 +53,8 @@ from io import StringIO
 from urllib.parse import urlparse, uses_netloc, uses_params, uses_relative
 from urllib.request import urlopen
 
+import numpy as np
+
 from mdtraj import version
 from mdtraj.core import element as elem
 from mdtraj.core.topology import Topology
@@ -64,10 +66,6 @@ _VALID_URLS = set(uses_relative + uses_netloc + uses_params)
 _VALID_URLS.discard("")
 
 __all__ = ["load_pdb", "PDBTrajectoryFile"]
-
-##############################################################################
-# Code
-##############################################################################
 
 
 def _is_url(url):
@@ -146,8 +144,7 @@ def load_pdb(
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type string or path-like for load_pdb. "
-            "you supplied %s" % type(filename),
+            "filename must be of type string or path-like for load_pdb. " "you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)
@@ -340,7 +337,9 @@ class PDBTrajectoryFile:
         if np.any(np.isinf(positions)):
             raise ValueError("Particle position is infinite")
 
-        self._last_topology = topology  # Hack to save the topology of the last frame written, allows us to output CONECT entries in write_footer()
+        # Hack to save the topology of the last frame written, allows us to
+        # output CONECT entries in write_footer()
+        self._last_topology = topology
 
         if bfactors is None:
             bfactors = [f"{0.0:5.2f}"] * len(positions)
@@ -409,8 +408,7 @@ class PDBTrajectoryFile:
                     atomIndex += 1
                 if resIndex == len(residues) - 1:
                     print(
-                        "TER   %5d      %3s %s%4d"
-                        % (atomSerial + 1, resName, chainName, res.resSeq),
+                        "TER   %5d      %3s %s%4d" % (atomSerial + 1, resName, chainName, res.resSeq),
                         file=self._file,
                     )
                     atomIndex += 1
@@ -441,8 +439,7 @@ class PDBTrajectoryFile:
                 raise ValueError("unitcell_angles must be length 3")
         else:
             raise ValueError(
-                "either unitcell_lengths and unitcell_angles"
-                "should both be spefied, or neither",
+                "either unitcell_lengths and unitcell_angles" "should both be spefied, or neither",
             )
 
         box = list(unitcell_lengths) + list(unitcell_angles)
@@ -450,12 +447,11 @@ class PDBTrajectoryFile:
 
         if write_metadata:
             print(
-                "REMARK   1 CREATED WITH MDTraj %s, %s"
-                % (version.version, str(date.today())),
+                f"REMARK   1 CREATED WITH MDTraj {version.version}, {str(date.today())}",
                 file=self._file,
             )
         print(
-            "CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f P 1           1 " % tuple(box),
+            "CRYST1{:9.3f}{:9.3f}{:9.3f}{:7.2f}{:7.2f}{:7.2f} P 1           1 ".format(*tuple(box)),
             file=self._file,
         )
 
@@ -500,10 +496,7 @@ class PDBTrajectoryFile:
         conectBonds = []
         if self._last_topology is not None:
             for atom1, atom2 in self._last_topology.bonds:
-                if (
-                    atom1.residue.name not in standardResidues
-                    or atom2.residue.name not in standardResidues
-                ):
+                if atom1.residue.name not in standardResidues or atom2.residue.name not in standardResidues:
                     conectBonds.append((atom1, atom2))
                 elif (
                     atom1.name == "SG"
@@ -545,8 +538,7 @@ class PDBTrajectoryFile:
                 bonded = atomBonds[index1]
                 while len(bonded) > 4:
                     print(
-                        "CONECT%5d%5d%5d%5d"
-                        % (index1, bonded[0], bonded[1], bonded[2]),
+                        "CONECT%5d%5d%5d%5d" % (index1, bonded[0], bonded[1], bonded[2]),
                         file=self._file,
                     )
                     del bonded[:4]
@@ -645,10 +637,7 @@ class PDBTrajectoryFile:
                 c = self._topology.add_chain(chain.chain_id)
                 for residue in chain.iter_residues():
                     resName = residue.get_name()
-                    if (
-                        resName in PDBTrajectoryFile._residueNameReplacements
-                        and self._standard_names
-                    ):
+                    if resName in PDBTrajectoryFile._residueNameReplacements and self._standard_names:
                         resName = PDBTrajectoryFile._residueNameReplacements[resName]
                     r = self._topology.add_residue(
                         resName,
@@ -656,13 +645,8 @@ class PDBTrajectoryFile:
                         residue.number,
                         residue.segment_id,
                     )
-                    if (
-                        resName in PDBTrajectoryFile._atomNameReplacements
-                        and self._standard_names
-                    ):
-                        atomReplacements = PDBTrajectoryFile._atomNameReplacements[
-                            resName
-                        ]
+                    if resName in PDBTrajectoryFile._atomNameReplacements and self._standard_names:
+                        atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
                     else:
                         atomReplacements = {}
                     for atom in residue.atoms:
@@ -700,10 +684,7 @@ class PDBTrajectoryFile:
                 # Only add bonds that don't already exist.
                 existingBonds = set(self._topology.bonds)
                 for bond in connectBonds:
-                    if (
-                        bond not in existingBonds
-                        and (bond[1], bond[0]) not in existingBonds
-                    ):
+                    if bond not in existingBonds and (bond[1], bond[0]) not in existingBonds:
                         self._topology.add_bond(bond[0], bond[1])
                         existingBonds.add(bond)
 
@@ -732,9 +713,7 @@ class PDBTrajectoryFile:
                 name = residue.attrib["name"]
                 for id in residue.attrib:
                     if id == "name" or id.startswith("alt"):
-                        PDBTrajectoryFile._residueNameReplacements[
-                            residue.attrib[id]
-                        ] = name
+                        PDBTrajectoryFile._residueNameReplacements[residue.attrib[id]] = name
                 if "type" not in residue.attrib:
                     atoms = copy(allResidues)
                 elif residue.attrib["type"] == "Protein":
@@ -788,12 +767,7 @@ class PDBTrajectoryFile:
                 element = elem.get_by_symbol(atom_name[0])
             except KeyError:
                 try:
-                    symbol = (
-                        atom_name[0:2]
-                        .strip()
-                        .rstrip("AB0123456789")
-                        .lstrip("0123456789")
-                    )
+                    symbol = atom_name[0:2].strip().rstrip("AB0123456789").lstrip("0123456789")
                     element = elem.get_by_symbol(symbol)
                 except KeyError:
                     element = None

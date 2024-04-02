@@ -170,9 +170,10 @@ class AmberRestartFile:
         if len(words) >= 2:
             time = float(words[1])
 
+        # variable _ throughout was hasvels, but velocies are not tracked
         lines_per_frame = int(ceil(natom / 2))
         if len(lines) == lines_per_frame + 2:
-            hasbox = hasvels = False
+            hasbox = _ = False
         elif natom in (1, 2) and len(lines) == 4:
             # This is the _only_ case where line counting does not work -- there
             # is either 1 or 2 atoms and there are 4 lines. The 1st 3 lines are
@@ -184,17 +185,13 @@ class AmberRestartFile:
             # plausible scenario where the detection here will ever fail
             line = lines[3]
             if natom == 1:
-                tmp = [
-                    line[i : i + 12]
-                    for i in range(0, 72, 12)
-                    if line[i : i + 12].strip()
-                ]
+                tmp = [line[i : i + 12] for i in range(0, 72, 12) if line[i : i + 12].strip()]
                 if len(tmp) == 3:
-                    hasvels = True
+                    _ = True
                     hasbox = False
                 elif len(tmp) == 6:
                     hasbox = True
-                    hasvels = False
+                    _ = False
                 else:
                     raise TypeError("not a recognized Amber restart")
             else:
@@ -202,22 +199,21 @@ class AmberRestartFile:
                 tmp = [float(line[i : i + 12]) >= 60.0 for i in range(0, 72, 12)]
                 if any(tmp):
                     hasbox = True
-                    hasvels = False
+                    _ = False
                 else:
-                    hasvels = True
+                    _ = True
                     hasbox = False
         elif len(lines) == lines_per_frame + 3:
             hasbox = True
-            hasvels = False
+            _ = False
         elif len(lines) == 2 * lines_per_frame + 2:
             hasbox = False
-            hasvels = True
+            _ = True
         elif len(lines) == 2 * lines_per_frame + 3:
-            hasbox = hasvels = True
+            hasbox = _ = True
         else:
             raise TypeError(
-                "Badly formatted restart file. Has %d lines for "
-                "%d atoms" % (len(lines), natom),
+                "Badly formatted restart file. Has %d lines for " "%d atoms" % (len(lines), natom),
             )
 
         coordinates = np.zeros((1, natom, 3))
@@ -233,9 +229,7 @@ class AmberRestartFile:
             coordinates[0, i2, :] = [float(line[j : j + 12]) for j in range(0, 36, 12)]
             i2 += 1
             if i2 < natom:
-                coordinates[0, i2, :] = [
-                    float(line[j : j + 12]) for j in range(36, 72, 12)
-                ]
+                coordinates[0, i2, :] = [float(line[j : j + 12]) for j in range(36, 72, 12)]
         if hasbox:
             cell_lengths = np.zeros((1, 3))
             cell_angles = np.zeros((1, 3))
@@ -317,8 +311,7 @@ class AmberRestartFile:
         """
         if self._mode != "r":
             raise OSError(
-                "The file was opened in mode=%s. Reading is not "
-                "allowed." % self._mode,
+                "The file was opened in mode=%s. Reading is not " "allowed." % self._mode,
             )
 
         with open(self._filename) as f:
@@ -371,8 +364,7 @@ class AmberRestartFile:
         if not self._needs_initialization:
             # Must have already been written -- can only write once
             raise RuntimeError(
-                "restart file has already been written -- can "
-                "only write one frame to restart files.",
+                "restart file has already been written -- can " "only write one frame to restart files.",
             )
         # These are no-ops.
         # coordinates = in_units_of(coordinates, None, 'angstroms')
@@ -422,16 +414,14 @@ class AmberRestartFile:
             warn_on_cast=False,
             add_newaxis_on_deficient_ndim=True,
         )
-        if (cell_lengths is None and cell_angles is not None) or (
-            cell_lengths is not None and cell_angles is None
-        ):
+        if (cell_lengths is None and cell_angles is not None) or (cell_lengths is not None and cell_angles is None):
             prov, negl = "cell_lengths", "cell_angles"
             if cell_lengths is None:
                 prov, negl = negl, prov
             raise ValueError(
-                'You provided the variable "%s" but did not '
-                'provide "%s". Either provide both or neither -- '
-                "one without the other is meaningless." % (prov, negl),
+                f'You provided the variable "{prov}" but did not '
+                f'provide "{negl}". Either provide both or neither -- '
+                "one without the other is meaningless.",
             )
 
         self._handle.write(
@@ -660,8 +650,7 @@ class AmberNetCDFRestartFile:
         """
         if self._mode != "r":
             raise OSError(
-                "The file was opened in mode=%s. Reading is not "
-                "allowed." % self._mode,
+                "The file was opened in mode=%s. Reading is not " "allowed." % self._mode,
             )
 
         if self._closed:
@@ -685,8 +674,7 @@ class AmberNetCDFRestartFile:
             raise TypeError("NetCDF file does not have correct Conventions")
         if convention_version != "1.0":
             raise ValueError(
-                "NetCDF restart has ConventionVersion %s. Only "
-                "Version 1.0 is supported." % convention_version,
+                "NetCDF restart has ConventionVersion %s. Only " "Version 1.0 is supported." % convention_version,
             )
         if atom_indices is not None:
             atom_slice = ensure_type(
@@ -783,8 +771,7 @@ class AmberNetCDFRestartFile:
         if not self._needs_initialization:
             # Must have already been written -- can only write once
             raise RuntimeError(
-                "NetCDF restart file has already been written "
-                "-- can only write one frame to restart files.",
+                "NetCDF restart file has already been written " "-- can only write one frame to restart files.",
             )
         # these are no-ops
         # coordinates = in_units_of(coordinates, None, 'angstroms')
@@ -834,16 +821,14 @@ class AmberNetCDFRestartFile:
             warn_on_cast=False,
             add_newaxis_on_deficient_ndim=True,
         )
-        if (cell_lengths is None and cell_angles is not None) or (
-            cell_lengths is not None and cell_angles is None
-        ):
+        if (cell_lengths is None and cell_angles is not None) or (cell_lengths is not None and cell_angles is None):
             prov, negl = "cell_lengths", "cell_angles"
             if cell_lengths is None:
                 prov, negl = negl, prov
             raise ValueError(
-                'You provided the variable "%s" but did not '
-                'provide "%s". Either provide both or neither -- '
-                "one without the other is meaningless." % (prov, negl),
+                f'You provided the variable "{prov}" but did not '
+                f'provide "{negl}". Either provide both or neither -- '
+                "one without the other is meaningless.",
             )
 
         self._initialize_headers(

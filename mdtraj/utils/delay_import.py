@@ -161,12 +161,8 @@ def import_(module):
         try:
             message = MESSAGES[module]
         except KeyError:
-            message = (
-                "The code at {filename}:{line_number} requires the "
-                + module
-                + " package"
-            )
-            e = ImportError("No module named %s" % module)
+            message = "The code at {filename}:{line_number} requires the " + module + " package"
+            error = ImportError("No module named %s" % module)
 
         (
             frame,
@@ -177,17 +173,13 @@ def import_(module):
             index,
         ) = inspect.getouterframes(inspect.currentframe())[1]
 
-        m = message.format(filename=os.path.basename(filename), line_number=line_number)
-        m = textwrap.dedent(m)
+        message = message.format(filename=os.path.basename(filename), line_number=line_number)
+        message = textwrap.dedent(message)
 
-        bar = (
-            "\033[91m"
-            + "#" * max(len(line) for line in m.split(os.linesep))
-            + "\033[0m"
-        )
+        bar = "\033[91m" + "#" * max(len(line) for line in message.split(os.linesep)) + "\033[0m"
 
         print("", file=sys.stderr)
         print(bar, file=sys.stderr)
-        print(m, file=sys.stderr)
+        print(message, file=sys.stderr)
         print(bar, file=sys.stderr)
-        raise ImportError(m)
+        raise ImportError(message) from error

@@ -123,8 +123,7 @@ def load_pdbx(
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type string or path-like for load_pdb. "
-            "you supplied %s" % type(filename),
+            "filename must be of type string or path-like for load_pdb. " "you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)
@@ -237,8 +236,7 @@ class PDBxTrajectoryFile:
             else:
                 self._topology = top
             positions = [
-                pdbx.getPositions(asNumpy=True, frame=i).value_in_unit(nanometers)
-                for i in range(pdbx.getNumFrames())
+                pdbx.getPositions(asNumpy=True, frame=i).value_in_unit(nanometers) for i in range(pdbx.getNumFrames())
             ]
             self._positions = np.array(positions)
             vectors = pdbx.topology.getPeriodicBoxVectors()

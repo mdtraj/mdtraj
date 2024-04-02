@@ -1,5 +1,6 @@
 import itertools
 import os
+import shutil
 import subprocess
 
 import numpy as np
@@ -7,10 +8,8 @@ import pytest
 
 import mdtraj as md
 
-DSSP_MSG = (
-    "This test requires mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
-)
-needs_dssp = pytest.mark.skipif(not find_executable("mkdssp"), reason=DSSP_MSG)
+DSSP_MSG = "This test requires mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
+needs_dssp = pytest.mark.skipif(not shutil.which("mkdssp"), reason=DSSP_MSG)
 
 
 def call_dssp(dirname, traj, frame=0):
@@ -20,10 +19,13 @@ def call_dssp(dirname, traj, frame=0):
     cmd = ["mkdssp", "-i", inp, "-o", out]
     subprocess.check_output(" ".join(cmd), shell=True)
 
-    KEY_LINE = "  #  RESIDUE AA STRUCTURE BP1 BP2  ACC     N-H-->O    O-->H-N    N-H-->O    O-->H-N    TCO  KAPPA ALPHA  PHI   PSI    X-CA   Y-CA   Z-CA"
+    KEY_LINE = (
+        "  #  RESIDUE AA STRUCTURE BP1 BP2  ACC     N-H-->O    O-->H-N    N-H-->O    "
+        "O-->H-N    TCO  KAPPA ALPHA  PHI   PSI    X-CA   Y-CA   Z-CA"
+    )
     with open(out) as f:
         # exaust the first entries
-        max(itertools.takewhile(lambda l: not l.startswith(KEY_LINE), f))
+        max(itertools.takewhile(lambda line: not line.startswith(KEY_LINE), f))
         return np.array([line[16] for line in f if line[13] != "!"])
 
 
@@ -89,4 +91,4 @@ def test_5(get_fn):
 
 def test_7(get_fn):
     t = md.load(get_fn("2EQQ.pdb"))
-    a = md.compute_dssp(t, simplified=True)
+    md.compute_dssp(t, simplified=True)

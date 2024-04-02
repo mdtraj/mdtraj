@@ -45,12 +45,10 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
-"""Load an md.Topology from CHARMM/XPLOR PSF files
-"""
+"""Load an md.Topology from CHARMM/XPLOR PSF files"""
 
 # Written by Jason Swails <jason.swails@gmail.com> 9/8/2014
 # This code was mostly stolen and stripped down from ParmEd
-
 
 from mdtraj.core import element as elem
 from mdtraj.core import topology

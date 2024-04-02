@@ -73,6 +73,7 @@ True
 Functions
 ---------
 """
+
 import os
 import warnings
 
@@ -194,8 +195,7 @@ def saveh(file, *args, **kwargs):
         for key, val in namedict.items():
             if not isinstance(val, np.ndarray):
                 raise TypeError(
-                    "Only numpy arrays can "
-                    "be saved: type(%s) is %s" % (key, type(val)),
+                    "Only numpy arrays can " f"be saved: type({key}) is {type(val)}",
                 )
             try:
                 atom = tables.Atom.from_dtype(val.dtype)
@@ -276,7 +276,7 @@ def loadh(file, name=Ellipsis, deferred=True):
             node = handle.get_node(where="/", name=name)
         except tables.NoSuchNodeError:
             raise KeyError(
-                'Node "%s" does not exist ' "in file %s" % (name, file),
+                f'Node "{name}" does not exist ' f"in file {file}",
             )
 
         return_value = np.array(node[:])
@@ -306,9 +306,7 @@ class DeferredTable:
         # get the paths of all of the nodes that are arrays (note that)
         # we're skipping Tables
         self._node_names = [
-            node._v_pathname[1:]
-            for node in handle.walk_nodes(where="/")
-            if isinstance(node, tables.Array)
+            node._v_pathname[1:] for node in handle.walk_nodes(where="/") if isinstance(node, tables.Array)
         ]
 
         self._loaded = {}
@@ -317,8 +315,7 @@ class DeferredTable:
         repr_strings = []
         for name in self._node_names:
             repr_strings.append(
-                "  %s: [shape=%s, dtype=%s]"
-                % (
+                "  {}: [shape={}, dtype={}]".format(
                     name,
                     handle.get_node(where="/", name=name).shape,
                     handle.get_node(where="/", name=name).dtype,

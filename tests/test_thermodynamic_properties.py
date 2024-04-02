@@ -146,22 +146,16 @@ def test_static_dielectric(get_fn):
 
     reference = 87.1818  # From gromacs, see above comment
 
-    assert (
-        abs((epsilon1 - reference) / reference) < 1e-3
-    ), "Dielectric tolerance not met!"
+    assert abs((epsilon1 - reference) / reference) < 1e-3, "Dielectric tolerance not met!"
 
 
 def test_kappa(get_fn):
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
     kappa = md.geometry.isothermal_compressability_kappa_T(traj, temperature)
-    reference = (
-        2.05427e-10 * 1e5
-    )  # m^3 / J to 1 / bar.  Data from gromacs.  See above comment
+    reference = 2.05427e-10 * 1e5  # m^3 / J to 1 / bar.  Data from gromacs.  See above comment
 
     # 20% tolerance.
-    assert (
-        abs((kappa - reference) / reference) < 2e-1
-    ), "Compressability tolerance not met!"
+    assert abs((kappa - reference) / reference) < 2e-1, "Compressability tolerance not met!"
 
 
 @pytest.mark.skip("Thermal expansion test doesn't work.")  # Not working

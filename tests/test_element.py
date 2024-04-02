@@ -31,7 +31,7 @@ def test_element_0(get_fn):
     a = t.top.atom(15)
     H = element.Element.getBySymbol("H")
 
-    eq(a.element, element.hydrogen)
+    eq(a.element, H)
 
 
 def test_element_pickle():

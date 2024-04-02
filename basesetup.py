@@ -58,14 +58,10 @@ class CompilerDetection:
             self.compiler_args_sse2 = ["-msse2"]
         else:
             self.compiler_args_sse2 = []
-        self.compiler_args_sse3 = (
-            ["-mssse3"] if (self.sse3_enabled and not self.msvc) else []
-        )
+        self.compiler_args_sse3 = ["-mssse3"] if (self.sse3_enabled and not self.msvc) else []
         self.compiler_args_neon = []
         self.compiler_args_warn = (
-            ["-Wno-unused-function", "-Wno-unreachable-code", "-Wno-sign-compare"]
-            if not self.msvc
-            else []
+            ["-Wno-unused-function", "-Wno-unreachable-code", "-Wno-sign-compare"] if not self.msvc else []
         )
 
         if self.neon_enabled:
@@ -412,11 +408,7 @@ class build_ext(_build_ext):
         filename = _build_ext.get_ext_filename(self, ext_name)
 
         try:
-            exts = [
-                e
-                for e in self.extensions
-                if ext_name in {e.name, e.name.split(".")[-1]}
-            ]
+            exts = [e for e in self.extensions if ext_name in {e.name, e.name.split(".")[-1]}]
             ext = exts[0]
             if isinstance(ext, StaticLibrary):
                 if new_compiler().compiler_type == "msvc":

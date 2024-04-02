@@ -863,7 +863,6 @@ Examples
 
 """
 
-
 __author__ = "Christopher M. Bruns"
 __version__ = "0.5"
 

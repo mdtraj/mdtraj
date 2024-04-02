@@ -121,7 +121,8 @@ def test_contact_4(get_fn):
     pdb = md.load(
         get_fn("1am7_protein.pdb"),
     )  # protonated and including at least one glycine residue (which has no heavy atoms in its sidechain)
-    contacts = md.compute_contacts(
+
+    md.compute_contacts(
         pdb,
         contacts="all",
         scheme="sidechain-heavy",

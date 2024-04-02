@@ -29,7 +29,9 @@ import mdtraj
 from mdtraj.core.selection import parse_selection
 from mdtraj.testing import eq
 
-pnode = lambda s: ast.parse(s, mode="eval").body
+
+def pnode(s):
+    return ast.parse(s, mode="eval").body
 
 
 @pytest.fixture()
@@ -313,8 +315,7 @@ def test_backbone(gbp):
 
 def test_sidechain(gbp):
     ref_sidechain = gbp.topology.select(
-        "protein and not (name C or name CA "
-        "or name N or name O or name H or name HA)",
+        "protein and not (name C or name CA " "or name N or name O or name H or name HA)",
     )
     sidechain = gbp.topology.select("sidechain")
     is_sidechain = gbp.topology.select("is_sidechain")

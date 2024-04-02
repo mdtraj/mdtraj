@@ -30,7 +30,7 @@ from mdtraj.formats import PDBxTrajectoryFile
 from mdtraj.testing import eq
 
 try:
-    import openmm
+    import openmm  # noqa: F401
 
     HAVE_OPENMM = True
 except ImportError:

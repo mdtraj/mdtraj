@@ -153,7 +153,6 @@ def _topology_from_subset(topology, atom_indices):
     return newTopology
 
 
-
 class Topology:
     """Topology stores the topological information about a system.
 
@@ -337,9 +336,10 @@ class Topology:
         fasta : String or list of Strings
            A FASTA string for each chain specified.
         """
-        fasta = lambda c: "".join(
-            [res.code for res in c.residues if res.is_protein and res.code is not None],
-        )
+
+        def fasta(c):
+            return "".join([res.code for res in c.residues if res.is_protein and res.code is not None])
+
         if chain is not None:
             if not isinstance(chain, int):
                 raise ValueError("chain must be an Integer.")
@@ -567,13 +567,11 @@ class Topology:
         out = cls()
         if not isinstance(atoms, pd.DataFrame):
             raise TypeError(
-                "atoms must be an instance of pandas.DataFrame. "
-                "You supplied a %s" % type(atoms),
+                "atoms must be an instance of pandas.DataFrame. " "You supplied a %s" % type(atoms),
             )
         if not isinstance(bonds, np.ndarray):
             raise TypeError(
-                "bonds must be an instance of numpy.ndarray. "
-                "You supplied a %s" % type(bonds),
+                "bonds must be an instance of numpy.ndarray. " "You supplied a %s" % type(bonds),
             )
 
         if not np.all(np.arange(len(atoms)) == atoms.index):
@@ -595,11 +593,7 @@ class Topology:
 
                 c = out.add_chain()
 
-            if (
-                atom["resSeq"] != previous_resSeq
-                or atom["resName"] != previous_resName
-                or c.n_atoms == 0
-            ):
+            if atom["resSeq"] != previous_resSeq or atom["resName"] != previous_resName or c.n_atoms == 0:
                 previous_resSeq = atom["resSeq"]
                 previous_resName = atom["resName"]
 
@@ -689,9 +683,7 @@ class Topology:
                 return False
 
             for r1, r2 in zip(c1.residues, c2.residues):
-                if (r1.index != r1.index) or (
-                    r1.name != r2.name
-                ):  # or (r1.resSeq != r2.resSeq):
+                if (r1.index != r1.index) or (r1.name != r2.name):  # or (r1.resSeq != r2.resSeq):
                     return False
                 if len(r1._atoms) != len(r2._atoms):
                     return False
@@ -1068,10 +1060,7 @@ class Topology:
                         else:
                             toResidue = i
                             toAtom = bond[1]
-                        if (
-                            fromAtom in atomMaps[fromResidue]
-                            and toAtom in atomMaps[toResidue]
-                        ):
+                        if fromAtom in atomMaps[fromResidue] and toAtom in atomMaps[toResidue]:
                             self.add_bond(
                                 atomMaps[fromResidue][fromAtom],
                                 atomMaps[toResidue][toAtom],
@@ -1199,31 +1188,18 @@ class Topology:
         if selection == "all":
             atom_indices = np.arange(self.n_atoms)
         elif selection == "alpha":
-            atom_indices = [
-                a.index for a in self.atoms if a.name == "CA" and a.residue.is_protein
-            ]
+            atom_indices = [a.index for a in self.atoms if a.name == "CA" and a.residue.is_protein]
         elif selection == "minimal":
             atom_indices = [
-                a.index
-                for a in self.atoms
-                if a.name in ["CA", "CB", "C", "N", "O"] and a.residue.is_protein
+                a.index for a in self.atoms if a.name in ["CA", "CB", "C", "N", "O"] and a.residue.is_protein
             ]
         elif selection == "heavy":
-            atom_indices = [
-                a.index
-                for a in self.atoms
-                if a.element != elem.hydrogen and a.residue.is_protein
-            ]
+            atom_indices = [a.index for a in self.atoms if a.element != elem.hydrogen and a.residue.is_protein]
         elif selection == "water":
-            atom_indices = [
-                a.index
-                for a in self.atoms
-                if a.name in ["O", "OW"] and a.residue.is_water
-            ]
+            atom_indices = [a.index for a in self.atoms if a.name in ["O", "OW"] and a.residue.is_water]
         else:
             raise ValueError(
-                "%s is not a valid option. Selection must be one of %s"
-                % (
+                "{} is not a valid option. Selection must be one of {}".format(
                     selection,
                     ", ".join(options),
                 ),
@@ -1292,11 +1268,7 @@ class Topology:
     def _unique_pairs(cls, a_indices, b_indices):
         return np.array(
             list(
-                {
-                    (a, b) if a > b else (b, a)
-                    for a, b in itertools.product(a_indices, b_indices)
-                    if a != b
-                },
+                {(a, b) if a > b else (b, a) for a, b in itertools.product(a_indices, b_indices) if a != b},
             ),
             dtype=np.int32,
         )
@@ -1704,10 +1676,7 @@ class Atom:
     @property
     def is_sidechain(self):
         """Whether the atom is in the sidechain of a protein residue"""
-        return (
-            self.name not in {"C", "CA", "N", "O", "HA", "H"}
-            and self.residue.is_protein
-        )
+        return self.name not in {"C", "CA", "N", "O", "HA", "H"} and self.residue.is_protein
 
     @property
     def segment_id(self):
@@ -1842,12 +1811,8 @@ class Bond(namedtuple("Bond", ["atom1", "atom2"])):
         Must use __new__ constructor since this is an immutable class
         """
         bond = super().__new__(cls, atom1, atom2)
-        assert (
-            isinstance(type, Singleton) or type is None
-        ), "Type must be None or a Singleton"
-        assert (
-            order is None or 1 <= order <= 3
-        ), "Order must be int between 1 to 3 or None"
+        assert isinstance(type, Singleton) or type is None, "Type must be None or a Singleton"
+        assert order is None or 1 <= order <= 3, "Order must be int between 1 to 3 or None"
         bond.type = type
         bond.order = order
         return bond

@@ -165,7 +165,9 @@ def test_compare_rdf_t_at_0(get_fn, periodic, opt):
 def test_amber_rdf_t(get_fn, periodic, opt):
     # Test triclinic case where simple approach in Tuckerman text does not
     # always work
-    ext_ref = (
+
+    # external reference
+    _ = (
         np.array(
             [
                 17.4835,

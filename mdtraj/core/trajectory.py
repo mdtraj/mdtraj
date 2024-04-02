@@ -168,14 +168,10 @@ def _parse_topology(top, **kwargs):
         topology = top
     elif isinstance(top, Trajectory):
         topology = top.topology
-    elif isinstance(top, (str, os.PathLike)) and (
-        ext in [".pdb", ".pdb.gz", ".pdbx", ".cif", ".h5", ".lh5"]
-    ):
+    elif isinstance(top, (str, os.PathLike)) and (ext in [".pdb", ".pdb.gz", ".pdbx", ".cif", ".h5", ".lh5"]):
         _traj = load_frame(top, 0, **kwargs)
         topology = _traj.topology
-    elif isinstance(top, (str, os.PathLike)) and (
-        ext in [".prmtop", ".parm7", ".prm7"]
-    ):
+    elif isinstance(top, (str, os.PathLike)) and (ext in [".prmtop", ".parm7", ".prm7"]):
         topology = load_prmtop(top, **kwargs)
     elif isinstance(top, (str, os.PathLike)) and (ext in [".psf"]):
         topology = load_psf(top, **kwargs)
@@ -192,9 +188,8 @@ def _parse_topology(top, **kwargs):
     elif isinstance(top, (str, os.PathLike)):
         raise OSError(
             "The topology is loaded by filename extension, and the "
-            'detected "%s" format is not supported. Supported topology '
-            'formats include %s and "%s".'
-            % (
+            'detected "{}" format is not supported. Supported topology '
+            'formats include {} and "{}".'.format(
                 ext,
                 ", ".join(['"%s"' % e for e in _TOPOLOGY_EXTS[:-1]]),
                 _TOPOLOGY_EXTS[-1],
@@ -212,7 +207,6 @@ def _get_extension(filename):
         extension2 = os.path.splitext(base)[1]
         return extension2 + extension
     return extension
-
 
 
 def open(filename, mode="r", force_overwrite=True, **kwargs):
@@ -258,9 +252,8 @@ def open(filename, mode="r", force_overwrite=True, **kwargs):
         loader = FormatRegistry.fileobjects[extension]
     except KeyError:
         raise OSError(
-            "Sorry, no loader for filename=%s (extension=%s) "
-            "was found. I can only load files with extensions in %s"
-            % (filename, extension, FormatRegistry.fileobjects.keys()),
+            f"Sorry, no loader for filename={filename} (extension={extension}) "
+            f"was found. I can only load files with extensions in {FormatRegistry.fileobjects.keys()}",
         )
     return loader(filename, mode=mode, force_overwrite=force_overwrite, **kwargs)
 
@@ -306,9 +299,8 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
         loader = FormatRegistry.loaders[extension]
     except KeyError:
         raise OSError(
-            "Sorry, no loader for filename=%s (extension=%s) "
-            "was found. I can only load files with extensions in %s"
-            % (filename, extension, FormatRegistry.loaders.keys()),
+            f"Sorry, no loader for filename={filename} (extension={extension}) "
+            f"was found. I can only load files with extensions in {FormatRegistry.loaders.keys()}",
         )
 
     kwargs["atom_indices"] = atom_indices
@@ -392,8 +384,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         )
     elif len(set(extensions)) > 1:
         raise TypeError(
-            "Each filename must have the same extension. "
-            "Received: %s" % ", ".join(set(extensions)),
+            "Each filename must have the same extension. " "Received: %s" % ", ".join(set(extensions)),
         )
 
     # pre-loads the topology from PDB for major performance boost.
@@ -415,14 +406,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         loader = FormatRegistry.loaders[extension]
     except KeyError:
         raise OSError(
-            "Sorry, no loader for filename=%s (extension=%s) "
+            f"Sorry, no loader for filename={filename_or_filenames[0]} (extension={extension}) "
             "was found. I can only load files "
-            "with extensions in %s"
-            % (
-                filename_or_filenames[0],
-                extension,
-                FormatRegistry.loaders.keys(),
-            ),
+            f"with extensions in {FormatRegistry.loaders.keys()}",
         )
 
     if loader.__name__ not in ["load_dtr"]:
@@ -474,11 +460,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     # Only do this monkey patching if needed in order not to
     # modify the output topology
-    if (
-        ("top" in kwargs)
-        and (kwargs.get("atom_indices", None) is not None)
-        and (len(filename_or_filenames) > 0)
-    ):
+    if ("top" in kwargs) and (kwargs.get("atom_indices", None) is not None) and (len(filename_or_filenames) > 0):
         # In case only a part of the atoms were selected
         # I get the right topology that
         # kwargs['top'].subset shall return
@@ -591,13 +573,9 @@ def iterload(filename, chunk=100, **kwargs):
             i += chunk
             yield traj
     else:
-        with (
-            lambda x: (
-                open(x, n_atoms=topology.n_atoms)
-                if extension in (".crd", ".mdcrd")
-                else open(filename)
-            )
-        )(filename) as f:
+        with (lambda x: (open(x, n_atoms=topology.n_atoms) if extension in (".crd", ".mdcrd") else open(filename)))(
+            filename,
+        ) as f:
             if skip > 0:
                 f.seek(skip)
             while True:
@@ -828,11 +806,7 @@ class Trajectory:
             value = np.array([value])
         elif not value.shape == (self.n_frames,):
             raise ValueError(
-                "Wrong shape. Got %s, should be %s"
-                % (
-                    value.shape,
-                    (self.n_frames),
-                ),
+                f"Wrong shape. Got {value.shape}, should be {self.n_frames}",
             )
 
         self._time = value
@@ -880,8 +854,7 @@ class Trajectory:
 
         if not len(vectors) == len(self):
             raise TypeError(
-                "unitcell_vectors must be the same length as "
-                "the trajectory. you provided %s" % str(vectors),
+                "unitcell_vectors must be the same length as " "the trajectory. you provided %s" % str(vectors),
             )
 
         v1 = vectors[:, 0, :]
@@ -1099,9 +1072,7 @@ class Trajectory:
         if ref_atom_indices is None:
             ref_atom_indices = atom_indices
 
-        if not isinstance(ref_atom_indices, slice) and (
-            len(ref_atom_indices) != len(atom_indices)
-        ):
+        if not isinstance(ref_atom_indices, slice) and (len(ref_atom_indices) != len(atom_indices)):
             raise ValueError("Number of atoms must be consistent!")
 
         n_frames = self.xyz.shape[0]
@@ -1176,8 +1147,7 @@ class Trajectory:
                 raise TypeError("You can only join Trajectory instances")
             if not all(self.n_atoms == o.n_atoms for o in other):
                 raise ValueError(
-                    "Number of atoms in self (%d) is not equal "
-                    "to number of atoms in other" % (self.n_atoms),
+                    "Number of atoms in self (%d) is not equal " "to number of atoms in other" % (self.n_atoms),
                 )
             if check_topology and not all(self.topology == o.topology for o in other):
                 raise ValueError("The topologies of the Trajectories are not the same")
@@ -1368,8 +1338,7 @@ class Trajectory:
 
         if (topology is not None) and (topology._numAtoms != self.n_atoms):
             raise ValueError(
-                "Number of atoms in xyz (%s) and "
-                "in topology (%s) don't match" % (self.n_atoms, topology._numAtoms),
+                f"Number of atoms in xyz ({self.n_atoms}) and " f"in topology ({topology._numAtoms}) don't match",
             )
 
     def openmm_positions(self, frame):
@@ -1500,9 +1469,9 @@ class Trajectory:
             saver = savers[extension]
         except KeyError:
             raise OSError(
-                "Sorry, no saver for filename=%s (extension=%s) "
+                f"Sorry, no saver for filename={filename} (extension={extension}) "
                 "was found. I can only save files "
-                "with extensions in %s" % (filename, extension, savers.keys()),
+                f"with extensions in {savers.keys()}",
             )
 
         # run the saver, and return whatever output it gives
@@ -1610,7 +1579,6 @@ class Trajectory:
 
         with PDBTrajectoryFile(filename, "w", force_overwrite=force_overwrite) as f:
             for i in range(self.n_frames):
-
                 if self._have_unitcell:
                     f.write(
                         in_units_of(
@@ -1779,8 +1747,7 @@ class Trajectory:
         if self._have_unitcell:
             if not np.all(self.unitcell_angles == 90):
                 raise ValueError(
-                    "Only rectilinear boxes can be saved to mdcrd files. "
-                    f"Your angles are {self.unitcell_angles}",
+                    "Only rectilinear boxes can be saved to mdcrd files. " f"Your angles are {self.unitcell_angles}",
                 )
 
         with MDCRDTrajectoryFile(
@@ -2151,11 +2118,7 @@ class Trajectory:
                     raise ValueError(type + "is not a valid solvent type")
                 solvent_types.remove(type)
 
-        atom_indices = [
-            atom.index
-            for atom in self.topology.atoms
-            if atom.residue.name not in solvent_types
-        ]
+        atom_indices = [atom.index for atom in self.topology.atoms if atom.residue.name not in solvent_types]
 
         return self.atom_slice(atom_indices, inplace=inplace)
 
@@ -2353,13 +2316,9 @@ class Trajectory:
 
         # Expand molecules into atom indices
         anchor_molecules_atom_indices = [
-            np.fromiter((a.index for a in mol), dtype=np.int32)
-            for mol in anchor_molecules
+            np.fromiter((a.index for a in mol), dtype=np.int32) for mol in anchor_molecules
         ]
-        other_molecules_atom_indices = [
-            np.fromiter((a.index for a in mol), dtype=np.int32)
-            for mol in other_molecules
-        ]
+        other_molecules_atom_indices = [np.fromiter((a.index for a in mol), dtype=np.int32) for mol in other_molecules]
 
         if inplace:
             result = self

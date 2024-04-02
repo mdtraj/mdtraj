@@ -110,9 +110,7 @@ def load_hoomdxml(filename, top=None):
 
     # ignore the bond type
     if hasattr(bond, "text"):
-        bonds = [
-            (int(b.split()[1]), int(b.split()[2])) for b in bond.text.splitlines()[1:]
-        ]
+        bonds = [(int(b.split()[1]), int(b.split()[2])) for b in bond.text.splitlines()[1:]]
         chains = _find_chains(bonds)
     else:
         chains = []
@@ -167,7 +165,7 @@ def _find_chains(bond_list):
     This function requires the NetworkX python package.
     """
     nx = import_("networkx")
-    chains = []
+    _chains = []
     bond_list = np.asarray(bond_list)
     molecules = nx.Graph()
     molecules.add_nodes_from(set(bond_list.flatten()))

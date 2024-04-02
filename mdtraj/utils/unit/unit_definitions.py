@@ -30,7 +30,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-
 __author__ = "Christopher M. Bruns"
 __version__ = "0.6"
 
@@ -393,10 +392,6 @@ planck_unit_system = UnitSystem(
         radian_base_unit,
     ],
 )
-
-########################
-### TESTING/EXAMPLES ###
-########################
 
 # run module directly for testing
 if __name__ == "__main__":

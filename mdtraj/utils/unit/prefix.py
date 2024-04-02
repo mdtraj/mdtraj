@@ -81,13 +81,11 @@ class SiPrefix:
             base_units = list(unit.iter_base_or_scaled_units())
             if 1 != len(base_units):
                 raise TypeError(
-                    'Unit prefix "%s" can only be with simple Units containing one component.'
-                    % self.prefix,
+                    'Unit prefix "%s" can only be with simple Units containing one component.' % self.prefix,
                 )
             if 1 != base_units[0][1]:
                 raise TypeError(
-                    'Unit prefix "%s" can only be with simple Units with an exponent of 1.'
-                    % self.prefix,
+                    'Unit prefix "%s" can only be with simple Units with an exponent of 1.' % self.prefix,
                 )
             base_unit = base_units[0][0]
             # Delegate to Base or Scaled Unit multiply
@@ -96,8 +94,7 @@ class SiPrefix:
             return new_unit
         else:
             raise TypeError(
-                'Unit prefix "%s" can only be applied to a Unit, BaseUnit, or ScaledUnit.'
-                % self.prefix,
+                'Unit prefix "%s" can only be applied to a Unit, BaseUnit, or ScaledUnit.' % self.prefix,
             )
 
 
@@ -162,9 +159,7 @@ def define_prefixed_units(base_unit, module=sys.modules[__name__]):
         name = new_base_unit.name
         new_unit = Unit({new_base_unit: 1.0})
         # Create base_unit attribute, needed for creating UnitSystems
-        module.__dict__[name + "_base_unit"] = (
-            new_base_unit  # e.g. "kilometer_base_unit"
-        )
+        module.__dict__[name + "_base_unit"] = new_base_unit  # e.g. "kilometer_base_unit"
         # Create attribue in this module
         module.__dict__[name] = new_unit  # e.g. "kilometer"
         # And plural version

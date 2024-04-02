@@ -27,7 +27,6 @@ a work in progress. Contributions are encouraged.
 # Imports
 # ------------------------------------------------------------------------------
 
-
 import os
 import warnings
 from argparse import ArgumentParser
@@ -63,7 +62,17 @@ def parse_args():
         help="""Input trajectory file(s),
         in any supported format.""",
     )
-    # parser.add_argument('-n', '--noload', action='store_true', help='''Do not load the coordinate data from the trajectory, for example if the trajectory is too large to load into memory. Only a limited number of checks will be done.''')
+    # parser.add_argument(
+    #     "-n",
+    #     "--noload",
+    #     action="store_true",
+    #     help=(
+    #         """
+    #         Do not load the coordinate data from the trajectory, for example if the trajectory is
+    #         too large to load into memory. Only a limited number of checks will be done.
+    #         """
+    #     ),
+    # )
     parser.add_argument(
         "-t",
         "--topology",
@@ -94,9 +103,7 @@ def parse_args():
 def main(args, parser):
     inspector = Inspector(args.bond_low, args.bond_high, args.rmsd_tolerance)
 
-    topology_files = [
-        fn for fn in args.files if os.path.splitext(fn)[1] in [".pdb", ".prmtop", ".h5"]
-    ]
+    topology_files = [fn for fn in args.files if os.path.splitext(fn)[1] in [".pdb", ".prmtop", ".h5"]]
     if args.topology is None and len(topology_files) > 0:
         args.topology = topology_files[0]
 
@@ -165,8 +172,7 @@ class Inspector:
             ),
         )
         self.log(
-            "Unique atom names:  %s"
-            % ", ".join(np.unique([a.name for a in self.topology.atoms])),
+            "Unique atom names:  %s" % ", ".join(np.unique([a.name for a in self.topology.atoms])),
         )
 
     def check_bonds(self):
@@ -176,9 +182,7 @@ class Inspector:
         pairs = []
         for a, b in self.topology.bonds:
             try:
-                radsum = (
-                    COVALENT_RADII[a.element.symbol] + COVALENT_RADII[b.element.symbol]
-                )
+                radsum = COVALENT_RADII[a.element.symbol] + COVALENT_RADII[b.element.symbol]
             except KeyError:
                 raise NotImplementedError(
                     "I don't have radii information for all of your atoms",
@@ -200,12 +204,10 @@ class Inspector:
             a2 = self.topology.atom(pairs[bond][0])
 
             self.log(
-                "error: atoms (%s) and (%s) are bonded according to the topology "
-                % (a1, a2),
+                f"error: atoms ({a1}) and ({a2}) are bonded according to the topology ",
             )
             self.log(
-                "but they are a distance of %.3f nm apart in frame %d"
-                % (distances[frame, bond], frame),
+                "but they are a distance of %.3f nm apart in frame %d" % (distances[frame, bond], frame),
             )
         else:
             self.log("All good.")
@@ -237,8 +239,7 @@ class Inspector:
             names = [q.residue.name + " " + q.name for q in self.t.topology.atoms]
             self.log(
                 "Frame %d: closest nb dist between "
-                "%d (%s), %d (%s), at d=%.4f nm"
-                % (i, a, names[a], b, names[b], dist[a, b]),
+                "%d (%s), %d (%s), at d=%.4f nm" % (i, a, names[a], b, names[b], dist[a, b]),
             )
 
     def check_imaging(self):

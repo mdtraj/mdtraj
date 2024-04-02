@@ -21,10 +21,6 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
-
 import itertools
 import os
 from datetime import date
@@ -93,8 +89,7 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_xyz. "
-            "you supplied %s",
+            "filename must be of type path-like for load_xyz. " "you supplied %s",
         )
 
     topology = _parse_topology(top)

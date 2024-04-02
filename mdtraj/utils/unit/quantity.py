@@ -216,14 +216,7 @@ class Quantity:
 
     def __repr__(self):
         """ """
-        return (
-            Quantity.__name__
-            + "(value="
-            + repr(self._value)
-            + ", unit="
-            + str(self.unit)
-            + ")"
-        )
+        return Quantity.__name__ + "(value=" + repr(self._value) + ", unit=" + str(self.unit) + ")"
 
     def format(self, format_spec):
         return format_spec % self._value + " " + str(self.unit.get_symbol())
@@ -243,8 +236,7 @@ class Quantity:
         # can only add using like units
         if not self.unit.is_compatible(other.unit):
             raise TypeError(
-                'Cannot add two quantities with incompatible units "%s" and "%s".'
-                % (self.unit, other.unit),
+                f'Cannot add two quantities with incompatible units "{self.unit}" and "{other.unit}".',
             )
         value = self._value + other.value_in_unit(self.unit)
         unit = self.unit
@@ -264,8 +256,7 @@ class Quantity:
         """
         if not self.unit.is_compatible(other.unit):
             raise TypeError(
-                'Cannot subtract two quantities with incompatible units "%s" and "%s".'
-                % (self.unit, other.unit),
+                f'Cannot subtract two quantities with incompatible units "{self.unit}" and "{other.unit}".',
             )
         value = self._value - other.value_in_unit(self.unit)
         unit = self.unit
@@ -301,9 +292,6 @@ class Quantity:
     def __le__(self, other):
         return self._value <= (other.value_in_unit(self.unit))
 
-    def __lt__(self, other):
-        return self._value < (other.value_in_unit(self.unit))
-
     __hash__ = None
 
     _reduce_cache = {}
@@ -333,9 +321,7 @@ class Quantity:
                 if d not in canonical_units:
                     canonical_units[d] = [u, exponent]
                 else:
-                    value_factor *= (
-                        u.conversion_factor_to(canonical_units[d][0]) ** exponent
-                    )
+                    value_factor *= u.conversion_factor_to(canonical_units[d][0]) ** exponent
                     canonical_units[d][1] += exponent
             new_base_units = {}
             for d in canonical_units:
@@ -707,13 +693,9 @@ class Quantity:
             try:
                 # multiply operator, if it exists, is preferred
                 if post_multiply:
-                    value = (
-                        self._value * factor
-                    )  # works for number, numpy.array, or vec3, e.g.
+                    value = self._value * factor  # works for number, numpy.array, or vec3, e.g.
                 else:
-                    value = (
-                        factor * self._value
-                    )  # works for number, numpy.array, or vec3, e.g.
+                    value = factor * self._value  # works for number, numpy.array, or vec3, e.g.
                 result = Quantity(value, new_unit)
             except TypeError:
                 value = copy.deepcopy(self._value)
@@ -786,8 +768,7 @@ class Quantity:
                 pass  # OK
             elif not self.unit.is_compatible(value.unit):
                 raise TypeError(
-                    'Unit "%s" is not compatible with Unit "%s".'
-                    % (self.unit, value.unit),
+                    f'Unit "{self.unit}" is not compatible with Unit "{value.unit}".',
                 )
             self._value[key] = value / self.unit
             assert not is_quantity(self._value[key])

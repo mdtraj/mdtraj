@@ -212,8 +212,9 @@ def chemical_shifts_ppm(trj):
 
     if binary is None:
         raise OSError(
-            "External command not found. Looked for %s in PATH. `chemical_shifts_ppm` requires the external program PPM, available at http://spin.ccic.ohio-state.edu/index.php/download/index"
-            % ", ".join(PPM),
+            f"External command not found. Looked for {PPM} in PATH. `chemical_shifts_ppm` "
+            "requires the external program PPM, available at "
+            "http://spin.ccic.ohio-state.edu/index.php/download/index",
         )
 
     with enter_temp_directory():
@@ -226,8 +227,8 @@ def chemical_shifts_ppm(trj):
         if return_flag != 0:
             raise (
                 OSError(
-                    "Could not successfully execute command '%s', check your PPM installation or your input trajectory."
-                    % cmd,
+                    f"Could not successfully execute command '{cmd}', check your PPM "
+                    "installation or your input trajectory.",
                 )
             )
 
@@ -300,8 +301,9 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
     binary = find_executable(SPARTA_PLUS)
     if binary is None:
         raise OSError(
-            "External command not found. Looked for %s in PATH. `chemical_shifts_spartaplus` requires the external program SPARTA+, available at http://spin.niddk.nih.gov/bax/software/SPARTA+/"
-            % ", ".join(SPARTA_PLUS),
+            f"External command not found. Looked for {SPARTA_PLUS} in PATH. "
+            "`chemical_shifts_spartaplus` requires the external program SPARTA+, available at "
+            "http://spin.niddk.nih.gov/bax/software/SPARTA+/",
         )
 
     names = [
@@ -321,9 +323,7 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
             trj[i].save("./trj%d.pdb" % i)
 
         subprocess.check_call(
-            [binary, "-in"]
-            + [f"trj{i}.pdb" for i in range(trj.n_frames)]
-            + ["-out", "trj0_pred.tab"],
+            [binary, "-in"] + [f"trj{i}.pdb" for i in range(trj.n_frames)] + ["-out", "trj0_pred.tab"],
         )
 
         lines_to_skip = _get_lines_to_skip("trj0_pred.tab")
@@ -384,11 +384,6 @@ def reindex_dataframe_by_atoms(trj, frame):
     new_frame = frame.copy()
 
     new_frame["serial"] = top.ix[new_frame.index].serial
-    new_frame = (
-        new_frame.dropna()
-        .reset_index()
-        .set_index("serial")
-        .drop(["resSeq", "name"], axis=1)
-    )
+    new_frame = new_frame.dropna().reset_index().set_index("serial").drop(["resSeq", "name"], axis=1)
 
     return new_frame

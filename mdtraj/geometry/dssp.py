@@ -1,3 +1,5 @@
+import numpy as np
+
 from mdtraj.geometry import _geometry
 from mdtraj.geometry.hbond import _prep_kabsch_sander_arrays
 

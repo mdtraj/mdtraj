@@ -66,7 +66,10 @@ def docstring_verifiers(module, error_on_none=False):
     # currently, the docstring on classes are not being checked, since
     # isclass() is not in the list
     acceptors = [isfunction, ismethod, isbuiltin]
-    accept = lambda f: any([acc(f) for acc in acceptors])
+
+    def accept(f):
+        return any([acc(f) for acc in acceptors])
+
     functions = [f for f in walk(module) if accept(f)]
 
     def format(f):
@@ -150,17 +153,14 @@ def docstring_verifiers(module, error_on_none=False):
 
             if args != param_names:
                 raise ValueError(
-                    "In %s, arguments %s don't "
-                    "match Parameters list %s"
-                    % (
-                        format(f),
-                        list(args),
-                        list(param_names),
-                    ),
+                    f"In {format(f)}, arguments {list(args)} don't " f"match Parameters list {list(param_names)}",
                 )
 
     for f in functions:
-        qq = lambda: check_docstring(f)
+
+        def qq():
+            return check_docstring(f)
+
         qq.description = f"NumpyDoc: {module.__name__}.{f.__name__}"
         qq.fname = f.__name__
         yield qq

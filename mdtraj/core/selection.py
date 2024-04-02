@@ -351,9 +351,7 @@ class parse_selection:
 
         def infix(klass):
             kws = sorted(klass.keyword_aliases.keys())
-            return [
-                (kw, klass.n_terms, getattr(opAssoc, klass.assoc), klass) for kw in kws
-            ]
+            return [(kw, klass.n_terms, getattr(opAssoc, klass.assoc), klass) for kw in kws]
 
         # literals include words made of alphanumerics, numbers,
         # or quoted strings but we exclude any of the logical
@@ -383,9 +381,7 @@ class parse_selection:
         expression = range_condition | in_list_condition | base_expression
         logical_expr = infixNotation(
             expression,
-            infix(UnaryInfixOperand)
-            + infix(BinaryInfixOperand)
-            + infix(RegexInfixOperand),
+            infix(UnaryInfixOperand) + infix(BinaryInfixOperand) + infix(RegexInfixOperand),
         )
 
         self.expression = logical_expr
@@ -416,8 +412,7 @@ class parse_selection:
         # but that substitution breaks behavior
         if isinstance(astnode, (ast.Num, ast.Str)):
             raise ValueError(
-                "Cannot use a single literal as a boolean. "
-                f"Choked on node with value {astnode.value}",
+                "Cannot use a single literal as a boolean. " f"Choked on node with value {astnode.value}",
             )
 
         args = [ast.arg(arg="atom", annotation=None)]

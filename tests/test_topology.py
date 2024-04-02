@@ -62,7 +62,7 @@ def test_topology_openmm(get_fn):
 def test_topology_openmm_boxes(get_fn):
     traj = md.load(get_fn("1vii_sustiva_water.pdb"))
     mmtop = traj.topology.to_openmm(traj=traj)
-    box = mmtop.getUnitCellDimensions() / u.nanometer
+    mmtop.getUnitCellDimensions() / u.nanometer
 
 
 def test_topology_pandas(get_fn):
@@ -73,7 +73,7 @@ def test_topology_pandas(get_fn):
     eq(topology, topology2)
 
     # Make sure default argument of None works, see issue #774
-    topology3 = md.Topology.from_dataframe(atoms)
+    md.Topology.from_dataframe(atoms)
 
 
 def test_topology_pandas_TIP4PEW(get_fn):
@@ -128,9 +128,7 @@ def test_residue(get_fn):
 
 def test_segment_id(get_fn):
     top = md.load(get_fn("ala_ala_ala.pdb")).topology
-    assert (
-        next(top.residues).segment_id == "AAL"
-    ), "Segment id is not being assigned correctly for ala_ala_ala.psf"
+    assert next(top.residues).segment_id == "AAL", "Segment id is not being assigned correctly for ala_ala_ala.psf"
     df = top.to_dataframe()[0]
     assert len(df["segmentID"] == "AAL") == len(
         df,
@@ -172,10 +170,7 @@ def test_atoms_by_name(get_fn):
         assert atom1.name == "CA"
 
     assert len(list(top.atoms_by_name("CA"))) == sum(1 for _ in atoms if _.name == "CA")
-    assert (
-        top.residue(15).atom("CA")
-        == [a for a in top.residue(15).atoms if a.name == "CA"][0]
-    )
+    assert top.residue(15).atom("CA") == [a for a in top.residue(15).atoms if a.name == "CA"][0]
 
     with pytest.raises(KeyError):
         top.residue(15).atom("sdfsdf")
@@ -199,7 +194,7 @@ def test_top_dataframe_openmm_roundtrip(get_fn):
     t = md.load(get_fn("2EQQ.pdb"))
     top, bonds = t.top.to_dataframe()
     t.topology = md.Topology.from_dataframe(top, bonds)
-    omm_top = t.top.to_openmm()
+    t.top.to_openmm()
 
 
 def test_n_bonds(get_fn):
@@ -243,10 +238,7 @@ def test_select_pairs(get_fn):
     traj = md.load(get_fn("tip3p_300K_1ATM.pdb"))
     select_pairs = traj.top.select_pairs
 
-    assert (
-        len(select_pairs(selection1="name O", selection2="name O"))
-        == 258 * (258 - 1) // 2
-    )
+    assert len(select_pairs(selection1="name O", selection2="name O")) == 258 * (258 - 1) // 2
     assert len(select_pairs(selection1="name H1", selection2="name O")) == 258 * 258
 
     selections = iter(
@@ -292,9 +284,7 @@ def test_molecules(get_fn):
     top = md.load(get_fn("4OH9.pdb")).topology
     molecules = top.find_molecules()
     assert sum(len(mol) for mol in molecules) == top.n_atoms
-    assert (
-        sum(1 for mol in molecules if len(mol) > 1) == 2
-    )  # All but two molecules are water
+    assert sum(1 for mol in molecules if len(mol) > 1) == 2  # All but two molecules are water
 
 
 def test_copy_and_hash(get_fn):
@@ -343,12 +333,8 @@ def test_topology_join_keep_resSeq(get_fn):
     out_topology_keepId_True = top_1.join(top_2, keep_resSeq=True)
     out_topology_keepId_False = top_1.join(top_2, keep_resSeq=False)
 
-    out_resSeq_keepId_True = [
-        residue.resSeq for residue in out_topology_keepId_True.residues
-    ]
-    out_resSeq_keepId_False = [
-        residue.resSeq for residue in out_topology_keepId_False.residues
-    ]
+    out_resSeq_keepId_True = [residue.resSeq for residue in out_topology_keepId_True.residues]
+    out_resSeq_keepId_False = [residue.resSeq for residue in out_topology_keepId_False.residues]
 
     expected_resSeq_keepId_True = [residue.resSeq for residue in top_1.residues] + [
         residue.resSeq for residue in top_2.residues

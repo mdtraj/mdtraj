@@ -241,7 +241,7 @@ class PdbStructure:
         print("END", file=output_stream)
 
     def _add_model(self, model):
-        if self.default_model == None:
+        if self.default_model is None:
             self.default_model = model
         self.models.append(model)
         self._current_model = model
@@ -297,7 +297,7 @@ class PdbStructure:
 
     def _add_atom(self, atom):
         """ """
-        if self._current_model == None:
+        if self._current_model is None:
             self._add_model(Model(0))
         atom.model_number = self._current_model.number
         # Atom might be alternate position for existing atom
@@ -454,8 +454,7 @@ class Chain:
         else:  # Residue name does not match
             # Only residue name does not match
             warnings.warn(
-                "WARNING: two consecutive residues with same number (%s, %s)"
-                % (atom, self._current_residue.atoms[-1]),
+                f"WARNING: two consecutive residues with same number ({atom}, {self._current_residue.atoms[-1]})",
             )
             self._add_residue(
                 Residue(
@@ -575,8 +574,12 @@ class Residue:
             old_atom = self.atoms_by_name[atom.name_with_spaces]
             # Unless this is a duplicated atom (warn about file error)
             if atom.alternate_location_indicator in old_atom.locations:
-                pass  # TJL COMMENTED OUT
-                # warnings.warn("WARNING: duplicate atom (%s, %s)" % (atom, old_atom._pdb_string(old_atom.serial_number, atom.alternate_location_indicator)))
+                # TJL COMMENTED OUT
+                # warnings.warn(
+                #     "WARNING: duplicate atom (%s, %s)"
+                #     % (atom, old_atom._pdb_string(old_atom.serial_number, atom.alternate_location_indicator))
+                # )
+                pass
             else:
                 for alt_loc, position in atom.locations.items():
                     old_atom.locations[alt_loc] = position
@@ -603,14 +606,14 @@ class Residue:
     def set_name_with_spaces(self, name, alt_loc=None):
         # Gromacs ffamber PDB files can have 4-character residue names
         # assert len(name) == 3
-        if alt_loc == None:
+        if alt_loc is None:
             alt_loc = self.primary_location_id
         loc = self.locations[alt_loc]
         loc.name_with_spaces = name
         loc.name = name.strip()
 
     def get_name_with_spaces(self, alt_loc=None):
-        if alt_loc == None:
+        if alt_loc is None:
             alt_loc = self.primary_location_id
         loc = self.locations[alt_loc]
         return loc.name_with_spaces
@@ -622,7 +625,7 @@ class Residue:
     )
 
     def get_name(self, alt_loc=None):
-        if alt_loc == None:
+        if alt_loc is None:
             alt_loc = self.primary_location_id
         loc = self.locations[alt_loc]
         return loc.name
@@ -645,7 +648,7 @@ class Residue:
 
     # Three possibilities: primary alt_loc, certain alt_loc, or all alt_locs
     def iter_atoms(self, alt_loc=None):
-        if alt_loc == None:
+        if alt_loc is None:
             locs = [self.primary_location_id]
         elif alt_loc == "":
             locs = [self.primary_location_id]
@@ -657,7 +660,7 @@ class Residue:
         for atom in self.atoms:
             use_atom = False  # start pessimistic
             for loc2 in atom.locations.keys():
-                if locs == None:  # means all locations
+                if locs is None:  # means all locations
                     use_atom = True
                 elif loc2 in locs:
                     use_atom = True
@@ -770,15 +773,12 @@ class Atom:
                     if (
                         pdbstructure._current_model is None
                         or pdbstructure._current_model._current_chain is None
-                        or pdbstructure._current_model._current_chain._current_residue
-                        is None
+                        or pdbstructure._current_model._current_chain._current_residue is None
                     ):
                         # This is the first residue in the model.
                         self.residue_number = pdbstructure._next_residue_number
                     else:
-                        currentRes = (
-                            pdbstructure._current_model._current_chain._current_residue
-                        )
+                        currentRes = pdbstructure._current_model._current_chain._current_residue
                         if currentRes.name_with_spaces != self.residue_name_with_spaces:
                             # The residue name has changed.
                             self.residue_number = pdbstructure._next_residue_number
@@ -869,13 +869,13 @@ class Atom:
     # Hide existence of multiple alternate locations to avoid scaring casual users
     def get_location(self, location_id=None):
         id = location_id
-        if id == None:
+        if id is None:
             id = self.default_location_id
         return self.locations[id]
 
     def set_location(self, new_location, location_id=None):
         id = location_id
-        if id == None:
+        if id is None:
             id = self.default_location_id
         self.locations[id] = new_location
 
@@ -923,9 +923,9 @@ class Atom:
         """
         Produce a PDB line for this atom using a particular serial number and alternate location
         """
-        if serial_number == None:
+        if serial_number is None:
             serial_number = self.serial_number
-        if alternate_location_indicator == None:
+        if alternate_location_indicator is None:
             alternate_location_indicator = self.alternate_location_indicator
         # produce PDB line in three parts: names, numbers, and end
         # Accomodate 4-character residue names that use column 21
@@ -949,7 +949,7 @@ class Atom:
             self.element_symbol,
         )
         formal_charge = "  "
-        if self.formal_charge != None:
+        if self.formal_charge is not None:
             formal_charge = "%+2d" % self.formal_charge
         return names + numbers + end + formal_charge
 
@@ -962,7 +962,7 @@ class Atom:
         alt_loc = None means write just the primary location
         alt_loc = "AB" means write locations "A" and "B"
         """
-        if alt_loc == None:
+        if alt_loc is None:
             locs = [self.default_location_id]
         elif alt_loc == "":
             locs = [self.default_location_id]

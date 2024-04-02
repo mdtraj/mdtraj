@@ -255,7 +255,7 @@ def _verify_closest_contact(traj):
     contact = find_closest_contact(traj, group1, group2)
     pairs = np.array([(i, j) for i in group1 for j in group2], dtype=int)
     dists = md.compute_distances(traj, pairs, True)[0]
-    dists2 = md.compute_distances(traj, pairs, False)[0]
+    _ = md.compute_distances(traj, pairs, False)[0]
     nearest = np.argmin(dists)
     eq(float(dists[nearest]), contact[2], decimal=5)
     assert (pairs[nearest, 0] == contact[0] and pairs[nearest, 1] == contact[1]) or (
@@ -313,13 +313,13 @@ def test_distances_t_at_0(get_fn):
 def _run_amber_traj_t(traj, ext_ref):
     # Test triclinic case where simple approach in Tuckerman text does not
     # always work
-    distopt = compute_distances_t(
+    _ = compute_distances_t(
         traj,
         atom_pairs=[[0, 9999]],
         time_pairs=[[0, 2]],
         opt=True,
     )
-    distslw = compute_distances_t(
+    _ = compute_distances_t(
         traj,
         atom_pairs=[[0, 9999]],
         time_pairs=[[0, 2]],

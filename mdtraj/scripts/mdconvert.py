@@ -81,7 +81,8 @@ units = {
 }
 
 
-ext = lambda fn: os.path.splitext(fn)[1]
+def ext(fn):
+    return os.path.splitext(fn)[1]
 
 
 class _Warner:
@@ -107,7 +108,6 @@ def index(str):
         start, end, step = ((None if e == "" else int(e)) for e in str.split(":"))
 
     return slice(start, end, step)
-
 
 
 def parse_args():
@@ -239,11 +239,7 @@ def parse_args():
 
     if ext(args.output) not in formats:
         parser.error(
-            "%s: '%s' is not a known extension"
-            % (
-                args.output,
-                ext(args.output),
-            ),
+            f"{args.output}: '{ext(args.output)}' is not a known extension",
         )
 
     if args.atom_indices is not None and not os.path.isfile(args.atom_indices):
@@ -264,13 +260,11 @@ def parse_args():
     if args.topology is not None and not os.path.isfile(args.topology):
         parser.error("no such file: %s" % args.topology)
 
-    if (
-        args.topology is None
-        and not all(ext(e) in [".h5", ".lh5", ".pdb"] for e in args.input)
-    ) and ext(args.output) in [".h5", ".lh5", ".pdb"]:
+    if (args.topology is None and not all(ext(e) in [".h5", ".lh5", ".pdb"] for e in args.input)) and ext(
+        args.output,
+    ) in [".h5", ".lh5", ".pdb"]:
         parser.error(
-            "to output a %s file, you need to supply a topology (-t, or --topology)"
-            % ext(args.output),
+            "to output a %s file, you need to supply a topology (-t, or --topology)" % ext(args.output),
         )
 
     if args.chunk is not None and (args.chunk % args.stride != 0):
@@ -373,8 +367,7 @@ def main(args, verbose=True):
 
                     if verbose:
                         sys.stdout.write(
-                            "\rconverted %d frames, %d atoms"
-                            % (n_total, data["xyz"].shape[1]),
+                            "\rconverted %d frames, %d atoms" % (n_total, data["xyz"].shape[1]),
                         )
                         sys.stdout.flush()
 
@@ -599,9 +592,7 @@ def convert(data, in_units, out_units, out_fields):
     formated_fields = ", ".join("'%s'" % o for o in out_fields)
     if len(ignored_keys) > 0:
         warn(
-            "%s data from input file(s) will be discarded. "
-            "output format only supports fields: %s"
-            % (
+            "{} data from input file(s) will be discarded. " "output format only supports fields: {}".format(
                 ", ".join(ignored_keys),
                 formated_fields,
             ),

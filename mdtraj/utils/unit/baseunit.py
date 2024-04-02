@@ -89,9 +89,9 @@ class BaseUnit:
         """
         Returns a sorted tuple of (BaseDimension, exponent) pairs, that can be used as a dictionary key.
         """
-        l = list(self.iter_base_dimensions())
-        l.sort()
-        return tuple(l)
+        _list = list(self.iter_base_dimensions())
+        _list.sort()
+        return tuple(_list)
 
     def __str__(self):
         """Returns a string with the name of this BaseUnit"""

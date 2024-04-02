@@ -21,23 +21,15 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
-
 import itertools
 import os
 
 import numpy as np
 
 from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils.validation import cast_indices, ensure_type, in_units_of
 
 __all__ = ["MDCRDTrajectoryFile", "load_mdcrd"]
-
-
-##############################################################################
-# Classes
-##############################################################################
 
 
 class _EOF(IOError):
@@ -87,8 +79,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_mdcrd. "
-            "you supplied %s" % type(filename),
+            "filename must be of type path-like for load_mdcrd. " "you supplied %s" % type(filename),
         )
 
     topology = _parse_topology(top)
@@ -168,8 +159,7 @@ class MDCRDTrajectoryFile:
         if mode == "r":
             if n_atoms is None:
                 raise ValueError(
-                    'To open a mdcrd file in mode="r", you must '
-                    'supply the number of atoms, "n_atoms"',
+                    'To open a mdcrd file in mode="r", you must ' 'supply the number of atoms, "n_atoms"',
                 )
             if not os.path.exists(filename):
                 raise OSError("The file '%s' doesn't exist" % filename)
@@ -327,9 +317,7 @@ class MDCRDTrajectoryFile:
             # but if some of them had box information and others didn't
             # that probably means there was a bug in the parsing.
             raise OSError(
-                "Inconsistent box information. Try manually "
-                "setting has_box? Your mdcrd file might be "
-                "corrupt.",
+                "Inconsistent box information. Try manually " "setting has_box? Your mdcrd file might be " "corrupt.",
             )
 
         return coords, np.array(boxes, dtype=np.float32)
@@ -347,15 +335,12 @@ class MDCRDTrajectoryFile:
             if line == b"":
                 raise _EOF()
             try:
-                items = [
-                    float(line[j : j + 8]) for j in range(0, len(line.rstrip()), 8)
-                ]
+                items = [float(line[j : j + 8]) for j in range(0, len(line.rstrip()), 8)]
                 assert 0 < len(items) <= 10
             except Exception:
                 raise OSError(
                     'mdcrd parse error on line %d of "%s". This file '
-                    "does not appear to be a valid mdcrd file."
-                    % (self._line_counter, self._filename),
+                    "does not appear to be a valid mdcrd file." % (self._line_counter, self._filename),
                 )
 
             length = len(items)
@@ -472,7 +457,7 @@ class MDCRDTrajectoryFile:
                 self._fh.write(b"\n")
 
             if cell_lengths is not None:
-                line = "%8.3f %8.3f %8.3f\n" % tuple(cell_lengths[i])
+                line = "{:8.3f} {:8.3f} {:8.3f}\n".format(*tuple(cell_lengths[i]))
                 line = line.encode("ascii")
                 self._fh.write(line)
 

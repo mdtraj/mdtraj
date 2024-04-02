@@ -21,6 +21,22 @@
 ##############################################################################
 
 
+from .angle import *
+from .contact import *
+from .dihedral import *
+from .distance import *
+from .drid import *
+from .dssp import *
+from .hbond import *
+from .neighborlist import *
+from .neighbors import *
+from .order import *
+from .rdf import *
+from .rg import *
+from .sasa import *
+from .shape import *
+from .thermodynamic_properties import *
+
 __all__ = [
     "baker_hubbard",
     "shrake_rupley",
@@ -64,19 +80,3 @@ __all__ = [
     "thermal_expansion_alpha_P",
     "density",
 ]
-
-from .angle import *
-from .contact import *
-from .dihedral import *
-from .distance import *
-from .drid import *
-from .dssp import *
-from .hbond import *
-from .neighborlist import *
-from .neighbors import *
-from .order import *
-from .rdf import *
-from .rg import *
-from .sasa import *
-from .shape import *
-from .thermodynamic_properties import *

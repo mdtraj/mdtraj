@@ -1,5 +1,4 @@
-"""gro.py: Used for loading Gromacs GRO files.
-"""
+"""gro.py: Used for loading Gromacs GRO files."""
 
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
@@ -45,7 +44,6 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
 
-
 import itertools
 import os
 import warnings
@@ -83,7 +81,6 @@ def load_gro(filename, stride=None, atom_indices=None, frame=None, top=None):
     """
 
     with GroTrajectoryFile(filename, "r", top=top) as f:
-        topology = f.topology
         if frame is not None:
             f.seek(frame)
             n_frames = 1
@@ -362,30 +359,21 @@ class GroTrajectoryFile:
                     line[i * 5 : i * 5 + 5].strip() for i in range(4)
                 )
                 thisresnum, thisatomnum = map(int, (thisresnum, thisatomnum))
-                if (
-                    residue is None
-                    or residue.resSeq != thisresnum
-                    or old_resname != thisresname
-                ):
+                if residue is None or residue.resSeq != thisresnum or old_resname != thisresname:
                     if residue is not None and thisresnum == residue.resSeq:
                         warnings.warn(
-                            "WARNING: two consecutive residues with same number (%s, %s)"
-                            % (thisresname, old_resname),
+                            f"WARNING: two consecutive residues with same number ({thisresname}, {old_resname})",
                         )
                     old_resname = thisresname
                     if thisresname in pdb.PDBTrajectoryFile._residueNameReplacements:
-                        thisresname = pdb.PDBTrajectoryFile._residueNameReplacements[
-                            thisresname
-                        ]
+                        thisresname = pdb.PDBTrajectoryFile._residueNameReplacements[thisresname]
                     residue = topology.add_residue(
                         thisresname,
                         chain,
                         resSeq=thisresnum,
                     )
                     if thisresname in pdb.PDBTrajectoryFile._atomNameReplacements:
-                        atomReplacements = pdb.PDBTrajectoryFile._atomNameReplacements[
-                            thisresname
-                        ]
+                        atomReplacements = pdb.PDBTrajectoryFile._atomNameReplacements[thisresname]
                     else:
                         atomReplacements = {}
 
@@ -417,7 +405,7 @@ class GroTrajectoryFile:
         atomcounter = itertools.count()
         comment = None
         boxvectors = None
-        topology = None
+
         xyz = np.zeros((self.n_atoms, 3), dtype=np.float32)
 
         got_line = False
@@ -512,18 +500,9 @@ class GroTrajectoryFile:
             )
 
         lines.append(
-            "%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f"
-            % (
-                box[0, 0],
-                box[1, 1],
-                box[2, 2],
-                box[0, 1],
-                box[0, 2],
-                box[1, 0],
-                box[1, 2],
-                box[2, 0],
-                box[2, 1],
-            ),
+            f"{box[0, 0]:10.5f}{box[1, 1]:10.5f}{box[2, 2]:10.5f}"
+            f"{box[0, 1]:10.5f}{box[0, 2]:10.5f}{box[1, 0]:10.5f}"
+            f"{box[1, 2]:10.5f}{box[2, 0]:10.5f}{box[2, 1]:10.5f}",
         )
 
         self._file.write("\n".join(lines))
@@ -569,7 +548,6 @@ class GroTrajectoryFile:
         self.close()
 
 
-
 def _isint(word):
     """ONLY matches integers! If you have a decimal point? None shall pass!
 
@@ -601,9 +579,7 @@ def _parse_gro_coord(line, firstDecimal, secondDecimal):
         return None
     digits = secondDecimal - firstDecimal
     try:
-        return tuple(
-            float(line[20 + i * digits : 20 + (i + 1) * digits]) for i in range(3)
-        )
+        return tuple(float(line[20 + i * digits : 20 + (i + 1) * digits]) for i in range(3))
     except ValueError:
         return None
 

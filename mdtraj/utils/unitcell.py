@@ -74,11 +74,7 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
     This code is adapted from gyroid, which is licensed under the BSD
     http://pythonhosted.org/gyroid/_modules/gyroid/unitcell.html
     """
-    if (
-        np.all(alpha < 2 * np.pi)
-        and np.all(beta < 2 * np.pi)
-        and np.all(gamma < 2 * np.pi)
-    ):
+    if np.all(alpha < 2 * np.pi) and np.all(beta < 2 * np.pi) and np.all(gamma < 2 * np.pi):
         warnings.warn(
             "All your angles were less than 2*pi. Did you accidentally give me radians?",
         )
@@ -163,8 +159,7 @@ def box_vectors_to_lengths_and_angles(a, b, c):
         raise TypeError("The last dimension must be length 3")
     if a.ndim not in [1, 2]:
         raise ValueError(
-            "vectors must be 1d or 2d (for a vectorized "
-            "operation on multiple frames)",
+            "vectors must be 1d or 2d (for a vectorized " "operation on multiple frames)",
         )
     last_dim = a.ndim - 1
 

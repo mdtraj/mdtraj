@@ -21,6 +21,7 @@
 ##############################################################################
 
 import os
+import shutil
 import subprocess
 
 import pytest
@@ -30,9 +31,9 @@ from mdtraj.formats import psf
 from mdtraj.testing import eq
 from mdtraj.utils import enter_temp_directory
 
-VMD = find_executable("vmd")
+VMD = shutil.which("vmd")
 needs_vmd = pytest.mark.skipif(
-    not find_executable("vmd"),
+    VMD is None,
     reason="This test requires the VMD executable: http://www.ks.uiuc.edu/Research/vmd/",
 )
 
@@ -45,12 +46,8 @@ def test_load_psf(get_fn):
     top2 = psf.load_psf(get_fn("ala_ala_ala.xpsf"))
     eq(top2, ref_top)
     # Test segment_names are loaded properly
-    assert (
-        next(top.residues).segment_id == "AAL"
-    ), "Segment id is not being assigned correctly for ala_ala_ala.psf"
-    assert (
-        next(top2.residues).segment_id == "AAL"
-    ), "Segment id is not being assigned correctly for ala_ala_ala.xpsf"
+    assert next(top.residues).segment_id == "AAL", "Segment id is not being assigned correctly for ala_ala_ala.psf"
+    assert next(top2.residues).segment_id == "AAL", "Segment id is not being assigned correctly for ala_ala_ala.xpsf"
 
 
 def test_multichain_psf(get_fn):
@@ -102,10 +99,7 @@ def test_against_vmd(pdb, get_fn):
     # the install mechanism, especially for bundled mac or windows installers
     VMD_ROOT = os.path.join(os.path.dirname(os.path.realpath(VMD)), "..")
     top_paths = [
-        os.path.join(r, f)
-        for (r, _, fs) in os.walk(VMD_ROOT)
-        for f in fs
-        if "top_all27_prot_lipid_na.inp" in f
+        os.path.join(r, f) for (r, _, fs) in os.walk(VMD_ROOT) for f in fs if "top_all27_prot_lipid_na.inp" in f
     ]
     assert len(top_paths) >= 0
     top = os.path.abspath(top_paths[0]).replace(" ", "\\ ")

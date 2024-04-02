@@ -20,8 +20,7 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-""" MSMBuilder2 "LH5" trajectory format.
-"""
+"""MSMBuilder2 "LH5" trajectory format."""
 
 ##############################################################################
 # Imports
@@ -103,11 +102,12 @@ def _convert_from_lossy_integers(X, precision=DEFAULT_PRECISION):
 
 
 def _convert_to_lossy_integers(X, precision=DEFAULT_PRECISION):
-    """Implementation of the lossy compression used in Gromacs XTC using the pytables library.  Convert 32 bit floats into 16 bit integers.  These conversion functions have been optimized for memory use.  Further memory reduction would require an in-place astype() operation, which one could create using ctypes."""
-    if (
-        np.max(X) * float(precision) < MAXINT16
-        and np.min(X) * float(precision) > -MAXINT16
-    ):
+    """
+    Implementation of the lossy compression used in Gromacs XTC using the pytables library.  Convert 32 bit floats
+    into 16 bit integers.  These conversion functions have been optimized for memory use.  Further memory reduction
+    would require an in-place astype() operation, which one could create using ctypes.
+    """
+    if np.max(X) * float(precision) < MAXINT16 and np.min(X) * float(precision) > -MAXINT16:
         X *= float(precision)
         Rounded = X.astype("int16")
         X /= float(precision)
@@ -231,8 +231,7 @@ class LH5TrajectoryFile:
             A topology object
         """
         if np.all(self._handle.root.AtomID[:] == 0) and (
-            np.all(self._handle.root.AtomNames[:] == b"")
-            or np.all(self._handle.root.eAtomNames[:] == "")
+            np.all(self._handle.root.AtomNames[:] == b"") or np.all(self._handle.root.eAtomNames[:] == "")
         ):
             return None
 

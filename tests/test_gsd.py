@@ -75,7 +75,7 @@ def test_read_stride(get_fn):
 def test_read_variable_top_error(get_fn):
     filename = get_fn("variable_top.gsd")
     with pytest.raises(IOError):
-        traj = mdtraj.load(filename)
+        mdtraj.load(filename)
 
 
 def test_write(get_fn, tmpdir):

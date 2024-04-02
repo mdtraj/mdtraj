@@ -217,10 +217,7 @@ def test_reporter_subset(tmpdir, get_fn):
         eq(got.cell_lengths, 2 * np.ones((50, 3)))
         eq(got.cell_angles, 90 * np.ones((50, 3)))
         eq(got.time, 0.002 * 2 * (1 + np.arange(50)))
-        assert (
-            f.topology
-            == md.load(get_fn("native.pdb"), atom_indices=atomSubset).topology
-        )
+        assert f.topology == md.load(get_fn("native.pdb"), atom_indices=atomSubset).topology
 
     with NetCDFTrajectoryFile(ncfile) as f:
         xyz, time, cell_lengths, cell_angles = f.read()

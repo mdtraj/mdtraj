@@ -28,7 +28,6 @@ from mdtraj.utils import ensure_type
 __all__ = ["wernet_nilsson", "baker_hubbard", "kabsch_sander"]
 
 
-
 def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle according to the criterion outlined in [1].
@@ -305,7 +304,9 @@ def kabsch_sander(traj):
 
     References
     ----------
-    .. [1] Kabsch W, Sander C (1983). "Dictionary of protein secondary structure: pattern recognition of hydrogen-bonded and geometrical features". Biopolymers 22 (12): 2577-637. doi:10.1002/bip.360221211
+    .. [1] Kabsch W, Sander C (1983). "Dictionary of protein secondary structure: pattern
+        recognition of hydrogen-bonded and geometrical features". Biopolymers 22 (12):
+        2577-637. doi:10.1002/bip.360221211
     """
     if traj.topology is None:
         raise ValueError("kabsch_sander requires topology")
@@ -370,18 +371,10 @@ def _get_bond_triplets(topology, exclude_water=True, sidechain_only=False):
     def get_donors(e0, e1):
         # Find all matching bonds
         elems = {e0, e1}
-        atoms = [
-            (one, two)
-            for one, two in topology.bonds
-            if {one.element.symbol, two.element.symbol} == elems
-        ]
+        atoms = [(one, two) for one, two in topology.bonds if {one.element.symbol, two.element.symbol} == elems]
 
         # Filter non-participating atoms
-        atoms = [
-            atom
-            for atom in atoms
-            if can_participate(atom[0]) and can_participate(atom[1])
-        ]
+        atoms = [atom for atom in atoms if can_participate(atom[0]) and can_participate(atom[1])]
 
         # Get indices for the remaining atoms
         indices = []
@@ -417,11 +410,7 @@ def _get_bond_triplets(topology, exclude_water=True, sidechain_only=False):
         return np.zeros((0, 3), dtype=int)
 
     acceptor_elements = frozenset(("O", "N"))
-    acceptors = [
-        a.index
-        for a in topology.atoms
-        if a.element.symbol in acceptor_elements and can_participate(a)
-    ]
+    acceptors = [a.index for a in topology.atoms if a.element.symbol in acceptor_elements and can_participate(a)]
 
     # Make acceptors a 2-D numpy array
     acceptors = np.array(acceptors)[:, np.newaxis]

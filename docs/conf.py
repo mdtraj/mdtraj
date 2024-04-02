@@ -15,6 +15,11 @@
 import os
 import sys
 
+import msmb_theme
+import sphinx_rtd_theme
+
+import mdtraj.version
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -60,7 +65,6 @@ copyright = "2016, Stanford University and the Authors"
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-import mdtraj.version
 
 # The short X.Y version.
 version = mdtraj.version.short_version
@@ -113,8 +117,6 @@ pygments_style = "sphinx"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-import msmb_theme
-import sphinx_rtd_theme
 
 html_theme = "msmb_theme"
 

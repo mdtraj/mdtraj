@@ -21,10 +21,6 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
-
 from copy import deepcopy
 
 import numpy as np
@@ -37,8 +33,10 @@ __all__ = ["shrake_rupley"]
 # These van der waals radii are taken from
 # https://en.wikipedia.org/wiki/Atomic_radii_of_the_elements_(data_page)
 # which references
-# A. Bondi (1964). "van der Waals Volumes and Radii". J. Phys. Chem. 68: 441. doi:10.1021/j100785a001 and doi:10.1021/jp8111556.
-# M. Mantina et al. (2009). "Consistent van der Waals Radii for the Whole Main Group". J. Phys. Chem. A. 113 (19): 5806--12. doi:10.1021/jp8111556
+# A. Bondi (1964). "van der Waals Volumes and Radii". J. Phys. Chem. 68:
+#   441. doi:10.1021/j100785a001 and doi:10.1021/jp8111556.
+# M. Mantina et al. (2009). "Consistent van der Waals Radii for the Whole Main Group".
+#   J. Phys. Chem. A. 113 (19): 5806--12. doi:10.1021/jp8111556
 # Where no van der Waals value is known, a default of 2 angstroms is used.
 # However, because certain atoms in biophysical simulations have a high
 # chance of being completely ionized, we have decided to give the
@@ -47,7 +45,9 @@ __all__ = ["shrake_rupley"]
 # +1: Li, Na, K, Cs
 # -1: Cl
 # These ionic radii are were taken from:
-# Shannon, R. D. Revised effective ionic radii and systematic studies of interatomic distances in halides and chalcogenides. Acta Crystallographica Section A 32, 751--767 (1976). doi:10.1107/S0567739476001551
+# Shannon, R. D. Revised effective ionic radii and systematic studies of interatomic distances in
+#   halides and chalcogenides. Acta Crystallographica Section A 32, 751--767 (1976).
+#   doi:10.1107/S0567739476001551
 # For most atoms, adding electrons usually doesn't change the radius much
 # (<10%), while removing them changes it substantially (>50%). Further,
 # when atoms like N, S, and P, are positive, they are bound to atoms in such
@@ -175,10 +175,6 @@ _ATOMIC_RADII = {
     "Uuo": 0.200,
 }
 
-##############################################################################
-# Functions
-##############################################################################
-
 
 def shrake_rupley(
     traj,
@@ -290,18 +286,14 @@ def shrake_rupley(
 
     out = np.zeros((xyz.shape[0], dim1), dtype=np.float32)
     if bool(modified_radii):
-        atom_radii = [
-            modified_radii[atom.element.symbol] for atom in traj.topology.atoms
-        ]
+        atom_radii = [modified_radii[atom.element.symbol] for atom in traj.topology.atoms]
     else:
-        atom_radii = [
-            _ATOMIC_RADII[atom.element.symbol] for atom in traj.topology.atoms
-        ]
+        atom_radii = [_ATOMIC_RADII[atom.element.symbol] for atom in traj.topology.atoms]
     radii = np.array(atom_radii, np.float32) + probe_radius
 
     _geometry._sasa(xyz, radii, int(n_sphere_points), atom_mapping, out)
 
-    if get_mapping == True:
+    if get_mapping is True:
         return out, atom_mapping
     else:
         return out

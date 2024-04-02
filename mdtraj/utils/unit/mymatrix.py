@@ -365,33 +365,33 @@ class MyMatrix(MyVector):
                 ipiv[icol] += 1
                 # We now have the pivot element, so we interchange rows...
                 if irow != icol:
-                    for l in range(n):
-                        temp = a[irow][l]
-                        a[irow][l] = a[icol][l]
-                        a[icol][l] = temp
+                    for line in range(n):
+                        temp = a[irow][line]
+                        a[irow][line] = a[icol][line]
+                        a[icol][line] = temp
                 indxr[i] = irow
                 indxc[i] = icol
                 if a[icol][icol] == 0:
                     raise ArithmeticError("Cannot invert singular matrix")
                 pivinv = 1.0 / a[icol][icol]
                 a[icol][icol] = 1.0
-                for l in range(n):
-                    a[icol][l] *= pivinv
+                for line in range(n):
+                    a[icol][line] *= pivinv
                 for ll in range(n):  # next we reduce the rows
                     if ll == icol:
                         continue  # except the pivot one, of course
                     dum = a[ll][icol]
                     a[ll][icol] = 0.0
-                    for l in range(n):
-                        a[ll][l] -= a[icol][l] * dum
+                    for line in range(n):
+                        a[ll][line] -= a[icol][line] * dum
             # Unscramble the permuted columns
-            for l in range(n - 1, -1, -1):
-                if indxr[l] == indxc[l]:
+            for line in range(n - 1, -1, -1):
+                if indxr[line] == indxc[line]:
                     continue
                 for k in range(n):
-                    temp = a[k][indxr[l]]
-                    a[k][indxr[l]] = a[k][indxc[l]]
-                    a[k][indxc[l]] = temp
+                    temp = a[k][indxr[line]]
+                    a[k][indxr[line]] = a[k][indxc[line]]
+                    a[k][indxc[line]] = temp
             return a
 
     def transpose(self):

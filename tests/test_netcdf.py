@@ -34,8 +34,7 @@ from mdtraj.testing import eq
 
 needs_cpptraj = pytest.mark.skipif(
     find_executable("cpptraj") is None,
-    reason="This test requires cpptraj from AmberTools to be installed "
-    "(http://ambermd.org)",
+    reason="This test requires cpptraj from AmberTools to be installed " "(http://ambermd.org)",
 )
 
 fd, temp = tempfile.mkstemp(suffix=".nc")
@@ -199,9 +198,6 @@ def test_read_write_25():
 
 
 def test_write_3():
-    xyz = np.random.randn(100, 3, 3)
-    time = np.random.randn(100)
-
     with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
         # you can't supply cell_lengths without cell_angles
         with pytest.raises(ValueError):
@@ -226,7 +222,7 @@ def test_do_overwrite():
         f.write(np.random.randn(10, 5, 3))
 
 
-def test_do_overwrite():
+def test_do_not_overwrite():
     with open(temp, "w") as f:
         f.write("a")
 

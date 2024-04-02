@@ -1,6 +1,4 @@
-"""Extract reference documentation from the NumPy source tree.
-
-"""
+"""Extract reference documentation from the NumPy source tree."""
 
 # This code is copied directly from numpy
 # numpy / doc / sphinxext / docscrape.py
@@ -75,8 +73,8 @@ class Reader:
             return ""
 
     def seek_next_non_empty_line(self):
-        for l in self[self._l :]:
-            if l.strip():
+        for line in self[self._l :]:
+            if line.strip():
                 break
             else:
                 self._l += 1
@@ -221,8 +219,7 @@ class NumpyDocString:
         return params
 
     _name_rgx = re.compile(
-        r"^\s*(:(?P<role>\w+):`(?P<name>[a-zA-Z0-9_.-]+)`|"
-        r" (?P<name2>[a-zA-Z0-9_.-]+))\s*",
+        r"^\s*(:(?P<role>\w+):`(?P<name>[a-zA-Z0-9_.-]+)`|" r" (?P<name2>[a-zA-Z0-9_.-]+))\s*",
         re.X,
     )
 
@@ -454,7 +451,7 @@ def indent(str, indent=4):
     if str is None:
         return indent_str
     lines = str.split("\n")
-    return "\n".join(indent_str + l for l in lines)
+    return "\n".join(indent_str + line for line in lines)
 
 
 def dedent_lines(lines):
@@ -500,8 +497,9 @@ class FunctionDoc(NumpyDocString):
     def __str__(self):
         out = ""
 
-        func, func_name = self.get_func()
-        signature = self["Signature"].replace("*", r"\*")
+        # func, signature not used - what do they do?
+        func, func_name = self.get_func()  # noqa F841
+        signature = self["Signature"].replace("*", r"\*")  # noqa F841
 
         roles = {
             "func": "function",
@@ -550,9 +548,7 @@ class ClassDoc(NumpyDocString):
             if not self["Methods"]:
                 self["Methods"] = [(name, "", "") for name in sorted(self.methods)]
             if not self["Attributes"]:
-                self["Attributes"] = [
-                    (name, "", "") for name in sorted(self.properties)
-                ]
+                self["Attributes"] = [(name, "", "") for name in sorted(self.properties)]
 
     @property
     def methods(self):
@@ -561,18 +557,11 @@ class ClassDoc(NumpyDocString):
         return [
             name
             for name, func in inspect.getmembers(self._cls)
-            if (
-                (not name.startswith("_") or name in self.extra_public_methods)
-                and callable(func)
-            )
+            if ((not name.startswith("_") or name in self.extra_public_methods) and callable(func))
         ]
 
     @property
     def properties(self):
         if self._cls is None:
             return []
-        return [
-            name
-            for name, func in inspect.getmembers(self._cls)
-            if not name.startswith("_") and func is None
-        ]
+        return [name for name, func in inspect.getmembers(self._cls) if not name.startswith("_") and func is None]

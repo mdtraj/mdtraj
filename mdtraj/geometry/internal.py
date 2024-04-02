@@ -25,7 +25,6 @@
 This code is new and should be considered __unstable__
 """
 
-
 import logging
 from itertools import combinations
 
@@ -376,7 +375,6 @@ def get_dihedral_connectivity(ibonds):
     return np.array(idihedrals)
 
 
-
 def get_wilson_B(conformation, **kwargs):
     """Calculate the Wilson B matrix, which collects the derivatives of the
     redundant internal coordinates w/r/t the cartesian coordinates.
@@ -499,10 +497,7 @@ def get_angle_derivs(xyz, iangles):
 
         if np.linalg.norm(u + v) < 1e-10 or np.linalg.norm(u - v) < 1e-10:
             # if they're parallel
-            if (
-                np.linalg.norm(u + vector1) < 1e-10
-                or np.linalg.norm(u - vector1) < 1e-10
-            ):
+            if np.linalg.norm(u + vector1) < 1e-10 or np.linalg.norm(u - vector1) < 1e-10:
                 # and they're parallel o [1, -1, 1]
                 w_prime = np.cross(u, vector2)
             else:

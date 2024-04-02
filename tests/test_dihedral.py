@@ -1,5 +1,6 @@
 import itertools
 import os
+import shutil
 
 import numpy as np
 import pytest
@@ -25,7 +26,7 @@ def traj(get_fn):
 
 @pytest.fixture()
 def pymol():
-    pymol = find_executable("pymol")
+    pymol = shutil.which("pymol")
     if pymol is None:
         try_paths = ["/Applications/MacPyMOL.app/Contents/MacOS/MacPyMOL"]
         for path in try_paths:

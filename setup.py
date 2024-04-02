@@ -11,11 +11,8 @@ binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 import sys
 from glob import glob
 
-DOCLINES = __doc__.split("\n")
-
 from setuptools import Extension, find_packages, setup
 
-sys.path.insert(0, ".")
 from basesetup import (
     CompilerDetection,
     StaticLibrary,
@@ -23,6 +20,10 @@ from basesetup import (
     parse_setuppy_commands,
     write_version_py,
 )
+
+DOCLINES = __doc__.split("\n")
+
+sys.path.insert(0, ".")
 
 try:
     # add an optional --disable-openmp to disable OpenMP support
@@ -203,11 +204,7 @@ def rmsd_extensions():
         ],
         language="c++",
         # don't enable OpenMP
-        extra_compile_args=(
-            compiler.compiler_args_sse2
-            + compiler.compiler_args_sse3
-            + compiler.compiler_args_opt
-        ),
+        extra_compile_args=(compiler.compiler_args_sse2 + compiler.compiler_args_sse3 + compiler.compiler_args_opt),
     )
 
     rmsd = Extension(

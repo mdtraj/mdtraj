@@ -20,15 +20,12 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
-
 import os
 
 import numpy as np
 
 from mdtraj.core.element import virtual_site
+from mdtraj.core.topology import Topology
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, lengths_and_angles_to_tilt_factors
 
@@ -80,8 +77,7 @@ def load_gsd(
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_gsd. "
-            "you supplied %s",
+            "filename must be of type path-like for load_gsd. " "you supplied %s",
         )
 
     if top is not None:

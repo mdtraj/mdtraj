@@ -21,23 +21,15 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
-
 import itertools
 import os
 
 import numpy as np
 
 from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils.validation import cast_indices, in_units_of
 
 __all__ = ["ArcTrajectoryFile", "load_arc"]
-
-
-##############################################################################
-# Classes
-##############################################################################
 
 
 class _EOF(IOError):
@@ -74,8 +66,7 @@ def load_arc(filename, stride=None, atom_indices=None, frame=None):
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_arc. "
-            "you supplied %s" % type(filename),
+            "filename must be of type path-like for load_arc. " "you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)
@@ -303,7 +294,7 @@ class ArcTrajectoryFile:
                 self._read()
 
         coords = np.array(coords)
-        if any(l is None for l in lengths):
+        if any(length is None for length in lengths):
             lengths = angles = None
         else:
             lengths = np.array(lengths)

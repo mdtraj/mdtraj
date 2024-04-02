@@ -240,7 +240,6 @@ def test_write_closed(get_fn):
 
 
 def test_tell(get_fn):
-    fn_dcd = get_fn("frame0.dcd")
     with DCDTrajectoryFile(get_fn("frame0.dcd")) as f:
         eq(f.tell(), 0)
 

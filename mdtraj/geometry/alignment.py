@@ -274,12 +274,7 @@ def rmsd_qcp(conformation1, conformation2):
     # two of the coefficients
     C2 = -2.0 * (Sxx2 + Syy2 + Szz2 + Sxy2 + Syx2 + Sxz2 + Szx2 + Syz2 + Szy2)
     C1 = 8.0 * (
-        Sxx * Syz * Szy
-        + Syy * Szx * Sxz
-        + Szz * Sxy * Syx
-        - Sxx * Syy * Szz
-        - Syz * Szx * Sxy
-        - Szy * Syx * Sxz
+        Sxx * Syz * Szy + Syy * Szx * Sxz + Szz * Sxy * Syx - Sxx * Syy * Szz - Syz * Szx * Sxy - Szy * Syx * Sxz
     )
 
     SxzpSzx = Sxz + Szx
@@ -295,8 +290,7 @@ def rmsd_qcp(conformation1, conformation2):
     # the other coefficient
     C0 = (
         Sxy2Sxz2Syx2Szx2 * Sxy2Sxz2Syx2Szx2
-        + (Sxx2Syy2Szz2Syz2Szy2 + SyzSzymSyySzz2)
-        * (Sxx2Syy2Szz2Syz2Szy2 - SyzSzymSyySzz2)
+        + (Sxx2Syy2Szz2Syz2Szy2 + SyzSzymSyySzz2) * (Sxx2Syy2Szz2Syz2Szy2 - SyzSzymSyySzz2)
         + (-(SxzpSzx) * (SyzmSzy) + (SxymSyx) * (SxxmSyy - Szz))
         * (-(SxzmSzx) * (SyzpSzy) + (SxymSyx) * (SxxmSyy + Szz))
         + (-(SxzpSzx) * (SyzpSzy) - (SxypSyx) * (SxxpSyy - Szz))
@@ -308,8 +302,13 @@ def rmsd_qcp(conformation1, conformation2):
     )
 
     E0 = (G_A + G_B) / 2.0
-    f = lambda x: x**4.0 + C2 * x**2.0 + C1 * x + C0
-    df = lambda x: 4 * x**3.0 + 2 * C2 * x + C1
+
+    def f(x):
+        return x**4.0 + C2 * x**2.0 + C1 * x + C0
+
+    def df(x):
+        return 4 * x**3.0 + 2 * C2 * x + C1
+
     max_eigenvalue = scipy.optimize.newton(f, E0, df)
     rmsd = np.sqrt(np.abs(2.0 * (E0 - max_eigenvalue) / n_atoms))
     return rmsd

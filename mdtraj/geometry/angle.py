@@ -21,8 +21,6 @@
 ##############################################################################
 
 
-
-
 import numpy as np
 
 from mdtraj.geometry import _geometry, distance

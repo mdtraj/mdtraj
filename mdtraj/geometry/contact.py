@@ -131,15 +131,11 @@ def compute_contacts(
         residue_pairs = []
         for i in range(traj.n_residues):
             residue_i = traj.topology.residue(i)
-            if ignore_nonprotein and not any(
-                a for a in residue_i.atoms if a.name.lower() == "ca"
-            ):
+            if ignore_nonprotein and not any(a for a in residue_i.atoms if a.name.lower() == "ca"):
                 continue
             for j in range(i + 3, traj.n_residues):
                 residue_j = traj.topology.residue(j)
-                if ignore_nonprotein and not any(
-                    a for a in residue_j.atoms if a.name.lower() == "ca"
-                ):
+                if ignore_nonprotein and not any(a for a in residue_j.atoms if a.name.lower() == "ca"):
                     continue
                 if residue_i.chain == residue_j.chain:
                     residue_pairs.append((i, j))
@@ -175,19 +171,14 @@ def compute_contacts(
             import warnings
 
             warnings.warn(
-                "The soft_min=True option with scheme=ca gives"
-                "the same results as soft_min=False",
+                "The soft_min=True option with scheme=ca gives" "the same results as soft_min=False",
             )
         filtered_residue_pairs = []
         atom_pairs = []
 
         for r0, r1 in residue_pairs:
-            ca_atoms_0 = [
-                a.index for a in traj.top.residue(r0).atoms if a.name.lower() == "ca"
-            ]
-            ca_atoms_1 = [
-                a.index for a in traj.top.residue(r1).atoms if a.name.lower() == "ca"
-            ]
+            ca_atoms_0 = [a.index for a in traj.top.residue(r0).atoms if a.name.lower() == "ca"]
+            ca_atoms_1 = [a.index for a in traj.top.residue(r1).atoms if a.name.lower() == "ca"]
             if len(ca_atoms_0) == 1 and len(ca_atoms_1) == 1:
                 atom_pairs.append((ca_atoms_0[0], ca_atoms_1[0]))
                 filtered_residue_pairs.append((r0, r1))
@@ -210,24 +201,16 @@ def compute_contacts(
 
     elif scheme in ["closest", "closest-heavy", "sidechain", "sidechain-heavy"]:
         if scheme == "closest":
-            residue_membership = [
-                [atom.index for atom in residue.atoms]
-                for residue in traj.topology.residues
-            ]
+            residue_membership = [[atom.index for atom in residue.atoms] for residue in traj.topology.residues]
         elif scheme == "closest-heavy":
             # then remove the hydrogens from the above list
             residue_membership = [
-                [
-                    atom.index
-                    for atom in residue.atoms
-                    if not (atom.element == element.hydrogen)
-                ]
+                [atom.index for atom in residue.atoms if not (atom.element == element.hydrogen)]
                 for residue in traj.topology.residues
             ]
         elif scheme == "sidechain":
             residue_membership = [
-                [atom.index for atom in residue.atoms if atom.is_sidechain]
-                for residue in traj.topology.residues
+                [atom.index for atom in residue.atoms if atom.is_sidechain] for residue in traj.topology.residues
             ]
         elif scheme == "sidechain-heavy":
             # then remove the hydrogens from the above list
@@ -235,9 +218,11 @@ def compute_contacts(
                 import warnings
 
                 warnings.warn(
-                    "selected topology includes at least one glycine residue, which has no heavy atoms in its sidechain. The distances involving glycine residues "
-                    "will be computed using the sidechain hydrogen instead.",
+                    "selected topology includes at least one glycine residue, which has no heavy "
+                    "atoms in its sidechain. The distances involving glycine residues will be "
+                    "computed using the sidechain hydrogen instead.",
                 )
+
             residue_membership = [
                 (
                     [
@@ -340,8 +325,7 @@ def squareform(distances, residue_pairs):
     if distances.shape[1] != residue_pairs.shape[0]:
         raise ValueError(
             "The number of pairs in distances, %d, does not "
-            "match the number of pairs in residue_pairs, %d."
-            % (distances.shape[1], residue_pairs.shape[0]),
+            "match the number of pairs in residue_pairs, %d." % (distances.shape[1], residue_pairs.shape[0]),
         )
 
     n_residues = np.max(residue_pairs) + 1

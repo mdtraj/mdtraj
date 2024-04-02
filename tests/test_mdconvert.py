@@ -147,16 +147,12 @@ def test_pairwise(traj, extension):
 
         # Use the --atom_indices flag to mdconvert
         command2 = command1 + ["-a", atom_indices_fn]
-        command2[3] = (
-            "subset." + out_fn
-        )  # make sure the output goes to a different file
+        command2[3] = "subset." + out_fn  # make sure the output goes to a different file
         subprocess.check_call(command2, cwd=working_dir)
 
         # Use the --stride 3 flag
         command3 = command1 + ["-s 3"]
-        command3[3] = (
-            "stride." + out_fn
-        )  # change the out filename, so they don't clobbed
+        command3[3] = "stride." + out_fn  # change the out filename, so they don't clobbed
         subprocess.check_call(command3, cwd=working_dir)
 
         # ensure that the xyz coordinates are preserved by a trip

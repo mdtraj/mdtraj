@@ -158,27 +158,19 @@ def test_slice(get_fn):
         t.slice(key=range(10), copy=False).xyz,
     )
     assert eq(
-        (
-            t.slice(key=range(5), copy=False) + t.slice(key=range(5, 10), copy=False)
-        ).time,
+        (t.slice(key=range(5), copy=False) + t.slice(key=range(5, 10), copy=False)).time,
         t.slice(key=range(10), copy=False).time,
     )
     assert eq(
-        (
-            t.slice(key=range(5), copy=False) + t.slice(key=range(5, 10), copy=False)
-        ).unitcell_vectors,
+        (t.slice(key=range(5), copy=False) + t.slice(key=range(5, 10), copy=False)).unitcell_vectors,
         t.slice(key=range(10), copy=False).unitcell_vectors,
     )
     assert eq(
-        (
-            t.slice(key=range(5), copy=False) + t.slice(key=range(5, 10), copy=False)
-        ).unitcell_lengths,
+        (t.slice(key=range(5), copy=False) + t.slice(key=range(5, 10), copy=False)).unitcell_lengths,
         t.slice(key=range(10), copy=False).unitcell_lengths,
     )
     assert eq(
-        (
-            t.slice(key=range(5), copy=False) + t.slice(key=range(5, 10), copy=False)
-        ).unitcell_angles,
+        (t.slice(key=range(5), copy=False) + t.slice(key=range(5, 10), copy=False)).unitcell_angles,
         t.slice(key=range(10), copy=False).unitcell_angles,
     )
 
@@ -218,8 +210,7 @@ def precision2(fext1, fext2):
 
 
 def test_read_path(ref_traj, get_fn):
-    top = get_fn("native.pdb")
-    t = md.load(Path(get_fn(ref_traj.fn)), top=top)
+    md.load(Path(get_fn(ref_traj.fn)), top=get_fn("native.pdb"))
 
 
 def test_write_path(write_traj, get_fn):
@@ -331,10 +322,7 @@ def test_float_atom_indices_exception(ref_traj, get_fn):
     try:
         md.load(get_fn(ref_traj.fn), atom_indices=[0.5, 1.3], top=top)
     except ValueError as e:
-        assert (
-            e.args[0]
-            == "indices must be of an integer type. float64 is not an integer type"
-        )
+        assert e.args[0] == "indices must be of an integer type. float64 is not an integer type"
 
 
 def test_restrict_atoms(get_fn):
@@ -626,7 +614,6 @@ def test_iterload_chunk_dcd(get_fn):
     frames_chunk = 2
 
     full = md.load(file, top=top, stride=skip_frames)
-    length = len(full)
 
     chunks = []
     for traj_chunk in md.iterload(
@@ -680,11 +667,11 @@ def test_open_and_load(get_fn):
 
     for file in files:
         if file.endswith(".mdcrd"):
-            opened = md.open(get_fn(file), n_atoms=22)
+            md.open(get_fn(file), n_atoms=22)
         else:
-            opened = md.open(get_fn(file))
+            md.open(get_fn(file))
 
-        loaded = md.load(get_fn(file), top=get_fn("native.pdb"))
+        md.load(get_fn(file), top=get_fn("native.pdb"))
 
 
 def test_length(get_fn):
@@ -799,7 +786,7 @@ def test_image_molecules(get_fn):
     # Image inplace with making molecules whole
     t.image_molecules(inplace=True, make_whole=True)
     # Test coordinates in t are not corrupted to NaNs (issue #1813)
-    assert np.any(np.isnan(t.xyz)) == False
+    assert np.any(np.isnan(t.xyz)) is False
     # Image with specified anchor molecules
     molecules = t.topology.find_molecules()
     anchor_molecules = molecules[0:3]

@@ -19,3 +19,10 @@ select = [
     "UP",
     "NPY",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Would really, really like to get rid of F403, though F401 is okay
+"__init__.py" = ["F401", "F403"]
+"tests/test_*.py" = ["NPY002"]
+"mdtraj/geometry/__init__.py" = ["F403", "F405"]
+"mdtraj/utils/unit/**" = ["F403", "F405"]

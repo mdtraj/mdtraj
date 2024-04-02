@@ -41,9 +41,7 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
-"""Load an md.Topology from tripos mol2 files.
-"""
-
+"""Load an md.Topology from tripos mol2 files."""
 
 import itertools
 import re
@@ -147,10 +145,7 @@ def load_mol2(filename):
         n_bonds = bonds_mdtraj.shape[0]
         bond_augment = np.zeros([n_bonds, 2], dtype=float)
         # Add bond type information
-        bond_augment[:, 0] = [
-            float(bond_type_map[str(bond_value)])
-            for bond_value in bonds["bond_type"].values
-        ]
+        bond_augment[:, 0] = [float(bond_type_map[str(bond_value)]) for bond_value in bonds["bond_type"].values]
         # Add Bond "order" information, this is not known from Mol2 files
         bond_augment[:, 1] = [0.0 for _ in range(n_bonds)]
         # Augment array, dtype is cast to minimal representation of float
@@ -198,18 +193,14 @@ def mol2_to_dataframes(filename):
     """
     pd = import_("pandas")
     with open(filename) as f:
-        data = {
-            key: list(grp) for key, grp in itertools.groupby(f, _parse_mol2_sections)
-        }
+        data = {key: list(grp) for key, grp in itertools.groupby(f, _parse_mol2_sections)}
 
     # Mol2 can have "status bits" at the end of the bond lines. We don't care
     # about these, but they interfere with using pd_read_table because it looks
     # like one line has too many columns. So we just regex out the offending
     # text.
     status_bit_regex = r"BACKBONE|DICT|INTERRES|\|"
-    data["@<TRIPOS>BOND\n"] = [
-        re.sub(status_bit_regex, lambda _: "", s) for s in data["@<TRIPOS>BOND\n"]
-    ]
+    data["@<TRIPOS>BOND\n"] = [re.sub(status_bit_regex, lambda _: "", s) for s in data["@<TRIPOS>BOND\n"]]
 
     if len(data["@<TRIPOS>BOND\n"]) > 1:
         csv = StringIO()

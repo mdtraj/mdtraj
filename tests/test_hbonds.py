@@ -32,19 +32,13 @@ import scipy.sparse
 import mdtraj as md
 from mdtraj.testing import eq
 
-DSSP_MSG = (
-    "This test requires mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
-)
-needs_dssp = pytest.mark.skipif(not find_executable("mkdssp"), reason=DSSP_MSG)
-DSSP_MSG = (
-    "This test requires mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
-)
+DSSP_MSG = "This test requires mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
 needs_dssp = pytest.mark.skipif(not shutil.which("mkdssp"), reason=DSSP_MSG)
 
 
 def test_hbonds(get_fn):
     t = md.load(get_fn("2EQQ.pdb"))
-    ours = md.geometry.hbond.kabsch_sander(t)
+    md.geometry.hbond.kabsch_sander(t)
 
 
 @needs_dssp

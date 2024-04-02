@@ -41,8 +41,7 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
-"""Load an md.Topology from AMBER PRMTOP files
-"""
+"""Load an md.Topology from AMBER PRMTOP files"""
 
 # Written by: TJ Lane <tjlane@stanford.edu> 2/25/14
 # This code was mostly stolen/stripped down from OpenMM code, specifically
@@ -192,9 +191,7 @@ def load_prmtop(filename, **kwargs):
             r = top.add_residue(res_name, c)
 
             if res_name in pdb.PDBTrajectoryFile._atomNameReplacements:
-                atom_replacements = pdb.PDBTrajectoryFile._atomNameReplacements[
-                    res_name
-                ]
+                atom_replacements = pdb.PDBTrajectoryFile._atomNameReplacements[res_name]
             else:
                 atom_replacements = {}
 
@@ -238,8 +235,7 @@ def load_prmtop(filename, **kwargs):
     for ii in range(0, len(bond_pointers), 3):
         if int(bond_pointers[ii]) < 0 or int(bond_pointers[ii + 1]) < 0:
             raise Exception(
-                "Found negative bonded atom pointers %s"
-                % (
+                "Found negative bonded atom pointers {}".format(
                     (
                         bond_pointers[ii],
                         bond_pointers[ii + 1],
