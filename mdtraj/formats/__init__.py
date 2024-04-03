@@ -13,5 +13,4 @@ from .lammpstrj import LAMMPSTrajectoryFile
 from .dtr import DTRTrajectoryFile
 from .gro import GroTrajectoryFile
 from .xyzfile import XYZTrajectoryFile
-from .tng import TNGTrajectoryFile
 from .pdbx import PDBxTrajectoryFile
