@@ -6,6 +6,13 @@ These are new features and improvements of note in each release.
 Current Development
 -------------------
 
+- Remove TNG support (#1875)
+- Drop support for long-unsupported upstreams (#1838)
+- Drop `distutils` (#1834)
+
+Jinzhe Zeng+
+Matthew W. Thompson
+
 v1.9.9 (July 22, 2023)
 ---------------------
 

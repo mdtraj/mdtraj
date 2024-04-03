@@ -48,7 +48,6 @@ file_objs = [
     (md.formats.XYZTrajectoryFile, 'xyz'),
     (md.formats.XYZTrajectoryFile, 'xyz.gz'),
     (md.formats.LAMMPSTrajectoryFile, 'lammpstrj'),
-    (md.formats.TNGTrajectoryFile, 'tng'),
     (md.formats.LH5TrajectoryFile, 'lh5'),
     (md.formats.PDBTrajectoryFile, 'pdb'),
     (md.formats.PDBTrajectoryFile, 'pdb.gz'),
@@ -635,7 +634,7 @@ def test_open_and_load(get_fn):
 def test_length(get_fn):
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
              'frame0.dcd', '2EQQ.pdb',
-             'frame0.binpos', 'frame0.xyz', 'frame0.tng']
+             'frame0.binpos', 'frame0.xyz']
     if not on_win:
         files.append('frame0.lh5')
 
