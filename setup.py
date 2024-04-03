@@ -126,7 +126,7 @@ def format_extensions():
                     extra_compile_args=compiler_args,
                     libraries=extra_cpp_libraries)
 
-    return [xtc, trr, tng, dcd, binpos, dtr]
+    return [xtc, trr, dcd, binpos, dtr]
 
 
 def rmsd_extensions():
