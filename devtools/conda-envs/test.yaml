@@ -1,6 +1,5 @@
 name: mdtraj-test
 channels:
-  - jaimergp/label/unsupported-cudatoolkit-shim
   - conda-forge
 dependencies:
   # Core
