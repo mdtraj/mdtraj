@@ -78,15 +78,15 @@ MESSAGES = {
     sharing of array-oriented scientific data.
 
     netcdf4-python can be downloaded from https://pypi.python.org/pypi/netCDF,
-    or installed with the python "easy_install" or "pip" package managers using:
+    or installed with the python "coonda" or "pip" package managers using:
 
-    # easy_install netCDF4
+    # conda install -c conda-forge netCDF4
     or
     # pip install netCDF4
 
     netcdf4-python also depends on the C-language HDF5 and NetCDF libraries.
     For detailed installation instructions, visit
-    http://netcdf4-python.googlecode.com/svn/trunk/docs/netCDF4-module.html
+    https://unidata.github.io/netcdf4-python/#quick-install
     ''',
 
     'openmm.unit': '''
