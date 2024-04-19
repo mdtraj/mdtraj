@@ -176,7 +176,14 @@ class NetCDFTrajectoryFile(object):
         self._validate_open()
         if self._needs_initialization:
             raise IOError('The file is uninitialized.')
-        return self._handle.dimensions['atom']
+        
+        try:
+            # netCDF4 requires use of .size on dimensions
+            # to get size as integer. 
+            return self._handle.dimensions['atom'].size
+        except AttributeError:
+            # scipy case
+            return self._handle.dimensions['atom']
 
     @property
     def n_frames(self):
