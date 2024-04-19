@@ -128,13 +128,6 @@ class NetCDFTrajectoryFile(object):
         try:
             # import netcdf4 if it's available
             netcdf = import_('netCDF4').Dataset
-
-            # mode check for netCDF4
-            if mode not in ['r', 'w', 'a', 'ws', 'as']:
-                raise ValueError(("mode must be one of ['r', 'w', 'a', 'ws', 'as'] if using netCDF4."
-                    " 'r' indicates read, 'w' indicates write, and 'a' indicates"
-                    " append. 'a' and 'w' can be appended with 's', which turns "
-                    " off buffering"))
             
             # set input args for netCDF4
             input_args = {'format': 'NETCDF3_64BIT', 'clobber': force_overwrite}
@@ -147,15 +140,15 @@ class NetCDFTrajectoryFile(object):
             warnings.warn('Could not find netCDF4 module. Falling back on '
                               'scipy implementation, which can be significantly'
                               'slower than the netCDF4 implementation.')
-            
-            # mode check for scipy.io.netcdf_file
-            if mode not in ['r', 'w']:
-                raise ValueError("mode must be one of ['r', 'w'] if using scipy.io.netcdf_file.")
+        
             
             # input args for scipy.io.netcdf_file
             # AMBER uses the NetCDF3 format, with 64 bit encodings, which
             # for scipy.io.netcdf_file is "version=2"
             input_args = {'version': 2}
+
+        if mode not in ['r', 'w']:
+            raise ValueError("mode must be one of ['r', 'w']")
 
         if mode == 'w' and not force_overwrite and os.path.exists(filename):
             raise IOError('"%s" already exists' % filename)
