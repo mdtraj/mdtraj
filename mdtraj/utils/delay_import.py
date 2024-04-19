@@ -78,7 +78,7 @@ MESSAGES = {
     sharing of array-oriented scientific data.
 
     netcdf4-python can be downloaded from https://pypi.python.org/pypi/netCDF,
-    or installed with the python "coonda" or "pip" package managers using:
+    or installed with the python "conda" or "pip" package managers using:
 
     # conda install -c conda-forge netCDF4
     or
