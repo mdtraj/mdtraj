@@ -533,7 +533,7 @@ class Topology(object):
             if atom['chainID'] != previous_chainID:
                 previous_chainID = atom['chainID']
 
-                c = out.add_chain(previous_chainID)
+                c = out.add_chain(previous_chainID, chain_id=previous_chainID)
 
             if atom['resSeq'] != previous_resSeq or atom['resName'] != previous_resName or c.n_atoms==0:
                 previous_resSeq = atom['resSeq']
