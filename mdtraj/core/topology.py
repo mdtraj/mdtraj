@@ -449,7 +449,8 @@ class Topology(object):
         pd = import_('pandas')
         data = [(atom.serial, atom.name, atom.element.symbol,
                  atom.residue.resSeq, atom.residue.name,
-                 atom.residue.chain.index,atom.segment_id) for atom in self.atoms]
+                 [atom.residue.chain.index if atom.residue.chain.chain_id is None else atom.residue.chain.chain_id][0],
+                 atom.segment_id) for atom in self.atoms]
 
         atoms = pd.DataFrame(data, columns=["serial", "name", "element",
                                             "resSeq", "resName", "chainID","segmentID"])
@@ -532,7 +533,7 @@ class Topology(object):
             if atom['chainID'] != previous_chainID:
                 previous_chainID = atom['chainID']
 
-                c = out.add_chain()
+                c = out.add_chain(previous_chainID)
 
             if atom['resSeq'] != previous_resSeq or atom['resName'] != previous_resName or c.n_atoms==0:
                 previous_resSeq = atom['resSeq']
