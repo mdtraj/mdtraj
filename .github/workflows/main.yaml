@@ -47,8 +47,8 @@ jobs:
 
     - name: Environment Information
       run: |
-        conda info
-        conda list
+        mamba info
+        mamba list
 
     - name: Run tests
       if: always()
