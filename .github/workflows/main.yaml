@@ -24,7 +24,8 @@ jobs:
 
       matrix:
         os:
-          - macOS-latest
+          - macOS-latest  # arm64
+          - macOS-13  # x86-64
           - ubuntu-latest
         python-version:
           - "3.10"
@@ -47,8 +48,8 @@ jobs:
 
     - name: Environment Information
       run: |
-        conda info
-        conda list
+        micromamba info
+        micromamba list
 
     - name: Run tests
       if: always()
