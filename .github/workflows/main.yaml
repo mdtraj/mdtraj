@@ -47,8 +47,8 @@ jobs:
 
     - name: Environment Information
       run: |
-        mamba info
-        mamba list
+        micromamba info
+        micromamba list
 
     - name: Run tests
       if: always()
