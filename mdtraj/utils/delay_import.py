@@ -77,7 +77,7 @@ MESSAGES = {
     machine-independent data formats that support the creation, access, and
     sharing of array-oriented scientific data.
 
-    netcdf4-python can be downloaded from https://pypi.python.org/pypi/netCDF,
+    netcdf4-python can be downloaded from https://pypi.python.org/pypi/netCDF4,
     or installed with the python "conda" or "pip" package managers using:
 
     # conda install -c conda-forge netCDF4
