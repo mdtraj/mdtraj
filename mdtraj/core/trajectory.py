@@ -45,7 +45,6 @@ from mdtraj.formats import (
     MDCRDTrajectoryFile,
     NetCDFTrajectoryFile,
     PDBTrajectoryFile,
-    TNGTrajectoryFile,
     TRRTrajectoryFile,
     XTCTrajectoryFile,
     XYZTrajectoryFile,
@@ -244,7 +243,7 @@ def open(filename, mode="r", force_overwrite=True, **kwargs):
     load, ArcTrajectoryFile, BINPOSTrajectoryFile, DCDTrajectoryFile,
     HDF5TrajectoryFile, LH5TrajectoryFile, MDCRDTrajectoryFile,
     NetCDFTrajectoryFile, PDBTrajectoryFile, TRRTrajectoryFile,
-    XTCTrajectoryFile, TNGTrajectoryFile
+    XTCTrajectoryFile
 
     """
     extension = _get_extension(filename)
@@ -1438,7 +1437,6 @@ class Trajectory:
             ".xyz.gz": self.save_xyz,
             ".gro": self.save_gro,
             ".rst7": self.save_amberrst7,
-            ".tng": self.save_tng,
             ".dtr": self.save_dtr,
             ".gsd": self.save_gsd,
         }
@@ -1952,24 +1950,6 @@ class Trajectory:
                 self.unitcell_vectors,
                 precision=precision,
             )
-
-    def save_tng(self, filename, force_overwrite=True):
-        """Save trajectory to Gromacs TNG format
-
-        Parameters
-        ----------
-        filename : path-like
-            filesystem path in which to save the trajectory
-        force_overwrite : bool, default=True
-            Overwrite anything that exists at filename, if its already there
-        """
-        self._check_valid_unitcell()
-        with TNGTrajectoryFile(
-            os.fspath(filename),
-            "w",
-            force_overwrite=force_overwrite,
-        ) as f:
-            f.write(self.xyz, time=self.time, box=self.unitcell_vectors)
 
     def save_gsd(self, filename, force_overwrite=True):
         """Save trajectory to HOOMD GSD format

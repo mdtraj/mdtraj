@@ -56,7 +56,6 @@ from mdtraj.formats.pdb import load_pdb
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.formats.tng import load_tng
 from mdtraj.formats.trr import load_trr
 from mdtraj.formats.xtc import load_xtc
 from mdtraj.formats.xyzfile import load_xyz
@@ -148,7 +147,6 @@ __all__ = (
     "load_pdb",
     "load_prmtop",
     "load_psf",
-    "load_tng",
     "load_trr",
     "load_xtc",
     "load_xyz",

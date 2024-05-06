@@ -11,7 +11,6 @@ from mdtraj.formats.mdcrd import MDCRDTrajectoryFile
 from mdtraj.formats.netcdf import NetCDFTrajectoryFile
 from mdtraj.formats.pdb import PDBTrajectoryFile
 from mdtraj.formats.pdbx import PDBxTrajectoryFile
-from mdtraj.formats.tng import TNGTrajectoryFile
 from mdtraj.formats.trr import TRRTrajectoryFile
 from mdtraj.formats.xtc import XTCTrajectoryFile
 from mdtraj.formats.xyzfile import XYZTrajectoryFile
@@ -31,7 +30,6 @@ __all__ = (
     "NetCDFTrajectoryFile",
     "PDBTrajectoryFile",
     "PDBxTrajectoryFile",
-    "TNGTrajectoryFile",
     "TRRTrajectoryFile",
     "XTCTrajectoryFile",
     "XYZTrajectoryFile",

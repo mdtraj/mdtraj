@@ -4,12 +4,11 @@ MDTraj is a python library that allows users to manipulate molecular dynamics
 (MD) trajectories and perform a variety of analyses, including fast RMSD,
 solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj
 is the wide variety of molecular dynamics trajectory file formats which are
-supported, including RCSB pdb, GROMACS xtc, tng, and trr, CHARMM / NAMD dcd, AMBER
+supported, including RCSB pdb, GROMACS xtc, and trr, CHARMM / NAMD dcd, AMBER
 binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 """
 
 import sys
-from glob import glob
 
 from setuptools import Extension, find_packages, setup
 
@@ -119,20 +118,6 @@ def format_extensions():
         zlib_include_dirs += [f"{sys.prefix}/include"]
         zlib_library_dirs += [f"{sys.prefix}/lib"]
 
-    tng = Extension(
-        "mdtraj.formats.tng",
-        sources=glob("mdtraj/formats/tng/src/compression/*.c")
-        + [
-            "mdtraj/formats/tng/src/lib/tng_io.c",
-            "mdtraj/formats/tng/src/lib/md5.c",
-            "mdtraj/formats/tng/tng.pyx",
-        ],
-        include_dirs=["mdtraj/formats/tng/include"] + zlib_include_dirs,
-        define_macros=[("USE_ZLIB", 1)],
-        library_dirs=zlib_library_dirs,
-        libraries=["z"],
-    )
-
     dcd = Extension(
         "mdtraj.formats.dcd",
         sources=[
@@ -175,7 +160,7 @@ def format_extensions():
         libraries=extra_cpp_libraries,
     )
 
-    return [xtc, trr, tng, dcd, binpos, dtr]
+    return [xtc, trr, dcd, binpos, dtr]
 
 
 def rmsd_extensions():

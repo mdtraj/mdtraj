@@ -53,7 +53,6 @@ file_objs = [
     (md.formats.XYZTrajectoryFile, "xyz"),
     (md.formats.XYZTrajectoryFile, "xyz.gz"),
     (md.formats.LAMMPSTrajectoryFile, "lammpstrj"),
-    (md.formats.TNGTrajectoryFile, "tng"),
     (md.formats.LH5TrajectoryFile, "lh5"),
     (md.formats.PDBTrajectoryFile, "pdb"),
     (md.formats.PDBTrajectoryFile, "pdb.gz"),
@@ -684,7 +683,6 @@ def test_length(get_fn):
         "2EQQ.pdb",
         "frame0.binpos",
         "frame0.xyz",
-        "frame0.tng",
     ]
     if not on_win:
         files.append("frame0.lh5")
