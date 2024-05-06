@@ -33,13 +33,14 @@ The code is heavily based on amber_netcdf_trajectory_tools.py by John Chodera.
 
 import os
 import socket
+import sys
 import warnings
 from datetime import datetime
 
 import numpy as np
 from mdtraj import version
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils import ensure_type, import_, in_units_of, cast_indices
+from mdtraj.utils import ensure_type, in_units_of, cast_indices
 
 __all__ = ['NetCDFTrajectoryFile', 'load_netcdf']
 
@@ -127,21 +128,27 @@ class NetCDFTrajectoryFile(object):
 
         try:
             # import netcdf4 if it's available
-            netcdf = import_('netCDF4').Dataset
+            import netCDF4
+            netcdf = netCDF4.Dataset
             
             # set input args for netCDF4
             input_args = {'format': 'NETCDF3_64BIT', 'clobber': force_overwrite}
 
         except ImportError:
-            netcdf = import_('scipy.io').netcdf_file
-
-            # warn the user, even though the import above also gives
-            # them a big warning. 
-            warnings.warn('Could not find netCDF4 module. Falling back on '
-                              'scipy implementation, which can be significantly'
-                              'slower than the netCDF4 implementation.')
-        
             
+            import scipy.io
+
+            netcdf = scipy.io.netcdf_file
+
+            warning_message = (
+                "Warning: The 'netCDF4' Python module is not installed. MDTraj is using the 'scipy' "
+                "implementation to read and write netCDF files,which can be significantly slower.\n"
+                "For improved performance, consider installing the 'netCDF4' module. See installation instructions at:\n"
+                "https://unidata.github.io/netcdf4-python/#quick-install"
+            )
+            
+            print(warning_message, file=sys.stderr)
+
             # input args for scipy.io.netcdf_file
             # AMBER uses the NetCDF3 format, with 64 bit encodings, which
             # for scipy.io.netcdf_file is "version=2"
