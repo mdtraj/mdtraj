@@ -320,7 +320,15 @@ def test_load_pdb_input_top(get_fn):
     eq(p_1.topology, p_2.topology)
 
 def test_chimera_indexing(get_fn):
-    load_pdb(get_fn('chimera_indexing.pdb'))  # this should just not fail
+    traj = load_pdb(get_fn('chimera_indexing.pdb'))  # this should just not fail
+
+    assert traj.n_atoms == 3
+    assert traj.topology._atoms[0].serial == 100000
+    assert traj.topology._atoms[0].residue.resSeq == 10000
 
 def test_vmd_indexing(get_fn):
-    load_pdb(get_fn('vmd_indexing.pdb'))  # this should just not fail
+    traj = load_pdb(get_fn('vmd_indexing.pdb'))  # this should just not fail
+
+    assert traj.n_atoms == 3
+    assert traj.topology._atoms[0].serial == 100000
+    assert traj.topology._atoms[0].residue.resSeq == 10000
