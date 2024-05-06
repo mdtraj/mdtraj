@@ -25,8 +25,6 @@
 ###############################################################################
 # Imports
 ###############################################################################
-from __future__ import print_function
-
 import os
 import warnings
 import xdrlib
@@ -35,7 +33,6 @@ cimport numpy as np
 np.import_array()
 
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
-from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
 
 cimport xdrlib
@@ -158,7 +155,7 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_xtc')
 
-    if not isinstance(filename, (string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type path-like for load_xtc. '
                         'you supplied %s' % type(filename))
 

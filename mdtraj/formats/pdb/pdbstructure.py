@@ -41,8 +41,6 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
 
-from __future__ import print_function, division
-
 import sys
 import warnings
 import numpy as np

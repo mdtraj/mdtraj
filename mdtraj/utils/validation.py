@@ -25,12 +25,11 @@
 # imports
 ##############################################################################
 
-from __future__ import print_function, division
 import warnings
 import numbers
 import numpy as np
 import collections
-from mdtraj.utils.six.moves import zip_longest
+from itertools import zip_longest
 
 ##############################################################################
 # functions / classes

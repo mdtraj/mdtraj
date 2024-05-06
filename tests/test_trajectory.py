@@ -27,7 +27,6 @@ from mdtraj.testing import eq
 import numpy as np
 import mdtraj as md
 import mdtraj.utils
-from mdtraj.utils import six
 from mdtraj.core import element
 import mdtraj.core.trajectory
 import pytest
@@ -35,7 +34,6 @@ import mdtraj.formats
 from collections import namedtuple
 
 on_win = (sys.platform == 'win32')
-on_py3 = (sys.version_info >= (3, 0))
 
 TrajObj = namedtuple('TrajObj', ['fobj', 'fext', 'fn'])
 file_objs = [
@@ -50,7 +48,6 @@ file_objs = [
     (md.formats.XYZTrajectoryFile, 'xyz'),
     (md.formats.XYZTrajectoryFile, 'xyz.gz'),
     (md.formats.LAMMPSTrajectoryFile, 'lammpstrj'),
-    (md.formats.TNGTrajectoryFile, 'tng'),
     (md.formats.LH5TrajectoryFile, 'lh5'),
     (md.formats.PDBTrajectoryFile, 'pdb'),
     (md.formats.PDBTrajectoryFile, 'pdb.gz'),
@@ -292,10 +289,7 @@ def test_float_atom_indices_exception(ref_traj, get_fn):
     try:
         md.load(get_fn(ref_traj.fn), atom_indices=[0.5, 1.3], top=top)
     except ValueError as e:
-        if six.PY3:
-            assert e.args[0] == 'indices must be of an integer type. float64 is not an integer type'
-        else:
-            assert e.message == 'indices must be of an integer type. float64 is not an integer type'
+        assert e.args[0] == 'indices must be of an integer type. float64 is not an integer type'
 
 
 def test_restrict_atoms(get_fn):
@@ -640,8 +634,8 @@ def test_open_and_load(get_fn):
 def test_length(get_fn):
     files = ['frame0.nc', 'frame0.h5', 'frame0.xtc', 'frame0.trr',
              'frame0.dcd', '2EQQ.pdb',
-             'frame0.binpos', 'frame0.xyz', 'frame0.tng']
-    if not (on_win and on_py3):
+             'frame0.binpos', 'frame0.xyz']
+    if not on_win:
         files.append('frame0.lh5')
 
     for file in files:

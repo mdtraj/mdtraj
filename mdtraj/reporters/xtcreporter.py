@@ -24,13 +24,9 @@
 through time in the GROMACS XTC format
 """
 
-
-from __future__ import print_function, division
 from ..formats.xtc import XTCTrajectoryFile
 from .basereporter import _BaseReporter
-from mdtraj.utils.six import PY3
-if PY3:
-    basestring = str
+
 try:
     # openmm
     import openmm.unit as units
@@ -74,7 +70,7 @@ class XTCReporter(_BaseReporter):
 
     def __init__(self, file, reportInterval, atomSubset=None, append=False):
         if append:
-            if isinstance(file, basestring):
+            if isinstance(file, str):
                 with self.backend(file, 'r') as f:
                     contents = f.read()
             elif isinstance(file, self.backend):

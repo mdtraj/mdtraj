@@ -20,8 +20,6 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-from __future__ import print_function, division
-
 import numpy as np
 
 from mdtraj.utils import ensure_type

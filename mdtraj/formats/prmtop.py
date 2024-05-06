@@ -53,7 +53,6 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
 import re
 
 from mdtraj.core import topology

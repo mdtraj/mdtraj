@@ -47,7 +47,6 @@ from .formats.lammpstrj import load_lammpstrj
 from .formats.dtr import load_dtr, load_stk
 from .formats.xyzfile import load_xyz
 from .formats.hoomdxml import load_hoomdxml
-from .formats.tng import load_tng
 
 
 from .core import element

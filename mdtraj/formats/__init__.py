@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from .arc import ArcTrajectoryFile
 from .dcd import DCDTrajectoryFile
 from .binpos import BINPOSTrajectoryFile
@@ -15,5 +13,4 @@ from .lammpstrj import LAMMPSTrajectoryFile
 from .dtr import DTRTrajectoryFile
 from .gro import GroTrajectoryFile
 from .xyzfile import XYZTrajectoryFile
-from .tng import TNGTrajectoryFile
 from .pdbx import PDBxTrajectoryFile

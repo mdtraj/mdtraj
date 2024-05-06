@@ -20,8 +20,6 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-from __future__ import print_function, division
-
 __all__ = ['baker_hubbard', 'shrake_rupley', 'kabsch_sander', 'compute_distances',
            'compute_distances_t', 'compute_displacements', 'compute_angles', 
            'compute_dihedrals', 'compute_phi', 'compute_psi', 'compute_chi1', 'compute_chi2',

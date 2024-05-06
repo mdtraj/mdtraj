@@ -24,8 +24,6 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
-
 import numpy as np
 import os
 
@@ -35,7 +33,6 @@ from mdtraj.core.element import virtual_site
 from mdtraj.utils import (ensure_type, cast_indices,
         lengths_and_angles_to_tilt_factors)
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils.six import string_types
 
 __all__ = ['load_gsd', 'write_gsd', 'load_gsd_topology']
 
@@ -75,7 +72,7 @@ def load_gsd(filename, top=None, start=None, n_frames=None, stride=None,
     from mdtraj.core.trajectory import Trajectory, _parse_topology
     import gsd.hoomd
 
-    if not isinstance(filename, (string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type path-like for load_gsd. '
                         'you supplied %s'.format(type(filename)))
 

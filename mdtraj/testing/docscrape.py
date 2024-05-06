@@ -34,14 +34,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function, division
 import inspect
 import textwrap
 import re
 import pydoc
 from warnings import warn
-
-from mdtraj.utils.six import StringIO, iteritems
 
 
 class Reader(object):
@@ -405,7 +402,7 @@ class NumpyDocString(object):
         idx = self['index']
         out = []
         out += ['.. index:: %s' % idx.get('default','')]
-        for section, references in iteritems(idx):
+        for section, references in idx.items():
             if section == 'default':
                 continue
             out += ['   :%s: %s' % (section, ', '.join(references))]

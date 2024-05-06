@@ -25,14 +25,11 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
 import os
 import itertools
 import numpy as np
 from mdtraj.utils import ensure_type, cast_indices, in_units_of
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils.six import string_types, PY3
-from mdtraj.utils.six.moves import xrange
 
 __all__ = ['MDCRDTrajectoryFile', 'load_mdcrd']
 
@@ -85,7 +82,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_mdcrd')
 
-    if not isinstance(filename, (string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type path-like for load_mdcrd. '
             'you supplied %s' % type(filename))
 
@@ -269,7 +266,7 @@ class MDCRDTrajectoryFile(object):
         if n_frames is None:
             frame_counter = itertools.count()
         else:
-            frame_counter = xrange(n_frames)
+            frame_counter = range(n_frames)
 
         if stride is None:
             stride = 1
@@ -387,8 +384,7 @@ class MDCRDTrajectoryFile(object):
             # this is the first write()
             self._n_atoms = xyz.shape[1]
             comment = 'TITLE : Created by MDTraj with %d atoms\n' % self._n_atoms
-            if PY3:
-                comment = comment.encode('ascii')
+            comment = comment.encode('ascii')
             self._fh.write(comment)
 
             if cell_lengths is None:
@@ -412,8 +408,7 @@ class MDCRDTrajectoryFile(object):
                 out = "%8.3f" % coord
                 if len(out) > 8:
                     raise ValueError('Overflow error')
-                if PY3:
-                    out = out.encode('ascii')
+                out = out.encode('ascii')
                 self._fh.write(out)
                 if (j+1) % 10 == 0:
                     self._fh.write(b"\n")
@@ -424,8 +419,7 @@ class MDCRDTrajectoryFile(object):
 
             if cell_lengths is not None:
                 line = "%8.3f %8.3f %8.3f\n" % tuple(cell_lengths[i])
-                if PY3:
-                    line = line.encode('ascii')
+                line = line.encode('ascii')
                 self._fh.write(line)
 
     def seek(self, offset, whence=0):

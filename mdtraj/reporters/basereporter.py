@@ -25,15 +25,10 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division
-# stdlib
 import math
 # ours
 from mdtraj.core.topology import _topology_from_subset, Topology
 from mdtraj.utils import unitcell
-from mdtraj.utils.six import PY3
-if PY3:
-    basestring = str
 
 import numpy as np
 
@@ -99,7 +94,7 @@ class _BaseReporter(object):
         system, and are not "subsetted" to only include the energy of your
         subsystem.
         """
-        if isinstance(file, basestring):
+        if isinstance(file, str):
             self._traj_file = self.backend(file, 'w')
         elif isinstance(file, self.backend):
             self._traj_file = file
