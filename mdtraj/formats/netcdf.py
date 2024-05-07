@@ -33,7 +33,6 @@ The code is heavily based on amber_netcdf_trajectory_tools.py by John Chodera.
 
 import os
 import socket
-import sys
 import warnings
 from datetime import datetime
 
@@ -141,13 +140,13 @@ class NetCDFTrajectoryFile(object):
             netcdf = scipy.io.netcdf_file
 
             warning_message = (
-                "Warning: The 'netCDF4' Python module is not installed. MDTraj is using the 'scipy' "
+                "Warning: The 'netCDF4' Python package is not installed. MDTraj is using the 'scipy' "
                 "implementation to read and write netCDF files,which can be significantly slower.\n"
-                "For improved performance, consider installing the 'netCDF4' module. See installation instructions at:\n"
+                "For improved performance, consider installing netCDF4. See installation instructions at:\n"
                 "https://unidata.github.io/netcdf4-python/#quick-install"
             )
             
-            print(warning_message, file=sys.stderr)
+            warnings.warn(warning_message)
 
             # input args for scipy.io.netcdf_file
             # AMBER uses the NetCDF3 format, with 64 bit encodings, which
