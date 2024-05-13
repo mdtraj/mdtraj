@@ -33,7 +33,6 @@ import warnings
 from datetime import datetime
 
 import numpy as np
-from packaging.version import Version
 
 from mdtraj import version
 from mdtraj.formats.registry import FormatRegistry
@@ -130,11 +129,34 @@ class NetCDFTrajectoryFile:
     def __init__(self, filename, mode="r", force_overwrite=True):
         self._closed = True  # is the file currently closed?
         self._mode = mode  # what mode were we opened in
-        if Version(import_("scipy.version").short_version) < Version("0.12.0"):
-            raise ImportError(
-                "MDTraj NetCDF support requires scipy>=0.12.0. "
-                "You have %s" % import_("scipy.version").short_version,
+
+        try:
+            # import netcdf4 if it's available
+            import netCDF4
+
+            netcdf = netCDF4.Dataset
+
+            # set input args for netCDF4
+            input_args = {"format": "NETCDF3_64BIT", "clobber": force_overwrite}
+
+        except ImportError:
+            import scipy.io
+
+            netcdf = scipy.io.netcdf_file
+
+            warning_message = (
+                "Warning: The 'netCDF4' Python package is not installed. MDTraj is using the 'scipy' "
+                "implementation to read and write netCDF files,which can be significantly slower.\n"
+                "For improved performance, consider installing netCDF4. See installation instructions at:\n"
+                "https://unidata.github.io/netcdf4-python/#quick-install"
             )
+
+            warnings.warn(warning_message)
+
+            # input args for scipy.io.netcdf_file
+            # AMBER uses the NetCDF3 format, with 64 bit encodings, which
+            # for scipy.io.netcdf_file is "version=2"
+            input_args = {"version": 2}
 
         netcdf = import_("scipy.io").netcdf_file  # noqa: F841
 
@@ -144,9 +166,7 @@ class NetCDFTrajectoryFile:
         if mode == "w" and not force_overwrite and os.path.exists(filename):
             raise OSError('"%s" already exists' % filename)
 
-        # AMBER uses the NetCDF3 format, with 64 bit encodings, which
-        # for scipy.io.netcdf_file is "version=2"
-        self._handle = netcdf(filename, mode=mode, version=2)
+        self._handle = netcdf(filename, mode=mode, **input_args)
         self._closed = False
 
         # self._frame_index is the current frame that we're at in the
@@ -169,7 +189,14 @@ class NetCDFTrajectoryFile:
         self._validate_open()
         if self._needs_initialization:
             raise OSError("The file is uninitialized.")
-        return self._handle.dimensions["atom"]
+
+        try:
+            # netCDF4 requires use of .size on dimensions
+            # to get size as integer.
+            return self._handle.dimensions["atom"].size
+        except AttributeError:
+            # scipy case
+            return self._handle.dimensions["atom"]
 
     @property
     def n_frames(self):
