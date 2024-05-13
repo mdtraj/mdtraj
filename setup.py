@@ -5,7 +5,7 @@ MDTraj is a python library that allows users to manipulate molecular dynamics
 solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj
 is the wide variety of molecular dynamics trajectory file formats which are
 supported, including RCSB pdb, GROMACS xtc, and trr, CHARMM / NAMD dcd, AMBER
-binpos, AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
+AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 """
 
 import sys
@@ -131,19 +131,6 @@ def format_extensions():
         extra_compile_args=compiler_args,
     )
 
-    binpos = Extension(
-        "mdtraj.formats.binpos",
-        sources=[
-            "mdtraj/formats/binpos/src/binposplugin.c",
-            "mdtraj/formats/binpos/binpos.pyx",
-        ],
-        include_dirs=[
-            "mdtraj/formats/binpos/include/",
-            "mdtraj/formats/binpos/",
-        ],
-        extra_compile_args=compiler_args,
-    )
-
     dtr = Extension(
         "mdtraj.formats.dtr",
         sources=[
@@ -160,7 +147,7 @@ def format_extensions():
         libraries=extra_cpp_libraries,
     )
 
-    return [xtc, trr, dcd, binpos, dtr]
+    return [xtc, trr, dcd, dtr]
 
 
 def rmsd_extensions():

@@ -33,7 +33,7 @@ Other Formats
 ~~~~~~~~~~~~~
 
 Currently, MDTraj is able to read and write trajectories in DCD, XTC,
-TRR, BINPOS, and AMBER NetCDF formats, in addition to HDF5. This
+TRR, and AMBER NetCDF formats, in addition to HDF5. This
 presents an opportunity to compare these formats and see how they fit
 our design goals. The most space efficient is XTC, because it uses 16 bit
 fixed precision encoding. For some reason, the XTC read times are quite

@@ -1,6 +1,5 @@
 from mdtraj.formats.amberrst import AmberNetCDFRestartFile, AmberRestartFile
 from mdtraj.formats.arc import ArcTrajectoryFile
-from mdtraj.formats.binpos import BINPOSTrajectoryFile
 from mdtraj.formats.dcd import DCDTrajectoryFile
 from mdtraj.formats.dtr import DTRTrajectoryFile
 from mdtraj.formats.gro import GroTrajectoryFile
@@ -19,7 +18,6 @@ __all__ = (
     "AmberNetCDFRestartFile",
     "AmberRestartFile",
     "ArcTrajectoryFile",
-    "BINPOSTrajectoryFile",
     "DCDTrajectoryFile",
     "DTRTrajectoryFile",
     "GroTrajectoryFile",

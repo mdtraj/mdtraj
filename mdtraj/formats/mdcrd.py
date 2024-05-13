@@ -46,7 +46,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
     filename : path-like
         Path of AMBER mdcrd file.
     top : {str, Trajectory, Topology}
-        The BINPOS format does not contain topology information. Pass in either
+        The mdcrd format does not contain topology information. Pass in either
         the path to a pdb file, a trajectory, or a topology to supply this
         information.
     stride : int, default=None

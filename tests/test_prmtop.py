@@ -30,18 +30,6 @@ def test_load_prmtop(get_fn):
     ref_top = md.load(get_fn("native.pdb")).topology
     eq(top, ref_top)
 
-
-def test_load_binpos_w_prmtop(get_fn):
-    traj = md.load(
-        get_fn("alanine.binpos"),
-        top=get_fn("alanine-dipeptide-implicit.prmtop"),
-    )
-    ref_traj = md.load(get_fn("native.pdb"))
-
-    eq(traj.topology, ref_traj.topology)
-    eq(traj.xyz, ref_traj.xyz)
-
-
 def test_load_chamber_prmtop(get_fn):
     top = prmtop.load_prmtop(get_fn("ala3_chamber.parm7"))
     eq(top.n_atoms, 33)

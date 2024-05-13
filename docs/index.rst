@@ -9,7 +9,7 @@ dynamics (MD) <http://en.wikipedia.org/wiki/Molecular_dynamics>`_
 trajectories.  Features include:
 
  - Wide MD format support, including ``pdb``, ``xtc``,
-   ``trr``, ``dcd``, ``binpos``, ``netcdf``, ``mdcrd``, ``prmtop``, and
+   ``trr``, ``dcd``, ``netcdf``, ``mdcrd``, ``prmtop``, and
    more.
  - Extremely fast RMSD calculations (4x the speed of the original `Theobald
    QCP <http://theobald.brandeis.edu/qcp/>`_).

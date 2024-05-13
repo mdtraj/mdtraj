@@ -47,7 +47,6 @@ Format-specific loading functions
 .. autosummary::
     :toctree: api/generated/
 
-    load_binpos
     load_lh5
     load_pdb
     load_xml

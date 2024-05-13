@@ -3,8 +3,8 @@
 
 ``mdconvert`` is a command-line script installed with MDTraj to convert
 molecular dynamics trajectories between formats. The DCD, XTC, TRR,
-binpos, NetCDF, binpos, and HDF5 formats are supported (.xtc, .nc, .trr, .h5,
-.pdb, .binpos, .dcd). ``mdconvert`` is memory-efficient, and processes
+NetCDF, and HDF5 formats are supported (.xtc, .nc, .trr, .h5,
+.pdb, .dcd). ``mdconvert`` is memory-efficient, and processes
 trajectories in a chunked, streaming fashion. It is capable of converting
 trajectory files which cannot be fully loaded into memory. It can also
 concatenate trajectories, convert only a subset of the atoms in a trajectory
@@ -25,8 +25,8 @@ Here's the ``mdconvert`` help text. ::
                    input [input ...]
 
   Convert molecular dynamics trajectories between formats. The DCD, XTC, TRR,
-  binpos, NetCDF, binpos, and HDF5 formats are supported (.xtc, .nc, .trr, .h5,
-  .pdb, .binpos, .dcd)
+  NetCDF, and HDF5 formats are supported (.xtc, .nc, .trr, .h5,
+  .pdb, .dcd)
 
   positional arguments:
     input                 path to one or more trajectory files. Multiple
@@ -39,7 +39,7 @@ Here's the ``mdconvert`` help text. ::
     -o OUTPUT, --output OUTPUT
                           path to the save the output. the output format will
                           chosen based on the file extension (.xtc, .nc, .trr,
-                          .h5, .pdb, .binpos, .dcd)
+                          .h5, .pdb, .dcd)
 
   optional arguments:
     -h, --help            show this help message and exit
@@ -66,6 +66,6 @@ Here's the ``mdconvert`` help text. ::
                           path to a PDB file. this will be used to parse the
                           topology of the system. it's optional, but useful. if
                           specified, it enables you to output the coordinates of
-                          your dcd/xtc/trr/netcdf/binpos as a PDB file. If
+                          your dcd/xtc/trr/netcdf as a PDB file. If
                           you're converting *to* .h5, the topology will be
                           stored inside the h5 file.

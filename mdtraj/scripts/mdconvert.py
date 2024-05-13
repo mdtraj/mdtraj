@@ -37,7 +37,6 @@ formats = {
     ".dcd": md.formats.DCDTrajectoryFile,
     ".xtc": md.formats.XTCTrajectoryFile,
     ".trr": md.formats.TRRTrajectoryFile,
-    ".binpos": md.formats.BINPOSTrajectoryFile,
     ".nc": md.formats.NetCDFTrajectoryFile,
     ".netcdf": md.formats.NetCDFTrajectoryFile,
     ".h5": md.formats.HDF5TrajectoryFile,
@@ -51,7 +50,6 @@ fields = {
     ".dcd": ("xyz", "cell_lengths", "cell_angles"),
     ".nc": ("xyz", "time", "cell_lengths", "cell_angles"),
     ".netcdf": ("xyz", "time", "cell_lengths", "cell_angles"),
-    ".binpos": ("xyz",),
     ".lh5": ("xyz", "topology"),
     ".h5": (
         "xyz",
@@ -71,7 +69,6 @@ fields = {
 units = {
     ".xtc": "nanometers",
     ".trr": "nanometers",
-    ".binpos": "angstroms",
     ".nc": "angstroms",
     ".netcdf": "angstroms",
     ".dcd": "angstroms",
@@ -122,8 +119,8 @@ def parse_args():
     extensions = ", ".join(list(formats.keys()))
     parser = ArgumentParser(
         description="""Convert molecular dynamics
-    trajectories between formats. The DCD, XTC, TRR, PDB, binpos, NetCDF,
-    binpos, LH5, and HDF5 formats are supported (%s)"""
+    trajectories between formats. The DCD, XTC, TRR, PDB, NetCDF,
+    LH5, and HDF5 formats are supported (%s)"""
         % extensions,
     )
     parser.add_argument(
@@ -202,7 +199,7 @@ def parse_args():
                         PDB/prmtop file. this will be used to parse the topology
                         of the system. it's optional, but useful. if specified,
                         it enables you to output the coordinates of your
-                        dcd/xtc/trr/netcdf/binpos as a PDB file. If you\'re
+                        dcd/xtc/trr/netcdf as a PDB file. If you\'re
                         converting *to* .h5, the topology will be stored
                         inside the h5 file.""",
     )
@@ -413,9 +410,6 @@ def write(outfile, data):
             data.get("cell_angles", None),
         )
 
-    elif isinstance(outfile, md.formats.BINPOSTrajectoryFile):
-        outfile.write(data.get("xyz", None))
-
     elif isinstance(outfile, md.formats.PDBTrajectoryFile):
         lengths, angles = None, None
         for i, frame in enumerate(data.get("xyz")):
@@ -502,10 +496,6 @@ def read(infile, chunk, stride, atom_indices):
 
     elif isinstance(infile, md.formats.DCDTrajectoryFile):
         data = dict(zip(fields[".dcd"], _data))
-        in_units = "angstroms"
-
-    elif isinstance(infile, md.formats.BINPOSTrajectoryFile):
-        data = {"xyz": _data}
         in_units = "angstroms"
 
     elif isinstance(infile, md.formats.NetCDFTrajectoryFile):

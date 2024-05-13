@@ -12,7 +12,6 @@ supported trajectory formats. The high level interface is provided by the
     AmberNetCDFRestartFile
     AmberRestartFile
     ArcTrajectoryFile
-    BINPOSTrajectoryFile
     DCDTrajectoryFile
     DTRTrajectoryFile
     GroTrajectoryFile

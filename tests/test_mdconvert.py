@@ -94,7 +94,6 @@ def test_slice(traj):
 extensions = [
     "xtc",
     "dcd",
-    "binpos",
     "trr",
     "nc",
     "pdb",
@@ -181,7 +180,7 @@ def test_pairwise(traj, extension):
         eq(out2.xyz, traj.xyz[:, atom_indices], decimal=decimal)
         eq(out3.xyz, traj.xyz[::3], decimal=decimal)
 
-        if ext1 not in ["binpos", "lh5"] and ext2 not in ["binpos", "lh5"]:
+        if ext1 not in ["lh5"] and ext2 not in ["lh5"]:
             # binpos doesn't save unitcell information
             eq(out1.unitcell_vectors, traj.unitcell_vectors, decimal=2)
             eq(out2.unitcell_vectors, traj.unitcell_vectors, decimal=2)
@@ -200,25 +199,3 @@ def test_pairwise(traj, extension):
             eq(out2.topology, traj.topology.subset(atom_indices))
             eq(out3.topology, traj.topology)
 
-
-def test_mdconvert_alanine(tmpdir, get_fn):
-    command = [
-        "mdconvert",
-        get_fn("alanine-dipeptide-explicit.binpos"),
-        "--top",
-        get_fn("alanine-dipeptide-explicit.prmtop"),
-        "-o",
-        "out.dcd",
-    ]
-    subprocess.check_call(command, cwd=str(tmpdir))
-    t = md.load(
-        f"{tmpdir}/out.dcd",
-        top=get_fn("alanine-dipeptide-explicit.prmtop"),
-    )
-    t2 = md.load(
-        get_fn("alanine-dipeptide-explicit.binpos"),
-        top=get_fn("alanine-dipeptide-explicit.prmtop"),
-    )
-
-    eq(t.xyz, t2.xyz)
-    eq(t.topology, t2.topology)

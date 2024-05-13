@@ -23,7 +23,7 @@
 
 """The mdtraj package contains tools for loading and saving molecular dynamics
 trajectories in a variety of formats, including Gromacs XTC & TRR, CHARMM/NAMD
-DCD, AMBER BINPOS, PDB, and HDF5.
+DCD, PDB, and HDF5.
 """
 
 # silence cython related numpy warnings, see github.com/numpy/numpy/pull/432
@@ -41,7 +41,6 @@ from mdtraj.core.trajectory import (
 )
 from mdtraj.formats.amberrst import load_ncrestrt, load_restrt
 from mdtraj.formats.arc import load_arc
-from mdtraj.formats.binpos import load_binpos
 from mdtraj.formats.dcd import load_dcd
 from mdtraj.formats.dtr import load_dtr, load_stk
 from mdtraj.formats.hdf5 import load_hdf5
@@ -132,7 +131,6 @@ __all__ = (
     "load_ncrestrt",
     "load_restrt",
     "load_arc",
-    "load_binpos",
     "load_dcd",
     "load_dtr",
     "load_stk",

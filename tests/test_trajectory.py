@@ -48,7 +48,6 @@ file_objs = [
     (md.formats.TRRTrajectoryFile, "trr"),
     (md.formats.DCDTrajectoryFile, "dcd"),
     (md.formats.MDCRDTrajectoryFile, "mdcrd"),
-    (md.formats.BINPOSTrajectoryFile, "binpos"),
     (md.formats.DTRTrajectoryFile, "dtr"),
     (md.formats.XYZTrajectoryFile, "xyz"),
     (md.formats.XYZTrajectoryFile, "xyz.gz"),
@@ -87,7 +86,7 @@ def write_traj(request, tmpdir):
 
 @pytest.fixture
 def write_traj_with_box(write_traj):
-    if write_traj.fext in ["binpos", "xyz", "xyz.gz", "pdb", "pdb.gz", "lh5"]:
+    if write_traj.fext in ["xyz", "xyz.gz", "pdb", "pdb.gz", "lh5"]:
         pytest.skip(f"{write_traj.fext} does not store box information")
     else:
         return write_traj
@@ -186,7 +185,6 @@ def has_time_info(fext):
     # Some formats don't save time information
     return fext not in [
         "dcd",
-        "binpos",
         "pdb",
         "pdb.gz",
         "xyz",
@@ -510,7 +508,6 @@ def test_seek_read_mode(ref_traj, get_fn):
                 if point + offset < length:
                     read = f.read(offset)
                     if fobj not in [
-                        md.formats.BINPOSTrajectoryFile,
                         md.formats.LH5TrajectoryFile,
                         md.formats.XYZTrajectoryFile,
                     ]:
@@ -681,7 +678,6 @@ def test_length(get_fn):
         "frame0.trr",
         "frame0.dcd",
         "2EQQ.pdb",
-        "frame0.binpos",
         "frame0.xyz",
     ]
     if not on_win:

@@ -34,7 +34,6 @@ from mdtraj.core.topology import Topology
 from mdtraj.formats import (
     AmberNetCDFRestartFile,
     AmberRestartFile,
-    BINPOSTrajectoryFile,
     DCDTrajectoryFile,
     DTRTrajectoryFile,
     GroTrajectoryFile,
@@ -240,7 +239,7 @@ def open(filename, mode="r", force_overwrite=True, **kwargs):
 
     See Also
     --------
-    load, ArcTrajectoryFile, BINPOSTrajectoryFile, DCDTrajectoryFile,
+    load, ArcTrajectoryFile, DCDTrajectoryFile,
     HDF5TrajectoryFile, LH5TrajectoryFile, MDCRDTrajectoryFile,
     NetCDFTrajectoryFile, PDBTrajectoryFile, TRRTrajectoryFile,
     XTCTrajectoryFile
@@ -635,7 +634,7 @@ class Trajectory:
 
     A Trajectory should generally be constructed by loading a file from disk.
     Trajectories can be loaded from (and saved to) the PDB, XTC, TRR, DCD,
-    binpos, NetCDF or MDTraj HDF5 formats.
+    NetCDF or MDTraj HDF5 formats.
 
     Trajectory supports fancy indexing, so you can extract one or more frames
     from a Trajectory as a separate trajectory. For example, to form a
@@ -1424,7 +1423,6 @@ class Trajectory:
             ".pdb.gz": self.save_pdb,
             ".dcd": self.save_dcd,
             ".h5": self.save_hdf5,
-            ".binpos": self.save_binpos,
             ".nc": self.save_netcdf,
             ".netcdf": self.save_netcdf,
             ".ncrst": self.save_netcdfrst,
@@ -1713,23 +1711,6 @@ class Trajectory:
                 cell_angles=self.unitcell_angles,
                 times=self.time,
             )
-
-    def save_binpos(self, filename, force_overwrite=True):
-        """Save trajectory to AMBER BINPOS format
-
-        Parameters
-        ----------
-        filename : path-like
-            filesystem path in which to save the trajectory
-        force_overwrite : bool, default=True
-            Overwrite anything that exists at filename, if its already there
-        """
-        with BINPOSTrajectoryFile(
-            os.fspath(filename),
-            "w",
-            force_overwrite=force_overwrite,
-        ) as f:
-            f.write(in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit))
 
     def save_mdcrd(self, filename, force_overwrite=True):
         """Save trajectory to AMBER mdcrd format
