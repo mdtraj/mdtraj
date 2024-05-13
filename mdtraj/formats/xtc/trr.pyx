@@ -38,7 +38,6 @@ np.import_array()
 
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, in_units_of
-from mdtraj.utils.six import string_types
 
 cimport xdrlib
 
