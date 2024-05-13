@@ -48,7 +48,6 @@ from mdtraj.formats import (
     XTCTrajectoryFile,
     XYZTrajectoryFile,
 )
-from mdtraj.formats.registry import FormatRegistry
 from mdtraj.formats.arc import load_arc
 from mdtraj.formats.gro import load_gro
 from mdtraj.formats.gsd import load_gsd_topology, write_gsd
@@ -56,6 +55,7 @@ from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.formats.mol2 import load_mol2
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
+from mdtraj.formats.registry import FormatRegistry
 from mdtraj.geometry import _geometry, distance
 from mdtraj.utils import (
     box_vectors_to_lengths_and_angles,
