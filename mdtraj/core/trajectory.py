@@ -29,7 +29,6 @@ from copy import deepcopy
 
 import numpy as np
 
-from mdtraj import FormatRegistry, _rmsd
 from mdtraj.core.residue_names import _SOLVENT_TYPES
 from mdtraj.core.topology import Topology
 from mdtraj.formats import (
@@ -49,6 +48,7 @@ from mdtraj.formats import (
     XTCTrajectoryFile,
     XYZTrajectoryFile,
 )
+from mdtraj.formats.registry import FormatRegistry
 from mdtraj.formats.arc import load_arc
 from mdtraj.formats.gro import load_gro
 from mdtraj.formats.gsd import load_gsd_topology, write_gsd
