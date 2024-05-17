@@ -49,6 +49,98 @@ import numpy as np
 
 from mdtraj.core import element
 
+_residue_num_initial_nodec_vals = {'A000': 'chimera', '2710': 'hex', '****': 'overflow'}
+_atom_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex', '*****': 'overflow'}
+
+
+def _read_atom_number(num_str, pdbstructure=None, index_fnc=None):
+    try:
+        if num_str in _atom_num_initial_nodec_vals.keys() or pdbstructure._next_atom_number > 99999:
+            raise OverflowError("Need to parse atom number using non-decimal residue modes.")
+        else:
+            return int(num_str)
+    except (AttributeError, ValueError, OverflowError):
+        if index_fnc is None:
+            # we need to figure out on the 1st try which mode to switch to. There are currently 3 options: VMD (hex), Chimera (their own 'hybrid36' mode), and overflow (*****).
+            # Chimera starts with A0000, vmd with 186a0, so they are distinguishable.
+            if pdbstructure is None:
+                try:
+                    return int(num_str)
+                except ValueError:
+                    return 0  # num_str is not decimal, no index_fnc to interpret it, no pdbstructure to say what it is or to provide current number of atoms. No way to figure out
+            else:
+                if pdbstructure._atom_num_nondec_mode is None:
+                    pdbstructure._atom_num_nondec_mode = pdbstructure._atom_num_initial_nodec_vals[num_str]  # numbers are supposed to be read in order
+                try:
+                    # Try and run the _atom_num_fncs on num_str
+                    return pdbstructure._atom_num_fncs[pdbstructure._atom_num_nondec_mode](num_str)
+                except ValueError:
+                    # Didn't work, we need to change to overflow mode and guess with _next_atom_number.
+                    _atom_num_nondec_mode = "overflow"
+                    return pdbstructure._atom_num_fncs[pdbstructure._atom_num_nondec_mode](num_str)
+
+        else:
+            return index_fnc(num_str)
+
+
+def _overflow_residue_check(num_str, pdbstructure, curr_atom):
+    """
+    Function to check what the current residue is because it's overflowed. Lifted from the original PDB code down below.
+    """
+    if pdbstructure._current_model is None or pdbstructure._current_model._current_chain is None or pdbstructure._current_model._current_chain._current_residue is None:
+        # This is the first residue in the model.
+        return pdbstructure._next_residue_number
+    else:
+        currentRes = pdbstructure._current_model._current_chain._current_residue
+        if currentRes.name_with_spaces != curr_atom.residue_name_with_spaces:
+            # The residue name has changed.
+            return pdbstructure._next_residue_number
+        elif curr_atom.name_with_spaces in currentRes.atoms_by_name:
+            # There is already an atom with this name.
+            return pdbstructure._next_residue_number
+        else:
+            return currentRes.number
+
+
+def _read_residue_number(num_str, pdbstructure=None, index_fnc=None, curr_atom=None):
+    """
+    Try to check what the residue number is.
+    """
+    try:
+        if num_str in _residue_num_initial_nodec_vals.keys() or pdbstructure._next_residue_number > 9999:
+            if num_str == "9999":
+                # If on the cusp... move on...
+                return int(num_str)
+            else:
+                # This is all the cases where we're safely in the hex/chimera/overflow region
+                raise OverflowError("Need to parse residue number using non-decimal residue modes.")
+        else:
+            #  Within "normal" pdb specifications
+            return int(num_str)
+    except (AttributeError, OverflowError, KeyError):
+        if index_fnc is None:
+            # we need to figure out on the 1st try which mode to switch to. There are currently 3 options: VMD (hex) and Chimera (their own 'hybrid36' mode) and Overflow (****).
+            # Chimera starts with A000, vmd with 2710, and Overflow just shows ****.
+            # The can be turned into decimal with "int()" so the "hex" mode will only be activated when _next_residue_number > 9999 (maximum in decimal) and current num_str isn't 9999.
+            if pdbstructure is None:
+                try:
+                    return int(num_str)
+                except ValueError:
+                    return 0  # num_str is not decimal, no index_fnc to interpret it, no pdbstructure to say what it is or to provide current number of atoms. No way to figure out
+            else:
+                if pdbstructure._residue_num_nondec_mode is None:
+                    pdbstructure._residue_num_nondec_mode = pdbstructure._residue_num_initial_nodec_vals[num_str]  # convert to correct mode
+
+                try:
+                    # Try and run the _residue_num_fncs
+                    return pdbstructure._residue_num_fncs[pdbstructure._residue_num_nondec_mode](num_str)
+                except ValueError:
+                    # Didn't work, we need to change to overflow mode and guess with _next_residue_number
+                    pdbstructure._atom_num_nondec_mode = "overflow"
+                    return pdbstructure._residue_num_fncs[pdbstructure._residue_num_nondec_mode](num_str, pdbstructure, curr_atom)
+        else:
+            return index_fnc(num_str, pdbstructure, curr_atom)
+
 
 class PdbStructure:
     """
@@ -139,6 +231,19 @@ class PdbStructure:
          - load_all_models (bool) Whether to load every model of an NMR
              structure or trajectory, or just load the first model, to save memory.
         """
+        self._atom_num_fncs = {'hex': (lambda s: int(s, base=16)),
+                               'chimera': (lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36))),
+                               'overflow': (lambda s: self._next_atom_number)}
+        self._atom_num_initial_nodec_vals = {'A0000': 'chimera', '186a0': 'hex', '*****': 'overflow'}
+        self._atom_num_nondec_mode = None   # None (decimal until changes), 'hex', 'chimera'
+
+        self._residue_num_fncs = {'hex': (lambda s, y=None, z=None: int(s, base=16)),
+                                  'chimera': (lambda s, y=None, z=None: (int(s[0], base=36) * 10**3 + int(s[1:], base=36))),
+                                  'overflow': _overflow_residue_check}
+        self._residue_num_initial_nodec_vals = {'A000': 'chimera', '2710': 'hex', '****': 'overflow'}
+        self._residue_num_nondec_mode = None   # None (decimal until changes), 'hex', 'chimera'
+
+
         # initialize models
         self.load_all_models = load_all_models
         self.models = []
@@ -168,7 +273,7 @@ class PdbStructure:
             # Notice MODEL punctuation, for the next level of detail
             # in the structure->model->chain->residue->atom->position hierarchy
             elif pdb_line.find("MODEL") == 0:
-                # model_number = int(pdb_line[10:14])
+                #model_number = int(pdb_line[10:14])
                 if self._current_model is None:
                     new_number = 0
                 else:
@@ -181,14 +286,14 @@ class PdbStructure:
             elif pdb_line.find("ENDMDL") == 0:
                 self._current_model._finalize()
                 if self.load_all_models:
-                    state = "NEW_MODEL"
+                    state = 'NEW_MODEL'
                 else:
                     break
 
             elif pdb_line.find("END") == 0:
                 self._current_model._finalize()
                 if self.load_all_models:
-                    state = "NEW_MODEL"
+                    state = 'NEW_MODEL'
                 else:
                     break
 
@@ -197,35 +302,24 @@ class PdbStructure:
                 self._reset_residue_numbers()
 
             elif pdb_line.find("CRYST1") == 0:
-                self._unit_cell_lengths = (
-                    float(pdb_line[6:15]),
-                    float(pdb_line[15:24]),
-                    float(pdb_line[24:33]),
-                )
-                self._unit_cell_angles = (
-                    float(pdb_line[33:40]),
-                    float(pdb_line[40:47]),
-                    float(pdb_line[47:54]),
-                )
+                self._unit_cell_lengths = (float(pdb_line[6:15]), float(pdb_line[15:24]), float(pdb_line[24:33]))
+                self._unit_cell_angles = (float(pdb_line[33:40]), float(pdb_line[40:47]), float(pdb_line[47:54]))
 
             elif pdb_line.find("CONECT") == 0:
-                atoms = [int(pdb_line[6:11])]
-                for pos in (11, 16, 21, 26):
-                    try:
-                        atoms.append(int(pdb_line[pos : pos + 5]))
-                    except ValueError:
-                        # Optional field, don't worry if it isn't defined
-                        pass
+                atoms = []
+                l = len(pdb_line[:-1].rstrip(' ')) - 5   # :-1 to remove '\n' in the end so rstrip can work, -5 to leave space for +5 in the 'pos : pos+5'
+                for pos in [p for p in [6, 11, 16, 21, 26] if(p <= l)]:
+                    atoms.append(_read_atom_number(pdb_line[pos : pos+5], pdbstructure=self))
 
                 self._current_model.connects.append(atoms)
         self._finalize()
 
     def _reset_atom_numbers(self):
-        self._atom_numbers_are_hex = False
+        self._atom_num_nondec_mode = None    # None (decimal until changes), 'hex', 'chimera', 'overflow'
         self._next_atom_number = 1
 
     def _reset_residue_numbers(self):
-        self._residue_numbers_are_hex = False
+        self._residue_num_nondec_mode = None
         self._next_residue_number = 1
 
     def write(self, output_stream=sys.stdout):
@@ -261,7 +355,8 @@ class PdbStructure:
         return self.models_by_number[model_number]
 
     def __iter__(self):
-        yield from self.models
+        for model in self.models:
+            yield model
 
     def iter_models(self, use_all_models=False):
         if use_all_models:
@@ -296,7 +391,8 @@ class PdbStructure:
         return len(self.models)
 
     def _add_atom(self, atom):
-        """ """
+        """
+        """
         if self._current_model is None:
             self._add_model(Model(0))
         atom.model_number = self._current_model.number
@@ -317,7 +413,7 @@ class PdbStructure:
         return self._unit_cell_angles
 
 
-class Model:
+class Model(object):
     """Model holds one model of a PDB structure.
 
     NMR structures usually have multiple models.  This represents one
@@ -392,7 +488,7 @@ class Model:
         for chain in self.chains:
             chain._finalize()
 
-    class AtomSerialNumber:
+    class AtomSerialNumber(object):
         """pdb.Model inner class for pass-by-reference incrementable serial number"""
 
         def __init__(self, val):
@@ -519,7 +615,8 @@ class Chain:
 
     def iter_atoms(self):
         for res in self:
-            yield from res
+            for atom in res:
+                yield atom
 
     def iter_positions(self, include_alt_loc=False):
         for res in self:
@@ -574,12 +671,8 @@ class Residue:
             old_atom = self.atoms_by_name[atom.name_with_spaces]
             # Unless this is a duplicated atom (warn about file error)
             if atom.alternate_location_indicator in old_atom.locations:
-                # TJL COMMENTED OUT
-                # warnings.warn(
-                #     "WARNING: duplicate atom (%s, %s)"
-                #     % (atom, old_atom._pdb_string(old_atom.serial_number, atom.alternate_location_indicator))
-                # )
-                pass
+                pass  # TJL COMMENTED OUT
+                # warnings.warn("WARNING: duplicate atom (%s, %s)" % (atom, old_atom._pdb_string(old_atom.serial_number, atom.alternate_location_indicator)))
             else:
                 for alt_loc, position in atom.locations.items():
                     old_atom.locations[alt_loc] = position
@@ -689,10 +782,10 @@ class Residue:
             self.residue_name_with_spaces = residue_name_with_spaces
 
 
-class Atom:
+class Atom(object):
     """Atom represents one atom in a PDB structure."""
 
-    def __init__(self, pdb_line, pdbstructure=None):
+    def __init__(self, pdb_line, pdbstructure=None, indexing_fnc=None):
         """Create a new pdb.Atom from an ATOM or HETATM line.
 
         Example line:
@@ -730,19 +823,9 @@ class Atom:
         self.is_final_residue_in_chain = False
         # Start parsing fields from pdb line
         self.record_name = pdb_line[0:6].strip()
-        # VMD sometimes uses hex for atoms greater than 9,999
-        if pdbstructure is not None and pdbstructure._atom_numbers_are_hex:
-            self.serial_number = int(pdb_line[6:11], 16)
-        else:
-            try:
-                self.serial_number = int(pdb_line[6:11])
-            except ValueError:
-                try:
-                    self.serial_number = int(pdb_line[6:11], 16)
-                    pdbstructure._atom_numbers_are_hex = True
-                except ValueError:
-                    # Just give it the next number in sequence.
-                    self.serial_number = pdbstructure._next_atom_number
+
+        self.serial_number = _read_atom_number(pdb_line[6:11], pdbstructure=pdbstructure, index_fnc=indexing_fnc)
+
         self.name_with_spaces = pdb_line[12:16]
         alternate_location_indicator = pdb_line[16]
 
@@ -758,35 +841,8 @@ class Atom:
         self.residue_name = self.residue_name_with_spaces.strip()
 
         self.chain_id = pdb_line[21]
-        if pdbstructure is not None and pdbstructure._residue_numbers_are_hex:
-            self.residue_number = int(pdb_line[22:26], 16)
-        else:
-            try:
-                self.residue_number = int(pdb_line[22:26])
-            except ValueError:
-                try:
-                    self.residue_number = int(pdb_line[22:26], 16)
-                    pdbstructure._residue_numbers_are_hex = True
-                except ValueError:
-                    # When VMD runs out of hex values it starts filling in the residue ID field with ****
-                    # Look at the most recent atoms to figure out whether this is a new residue or not.
-                    if (
-                        pdbstructure._current_model is None
-                        or pdbstructure._current_model._current_chain is None
-                        or pdbstructure._current_model._current_chain._current_residue is None
-                    ):
-                        # This is the first residue in the model.
-                        self.residue_number = pdbstructure._next_residue_number
-                    else:
-                        currentRes = pdbstructure._current_model._current_chain._current_residue
-                        if currentRes.name_with_spaces != self.residue_name_with_spaces:
-                            # The residue name has changed.
-                            self.residue_number = pdbstructure._next_residue_number
-                        elif self.name_with_spaces in currentRes.atoms_by_name:
-                            # There is already an atom with this name.
-                            self.residue_number = pdbstructure._next_residue_number
-                        else:
-                            self.residue_number = currentRes.number
+        self.residue_number = _read_residue_number(pdb_line[22:26], pdbstructure, None, self)
+
         self.insertion_code = pdb_line[26]
         # coordinates, occupancy, and temperature factor belong in Atom.Location object
         x = float(pdb_line[30:38])
@@ -879,7 +935,7 @@ class Atom:
             id = self.default_location_id
         self.locations[id] = new_location
 
-    location = property(get_location, set_location, doc="default Atom.Location object")
+    location = property(get_location, set_location, doc='default Atom.Location object')
 
     def get_position(self):
         return self.location.position
@@ -949,9 +1005,9 @@ class Atom:
             self.element_symbol,
         )
         formal_charge = "  "
-        if self.formal_charge is not None:
+        if (self.formal_charge != None): 
             formal_charge = "%+2d" % self.formal_charge
-        return names + numbers + end + formal_charge
+        return names+numbers+end+formal_charge
 
     def __str__(self):
         return self._pdb_string(self.serial_number, self.alternate_location_indicator)

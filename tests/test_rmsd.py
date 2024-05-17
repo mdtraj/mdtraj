@@ -266,4 +266,4 @@ def test_rmsd_atom_indices_vs_ref_indices():
 
     md.rmsd(trj_1, trj_2, atom_indices=[0], ref_atom_indices=[1])
     md.rmsd(trj_2, trj_1, atom_indices=[1], ref_atom_indices=[0])
-    # is this don't fail then it's good no matter the result
+    # if this don't fail then it's good no matter the result
