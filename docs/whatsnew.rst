@@ -9,9 +9,15 @@ Current Development
 - Remove TNG support (#1875)
 - Drop support for long-unsupported upstreams (#1838)
 - Drop `distutils` (#1834)
+- Lint codebase (#1874)
+- Allow `mdtraj.load()`` to read various non-standard PDB files (#1849)
+- Use netCDF4 as default in `NetCDFTrajectoryFile`, fallback to SciPy implementation (#1878)
+- Add dependabot for updating actions (#1865)
 
 Jinzhe Zeng+
 Matthew W. Thompson
+Jeremy Leung
+Jessica A. Nash+
 
 v1.9.9 (July 22, 2023)
 ---------------------
