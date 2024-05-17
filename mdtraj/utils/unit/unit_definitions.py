@@ -48,7 +48,7 @@ from .unit_operators import *  # needed for manipulation of units
 ### DIMENSIONLESS ###
 #####################
 
-# dimensionless = Unit({}); # defined in unit.py
+dimensionless = Unit({}); # defined in unit.py
 
 ##############
 ### LENGTH ###
