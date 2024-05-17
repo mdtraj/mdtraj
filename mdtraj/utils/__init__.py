@@ -126,7 +126,7 @@ class deprecated:
     def _update_doc(self, olddoc):
         newdoc = "DEPRECATED"
         if self.extra:
-            newdoc = "%s: %s" % (newdoc, self.extra)
+            newdoc = f"{newdoc}: {self.extra}"
         if olddoc:
-            newdoc = "%s\n\n%s" % (newdoc, olddoc)
+            newdoc = f"{newdoc}\n\n{olddoc}"
         return newdoc

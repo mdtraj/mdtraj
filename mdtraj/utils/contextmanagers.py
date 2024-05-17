@@ -31,7 +31,7 @@ class timing:
     def __exit__(self, ty, val, tb):
         self.end = time.time()
         self.time = self.end - self.start
-        print("%s: %0.3f seconds" % (self.name, self.time))
+        print(f"{self.name}: {self.time:0.3f} seconds")
         return False
 
 

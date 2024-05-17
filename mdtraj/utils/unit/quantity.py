@@ -234,7 +234,7 @@ class Quantity:
         # can only add using like units
         if not self.unit.is_compatible(other.unit):
             raise TypeError(
-                'Cannot add two quantities with incompatible units "%s" and "%s".' % (self.unit, other.unit),
+                f'Cannot add two quantities with incompatible units "{self.unit}" and "{other.unit}".',
             )
         value = self._value + other.value_in_unit(self.unit)
         unit = self.unit
@@ -254,7 +254,7 @@ class Quantity:
         """
         if not self.unit.is_compatible(other.unit):
             raise TypeError(
-                'Cannot subtract two quantities with incompatible units "%s" and "%s".' % (self.unit, other.unit),
+                f'Cannot subtract two quantities with incompatible units "{self.unit}" and "{other.unit}".',
             )
         value = self._value - other.value_in_unit(self.unit)
         unit = self.unit
@@ -289,9 +289,6 @@ class Quantity:
 
     def __le__(self, other):
         return self._value <= (other.value_in_unit(self.unit))
-
-    def __lt__(self, other):
-        return self._value < (other.value_in_unit(self.unit))
 
     __hash__ = None
 
@@ -665,7 +662,7 @@ class Quantity:
           and  result = value * factor when post_multiply is True
         """
         if not self.unit.is_compatible(other_unit):
-            raise TypeError('Unit "%s" is not compatible with Unit "%s".' % (self.unit, other_unit))
+            raise TypeError(f'Unit "{self.unit}" is not compatible with Unit "{other_unit}".')
         f = self.unit.conversion_factor_to(other_unit)
         return self._change_units_with_factor(other_unit, f)
 
@@ -753,7 +750,7 @@ class Quantity:
             if self.unit.is_dimensionless() and is_dimensionless(value):
                 pass  # OK
             elif not self.unit.is_compatible(value.unit):
-                raise TypeError('Unit "%s" is not compatible with Unit "%s".' % (self.unit, value.unit))
+                raise TypeError(f'Unit "{self.unit}" is not compatible with Unit "{value.unit}".')
             self._value[key] = value / self.unit
             assert not is_quantity(self._value[key])
 

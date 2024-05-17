@@ -169,7 +169,6 @@ def import_(module):
             message = MESSAGES[module]
         except KeyError:
             message = "The code at {filename}:{line_number} requires the " + module + " package"
-            e = ImportError("No module named %s" % module)
 
         frame, filename, line_number, function_name, lines, index = inspect.getouterframes(inspect.currentframe())[1]
 

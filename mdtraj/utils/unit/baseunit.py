@@ -89,16 +89,16 @@ class BaseUnit:
         """
         Returns a sorted tuple of (BaseDimension, exponent) pairs, that can be used as a dictionary key.
         """
-        l = list(self.iter_base_dimensions())
-        l.sort()
-        return tuple(l)
+        _list = list(self.iter_base_dimensions())
+        _list.sort()
+        return tuple(_list)
 
     def __str__(self):
         """Returns a string with the name of this BaseUnit"""
         return self.name
 
     def __repr__(self):
-        return 'BaseUnit(base_dim=%s, name="%s", symbol="%s")' % (self.dimension, self.name, self.symbol)
+        return f'BaseUnit(base_dim={self.dimension}, name="{self.name}", symbol="{self.symbol}")'
 
     def define_conversion_factor_to(self, other, factor):
         """
@@ -165,7 +165,7 @@ class BaseUnit:
         if self.dimension != other.dimension:
             raise TypeError("Cannot get conversion for BaseUnits with different dimensions.")
         if other.name not in self._conversion_factor_to_by_name:
-            raise LookupError('No conversion defined from BaseUnit "%s" to "%s".' % (self, other))
+            raise LookupError(f'No conversion defined from BaseUnit "{self}" to "{other}".')
         return self._conversion_factor_to_by_name[other.name]
 
 

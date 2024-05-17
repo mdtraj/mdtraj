@@ -151,14 +151,11 @@ class Unit:
                 yield (unit, exponent)
 
     def iter_scaled_units(self):
-        for unit, exponent in self._scaled_units:
-            yield (unit, exponent)
+        yield from self._scaled_units
 
     def iter_base_or_scaled_units(self):
-        for item in self.iter_top_base_units():
-            yield item
-        for item in self.iter_scaled_units():
-            yield item
+        yield from self.iter_top_base_units()
+        yield from self.iter_scaled_units()
 
     def get_conversion_factor_to_base_units(self):
         """
@@ -465,7 +462,7 @@ class Unit:
         if 0 == pos_count == neg_count:
             symbol = "dimensionless"
         else:
-            symbol = "%s%s" % (pos_string, neg_string)
+            symbol = f"{pos_string}{neg_string}"
         return symbol
 
     def get_name(self):
@@ -515,7 +512,7 @@ class Unit:
         if 0 == pos_count == neg_count:
             name = "dimensionless"
         else:
-            name = "%s%s" % (pos_string, neg_string)
+            name = f"{pos_string}{neg_string}"
         self._name = name
         return name
 
@@ -553,8 +550,7 @@ class ScaledUnit:
             yield self.base_units[dim]
 
     def iter_base_units(self):
-        for base_unit, exponent in self:
-            yield (base_unit, exponent)
+        yield from self
 
     def iter_base_dimensions(self):
         """
@@ -568,9 +564,9 @@ class ScaledUnit:
         """
         Returns a sorted tuple of (BaseDimension, exponent) pairs, that can be used as a dictionary key.
         """
-        l = list(self.iter_base_dimensions())
-        l.sort()
-        return tuple(l)
+        _list = list(self.iter_base_dimensions())
+        _list.sort()
+        return tuple(_list)
 
     def get_conversion_factor_to_base_units(self):
         return self.factor
@@ -661,8 +657,7 @@ class UnitSystem:
             raise ArithmeticError("UnitSystem is not a valid basis set.  " + str(e))
 
     def __iter__(self):
-        for unit in self.units:
-            yield unit
+        yield from self.units
 
     def __str__(self):
         """ """

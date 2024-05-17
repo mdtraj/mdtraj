@@ -9,7 +9,6 @@ requires = [
 
 [tool.ruff]
 line-length=119
-exclude=["mdtraj/utils/"]
 
 [tool.ruff.lint]
 select = [

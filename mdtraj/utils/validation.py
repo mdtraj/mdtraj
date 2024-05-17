@@ -117,11 +117,11 @@ def ensure_type(
             # then we should reshape the scalar to be a 1d length-1 array
             val = np.array([val])
         else:
-            raise TypeError("%s must be numpy array. " " You supplied type %s" % (name, type(val)))
+            raise TypeError(f"{name} must be numpy array. You supplied type {type(val)}")
 
     if warn_on_cast and val.dtype != dtype:
         warnings.warn(
-            "Casting %s dtype=%s to %s " % (name, val.dtype, dtype),
+            f"Casting {name} dtype={val.dtype} to {dtype} ",
             TypeCastPerformanceWarning,
         )
 
@@ -129,12 +129,12 @@ def ensure_type(
         if add_newaxis_on_deficient_ndim and val.ndim + 1 == ndim:
             val = val[np.newaxis, ...]
         else:
-            raise ValueError("%s must be ndim %s. " "You supplied %s" % (name, ndim, val.ndim))
+            raise ValueError(f"{name} must be ndim {ndim}. You supplied {val.ndim}")
 
     val = np.ascontiguousarray(val, dtype=dtype)
 
     if length is not None and len(val) != length:
-        raise ValueError("%s must be length %s. " "You supplied %s" % (name, length, len(val)))
+        raise ValueError(f"{name} must be length {length}. You supplied {len(val)}")
 
     if shape is not None:
         # the shape specified given by the user can look like (None, None 3)
@@ -142,7 +142,7 @@ def ensure_type(
         # dimension 1
         sentenel = object()
         error = ValueError(
-            "%s must be shape %s. You supplied  " "%s" % (name, str(shape).replace("None", "Any"), val.shape),
+            "{} must be shape {}. You supplied  " "{}".format(name, str(shape).replace("None", "Any"), val.shape),
         )
         for a, b in zip_longest(val.shape, shape, fillvalue=sentenel):
             if a is sentenel or b is sentenel:

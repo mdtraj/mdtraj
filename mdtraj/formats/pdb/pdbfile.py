@@ -682,7 +682,7 @@ class PDBTrajectoryFile:
                         connectBonds.append((atomByNumber[i], atomByNumber[j]))
             if len(connectBonds) > 0:
                 # Only add bonds that don't already exist.
-                existingBonds = set((bond.atom1, bond.atom2) for bond in self._topology.bonds)
+                existingBonds = {(bond.atom1, bond.atom2) for bond in self._topology.bonds}
                 for bond in connectBonds:
                     if bond not in existingBonds and (bond[1], bond[0]) not in existingBonds:
                         self._topology.add_bond(bond[0], bond[1])
