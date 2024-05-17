@@ -1063,6 +1063,7 @@ class Trajectory:
         -------
         self
         """
+        from mdtraj import _rmsd
 
         if atom_indices is None:
             atom_indices = slice(None)
@@ -1970,6 +1971,8 @@ class Trajectory:
         -------
         self
         """
+        from mdtraj import _rmsd
+
         if mass_weighted and self.top is not None:
             self.xyz -= distance.compute_center_of_mass(self)[:, np.newaxis, :]
         else:
