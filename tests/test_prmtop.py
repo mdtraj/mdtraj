@@ -30,6 +30,7 @@ def test_load_prmtop(get_fn):
     ref_top = md.load(get_fn("native.pdb")).topology
     eq(top, ref_top)
 
+
 def test_load_chamber_prmtop(get_fn):
     top = prmtop.load_prmtop(get_fn("ala3_chamber.parm7"))
     eq(top.n_atoms, 33)

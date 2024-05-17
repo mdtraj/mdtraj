@@ -198,4 +198,3 @@ def test_pairwise(traj, extension):
             eq(out1.topology, traj.topology)
             eq(out2.topology, traj.topology.subset(atom_indices))
             eq(out3.topology, traj.topology)
-

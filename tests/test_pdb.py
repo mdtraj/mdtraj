@@ -170,16 +170,18 @@ def test_pdbstructure_1():
         "ATOM    190  C   CYS A  42      40.339  -6.654  14.087  1.00 22.28           C",
         "ATOM    191  O   CYS A  42      41.181  -7.530  13.859  1.00 13.70           O",
         "ATOM    192  CB  CYS A  42      38.949  -6.825  12.002  1.00  9.67           C",
-        "ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S"
-         ]
-    positions = np.array([
-        [ 40.714,  -5.292, 12.123],
-        [ 39.736,  -5.883, 12.911],
-        [ 40.339,  -6.654, 14.087],
-        [ 41.181,  -7.53,  13.859],
-        [ 38.949,  -6.825, 12.002],
-        [ 37.557,  -7.514, 12.922]
-    ])
+        "ATOM    193  SG  CYS A  42      37.557  -7.514  12.922  1.00 20.12           S",
+    ]
+    positions = np.array(
+        [
+            [40.714, -5.292, 12.123],
+            [39.736, -5.883, 12.911],
+            [40.339, -6.654, 14.087],
+            [41.181, -7.53, 13.859],
+            [38.949, -6.825, 12.002],
+            [37.557, -7.514, 12.922],
+        ],
+    )
 
     res = pdbstructure.Residue("CYS", 42)
     for line in pdb_lines:
@@ -309,7 +311,7 @@ def test_bfactors(get_fn):
 
 
 def test_hex(get_fn):
-    pdb = load_pdb(get_fn('water_hex.pdb.gz'))
+    pdb = load_pdb(get_fn("water_hex.pdb.gz"))
     assert pdb.n_atoms == 100569
     assert pdb.n_residues == 33523
     pdb.save(temp)
@@ -332,8 +334,9 @@ def test_multichain_load_cycle(get_fn):
     bonds2 = [(bond.atom1.index, bond.atom2.index) for bond in pdb2.topology.bonds]
     assert len(bonds) == len(bonds2)
 
+
 def test_load_pdb_input_top(get_fn):
-    pdb = get_fn('native.pdb')
+    pdb = get_fn("native.pdb")
     p_1 = load_pdb(pdb)
 
     p_2 = load_pdb(pdb, top=p_1.topology)
@@ -341,8 +344,9 @@ def test_load_pdb_input_top(get_fn):
     eq(p_1.xyz, p_2.xyz)
     eq(p_1.topology, p_2.topology)
 
+
 def test_chimera_indexing(get_fn):
-    traj = load_pdb(get_fn('chimera_indexing.pdb'))  # this should just not fail
+    traj = load_pdb(get_fn("chimera_indexing.pdb"))  # this should just not fail
 
     assert traj.n_atoms == 3
     assert traj.topology._atoms[0].serial == 100000
@@ -351,9 +355,10 @@ def test_chimera_indexing(get_fn):
 
     test_pos = np.array([[10.613, 0.225, 12.764], [10.629, 0.313, 12.729], [10.596, 0.172, 12.686]], dtype=np.float32)
     assert np.array_equal(traj._xyz[0], test_pos)
+
 
 def test_vmd_indexing(get_fn):
-    traj = load_pdb(get_fn('vmd_indexing.pdb'))  # this should just not fail
+    traj = load_pdb(get_fn("vmd_indexing.pdb"))  # this should just not fail
 
     assert traj.n_atoms == 3
     assert traj.topology._atoms[0].serial == 100000
@@ -362,4 +367,3 @@ def test_vmd_indexing(get_fn):
 
     test_pos = np.array([[10.613, 0.225, 12.764], [10.629, 0.313, 12.729], [10.596, 0.172, 12.686]], dtype=np.float32)
     assert np.array_equal(traj._xyz[0], test_pos)
-
