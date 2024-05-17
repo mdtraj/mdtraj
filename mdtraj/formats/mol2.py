@@ -41,24 +41,22 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
-"""Load an md.Topology from tripos mol2 files.
-"""
+"""Load an md.Topology from tripos mol2 files."""
 
-##############################################################################
-# Imports
-##############################################################################
-
-import numpy as np
 import itertools
 import re
 from io import StringIO
-from mdtraj.utils import import_
-from mdtraj.formats.registry import FormatRegistry
+
+import numpy as np
+
 from mdtraj.core import element as elem
+from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils import import_
 
-__all__ = ['load_mol2', "mol2_to_dataframes"]
+__all__ = ["load_mol2", "mol2_to_dataframes"]
 
-@FormatRegistry.register_loader('.mol2')
+
+@FormatRegistry.register_loader(".mol2")
 def load_mol2(filename):
     """Load a TRIPOS mol2 file from disk.
 
@@ -83,15 +81,15 @@ def load_mol2(filename):
     --------
     >>> traj = md.load_mol2('mysystem.mol2')
     """
+    from mdtraj.core.topology import Amide, Aromatic, Double, Single, Topology, Triple
     from mdtraj.core.trajectory import Trajectory
-    from mdtraj.core.topology import Topology, Single, Double, Triple, Aromatic, Amide
 
     atoms, bonds = mol2_to_dataframes(filename)
 
     atoms_mdtraj = atoms[["name", "resName"]].copy()
     atoms_mdtraj["serial"] = atoms.index
 
-    #Figure out 1 letter element names
+    # Figure out 1 letter element names
 
     # IF this is a GAFF mol2, this line should work without issues
     atoms_mdtraj["element"] = atoms.atype.map(gaff_elements)
@@ -104,38 +102,40 @@ def load_mol2(filename):
                 assert len(x) == 1
                 x = x[0]
 
-            if '.' in x:  # orbital-hybridizations in SYBL
-                return x.split('.')[0]
+            if "." in x:  # orbital-hybridizations in SYBL
+                return x.split(".")[0]
             try:
                 # check if we can convert the whole str to an Element,
                 # if not, we only pass the first letter.
                 from mdtraj.core.element import Element
+
                 Element.getBySymbol(x)
             except KeyError:
                 return x[0]
             return x
+
         atoms_mdtraj["element"] = atoms.atype.apply(to_element)
 
     # Check if elements inferred from atoms.atype are valid
     # If not, try to infer elements from atoms.name
     try:
-        atoms_mdtraj['element'].apply(elem.get_by_symbol)
+        atoms_mdtraj["element"].apply(elem.get_by_symbol)
     except KeyError:
         try:
             atoms_mdtraj["element"] = atoms.name.apply(to_element)
-            atoms_mdtraj['element'].apply(elem.get_by_symbol)
+            atoms_mdtraj["element"].apply(elem.get_by_symbol)
         except KeyError:
-            raise KeyError('Invalid element passed to atoms DataFrame')
+            raise KeyError("Invalid element passed to atoms DataFrame")
 
-    atoms_mdtraj['resSeq'] = atoms['code']
-    atoms_mdtraj["chainID"] = np.ones(len(atoms), 'int')
+    atoms_mdtraj["resSeq"] = atoms["code"]
+    atoms_mdtraj["chainID"] = np.ones(len(atoms), "int")
 
     bond_type_map = {
-        '1': Single,
-        '2': Double,
-        '3': Triple,
-        'am': Amide,
-        'ar': Aromatic
+        "1": Single,
+        "2": Double,
+        "3": Triple,
+        "am": Amide,
+        "ar": Aromatic,
     }
     if bonds is not None:
         bonds_mdtraj = bonds[["id0", "id1"]].values
@@ -161,8 +161,6 @@ def load_mol2(filename):
     traj = Trajectory(xyzlist, top)
 
     return traj
-
-
 
 
 def mol2_to_dataframes(filename):
@@ -193,112 +191,127 @@ def mol2_to_dataframes(filename):
     If you just need the coordinates and bonds, use load_mol2(filename)
     to get a Trajectory object.
     """
-    pd = import_('pandas')
+    pd = import_("pandas")
     with open(filename) as f:
-        data = dict((key, list(grp)) for key, grp in itertools.groupby(f, _parse_mol2_sections))
+        data = {key: list(grp) for key, grp in itertools.groupby(f, _parse_mol2_sections)}
 
     # Mol2 can have "status bits" at the end of the bond lines. We don't care
     # about these, but they interfere with using pd_read_table because it looks
     # like one line has too many columns. So we just regex out the offending
     # text.
     status_bit_regex = r"BACKBONE|DICT|INTERRES|\|"
-    data["@<TRIPOS>BOND\n"] = [re.sub(status_bit_regex, lambda _: "", s)
-                               for s in data["@<TRIPOS>BOND\n"]]
+    data["@<TRIPOS>BOND\n"] = [re.sub(status_bit_regex, lambda _: "", s) for s in data["@<TRIPOS>BOND\n"]]
 
     if len(data["@<TRIPOS>BOND\n"]) > 1:
         csv = StringIO()
         csv.writelines(data["@<TRIPOS>BOND\n"][1:])
         csv.seek(0)
-        bonds_frame = pd.read_table(csv, names=["bond_id", "id0", "id1", "bond_type"],
-            index_col=0, header=None, sep="\s+", engine='python')
+        bonds_frame = pd.read_table(
+            csv,
+            names=["bond_id", "id0", "id1", "bond_type"],
+            index_col=0,
+            header=None,
+            sep=r"\s+",
+            engine="python",
+        )
     else:
         bonds_frame = None
 
     csv = StringIO()
     csv.writelines(data["@<TRIPOS>ATOM\n"][1:])
     csv.seek(0)
-    atoms_frame = pd.read_csv(csv, sep="\s+", engine='python',  header=None)
+    atoms_frame = pd.read_csv(csv, sep=r"\s+", engine="python", header=None)
     ncols = atoms_frame.shape[1]
-    names=["serial", "name", "x", "y", "z", "atype", "code", "resName", "charge", "status"]
+    names = [
+        "serial",
+        "name",
+        "x",
+        "y",
+        "z",
+        "atype",
+        "code",
+        "resName",
+        "charge",
+        "status",
+    ]
     atoms_frame.columns = names[:ncols]
-    
+
     return atoms_frame, bonds_frame
 
 
 def _parse_mol2_sections(x):
     """Helper function for parsing a section in a MOL2 file."""
-    if x.startswith('@<TRIPOS>'):
+    if x.startswith("@<TRIPOS>"):
         _parse_mol2_sections.key = x
     return _parse_mol2_sections.key
 
 
-
-
 gaff_elements = {
-    'br': 'Br',
-    'c': 'C',
-    'c1': 'C',
-    'c2': 'C',
-    'c3': 'C',
-    'ca': 'C',
-    'cc': 'C',
-    'cd': 'C',
-    'ce': 'C',
-    'cf': 'C',
-    'cg': 'C',
-    'ch': 'C',
-    'cl': 'Cl',
-    'cp': 'C',
-    'cq': 'C',
-    'cu': 'C',
-    'cv': 'C',
-    'cx': 'C',
-    'cy': 'C',
-    'cz': 'C',
-    'f': 'F',
-    'h1': 'H',
-    'h2': 'H',
-    'h3': 'H',
-    'h4': 'H',
-    'h5': 'H',
-    'ha': 'H',
-    'hc': 'H',
-    'hn': 'H',
-    'ho': 'H',
-    'hp': 'H',
-    'hs': 'H',
-    'hw': 'H',
-    'hx': 'H',
-    'i': 'I',
-    'n': 'N',
-    'n1': 'N',
-    'n2': 'N',
-    'n3': 'N',
-    'n4': 'N',
-    'na': 'N',
-    'nb': 'N',
-    'nc': 'N',
-    'nd': 'N',
-    'ne': 'N',
-    'nf': 'N',
-    'nh': 'N',
-    'no': 'N',
-    'o': 'O',
-    'oh': 'O',
-    'os': 'O',
-    'ow': 'O',
-    'p2': 'P',
-    'p3': 'P',
-    'p4': 'P',
-    'p5': 'P',
-    'pb': 'P',
-    'px': 'P',
-    'py': 'P',
-    's': 'S',
-    's2': 'S',
-    's4': 'S',
-    's6': 'S',
-    'sh': 'S',
-    'ss': 'S',
-    'sx': 'S',
-    'sy': 'S'}
+    "br": "Br",
+    "c": "C",
+    "c1": "C",
+    "c2": "C",
+    "c3": "C",
+    "ca": "C",
+    "cc": "C",
+    "cd": "C",
+    "ce": "C",
+    "cf": "C",
+    "cg": "C",
+    "ch": "C",
+    "cl": "Cl",
+    "cp": "C",
+    "cq": "C",
+    "cu": "C",
+    "cv": "C",
+    "cx": "C",
+    "cy": "C",
+    "cz": "C",
+    "f": "F",
+    "h1": "H",
+    "h2": "H",
+    "h3": "H",
+    "h4": "H",
+    "h5": "H",
+    "ha": "H",
+    "hc": "H",
+    "hn": "H",
+    "ho": "H",
+    "hp": "H",
+    "hs": "H",
+    "hw": "H",
+    "hx": "H",
+    "i": "I",
+    "n": "N",
+    "n1": "N",
+    "n2": "N",
+    "n3": "N",
+    "n4": "N",
+    "na": "N",
+    "nb": "N",
+    "nc": "N",
+    "nd": "N",
+    "ne": "N",
+    "nf": "N",
+    "nh": "N",
+    "no": "N",
+    "o": "O",
+    "oh": "O",
+    "os": "O",
+    "ow": "O",
+    "p2": "P",
+    "p3": "P",
+    "p4": "P",
+    "p5": "P",
+    "pb": "P",
+    "px": "P",
+    "py": "P",
+    "s": "S",
+    "s2": "S",
+    "s4": "S",
+    "s6": "S",
+    "sh": "S",
+    "ss": "S",
+    "sx": "S",
+    "sy": "S",
+}

@@ -24,7 +24,14 @@ import numpy as np
 
 from mdtraj.geometry.distance import compute_center_of_geometry
 
-__all__ = ['compute_gyration_tensor', 'principal_moments', 'asphericity', 'acylindricity', 'relative_shape_antisotropy', 'relative_shape_anisotropy']
+__all__ = [
+    "compute_gyration_tensor",
+    "principal_moments",
+    "asphericity",
+    "acylindricity",
+    "relative_shape_antisotropy",
+    "relative_shape_anisotropy",
+]
 
 
 def compute_gyration_tensor(traj):
@@ -45,7 +52,7 @@ def compute_gyration_tensor(traj):
     -------
     S_xy:  np.ndarray, shape=(traj.n_frames, 3, 3), dtype=float64
         Gyration tensors for each frame.
-    
+
     References
     ----------
     .. [1] https://isg.nist.gov/deepzoomweb/measurement3Ddata_help#shape-metrics-formulas
@@ -53,7 +60,8 @@ def compute_gyration_tensor(traj):
     """
     center_of_geom = np.expand_dims(compute_center_of_geometry(traj), axis=1)
     xyz = traj.xyz - center_of_geom
-    return np.einsum('...ji,...jk->...ik', xyz, xyz) / traj.n_atoms
+    return np.einsum("...ji,...jk->...ik", xyz, xyz) / traj.n_atoms
+
 
 def principal_moments(traj):
     """Compute the principal moments of a trajectory.
@@ -74,6 +82,7 @@ def principal_moments(traj):
     gyration_tensor = compute_gyration_tensor(traj)
     return np.linalg.eigvalsh(gyration_tensor)
 
+
 def asphericity(traj):
     """Compute the asphericity of a trajectory.
 
@@ -81,7 +90,7 @@ def asphericity(traj):
 
     .. math::
 
-        b = \frac{1}{2}(\lambda_1^2 + \lambda_2^2)
+        b = \frac{1}{2}(\\lambda_1^2 + \\lambda_2^2)
 
 
     Parameters
@@ -96,11 +105,12 @@ def asphericity(traj):
 
     """
     pm = principal_moments(traj)
-    b = pm[:,2] - (pm[:,0] + pm[:,1]) / 2.0
+    b = pm[:, 2] - (pm[:, 0] + pm[:, 1]) / 2.0
     return b
 
+
 def acylindricity(traj):
-    """Compute the acylindricity of a trajectory.
+    r"""Compute the acylindricity of a trajectory.
 
     For each frame compute the principal moments then,
 
@@ -121,8 +131,9 @@ def acylindricity(traj):
 
     """
     pm = principal_moments(traj)
-    c = pm[:,1] - pm[:,0]
+    c = pm[:, 1] - pm[:, 0]
     return c
+
 
 def relative_shape_anisotropy(traj):
     """Compute the relative shape anisotropy of a trajectory.
@@ -131,7 +142,11 @@ def relative_shape_anisotropy(traj):
 
     .. math::
 
-        \kappa^2 = \frac{3}{2}\frac{\lambda_1^4 + \lambda_2^4 + \lambda_3^4}{(\lambda_1^2 + \lambda_2^2 + \lambda_3^2)^2} - \frac{1}{2}
+        \\kappa^2 = \frac{3}{2}\frac{
+            \\lambda_1^4 + \\lambda_2^4 + \\lambda_3^4
+        }{
+            (\\lambda_1^2 + \\lambda_2^2 + \\lambda_3^2)^2
+        } - \frac{1}{2}
 
 
     Parameters
@@ -149,10 +164,12 @@ def relative_shape_anisotropy(traj):
     kappa2 = 1.5 * np.square(pm).sum(axis=1) / np.square(pm.sum(axis=1)) - 0.5
     return kappa2
 
+
 relative_shape_antisotropy = relative_shape_anisotropy
 
+
 def _compute_gyration_tensor_slow(traj):
-    """Compute the gyration tensor of a trajectory. """
+    """Compute the gyration tensor of a trajectory."""
     xyz = traj.xyz
     center_of_geom = np.expand_dims(compute_center_of_geometry(traj), axis=1)
     centered_xyz = xyz - center_of_geom

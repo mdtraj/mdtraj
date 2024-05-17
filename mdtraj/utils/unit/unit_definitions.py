@@ -33,13 +33,14 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 __author__ = "Christopher M. Bruns"
 __version__ = "0.6"
 
-from .baseunit import BaseUnit
-from .standard_dimensions import *
-from .unit import Unit, ScaledUnit, UnitSystem, dimensionless
-from .unit_operators import * ; # needed for manipulation of units
-from .prefix import *
 import math
 import sys
+
+from .baseunit import BaseUnit
+from .prefix import *
+from .standard_dimensions import *
+from .unit import ScaledUnit, Unit, UnitSystem
+from .unit_operators import *  # needed for manipulation of units
 
 # Physical constants in this file are CODATA 2018 values from https://pml.nist.gov/cuu/Constants
 
@@ -47,7 +48,7 @@ import sys
 ### DIMENSIONLESS ###
 #####################
 
-# dimensionless = Unit({}); # defined in unit.py
+dimensionless = Unit({})
 
 ##############
 ### LENGTH ###
@@ -55,7 +56,7 @@ import sys
 
 meter_base_unit = BaseUnit(length_dimension, "meter", "m")
 meters = meter = Unit({meter_base_unit: 1.0})
-define_prefixed_units(meter_base_unit, module = sys.modules[__name__])
+define_prefixed_units(meter_base_unit, module=sys.modules[__name__])
 
 angstrom_base_unit = BaseUnit(length_dimension, "angstrom", "A")
 angstrom_base_unit.define_conversion_factor_to(meter_base_unit, 1e-10)
@@ -79,7 +80,7 @@ yard = yards = Unit({yard_base_unit: 1.0})
 furlongs = furlong = yard.create_unit(scale=220.0, name="furlong", symbol="furlong")
 miles = mile = furlong.create_unit(scale=8.0, name="mile", symbol="mi")
 
-bohrs = bohr = angstrom.create_unit(scale=0.529177210903, name='bohr', symbol='r_0')
+bohrs = bohr = angstrom.create_unit(scale=0.529177210903, name="bohr", symbol="r_0")
 
 ############
 ### MASS ###
@@ -88,7 +89,7 @@ bohrs = bohr = angstrom.create_unit(scale=0.529177210903, name='bohr', symbol='r
 gram_base_unit = BaseUnit(mass_dimension, "gram", "g")
 grams = gram = Unit({gram_base_unit: 1.0})
 
-define_prefixed_units(gram_base_unit, module = sys.modules[__name__])
+define_prefixed_units(gram_base_unit, module=sys.modules[__name__])
 
 planck_mass_base_unit = BaseUnit(mass_dimension, "Planck mass", "m_P")
 planck_mass_base_unit.define_conversion_factor_to(kilogram_base_unit, 2.176434e-8)
@@ -109,7 +110,7 @@ stone = stones = Unit({stone_base_unit: 1.0})
 second_base_unit = BaseUnit(time_dimension, "second", "s")
 seconds = second = Unit({second_base_unit: 1.0})
 
-define_prefixed_units(second_base_unit, module = sys.modules[__name__])
+define_prefixed_units(second_base_unit, module=sys.modules[__name__])
 
 planck_time_base_unit = BaseUnit(time_dimension, "Planck time", "t_P")
 planck_time_base_unit.define_conversion_factor_to(second_base_unit, 5.391247e-44)
@@ -147,7 +148,10 @@ coulomb_base_unit.define_conversion_factor_to(elementary_charge_base_unit, 6.241
 coulombs = coulomb = Unit({coulomb_base_unit: 1.0})
 
 planck_charge_base_unit = BaseUnit(charge_dimension, "Planck charge", "q_P")
-planck_charge_base_unit.define_conversion_factor_to(elementary_charge_base_unit, 1/math.sqrt(7.2973525693e-3)) # Calculated from fine structure constant
+planck_charge_base_unit.define_conversion_factor_to(
+    elementary_charge_base_unit,
+    1 / math.sqrt(7.2973525693e-3),
+)  # Calculated from fine structure constant
 
 ##############
 ### AMOUNT ###
@@ -175,11 +179,11 @@ radian_base_unit = BaseUnit(angle_dimension, "radian", "rad")
 radians = radian = Unit({radian_base_unit: 1.0})
 
 degree_base_unit = BaseUnit(angle_dimension, "degree", "deg")
-degree_base_unit.define_conversion_factor_to(radian_base_unit, math.pi/180.0)
+degree_base_unit.define_conversion_factor_to(radian_base_unit, math.pi / 180.0)
 degrees = degree = Unit({degree_base_unit: 1.0})
 
-arcminutes = arcminute = degree.create_unit(scale=1.0/60.0, name="arcminute", symbol="'")
-arcseconds = arcsecond = arcminute.create_unit(scale=1.0/60.0, name="arcsecond", symbol='"')
+arcminutes = arcminute = degree.create_unit(scale=1.0 / 60.0, name="arcminute", symbol="'")
+arcseconds = arcsecond = arcminute.create_unit(scale=1.0 / 60.0, name="arcsecond", symbol='"')
 
 ###################
 ### INFORMATION ###
@@ -193,7 +197,7 @@ byte_base_unit.define_conversion_factor_to(bit_base_unit, 8.0)
 bytes = byte = Unit({byte_base_unit: 1.0})
 
 nat_base_unit = BaseUnit(information_dimension, "nat", "nat")
-nat_base_unit.define_conversion_factor_to(bit_base_unit, 1.0/math.log(2.0))
+nat_base_unit.define_conversion_factor_to(bit_base_unit, 1.0 / math.log(2.0))
 nats = nat = nits = nit = nepits = nepit = Unit({nat_base_unit: 1.0})
 
 ban_base_unit = BaseUnit(information_dimension, "ban", "ban")
@@ -207,24 +211,24 @@ bans = ban = hartleys = hartley = dits = dit = Unit({ban_base_unit: 1.0})
 
 # Molar mass
 # daltons = dalton = grams / mole
-daltons = dalton = Unit({ScaledUnit(1.0, gram/mole, "dalton", "Da"): 1.0})
+daltons = dalton = Unit({ScaledUnit(1.0, gram / mole, "dalton", "Da"): 1.0})
 amus = amu = dalton
 atom_mass_units = atomic_mass_unit = dalton
 
 # Volume
 liter_base_unit = ScaledUnit(1.0, decimeter**3, "liter", "L")
 liter = liters = litre = litres = Unit({liter_base_unit: 1.0})
-define_prefixed_units(liter_base_unit, module = sys.modules[__name__])
+define_prefixed_units(liter_base_unit, module=sys.modules[__name__])
 
 # Concentration
-molar_base_unit = ScaledUnit(1.0, mole/liter, "molar", "M")
+molar_base_unit = ScaledUnit(1.0, mole / liter, "molar", "M")
 molar = molal = Unit({molar_base_unit: 1.0})
-define_prefixed_units(molar_base_unit, module = sys.modules[__name__])
+define_prefixed_units(molar_base_unit, module=sys.modules[__name__])
 
 # Force
 newton_base_unit = ScaledUnit(1.0, kilogram * meter / second / second, "newton", "N")
 newtons = newton = Unit({newton_base_unit: 1.0})
-define_prefixed_units(newton_base_unit, module = sys.modules[__name__])
+define_prefixed_units(newton_base_unit, module=sys.modules[__name__])
 # pound can be mass, force, or currency
 pound_force_base_unit = ScaledUnit(4.448, newton, "pound", "lb")
 pound_force = pounds_force = Unit({pound_force_base_unit: 1.0})
@@ -234,7 +238,7 @@ dyne = dynes = Unit({dyne_base_unit: 1.0})
 # Energy
 joule_base_unit = ScaledUnit(1.0, newton * meter, "joule", "J")
 joules = joule = Unit({joule_base_unit: 1.0})
-define_prefixed_units(joule_base_unit, module = sys.modules[__name__])
+define_prefixed_units(joule_base_unit, module=sys.modules[__name__])
 erg_base_unit = ScaledUnit(1.0, dyne * centimeter, "erg", "erg")
 erg = ergs = Unit({erg_base_unit: 1.0})
 hartree_base_unit = ScaledUnit(4.3597447222071e-18, joule, "hartree", "Ha")
@@ -248,7 +252,7 @@ kilojoules_per_mole = kilojoule_per_mole = md_kilojoule / mole
 
 calorie_base_unit = ScaledUnit(4.184, joule, "calorie", "cal")
 calories = calorie = Unit({calorie_base_unit: 1.0})
-define_prefixed_units(calorie_base_unit, module = sys.modules[__name__])
+define_prefixed_units(calorie_base_unit, module=sys.modules[__name__])
 md_kilocalories = md_kilocalorie = Unit({ScaledUnit(4.184, md_kilojoule, "kilocalorie", "kcal"): 1.0})
 kilocalories_per_mole = kilocalorie_per_mole = md_kilocalorie / mole
 
@@ -289,14 +293,14 @@ debyes = debye = Unit({debye_base_unit: 1.0})
 # Pressure
 pascal_base_unit = ScaledUnit(1.0, newton / (meter**2), "pascal", "Pa")
 pascals = pascal = Unit({pascal_base_unit: 1.0})
-define_prefixed_units(pascal_base_unit, module = sys.modules[__name__])
+define_prefixed_units(pascal_base_unit, module=sys.modules[__name__])
 psi_base_unit = ScaledUnit(1.0, pound_force / (inch**2), "psi", "psi")
 psi = Unit({psi_base_unit: 1.0})
 bar_base_unit = ScaledUnit(10.0**5, pascal, "bar", "bar")
 bar = bars = Unit({bar_base_unit: 1.0})
 atmosphere_base_unit = ScaledUnit(101325.0, pascal, "atmosphere", "atm")
 atmosphere = atmospheres = Unit({atmosphere_base_unit: 1.0})
-torr_base_unit = ScaledUnit(1.0/760.0, atmosphere, "torr", "Torr")
+torr_base_unit = ScaledUnit(1.0 / 760.0, atmosphere, "torr", "Torr")
 torr = Unit({torr_base_unit: 1.0})
 mmHg_base_unit = ScaledUnit(133.322, pascal, "mmHg", "mmHg")
 mmHg = Unit({mmHg_base_unit: 1.0})
@@ -305,9 +309,10 @@ mmHg = Unit({mmHg_base_unit: 1.0})
 ### Unit Systems ###
 ####################
 
-ampere_base_unit = ScaledUnit(1.0, coulomb/second, "ampere", "A")
+ampere_base_unit = ScaledUnit(1.0, coulomb / second, "ampere", "A")
 
-si_unit_system = UnitSystem([
+si_unit_system = UnitSystem(
+    [
         meter_base_unit,
         kilogram_base_unit,
         second_base_unit,
@@ -315,43 +320,56 @@ si_unit_system = UnitSystem([
         kelvin_base_unit,
         mole_base_unit,
         candela_base_unit,
-        radian_base_unit])
+        radian_base_unit,
+    ],
+)
 
-cgs_unit_system = UnitSystem([
+cgs_unit_system = UnitSystem(
+    [
         centimeter_base_unit,
         gram_base_unit,
         second_base_unit,
         ampere_base_unit,
         kelvin_base_unit,
         mole_base_unit,
-        radian_base_unit])
+        radian_base_unit,
+    ],
+)
 
-dalton_base_unit = ScaledUnit(1.0, gram/mole, "dalton", "Da")
+dalton_base_unit = ScaledUnit(1.0, gram / mole, "dalton", "Da")
 
-md_unit_system = UnitSystem([
+md_unit_system = UnitSystem(
+    [
         nanometer_base_unit,
         dalton_base_unit,
         picosecond_base_unit,
         elementary_charge_base_unit,
         kelvin_base_unit,
         mole_base_unit,
-        radian_base_unit])
+        radian_base_unit,
+    ],
+)
 
-planck_unit_system = UnitSystem([\
+planck_unit_system = UnitSystem(
+    [
         planck_length_base_unit,
         planck_mass_base_unit,
         planck_time_base_unit,
         planck_charge_base_unit,
         planck_temperature_base_unit,
         single_item_amount_base_unit,
-        radian_base_unit])
+        radian_base_unit,
+    ],
+)
 
 ########################
 ### TESTING/EXAMPLES ###
 ########################
 
 # run module directly for testing
-if __name__=='__main__':
+if __name__ == "__main__":
     # Test the examples in the docstrings
-    import doctest, sys
+    import doctest
+    import sys
+
     doctest.testmod(sys.modules[__name__])

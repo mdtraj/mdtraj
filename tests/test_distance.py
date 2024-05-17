@@ -20,21 +20,22 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-import time
 import itertools
-import pytest
-import numpy as np
-import mdtraj as md
 
-from mdtraj.testing import eq, assert_allclose
+import numpy as np
+import pytest
+
+import mdtraj as md
 from mdtraj.geometry.distance import (
-    compute_distances_core,
-    compute_distances,
-    compute_distances_t,
+    _displacement,
+    _displacement_mic,
     compute_displacements,
+    compute_distances,
+    compute_distances_core,
+    compute_distances_t,
     find_closest_contact,
 )
-from mdtraj.geometry.distance import _displacement_mic, _displacement
+from mdtraj.testing import assert_allclose, eq
 
 N_FRAMES = 20
 N_ATOMS = 20
@@ -44,7 +45,10 @@ pairs = np.array(list(itertools.combinations(range(N_ATOMS), 2)), dtype=np.int32
 times = np.array([[i, 0] for i in range(N_FRAMES)[::2]], dtype=np.int32)
 
 ptraj = md.Trajectory(xyz=xyz, topology=None)
-ptraj.unitcell_vectors = np.ascontiguousarray(np.random.randn(N_FRAMES, 3, 3) + 2 * np.eye(3, 3), dtype=np.float32)
+ptraj.unitcell_vectors = np.ascontiguousarray(
+    np.random.randn(N_FRAMES, 3, 3) + 2 * np.eye(3, 3),
+    dtype=np.float32,
+)
 
 
 def test_generator():
@@ -59,47 +63,52 @@ def test_0():
     b = compute_distances(ptraj, pairs, periodic=False, opt=False)
     eq(a, b)
 
-def test_compute_distances_core_nonperiodic():
 
+def test_compute_distances_core_nonperiodic():
     a = compute_distances(ptraj, pairs, periodic=False, opt=True)
-    b = compute_distances_core(ptraj.xyz,
-                               pairs,
-                               unitcell_vectors=ptraj.unitcell_vectors,
-                               periodic=False,
-                               opt=True,
-                               )
+    b = compute_distances_core(
+        ptraj.xyz,
+        pairs,
+        unitcell_vectors=ptraj.unitcell_vectors,
+        periodic=False,
+        opt=True,
+    )
     eq(a, b)
 
     a = compute_distances(ptraj, pairs, periodic=False, opt=False)
-    b = compute_distances_core(ptraj.xyz,
-                               pairs,
-                               unitcell_vectors=ptraj.unitcell_vectors,
-                               periodic=False,
-                               opt=False,
-                               )
+    b = compute_distances_core(
+        ptraj.xyz,
+        pairs,
+        unitcell_vectors=ptraj.unitcell_vectors,
+        periodic=False,
+        opt=False,
+    )
     eq(a, b)
 
-def test_compute_distances_core_periodic():
 
+def test_compute_distances_core_periodic():
     # opt
     a = compute_distances(ptraj, pairs, periodic=True, opt=True)
-    b = compute_distances_core(ptraj.xyz,
-                               pairs,
-                               unitcell_vectors=ptraj.unitcell_vectors,
-                               periodic=True,
-                               opt=True,
-                               )
+    b = compute_distances_core(
+        ptraj.xyz,
+        pairs,
+        unitcell_vectors=ptraj.unitcell_vectors,
+        periodic=True,
+        opt=True,
+    )
     eq(a, b, decimal=3)
 
     # no-opt
     a = compute_distances(ptraj, pairs, periodic=True, opt=False)
-    b = compute_distances_core(ptraj.xyz,
-                               pairs,
-                               unitcell_vectors=ptraj.unitcell_vectors,
-                               periodic=True,
-                               opt=False,
-                               )
+    b = compute_distances_core(
+        ptraj.xyz,
+        pairs,
+        unitcell_vectors=ptraj.unitcell_vectors,
+        periodic=True,
+        opt=False,
+    )
     eq(a, b, decimal=3)
+
 
 def test_1():
     a = compute_displacements(ptraj, pairs, periodic=False, opt=True)
@@ -144,7 +153,7 @@ def test_2p():
 def test_3p():
     a = compute_distances(ptraj, pairs, periodic=True, opt=True)
     b = compute_displacements(ptraj, pairs, periodic=True, opt=True)
-    print(a,  b)
+    print(a, b)
     eq(a, np.sqrt(np.sum(np.square(b), axis=2)))
 
 
@@ -167,16 +176,46 @@ def test_5():
 
 
 def test_6(get_fn):
-    ext_ref = np.array([17.4835, 22.2418, 24.2910, 22.5505, 12.8686, 22.1090,
-                        7.4472, 22.4253, 19.8283, 20.6935]) / 10
-    traj = md.load(get_fn('test_good.nc'), top=get_fn('test.parm7'))
+    ext_ref = (
+        np.array(
+            [
+                17.4835,
+                22.2418,
+                24.2910,
+                22.5505,
+                12.8686,
+                22.1090,
+                7.4472,
+                22.4253,
+                19.8283,
+                20.6935,
+            ],
+        )
+        / 10
+    )
+    traj = md.load(get_fn("test_good.nc"), top=get_fn("test.parm7"))
     _run_amber_traj(traj, ext_ref)
 
 
 def test_7(get_fn):
-    ext_ref = np.array([30.9184, 23.9040, 25.3869, 28.0060, 25.9704, 24.6836,
-                        23.0508, 27.1983, 24.4954, 26.7448]) / 10
-    traj = md.load(get_fn('test_bad.nc'), top=get_fn('test.parm7'))
+    ext_ref = (
+        np.array(
+            [
+                30.9184,
+                23.9040,
+                25.3869,
+                28.0060,
+                25.9704,
+                24.6836,
+                23.0508,
+                27.1983,
+                24.4954,
+                26.7448,
+            ],
+        )
+        / 10
+    )
+    traj = md.load(get_fn("test_bad.nc"), top=get_fn("test.parm7"))
     _run_amber_traj(traj, ext_ref)
 
 
@@ -216,11 +255,12 @@ def _verify_closest_contact(traj):
     contact = find_closest_contact(traj, group1, group2)
     pairs = np.array([(i, j) for i in group1 for j in group2], dtype=int)
     dists = md.compute_distances(traj, pairs, True)[0]
-    dists2 = md.compute_distances(traj, pairs, False)[0]
+    _ = md.compute_distances(traj, pairs, False)[0]
     nearest = np.argmin(dists)
     eq(float(dists[nearest]), contact[2], decimal=5)
-    assert ((pairs[nearest, 0] == contact[0] and pairs[nearest, 1] == contact[1]) or (
-    pairs[nearest, 0] == contact[1] and pairs[nearest, 1] == contact[0]))
+    assert (pairs[nearest, 0] == contact[0] and pairs[nearest, 1] == contact[1]) or (
+        pairs[nearest, 0] == contact[1] and pairs[nearest, 1] == contact[0]
+    )
 
 
 def test_distance_nan():
@@ -242,12 +282,12 @@ def test_closest_contact_nan_pos():
 
 
 def test_distance_t_inputs():
-    incorrect_pairs = np.array((0, ptraj.n_atoms+1))
-    with pytest.raises(ValueError, match='atom_pairs'):
+    incorrect_pairs = np.array((0, ptraj.n_atoms + 1))
+    with pytest.raises(ValueError, match="atom_pairs"):
         compute_distances_t(ptraj, incorrect_pairs, times)
 
-    incorrect_times = np.array((0, ptraj.n_frames+1))
-    with pytest.raises(ValueError, match='time_pairs'):
+    incorrect_times = np.array((0, ptraj.n_frames + 1))
+    with pytest.raises(ValueError, match="time_pairs"):
         compute_distances_t(ptraj, pairs, incorrect_times)
 
 
@@ -259,6 +299,7 @@ def test_distances_t(get_fn):
     d = compute_distances_t(ptraj, pairs, times, periodic=False, opt=False)
     eq(c, d)
 
+
 def test_distances_t_at_0(get_fn):
     times = np.array([[0, 0]], dtype=np.int32)
     a = compute_distances_t(ptraj, pairs, times, periodic=True, opt=True)
@@ -268,14 +309,41 @@ def test_distances_t_at_0(get_fn):
     eq(a, c)
     eq(b, d)
 
+
 def _run_amber_traj_t(traj, ext_ref):
     # Test triclinic case where simple approach in Tuckerman text does not
     # always work
-    distopt = compute_distances_t(traj, atom_pairs=[[0, 9999]], time_pairs=[[0, 2]], opt=True)
-    distslw = compute_distances_t(traj, atom_pairs=[[0, 9999]], time_pairs=[[0, 2]], opt=False)
+    _ = compute_distances_t(
+        traj,
+        atom_pairs=[[0, 9999]],
+        time_pairs=[[0, 2]],
+        opt=True,
+    )
+    _ = compute_distances_t(
+        traj,
+        atom_pairs=[[0, 9999]],
+        time_pairs=[[0, 2]],
+        opt=False,
+    )
+
 
 def test_amber_t(get_fn):
-    ext_ref = np.array([17.4835, 22.2418, 24.2910, 22.5505, 12.8686, 22.1090,
-                        7.4472, 22.4253, 19.8283, 20.6935]) / 10
-    traj = md.load(get_fn('test_good.nc'), top=get_fn('test.parm7'))
+    ext_ref = (
+        np.array(
+            [
+                17.4835,
+                22.2418,
+                24.2910,
+                22.5505,
+                12.8686,
+                22.1090,
+                7.4472,
+                22.4253,
+                19.8283,
+                20.6935,
+            ],
+        )
+        / 10
+    )
+    traj = md.load(get_fn("test_good.nc"), top=get_fn("test.parm7"))
     _run_amber_traj_t(traj, ext_ref)

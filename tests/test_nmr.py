@@ -1,15 +1,19 @@
-import numpy as np
-import mdtraj as md
-from mdtraj.testing import eq
-from mdtraj.nmr.shift_wrappers import find_executable, SPARTA_PLUS, PPM, SHIFTX2
-import pytest
 import os
 
+import numpy as np
+import pytest
 
-@pytest.mark.skipif(not find_executable(SPARTA_PLUS),
-                    reason='SPARTA+ binary not found')
+import mdtraj as md
+from mdtraj.nmr.shift_wrappers import PPM, SHIFTX2, SPARTA_PLUS, find_executable
+from mdtraj.testing import eq
+
+
+@pytest.mark.skipif(
+    not find_executable(SPARTA_PLUS),
+    reason="SPARTA+ binary not found",
+)
 def test_spartaplus(get_fn):
-    t = md.load(get_fn('2EQQ.pdb'))
+    t = md.load(get_fn("2EQQ.pdb"))
     result = md.chemical_shifts_spartaplus(t)
 
     print(result)
@@ -19,10 +23,12 @@ def test_spartaplus(get_fn):
     #  1    E   HA     0.000     4.378     4.350     0.047     0.000     0.291
 
 
-@pytest.mark.skipif(not find_executable(PPM),
-                    reason='PPM binary not found')
+@pytest.mark.skipif(
+    not find_executable(PPM),
+    reason="PPM binary not found",
+)
 def test_ppm(get_fn):
-    t = md.load(get_fn('2EQQ.pdb'))
+    t = md.load(get_fn("2EQQ.pdb"))
     result = md.chemical_shifts_ppm(t)
 
     print(result)
@@ -30,13 +36,15 @@ def test_ppm(get_fn):
     eq(result.shape[1], 20)  # 2EQQ is NMR structure with 20 frames
     eq(float(result.ix[(2, "CA")][0]), 53.004, decimal=4)
     # taken from first entry in bb_details.dat, which looks like the following:
-    #       2     ASN   CA    999.000  53.004  51.168  51.802  53.081  54.098  52.820  52.379  51.856  53.034  52.754  54.134  54.222  51.210  52.207  50.824  54.459  53.605  54.211  53.688  52.344  53.004  51.168  51.802  53.081  54.098  52.820  52.379  51.856  53.034  52.754  54.134  54.222  51.210  52.207  50.824  54.459  53.605  54.211  53.688  52.344
+    #       2     ASN   CA    999.000  53.004  51.168  51.802  53.081  54.098  52.820  52.379  51.856  53.034  52.754  54.134  54.222  51.210  52.207  50.824  54.459  53.605  54.211  53.688  52.344  53.004  51.168  51.802  53.081  54.098  52.820  52.379  51.856  53.034  52.754  54.134  54.222  51.210  52.207  50.824  54.459  53.605  54.211  53.688  52.344  # noqa
 
 
-@pytest.mark.skipif((not find_executable(SHIFTX2)) or (os.environ.get('TRAVIS', '') == 'true'),
-                    reason='SHIFTX2 binary not found or running on travis.')
+@pytest.mark.skipif(
+    (not find_executable(SHIFTX2)) or (os.environ.get("TRAVIS", "") == "true"),
+    reason="SHIFTX2 binary not found or running on travis.",
+)
 def test_shiftx2(get_fn):
-    t = md.load(get_fn('2EQQ.pdb'))
+    t = md.load(get_fn("2EQQ.pdb"))
     result = md.chemical_shifts_shiftx2(t)
 
     print(result)
@@ -49,7 +57,7 @@ def test_shiftx2(get_fn):
 
 
 def test_2_scalar_couplings(get_fn):
-    t = md.load(get_fn('frame0.h5'))  # This is Alanine dipeptide
+    t = md.load(get_fn("frame0.h5"))  # This is Alanine dipeptide
     for model in ["Ruterjans1999", "Bax2007", "Bax1997"]:
         indices, J = md.compute_J3_HN_HA(t)
         eq(indices.shape, (1, 4))
@@ -64,7 +72,7 @@ def test_2_scalar_couplings(get_fn):
 
 
 def test_3_scalar_couplings(get_fn):
-    t = md.load(get_fn('1bpi.pdb'))
+    t = md.load(get_fn("1bpi.pdb"))
     for model in ["Bax2007"]:
         indices_HA, J_HA = md.compute_J3_HN_HA(t)
         indices_C, J_C = md.compute_J3_HN_C(t)

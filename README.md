@@ -41,7 +41,7 @@ Read, write and analyze MD trajectories with only a few lines of Python code.
 
 With MDTraj, you can
 
-- Read and write from **every MD format imaginable** (`pdb`, `xtc`, `trr`, `dcd`, `binpos`, `netcdf`, `mdcrd`, `prmtop`, `gsd`, ...)
+- Read and write from **every MD format imaginable** (`pdb`, `xtc`, `trr`, `dcd`, `netcdf`, `mdcrd`, `prmtop`, `gsd`, ...)
 - Run **blazingly** fast RMSD calculations (4x the speed of the original Theobald QCP).
 - Use tons of analysis functions like bonds/angles/dihedrals, hydrogen bonding identification, secondary structure assignment, NMR observables.
 - Use a **lightweight API**, with a focus on **speed** and vectorized operations.

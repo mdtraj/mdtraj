@@ -1,25 +1,11 @@
-##############################################################################
-# Imports
-##############################################################################
-
 import numpy as np
 
-import mdtraj as md
-from mdtraj.utils import ensure_type
-from mdtraj.geometry.hbond import _prep_kabsch_sander_arrays
 from mdtraj.geometry import _geometry
+from mdtraj.geometry.hbond import _prep_kabsch_sander_arrays
 
-##############################################################################
-# GLOBALS
-##############################################################################
+SIMPLIFIED_CODE_TRANSLATION = str.maketrans("HGIEBTS ", "HHHEECCC")
 
-SIMPLIFIED_CODE_TRANSLATION = str.maketrans('HGIEBTS ', 'HHHEECCC')
-__all__ = ['compute_dssp']
-
-
-##############################################################################
-# CODE
-##############################################################################
+__all__ = ["compute_dssp"]
 
 
 def compute_dssp(traj, simplified=True):
@@ -73,10 +59,15 @@ def compute_dssp(traj, simplified=True):
        features". Biopolymers 22 (12): 2577-637. doi:10.1002/bip.360221211
     """
     if traj.topology is None:
-        raise ValueError('kabsch_sander requires topology')
+        raise ValueError("kabsch_sander requires topology")
 
-    xyz, nco_indices, ca_indices, proline_indices, protein_indices \
-        = _prep_kabsch_sander_arrays(traj)
+    (
+        xyz,
+        nco_indices,
+        ca_indices,
+        proline_indices,
+        protein_indices,
+    ) = _prep_kabsch_sander_arrays(traj)
     chain_ids = np.array([r.chain.index for r in traj.top.residues], dtype=np.int32)
 
     value = _geometry._dssp(xyz, nco_indices, ca_indices, proline_indices, chain_ids)
@@ -86,8 +77,8 @@ def compute_dssp(traj, simplified=True):
     n_frames = xyz.shape[0]
     n_residues = nco_indices.shape[0]
 
-    array = np.fromiter(value, dtype=np.dtype('U2'))
+    array = np.fromiter(value, dtype=np.dtype("U2"))
 
     array = array.reshape(n_frames, n_residues)
-    array[:, np.logical_not(protein_indices)] = 'NA'
+    array[:, np.logical_not(protein_indices)] = "NA"
     return array

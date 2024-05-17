@@ -24,16 +24,8 @@
 in the HDF5 format.
 """
 
-##############################################################################
-# Imports
-##############################################################################
-
 from mdtraj.formats.hdf5 import HDF5TrajectoryFile
 from mdtraj.reporters.basereporter import _BaseReporter
-
-##############################################################################
-# Classes
-##############################################################################
 
 
 class HDF5Reporter(_BaseReporter):
@@ -93,17 +85,36 @@ class HDF5Reporter(_BaseReporter):
 
     >>> traj = mdtraj.trajectory.load('traj.lh5')
     """
+
     @property
     def backend(self):
         return HDF5TrajectoryFile
 
-    def __init__(self, file, reportInterval, coordinates=True, time=True,
-                 cell=True, potentialEnergy=True, kineticEnergy=True,
-                 temperature=True, velocities=False, atomSubset=None,
-                 enforcePeriodicBox=None):
-        """Create a HDF5Reporter.
-        """
-        super(HDF5Reporter, self).__init__(file, reportInterval,
-            coordinates, time, cell, potentialEnergy, kineticEnergy,
-            temperature, velocities, atomSubset,
-            enforcePeriodicBox)
+    def __init__(
+        self,
+        file,
+        reportInterval,
+        coordinates=True,
+        time=True,
+        cell=True,
+        potentialEnergy=True,
+        kineticEnergy=True,
+        temperature=True,
+        velocities=False,
+        atomSubset=None,
+        enforcePeriodicBox=None,
+    ):
+        """Create a HDF5Reporter."""
+        super().__init__(
+            file,
+            reportInterval,
+            coordinates,
+            time,
+            cell,
+            potentialEnergy,
+            kineticEnergy,
+            temperature,
+            velocities,
+            atomSubset,
+            enforcePeriodicBox,
+        )

@@ -21,20 +21,12 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
-
 import numpy as np
-from mdtraj.utils import ensure_type
+
 from mdtraj.geometry import _geometry, distance
-import warnings
+from mdtraj.utils import ensure_type
 
-__all__ = ['compute_angles']
-
-##############################################################################
-# Functions
-##############################################################################
+__all__ = ["compute_angles"]
 
 
 def compute_angles(traj, angle_indices, periodic=True, opt=True):
@@ -60,20 +52,46 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
     angles : np.ndarray, shape=[n_frames, n_angles], dtype=float
         The angles are in radians
     """
-    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz', shape=(None, None, 3), warn_on_cast=False)
-    triplets = ensure_type(angle_indices, dtype=np.int32, ndim=2, name='angle_indices', shape=(None, 3), warn_on_cast=False)
+    xyz = ensure_type(
+        traj.xyz,
+        dtype=np.float32,
+        ndim=3,
+        name="traj.xyz",
+        shape=(None, None, 3),
+        warn_on_cast=False,
+    )
+    triplets = ensure_type(
+        angle_indices,
+        dtype=np.int32,
+        ndim=2,
+        name="angle_indices",
+        shape=(None, 3),
+        warn_on_cast=False,
+    )
     if not np.all(np.logical_and(triplets < traj.n_atoms, triplets >= 0)):
-        raise ValueError('angle_indices must be between 0 and %d' % traj.n_atoms)
+        raise ValueError("angle_indices must be between 0 and %d" % traj.n_atoms)
 
     if len(triplets) == 0:
         return np.zeros((len(xyz), 0), dtype=np.float32)
 
     out = np.zeros((xyz.shape[0], triplets.shape[0]), dtype=np.float32)
     if periodic is True and traj._have_unitcell:
-        box = ensure_type(traj.unitcell_vectors, dtype=np.float32, ndim=3, name='unitcell_vectors', shape=(len(xyz), 3, 3))
+        box = ensure_type(
+            traj.unitcell_vectors,
+            dtype=np.float32,
+            ndim=3,
+            name="unitcell_vectors",
+            shape=(len(xyz), 3, 3),
+        )
         if opt:
             orthogonal = np.allclose(traj.unitcell_angles, 90)
-            _geometry._angle_mic(xyz, triplets, box.transpose(0, 2, 1).copy(), out, orthogonal)
+            _geometry._angle_mic(
+                xyz,
+                triplets,
+                box.transpose(0, 2, 1).copy(),
+                out,
+                orthogonal,
+            )
             return out
         else:
             _angle(traj, triplets, periodic, out)

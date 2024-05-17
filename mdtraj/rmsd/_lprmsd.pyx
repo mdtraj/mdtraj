@@ -26,14 +26,15 @@
 ##############################################################################
 import cython
 import numpy as np
-from mdtraj.utils import ensure_type
 import scipy.spatial.distance
+from mdtraj.utils import ensure_type
 
 cimport numpy as np
-from libcpp.vector cimport vector
-from libc.stdio cimport printf
 from cpython cimport bool
 from cython.parallel cimport prange
+from libc.stdio cimport printf
+from libcpp.vector cimport vector
+
 np.import_array()
 assert sizeof(np.int32_t) == sizeof(int)
 

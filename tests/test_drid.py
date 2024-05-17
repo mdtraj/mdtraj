@@ -1,8 +1,9 @@
-import mdtraj as md
 import numpy as np
 import scipy.special
-from mdtraj.geometry import compute_drid
 from scipy.spatial.distance import euclidean, pdist, squareform
+
+import mdtraj as md
+from mdtraj.geometry import compute_drid
 
 # To keep backwards compatibility
 try:
@@ -16,17 +17,19 @@ def test_drid_1():
     n_atoms = 20
     top = md.Topology()
     chain = top.add_chain()
-    residue = top.add_residue('X', chain)
+    residue = top.add_residue("X", chain)
     for i in range(n_atoms):
-        top.add_atom('X', None, residue)
+        top.add_atom("X", None, residue)
 
-    t = md.Trajectory(xyz=np.random.RandomState(0).randn(n_frames, n_atoms, 3),
-                      topology=top)
+    t = md.Trajectory(
+        xyz=np.random.RandomState(0).randn(n_frames, n_atoms, 3),
+        topology=top,
+    )
     # t contains no bonds
     got = compute_drid(t).reshape(n_frames, n_atoms, 3)
 
     for i in range(n_atoms):
-        others = set(range(n_atoms)) - set([i])
+        others = set(range(n_atoms)) - {i}
         rd = 1 / np.array([euclidean(t.xyz[0, i], t.xyz[0, e]) for e in others])
 
         mean = np.mean(rd)
@@ -43,9 +46,9 @@ def test_drid_2():
     n_bonds = 5
     top = md.Topology()
     chain = top.add_chain()
-    residue = top.add_residue('X', chain)
+    residue = top.add_residue("X", chain)
     for i in range(n_atoms):
-        top.add_atom('X', None, residue)
+        top.add_atom("X", None, residue)
 
     random = np.random.RandomState(0)
     bonds = random.randint(n_atoms, size=(n_bonds, 2))

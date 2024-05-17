@@ -1,0 +1,32 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+  - id: check-yaml
+  - id: end-of-file-fixer
+  - id: trailing-whitespace
+    exclude: '\.(pdb|gro|top|sdf)$'
+  - id: debug-statements
+- repo: https://github.com/asottile/add-trailing-comma
+  rev: v3.1.0
+  hooks:
+  - id: add-trailing-comma
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.3.4
+  hooks:
+    - id: ruff
+    - id: ruff-format
+- repo: https://github.com/nbQA-dev/nbQA
+  rev: 1.8.5
+  hooks:
+    - id: nbqa-pyupgrade
+      files: ^examples
+      args:
+        - --py39-plus
+    - id: nbqa-isort
+      files: ^examples
+- repo: https://github.com/kynan/nbstripout
+  rev: 0.7.1
+  hooks:
+    - id: nbstripout
+      files: ^examples

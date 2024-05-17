@@ -20,21 +20,13 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-
-##############################################################################
-# Imports
-##############################################################################
-
 import numpy as np
+
+from mdtraj.geometry import _geometry, compute_distances
 from mdtraj.utils import ensure_type
-from mdtraj.geometry import compute_distances, compute_angles
-from mdtraj.geometry import _geometry
 
-__all__ = ['wernet_nilsson', 'baker_hubbard', 'kabsch_sander']
+__all__ = ["wernet_nilsson", "baker_hubbard", "kabsch_sander"]
 
-##############################################################################
-# Functions
-##############################################################################
 
 def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
@@ -119,16 +111,26 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False
     angle_cutoff = 45
 
     if traj.topology is None:
-        raise ValueError('wernet_nilsson requires that traj contain topology '
-                         'information')
+        raise ValueError(
+            "wernet_nilsson requires that traj contain topology " "information",
+        )
 
     # Get the possible donor-hydrogen...acceptor triplets
-    bond_triplets = _get_bond_triplets(traj.topology,
-        exclude_water=exclude_water, sidechain_only=sidechain_only)
+    bond_triplets = _get_bond_triplets(
+        traj.topology,
+        exclude_water=exclude_water,
+        sidechain_only=sidechain_only,
+    )
 
     # Compute geometry
-    mask, distances, angles = _compute_bounded_geometry(traj, bond_triplets,
-        distance_cutoff, [0, 2], [2, 0, 1], periodic=periodic)
+    mask, distances, angles = _compute_bounded_geometry(
+        traj,
+        bond_triplets,
+        distance_cutoff,
+        [0, 2],
+        [2, 0, 1],
+        periodic=periodic,
+    )
 
     # Update triplets under consideration
     bond_triplets = bond_triplets.compress(mask, axis=0)
@@ -142,8 +144,15 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False
     return [bond_triplets.compress(present, axis=0) for present in presence]
 
 
-def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_only=False,
-                  distance_cutoff=0.25, angle_cutoff=120):
+def baker_hubbard(
+    traj,
+    freq=0.1,
+    exclude_water=True,
+    periodic=True,
+    sidechain_only=False,
+    distance_cutoff=0.25,
+    angle_cutoff=120,
+):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle.
 
@@ -168,11 +177,11 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_o
     sidechain_only : bool, default=False
         Set to True to only consider sidechain-sidechain interactions.
     distance_cutoff : float, default=0.25
-        Distance cutoff of Donor-H...Acceptor contact in nanometers. 
+        Distance cutoff of Donor-H...Acceptor contact in nanometers.
         The criterion employed is any contact that is shorter than the distance cutoff.
         with an distance_cutoff is accepted.
     angle_cutoff : float, default=120
-        Angle cutoff of the angle theta in degrees. 
+        Angle cutoff of the angle theta in degrees.
         The criterion employed is any contact with an angle theta greater than the
         angle_cutoff is accepted.
 
@@ -229,15 +238,26 @@ def baker_hubbard(traj, freq=0.1, exclude_water=True, periodic=True, sidechain_o
     angle_cutoff = np.radians(angle_cutoff)
 
     if traj.topology is None:
-        raise ValueError('baker_hubbard requires that traj contain topology '
-                         'information')
+        raise ValueError(
+            "baker_hubbard requires that traj contain topology " "information",
+        )
 
     # Get the possible donor-hydrogen...acceptor triplets
-    bond_triplets = _get_bond_triplets(traj.topology,
-        exclude_water=exclude_water, sidechain_only=sidechain_only)
+    bond_triplets = _get_bond_triplets(
+        traj.topology,
+        exclude_water=exclude_water,
+        sidechain_only=sidechain_only,
+    )
 
-    mask, distances, angles = _compute_bounded_geometry(traj, bond_triplets,
-        distance_cutoff, [1, 2], [0, 1, 2], freq=freq, periodic=periodic)
+    mask, distances, angles = _compute_bounded_geometry(
+        traj,
+        bond_triplets,
+        distance_cutoff,
+        [1, 2],
+        [0, 1, 2],
+        freq=freq,
+        periodic=periodic,
+    )
 
     # Find triplets that meet the criteria
     presence = np.logical_and(distances < distance_cutoff, angles > angle_cutoff)
@@ -258,7 +278,7 @@ def kabsch_sander(traj):
 
     .. math::
 
-        E = 0.42 \cdot 0.2 \cdot 33.2 kcal/(mol \cdot nm) * \\
+        E = 0.42 \\cdot 0.2 \\cdot 33.2 kcal/(mol \\cdot nm) * \\
             (1/r_{ON} + 1/r_{CH} - 1/r_{OH} - 1/r_{CN})
 
     Parameters
@@ -284,12 +304,15 @@ def kabsch_sander(traj):
 
     References
     ----------
-    .. [1] Kabsch W, Sander C (1983). "Dictionary of protein secondary structure: pattern recognition of hydrogen-bonded and geometrical features". Biopolymers 22 (12): 2577-637. doi:10.1002/bip.360221211
+    .. [1] Kabsch W, Sander C (1983). "Dictionary of protein secondary structure: pattern
+        recognition of hydrogen-bonded and geometrical features". Biopolymers 22 (12):
+        2577-637. doi:10.1002/bip.360221211
     """
     if traj.topology is None:
-        raise ValueError('kabsch_sander requires topology')
+        raise ValueError("kabsch_sander requires topology")
 
     import scipy.sparse
+
     xyz, nco_indices, ca_indices, proline_indices, _ = _prep_kabsch_sander_arrays(traj)
     n_residues = len(ca_indices)
 
@@ -298,14 +321,20 @@ def kabsch_sander(traj):
     hbonds.fill(-1)
     henergies.fill(np.nan)
 
-    _geometry._kabsch_sander(xyz, nco_indices, ca_indices, proline_indices,
-                             hbonds, henergies)
+    _geometry._kabsch_sander(
+        xyz,
+        nco_indices,
+        ca_indices,
+        proline_indices,
+        hbonds,
+        henergies,
+    )
 
     # The C code returns its info in a pretty inconvenient format.
     # Let's change it to a list of scipy CSR matrices.
 
     matrices = []
-    hbonds_mask = (hbonds != -1)
+    hbonds_mask = hbonds != -1
     for i in range(xyz.shape[0]):
         # appologies for this cryptic code -- we need to deal with the low
         # level aspects of the csr matrix format.
@@ -318,8 +347,12 @@ def kabsch_sander(traj):
         indices = hbonds_frame[mask].flatten()
         data = henergies_frame[mask].flatten()
 
-        matrices.append(scipy.sparse.csr_matrix(
-            (data, indices, indptr), shape=(n_residues, n_residues)).T)
+        matrices.append(
+            scipy.sparse.csr_matrix(
+                (data, indices, indptr),
+                shape=(n_residues, n_residues),
+            ).T,
+        )
 
     return matrices
 
@@ -337,13 +370,11 @@ def _get_bond_triplets(topology, exclude_water=True, sidechain_only=False):
 
     def get_donors(e0, e1):
         # Find all matching bonds
-        elems = set((e0, e1))
-        atoms = [(one, two) for one, two in topology.bonds
-            if set((one.element.symbol, two.element.symbol)) == elems]
+        elems = {e0, e1}
+        atoms = [(one, two) for one, two in topology.bonds if {one.element.symbol, two.element.symbol} == elems]
 
         # Filter non-participating atoms
-        atoms = [atom for atom in atoms
-            if can_participate(atom[0]) and can_participate(atom[1])]
+        atoms = [atom for atom in atoms if can_participate(atom[0]) and can_participate(atom[1])]
 
         # Get indices for the remaining atoms
         indices = []
@@ -361,14 +392,16 @@ def _get_bond_triplets(topology, exclude_water=True, sidechain_only=False):
     nbonds = 0
     for _bond in topology.bonds:
         nbonds += 1
-        break # Only need to find one hit for this check (not robust)
+        break  # Only need to find one hit for this check (not robust)
     if nbonds == 0:
-        raise ValueError('No bonds found in topology. Try using '
-                         'traj._topology.create_standard_bonds() to create bonds '
-                         'using our PDB standard bond definitions.')
-        
-    nh_donors = get_donors('N', 'H')
-    oh_donors = get_donors('O', 'H')
+        raise ValueError(
+            "No bonds found in topology. Try using "
+            "traj._topology.create_standard_bonds() to create bonds "
+            "using our PDB standard bond definitions.",
+        )
+
+    nh_donors = get_donors("N", "H")
+    oh_donors = get_donors("O", "H")
     xh_donors = np.array(nh_donors + oh_donors)
 
     if len(xh_donors) == 0:
@@ -376,9 +409,8 @@ def _get_bond_triplets(topology, exclude_water=True, sidechain_only=False):
         # no possible pairs and return nothing
         return np.zeros((0, 3), dtype=int)
 
-    acceptor_elements = frozenset(('O', 'N'))
-    acceptors = [a.index for a in topology.atoms
-        if a.element.symbol in acceptor_elements and can_participate(a)]
+    acceptor_elements = frozenset(("O", "N"))
+    acceptors = [a.index for a in topology.atoms if a.element.symbol in acceptor_elements and can_participate(a)]
 
     # Make acceptors a 2-D numpy array
     acceptors = np.array(acceptors)[:, np.newaxis]
@@ -389,19 +421,30 @@ def _get_bond_triplets(topology, exclude_water=True, sidechain_only=False):
     bond_triplets = np.hstack((xh_donors_repeated, acceptors_tiled))
 
     # Filter out self-bonds
-    self_bond_mask = (bond_triplets[:, 0] == bond_triplets[:, 2])
+    self_bond_mask = bond_triplets[:, 0] == bond_triplets[:, 2]
     return bond_triplets[np.logical_not(self_bond_mask), :]
 
 
-def _compute_bounded_geometry(traj, triplets, distance_cutoff, distance_indices,
-                              angle_indices, freq=0.0, periodic=True):
+def _compute_bounded_geometry(
+    traj,
+    triplets,
+    distance_cutoff,
+    distance_indices,
+    angle_indices,
+    freq=0.0,
+    periodic=True,
+):
     """
     Returns a tuple include (1) the mask for triplets that fulfill the distance
     criteria frequently enough, (2) the actual distances calculated, and (3) the
     angles between the triplets specified by angle_indices.
     """
     # First we calculate the requested distances
-    distances = compute_distances(traj, triplets[:, distance_indices], periodic=periodic)
+    distances = compute_distances(
+        traj,
+        triplets[:, distance_indices],
+        periodic=periodic,
+    )
 
     # Now we discover which triplets meet the distance cutoff often enough
     prevalence = np.mean(distances < distance_cutoff, axis=0)
@@ -420,13 +463,18 @@ def _compute_bounded_geometry(traj, triplets, distance_cutoff, distance_indices,
         if set(abc_pair) == set(distance_indices):
             abc_distances.append(distances)
         else:
-            abc_distances.append(compute_distances(traj, triplets[:, abc_pair],
-                periodic=periodic))
+            abc_distances.append(
+                compute_distances(
+                    traj,
+                    triplets[:, abc_pair],
+                    periodic=periodic,
+                ),
+            )
 
     # Law of cosines calculation
     a, b, c = abc_distances
-    cosines = (a ** 2 + b ** 2 - c ** 2) / (2 * a * b)
-    np.clip(cosines, -1, 1, out=cosines) # avoid NaN error
+    cosines = (a**2 + b**2 - c**2) / (2 * a * b)
+    np.clip(cosines, -1, 1, out=cosines)  # avoid NaN error
     angles = np.arccos(cosines)
 
     return mask, distances, angles
@@ -440,18 +488,26 @@ def _get_or_minus1(f):
 
 
 def _prep_kabsch_sander_arrays(traj):
-    xyz = ensure_type(traj.xyz, dtype=np.float32, ndim=3, name='traj.xyz',
-                      shape=(None, None, 3), warn_on_cast=False)
+    xyz = ensure_type(
+        traj.xyz,
+        dtype=np.float32,
+        ndim=3,
+        name="traj.xyz",
+        shape=(None, None, 3),
+        warn_on_cast=False,
+    )
 
     ca_indices, nco_indices, is_proline, is_protein = [], [], [], []
     for residue in traj.topology.residues:
-        ca = _get_or_minus1(lambda: [a.index for a in residue.atoms if a.name == 'CA'][0])
-        n = _get_or_minus1(lambda: [a.index for a in residue.atoms if a.name == 'N'][0])
-        c = _get_or_minus1(lambda: [a.index for a in residue.atoms if a.name == 'C'][0])
-        o = _get_or_minus1(lambda: [a.index for a in residue.atoms if a.name == 'O'][0])
+        ca = _get_or_minus1(
+            lambda: [a.index for a in residue.atoms if a.name == "CA"][0],
+        )
+        n = _get_or_minus1(lambda: [a.index for a in residue.atoms if a.name == "N"][0])
+        c = _get_or_minus1(lambda: [a.index for a in residue.atoms if a.name == "C"][0])
+        o = _get_or_minus1(lambda: [a.index for a in residue.atoms if a.name == "O"][0])
 
         ca_indices.append(ca)
-        is_proline.append(residue.name == 'PRO')
+        is_proline.append(residue.name == "PRO")
         nco_indices.append([n, c, o])
         is_protein.append(ca != -1 and n != -1 and c != -1 and o != -1)
 

@@ -1,13 +1,13 @@
+import contextlib
 import os
-import time
 import shutil
 import tempfile
-import contextlib
+import time
 
 __all__ = ["timing", "enter_temp_directory"]
 
 
-class timing(object):
+class timing:
     """A timing context manager
 
     Examples
@@ -17,20 +17,21 @@ class timing(object):
     ...     long_function()
     long_function: 0.000 seconds
     """
-    def __init__(self, name='block'):
+
+    def __init__(self, name="block"):
         self.name = name
         self.time = 0
         self.start = None
         self.end = None
-    
+
     def __enter__(self):
         self.start = time.time()
         return self
-    
+
     def __exit__(self, ty, val, tb):
         self.end = time.time()
         self.time = self.end - self.start
-        print("%s: %0.3f seconds" % (self.name, self.time))
+        print(f"{self.name}: {self.time:0.3f} seconds")
         return False
 
 

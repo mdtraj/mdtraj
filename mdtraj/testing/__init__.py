@@ -20,5 +20,6 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-from mdtraj.testing.testing import *
+
 from mdtraj.testing.docstrings import *
+from mdtraj.testing.testing import *

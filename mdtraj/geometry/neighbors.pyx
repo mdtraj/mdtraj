@@ -26,8 +26,8 @@
 ##############################################################################
 
 import numpy as np
-from mdtraj.utils import ensure_type
 from mdtraj.geometry import _geometry
+from mdtraj.utils import ensure_type
 
 from libcpp.vector cimport vector
 
@@ -126,4 +126,3 @@ def compute_neighbors(traj, cutoff, query_indices, haystack_indices=None,
             results.append(np.empty(0, dtype=int))
 
     return results
-

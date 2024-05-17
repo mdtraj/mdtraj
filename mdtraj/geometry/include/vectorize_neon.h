@@ -181,7 +181,7 @@ public:
  */
 class ivec4 {
 public:
-    
+
     int32x4_t val;
 
     ivec4() {}
