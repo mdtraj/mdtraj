@@ -31,7 +31,8 @@ import os
 import numpy as np
 
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils.validation import cast_indices, ensure_type, in_units_of
+from mdtraj.utils.unit import in_units_of
+from mdtraj.utils.validation import cast_indices, ensure_type
 
 __all__ = ["LAMMPSTrajectoryFile", "load_lammpstrj"]
 
