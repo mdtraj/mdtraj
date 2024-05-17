@@ -84,18 +84,14 @@ class SiPrefix:
                     'Unit prefix "%s" can only be with simple Units containing one component.' % self.prefix,
                 )
             if 1 != base_units[0][1]:
-                raise TypeError(
-                    'Unit prefix "%s" can only be with simple Units with an exponent of 1.' % self.prefix,
-                )
+                raise TypeError('Unit prefix "%s" can only be with simple Units with an exponent of 1.' % self.prefix)
             base_unit = base_units[0][0]
             # Delegate to Base or Scaled Unit multiply
             new_base_unit = self * base_unit
             new_unit = Unit({new_base_unit: 1.0})
             return new_unit
         else:
-            raise TypeError(
-                'Unit prefix "%s" can only be applied to a Unit, BaseUnit, or ScaledUnit.' % self.prefix,
-            )
+            raise TypeError('Unit prefix "%s" can only be applied to a Unit, BaseUnit, or ScaledUnit.' % self.prefix)
 
 
 yotto = SiPrefix("yotto", 1e-24, "y")

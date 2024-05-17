@@ -66,9 +66,7 @@ def _unit_class_rdiv(self, other):
     of the inverse of self.
     """
     if is_unit(other):
-        raise NotImplementedError(
-            "programmer is surprised __rtruediv__ was called instead of __truediv__",
-        )
+        raise NotImplementedError("programmer is surprised __rtruediv__ was called instead of __truediv__")
     else:
         # print "R scalar / unit"
         unit = pow(self, -1.0)

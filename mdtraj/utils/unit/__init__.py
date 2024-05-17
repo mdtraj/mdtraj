@@ -36,6 +36,7 @@ import sys
 
 import numpy as np
 
+from mdtraj.utils import import_
 from mdtraj.utils.unit import unit_definitions
 from mdtraj.utils.unit.quantity import Quantity
 
@@ -74,7 +75,7 @@ class _UnitContext(ast.NodeTransformer):
             raise ValueError(
                 "Invalid unit expression. Contains dissallowed " "operation %s" % node.__class__.__name__,
             )
-        return super().visit(node)
+        return super(_UnitContext, self).visit(node)
 
     def visit_Name(self, node):
         # we want to prefix all names to look like unit.nanometers instead
@@ -182,9 +183,7 @@ def in_units_of(quantity, units_in, units_out, inplace=False):
         units_out = _str_to_unit(units_out)
 
     if not units_in.is_compatible(units_out):
-        raise TypeError(
-            f'Unit "{units_in}" is not compatible with Unit "{units_out}".',
-        )
+        raise TypeError('Unit "%s" is not compatible with Unit "%s".' % (units_in, units_out))
 
     factor = units_in.conversion_factor_to(units_out)
     if inplace and (isinstance(quantity, np.ndarray) and quantity.flags["WRITEABLE"]):

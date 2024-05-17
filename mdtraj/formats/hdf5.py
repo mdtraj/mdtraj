@@ -25,6 +25,10 @@ This module implements the MDTraj HDF5 format described at
 https://github.com/mdtraj/mdtraj/wiki/HDF5-Trajectory-Format
 """
 
+##############################################################################
+# Imports
+##############################################################################
+
 import operator
 import os
 import warnings
@@ -35,14 +39,16 @@ try:
 except ImportError:
     import json
 
+# 3rd party
 import numpy as np
 
 import mdtraj.core.element as elem
+
+# ours
 from mdtraj import version
 from mdtraj.core.topology import Topology
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils import cast_indices, ensure_type, import_
-from mdtraj.utils.unit import in_units_of
+from mdtraj.utils import cast_indices, ensure_type, import_, in_units_of
 
 __all__ = ["HDF5TrajectoryFile", "load_hdf5"]
 
@@ -60,6 +66,10 @@ Frames = namedtuple(
         "alchemicalLambda",
     ],
 )
+
+##############################################################################
+# Code
+##############################################################################
 
 
 @FormatRegistry.register_loader(".h5")
@@ -115,11 +125,7 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
             n_frames = 1
         else:
             n_frames = None
-        return f.read_as_traj(
-            n_frames=n_frames,
-            stride=stride,
-            atom_indices=atom_indices,
-        )
+        return f.read_as_traj(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
 
 
 @FormatRegistry.register_fileobject(".h5")
@@ -279,36 +285,20 @@ class HDF5TrajectoryFile:
 
         topology = Topology()
 
-        for chain_dict in sorted(
-            topology_dict["chains"],
-            key=operator.itemgetter("index"),
-        ):
+        for chain_dict in sorted(topology_dict["chains"], key=operator.itemgetter("index")):
             chain = topology.add_chain()
-            for residue_dict in sorted(
-                chain_dict["residues"],
-                key=operator.itemgetter("index"),
-            ):
+            for residue_dict in sorted(chain_dict["residues"], key=operator.itemgetter("index")):
                 try:
                     resSeq = residue_dict["resSeq"]
                 except KeyError:
                     resSeq = None
-                    warnings.warn(
-                        "No resSeq information found in HDF file, defaulting to zero-based indices",
-                    )
+                    warnings.warn("No resSeq information found in HDF file, defaulting to zero-based indices")
                 try:
                     segment_id = residue_dict["segmentID"]
                 except KeyError:
                     segment_id = ""
-                residue = topology.add_residue(
-                    residue_dict["name"],
-                    chain,
-                    resSeq=resSeq,
-                    segment_id=segment_id,
-                )
-                for atom_dict in sorted(
-                    residue_dict["atoms"],
-                    key=operator.itemgetter("index"),
-                ):
+                residue = topology.add_residue(residue_dict["name"], chain, resSeq=resSeq, segment_id=segment_id)
+                for atom_dict in sorted(residue_dict["atoms"], key=operator.itemgetter("index")):
                     try:
                         element = elem.get_by_symbol(atom_dict["element"])
                     except KeyError:
@@ -543,25 +533,12 @@ class HDF5TrajectoryFile:
         if atom_indices is not None:
             topology = topology.subset(atom_indices)
 
-        # initial frame index
-        _ = int(self._frame_index)
-
         data = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
         if len(data) == 0:
             return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
 
-        in_units_of(
-            data.coordinates,
-            self.distance_unit,
-            Trajectory._distance_unit,
-            inplace=True,
-        )
-        in_units_of(
-            data.cell_lengths,
-            self.distance_unit,
-            Trajectory._distance_unit,
-            inplace=True,
-        )
+        in_units_of(data.coordinates, self.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(data.cell_lengths, self.distance_unit, Trajectory._distance_unit, inplace=True)
 
         return Trajectory(
             xyz=data.coordinates,
@@ -615,11 +592,7 @@ class HDF5TrajectoryFile:
             stride = int(stride)
 
         total_n_frames = len(self._handle.root.coordinates)
-        frame_slice = slice(
-            self._frame_index,
-            min(self._frame_index + n_frames, total_n_frames),
-            stride,
-        )
+        frame_slice = slice(self._frame_index, min(self._frame_index + n_frames, total_n_frames), stride)
         if frame_slice.stop - frame_slice.start == 0:
             return []
 
@@ -667,37 +640,17 @@ class HDF5TrajectoryFile:
                 can_be_none=False,
             ),
             time=get_field("time", frame_slice, out_units="picoseconds"),
-            cell_lengths=get_field(
-                "cell_lengths",
-                (frame_slice, slice(None)),
-                out_units="nanometers",
-            ),
-            cell_angles=get_field(
-                "cell_angles",
-                (frame_slice, slice(None)),
-                out_units="degrees",
-            ),
+            cell_lengths=get_field("cell_lengths", (frame_slice, slice(None)), out_units="nanometers"),
+            cell_angles=get_field("cell_angles", (frame_slice, slice(None)), out_units="degrees"),
             velocities=get_field(
                 "velocities",
                 (frame_slice, atom_slice, slice(None)),
                 out_units="nanometers/picosecond",
             ),
-            kineticEnergy=get_field(
-                "kineticEnergy",
-                frame_slice,
-                out_units="kilojoules_per_mole",
-            ),
-            potentialEnergy=get_field(
-                "potentialEnergy",
-                frame_slice,
-                out_units="kilojoules_per_mole",
-            ),
+            kineticEnergy=get_field("kineticEnergy", frame_slice, out_units="kilojoules_per_mole"),
+            potentialEnergy=get_field("potentialEnergy", frame_slice, out_units="kilojoules_per_mole"),
             temperature=get_field("temperature", frame_slice, out_units="kelvin"),
-            alchemicalLambda=get_field(
-                "lambda",
-                frame_slice,
-                out_units="dimensionless",
-            ),
+            alchemicalLambda=get_field("lambda", frame_slice, out_units="dimensionless"),
         )
 
         self._frame_index += frame_slice.stop - frame_slice.start

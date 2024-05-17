@@ -24,6 +24,9 @@
 Code to delay the import of a moldule, and give a nice error message if
 the module is not installed. for dealing with dependencies.
 """
+##############################################################################
+# imports
+##############################################################################
 
 import importlib
 import inspect
@@ -32,6 +35,10 @@ import sys
 import textwrap
 
 __all__ = ["import_"]
+
+##############################################################################
+# globals
+##############################################################################
 
 MESSAGES = {
     "networkx": """
@@ -78,9 +85,8 @@ MESSAGES = {
     netcdf4-python also depends on the C-language HDF5 and NetCDF libraries.
     For detailed installation instructions, visit
     https://unidata.github.io/netcdf4-python/#quick-install
-    ''',
-
-    'openmm.unit': '''
+    """,
+    "openmm.unit": """
     The code at {filename}:{line_number} requires the openmm.unit module,
     which is a python package for unit conversion.
 
@@ -163,24 +169,17 @@ def import_(module):
             message = MESSAGES[module]
         except KeyError:
             message = "The code at {filename}:{line_number} requires the " + module + " package"
-            error = ImportError("No module named %s" % module)
+            e = ImportError("No module named %s" % module)
 
-        (
-            frame,
-            filename,
-            line_number,
-            function_name,
-            lines,
-            index,
-        ) = inspect.getouterframes(inspect.currentframe())[1]
+        frame, filename, line_number, function_name, lines, index = inspect.getouterframes(inspect.currentframe())[1]
 
-        message = message.format(filename=os.path.basename(filename), line_number=line_number)
-        message = textwrap.dedent(message)
+        m = message.format(filename=os.path.basename(filename), line_number=line_number)
+        m = textwrap.dedent(m)
 
-        bar = "\033[91m" + "#" * max(len(line) for line in message.split(os.linesep)) + "\033[0m"
+        bar = "\033[91m" + "#" * max(len(line) for line in m.split(os.linesep)) + "\033[0m"
 
         print("", file=sys.stderr)
         print(bar, file=sys.stderr)
-        print(message, file=sys.stderr)
+        print(m, file=sys.stderr)
         print(bar, file=sys.stderr)
-        raise ImportError(message) from error
+        raise ImportError(m)

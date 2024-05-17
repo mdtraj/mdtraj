@@ -1,3 +1,4 @@
+import time
 import warnings
 
 from mdtraj.utils.contextmanagers import enter_temp_directory, timing
@@ -17,7 +18,6 @@ __all__ = [
     "import_",
     "in_units_of",
     "lengths_and_angles_to_box_vectors",
-    "lengths_and_angles_to_tilt_factors",
     "box_vectors_to_lengths_and_angles",
     "tilt_factors_to_angles",
     "ilen",
@@ -29,7 +29,6 @@ __all__ = [
     "enter_temp_directory",
     "timing",
     "deprecated",
-    "open_maybe_zipped",
 ]
 
 
@@ -127,7 +126,7 @@ class deprecated:
     def _update_doc(self, olddoc):
         newdoc = "DEPRECATED"
         if self.extra:
-            newdoc = f"{newdoc}: {self.extra}"
+            newdoc = "%s: %s" % (newdoc, self.extra)
         if olddoc:
-            newdoc = f"{newdoc}\n\n{olddoc}"
+            newdoc = "%s\n\n%s" % (newdoc, olddoc)
         return newdoc
