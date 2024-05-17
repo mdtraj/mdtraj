@@ -3,8 +3,8 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-Current Development
--------------------
+v1.10.0rc1 (May 17, 2024)
+-------------------------
 
 - Remove TNG support (#1875)
 - Drop support for long-unsupported upstreams (#1838)
