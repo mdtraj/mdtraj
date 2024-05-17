@@ -216,7 +216,7 @@ def shrake_rupley(
         for what atoms the SASA is computed. E.g. you can pass a lipid-embedded
         protein (s.t. the lipids are considered blockers) but only compute
         SASA for the protein using atom_selection = traj.top.select("protein").
-        The excluded atoms/residues get a SASA value 0
+        The excluded atoms/residues get a SASA value -1.
 
     Returns
     -------
@@ -287,9 +287,11 @@ def shrake_rupley(
 
     if atom_indices is None:
         atom_selection_mask = np.ones(traj.n_atoms, dtype=np.int32)
+        out = np.zeros((xyz.shape[0], dim1), dtype=np.float32)
     else:
-
         atom_selection_mask = np.array([[1 if ii in atom_indices else 0][0] for ii in range(traj.n_atoms)], dtype=np.int32)
+        out = np.full((xyz.shape[0], dim1), -1, dtype=np.float32)
+        out[:,atom_mapping[atom_indices]]=0
 
     modified_radii = {}
     if change_radii is not None:
@@ -299,7 +301,6 @@ def shrake_rupley(
         for k, v in change_radii.items():
             modified_radii[k] = v
 
-    out = np.zeros((xyz.shape[0], dim1), dtype=np.float32)
     if bool(modified_radii):
         atom_radii = [modified_radii[atom.element.symbol] for atom in traj.topology.atoms]
     else:
