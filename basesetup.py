@@ -392,7 +392,7 @@ class build_ext(_build_ext):
 
         try:
             # This might fail if no match in editable mode.
-            src_tree_output_dir.group(1)
+            src_tree_output_dir = src_tree_output_dir.group(1)
             if not os.path.exists(src_tree_output_dir):
                 os.makedirs(src_tree_output_dir)
         except AttributeError:
