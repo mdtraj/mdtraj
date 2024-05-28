@@ -306,7 +306,7 @@ metadata = dict(
     packages=find_packages(),
     cmdclass={"build_ext": build_ext},
     install_requires=[
-        "numpy>=1.6",
+        "numpy>=1.23,<2.0.0a0",
         "scipy",
         "astunparse",
         "pyparsing",
