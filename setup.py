@@ -310,6 +310,7 @@ metadata = dict(
         "scipy",
         "astunparse",
         "pyparsing",
+        "packaging",
     ],
     package_data={"mdtraj.formats.pdb": ["data/*"]},
     zip_safe=False,
