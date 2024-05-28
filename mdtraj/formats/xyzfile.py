@@ -21,34 +21,25 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
-
-from __future__ import print_function, division
-
-from datetime import date
 import itertools
 import os
+from datetime import date
 
 import numpy as np
 
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils import (cast_indices, in_units_of, ensure_type,
-                          open_maybe_zipped)
-from mdtraj.utils.six import string_types
-from mdtraj.utils.six.moves import xrange
+from mdtraj.utils import cast_indices, ensure_type, in_units_of, open_maybe_zipped
 from mdtraj.version import version
 
-__all__ = ['XYZTrajectoryFile', 'load_xyz']
+__all__ = ["XYZTrajectoryFile", "load_xyz"]
 
 
 class _EOF(IOError):
     pass
 
 
-@FormatRegistry.register_loader('.xyz')
-@FormatRegistry.register_loader('.xyz.gz')
+@FormatRegistry.register_loader(".xyz")
+@FormatRegistry.register_loader(".xyz.gz")
 def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load a xyz trajectory file.
 
@@ -87,7 +78,7 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.XYZTrajectoryFile :  Low level interface to xyz files
     """
-    from mdtraj.core.trajectory import _parse_topology, Trajectory
+    from mdtraj.core.trajectory import _parse_topology
 
     # We make `top` required. Although this is a little weird, its good because
     # this function is usually called by a dispatch from load(), where top comes
@@ -96,9 +87,10 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_xyz')
 
-    if not isinstance(filename, (string_types, os.PathLike)):
-        raise TypeError('filename must be of type path-like for load_xyz. '
-                        'you supplied %s'.format(type(filename)))
+    if not isinstance(filename, (str, os.PathLike)):
+        raise TypeError(
+            "filename must be of type path-like for load_xyz. " "you supplied %s",
+        )
 
     topology = _parse_topology(top)
     atom_indices = cast_indices(atom_indices)
@@ -109,13 +101,17 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
             n_frames = 1
         else:
             n_frames = None
-        return f.read_as_traj(topology, n_frames=n_frames, stride=stride,
-                              atom_indices=atom_indices)
+        return f.read_as_traj(
+            topology,
+            n_frames=n_frames,
+            stride=stride,
+            atom_indices=atom_indices,
+        )
 
 
-@FormatRegistry.register_fileobject('.xyz')
-@FormatRegistry.register_fileobject('.xyz.gz')
-class XYZTrajectoryFile(object):
+@FormatRegistry.register_fileobject(".xyz")
+@FormatRegistry.register_fileobject(".xyz.gz")
+class XYZTrajectoryFile:
     """Interface for reading and writing to xyz files.
 
     This is a file-like object, that both reading or writing depending
@@ -134,10 +130,10 @@ class XYZTrajectoryFile(object):
         exists on disk, should we overwrite it?
     """
 
-    distance_unit = 'angstroms'
+    distance_unit = "angstroms"
 
-    def __init__(self, filename, mode='r', force_overwrite=True):
-        """Open a xyz file for reading/writing. """
+    def __init__(self, filename, mode="r", force_overwrite=True):
+        """Open a xyz file for reading/writing."""
         self._is_open = False
         self._filename = filename
         self._mode = mode
@@ -147,18 +143,19 @@ class XYZTrajectoryFile(object):
         # when reporting errors to the user to say what line it occured on.
         self._line_counter = 0
 
-        if mode == 'r':
-            self._fh = open_maybe_zipped(filename, 'r')
+        if mode == "r":
+            self._fh = open_maybe_zipped(filename, "r")
             self._is_open = True
-        elif mode == 'w':
-            self._fh = open_maybe_zipped(filename, 'w', force_overwrite)
+        elif mode == "w":
+            self._fh = open_maybe_zipped(filename, "w", force_overwrite)
             self._is_open = True
         else:
-            raise ValueError('mode must be one of "r" or "w". '
-                             'you supplied "{0}"'.format(mode))
+            raise ValueError(
+                'mode must be one of "r" or "w". ' f'you supplied "{mode}"',
+            )
 
     def close(self):
-        """Close the xyz file. """
+        """Close the xyz file."""
         if self._is_open:
             self._fh.close()
             self._is_open = False
@@ -167,11 +164,11 @@ class XYZTrajectoryFile(object):
         self.close()
 
     def __enter__(self):
-        """Support the context manager protocol. """
+        """Support the context manager protocol."""
         return self
 
     def __exit__(self, *exc_info):
-        """Support the context manager protocol. """
+        """Support the context manager protocol."""
         self.close()
 
     def read_as_traj(self, topology, n_frames=None, stride=None, atom_indices=None):
@@ -197,6 +194,7 @@ class XYZTrajectoryFile(object):
             A trajectory object containing the loaded portion of the file.
         """
         from mdtraj.core.trajectory import Trajectory
+
         if atom_indices is not None:
             topology = topology.subset(atom_indices)
 
@@ -209,7 +207,7 @@ class XYZTrajectoryFile(object):
 
         if stride is None:
             stride = 1
-        time = (stride*np.arange(len(xyz))) + initial
+        time = (stride * np.arange(len(xyz))) + initial
         return Trajectory(xyz=xyz, topology=topology, time=time)
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
@@ -230,14 +228,15 @@ class XYZTrajectoryFile(object):
         -------
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=np.float32
         """
-        if not self._mode == 'r':
-            raise ValueError('read() is only available when file is opened '
-                             'in mode="r"')
+        if not self._mode == "r":
+            raise ValueError(
+                "read() is only available when file is opened " 'in mode="r"',
+            )
 
         if n_frames is None:
             frame_counter = itertools.count()
         else:
-            frame_counter = xrange(n_frames)
+            frame_counter = range(n_frames)
 
         if stride is None:
             stride = 1
@@ -264,10 +263,10 @@ class XYZTrajectoryFile(object):
         return all_coords
 
     def _read(self):
-        """Read a single frame. """
+        """Read a single frame."""
 
         first = self._fh.readline()  # Number of atoms.
-        if first == '':
+        if first == "":
             raise _EOF()
         else:
             self._n_atoms = int(first)
@@ -277,19 +276,20 @@ class XYZTrajectoryFile(object):
         xyz = np.empty(shape=(self._n_atoms, 3))
         types = np.empty(shape=self._n_atoms, dtype=str)
 
-        for i in xrange(self._n_atoms):
+        for i in range(self._n_atoms):
             line = self._fh.readline()
-            if line == '':
+            if line == "":
                 raise _EOF()
             split_line = line.split()
             try:
                 types[i] = split_line[0]
                 xyz[i] = [float(x) for x in split_line[1:4]]
             except Exception:
-                raise IOError('xyz parse error on line {0:d} of "{1:s}". '
-                              'This file does not appear to be a valid '
-                              'xyz file.'.format(
-                        self._line_counter,  self._filename))
+                raise OSError(
+                    f'xyz parse error on line {self._line_counter:d} of "{self._filename:s}". '
+                    "This file does not appear to be a valid "
+                    "xyz file.",
+                )
             self._line_counter += 1
         # --- end body ---
 
@@ -308,24 +308,35 @@ class XYZTrajectoryFile(object):
             The type of each particle.
         """
 
-        if not self._mode == 'w':
-            raise ValueError('write() is only available when file is opened '
-                             'in mode="w"')
+        if not self._mode == "w":
+            raise ValueError(
+                "write() is only available when file is opened " 'in mode="w"',
+            )
 
         if not types:
             # Make all particles the same type.
-            types = ['X' for _ in xrange(xyz.shape[1])]
-        xyz = ensure_type(xyz, np.float32, 3, 'xyz', can_be_none=False,
-                        shape=(None, None, 3), warn_on_cast=False,
-                        add_newaxis_on_deficient_ndim=True)
+            types = ["X" for _ in range(xyz.shape[1])]
+        xyz = ensure_type(
+            xyz,
+            np.float32,
+            3,
+            "xyz",
+            can_be_none=False,
+            shape=(None, None, 3),
+            warn_on_cast=False,
+            add_newaxis_on_deficient_ndim=True,
+        )
 
         for i in range(xyz.shape[0]):
-            self._fh.write('{0}\n'.format(xyz.shape[1]))
-            self._fh.write("Created with MDTraj {0}, {1}\n".format(version, str(date.today())))
+            self._fh.write(f"{xyz.shape[1]}\n")
+            self._fh.write(
+                f"Created with MDTraj {version}, {str(date.today())}\n",
+            )
 
             for j, coord in enumerate(xyz[i]):
-                self._fh.write('{0} {1:8.3f} {2:8.3f} {3:8.3f}\n'.format(
-                    types[j], coord[0], coord[1], coord[2]))
+                self._fh.write(
+                    f"{types[j]} {coord[0]:8.3f} {coord[1]:8.3f} {coord[2]:8.3f}\n",
+                )
 
     def seek(self, offset, whence=0):
         """Move to a new file position.
@@ -340,7 +351,7 @@ class XYZTrajectoryFile(object):
             2: move relative to the end of file, offset should be <= 0.
             Seeking beyond the end of a file is not supported
         """
-        if self._mode == 'r':
+        if self._mode == "r":
             advance, absolute = None, None
             if whence == 0 and offset >= 0:
                 if offset >= self._frame_index:
@@ -352,16 +363,16 @@ class XYZTrajectoryFile(object):
             elif whence == 1 and offset < 0:
                 absolute = offset + self._frame_index
             elif whence == 2 and offset <= 0:
-                raise NotImplementedError('offsets from the end are not supported yet')
+                raise NotImplementedError("offsets from the end are not supported yet")
             else:
-                raise IOError('Invalid argument')
+                raise OSError("Invalid argument")
 
             if advance is not None:
                 for i in range(advance):
                     self._read()  # advance and throw away these frames
             elif absolute is not None:
                 self._fh.close()
-                self._fh = open(self._filename, 'r')
+                self._fh = open(self._filename)
                 self._frame_index = 0
                 self._line_counter = 0
                 for i in range(absolute):
@@ -370,7 +381,7 @@ class XYZTrajectoryFile(object):
                 raise RuntimeError()
 
         else:
-            raise NotImplementedError('offsets in write mode are not supported yet')
+            raise NotImplementedError("offsets in write mode are not supported yet")
 
     def tell(self):
         """Current file position.
@@ -383,11 +394,11 @@ class XYZTrajectoryFile(object):
         return int(self._frame_index)
 
     def __len__(self):
-        """Number of frames in the file. """
-        if str(self._mode) != 'r':
+        """Number of frames in the file."""
+        if str(self._mode) != "r":
             raise NotImplementedError('len() only available in mode="r" currently')
         if not self._is_open:
-            raise ValueError('I/O operation on closed file')
+            raise ValueError("I/O operation on closed file")
         if self._n_frames is None:
             with open(self._filename) as fh:
                 n_atoms = int(fh.readline())

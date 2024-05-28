@@ -25,23 +25,23 @@
 ###############################################################################
 # Imports
 ###############################################################################
-from __future__ import print_function
-
 import os
 import warnings
 import xdrlib
+
 import numpy as np
+
 cimport numpy as np
+
 np.import_array()
 
-from mdtraj.utils import ensure_type, cast_indices, in_units_of
-from mdtraj.utils.six import string_types
 from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils import cast_indices, ensure_type, in_units_of
 
 cimport xdrlib
 
-from libc.stdio cimport SEEK_SET, SEEK_CUR
 from libc.math cimport ceil
+from libc.stdio cimport SEEK_CUR, SEEK_SET
 
 ctypedef np.npy_int64   int64_t
 
@@ -158,7 +158,7 @@ def load_xtc(filename, top=None, stride=None, atom_indices=None, frame=None):
     if top is None:
         raise ValueError('"top" argument is required for load_xtc')
 
-    if not isinstance(filename, (string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type path-like for load_xtc. '
                         'you supplied %s' % type(filename))
 

@@ -14,23 +14,24 @@ Example Usage
    from simtk.openmm.app import *
    from simtk.openmm import *
    from simtk.unit import *
-   from mdtraj.reporters import NetCDFReporter         # <-- new import from mdtraj
+   from mdtraj.reporters import NetCDFReporter  # <-- new import from mdtraj
 
-   pdb = PDBFile('input.pdb')
-   forcefield = ForceField('amber99sb.xml', 'tip3p.xml')
-   system = forcefield.createSystem(pdb.topology, nonbondedMethod=PME,
-                                    nonbondedCutoff=1*nanometer, constraints=HBonds)
-   integrator = LangevinIntegrator(300*kelvin, 1/picosecond, 0.002*picoseconds)
+   pdb = PDBFile("input.pdb")
+   forcefield = ForceField("amber99sb.xml", "tip3p.xml")
+   system = forcefield.createSystem(
+       pdb.topology, nonbondedMethod=PME, nonbondedCutoff=1 * nanometer, constraints=HBonds
+   )
+   integrator = LangevinIntegrator(300 * kelvin, 1 / picosecond, 0.002 * picoseconds)
    simulation = Simulation(pdb.topology, system, integrator)
    simulation.context.setPositions(pdb.positions)
    simulation.minimizeEnergy()
-   simulation.reporters.append(NetCDFReporter('output.nc', 1000))   # <-- AMBER compatible
+   simulation.reporters.append(NetCDFReporter("output.nc", 1000))  # <-- AMBER compatible
    simulation.step(10000)
 
 .. currentmodule:: mdtraj.reporters
 .. autosummary::
     :toctree: generated/
-    
+
     HDF5Reporter
     NetCDFReporter
     DCDReporter

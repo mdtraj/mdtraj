@@ -33,7 +33,7 @@ Other Formats
 ~~~~~~~~~~~~~
 
 Currently, MDTraj is able to read and write trajectories in DCD, XTC,
-TRR, BINPOS, and AMBER NetCDF formats, in addition to HDF5. This
+TRR, and AMBER NetCDF formats, in addition to HDF5. This
 presents an opportunity to compare these formats and see how they fit
 our design goals. The most space efficient is XTC, because it uses 16 bit
 fixed precision encoding. For some reason, the XTC read times are quite
@@ -246,7 +246,7 @@ a string and stored in the HDF5 file with an ASCII encoding.
 The topology stores a hierarchical description of the chains, residues,
 and atoms in the system. Each chain is associated with an ``index`` and
 a list of residues. Each residue is associated with a ``name``, an
-``index``, a ``resSeq`` index (not zero-indexed), and a list of ``atom``\ s. 
+``index``, a ``resSeq`` index (not zero-indexed), and a list of ``atom``\ s.
 Each ``atom`` is associated with a
 ``name``, an ``element``, and an ``index``. All of the indicies should
 be zero-based.
@@ -369,4 +369,3 @@ Since it's JSON, the whitespace is optional and just for readability.
                                'index': 2,
                                'resSeq': 3,
                                'name': 'NME'}]}]}
-

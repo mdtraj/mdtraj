@@ -44,7 +44,7 @@ static int vmd_file_is_executable(const char * filename);
 
 #define VMD_FILENAME_MAX 1024
 
-#if defined(_MSC_VER) 
+#if defined(_MSC_VER)
 
 /* Windows version */
 
@@ -67,9 +67,9 @@ static VMDDIR * vmd_opendir(const char * filename) {
 
 static char * vmd_readdir(VMDDIR * d) {
   if (FindNextFile(d->h, &(d->fd))) {
-    return d->fd.cFileName; 
+    return d->fd.cFileName;
   }
-  return NULL;     
+  return NULL;
 }
 
 static void vmd_closedir(VMDDIR * d) {
@@ -88,7 +88,7 @@ static int vmd_file_is_executable(const char * filename) {
   }
 
   return 0;
-} 
+}
 
 #else
 
@@ -118,7 +118,7 @@ static char * vmd_readdir(VMDDIR * d) {
     return p->d_name;
   }
 
-  return NULL;     
+  return NULL;
 }
 
 static void vmd_closedir(VMDDIR * d) {
@@ -132,17 +132,13 @@ static void vmd_closedir(VMDDIR * d) {
 static int vmd_file_is_executable(const char * filename) {
   struct stat buf;
   if (!stat(filename, &buf)) {
-    if (buf.st_mode & S_IXUSR || 
+    if (buf.st_mode & S_IXUSR ||
         buf.st_mode & S_IXGRP ||
         buf.st_mode & S_IXOTH) {
       return 1;
     }
   }
   return 0;
-} 
+}
 
 #endif
-
-
-
-

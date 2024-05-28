@@ -24,17 +24,8 @@
 through time in the AMBER NetCDF format
 """
 
-##############################################################################
-# Imports
-##############################################################################
-
-from __future__ import print_function, division
 from mdtraj.formats.netcdf import NetCDFTrajectoryFile
 from mdtraj.reporters.basereporter import _BaseReporter
-
-##############################################################################
-# Imports
-##############################################################################
 
 
 class NetCDFReporter(_BaseReporter):
@@ -67,14 +58,30 @@ class NetCDFReporter(_BaseReporter):
 
     >>> traj = mdtraj.trajectory.load('traj.nc')
     """
+
     @property
     def backend(self):
         return NetCDFTrajectoryFile
 
-    def __init__(self, file, reportInterval, coordinates=True, time=True,
-                 cell=True, atomSubset=None):
-        """Create a NetCDFReporter.
-        """
-        super(NetCDFReporter, self).__init__(file, reportInterval,
-            coordinates, time, cell, potentialEnergy=False, kineticEnergy=False,
-            temperature=False, velocities=False, atomSubset=atomSubset)
+    def __init__(
+        self,
+        file,
+        reportInterval,
+        coordinates=True,
+        time=True,
+        cell=True,
+        atomSubset=None,
+    ):
+        """Create a NetCDFReporter."""
+        super().__init__(
+            file,
+            reportInterval,
+            coordinates,
+            time,
+            cell,
+            potentialEnergy=False,
+            kineticEnergy=False,
+            temperature=False,
+            velocities=False,
+            atomSubset=atomSubset,
+        )

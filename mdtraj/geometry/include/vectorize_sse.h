@@ -396,4 +396,3 @@ static inline int store3(const fvec4& v, float* loc) {
 
 
 #endif /*OPENMM_VECTORIZE_SSE_H_*/
-

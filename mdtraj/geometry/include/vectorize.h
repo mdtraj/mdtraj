@@ -36,7 +36,7 @@
     #include "vectorize_generic.h"
 #elif defined(__ARM_NEON)
     #include "vectorize_neon.h"
-#elif defined(__SSE2__) 
+#elif defined(__SSE2__)
     #include <pmmintrin.h>
     #include "vectorize_sse.h"
 #else

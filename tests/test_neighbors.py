@@ -1,4 +1,5 @@
 import numpy as np
+
 import mdtraj as md
 from mdtraj.testing import eq
 
@@ -10,7 +11,9 @@ def compute_neighbors_reference(traj, cutoff, query_indices, haystack_indices=No
         haystack_indices = range(traj.n_atoms)
     # explicitly enumerate the pairs of query-haystack indices we need to
     # check
-    pairs = np.array([(q, i) for i in haystack_indices for q in query_indices if i != q])
+    pairs = np.array(
+        [(q, i) for i in haystack_indices for q in query_indices if i != q],
+    )
     dists = md.compute_distances(traj, pairs)
     # some of the haystack might be within cutoff of more than one of the
     # query atoms, so we need unique
@@ -34,8 +37,8 @@ def test_compute_neighbors_1():
 
 
 def test_compute_neighbors_2(get_fn):
-    traj = md.load(get_fn('4ZUO.pdb'))
-    query_indices = traj.top.select('residue 1')
+    traj = md.load(get_fn("4ZUO.pdb"))
+    query_indices = traj.top.select("residue 1")
     cutoff = 1.0
     value = md.compute_neighbors(traj, cutoff, query_indices)
     reference = compute_neighbors_reference(traj, cutoff, query_indices)
@@ -44,8 +47,8 @@ def test_compute_neighbors_2(get_fn):
 
 
 def test_compute_neighbors_3(get_fn):
-    traj = md.load(get_fn('test_good.nc'), top=get_fn('test.parm7'))
-    query_indices = traj.top.select('residue 1')
+    traj = md.load(get_fn("test_good.nc"), top=get_fn("test.parm7"))
+    query_indices = traj.top.select("residue 1")
     cutoff = 1.0
     value = md.compute_neighbors(traj, cutoff, query_indices)
     reference = compute_neighbors_reference(traj, cutoff, query_indices)

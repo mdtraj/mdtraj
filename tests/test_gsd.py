@@ -21,24 +21,25 @@
 ##############################################################################
 
 
-import numpy as np
-import mdtraj
-from mdtraj import io
-from mdtraj.testing import eq
 import pytest
 
+import mdtraj
+from mdtraj.testing import eq
+
+
 def test_read(get_fn):
-    filename = get_fn('out.gsd')
+    filename = get_fn("out.gsd")
     traj = mdtraj.load(filename)
 
     assert len(traj) == 1000
     assert traj.top.n_atoms == 80
     assert traj.top.n_bonds == 70
-    assert traj.top.atom(0).name == 'opls_135'
-    assert traj.top.atom(1).name == 'opls_140'
+    assert traj.top.atom(0).name == "opls_135"
+    assert traj.top.atom(1).name == "opls_140"
+
 
 def test_read_start(get_fn):
-    filename = get_fn('out.gsd')
+    filename = get_fn("out.gsd")
     traj = mdtraj.load(filename)
     other = mdtraj.load(filename, start=2)
 
@@ -46,8 +47,9 @@ def test_read_start(get_fn):
     eq(traj[2].unitcell_lengths, other[0].unitcell_lengths)
     assert traj.top == other.top
 
+
 def test_read_frame(get_fn):
-    filename = get_fn('out.gsd')
+    filename = get_fn("out.gsd")
     traj = mdtraj.load(filename)
     other = mdtraj.load(filename, frame=2)
 
@@ -55,8 +57,9 @@ def test_read_frame(get_fn):
     eq(traj[2].unitcell_lengths, other[0].unitcell_lengths)
     assert traj.top == other.top
 
+
 def test_read_stride(get_fn):
-    filename = get_fn('out.gsd')
+    filename = get_fn("out.gsd")
     traj = mdtraj.load(filename)
     other = mdtraj.load(filename, stride=10)
 
@@ -68,16 +71,17 @@ def test_read_stride(get_fn):
 
     assert traj.top == other.top
 
+
 def test_read_variable_top_error(get_fn):
-    filename = get_fn('variable_top.gsd')
+    filename = get_fn("variable_top.gsd")
     with pytest.raises(IOError):
-        traj = mdtraj.load(filename)
+        mdtraj.load(filename)
 
 
 def test_write(get_fn, tmpdir):
-    filename = get_fn('out.gsd')
+    filename = get_fn("out.gsd")
     traj = mdtraj.load(filename)
-    fn = '{}/compare.gsd'.format(tmpdir)
+    fn = f"{tmpdir}/compare.gsd"
     traj.save(fn)
     other = mdtraj.load(fn)
 
@@ -85,14 +89,14 @@ def test_write(get_fn, tmpdir):
     eq(other.xyz, traj.xyz)
     eq(other.unitcell_lengths, traj.unitcell_lengths)
 
+
 def test_write_frame(get_fn, tmpdir):
-    filename = get_fn('out.gsd')
+    filename = get_fn("out.gsd")
     traj = mdtraj.load(filename)
-    fn = '{}/compare.gsd'.format(tmpdir)
+    fn = f"{tmpdir}/compare.gsd"
     traj[2].save(fn)
     other = mdtraj.load(fn)
 
     assert traj.top == other.top
     eq(traj[2].xyz, other.xyz)
     eq(traj[2].unitcell_lengths, other.unitcell_lengths)
-

@@ -20,14 +20,16 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-from mdtraj.formats import TRRTrajectoryFile
-import os, tempfile
+import os
+import tempfile
+
 import numpy as np
-from mdtraj.testing import eq
-from mdtraj import io
 import pytest
 
-fd, temp = tempfile.mkstemp(suffix='.trr')
+from mdtraj.formats import TRRTrajectoryFile
+from mdtraj.testing import eq
+
+fd, temp = tempfile.mkstemp(suffix=".trr")
 os.close(fd)
 
 
@@ -44,7 +46,7 @@ def test_1():
     step = np.arange(500)
     lambd = np.random.randn(500)
 
-    with TRRTrajectoryFile(temp, 'w') as f:
+    with TRRTrajectoryFile(temp, "w") as f:
         f.write(xyz=xyz, time=time, step=step, lambd=lambd)
     with TRRTrajectoryFile(temp) as f:
         xyz2, time2, step2, box2, lambd2 = f.read()
@@ -56,9 +58,9 @@ def test_1():
 
 
 def test_read_stride(get_fn):
-    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+    with TRRTrajectoryFile(get_fn("frame0.trr")) as f:
         xyz, time, step, box, lambd = f.read()
-    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+    with TRRTrajectoryFile(get_fn("frame0.trr")) as f:
         xyz3, time3, step3, box3, lambd3 = f.read(stride=3)
     assert eq(xyz[::3], xyz3)
     assert eq(step[::3], step3)
@@ -68,9 +70,9 @@ def test_read_stride(get_fn):
 
 def test_read_stride_n_frames(get_fn):
     # trr read stride when n_frames is supplied (different path)
-    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+    with TRRTrajectoryFile(get_fn("frame0.trr")) as f:
         xyz, time, step, box, lambd = f.read()
-    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+    with TRRTrajectoryFile(get_fn("frame0.trr")) as f:
         xyz3, time3, step3, box3, lambd3 = f.read(n_frames=1000, stride=3)
     assert eq(xyz[::3], xyz3)
     assert eq(step[::3], step3)
@@ -80,11 +82,11 @@ def test_read_stride_n_frames(get_fn):
 
 def test_read_stride_offsets(get_fn):
     # read xtc with stride and offsets
-    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+    with TRRTrajectoryFile(get_fn("frame0.trr")) as f:
         xyz, time, step, box, lambd = f.read()
     for s in (1, 2, 3, 4, 5):
-        with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
-            f.offsets # pre-compute byte offsets between frames
+        with TRRTrajectoryFile(get_fn("frame0.trr")) as f:
+            f.offsets  # pre-compute byte offsets between frames
             xyz_s, time_s, step_s, box_s, lamb_s = f.read(stride=s)
         assert eq(xyz_s, xyz[::s])
         assert eq(step_s, step[::s])
@@ -94,31 +96,31 @@ def test_read_stride_offsets(get_fn):
 
 def test_read_stride_n_frames_offsets(get_fn):
     # read trr with stride with n_frames and offsets
-    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+    with TRRTrajectoryFile(get_fn("frame0.trr")) as f:
         xyz, time, step, box, lambd = f.read()
     for s in (1, 2, 3, 4, 5):
-        with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
-            f.offsets # pre-compute byte offsets between frames
+        with TRRTrajectoryFile(get_fn("frame0.trr")) as f:
+            f.offsets  # pre-compute byte offsets between frames
             xyz_s, time_s, step_s, box_s, lamb_s = f.read(n_frames=1000, stride=s)
-        assert eq(xyz_s, xyz[::s], err_msg='stride=%s' % s)
+        assert eq(xyz_s, xyz[::s], err_msg="stride=%s" % s)
         assert eq(step_s, step[::s])
         assert eq(box_s, box[::s])
         assert eq(time_s, time[::s])
 
 
 def test_read_stride_switching(get_fn):
-    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+    with TRRTrajectoryFile(get_fn("frame0.trr")) as f:
         xyz, time, step, box, lambd = f.read()
-    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+    with TRRTrajectoryFile(get_fn("frame0.trr")) as f:
         f.offsets  # pre-compute byte offsets between frames
         # read the first 10 frames with stride of 2
         s = 2
         n_frames = 10
         xyz_s, time_s, step_s, box_s, lamb_s = f.read(n_frames=n_frames, stride=s)
-        assert eq(xyz_s, xyz[:n_frames*s:s])
-        assert eq(step_s, step[:n_frames*s:s])
-        assert eq(box_s, box[:n_frames*s:s])
-        assert eq(time_s, time[:n_frames*s:s])
+        assert eq(xyz_s, xyz[: n_frames * s : s])
+        assert eq(step_s, step[: n_frames * s : s])
+        assert eq(box_s, box[: n_frames * s : s])
+        assert eq(time_s, time[: n_frames * s : s])
         # now read the rest with stride 3, should start from frame index 8.
         # eg. np.arange(0, n_frames*s + 1, 2)[-1] == 18
         offset = f.tell()
@@ -138,7 +140,7 @@ def test_write_read():
     step = np.arange(500)
     lambd = np.random.randn(500)
 
-    with TRRTrajectoryFile(temp, 'w') as f:
+    with TRRTrajectoryFile(temp, "w") as f:
         f.write(xyz=xyz, time=time, step=step, lambd=lambd)
     with TRRTrajectoryFile(temp) as f:
         xyz2, time2, step2, box2, lambd2 = f.read(n_frames=500)
@@ -183,7 +185,7 @@ def test_deficient_shape():
     step = np.arange(500)
     lambd = np.random.randn(500)
 
-    with TRRTrajectoryFile(temp, 'w') as f:
+    with TRRTrajectoryFile(temp, "w") as f:
         for i in range(len(xyz)):
             f.write(xyz=xyz[i], time=time[i], step=step[i], lambd=lambd[i])
     with TRRTrajectoryFile(temp) as f:
@@ -201,7 +203,7 @@ def test_ragged_1():
     time = np.random.randn(100)
     box = np.random.randn(100, 3, 3)
 
-    with TRRTrajectoryFile(temp, 'w', force_overwrite=True) as f:
+    with TRRTrajectoryFile(temp, "w", force_overwrite=True) as f:
         f.write(xyz)
         with pytest.raises(ValueError):
             f.write(xyz, time, box)
@@ -213,14 +215,14 @@ def test_ragged_2():
     time = np.random.randn(100)
     box = np.random.randn(100, 3, 3)
 
-    with TRRTrajectoryFile(temp, 'w', force_overwrite=True) as f:
+    with TRRTrajectoryFile(temp, "w", force_overwrite=True) as f:
         f.write(xyz, time=time, box=box)
         with pytest.raises(ValueError):
             f.write(xyz)
 
 
 def test_malformed():
-    with open(temp, 'w') as tmpf:
+    with open(temp, "w") as tmpf:
         tmpf.write("foo")  # very badly malformed TRR
 
     with pytest.raises(IOError):
@@ -233,7 +235,7 @@ def test_malformed():
 
 
 def test_tell(get_fn):
-    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+    with TRRTrajectoryFile(get_fn("frame0.trr")) as f:
         eq(f.tell(), 0)
 
         f.read(101)
@@ -244,8 +246,8 @@ def test_tell(get_fn):
 
 
 def test_seek(get_fn):
-    reference = TRRTrajectoryFile(get_fn('frame0.trr')).read()[0]
-    with TRRTrajectoryFile(get_fn('frame0.trr')) as f:
+    reference = TRRTrajectoryFile(get_fn("frame0.trr")).read()[0]
+    with TRRTrajectoryFile(get_fn("frame0.trr")) as f:
         eq(len(f), len(reference))
         eq(len(f.offsets), len(reference))
 
@@ -282,12 +284,14 @@ def test_get_velocities():
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
 
-    with TRRTrajectoryFile(temp, 'w') as f:
+    with TRRTrajectoryFile(temp, "w") as f:
         f._write(xyz=xyz, time=time, step=step, box=box, lambd=lambd, vel=vel)
     with TRRTrajectoryFile(temp) as f:
         xyz2, time2, step2, box2, lambd2, vel2, forces2 = f._read(
-            n_frames=500, atom_indices=None, get_velocities=True,
-            get_forces=False
+            n_frames=500,
+            atom_indices=None,
+            get_velocities=True,
+            get_forces=False,
         )
 
     eq(xyz, xyz2)
@@ -308,13 +312,21 @@ def test_get_forces():
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
 
-    with TRRTrajectoryFile(temp, 'w') as f:
-        f._write(xyz=xyz, time=time, step=step, box=box, lambd=lambd,
-                 forces=forces)
+    with TRRTrajectoryFile(temp, "w") as f:
+        f._write(
+            xyz=xyz,
+            time=time,
+            step=step,
+            box=box,
+            lambd=lambd,
+            forces=forces,
+        )
     with TRRTrajectoryFile(temp) as f:
         xyz2, time2, step2, box2, lambd2, vel2, forces2 = f._read(
-            n_frames=500, atom_indices=None, get_velocities=False,
-            get_forces=True
+            n_frames=500,
+            atom_indices=None,
+            get_velocities=False,
+            get_forces=True,
         )
 
     eq(xyz, xyz2)
@@ -336,13 +348,22 @@ def test_get_velocities_and_forces():
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
 
-    with TRRTrajectoryFile(temp, 'w') as f:
-        f._write(xyz=xyz, time=time, step=step, box=box, lambd=lambd,
-                 vel=vel, forces=forces)
+    with TRRTrajectoryFile(temp, "w") as f:
+        f._write(
+            xyz=xyz,
+            time=time,
+            step=step,
+            box=box,
+            lambd=lambd,
+            vel=vel,
+            forces=forces,
+        )
     with TRRTrajectoryFile(temp) as f:
         xyz2, time2, step2, box2, lambd2, vel2, forces2 = f._read(
-            n_frames=500, atom_indices=None, get_velocities=True,
-            get_forces=True
+            n_frames=500,
+            atom_indices=None,
+            get_velocities=True,
+            get_forces=True,
         )
 
     eq(xyz, xyz2)
@@ -363,13 +384,22 @@ def test_get_velocities_forces_atom_indices_1():
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
 
-    with TRRTrajectoryFile(temp, 'w') as f:
-        f._write(xyz=xyz, time=time, step=step, box=box, lambd=lambd,
-                 vel=vel, forces=forces)
+    with TRRTrajectoryFile(temp, "w") as f:
+        f._write(
+            xyz=xyz,
+            time=time,
+            step=step,
+            box=box,
+            lambd=lambd,
+            vel=vel,
+            forces=forces,
+        )
     with TRRTrajectoryFile(temp) as f:
         xyz2, time2, step2, box2, lambd2, vel2, forces2 = f._read(
-            n_frames=500, atom_indices=[0, 1, 2],
-            get_velocities=True, get_forces=True
+            n_frames=500,
+            atom_indices=[0, 1, 2],
+            get_velocities=True,
+            get_forces=True,
         )
 
     eq(xyz[:, [0, 1, 2]], xyz2)
@@ -390,13 +420,22 @@ def test_get_velocities_forces_atom_indices_2():
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
 
-    with TRRTrajectoryFile(temp, 'w') as f:
-        f._write(xyz=xyz, time=time, step=step, box=box, lambd=lambd,
-                 vel=vel, forces=forces)
+    with TRRTrajectoryFile(temp, "w") as f:
+        f._write(
+            xyz=xyz,
+            time=time,
+            step=step,
+            box=box,
+            lambd=lambd,
+            vel=vel,
+            forces=forces,
+        )
     with TRRTrajectoryFile(temp) as f:
         xyz2, time2, step2, box2, lambd2, vel2, forces2 = f._read(
-            n_frames=500, atom_indices=slice(None, None, 2),
-            get_velocities=True, get_forces=True
+            n_frames=500,
+            atom_indices=slice(None, None, 2),
+            get_velocities=True,
+            get_forces=True,
         )
 
     eq(xyz[:, ::2], xyz2)
@@ -417,11 +456,16 @@ def test_read_velocities_do_not_exist():
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
 
-    with TRRTrajectoryFile(temp, 'w') as f:
+    with TRRTrajectoryFile(temp, "w") as f:
         f.write(xyz=xyz, time=time, step=step, box=box, lambd=lambd)
     with TRRTrajectoryFile(temp) as f:
         with pytest.raises(RuntimeError):
-            f._read(n_frames=500, atom_indices=None, get_velocities=True, get_forces=False)
+            f._read(
+                n_frames=500,
+                atom_indices=None,
+                get_velocities=True,
+                get_forces=False,
+            )
 
 
 def test_read_forces_do_not_exist():
@@ -433,8 +477,13 @@ def test_read_forces_do_not_exist():
     step = np.array(np.arange(500), dtype=np.int32)
     lambd = np.array(np.random.randn(500), dtype=np.float32)
 
-    with TRRTrajectoryFile(temp, 'w') as f:
+    with TRRTrajectoryFile(temp, "w") as f:
         f.write(xyz=xyz, time=time, step=step, box=box, lambd=lambd)
     with TRRTrajectoryFile(temp) as f:
         with pytest.raises(RuntimeError):
-            f._read(n_frames=500, atom_indices=None, get_velocities=False, get_forces=True)
+            f._read(
+                n_frames=500,
+                atom_indices=None,
+                get_velocities=False,
+                get_forces=True,
+            )

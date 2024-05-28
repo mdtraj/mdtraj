@@ -16,6 +16,7 @@ cdef extern from "include/xdrfile_xtc.h":
 
 
 cimport numpy as np
+
 ctypedef np.npy_int64 int64_t
 
 cdef extern from "include/xdr_seek.h":

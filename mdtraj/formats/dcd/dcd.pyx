@@ -27,19 +27,50 @@
 ##############################################################################
 
 import os
-import numpy as np
-cimport numpy as np
-np.import_array()
-from mdtraj.utils import ensure_type, cast_indices, in_units_of
-from mdtraj.utils.six import string_types
-from mdtraj.formats.registry import FormatRegistry
-from libc.stdlib cimport malloc, free
-from libc.string cimport strcpy, strlen
-from dcdlib cimport molfile_timestep_t, dcdhandle
-from dcdlib cimport open_dcd_read, close_file_read, read_next_timestep
-from dcdlib cimport open_dcd_write, close_file_write, write_timestep
-from dcdlib cimport dcd_rewind
 
+import numpy as np
+
+cimport numpy as np
+
+np.import_array()
+from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils import cast_indices, ensure_type, in_units_of
+
+from dcdlib cimport (
+    close_file_read,
+    close_file_write,
+    dcd_rewind,
+    dcdhandle,
+    molfile_timestep_t,
+    open_dcd_read,
+    open_dcd_write,
+    read_next_timestep,
+    write_timestep,
+)
+from libc.stdlib cimport free, malloc
+from libc.string cimport strcpy, strlen
+
+import numpy as np
+
+cimport numpy as np
+
+np.import_array()
+from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils import cast_indices, ensure_type, in_units_of
+
+from dcdlib cimport (
+    close_file_read,
+    close_file_write,
+    dcd_rewind,
+    dcdhandle,
+    molfile_timestep_t,
+    open_dcd_read,
+    open_dcd_write,
+    read_next_timestep,
+    write_timestep,
+)
+from libc.stdlib cimport free, malloc
+from libc.string cimport strcpy, strlen
 
 ##############################################################################
 # Globals
@@ -124,7 +155,7 @@ def load_dcd(filename, top=None, stride=None, atom_indices=None, frame=None):
     # we want to give the user an informative error message
     if top is None:
         raise ValueError('"top" argument is required for load_dcd')
-    if not isinstance(filename, (string_types, os.PathLike)):
+    if not isinstance(filename, (str, os.PathLike)):
         raise TypeError('filename must be of type path-like for load_dcd. '
             'you supplied %s' % type(filename))
 

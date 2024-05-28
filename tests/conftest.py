@@ -20,11 +20,16 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-import pytest
 import os
-@pytest.fixture(scope='session')
+
+import pytest
+
+
+@pytest.fixture(scope="session")
 def get_fn():
     test_dir = os.path.dirname(os.path.abspath(__file__))
+
     def _get_fn(fn):
-        return '{}/data/{}'.format(test_dir, fn)
+        return f"{test_dir}/data/{fn}"
+
     return _get_fn
