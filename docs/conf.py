@@ -17,8 +17,6 @@ import sys
 
 import msmb_theme
 import sphinx_rtd_theme
-import nbsphinx
-import nbformat
 
 import mdtraj.version
 
@@ -43,7 +41,8 @@ extensions = [
     'sphinx.ext.viewcode',
     "numpydoc",
     "notebook_sphinxext",
-    "nbsphinx"
+    "nbsphinx",
+    "nbsphinx_link"
 ]
 
 autosummary_generate = True
@@ -54,7 +53,7 @@ numpydoc_class_members_toctree = False
 templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = [".rst", ".ipynb"]
+source_suffix = ".rst"
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -308,3 +307,31 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
+
+here = os.path.dirname(__file__)
+repo = os.path.join(here, "..")
+
+# Ensure env.metadata[env.docname]['nbsphinx-link-target']
+# points relative to repo root:
+nbsphinx_link_target_root = repo
+
+nbsphinx_prolog = (
+    r"""
+{% if env.metadata[env.docname]['nbsphinx-link-target'] %}
+{% set docpath = env.metadata[env.docname]['nbsphinx-link-target'] %}
+{% else %}
+{% set docpath = env.doc2path(env.docname, base='docs/source/') %}
+{% endif %}
+
+.. only:: html
+
+    .. role:: raw-html(raw)
+        :format: html
+
+    .. nbinfo::
+        This page was generated from `{{ docpath }}`__.
+
+    __ https://github.com/mdtraj/mdtraj/tree/master/
+        """
+    + r"{{ docpath }}"
+)
