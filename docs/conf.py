@@ -17,6 +17,8 @@ import sys
 
 import msmb_theme
 import sphinx_rtd_theme
+import nbsphinx
+import nbformat
 
 import mdtraj.version
 
@@ -120,7 +122,7 @@ pygments_style = "sphinx"
 
 # nbsphinx specific options
 nbsphinx_allow_errors = True  # Continue through Jupyter errors
-nbsphinx_execute = 'auto'  # Automatically execute cells
+nbsphinx_execute = 'never'  # Never execute cells
 
 
 # -- Options for HTML output ----------------------------------------------
