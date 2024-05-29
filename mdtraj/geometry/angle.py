@@ -80,9 +80,11 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
             traj.unitcell_vectors,
             dtype=np.float32,
             ndim=3,
-            name="unitcell_vectors",
+            name='unitcell_vectors',
             shape=(len(xyz), 3, 3),
+            warn_on_cast=False,
         )
+
         if opt:
             orthogonal = np.allclose(traj.unitcell_angles, 90)
             _geometry._angle_mic(
@@ -117,5 +119,5 @@ def _angle(traj, angle_indices, periodic, out):
     # dimension
     u = u_prime / (u_norm[..., np.newaxis])
     v = v_prime / (v_norm[..., np.newaxis])
-
-    return np.arccos((u * v).sum(-1), out=out)
+    # use np.clip() to guard against errors when angles approach 180 degrees:
+    return np.arccos(np.clip((u * v).sum(-1), -1.0, 1.0), out=out)
