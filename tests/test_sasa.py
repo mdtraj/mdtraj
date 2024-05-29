@@ -170,3 +170,66 @@ def test_sasa_5():
     np.testing.assert_approx_equal(calc_area_sulfur, true_area_sulfur)
     # Finally, ensure that we are not changing _ATOMIC_RADII
     assert prev_area_chlorine != calc_area_chlorine
+
+def test_sasa_6(get_fn):
+    #Test the atom selection
+    t = md.load(get_fn('frame0.h5'))
+    atoms_resid1 = t.top.select("resid 1").astype(int)
+    atoms_resid0_2 = t.top.select("resid 0 2").astype(int)
+
+    # Mode="atom"
+    sasa_all_atoms = md.geometry.shrake_rupley(t)
+    sasa_all_atoms_w_selection = md.geometry.shrake_rupley(t, atom_indices=atoms_resid1)
+
+    # The computed SASA values are the same as in "normal" mode
+    np.testing.assert_array_almost_equal(sasa_all_atoms[:,atoms_resid1],
+                                         sasa_all_atoms_w_selection[:,atoms_resid1])
+    # The uncomputed SASA values are all -1
+    np.testing.assert_equal(np.unique(sasa_all_atoms_w_selection[:,atoms_resid0_2]),-1)
+
+    # Mode="residues"
+    sasa_all_residues = md.geometry.shrake_rupley(t, mode="residue")
+    sasa_all_residues_w_selection = md.geometry.shrake_rupley(t, atom_indices=atoms_resid1, mode="residue")
+
+    # The computed SASA values are the same as in "normal" mode
+    np.testing.assert_array_almost_equal(sasa_all_residues[:,1],
+                                         sasa_all_residues_w_selection[:,1])
+    # The uncomputed SASA values are all -1
+    np.testing.assert_equal(np.unique(sasa_all_residues_w_selection[:, [0,2]]), -1)
+
+    #Test the non sequential selection
+    # Mode="atom"
+    sasa_all_atoms_w_selection = md.geometry.shrake_rupley(t, atom_indices=atoms_resid0_2)
+
+    # The computed SASA values are the same as in "normal" mode
+    np.testing.assert_array_almost_equal(sasa_all_atoms[:, atoms_resid0_2],
+                                         sasa_all_atoms_w_selection[:, atoms_resid0_2])
+
+    # The uncomputed SASA values are all -1
+    np.testing.assert_equal(np.unique(sasa_all_atoms_w_selection[:,atoms_resid1]),-1)
+
+    # Mode="residues"
+    sasa_all_residues_w_selection = md.geometry.shrake_rupley(t, atom_indices=atoms_resid0_2, mode="residue")
+
+    # The computed SASA values are the same as in "normal" mode
+    np.testing.assert_array_almost_equal(sasa_all_residues[:, [0,2]],
+                                         sasa_all_residues_w_selection[:, [0,2]])
+    # The uncomputed SASA values are all -1
+    np.testing.assert_equal(np.unique(sasa_all_residues_w_selection[:, 1]), -1)
+
+def test_sasa_7(get_fn):
+    #Test the atom selection with specific atoms within residues
+    t = md.load(get_fn('frame0.h5'))
+    atoms_resid1_HB3 = t.top.select("resid 1 and name HB3").astype(int)
+    atoms_not_resid1_HB3 = t.top.select("not (resid 1 and name HB3)").astype(int)
+
+    # Just one CA-atom's SASA has the right value and everybody else has 0
+    SASA_resid1_HB3_per_atom = md.geometry.shrake_rupley(t,atom_indices=atoms_resid1_HB3)
+    sasa_all_atoms = md.geometry.shrake_rupley(t)
+    np.testing.assert_equal(sasa_all_atoms[:,atoms_resid1_HB3], SASA_resid1_HB3_per_atom[:,atoms_resid1_HB3])
+    assert all(SASA_resid1_HB3_per_atom[:,atoms_resid1_HB3]>0)
+    np.testing.assert_equal(SASA_resid1_HB3_per_atom[:,atoms_not_resid1_HB3], -1)
+
+    # Nothing changes if you do "residue" mode bc only one atom is contributing
+    SASA_resid1_HB3_per_residue = md.geometry.shrake_rupley(t, atom_indices=atoms_resid1_HB3, mode="residue")
+    np.testing.assert_equal(SASA_resid1_HB3_per_atom[:, atoms_resid1_HB3[0]], SASA_resid1_HB3_per_residue[:, 1])
