@@ -2,6 +2,10 @@ pip
 setuptools
 sphinx
 sphinx_rtd_theme
+nbsphinx
+msmb_theme
+jupyter
+ipython
 matplotlib
 jupyter
 jinja2
@@ -14,4 +18,4 @@ setuptools
 pandas
 numpydoc
 wheel
-python==3.7
+python==3.10
