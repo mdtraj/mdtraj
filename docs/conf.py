@@ -42,6 +42,7 @@ extensions = [
     "numpydoc",
     "notebook_sphinxext",
     "nbsphinx",
+    "recommonmark"
 ]
 
 autosummary_generate = True

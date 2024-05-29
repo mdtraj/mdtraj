@@ -11,11 +11,13 @@ jupyter
 jinja2
 runipy
 openmm
-pytables
+tables
 scikit-learn
 pytest
 setuptools
 pandas
 numpydoc
 wheel
+recommonmark
+pytables
 python==3.10
