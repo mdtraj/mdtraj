@@ -19,5 +19,5 @@ setuptools
 pandas
 numpydoc
 wheel
-pytables
-python==3.11
+tables
+# python==3.11
