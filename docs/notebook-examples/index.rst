@@ -43,4 +43,3 @@ the directory with the notebook files, start an IPython notebook server:
 Let us know if you would like to contribute other example notebooks, or
 have any suggestions for how these can be improved.
 
-.. vim: tw=75
