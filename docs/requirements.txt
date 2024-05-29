@@ -3,11 +3,12 @@ setuptools
 sphinx
 sphinx_rtd_theme
 nbsphinx
+nbsphinx_link
 msmb_theme
 jupyter
 ipython
 matplotlib
-jupyter
+pandoc
 jinja2
 runipy
 openmm
