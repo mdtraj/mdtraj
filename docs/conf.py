@@ -37,8 +37,11 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.mathjax",
+    'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
     "numpydoc",
     "notebook_sphinxext",
+    "nbsphinx",
 ]
 
 autosummary_generate = True
@@ -49,7 +52,7 @@ numpydoc_class_members_toctree = False
 templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = ".rst"
+source_suffix = [".rst", ".ipynb"]
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -59,7 +62,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "MDTraj"
-copyright = "2016, Stanford University and the Authors"
+copyright = "2024, Folding@home and the Authors"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -111,6 +114,12 @@ pygments_style = "sphinx"
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 # keep_warnings = False
+ 
+# -- Options for NBsphinx --------------------------------------------------
+
+# nbsphinx specific options
+nbsphinx_allow_errors = True  # Continue through Jupyter errors
+nbsphinx_execute = 'auto'  # Automatically execute cells
 
 
 # -- Options for HTML output ----------------------------------------------
@@ -118,7 +127,7 @@ pygments_style = "sphinx"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 
-html_theme = "msmb_theme"
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
