@@ -43,8 +43,7 @@ extensions = [
     'sphinx.ext.viewcode',
     "numpydoc",
     "notebook_sphinxext",
-    "nbsphinx",
-    "recommonmark"
+    "nbsphinx"
 ]
 
 autosummary_generate = True

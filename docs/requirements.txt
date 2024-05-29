@@ -18,6 +18,5 @@ setuptools
 pandas
 numpydoc
 wheel
-recommonmark
 pytables
 python==3.11
