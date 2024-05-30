@@ -36,6 +36,7 @@ July 6th, 2023
 [![Anaconda-Server Version](https://anaconda.org/conda-forge/mdtraj/badges/version.svg)](https://anaconda.org/conda-forge/mdtraj)
 [![Anaconda-Server Downloads](https://anaconda.org/conda-forge/mdtraj/badges/downloads.svg)](https://anaconda.org/conda-forge/mdtraj)
 [![DOI for Citing MDTraj](https://img.shields.io/badge/DOI-10.1016%2Fj.bpj.2015.08.015-blue.svg)](http://doi.org/10.1016/j.bpj.2015.08.015)
+[![Documentation Status](https://readthedocs.org/projects/mdtraj/badge/?version=latest)](https://mdtraj.readthedocs.io/en/latest/?badge=latest)
 
 Read, write and analyze MD trajectories with only a few lines of Python code.
 
