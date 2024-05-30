@@ -29,6 +29,8 @@ sphinx:
 python:
   install:
     - requirements: docs/requirements.txt
+    - method: pip
+      path: mdtraj
 
 # conda:
 #   environment: docs/requirements.yaml
