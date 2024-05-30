@@ -37,8 +37,12 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.mathjax",
+    'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
     "numpydoc",
     "notebook_sphinxext",
+    "nbsphinx",
+    "nbsphinx_link"
 ]
 
 autosummary_generate = True
@@ -59,7 +63,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "MDTraj"
-copyright = "2016, Stanford University and the Authors"
+copyright = "2024, Folding@home and the Authors"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -111,6 +115,12 @@ pygments_style = "sphinx"
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 # keep_warnings = False
+ 
+# -- Options for NBsphinx --------------------------------------------------
+
+# nbsphinx specific options
+nbsphinx_allow_errors = True  # Continue through Jupyter errors
+nbsphinx_execute = 'never'  # Never execute cells
 
 
 # -- Options for HTML output ----------------------------------------------
@@ -118,7 +128,7 @@ pygments_style = "sphinx"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 
-html_theme = "msmb_theme"
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -297,3 +307,31 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
+
+here = os.path.dirname(__file__)
+repo = os.path.join(here, "..")
+
+# Ensure env.metadata[env.docname]['nbsphinx-link-target']
+# points relative to repo root:
+nbsphinx_link_target_root = repo
+
+nbsphinx_prolog = (
+    r"""
+{% if env.metadata[env.docname]['nbsphinx-link-target'] %}
+{% set docpath = env.metadata[env.docname]['nbsphinx-link-target'] %}
+{% else %}
+{% set docpath = env.doc2path(env.docname, base='docs/source/') %}
+{% endif %}
+
+.. only:: html
+
+    .. role:: raw-html(raw)
+        :format: html
+
+    .. nbinfo::
+        This page was generated from `{{ docpath }}`__.
+
+    __ https://github.com/mdtraj/mdtraj/tree/master/
+        """
+    + r"{{ docpath }}"
+)

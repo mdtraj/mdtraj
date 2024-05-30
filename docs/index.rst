@@ -27,8 +27,10 @@ trajectories between formats.
 
    installation
    new_to_python
-   examples/index
+   notebook-examples/index
    whatsnew
+   .. examples/index
+
 
 API Reference
 -------------
