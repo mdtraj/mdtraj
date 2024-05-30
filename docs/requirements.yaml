@@ -7,25 +7,4 @@ dependencies:
   - python=3.11
 
   # other libraries
-  - pip
-  - setuptools
-  - sphinx
-  - sphinx_rtd_theme
-  - nbsphinx
-  - nbsphinx_link
-  - msmb_theme
   - pandoc
- 
-  # python libraries
-  - jupyter
-  - ipython
-  - matplotlib
-  - jinja2
-  - runipy
-  - openmm
-  - scikit-learn
-  - pytest
-  - pandas
-  - numpydoc
-  - wheel
-  - tables
