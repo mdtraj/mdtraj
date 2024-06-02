@@ -468,7 +468,7 @@ cdef class DTRTrajectoryFile:
         if atom_indices is not None:
             topology = topology.subset(atom_indices)
 
-        xyz, time, box_length, box_angle = self.read(stride=stride, atom_indices=atom_indices)
+        xyz, time, box_length, box_angle = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
         if len(xyz) == 0:
             return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
 
