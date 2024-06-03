@@ -133,9 +133,6 @@ def test_read_write_1_scipy(monkeypatch):
     monkeypatch.setitem(sys.modules, 'netCDF4', None)
     test_read_write_1()
 
-def test_read_write_1_netcdf(monkeypatch):
-    test_read_write_1()
-
 def test_read_write_2(get_fn):
     xyz = np.random.randn(5, 22, 3)
     time = np.random.randn(5)
@@ -156,9 +153,6 @@ def test_read_write_2(get_fn):
 
 def test_read_write_2_scipy(get_fn, monkeypatch):
     monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_read_write_2(get_fn)
-
-def test_read_write_2_netcdf(get_fn, monkeypatch):
     test_read_write_2(get_fn)
 
 def test_ragged_1():
