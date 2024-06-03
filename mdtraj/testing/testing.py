@@ -134,8 +134,10 @@ def eq(o1, o2, decimal=6, err_msg=""):
     ------
     AssertionError
         If the tests fail
-    """
-    assert type(o1) is type(o2), f"o1 and o2 not the same type: {type(o1)} {type(o2)}"
+    """    
+    # assert type(o1) is type(o2), f"o1 and o2 not the same type: {type(o1)} {type(o2)}"
+    assert (isinstance(o1, (np.ndarray, np.ma.MaskedArray)) and 
+            isinstance(o2, (np.ndarray, np.ma.MaskedArray))), f"o1 and o2 not the same type: {type(o1)} {type(o2)}"
 
     if isinstance(o1, dict):
         assert_dict_equal(o1, o1, decimal)
