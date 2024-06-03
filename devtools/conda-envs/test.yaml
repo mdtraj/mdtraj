@@ -16,3 +16,4 @@ dependencies:
   - gsd>=2.8
   - pytest
   - pytest-xdist
+  - netCDF4
