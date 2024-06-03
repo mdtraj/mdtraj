@@ -49,8 +49,8 @@ def teardown_module(module):
     os.unlink(temp)
     os.unlink(temp2)
 
-
 def test_read_after_close(get_fn):
+    """Default test using netCDF4"""
     f = NetCDFTrajectoryFile(get_fn("mdcrd.nc"))
     assert eq(f.n_atoms, 223)
     assert eq(f.n_frames, 101)
@@ -61,8 +61,13 @@ def test_read_after_close(get_fn):
     with pytest.raises(IOError):
         f.read()
 
+def test_read_after_close_scipy(get_fn, monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_read_after_close(get_fn)
 
 def test_shape(get_fn):
+    """Default test using netCDF4"""
     xyz, time, boxlength, boxangles = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()
 
     assert eq(xyz.shape, (101, 223, 3))
@@ -70,8 +75,13 @@ def test_shape(get_fn):
     assert eq(boxlength, None)
     assert eq(boxangles, None)
 
+def test_shape_scipy(get_fn, monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_shape(get_fn)
 
 def test_read_chunk_1(get_fn):
+    """Default test using netCDF4"""
     with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as f:
         a, b, c, d = f.read(10)
         e, f, g, h = f.read()
@@ -87,8 +97,14 @@ def test_read_chunk_1(get_fn):
     assert eq(a, xyz[0:10])
     assert eq(e, xyz[10:])
 
+def test_read_chunk_1_scipy(get_fn, monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_read_chunk_1(get_fn)
 
 def test_read_chunk_2(get_fn):
+    """Default test using netCDF4"""
+
     with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as f:
         a, b, c, d = f.read(10)
         e, f, g, h = f.read(100000000000)
@@ -104,13 +120,23 @@ def test_read_chunk_2(get_fn):
     assert eq(a, xyz[0:10])
     assert eq(e, xyz[10:])
 
+def test_read_chunk_2_scipy(get_fn, monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_read_chunk_2(get_fn)
 
 def test_read_chunk_3(get_fn):
+    """Default test using netCDF4"""
     # too big of a chunk should not be an issue
     a = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read(1000000000)
     b = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()
 
     eq(a[0], b[0])
+
+def test_read_chunk_3_scipy(get_fn, monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_read_chunk_3(get_fn)
 
 def test_read_write_1():
     """Default test using netCDF4"""
@@ -159,6 +185,7 @@ def test_read_write_2_scipy(get_fn, monkeypatch):
     test_read_write_2(get_fn)
 
 def test_ragged_1():
+    """Default test using netCDF4"""
     # try first writing no cell angles/lengths, and then adding some
     xyz = np.random.randn(100, 3, 3)
     time = np.random.randn(100)
@@ -177,6 +204,7 @@ def test_ragged_1_scipy(monkeypatch):
 
 
 def test_ragged_2():
+    """Default test using netCDF4"""
     # try first writing no cell angles/lengths, and then adding some
     xyz = np.random.randn(100, 3, 3)
     time = np.random.randn(100)
@@ -195,6 +223,7 @@ def test_ragged_2_scipy(monkeypatch):
     test_ragged_2()
 
 def test_read_write_25():
+    """Default test using netCDF4"""
     xyz = np.random.randn(100, 3, 3)
     time = np.random.randn(100)
 
@@ -220,6 +249,7 @@ def test_read_write_25_scipy(monkeypatch):
     test_read_write_25()
 
 def test_write_3():
+    """Default test using netCDF4"""
     with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
         # you can't supply cell_lengths without cell_angles
         with pytest.raises(ValueError):
@@ -234,6 +264,7 @@ def test_write_3_scipy(monkeypatch):
     test_write_3()
 
 def test_n_atoms():
+    """Default test using netCDF4"""
     with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
         f.write(np.random.randn(1, 11, 3))
     with NetCDFTrajectoryFile(temp) as f:
@@ -245,6 +276,7 @@ def test_n_atoms_scipy(monkeypatch):
     test_n_atoms()
 
 def test_do_overwrite():
+    """Default test using netCDF4"""
     with open(temp, "w") as f:
         f.write("a")
 
@@ -257,6 +289,7 @@ def test_do_overwrite_scipy(monkeypatch):
     test_do_overwrite()
 
 def test_do_not_overwrite():
+    """Default test using netCDF4"""
     with open(temp, "w") as f:
         f.write("a")
 
@@ -270,6 +303,7 @@ def test_do_not_overwrite_scipy(monkeypatch):
     test_do_not_overwrite()
 
 def test_trajectory_save_load(get_fn):
+    """Default test using netCDF4"""
     t = md.load(get_fn("native.pdb"))
     t.unitcell_lengths = 1 * np.ones((1, 3))
     t.unitcell_angles = 90 * np.ones((1, 3))
