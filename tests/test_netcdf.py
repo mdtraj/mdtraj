@@ -21,6 +21,7 @@
 ##############################################################################
 
 import os
+import sys
 import subprocess
 import tempfile
 from distutils.spawn import find_executable
@@ -112,7 +113,6 @@ def test_read_chunk_3(get_fn):
 
     eq(a[0], b[0])
 
-
 def test_read_write_1():
     xyz = np.random.randn(100, 3, 3)
     time = np.random.randn(100)
@@ -129,6 +129,14 @@ def test_read_write_1():
         assert eq(c, boxlengths)
         assert eq(d, boxangles)
 
+def test_read_write_1_scipy(monkeypatch):
+    with monkeypatch.context() as m:
+        monkeypatch.setitem(sys.modules, 'netCDF4', None)
+        test_read_write_1()
+
+def test_read_write_1_netcdf(monkeypatch):
+    with monkeypatch.context() as m:
+        test_read_write_1()
 
 def test_read_write_2(get_fn):
     xyz = np.random.randn(5, 22, 3)
