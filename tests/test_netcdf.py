@@ -41,7 +41,6 @@ needs_cpptraj = pytest.mark.skipif(
 fd, temp = tempfile.mkstemp(suffix=".nc")
 fd2, temp2 = tempfile.mkstemp(suffix=".nc")
 
-
 def teardown_module(module):
     """remove the temporary file created by tests in this file
     this gets automatically called by pytest"""
@@ -114,6 +113,7 @@ def test_read_chunk_3(get_fn):
     eq(a[0], b[0])
 
 def test_read_write_1():
+    """Default test using netCDF4"""
     xyz = np.random.randn(100, 3, 3)
     time = np.random.randn(100)
     boxlengths = np.random.randn(100, 3)
@@ -130,10 +130,12 @@ def test_read_write_1():
         assert eq(d, boxangles)
 
 def test_read_write_1_scipy(monkeypatch):
+    """Test fallback scipy implementation"""
     monkeypatch.setitem(sys.modules, 'netCDF4', None)
     test_read_write_1()
 
 def test_read_write_2(get_fn):
+    """Default test using netCDF4"""
     xyz = np.random.randn(5, 22, 3)
     time = np.random.randn(5)
 
@@ -152,6 +154,7 @@ def test_read_write_2(get_fn):
     eq(t.unitcell_lengths, None)
 
 def test_read_write_2_scipy(get_fn, monkeypatch):
+    """Test fallback scipy implementation"""
     monkeypatch.setitem(sys.modules, 'netCDF4', None)
     test_read_write_2(get_fn)
 
@@ -167,6 +170,11 @@ def test_ragged_1():
         with pytest.raises(ValueError):
             f.write(xyz, time, cell_lengths, cell_angles)
 
+def test_ragged_1_scipy(monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_ragged_1()
+
 
 def test_ragged_2():
     # try first writing no cell angles/lengths, and then adding some
@@ -181,6 +189,10 @@ def test_ragged_2():
         with pytest.raises(ValueError):
             f.write(xyz, time)
 
+def test_ragged_2_scipy(monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_ragged_2()
 
 def test_read_write_25():
     xyz = np.random.randn(100, 3, 3)
@@ -202,6 +214,10 @@ def test_read_write_25():
         assert eq(c, None)
         assert eq(d, None)
 
+def test_read_write_25_scipy(monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_read_write_25()
 
 def test_write_3():
     with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
@@ -212,6 +228,10 @@ def test_write_3():
         with pytest.raises(ValueError):
             f.write(np.random.randn(100, 3, 3), cell_angles=np.random.randn(100, 3))
 
+def test_write_3_scipy(monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_write_3()
 
 def test_n_atoms():
     with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
@@ -219,6 +239,10 @@ def test_n_atoms():
     with NetCDFTrajectoryFile(temp) as f:
         eq(f.n_atoms, 11)
 
+def test_n_atoms_scipy(monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_n_atoms()
 
 def test_do_overwrite():
     with open(temp, "w") as f:
@@ -227,6 +251,10 @@ def test_do_overwrite():
     with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
         f.write(np.random.randn(10, 5, 3))
 
+def test_do_overwrite_scipy(monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_do_overwrite()
 
 def test_do_not_overwrite():
     with open(temp, "w") as f:
@@ -236,6 +264,10 @@ def test_do_not_overwrite():
         with NetCDFTrajectoryFile(temp, "w", force_overwrite=False) as f:
             f.write(np.random.randn(10, 5, 3))
 
+def test_do_not_overwrite_scipy(monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_do_not_overwrite()
 
 def test_trajectory_save_load(get_fn):
     t = md.load(get_fn("native.pdb"))
@@ -248,6 +280,10 @@ def test_trajectory_save_load(get_fn):
     eq(t.xyz, t2.xyz)
     eq(t.unitcell_lengths, t2.unitcell_lengths)
 
+def test_do_overwrite_scipy(get_fn, monkeypatch):
+    """Test fallback scipy implementation"""
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_trajectory_save_load(get_fn)
 
 @needs_cpptraj
 def test_cpptraj(get_fn):
