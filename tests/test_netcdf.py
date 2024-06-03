@@ -130,13 +130,11 @@ def test_read_write_1():
         assert eq(d, boxangles)
 
 def test_read_write_1_scipy(monkeypatch):
-    with monkeypatch.context() as m:
-        monkeypatch.setitem(sys.modules, 'netCDF4', None)
-        test_read_write_1()
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_read_write_1()
 
 def test_read_write_1_netcdf(monkeypatch):
-    with monkeypatch.context() as m:
-        test_read_write_1()
+    test_read_write_1()
 
 def test_read_write_2(get_fn):
     xyz = np.random.randn(5, 22, 3)
@@ -157,13 +155,11 @@ def test_read_write_2(get_fn):
     eq(t.unitcell_lengths, None)
 
 def test_read_write_2_scipy(get_fn, monkeypatch):
-    with monkeypatch.context() as m:
-        monkeypatch.setitem(sys.modules, 'netCDF4', None)
-        test_read_write_2(get_fn)
+    monkeypatch.setitem(sys.modules, 'netCDF4', None)
+    test_read_write_2(get_fn)
 
 def test_read_write_2_netcdf(get_fn, monkeypatch):
-    with monkeypatch.context() as m:
-        test_read_write_2(get_fn)
+    test_read_write_2(get_fn)
 
 def test_ragged_1():
     # try first writing no cell angles/lengths, and then adding some
