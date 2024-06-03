@@ -28,6 +28,7 @@ from distutils.spawn import find_executable
 
 import numpy as np
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 import mdtraj as md
 from mdtraj.formats import NetCDFTrajectoryFile
@@ -41,283 +42,219 @@ needs_cpptraj = pytest.mark.skipif(
 fd, temp = tempfile.mkstemp(suffix=".nc")
 fd2, temp2 = tempfile.mkstemp(suffix=".nc")
 
-def teardown_module(module):
-    """remove the temporary file created by tests in this file
-    this gets automatically called by pytest"""
-    os.close(fd)
-    os.close(fd2)
-    os.unlink(temp)
-    os.unlink(temp2)
-
-def test_read_after_close(get_fn):
-    """Default test using netCDF4"""
-    f = NetCDFTrajectoryFile(get_fn("mdcrd.nc"))
-    assert eq(f.n_atoms, 223)
-    assert eq(f.n_frames, 101)
-
-    f.close()
-
-    # should be an IOError if you read a file that's closed
-    with pytest.raises(IOError):
-        f.read()
-
-def test_read_after_close_scipy(get_fn, monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_read_after_close(get_fn)
-
-def test_shape(get_fn):
-    """Default test using netCDF4"""
-    xyz, time, boxlength, boxangles = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()
-
-    assert eq(xyz.shape, (101, 223, 3))
-    assert eq(time.shape, (101,))
-    assert eq(boxlength, None)
-    assert eq(boxangles, None)
-
-def test_shape_scipy(get_fn, monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_shape(get_fn)
-
-def test_read_chunk_1(get_fn):
-    """Default test using netCDF4"""
-    with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as f:
-        a, b, c, d = f.read(10)
-        e, f, g, h = f.read()
-
-        assert eq(len(a), 10)
-        assert eq(len(b), 10)
-
-        assert eq(len(e), 101 - 10)
-        assert eq(len(f), 101 - 10)
-
-    xyz = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()[0]
-
-    assert eq(a, xyz[0:10])
-    assert eq(e, xyz[10:])
-
-def test_read_chunk_1_scipy(get_fn, monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_read_chunk_1(get_fn)
-
-def test_read_chunk_2(get_fn):
-    """Default test using netCDF4"""
-
-    with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as f:
-        a, b, c, d = f.read(10)
-        e, f, g, h = f.read(100000000000)
-
-        assert eq(len(a), 10)
-        assert eq(len(b), 10)
-
-        assert eq(len(e), 101 - 10)
-        assert eq(len(f), 101 - 10)
-
-    xyz = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()[0]
-
-    assert eq(a, xyz[0:10])
-    assert eq(e, xyz[10:])
-
-def test_read_chunk_2_scipy(get_fn, monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_read_chunk_2(get_fn)
-
-def test_read_chunk_3(get_fn):
-    """Default test using netCDF4"""
-    # too big of a chunk should not be an issue
-    a = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read(1000000000)
-    b = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()
-
-    eq(a[0], b[0])
-
-def test_read_chunk_3_scipy(get_fn, monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_read_chunk_3(get_fn)
-
-def test_read_write_1():
-    """Default test using netCDF4"""
-    xyz = np.random.randn(100, 3, 3)
-    time = np.random.randn(100)
-    boxlengths = np.random.randn(100, 3)
-    boxangles = np.random.randn(100, 3)
-
-    with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
-        f.write(xyz, time, boxlengths, boxangles)
-
-    with NetCDFTrajectoryFile(temp) as f:
-        a, b, c, d = f.read()
-        assert eq(a, xyz)
-        assert eq(b, time)
-        assert eq(c, boxlengths)
-        assert eq(d, boxangles)
-
-def test_read_write_1_scipy(monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_read_write_1()
-
-def test_read_write_2(get_fn):
-    """Default test using netCDF4"""
-    xyz = np.random.randn(5, 22, 3)
-    time = np.random.randn(5)
-
-    with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
-        f.write(xyz, time)
-
-    with NetCDFTrajectoryFile(temp) as f:
-        rcoord, rtime, rlengths, rangles = f.read()
-        assert eq(rcoord, xyz)
-        assert eq(rtime, time)
-        assert eq(rlengths, None)
-        assert eq(rangles, None)
-
-    t = md.load(temp, top=get_fn("native.pdb"))
-    eq(t.unitcell_angles, None)
-    eq(t.unitcell_lengths, None)
-
-def test_read_write_2_scipy(get_fn, monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_read_write_2(get_fn)
-
-def test_ragged_1():
-    """Default test using netCDF4"""
-    # try first writing no cell angles/lengths, and then adding some
-    xyz = np.random.randn(100, 3, 3)
-    time = np.random.randn(100)
-    cell_lengths = np.random.randn(100, 3)
-    cell_angles = np.random.randn(100, 3)
-
-    with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
-        f.write(xyz, time)
-        with pytest.raises(ValueError):
-            f.write(xyz, time, cell_lengths, cell_angles)
-
-def test_ragged_1_scipy(monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_ragged_1()
-
-
-def test_ragged_2():
-    """Default test using netCDF4"""
-    # try first writing no cell angles/lengths, and then adding some
-    xyz = np.random.randn(100, 3, 3)
-    time = np.random.randn(100)
-    cell_lengths = np.random.randn(100, 3)
-    cell_angles = np.random.randn(100, 3)
-
-    # from mdtraj.formats import HDF5TrajectoryFile
-    with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
-        f.write(xyz, time, cell_lengths, cell_angles)
-        with pytest.raises(ValueError):
+class TestNetCDFNetCDF4():
+    def teardown_module(self, module):
+        """remove the temporary file created by tests in this file
+        this gets automatically called by pytest"""
+        os.close(fd)
+        os.close(fd2)
+        os.unlink(temp)
+        os.unlink(temp2)
+    
+    def test_read_after_close(self, get_fn):
+        """Default test using netCDF4"""
+        f = NetCDFTrajectoryFile(get_fn("mdcrd.nc"))
+        assert eq(f.n_atoms, 223)
+        assert eq(f.n_frames, 101)
+    
+        f.close()
+    
+        # should be an IOError if you read a file that's closed
+        with pytest.raises(IOError):
+            f.read()
+    
+    def test_shape(self, get_fn):
+        """Default test using netCDF4"""
+        xyz, time, boxlength, boxangles = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()
+    
+        assert eq(xyz.shape, (101, 223, 3))
+        assert eq(time.shape, (101,))
+        assert eq(boxlength, None)
+        assert eq(boxangles, None)
+    
+    def test_read_chunk_1(self, get_fn):
+        """Default test using netCDF4"""
+        with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as f:
+            a, b, c, d = f.read(10)
+            e, f, g, h = f.read()
+    
+            assert eq(len(a), 10)
+            assert eq(len(b), 10)
+    
+            assert eq(len(e), 101 - 10)
+            assert eq(len(f), 101 - 10)
+    
+        xyz = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()[0]
+    
+        assert eq(a, xyz[0:10])
+        assert eq(e, xyz[10:])
+    
+    def test_read_chunk_2(self, get_fn):
+        """Default test using netCDF4"""
+    
+        with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as f:
+            a, b, c, d = f.read(10)
+            e, f, g, h = f.read(100000000000)
+    
+            assert eq(len(a), 10)
+            assert eq(len(b), 10)
+    
+            assert eq(len(e), 101 - 10)
+            assert eq(len(f), 101 - 10)
+    
+        xyz = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()[0]
+    
+        assert eq(a, xyz[0:10])
+        assert eq(e, xyz[10:])
+    
+    def test_read_chunk_3(self, get_fn):
+        """Default test using netCDF4"""
+        # too big of a chunk should not be an issue
+        a = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read(1000000000)
+        b = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()
+    
+        eq(a[0], b[0])
+    
+    def test_read_write_1(self):
+        """Default test using netCDF4"""
+        xyz = np.random.randn(100, 3, 3)
+        time = np.random.randn(100)
+        boxlengths = np.random.randn(100, 3)
+        boxangles = np.random.randn(100, 3)
+    
+        with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
+            f.write(xyz, time, boxlengths, boxangles)
+    
+        with NetCDFTrajectoryFile(temp) as f:
+            a, b, c, d = f.read()
+            assert eq(a, xyz)
+            assert eq(b, time)
+            assert eq(c, boxlengths)
+            assert eq(d, boxangles)
+    
+    def test_read_write_2(self, get_fn):
+        """Default test using netCDF4"""
+        xyz = np.random.randn(5, 22, 3)
+        time = np.random.randn(5)
+    
+        with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
             f.write(xyz, time)
-
-def test_ragged_2_scipy(monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_ragged_2()
-
-def test_read_write_25():
-    """Default test using netCDF4"""
-    xyz = np.random.randn(100, 3, 3)
-    time = np.random.randn(100)
-
-    with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
-        f.write(xyz, time)
-        f.write(xyz, time)
-
-    with NetCDFTrajectoryFile(temp) as f:
-        a, b, c, d = f.read()
-        assert eq(a[0:100], xyz)
-        assert eq(b[0:100], time)
-        assert eq(c, None)
-        assert eq(d, None)
-
-        assert eq(a[100:], xyz)
-        assert eq(b[100:], time)
-        assert eq(c, None)
-        assert eq(d, None)
-
-def test_read_write_25_scipy(monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_read_write_25()
-
-def test_write_3():
-    """Default test using netCDF4"""
-    with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
-        # you can't supply cell_lengths without cell_angles
-        with pytest.raises(ValueError):
-            f.write(np.random.randn(100, 3, 3), cell_lengths=np.random.randn(100, 3))
-        # or the other way around
-        with pytest.raises(ValueError):
-            f.write(np.random.randn(100, 3, 3), cell_angles=np.random.randn(100, 3))
-
-def test_write_3_scipy(monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_write_3()
-
-def test_n_atoms():
-    """Default test using netCDF4"""
-    with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
-        f.write(np.random.randn(1, 11, 3))
-    with NetCDFTrajectoryFile(temp) as f:
-        eq(f.n_atoms, 11)
-
-def test_n_atoms_scipy(monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_n_atoms()
-
-def test_do_overwrite():
-    """Default test using netCDF4"""
-    with open(temp, "w") as f:
-        f.write("a")
-
-    with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
-        f.write(np.random.randn(10, 5, 3))
-
-def test_do_overwrite_scipy(monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_do_overwrite()
-
-def test_do_not_overwrite():
-    """Default test using netCDF4"""
-    with open(temp, "w") as f:
-        f.write("a")
-
-    with pytest.raises(IOError):
-        with NetCDFTrajectoryFile(temp, "w", force_overwrite=False) as f:
+    
+        with NetCDFTrajectoryFile(temp) as f:
+            rcoord, rtime, rlengths, rangles = f.read()
+            assert eq(rcoord, xyz)
+            assert eq(rtime, time)
+            assert eq(rlengths, None)
+            assert eq(rangles, None)
+    
+        t = md.load(temp, top=get_fn("native.pdb"))
+        eq(t.unitcell_angles, None)
+        eq(t.unitcell_lengths, None)
+    
+    def test_ragged_1(self):
+        """Default test using netCDF4"""
+        # try first writing no cell angles/lengths, and then adding some
+        xyz = np.random.randn(100, 3, 3)
+        time = np.random.randn(100)
+        cell_lengths = np.random.randn(100, 3)
+        cell_angles = np.random.randn(100, 3)
+    
+        with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
+            f.write(xyz, time)
+            with pytest.raises(ValueError):
+                f.write(xyz, time, cell_lengths, cell_angles)
+    
+    def test_ragged_2(self):
+        """Default test using netCDF4"""
+        # try first writing no cell angles/lengths, and then adding some
+        xyz = np.random.randn(100, 3, 3)
+        time = np.random.randn(100)
+        cell_lengths = np.random.randn(100, 3)
+        cell_angles = np.random.randn(100, 3)
+    
+        # from mdtraj.formats import HDF5TrajectoryFile
+        with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
+            f.write(xyz, time, cell_lengths, cell_angles)
+            with pytest.raises(ValueError):
+                f.write(xyz, time)
+    
+    def test_read_write_25(self):
+        """Default test using netCDF4"""
+        xyz = np.random.randn(100, 3, 3)
+        time = np.random.randn(100)
+    
+        with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
+            f.write(xyz, time)
+            f.write(xyz, time)
+    
+        with NetCDFTrajectoryFile(temp) as f:
+            a, b, c, d = f.read()
+            assert eq(a[0:100], xyz)
+            assert eq(b[0:100], time)
+            assert eq(c, None)
+            assert eq(d, None)
+    
+            assert eq(a[100:], xyz)
+            assert eq(b[100:], time)
+            assert eq(c, None)
+            assert eq(d, None)
+    
+    def test_write_3(self):
+        """Default test using netCDF4"""
+        with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
+            # you can't supply cell_lengths without cell_angles
+            with pytest.raises(ValueError):
+                f.write(np.random.randn(100, 3, 3), cell_lengths=np.random.randn(100, 3))
+            # or the other way around
+            with pytest.raises(ValueError):
+                f.write(np.random.randn(100, 3, 3), cell_angles=np.random.randn(100, 3))
+    
+    def test_n_atoms(self):
+        """Default test using netCDF4"""
+        with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
+            f.write(np.random.randn(1, 11, 3))
+        with NetCDFTrajectoryFile(temp) as f:
+            eq(f.n_atoms, 11)
+    
+    def test_do_overwrite(self):
+        """Default test using netCDF4"""
+        with open(temp, "w") as f:
+            f.write("a")
+    
+        with NetCDFTrajectoryFile(temp, "w", force_overwrite=True) as f:
             f.write(np.random.randn(10, 5, 3))
+    
+    def test_do_not_overwrite(self):
+        """Default test using netCDF4"""
+        with open(temp, "w") as f:
+            f.write("a")
+    
+        with pytest.raises(IOError):
+            with NetCDFTrajectoryFile(temp, "w", force_overwrite=False) as f:
+                f.write(np.random.randn(10, 5, 3))
+    
+    def test_trajectory_save_load(self, get_fn):
+        """Default test using netCDF4"""
+        t = md.load(get_fn("native.pdb"))
+        t.unitcell_lengths = 1 * np.ones((1, 3))
+        t.unitcell_angles = 90 * np.ones((1, 3))
+    
+        t.save(temp)
+        t2 = md.load(temp, top=t.topology)
+    
+        eq(t.xyz, t2.xyz)
+        eq(t.unitcell_lengths, t2.unitcell_lengths)
 
-def test_do_not_overwrite_scipy(monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_do_not_overwrite()
 
-def test_trajectory_save_load(get_fn):
-    """Default test using netCDF4"""
-    t = md.load(get_fn("native.pdb"))
-    t.unitcell_lengths = 1 * np.ones((1, 3))
-    t.unitcell_angles = 90 * np.ones((1, 3))
+class TestNetCDFScipy(TestNetCDFNetCDF4):
+    def setup_method(self, method):
+        monkeypatch = MonkeyPatch()
+        monkeypatch.setitem(sys.modules, 'netCDF4', None)
 
-    t.save(temp)
-    t2 = md.load(temp, top=t.topology)
+    def teardown_method(self, method):
+        monkeypatch = MonkeyPatch()
+        monkeypatch.delitem(sys.modules, 'netCDF4')
 
-    eq(t.xyz, t2.xyz)
-    eq(t.unitcell_lengths, t2.unitcell_lengths)
-
-def test_do_overwrite_scipy(get_fn, monkeypatch):
-    """Test fallback scipy implementation"""
-    monkeypatch.setitem(sys.modules, 'netCDF4', None)
-    test_trajectory_save_load(get_fn)
 
 @needs_cpptraj
 def test_cpptraj(get_fn):
@@ -354,3 +291,4 @@ def test_cpptraj(get_fn):
     np.testing.assert_array_almost_equal(trj0.time, trj1.time)
     np.testing.assert_array_almost_equal(trj0.time, trj2.time)
     np.testing.assert_array_almost_equal(trj1.time, trj2.time)
+         
