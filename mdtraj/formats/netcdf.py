@@ -158,8 +158,6 @@ class NetCDFTrajectoryFile:
             # for scipy.io.netcdf_file is "version=2"
             input_args = {"version": 2}
 
-        netcdf = import_("scipy.io").netcdf_file  # noqa: F841
-
         if mode not in ["r", "w"]:
             raise ValueError("mode must be one of ['r', 'w']")
 
