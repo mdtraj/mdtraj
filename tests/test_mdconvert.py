@@ -110,91 +110,108 @@ def extension(request):
     return request.param
 
 
-def test_pairwise(traj, extension):
+def test_pairwise(traj, extension, monkeypatch):
     """ensure that the xyz coordinates are preserved by a trip
     from python -> save in format X -> mdconvert to format Y -> python
     """
-    traj, _, tmpdir = traj
-    ext1 = extension
 
-    # save one copy of traj for use as a topology file
-    topology_fn = f"{tmpdir}/topology.pdb"
-    traj[0].save(topology_fn)
+    def test_base(traj, extension, monkeypatch):
+        traj, _, tmpdir = traj
+        ext1 = extension
 
-    # save a .dat file for the atom_indices so that we can test
-    # mdconvert's atom_indices flag
-    atom_indices = np.array([0, 3])
-    atom_indices_fn = f"{tmpdir}/atom_indices.dat"
-    np.savetxt(atom_indices_fn, atom_indices, fmt="%d")
+        # save one copy of traj for use as a topology file
+        topology_fn = f"{tmpdir}/topology.pdb"
+        traj[0].save(topology_fn)
+    
+        # save a .dat file for the atom_indices so that we can test
+        # mdconvert's atom_indices flag
+        atom_indices = np.array([0, 3])
+        atom_indices_fn = f"{tmpdir}/atom_indices.dat"
+        np.savetxt(atom_indices_fn, atom_indices, fmt="%d")
+    
+        in_fn = f"{tmpdir}/traj.{ext1}"
+        traj.save(in_fn)
+        working_dir = f"{tmpdir}/from-{ext1}"
+        os.mkdir(working_dir)
 
-    in_fn = f"{tmpdir}/traj.{ext1}"
-    traj.save(in_fn)
-    working_dir = f"{tmpdir}/from-{ext1}"
-    os.mkdir(working_dir)
+        for ext2 in extensions:
+            print(ext2)
+            out_fn = f"traj.{ext2}"
+    
+            command1 = ["mdconvert", in_fn, "-o", out_fn, "-c 6"]
+            if ext2 in ["pdb", "h5", "lh5"]:
+                # if we're saving a pdb or h5, we need to give it a topology too
+                command1 += ["-t", topology_fn]
+    
+            # TODO: test fixture
+            subprocess.check_call(command1, cwd=working_dir)
+    
+            # Use the --atom_indices flag to mdconvert
+            command2 = command1 + ["-a", atom_indices_fn]
+            command2[3] = "subset." + out_fn  # make sure the output goes to a different file
+            subprocess.check_call(command2, cwd=working_dir)
+    
+            # Use the --stride 3 flag
+            command3 = command1 + ["-s 3"]
+            command3[3] = "stride." + out_fn  # change the out filename, so they don't clobbed
+            subprocess.check_call(command3, cwd=working_dir)
+    
+            # ensure that the xyz coordinates are preserved by a trip
+            # from python -> save in format X -> mdconvert to format Y -> python
+            load_kwargs_check1 = {}
+            load_kwargs_check2 = {}
+            if ext2 not in ["pdb", "h5", "lh5"]:
+                load_kwargs_check1["top"] = traj.topology
+                load_kwargs_check2["top"] = traj.topology.subset(atom_indices)
+    
+            out1 = md.load(os.path.join(working_dir, out_fn), **load_kwargs_check1)
+            out2 = md.load(
+                os.path.join(working_dir, "subset." + out_fn),
+                **load_kwargs_check2,
+            )
+            out3 = md.load(
+                os.path.join(working_dir, "stride." + out_fn),
+                **load_kwargs_check1,
+            )
+    
+            if ext1 in ["lh5"] or ext2 in ["lh5"]:
+                decimal = 3
+            else:
+                decimal = 6
+            eq(out1.xyz, traj.xyz, decimal=decimal)
+            eq(out2.xyz, traj.xyz[:, atom_indices], decimal=decimal)
+            eq(out3.xyz, traj.xyz[::3], decimal=decimal)
+    
+            if ext1 not in ["lh5"] and ext2 not in ["lh5"]:
+                # binpos doesn't save unitcell information
+                eq(out1.unitcell_vectors, traj.unitcell_vectors, decimal=2)
+                eq(out2.unitcell_vectors, traj.unitcell_vectors, decimal=2)
+                eq(out3.unitcell_vectors, traj.unitcell_vectors[::3], decimal=2)
+    
+            if all(e in ["xtc", "trr", "nc", "h5"] for e in [ext1, ext2]):
+                # these formats contain time information
+                if all(e in ["nc"] for e in [ext1, ext2]):
+                    with monkeypatch.context() as m:
+                        m.setitem(sys.modules, 'netCDF4', None)
+                        eq(out1.time, traj.time)
+                        eq(out2.time, traj.time)
+                        eq(out3.time, traj.time[::3])
 
-    for ext2 in extensions:
-        print(ext2)
-        out_fn = f"traj.{ext2}"
+                eq(out1.time, traj.time)
+                eq(out2.time, traj.time)
+                eq(out3.time, traj.time[::3])
+    
+            if ext2 in ["pdb", "h5", "lh5"]:
+                # these formats contain a topology in the file that was
+                # read from disk
+                eq(out1.topology, traj.topology)
+                eq(out2.topology, traj.topology.subset(atom_indices))
+                eq(out3.topology, traj.topology)
 
-        command1 = ["mdconvert", in_fn, "-o", out_fn, "-c 6"]
-        if ext2 in ["pdb", "h5", "lh5"]:
-            # if we're saving a pdb or h5, we need to give it a topology too
-            command1 += ["-t", topology_fn]
-
-        # TODO: test fixture
-        subprocess.check_call(command1, cwd=working_dir)
-
-        # Use the --atom_indices flag to mdconvert
-        command2 = command1 + ["-a", atom_indices_fn]
-        command2[3] = "subset." + out_fn  # make sure the output goes to a different file
-        subprocess.check_call(command2, cwd=working_dir)
-
-        # Use the --stride 3 flag
-        command3 = command1 + ["-s 3"]
-        command3[3] = "stride." + out_fn  # change the out filename, so they don't clobbed
-        subprocess.check_call(command3, cwd=working_dir)
-
-        # ensure that the xyz coordinates are preserved by a trip
-        # from python -> save in format X -> mdconvert to format Y -> python
-        load_kwargs_check1 = {}
-        load_kwargs_check2 = {}
-        if ext2 not in ["pdb", "h5", "lh5"]:
-            load_kwargs_check1["top"] = traj.topology
-            load_kwargs_check2["top"] = traj.topology.subset(atom_indices)
-
-        out1 = md.load(os.path.join(working_dir, out_fn), **load_kwargs_check1)
-        out2 = md.load(
-            os.path.join(working_dir, "subset." + out_fn),
-            **load_kwargs_check2,
-        )
-        out3 = md.load(
-            os.path.join(working_dir, "stride." + out_fn),
-            **load_kwargs_check1,
-        )
-
-        if ext1 in ["lh5"] or ext2 in ["lh5"]:
-            decimal = 3
-        else:
-            decimal = 6
-        eq(out1.xyz, traj.xyz, decimal=decimal)
-        eq(out2.xyz, traj.xyz[:, atom_indices], decimal=decimal)
-        eq(out3.xyz, traj.xyz[::3], decimal=decimal)
-
-        if ext1 not in ["lh5"] and ext2 not in ["lh5"]:
-            # binpos doesn't save unitcell information
-            eq(out1.unitcell_vectors, traj.unitcell_vectors, decimal=2)
-            eq(out2.unitcell_vectors, traj.unitcell_vectors, decimal=2)
-            eq(out3.unitcell_vectors, traj.unitcell_vectors[::3], decimal=2)
-
-        if all(e in ["xtc", "trr", "nc", "h5"] for e in [ext1, ext2]):
-            # these formats contain time information
-            eq(out1.time, traj.time)
-            eq(out2.time, traj.time)
-            eq(out3.time, traj.time[::3])
-
-        if ext2 in ["pdb", "h5", "lh5"]:
-            # these formats contain a topology in the file that was
-            # read from disk
-            eq(out1.topology, traj.topology)
-            eq(out2.topology, traj.topology.subset(atom_indices))
-            eq(out3.topology, traj.topology)
+    if extension in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(traj, '.scipy.nc', monkeypatch)
+    
+    test_base(traj, extension, monkeypatch)
