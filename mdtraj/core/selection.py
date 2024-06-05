@@ -27,7 +27,6 @@ import sys
 from collections import namedtuple
 from copy import deepcopy
 
-import astunparse
 from pyparsing import (
     Group,
     Keyword,
@@ -42,6 +41,12 @@ from pyparsing import (
     opAssoc,
     quotedString,
 )
+
+try:
+    from ast import unparse
+except ImportError:
+    from astunparse import unparse
+
 
 # this number arises from the current selection language, if the cache size is exceeded, it hurts performance a bit.
 ParserElement.enablePackrat(cache_size_limit=304)
@@ -426,7 +431,7 @@ class parse_selection:
         )
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
-        source = astunparse.unparse(astnode)
+        source = unparse(astnode)
 
         expr = eval(
             compile(ast.fix_missing_locations(func), "<string>", mode="eval"),
