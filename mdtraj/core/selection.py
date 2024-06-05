@@ -408,14 +408,10 @@ class parse_selection:
         astnode = self.transformer.visit(deepcopy(parse_result[0].ast()))
 
         # Special check for a single literal
-        try:
-            check = astnode.value
-        except AttributeError:
-            check = astnode
 
-        if isinstance(astnode, ast.Constant) and isinstance(check, (int, float, str)) and check not in {True, False, None}:
+        if isinstance(astnode, ast.Constant) and astnode.value not in {True, False, None}:
             raise ValueError(
-                "Cannot use a single literal as a boolean. " f"Choked on node with value {check}",
+                "Cannot use a single literal as a boolean. " f"Choked on node with value {astnode.value}",
             )
 
         args = [ast.arg(arg="atom", annotation=None)]
