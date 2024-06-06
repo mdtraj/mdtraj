@@ -1474,7 +1474,7 @@ class Trajectory:
         # run the saver, and return whatever output it gives
         return saver(filename, **kwargs)
 
-    def save_hdf5(self, filename, savemode="w", force_overwrite=True):
+    def save_hdf5(self, filename, mode="w", force_overwrite=True):
         """Save trajectory to MDTraj HDF5 format
 
         Parameters
@@ -1483,15 +1483,15 @@ class Trajectory:
             filesystem path in which to save the trajectory
         force_overwrite : bool, default=True
             Overwrite anything that exists at filename, if its already there
-        savemode : str, default='w'
+        mode : str, default='w'
             The mode in which to save the file. 'w' will overwrite any existing
             file, 'a' will append to an existing file.
         """
         # check if savemode is valid (only "w" or "a" are allowed)
-        if savemode not in ["w", "a"]:
+        if mode not in ["w", "a"]:
             raise ValueError("savemode must be either 'w' or 'a'")
         
-        with HDF5TrajectoryFile(filename, savemode, force_overwrite=force_overwrite) as f:
+        with HDF5TrajectoryFile(filename, mode, force_overwrite=force_overwrite) as f:
             f.write(
                 coordinates=in_units_of(
                     self.xyz,
