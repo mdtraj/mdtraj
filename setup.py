@@ -308,7 +308,7 @@ metadata = dict(
     install_requires=[
         "numpy>=1.23,<2.0.0a0",
         "scipy",
-        "astunparse;python_version<3.9",
+        "astunparse;python_version<'3.9'",
         "pyparsing",
         "packaging",
     ],
