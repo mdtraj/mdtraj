@@ -24,6 +24,7 @@
 import ast
 import re
 import sys
+from ast import unparse
 from collections import namedtuple
 from copy import deepcopy
 
@@ -41,11 +42,6 @@ from pyparsing import (
     opAssoc,
     quotedString,
 )
-
-try:
-    from ast import unparse
-except ImportError:
-    from astunparse import unparse
 
 
 # this number arises from the current selection language, if the cache size is exceeded, it hurts performance a bit.
