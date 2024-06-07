@@ -119,6 +119,7 @@ class TestNetCDFNetCDF4():
         # too big of a chunk should not be an issue
         with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as file:
             a = file.read(1000000000)
+        with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as file:
             b = file.read()
     
         eq(a[0], b[0])
