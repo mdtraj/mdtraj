@@ -135,7 +135,6 @@ def test_pairwise(traj, extension, monkeypatch):
         os.mkdir(working_dir)
 
         for ext2 in extensions:
-            print(ext2)
             out_fn = f"traj.{ext2}"
     
             command1 = ["mdconvert", in_fn, "-o", out_fn, "-c 6"]
@@ -209,9 +208,14 @@ def test_pairwise(traj, extension, monkeypatch):
                 eq(out3.topology, traj.topology)
 
     if extension in ('nc'):
-        # Running with scipy
+        # If extension is nc, we need to test with both SciPy and NetCDF4.
+        # First, we use pytest.monkeypatch to remove the netCDF4 import from the environment
+        # Then, we make sure the extension for both SciPy and NetCDF4 tests are different (or 
+        # there will be SameFileError/FileExistsError failures)
+        # All these changes will be reverted outside the context manager, and the netCDF4 test will run again
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(traj, '.scipy.nc', monkeypatch)
     
+    # For testing most formats and with netCDF4 (if format is nc)
     test_base(traj, extension, monkeypatch)
