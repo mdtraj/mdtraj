@@ -43,6 +43,10 @@ fd, temp = tempfile.mkstemp(suffix=".nc")
 fd2, temp2 = tempfile.mkstemp(suffix=".nc")
 
 class TestNetCDFNetCDF4():
+    """
+    This class contains all the tests that we would also want to run with scipy.
+    Now a class so we can subclass it for later.
+    """
     def teardown_module(self, module):
         """remove the temporary file created by tests in this file
         this gets automatically called by pytest"""
@@ -65,8 +69,9 @@ class TestNetCDFNetCDF4():
     
     def test_shape(self, get_fn):
         """Default test using netCDF4"""
-        xyz, time, boxlength, boxangles = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()
-    
+        with  NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as netcdf_file:
+            xyz, time, boxlength, boxangles = netcdf_file.read()
+
         assert eq(xyz.shape, (101, 223, 3))
         assert eq(time.shape, (101,))
         assert eq(boxlength, None)
@@ -74,9 +79,9 @@ class TestNetCDFNetCDF4():
     
     def test_read_chunk_1(self, get_fn):
         """Default test using netCDF4"""
-        with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as f:
-            a, b, c, d = f.read(10)
-            e, f, g, h = f.read()
+        with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as file:
+            a, b, c, d = file.read(10)
+            e, f, g, h = file.read()
     
             assert eq(len(a), 10)
             assert eq(len(b), 10)
@@ -84,7 +89,8 @@ class TestNetCDFNetCDF4():
             assert eq(len(e), 101 - 10)
             assert eq(len(f), 101 - 10)
     
-        xyz = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()[0]
+        with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as file:
+            xyz = file.read()[0]
     
         assert eq(a, xyz[0:10])
         assert eq(e, xyz[10:])
@@ -92,9 +98,9 @@ class TestNetCDFNetCDF4():
     def test_read_chunk_2(self, get_fn):
         """Default test using netCDF4"""
     
-        with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as f:
-            a, b, c, d = f.read(10)
-            e, f, g, h = f.read(100000000000)
+        with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as file:
+            a, b, c, d = file.read(10)
+            e, f, g, h = file.read(100000000000)
     
             assert eq(len(a), 10)
             assert eq(len(b), 10)
@@ -102,7 +108,8 @@ class TestNetCDFNetCDF4():
             assert eq(len(e), 101 - 10)
             assert eq(len(f), 101 - 10)
     
-        xyz = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()[0]
+        with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as file:
+            xyz = file.read()[0]
     
         assert eq(a, xyz[0:10])
         assert eq(e, xyz[10:])
@@ -110,8 +117,9 @@ class TestNetCDFNetCDF4():
     def test_read_chunk_3(self, get_fn):
         """Default test using netCDF4"""
         # too big of a chunk should not be an issue
-        a = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read(1000000000)
-        b = NetCDFTrajectoryFile(get_fn("mdcrd.nc")).read()
+        with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as file:
+            a = file.read(1000000000)
+            b = file.read()
     
         eq(a[0], b[0])
     
@@ -247,13 +255,16 @@ class TestNetCDFNetCDF4():
 
 
 class TestNetCDFScipy(TestNetCDFNetCDF4):
+    """This inherits the TestNetCDFNetCDF4 class and run all tests with SciPy"""
     def setup_method(self, method):
+        """Patching out netCDF4. This is the way to do it inside a class"""
         monkeypatch = MonkeyPatch()
         monkeypatch.setitem(sys.modules, 'netCDF4', None)
 
     def teardown_method(self, method):
+        """Undoing most changes, just in case."""
         monkeypatch = MonkeyPatch()
-        monkeypatch.delitem(sys.modules, 'netCDF4')
+        monkeypatch.delitem(sys.modules, 'netCDF4', None)
 
 
 @needs_cpptraj
