@@ -24,10 +24,10 @@
 import ast
 import re
 import sys
+from ast import unparse
 from collections import namedtuple
 from copy import deepcopy
 
-import astunparse
 from pyparsing import (
     Group,
     Keyword,
@@ -42,6 +42,7 @@ from pyparsing import (
     opAssoc,
     quotedString,
 )
+
 
 # this number arises from the current selection language, if the cache size is exceeded, it hurts performance a bit.
 ParserElement.enablePackrat(cache_size_limit=304)
@@ -75,7 +76,7 @@ class _RewriteNames(ast.NodeTransformer):
         # all other bare names are taken to be string literals. Thus something
         # like parse_selection('name CA') properly resolves CA as a string
         # literal, not a barename to be loaded from the global scope!
-        return ast.Constant(s=node.id, kind=None)
+        return ast.Constant(value=node.id, kind=None)
 
 
 def _chain(*attrs):
@@ -408,9 +409,8 @@ class parse_selection:
         astnode = self.transformer.visit(deepcopy(parse_result[0].ast()))
 
         # Special check for a single literal
-        # TODO: These classes are deprecated since 3.8 and replaced with ast.Constant,
-        # but that substitution breaks behavior
-        if isinstance(astnode, (ast.Num, ast.Str)):
+
+        if isinstance(astnode, ast.Constant) and astnode.value not in {True, False, None}:
             raise ValueError(
                 "Cannot use a single literal as a boolean. " f"Choked on node with value {astnode.value}",
             )
@@ -427,7 +427,7 @@ class parse_selection:
         )
 
         func = ast.Expression(body=ast.Lambda(signature, astnode))
-        source = astunparse.unparse(astnode)
+        source = unparse(astnode)
 
         expr = eval(
             compile(ast.fix_missing_locations(func), "<string>", mode="eval"),
