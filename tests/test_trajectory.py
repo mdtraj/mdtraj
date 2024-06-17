@@ -62,7 +62,7 @@ file_objs = [
 
 
 @pytest.fixture(params=file_objs, ids=lambda x: x[1])
-def ref_traj(request):
+def ref_traj(request, monkeypatch):
     fobj, fext = request.param
     if on_win and on_py3:
         if fext == "lh5":
@@ -206,64 +206,98 @@ def precision2(fext1, fext2):
     return min(precision(fext1), precision(fext2))
 
 
-def test_read_path(ref_traj, get_fn):
-    md.load(Path(get_fn(ref_traj.fn)), top=get_fn("native.pdb"))
+def test_read_path(ref_traj, get_fn, monkeypatch):
+
+    if ref_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            md.load(Path(get_fn(ref_traj.fn)), top=get_fn("native.pdb"))
+
+    md.load(Path(get_fn(ref_traj.fn)), top=get_fn("native.pdb"))    
 
 
-def test_write_path(write_traj, get_fn):
-    if write_traj.fext in ("ncrst", "rst7"):
-        pytest.skip(f"{write_traj.fext} can only store 1 frame per file")
-    if write_traj.fext in ("mdcrd"):
-        pytest.skip(f"{write_traj.fext} can only store rectilinear boxes")
-    t = md.load(get_fn("traj.h5"))
-    if t.unitcell_vectors is None:
-        if write_traj.fext in ("dtr", "lammpstrj"):
-            pytest.skip(f"{write_traj.fext} needs to write unitcells")
-    t.save(Path(write_traj.fn))
-
-
-def test_read_write(ref_traj, write_traj, get_fn):
+def test_write_path(write_traj, get_fn, monkeypatch):
     if write_traj.fext in ("ncrst", "rst7"):
         pytest.skip(f"{write_traj.fext} can only store 1 frame per file")
     if write_traj.fext in ("mdcrd"):
         pytest.skip(f"{write_traj.fext} can only store rectilinear boxes")
 
-    top = get_fn("native.pdb")
-    t = md.load(get_fn(ref_traj.fn), top=top)
+    def test_base(write_traj, get_fn):
+        t = md.load(get_fn("traj.h5"))
+        if t.unitcell_vectors is None:
+            if write_traj.fext in ("dtr", "lammpstrj"):
+                pytest.skip(f"{write_traj.fext} needs to write unitcells")
+        t.save(Path(write_traj.fn))
 
-    if t.unitcell_vectors is None:
-        if write_traj.fext in ("dtr", "lammpstrj"):
-            pytest.skip(f"{write_traj.fext} needs to write unitcells")
-
-    t.save(write_traj.fn)
-    t2 = md.load(write_traj.fn, top=top)
-    eq(t.xyz, t2.xyz, decimal=precision2(ref_traj.fext, write_traj.fext))
-    if has_time_info(write_traj.fext):
-        eq(t.time, t2.time, decimal=3)
+    if write_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(write_traj, get_fn)
+    
+    test_base(write_traj, get_fn)
 
 
-def test_load(ref_traj, get_fn):
-    nat = md.load(get_fn("native.pdb"))
-    num_block = 3
-    t0 = md.load(get_fn(ref_traj.fn), top=nat, discard_overlapping_frames=True)
-    t1 = md.load(get_fn(ref_traj.fn), top=nat, discard_overlapping_frames=False)
-    t2 = md.load(
-        [get_fn(ref_traj.fn) for _ in range(num_block)],
-        top=nat,
-        discard_overlapping_frames=False,
-    )
-    t3 = md.load(
-        [get_fn(ref_traj.fn) for _ in range(num_block)],
-        top=nat,
-        discard_overlapping_frames=True,
-    )
+def test_read_write(ref_traj, write_traj, get_fn, monkeypatch):
+    if write_traj.fext in ("ncrst", "rst7"):
+        pytest.skip(f"{write_traj.fext} can only store 1 frame per file")
+    if write_traj.fext in ("mdcrd"):
+        pytest.skip(f"{write_traj.fext} can only store rectilinear boxes")
 
-    # these don't actually overlap, so discard_overlapping_frames should
-    # have no effect. the overlap is between the last frame of one and the
-    # first frame of the next.
-    assert eq(t0.n_frames, t1.n_frames)
-    assert eq(t0.n_frames * num_block, t2.n_frames)
-    assert eq(t3.n_frames, t2.n_frames)
+    def test_base(ref_traj, write_traj, get_fn):
+        top = get_fn("native.pdb")
+        t = md.load(get_fn(ref_traj.fn), top=top)
+    
+        if t.unitcell_vectors is None:
+            if write_traj.fext in ("dtr", "lammpstrj"):
+                pytest.skip(f"{write_traj.fext} needs to write unitcells")
+    
+        t.save(write_traj.fn)
+        t2 = md.load(write_traj.fn, top=top)
+        eq(t.xyz, t2.xyz, decimal=precision2(ref_traj.fext, write_traj.fext))
+        if has_time_info(write_traj.fext):
+            eq(t.time, t2.time, decimal=3)
+    
+    if write_traj.fext in ('nc') or ref_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(ref_traj, write_traj, get_fn)
+    
+    test_base(ref_traj, write_traj, get_fn)
+
+def test_load(ref_traj, get_fn, monkeypatch):
+    def test_base(ref_traj, get_fn):
+        nat = md.load(get_fn("native.pdb"))
+        num_block = 3
+        t0 = md.load(get_fn(ref_traj.fn), top=nat, discard_overlapping_frames=True)
+        t1 = md.load(get_fn(ref_traj.fn), top=nat, discard_overlapping_frames=False)
+        t2 = md.load(
+            [get_fn(ref_traj.fn) for _ in range(num_block)],
+            top=nat,
+            discard_overlapping_frames=False,
+        )
+        t3 = md.load(
+            [get_fn(ref_traj.fn) for _ in range(num_block)],
+            top=nat,
+            discard_overlapping_frames=True,
+        )
+    
+        # these don't actually overlap, so discard_overlapping_frames should
+        # have no effect. the overlap is between the last frame of one and the
+        # first frame of the next.
+        assert eq(t0.n_frames, t1.n_frames)
+        assert eq(t0.n_frames * num_block, t2.n_frames)
+        assert eq(t3.n_frames, t2.n_frames)
+
+    if ref_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(ref_traj, get_fn)
+    
+    test_base(ref_traj, get_fn)
 
 
 def test_hdf5(get_fn):
@@ -312,14 +346,23 @@ def test_center_aind(get_fn):
     eq(mu0, mu2)
 
 
-def test_float_atom_indices_exception(ref_traj, get_fn):
-    # Is an informative error message given when you supply floats for atom_indices?
-    top = md.load(get_fn("native.pdb")).topology
+def test_float_atom_indices_exception(ref_traj, get_fn, monkeypatch):
+    def test_base(ref_traj, get_fn):
+        # Is an informative error message given when you supply floats for atom_indices?
+        top = md.load(get_fn("native.pdb")).topology
+    
+        try:
+            md.load(get_fn(ref_traj.fn), atom_indices=[0.5, 1.3], top=top)
+        except ValueError as e:
+            assert e.args[0] == "indices must be of an integer type. float64 is not an integer type"
 
-    try:
-        md.load(get_fn(ref_traj.fn), atom_indices=[0.5, 1.3], top=top)
-    except ValueError as e:
-        assert e.args[0] == "indices must be of an integer type. float64 is not an integer type"
+    if ref_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(ref_traj, get_fn)
+    
+    test_base(ref_traj, get_fn)
 
 
 def test_restrict_atoms(get_fn):
@@ -392,34 +435,43 @@ def test_pdb_unitcell_loadsave(tmpdir, get_fn):
     eq(tref.unitcell_vectors, tnew.unitcell_vectors, decimal=3)
 
 
-def test_load_combination(ref_traj, get_fn):
+def test_load_combination(ref_traj, get_fn, monkeypatch):
     # Test that the load function's stride and atom_indices work across
     # all trajectory formats
 
-    topology = md.load(get_fn("native.pdb")).topology
-    ainds = np.array([a.index for a in topology.atoms if a.element.symbol == "C"])
+    def test_base(ref_traj, get_fn):
+        topology = md.load(get_fn("native.pdb")).topology
+        ainds = np.array([a.index for a in topology.atoms if a.element.symbol == "C"])
+    
+        no_kwargs = md.load(get_fn(ref_traj.fn), top=topology)
+        strided3 = md.load(get_fn(ref_traj.fn), top=topology, stride=3)
+        subset = md.load(get_fn(ref_traj.fn), top=topology, atom_indices=ainds)
+    
+        # test 1
+        t1 = no_kwargs
+        t2 = strided3
+        assert eq(t1.xyz[::3], t2.xyz)
+        assert eq(t1.time[::3], t2.time)
+        if t1.unitcell_vectors is not None:
+            assert eq(t1.unitcell_vectors[::3], t2.unitcell_vectors)
+        assert eq(t1.topology, t2.topology)
+    
+        # test 2
+        t1 = no_kwargs
+        t2 = subset
+        assert eq(t1.xyz[:, ainds, :], t2.xyz)
+        assert eq(t1.time, t2.time)
+        if t1.unitcell_vectors is not None:
+            assert eq(t1.unitcell_vectors, t2.unitcell_vectors)
+        assert eq(t1.topology.subset(ainds), t2.topology)
 
-    no_kwargs = md.load(get_fn(ref_traj.fn), top=topology)
-    strided3 = md.load(get_fn(ref_traj.fn), top=topology, stride=3)
-    subset = md.load(get_fn(ref_traj.fn), top=topology, atom_indices=ainds)
-
-    # test 1
-    t1 = no_kwargs
-    t2 = strided3
-    assert eq(t1.xyz[::3], t2.xyz)
-    assert eq(t1.time[::3], t2.time)
-    if t1.unitcell_vectors is not None:
-        assert eq(t1.unitcell_vectors[::3], t2.unitcell_vectors)
-    assert eq(t1.topology, t2.topology)
-
-    # test 2
-    t1 = no_kwargs
-    t2 = subset
-    assert eq(t1.xyz[:, ainds, :], t2.xyz)
-    assert eq(t1.time, t2.time)
-    if t1.unitcell_vectors is not None:
-        assert eq(t1.unitcell_vectors, t2.unitcell_vectors)
-    assert eq(t1.topology.subset(ainds), t2.topology)
+    if ref_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(ref_traj, get_fn)
+    
+    test_base(ref_traj, get_fn)
 
 
 def test_no_topology():
@@ -470,7 +522,7 @@ def test_stack_2():
     eq(t3.n_atoms, 11)
 
 
-def test_seek_read_mode(ref_traj, get_fn):
+def test_seek_read_mode(ref_traj, get_fn, monkeypatch):
     # Test the seek/tell capacity of the different TrajectoryFile objects in
     # read mode. Basically, we just seek around the files and read different
     # segments, keeping track of our location manually and checking with both
@@ -485,68 +537,87 @@ def test_seek_read_mode(ref_traj, get_fn):
     if ref_traj.fext == "gro":
         pytest.xfail("This is broken")
 
-    point = 0
-    xyz = md.load(get_fn(fn), top=get_fn("native.pdb")).xyz
-    length = len(xyz)
-    kwargs = {}
-    if fobj is md.formats.MDCRDTrajectoryFile:
-        kwargs = {"n_atoms": 22}
-
-    with fobj(get_fn(fn), **kwargs) as f:
-        for i in range(100):
-            r = np.random.rand()
-            if r < 0.25:
-                offset = np.random.randint(-5, 5)
-                if 0 < point + offset < length:
-                    point += offset
-                    f.seek(offset, 1)
+    def test_base(ref_traj, get_fn):
+        point = 0
+        xyz = md.load(get_fn(fn), top=get_fn("native.pdb")).xyz
+        length = len(xyz)
+        kwargs = {}
+        if fobj is md.formats.MDCRDTrajectoryFile:
+            kwargs = {"n_atoms": 22}
+    
+        with fobj(get_fn(fn), **kwargs) as f:
+            for i in range(100):
+                r = np.random.rand()
+                if r < 0.25:
+                    offset = np.random.randint(-5, 5)
+                    if 0 < point + offset < length:
+                        point += offset
+                        f.seek(offset, 1)
+                    else:
+                        f.seek(0)
+                        point = 0
+                if r < 0.5:
+                    offset = np.random.randint(1, 10)
+                    if point + offset < length:
+                        read = f.read(offset)
+                        if fobj not in [
+                            md.formats.LH5TrajectoryFile,
+                            md.formats.XYZTrajectoryFile,
+                        ]:
+                            read = read[0]
+                        readlength = len(read)
+                        read = mdtraj.utils.in_units_of(read, f.distance_unit, "nanometers")
+                        eq(xyz[point : point + offset], read)
+                        point += readlength
+                elif r < 0.75:
+                    offset = np.random.randint(low=-100, high=0)
+                    try:
+                        f.seek(offset, 2)
+                        point = length + offset
+                    except NotImplementedError:
+                        # not all of the *TrajectoryFiles currently support
+                        # seeking from the end, so we'll let this pass if they
+                        # say that they dont implement this.
+                        pass
                 else:
-                    f.seek(0)
-                    point = 0
-            if r < 0.5:
-                offset = np.random.randint(1, 10)
-                if point + offset < length:
-                    read = f.read(offset)
-                    if fobj not in [
-                        md.formats.LH5TrajectoryFile,
-                        md.formats.XYZTrajectoryFile,
-                    ]:
-                        read = read[0]
-                    readlength = len(read)
-                    read = mdtraj.utils.in_units_of(read, f.distance_unit, "nanometers")
-                    eq(xyz[point : point + offset], read)
-                    point += readlength
-            elif r < 0.75:
-                offset = np.random.randint(low=-100, high=0)
-                try:
-                    f.seek(offset, 2)
-                    point = length + offset
-                except NotImplementedError:
-                    # not all of the *TrajectoryFiles currently support
-                    # seeking from the end, so we'll let this pass if they
-                    # say that they dont implement this.
-                    pass
-            else:
-                offset = np.random.randint(100)
-                f.seek(offset, 0)
-                point = offset
+                    offset = np.random.randint(100)
+                    f.seek(offset, 0)
+                    point = offset
+    
+                eq(f.tell(), point)
 
-            eq(f.tell(), point)
+    if ref_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(ref_traj, get_fn)
+    
+    test_base(ref_traj, get_fn)
 
 
-def test_load_frame(ref_traj, get_fn):
+def test_load_frame(ref_traj, get_fn, monkeypatch):
     if ref_traj.fobj is md.formats.GroTrajectoryFile:
         pytest.xfail("Gro doesn't implement seek")
-    trajectory = md.load(get_fn(ref_traj.fn), top=get_fn("native.pdb"))
-    rand = np.random.randint(len(trajectory))
-    frame = md.load_frame(get_fn(ref_traj.fn), index=rand, top=get_fn("native.pdb"))
 
-    if ref_traj.fobj is md.formats.DTRTrajectoryFile:
-        pytest.xfail("DTR doesn't load a single frame properly")
-    eq(trajectory[rand].xyz, frame.xyz)
-    eq(trajectory[rand].unitcell_vectors, frame.unitcell_vectors)
-    if has_time_info(ref_traj.fext):
-        eq(trajectory[rand].time, frame.time)
+    def test_base(ref_traj, get_fn):
+        trajectory = md.load(get_fn(ref_traj.fn), top=get_fn("native.pdb"))
+        rand = np.random.randint(len(trajectory))
+        frame = md.load_frame(get_fn(ref_traj.fn), index=rand, top=get_fn("native.pdb"))
+    
+        if ref_traj.fobj is md.formats.DTRTrajectoryFile:
+            pytest.xfail("DTR doesn't load a single frame properly")
+        eq(trajectory[rand].xyz, frame.xyz)
+        eq(trajectory[rand].unitcell_vectors, frame.unitcell_vectors)
+        if has_time_info(ref_traj.fext):
+            eq(trajectory[rand].time, frame.time)
+
+    if ref_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(ref_traj, get_fn)
+    
+    test_base(ref_traj, get_fn)
 
 
 def test_load_frame_2eqq(get_fn):
@@ -556,29 +627,39 @@ def test_load_frame_2eqq(get_fn):
     eq(t1[r].xyz, t2.xyz)
 
 
-def test_iterload(write_traj, get_fn):
+def test_iterload(write_traj, get_fn, monkeypatch):
     if write_traj.fext == "dtr":
         pytest.xfail("This is broken with dtr")
-    t_ref = md.load(get_fn("frame0.h5"))[:20]
 
-    if write_traj.fext in ("ncrst", "rst7"):
-        pytest.skip("Only 1 frame per file format")
+    def test_base(write_traj, get_fn):
+        t_ref = md.load(get_fn("frame0.h5"))[:20]
+    
+        if write_traj.fext in ("ncrst", "rst7"):
+            pytest.skip("Only 1 frame per file format")
+    
+        t_ref.save(write_traj.fn)
+    
+        for stride in [1, 2, 3]:
+            loaded = md.load(write_traj.fn, top=t_ref, stride=stride)
+            iterloaded = functools.reduce(
+                lambda a, b: a.join(b),
+                md.iterload(write_traj.fn, top=t_ref, stride=stride, chunk=6),
+            )
+            eq(loaded.xyz, iterloaded.xyz)
+            eq(loaded.time, iterloaded.time)
+            eq(loaded.unitcell_angles, iterloaded.unitcell_angles)
+            eq(loaded.unitcell_lengths, iterloaded.unitcell_lengths)
 
-    t_ref.save(write_traj.fn)
-
-    for stride in [1, 2, 3]:
-        loaded = md.load(write_traj.fn, top=t_ref, stride=stride)
-        iterloaded = functools.reduce(
-            lambda a, b: a.join(b),
-            md.iterload(write_traj.fn, top=t_ref, stride=stride, chunk=6),
-        )
-        eq(loaded.xyz, iterloaded.xyz)
-        eq(loaded.time, iterloaded.time)
-        eq(loaded.unitcell_angles, iterloaded.unitcell_angles)
-        eq(loaded.unitcell_lengths, iterloaded.unitcell_lengths)
+    if write_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(write_traj, get_fn)
+    
+    test_base(write_traj, get_fn)
 
 
-def test_iterload_skip(ref_traj, get_fn):
+def test_iterload_skip(ref_traj, get_fn, monkeypatch):
     if ref_traj.fobj is md.formats.PDBTrajectoryFile:
         pytest.xfail("PDB Iterloads an extra frame!!")
     if ref_traj.fobj is md.formats.GroTrajectoryFile:
@@ -586,18 +667,27 @@ def test_iterload_skip(ref_traj, get_fn):
     if ref_traj.fext in ("ncrst", "rst7"):
         pytest.skip("Only 1 frame per file format")
 
-    top = md.load(get_fn("native.pdb"))
-    t_ref = md.load(get_fn(ref_traj.fn), top=top)
+    def test_base(ref_traj, get_fn):
+        top = md.load(get_fn("native.pdb"))
+        t_ref = md.load(get_fn(ref_traj.fn), top=top)
+    
+        for cs in [0, 1, 11, 100]:
+            for skip in [0, 1, 20, 101]:
+                t = functools.reduce(
+                    lambda a, b: a.join(b),
+                    md.iterload(get_fn(ref_traj.fn), skip=skip, top=top, chunk=cs),
+                )
+                eq(t_ref.xyz[skip:], t.xyz)
+                eq(t_ref.time[skip:], t.time)
+                eq(t_ref.topology, t.topology)
 
-    for cs in [0, 1, 11, 100]:
-        for skip in [0, 1, 20, 101]:
-            t = functools.reduce(
-                lambda a, b: a.join(b),
-                md.iterload(get_fn(ref_traj.fn), skip=skip, top=top, chunk=cs),
-            )
-            eq(t_ref.xyz[skip:], t.xyz)
-            eq(t_ref.time[skip:], t.time)
-            eq(t_ref.topology, t.topology)
+    if ref_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(ref_traj, get_fn)
+    
+    test_base(ref_traj, get_fn)
 
 
 def test_iterload_chunk_dcd(get_fn):
@@ -624,37 +714,64 @@ def test_iterload_chunk_dcd(get_fn):
     assert eq(full.xyz, joined.xyz)
 
 
-def test_save_load(write_traj, get_fn):
+def test_save_load(write_traj, get_fn, monkeypatch):
     # this cycles all the known formats you can save to, and then tries
     # to reload, using just a single-frame file.
 
-    t_ref = md.load(get_fn("native.pdb"))
-    t_ref.unitcell_vectors = np.array([[[1, 0, 0], [0, 1, 0], [0, 0, 1]]])
+    def test_base(write_traj, get_fn):
+        t_ref = md.load(get_fn("native.pdb"))
+        t_ref.unitcell_vectors = np.array([[[1, 0, 0], [0, 1, 0], [0, 0, 1]]])
 
-    t_ref.save(write_traj.fn)
-    t = md.load(write_traj.fn, top=t_ref.topology)
+        t_ref.save(write_traj.fn)
+        t = md.load(write_traj.fn, top=t_ref.topology)
 
-    eq(t.xyz, t_ref.xyz)
-    eq(t.time, t_ref.time)
-    if t._have_unitcell:
-        eq(t.unitcell_angles, t_ref.unitcell_angles)
-        eq(t.unitcell_lengths, t_ref.unitcell_lengths)
+        eq(t.xyz, t_ref.xyz)
+        eq(t.time, t_ref.time)
+        if t._have_unitcell:
+            eq(t.unitcell_angles, t_ref.unitcell_angles)
+            eq(t.unitcell_lengths, t_ref.unitcell_lengths)
+
+    if write_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(write_traj, get_fn)
+    
+    test_base(write_traj, get_fn)
 
 
-def test_force_overwrite(write_traj, get_fn):
+def test_force_overwrite(write_traj, get_fn, monkeypatch):
     if write_traj.fext == "dtr":
         pytest.xfail("This is broken with dtr")
 
-    t_ref = md.load(get_fn("native2.pdb"), no_boxchk=True)
-    open(write_traj.fn, "w").close()
-    t_ref.save(write_traj.fn, force_overwrite=True)
+    def test_base(write_traj, get_fn):
+        t_ref = md.load(get_fn("native2.pdb"), no_boxchk=True)
+        open(write_traj.fn, "w").close()
+        t_ref.save(write_traj.fn, force_overwrite=True)
+
+    if write_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(write_traj, get_fn)
+    
+    test_base(write_traj, get_fn)
 
 
-def test_force_noverwrite(write_traj, get_fn):
-    t_ref = md.load(get_fn("native2.pdb"), no_boxchk=True)
-    open(write_traj.fn, "w").close()
-    with pytest.raises(IOError):
-        t_ref.save(write_traj.fn, force_overwrite=False)
+def test_force_noverwrite(write_traj, get_fn, monkeypatch):
+    def test_base(write_traj, get_fn):
+        t_ref = md.load(get_fn("native2.pdb"), no_boxchk=True)
+        open(write_traj.fn, "w").close()
+        with pytest.raises(IOError):
+            t_ref.save(write_traj.fn, force_overwrite=False)
+
+    if write_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(write_traj, get_fn)
+    
+    test_base(write_traj, get_fn)
 
 
 def test_open_and_load(get_fn):
@@ -695,16 +812,26 @@ def test_length(get_fn):
         assert len(opened) == len(loaded)
 
 
-def test_unitcell(write_traj, get_fn):
+def test_unitcell(write_traj, get_fn, monkeypatch):
     # make sure that bogus unitcell vecotrs are not saved
 
     if write_traj.fext in ["rst7", "ncrst", "lammpstrj", "dtr"]:
         pytest.xfail(f"{write_traj.fext} seems to need unit vectors")
 
-    top = md.load(get_fn("native.pdb")).restrict_atoms(range(5)).topology
-    t = md.Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
-    t.save(write_traj.fn)
-    assert eq(md.load(write_traj.fn, top=top).unitcell_vectors, None)
+
+    def test_base(write_traj, get_fn):
+        top = md.load(get_fn("native.pdb")).restrict_atoms(range(5)).topology
+        t = md.Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
+        t.save(write_traj.fn)
+        assert eq(md.load(write_traj.fn, top=top).unitcell_vectors, None)
+
+    if write_traj.fext in ('nc'):
+        # Running with scipy
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'netCDF4', None)
+            test_base(write_traj, get_fn)
+    
+    test_base(write_traj, get_fn)
 
 
 def test_chunk0_iterload(get_fn):

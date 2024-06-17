@@ -152,6 +152,8 @@ def test_write_read():
 
 
 def test_read_atomindices_1():
+    test_write_read()
+
     with TRRTrajectoryFile(temp) as f:
         xyz, time, step, box, lambd = f.read()
 
@@ -165,6 +167,8 @@ def test_read_atomindices_1():
 
 
 def test_read_atomindices_2():
+    test_write_read()
+
     with TRRTrajectoryFile(temp) as f:
         xyz, time, step, box, lambd = f.read()
 

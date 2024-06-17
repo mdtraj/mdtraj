@@ -388,7 +388,10 @@ class AmberRestartFile:
             raise ValueError("Can only write 1 frame to a restart file!")
         if time is not None:
             try:
-                time = float(time)
+                if isinstance(time, np.ndarray):
+                    time = float(time.item())
+                else:
+                    time = float(time)
             except TypeError:
                 raise TypeError("Can only provide a single time")
         else:
@@ -795,7 +798,10 @@ class AmberNetCDFRestartFile:
             raise ValueError("Can only write 1 frame to a restart file!")
         if time is not None:
             try:
-                time = float(time)
+                if isinstance(time, np.ndarray):
+                    time = float(time.item())
+                else:
+                    time = float(time)
             except TypeError:
                 raise TypeError("Can only provide a single time")
         else:
@@ -840,7 +846,10 @@ class AmberNetCDFRestartFile:
 
         # Write the time, coordinates, and box info
         if time is not None:
-            self._handle.variables["time"][0] = float(time)
+            if isinstance(time, np.ndarray):
+                self._handle.variables["time"][0] = float(time.item())
+            else:
+                self._handle.variables["time"][0] = float(time)
         self._handle.variables["coordinates"][:, :] = coordinates[0, :, :]
         if cell_lengths is not None:
             self._handle.variables["cell_angles"][:] = cell_angles[0, :]
