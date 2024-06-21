@@ -606,7 +606,7 @@ class Chain:
                     next_serial_number.val,
                     r.name_with_spaces,
                     self.chain_id,
-                    r.number,
+                    r.number % 10000,
                     r.insertion_code,
                 ),
                 file=output_stream,
