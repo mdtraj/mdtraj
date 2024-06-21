@@ -55,7 +55,7 @@ _atom_num_initial_nodec_vals = {"A0000": "chimera", "186a0": "hex", "*****": "ov
 
 def _read_atom_number(num_str, pdbstructure=None, index_fnc=None):
     try:
-        if num_str in _atom_num_initial_nodec_vals.keys() or pdbstructure._next_atom_number > 99999:
+        if num_str in _atom_num_initial_nodec_vals.keys() and pdbstructure._next_atom_number >= 99999:
             raise OverflowError("Need to parse atom number using non-decimal residue modes.")
         else:
             return int(num_str)
@@ -117,13 +117,9 @@ def _read_residue_number(num_str, pdbstructure=None, index_fnc=None, curr_atom=N
     Try to check what the residue number is.
     """
     try:
-        if num_str in _residue_num_initial_nodec_vals.keys() or pdbstructure._next_residue_number > 9999:
-            if num_str == "9999":
-                # If on the cusp... move on...
-                return int(num_str)
-            else:
-                # This is all the cases where we're safely in the hex/chimera/overflow region
-                raise OverflowError("Need to parse residue number using non-decimal residue modes.")
+        if pdbstructure._next_residue_number > 9999 and num_str in _residue_num_initial_nodec_vals.keys():
+            # This is all the cases where we're safely in the hex/chimera/overflow region
+            raise OverflowError("Need to parse residue number using non-decimal residue modes.")
         else:
             #  Within "normal" pdb specifications
             return int(num_str)
@@ -153,7 +149,7 @@ def _read_residue_number(num_str, pdbstructure=None, index_fnc=None, curr_atom=N
                     return pdbstructure._residue_num_fncs[pdbstructure._residue_num_nondec_mode](num_str)
                 except ValueError:
                     # Didn't work, we need to change to overflow mode and guess with _next_residue_number
-                    pdbstructure._atom_num_nondec_mode = "overflow"
+                    pdbstructure._residue_num_nondec_mode = "overflow"
                     return pdbstructure._residue_num_fncs[pdbstructure._residue_num_nondec_mode](
                         num_str,
                         pdbstructure,
