@@ -55,7 +55,7 @@ _atom_num_initial_nodec_vals = {"A0000": "chimera", "186a0": "hex", "*****": "ov
 
 def _read_atom_number(num_str, pdbstructure=None, index_fnc=None):
     try:
-        if num_str in _atom_num_initial_nodec_vals.keys() and pdbstructure._next_atom_number >= 99999:
+        if pdbstructure._next_atom_number > 99999 and num_str in _atom_num_initial_nodec_vals.keys():
             raise OverflowError("Need to parse atom number using non-decimal residue modes.")
         else:
             return int(num_str)
