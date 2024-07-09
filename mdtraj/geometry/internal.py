@@ -34,7 +34,6 @@ from mdtraj.geometry.angle import compute_angles
 from mdtraj.geometry.dihedral import compute_dihedrals
 from mdtraj.geometry.distance import compute_distances
 from mdtraj.utils import import_
-from mdtraj.utils.six.moves import filter, xrange  # itertools
 
 # these are covalent radii taken from the crystalographic data in nm
 # Dalton Trans., 2008, 2832-2838, DOI: 10.1039/B801115J
@@ -285,7 +284,7 @@ def get_bond_connectivity(conf):
 
     elements = np.zeros(n_atoms, dtype="S1")
     atom_names = [a.name for a in conf.top.atoms()]
-    for i in xrange(n_atoms):
+    for i in range(n_atoms):
         # name of the element that is atom[i]
         # take the first character of the AtomNames string,
         # after stripping off any digits
@@ -299,8 +298,8 @@ def get_bond_connectivity(conf):
     distance_mtx = squareform(pdist(xyz))
     connectivity = []
 
-    for i in xrange(n_atoms):
-        for j in xrange(i + 1, n_atoms):
+    for i in range(n_atoms):
+        for j in range(i + 1, n_atoms):
             # Regular bonds are assigned to all pairs of atoms where
             # the interatomic distance is less than or equal to 1.3 times the
             # sum of their respective covalent radii.
@@ -332,7 +331,7 @@ def get_angle_connectivity(ibonds):
     n_atoms = graph.number_of_nodes()
     iangles = []
 
-    for i in xrange(n_atoms):
+    for i in range(n_atoms):
         for m, n in combinations(graph.neighbors(i), 2):
             # so now the there is a bond angle m-i-n
             iangles.append((m, i, n))
@@ -366,7 +365,7 @@ def get_dihedral_connectivity(ibonds):
     #    An msmbuilder trajectory, only the first frame will be used. This
     #    is used purely to make the check for angle(ABC) != 180.
 
-    for a in xrange(n_atoms):
+    for a in range(n_atoms):
         for b in graph.neighbors(a):
             for c in filter(lambda c: c not in [a, b], graph.neighbors(b)):
                 for d in filter(lambda d: d not in [a, b, c], graph.neighbors(c)):
