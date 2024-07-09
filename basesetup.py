@@ -272,41 +272,6 @@ def git_version():
     return GIT_REVISION
 
 
-def write_version_py(version, isreleased, filename):
-    cnt = """
-# This file is generated in setup.py at build time.
-version = '{version}'
-short_version = '{short_version}'
-full_version = '{full_version}'
-git_revision = '{git_revision}'
-release = {release}
-"""
-    # git_revision
-    if os.path.exists(".git"):
-        git_revision = git_version()
-    else:
-        git_revision = "Unknown"
-
-    # short_version, full_version
-    if isreleased:
-        full_version = version
-        short_version = version
-    else:
-        full_version = f"{version}+{git_revision}"
-        short_version = version
-
-    with open(filename, "w") as f:
-        f.write(
-            cnt.format(
-                version=version,
-                short_version=short_version,
-                full_version=full_version,
-                git_revision=git_revision,
-                release=isreleased,
-            ),
-        )
-
-
 def copy_same_file_pass(source, destination):
     try:
         # Try to copy
