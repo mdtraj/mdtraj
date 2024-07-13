@@ -8,6 +8,7 @@ dependencies:
   - numpy
   - zlib
   - pyparsing
+  - mda-xdrlib
   - scipy
   - networkx
   - pandas
