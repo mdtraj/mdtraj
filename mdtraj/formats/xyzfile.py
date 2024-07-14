@@ -29,7 +29,7 @@ import numpy as np
 
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, in_units_of, open_maybe_zipped
-from mdtraj.version import version
+from mdtraj
 
 __all__ = ["XYZTrajectoryFile", "load_xyz"]
 
@@ -330,7 +330,7 @@ class XYZTrajectoryFile:
         for i in range(xyz.shape[0]):
             self._fh.write(f"{xyz.shape[1]}\n")
             self._fh.write(
-                f"Created with MDTraj {version}, {str(date.today())}\n",
+                f"Created with MDTraj {mdtraj.version.version}, {str(date.today())}\n",
             )
 
             for j, coord in enumerate(xyz[i]):
