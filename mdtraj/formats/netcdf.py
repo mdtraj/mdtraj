@@ -34,7 +34,7 @@ from datetime import datetime
 
 import numpy as np
 
-import mdtraj.version
+import mdtraj
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, import_, in_units_of
 

@@ -55,7 +55,7 @@ from urllib.request import urlopen
 
 import numpy as np
 
-import mdtraj.version
+import mdtraj
 from mdtraj.core import element as elem
 from mdtraj.core.topology import Topology
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
