@@ -867,7 +867,7 @@ class AmberNetCDFRestartFile:
         ncfile.title = "NetCDF Restart file written by MDTraj w/out velocities"
         ncfile.application = "Omnia"
         ncfile.program = "MDTraj"
-        ncfile.programVersion = mdtraj._version.short_version
+        ncfile.programVersion = mdtraj.__version__
         # Dimensions
         ncfile.createDimension("spatial", 3)
         ncfile.createDimension("atom", n_atoms)
