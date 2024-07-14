@@ -330,7 +330,7 @@ class XYZTrajectoryFile:
         for i in range(xyz.shape[0]):
             self._fh.write(f"{xyz.shape[1]}\n")
             self._fh.write(
-                f"Created with MDTraj {mdtraj.version.version}, {str(date.today())}\n",
+                f"Created with MDTraj {mdtraj._version.version}, {str(date.today())}\n",
             )
 
             for j, coord in enumerate(xyz[i]):

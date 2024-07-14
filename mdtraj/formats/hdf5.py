@@ -938,7 +938,7 @@ class HDF5TrajectoryFile:
         self._handle.root._v_attrs.conventions = "Pande"
         self._handle.root._v_attrs.conventionVersion = "1.1"
         self._handle.root._v_attrs.program = "MDTraj"
-        self._handle.root._v_attrs.programVersion = mdtraj.version.short_version
+        self._handle.root._v_attrs.programVersion = mdtraj._version.short_version
         self._handle.root._v_attrs.title = "title"
 
         # if the client has not the title attribute themselves, we'll

@@ -447,7 +447,7 @@ class PDBTrajectoryFile:
 
         if write_metadata:
             print(
-                f"REMARK   1 CREATED WITH MDTraj {mdtraj.version.version}, {str(date.today())}",
+                f"REMARK   1 CREATED WITH MDTraj {mdtraj._version.version}, {str(date.today())}",
                 file=self._file,
             )
         print(

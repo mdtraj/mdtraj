@@ -545,7 +545,7 @@ class NetCDFTrajectoryFile:
         )
         setattr(self._handle, "application", "Omnia")
         setattr(self._handle, "program", "MDTraj")
-        setattr(self._handle, "programVersion", mdtraj.version.short_version)
+        setattr(self._handle, "programVersion", mdtraj._version.short_version)
         setattr(self._handle, "Conventions", "AMBER")
         setattr(self._handle, "ConventionVersion", "1.0")
 
