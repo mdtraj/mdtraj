@@ -27,9 +27,9 @@ from datetime import date
 
 import numpy as np
 
+import mdtraj
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, in_units_of, open_maybe_zipped
-from mdtraj
 
 __all__ = ["XYZTrajectoryFile", "load_xyz"]
 
