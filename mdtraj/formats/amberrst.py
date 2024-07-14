@@ -860,7 +860,7 @@ class AmberNetCDFRestartFile:
         """Initialize the headers and convention properties of the NetCDF
         restart file
         """
-        from mdtraj import version as mdtraj_version
+        import mdtraj.version as mdtraj_version
 
         ncfile = self._handle
         ncfile.Conventions = "AMBERRESTART"
