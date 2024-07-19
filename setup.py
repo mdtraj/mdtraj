@@ -311,6 +311,7 @@ metadata = dict(
         "scipy",
         "pyparsing",
         "packaging",
+        "mda-xdrlib",
     ],
     package_data={"mdtraj.formats.pdb": ["data/*"]},
     zip_safe=False,
