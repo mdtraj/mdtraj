@@ -55,7 +55,7 @@ from urllib.request import urlopen
 
 import numpy as np
 
-from mdtraj import version
+import mdtraj
 from mdtraj.core import element as elem
 from mdtraj.core.topology import Topology
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
@@ -447,7 +447,7 @@ class PDBTrajectoryFile:
 
         if write_metadata:
             print(
-                f"REMARK   1 CREATED WITH MDTraj {version.version}, {str(date.today())}",
+                f"REMARK   1 CREATED WITH MDTraj {mdtraj.__version__}, {str(date.today())}",
                 file=self._file,
             )
         print(

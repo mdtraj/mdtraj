@@ -1,10 +1,18 @@
 [build-system]
 requires = [
     "setuptools",
+    "versioneer[toml]",
     "wheel",
     "numpy~=1.25",
     "Cython~=0.29.36",
 ]
+
+[tool.versioneer]
+VCS = "git"
+style = "pep440"
+versionfile_source = "mdtraj/_version.py"
+versionfile_build = "mdtraj/_version.py"
+tag_prefix = ""
 
 [tool.ruff]
 line-length=119

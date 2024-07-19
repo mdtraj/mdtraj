@@ -34,7 +34,7 @@ from datetime import datetime
 
 import numpy as np
 
-from mdtraj import version
+import mdtraj
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, import_, in_units_of
 
@@ -545,7 +545,7 @@ class NetCDFTrajectoryFile:
         )
         setattr(self._handle, "application", "Omnia")
         setattr(self._handle, "program", "MDTraj")
-        setattr(self._handle, "programVersion", version.short_version)
+        setattr(self._handle, "programVersion", mdtraj.__version__)
         setattr(self._handle, "Conventions", "AMBER")
         setattr(self._handle, "ConventionVersion", "1.0")
 

@@ -116,6 +116,10 @@ from . import reporters
 from ._lprmsd import lprmsd
 from ._rmsd import rmsd, rmsf
 
+from . import _version
+
+__version__ = _version.get_versions()["version"]
+
 __all__ = (
     "reporters",
     "lprmsd",

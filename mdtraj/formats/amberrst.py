@@ -36,6 +36,7 @@ from math import ceil
 import numpy as np
 from packaging.version import Version
 
+import mdtraj
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, import_, in_units_of
 
@@ -860,15 +861,13 @@ class AmberNetCDFRestartFile:
         """Initialize the headers and convention properties of the NetCDF
         restart file
         """
-        from mdtraj import version as mdtraj_version
-
         ncfile = self._handle
         ncfile.Conventions = "AMBERRESTART"
         ncfile.ConventionVersion = "1.0"
         ncfile.title = "NetCDF Restart file written by MDTraj w/out velocities"
         ncfile.application = "Omnia"
         ncfile.program = "MDTraj"
-        ncfile.programVersion = mdtraj_version.short_version
+        ncfile.programVersion = mdtraj.__version__
         # Dimensions
         ncfile.createDimension("spatial", 3)
         ncfile.createDimension("atom", n_atoms)

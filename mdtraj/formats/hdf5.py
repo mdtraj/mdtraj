@@ -45,7 +45,7 @@ import numpy as np
 import mdtraj.core.element as elem
 
 # ours
-from mdtraj import version
+import mdtraj
 from mdtraj.core.topology import Topology
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, import_, in_units_of
@@ -938,7 +938,7 @@ class HDF5TrajectoryFile:
         self._handle.root._v_attrs.conventions = "Pande"
         self._handle.root._v_attrs.conventionVersion = "1.1"
         self._handle.root._v_attrs.program = "MDTraj"
-        self._handle.root._v_attrs.programVersion = version.short_version
+        self._handle.root._v_attrs.programVersion = mdtraj.__version__
         self._handle.root._v_attrs.title = "title"
 
         # if the client has not the title attribute themselves, we'll
