@@ -335,6 +335,16 @@ def test_multichain_load_cycle(get_fn):
     assert len(bonds) == len(bonds2)
 
 
+def test_multichain_load_cycle_noter(get_fn):
+    # Issue 1611, make sure that save/load works for more than 1 chain
+    pdb = load(get_fn("issue_1611.pdb"))
+    bonds = [(bond.atom1.index, bond.atom2.index) for bond in pdb.topology.bonds]
+    pdb.save(temp, ter=False)
+    pdb2 = load_pdb(temp)
+    bonds2 = [(bond.atom1.index, bond.atom2.index) for bond in pdb2.topology.bonds]
+    assert len(bonds) == len(bonds2)
+
+
 def test_load_pdb_input_top(get_fn):
     pdb = get_fn("native.pdb")
     p_1 = load_pdb(pdb)
