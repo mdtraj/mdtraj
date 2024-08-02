@@ -304,6 +304,7 @@ class PDBTrajectoryFile:
         unitcell_lengths=None,
         unitcell_angles=None,
         bfactors=None,
+        ter=True,
     ):
         """Write a PDB file to disk
 
@@ -323,6 +324,9 @@ class PDBTrajectoryFile:
         bfactors : array_like, default=None, shape=(n_atoms,)
             Save bfactors with pdb file. Should contain a single number for
             each atom in the topology
+        ter : bool, default=True
+            Include TER lines in pdb to indicate end of a chain of residues. This is useful
+            if you need to keep atom numbers consistent.
         """
         if not self._mode == "w":
             raise ValueError("file not opened for writing")
@@ -336,6 +340,9 @@ class PDBTrajectoryFile:
             raise ValueError("Particle position is NaN")
         if np.any(np.isinf(positions)):
             raise ValueError("Particle position is infinite")
+
+        # Saving this for writing footer
+        self.ter = ter
 
         # Hack to save the topology of the last frame written, allows us to
         # output CONECT entries in write_footer()
@@ -406,9 +413,9 @@ class PDBTrajectoryFile:
                     print(line, file=self._file)
                     posIndex += 1
                     atomIndex += 1
-                if resIndex == len(residues) - 1:
+                if resIndex == len(residues) - 1 and ter:
                     print(
-                        "TER   %5d      %3s %s%4d" % (atomSerial + 1, resName, chainName, res.resSeq),
+                        "TER   %5d      %3s %s%4d" % ((atomSerial + 1) % 100000, resName, chainName, res.resSeq % 10000),
                         file=self._file,
                     )
                     atomIndex += 1
@@ -508,12 +515,14 @@ class PDBTrajectoryFile:
         if len(conectBonds) > 0:
             # Work out the index used in the PDB file for each atom.
 
+            # Regular case
             atomIndex = {}
             nextAtomIndex = 0
             prevChain = None
             for chain in self._last_topology.chains:
                 for atom in chain.atoms:
-                    if atom.residue.chain != prevChain:
+                    if atom.residue.chain != prevChain and self.ter:
+                        # We have a TER line, so adding an extra number to the AtomIndex
                         nextAtomIndex += 1
                         prevChain = atom.residue.chain
                     atomIndex[atom] = nextAtomIndex
