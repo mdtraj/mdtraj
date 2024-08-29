@@ -5,7 +5,7 @@ dependencies:
   # Core
   - python
   - cython =0.29.36
-  - numpy
+  - numpy>=2
   - zlib
   - pyparsing
   - mda-xdrlib
