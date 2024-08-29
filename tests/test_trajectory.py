@@ -214,7 +214,7 @@ def test_read_path(ref_traj, get_fn, monkeypatch):
             m.setitem(sys.modules, 'netCDF4', None)
             md.load(Path(get_fn(ref_traj.fn)), top=get_fn("native.pdb"))
 
-    md.load(Path(get_fn(ref_traj.fn)), top=get_fn("native.pdb"))    
+    md.load(Path(get_fn(ref_traj.fn)), top=get_fn("native.pdb"))
 
 
 def test_write_path(write_traj, get_fn, monkeypatch):
@@ -235,7 +235,7 @@ def test_write_path(write_traj, get_fn, monkeypatch):
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(write_traj, get_fn)
-    
+
     test_base(write_traj, get_fn)
 
 
@@ -248,23 +248,23 @@ def test_read_write(ref_traj, write_traj, get_fn, monkeypatch):
     def test_base(ref_traj, write_traj, get_fn):
         top = get_fn("native.pdb")
         t = md.load(get_fn(ref_traj.fn), top=top)
-    
+
         if t.unitcell_vectors is None:
             if write_traj.fext in ("dtr", "lammpstrj"):
                 pytest.skip(f"{write_traj.fext} needs to write unitcells")
-    
+
         t.save(write_traj.fn)
         t2 = md.load(write_traj.fn, top=top)
         eq(t.xyz, t2.xyz, decimal=precision2(ref_traj.fext, write_traj.fext))
         if has_time_info(write_traj.fext):
             eq(t.time, t2.time, decimal=3)
-    
+
     if write_traj.fext in ('nc') or ref_traj.fext in ('nc'):
         # Running with scipy
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(ref_traj, write_traj, get_fn)
-    
+
     test_base(ref_traj, write_traj, get_fn)
 
 def test_load(ref_traj, get_fn, monkeypatch):
@@ -283,7 +283,7 @@ def test_load(ref_traj, get_fn, monkeypatch):
             top=nat,
             discard_overlapping_frames=True,
         )
-    
+
         # these don't actually overlap, so discard_overlapping_frames should
         # have no effect. the overlap is between the last frame of one and the
         # first frame of the next.
@@ -296,7 +296,7 @@ def test_load(ref_traj, get_fn, monkeypatch):
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(ref_traj, get_fn)
-    
+
     test_base(ref_traj, get_fn)
 
 
@@ -350,7 +350,7 @@ def test_float_atom_indices_exception(ref_traj, get_fn, monkeypatch):
     def test_base(ref_traj, get_fn):
         # Is an informative error message given when you supply floats for atom_indices?
         top = md.load(get_fn("native.pdb")).topology
-    
+
         try:
             md.load(get_fn(ref_traj.fn), atom_indices=[0.5, 1.3], top=top)
         except ValueError as e:
@@ -361,7 +361,7 @@ def test_float_atom_indices_exception(ref_traj, get_fn, monkeypatch):
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(ref_traj, get_fn)
-    
+
     test_base(ref_traj, get_fn)
 
 
@@ -442,11 +442,11 @@ def test_load_combination(ref_traj, get_fn, monkeypatch):
     def test_base(ref_traj, get_fn):
         topology = md.load(get_fn("native.pdb")).topology
         ainds = np.array([a.index for a in topology.atoms if a.element.symbol == "C"])
-    
+
         no_kwargs = md.load(get_fn(ref_traj.fn), top=topology)
         strided3 = md.load(get_fn(ref_traj.fn), top=topology, stride=3)
         subset = md.load(get_fn(ref_traj.fn), top=topology, atom_indices=ainds)
-    
+
         # test 1
         t1 = no_kwargs
         t2 = strided3
@@ -455,7 +455,7 @@ def test_load_combination(ref_traj, get_fn, monkeypatch):
         if t1.unitcell_vectors is not None:
             assert eq(t1.unitcell_vectors[::3], t2.unitcell_vectors)
         assert eq(t1.topology, t2.topology)
-    
+
         # test 2
         t1 = no_kwargs
         t2 = subset
@@ -470,7 +470,7 @@ def test_load_combination(ref_traj, get_fn, monkeypatch):
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(ref_traj, get_fn)
-    
+
     test_base(ref_traj, get_fn)
 
 
@@ -544,7 +544,7 @@ def test_seek_read_mode(ref_traj, get_fn, monkeypatch):
         kwargs = {}
         if fobj is md.formats.MDCRDTrajectoryFile:
             kwargs = {"n_atoms": 22}
-    
+
         with fobj(get_fn(fn), **kwargs) as f:
             for i in range(100):
                 r = np.random.rand()
@@ -583,7 +583,7 @@ def test_seek_read_mode(ref_traj, get_fn, monkeypatch):
                     offset = np.random.randint(100)
                     f.seek(offset, 0)
                     point = offset
-    
+
                 eq(f.tell(), point)
 
     if ref_traj.fext in ('nc'):
@@ -591,7 +591,7 @@ def test_seek_read_mode(ref_traj, get_fn, monkeypatch):
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(ref_traj, get_fn)
-    
+
     test_base(ref_traj, get_fn)
 
 
@@ -603,7 +603,7 @@ def test_load_frame(ref_traj, get_fn, monkeypatch):
         trajectory = md.load(get_fn(ref_traj.fn), top=get_fn("native.pdb"))
         rand = np.random.randint(len(trajectory))
         frame = md.load_frame(get_fn(ref_traj.fn), index=rand, top=get_fn("native.pdb"))
-    
+
         if ref_traj.fobj is md.formats.DTRTrajectoryFile:
             pytest.xfail("DTR doesn't load a single frame properly")
         eq(trajectory[rand].xyz, frame.xyz)
@@ -616,7 +616,7 @@ def test_load_frame(ref_traj, get_fn, monkeypatch):
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(ref_traj, get_fn)
-    
+
     test_base(ref_traj, get_fn)
 
 
@@ -633,12 +633,12 @@ def test_iterload(write_traj, get_fn, monkeypatch):
 
     def test_base(write_traj, get_fn):
         t_ref = md.load(get_fn("frame0.h5"))[:20]
-    
+
         if write_traj.fext in ("ncrst", "rst7"):
             pytest.skip("Only 1 frame per file format")
-    
+
         t_ref.save(write_traj.fn)
-    
+
         for stride in [1, 2, 3]:
             loaded = md.load(write_traj.fn, top=t_ref, stride=stride)
             iterloaded = functools.reduce(
@@ -655,7 +655,7 @@ def test_iterload(write_traj, get_fn, monkeypatch):
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(write_traj, get_fn)
-    
+
     test_base(write_traj, get_fn)
 
 
@@ -670,7 +670,7 @@ def test_iterload_skip(ref_traj, get_fn, monkeypatch):
     def test_base(ref_traj, get_fn):
         top = md.load(get_fn("native.pdb"))
         t_ref = md.load(get_fn(ref_traj.fn), top=top)
-    
+
         for cs in [0, 1, 11, 100]:
             for skip in [0, 1, 20, 101]:
                 t = functools.reduce(
@@ -686,7 +686,7 @@ def test_iterload_skip(ref_traj, get_fn, monkeypatch):
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(ref_traj, get_fn)
-    
+
     test_base(ref_traj, get_fn)
 
 
@@ -736,7 +736,7 @@ def test_save_load(write_traj, get_fn, monkeypatch):
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(write_traj, get_fn)
-    
+
     test_base(write_traj, get_fn)
 
 
@@ -754,7 +754,7 @@ def test_force_overwrite(write_traj, get_fn, monkeypatch):
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(write_traj, get_fn)
-    
+
     test_base(write_traj, get_fn)
 
 
@@ -770,7 +770,7 @@ def test_force_noverwrite(write_traj, get_fn, monkeypatch):
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(write_traj, get_fn)
-    
+
     test_base(write_traj, get_fn)
 
 
@@ -830,7 +830,7 @@ def test_unitcell(write_traj, get_fn, monkeypatch):
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(write_traj, get_fn)
-    
+
     test_base(write_traj, get_fn)
 
 

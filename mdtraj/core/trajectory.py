@@ -1490,7 +1490,7 @@ class Trajectory:
         # check if savemode is valid (only "w" or "a" are allowed)
         if mode not in ["w", "a"]:
             raise ValueError("savemode must be either 'w' or 'a'")
-        
+
         with HDF5TrajectoryFile(filename, mode, force_overwrite=force_overwrite) as f:
             f.write(
                 coordinates=in_units_of(

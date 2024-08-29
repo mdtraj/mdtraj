@@ -3,7 +3,7 @@ requires = [
     "setuptools",
     "versioneer[toml]",
     "wheel",
-    "numpy~=1.25",
+    "numpy",
     "Cython~=0.29.36",
 ]
 
