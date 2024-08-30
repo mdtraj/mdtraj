@@ -1,4 +1,4 @@
-## Note on current project status
+![image](https://github.com/user-attachments/assets/8a2aa01b-dfa8-4a5e-b9d1-c0657da16edd)## Note on current project status
 
 TLDR: MDTraj is currently undergoing a transition to new maintainers (the Folding@home consortium).
 Please bear with us as we slowly respond to issues and clean up.
@@ -47,9 +47,9 @@ With MDTraj, you can
 - Use tons of analysis functions like bonds/angles/dihedrals, hydrogen bonding identification, secondary structure assignment, NMR observables.
 - Use a **lightweight API**, with a focus on **speed** and vectorized operations.
 
-For details, see the website at [mdtraj.org](http://mdtraj.org). To get involved,
-take a look at the [github issue tracker](https://github.com/mdtraj/mdtraj/issues)
-and/or the [gitter room](https://gitter.im/mdtraj/community).
+For details, see the [documentation](https://mdtraj.readthedocs.io/en/latest/). To get involved,
+take a look at the [GitHub issue tracker](https://github.com/mdtraj/mdtraj/issues)
+and/or the [Discussions](https://github.com/mdtraj/mdtraj/discussions) section.
 
 ####  Citation
 
