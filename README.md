@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/8a2aa01b-dfa8-4a5e-b9d1-c0657da16edd)## Note on current project status
+## Note on current project status
 
 TLDR: MDTraj is currently undergoing a transition to new maintainers (the Folding@home consortium).
 Please bear with us as we slowly respond to issues and clean up.
