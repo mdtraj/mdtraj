@@ -96,7 +96,7 @@ def test_superpose_0(get_fn):
     displ_rmsd = np.zeros(t1.n_frames)
     for i in range(t1.n_frames):
         delta = t1.xyz[i] - t1.xyz[0]
-        displ_rmsd[i] = (delta**2.0).sum(1).mean() ** 0.5
+        displ_rmsd[i] = (delta**2.0).sum(1).mean() ** np.float64(0.5)
 
     eq(reference_rmsd, displ_rmsd, decimal=5)
 

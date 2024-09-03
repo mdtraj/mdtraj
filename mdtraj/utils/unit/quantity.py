@@ -241,7 +241,7 @@ class Quantity:
             )
         value = self._value + other.value_in_unit(self.unit)
         unit = self.unit
-        return Quantity(value, unit)
+        return Quantity(np.float64(value), unit)
 
     def __sub__(self, other):
         """Subtract two Quantities.
@@ -261,7 +261,7 @@ class Quantity:
             )
         value = self._value - other.value_in_unit(self.unit)
         unit = self.unit
-        return Quantity(value, unit)
+        return Quantity(np.float64(value), unit)
 
     def __eq__(self, other):
         """ """
@@ -346,10 +346,10 @@ class Quantity:
             Quantity._reduce_cache[key] = (unit, value_factor)
         # Create Quantity, then scale (in case value is a container)
         # That's why we don't just scale the value.
-        result = Quantity(self._value, unit)
+        result = Quantity(np.float64(self._value), unit)
         if value_factor != 1.0:
             # __mul__ strips off dimensionless, if appropriate
-            result = result * value_factor
+            result = np.float64(result * value_factor)
         if unit.is_dimensionless():
             assert unit is dimensionless  # should have been set earlier in this method
             if is_quantity(result):
@@ -374,7 +374,7 @@ class Quantity:
             # print "quantity * quantity"
             # Situations where the units cancel can result in scale factors from the unit cancellation.
             # To simplify things, delegate Quantity * Quantity to (Quantity * scalar) * unit
-            return (self * other._value) * other.unit
+            return np.float64(self * other._value) * other.unit
         else:
             # print "quantity * scalar"
             return self._change_units_with_factor(self.unit, other, post_multiply=False)
@@ -505,11 +505,11 @@ class Quantity:
         """
         try:
             # Faster for numpy arrays
-            mean = self._value.mean(*args, **kwargs)
+            mean = self._value.mean(*args, **kwargs, dtype=np.float64)
         except AttributeError:
             if args or kwargs:
                 raise TypeError("Unsupported arguments for Quantity.mean")
-            mean = (self.sum() / len(self._value))._value
+            mean = np.float64((self.sum() / len(self._value))._value)
         return Quantity(mean, self.unit)
 
     def std(self, *args, **kwargs):
@@ -685,7 +685,7 @@ class Quantity:
             pass
         if factor_is_identity:
             # No multiplication required
-            result = Quantity(copy.deepcopy(self._value), new_unit)
+            result = Quantity(copy.deepcopy(np.float64(self._value)), new_unit)
         else:
             try:
                 # multiply operator, if it exists, is preferred
@@ -693,12 +693,12 @@ class Quantity:
                     value = self._value * factor  # works for number, numpy.array, or vec3, e.g.
                 else:
                     value = factor * self._value  # works for number, numpy.array, or vec3, e.g.
-                result = Quantity(value, new_unit)
+                result = Quantity(np.float64(value), new_unit)
             except TypeError:
-                value = copy.deepcopy(self._value)
+                value = copy.deepcopy(np.float64(self._value))
                 result = Quantity(self._scale_sequence(value, factor, post_multiply), new_unit)
         if new_unit.is_dimensionless():
-            return result._value
+            return np.float64(result._value)
         else:
             return result
 

@@ -235,7 +235,7 @@ class MyMatrix(MyVector):
             for j in range(n):
                 for k in range(r):
                     result[i][j] += self[i][k] * rhs[k][j]
-        return result
+        return np.float64(result)
 
     def __add__(self, rhs):
         """
