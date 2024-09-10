@@ -22,9 +22,9 @@
 
 import os
 import sys
+import shutil
 import subprocess
 import tempfile
-from distutils.spawn import find_executable
 
 import numpy as np
 import pytest
@@ -35,7 +35,7 @@ from mdtraj.formats import NetCDFTrajectoryFile
 from mdtraj.testing import eq
 
 needs_cpptraj = pytest.mark.skipif(
-    find_executable("cpptraj") is None,
+    shutil.which("cpptraj") is None,
     reason="This test requires cpptraj from AmberTools to be installed " "(http://ambermd.org)",
 )
 
