@@ -27,7 +27,6 @@
 ###############################################################################
 import os
 import warnings
-import mda_xdrlib as xdrlib
 
 import numpy as np
 
