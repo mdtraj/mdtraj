@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.9", "3.10", "3.11", "3.12"]
+        python: ["3.10", "3.11", "3.12"]
         os: [ubuntu-latest, macos-latest]  # Windows missing zlib
     steps:
       - uses: actions/checkout@v4
