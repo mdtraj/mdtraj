@@ -3,7 +3,7 @@
 #include "rotation_generic.h"
 #elif defined(__ARM_NEON)
 #include "rotation_arm.h"
-#elif defined(__SSE2__) 
+#elif defined(__SSE2__)
 #include "rotation_sse.h"
 #else
 #include "rotation_generic.h"

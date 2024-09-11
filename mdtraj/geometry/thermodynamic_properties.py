@@ -6,15 +6,17 @@ However, all inputs and outputs are done with implicit units.  This is
 to avoid incompatibilities between versions of openmm.unit and MDTraj.utils.unit.
 
 """
+
 import numpy as np
+
 import mdtraj as md
 import mdtraj.utils.unit.unit_definitions as u
-from mdtraj.utils.unit import in_units_of
 
 # Units taken from http://en.wikipedia.org/wiki/Boltzmann_constant on Nov. 2.
-kB = 1.3806488E-23 * u.joule / u.kelvin
-epsilon0 = 8.854187817E-12 * u.farad / u.meter
+kB = 1.3806488e-23 * u.joule / u.kelvin
+epsilon0 = 8.854187817e-12 * u.farad / u.meter
 gas_constant = 8.3144621 * u.joule / u.kelvin / u.mole
+
 
 def dipole_moments(traj, charges):
     """Calculate the dipole moments of each frame in a trajectory.
@@ -40,17 +42,28 @@ def dipole_moments(traj, charges):
     molecules.  This total displacement is then used as to calculate the
     box dipole moment.
     """
-    local_indices = np.array([(a.index, a.residue.atom(0).index) for a in traj.top.atoms], dtype='int32')
+    local_indices = np.array(
+        [(a.index, a.residue.atom(0).index) for a in traj.top.atoms],
+        dtype="int32",
+    )
     local_displacements = md.compute_displacements(traj, local_indices, periodic=True)
 
-    molecule_indices = np.array([(a.residue.atom(0).index, 0) for a in traj.top.atoms], dtype='int32')
-    molecule_displacements = md.compute_displacements(traj, molecule_indices, periodic=True)
+    molecule_indices = np.array(
+        [(a.residue.atom(0).index, 0) for a in traj.top.atoms],
+        dtype="int32",
+    )
+    molecule_displacements = md.compute_displacements(
+        traj,
+        molecule_indices,
+        periodic=True,
+    )
 
     xyz = local_displacements + molecule_displacements
 
     moments = xyz.transpose(0, 2, 1).dot(charges)
 
     return moments
+
 
 def static_dielectric(traj, charges, temperature):
     """Calculate the static dielectric constant from a trajectory.
@@ -83,18 +96,22 @@ def static_dielectric(traj, charges, temperature):
 
     subtracted = moments - mu
 
-    dipole_variance = (subtracted * subtracted).sum(-1).mean(0) * (u.elementary_charge * u.nanometers) ** 2.  # <M*M> - <M>*<M> = <(M - <M>) * (M - <M>)>
+    dipole_variance = (subtracted * subtracted).sum(-1).mean(0) * (
+        u.elementary_charge * u.nanometers
+    ) ** 2.0  # <M*M> - <M>*<M> = <(M - <M>) * (M - <M>)>
 
-    volume = traj.unitcell_volumes.mean() * u.nanometers ** 3.  # Average box volume of trajectory
+    volume = traj.unitcell_volumes.mean() * u.nanometers**3.0  # Average box volume of trajectory
 
-    static_dielectric = 1.0 + dipole_variance / (3 * kB * temperature * volume * epsilon0)  # Eq. 7 of Derivation of an improved simple point charge model for liquid water: SPC/A and SPC/L
+    static_dielectric = 1.0 + dipole_variance / (
+        3 * kB * temperature * volume * epsilon0
+    )  # Eq. 7 of Derivation of an improved simple point charge model for liquid water: SPC/A and SPC/L
     # Also https://github.com/gromacs/gromacs/blob/master/src/gromacs/gmxana/gmx_current.c#L622
 
     return static_dielectric
 
 
 def heat_capacity_Cp():
-    raise(NotImplementedError("Has not been implemented."))
+    raise (NotImplementedError("Has not been implemented."))
 
 
 def isothermal_compressability_kappa_T(traj, temperature):
@@ -121,11 +138,12 @@ def isothermal_compressability_kappa_T(traj, temperature):
     mu = traj.unitcell_volumes.mean()
 
     kappa = np.cov(traj.unitcell_volumes) / mu
-    kappa = kappa * u.nanometers ** 3
+    kappa = kappa * u.nanometers**3
 
-    kappa /= (kB * temperature)
+    kappa /= kB * temperature
 
     return kappa * u.bar
+
 
 def thermal_expansion_alpha_P(traj, temperature, energies):
     """Calculate the thermal expansion coefficient.
@@ -150,7 +168,7 @@ def thermal_expansion_alpha_P(traj, temperature, energies):
     Equation (5) in Fennell, Dill.  J. Phys. Chem. B, 2012.
     THIS FUNCTION IS NOT CURRENTLY IMPLEMENTED!
     """
-    raise(NotImplementedError("Disabled due to lack of available unit test."))
+    raise (NotImplementedError("Disabled due to lack of available unit test."))
     # Had some issues finding a useful unit test, so disabled this code for now.
     # Feel free to file a pull request with a working unit test :)
     temperature = temperature * u.kelvin
@@ -161,7 +179,7 @@ def thermal_expansion_alpha_P(traj, temperature, energies):
     alpha /= mean_volume
     alpha *= u.kilojoules_per_mole
 
-    alpha /= (gas_constant * temperature ** 2)
+    alpha /= gas_constant * temperature**2
 
     return alpha * u.kelvin
 
@@ -192,7 +210,8 @@ def density(traj, masses=None):
     volume_trace = traj.unitcell_volumes
     densities = mass / volume_trace
 
-    #conversion = in_units_of(1., "dalton * nanometer ** -3", "kilogram / item * meter ** -3")  # The item thing is really weird, but taken from OpenMM StateDataReporter's density calculation
+    # conversion = in_units_of(1., "dalton * nanometer ** -3", "kilogram / item * meter ** -3")
+    # The item thing is really weird, but taken from OpenMM StateDataReporter's density calculation
     conversion = 1.6605387823355087  # The units stuff is busted on py3k, so using hard-coded for now.
 
     densities = densities * conversion

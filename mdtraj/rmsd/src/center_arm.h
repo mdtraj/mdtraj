@@ -35,7 +35,7 @@ void inplace_center_and_trace_atom_major(float* coords, float* traces, const int
             sx_ = vaddq_f64(sx_, vcvt_f64_f32(vget_low_f32(xyz.val[0])));
             sy_ = vaddq_f64(sy_, vcvt_f64_f32(vget_low_f32(xyz.val[1])));
             sz_ = vaddq_f64(sz_, vcvt_f64_f32(vget_low_f32(xyz.val[2])));
-            
+
             /* and the second two values from each float4 */
             sx_ = vaddq_f64(sx_, vcvt_f64_f32(vget_high_f32(xyz.val[0])));
             sy_ = vaddq_f64(sy_, vcvt_f64_f32(vget_high_f32(xyz.val[1])));
@@ -46,7 +46,7 @@ void inplace_center_and_trace_atom_major(float* coords, float* traces, const int
         sx = vgetq_lane_f64(sx_, 0) + vgetq_lane_f64(sx_, 1);
         sy = vgetq_lane_f64(sy_, 0) + vgetq_lane_f64(sy_, 1);
         sz = vgetq_lane_f64(sz_, 0) + vgetq_lane_f64(sz_, 1);
-        
+
         /* Add the last couple entries that weren't a factor of four */
         for (i = 0; i < n_atoms % 4; i++) {
             sx += confp[i*3 + 0];
@@ -75,7 +75,7 @@ void inplace_center_and_trace_atom_major(float* coords, float* traces, const int
             xyz.val[1] = vsubq_f32(xyz.val[1], muy_);
             xyz.val[2] = vsubq_f32(xyz.val[2], muz_);
 
-            xyz2.val[0] = vmulq_f32(xyz.val[0], xyz.val[0]);        
+            xyz2.val[0] = vmulq_f32(xyz.val[0], xyz.val[0]);
             xyz2.val[1] = vmulq_f32(xyz.val[1], xyz.val[1]);
             xyz2.val[2] = vmulq_f32(xyz.val[2], xyz.val[2]);
             trace_ = vaddq_f64(trace_, vcvt_f64_f32(vget_low_f32(xyz2.val[0])));
@@ -89,7 +89,7 @@ void inplace_center_and_trace_atom_major(float* coords, float* traces, const int
             confp += 12;
         }
         trace = vgetq_lane_f64(trace_, 0) + vgetq_lane_f64(trace_, 1);
-        
+
         for (i = 0; i < n_atoms % 4; i++) {
             confp[i*3 + 0] -= sxf;
             confp[i*3 + 1] -= syf;
@@ -97,7 +97,7 @@ void inplace_center_and_trace_atom_major(float* coords, float* traces, const int
             trace += confp[i*3 + 0]*confp[i*3 + 0];
             trace += confp[i*3 + 1]*confp[i*3 + 1];
             trace += confp[i*3 + 2]*confp[i*3 + 2];
-        }        
+        }
         if (traces != NULL)
             traces[k] = (float) trace;
     }

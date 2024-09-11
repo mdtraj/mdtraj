@@ -133,7 +133,7 @@ void dist_mic_triclinic(const float* xyz, const int* pairs, const float* box_mat
 }
 
 void dist_mic_triclinic_t(const float* xyz, const int* pairs, const int* times,
-                        const float* box_matrix, float* distance_out, 
+                        const float* box_matrix, float* distance_out,
                         float* displacement_out, const int n_frames,
                         const int n_atoms, const int n_pairs) {
     bool store_displacement = (displacement_out != NULL);
@@ -373,7 +373,7 @@ void kabsch_sander(const float* xyz, const int* nco_indices, const int* ca_indic
                 fvec4 rj_ca(xyz[3*ca_indices[rj]], xyz[3*ca_indices[rj]+1], xyz[3*ca_indices[rj]+2], 0);
 
                 // Check the ca distance before proceding
-                
+
                 fvec4 r12 = ri_ca-rj_ca;
                 if (dot3(r12, r12) < MINIMAL_CA_DISTANCE2) {
                     float e = ks_donor_acceptor(xyz, &hcoords[0], nco_indices, ri, rj);

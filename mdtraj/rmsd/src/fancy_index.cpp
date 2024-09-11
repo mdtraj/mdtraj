@@ -28,7 +28,7 @@ range(int n)
  * The equivalent python code for this function is
  *
  * >>> out = A[indx, indy]
- * 
+ *
  * where
  *   A.shape == (nx, ny),
  *   indx.shape == (nindx,)
@@ -58,8 +58,7 @@ fancy_index2d(const float* A, int nx, int ny,
             out[ii*nindy + jj] = A[i*ny + j];
         }
     }
-    
+
     if (indx == NULL) { free(indx_); }
     if (indy == NULL) { free(indy_); }
 }
-

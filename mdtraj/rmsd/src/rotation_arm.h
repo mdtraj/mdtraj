@@ -112,7 +112,7 @@ float rot_msd_atom_major(const int n_real_atoms, const int n_padded_atoms,
     double sum_displacement = 0.0; /* accumulate the sum-squared-displacement here */
     float sum4 = 0; /* a single sum-squared-displacement for 4 values */
 
-    float32x4x3_t axyz, bxyz;    
+    float32x4x3_t axyz, bxyz;
     float32x4_t tx, ty, tz, dx, dy, dz, acculm;
     float32x4_t rXX = vld1q_dup_f32(rot + 0);
     float32x4_t rXY = vld1q_dup_f32(rot + 1);
@@ -144,7 +144,7 @@ float rot_msd_atom_major(const int n_real_atoms, const int n_padded_atoms,
         /* sum up (bx-tx)^2 + (by-ty)^2 + (bz-tz)^2 over a block of 4 atoms */
         /* and accumulate the result into sum_displacement */
         acculm = add3(vmulq_f32(dx, dx), vmulq_f32(dy, dy), vmulq_f32(dz, dz));
-        /* horizontal add of all 4 elemenets in acculm */    
+        /* horizontal add of all 4 elemenets in acculm */
         float32x4_t tmp = vpaddq_f32(acculm,acculm); /* tmp = a01 a23 a01 a23 */
         sum4 = vgetq_lane_f32(tmp, 0) + vgetq_lane_f32(tmp, 1);
         sum_displacement += sum4;

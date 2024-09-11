@@ -36,19 +36,20 @@ July 6th, 2023
 [![Anaconda-Server Version](https://anaconda.org/conda-forge/mdtraj/badges/version.svg)](https://anaconda.org/conda-forge/mdtraj)
 [![Anaconda-Server Downloads](https://anaconda.org/conda-forge/mdtraj/badges/downloads.svg)](https://anaconda.org/conda-forge/mdtraj)
 [![DOI for Citing MDTraj](https://img.shields.io/badge/DOI-10.1016%2Fj.bpj.2015.08.015-blue.svg)](http://doi.org/10.1016/j.bpj.2015.08.015)
+[![Documentation Status](https://readthedocs.org/projects/mdtraj/badge/?version=latest)](https://mdtraj.readthedocs.io/en/latest/?badge=latest)
 
 Read, write and analyze MD trajectories with only a few lines of Python code.
 
 With MDTraj, you can
 
-- Read and write from **every MD format imaginable** (`pdb`, `xtc`, `trr`, `dcd`, `binpos`, `netcdf`, `mdcrd`, `prmtop`, `gsd`, ...)
+- Read and write from **every MD format imaginable** (`pdb`, `xtc`, `trr`, `dcd`, `netcdf`, `mdcrd`, `prmtop`, `gsd`, ...)
 - Run **blazingly** fast RMSD calculations (4x the speed of the original Theobald QCP).
 - Use tons of analysis functions like bonds/angles/dihedrals, hydrogen bonding identification, secondary structure assignment, NMR observables.
 - Use a **lightweight API**, with a focus on **speed** and vectorized operations.
 
-For details, see the website at [mdtraj.org](http://mdtraj.org). To get involved,
-take a look at the [github issue tracker](https://github.com/mdtraj/mdtraj/issues)
-and/or the [gitter room](https://gitter.im/mdtraj/community).
+For details, see the [documentation](https://mdtraj.readthedocs.io/en/latest/). To get involved,
+take a look at the [GitHub issue tracker](https://github.com/mdtraj/mdtraj/issues)
+and/or the [Discussions](https://github.com/mdtraj/mdtraj/discussions) section.
 
 ####  Citation
 

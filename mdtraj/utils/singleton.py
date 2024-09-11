@@ -5,12 +5,12 @@ pickling/unpickling
 """
 
 
-class Singleton(object):
+class Singleton:
     _inst = None
 
     def __new__(cls):
         if cls._inst is None:
-            cls._inst = super(Singleton, cls).__new__(cls)
+            cls._inst = super().__new__(cls)
         return cls._inst
 
     def __reduce__(self):

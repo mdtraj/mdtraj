@@ -22,6 +22,7 @@
 
 
 import numpy as np
+
 from mdtraj.geometry import alignment
 from mdtraj.testing import eq
 

@@ -158,9 +158,9 @@ void dist_t(const float* xyz, const int* pairs, const int* times,
 #ifdef COMPILE_WITH_PERIODIC_BOUNDARY_CONDITIONS
             r12 -= round(r12*inv_box_size)*box_size;
 #endif
-    
+
             // Store results.
-    
+
             if (store_displacement) {
                 float temp[4];
                 r12.store(temp);

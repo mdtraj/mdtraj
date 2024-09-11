@@ -1,6 +1,6 @@
 @<TRIPOS>MOLECULE
 adp
-   39    41     1     0     1 
+   39    41     1     0     1
 SMALL
 USER_CHARGES
 @<TRIPOS>ATOM
@@ -86,4 +86,4 @@ USER_CHARGES
    40    36    38 1
    41    38    39 1
 @<TRIPOS>SUBSTRUCTURE
-      1  adp              1 ****               0 ****  **** 
+      1  adp              1 ****               0 ****  ****

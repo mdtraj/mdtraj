@@ -36,7 +36,7 @@ cdef extern from "geometry.h" nogil:
                   float* distance_out, float* displacement_out,
                   int n_frames, int n_atoms, int n_pairs)
     void dist_t(const float* xyz, const int* pairs, const int* times,
-                    float* distance_out, float* displacement_out, const int n_times, 
+                    float* distance_out, float* displacement_out, const int n_times,
                     const int n_atoms, const int n_pairs)
     void dist_mic_t(const float* xyz, const int* pairs, const int* times,
                     const float* box_matrix, float* distance_out,
@@ -86,7 +86,7 @@ cdef extern from "geometry.h" nogil:
 cdef extern from "sasa.h":
     void sasa(const int n_frames, const int n_atoms, const float* xyzlist,
               const float* atom_radii, const int n_sphere_points,
-              const int* atom_mapping, const int n_groups, float* out) nogil
+              const int* atom_mapping, const int* atom_selection, const int n_groups, float* out) nogil
 
 
 ##############################################################################
@@ -228,11 +228,12 @@ def _sasa(float[:, :, ::1] xyz,
           float[::1] atom_radii,
           int n_sphere_points,
           int[::1] atom_outmapping,
+          int[::1] atom_selection_mask,
           float[:, ::1] out):
     cdef int n_frames = xyz.shape[0]
     cdef int n_atoms = xyz.shape[1]
     sasa(n_frames, n_atoms, &xyz[0,0,0], &atom_radii[0], n_sphere_points,
-         &atom_outmapping[0], out.shape[1], &out[0,0])
+         &atom_outmapping[0], &atom_selection_mask[0], out.shape[1], &out[0,0])
 
 
 def _dssp(float[:, :, ::1] xyz,
@@ -248,9 +249,7 @@ def _dssp(float[:, :, ::1] xyz,
          &is_proline[0], &chain_ids[0], n_frames, n_atoms,
          n_residues, &secondary[0])
 
-    PY2 = sys.version_info[0] == 2
-    value = str(secondary.base) if PY2 else secondary.base.decode('ascii')
-    return value
+    return secondary.base.decode('ascii')
 
 
 def _find_closest_contact(float[:, ::1] positions,

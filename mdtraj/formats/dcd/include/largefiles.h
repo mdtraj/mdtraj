@@ -18,7 +18,7 @@
  *   Platform dependent defines for enabling 64-bit file I/O on 32-bit machines
  *
  ***************************************************************************/
- 
+
 #if defined(_AIX)
 /* Define to enable large file extensions on AIX */
 #define _LARGE_FILE
@@ -33,4 +33,3 @@
 #endif
 #define _FILE_OFFSET_BITS 64
 #endif
-

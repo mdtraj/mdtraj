@@ -1,9 +1,9 @@
 [build-system]
 requires = [
     "setuptools",
+    "versioneer[toml]",
     "wheel",
-    # provides the oldest numpy version with wheels on PyPI
-    "oldest-supported-numpy",
+    "numpy~=1.25",
     "Cython~=0.29.36",
 ]
 
@@ -16,3 +16,31 @@ skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
 
 [tool.cibuildwheel.linux]
 environment-pass = ["CIBW_BUILD"]
+
+[tool.versioneer]
+VCS = "git"
+style = "pep440"
+versionfile_source = "mdtraj/_version.py"
+versionfile_build = "mdtraj/_version.py"
+tag_prefix = ""
+
+[tool.ruff]
+line-length=119
+
+[tool.ruff.lint]
+select = [
+    "F",
+    "I",
+    "E",
+    "W",
+    "UP",
+    "NPY",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Would really, really like to get rid of F403, though F401 is okay
+"__init__.py" = ["F401", "F403"]
+"tests/test_*.py" = ["NPY002"]
+"mdtraj/geometry/__init__.py" = ["F403", "F405"]
+"mdtraj/core/trajectory.py" = ["F401"]
+"mdtraj/utils/unit/**" = ["F403", "F405"]
