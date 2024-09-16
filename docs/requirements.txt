@@ -7,7 +7,6 @@ nbsphinx_link
 msmb_theme
 jupyter
 ipython
-mda-xdrlib
 matplotlib
 pandoc
 jinja2
