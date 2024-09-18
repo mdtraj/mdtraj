@@ -31,6 +31,9 @@ jobs:
           - "3.10"
           - "3.11"
           - "3.12"
+        numpy-version:
+          - "2"
+          - "1.26.*"
 
     steps:
     - uses: actions/checkout@v4
@@ -41,6 +44,7 @@ jobs:
         environment-file: devtools/conda-envs/test.yaml
         create-args: >-
           python=${{ matrix.python-version }}
+          numpy=${{ matrix.numpy-version }}
 
     - name: Install package
       run: |

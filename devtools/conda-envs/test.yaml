@@ -5,7 +5,7 @@ dependencies:
   # Core
   - python
   - cython =0.29.36
-  - numpy=2
+  - numpy
   - zlib
   - pyparsing
   - scipy
