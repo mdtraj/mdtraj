@@ -24,6 +24,7 @@
 import functools
 import os
 import warnings
+from collections import deque, defaultdict
 from collections.abc import Iterable
 from copy import deepcopy
 
@@ -2193,6 +2194,53 @@ class Trajectory:
     def _have_unitcell(self):
         return self._unitcell_lengths is not None and self._unitcell_angles is not None
 
+    def _sort_bonds(self):
+        """Sort bonds for wrapping molecules correctly.
+
+        Each molecule is built in a continuous chain along the bonds, which
+        prevents atoms from being imaged to multiple distinct locations.
+        The returned list of bonds defines each molecule as a minimum spanning
+        tree of the molecular graph.
+
+        Returns
+        -------
+        sorted_bonds: np.ndarray, shape=(m,2)
+            Sorted array of bonds that define molecules as MSTs.
+        """
+        bonds = np.asarray(
+                [[b0.index, b1.index] for b0, b1 in self._topology.bonds],
+                dtype=np.int32,
+            )
+        # Build an adjacency list for the molecular graph
+        adj = defaultdict(list)
+        for bond in bonds:
+            atom1, atom2 = bond
+            adj[atom1].append(atom2)
+            adj[atom2].append(atom1)
+
+        sorted_bonds = []
+        visited = set()
+        queue = deque()
+
+        atoms = set(bonds.flatten())
+
+        # Iterate through all atoms to handle disconnected subgraphs (molecules)
+        for atom in atoms:
+            if atom not in visited:
+                # Start BFS traversal from this atom
+                visited.add(atom)
+                queue.append(atom)
+                while queue:
+                    current_atom = queue.popleft()
+                    for neighbor in adj[current_atom]:
+                        if neighbor not in visited:
+                            visited.add(neighbor)
+                            queue.append(neighbor)
+                            # Add the bond with the known atom at index 0
+                            sorted_bonds.append([current_atom, neighbor])
+
+        return np.array(sorted_bonds, dtype=np.int32)
+
     def make_molecules_whole(self, inplace=False, sorted_bonds=None):
         """Only make molecules whole
 
@@ -2222,11 +2270,7 @@ class Trajectory:
             result = self[:]
 
         if sorted_bonds is None:
-            sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray(
-                [[b0.index, b1.index] for b0, b1 in sorted_bonds],
-                dtype=np.int32,
-            )
+            sorted_bonds = self._sort_bonds()
 
         box = np.asarray(result.unitcell_vectors, order="c")
         _geometry.whole_molecules(result.xyz, box, sorted_bonds)
@@ -2301,11 +2345,7 @@ class Trajectory:
         else:
             result = self[:]
         if make_whole and sorted_bonds is None:
-            sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray(
-                [[b0.index, b1.index] for b0, b1 in sorted_bonds],
-                dtype=np.int32,
-            )
+            sorted_bonds = self._sort_bonds()
         elif not make_whole:
             sorted_bonds = None
 
