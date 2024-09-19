@@ -4,7 +4,7 @@ channels:
 dependencies:
   # Core
   - python
-  - cython
+  - cython =3
   - numpy
   - zlib
   - pyparsing
