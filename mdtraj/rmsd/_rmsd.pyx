@@ -38,13 +38,15 @@ from cython.parallel cimport prange
 # External Declarations
 ##############################################################################
 
-cdef extern float msd_axis_major(int nrealatoms, int npaddedatoms, int rowstride,
-    float* aT, float* bT, float G_a, float G_b) nogil
-cdef extern float msd_atom_major(int nrealatoms, int npaddedatoms,  float* a,
-    float* b, float G_a, float G_b, int computeRot, float rot[9]) nogil
-cdef extern float rot_msd_atom_major(const int n_real_atoms,
-    const int n_padded_atoms, const float* a, const float* b, const float rot[9]) nogil
-cdef extern float rot_atom_major(const int n_atoms, float* a, const float rot[9]) nogil
+cdef extern from "theobald_rmsd.h":
+    cdef extern float msd_axis_major(int nrealatoms, int npaddedatoms, int rowstride,
+        float* aT, float* bT, float G_a, float G_b) nogil
+    cdef extern float msd_atom_major(int nrealatoms, int npaddedatoms,  float* a,
+        float* b, float G_a, float G_b, int computeRot, float rot[9]) nogil
+cdef extern from "rotation.h":
+    cdef extern float rot_msd_atom_major(const int n_real_atoms,
+        const int n_padded_atoms, const float* a, const float* b, const float rot[9]) nogil
+    cdef extern float rot_atom_major(const int n_atoms, float* a, const float rot[9]) nogil
 cdef extern from "center.h":
     void inplace_center_and_trace_atom_major(float* coords, float* traces,
     const int n_frames, const int n_atoms) nogil

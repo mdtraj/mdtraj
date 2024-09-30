@@ -4,7 +4,7 @@ requires = [
     "versioneer[toml]",
     "wheel",
     "numpy==2.*",
-    "Cython~=0.29.36",
+    "Cython>=3.0.0",
 ]
 
 [tool.versioneer]
