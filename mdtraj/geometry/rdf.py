@@ -213,7 +213,7 @@ def compute_rdf_t(
 
         # Normalize by volume of the spherical shell (see above)
         V = (4 / 3) * np.pi * (np.power(edges[1:], 3) - np.power(edges[:-1], 3))
-        norm = len(pairs_set) / (period_length) * np.sum(1.0 / traj.unitcell_volumes) * V
+        norm = len(pairs_set) / (period_length) * np.sum(np.float64(1.0) / traj.unitcell_volumes) * V
 
         temp_g_r_t = temp_g_r_t.astype(np.float64) / norm  # From int64.
         g_r_t[i] = temp_g_r_t
