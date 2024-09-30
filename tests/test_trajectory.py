@@ -891,6 +891,21 @@ def test_smooth(get_fn):
     eq(output, test)
 
 
+def test_make_whole(get_fn):
+    t1 = md.load(get_fn("water1_pbc.pdb"))
+    t2 = md.load(get_fn("water2_pbc.pdb"))
+
+    t1.make_molecules_whole(inplace=True)
+    t2.make_molecules_whole(inplace=True)
+
+    # Test that bond lengths are preserved
+    bonds1 = [(a1.index, a2.index) for a1, a2 in t1.topology._bonds]
+    bond_lenghts1 = [np.linalg.norm(t1.xyz[0, a1] - t1.xyz[0, a2]) for a1, a2 in bonds1]
+    bonds2 = [(a1.index, a2.index) for a1, a2 in t2.topology._bonds]
+    bond_lenghts2 = [np.linalg.norm(t2.xyz[0, a1] - t2.xyz[0, a2]) for a1, a2 in bonds2]
+
+    assert np.allclose(bond_lenghts1, bond_lenghts2)
+
 @pytest.mark.skip(reason="Broken, maybe only on Python 3.11")
 def test_image_molecules(get_fn):
     # Load trajectory with periodic box
