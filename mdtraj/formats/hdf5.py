@@ -64,6 +64,7 @@ Frames = namedtuple(
         "potentialEnergy",
         "temperature",
         "alchemicalLambda",
+        "forces",
     ],
 )
 
@@ -651,6 +652,11 @@ class HDF5TrajectoryFile:
             potentialEnergy=get_field("potentialEnergy", frame_slice, out_units="kilojoules_per_mole"),
             temperature=get_field("temperature", frame_slice, out_units="kelvin"),
             alchemicalLambda=get_field("lambda", frame_slice, out_units="dimensionless"),
+            forces=get_field(
+                "forces",
+               (frame_slice, atom_slice, slice(None)),
+               out_units="kilojoules/(mole*nanometer)"
+            ),
         )
 
         self._frame_index += frame_slice.stop - frame_slice.start
@@ -667,6 +673,7 @@ class HDF5TrajectoryFile:
         potentialEnergy=None,
         temperature=None,
         alchemicalLambda=None,
+        forces=None
     ):
         """Write one or more frames of data to the file
 
@@ -718,6 +725,9 @@ class HDF5TrajectoryFile:
         alchemicalLambda : np.ndarray, shape=(n_frames,), optional
             You may optionally specify the alchemical lambda in each frame. These
             have no units, but are generally between zero and one.
+        forces :  np.ndarray, shape=(n_frames, n_atoms, 3), optional
+            You may optionally specify the cartesian components of the fores
+            for each atom in each frame.
         """
         _check_mode(self.mode, ("w", "a"))
 
@@ -741,6 +751,7 @@ class HDF5TrajectoryFile:
         potentialEnergy = in_units_of(potentialEnergy, None, "kilojoules_per_mole")
         temperature = in_units_of(temperature, None, "kelvin")
         alchemicalLambda = in_units_of(alchemicalLambda, None, "dimensionless")
+        forces = in_units_of(forces, None, "kilojoules/(mole*nanometer)")
 
         # do typechecking and shapechecking on the arrays
         # this ensure_type method has a lot of options, but basically it lets
@@ -844,6 +855,16 @@ class HDF5TrajectoryFile:
             warn_on_cast=False,
             add_newaxis_on_deficient_ndim=True,
         )
+        forces = ensure_type(
+            forces,
+            dtype=np.float32,
+            ndim=3,
+            name="forces",
+            shape=(n_frames, n_atoms, 3),
+            can_be_none=True,
+            warn_on_cast=False,
+            add_newaxis_on_deficient_ndim=True,
+        )
 
         # if this is our first call to write(), we need to create the headers
         # and the arrays in the underlying HDF5 file
@@ -858,6 +879,7 @@ class HDF5TrajectoryFile:
                 set_potentialEnergy=(potentialEnergy is not None),
                 set_temperature=(temperature is not None),
                 set_alchemicalLambda=(alchemicalLambda is not None),
+                set_forces=(forces is not None),
             )
             self._needs_initialization = False
 
@@ -876,6 +898,7 @@ class HDF5TrajectoryFile:
                 "kineticEnergy",
                 "potentialEnergy",
                 "temperature",
+                "forces",
             ]:
                 contents = locals()[name]
                 if contents is not None:
@@ -932,6 +955,7 @@ class HDF5TrajectoryFile:
         set_potentialEnergy,
         set_temperature,
         set_alchemicalLambda,
+        set_forces,
     ):
         self._n_atoms = n_atoms
 
@@ -1025,6 +1049,14 @@ class HDF5TrajectoryFile:
                 shape=(0,),
             )
             self._get_node("/", name="lambda").attrs["units"] = "dimensionless"
+        if set_forces:
+            self._create_earray(
+                where="/",
+                name="forces",
+                atom=self.tables.Float32Atom(),
+                shape=(0, self._n_atoms, 3),
+            )
+            self._handle.root.forces.attrs["units"] = "kilojoules/(mole*nanometer)"
 
     def seek(self, offset, whence=0):
         """Move to a new file position
