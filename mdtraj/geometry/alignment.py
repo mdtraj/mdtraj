@@ -268,12 +268,12 @@ def rmsd_qcp(conformation1, conformation2):
     Szy2 = Szy * Szy
     Szx2 = Szx * Szx
 
-    SyzSzymSyySzz2 = np.float64(2.0) * (Syz * Szy - Syy * Szz)
+    SyzSzymSyySzz2 = 2.0 * (Syz * Szy - Syy * Szz)
     Sxx2Syy2Szz2Syz2Szy2 = Syy2 + Szz2 - Sxx2 + Syz2 + Szy2
 
     # two of the coefficients
-    C2 = np.float64(-2.0) * (Sxx2 + Syy2 + Szz2 + Sxy2 + Syx2 + Sxz2 + Szx2 + Syz2 + Szy2)
-    C1 = np.float64(8.0) * (
+    C2 = -2.0 * (Sxx2 + Syy2 + Szz2 + Sxy2 + Syx2 + Sxz2 + Szx2 + Syz2 + Szy2)
+    C1 = 8.0 * (
         Sxx * Syz * Szy + Syy * Szx * Sxz + Szz * Sxy * Syx - Sxx * Syy * Szz - Syz * Szx * Sxy - Szy * Syx * Sxz
     )
 
@@ -301,7 +301,7 @@ def rmsd_qcp(conformation1, conformation2):
         * (-(SxymSyx) * (SyzpSzy) + (SxzmSzx) * (SxxpSyy - Szz))
     )
 
-    E0 = (G_A + G_B) / np.float64(2.0)
+    E0 = (G_A + G_B) / 2.0
 
     def f(x):
         return x**4.0 + C2 * x**2.0 + C1 * x + C0

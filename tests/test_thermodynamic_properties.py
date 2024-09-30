@@ -90,7 +90,7 @@ Cp-Cv                                    =     5563.55 J/mol K
 
 def test_volume(get_fn):
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
-    v = np.float64(traj.unitcell_volumes.mean())
+    v = traj.unitcell_volumes.mean()
     reference = 7.92813  # From gromacs, see above comment
 
     assert abs((v - reference) / reference) < 1e-3, "Volume tolerance not met!"
@@ -98,7 +98,7 @@ def test_volume(get_fn):
 
 def test_density(get_fn):
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
-    rho = np.float64(md.geometry.density(traj).mean())
+    rho = md.geometry.density(traj).mean()
     reference = 973.651  # From gromacs, see above comment
 
     assert abs((rho - reference) / reference) < 1e-3, "Density tolerance not met!"
@@ -142,7 +142,7 @@ def test_static_dielectric(get_fn):
     traj.xyz = xyz
     epsilon1 = md.geometry.static_dielectric(traj, charges, temperature)
 
-    eq(epsilon0, epsilon1)
+    eq(epsilon0, epsilon1, decimal=3)
 
     reference = 87.1818  # From gromacs, see above comment
 

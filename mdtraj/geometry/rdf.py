@@ -188,8 +188,8 @@ def compute_rdf_t(
         pairs = np.vstack([np.vstack([pairs_set, pairs_set]).T, pairs])
 
     n_small_chunks = np.ceil(len(pairs) / n_concurrent_pairs).astype("int")
-    g_r_t = np.zeros((n_small_chunks, len(times), n_bins), dtype=np.float64)
-    weights = np.zeros(n_small_chunks, dtype=np.float64)
+    g_r_t = np.zeros((n_small_chunks, len(times), n_bins))
+    weights = np.zeros(n_small_chunks)
 
     # Splits pairs into smaller chunks so that frame_distances is not excessively large
     for i in range(n_small_chunks):
@@ -207,7 +207,7 @@ def compute_rdf_t(
         )
 
         for n, distances in enumerate(frame_distances):
-            tmp, edges = np.histogram(np.float64(distances), range=r_range, bins=n_bins)
+            tmp, edges = np.histogram(distances, range=r_range, bins=n_bins)
             temp_g_r_t[n, :] += tmp
         r = 0.5 * (edges[1:] + edges[:-1])
 
@@ -215,7 +215,7 @@ def compute_rdf_t(
         V = (4 / 3) * np.pi * (np.power(edges[1:], 3) - np.power(edges[:-1], 3))
         norm = len(pairs_set) / (period_length) * np.sum(1.0 / traj.unitcell_volumes) * V
 
-        temp_g_r_t = temp_g_r_t / norm  # From int64.
+        temp_g_r_t = temp_g_r_t.astype(np.float64) / norm  # From int64.
         g_r_t[i] = temp_g_r_t
 
     g_r_t_final = np.average(g_r_t, axis=0, weights=weights)
