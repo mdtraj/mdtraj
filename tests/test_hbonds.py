@@ -48,7 +48,7 @@ def test_hbonds_against_dssp(get_fn, tmpdir):
     dssp = os.path.join(tmpdir, "f.pdb.dssp")
     t.save(pdb)
 
-    cmd = ["mkdssp", "-i", pdb, "-o", dssp]
+    cmd = ["mkdssp", pdb, dssp]
     subprocess.check_output(" ".join(cmd), shell=True)
     energy = scipy.sparse.lil_matrix((t.n_residues, t.n_residues))
 
