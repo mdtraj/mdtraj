@@ -15,8 +15,8 @@ needs_dssp = pytest.mark.skipif(not shutil.which("mkdssp"), reason=DSSP_MSG)
 def call_dssp(dirname, traj, frame=0):
     inp = os.path.join(dirname, "temp.pdb")
     out = os.path.join(dirname, "temp.pdb.dssp")
-    traj[frame].save(inp)
-    cmd = ["mkdssp", "-i", inp, "-o", out]
+    traj[frame].save(inp, header=False)
+    cmd = ["mkdssp", inp, out]
     subprocess.check_output(" ".join(cmd), shell=True)
 
     KEY_LINE = (
