@@ -46,7 +46,7 @@ def test_hbonds_against_dssp(get_fn, tmpdir):
     t = md.load(get_fn("2EQQ.pdb"))[0]
     pdb = os.path.join(tmpdir, "f.pdb")
     dssp = os.path.join(tmpdir, "f.pdb.dssp")
-    t.save(pdb)
+    t.save(pdb, header=False)
 
     cmd = ["mkdssp", pdb, dssp]
     subprocess.check_output(" ".join(cmd), shell=True)
