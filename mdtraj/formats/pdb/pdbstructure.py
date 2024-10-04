@@ -69,7 +69,7 @@ def _read_atom_number(num_str, pdbstructure=None):
             raise OverflowError("Need to parse atom number using non-decimal residue modes.")
         else:
             return int(num_str)
-    except (AttributeError, ValueError, OverflowError):
+    except (AttributeError, ValueError, OverflowError, ValueError):
         # we need to figure out on the 1st try which mode to switch to. There are currently 3
         # options: VMD (hex), Chimera (their own 'hybrid36' mode), and overflow (*****).
         # Chimera starts with A0000, vmd with 186a0, so they are distinguishable.
@@ -77,14 +77,18 @@ def _read_atom_number(num_str, pdbstructure=None):
             try:
                 return int(num_str)
             except ValueError:
-                # num_str is not decimal, no index_fnc to interpret it, no pdbstructure to say
+                # num_str is not decimal, no nondec_mode to interpret it, no pdbstructure to say
                 # what it is or to provide current number of atoms. No way to figure out
                 return 0
         else:
             if pdbstructure._atom_num_nondec_mode is None:
-               # If this is the first time we reached overflow, we will try to determine the mode
-               # using the num_str as key.
-                pdbstructure._atom_num_nondec_mode = _atom_num_initial_nondecimal_vals[num_str]
+                try:
+                    # If this is the first time we reached overflow, we will try to determine the mode
+                    # using the num_str as key.
+                    pdbstructure._atom_num_nondec_mode = _atom_num_initial_nondecimal_vals[num_str]
+                except KeyError:
+                    # Not a known overflow, guess atom number
+                    return pdbstructure._next_atom_number
             try:
                 # The _atom_num_nondec_mode has been set.
                 # Try and run the corresponding _atom_num_functions on num_str
@@ -93,6 +97,9 @@ def _read_atom_number(num_str, pdbstructure=None):
                 # Didn't work, we need to change to overflow mode and guess with _next_atom_number.
                 _atom_num_nondec_mode = "overflow"
                 return pdbstructure._atom_num_functions[pdbstructure._atom_num_nondec_mode](num_str)
+            except KeyError:
+                # Not a known overflow mode, guess atom number
+                return pdbstructure._next_atom_number
 
 
 def _overflow_residue_check(num_str, pdbstructure, curr_atom):
@@ -134,9 +141,8 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
             # Raise an OverflowError, which will switch to the correct mode to read num_str. 
             raise OverflowError("Need to parse residue number using non-decimal residue modes.")
         else:
-            #  Within "normal" pdb specifications
             return int(num_str)
-    except (AttributeError, OverflowError, KeyError):
+    except (AttributeError, OverflowError, KeyError, ValueError):
         # we need to figure out on the 1st try which mode to switch to. There are currently 3 options:
         # VMD (hex) and Chimera (their own 'hybrid36' mode) and Overflow (****).
         # Chimera starts with A000, vmd with 2710, and Overflow just shows ****.
@@ -153,7 +159,11 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
         else:
             if pdbstructure._residue_num_nondec_mode is None:
                 # Attempt to set overflow mode using num_str as key
-                pdbstructure._residue_num_nondec_mode = _residue_num_initial_nondecimal_vals[num_str]
+                try:
+                    pdbstructure._residue_num_nondec_mode = _residue_num_initial_nondecimal_vals[num_str]
+                except KeyError:
+                    # Not a known overflow mode, guess residue number
+                    return pdbstructure._next_residue_number
             try:
                 # Try and run the _residue_num_functions
                 return pdbstructure._residue_num_functions[pdbstructure._residue_num_nondec_mode](num_str, pdbstructure, curr_atom)
@@ -165,6 +175,9 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
                     pdbstructure,
                     curr_atom,
                 )
+            except KeyError:
+                # Not a known overflow, guess residue number
+                return pdbstructure._next_residue_number
 
 
 class PdbStructure:
