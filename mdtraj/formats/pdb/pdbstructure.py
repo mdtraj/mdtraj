@@ -176,7 +176,7 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
                     curr_atom,
                 )
             except KeyError:
-                # Not a known overflow, guess residue number
+                # Not a known overflow mode, guess residue number
                 return pdbstructure._next_residue_number
 
 
@@ -361,7 +361,7 @@ class PdbStructure:
         self._next_atom_number = 1
 
     def _reset_residue_numbers(self):
-        self._residue_num_nondec_mode = None
+        self._residue_num_nondec_mode = None  # None (decimal until changes), 'hex', 'chimera', 'overflow'
         self._next_residue_number = 1
 
     def write(self, output_stream=sys.stdout):
