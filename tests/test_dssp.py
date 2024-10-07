@@ -11,7 +11,7 @@ import mdtraj as md
 
 def call_dssp(get_fn, ref_name, frame=0):
     """Read reference output files created with mkdssp v2.2.1"""
-    out = get_fn(f"{ref_name}.dssp")
+    out = get_fn(f"dssp/{ref_name}_{frame}.dssp")
 
     KEY_LINE = (
         "  #  RESIDUE AA STRUCTURE BP1 BP2  ACC     N-H-->O    O-->H-N    N-H-->O    "
@@ -60,7 +60,7 @@ def test_2(get_fn, tmpdir, fn):
     """This test checks dssp assignments on different chains for pdb files in tests/data"""
     t = md.load(get_fn(fn))
     for i in range(len(t)):
-        assert_(call_dssp(get_fn, fn), md.compute_dssp(t[i], simplified=False)[0])
+        assert_(call_dssp(get_fn, fn, i), md.compute_dssp(t[i], simplified=False)[0])
 
 
 @pytest.mark.parametrize('pdbid', ["1GAI", "6gsv", "2AAC"])
