@@ -1,10 +1,10 @@
 ==== Secondary Structure Definition by the program DSSP, CMBI version by M.L. Hekkelman/2010-10-21 ==== DATE=2024-10-07        .
 REFERENCE W. KABSCH AND C.SANDER, BIOPOLYMERS 22 (1983) 2577-2637                                                              .
-HEADER    CYTOKINE                                30-MAR-07   2EQQ                                                             .
-COMPND    MOL_ID: 1; MOLECULE: GROWTH-BLOCKING PEPTIDE, LONG FORM; CHAIN: A; FRA                                               .
-SOURCE    MOL_ID: 1; ORGANISM_SCIENTIFIC: MYTHIMNA SEPARATA; ORGANISM_COMMON: NO                                               .
-AUTHOR    Y.UMETSU,T.AIZAWA,M.KAMIYA,Y.KUMAKI,M.DEMURA,K.KAWANO                                                                .
-   28  1  1  1  0 TOTAL NUMBER OF RESIDUES, NUMBER OF CHAINS, NUMBER OF SS-BRIDGES(TOTAL,INTRACHAIN,INTERCHAIN)                .
+                                                                                                                               .
+COMPND                                                                                                                         .
+SOURCE                                                                                                                         .
+AUTHOR                                                                                                                         .
+   28  1  0  0  0 TOTAL NUMBER OF RESIDUES, NUMBER OF CHAINS, NUMBER OF SS-BRIDGES(TOTAL,INTRACHAIN,INTERCHAIN)                .
   2809.3   ACCESSIBLE SURFACE OF PROTEIN (ANGSTROM**2)                                                                         .
    11 39.3   TOTAL NUMBER OF HYDROGEN BONDS OF TYPE O(I)-->H-N(J)  , SAME NUMBER PER 100 RESIDUES                              .
     0  0.0   TOTAL NUMBER OF HYDROGEN BONDS IN     PARALLEL BRIDGES, SAME NUMBER PER 100 RESIDUES                              .
@@ -32,7 +32,7 @@ AUTHOR    Y.UMETSU,T.AIZAWA,M.KAMIYA,Y.KUMAKI,M.DEMURA,K.KAWANO                 
     4    4 A S  S    S-     0   0   85     -3,-0.3     2,-2.0     1,-0.1    -2,-0.1   0.234 105.9-118.8 -88.7  12.3   -9.5    3.9    7.6
     5    5 A G        -     0   0   55     -4,-0.1     2,-0.4     2,-0.0    -1,-0.1  -0.410  41.3-135.7  81.1 -60.8  -10.9    0.7    6.0
     6    6 A G        -     0   0   39     -2,-2.0     2,-0.2    -4,-0.1     6,-0.1  -0.889  22.9 -78.2 113.4-145.3   -7.5   -0.3    4.6
-    7    7 A a        -     0   0   54     -2,-0.4     3,-0.1     4,-0.3     4,-0.1  -0.785  62.3 -46.6-142.9-171.4   -6.8   -1.6    1.2
+    7    7 A C        -     0   0   54     -2,-0.4     3,-0.1     4,-0.3     4,-0.1  -0.785  62.3 -46.6-142.9-171.4   -6.8   -1.6    1.2
     8    8 A V  S >  S-     0   0  100     -2,-0.2     3,-1.5     1,-0.2     2,-0.2  -0.235  80.9 -76.0 -59.7 151.2   -7.1   -4.8   -0.8
     9    9 A A  T 3  S+     0   0   99      1,-0.3    -1,-0.2    -3,-0.1     3,-0.1  -0.324 124.7  24.4 -54.6 117.0   -5.8   -8.0    0.9
    10   10 A G  T 3  S+     0   0   38      1,-0.2    12,-1.6    -2,-0.2     2,-0.5   0.627  94.9 121.9  99.9  17.5   -2.0   -7.8    0.8
@@ -44,7 +44,7 @@ AUTHOR    Y.UMETSU,T.AIZAWA,M.KAMIYA,Y.KUMAKI,M.DEMURA,K.KAWANO                 
    16   16 A D  T 3  S-     0   0  122      2,-0.1    -3,-0.0     0, 0.0     0, 0.0   0.725 124.1-103.9 -80.1 -22.6   -0.4    9.9    1.8
    17   17 A G    <   +     0   0   37     -3,-1.5     2,-0.6     1,-0.3    -4,-0.0   0.685  64.2 156.9 105.2  25.2   -2.8    7.0    1.1
    18   18 A R        -     0   0  144     -4,-0.1    -4,-1.3     2,-0.0     2,-0.4  -0.750  29.8-149.4 -87.2 121.5   -0.7    5.1   -1.4
-   19   19 A a  E     +A   13   0A  57     -2,-0.6    -6,-0.2    -6,-0.2    -8,-0.0  -0.749  32.2 144.3 -88.0 134.7   -1.7    1.4   -1.7
+   19   19 A C  E     +A   13   0A  57     -2,-0.6    -6,-0.2    -6,-0.2    -8,-0.0  -0.749  32.2 144.3 -88.0 134.7   -1.7    1.4   -1.7
    20   20 A K  E     -A   12   0A  46     -8,-2.1    -8,-2.5    -2,-0.4   -10,-0.0  -0.963  53.6 -56.4-160.6 160.2    1.0   -1.1   -2.6
    21   21 A P  E     -A   11   0A  24      0, 0.0   -10,-0.3     0, 0.0     4,-0.2   0.082  48.7-115.8 -34.3 146.6    2.1   -4.7   -1.9
    22   22 A T  S    S+     0   0   74    -12,-1.6   -11,-0.1   -11,-0.1     3,-0.1   0.801 108.1  44.1 -59.0 -30.0    2.7   -5.6    1.8
