@@ -32,24 +32,15 @@ import scipy.sparse
 import mdtraj as md
 from mdtraj.testing import eq
 
-DSSP_MSG = "This test requires mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
-needs_dssp = pytest.mark.skipif(not shutil.which("mkdssp"), reason=DSSP_MSG)
-
 
 def test_hbonds(get_fn):
     t = md.load(get_fn("2EQQ.pdb"))
     md.geometry.hbond.kabsch_sander(t)
 
 
-@needs_dssp
 def test_hbonds_against_dssp(get_fn, tmpdir):
     t = md.load(get_fn("2EQQ.pdb"))[0]
-    pdb = os.path.join(tmpdir, "f.pdb")
-    dssp = os.path.join(tmpdir, "f.pdb.dssp")
-    t.save(pdb, header=False)
-
-    cmd = ["mkdssp", pdb, dssp]
-    subprocess.check_output(" ".join(cmd), shell=True)
+    dssp = get_fn('2EQQ.pdb.dssp')  # Reference file made with mkdssp v2.2.1
     energy = scipy.sparse.lil_matrix((t.n_residues, t.n_residues))
 
     # read the dssp N-H-->O column from the output file

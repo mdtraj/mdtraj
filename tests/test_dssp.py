@@ -8,16 +8,10 @@ import pytest
 
 import mdtraj as md
 
-DSSP_MSG = "This test requires mkdssp to be installed, from http://swift.cmbi.ru.nl/gv/dssp/"
-needs_dssp = pytest.mark.skipif(not shutil.which("mkdssp"), reason=DSSP_MSG)
 
-
-def call_dssp(dirname, traj, frame=0):
-    inp = os.path.join(dirname, "temp.pdb")
-    out = os.path.join(dirname, "temp.pdb.dssp")
-    traj[frame].save(inp, header=False)
-    cmd = ["mkdssp", inp, out]
-    subprocess.check_output(" ".join(cmd), shell=True)
+def call_dssp(get_fn, ref_name, frame=0):
+    """Read reference output files created with mkdssp v2.2.1"""
+    out = get_fn(f"{ref_name}.dssp")
 
     KEY_LINE = (
         "  #  RESIDUE AA STRUCTURE BP1 BP2  ACC     N-H-->O    O-->H-N    N-H-->O    "
@@ -53,32 +47,29 @@ def assert_(a, b):
             raise
 
 
-@needs_dssp
 @pytest.mark.parametrize('fn', ["1bpi.pdb", "1vii.pdb", "4ZUO.pdb", "1am7_protein.pdb"])
 def test_1(get_fn, tmpdir, fn):
     """This test checks dssp assignments for pdb files in tests/data"""
     t = md.load_pdb(get_fn(fn))
     t = t.atom_slice(t.top.select_atom_indices("minimal"))
-    assert_(call_dssp(tmpdir, t), md.compute_dssp(t, simplified=False)[0])
+    assert_(call_dssp(get_fn, fn), md.compute_dssp(t, simplified=False)[0])
 
 
-@needs_dssp
 @pytest.mark.parametrize('fn', ["2EQQ.pdb"])
 def test_2(get_fn, tmpdir, fn):
     """This test checks dssp assignments on different chains for pdb files in tests/data"""
     t = md.load(get_fn(fn))
     for i in range(len(t)):
-        assert_(call_dssp(tmpdir, t[i]), md.compute_dssp(t[i], simplified=False)[0])
+        assert_(call_dssp(get_fn, fn), md.compute_dssp(t[i], simplified=False)[0])
 
 
-@needs_dssp
 @pytest.mark.parametrize('pdbid', ["1GAI", "6gsv", "2AAC"])
-def test_3(tmpdir, pdbid):
+def test_3(get_fn, tmpdir, pdbid):
     """This test checks dssp assignments on pdb files downloaded from rcsb"""
     # 1COY gives a small error, due to a broken chain.
     t = md.load_pdb("http://www.rcsb.org/pdb/files/%s.pdb" % pdbid)
     t = t.atom_slice(t.top.select_atom_indices("minimal"))
-    assert_(call_dssp(tmpdir, t), md.compute_dssp(t, simplified=False)[0])
+    assert_(call_dssp(get_fn, pdbid), md.compute_dssp(t, simplified=False)[0])
 
 
 def test_4(get_fn):
