@@ -220,9 +220,7 @@ def test_compare_gromacs_rdf_t(get_fn):
 def test_compare_rdf_t_master(get_fn):
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
 
-    times = list()
-    for j in range(100):
-        times.append([0, j])
+    times = [[0,j] for j in range(100)]
 
     pairs = traj.top.select_pairs("name O", "name O")
     r_t, rdf_O_O = mdtraj.geometry.rdf.compute_rdf_t(traj, pairs, times)
