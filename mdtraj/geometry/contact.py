@@ -271,7 +271,6 @@ def compute_contacts(
                         np.exp(
                             soft_min_beta / atom_distances[:, index : index + n],
                             casting='safe',
-                            dtype=np.float64,
                         ),
                         axis=1,
                     ),
