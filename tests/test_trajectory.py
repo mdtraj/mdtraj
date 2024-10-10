@@ -414,7 +414,7 @@ def test_restrict_atoms_not_inplace(get_fn):
 def test_array_vs_matrix(get_fn):
     top = md.load(get_fn("native.pdb")).topology
     xyz = np.random.randn(1, 22, 3)
-    xyz_mat = np.matrix(xyz)
+    xyz_mat = np.asarray(xyz)
     t1 = md.Trajectory(xyz, top)
     t2 = md.Trajectory(xyz_mat, top)
 

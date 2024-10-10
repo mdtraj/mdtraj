@@ -201,7 +201,10 @@ def load_pdb(
         # cell is not absurdly high. Standard water density is ~55 M, which
         # yields a particle density ~100 atoms per cubic nm. It should be safe
         # to say that no particle density should exceed 10x that.
-        particle_density = traj.top.n_atoms / traj.unitcell_volumes[0]
+        if traj.unitcell_volumes[0] > 0:
+            particle_density = traj.top.n_atoms / traj.unitcell_volumes[0]
+        else:  # If calculated unitcell_volume is 0 (or invalid)
+            particle_density = traj.top.n_atoms  # Infinite density.
         if particle_density > 1000:
             warnings.warn(
                 "Unlikely unit cell vectors detected in PDB file likely "
