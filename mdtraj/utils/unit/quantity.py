@@ -74,6 +74,7 @@ __version__ = "0.5"
 
 import copy
 import math
+import numpy as np
 
 from .standard_dimensions import *
 from .unit import Unit, dimensionless, is_unit
@@ -411,7 +412,10 @@ class Quantity:
             return (self / other._value) / other.unit
         else:
             # print "quantity / scalar"
-            return self * pow(other, -1.0)
+            try:
+                return self * pow(other, -1.0)
+            except RuntimeError:
+                return self * pow(np.float64(other), -1.0)
             # return Quantity(self._value / other, self.unit)
 
     __div__ = __truediv__
@@ -428,7 +432,10 @@ class Quantity:
             raise NotImplementedError("programmer is surprised __rtruediv__ was called instead of __truediv__")
         else:
             # print "R scalar / quantity"
-            return other * pow(self, -1.0)
+            try:
+                return self * pow(other, -1.0)
+            except RuntimeError:
+                return self * pow(np.float64(other), -1.0)
             # return Quantity(other / self._value, pow(self.unit, -1.0))
 
     __rdiv__ = __rtruediv__

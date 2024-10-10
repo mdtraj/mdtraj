@@ -874,7 +874,7 @@ class Trajectory:
             if the Trajectory contains no unitcell information.
         """
         if self.unitcell_lengths is not None:
-            return np.array(list(map(np.linalg.det, self.unitcell_vectors)))
+            return np.array(list(map(np.linalg.det, self.unitcell_vectors)), dtype=np.float64)
         else:
             return None
 
@@ -1490,7 +1490,7 @@ class Trajectory:
         # check if savemode is valid (only "w" or "a" are allowed)
         if mode not in ["w", "a"]:
             raise ValueError("savemode must be either 'w' or 'a'")
-        
+
         with HDF5TrajectoryFile(filename, mode, force_overwrite=force_overwrite) as f:
             f.write(
                 coordinates=in_units_of(
@@ -1545,7 +1545,7 @@ class Trajectory:
                 types=[a.name for a in self.top.atoms],
             )
 
-    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True):
+    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True, header=True):
         """Save trajectory to RCSB PDB format
 
         Parameters
@@ -1561,6 +1561,10 @@ class Trajectory:
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.
+        header : bool, default=True
+            Include header in pdb. Useful if you want the extra output, but sometimes prevent
+            programs from running smoothly.
+
         """
         self._check_valid_unitcell()
 
@@ -1603,6 +1607,7 @@ class Trajectory:
                         ),
                         unitcell_angles=self.unitcell_angles[i],
                         ter=ter,
+                        header=header,
                     )
                 else:
                     f.write(
@@ -1615,6 +1620,7 @@ class Trajectory:
                         modelIndex=i,
                         bfactors=bfactors[i],
                         ter=ter,
+                        header=header,
                     )
 
     def save_xtc(self, filename, force_overwrite=True):
