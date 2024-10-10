@@ -229,7 +229,7 @@ def test_compare_rdf_t_master(get_fn):
     master_g_r_t = np.loadtxt(get_fn("O_O_rdf_t.txt"))  # Might need to remake this file with NEP50
 
     assert eq(r_t, master_r_t)
-    assert eq(rdf_O_O, master_g_r_t, decimal=1)
+    assert eq(rdf_O_O, master_g_r_t, decimal=5)
 
 
 def test_compare_n_concurrent_pairs(get_fn):
