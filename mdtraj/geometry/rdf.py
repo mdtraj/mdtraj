@@ -164,6 +164,7 @@ def compute_rdf_t(
     """
     if r_range is None:
         r_range = np.array([0.0, 1.0])
+
     r_range = ensure_type(
         r_range,
         dtype=np.float64,
@@ -172,6 +173,7 @@ def compute_rdf_t(
         shape=(2,),
         warn_on_cast=False,
     )
+
     if n_bins is not None:
         n_bins = int(n_bins)
         if n_bins <= 0:
@@ -191,6 +193,8 @@ def compute_rdf_t(
     g_r_t = np.zeros((n_small_chunks, len(times), n_bins))
     weights = np.zeros(n_small_chunks)
 
+    edges = np.linspace(r_range[0], r_range[1], num=n_bins+1, dtype=np.float32)
+
     # Splits pairs into smaller chunks so that frame_distances is not excessively large
     for i in range(n_small_chunks):
         temp_g_r_t = np.zeros((len(times), n_bins))
@@ -207,16 +211,18 @@ def compute_rdf_t(
         )
 
         for n, distances in enumerate(frame_distances):
-            tmp, edges = np.histogram(distances, range=r_range, bins=n_bins)
+            tmp, _ = np.histogram(distances, bins=edges)
             temp_g_r_t[n, :] += tmp
+
         r = 0.5 * (edges[1:] + edges[:-1])
 
         # Normalize by volume of the spherical shell (see above)
         V = (4 / 3) * np.pi * (np.power(edges[1:], 3) - np.power(edges[:-1], 3))
-        norm = len(pairs_set) / (period_length) * np.sum(np.float64(1.0) / traj.unitcell_volumes) * V
+        norm = len(pairs_set) / (period_length) * np.sum(1.0 / traj.unitcell_volumes, dtype=np.float64) * np.float64(V)
 
-        temp_g_r_t = temp_g_r_t.astype(np.float64) / norm  # From int64.
-        g_r_t[i] = temp_g_r_t
+        temp_g_r_t = temp_g_r_t / norm
+
+        g_r_t[i] = temp_g_r_t.astype(np.float64)
 
     g_r_t_final = np.average(g_r_t, axis=0, weights=weights)
 
