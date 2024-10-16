@@ -67,7 +67,7 @@ def test_read_write_0():
         xyz2, new_lengths, new_angles = f.read()
 
     eq(lengths, new_lengths)
-    eq(angles, new_angles, decimal=3)
+    eq(angles, new_angles)
     eq(xyz, xyz2, decimal=3)
 
 
