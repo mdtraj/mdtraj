@@ -22,7 +22,7 @@ v1.10.1 (October 17, 2024)
 - Remove unused `xdrlib` import from Python layer (#1919)
 - Fix PDB "vmd convention" false-positive (#1904)
 
-A total of 15 people contributed to this release.
+A total of 11 people contributed to this release.
 People with a "+" by their names contributed a patch for the first time.
 
 - Charlie Laughton
