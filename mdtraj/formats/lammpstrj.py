@@ -309,9 +309,9 @@ class LAMMPSTrajectoryFile:
                 except _EOF:
                     break
 
-        all_coords = np.array(all_coords)
-        all_lengths = np.array(all_lengths, dtype=np.float32)
-        all_angles = np.array(all_angles, dtype=np.float32)
+        all_coords = np.asarray(all_coords)
+        all_lengths = np.asarray(all_lengths)
+        all_angles = np.asarray(all_angles)
         return all_coords, all_lengths, all_angles
 
     def parse_box(self, style):
@@ -531,7 +531,7 @@ class LAMMPSTrajectoryFile:
 
         xyz = ensure_type(
             xyz,
-            np.float32,
+            np.float64,
             3,
             "xyz",
             can_be_none=False,
@@ -541,7 +541,7 @@ class LAMMPSTrajectoryFile:
         )
         cell_lengths = ensure_type(
             cell_lengths,
-            np.float32,
+            np.float64,
             2,
             "cell_lengths",
             can_be_none=False,
@@ -554,7 +554,7 @@ class LAMMPSTrajectoryFile:
             cell_angles.fill(90)
         cell_angles = ensure_type(
             cell_angles,
-            np.float32,
+            np.float64,
             2,
             "cell_angles",
             can_be_none=False,

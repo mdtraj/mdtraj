@@ -20,6 +20,7 @@ SKIP_MODULES = [
     r"mdtraj\.scripts",
     r"mdtraj\.testing\.docscrape",
     r"mdtraj\.io",
+    r"mdtraj\._version",
 ]
 
 MODULES = import_all_modules(mdtraj)

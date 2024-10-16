@@ -107,10 +107,10 @@ def ensure_type(
             # If they give us an iterator, let's try...
             if isinstance(val, collections.abc.Sequence):
                 # sequences are easy. these are like lists and stuff
-                val = np.array(val, dtype=dtype)
+                val = np.asarray(val, dtype=dtype)
             else:
                 # this is a generator...
-                val = np.array(list(val), dtype=dtype)
+                val = np.asarray(list(val), dtype=dtype)
         elif np.isscalar(val) and add_newaxis_on_deficient_ndim and ndim == 1:
             # special case: if the user is looking for a 1d array, and
             # they request newaxis upconversion, and provided a scalar

@@ -276,7 +276,7 @@ def shrake_rupley(
             dtype=np.int32,
         )
         if not np.all(
-            np.unique(atom_mapping) == np.arange(1 + np.max(atom_mapping)),
+            np.unique(atom_mapping) == np.arange(np.int64(1) + np.max(atom_mapping)),
         ):
             raise ValueError(
                 "residues must have contiguous integer indices " "starting from zero",

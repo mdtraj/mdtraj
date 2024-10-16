@@ -43,7 +43,6 @@ from pyparsing import (
     quotedString,
 )
 
-
 # this number arises from the current selection language, if the cache size is exceeded, it hurts performance a bit.
 ParserElement.enablePackrat(cache_size_limit=304)
 

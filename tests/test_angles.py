@@ -1,7 +1,7 @@
 import itertools
-import pytest
 
 import numpy as np
+import pytest
 
 import mdtraj as md
 from mdtraj.testing import eq
