@@ -2037,7 +2037,7 @@ class Trajectory:
         --------
         stack : stack multiple trajectories along the atom axis
         """
-        xyz = np.array(self.xyz[:, atom_indices], order="C")
+        xyz = np.array(self.xyz[:, sorted(atom_indices)], order="C")
         topology = None
         if self._topology is not None:
             topology = self._topology.subset(atom_indices)
