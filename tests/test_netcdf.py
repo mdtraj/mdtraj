@@ -43,8 +43,11 @@ fd, temp = tempfile.mkstemp(suffix=".nc")
 fd2, temp2 = tempfile.mkstemp(suffix=".nc")
 
 def test_mdconvert(tmp_path):
-    from subprocess import run
-    run("mdconvert", "mdcrd.nc", "-o", f"{tmp_path}/test.xtc")
+    output_file = tmp_path / "output.xtc"
+    command = f"mdconvert mdcrd.nc -o {output_file}"
+    result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert result.returncode == 0
+    assert output_file.exists()
 
 class TestNetCDFNetCDF4():
     """
