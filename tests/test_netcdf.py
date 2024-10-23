@@ -42,6 +42,10 @@ needs_cpptraj = pytest.mark.skipif(
 fd, temp = tempfile.mkstemp(suffix=".nc")
 fd2, temp2 = tempfile.mkstemp(suffix=".nc")
 
+def test_mdconvert(tmp_path):
+    from subprocess import run
+    run("mdconvert", "mdcrd.nc", "-o", f"{tmp_path}/test.xtc")
+
 class TestNetCDFNetCDF4():
     """
     This class contains all the tests that we would also want to run with scipy.
