@@ -45,7 +45,7 @@ on_py3 = sys.version_info >= (3, 0)
 
 def test_nc_input(tmp_path, get_fn):
     output_file = tmp_path / "output.xtc"
-    command = f"mdconvert {get_fn("mdcrd.nc")} -o {output_file}"
+    command = f"mdconvert {get_fn('mdcrd.nc')} -o {output_file}"
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert result.returncode == 0
     assert output_file.exists()
