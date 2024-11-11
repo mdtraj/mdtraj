@@ -5,7 +5,7 @@
  *
  * MIT License
  * Copyright 2011 Imran Haque (ihaque@cs.stanford.edu)
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -35,7 +35,7 @@
  *     __m128 dst1 = _mm_swizzle_ps_xzwx(src);
  *
  * Similarly, a shuffle:
- *      
+ *
  *     float4 dst2 = src1.xy,src2.yz
  *
  * Becomes

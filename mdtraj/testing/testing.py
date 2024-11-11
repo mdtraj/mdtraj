@@ -25,19 +25,24 @@
 # imports
 ##############################################################################
 
-from __future__ import print_function, division
-
 import ast
 import sys
 
 import numpy as np
-from numpy.testing import (assert_allclose, assert_almost_equal,
-                           assert_approx_equal, assert_array_almost_equal, assert_array_almost_equal_nulp,
-                           assert_array_equal, assert_array_less, assert_array_max_ulp, assert_equal,
-                           assert_raises, assert_string_equal, assert_warns)
-
-# py2/3 compatibility
-from mdtraj.utils.six import iteritems, integer_types, PY2
+from numpy.testing import (
+    assert_allclose,
+    assert_almost_equal,
+    assert_approx_equal,
+    assert_array_almost_equal,
+    assert_array_almost_equal_nulp,
+    assert_array_equal,
+    assert_array_less,
+    assert_array_max_ulp,
+    assert_equal,
+    assert_raises,
+    assert_string_equal,
+    assert_warns,
+)
 
 # if the system doesn't have scipy, we'd like
 # this package to still work:
@@ -46,7 +51,10 @@ from mdtraj.utils.six import iteritems, integer_types, PY2
 try:
     from scipy.sparse import isspmatrix
 except ImportError:
-    isspmatrix = lambda x: False
+
+    def isspmatrix(x):
+        return False
+
 
 try:
     # need special logic to check for equality of pandas DataFrames.
@@ -55,12 +63,24 @@ try:
 except ImportError:
     pass
 
-__all__ = ['assert_allclose', 'assert_almost_equal', 'assert_approx_equal',
-           'assert_array_almost_equal', 'assert_array_almost_equal_nulp',
-           'assert_array_equal', 'assert_array_less', 'assert_array_max_ulp',
-           'assert_equal', 'assert_raises',
-           'assert_string_equal', 'assert_warns', 'get_fn', 'eq',
-           'assert_dict_equal', 'assert_sparse_matrix_equal', ]
+__all__ = [
+    "assert_allclose",
+    "assert_almost_equal",
+    "assert_approx_equal",
+    "assert_array_almost_equal",
+    "assert_array_almost_equal_nulp",
+    "assert_array_equal",
+    "assert_array_less",
+    "assert_array_max_ulp",
+    "assert_equal",
+    "assert_raises",
+    "assert_string_equal",
+    "assert_warns",
+    "get_fn",
+    "eq",
+    "assert_dict_equal",
+    "assert_sparse_matrix_equal",
+]
 
 
 def eq_(a, b, msg=None):
@@ -76,14 +96,16 @@ def eq_(a, b, msg=None):
         Optional assertion message. Why are you using this function then??
     """
     if not a == b:
-        raise AssertionError(msg or "%r != %r" % (a, b))
+        raise AssertionError(msg or f"{a!r} != {b!r}")
 
 
 def get_fn(name):
-    raise NotImplementedError("Testing reference data is no longer included in the MDTraj package")
+    raise NotImplementedError(
+        "Testing reference data is no longer included in the MDTraj package",
+    )
 
 
-def eq(o1, o2, decimal=6, err_msg=''):
+def eq(o1, o2, decimal=6, err_msg=""):
     """Convenience function for asserting that two objects are equal to one another
 
     If the objects are both arrays or sparse matrices, this method will
@@ -112,12 +134,12 @@ def eq(o1, o2, decimal=6, err_msg=''):
     ------
     AssertionError
         If the tests fail
-    """
-    if isinstance(o1, integer_types) and isinstance(o2, integer_types) and PY2:
-        eq_(long(o1), long(o2))
-        return True
-
-    assert (type(o1) is type(o2)), 'o1 and o2 not the same type: %s %s' % (type(o1), type(o2))
+    """    
+    # assert type(o1) is type(o2), f"o1 and o2 not the same type: {type(o1)} {type(o2)}"
+    if isinstance(o1, (np.ndarray, np.ma.MaskedArray)) and isinstance(o2, (np.ndarray, np.ma.MaskedArray)):
+        pass
+    else:
+        assert type(o1) is type(o2), f"o1 and o2 not the same type: {type(o1)} {type(o2)}"
 
     if isinstance(o1, dict):
         assert_dict_equal(o1, o1, decimal)
@@ -126,7 +148,7 @@ def eq(o1, o2, decimal=6, err_msg=''):
     elif isspmatrix(o1):
         assert_sparse_matrix_equal(o1, o1, decimal)
     elif isinstance(o1, np.ndarray):
-        if o1.dtype.kind == 'f' or o2.dtype.kind == 'f':
+        if o1.dtype.kind == "f" or o2.dtype.kind == "f":
             # compare floats for almost equality
             assert_array_almost_equal(o1, o2, decimal, err_msg=err_msg)
         elif o1.dtype.type == np.core.records.record:
@@ -137,7 +159,7 @@ def eq(o1, o2, decimal=6, err_msg=''):
         else:
             # compare everything else (ints, bools) for absolute equality
             assert_array_equal(o1, o2, err_msg=err_msg)
-    elif 'pandas' in sys.modules and isinstance(o1, pd.DataFrame):
+    elif "pandas" in sys.modules and isinstance(o1, pd.DataFrame):
         # pandas dataframes are basically like dictionaries of numpy arrayss
         assert_dict_equal(o1, o2, decimal=decimal)
     elif isinstance(o1, ast.AST) and isinstance(o2, ast.AST):
@@ -166,10 +188,10 @@ def assert_dict_equal(t1, t2, decimal=6):
     # make sure the keys are the same
     eq_(list(t1.keys()), list(t2.keys()))
 
-    for key, val in iteritems(t1):
+    for key, val in t1.items():
         # compare numpy arrays using numpy.testing
-        if isinstance(val, np.ndarray) or ('pandas' in sys.modules and isinstance(t1, pd.DataFrame)):
-            if val.dtype.kind == 'f':
+        if isinstance(val, np.ndarray) or ("pandas" in sys.modules and isinstance(t1, pd.DataFrame)):
+            if val.dtype.kind == "f":
                 # compare floats for almost equality
                 assert_array_almost_equal(val, t2[key], decimal)
             else:

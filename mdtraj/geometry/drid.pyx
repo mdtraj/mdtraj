@@ -25,11 +25,11 @@
 # Imports
 ##############################################################################
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 from mdtraj.utils import ensure_type
 
 cimport cython
+
 from cython.parallel import prange
 
 __all__ = ['compute_drid']

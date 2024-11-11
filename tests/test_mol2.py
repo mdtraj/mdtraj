@@ -20,21 +20,23 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-import mdtraj as md
-from mdtraj.testing import eq
-from mdtraj.formats import mol2
-from distutils.spawn import find_executable
-import tarfile
-import pickle
 import os
+import pickle
+import shutil
+import tarfile
+
 import numpy as np
-import scipy.sparse
 import pytest
+import scipy.sparse
+
+import mdtraj as md
+from mdtraj.formats import mol2
+from mdtraj.testing import eq
 
 
 def test_load_mol2(get_fn):
-    trj = md.load(get_fn('imatinib.mol2'))
-    ref_trj = md.load(get_fn('imatinib.pdb'))
+    trj = md.load(get_fn("imatinib.mol2"))
+    ref_trj = md.load(get_fn("imatinib.pdb"))
     eq(trj.xyz, ref_trj.xyz)
 
     ref_top, ref_bonds = ref_trj.top.to_dataframe()
@@ -46,14 +48,16 @@ def test_load_mol2(get_fn):
         # This is what we wanted to happen, its fine
         pass
     else:
-        raise AssertionError("Reference bonds with no bond order should not equal Mol2 bonds with bond order")
+        raise AssertionError(
+            "Reference bonds with no bond order should not equal Mol2 bonds with bond order",
+        )
     # Strip bond order info since PDB does not have it
     bonds[:, -2:] = np.zeros([bonds.shape[0], 2])
     eq(bonds, ref_bonds)
 
 
-@pytest.mark.skipif(find_executable('obabel') is None, reason='Requires obabel')
-@pytest.mark.skipif(os.environ.get("TRAVIS", None) == 'true', reason="Skip on Travis.")
+@pytest.mark.skipif(shutil.which("obabel") is None, reason="Requires obabel")
+@pytest.mark.skipif(os.environ.get("TRAVIS", None) == "true", reason="Skip on Travis.")
 def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb(get_fn, tmpdir):
     tar_filename = "freesolve_v0.3.tar.bz2"
     tar = tarfile.open(get_fn(tar_filename), mode="r:bz2")
@@ -61,15 +65,15 @@ def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb(get_fn, tmpdir):
     tar.extractall()
     tar.close()
 
-    with open("./v0.3/database.pickle", 'rb') as f:
-        database = pickle.load(f, encoding='latin-1')
+    with open("./v0.3/database.pickle", "rb") as f:
+        database = pickle.load(f, encoding="latin-1")
 
     for key in database:
         gaff_filename = "./v0.3/mol2files_gaff/%s.mol2" % key
         pdb_filename = "./v0.3/mol2files_gaff/%s.pdb" % key
         sybyl_filename = "./v0.3/mol2files_sybyl/%s.mol2" % key
 
-        cmd = "obabel -imol2 %s -opdb > %s 2>/dev/null" % (sybyl_filename, pdb_filename)
+        cmd = f"obabel -imol2 {sybyl_filename} -opdb > {pdb_filename} 2>/dev/null"
         assert os.system(cmd) == 0
 
         t_pdb = md.load(pdb_filename)
@@ -94,12 +98,18 @@ def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb(get_fn, tmpdir):
         # eq(top_gaff.name.values, top_sybyl.name.values)  # THEY CAN HAVE DIFFERENT NAMES, so this isn't TRUE!
 
         def make_bonds_comparable(bond_array):
-            """Create a bond connectivity matrix from a numpy array of atom pairs.  Avoids having to compare the order in which bonds are listed."""
+            """
+            Create a bond connectivity matrix from a numpy array of atom pairs.  Avoids having to
+            compare the order in which bonds are listed.
+            """
             n_bonds = len(bond_array)
             data = np.ones(n_bonds)
             i = bond_array[:, 0]
             j = bond_array[:, 1]
-            matrix = scipy.sparse.coo_matrix((data, (i, j)), shape=(t_pdb.n_atoms, t_pdb.n_atoms)).toarray()
+            matrix = scipy.sparse.coo_matrix(
+                (data, (i, j)),
+                shape=(t_pdb.n_atoms, t_pdb.n_atoms),
+            ).toarray()
             return matrix + matrix.T  # Symmetrize to account for (a ~ b) versus (b ~ a)
 
         bond_matrix_pdb = make_bonds_comparable(bonds_pdb)
@@ -122,39 +132,47 @@ def test_mol2_dataframe(get_fn):
 
 
 def test_mol2_dataframe_status(get_fn):
-    atoms, bonds = mol2.mol2_to_dataframes(get_fn('adp.mol2'))
-    assert atoms['charge'][1] == 1.3672
-    assert atoms['status'][1] == '****'
+    atoms, bonds = mol2.mol2_to_dataframes(get_fn("adp.mol2"))
+    assert atoms["charge"][1] == 1.3672
+    assert atoms["status"][1] == "****"
 
 
 def test_mol2_warnings(get_fn):
-    trj = md.load_mol2(get_fn('lysozyme-ligand-tripos.mol2'))
+    md.load_mol2(get_fn("lysozyme-ligand-tripos.mol2"))
 
 
 def test_mol2_status_bits(get_fn):
-    trj = md.load_mol2(get_fn('status-bits.mol2'))
+    trj = md.load_mol2(get_fn("status-bits.mol2"))
     eq(trj.topology.n_atoms, 18)
     eq(trj.topology.n_bonds, 18)
 
 
 def test_mol2_without_bonds(get_fn):
-    trj = md.load_mol2(get_fn('li.mol2'))
+    trj = md.load_mol2(get_fn("li.mol2"))
     assert trj.topology.n_bonds == 0
 
 
-
 def test_mol2_element_name(get_fn):
-    trj = md.load_mol2(get_fn('cl.mol2'))
+    trj = md.load_mol2(get_fn("cl.mol2"))
     top, bonds = trj.top.to_dataframe()
-    assert top.iloc[0]['element'] == 'Cl'
+    assert top.iloc[0]["element"] == "Cl"
 
-    
-@pytest.mark.parametrize('mol2_file', [('li.mol2'),
-('lysozyme-ligand-tripos.mol2'), ('imatinib.mol2'),
-('status-bits.mol2'), ('adp.mol2'), ('water_acn.mol2')])
+
+@pytest.mark.parametrize(
+    "mol2_file",
+    [
+        ("li.mol2"),
+        ("lysozyme-ligand-tripos.mol2"),
+        ("imatinib.mol2"),
+        ("status-bits.mol2"),
+        ("adp.mol2"),
+        ("water_acn.mol2"),
+    ],
+)
 def test_load_all_mol2(mol2_file, get_fn):
-    trj = md.load_mol2(get_fn(mol2_file))
+    md.load_mol2(get_fn(mol2_file))
+
 
 def test_mol2_n_residues(get_fn):
-    trj = md.load_mol2(get_fn('water_acn.mol2'))
+    trj = md.load_mol2(get_fn("water_acn.mol2"))
     assert trj.n_residues == 10

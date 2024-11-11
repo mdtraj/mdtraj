@@ -20,18 +20,23 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-from __future__ import print_function, division
-
 import numpy as np
 
-from mdtraj.utils import ensure_type
 from mdtraj.geometry.distance import compute_distances, compute_distances_t
+from mdtraj.utils import ensure_type
 
-__all__ = ['compute_rdf', 'compute_rdf_t']
+__all__ = ["compute_rdf", "compute_rdf_t"]
 
 
-def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
-                periodic=True, opt=True):
+def compute_rdf(
+    traj,
+    pairs,
+    r_range=None,
+    bin_width=0.005,
+    n_bins=None,
+    periodic=True,
+    opt=True,
+):
     """Compute radial distribution functions for pairs in every frame.
 
     Parameters
@@ -68,12 +73,18 @@ def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
     """
     if r_range is None:
         r_range = np.array([0.0, 1.0])
-    r_range = ensure_type(r_range, dtype=np.float64, ndim=1, name='r_range',
-                          shape=(2,), warn_on_cast=False)
+    r_range = ensure_type(
+        r_range,
+        dtype=np.float64,
+        ndim=1,
+        name="r_range",
+        shape=(2,),
+        warn_on_cast=False,
+    )
     if n_bins is not None:
         n_bins = int(n_bins)
         if n_bins <= 0:
-            raise ValueError('`n_bins` must be a positive integer')
+            raise ValueError("`n_bins` must be a positive integer")
     else:
         n_bins = int((r_range[1] - r_range[0]) / bin_width)
 
@@ -93,9 +104,19 @@ def compute_rdf(traj, pairs, r_range=None, bin_width=0.005, n_bins=None,
     return r, g_r
 
 
-def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None, 
-                  bin_width=0.005, n_bins=None, self_correlation=True, 
-                  periodic=True, n_concurrent_pairs = 100000, opt=True):
+def compute_rdf_t(
+    traj,
+    pairs,
+    times,
+    period_length=None,
+    r_range=None,
+    bin_width=0.005,
+    n_bins=None,
+    self_correlation=True,
+    periodic=True,
+    n_concurrent_pairs=100000,
+    opt=True,
+):
     """Compute time-dependent radial distribution functions, g(r, t).
     The time-dependent radial distribution function is calculated between pairs of time points.
     For example, g(r, 0) is equal to the time-independent radial distribution function, g(r).
@@ -143,12 +164,18 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
     """
     if r_range is None:
         r_range = np.array([0.0, 1.0])
-    r_range = ensure_type(r_range, dtype=np.float64, ndim=1, name='r_range',
-                          shape=(2,), warn_on_cast=False)
+    r_range = ensure_type(
+        r_range,
+        dtype=np.float64,
+        ndim=1,
+        name="r_range",
+        shape=(2,),
+        warn_on_cast=False,
+    )
     if n_bins is not None:
         n_bins = int(n_bins)
         if n_bins <= 0:
-            raise ValueError('`n_bins` must be a positive integer')
+            raise ValueError("`n_bins` must be a positive integer")
     else:
         n_bins = int((r_range[1] - r_range[0]) / bin_width)
 
@@ -160,18 +187,24 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
         pairs_set = np.unique(pairs)
         pairs = np.vstack([np.vstack([pairs_set, pairs_set]).T, pairs])
 
-    n_small_chunks = np.ceil(len(pairs)/n_concurrent_pairs).astype("int")
+    n_small_chunks = np.ceil(len(pairs) / n_concurrent_pairs).astype("int")
     g_r_t = np.zeros((n_small_chunks, len(times), n_bins))
     weights = np.zeros(n_small_chunks)
 
     # Splits pairs into smaller chunks so that frame_distances is not excessively large
     for i in range(n_small_chunks):
         temp_g_r_t = np.zeros((len(times), n_bins))
-        pairs_set = pairs[i*n_concurrent_pairs:(i+1)*n_concurrent_pairs]
-        weights[i] = len(pairs_set)/n_concurrent_pairs
-        
+        pairs_set = pairs[i * n_concurrent_pairs : (i + 1) * n_concurrent_pairs]
+        weights[i] = len(pairs_set) / n_concurrent_pairs
+
         # Returns shape (len(times), len(pairs_set))
-        frame_distances = compute_distances_t(traj, pairs_set, times, periodic=periodic, opt=opt)
+        frame_distances = compute_distances_t(
+            traj,
+            pairs_set,
+            times,
+            periodic=periodic,
+            opt=opt,
+        )
 
         for n, distances in enumerate(frame_distances):
             tmp, edges = np.histogram(distances, range=r_range, bins=n_bins)
@@ -186,5 +219,5 @@ def compute_rdf_t(traj, pairs, times, period_length=None, r_range=None,
         g_r_t[i] = temp_g_r_t
 
     g_r_t_final = np.average(g_r_t, axis=0, weights=weights)
-    
+
     return r, g_r_t_final

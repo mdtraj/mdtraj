@@ -20,14 +20,14 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-from mdtraj.testing import eq
 from mdtraj import load, load_topology
+from mdtraj.testing import eq
 
 
 def test_xml(get_fn):
-    top = load_topology(get_fn('native2.pdb'), no_boxchk=True)
-    t1 = load(get_fn('native2.xml'), top=top)
-    t2 = load(get_fn('native2.pdb'), no_boxchk=True)
+    top = load_topology(get_fn("native2.pdb"), no_boxchk=True)
+    t1 = load(get_fn("native2.xml"), top=top)
+    t2 = load(get_fn("native2.pdb"), no_boxchk=True)
 
     t1.center_coordinates()
     t2.center_coordinates()

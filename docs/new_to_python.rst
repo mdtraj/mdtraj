@@ -32,7 +32,7 @@ blocks you need for numerical and scientific computing, and with a great
 package manager, ``conda``, for installing additional packages.
 
 .. tip:: `Download <http://continuum.io/downloads>`_ Anaconda scientific
-         python. Pick Python 3.5
+         python. We test against python 3.10, 3.11, and 3.12
 
 
 Installing MDTraj
