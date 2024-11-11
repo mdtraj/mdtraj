@@ -302,6 +302,7 @@ metadata = dict(
         "scipy",
         "pyparsing",
         "packaging",
+        "netCDF4",
     ],
     package_data={"mdtraj.formats.pdb": ["data/*"]},
     zip_safe=False,
