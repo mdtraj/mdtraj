@@ -132,6 +132,9 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
         if pdbstructure._next_residue_number > 9999 and num_str in _residue_num_initial_nondecimal_vals:
             # If the next residue number is > 9999 and our current residue number is one of the nondecimal keys,
             # Raise an OverflowError, which will switch to the correct mode to read num_str. 
+            pdbstructure.switch = True
+            raise OverflowError("Need to parse residue number using non-decimal residue modes.")
+        elif pdbstructure.switch and pdbstructure._next_residue_number > 9999:
             raise OverflowError("Need to parse residue number using non-decimal residue modes.")
         else:
             #  Within "normal" pdb specifications
@@ -270,6 +273,7 @@ class PdbStructure:
             "overflow": _overflow_residue_check,
         }
         self._residue_num_nondec_mode = None  # None (decimal until changes), 'hex', 'chimera'
+        self.switch = False
 
         # initialize models
         self.load_all_models = load_all_models
