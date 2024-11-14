@@ -67,6 +67,8 @@ def _read_atom_number(num_str, pdbstructure=None):
         # raise an OverflowError, which will switch to the correct mode to read num_str.
         if pdbstructure._next_atom_number > 99999 and num_str in _atom_num_initial_nondecimal_vals:
             raise OverflowError("Need to parse atom number using non-decimal residue modes.")
+        elif pdbstructure._next_atom_number > 99999 and pdbstructure._atom_num_nondec_mode is not None:
+            return pdbstructure._atom_num_functions[pdbstructure._atom_num_nondec_mode](num_str)
         else:
             return int(num_str)
     except (AttributeError, ValueError, OverflowError, ValueError):
@@ -140,6 +142,8 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
             # If the next residue number is > 9999 and our current residue number is one of the nondecimal keys,
             # Raise an OverflowError, which will switch to the correct mode to read num_str. 
             raise OverflowError("Need to parse residue number using non-decimal residue modes.")
+        elif pdbstructure._next_residue_number > 9999 and pdbstructure._residue_num_nondec_mode is not None:
+            return pdbstructure._residue_num_functions[pdbstructure._residue_num_nondec_mode](num_str, pdbstructure, curr_atom)
         else:
             return int(num_str)
     except (AttributeError, OverflowError, KeyError, ValueError):

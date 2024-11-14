@@ -358,23 +358,31 @@ def test_load_pdb_input_top(get_fn):
 def test_chimera_indexing(get_fn):
     traj = load_pdb(get_fn("chimera_indexing.pdb"))  # this should just not fail
 
-    assert traj.n_atoms == 6
+    assert traj.n_atoms == 9
+    assert traj.n_residues == 3
     assert traj.topology._atoms[3].serial == 100000
     assert traj.topology._atoms[3].residue.resSeq == 10000
-    assert traj.topology.n_bonds == 4
+    assert traj.topology.n_bonds == 6
+    assert traj.topology._atoms[6].serial == 100003
+    assert traj.topology._atoms[6].residue.resSeq == 10001
 
-    test_pos = np.array([[10.613, 0.225, 12.764], [10.629, 0.313, 12.729], [10.596, 0.172, 12.686], [10.613, 0.225, 12.764], [10.629, 0.313, 12.729], [10.596, 0.172, 12.686]], dtype=np.float32)
+    test_pos = np.array([[10.613, 0.225, 12.764], [10.629, 0.313, 12.729], [10.596, 0.172, 12.686], [10.613, 0.225, 12.764], [10.629, 0.313, 12.729], [10.596, 0.172, 12.686], [10.613, 0.225, 12.764], [10.629, 0.313, 12.729], [10.596, 0.172, 12.686]], dtype=np.float32)
     assert np.array_equal(traj._xyz[0], test_pos)
 
 
 def test_vmd_indexing(get_fn):
     traj = load_pdb(get_fn("vmd_indexing.pdb"))  # this should just not fail
 
-    assert traj.n_atoms == 6
+    assert traj.n_atoms == 8
+    assert traj.n_residues == 6
     assert traj.topology._atoms[1].residue.resSeq == 2710
     assert traj.topology._atoms[3].serial == 100000
     assert traj.topology._atoms[3].residue.resSeq == 10000
     assert traj.topology.n_bonds == 2
+    assert traj.topology._atoms[6].serial == 100003
+    assert traj.topology._atoms[6].residue.resSeq == 10001
+    assert traj.topology._atoms[7].serial == 100465
+    assert traj.topology._atoms[7].residue.resSeq == 11000
 
-    test_pos = np.array([[10.613, 0.225, 12.764], [10.613, 0.225, 12.764], [10.613, 0.225, 12.764], [10.613, 0.225, 12.764], [10.629, 0.313, 12.729], [10.596, 0.172, 12.686]], dtype=np.float32)
+    test_pos = np.array([[10.613, 0.225, 12.764], [10.613, 0.225, 12.764], [10.613, 0.225, 12.764], [10.613, 0.225, 12.764], [10.629, 0.313, 12.729], [10.596, 0.172, 12.686], [10.613, 0.225, 12.764], [10.629, 0.313, 12.729]], dtype=np.float32)
     assert np.array_equal(traj._xyz[0], test_pos)
