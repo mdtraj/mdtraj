@@ -211,7 +211,7 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
                     pdbstructure,
                     curr_atom,
                 )
-            except KeyError as e:
+            except KeyError:
                 # Not a known overflow mode, guess residue number
                 pdbstructure._residue_num_nodec_mode = None
                 return pdbstructure._next_residue_number
