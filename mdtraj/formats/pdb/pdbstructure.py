@@ -71,7 +71,7 @@ def _read_atom_number(num_str, pdbstructure=None):
             return pdbstructure._atom_num_functions[pdbstructure._atom_num_nondec_mode](num_str)
         else:
             return int(num_str)
-    except (AttributeError, ValueError, OverflowError, ValueError):
+    except (AttributeError, ValueError, OverflowError, KeyError):
         # we need to figure out on the 1st try which mode to switch to. There are currently 3
         # options: VMD (hex), Chimera (their own 'hybrid36' mode), and overflow (*****).
         # Chimera starts with A0000, vmd with 186a0, so they are distinguishable.
