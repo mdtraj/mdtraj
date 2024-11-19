@@ -221,7 +221,7 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
     Parameters
     ----------
     num_str : str
-        str to be converted to int. Represents the atom number.
+        str to be converted to int. Represents the residue number.
     pdbstructure : PdbStructure, default: None
         The PdbStructure object associated with `num_str`.
     curr_atom : Atom, default: None
