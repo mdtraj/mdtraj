@@ -54,6 +54,20 @@ def _overflow_residue_check(num_str, pdbstructure, curr_atom):
     """
     Function to check and guess what the current residue is because it's overflowed. Lifted from the 
     original PDB code down below.
+
+    Parameters
+    ----------
+    num_str : str
+        str to be converted to int. Represents the residue number.
+    pdbstructure : PdbStructure
+        The PdbStructure object associated with `num_str`.
+    curr_atom : Atom
+        The current Atom object the residue number is associated with.
+
+    Returns
+    -------
+    int
+        The residue number deciphered in base 10.
     """
     if (
         pdbstructure._current_model is None
@@ -91,10 +105,25 @@ def _check_overflow_eligibility(num_str, str_type='atom'):
     """
     Return True if it's an overflow type, else False.
 
-    An overflow type is defined as from the dictionary above or something that looks the chimera
-    format ({A..Z}000). The latter check exists because if residue numbers or atom numbers skip 
-    around and doesn't contain the start key, it might actually not recognize the overflow. This 
-    only exists for chimera-values because it has no chance of false negatives.
+    An overflow type is defined as any dictionary keys above or
+    something that looks the chimera format ({A..Z}000). The 
+    latter check exists because if residue numbers or atom numbers skip 
+    around and doesn't contain the start key, it might actually 
+    not recognize the overflow. This only exists for chimera-type values 
+    because it has no chance of false negatives.
+
+    Parameters
+    ----------
+    num_str : str
+        str to be checked whether it's overflowed or not.
+    str_type : str, default: 'atom'
+        The type of num_str. 'atom' if it's for an atom number,
+        'residue' if it's for a residue number.
+
+    Returns
+    -------
+    bool
+        True if overflow type, False if not.
     """
     # Check a different dictionary depending on the type.
     if str_type == 'atom':
@@ -120,6 +149,18 @@ def _read_atom_number(num_str, pdbstructure=None):
     If it's in any of the non-decimal modes, we will attempt to set the _atom_num_nondec_mode to the
     correct key. With this set, all subsequent atom numbers will be deciphered using a corresponding
     function.
+
+    Parameters
+    ----------
+    num_str : str
+        str to be converted to int. Represents the atom number.
+    pdbstructure : PdbStructure, default: None
+        The PdbStructure object associated with `num_str`.
+
+    Returns
+    -------
+    int
+        The atom number deciphered in base 10.
     """
     try:
         if pdbstructure._atom_num_nondec_mode is not None:
@@ -176,6 +217,20 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
     If it's in any of the non-decimal modes, we will attempt to set the _residue_num_nondec_mode to the
     correct key. With this set, all subsequent residue numbers will be deciphered using a corresponding
     function. If it's in "overflow" mode, will try to guess the residue number.
+
+    Parameters
+    ----------
+    num_str : str
+        str to be converted to int. Represents the atom number.
+    pdbstructure : PdbStructure, default: None
+        The PdbStructure object associated with `num_str`.
+    curr_atom : Atom, default: None
+        The current Atom object the residue number is associated with.
+
+    Returns
+    -------
+    int
+        The residue number deciphered in base 10.
     """
     try:
         if pdbstructure._residue_num_nondec_mode is not None:
@@ -314,7 +369,7 @@ class PdbStructure:
              structure or trajectory, or just load the first model, to save memory.
         """
         self._atom_num_nondec_mode = None  # None (decimal until changes), 'hex', 'chimera', 'overflow'
-        self._residue_num_nondec_mode = None  # None (decimal until changes), 'hex', 'chimera'
+        self._residue_num_nondec_mode = None  # None (decimal until changes), 'hex', 'chimera', 'overflow'
 
         # initialize models
         self.load_all_models = load_all_models
