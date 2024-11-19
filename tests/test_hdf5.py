@@ -41,6 +41,7 @@ needs_units = pytest.mark.skipif(not HAVE_UNITS, reason="requires openmm.units")
 
 
 fd, temp = tempfile.mkstemp(suffix=".h5")
+rng = np.random.default_rng()
 
 
 def teardown_module(module):
@@ -51,7 +52,7 @@ def teardown_module(module):
 
 
 def test_write_coordinates():
-    coordinates = np.random.randn(4, 10, 3)
+    coordinates = rng.standard_normal((4, 10, 3))
     with HDF5TrajectoryFile(temp, "w") as f:
         f.write(coordinates)
 
@@ -61,7 +62,7 @@ def test_write_coordinates():
 
 
 def test_write_coordinates_reshape():
-    coordinates = np.random.randn(10, 3)
+    coordinates = rng.standard_normal((10, 3))
     with HDF5TrajectoryFile(temp, "w") as f:
         f.write(coordinates)
 
@@ -71,7 +72,7 @@ def test_write_coordinates_reshape():
 
 
 def test_write_multiple():
-    coordinates = np.random.randn(4, 10, 3)
+    coordinates = rng.standard_normal((4, 10, 3))
     with HDF5TrajectoryFile(temp, "w") as f:
         f.write(coordinates)
         f.write(coordinates)
@@ -81,7 +82,7 @@ def test_write_multiple():
 
 
 def test_write_inconsistent():
-    coordinates = np.random.randn(4, 10, 3)
+    coordinates = rng.standard_normal((4, 10, 3))
     with HDF5TrajectoryFile(temp, "w") as f:
         f.write(coordinates)
         # since the first frames we saved didn't contain velocities, we
@@ -91,7 +92,7 @@ def test_write_inconsistent():
 
 
 def test_write_inconsistent_2():
-    coordinates = np.random.randn(4, 10, 3)
+    coordinates = rng.standard_normal((4, 10, 3))
     with HDF5TrajectoryFile(temp, "w") as f:
         f.write(coordinates, velocities=coordinates)
         # we're saving a deficient set of data, since before we wrote
@@ -103,8 +104,8 @@ def test_write_inconsistent_2():
 @needs_units
 def test_write_units():
     # openmm.units are automatically converted into MD units for storage on disk
-    coordinates = units.Quantity(np.random.randn(4, 10, 3), units.angstroms)
-    velocities = units.Quantity(np.random.randn(4, 10, 3), units.angstroms / units.year)
+    coordinates = units.Quantity(rng.standard_normal((4, 10, 3)), units.angstroms)
+    velocities = units.Quantity(rng.standard_normal((4, 10, 3)), units.angstroms / units.year)
 
     with HDF5TrajectoryFile(temp, "w") as f:
         f.write(coordinates, velocities=velocities)
@@ -122,13 +123,14 @@ def test_write_units():
 
 def test_write_units2():
     from mdtraj.utils import unit
+    
 
     coordinates = unit.quantity.Quantity(
-        np.random.randn(4, 10, 3),
+        rng.standard_normal((4,10,3)),
         unit.unit_definitions.angstroms,
     )
     velocities = unit.quantity.Quantity(
-        np.random.randn(4, 10, 3),
+        rng.standard_normal((4,10,3)),
         unit.unit_definitions.angstroms / unit.unit_definitions.year,
     )
 
@@ -154,7 +156,7 @@ def test_write_units2():
 @needs_units
 def test_write_units_mismatch():
     velocities = units.Quantity(
-        np.random.randn(4, 10, 3),
+        rng.standard_normal((4,10,3)),
         units.angstroms / units.picosecond,
     )
 
@@ -207,7 +209,7 @@ def test_constraints2():
 
 
 def test_read_0():
-    coordinates = np.random.randn(4, 10, 3)
+    coordinates = rng.standard_normal((4, 10, 3))
     with HDF5TrajectoryFile(temp, "w") as f:
         f.write(coordinates, alchemicalLambda=np.array([1, 2, 3, 4]))
 
@@ -220,9 +222,9 @@ def test_read_0():
 
 @needs_units
 def test_read_1():
-    coordinates = units.Quantity(np.random.randn(4, 10, 3), units.angstroms)
+    coordinates = units.Quantity(rng.standard_normal((4, 10, 3)), units.angstroms)
     velocities = units.Quantity(
-        np.random.randn(4, 10, 3),
+        rng.standard_normal((4, 10, 3)),
         units.angstroms / units.years,
     )
 
@@ -239,7 +241,7 @@ def test_read_1():
 
 
 def test_read_slice_0():
-    coordinates = np.random.randn(4, 10, 3)
+    coordinates = rng.standard_normal((4, 10, 3))
     with HDF5TrajectoryFile(temp, "w") as f:
         f.write(coordinates, alchemicalLambda=np.array([1, 2, 3, 4]))
 
@@ -251,7 +253,7 @@ def test_read_slice_0():
 
 
 def test_read_slice_1():
-    coordinates = np.random.randn(4, 10, 3)
+    coordinates = rng.standard_normal((4, 10, 3))
     with HDF5TrajectoryFile(temp, "w") as f:
         f.write(coordinates)
 
@@ -266,7 +268,7 @@ def test_read_slice_1():
 
 
 def test_read_slice_2():
-    coordinates = np.random.randn(4, 10, 3)
+    coordinates = rng.standard_normal((4, 10, 3))
     with HDF5TrajectoryFile(temp, "w") as f:
         f.write(coordinates, alchemicalLambda=np.arange(4))
 
@@ -277,7 +279,7 @@ def test_read_slice_2():
 
 
 def test_read_slice_3():
-    coordinates = np.random.randn(4, 10, 3)
+    coordinates = rng.standard_normal((4, 10, 3))
     with HDF5TrajectoryFile(temp, "w") as f:
         f.write(coordinates, alchemicalLambda=np.arange(4))
 
@@ -292,7 +294,7 @@ def test_do_overwrite():
         f.write("a")
 
     with HDF5TrajectoryFile(temp, "w", force_overwrite=True) as f:
-        f.write(np.random.randn(10, 5, 3))
+        f.write(rng.standard_normal((10, 5, 3)))
 
 
 def test_vsite_elements(get_fn):
@@ -309,7 +311,7 @@ def test_dont_overwrite():
         f.write("a")
     with pytest.raises(IOError):
         with HDF5TrajectoryFile(temp, "w", force_overwrite=False) as f:
-            f.write(np.random.randn(10, 5, 3))
+            f.write(rng.standard_normal((10, 5, 3)))
 
 
 def test_attributes():
@@ -335,8 +337,8 @@ def test_attributes():
 
 
 def test_append():
-    x1 = np.random.randn(10, 5, 3)
-    x2 = np.random.randn(8, 5, 3)
+    x1 = rng.standard_normal((10, 5, 3))
+    x2 = rng.standard_normal((8, 5, 3))
     with HDF5TrajectoryFile(temp, "w") as f:
         f.write(x1)
     with HDF5TrajectoryFile(temp, "a") as f:

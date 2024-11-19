@@ -16,4 +16,3 @@ dependencies:
   - pytest
   - pytest-xdist
   - netCDF4
-  - ambertools

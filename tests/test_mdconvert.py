@@ -122,13 +122,13 @@ def test_pairwise(traj, extension, monkeypatch):
         # save one copy of traj for use as a topology file
         topology_fn = f"{tmpdir}/topology.pdb"
         traj[0].save(topology_fn)
-    
+
         # save a .dat file for the atom_indices so that we can test
         # mdconvert's atom_indices flag
         atom_indices = np.array([0, 3])
         atom_indices_fn = f"{tmpdir}/atom_indices.dat"
         np.savetxt(atom_indices_fn, atom_indices, fmt="%d")
-    
+
         in_fn = f"{tmpdir}/traj.{ext1}"
         traj.save(in_fn)
         working_dir = f"{tmpdir}/from-{ext1}"
@@ -136,25 +136,25 @@ def test_pairwise(traj, extension, monkeypatch):
 
         for ext2 in extensions:
             out_fn = f"traj.{ext2}"
-    
+
             command1 = ["mdconvert", in_fn, "-o", out_fn, "-c 6"]
             if ext2 in ["pdb", "h5", "lh5"]:
                 # if we're saving a pdb or h5, we need to give it a topology too
                 command1 += ["-t", topology_fn]
-    
+
             # TODO: test fixture
             subprocess.check_call(command1, cwd=working_dir)
-    
+
             # Use the --atom_indices flag to mdconvert
             command2 = command1 + ["-a", atom_indices_fn]
             command2[3] = "subset." + out_fn  # make sure the output goes to a different file
             subprocess.check_call(command2, cwd=working_dir)
-    
+
             # Use the --stride 3 flag
             command3 = command1 + ["-s 3"]
             command3[3] = "stride." + out_fn  # change the out filename, so they don't clobbed
             subprocess.check_call(command3, cwd=working_dir)
-    
+
             # ensure that the xyz coordinates are preserved by a trip
             # from python -> save in format X -> mdconvert to format Y -> python
             load_kwargs_check1 = {}
@@ -162,7 +162,7 @@ def test_pairwise(traj, extension, monkeypatch):
             if ext2 not in ["pdb", "h5", "lh5"]:
                 load_kwargs_check1["top"] = traj.topology
                 load_kwargs_check2["top"] = traj.topology.subset(atom_indices)
-    
+
             out1 = md.load(os.path.join(working_dir, out_fn), **load_kwargs_check1)
             out2 = md.load(
                 os.path.join(working_dir, "subset." + out_fn),
@@ -172,7 +172,7 @@ def test_pairwise(traj, extension, monkeypatch):
                 os.path.join(working_dir, "stride." + out_fn),
                 **load_kwargs_check1,
             )
-    
+
             if ext1 in ["lh5"] or ext2 in ["lh5"]:
                 decimal = 3
             else:
@@ -180,13 +180,13 @@ def test_pairwise(traj, extension, monkeypatch):
             eq(out1.xyz, traj.xyz, decimal=decimal)
             eq(out2.xyz, traj.xyz[:, atom_indices], decimal=decimal)
             eq(out3.xyz, traj.xyz[::3], decimal=decimal)
-    
+
             if ext1 not in ["lh5"] and ext2 not in ["lh5"]:
                 # binpos doesn't save unitcell information
                 eq(out1.unitcell_vectors, traj.unitcell_vectors, decimal=2)
                 eq(out2.unitcell_vectors, traj.unitcell_vectors, decimal=2)
                 eq(out3.unitcell_vectors, traj.unitcell_vectors[::3], decimal=2)
-    
+
             if all(e in ["xtc", "trr", "nc", "h5"] for e in [ext1, ext2]):
                 # these formats contain time information
                 if all(e in ["nc"] for e in [ext1, ext2]):
@@ -199,7 +199,7 @@ def test_pairwise(traj, extension, monkeypatch):
                 eq(out1.time, traj.time)
                 eq(out2.time, traj.time)
                 eq(out3.time, traj.time[::3])
-    
+
             if ext2 in ["pdb", "h5", "lh5"]:
                 # these formats contain a topology in the file that was
                 # read from disk
@@ -210,12 +210,12 @@ def test_pairwise(traj, extension, monkeypatch):
     if extension in ('nc'):
         # If extension is nc, we need to test with both SciPy and NetCDF4.
         # First, we use pytest.monkeypatch to remove the netCDF4 import from the environment
-        # Then, we make sure the extension for both SciPy and NetCDF4 tests are different (or 
+        # Then, we make sure the extension for both SciPy and NetCDF4 tests are different (or
         # there will be SameFileError/FileExistsError failures)
         # All these changes will be reverted outside the context manager, and the netCDF4 test will run again
         with monkeypatch.context() as m:
             m.setitem(sys.modules, 'netCDF4', None)
             test_base(traj, '.scipy.nc', monkeypatch)
-    
+
     # For testing most formats and with netCDF4 (if format is nc)
     test_base(traj, extension, monkeypatch)
