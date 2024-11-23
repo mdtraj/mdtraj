@@ -24,16 +24,19 @@ jobs:
 
       matrix:
         os:
-          - macOS-latest
+          - macOS-latest  # arm64
+          - macOS-13  # x86-64
           - ubuntu-latest
         python-version:
-          - "3.9"
           - "3.10"
           - "3.11"
           - "3.12"
-  
+        numpy-version:
+          - "numpy=2"
+          - "numpy=1"
+
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up conda environment
       uses: mamba-org/setup-micromamba@v1
@@ -41,6 +44,7 @@ jobs:
         environment-file: devtools/conda-envs/test.yaml
         create-args: >-
           python=${{ matrix.python-version }}
+          ${{ matrix.numpy-version }}
 
     - name: Install package
       run: |
@@ -48,10 +52,10 @@ jobs:
 
     - name: Environment Information
       run: |
-        conda info
-        conda list
+        micromamba info
+        micromamba list
 
     - name: Run tests
       if: always()
       run: |
-        pytest -n auto --durations=10 tests/
+        pytest -n logical --durations=10 tests/ -r fE

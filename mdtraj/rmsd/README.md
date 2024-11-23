@@ -6,4 +6,3 @@ source code that gets compiled to produce the IRMSD implementation code, a
 single python shared object file importable at `mdtraj._rmsd`. The object
 oriented python wrapper for this code is  `mdtraj.rmsd`, and is written in
 the `rmsd.py` file.
-

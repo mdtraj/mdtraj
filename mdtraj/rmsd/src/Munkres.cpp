@@ -430,4 +430,3 @@ int Munkres::find_primed_zero_in_row(int row) {
 	}
 	return -1;
 }
-

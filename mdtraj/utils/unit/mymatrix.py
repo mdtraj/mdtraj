@@ -28,9 +28,9 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from __future__ import print_function, division, absolute_import
 
 import sys
+
 
 def eye(size):
     """
@@ -52,6 +52,7 @@ def eye(size):
         result.append(r)
     return MyMatrix(result)
 
+
 def zeros(m, n=None):
     """
     Returns matrix of zeroes
@@ -71,10 +72,12 @@ def zeros(m, n=None):
         result.append(r)
     return MyMatrix(result)
 
-class MyVector(object):
+
+class MyVector:
     """
     Parent class of MyMatrix and type of Matrix Row.
     """
+
     def __init__(self, collection):
         if isinstance(collection, MyVector):
             self.data = collection.data
@@ -97,8 +100,7 @@ class MyVector(object):
         del self.data[key]
 
     def __iter__(self):
-        for item in self.data:
-            yield item
+        yield from self.data
 
     def __len__(self):
         return len(self.data)
@@ -116,6 +118,7 @@ class MyVector(object):
             for element in self:
                 new_vec.append(lhs * element)
             return self.__class__(new_vec)
+
 
 class MyMatrix(MyVector):
     """
@@ -157,6 +160,7 @@ class MyMatrix(MyVector):
      [5, 4, 0, 1, 0]
      [0, 0, 0, 0, 1]]
     """
+
     def numRows(self):
         return len(self.data)
 
@@ -182,7 +186,7 @@ class MyMatrix(MyVector):
         return result
 
     def __repr__(self):
-        return 'MyMatrix(' + MyVector.__repr__(self) + ')'
+        return "MyMatrix(" + MyVector.__repr__(self) + ")"
 
     def is_square(self):
         return self.numRows() == self.numCols()
@@ -230,7 +234,7 @@ class MyMatrix(MyVector):
         for i in range(m):
             for j in range(n):
                 for k in range(r):
-                    result[i][j] += self[i][k]*rhs[k][j]
+                    result[i][j] += self[i][k] * rhs[k][j]
         return result
 
     def __add__(self, rhs):
@@ -245,7 +249,7 @@ class MyMatrix(MyVector):
         n = self.numCols()
         assert len(rhs) == m
         assert len(rhs[0]) == n
-        result = zeros(m,n)
+        result = zeros(m, n)
         for i in range(m):
             for j in range(n):
                 result[i][j] = self[i][j] + rhs[i][j]
@@ -263,7 +267,7 @@ class MyMatrix(MyVector):
         n = self.numCols()
         assert len(rhs) == m
         assert len(rhs[0]) == n
-        result = zeros(m,n)
+        result = zeros(m, n)
         for i in range(m):
             for j in range(n):
                 result[i][j] = self[i][j] - rhs[i][j]
@@ -319,19 +323,19 @@ class MyMatrix(MyVector):
             return self
         elif self.numRows() == 1:
             val = self[0][0]
-            val = 1.0/val
+            val = 1.0 / val
             return MyMatrix([[val]])
-        elif self.numRows() == 2: # 2x2 is analytic
+        elif self.numRows() == 2:  # 2x2 is analytic
             # http://en.wikipedia.org/wiki/Invertible_matrix#Inversion_of_2.C3.972_matrices
             a = self[0][0]
             b = self[0][1]
             c = self[1][0]
             d = self[1][1]
-            determinant = a*d - b*c
+            determinant = a * d - b * c
             if determinant == 0:
                 raise ArithmeticError("Cannot invert 2x2 matrix with zero determinant")
             else:
-                return 1.0/(a*d - b*c) * MyMatrix([[d, -b],[-c, a]])
+                return 1.0 / (a * d - b * c) * MyMatrix([[d, -b], [-c, a]])
         else:
             # Gauss Jordan elimination from numerical recipes
             n = self.numRows()
@@ -339,18 +343,18 @@ class MyMatrix(MyVector):
             assert n == m1
             # Copy initial matrix into result matrix
             a = zeros(n, n)
-            for i in range (0,n):
-                for j in range (0,n):
+            for i in range(0, n):
+                for j in range(0, n):
                     a[i][j] = self[i][j]
             # These arrays are used for bookkeeping on the pivoting
             indxc = [0] * n
             indxr = [0] * n
             ipiv = [0] * n
-            for i in range (0,n):
+            for i in range(0, n):
                 big = 0.0
-                for j in range (0,n):
+                for j in range(0, n):
                     if ipiv[j] != 1:
-                        for k in range (0,n):
+                        for k in range(0, n):
                             if ipiv[k] == 0:
                                 if abs(a[j][k]) >= big:
                                     big = abs(a[j][k])
@@ -359,33 +363,33 @@ class MyMatrix(MyVector):
                 ipiv[icol] += 1
                 # We now have the pivot element, so we interchange rows...
                 if irow != icol:
-                    for l in range(n):
-                        temp = a[irow][l]
-                        a[irow][l] = a[icol][l]
-                        a[icol][l] = temp
+                    for index in range(n):
+                        temp = a[irow][index]
+                        a[irow][index] = a[icol][index]
+                        a[icol][index] = temp
                 indxr[i] = irow
                 indxc[i] = icol
                 if a[icol][icol] == 0:
                     raise ArithmeticError("Cannot invert singular matrix")
-                pivinv = 1.0/a[icol][icol]
+                pivinv = 1.0 / a[icol][icol]
                 a[icol][icol] = 1.0
-                for l in range(n):
-                    a[icol][l] *= pivinv
-                for ll in range(n): # next we reduce the rows
+                for index in range(n):
+                    a[icol][index] *= pivinv
+                for ll in range(n):  # next we reduce the rows
                     if ll == icol:
-                        continue # except the pivot one, of course
+                        continue  # except the pivot one, of course
                     dum = a[ll][icol]
                     a[ll][icol] = 0.0
-                    for l in range(n):
-                        a[ll][l] -= a[icol][l]*dum
+                    for row in range(n):
+                        a[ll][row] -= a[icol][row] * dum
             # Unscramble the permuted columns
-            for l in range(n-1, -1, -1):
-                if indxr[l] == indxc[l]:
+            for index in range(n - 1, -1, -1):
+                if indxr[index] == indxc[index]:
                     continue
                 for k in range(n):
-                    temp = a[k][indxr[l]]
-                    a[k][indxr[l]] = a[k][indxc[l]]
-                    a[k][indxc[l]] = temp
+                    temp = a[k][indxr[index]]
+                    a[k][indxr[index]] = a[k][indxc[index]]
+                    a[k][indxc[index]] = temp
             return a
 
     def transpose(self):
@@ -393,7 +397,6 @@ class MyMatrix(MyVector):
 
 
 class MyMatrixTranspose(MyMatrix):
-
     def transpose(self):
         return MyMatrix(self.data)
 
@@ -443,7 +446,7 @@ class MyMatrixTranspose(MyMatrix):
         if len(self.data) == 0:
             return "MyMatrixTranspose([[]])"
         start_char = "["
-        result = 'MyMatrixTranspose('
+        result = "MyMatrixTranspose("
         for m in range(len(self.data[0])):
             result += start_char
             result += "["
@@ -456,13 +459,14 @@ class MyMatrixTranspose(MyMatrix):
             if m < len(self.data[0]) - 1:
                 result += ","
             start_char = ""
-        result += '])'
+        result += "])"
         return result
 
 
 # run module directly for testing
-if __name__=='__main__':
-
+if __name__ == "__main__":
     # Test the examples in the docstrings
-    import doctest, sys
+    import doctest
+    import sys
+
     doctest.testmod(sys.modules[__name__])

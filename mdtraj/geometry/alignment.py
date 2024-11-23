@@ -35,13 +35,13 @@ Rapid calculation of RMSDs using a quaternion-based characteristic polynomial.
 Acta Crystallogr A 61(4):478-480.
 """
 
-from __future__ import print_function, division
 import numpy as np
 import scipy.optimize
+
 from mdtraj.utils import ensure_type
 
 
-class Transformation(object):
+class Transformation:
     """Operator capable of rotating and translating a conformation
 
     Parameters
@@ -51,6 +51,7 @@ class Transformation(object):
     translation : np.array, shape=(3)
         Translation vector
     """
+
     def __init__(self, rotation, translation):
         self.rotation = rotation
         self.translation = translation
@@ -70,7 +71,6 @@ class Transformation(object):
 
         """
         return coordinates.dot(self.rotation) + self.translation
-
 
     def __call__self(self, coordinates):
         return self.transform(coordinates)
@@ -132,8 +132,15 @@ def compute_translation_and_rotation(mobile, target):
         Rotation matrix to apply to mobile to carry out the transformation.
     """
 
-    ensure_type(mobile, 'float', 2, 'mobile', warn_on_cast=False, shape=(None, 3))
-    ensure_type(target, 'float', 2, 'target', warn_on_cast=False, shape=(target.shape[0], 3))
+    ensure_type(mobile, "float", 2, "mobile", warn_on_cast=False, shape=(None, 3))
+    ensure_type(
+        target,
+        "float",
+        2,
+        "target",
+        warn_on_cast=False,
+        shape=(target.shape[0], 3),
+    )
 
     mu1 = mobile.mean(0)
     mu2 = target.mean(0)
@@ -170,13 +177,20 @@ def rmsd_kabsch(xyz1, xyz2):
     """
     xyz1_prime = transform(xyz1, xyz2)
     delta = xyz1_prime - xyz2
-    rmsd = (delta ** 2.0).sum(1).mean() ** 0.5
+    rmsd = (delta**2.0).sum(1).mean() ** 0.5
     return rmsd
 
 
 def _center(conformation):
     """Center the conformation"""
-    ensure_type(conformation, 'float', 2, 'conformation', warn_on_cast=False, shape=(None, 3))
+    ensure_type(
+        conformation,
+        "float",
+        2,
+        "conformation",
+        warn_on_cast=False,
+        shape=(None, 3),
+    )
     centroid = np.mean(conformation, axis=0)
     centered = conformation - centroid
     return centered
@@ -201,18 +215,34 @@ def rmsd_qcp(conformation1, conformation2):
     rmsd : float
         The root-mean square deviation after alignment between the two pointsets
     """
-    ensure_type(conformation1, np.float32, 2, 'conformation1', warn_on_cast=False, shape=(None, 3))
-    ensure_type(conformation2, np.float32, 2, 'conformation2', warn_on_cast=False, shape=(conformation1.shape[0], 3))
+    ensure_type(
+        conformation1,
+        np.float32,
+        2,
+        "conformation1",
+        warn_on_cast=False,
+        shape=(None, 3),
+    )
+    ensure_type(
+        conformation2,
+        np.float32,
+        2,
+        "conformation2",
+        warn_on_cast=False,
+        shape=(conformation1.shape[0], 3),
+    )
 
     A = _center(conformation1)
     B = _center(conformation2)
     if not A.shape[0] == B.shape[0]:
-        raise ValueError('conformation1 and conformation2 must have same number of atoms')
+        raise ValueError(
+            "conformation1 and conformation2 must have same number of atoms",
+        )
     n_atoms = len(A)
 
     # the inner product of the structures A and B
-    G_A = np.einsum('ij,ij', A, A)
-    G_B = np.einsum('ij,ij', B, B)
+    G_A = np.einsum("ij,ij", A, A)
+    G_B = np.einsum("ij,ij", B, B)
     # print 'GA', G_A, np.trace(np.dot(A.T, A))
     # print 'GB', G_B, np.trace(np.dot(B.T, B))
 
@@ -238,12 +268,14 @@ def rmsd_qcp(conformation1, conformation2):
     Szy2 = Szy * Szy
     Szx2 = Szx * Szx
 
-    SyzSzymSyySzz2 = 2.0 * (Syz * Szy - Syy * Szz)
+    SyzSzymSyySzz2 = np.float64(2.0) * (Syz * Szy - Syy * Szz)
     Sxx2Syy2Szz2Syz2Szy2 = Syy2 + Szz2 - Sxx2 + Syz2 + Szy2
 
     # two of the coefficients
-    C2 = -2.0 * (Sxx2 + Syy2 + Szz2 + Sxy2 + Syx2 + Sxz2 + Szx2 + Syz2 + Szy2)
-    C1 = 8.0 * (Sxx * Syz * Szy + Syy * Szx * Sxz + Szz * Sxy * Syx - Sxx * Syy * Szz - Syz * Szx * Sxy - Szy * Syx * Sxz)
+    C2 = np.float64(-2.0) * (Sxx2 + Syy2 + Szz2 + Sxy2 + Syx2 + Sxz2 + Szx2 + Syz2 + Szy2)
+    C1 = np.float64(8.0) * (
+        Sxx * Syz * Szy + Syy * Szx * Sxz + Szz * Sxy * Syx - Sxx * Syy * Szz - Syz * Szx * Sxy - Szy * Syx * Sxz
+    )
 
     SxzpSzx = Sxz + Szx
     SyzpSzy = Syz + Szy
@@ -256,19 +288,31 @@ def rmsd_qcp(conformation1, conformation2):
     Sxy2Sxz2Syx2Szx2 = Sxy2 + Sxz2 - Syx2 - Szx2
 
     # the other coefficient
-    C0 = Sxy2Sxz2Syx2Szx2 * Sxy2Sxz2Syx2Szx2 \
-        + (Sxx2Syy2Szz2Syz2Szy2 + SyzSzymSyySzz2) * (Sxx2Syy2Szz2Syz2Szy2 - SyzSzymSyySzz2) \
-        + (-(SxzpSzx) * (SyzmSzy) + (SxymSyx) * (SxxmSyy - Szz)) * (-(SxzmSzx) * (SyzpSzy) + (SxymSyx) * (SxxmSyy + Szz)) \
-        + (-(SxzpSzx) * (SyzpSzy) - (SxypSyx) * (SxxpSyy - Szz)) * (-(SxzmSzx) * (SyzmSzy) - (SxypSyx) * (SxxpSyy + Szz)) \
-        + (+(SxypSyx) * (SyzpSzy) + (SxzpSzx) * (SxxmSyy + Szz)) * (-(SxymSyx) * (SyzmSzy) + (SxzpSzx) * (SxxpSyy + Szz)) \
-        + (+(SxypSyx) * (SyzmSzy) + (SxzmSzx) * (SxxmSyy - Szz)) * (-(SxymSyx) * (SyzpSzy) + (SxzmSzx) * (SxxpSyy - Szz))
+    C0 = (
+        Sxy2Sxz2Syx2Szx2 * Sxy2Sxz2Syx2Szx2
+        + (Sxx2Syy2Szz2Syz2Szy2 + SyzSzymSyySzz2) * (Sxx2Syy2Szz2Syz2Szy2 - SyzSzymSyySzz2)
+        + (-(SxzpSzx) * (SyzmSzy) + (SxymSyx) * (SxxmSyy - Szz))
+        * (-(SxzmSzx) * (SyzpSzy) + (SxymSyx) * (SxxmSyy + Szz))
+        + (-(SxzpSzx) * (SyzpSzy) - (SxypSyx) * (SxxpSyy - Szz))
+        * (-(SxzmSzx) * (SyzmSzy) - (SxypSyx) * (SxxpSyy + Szz))
+        + (+(SxypSyx) * (SyzpSzy) + (SxzpSzx) * (SxxmSyy + Szz))
+        * (-(SxymSyx) * (SyzmSzy) + (SxzpSzx) * (SxxpSyy + Szz))
+        + (+(SxypSyx) * (SyzmSzy) + (SxzmSzx) * (SxxmSyy - Szz))
+        * (-(SxymSyx) * (SyzpSzy) + (SxzmSzx) * (SxxpSyy - Szz))
+    )
 
-    E0 = (G_A + G_B) / 2.0
-    f = lambda x: x ** 4.0 + C2 * x ** 2. + C1 * x + C0
-    df = lambda x: 4 * x ** 3.0 + 2 * C2 * x + C1
+    E0 = (G_A + G_B) / np.float64(2.0)
+
+    def f(x):
+        return x**4.0 + C2 * x**2.0 + C1 * x + C0
+
+    def df(x):
+        return 4 * x**3.0 + 2 * C2 * x + C1
+
     max_eigenvalue = scipy.optimize.newton(f, E0, df)
     rmsd = np.sqrt(np.abs(2.0 * (E0 - max_eigenvalue) / n_atoms))
     return rmsd
+
 
 def compute_average_structure(xyz):
     """Compute the average structure from a set of frames.
@@ -297,5 +341,5 @@ def compute_average_structure(xyz):
         average = np.zeros((n_atoms, 3))
         for frame in range(n_frames):
             average += transform(xyz[frame], candidate)
-        candidate = average/n_frames
+        candidate = average / n_frames
     return candidate

@@ -21,16 +21,17 @@
 ##############################################################################
 
 
-import mdtraj as md
 import numpy as np
-from mdtraj.geometry.alignment import rmsd_qcp, compute_average_structure
+
+import mdtraj as md
+from mdtraj.geometry.alignment import compute_average_structure, rmsd_qcp
 from mdtraj.testing import eq
 
 np.random.seed(52)
 
 
 def test_trajectory_rmsd(get_fn):
-    t = md.load(get_fn('traj.h5'))
+    t = md.load(get_fn("traj.h5"))
     for parallel in [True, False]:
         calculated = md.rmsd(t, t, 0, parallel=parallel)
         reference = np.zeros(t.n_frames)
@@ -43,8 +44,8 @@ def test_trajectory_rmsd(get_fn):
 def test_precentered_1(get_fn):
     # test rmsd against the numpy version, using the same trajectory
     # as target and reference
-    t1 = md.load(get_fn('traj.h5'), stride=10)
-    t2 = md.load(get_fn('traj.h5'), stride=10)
+    t1 = md.load(get_fn("traj.h5"), stride=10)
+    t2 = md.load(get_fn("traj.h5"), stride=10)
     # don't center t1, and use it without precentered
     # explicitly center t2, and use *with* precentered
 
@@ -65,10 +66,10 @@ def test_precentered_1(get_fn):
 def test_precentered_2(get_fn):
     # test rmsd against the numpy version, using the difference
     # trajectories as target and reference
-    t1_a = md.load(get_fn('traj.h5'), stride=10)
-    t2_a = md.load(get_fn('traj.h5'), stride=10)
-    t1_b = md.load(get_fn('traj.h5'), stride=10)
-    t2_b = md.load(get_fn('traj.h5'), stride=10)
+    t1_a = md.load(get_fn("traj.h5"), stride=10)
+    t2_a = md.load(get_fn("traj.h5"), stride=10)
+    t1_b = md.load(get_fn("traj.h5"), stride=10)
+    t2_b = md.load(get_fn("traj.h5"), stride=10)
     # don't center t1, and use it without precentered
     # explicitly center t2, and use *with* precentered
 
@@ -88,14 +89,14 @@ def test_precentered_2(get_fn):
 
 
 def test_superpose_0(get_fn):
-    t1 = md.load(get_fn('traj.h5'))
+    t1 = md.load(get_fn("traj.h5"))
     reference_rmsd = md.rmsd(t1, t1, 0)
 
     t1.superpose(t1, 0)
     displ_rmsd = np.zeros(t1.n_frames)
     for i in range(t1.n_frames):
         delta = t1.xyz[i] - t1.xyz[0]
-        displ_rmsd[i] = (delta ** 2.0).sum(1).mean() ** 0.5
+        displ_rmsd[i] = (delta**np.float64(2.0)).sum(1).mean() ** np.float64(0.5)
 
     eq(reference_rmsd, displ_rmsd, decimal=5)
 
@@ -107,7 +108,10 @@ def test_superpose_1():
 
     for indices in [None, np.arange(90)]:
         # make another trajectory in a similar rotational state
-        query = md.Trajectory(xyz=reference.xyz + 0.01 * np.random.randn(*reference.xyz.shape), topology=None)
+        query = md.Trajectory(
+            xyz=reference.xyz + 0.01 * np.random.randn(*reference.xyz.shape),
+            topology=None,
+        )
         query.superpose(reference, 0, atom_indices=indices)
         assert eq(reference.xyz, reference_xyz)
 
@@ -142,10 +146,18 @@ def test_superpose_refinds():
     normal = md.Trajectory(xyz=normal, topology=None)
     flipped = md.Trajectory(xyz=flipped, topology=None)
 
-    normal.superpose(flipped, atom_indices=np.arange(0, 50), ref_atom_indices=np.arange(50, 100))
+    normal.superpose(
+        flipped,
+        atom_indices=np.arange(0, 50),
+        ref_atom_indices=np.arange(50, 100),
+    )
     eq(normal.xyz, normal_xyz)
 
-    flipped.superpose(normal, atom_indices=np.arange(50, 100), ref_atom_indices=np.arange(0, 50))
+    flipped.superpose(
+        normal,
+        atom_indices=np.arange(50, 100),
+        ref_atom_indices=np.arange(0, 50),
+    )
     eq(flipped.xyz, flipped_xyz)
 
     normal.superpose(flipped)
@@ -153,13 +165,13 @@ def test_superpose_refinds():
 
 
 def test_rmsd_atom_indices(get_fn):
-    native = md.load(get_fn('native.pdb'))
-    t1 = md.load(get_fn('traj.h5'))
+    native = md.load(get_fn("native.pdb"))
+    t1 = md.load(get_fn("traj.h5"))
 
     atom_indices = np.arange(10)
     dist1 = md.rmsd(t1, native, atom_indices=atom_indices)
 
-    t2 = md.load(get_fn('traj.h5'))
+    t2 = md.load(get_fn("traj.h5"))
     t2.restrict_atoms(atom_indices)
     native.restrict_atoms(atom_indices)
     dist2 = md.rmsd(t2, native)
@@ -168,23 +180,31 @@ def test_rmsd_atom_indices(get_fn):
 
 
 def test_rmsd_ref_ainds(get_fn):
-    native = md.load(get_fn('native.pdb'))
-    t1 = md.load(get_fn('traj.h5'))
+    native = md.load(get_fn("native.pdb"))
+    t1 = md.load(get_fn("traj.h5"))
 
     atom_indices = np.arange(10)
-    dist1 = md.rmsd(t1, native, atom_indices=atom_indices,
-                    ref_atom_indices=atom_indices)
+    dist1 = md.rmsd(
+        t1,
+        native,
+        atom_indices=atom_indices,
+        ref_atom_indices=atom_indices,
+    )
 
     bad_atom_indices = np.arange(10, 20)
-    t2 = md.load(get_fn('traj.h5'))
-    dist2 = md.rmsd(t2, native, atom_indices=atom_indices,
-                    ref_atom_indices=bad_atom_indices)
+    t2 = md.load(get_fn("traj.h5"))
+    dist2 = md.rmsd(
+        t2,
+        native,
+        atom_indices=atom_indices,
+        ref_atom_indices=bad_atom_indices,
+    )
 
     assert np.all(dist2 > dist1)
 
 
 def test_average_structure(get_fn):
-    traj = md.load(get_fn('frame0.dcd'), top=get_fn('frame0.pdb'))
+    traj = md.load(get_fn("frame0.dcd"), top=get_fn("frame0.pdb"))
     average = compute_average_structure(traj.xyz)
 
     # The mean RMSD to the average structure should be less than to any individual frame.
@@ -195,28 +215,31 @@ def test_average_structure(get_fn):
         sum2 += rmsd_qcp(average, traj.xyz[i])
     assert sum2 < sum1
 
+
 def test_trajectory_rmsf(get_fn):
-    t = md.load(get_fn('traj.h5'))
+    t = md.load(get_fn("traj.h5"))
     for parallel in [True, False]:
         calculated = md.rmsf(t, t, 0, parallel=parallel)
         t.superpose(t, 0)
         avg_xyz = np.average(t.xyz, axis=0)
-        reference = np.sqrt(3*np.mean((t.xyz - avg_xyz)**2, axis=(0, 2)))
-        assert np.sum(np.abs(calculated)) > 0 # check trivial error
+        reference = np.sqrt(3 * np.mean((t.xyz - avg_xyz) ** 2, axis=(0, 2)))
+        assert np.sum(np.abs(calculated)) > 0  # check trivial error
         eq(calculated, reference, decimal=3)
 
+
 def test_trajectory_rmsf_aligned(get_fn):
-    t = md.load(get_fn('traj.h5'))
+    t = md.load(get_fn("traj.h5"))
     for parallel in [True, False]:
         # testing different set of atoms for alignment and RMSF calculation
-        atom_indices = range(int(t.n_atoms/2))
-        rmsf_indices = range(int(t.n_atoms/2), t.n_atoms)
+        atom_indices = range(int(t.n_atoms / 2))
+        rmsf_indices = range(int(t.n_atoms / 2), t.n_atoms)
         t.superpose(t, 99, atom_indices=atom_indices, parallel=False)
         calculated = md.rmsf(t, None, atom_indices=rmsf_indices, parallel=parallel)
         avg_xyz = np.average(t.xyz, axis=0)
-        reference = np.sqrt(3*np.mean((t.xyz - avg_xyz)**2, axis=(0, 2)))[rmsf_indices]
-        assert np.sum(np.abs(calculated)) > 0 # check trivial error
+        reference = np.sqrt(3 * np.mean((t.xyz - avg_xyz) ** 2, axis=(0, 2)))[rmsf_indices]
+        assert np.sum(np.abs(calculated)) > 0  # check trivial error
         eq(calculated, reference, decimal=3)
+
 
 def test_rmsd_atom_indices_vs_ref_indices():
     n_frames = 1
@@ -225,21 +248,22 @@ def test_rmsd_atom_indices_vs_ref_indices():
 
     top_1 = md.Topology()
     top_1.add_chain()
-    top_1.add_residue('RS2', top_1.chain(0))
-    top_1.add_atom('A2', 'H', top_1.residue(0))
+    top_1.add_residue("RS2", top_1.chain(0))
+    top_1.add_atom("A2", "H", top_1.residue(0))
 
     top_2 = md.Topology()
     top_2.add_chain()
-    top_2.add_residue('RS1', top_2.chain(0))
-    top_2.add_atom('A1', 'H', top_2.residue(0))
+    top_2.add_residue("RS1", top_2.chain(0))
+    top_2.add_atom("A1", "H", top_2.residue(0))
     top_2.add_chain()
-    top_2.add_residue('RS2', top_2.chain(1))
-    top_2.add_atom('A2', 'H', top_2.residue(1))
-    # here the 2nd chain in the top_2 is rmsd-compatible to the one in the top_1 so we should be able to compute rsmd between them.
+    top_2.add_residue("RS2", top_2.chain(1))
+    top_2.add_atom("A2", "H", top_2.residue(1))
+    # here the 2nd chain in the top_2 is rmsd-compatible to the one in the top_1
+    # so we should be able to compute rsmd between them.
 
     trj_1 = md.Trajectory(np.random.RandomState(0).randn(n_frames, n_atoms_1, 3), top_1)
     trj_2 = md.Trajectory(np.random.RandomState(0).randn(n_frames, n_atoms_2, 3), top_2)
 
     md.rmsd(trj_1, trj_2, atom_indices=[0], ref_atom_indices=[1])
     md.rmsd(trj_2, trj_1, atom_indices=[1], ref_atom_indices=[0])
-    # is this don't fail then it's good no matter the result
+    # if this don't fail then it's good no matter the result

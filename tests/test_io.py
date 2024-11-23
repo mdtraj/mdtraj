@@ -30,7 +30,7 @@ import tables
 from mdtraj import io
 from mdtraj.testing import eq
 
-fd, temp = tempfile.mkstemp(suffix='.h5')
+fd, temp = tempfile.mkstemp(suffix=".h5")
 os.close(fd)
 
 
@@ -47,8 +47,8 @@ def test_overwrite_1():
         b = a + 1
         io.saveh(fn, a=a)
         io.saveh(fn, b=b)
-        eq(io.loadh(fn, 'a'), a)
-        eq(io.loadh(fn, 'b'), b)
+        eq(io.loadh(fn, "a"), a)
+        eq(io.loadh(fn, "b"), b)
     except:
         raise
     finally:
@@ -64,7 +64,7 @@ def test_overwrite_2():
         b = a + 1
         io.saveh(fn, a=a)
         io.saveh(fn, a=b)
-        eq(io.loadh(fn, 'a'), b)
+        eq(io.loadh(fn, "a"), b)
     except:
         raise
     finally:
@@ -82,33 +82,38 @@ class test_io(unittest.TestCase):
         self.data = np.arange(10000, dtype=np.float32)
 
         # Write Data to an HDF5 file as a compressed CArray.
-        hdf_file = tables.open_file(self.filename1, 'a')
-        hdf_file.create_carray("/", "arr_0", tables.Float32Atom(),
-                               self.data.shape, filters=io.COMPRESSION)
+        hdf_file = tables.open_file(self.filename1, "a")
+        hdf_file.create_carray(
+            "/",
+            "arr_0",
+            tables.Float32Atom(),
+            self.data.shape,
+            filters=io.COMPRESSION,
+        )
         hdf_file.root.arr_0[:] = self.data[:]
         hdf_file.flush()
         hdf_file.close()
 
     def test_load_1(self):
         # Load by specifying array name
-        TestData = io.loadh(self.filename1, 'arr_0')
+        TestData = io.loadh(self.filename1, "arr_0")
         eq(TestData, self.data)
 
     def test_load_2(self):
         # load using deferred=False
-        TestData = io.loadh(self.filename1, deferred=False)['arr_0']
+        TestData = io.loadh(self.filename1, deferred=False)["arr_0"]
         eq(TestData, self.data)
 
     def test_load_3(self):
         # load using deferred=True
         deferred = io.loadh(self.filename1, deferred=True)
-        eq(deferred['arr_0'], self.data)
+        eq(deferred["arr_0"], self.data)
         deferred.close()
 
     def test_save(self):
         # Save HDF5 to disk and load it back up
         io.saveh(self.filename2, self.data)
-        TestData = io.loadh(self.filename2, 'arr_0')
+        TestData = io.loadh(self.filename2, "arr_0")
         eq(TestData, self.data)
 
     def teardown(self):
@@ -127,9 +132,14 @@ class test_io_int(test_io):
         self.data = np.arange(10000, dtype=np.int64)
 
         # Write Data to an HDF5 file as a compressed CArray.
-        hdf_file = tables.open_file(self.filename1, 'a')
-        hdf_file.create_carray("/", "arr_0", tables.Int64Atom(),
-                               self.data.shape, filters=io.COMPRESSION)
+        hdf_file = tables.open_file(self.filename1, "a")
+        hdf_file.create_carray(
+            "/",
+            "arr_0",
+            tables.Int64Atom(),
+            self.data.shape,
+            filters=io.COMPRESSION,
+        )
         hdf_file.root.arr_0[:] = self.data[:]
         hdf_file.flush()
         hdf_file.close()
@@ -140,15 +150,15 @@ def test_groups():
     # nested groups and stuff
     x = np.random.randn(10)
     y = np.random.randn(11)
-    f = tables.open_file(temp, 'w')
-    f.create_group(where='/', name='mygroup')
-    f.create_array(where='/mygroup', name='myarray', obj=x)
-    f.create_array(where='/', name='mya2', obj=y)
+    f = tables.open_file(temp, "w")
+    f.create_group(where="/", name="mygroup")
+    f.create_array(where="/mygroup", name="myarray", obj=x)
+    f.create_array(where="/", name="mya2", obj=y)
     f.close()
 
-    assert eq(io.loadh(temp)['mygroup/myarray'], x)
-    assert eq(io.loadh(temp)['mya2'], y)
-    assert eq(io.loadh(temp, deferred=False)['mygroup/myarray'], x)
-    assert eq(io.loadh(temp, deferred=False)['mya2'], y)
-    assert eq(io.loadh(temp, 'mygroup/myarray'), x)
-    assert eq(io.loadh(temp, 'mya2'), y)
+    assert eq(io.loadh(temp)["mygroup/myarray"], x)
+    assert eq(io.loadh(temp)["mya2"], y)
+    assert eq(io.loadh(temp, deferred=False)["mygroup/myarray"], x)
+    assert eq(io.loadh(temp, deferred=False)["mya2"], y)
+    assert eq(io.loadh(temp, "mygroup/myarray"), x)
+    assert eq(io.loadh(temp, "mya2"), y)

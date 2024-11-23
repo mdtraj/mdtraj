@@ -21,29 +21,31 @@
 ##############################################################################
 
 
-import mdtraj as md
 import numpy as np
-from mdtraj.formats import ArcTrajectoryFile
-from mdtraj.formats import PDBTrajectoryFile
+
+import mdtraj as md
+from mdtraj.formats import ArcTrajectoryFile, PDBTrajectoryFile
 from mdtraj.testing import eq
 
 
 def test_read_0(get_fn):
-    with ArcTrajectoryFile(get_fn('4waters.arc')) as f:
+    with ArcTrajectoryFile(get_fn("4waters.arc")) as f:
         xyz, leng, ang = f.read()
-    with PDBTrajectoryFile(get_fn('4waters.pdb')) as f:
+    with PDBTrajectoryFile(get_fn("4waters.pdb")) as f:
         xyz2 = f.positions
     eq(xyz, xyz2, decimal=3)
 
+
 def test_read_arctraj(get_fn):
-    traj = md.load(get_fn('nitrogen.arc'), top=get_fn('nitrogen.pdb'))
-    owntop = md.load(get_fn('nitrogen.arc'))
+    traj = md.load(get_fn("nitrogen.arc"), top=get_fn("nitrogen.pdb"))
+    owntop = md.load(get_fn("nitrogen.arc"))
     eq(traj.xyz, owntop.xyz)
 
+
 def test_read_pbc(get_fn):
-    with ArcTrajectoryFile(get_fn('thf200.arc')) as f:
-       xyz, leng, ang = f.read()
+    with ArcTrajectoryFile(get_fn("thf200.arc")) as f:
+        xyz, leng, ang = f.read()
     eq(xyz[0, 0], np.array([21.231166, 32.549819, 8.278454]), decimal=3)
-    eq(xyz[0,-1], np.array([29.013880, 6.255754, 44.074519]), decimal=3)
+    eq(xyz[0, -1], np.array([29.013880, 6.255754, 44.074519]), decimal=3)
     eq(leng, np.array([[45.119376, 45.119376, 45.119376]]), decimal=3)
     eq(ang, np.array([[90.0, 90.0, 90.0]]), decimal=3)

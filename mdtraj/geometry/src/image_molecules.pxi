@@ -2,8 +2,11 @@
 # This file is lovingly included from _geometry.pyx
 
 import numpy as np
+
 cimport numpy as np
 from libc.stdint cimport int32_t, int64_t
+from libcpp.vector cimport vector
+
 
 cdef extern from "math_patch.h" nogil:
     float roundf(float x)
@@ -207,10 +210,10 @@ def image_molecules(xyz, box, anchor_molecules, other_molecules, sorted_bonds):
     for i, om in enumerate(other_molecules):
         other_molecule_indices[offset:other_molecule_offsets[i]] = om
         offset = other_molecule_offsets[i]
-    
+
     for i in range(xyz.shape[0]):
-        image_frame(xyz[i], box[i], anchor_molecule_indices, 
-                    anchor_molecule_offsets, other_molecule_indices, 
+        image_frame(xyz[i], box[i], anchor_molecule_indices,
+                    anchor_molecule_offsets, other_molecule_indices,
                     other_molecule_offsets, sorted_bonds)
 
 def whole_molecules(xyz, box, sorted_bonds):

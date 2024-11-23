@@ -44,7 +44,7 @@ float msdFromMandG(const float M[9], const float G_x, const float G_y,
 #elif defined(__ARM_NEON)
 #include <arm_neon.h>
 #include "theobald_rmsd_arm.h"
-#elif defined(__SSE2__) 
+#elif defined(__SSE2__)
 #include "theobald_rmsd_sse.h"
 #include <xmmintrin.h>
 #ifdef __SSE3__
@@ -55,7 +55,7 @@ float msdFromMandG(const float M[9], const float G_x, const float G_y,
 #endif
 #include "theobald_rmsd.h"
 
-/* 
+/*
 Using #define ALIGNED enables aligned loads. Slight speed boost, but
 requires that input data be 16-byte aligned.
 */
@@ -332,6 +332,3 @@ float msdFromMandG(const float M[9], const float G_x, const float G_y,
     }
     return ls_rmsd2;
 }
-
-
-

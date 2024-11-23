@@ -25,12 +25,12 @@
 # imports
 ##############################################################################
 
-from __future__ import print_function, division
-import warnings
-import numbers
-import numpy as np
 import collections
-from mdtraj.utils.six.moves import zip_longest
+import numbers
+import warnings
+from itertools import zip_longest
+
+import numpy as np
 
 ##############################################################################
 # functions / classes
@@ -41,8 +41,17 @@ class TypeCastPerformanceWarning(RuntimeWarning):
     pass
 
 
-def ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=None,
-    warn_on_cast=True, add_newaxis_on_deficient_ndim=False):
+def ensure_type(
+    val,
+    dtype,
+    ndim,
+    name,
+    length=None,
+    can_be_none=False,
+    shape=None,
+    warn_on_cast=True,
+    add_newaxis_on_deficient_ndim=False,
+):
     """Typecheck the size, shape and dtype of a numpy array, with optional
     casting.
 
@@ -98,43 +107,43 @@ def ensure_type(val, dtype, ndim, name, length=None, can_be_none=False, shape=No
             # If they give us an iterator, let's try...
             if isinstance(val, collections.abc.Sequence):
                 # sequences are easy. these are like lists and stuff
-                val = np.array(val, dtype=dtype)
+                val = np.asarray(val, dtype=dtype)
             else:
                 # this is a generator...
-                val = np.array(list(val), dtype=dtype)
+                val = np.asarray(list(val), dtype=dtype)
         elif np.isscalar(val) and add_newaxis_on_deficient_ndim and ndim == 1:
             # special case: if the user is looking for a 1d array, and
             # they request newaxis upconversion, and provided a scalar
             # then we should reshape the scalar to be a 1d length-1 array
             val = np.array([val])
         else:
-            raise TypeError(("%s must be numpy array. "
-                " You supplied type %s" % (name, type(val))))
+            raise TypeError(f"{name} must be numpy array. You supplied type {type(val)}")
 
     if warn_on_cast and val.dtype != dtype:
-        warnings.warn("Casting %s dtype=%s to %s " % (name, val.dtype, dtype),
-            TypeCastPerformanceWarning)
+        warnings.warn(
+            f"Casting {name} dtype={val.dtype} to {dtype} ",
+            TypeCastPerformanceWarning,
+        )
 
     if not val.ndim == ndim:
         if add_newaxis_on_deficient_ndim and val.ndim + 1 == ndim:
             val = val[np.newaxis, ...]
         else:
-            raise ValueError(("%s must be ndim %s. "
-                "You supplied %s" % (name, ndim, val.ndim)))
+            raise ValueError(f"{name} must be ndim {ndim}. You supplied {val.ndim}")
 
     val = np.ascontiguousarray(val, dtype=dtype)
 
     if length is not None and len(val) != length:
-        raise ValueError(("%s must be length %s. "
-            "You supplied %s" % (name, length, len(val))))
+        raise ValueError(f"{name} must be length {length}. You supplied {len(val)}")
 
     if shape is not None:
         # the shape specified given by the user can look like (None, None 3)
         # which indicates that ANY length is accepted in dimension 0 or
         # dimension 1
         sentenel = object()
-        error = ValueError(("%s must be shape %s. You supplied  "
-                "%s" % (name, str(shape).replace('None', 'Any'), val.shape)))
+        error = ValueError(
+            "{} must be shape {}. You supplied  " "{}".format(name, str(shape).replace("None", "Any"), val.shape),
+        )
         for a, b in zip_longest(val.shape, shape, fillvalue=sentenel):
             if a is sentenel or b is sentenel:
                 # if the sentenel was reached, it means that the ndim didn't
@@ -173,7 +182,7 @@ def cast_indices(indices):
 
     out = np.asarray(indices)
     if not issubclass(out.dtype.type, np.integer):
-        raise ValueError('indices must be of an integer type. %s is not an integer type' % out.dtype)
+        raise ValueError("indices must be of an integer type. %s is not an integer type" % out.dtype)
 
     return out
 
@@ -204,5 +213,6 @@ def check_random_state(seed):
         return np.random.RandomState(seed)
     if isinstance(seed, np.random.RandomState):
         return seed
-    raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
-                     ' instance' % seed)
+    raise ValueError(
+        "%r cannot be used to seed a numpy.random.RandomState" " instance" % seed,
+    )
