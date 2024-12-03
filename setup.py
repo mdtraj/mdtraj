@@ -32,6 +32,13 @@ except ValueError:
     disable_openmp = False
 
 
+##########################
+VERSION = "1.10.1+lim"  # please keep this in-sync with default.nix
+ISRELEASED = False
+__version__ = VERSION
+##########################
+
+
 CLASSIFIERS = """\
 Development Status :: 5 - Production/Stable
 Intended Audience :: Science/Research
@@ -169,7 +176,11 @@ def rmsd_extensions():
         ],
         language="c++",
         # don't enable OpenMP
-        extra_compile_args=(compiler.compiler_args_sse2 + compiler.compiler_args_sse3 + compiler.compiler_args_opt),
+        extra_compile_args=(
+            compiler.compiler_args_sse2
+            + compiler.compiler_args_sse3
+            + compiler.compiler_args_opt
+        ),
     )
 
     rmsd = Extension(
