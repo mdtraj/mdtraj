@@ -3,6 +3,18 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.10.2 (December 11, 2024)
+--------------------------
+
+- Add netCDF4 as a dependency in ``setup.py`` (#1944)
+- Support NumPy 2 (#1928)
+
+Authors
+~~~~~~~
+
+- Jeremy Leung
+- Jessica A. Nash
+
 v1.10.1 (October 17, 2024)
 --------------------------
 
