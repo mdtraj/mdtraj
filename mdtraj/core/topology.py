@@ -377,7 +377,7 @@ class Topology:
         }
 
         for chain in self.chains:
-            c = out.addChain()
+            c = out.addChain(id=chain.chain_id)
             for residue in chain.residues:
                 r = out.addResidue(residue.name, c, id=str(residue.resSeq))
                 for atom in residue.atoms:
@@ -441,7 +441,7 @@ class Topology:
         atom_mapping = {}
 
         for chain in value.chains():
-            c = out.add_chain()
+            c = out.add_chain(chain_id=chain.id)
             for residue in chain.residues():
                 try:
                     r = out.add_residue(residue.name, c, resSeq=int(residue.id))
