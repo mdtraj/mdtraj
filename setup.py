@@ -298,7 +298,7 @@ metadata = dict(
     packages=find_packages(),
     cmdclass={**versioneer.get_cmdclass(), "build_ext": build_ext},
     install_requires=[
-        "numpy<3",
+        "numpy>=1.25.0,<3",
         "scipy",
         "pyparsing",
         "packaging",
