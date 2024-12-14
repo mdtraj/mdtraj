@@ -144,7 +144,8 @@ def load_pdb(
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type string or path-like for load_pdb. " "you supplied %s" % type(filename),
+            "filename must be of type string or path-like for load_pdb. "
+            "you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)
@@ -157,6 +158,7 @@ def load_pdb(
             coords = f.positions[::stride, atom_slice, :]
         assert coords.ndim == 3, "internal shape error"
         n_frames = len(coords)
+        bfactors = f.bfactors
 
         topology = f.topology
         if atom_indices is not None:
@@ -192,6 +194,8 @@ def load_pdb(
         unitcell_lengths=unitcell_lengths,
         unitcell_angles=unitcell_angles,
     )
+    if bfactors is not None:
+        traj.bfactors = bfactors
 
     if not no_boxchk and traj.unitcell_lengths is not None:
         # Only one CRYST1 record is allowed, so only do this check for the first
@@ -274,6 +278,7 @@ class PDBTrajectoryFile:
         self._file = None
         self._topology = top
         self._positions = None
+        self._bfactors = None
         self._mode = mode
         self._last_topology = None
         self._standard_names = standard_names
@@ -356,12 +361,12 @@ class PDBTrajectoryFile:
         self._last_topology = topology
 
         if bfactors is None:
-            bfactors = [f"{0.0:5.2f}"] * len(positions)
+            bfactors = [f"{0.0:6.2f}"] * len(positions)
         else:
-            if (np.max(bfactors) >= 100) or (np.min(bfactors) <= -10):
-                raise ValueError("bfactors must be in (-10, 100)")
+            if (np.max(bfactors) >= 1000) or (np.min(bfactors) <= -10):
+                raise ValueError("bfactors must be in (-10, 1000)")
 
-            bfactors = [f"{b:5.2f}" for b in bfactors]
+            bfactors = [f"{b:6.2f}" for b in bfactors]
 
         atomIndex = 1
         posIndex = 0
@@ -400,14 +405,23 @@ class PDBTrajectoryFile:
                         atomSerial = atom.serial
                     else:
                         atomSerial = atomIndex
+                    if isinstance(res.resSeq, int):
+                        if res.resSeq < 0:
+                            resSeq = res.resSeq
+                        else:
+                            resSeq = res.resSeq % 10000
+                        resSeq = f"{resSeq:4d} "
+                    else:
+                        resSeq = f"{res.resSeq:>5s}"
+                    # line = "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s  " % ( # Right-justify atom symbol
                     line = (
-                        "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s  "
+                        "ATOM  %5d %-4s %3s %1s%5s   %s%s%s  1.00%6s      %-4s%2s  "
                         % (  # Right-justify atom symbol
                             atomSerial % 100000,
                             atomName,
                             resName,
                             chainName,
-                            (res.resSeq) % 10000,
+                            resSeq,
                             _format_83(coords[0]),
                             _format_83(coords[1]),
                             _format_83(coords[2]),
@@ -420,11 +434,13 @@ class PDBTrajectoryFile:
                     print(line, file=self._file)
                     posIndex += 1
                     atomIndex += 1
-                if resIndex == len(residues) - 1 and ter:
+                if resIndex == len(residues) - 1:
                     print(
-                        "TER   %5d      %3s %s%4d" % ((atomSerial + 1) % 100000, resName, chainName, res.resSeq % 10000),
+                        "TER   %5d      %3s %s%5s"
+                        % (atomSerial + 1, resName, chainName, resSeq),
                         file=self._file,
                     )
+                    # print("TER   %5d      %3s %s%4d" % (atomSerial+1, resName, chainName, res.resSeq), file=self._file)
                     atomIndex += 1
 
         if header and modelIndex is not None:
@@ -453,7 +469,8 @@ class PDBTrajectoryFile:
                 raise ValueError("unitcell_angles must be length 3")
         else:
             raise ValueError(
-                "either unitcell_lengths and unitcell_angles" "should both be spefied, or neither",
+                "either unitcell_lengths and unitcell_angles"
+                "should both be spefied, or neither",
             )
 
         box = list(unitcell_lengths) + list(unitcell_angles)
@@ -465,7 +482,9 @@ class PDBTrajectoryFile:
                 file=self._file,
             )
         print(
-            "CRYST1{:9.3f}{:9.3f}{:9.3f}{:7.2f}{:7.2f}{:7.2f} P 1           1 ".format(*tuple(box)),
+            "CRYST1{:9.3f}{:9.3f}{:9.3f}{:7.2f}{:7.2f}{:7.2f} P 1           1 ".format(
+                *tuple(box)
+            ),
             file=self._file,
         )
 
@@ -510,7 +529,10 @@ class PDBTrajectoryFile:
         conectBonds = []
         if self._last_topology is not None:
             for atom1, atom2 in self._last_topology.bonds:
-                if atom1.residue.name not in standardResidues or atom2.residue.name not in standardResidues:
+                if (
+                    atom1.residue.name not in standardResidues
+                    or atom2.residue.name not in standardResidues
+                ):
                     conectBonds.append((atom1, atom2))
                 elif (
                     atom1.name == "SG"
@@ -554,7 +576,8 @@ class PDBTrajectoryFile:
                 bonded = atomBonds[index1]
                 while len(bonded) > 4:
                     print(
-                        "CONECT%5d%5d%5d%5d" % (index1, bonded[0], bonded[1], bonded[2]),
+                        "CONECT%5d%5d%5d%5d"
+                        % (index1, bonded[0], bonded[1], bonded[2]),
                         file=self._file,
                     )
                     del bonded[:4]
@@ -588,6 +611,11 @@ class PDBTrajectoryFile:
     def positions(self):
         """The cartesian coordinates of all of the atoms in each frame. Available when a file is opened in mode='r'"""
         return self._positions
+
+    @property
+    def bfactors(self):
+        """The bfactors of all of the atoms in each frame. Available when a file is opened in mode='r'"""
+        return self._bfactors
 
     @property
     def topology(self):
@@ -625,13 +653,18 @@ class PDBTrajectoryFile:
 
         # load all of the positions (from every model)
         _positions = []
+        _bfactors = []
         for model in pdb.iter_models(use_all_models=True):
             coords = []
+            bfactors = []
             for chain in model.iter_chains():
                 for residue in chain.iter_residues():
                     for atom in residue.atoms:
                         coords.append(atom.get_position())
+                        bfactors.append(atom.get_temperature_factor())
+
             _positions.append(coords)
+            _bfactors.append(bfactors)
 
         if not all(len(f) == len(_positions[0]) for f in _positions):
             raise ValueError(
@@ -639,6 +672,7 @@ class PDBTrajectoryFile:
             )
 
         self._positions = np.array(_positions)
+        self._bfactors = np.array(_bfactors)
 
         ## The atom positions read from the PDB file
         self._unitcell_lengths = pdb.get_unit_cell_lengths()
@@ -653,16 +687,26 @@ class PDBTrajectoryFile:
                 c = self._topology.add_chain(chain.chain_id)
                 for residue in chain.iter_residues():
                     resName = residue.get_name()
-                    if resName in PDBTrajectoryFile._residueNameReplacements and self._standard_names:
+                    if residue.insertion_code == " ":
+                        resSeq = residue.number
+                    else:
+                        resSeq = f"{residue.number:4d}{residue.insertion_code}".strip()
+                    if (
+                        resName in PDBTrajectoryFile._residueNameReplacements
+                        and self._standard_names
+                    ):
                         resName = PDBTrajectoryFile._residueNameReplacements[resName]
+                    # r = self._topology.add_residue(resName, c, residue.number, residue.segment_id)
                     r = self._topology.add_residue(
-                        resName,
-                        c,
-                        residue.number,
-                        residue.segment_id,
+                        resName, c, resSeq, residue.segment_id
                     )
-                    if resName in PDBTrajectoryFile._atomNameReplacements and self._standard_names:
-                        atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
+                    if (
+                        resName in PDBTrajectoryFile._atomNameReplacements
+                        and self._standard_names
+                    ):
+                        atomReplacements = PDBTrajectoryFile._atomNameReplacements[
+                            resName
+                        ]
                     else:
                         atomReplacements = {}
                     for atom in residue.atoms:
@@ -698,9 +742,14 @@ class PDBTrajectoryFile:
                         connectBonds.append((atomByNumber[i], atomByNumber[j]))
             if len(connectBonds) > 0:
                 # Only add bonds that don't already exist.
-                existingBonds = {(bond.atom1, bond.atom2) for bond in self._topology.bonds}
+                existingBonds = {
+                    (bond.atom1, bond.atom2) for bond in self._topology.bonds
+                }
                 for bond in connectBonds:
-                    if bond not in existingBonds and (bond[1], bond[0]) not in existingBonds:
+                    if (
+                        bond not in existingBonds
+                        and (bond[1], bond[0]) not in existingBonds
+                    ):
                         self._topology.add_bond(bond[0], bond[1])
                         existingBonds.add(bond)
 
@@ -729,7 +778,9 @@ class PDBTrajectoryFile:
                 name = residue.attrib["name"]
                 for id in residue.attrib:
                     if id == "name" or id.startswith("alt"):
-                        PDBTrajectoryFile._residueNameReplacements[residue.attrib[id]] = name
+                        PDBTrajectoryFile._residueNameReplacements[
+                            residue.attrib[id]
+                        ] = name
                 if "type" not in residue.attrib:
                     atoms = copy(allResidues)
                 elif residue.attrib["type"] == "Protein":
@@ -783,7 +834,12 @@ class PDBTrajectoryFile:
                 element = elem.get_by_symbol(atom_name[0])
             except KeyError:
                 try:
-                    symbol = atom_name[0:2].strip().rstrip("AB0123456789").lstrip("0123456789")
+                    symbol = (
+                        atom_name[0:2]
+                        .strip()
+                        .rstrip("AB0123456789")
+                        .lstrip("0123456789")
+                    )
                     element = elem.get_by_symbol(symbol)
                 except KeyError:
                     element = None
