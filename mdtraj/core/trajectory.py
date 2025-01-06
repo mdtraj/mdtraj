@@ -615,10 +615,11 @@ def join(trajs, check_topology=True, discard_overlapping_frames=False):
     if len(list_trajs) == 1:
         return list_trajs[0]
     else:
-        joined_traj = list_trajs[0].join(list_trajs[1:], 
-                                         check_topology=check_topology, 
-                                         discard_overlapping_frames=False
-                                         )
+        joined_traj = list_trajs[0]
+        joined_traj = joined_traj.join(list_trajs[1:], 
+                                       check_topology=check_topology, 
+                                       discard_overlapping_frames=False
+                                       )
         return joined_traj
 
 
