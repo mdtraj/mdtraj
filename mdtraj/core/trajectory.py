@@ -611,14 +611,15 @@ def join(trajs, check_topology=True, discard_overlapping_frames=False):
     discard_overlapping_frames : bool
         Check for overlapping frames and discard
     """
-    return functools.reduce(
-        lambda x, y: x.join(
-            y,
-            check_topology=check_topology,
-            discard_overlapping_frames=discard_overlapping_frames,
-        ),
-        trajs,
-    )
+    list_trajs = list(trajs)
+    if len(list_trajs) == 1:
+        return list_trajs[0]
+    else:
+        joined_traj = list_trajs[0].join(list_trajs[1:], 
+                                         check_topology=check_topology, 
+                                         discard_overlapping_frames=False
+                                         )
+        return joined_traj
 
 
 class Trajectory:
