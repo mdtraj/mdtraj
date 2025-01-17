@@ -53,7 +53,7 @@ from mdtraj.core import element
 def _overflow_residue_check(num_str, pdbstructure, curr_atom):
     """
     Function to check and guess what the current residue is because it's overflowed. Lifted from the 
-    original PDB code down below.
+    original PDB code from a previous commit (c724024).
     """
     if (
         pdbstructure._current_model is None
@@ -74,10 +74,17 @@ def _overflow_residue_check(num_str, pdbstructure, curr_atom):
             return currentRes.number
 
 
+def _overflow_atom_check(num_str, pdbstructure):
+    """
+    Function to return the next atom number is because it has overflowed.
+    """
+    return pdbstructure._next_atom_number
+
+
 _atom_num_initial_nondecimal_functions = {
-    "186a0": (lambda s: int(s, base=16)),  # "hex"
-    "A0000": (lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36))),  # "chimera"
-    "*****": (lambda s: self._next_atom_number),  # "overflow"
+    "186a0": (lambda s, y=None: int(s, base=16)),  # "hex"
+    "A0000": (lambda s, y=None: (int(s[0], base=36) * 10**4 + int(s[1:], base=36))),  # "chimera"
+    "*****": _overflow_atom_check,  # "overflow"
 }
 
 _residue_num_initial_nondecimal_functions = {
@@ -125,7 +132,7 @@ def _read_atom_number(num_str, pdbstructure=None):
         if pdbstructure._atom_num_nondec_mode is not None:
             # If it already has an overflow function, then it will use the corresponding 
             # _atom_num_function as dictated by pdbstructure._atom_num_nondec_mode to decipher the num_str.
-            return pdbstructure._atom_num_nondec_mode(num_str)
+            return pdbstructure._atom_num_nondec_mode(num_str, pdbstructure)
         elif pdbstructure._next_atom_number > 99999 and _check_overflow_eligibility(num_str, 'atom'):
             # If the next atom number is > 99999 and our current atom number is one of the overflow keys,
             # raise an OverflowError, which will switch to the correct mode to read num_str.
@@ -156,11 +163,11 @@ def _read_atom_number(num_str, pdbstructure=None):
             try:
                 # The _atom_num_nondec_mode has been set.
                 # Try and run the corresponding _atom_num_functions on num_str
-                return pdbstructure._atom_num_nondec_mode(num_str)
+                return pdbstructure._atom_num_nondec_mode(num_str, pdbstructure)
             except ValueError:
                 # Didn't work, we need to change to overflow mode and guess with _next_atom_number.
                 _atom_num_nondec_mode = _atom_num_initial_nondecimal_functions['*****']
-                return pdbstructure._atom_num_nondec_mode(num_str)
+                return pdbstructure._atom_num_nondec_mode(num_str, pdbstructure)
             except KeyError:
                 # Not a known overflow mode, guess atom number
                 pdbstructure._atom_num_nodec_mode = None
