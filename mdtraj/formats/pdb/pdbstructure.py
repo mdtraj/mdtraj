@@ -91,7 +91,7 @@ def _overflow_residue_check(num_str, pdbstructure, curr_atom):
 _atom_num_initial_nondecimal_functions = {
     "186a0": (lambda s, y=None: int(s, base=16)),  # "hex"
     "A0000": (lambda s, y=None: (int(s[0], base=36) * 10**4 + int(s[1:], base=36))),  # "chimera"
-    "*****": (lambda s, y: y._next_atom_number,  # "overflow", y is the PdbStructure
+    "*****": (lambda s, y: y._next_atom_number)  # "overflow", y is the PdbStructure
 }
 
 _residue_num_initial_nondecimal_functions = {
