@@ -848,8 +848,10 @@ class Topology:
             The element of the atom to add
         residue : mdtraj.topology.Residue
             The Residue to add it to
-        serial : int
+        serial : int, optional
             Serial number associated with the atom.
+        formal_charge : int, optional
+            The formal charge of the atom to add.
 
         Returns
         -------
