@@ -365,6 +365,16 @@ class Topology:
         mm = import_("openmm")
         u = import_("openmm.unit")
 
+        # Check that OpenMM is greater
+        # than version 8.2 - this is where
+        # the formal charge of atoms was added to OpenMM.
+        # This check can likely eventually be removed.
+        version_tuple = tuple(map(int, mm.__version__.split('.')))
+        if version_tuple >= (8, 2):
+            formal_charge = True
+        else:
+            formal_charge = False
+
         out = app.Topology()
         atom_mapping = {}
         bond_mapping = {
@@ -385,7 +395,12 @@ class Topology:
                         element = None
                     else:
                         element = app.Element.getBySymbol(atom.element.symbol)
-                    a = out.addAtom(atom.name, element, r)
+                    
+                    # If we are using a compatible version of OpenMM, add formal charge
+                    if formal_charge:
+                        a = out.addAtom(atom.name, element, r, formalCharge=atom.formal_charge)
+                    else:
+                        a = out.addAtom(atom.name, element, r)
                     atom_mapping[atom] = a
 
         for bond in self.bonds:
@@ -426,8 +441,8 @@ class Topology:
         version = openmm.__version__
 
         # Check version to determine if we
-        # should check for partial charges on 
-        # atoms
+        # should check for formal charges on 
+        # atoms. This feature was added in OpenMM 8.2
         version_tuple = tuple(map(int, openmm.__version__.split('.')))
         if version_tuple >= (8, 2):
             formal_charge = True
@@ -465,6 +480,7 @@ class Topology:
                         element = elem.virtual
                     else:
                         element = elem.get_by_symbol(atom.element.symbol)
+                    # If we are using a compatible version of OpenMM, add formal charge
                     if formal_charge:
                         a = out.add_atom(atom.name, element, r, formal_charge=atom.formalCharge)
                     else:
