@@ -365,16 +365,6 @@ class Topology:
         mm = import_("openmm")
         u = import_("openmm.unit")
 
-        # Check that OpenMM is greater
-        # than version 8.2 - this is where
-        # the formal charge of atoms was added to OpenMM.
-        # This check can likely eventually be removed.
-        version_tuple = tuple(map(int, mm.__version__.split('.')))
-        if version_tuple >= (8, 2):
-            formal_charge = True
-        else:
-            formal_charge = False
-
         out = app.Topology()
         atom_mapping = {}
         bond_mapping = {
@@ -397,9 +387,9 @@ class Topology:
                         element = app.Element.getBySymbol(atom.element.symbol)
                     
                     # If we are using a compatible version of OpenMM, add formal charge
-                    if formal_charge:
+                    try:
                         a = out.addAtom(atom.name, element, r, formalCharge=atom.formal_charge)
-                    else:
+                    except TypeError: # This will occur if the version of OpenMM does not support formal charge (version<=8.2)
                         a = out.addAtom(atom.name, element, r)
                     atom_mapping[atom] = a
 
@@ -437,19 +427,7 @@ class Topology:
             An OpenMM topology that you wish to convert to a
             mdtraj topology.
         """
-        openmm = import_("openmm")
-        version = openmm.__version__
-
-        # Check version to determine if we
-        # should check for formal charges on 
-        # atoms. This feature was added in OpenMM 8.2
-        version_tuple = tuple(map(int, openmm.__version__.split('.')))
-        if version_tuple >= (8, 2):
-            formal_charge = True
-        else:
-            formal_charge = False
-
-        app = openmm.app
+        app = import_("openmm.app")
 
         bond_mapping = {
             app.Single: Single,
@@ -480,8 +458,8 @@ class Topology:
                         element = elem.virtual
                     else:
                         element = elem.get_by_symbol(atom.element.symbol)
-                    # If we are using a compatible version of OpenMM, add formal charge
-                    if formal_charge:
+                    # If we are using a compatible version of OpenMM (>=8.2), add formal charge 
+                    if hasattr(atom, "formalCharge"):
                         a = out.add_atom(atom.name, element, r, formal_charge=atom.formalCharge)
                     else:
                         a = out.add_atom(atom.name, element, r)
