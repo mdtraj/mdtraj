@@ -422,7 +422,20 @@ class Topology:
             An OpenMM topology that you wish to convert to a
             mdtraj topology.
         """
-        app = import_("openmm.app")
+        openmm = import_("openmm")
+        version = openmm.__version__
+
+        # Check version to determine if we
+        # should check for partial charges on 
+        # atoms
+        version_tuple = tuple(map(int, openmm.__version__.split('.')))
+        if version_tuple >= (8, 2):
+            formal_charge = True
+        else:
+            formal_charge = False
+
+        app = openmm.app
+
         bond_mapping = {
             app.Single: Single,
             app.Double: Double,
@@ -452,7 +465,10 @@ class Topology:
                         element = elem.virtual
                     else:
                         element = elem.get_by_symbol(atom.element.symbol)
-                    a = out.add_atom(atom.name, element, r)
+                    if formal_charge:
+                        a = out.add_atom(atom.name, element, r, formal_charge=atom.formalCharge)
+                    else:
+                        a = out.add_atom(atom.name, element, r)
                     atom_mapping[atom] = a
 
         for bond in value.bonds():
@@ -821,7 +837,7 @@ class Topology:
         self._atoms.remove(a)
         self._numAtoms -= 1
 
-    def add_atom(self, name, element, residue, serial=None):
+    def add_atom(self, name, element, residue, serial=None, formal_charge=None):
         """Create a new Atom and add it to the Topology.
 
         Parameters
@@ -842,7 +858,7 @@ class Topology:
         """
         if element is None:
             element = elem.virtual
-        atom = Atom(name, element, self._numAtoms, residue, serial=serial)
+        atom = Atom(name, element, self._numAtoms, residue, serial=serial, formal_charge=formal_charge)
         self._atoms.append(atom)
         self._numAtoms += 1
         residue._atoms.append(atom)
@@ -1647,9 +1663,11 @@ class Atom:
     serial : int
         The serial number from the PDB specification. Unlike index,
         this may not be contiguous or 0-indexed.
+    formal_charge : float
+
     """
 
-    def __init__(self, name, element, index, residue, serial=None):
+    def __init__(self, name, element, index, residue, serial=None, formal_charge=None):
         """Construct a new Atom.  You should call add_atom() on the Topology instead of calling this directly."""
         # The name of the Atom
         self.name = name
@@ -1661,6 +1679,8 @@ class Atom:
         self.residue = residue
         # The not-necessarily-contiguous "serial" number from the PDB spec
         self.serial = serial
+        # The formal charge of the atom
+        self.formal_charge = formal_charge
 
     @property
     def n_bonds(self):

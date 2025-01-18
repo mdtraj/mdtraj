@@ -400,8 +400,15 @@ class PDBTrajectoryFile:
                         atomSerial = atom.serial
                     else:
                         atomSerial = atomIndex
+                    if atom.formal_charge:
+                        if atom.formal_charge >= 0:
+                            charge = f"{atom.formal_charge}+"
+                        else:
+                            charge = f"{str(atom.formal_charge)[1:]}-"
+                    else:
+                        charge = "  "
                     line = (
-                        "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s  "
+                        "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s%2s"
                         % (  # Right-justify atom symbol
                             atomSerial % 100000,
                             atomName,
@@ -414,9 +421,10 @@ class PDBTrajectoryFile:
                             bfactors[posIndex],
                             atom.segment_id[:4],
                             symbol[-2:],
+                            charge,
                         )
                     )
-                    assert len(line) == 80, "Fixed width overflow detected"
+                    assert len(line) == 80, f"Fixed width overflow detected, {len(line)}"
                     print(line, file=self._file)
                     posIndex += 1
                     atomIndex += 1
