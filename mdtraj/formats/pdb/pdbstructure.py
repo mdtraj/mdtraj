@@ -52,8 +52,8 @@ from mdtraj.core import element
 
 def _overflow_residue_check(num_str, pdbstructure, curr_atom):
     """
-    Function to check and guess what the current residue is because it's overflowed. Lifted from the 
-    original PDB code from a previous commit (c724024).
+    Function to check and guess what the current residue is because it's overflowed. Lifted 
+    from a previous commit (c724024).
 
     Parameters
     ----------
@@ -198,15 +198,11 @@ def _read_atom_number(num_str, pdbstructure=None):
                 # The _atom_num_nondec_mode has been set.
                 # Try and run the corresponding _atom_num_functions on num_str
                 return pdbstructure._atom_num_nondec_mode(num_str, pdbstructure)
-            except ValueError:
+            except (ValueError, KeyError, TypeError):
                 # Didn't work, we need to change to overflow mode and guess with _next_atom_number.
-                _atom_num_nondec_mode = _atom_num_initial_nondecimal_functions['*****']
+                pdbstructure._atom_num_nondec_mode = _atom_num_initial_nondecimal_functions['*****']
+                warnings.warn(f'Need to guess atom number starting from atom {pdbstructure._next_atom_number}.')
                 return pdbstructure._atom_num_nondec_mode(num_str, pdbstructure)
-            except KeyError:
-                # Not a known overflow mode, guess atom number
-                pdbstructure._atom_num_nodec_mode = None
-                return pdbstructure._next_atom_number
-
 
 
 def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
@@ -269,14 +265,11 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
             try:
                 # Try and run the _residue_num_functions
                 return pdbstructure._residue_num_nondec_mode(num_str, pdbstructure, curr_atom)
-            except ValueError:
+            except (ValueError, KeyError, TypeError):
                 # Didn't work, we need to change to overflow mode and guess with _next_residue_number
                 pdbstructure._residue_num_nondec_mode = _residue_num_initial_nondecimal_functions['****']
+                warnings.warn(f'Need to guess residue number starting from residue {pdbstructure._next_residue_number}.')
                 return pdbstructure._residue_num_nondec_mode(num_str, pdbstructure, curr_atom)
-            except KeyError:
-                # Not a known overflow mode, guess residue number
-                pdbstructure._residue_num_nodec_mode = None
-                return pdbstructure._next_residue_number
 
 
 class PdbStructure:
@@ -441,6 +434,7 @@ class PdbStructure:
                     atoms.append(_read_atom_number(pdb_line[pos : pos + 5], pdbstructure=self))
 
                 self._current_model.connects.append(atoms)
+
         self._finalize()
 
     def _reset_atom_numbers(self):
