@@ -201,7 +201,7 @@ def _read_atom_number(num_str, pdbstructure=None):
             except (ValueError, KeyError, TypeError):
                 # Didn't work, we need to change to overflow mode and guess with _next_atom_number.
                 pdbstructure._atom_num_nondec_mode = _atom_num_initial_nondecimal_functions['*****']
-                warnings.warn(f'Need to guess atom number starting from atom {pdbstructure._next_atom_number}.')
+                warnings.warn(f'Need to guess atom number {num_str} starting from atom {pdbstructure._next_atom_number}.')
                 return pdbstructure._atom_num_nondec_mode(num_str, pdbstructure)
 
 
@@ -268,7 +268,7 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
             except (ValueError, KeyError, TypeError):
                 # Didn't work, we need to change to overflow mode and guess with _next_residue_number
                 pdbstructure._residue_num_nondec_mode = _residue_num_initial_nondecimal_functions['****']
-                warnings.warn(f'Need to guess residue number starting from residue {pdbstructure._next_residue_number}.')
+                warnings.warn(f'Need to guess residue number string {num_str} starting from residue{pdbstructure._next_residue_number}, atom {pdbstructure._next_atom_number}.')
                 return pdbstructure._residue_num_nondec_mode(num_str, pdbstructure, curr_atom)
 
 
