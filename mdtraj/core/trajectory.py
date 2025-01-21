@@ -618,7 +618,7 @@ def join(trajs, check_topology=True, discard_overlapping_frames=False):
         joined_traj = list_trajs[0]
         joined_traj = joined_traj.join(list_trajs[1:], 
                                        check_topology=check_topology, 
-                                       discard_overlapping_frames=False
+                                       discard_overlapping_frames=discard_overlapping_frames
                                        )
         return joined_traj
 
