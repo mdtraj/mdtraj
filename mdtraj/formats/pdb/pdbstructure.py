@@ -900,10 +900,25 @@ class Atom:
         # segment id, element_symbol, and formal_charge are not always present
         self.segment_id = pdb_line[72:76].strip()
         self.element_symbol = pdb_line[76:78].strip()
-        try:
-            self.formal_charge = int(pdb_line[78:80])
-        except ValueError:
-            self.formal_charge = None
+
+        # Handle charges
+        self.formal_charge = None
+        charge_string = pdb_line[78:80].strip() # Is there any charge information?
+        if charge_string:
+            # A PDB charge string may either be of format 
+            # {charge}{sign} or {sign}{charge} (first preferred)
+            # We should try both.
+            try:
+                charge_number = pdb_line[78]
+                sign = pdb_line[79]
+                self.formal_charge = int(f"{sign}{charge_number}")
+            except ValueError:
+                try:
+                    charge_number = pdb_line[79]
+                    sign = pdb_line[78]
+                    self.formal_charge = int(f"{sign}{charge_number}")
+                except ValueError:
+                    warnings.warn(f"Could not parse charge information for atom {self._pdb_string()}\nSetting to None")
         # figure out atom element
         try:
             # First try to find a sensible element symbol from columns 76-77
