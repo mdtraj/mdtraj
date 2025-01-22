@@ -906,17 +906,16 @@ class Atom:
         charge_string = pdb_line[78:80].strip() # Is there any charge information?
         if charge_string:
             # A PDB charge string may either be of format 
-            # {charge}{sign} or {sign}{charge} (first preferred)
+            # {charge}{sign} or {sign}{charge}
             # We should try both.
             try:
-                charge_number = pdb_line[78]
-                sign = pdb_line[79]
-                self.formal_charge = int(f"{sign}{charge_number}")
+                # Try the string as is. This will work for {sign}{charge}
+                self.formal_charge = int(charge_string)
             except ValueError:
+                # Try reversing (other format)
                 try:
-                    charge_number = pdb_line[79]
-                    sign = pdb_line[78]
-                    self.formal_charge = int(f"{sign}{charge_number}")
+                    charge_string = charge_string[::-1]
+                    self.formal_charge = int(charge_string)
                 except ValueError:
                     warnings.warn(f"Could not parse charge information for atom {self._pdb_string()}\nSetting to None")
         # figure out atom element
