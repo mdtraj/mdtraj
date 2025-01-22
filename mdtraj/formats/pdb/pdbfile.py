@@ -148,7 +148,6 @@ def load_pdb(
         )
 
     atom_indices = cast_indices(atom_indices)
-
     with PDBTrajectoryFile(filename, standard_names=standard_names, top=top) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
         if frame is not None:
@@ -689,6 +688,7 @@ class PDBTrajectoryFile:
                             element,
                             r,
                             serial=atom.serial_number,
+                            formal_charge=atom.formal_charge,
                         )
                         atomByNumber[atom.serial_number] = newAtom
 
