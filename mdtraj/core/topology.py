@@ -48,6 +48,7 @@ import os
 import warnings
 import xml.etree.ElementTree as etree
 from collections import namedtuple
+from typing import List, Dict, Generator, Optional, Tuple, Union
 
 import numpy as np
 
@@ -62,7 +63,7 @@ from mdtraj.utils import ensure_type, ilen, import_
 from mdtraj.utils.singleton import Singleton
 
 
-def _topology_from_subset(topology, atom_indices):
+def _topology_from_subset(topology: 'Topology', atom_indices: List[int]) -> 'Topology':
     """Create a new topology that only contains the supplied indices
 
     Note
@@ -86,7 +87,7 @@ def _topology_from_subset(topology, atom_indices):
             warnings.warn("atom_indices are not unique")
 
     newTopology = Topology()
-    old_atom_to_new_atom = {}
+    old_atom_to_new_atom: Dict['Atom', 'Atom'] = {}
 
     for chain in topology._chains:
         newChain = newTopology.add_chain()
@@ -203,25 +204,25 @@ class Topology:
 
     _standardBonds = {}
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create a new Topology object"""
-        self._chains = []
-        self._numResidues = 0
-        self._numAtoms = 0
-        self._bonds = []
-        self._atoms = []
-        self._residues = []
+        self._chains: List['Chain'] = []
+        self._numResidues: int = 0
+        self._numAtoms: int = 0
+        self._bonds: List['Bond'] = []
+        self._atoms: List['Atom'] = []
+        self._residues: List['Residue'] = []
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return not self.__eq__(other)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "<%s>" % (self._string_summary_basic())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self._string_summary_basic()} at 0x{id(self):02x}>"
 
-    def _string_summary_basic(self):
+    def _string_summary_basic(self) -> str:
         return "mdtraj.Topology with %d chains, %d residues, " "%d atoms, %d bonds" % (
             self.n_chains,
             self.n_residues,
@@ -229,7 +230,7 @@ class Topology:
             len(self._bonds),
         )
 
-    def copy(self):
+    def copy(self) -> 'Topology':
         """Return a copy of the topology
 
         Returns
@@ -251,13 +252,13 @@ class Topology:
 
         return out
 
-    def __copy__(self, *args):
+    def __copy__(self, *args) -> 'Topology':
         return self.copy()
 
-    def __deepcopy__(self, *args):
+    def __deepcopy__(self, *args) -> 'Topology':
         return self.copy()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         hash_value = hash(tuple(self._chains))
         hash_value ^= hash(tuple(self._atoms))
         hash_value ^= hash(tuple(self._bonds))
@@ -265,7 +266,7 @@ class Topology:
 
         return hash_value
 
-    def join(self, other, keep_resSeq=True):
+    def join(self, other: 'Topology', keep_resSeq: bool=True) -> 'Topology':
         """Join two topologies together
 
         Parameters
@@ -293,7 +294,7 @@ class Topology:
         if not keep_resSeq:
             out_resSeq = out.atom(-1).residue.resSeq
 
-        atom_mapping = {}
+        atom_mapping: Dict['Atom', 'Atom'] = {}
         for chain in other.chains:
             c = out.add_chain()
             for residue in chain.residues:
