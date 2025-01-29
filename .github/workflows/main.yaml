@@ -58,4 +58,4 @@ jobs:
     - name: Run tests
       if: always()
       run: |
-        pytest -n logical --durations=10 tests/ -r fE
+        pytest -n logical --durations=10 tests/ -r fE --color=yes
