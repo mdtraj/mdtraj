@@ -59,6 +59,35 @@ def test_topology_openmm(get_fn):
 
 
 @needs_openmm
+def test_topology_openmm_preserve_chain_id_when_specified(get_fn):
+    top = md.load(get_fn("custom.pdb")).topology
+    for chain in top.chains:
+        assert chain.chain_id is not None
+    openmm_top = top.to_openmm()
+    chain = next(openmm_top.chains())
+    eq(chain.id, "X")
+
+
+@needs_openmm
+def test_topology_openmm_roundtrip_chain_id(get_fn):
+    top = md.load(get_fn("custom.pdb")).topology
+    top2 = md.Topology.from_openmm(top.to_openmm())
+    for chain1, chain2 in zip(top.chains, top2.chains):
+        eq(chain1.chain_id, "X")
+        eq(chain2.chain_id, "X")
+
+
+@needs_openmm
+def test_topology_openmm_preserve_chain_id_even_when_empty(get_fn):
+    top = md.load(get_fn("native.pdb")).topology
+    for chain in top.chains:
+        assert chain.chain_id is not None
+    openmm_top = top.to_openmm()
+    chain = next(openmm_top.chains())
+    eq(chain.id, " ")
+
+
+@needs_openmm
 def test_topology_openmm_boxes(get_fn):
     traj = md.load(get_fn("1vii_sustiva_water.pdb"))
     mmtop = traj.topology.to_openmm(traj=traj)
