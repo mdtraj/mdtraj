@@ -42,13 +42,12 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
 
-
+from __future__ import annotations
 import itertools
 import os
 import warnings
 import xml.etree.ElementTree as etree
 from collections import namedtuple
-from typing import List, Dict, Generator, Optional, Tuple, Union
 
 import numpy as np
 
@@ -63,7 +62,7 @@ from mdtraj.utils import ensure_type, ilen, import_
 from mdtraj.utils.singleton import Singleton
 
 
-def _topology_from_subset(topology: 'Topology', atom_indices: List[int]) -> 'Topology':
+def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topology:
     """Create a new topology that only contains the supplied indices
 
     Note
@@ -87,7 +86,7 @@ def _topology_from_subset(topology: 'Topology', atom_indices: List[int]) -> 'Top
             warnings.warn("atom_indices are not unique")
 
     newTopology = Topology()
-    old_atom_to_new_atom: Dict['Atom', 'Atom'] = {}
+    old_atom_to_new_atom: dict[Atom, Atom] = {}
 
     for chain in topology._chains:
         newChain = newTopology.add_chain()
@@ -202,18 +201,18 @@ class Topology:
     >>> t2 = md.Topology.from_dataframe(table, bonds)
     """
 
-    _standardBonds = {}
+    _standardBonds: dict = {}
 
     def __init__(self) -> None:
         """Create a new Topology object"""
-        self._chains: List['Chain'] = []
+        self._chains: list[Chain] = []
         self._numResidues: int = 0
         self._numAtoms: int = 0
-        self._bonds: List['Bond'] = []
-        self._atoms: List['Atom'] = []
-        self._residues: List['Residue'] = []
+        self._bonds: list[Bond] = []
+        self._atoms: list[Atom] = []
+        self._residues: list[Residue] = []
 
-    def __ne__(self, other) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def __str__(self) -> str:
@@ -230,7 +229,7 @@ class Topology:
             len(self._bonds),
         )
 
-    def copy(self) -> 'Topology':
+    def copy(self) -> Topology:
         """Return a copy of the topology
 
         Returns
@@ -252,10 +251,10 @@ class Topology:
 
         return out
 
-    def __copy__(self, *args) -> 'Topology':
+    def __copy__(self, *args) -> Topology:
         return self.copy()
 
-    def __deepcopy__(self, *args) -> 'Topology':
+    def __deepcopy__(self, *args) -> Topology:
         return self.copy()
 
     def __hash__(self) -> int:
@@ -266,7 +265,7 @@ class Topology:
 
         return hash_value
 
-    def join(self, other: 'Topology', keep_resSeq: bool=True) -> 'Topology':
+    def join(self, other: Topology, keep_resSeq: bool = True) -> Topology:
         """Join two topologies together
 
         Parameters
@@ -294,7 +293,7 @@ class Topology:
         if not keep_resSeq:
             out_resSeq = out.atom(-1).residue.resSeq
 
-        atom_mapping: Dict['Atom', 'Atom'] = {}
+        atom_mapping: dict[Atom, Atom] = {}
         for chain in other.chains:
             c = out.add_chain()
             for residue in chain.residues:
@@ -323,7 +322,7 @@ class Topology:
 
         return out
 
-    def to_fasta(self, chain=None):
+    def to_fasta(self, chain: int | None = None) -> str | list[str]:
         """Convert this topology into FASTA string
 
         Parameters
@@ -348,7 +347,7 @@ class Topology:
         else:
             return [fasta(c) for c in self._chains]
 
-    def to_openmm(self, traj=None):
+    def to_openmm(self, traj: 'MDTraj.Trajectory' | None=None) -> 'openmm.app.Topology':
         """Convert this topology into OpenMM topology
 
         Parameters
