@@ -7,6 +7,11 @@ def test_load_single(get_fn):
     load(get_fn("frame0.pdb"))
 
 
+def test_load_single_top_none(get_fn):
+    # Just check for any raised errors coming from loading a single file with top=None
+    load(get_fn("frame0.pdb"), top=None)
+
+
 def test_load_single_list(get_fn):
     # See if a single-element list of files is successfully loaded.
     load([get_fn("frame0.pdb")])
