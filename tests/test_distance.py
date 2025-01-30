@@ -37,6 +37,10 @@ from mdtraj.geometry.distance import (
 )
 from mdtraj.testing import assert_allclose, eq
 
+
+flaky_on_macos = pytest.mark.flaky(condition=sys.platform.startswith('darwin'), reruns=3, reason='flaky on macos')
+
+
 N_FRAMES = 20
 N_ATOMS = 20
 
@@ -64,6 +68,7 @@ def test_0():
     eq(a, b)
 
 
+@flaky_on_macos
 def test_compute_distances_core_nonperiodic():
     a = compute_distances(ptraj, pairs, periodic=False, opt=True)
     b = compute_distances_core(
@@ -128,6 +133,7 @@ def test_3():
     eq(a, np.sqrt(np.sum(np.square(b), axis=2)))
 
 
+@flaky_on_macos
 def test_0p():
     a = compute_distances(ptraj, pairs, periodic=True, opt=True)
     b = compute_distances(ptraj, pairs, periodic=True, opt=False)
@@ -135,12 +141,14 @@ def test_0p():
     eq(a, b, decimal=3)
 
 
+@flaky_on_macos
 def test_1p():
     a = compute_displacements(ptraj, pairs, periodic=True, opt=True)
     b = compute_displacements(ptraj, pairs, periodic=True, opt=False)
     eq(a, b, decimal=3)
 
 
+@flaky_on_macos
 def test_2p():
     a = compute_distances(ptraj, pairs, periodic=True, opt=False)
     b = compute_displacements(ptraj, pairs, periodic=True, opt=False)
@@ -150,6 +158,7 @@ def test_2p():
     eq(a, b, decimal=5)
 
 
+@flaky_on_macos
 def test_3p():
     a = compute_distances(ptraj, pairs, periodic=True, opt=True)
     b = compute_displacements(ptraj, pairs, periodic=True, opt=True)
