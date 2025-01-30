@@ -148,7 +148,6 @@ def load_pdb(
         )
 
     atom_indices = cast_indices(atom_indices)
-
     with PDBTrajectoryFile(filename, standard_names=standard_names, top=top) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
         if frame is not None:
@@ -400,8 +399,13 @@ class PDBTrajectoryFile:
                         atomSerial = atom.serial
                     else:
                         atomSerial = atomIndex
+                    if atom.formal_charge:
+                        # Charge string in PDB should have charge first, followed by the sign.
+                        charge_string = f"{abs(atom.formal_charge)}{'-' if atom.formal_charge < 0 else '+'}"
+                    else:
+                        charge_string = "  "
                     line = (
-                        "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s  "
+                        "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s%2s"
                         % (  # Right-justify atom symbol
                             atomSerial % 100000,
                             atomName,
@@ -414,9 +418,10 @@ class PDBTrajectoryFile:
                             bfactors[posIndex],
                             atom.segment_id[:4],
                             symbol[-2:],
+                            charge_string,
                         )
                     )
-                    assert len(line) == 80, "Fixed width overflow detected"
+                    assert len(line) == 80, f"Fixed width overflow detected, {len(line)}"
                     print(line, file=self._file)
                     posIndex += 1
                     atomIndex += 1
@@ -683,6 +688,7 @@ class PDBTrajectoryFile:
                             element,
                             r,
                             serial=atom.serial_number,
+                            formal_charge=atom.formal_charge,
                         )
                         atomByNumber[atom.serial_number] = newAtom
 
