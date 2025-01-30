@@ -21,7 +21,6 @@
 ##############################################################################
 
 
-import functools
 import os
 import warnings
 from collections.abc import Iterable
