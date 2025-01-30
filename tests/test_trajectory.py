@@ -929,6 +929,14 @@ def test_load_with_atom_indices(get_fn):
     eq(t1.time, t2.time)
 
 
+def test_atom_slicing(get_fn):
+    t = md.load(get_fn("frame0.xtc"), top=get_fn("frame0.gro"))
+    t1 = t.atom_slice([0,1])
+    t2 = t.atom_slice([1,0])
+    eq(t1.xyz, t2.xyz)
+    eq(t1.time, t2.time)
+
+
 def test_load_with_frame(get_fn):
     t1 = md.load(get_fn("frame0.xtc"), top=get_fn("frame0.pdb"), frame=3)
     t2 = md.load(get_fn("frame0.xtc"), top=get_fn("frame0.pdb"))
