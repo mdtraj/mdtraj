@@ -38,7 +38,7 @@ jobs:
           - "numpy=1"
         exclude:
           - python-version: "3.13"
-          - numpy-version: "numpy=1"
+            numpy-version: "numpy=1"
 
     steps:
     - uses: actions/checkout@v4
