@@ -528,7 +528,7 @@ class Topology:
         return atoms, bonds
 
     @classmethod
-    def from_dataframe(cls, atoms: pd.DataFrame, bonds: np.ndarray | None = None) -> Topology:
+    def from_dataframe(cls, atoms: pd.DataFrame, bonds: NDArray[np.float64] | None = None) -> Topology:
         """Create a mdtraj topology from a pandas data frame
 
         Parameters
@@ -1140,7 +1140,7 @@ class Topology:
         fmt_string = "[atom.index for atom in topology.atoms if {condition}]"
         return fmt_string.format(condition=condition)
 
-    def select(self, selection_string: str) -> np.ndarray:
+    def select(self, selection_string: str) -> NDArray[np.int32]:
         """Execute a selection against the topology
 
         Parameters
@@ -1167,7 +1167,7 @@ class Topology:
         indices = np.array([a.index for a in self.atoms if filter_func(a)])
         return indices
 
-    def select_atom_indices(self, selection: Literal["all","alpha","minimal","heavy","water"] = "minimal") -> np.ndarray:
+    def select_atom_indices(self, selection: Literal["all","alpha","minimal","heavy","water"] = "minimal") -> NDArray[np.int32]:
         """Get the indices of biologically-relevant groups by name.
 
         Parameters
@@ -1216,7 +1216,7 @@ class Topology:
         indices = np.array(atom_indices)
         return indices
 
-    def select_pairs(self, selection1: str | np.ndarray | Sequence[int] | None = None, selection2: str | np.ndarray | Sequence[int] | None = None) -> np.ndarray:
+    def select_pairs(self, selection1: str | NDArray[np.int32] | Sequence[int] | None = None, selection2: str | NDArray[np.int32] | Sequence[int] | None = None) -> NDArray[np.int32]:
         """Generate unique pairs of atom indices.
 
         If a selecton is a string, it will be resolved using the atom selection
@@ -1273,7 +1273,7 @@ class Topology:
         return pairs
 
     @classmethod
-    def _unique_pairs(cls, a_indices: iter[int], b_indices: iter[int]) -> np.ndarray:
+    def _unique_pairs(cls, a_indices: iter[int], b_indices: iter[int]) -> NDArray[np.int32]:
         return np.array(
             list(
                 {(a, b) if a > b else (b, a) for a, b in itertools.product(a_indices, b_indices) if a != b},
@@ -1282,7 +1282,7 @@ class Topology:
         )
 
     @classmethod
-    def _unique_pairs_mutually_exclusive(cls, a_indices: iter[int], b_indices: iter[int]) -> np.ndarray:
+    def _unique_pairs_mutually_exclusive(cls, a_indices: iter[int], b_indices: iter[int]) -> NDArray[np.int32]:
         pairs = np.fromiter(
             itertools.chain.from_iterable(
                 itertools.product(a_indices, b_indices),
@@ -1293,7 +1293,7 @@ class Topology:
         return np.vstack((pairs[::2], pairs[1::2])).T
 
     @classmethod
-    def _unique_pairs_equal(cls, a_indices: iter[int]) -> np.ndarray:
+    def _unique_pairs_equal(cls, a_indices: iter[int]) -> NDArray[np.int32]:
         pairs = np.fromiter(
             itertools.chain.from_iterable(
                 itertools.combinations(a_indices, 2),
