@@ -1365,7 +1365,7 @@ class Topology:
             molecules[atom_molecule[atom.index]].add(atom)
         return molecules
 
-    def guess_anchor_molecules(self):
+    def guess_anchor_molecules(self) -> list[set[Atom]]:
         """Guess anchor molecules for imaging
 
         Returns
@@ -1414,15 +1414,15 @@ class Chain:
         Iterator over all Atoms in the Chain.
     """
 
-    def __init__(self, index, topology, chain_id=None):
+    def __init__(self, index: int, topology: Topology, chain_id: str | None = None) -> None:
         """Construct a new Chain.  You should call add_chain() on the Topology instead of calling this directly."""
         # The index of the Chain within its Topology
-        self.index = index
+        self.index: int = index
         # The Topology this Chain belongs to
-        self.topology = topology
-        self._residues = []
+        self.topology: Topology = topology
+        self._residues: list[Residue] = []
         # PDB format chainID
-        self.chain_id = chain_id
+        self.chain_id: str | None = chain_id
 
     @property
     def residues(self):
