@@ -48,7 +48,7 @@ import os
 import warnings
 import xml.etree.ElementTree as etree
 from collections import namedtuple
-
+from typing import TYPE_CHECKING, Literal
 import numpy as np
 
 from mdtraj.core import element as elem
@@ -61,6 +61,12 @@ from mdtraj.core.selection import parse_selection
 from mdtraj.utils import ensure_type, ilen, import_
 from mdtraj.utils.singleton import Singleton
 
+if TYPE_CHECKING:
+	import MDtraj as md
+	import openmm
+	import pandas as pd
+	import networkx as nx
+			
 
 def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topology:
     """Create a new topology that only contains the supplied indices
@@ -347,7 +353,8 @@ class Topology:
         else:
             return [fasta(c) for c in self._chains]
 
-    def to_openmm(self, traj: 'MDTraj.Trajectory' | None=None) -> 'openmm.app.Topology':
+
+    def to_openmm(self, traj: md.Trajectory | None=None) -> openmm.app.Topology:
         """Convert this topology into OpenMM topology
 
         Parameters
@@ -413,7 +420,7 @@ class Topology:
         return out
 
     @classmethod
-    def from_openmm(cls, value):
+    def from_openmm(cls, value: openmm.app.Topology) -> Topology:
         """Create a mdtraj topology from an OpenMM topology
 
         Parameters
@@ -466,7 +473,7 @@ class Topology:
 
         return out
 
-    def to_dataframe(self):
+    def to_dataframe(self) -> tuple[pd.DataFrame, np.ndarray | None]:
         """Convert this topology into a pandas dataframe
 
         Returns
@@ -520,7 +527,7 @@ class Topology:
         return atoms, bonds
 
     @classmethod
-    def from_dataframe(cls, atoms, bonds=None):
+    def from_dataframe(cls, atoms: pd.DataFrame, bonds: np.ndarray | None = None) -> Topology:
         """Create a mdtraj topology from a pandas data frame
 
         Parameters
@@ -631,7 +638,7 @@ class Topology:
         out._numAtoms = out.n_atoms
         return out
 
-    def to_bondgraph(self):
+    def to_bondgraph(self) -> nx.Graph:
         """Create a NetworkX graph from the atoms and bonds in this topology
 
         Returns
@@ -655,7 +662,7 @@ class Topology:
         g.add_edges_from(self.bonds)
         return g
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Are two topologies equal?
 
         Parameters
@@ -710,7 +717,7 @@ class Topology:
 
         return True
 
-    def add_chain(self, chain_id=None):
+    def add_chain(self, chain_id: str | None = None) -> Chain:
         """Create a new Chain and add it to the Topology.
 
         Parameters
@@ -727,7 +734,7 @@ class Topology:
         self._chains.append(chain)
         return chain
 
-    def add_residue(self, name, chain, resSeq=None, segment_id=""):
+    def add_residue(self, name: str, chain: Chain, resSeq: int | None=None, segment_id: str = "") -> Residue:
         """Create a new Residue and add it to the Topology.
 
         Parameters
@@ -757,7 +764,7 @@ class Topology:
         chain._residues.append(residue)
         return residue
 
-    def insert_atom(self, name, element, residue, index=None, rindex=None, serial=None):
+    def insert_atom(self, name: str, element: md.element.Element, residue: Residue, index: int | None=None, rindex: int | None=None, serial: int | None=None) -> Atom:
         """Create a new Atom and insert it into the Topology at a specific position.
 
         Parameters
@@ -802,7 +809,7 @@ class Topology:
             residue._atoms.insert(rindex, atom)
         return atom
 
-    def delete_atom_by_index(self, index):
+    def delete_atom_by_index(self, index: int) -> None:
         """Delete an Atom from the topology.
 
         Parameters
@@ -821,7 +828,7 @@ class Topology:
         self._atoms.remove(a)
         self._numAtoms -= 1
 
-    def add_atom(self, name, element, residue, serial=None):
+    def add_atom(self, name: str, residue: Residue, element: md.element.Element | None = None, serial: int | None = None) -> Atom:
         """Create a new Atom and add it to the Topology.
 
         Parameters
@@ -848,7 +855,7 @@ class Topology:
         residue._atoms.append(atom)
         return atom
 
-    def add_bond(self, atom1, atom2, type=None, order=None):
+    def add_bond(self, atom1: Atom, atom2: Atom, type: Singleton | None = None, order: Literal[1,2,3] | None = None) -> None:
         """Create a new bond and add it to the Topology.
 
         Parameters
@@ -867,7 +874,7 @@ class Topology:
         else:
             self._bonds.append(Bond(atom2, atom1, type=type, order=order))
 
-    def chain(self, index):
+    def chain(self, index: int) -> Chain:
         """Get a specific chain by index.  These indices
         start from zero.
 
@@ -884,7 +891,7 @@ class Topology:
         return self._chains[index]
 
     @property
-    def chains(self):
+    def chains(self) -> iter[Chain]:
         """Iterator over all Chains in the Topology.
 
         Returns
@@ -895,11 +902,11 @@ class Topology:
         return iter(self._chains)
 
     @property
-    def n_chains(self):
+    def n_chains(self) -> int:
         """Get the number of chains in the Topology"""
         return len(self._chains)
 
-    def residue(self, index):
+    def residue(self, index:int) -> Residue:
         """Get a specific residue by index.  These indices
         start from zero.
 
@@ -916,7 +923,7 @@ class Topology:
         return self._residues[index]
 
     @property
-    def residues(self):
+    def residues(self) -> iter[Residue]:
         """Iterator over all Residues in the Topology.
 
         Returns
@@ -928,11 +935,11 @@ class Topology:
             yield from chain._residues
 
     @property
-    def n_residues(self):
+    def n_residues(self) -> int:
         """Get the number of residues in the Topology."""
         return len(self._residues)
 
-    def atom(self, index):
+    def atom(self, index: int) -> Atom:	
         """Get a specific atom by index. These indices
         start from zero.
 
@@ -949,7 +956,7 @@ class Topology:
         return self._atoms[index]
 
     @property
-    def atoms(self):
+    def atoms(self) -> iter[Atom]:
         """Iterator over all Atoms in the Topology.
 
         Returns
@@ -961,7 +968,7 @@ class Topology:
             for residue in chain._residues:
                 yield from residue._atoms
 
-    def atoms_by_name(self, name):
+    def atoms_by_name(self, name: str) -> iter[Atom]:
         """Iterator over all Atoms in the Topology with a specified name
 
         Parameters
@@ -983,12 +990,12 @@ class Topology:
                 yield atom
 
     @property
-    def n_atoms(self):
+    def n_atoms(self) -> int:
         """Get the number of atoms in the Topology"""
         return len(self._atoms)
 
     @property
-    def bonds(self):
+    def bonds(self) -> iter[Bond]:
         """Iterator over all bonds (each represented as a tuple of two Atoms) in the Topology.
 
         Returns
@@ -1002,11 +1009,11 @@ class Topology:
         return iter(self._bonds)
 
     @property
-    def n_bonds(self):
+    def n_bonds(self) -> int:
         """Get the number of bonds in the Topology"""
         return len(self._bonds)
 
-    def create_standard_bonds(self):
+    def create_standard_bonds(self) -> None:
         """Create bonds based on the atom and residue names for all standard residue types."""
         if len(Topology._standardBonds) == 0:
             # Load the standard bond defitions.
@@ -1066,7 +1073,7 @@ class Topology:
                                 atomMaps[toResidue][toAtom],
                             )
 
-    def create_disulfide_bonds(self, positions):
+    def create_disulfide_bonds(self, positions: list) -> None:
         """Identify disulfide bonds based on proximity and add them to the Topology.
 
         Parameters
@@ -1094,7 +1101,7 @@ class Topology:
                 if distance < 0.3:  # this is supposed to be nm. I think we're good
                     self.add_bond(sg1, sg2)
 
-    def subset(self, atom_indices):
+    def subset(self, atom_indices: list[int]) -> Topology:
         """Create a new Topology from a subset of the atoms in an existing topology.
 
         Notes
@@ -1109,7 +1116,7 @@ class Topology:
         """
         return _topology_from_subset(self, atom_indices)
 
-    def select_expression(self, selection_string):
+    def select_expression(self, selection_string:str) -> str:
         """Translate a atom selection expression into a pure python expression.
 
         Parameters
@@ -1132,7 +1139,7 @@ class Topology:
         fmt_string = "[atom.index for atom in topology.atoms if {condition}]"
         return fmt_string.format(condition=condition)
 
-    def select(self, selection_string):
+    def select(self, selection_string: str) -> np.ndarray:
         """Execute a selection against the topology
 
         Parameters
@@ -1159,7 +1166,7 @@ class Topology:
         indices = np.array([a.index for a in self.atoms if filter_func(a)])
         return indices
 
-    def select_atom_indices(self, selection="minimal"):
+    def select_atom_indices(self, selection: Literal["all","alpha","minimal","heavy","water"] = "minimal") -> np.ndarray:
         """Get the indices of biologically-relevant groups by name.
 
         Parameters
@@ -1265,7 +1272,7 @@ class Topology:
         return pairs
 
     @classmethod
-    def _unique_pairs(cls, a_indices, b_indices):
+    def _unique_pairs(cls, a_indices: iter[int], b_indices: iter[int]) -> np.ndarray:
         return np.array(
             list(
                 {(a, b) if a > b else (b, a) for a, b in itertools.product(a_indices, b_indices) if a != b},
@@ -1274,7 +1281,7 @@ class Topology:
         )
 
     @classmethod
-    def _unique_pairs_mutually_exclusive(cls, a_indices, b_indices):
+    def _unique_pairs_mutually_exclusive(cls, a_indices: iter[int], b_indices: iter[int]) -> np.ndarray:
         pairs = np.fromiter(
             itertools.chain.from_iterable(
                 itertools.product(a_indices, b_indices),
@@ -1285,7 +1292,7 @@ class Topology:
         return np.vstack((pairs[::2], pairs[1::2])).T
 
     @classmethod
-    def _unique_pairs_equal(cls, a_indices):
+    def _unique_pairs_equal(cls, a_indices: iter[int]) -> np.ndarray:
         pairs = np.fromiter(
             itertools.chain.from_iterable(
                 itertools.combinations(a_indices, 2),
@@ -1295,7 +1302,7 @@ class Topology:
         )
         return np.vstack((pairs[::2], pairs[1::2])).T
 
-    def find_molecules(self):
+    def find_molecules(self) -> list[set[Atom]]:
         """Identify molecules based on bonds.
 
         A molecule is defined as a set of atoms that are connected to each other by bonds.
