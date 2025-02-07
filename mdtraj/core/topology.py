@@ -398,7 +398,12 @@ class Topology:
                         element = None
                     else:
                         element = app.Element.getBySymbol(atom.element.symbol)
-                    a = out.addAtom(atom.name, element, r)
+                    
+                    # If we are using a compatible version of OpenMM, add formal charge
+                    try:
+                        a = out.addAtom(atom.name, element, r, formalCharge=atom.formal_charge)
+                    except TypeError: # This will occur if the version of OpenMM does not support formal charge (version<=8.2)
+                        a = out.addAtom(atom.name, element, r)
                     atom_mapping[atom] = a
 
         for bond in self.bonds:
@@ -436,6 +441,7 @@ class Topology:
             mdtraj topology.
         """
         app = import_("openmm.app")
+
         bond_mapping = {
             app.Single: Single,
             app.Double: Double,
@@ -465,7 +471,11 @@ class Topology:
                         element = elem.virtual
                     else:
                         element = elem.get_by_symbol(atom.element.symbol)
-                    a = out.add_atom(atom.name, element, r)
+                    # If we are using a compatible version of OpenMM (>=8.2), add formal charge 
+                    if hasattr(atom, "formalCharge"):
+                        a = out.add_atom(atom.name, element, r, formal_charge=atom.formalCharge)
+                    else:
+                        a = out.add_atom(atom.name, element, r)
                     atom_mapping[atom] = a
 
         for bond in value.bonds():
@@ -854,6 +864,7 @@ class Topology:
         self._atoms.remove(a)
         self._numAtoms -= 1
 
+
     def add_atom(
         self,
         name: str,
@@ -862,6 +873,7 @@ class Topology:
         serial: int | None = None,
         formal_charge: int | None = None,
     ) -> Atom:
+
         """Create a new Atom and add it to the Topology.
 
         Parameters
@@ -874,8 +886,9 @@ class Topology:
             The Residue to add it to
         serial : int, optional
             Serial number associated with the atom.
-				formal_charge : int, optional
-						The formal charge of the atom to add.	
+        formal_charge : int, optional
+            The formal charge of the atom to add.
+
         Returns
         -------
         atom : mdtraj.topology.Atom
@@ -1729,8 +1742,6 @@ class Atom:
         The serial number from the PDB specification. Unlike index,
         this may not be contiguous or 0-indexed.
     formal_charge : float
-    
-    """
 
     def __init__(
         self,
@@ -1754,6 +1765,7 @@ class Atom:
         self.serial: int | None = serial
         # The formal charge of the atom
         self.formal_charge: float | None = formal_charge
+
 
     @property
     def n_bonds(self) -> int:
