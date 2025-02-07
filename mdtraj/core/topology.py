@@ -1845,12 +1845,12 @@ class Bond(namedtuple("Bond", ["atom1", "atom2"])):
     def __deepcopy__(self, memo) -> Bond:
         return Bond(self[0], self[1], self.type, self.order)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Bond) -> bool:
         if not isinstance(other, Bond):
             return False
         return self._equality_tuple == other._equality_tuple
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"Bond({self[0]}, {self[1]}"
         if self.type is not None:
             s = f"{s}, type={self.type}"
@@ -1859,10 +1859,10 @@ class Bond(namedtuple("Bond", ["atom1", "atom2"])):
         s += ")"
         return s
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__repr__()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         # Set of atoms making up bonds, the type, and the order
         return hash((self[0], self[1], self.type, self.order))
 
@@ -1872,29 +1872,29 @@ class Bond(namedtuple("Bond", ["atom1", "atom2"])):
         if not isinstance(other, Bond):
             raise TypeError("Bond inequalities can only be compared with other bonds")
 
-    def __gt__(self, other):
+    def __gt__(self, other) -> bool:
         # Cannot use total_ordering because namedtuple
         # has its own __gt__, __lt__, etc. methods, which
         # supersede total_ordering
         self._other_is_bond(other)
         return self._equality_tuple > other._equality_tuple
 
-    def __ge__(self, other):
+    def __ge__(self, other) -> bool:
         self._other_is_bond(other)
         return self._equality_tuple >= other._equality_tuple
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         self._other_is_bond(other)
         return self._equality_tuple < other._equality_tuple
 
-    def __le__(self, other):
+    def __le__(self, other) -> bool:
         self._other_is_bond(other)
         return self._equality_tuple <= other._equality_tuple
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return not self.__eq__(other)
 
-    def __getstate__(self):
+    def __getstate__(self) ->	dict:
         # This is required for pickle because the parent class
         # does not properly return a state
         return self.__dict__
