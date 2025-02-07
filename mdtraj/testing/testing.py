@@ -63,6 +63,13 @@ try:
 except ImportError:
     pass
 
+
+try:
+    # numpy.core is replaced with numpy._core in numpy>=2.0.0
+    from numpy._core.records import record
+except ImportError:
+    from numpy.core.records import record
+
 __all__ = [
     "assert_allclose",
     "assert_almost_equal",
@@ -134,7 +141,7 @@ def eq(o1, o2, decimal=6, err_msg=""):
     ------
     AssertionError
         If the tests fail
-    """    
+    """
     # assert type(o1) is type(o2), f"o1 and o2 not the same type: {type(o1)} {type(o2)}"
     if isinstance(o1, (np.ndarray, np.ma.MaskedArray)) and isinstance(o2, (np.ndarray, np.ma.MaskedArray)):
         pass
@@ -151,7 +158,7 @@ def eq(o1, o2, decimal=6, err_msg=""):
         if o1.dtype.kind == "f" or o2.dtype.kind == "f":
             # compare floats for almost equality
             assert_array_almost_equal(o1, o2, decimal, err_msg=err_msg)
-        elif o1.dtype.type == np.core.records.record:
+        elif o1.dtype.type == record:
             # if its a record array, we need to comparse each term
             assert o1.dtype.names == o2.dtype.names
             for name in o1.dtype.names:

@@ -148,7 +148,6 @@ def load_pdb(
         )
 
     atom_indices = cast_indices(atom_indices)
-
     with PDBTrajectoryFile(filename, standard_names=standard_names, top=top) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
         if frame is not None:
@@ -201,7 +200,10 @@ def load_pdb(
         # cell is not absurdly high. Standard water density is ~55 M, which
         # yields a particle density ~100 atoms per cubic nm. It should be safe
         # to say that no particle density should exceed 10x that.
-        particle_density = traj.top.n_atoms / traj.unitcell_volumes[0]
+        if traj.unitcell_volumes[0] > 0:
+            particle_density = traj.top.n_atoms / traj.unitcell_volumes[0]
+        else:  # If calculated unitcell_volume is 0 (or invalid)
+            particle_density = traj.top.n_atoms  # Infinite density.
         if particle_density > 1000:
             warnings.warn(
                 "Unlikely unit cell vectors detected in PDB file likely "
@@ -305,6 +307,7 @@ class PDBTrajectoryFile:
         unitcell_angles=None,
         bfactors=None,
         ter=True,
+        header=True,
     ):
         """Write a PDB file to disk
 
@@ -327,6 +330,9 @@ class PDBTrajectoryFile:
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.
+        header : bool, default=True
+            Include header in pdb. Useful if you want the extra output, but sometimes prevent
+            programs from running smoothly.
         """
         if not self._mode == "w":
             raise ValueError("file not opened for writing")
@@ -358,7 +364,7 @@ class PDBTrajectoryFile:
 
         atomIndex = 1
         posIndex = 0
-        if modelIndex is not None:
+        if header and modelIndex is not None:
             print("MODEL     %4d" % modelIndex, file=self._file)
         for chainIndex, chain in enumerate(topology.chains):
             if not chain.chain_id:
@@ -393,8 +399,13 @@ class PDBTrajectoryFile:
                         atomSerial = atom.serial
                     else:
                         atomSerial = atomIndex
+                    if atom.formal_charge:
+                        # Charge string in PDB should have charge first, followed by the sign.
+                        charge_string = f"{abs(atom.formal_charge)}{'-' if atom.formal_charge < 0 else '+'}"
+                    else:
+                        charge_string = "  "
                     line = (
-                        "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s  "
+                        "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s%2s"
                         % (  # Right-justify atom symbol
                             atomSerial % 100000,
                             atomName,
@@ -407,9 +418,10 @@ class PDBTrajectoryFile:
                             bfactors[posIndex],
                             atom.segment_id[:4],
                             symbol[-2:],
+                            charge_string,
                         )
                     )
-                    assert len(line) == 80, "Fixed width overflow detected"
+                    assert len(line) == 80, f"Fixed width overflow detected, {len(line)}"
                     print(line, file=self._file)
                     posIndex += 1
                     atomIndex += 1
@@ -420,7 +432,7 @@ class PDBTrajectoryFile:
                     )
                     atomIndex += 1
 
-        if modelIndex is not None:
+        if header and modelIndex is not None:
             print("ENDMDL", file=self._file)
 
     def _write_header(self, unitcell_lengths, unitcell_angles, write_metadata=True):
@@ -676,6 +688,7 @@ class PDBTrajectoryFile:
                             element,
                             r,
                             serial=atom.serial_number,
+                            formal_charge=atom.formal_charge,
                         )
                         atomByNumber[atom.serial_number] = newAtom
 

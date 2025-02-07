@@ -3,8 +3,78 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.10.0rc1 (May 17, 2024)
--------------------------
+v1.10.3 (February 7, 2025)
+--------------------------
+
+- Pin numpy>=1.25 at run time, numpy>=2.0 at build time for numpy C-API #1960
+- Fix PDB overflow #1934
+- Allow `mdtraj.load` with `top=None` #1969
+- Preserve `chain_ids` for `to_openmm` and `from_openmm` #1951
+- Store and write formal charges from PDB/OpenMM #1967
+- Performance enhancement for `md.join` #1965
+- Sorting atom_indices in atom_slice #1938
+- Consolidate/update config files #1949
+- Mark a few distance tests as flaky #1972
+
+A total of 7 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Jeremy Leung
+- Matthew W. Thompson
+- Jessica A. Nash
+- Jan-Oliver Kapp-Joswig +
+- Ryan DiRisio +
+- Da Teng +
+- Pavel Buslaev +
+
+v1.10.2 (December 11, 2024)
+--------------------------
+
+- Add netCDF4 as a dependency in ``setup.py`` (#1944)
+- Support NumPy 2 (#1928)
+
+Authors
+~~~~~~~
+
+- Jeremy Leung
+- Jessica A. Nash
+
+v1.10.1 (October 17, 2024)
+--------------------------
+
+- Update RMSD module for Cython 3.0 (#1917)
+- Fix edge case with float rounding in angle computation (#1841)
+- Add atom selection via atom_indices to SASA computation (#1844)
+- ReadTheDocs migration (#1888)
+- Fix netCDF import (#1894)
+- Use standard library `ast.unparse` instead of third-party `astunparse` (#1898)
+- Allow appending to HDF5 files (#1899)
+- Remove deprecated `oldest-supported-numpy` (#1902)
+- Remove remaining uses of `six` (#1908)
+- Replace `xdrlib` with `mda_xdrlib` (#1911)
+- Add `mda-xdrlib` to `setup.py` (#1913)
+- Set up `versioneer` (#1909)
+- Remove `distutils` from tests (#1916)
+- Remove unused `xdrlib` import from Python layer (#1919)
+- Fix PDB "vmd convention" false-positive (#1904)
+
+A total of 11 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Charlie Laughton
+- Guillermo Pérez-Hernández
+- Sukrit Singh
+- Jeremy Leung
+- Sander Roet
+- Chris Jones+
+- David W.H. Swenson
+- Matthew W. Thompson
+- Robert Schütz+
+- Patrick Kunzmann
+- Augustin Zidek+
+
+v1.10.0 (May 30, 2024)
+----------------------
 
 - Remove TNG support (#1875)
 - Drop support for long-unsupported upstreams (#1838)
@@ -14,10 +84,13 @@ v1.10.0rc1 (May 17, 2024)
 - Use netCDF4 as default in `NetCDFTrajectoryFile`, fallback to SciPy implementation (#1878)
 - Add dependabot for updating actions (#1865)
 
-Jinzhe Zeng+
-Matthew W. Thompson
-Jeremy Leung
-Jessica A. Nash+
+A total of 4 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Jinzhe Zeng+
+- Matthew W. Thompson
+- Jeremy Leung
+- Jessica A. Nash+
 
 v1.9.9 (July 22, 2023)
 ---------------------

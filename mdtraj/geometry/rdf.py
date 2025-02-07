@@ -164,6 +164,7 @@ def compute_rdf_t(
     """
     if r_range is None:
         r_range = np.array([0.0, 1.0])
+
     r_range = ensure_type(
         r_range,
         dtype=np.float64,
@@ -172,6 +173,7 @@ def compute_rdf_t(
         shape=(2,),
         warn_on_cast=False,
     )
+ 
     if n_bins is not None:
         n_bins = int(n_bins)
         if n_bins <= 0:

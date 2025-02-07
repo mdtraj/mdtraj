@@ -29,6 +29,7 @@ import pytest
 
 import mdtraj as md
 from mdtraj.testing import eq
+from mdtraj.utils import import_
 
 try:
     import openmm.unit as u
@@ -59,11 +60,65 @@ def test_topology_openmm(get_fn):
 
 
 @needs_openmm
+def test_topology_openmm_preserve_chain_id_when_specified(get_fn):
+    top = md.load(get_fn("custom.pdb")).topology
+    for chain in top.chains:
+        assert chain.chain_id is not None
+    openmm_top = top.to_openmm()
+    chain = next(openmm_top.chains())
+    eq(chain.id, "X")
+
+
+@needs_openmm
+def test_topology_openmm_roundtrip_chain_id(get_fn):
+    top = md.load(get_fn("custom.pdb")).topology
+    top2 = md.Topology.from_openmm(top.to_openmm())
+    for chain1, chain2 in zip(top.chains, top2.chains):
+        eq(chain1.chain_id, "X")
+        eq(chain2.chain_id, "X")
+
+
+@needs_openmm
+def test_topology_openmm_preserve_chain_id_even_when_empty(get_fn):
+    top = md.load(get_fn("native.pdb")).topology
+    for chain in top.chains:
+        assert chain.chain_id is not None
+    openmm_top = top.to_openmm()
+    chain = next(openmm_top.chains())
+    eq(chain.id, " ")
+
+
+@needs_openmm
 def test_topology_openmm_boxes(get_fn):
     traj = md.load(get_fn("1vii_sustiva_water.pdb"))
     mmtop = traj.topology.to_openmm(traj=traj)
     mmtop.getUnitCellDimensions() / u.nanometer
 
+@needs_openmm
+def test_topology_openmm_formal_charges(get_fn):
+    """Test to make sure charges are conserved when converting to/from openmm from PDB"""
+    app = import_("openmm.app")
+
+    #  This is a edited 1ply PDB with formal charges added to sodium ions
+    pdb = app.PDBFile(get_fn("1ply_charge.pdb")) 
+
+    # Get the formal charges from the OpenMM topology
+    try:
+        formal_charges = [atom.formalCharge for atom in pdb.topology.atoms()]
+    except TypeError:
+        # OpenMM < 7.4 doesn't have formal charges, 
+        # so we just return (skip the test)
+        return
+
+    # Convert to MDTraj topology
+    mdtraj_topology = md.Topology.from_openmm(pdb.topology)
+
+    # Get the formal charges from the MDTraj topology
+    mdtraj_formal_charges = [atom.formal_charge for atom in mdtraj_topology.atoms]
+
+    # Check that the formal charges are the same
+    eq(formal_charges, mdtraj_formal_charges)
+    
 
 def test_topology_pandas(get_fn):
     topology = md.load(get_fn("native.pdb")).topology

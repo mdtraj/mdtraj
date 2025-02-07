@@ -49,56 +49,25 @@ import numpy as np
 
 from mdtraj.core import element
 
-_residue_num_initial_nondecimal_vals = {"A000": "chimera", "2710": "hex", "****": "overflow"}
-_atom_num_initial_nondecimal_vals = {"A0000": "chimera", "186a0": "hex", "*****": "overflow"}
-
-
-def _read_atom_number(num_str, pdbstructure=None):
-    """
-    This function determines whether we need to swap to overflow mode. Otherwise, we'll just 
-    turn ``num_str`` into an integer.
-    
-    If it's in any of the non-decimal modes, we will attempt to set the _atom_num_nondec_mode to the
-    correct key. With this set, all subsequent atom numbers will be deciphered using a corresponding
-    function.
-    """
-    try:
-        # If the next atom number is > 99999 and our current atom number is one of the overflow keys,
-        # raise an OverflowError, which will switch to the correct mode to read num_str.
-        if pdbstructure._next_atom_number > 99999 and num_str in _atom_num_initial_nondecimal_vals:
-            raise OverflowError("Need to parse atom number using non-decimal residue modes.")
-        else:
-            return int(num_str)
-    except (AttributeError, ValueError, OverflowError):
-        # we need to figure out on the 1st try which mode to switch to. There are currently 3
-        # options: VMD (hex), Chimera (their own 'hybrid36' mode), and overflow (*****).
-        # Chimera starts with A0000, vmd with 186a0, so they are distinguishable.
-        if pdbstructure is None:
-            try:
-                return int(num_str)
-            except ValueError:
-                # num_str is not decimal, no index_fnc to interpret it, no pdbstructure to say
-                # what it is or to provide current number of atoms. No way to figure out
-                return 0
-        else:
-            if pdbstructure._atom_num_nondec_mode is None:
-               # If this is the first time we reached overflow, we will try to determine the mode
-               # using the num_str as key.
-                pdbstructure._atom_num_nondec_mode = _atom_num_initial_nondecimal_vals[num_str]
-            try:
-                # The _atom_num_nondec_mode has been set.
-                # Try and run the corresponding _atom_num_functions on num_str
-                return pdbstructure._atom_num_functions[pdbstructure._atom_num_nondec_mode](num_str)
-            except ValueError:
-                # Didn't work, we need to change to overflow mode and guess with _next_atom_number.
-                _atom_num_nondec_mode = "overflow"
-                return pdbstructure._atom_num_functions[pdbstructure._atom_num_nondec_mode](num_str)
-
 
 def _overflow_residue_check(num_str, pdbstructure, curr_atom):
     """
-    Function to check and guess what the current residue is because it's overflowed. Lifted from the 
-    original PDB code down below.
+    Function to check and guess what the current residue is because it's overflowed. Lifted 
+    from a previous commit (c724024).
+
+    Parameters
+    ----------
+    num_str : str
+        str to be converted to int. Represents the residue number.
+    pdbstructure : PdbStructure
+        The PdbStructure object associated with `num_str`.
+    curr_atom : Atom
+        The current Atom object the residue number is associated with.
+
+    Returns
+    -------
+    int
+        The residue number deciphered in base 10.
     """
     if (
         pdbstructure._current_model is None
@@ -119,6 +88,123 @@ def _overflow_residue_check(num_str, pdbstructure, curr_atom):
             return currentRes.number
 
 
+_atom_num_initial_nondecimal_functions = {
+    "186a0": (lambda s, y=None: int(s, base=16)),  # "hex"
+    "A0000": (lambda s, y=None: (int(s[0], base=36) * 10**4 + int(s[1:], base=36))),  # "chimera"
+    "*****": (lambda s, y: y._next_atom_number)  # "overflow", y is the PdbStructure
+}
+
+_residue_num_initial_nondecimal_functions = {
+    "2710": (lambda s, y=None, z=None: int(s, base=16)),  # 'hex'
+    "A000": (lambda s, y=None, z=None: (int(s[0], base=36) * 10**3 + int(s[1:], base=36))),  # 'chimera'
+    "****": _overflow_residue_check,  # 'overflow'
+}
+
+
+def _check_overflow_eligibility(num_str, str_type='atom'):
+    """
+    Return True if it's an overflow type, else False.
+
+    An overflow type is defined as any dictionary keys above or
+    something that looks the chimera format ({A..Z}000). The 
+    latter check exists because if residue numbers or atom numbers skip 
+    around and doesn't contain the start key, it might actually 
+    not recognize the overflow. This only exists for chimera-type values 
+    because it has no chance of false negatives.
+
+    Parameters
+    ----------
+    num_str : str
+        str to be checked whether it's overflowed or not.
+    str_type : str, default: 'atom'
+        The type of num_str. 'atom' if it's for an atom number,
+        'residue' if it's for a residue number.
+
+    Returns
+    -------
+    bool
+        True if overflow type, False if not.
+    """
+    # Check a different dictionary depending on the type.
+    if str_type == 'atom':
+        if num_str in _atom_num_initial_nondecimal_functions:
+            return True
+    elif str_type == 'residue':
+        if num_str in _residue_num_initial_nondecimal_functions:
+            return True
+    
+    # This is mostly to 'guess' if the number is a chimera-type overflow, in case we skipped
+    if 65 <= ord(num_str[0]) <= 90:
+        # ord({A..Z}) should be in [65..90]
+        return True
+    else:
+        return False
+
+
+def _read_atom_number(num_str, pdbstructure=None):
+    """
+    This function determines whether we need to swap to overflow mode. Otherwise, we'll just 
+    turn ``num_str`` into an integer.
+    
+    If it's in any of the non-decimal modes, we will attempt to set the _atom_num_nondec_mode to the
+    correct key. With this set, all subsequent atom numbers will be deciphered using a corresponding
+    function.
+
+    Parameters
+    ----------
+    num_str : str
+        str to be converted to int. Represents the atom number.
+    pdbstructure : PdbStructure, default: None
+        The PdbStructure object associated with `num_str`.
+
+    Returns
+    -------
+    int
+        The atom number deciphered in base 10.
+    """
+    try:
+        if pdbstructure._atom_num_nondec_mode is not None:
+            # If it already has an overflow function, then it will use the corresponding 
+            # _atom_num_function as dictated by pdbstructure._atom_num_nondec_mode to decipher the num_str.
+            return pdbstructure._atom_num_nondec_mode(num_str, pdbstructure)
+        elif pdbstructure._next_atom_number > 99999 and _check_overflow_eligibility(num_str, 'atom'):
+            # If the next atom number is > 99999 and our current atom number is one of the overflow keys,
+            # raise an OverflowError, which will switch to the correct mode to read num_str.
+           raise OverflowError("Need to parse atom number using non-decimal residue modes.")
+        else:
+            return int(num_str)
+    except (AttributeError, ValueError, OverflowError, KeyError):
+        # we need to figure out on the 1st try which mode to switch to. There are currently 3
+        # options: VMD (hex), Chimera (their own 'hybrid36' mode), and overflow (*****).
+        # Chimera starts with A0000, vmd with 186a0, so they are distinguishable.
+        if pdbstructure is None:
+            try:
+                return int(num_str)
+            except ValueError:
+                # num_str is not decimal, no nondec_mode to interpret it, no pdbstructure to say
+                # what it is or to provide current number of atoms. No way to figure out
+                return 0
+        else:
+            if pdbstructure._atom_num_nondec_mode is None:
+                try:
+                    # If this is the first time we reached overflow, we will try to determine the mode
+                    # using the num_str as key.
+                    pdbstructure._atom_num_nondec_mode = _atom_num_initial_nondecimal_functions[num_str]
+                except KeyError:
+                    if 65 <= ord(num_str[0]) <= 90:
+                        # Could be a chimera-type overflow? Attempting to guess with that assumption.
+                        pdbstructure._atom_num_nondec_mode = _atom_num_initial_nondecimal_functions['A0000']
+            try:
+                # The _atom_num_nondec_mode has been set.
+                # Try and run the corresponding _atom_num_functions on num_str
+                return pdbstructure._atom_num_nondec_mode(num_str, pdbstructure)
+            except (ValueError, KeyError, TypeError):
+                # Didn't work, we need to change to overflow mode and guess with _next_atom_number.
+                pdbstructure._atom_num_nondec_mode = _atom_num_initial_nondecimal_functions['*****']
+                warnings.warn(f'Need to guess atom number {num_str} starting from atom {pdbstructure._next_atom_number}.')
+                return pdbstructure._atom_num_nondec_mode(num_str, pdbstructure)
+
+
 def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
     """
     This function determines whether we need to swap to overflow mode. Otherwise, we'll just 
@@ -127,16 +213,33 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
     If it's in any of the non-decimal modes, we will attempt to set the _residue_num_nondec_mode to the
     correct key. With this set, all subsequent residue numbers will be deciphered using a corresponding
     function. If it's in "overflow" mode, will try to guess the residue number.
+
+    Parameters
+    ----------
+    num_str : str
+        str to be converted to int. Represents the residue number.
+    pdbstructure : PdbStructure, default: None
+        The PdbStructure object associated with `num_str`.
+    curr_atom : Atom, default: None
+        The current Atom object the residue number is associated with.
+
+    Returns
+    -------
+    int
+        The residue number deciphered in base 10.
     """
     try:
-        if pdbstructure._next_residue_number > 9999 and num_str in _residue_num_initial_nondecimal_vals:
+        if pdbstructure._residue_num_nondec_mode is not None:
+            # If it already has an overflow function, then it will use the corresponding _residue_num_function
+            # as dictated by pdbstructure._residue_num_nondec_mode to decipher the num_str.
+            return pdbstructure._residue_num_nondec_mode(num_str, pdbstructure, curr_atom)
+        elif pdbstructure._next_residue_number > 9999 and _check_overflow_eligibility(num_str, 'residue'):
             # If the next residue number is > 9999 and our current residue number is one of the nondecimal keys,
             # Raise an OverflowError, which will switch to the correct mode to read num_str. 
             raise OverflowError("Need to parse residue number using non-decimal residue modes.")
         else:
-            #  Within "normal" pdb specifications
             return int(num_str)
-    except (AttributeError, OverflowError, KeyError):
+    except (AttributeError, OverflowError, KeyError, ValueError):
         # we need to figure out on the 1st try which mode to switch to. There are currently 3 options:
         # VMD (hex) and Chimera (their own 'hybrid36' mode) and Overflow (****).
         # Chimera starts with A000, vmd with 2710, and Overflow just shows ****.
@@ -153,18 +256,20 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
         else:
             if pdbstructure._residue_num_nondec_mode is None:
                 # Attempt to set overflow mode using num_str as key
-                pdbstructure._residue_num_nondec_mode = _residue_num_initial_nondecimal_vals[num_str]
+                try:
+                    pdbstructure._residue_num_nondec_mode = _residue_num_initial_nondecimal_functions[num_str]
+                except KeyError:
+                    if 65 <= ord(num_str[0]) <= 90:
+                        # Could be a chimera-type overflow? Attempting to guess with that assumption.
+                        pdbstructure._residue_num_nondec_mode = _residue_num_initial_nondecimal_functions['A000']
             try:
                 # Try and run the _residue_num_functions
-                return pdbstructure._residue_num_functions[pdbstructure._residue_num_nondec_mode](num_str, pdbstructure, curr_atom)
-            except ValueError:
+                return pdbstructure._residue_num_nondec_mode(num_str, pdbstructure, curr_atom)
+            except (ValueError, KeyError, TypeError):
                 # Didn't work, we need to change to overflow mode and guess with _next_residue_number
-                pdbstructure._residue_num_nondec_mode = "overflow"
-                return pdbstructure._residue_num_functions[pdbstructure._residue_num_nondec_mode](
-                    num_str,
-                    pdbstructure,
-                    curr_atom,
-                )
+                pdbstructure._residue_num_nondec_mode = _residue_num_initial_nondecimal_functions['****']
+                warnings.warn(f'Need to guess residue number string {num_str} starting from residue{pdbstructure._next_residue_number}, atom {pdbstructure._next_atom_number}.')
+                return pdbstructure._residue_num_nondec_mode(num_str, pdbstructure, curr_atom)
 
 
 class PdbStructure:
@@ -256,20 +361,8 @@ class PdbStructure:
          - load_all_models (bool) Whether to load every model of an NMR
              structure or trajectory, or just load the first model, to save memory.
         """
-        # List of overflow functions used to decipher non-decimal numbers.
-        self._atom_num_functions = {
-            "hex": (lambda s: int(s, base=16)),
-            "chimera": (lambda s: (int(s[0], base=36) * 10**4 + int(s[1:], base=36))),
-            "overflow": (lambda s: self._next_atom_number),
-        }
-        self._atom_num_nondec_mode = None  # None (decimal until changes), 'hex', 'chimera'
-
-        self._residue_num_functions = {
-            "hex": (lambda s, y=None, z=None: int(s, base=16)),
-            "chimera": (lambda s, y=None, z=None: (int(s[0], base=36) * 10**3 + int(s[1:], base=36))),
-            "overflow": _overflow_residue_check,
-        }
-        self._residue_num_nondec_mode = None  # None (decimal until changes), 'hex', 'chimera'
+        self._atom_num_nondec_mode = None  # None (decimal until changes), 'hex', 'chimera', 'overflow'
+        self._residue_num_nondec_mode = None  # None (decimal until changes), 'hex', 'chimera', 'overflow'
 
         # initialize models
         self.load_all_models = load_all_models
@@ -341,6 +434,7 @@ class PdbStructure:
                     atoms.append(_read_atom_number(pdb_line[pos : pos + 5], pdbstructure=self))
 
                 self._current_model.connects.append(atoms)
+
         self._finalize()
 
     def _reset_atom_numbers(self):
@@ -348,7 +442,7 @@ class PdbStructure:
         self._next_atom_number = 1
 
     def _reset_residue_numbers(self):
-        self._residue_num_nondec_mode = None
+        self._residue_num_nondec_mode = None  # None (decimal until changes), 'hex', 'chimera', 'overflow'
         self._next_residue_number = 1
 
     def write(self, output_stream=sys.stdout):
@@ -900,10 +994,24 @@ class Atom:
         # segment id, element_symbol, and formal_charge are not always present
         self.segment_id = pdb_line[72:76].strip()
         self.element_symbol = pdb_line[76:78].strip()
-        try:
-            self.formal_charge = int(pdb_line[78:80])
-        except ValueError:
-            self.formal_charge = None
+
+        # Handle charges
+        self.formal_charge = None
+        charge_string = pdb_line[78:80].strip() # Is there any charge information?
+        if charge_string:
+            # A PDB charge string may either be of format 
+            # {charge}{sign} or {sign}{charge}
+            # We should try both.
+            try:
+                # Try the string as is. This will work for {sign}{charge}
+                self.formal_charge = int(charge_string)
+            except ValueError:
+                # Try reversing (other format)
+                try:
+                    charge_string = charge_string[::-1]
+                    self.formal_charge = int(charge_string)
+                except ValueError:
+                    warnings.warn(f"Could not parse charge information for atom {self._pdb_string()}\nSetting to None")
         # figure out atom element
         try:
             # First try to find a sensible element symbol from columns 76-77

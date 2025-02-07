@@ -21,7 +21,6 @@
 ##############################################################################
 
 
-import functools
 import os
 import warnings
 from collections.abc import Iterable
@@ -385,18 +384,18 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             "Each filename must have the same extension. " "Received: %s" % ", ".join(set(extensions)),
         )
 
-    # pre-loads the topology from PDB for major performance boost.
+    # Pre-loads the topology from PDB for major performance boost
     topkwargs = kwargs.copy()
-    # if top is not given try with one of the trajectory files
-    topkwargs.pop("top", None)
     topkwargs.pop("atom_indices", None)
     topkwargs.pop("frame", None)
     topkwargs.pop("stride", None)
     topkwargs.pop("start", None)
-    kwargs["top"] = _parse_topology(
-        kwargs.get("top", filename_or_filenames[0]),
-        **topkwargs,
-    )
+
+    # If top is not given try with one of the trajectory files
+    top = topkwargs.pop("top", None)
+    if top is None:
+        top = filename_or_filenames[0]
+    kwargs["top"] = _parse_topology(top, **topkwargs)
 
     # get the right loader
     try:
@@ -611,14 +610,16 @@ def join(trajs, check_topology=True, discard_overlapping_frames=False):
     discard_overlapping_frames : bool
         Check for overlapping frames and discard
     """
-    return functools.reduce(
-        lambda x, y: x.join(
-            y,
-            check_topology=check_topology,
-            discard_overlapping_frames=discard_overlapping_frames,
-        ),
-        trajs,
-    )
+    list_trajs = list(trajs)
+    if len(list_trajs) == 1:
+        return list_trajs[0]
+    else:
+        joined_traj = list_trajs[0]
+        joined_traj = joined_traj.join(list_trajs[1:], 
+                                       check_topology=check_topology, 
+                                       discard_overlapping_frames=discard_overlapping_frames
+                                       )
+        return joined_traj
 
 
 class Trajectory:
@@ -874,7 +875,7 @@ class Trajectory:
             if the Trajectory contains no unitcell information.
         """
         if self.unitcell_lengths is not None:
-            return np.array(list(map(np.linalg.det, self.unitcell_vectors)))
+            return np.array(list(map(np.linalg.det, self.unitcell_vectors)), dtype=np.float64)
         else:
             return None
 
@@ -1490,7 +1491,7 @@ class Trajectory:
         # check if savemode is valid (only "w" or "a" are allowed)
         if mode not in ["w", "a"]:
             raise ValueError("savemode must be either 'w' or 'a'")
-        
+
         with HDF5TrajectoryFile(filename, mode, force_overwrite=force_overwrite) as f:
             f.write(
                 coordinates=in_units_of(
@@ -1545,7 +1546,7 @@ class Trajectory:
                 types=[a.name for a in self.top.atoms],
             )
 
-    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True):
+    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True, header=True):
         """Save trajectory to RCSB PDB format
 
         Parameters
@@ -1561,6 +1562,10 @@ class Trajectory:
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.
+        header : bool, default=True
+            Include header in pdb. Useful if you want the extra output, but sometimes prevent
+            programs from running smoothly.
+
         """
         self._check_valid_unitcell()
 
@@ -1603,6 +1608,7 @@ class Trajectory:
                         ),
                         unitcell_angles=self.unitcell_angles[i],
                         ter=ter,
+                        header=header,
                     )
                 else:
                     f.write(
@@ -1615,6 +1621,7 @@ class Trajectory:
                         modelIndex=i,
                         bfactors=bfactors[i],
                         ter=ter,
+                        header=header,
                     )
 
     def save_xtc(self, filename, force_overwrite=True):
@@ -2037,7 +2044,7 @@ class Trajectory:
         --------
         stack : stack multiple trajectories along the atom axis
         """
-        xyz = np.array(self.xyz[:, atom_indices], order="C")
+        xyz = np.array(self.xyz[:, sorted(atom_indices)], order="C")
         topology = None
         if self._topology is not None:
             topology = self._topology.subset(atom_indices)

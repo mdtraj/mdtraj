@@ -31,16 +31,20 @@ jobs:
           - "3.10"
           - "3.11"
           - "3.12"
+        numpy-version:
+          - "numpy=2"
+          - "numpy=1"
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Set up conda environment
-      uses: mamba-org/setup-micromamba@v1
+      uses: mamba-org/setup-micromamba@v2
       with:
         environment-file: devtools/conda-envs/test.yaml
         create-args: >-
           python=${{ matrix.python-version }}
+          ${{ matrix.numpy-version }}
 
     - name: Install package
       run: |
@@ -54,4 +58,4 @@ jobs:
     - name: Run tests
       if: always()
       run: |
-        pytest -n logical --durations=10 tests/ -r fE
+        pytest -n logical --durations=10 tests/ -r fE --color=yes
