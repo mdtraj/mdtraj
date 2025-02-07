@@ -3,6 +3,30 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.10.3 (February 7, 2025)
+--------------------------
+
+- Pin numpy>=1.25 at run time, numpy>=2.0 at build time for numpy C-API #1960
+- Fix PDB overflow #1934
+- Allow `mdtraj.load` with `top=None` #1969
+- Preserve `chain_ids` for `to_openmm` and `from_openmm` #1951
+- Store and write formal charges from PDB/OpenMM #1967
+- Performance enhancement for `md.join` #1965
+- Sorting atom_indices in atom_slice #1938
+- Consolidate/update config files #1949
+- Mark a few distance tests as flaky #1972
+
+A total of 7 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Jeremy Leung
+- Matthew W. Thompson
+- Jessica A. Nash
+- Jan-Oliver Kapp-Joswig +
+- Ryan DiRisio +
+- Da Teng +
+- Pavel Buslaev +
+
 v1.10.2 (December 11, 2024)
 --------------------------
 
