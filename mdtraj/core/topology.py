@@ -854,14 +854,7 @@ class Topology:
         self._atoms.remove(a)
         self._numAtoms -= 1
 
-    def add_atom(
-        self,
-        name: str,
-        element: md.element.Element,
-        residue: Residue,
-        serial: int | None = None,
-        formal_charge: int | None = None,
-    ) -> Atom:
+    def add_atom(self, name: str, element: md.element.Element, residue: Residue, serial: int | None = None, formal_charge: int | None = None) -> Atom:
         """Create a new Atom and add it to the Topology.
 
         Parameters
@@ -874,8 +867,9 @@ class Topology:
             The Residue to add it to
         serial : int, optional
             Serial number associated with the atom.
-				formal_charge : int, optional
-						The formal charge of the atom to add.	
+        formal_charge : int, optional
+            The formal charge of the atom to add.
+
         Returns
         -------
         atom : mdtraj.topology.Atom
@@ -1729,18 +1723,9 @@ class Atom:
         The serial number from the PDB specification. Unlike index,
         this may not be contiguous or 0-indexed.
     formal_charge : float
-    
-    """
 
-    def __init__(
-        self,
-        name: str,
-        element: md.element.Element,
-        index: int,
-        residue: Residue,
-        serial: int | None = None,
-        formal_charge: float | None = None,
-    ) -> None:
+    """
+    def __init__(self, name: str, element: md.element.Element, index: int, residue: Residue, serial: int | None = None, formal_charge: float | None = None):
         """Construct a new Atom.  You should call add_atom() on the Topology instead of calling this directly."""
         # The name of the Atom
         self.name: str = name
@@ -1899,7 +1884,6 @@ class Bond(namedtuple("Bond", ["atom1", "atom2"])):
     order : instance of mdtraj.topology.Singleton or None
     type : int on [1,3] domain or None
     """
-
     def __new__(
         cls,
         atom1: Atom,
