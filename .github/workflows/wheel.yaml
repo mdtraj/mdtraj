@@ -44,7 +44,7 @@ jobs:
           config-file: "{package}/pyproject.toml"
       - uses: actions/upload-artifact@v4
         with:
-          name: artifact-wheels-${{ matrix.os }}-${{ matrix.python-version }}
+          name: artifact-wheels-${{ matrix.os }}-${{ matrix.python }}
           path: ./wheelhouse/*.whl
           overwrite: true
   build_sdist:
