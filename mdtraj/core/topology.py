@@ -63,11 +63,11 @@ from mdtraj.utils import ensure_type, ilen, import_
 from mdtraj.utils.singleton import Singleton
 
 if TYPE_CHECKING:
-	import MDtraj as md
-	import openmm
-	import pandas as pd
-	import networkx as nx
-			
+    import MDtraj as md
+    import openmm
+    import pandas as pd
+    import networkx as nx
+
 
 def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topology:
     """Create a new topology that only contains the supplied indices
@@ -345,7 +345,13 @@ class Topology:
         """
 
         def fasta(c):
-            return "".join([res.code for res in c.residues if res.is_protein and res.code is not None])
+            return "".join(
+                [
+                    res.code
+                    for res in c.residues
+                    if res.is_protein and res.code is not None
+                ]
+            )
 
         if chain is not None:
             if not isinstance(chain, int):
@@ -353,7 +359,6 @@ class Topology:
             return fasta(self._chains[chain])
         else:
             return [fasta(c) for c in self._chains]
-
 
     def to_openmm(self, traj: md.Trajectory | None = None) -> openmm.app.Topology:
         """Convert this topology into OpenMM topology
@@ -528,7 +533,9 @@ class Topology:
         return atoms, bonds
 
     @classmethod
-    def from_dataframe(cls, atoms: pd.DataFrame, bonds: NDArray[np.float64] | None = None) -> Topology:
+    def from_dataframe(
+        cls, atoms: pd.DataFrame, bonds: NDArray[np.float64] | None = None
+    ) -> Topology:
         """Create a mdtraj topology from a pandas data frame
 
         Parameters
@@ -575,11 +582,13 @@ class Topology:
         out = cls()
         if not isinstance(atoms, pd.DataFrame):
             raise TypeError(
-                "atoms must be an instance of pandas.DataFrame. " "You supplied a %s" % type(atoms),
+                "atoms must be an instance of pandas.DataFrame. "
+                "You supplied a %s" % type(atoms),
             )
         if not isinstance(bonds, np.ndarray):
             raise TypeError(
-                "bonds must be an instance of numpy.ndarray. " "You supplied a %s" % type(bonds),
+                "bonds must be an instance of numpy.ndarray. "
+                "You supplied a %s" % type(bonds),
             )
 
         if not np.all(np.arange(len(atoms)) == atoms.index):
@@ -601,7 +610,11 @@ class Topology:
 
                 c = out.add_chain()
 
-            if atom["resSeq"] != previous_resSeq or atom["resName"] != previous_resName or c.n_atoms == 0:
+            if (
+                atom["resSeq"] != previous_resSeq
+                or atom["resName"] != previous_resName
+                or c.n_atoms == 0
+            ):
                 previous_resSeq = atom["resSeq"]
                 previous_resName = atom["resName"]
 
@@ -691,7 +704,9 @@ class Topology:
                 return False
 
             for r1, r2 in zip(c1.residues, c2.residues):
-                if (r1.index != r1.index) or (r1.name != r2.name):  # or (r1.resSeq != r2.resSeq):
+                if (r1.index != r1.index) or (
+                    r1.name != r2.name
+                ):  # or (r1.resSeq != r2.resSeq):
                     return False
                 if len(r1._atoms) != len(r2._atoms):
                     return False
@@ -735,7 +750,9 @@ class Topology:
         self._chains.append(chain)
         return chain
 
-    def add_residue(self, name: str, chain: Chain, resSeq: int | None = None, segment_id: str = "") -> Residue:
+    def add_residue(
+        self, name: str, chain: Chain, resSeq: int | None = None, segment_id: str = ""
+    ) -> Residue:
         """Create a new Residue and add it to the Topology.
 
         Parameters
@@ -765,7 +782,15 @@ class Topology:
         chain._residues.append(residue)
         return residue
 
-    def insert_atom(self, name: str, element: md.element.Element, residue: Residue, index: int | None = None, rindex: int | None = None, serial: int | None = None) -> Atom:
+    def insert_atom(
+        self,
+        name: str,
+        element: md.element.Element,
+        residue: Residue,
+        index: int | None = None,
+        rindex: int | None = None,
+        serial: int | None = None,
+    ) -> Atom:
         """Create a new Atom and insert it into the Topology at a specific position.
 
         Parameters
@@ -829,7 +854,13 @@ class Topology:
         self._atoms.remove(a)
         self._numAtoms -= 1
 
-    def add_atom(self, name: str, residue: Residue, element: md.element.Element | None = None, serial: int | None = None) -> Atom:
+    def add_atom(
+        self,
+        name: str,
+        element: md.element.Element,
+        residue: Residue,
+        serial: int | None = None,
+    ) -> Atom:
         """Create a new Atom and add it to the Topology.
 
         Parameters
@@ -856,7 +887,13 @@ class Topology:
         residue._atoms.append(atom)
         return atom
 
-    def add_bond(self, atom1: Atom, atom2: Atom, type: Singleton | None = None, order: Literal[1,2,3] | None = None) -> None:
+    def add_bond(
+        self,
+        atom1: Atom,
+        atom2: Atom,
+        type: Singleton | None = None,
+        order: Literal[1, 2, 3] | None = None,
+    ) -> None:
         """Create a new bond and add it to the Topology.
 
         Parameters
@@ -907,7 +944,7 @@ class Topology:
         """Get the number of chains in the Topology"""
         return len(self._chains)
 
-    def residue(self, index:int) -> Residue:
+    def residue(self, index: int) -> Residue:
         """Get a specific residue by index.  These indices
         start from zero.
 
@@ -940,7 +977,7 @@ class Topology:
         """Get the number of residues in the Topology."""
         return len(self._residues)
 
-    def atom(self, index: int) -> Atom:	
+    def atom(self, index: int) -> Atom:
         """Get a specific atom by index. These indices
         start from zero.
 
@@ -1068,7 +1105,10 @@ class Topology:
                         else:
                             toResidue = i
                             toAtom = bond[1]
-                        if fromAtom in atomMaps[fromResidue] and toAtom in atomMaps[toResidue]:
+                        if (
+                            fromAtom in atomMaps[fromResidue]
+                            and toAtom in atomMaps[toResidue]
+                        ):
                             self.add_bond(
                                 atomMaps[fromResidue][fromAtom],
                                 atomMaps[toResidue][toAtom],
@@ -1117,7 +1157,7 @@ class Topology:
         """
         return _topology_from_subset(self, atom_indices)
 
-    def select_expression(self, selection_string:str) -> str:
+    def select_expression(self, selection_string: str) -> str:
         """Translate a atom selection expression into a pure python expression.
 
         Parameters
@@ -1167,7 +1207,10 @@ class Topology:
         indices = np.array([a.index for a in self.atoms if filter_func(a)])
         return indices
 
-    def select_atom_indices(self, selection: Literal["all","alpha","minimal","heavy","water"] = "minimal") -> NDArray[np.int32]:
+    def select_atom_indices(
+        self,
+        selection: Literal["all", "alpha", "minimal", "heavy", "water"] = "minimal",
+    ) -> NDArray[np.int32]:
         """Get the indices of biologically-relevant groups by name.
 
         Parameters
@@ -1196,15 +1239,27 @@ class Topology:
         if selection == "all":
             atom_indices = np.arange(self.n_atoms)
         elif selection == "alpha":
-            atom_indices = [a.index for a in self.atoms if a.name == "CA" and a.residue.is_protein]
+            atom_indices = [
+                a.index for a in self.atoms if a.name == "CA" and a.residue.is_protein
+            ]
         elif selection == "minimal":
             atom_indices = [
-                a.index for a in self.atoms if a.name in ["CA", "CB", "C", "N", "O"] and a.residue.is_protein
+                a.index
+                for a in self.atoms
+                if a.name in ["CA", "CB", "C", "N", "O"] and a.residue.is_protein
             ]
         elif selection == "heavy":
-            atom_indices = [a.index for a in self.atoms if a.element != elem.hydrogen and a.residue.is_protein]
+            atom_indices = [
+                a.index
+                for a in self.atoms
+                if a.element != elem.hydrogen and a.residue.is_protein
+            ]
         elif selection == "water":
-            atom_indices = [a.index for a in self.atoms if a.name in ["O", "OW"] and a.residue.is_water]
+            atom_indices = [
+                a.index
+                for a in self.atoms
+                if a.name in ["O", "OW"] and a.residue.is_water
+            ]
         else:
             raise ValueError(
                 "{} is not a valid option. Selection must be one of {}".format(
@@ -1216,7 +1271,11 @@ class Topology:
         indices = np.array(atom_indices)
         return indices
 
-    def select_pairs(self, selection1: str | NDArray[np.int32] | Sequence[int] | None = None, selection2: str | NDArray[np.int32] | Sequence[int] | None = None) -> NDArray[np.int32]:
+    def select_pairs(
+        self,
+        selection1: str | NDArray[np.int32] | Sequence[int] | None = None,
+        selection2: str | NDArray[np.int32] | Sequence[int] | None = None,
+    ) -> NDArray[np.int32]:
         """Generate unique pairs of atom indices.
 
         If a selecton is a string, it will be resolved using the atom selection
@@ -1273,16 +1332,24 @@ class Topology:
         return pairs
 
     @classmethod
-    def _unique_pairs(cls, a_indices: iter[int], b_indices: iter[int]) -> NDArray[np.int32]:
+    def _unique_pairs(
+        cls, a_indices: iter[int], b_indices: iter[int]
+    ) -> NDArray[np.int32]:
         return np.array(
             list(
-                {(a, b) if a > b else (b, a) for a, b in itertools.product(a_indices, b_indices) if a != b},
+                {
+                    (a, b) if a > b else (b, a)
+                    for a, b in itertools.product(a_indices, b_indices)
+                    if a != b
+                },
             ),
             dtype=np.int32,
         )
 
     @classmethod
-    def _unique_pairs_mutually_exclusive(cls, a_indices: iter[int], b_indices: iter[int]) -> NDArray[np.int32]:
+    def _unique_pairs_mutually_exclusive(
+        cls, a_indices: iter[int], b_indices: iter[int]
+    ) -> NDArray[np.int32]:
         pairs = np.fromiter(
             itertools.chain.from_iterable(
                 itertools.product(a_indices, b_indices),
@@ -1415,7 +1482,9 @@ class Chain:
         Iterator over all Atoms in the Chain.
     """
 
-    def __init__(self, index: int, topology: Topology, chain_id: str | None = None) -> None:
+    def __init__(
+        self, index: int, topology: Topology, chain_id: str | None = None
+    ) -> None:
         """Construct a new Chain.  You should call add_chain() on the Topology instead of calling this directly."""
         # The index of the Chain within its Topology
         self.index: int = index
@@ -1530,15 +1599,17 @@ class Residue:
         A label for the segment to which this residue belongs
     """
 
-    def __init__(self, name: str, index: int, chain: Chain, resSeq: int, segment_id: str = "") -> None:
+    def __init__(
+        self, name: str, index: int, chain: Chain, resSeq: int, segment_id: str = ""
+    ) -> None:
         """Construct a new Residue.  You should call add_residue()
         on the Topology instead of calling this directly."""
-        self.name:str = name
+        self.name: str = name
         self.index: int = index
         self.chain: Chain = chain
         self.resSeq: int = resSeq
         self.segment_id: str = segment_id
-        self._atoms:list[Atom] = []
+        self._atoms: list[Atom] = []
 
     @property
     def atoms(self) -> iter[Atom]:
@@ -1635,7 +1706,7 @@ class Residue:
     def __repr__(self) -> str:
         return str(self)
 
-    def __hash__(self)-> int:
+    def __hash__(self) -> int:
         return hash((self.name, self.index, self.resSeq, self.segment_id))
 
 
@@ -1657,7 +1728,14 @@ class Atom:
         this may not be contiguous or 0-indexed.
     """
 
-    def __init__(self, name: str, element: md.element.Element, index: int, residue: Residue, serial: int | None = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        element: md.element.Element,
+        index: int,
+        residue: Residue,
+        serial: int | None = None,
+    ) -> None:
         """Construct a new Atom.  You should call add_atom() on the Topology instead of calling this directly."""
         # The name of the Atom
         self.name: str = name
@@ -1684,7 +1762,10 @@ class Atom:
     @property
     def is_sidechain(self) -> bool:
         """Whether the atom is in the sidechain of a protein residue"""
-        return self.name not in {"C", "CA", "N", "O", "HA", "H"} and self.residue.is_protein
+        return (
+            self.name not in {"C", "CA", "N", "O", "HA", "H"}
+            and self.residue.is_protein
+        )
 
     @property
     def segment_id(self) -> str:
@@ -1747,7 +1828,7 @@ class Triple(Singleton):
     def __repr__(self) -> str:
         return "Triple"
 
-    def __float__(self) -> float	:
+    def __float__(self) -> float:
         return 3.0
 
 
@@ -1812,20 +1893,32 @@ class Bond(namedtuple("Bond", ["atom1", "atom2"])):
     type : int on [1,3] domain or None
     """
 
-    def __new__(cls, atom1: Atom, atom2: Atom, type: Singleton | None, order: Literal[1,2,3] | None) -> Bond:
+    def __new__(
+        cls,
+        atom1: Atom,
+        atom2: Atom,
+        type: Singleton | None,
+        order: Literal[1, 2, 3] | None,
+    ) -> Bond:
         """Construct a new Bond.  You should call add_bond()
         on the Topology instead of calling this directly.
 
         Must use __new__ constructor since this is an immutable class
         """
         bond = super().__new__(cls, atom1, atom2)
-        assert isinstance(type, Singleton) or type is None, "Type must be None or a Singleton"
-        assert order is None or 1 <= order <= 3, "Order must be int between 1 to 3 or None"
+        assert (
+            isinstance(type, Singleton) or type is None
+        ), "Type must be None or a Singleton"
+        assert (
+            order is None or 1 <= order <= 3
+        ), "Order must be int between 1 to 3 or None"
         bond.type = type
         bond.order = order
         return bond
 
-    def __getnewargs__(self) -> tuple[Atom, Atom, Singleton | None, Literal[1,2,3] | None]:
+    def __getnewargs__(
+        self,
+    ) -> tuple[Atom, Atom, Singleton | None, Literal[1, 2, 3] | None]:
         """
         Support for pickle protocol 2:
         http://docs.python.org/2/library/pickle.html#pickling-and-unpickling-normal-class-instances
@@ -1894,7 +1987,7 @@ class Bond(namedtuple("Bond", ["atom1", "atom2"])):
     def __ne__(self, other) -> bool:
         return not self.__eq__(other)
 
-    def __getstate__(self) ->	dict:
+    def __getstate__(self) -> dict:
         # This is required for pickle because the parent class
         # does not properly return a state
         return self.__dict__
