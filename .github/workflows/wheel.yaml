@@ -46,6 +46,7 @@ jobs:
         with:
           name: artifact-wheels-${{ matrix.os }}-${{ matrix.python-version }}
           path: ./wheelhouse/*.whl
+          overwrite: true
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
