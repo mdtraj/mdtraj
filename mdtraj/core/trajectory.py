@@ -385,18 +385,18 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             "Each filename must have the same extension. " "Received: %s" % ", ".join(set(extensions)),
         )
 
-    # pre-loads the topology from PDB for major performance boost.
+    # Pre-loads the topology from PDB for major performance boost
     topkwargs = kwargs.copy()
-    # if top is not given try with one of the trajectory files
-    topkwargs.pop("top", None)
     topkwargs.pop("atom_indices", None)
     topkwargs.pop("frame", None)
     topkwargs.pop("stride", None)
     topkwargs.pop("start", None)
-    kwargs["top"] = _parse_topology(
-        kwargs.get("top", filename_or_filenames[0]),
-        **topkwargs,
-    )
+
+    # If top is not given try with one of the trajectory files
+    top = topkwargs.pop("top", None)
+    if top is None:
+        top = filename_or_filenames[0]
+    kwargs["top"] = _parse_topology(top, **topkwargs)
 
     # get the right loader
     try:
