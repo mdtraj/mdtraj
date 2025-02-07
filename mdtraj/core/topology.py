@@ -860,6 +860,7 @@ class Topology:
         element: md.element.Element,
         residue: Residue,
         serial: int | None = None,
+        formal_charge: int | None = None,
     ) -> Atom:
         """Create a new Atom and add it to the Topology.
 
@@ -871,9 +872,10 @@ class Topology:
             The element of the atom to add
         residue : mdtraj.topology.Residue
             The Residue to add it to
-        serial : int
+        serial : int, optional
             Serial number associated with the atom.
-
+				formal_charge : int, optional
+						The formal charge of the atom to add.	
         Returns
         -------
         atom : mdtraj.topology.Atom
@@ -881,7 +883,7 @@ class Topology:
         """
         if element is None:
             element = elem.virtual
-        atom = Atom(name, element, self._numAtoms, residue, serial=serial)
+        atom = Atom(name, element, self._numAtoms, residue, serial=serial, formal_charge=formal_charge)
         self._atoms.append(atom)
         self._numAtoms += 1
         residue._atoms.append(atom)
@@ -1726,6 +1728,8 @@ class Atom:
     serial : int
         The serial number from the PDB specification. Unlike index,
         this may not be contiguous or 0-indexed.
+    formal_charge : float
+    
     """
 
     def __init__(
@@ -1735,6 +1739,7 @@ class Atom:
         index: int,
         residue: Residue,
         serial: int | None = None,
+        formal_charge: float | None = None,
     ) -> None:
         """Construct a new Atom.  You should call add_atom() on the Topology instead of calling this directly."""
         # The name of the Atom
@@ -1747,6 +1752,8 @@ class Atom:
         self.residue: Residue = residue
         # The not-necessarily-contiguous "serial" number from the PDB spec
         self.serial: int | None = serial
+        # The formal charge of the atom
+        self.formal_charge: float | None = formal_charge
 
     @property
     def n_bonds(self) -> int:
