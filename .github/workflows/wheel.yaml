@@ -1,9 +1,7 @@
 name: Build and upload to PyPI
 
 on:
-  push:
   pull_request:
-  workflow_dispatch:
   release:
     types:
       - 'published'
