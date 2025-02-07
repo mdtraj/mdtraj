@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  release:
+    types:
+      - 'published'
 
 jobs:
   build_wheels:
@@ -12,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.10", "3.11", "3.12"]
+        python: ["3.11", "3.12", "3.13"]
         os: [ubuntu-latest, macos-latest]  # Windows missing zlib
     steps:
       - uses: actions/checkout@v4
@@ -30,13 +33,18 @@ jobs:
           PYVER: ${{ matrix.python }}
           OSVER: ${{ matrix.os }}
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22
+        uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BUILD_VERBOSITY: 1
           CIBW_ARCHS: all
           CIBW_BUILD: ${{ env.CIBW_BUILD }}
+        with:
+          package-dir: .
+          output-dir: wheelhouse
+          config-file: "{package}/pyproject.toml"
       - uses: actions/upload-artifact@v4
         with:
+          name: artifact-wheels-${{ matrix.os }}-${{ matrix.python-version }}
           path: ./wheelhouse/*.whl
   build_sdist:
     name: Build source distribution
@@ -53,11 +61,16 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
+          name: artifact-sdist
           path: dist/*.tar.gz
+          overwrite: true
 
   upload_pypi:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/mdtraj
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     permissions:
         # IMPORTANT: this permission is mandatory for trusted publishing
@@ -65,7 +78,10 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: artifact
+          # unpacks default artifact into dist/
+          # if `name: artifact` is omitted, the action will create extra parent dir
+          name: artifact-*
           path: dist
+          merge-multiple: true
 
       - uses: pypa/gh-action-pypi-publish@release/v1
