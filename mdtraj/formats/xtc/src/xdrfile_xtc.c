@@ -63,7 +63,7 @@ static int xtc_header(XDRFILE *xd,int *natoms,int *step,float *time,mybool bRead
 static int xtc_coord(XDRFILE *xd,int *natoms,matrix box,rvec *x,float *prec,
 					 mybool bRead)
 {
-	int i,j,result;
+	int result;
 
 	/* box */
 	result = xdrfile_read_float(box[0],DIM*DIM,xd);
@@ -116,8 +116,9 @@ int read_xtc_nframes(char* fn, unsigned long *nframes) {
 	x = malloc(natoms * sizeof(*x));
 
     xd = xdrfile_open(fn, "r");
-    if (NULL == xd)
+    if (NULL == xd) {
         return exdrFILENOTFOUND;
+	}
 
 	do {
 		result = read_xtc(xd, natoms, &step, &time, box, x, &prec);
