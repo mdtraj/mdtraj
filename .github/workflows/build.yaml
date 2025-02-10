@@ -1,7 +1,12 @@
 name: Build and upload to PyPI
 
 on:
-  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 2" # every monday
   release:
     types:
       - 'published'
@@ -73,7 +78,7 @@ jobs:
     environment:
       name: pypi
       url: https://pypi.org/p/mdtraj
-    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+    if: github.event_name == 'published'
     permissions:
         # IMPORTANT: this permission is mandatory for trusted publishing
         id-token: write
