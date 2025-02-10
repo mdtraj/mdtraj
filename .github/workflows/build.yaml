@@ -14,19 +14,31 @@ jobs:
       fail-fast: false
       matrix:
         python: ["3.11", "3.12", "3.13"]
-        os: [ubuntu-latest, macos-latest]  # Windows missing zlib
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
-      - name: set build type
+      - name: setup ubuntu
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          if [[ "${OSVER}" == "ubuntu-latest" ]]; then
-            echo "CIBW_BUILD=cp${PYVER//.}-manylinux_x86_64" >> $GITHUB_ENV
-          elif [[ "${OSVER}" == "macos-latest" ]]; then
-            # https://cibuildwheel.readthedocs.io/en/stable/faq/#universal2
-            echo "CIBW_BUILD=cp${PYVER//.}-macosx_universal2" >> $GITHUB_ENV
-          else
-            exit 1
-          fi
+          echo "CIBW_BUILD=cp${PYVER//.}-manylinux_x86_64" >> $GITHUB_ENV
+        env:
+          PYVER: ${{ matrix.python }}
+          OSVER: ${{ matrix.os }}
+      - name: setup macos
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          # https://cibuildwheel.readthedocs.io/en/stable/faq/#universal2
+          echo "CIBW_BUILD=cp${PYVER//.}-macosx_universal2" >> $GITHUB_ENV
+        env:
+          PYVER: ${{ matrix.python }}
+          OSVER: ${{ matrix.os }}
+      - name: setup windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: bash
+        run: |
+          # installing zlib
+          vcpkg install zlib:x64-windows
+          echo "CIBW_BUILD=cp${PYVER//.}-win_amd64" >> $GITHUB_ENV
         env:
           PYVER: ${{ matrix.python }}
           OSVER: ${{ matrix.os }}
