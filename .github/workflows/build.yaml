@@ -13,41 +13,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "3.12", "3.13"]
+        python: ["11", "12", "13"]
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
-      - name: setup ubuntu
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: |
-          echo "CIBW_BUILD=cp${PYVER//.}-manylinux_x86_64" >> $GITHUB_ENV
-        env:
-          PYVER: ${{ matrix.python }}
-          OSVER: ${{ matrix.os }}
-      - name: setup macos
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: |
-          # https://cibuildwheel.readthedocs.io/en/stable/faq/#universal2
-          echo "CIBW_BUILD=cp${PYVER//.}-macosx_universal2" >> $GITHUB_ENV
-        env:
-          PYVER: ${{ matrix.python }}
-          OSVER: ${{ matrix.os }}
-      - name: setup windows
+      - name: setup windows, install zlib
         if: ${{ matrix.os == 'windows-latest' }}
         shell: bash
-        run: |
-          # installing zlib
-          vcpkg install zlib:x64-windows
-          echo "CIBW_BUILD=cp${PYVER//.}-win_amd64" >> $GITHUB_ENV
-        env:
-          PYVER: ${{ matrix.python }}
-          OSVER: ${{ matrix.os }}
+        run:  vcpkg install zlib:x64-windows
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.22.0
         env:
+          CIBW_SKIP: "pp* *-musllinux* *-muslinux* *-win32"
           CIBW_BUILD_VERBOSITY: 1
-          CIBW_ARCHS: all
-          CIBW_BUILD: ${{ env.CIBW_BUILD }}
+          CIBW_ARCHS_WINDOWS: auto
+          CIBW_ARCHS_MACOS: "universal2"
+          CIBW_ARCHS_LINUX: native
+          CIBW_BUILD: "cp3${{ matrix.python }}-*"
+          # delocate 0.11.0 has this issue:
+          # https://github.com/matthew-brett/delocate/issues/229
+          # https://github.com/matthew-brett/delocate/issues/227
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: "pip install 'delocate<0.11.0' && delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+          CIBW_TEST_COMMAND: >
+            python -c "import mdtraj; print(mdtraj.__version__)" &&
+            mdconvert -h &&
+            mdinspect -h
         with:
           package-dir: .
           output-dir: wheelhouse
