@@ -3,7 +3,7 @@
 #         Molecular Dynamics Trajectories.
 # Copyright 2012-2013 Stanford University and the Authors
 #
-# Authors: Robert McGibbon
+# Authors: Ryan DiRisio
 # Contributors:
 #
 # MDTraj is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@ def compute_centroid(trajectory, atoms):
 
     Returns
     -------
-    centroid : ndarray
+    centroid : ndarray, shape=[n_frames, 3], dtype=float
         The mean (centroid) of the ring atoms coordinates. MDTraj stores the coordinates
         in nm.
     """
@@ -71,7 +71,8 @@ def compute_ring_normal(trajectory, atoms, centroid):
 
     Returns
     -------
-    norm_vec : ndarray
+    norm_vec : np.array, shape=[n_frames, 2, 3], dtype=float
+
         The normal vector to the plane defined by the ring atoms and the centroid.
         The normal vector is normalized, and the directionality is arbitrarily assigned
         by the order of the atoms list.
@@ -89,6 +90,8 @@ def dot_pdt(v1, v2):
     """
     Compute the dot product of two stacks of vectors.
 
+    ASsumes v1 and v2 are the same shape.
+
     Parameters
     ----------
     v1 : ndarray
@@ -98,7 +101,7 @@ def dot_pdt(v1, v2):
 
     Returns
     -------
-    dot : ndarray
+    dot : np.array, shape=v1.shape, dtype=float
         The dot product of the two stacks of vectors.
     """
     dot = np.einsum("ij,ij->i", v1, v2)
@@ -109,6 +112,8 @@ def compute_angles(vec_1, vec_2):
     """
     Compute the angles between the two supplied vectors.
 
+    Assumes the vectors are the same shape.
+
     Parameters
     ----------
     vec_1 : ndarray
@@ -118,7 +123,7 @@ def compute_angles(vec_1, vec_2):
 
     Returns
     -------
-    angle : ndarray
+    angle : np.array, shape=vec_1.shape, dtype=float
         The angles between the two vectors, in radians.
     """
     angle = np.arccos(
@@ -142,7 +147,7 @@ def cap_angle(angle):
 
     Returns
     -------
-    angle : ndarray
+    angle :np.array, shape=angle.shape, dtype=float
         The capped angles. Modifies the input array.
     """
     msk = angle > np.pi / 2
@@ -311,7 +316,7 @@ def calculate_edge_stack_threshold(
 
     Returns
     -------
-    tstack_msk : ndarray
+    tstack_msk : np.array, shape=[n_frames], dtype=float
         The mask of frames that meet the threshold for edge-to-face pi-stacking.
     """
     tstack_msk = (
@@ -354,9 +359,9 @@ def pi_stacking(
     trajectory : md.Trajectory
         The trajectory to analyze. The ligand and receptor groups map onto the
           trajectory's topology indices.
-    ligand_aromatic_groups : list of array_like
+    ligand_aromatic_groups : list of int
         The atom indices of the groups to be considered aromatic for the ligand.
-    receptor_aromatic_groups : list of array_like
+    receptor_aromatic_groups : list of int
         The atom indices of the groups to be considered aromatic for the receptor.
     ligand_neighbor_cutoff : float
         The distance cutoff for considering a receptor group for pi-stacking with a
@@ -383,8 +388,8 @@ def pi_stacking(
         The maximum distance between the point of intersection between both rings and
         the opposite ring's centroid.
 
-    Yields
-    ------
+    Returns
+    -------
     stacking_interactions: list, len=n_frames
         A list of lists of tuples, where each tuple is a pair of aromatic groups that
         are stacking in that frame.
