@@ -106,9 +106,6 @@ def test_t_stacking_default_settings(get_fn):
     """Test that t-stacking version of pi-stacking is being detected correctly."""
 
     t: md.Trajectory = md.load(get_fn("6A22.pdb"))
-    # for atm in t.top.atoms:
-    #     print(atm.residue.chain.index, atm)
-
     lig_aromatic_atms_to_test = [
         ("S10", "C9", "C8", "N7", "C6"),  # t-stacking
         ("C14", "C15", "C16", "C17", "C18", "C19"),  # NOT pi-stacking
