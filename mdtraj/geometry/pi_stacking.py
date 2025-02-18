@@ -198,7 +198,8 @@ def calculate_intersection_point(
         (plane_offset, tilted_offset, np.broadcast_to([0.0], plane_offset.shape)),
         axis=1,
     )
-    intersect_pt = np.linalg.solve(A, d)
+    # NOTE: np.linalg.solve changed in v2.0. This is how to do it in 2.0
+    intersect_pt = np.linalg.solve(A, d[..., None])[..., 0]
     vec = plane_centroid - intersect_pt
     intersect_direction = (
         intersect_direction / np.linalg.norm(intersect_direction, axis=1)[:, np.newaxis]
@@ -217,7 +218,7 @@ def calculate_intersection_point(
 def calculate_face_stack_threshold(
     face_plane_angle_range_rad,
     face_normal_to_centroid_angle_range_rad,
-    max_face_to_face_centroid_distance_nm,
+    max_face_to_face_centroid_distance,
     plane_angles,
     res_to_lig_angle,
     lig_to_res_angle,
@@ -235,7 +236,7 @@ def calculate_face_stack_threshold(
         The range of acceptable angles between the normal vector and the vector between
         centroids.
         Checks both the ligand and receptor groups.
-    max_face_to_face_centroid_distance_nm : float
+    max_face_to_face_centroid_distance : float
         The maximum distance between the centroids of the ligand and receptor groups for
         the interaction.
     plane_angles : ndarray
@@ -267,7 +268,7 @@ def calculate_face_stack_threshold(
                 & (lig_to_res_angle <= face_normal_to_centroid_angle_range_rad[1])
             )
         )
-        & (centroid_dist <= max_face_to_face_centroid_distance_nm)
+        & (centroid_dist <= max_face_to_face_centroid_distance)
     )
     return face_msk
 
@@ -275,8 +276,8 @@ def calculate_face_stack_threshold(
 def calculate_edge_stack_threshold(
     edge_plane_angle_range_rad,
     edge_normal_to_centroid_angle_range_rad,
-    max_edge_to_face_centroid_distance_nm,
-    edge_intersection_radius_nm,
+    max_edge_to_face_centroid_distance,
+    edge_intersection_radius,
     plane_angles,
     res_to_lig_angle,
     lig_to_res_angle,
@@ -294,10 +295,10 @@ def calculate_edge_stack_threshold(
     edge_normal_to_centroid_angle_range_rad : tuple of float
         The range of acceptable angles between the normal vector and the vector between
         centroids. Checks both the ligand and receptor groups.
-    max_edge_to_face_centroid_distance_nm : float
+    max_edge_to_face_centroid_distance : float
         The maximum distance between the centroids of the ligand and receptor groups for
         the interaction.
-    edge_intersection_radius_nm : float
+    edge_intersection_radius : float
         The maximum distance between the point of intersection between both rings and
         the opposite ring's centroid.
     plane_angles : ndarray
@@ -332,8 +333,8 @@ def calculate_edge_stack_threshold(
                 & (lig_to_res_angle <= edge_normal_to_centroid_angle_range_rad[1])
             )
         )
-        & (centroid_dist <= max_edge_to_face_centroid_distance_nm)
-        & (min_inter_dist <= edge_intersection_radius_nm)
+        & (centroid_dist <= max_edge_to_face_centroid_distance)
+        & (min_inter_dist <= edge_intersection_radius)
     )
     return tstack_msk
 
@@ -342,14 +343,14 @@ def pi_stacking(
     trajectory,
     ligand_aromatic_groups,
     receptor_aromatic_groups,
-    ligand_neighbor_cutoff,
-    max_face_to_face_centroid_distance,
-    face_plane_angle_range,
-    face_normal_to_centroid_angle_range,
-    max_edge_to_face_centroid_distance,
-    edge_plane_angle_range,
-    edge_normal_to_centroid_angle_range,
-    edge_intersection_radius,
+    ligand_neighbor_cutoff=0.6,
+    max_face_to_face_centroid_distance=5.5,
+    face_plane_angle_range=(0.0, 35.0),
+    face_normal_to_centroid_angle_range=(0.0, 33.0),
+    max_edge_to_face_centroid_distance=0.65,
+    edge_plane_angle_range=(50.0, 90.0),
+    edge_normal_to_centroid_angle_range=(0.0, 30.0),
+    edge_intersection_radius=0.15,
 ):
     """
     Calculate the pi-stacking interactions based on supplied atom groups.
@@ -365,10 +366,10 @@ def pi_stacking(
         The atom indices of the groups to be considered aromatic for the receptor.
     ligand_neighbor_cutoff : float
         The distance cutoff for considering a receptor group for pi-stacking with a
-        ligand group. In angstroms.
+        ligand group.
     max_face_to_face_centroid_distance : float
         The maximum distance between the centroids of the ligand and receptor groups for
-        the interaction. In angstroms.
+        the interaction. 
     face_plane_angle_range : tuple of float
         The range of acceptable angles between the two normal vectors defined by the two
         centroids. In degrees.
@@ -377,7 +378,7 @@ def pi_stacking(
         centroids. Checks both the ligand and receptor groups. In degrees.
     max_edge_to_face_centroid_distance : float
         The maximum distance between the centroids of the ligand and receptor groups for
-        the interaction. In angstroms.
+        the interaction.
     edge_plane_angle_range : tuple of float
         The range of acceptable angles between the two normal vectors defined by the two
         centroids. In degrees.
@@ -392,20 +393,9 @@ def pi_stacking(
     -------
     stacking_interactions: list, len=n_frames
         A list of lists of tuples, where each tuple is a pair of aromatic groups that
-        are stacking in that frame.
+        are stacking in that frame. The order of the tuple goes
+        (ligand_group, protein_group)
     """
-    ligand_neighbor_cutoff_nm = in_units_of(
-        ligand_neighbor_cutoff, "angstrom", "nanometers"
-    )
-    max_face_to_face_centroid_distance_nm = in_units_of(
-        max_face_to_face_centroid_distance, "angstrom", "nanometers"
-    )
-    max_edge_to_face_centroid_distance_nm = in_units_of(
-        max_edge_to_face_centroid_distance, "angstrom", "nanometers"
-    )
-    edge_intersection_radius_nm = in_units_of(
-        edge_intersection_radius, "angstrom", "nanometers"
-    )
     face_plane_angle_range_rad = tuple(np.deg2rad(face_plane_angle_range))
     face_normal_to_centroid_angle_range_rad = tuple(
         np.deg2rad(face_normal_to_centroid_angle_range)
@@ -422,7 +412,7 @@ def pi_stacking(
     receptor_nbr_atomatic_groups = set()
     neighbors = md.compute_neighborlist(
         trajectory,
-        ligand_neighbor_cutoff_nm,
+        ligand_neighbor_cutoff,
     )
     for lig_grp in ligand_aromatic_groups:
         # Find all neighbors for each of the atoms in the ligand group, add to set
@@ -434,9 +424,10 @@ def pi_stacking(
             if any([atm in lig_neighbors for atm in rec_grp]):
                 ligand_neighbor_groups[lig_grp].append(rec_grp)
                 receptor_nbr_atomatic_groups.add(rec_grp)
+    stacking_interactions = [[] for _ in range(len(trajectory))]
     # If no receptor aromatic neighbors within any of the ligand groups, return
     if len(ligand_neighbor_groups) == 0:
-        return
+        return stacking_interactions
     # Calculate the centroid and ring normals of each group
     receptor_grp_centroids = {}
     receptor_grp_normals = {}
@@ -446,7 +437,6 @@ def pi_stacking(
         receptor_grp_normals[rec_grp] = compute_ring_normal(
             trajectory, rec_grp, rec_centroid
         )
-    stacking_interactions = [[] for _ in range(len(trajectory))]
     # For each ligand -- receptor pairs, calculate the centroid distance
     for lig_grp, receptor_grps in ligand_neighbor_groups.items():
         lig_centroid = compute_centroid(
@@ -471,8 +461,8 @@ def pi_stacking(
             if np.all(
                 centroid_dist
                 > max(
-                    max_face_to_face_centroid_distance_nm,
-                    max_edge_to_face_centroid_distance_nm,
+                    max_face_to_face_centroid_distance,
+                    max_edge_to_face_centroid_distance,
                 )
             ):
                 # centroid distance too far for all frames, skip
@@ -493,7 +483,7 @@ def pi_stacking(
             lig_res_frames_msk = calculate_face_stack_threshold(
                 face_plane_angle_range_rad,
                 face_normal_to_centroid_angle_range_rad,
-                max_face_to_face_centroid_distance_nm,
+                max_face_to_face_centroid_distance,
                 plane_angles,
                 res_to_lig_angle,
                 lig_to_res_angle,
@@ -518,8 +508,8 @@ def pi_stacking(
             tstack_msk = calculate_edge_stack_threshold(
                 edge_plane_angle_range_rad,
                 edge_normal_to_centroid_angle_range_rad,
-                max_edge_to_face_centroid_distance_nm,
-                edge_intersection_radius_nm,
+                max_edge_to_face_centroid_distance,
+                edge_intersection_radius,
                 plane_angles,
                 res_to_lig_angle,
                 lig_to_res_angle,
