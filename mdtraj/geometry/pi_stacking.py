@@ -27,7 +27,6 @@ import numpy as np
 
 import mdtraj as md
 from mdtraj.geometry import compute_distances_core
-from mdtraj.utils import in_units_of
 
 __all__ = ["pi_stacking"]
 
