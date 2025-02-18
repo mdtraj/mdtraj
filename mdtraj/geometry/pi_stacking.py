@@ -369,7 +369,7 @@ def pi_stacking(
         ligand group.
     max_face_to_face_centroid_distance : float
         The maximum distance between the centroids of the ligand and receptor groups for
-        the interaction. 
+        the interaction.
     face_plane_angle_range : tuple of float
         The range of acceptable angles between the two normal vectors defined by the two
         centroids. In degrees.

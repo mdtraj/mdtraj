@@ -58,7 +58,7 @@ def test_pi_stacking(get_fn):
     stacking_interactions = pi_stacking(t, lig_grps, protein_grps)
     # Since it returns per-frame, just get the 'first'
     stacking_interactions = stacking_interactions[0]
-    assert len(stacking_interactions ) == 2
+    assert len(stacking_interactions) == 2
     assert (lig_grps[0], protein_grps[0]) in stacking_interactions
     assert (lig_grps[1], protein_grps[0]) in stacking_interactions
     assert (lig_grps[2], protein_grps[0]) not in stacking_interactions
@@ -105,14 +105,14 @@ def test_t_stacking_more_relaxed_radius(get_fn):
 
 def test_t_stacking_default_settings(get_fn):
     """Test that t-stacking version of pi-stacking is being detected correctly."""
-    
+
     t: md.Trajectory = md.load(get_fn("6A22.pdb"))
     # for atm in t.top.atoms:
     #     print(atm.residue.chain.index, atm)
 
     lig_aromatic_atms_to_test = [
-        ("S10", "C9", "C8","N7", "C6"),  # t-stacking
-        ("C14", "C15", "C16", "C17", "C18" ,"C19" ),  # NOT pi-stacking
+        ("S10", "C9", "C8", "N7", "C6"),  # t-stacking
+        ("C14", "C15", "C16", "C17", "C18", "C19"),  # NOT pi-stacking
     ]
     lig_grps = []
     for lig_grp in lig_aromatic_atms_to_test:
@@ -137,9 +137,7 @@ def test_t_stacking_default_settings(get_fn):
             )
         )
     # More permissive edge intersection radius for t-stack
-    stacking_interactions = pi_stacking(
-        t, lig_grps, protein_grps
-    )
+    stacking_interactions = pi_stacking(t, lig_grps, protein_grps)
     stacking_interactions = stacking_interactions[0]
     assert len(stacking_interactions) == 1
     assert (lig_grps[0], protein_grps[0]) in stacking_interactions
