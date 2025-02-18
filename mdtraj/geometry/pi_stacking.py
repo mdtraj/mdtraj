@@ -38,12 +38,17 @@ def compute_centroid(trajectory, atoms):
 
     NOTE: Assumes the atoms are not across periodic boundaries.
 
-    Args:
-        trajectory: The trajectory to analyze, uses just the xyz coordinates.
-        atoms: The atom indices involved in the ring.
+    Parameters
+    ----------
+    trajectory : md.Trajectory
+        The trajectory to analyze, uses just the xyz coordinates.
+    atoms : array_like
+        The atom indices involved in the ring.
 
-    Returns:
-        The mean (centroid) of the ring atoms coordinates. MDTraj stores the coordiantes
+    Returns
+    -------
+    centroid : ndarray
+        The mean (centroid) of the ring atoms coordinates. MDTraj stores the coordinates
         in nm.
     """
     trj_subset = trajectory.xyz[:, atoms]
@@ -55,12 +60,18 @@ def compute_ring_normal(trajectory, atoms, centroid):
     """
     Calculate the normal vector to the plane defined by the ring atoms and the centroid.
 
-    Args:
-        trajectory: The trajectory to analyze, uses just the xyz coordinates.
-        atoms: The atom indices involved in the ring. Must be at least of length 2
-        centroid: The centroid of the ring atoms.
+    Parameters
+    ----------
+    trajectory : md.Trajectory
+        The trajectory to analyze, uses just the xyz coordinates.
+    atoms : array_like
+        The atom indices involved in the ring. Must be at least of length 2.
+    centroid : ndarray
+        The centroid of the ring atoms.
 
-    Returns:
+    Returns
+    -------
+    norm_vec : ndarray
         The normal vector to the plane defined by the ring atoms and the centroid.
         The normal vector is normalized, and the directionality is arbitrarily assigned
         by the order of the atoms list.
@@ -75,13 +86,19 @@ def compute_ring_normal(trajectory, atoms, centroid):
 
 
 def dot_pdt(v1, v2):
-    """Compute the dot product of two stacks of vectors.
+    """
+    Compute the dot product of two stacks of vectors.
 
-    Args:
-        v1: The first stack of vectors.
-        v2: The second stack of vectors.
+    Parameters
+    ----------
+    v1 : ndarray
+        The first stack of vectors.
+    v2 : ndarray
+        The second stack of vectors.
 
-    Returns:
+    Returns
+    -------
+    dot : ndarray
         The dot product of the two stacks of vectors.
     """
     dot = np.einsum("ij,ij->i", v1, v2)
@@ -92,11 +109,16 @@ def compute_angles(vec_1, vec_2):
     """
     Compute the angles between the two supplied vectors.
 
-    Args:
-        vec_1: The first vector to compute the angles between.
-        vec_2: The second vector to compute the angles between.
+    Parameters
+    ----------
+    vec_1 : ndarray
+        The first vector to compute the angles between.
+    vec_2 : ndarray
+        The second vector to compute the angles between.
 
-    Returns:
+    Returns
+    -------
+    angle : ndarray
         The angles between the two vectors, in radians.
     """
     angle = np.arccos(
@@ -106,20 +128,21 @@ def compute_angles(vec_1, vec_2):
     return angle
 
 
-def cap_angle(
-    angle,
-):
+def cap_angle(angle):
     """
     Bring the angle to the range 0-pi/2.
 
     For this capping, if the angle is beyond pi/2, we are then functionally finding the
     angle where v2 is the negative of the original.
 
-    Args:
-        angle: The vector of angles to cap. Angles assumed to be defined between 0 and
-            pi.
+    Parameters
+    ----------
+    angle : ndarray
+        The vector of angles to cap. Angles assumed to be defined between 0 and pi.
 
-    Returns:
+    Returns
+    -------
+    angle : ndarray
         The capped angles. Modifies the input array.
     """
     msk = angle > np.pi / 2
@@ -141,15 +164,22 @@ def calculate_intersection_point(
     could just solve for the line of intersection, and then project the centroid
     onto that.
 
-    Args:
-        plane_normal: The normal vector of one of the rings.
-        plane_centroid: The centroid of one of the rings.
-        tilted_normal: The normal vector of the other ring.
-        tilted_centroid: The centroid of the other ring.
+    Parameters
+    ----------
+    plane_normal : ndarray
+        The normal vector of one of the rings.
+    plane_centroid : ndarray
+        The centroid of one of the rings.
+    tilted_normal : ndarray
+        The normal vector of the other ring.
+    tilted_centroid : ndarray
+        The centroid of the other ring.
 
-    Returns:
+    Returns
+    -------
+    points : ndarray
         The point of intersection between the two rings. If the two planes are parallel,
-          returns array of NaNs for that frame.
+        returns array of NaNs for that frame.
     """
     points = np.zeros(plane_normal.shape)
     intersect_direction = np.cross(plane_normal, tilted_normal, axis=1)
@@ -191,22 +221,32 @@ def calculate_face_stack_threshold(
     """
     Calculate the threshold for face-to-face pi-stacking interactions.
 
-    Args:
-        face_plane_angle_range_rad: The range of acceptable angles between the two
-            normal vectors defined by the two centroids.
-        face_normal_to_centroid_angle_range_rad: The range of acceptable angles between
-            the normal vector and the vector between centroids. Checks both the ligand
-            and receptor groups.
-        max_face_to_face_centroid_distance_nm: The maximum distance between the
-            centroids of the ligand and receptor groups for the interaction.
-        plane_angles: The angles between the normals of the two rings. In radians
-        res_to_lig_angle: The angles between the normal of the receptor ring and the
-            vector between the centroids. In radians.
-        lig_to_res_angle: The angles between the normal of the ligand ring and the
-            vector between the centroids. In radians.
-        centroid_dist: The distance between the centroids of the two rings. In nm.
+    Parameters
+    ----------
+    face_plane_angle_range_rad : tuple of float
+        The range of acceptable angles between the two normal vectors defined by the two
+        centroids.
+    face_normal_to_centroid_angle_range_rad : tuple of float
+        The range of acceptable angles between the normal vector and the vector between
+        centroids.
+        Checks both the ligand and receptor groups.
+    max_face_to_face_centroid_distance_nm : float
+        The maximum distance between the centroids of the ligand and receptor groups for
+        the interaction.
+    plane_angles : ndarray
+        The angles between the normals of the two rings. In radians.
+    res_to_lig_angle : ndarray
+        The angles between the normal of the receptor ring and the vector between the
+        centroids. In radians.
+    lig_to_res_angle : ndarray
+        The angles between the normal of the ligand ring and the vector between the
+        centroids. In radians.
+    centroid_dist : ndarray
+        The distance between the centroids of the two rings. In nm.
 
-    Returns:
+    Returns
+    -------
+    face_msk : ndarray
         The mask of frames that meet the threshold for face-to-face pi-stacking.
     """
     face_msk = (
@@ -241,26 +281,37 @@ def calculate_edge_stack_threshold(
     """
     Calculate the threshold for edge-to-face pi-stacking interactions.
 
-    Args:
-        edge_plane_angle_range_rad: The range of acceptable angles between the two
-            normal vectors defined by the two centroids.
-        edge_normal_to_centroid_angle_range_rad: The range of acceptable angles between
-            the normal vector and the vector between centroids. Checks both the ligand
-            and receptor groups.
-        max_edge_to_face_centroid_distance_nm: The maximum distance between the
-            centroids of the ligand and receptor groups for the interaction. In nm.
-        edge_intersection_radius_nm: The maximum distance between the point of
-            intersection between both rings and the opposite ring's centroid
-        plane_angles: The angles between the normals of the two rings. In radians
-        res_to_lig_angle: The angles between the normal of the receptor ring and the
-            vector between the centroids. In radians.
-        lig_to_res_angle: The angles between the normal of the ligand ring and the
-            vector between the centroids. In radians.
-        centroid_dist: The distance between the centroids of the two rings.
-        min_inter_dist: The distance between the intersection point and the
-            centroids of the two rings. In nm.
+    Parameters
+    ----------
+    edge_plane_angle_range_rad : tuple of float
+        The range of acceptable angles between the two normal vectors defined by the two
+        centroids.
+    edge_normal_to_centroid_angle_range_rad : tuple of float
+        The range of acceptable angles between the normal vector and the vector between
+        centroids. Checks both the ligand and receptor groups.
+    max_edge_to_face_centroid_distance_nm : float
+        The maximum distance between the centroids of the ligand and receptor groups for
+        the interaction.
+    edge_intersection_radius_nm : float
+        The maximum distance between the point of intersection between both rings and
+        the opposite ring's centroid.
+    plane_angles : ndarray
+        The angles between the normals of the two rings. In radians.
+    res_to_lig_angle : ndarray
+        The angles between the normal of the receptor ring and the vector between the
+        centroids. In radians.
+    lig_to_res_angle : ndarray
+        The angles between the normal of the ligand ring and the vector between the
+        centroids. In radians.
+    centroid_dist : ndarray
+        The distance between the centroids of the two rings. In nm.
+    min_inter_dist : ndarray
+        The distance between the intersection point and the centroids of the two rings.
+        In nm.
 
-    Returns:
+    Returns
+    -------
+    tstack_msk : ndarray
         The mask of frames that meet the threshold for edge-to-face pi-stacking.
     """
     tstack_msk = (
@@ -298,34 +349,45 @@ def pi_stacking(
     """
     Calculate the pi-stacking interactions based on supplied atom groups.
 
-    Args:
-        trajectory: The trajectory to analyze. The ligand and receptor groups map onto
-            the trajectory's topology indices.
-        ligand_aromatic_groups: The atom indices of the groups to be considered aromatic
-            for the ligand.
-        receptor_aromatic_groups: The atom indices of the groups to be considered
-            aromatic for the receptor.
-        ligand_neighbor_cutoff: The distance cutoff for considering a receptor group for
-            pi-stacking with a ligand group. In angstroms.
-        max_face_to_face_centroid_distance: The maximum distance between the centroids
-            of the ligand and receptor groups for the interaction. In Angstroms.
-        face_plane_angle_range: The range of acceptable angles between the two normal
-            vectors defined by the two centroids. In degrees.
-        face_normal_to_centroid_angle_range: The range of acceptable angles between the
-            normal vector and the vector between centroids. Checks both the ligand and
-            receptor groups. In degrees.
-        max_edge_to_face_centroid_distance: The maximum distance between the centroids
-            of the ligand and receptor groups for the interaction. In Angstroms.
-        edge_plane_angle_range: The range of acceptable angles between the two normal
-            vectors defined by the two centroids. In degrees.
-        edge_normal_to_centroid_angle_range: The range of acceptable angles between the
-            normal vector and the vector between centroids. Checks both the ligand and
-            receptor groups. In degrees.
-        edge_intersection_radius: The maximum distance between the point of intersection
-            between both rings and the opposite ring's centroid
+    Parameters
+    ----------
+    trajectory : md.Trajectory
+        The trajectory to analyze. The ligand and receptor groups map onto the
+          trajectory's topology indices.
+    ligand_aromatic_groups : list of array_like
+        The atom indices of the groups to be considered aromatic for the ligand.
+    receptor_aromatic_groups : list of array_like
+        The atom indices of the groups to be considered aromatic for the receptor.
+    ligand_neighbor_cutoff : float
+        The distance cutoff for considering a receptor group for pi-stacking with a
+        ligand group. In angstroms.
+    max_face_to_face_centroid_distance : float
+        The maximum distance between the centroids of the ligand and receptor groups for
+        the interaction. In angstroms.
+    face_plane_angle_range : tuple of float
+        The range of acceptable angles between the two normal vectors defined by the two
+        centroids. In degrees.
+    face_normal_to_centroid_angle_range : tuple of float
+        The range of acceptable angles between the normal vector and the vector between
+        centroids. Checks both the ligand and receptor groups. In degrees.
+    max_edge_to_face_centroid_distance : float
+        The maximum distance between the centroids of the ligand and receptor groups for
+        the interaction. In angstroms.
+    edge_plane_angle_range : tuple of float
+        The range of acceptable angles between the two normal vectors defined by the two
+        centroids. In degrees.
+    edge_normal_to_centroid_angle_range : tuple of float
+        The range of acceptable angles between the normal vector and the vector between
+        centroids. Checks both the ligand and receptor groups. In degrees.
+    edge_intersection_radius : float
+        The maximum distance between the point of intersection between both rings and
+        the opposite ring's centroid.
 
-    Yields:
-        A tuple of the frame index and the StackingInteraction object.
+    Yields
+    ------
+    stacking_interactions: list, len=n_frames
+        A list of lists of tuples, where each tuple is a pair of aromatic groups that
+        are stacking in that frame.
     """
     ligand_neighbor_cutoff_nm = in_units_of(
         ligand_neighbor_cutoff, "angstrom", "nanometers"
@@ -459,6 +521,6 @@ def pi_stacking(
                 centroid_dist,
                 min_inter_dist,
             )
-            for frame in np.where(lig_res_frames_msk)[0]:
+            for frame in np.where(tstack_msk)[0]:
                 stacking_interactions[frame].append((lig_grp, grp))
     return stacking_interactions
