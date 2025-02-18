@@ -15,4 +15,5 @@ dependencies:
   - gsd>=2.8
   - pytest
   - pytest-xdist
+  - pytest-rerunfailures
   - netCDF4

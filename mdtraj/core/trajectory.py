@@ -21,7 +21,6 @@
 ##############################################################################
 
 
-import functools
 import os
 import warnings
 from collections.abc import Iterable
@@ -611,14 +610,16 @@ def join(trajs, check_topology=True, discard_overlapping_frames=False):
     discard_overlapping_frames : bool
         Check for overlapping frames and discard
     """
-    return functools.reduce(
-        lambda x, y: x.join(
-            y,
-            check_topology=check_topology,
-            discard_overlapping_frames=discard_overlapping_frames,
-        ),
-        trajs,
-    )
+    list_trajs = list(trajs)
+    if len(list_trajs) == 1:
+        return list_trajs[0]
+    else:
+        joined_traj = list_trajs[0]
+        joined_traj = joined_traj.join(list_trajs[1:], 
+                                       check_topology=check_topology, 
+                                       discard_overlapping_frames=discard_overlapping_frames
+                                       )
+        return joined_traj
 
 
 class Trajectory:
@@ -2043,7 +2044,7 @@ class Trajectory:
         --------
         stack : stack multiple trajectories along the atom axis
         """
-        xyz = np.array(self.xyz[:, atom_indices], order="C")
+        xyz = np.array(self.xyz[:, sorted(atom_indices)], order="C")
         topology = None
         if self._topology is not None:
             topology = self._topology.subset(atom_indices)
