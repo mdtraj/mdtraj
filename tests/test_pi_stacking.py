@@ -22,7 +22,6 @@
 
 import mdtraj as md
 from mdtraj.geometry.pi_stacking import pi_stacking
-from mdtraj.testing import eq
 
 
 def test_pi_stacking(get_fn):
