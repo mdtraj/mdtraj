@@ -58,6 +58,7 @@ def test_pi_stacking(get_fn):
     stacking_interactions = pi_stacking(t, lig_grps, protein_grps)
     # Since it returns per-frame, just get the 'first'
     stacking_interactions = stacking_interactions[0]
+    assert len(stacking_interactions == 2 )
     assert (lig_grps[0], protein_grps[0]) in stacking_interactions
     assert (lig_grps[1], protein_grps[0]) in stacking_interactions
     assert (lig_grps[2], protein_grps[0]) not in stacking_interactions
@@ -97,5 +98,6 @@ def test_t_stacking(get_fn):
         t, lig_grps, protein_grps, edge_intersection_radius=0.21
     )
     stacking_interactions = stacking_interactions[0]
+    assert len(stacking_interactions == 1)
     assert (lig_grps[0], protein_grps[0]) in stacking_interactions
     assert (lig_grps[1], protein_grps[0]) not in stacking_interactions
