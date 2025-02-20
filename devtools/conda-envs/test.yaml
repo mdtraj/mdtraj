@@ -3,17 +3,18 @@ channels:
   - conda-forge
 dependencies:
   # Core
-  - python
   - cython =3
-  - numpy
-  - zlib
-  - pyparsing
-  - scipy
-  - networkx
-  - pandas
-  - pytables
   - gsd>=2.8
-  - pytest
-  - pytest-xdist
-  - pytest-rerunfailures
   - netCDF4
+  - networkx
+  - numpy
+  - openmm 
+  - pandas
+  - pyparsing
+  - pytables
+  - pytest
+  - pytest-rerunfailures
+  - pytest-xdist
+  - python
+  - scipy
+  - zlib
