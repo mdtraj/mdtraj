@@ -24,6 +24,8 @@ import os
 
 import pytest
 
+flaky_pdb_dl = pytest.mark.flaky(rerun=3, reason='github-node flaky pdb dl')
+
 
 @pytest.fixture(scope="session")
 def get_fn():

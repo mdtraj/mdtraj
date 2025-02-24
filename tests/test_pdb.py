@@ -28,6 +28,7 @@ import tempfile
 import numpy as np
 import pytest
 
+from conftest import flaky_pdb_dl
 from mdtraj import Topology, load, load_pdb
 from mdtraj.formats.pdb import pdbstructure
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
@@ -207,6 +208,7 @@ def test_pdbstructure_3():
         eq(expected[i], c)
 
 
+@flaky_pdb_dl
 def test_pdb_from_url():
     # load pdb from URL
     t1 = load_pdb("http://www.rcsb.org/pdb/files/4ZUO.pdb.gz")
