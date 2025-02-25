@@ -45,13 +45,15 @@ flaky_on_macos = pytest.mark.flaky(condition=sys.platform.startswith('darwin'), 
 N_FRAMES = 20
 N_ATOMS = 20
 
-xyz = np.asarray(np.random.randn(N_FRAMES, N_ATOMS, 3), dtype=np.float32)
+rng = np.random.default_rng()
+
+xyz = np.asarray(rng.standard_normal((N_FRAMES, N_ATOMS, 3), dtype=np.float32))
 pairs = np.array(list(itertools.combinations(range(N_ATOMS), 2)), dtype=np.int32)
 times = np.array([[i, 0] for i in range(N_FRAMES)[::2]], dtype=np.int32)
 
 ptraj = md.Trajectory(xyz=xyz, topology=None)
 ptraj.unitcell_vectors = np.ascontiguousarray(
-    np.random.randn(N_FRAMES, 3, 3) + 2 * np.eye(3, 3),
+    rng.standard_normal((N_FRAMES, 3, 3)) + 2 * np.eye(3, 3),
     dtype=np.float32,
 )
 
@@ -281,7 +283,7 @@ def test_distance_nan():
 
 def test_closest_contact_nan_pos():
     box_size = np.array([3.0, 4.0, 5.0])
-    xyz = np.asarray(np.random.randn(2, 20, 3), dtype=np.float32)
+    xyz = rng.standard_normal((2, 20, 3), dtype=np.float32)
     xyz *= box_size
     # Set the last frame to nan
     xyz[-1] = np.nan
