@@ -1,6 +1,6 @@
 pip
 setuptools
-sphinx
+sphinx <7.3
 sphinx_rtd_theme
 nbsphinx
 nbsphinx_link
