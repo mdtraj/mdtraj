@@ -121,16 +121,15 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
                     )
                     old_atom_to_new_atom[atom] = newAtom
 
-    bondsiter = topology.bonds
+    bondsiter: Iterator[Bond] | list[Bond] = topology.bonds
     if not hasattr(bondsiter, "__iter__"):
         bondsiter = list(bondsiter)
 
     for bond in bondsiter:
         try:
-            atom1, atom2 = bond
             newTopology.add_bond(
-                old_atom_to_new_atom[atom1],
-                old_atom_to_new_atom[atom2],
+                old_atom_to_new_atom[bond.atom1],
+                old_atom_to_new_atom[bond.atom2],
                 type=bond.type,
                 order=bond.order,
             )
@@ -253,8 +252,7 @@ class Topology:
                     out.add_atom(atom.name, atom.element, r, serial=atom.serial)
 
         for bond in self.bonds:
-            a1, a2 = bond
-            out.add_bond(a1, a2, type=bond.type, order=bond.order)
+            out.add_bond(bond.atom1, bond.atom2, type=bond.type, order=bond.order)
 
         return out
 
@@ -319,10 +317,9 @@ class Topology:
                     atom_mapping[atom] = a
 
         for bond in other.bonds:
-            a1, a2 = bond
             out.add_bond(
-                atom_mapping[a1],
-                atom_mapping[a2],
+                atom_mapping[bond.atom1],
+                atom_mapping[bond.atom2],
                 type=bond.type,
                 order=bond.order,
             )
@@ -407,10 +404,9 @@ class Topology:
                     atom_mapping[atom] = a
 
         for bond in self.bonds:
-            a1, a2 = bond
             out.addBond(
-                atom_mapping[a1],
-                atom_mapping[a2],
+                atom_mapping[bond.atom1],
+                atom_mapping[bond.atom2],
                 type=bond_mapping[bond.type],
                 order=bond.order,
             )
@@ -528,7 +524,7 @@ class Topology:
             ],
         )
 
-        bonds = np.zeros([len(self._bonds), 4], dtype=float)
+        bonds: NDArray[np.float64]  = np.zeros([len(self._bonds), 4], dtype=float)
         for index, bond in enumerate(self.bonds):
             if bond.order is None:
                 order = 0.0
@@ -1396,7 +1392,7 @@ class Topology:
 
         num_atoms = self.n_atoms
         atom_bonds = [[] for i in range(num_atoms)]
-        for atom1, atom2 in self.bonds:
+        for atom1, atom2, _, _, in self.bonds:
             atom_bonds[atom1.index].append(atom2.index)
             atom_bonds[atom2.index].append(atom1.index)
 
@@ -1883,7 +1879,7 @@ def float_to_bond_type(bond_float: float) -> Singleton | None:
     return None
 
 
-class Bond(namedtuple("Bond", ["atom1", "atom2"])):
+class Bond(namedtuple("Bond", ["atom1", "atom2", "type", "order"])):
     """A Bond representation of a bond between two Atoms within a Topology
 
     Attributes
