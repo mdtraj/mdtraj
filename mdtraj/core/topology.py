@@ -48,7 +48,7 @@ import os
 import warnings
 import xml.etree.ElementTree as etree
 from collections import namedtuple
-from typing import TYPE_CHECKING, Literal, Sequence
+from typing import TYPE_CHECKING, Iterator, Literal, Sequence
 import numpy as np
 from numpy.typing import NDArray
 
@@ -63,8 +63,8 @@ from mdtraj.utils import ensure_type, ilen, import_
 from mdtraj.utils.singleton import Singleton
 
 if TYPE_CHECKING:
-    import MDtraj as md
-    import openmm
+    import mdtraj as md
+    import openmm  # type: ignore
     import pandas as pd
     import networkx as nx
 
@@ -123,7 +123,7 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
 
     bondsiter = topology.bonds
     if not hasattr(bondsiter, "__iter__"):
-        bondsiter = bondsiter()
+        bondsiter = list(bondsiter)
 
     for bond in bondsiter:
         try:
@@ -935,7 +935,7 @@ class Topology:
         return self._chains[index]
 
     @property
-    def chains(self) -> iter[Chain]:
+    def chains(self) -> Iterator[Chain]:
         """Iterator over all Chains in the Topology.
 
         Returns
@@ -967,7 +967,7 @@ class Topology:
         return self._residues[index]
 
     @property
-    def residues(self) -> iter[Residue]:
+    def residues(self) -> Iterator[Residue]:
         """Iterator over all Residues in the Topology.
 
         Returns
@@ -1000,7 +1000,7 @@ class Topology:
         return self._atoms[index]
 
     @property
-    def atoms(self) -> iter[Atom]:
+    def atoms(self) -> Iterator[Atom]:
         """Iterator over all Atoms in the Topology.
 
         Returns
@@ -1012,7 +1012,7 @@ class Topology:
             for residue in chain._residues:
                 yield from residue._atoms
 
-    def atoms_by_name(self, name: str) -> iter[Atom]:
+    def atoms_by_name(self, name: str) -> Iterator[Atom]:
         """Iterator over all Atoms in the Topology with a specified name
 
         Parameters
@@ -1039,7 +1039,7 @@ class Topology:
         return len(self._atoms)
 
     @property
-    def bonds(self) -> iter[Bond]:
+    def bonds(self) -> Iterator[Bond]:
         """Iterator over all bonds (each represented as a tuple of two Atoms) in the Topology.
 
         Returns
@@ -1339,7 +1339,7 @@ class Topology:
 
     @classmethod
     def _unique_pairs(
-        cls, a_indices: iter[int], b_indices: iter[int]
+        cls, a_indices: Iterator[int], b_indices: Iterator[int]
     ) -> NDArray[np.int32]:
         return np.array(
             list(
@@ -1354,7 +1354,7 @@ class Topology:
 
     @classmethod
     def _unique_pairs_mutually_exclusive(
-        cls, a_indices: iter[int], b_indices: iter[int]
+        cls, a_indices: Iterator[int], b_indices: Iterator[int]
     ) -> NDArray[np.int32]:
         pairs = np.fromiter(
             itertools.chain.from_iterable(
@@ -1366,7 +1366,7 @@ class Topology:
         return np.vstack((pairs[::2], pairs[1::2])).T
 
     @classmethod
-    def _unique_pairs_equal(cls, a_indices: iter[int]) -> NDArray[np.int32]:
+    def _unique_pairs_equal(cls, a_indices: Iterator[int]) -> NDArray[np.int32]:
         pairs = np.fromiter(
             itertools.chain.from_iterable(
                 itertools.combinations(a_indices, 2),
@@ -1501,7 +1501,7 @@ class Chain:
         self.chain_id: str | None = chain_id
 
     @property
-    def residues(self) -> iter[Residue]:
+    def residues(self) -> Iterator[Residue]:
         """Iterator over all Residues in the Chain.
 
         Returns
@@ -1531,7 +1531,7 @@ class Chain:
         return len(self._residues)
 
     @property
-    def atoms(self) -> iter[Atom]:
+    def atoms(self) -> Iterator[Atom]:
         """Iterator over all Atoms in the Chain.
 
         Returns
@@ -1542,7 +1542,7 @@ class Chain:
         for residue in self._residues:
             yield from residue._atoms
 
-    def atoms_by_name(self, name: str) -> iter[Atom]:
+    def atoms_by_name(self, name: str) -> Iterator[Atom]:
         """Iterator over all Atoms in the Chain with a specified name.
 
         Parameters
@@ -1618,7 +1618,7 @@ class Residue:
         self._atoms: list[Atom] = []
 
     @property
-    def atoms(self) -> iter[Atom]:
+    def atoms(self) -> Iterator[Atom]:
         """Iterator over all Atoms in the Residue.
 
         Returns
@@ -1628,7 +1628,7 @@ class Residue:
         """
         return iter(self._atoms)
 
-    def atoms_by_name(self, name: str) -> iter[Atom]:
+    def atoms_by_name(self, name: str) -> Iterator[Atom]:
         """Iterator over all Atoms in the Residue with a specified name
 
         Parameters
