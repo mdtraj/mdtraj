@@ -601,8 +601,19 @@ class Topology:
             raise ValueError(
                 "atoms must be uniquely numbered " "starting from zero.",
             )
-        out._atoms = [None for i in range(len(atoms))]
+        
+        # create a default atom to fill in the topology to replace the original None placeholder
+        default_topology = Topology()
 
+        default_chain = Chain(index=-1, topology=default_topology)
+
+        default_residue = Residue(name="default", index=-1, chain=default_chain, resSeq=-1)
+
+        default_atom = Atom(name="default", element=elem.virtual, index=-1, residue=default_residue)
+
+        out._atoms = [default_atom for _ in range(len(atoms))]
+        #out._atoms = [None for i in range(len(atoms))]
+        
         c = None
         r = None
         previous_chainID = None
@@ -1071,7 +1082,7 @@ class Topology:
                 ),
             )
             for residue in tree.getroot().findall("Residue"):
-                bonds = []
+                bonds: list[tuple[str, str]] = []
                 Topology._standardBonds[residue.attrib["name"]] = bonds
                 for bond in residue.findall("Bond"):
                     bonds.append((bond.attrib["from"], bond.attrib["to"]))
@@ -1080,7 +1091,7 @@ class Topology:
 
             atomMaps = []
             for residue in chain._residues:
-                atomMap = {}
+                atomMap: dict[str, Atom] = {}
                 atomMaps.append(atomMap)
                 for atom in residue._atoms:
                     atomMap[atom.name] = atom
@@ -1213,7 +1224,7 @@ class Topology:
 
     def select_atom_indices(
         self,
-        selection: Literal["all", "alpha", "minimal", "heavy", "water"] = "minimal",
+        selection: str = "minimal",
     ) -> NDArray[np.int32]:
         """Get the indices of biologically-relevant groups by name.
 
@@ -1243,27 +1254,25 @@ class Topology:
         if selection == "all":
             atom_indices = np.arange(self.n_atoms)
         elif selection == "alpha":
-            atom_indices = [
-                a.index for a in self.atoms if a.name == "CA" and a.residue.is_protein
-            ]
+            atom_indices = np.array(
+                [a.index for a in self.atoms if a.name == "CA" and a.residue.is_protein],
+                dtype=np.int32
+            )
         elif selection == "minimal":
-            atom_indices = [
-                a.index
-                for a in self.atoms
-                if a.name in ["CA", "CB", "C", "N", "O"] and a.residue.is_protein
-            ]
+            atom_indices = np.array(
+                [a.index for a in self.atoms if a.name in ["CA", "CB", "C", "N", "O"] and a.residue.is_protein],
+                dtype=np.int32
+            )
         elif selection == "heavy":
-            atom_indices = [
-                a.index
-                for a in self.atoms
-                if a.element != elem.hydrogen and a.residue.is_protein
-            ]
+            atom_indices = np.array(
+                [a.index for a in self.atoms if a.element != elem.hydrogen and a.residue.is_protein],
+								dtype=np.int32
+            )		
         elif selection == "water":
-            atom_indices = [
-                a.index
-                for a in self.atoms
-                if a.name in ["O", "OW"] and a.residue.is_water
-            ]
+            atom_indices = np.array(
+                [a.index for a in self.atoms if a.name in ["O", "OW"] and a.residue.is_water],
+                dtype=np.int32
+            )
         else:
             raise ValueError(
                 "{} is not a valid option. Selection must be one of {}".format(
@@ -1282,7 +1291,7 @@ class Topology:
     ) -> NDArray[np.int32]:
         """Generate unique pairs of atom indices.
 
-        If a selecton is a string, it will be resolved using the atom selection
+        If a selection is a string, it will be resolved using the atom selection
         DSL, otherwise it is expected to be an array of atom indices.
 
         Parameters
