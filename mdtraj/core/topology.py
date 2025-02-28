@@ -531,7 +531,7 @@ class Topology:
             else:
                 order = bond.order
             try:
-                bond_type = float(bond.type)
+                bond_type = float(bond.type) if bond.type is not None else 0.0
             except TypeError:
                 # Trap the None case
                 bond_type = 0.0
@@ -615,11 +615,11 @@ class Topology:
                 previous_chainID = atom["chainID"]
 
                 c = out.add_chain()
-
+            assert c is not None, "Expected a Chain, but got None"
             if (
                 atom["resSeq"] != previous_resSeq
                 or atom["resName"] != previous_resName
-                or c.n_atoms == 0
+                or c.n_atoms == 0		
             ):
                 previous_resSeq = atom["resSeq"]
                 previous_resName = atom["resName"]
@@ -630,7 +630,7 @@ class Topology:
                     atom["resSeq"],
                     atom["segmentID"],
                 )
-
+            assert r is not None, "Expected a Residue, but got None"
             a = Atom(
                 atom["name"],
                 elem.get_by_symbol(atom["element"]),
@@ -646,7 +646,7 @@ class Topology:
             ai2 = int(bond[1])
             try:
                 bond_type = float_to_bond_type(bond[2])
-                bond_order = int(bond[3])
+                bond_order: int | None = int(bond[3])
                 if bond_order == 0:
                     bond_order = None
             except IndexError:
@@ -832,7 +832,7 @@ class Topology:
         else:
             atom = Atom(name, element, index, residue, serial=serial)
             for i in range(index, len(self._atoms)):
-                self._atoms[i].index += 1
+                    self._atoms[i].index += 1
             self._atoms.insert(index, atom)
         self._numAtoms += 1
         if rindex is None:
@@ -850,12 +850,13 @@ class Topology:
             The index of the atom to be removed.
         """
         a = self._atoms[index]
+        assert a is not None, "Expected an Atom, but got None"
         if a.index != index:
             raise RuntimeError(
                 "Index of selected atom does not match order in topology.",
             )
         for i in range(index + 1, len(self._atoms)):
-            self._atoms[i].index -= 1
+               self._atoms[i].index -= 1
         a.residue._atoms.remove(a)
         self._atoms.remove(a)
         self._numAtoms -= 1
@@ -894,7 +895,7 @@ class Topology:
         atom1: Atom,
         atom2: Atom,
         type: Singleton | None = None,
-        order: Literal[1, 2, 3] | None = None,
+        order: int | None = None,
     ) -> None:
         """Create a new bond and add it to the Topology.
 
@@ -993,6 +994,7 @@ class Topology:
         atom : Atom
             The `index`-th atom in the topology.
         """
+
         return self._atoms[index]
 
     @property
@@ -1392,7 +1394,7 @@ class Topology:
 
         num_atoms = self.n_atoms
         atom_bonds = [[] for i in range(num_atoms)]
-        for atom1, atom2, _, _, in self.bonds:
+        for atom1, atom2 in self.bonds:
             atom_bonds[atom1.index].append(atom2.index)
             atom_bonds[atom2.index].append(atom1.index)
 
@@ -1809,7 +1811,7 @@ class Single(Singleton):
         return 1.0
 
 
-Single = Single()
+Single: Singleton = Single()
 
 
 class Double(Singleton):
@@ -1820,7 +1822,7 @@ class Double(Singleton):
         return 2.0
 
 
-Double = Double()
+Double: Singleton = Double()
 
 
 class Triple(Singleton):
@@ -1831,7 +1833,7 @@ class Triple(Singleton):
         return 3.0
 
 
-Triple = Triple()
+Triple: Singleton = Triple()
 
 
 class Aromatic(Singleton):
@@ -1842,7 +1844,7 @@ class Aromatic(Singleton):
         return 1.5
 
 
-Aromatic = Aromatic()
+Aromatic: Singleton = Aromatic()
 
 
 class Amide(Singleton):
@@ -1853,7 +1855,7 @@ class Amide(Singleton):
         return 1.25
 
 
-Amide = Amide()
+Amide: Singleton = Amide()
 
 
 def float_to_bond_type(bond_float: float) -> Singleton | None:
@@ -1878,9 +1880,11 @@ def float_to_bond_type(bond_float: float) -> Singleton | None:
             return bond_type
     return None
 
-
-class Bond(namedtuple("Bond", ["atom1", "atom2", "type", "order"])):
-    """A Bond representation of a bond between two Atoms within a Topology
+class Bond(namedtuple("Bond", ["atom1", "atom2"])):
+    # Add type annotations for the extra attributes.
+    type: Singleton | None
+    order: int | None
+    """A Bond object represents a bond between two Atoms within a Topology.
 
     Attributes
     ----------
@@ -1896,7 +1900,7 @@ class Bond(namedtuple("Bond", ["atom1", "atom2", "type", "order"])):
         atom1: Atom,
         atom2: Atom,
         type: Singleton | None,
-        order: Literal[1, 2, 3] | None,
+        order: int | None,
     ) -> Bond:
         """Construct a new Bond.  You should call add_bond()
         on the Topology instead of calling this directly.
@@ -1916,7 +1920,7 @@ class Bond(namedtuple("Bond", ["atom1", "atom2", "type", "order"])):
 
     def __getnewargs__(
         self,
-    ) -> tuple[Atom, Atom, Singleton | None, Literal[1, 2, 3] | None]:
+    ) -> tuple[Atom, Atom, Singleton | None, int | None]:
         """
         Support for pickle protocol 2:
         http://docs.python.org/2/library/pickle.html#pickling-and-unpickling-normal-class-instances
