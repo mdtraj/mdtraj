@@ -1870,7 +1870,7 @@ class Single(Singleton):
         return 1.0
 
 
-Single: Singleton = Single()
+Single: Singleton = Single() #type: ignore[no-redef]
 
 
 class Double(Singleton):
@@ -1881,7 +1881,7 @@ class Double(Singleton):
         return 2.0
 
 
-Double: Singleton = Double()
+Double: Singleton = Double() #type: ignore[no-redef]
 
 
 class Triple(Singleton):
@@ -1892,7 +1892,7 @@ class Triple(Singleton):
         return 3.0
 
 
-Triple: Singleton = Triple()
+Triple: Singleton = Triple() #type: ignore[no-redef]
 
 
 class Aromatic(Singleton):
@@ -1903,7 +1903,7 @@ class Aromatic(Singleton):
         return 1.5
 
 
-Aromatic: Singleton = Aromatic()
+Aromatic: Singleton = Aromatic() #type: ignore[no-redef]
 
 
 class Amide(Singleton):
@@ -1914,7 +1914,7 @@ class Amide(Singleton):
         return 1.25
 
 
-Amide: Singleton = Amide()
+Amide: Singleton = Amide() #type: ignore[no-redef]
 
 
 def float_to_bond_type(bond_float: float) -> Singleton | None:
