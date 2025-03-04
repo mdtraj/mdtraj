@@ -15,3 +15,4 @@ Changes from upsteam's xdrfile-1.1.4 include:
  - Bugfix in do_trnheader to return the appropriate error code when reading magic, and properly check the value of the magic in xdrfile_trr.c
  - Bugfix of float exception (divide by zero) in xdrfile.c, see https://github.com/SimTk/mdtraj/issues/616
  - Implemented efficient seeking pattern inspired by xdrlib2 (part of MDAnalysis)
+ - Removed unused variables and compiler warnings, fixed overflow error handling (return -1 instead of just printing to stderr)
