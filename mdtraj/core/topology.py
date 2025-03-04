@@ -1465,15 +1465,15 @@ class Topology:
                 # Recursively tag all the bonded atoms.
 
                 while len(atom_stack) > 0:
-                    atom = atom_stack[-1]
-                    atom_molecule[atom] = molecule
+                    atom_index = atom_stack[-1]
+                    atom_molecule[atom_index] = molecule
                     while (
-                        neighbor_stack[-1] < len(atom_bonds[atom])
-                        and atom_molecule[atom_bonds[atom][neighbor_stack[-1]]] != -1
+                        neighbor_stack[-1] < len(atom_bonds[atom_index])
+                        and atom_molecule[atom_bonds[atom_index][neighbor_stack[-1]]] != -1
                     ):
                         neighbor_stack[-1] += 1
-                    if neighbor_stack[-1] < len(atom_bonds[atom]):
-                        atom_stack.append(atom_bonds[atom][neighbor_stack[-1]])
+                    if neighbor_stack[-1] < len(atom_bonds[atom_index]):
+                        atom_stack.append(atom_bonds[atom_index][neighbor_stack[-1]])
                         neighbor_stack.append(0)
                     else:
                         del atom_stack[-1]
