@@ -48,7 +48,7 @@ import os
 import warnings
 import xml.etree.ElementTree as etree
 from collections import namedtuple
-from typing import TYPE_CHECKING, Iterator, Literal, Sequence, cast
+from typing import TYPE_CHECKING, Callable, Iterable, Iterator, Literal, Sequence, cast
 import numpy as np
 from numpy.typing import NDArray
 
@@ -121,9 +121,9 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
                     )
                     old_atom_to_new_atom[atom] = newAtom
 
-    bondsiter: Iterator[Bond] | list[Bond] = topology.bonds
+    bondsiter: Iterable[Bond] | Callable[[], Iterable[Bond]] = topology.bonds
     if not hasattr(bondsiter, "__iter__"):
-        bondsiter = list(bondsiter)
+        bondsiter = bondsiter()
 
     for bond in bondsiter:
         try:
