@@ -252,7 +252,8 @@ class Topology:
                     out.add_atom(atom.name, atom.element, r, serial=atom.serial)
 
         for bond in self.bonds:
-            out.add_bond(bond.atom1, bond.atom2, type=bond.type, order=bond.order)
+            a1, a2 = bond
+            out.add_bond(a1, a2, type=bond.type, order=bond.order)
 
         return out
 
