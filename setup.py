@@ -293,7 +293,7 @@ metadata = dict(
     url="http://mdtraj.org",
     download_url="https://github.com/rmcgibbo/mdtraj/releases/latest",
     platforms=["Linux", "Mac OS-X", "Unix", "Windows"],
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     classifiers=CLASSIFIERS.splitlines(),
     packages=find_packages(),
     cmdclass={**versioneer.get_cmdclass(), "build_ext": build_ext},
@@ -302,8 +302,21 @@ metadata = dict(
         "scipy",
         "pyparsing",
         "packaging",
-        "netCDF4",
     ],
+    extra_require={
+        "tests": [
+            "pytest",
+            "pytest-rerunfailures",
+            "pytest-xdist",
+            "scripttest",
+        ],
+        "optional": [
+            "tables",
+            "networkx",
+            "netCDF4",
+            "pandas",
+        ],
+    },
     package_data={"mdtraj.formats.pdb": ["data/*"]},
     zip_safe=False,
     entry_points={
