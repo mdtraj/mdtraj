@@ -282,6 +282,22 @@ def geometry_extensions():
     ]
 
 
+EXTRAS_REQUIRE = {
+    "tests": [
+        "pytest",
+        "pytest-rerunfailures",
+        "pytest-xdist",
+        "scripttest",
+    ],
+    "optional": [
+        "tables",
+        "networkx",
+        "netCDF4",
+        "pandas",
+    ],
+}
+
+
 metadata = dict(
     name="mdtraj",
     author="Robert McGibbon",
@@ -303,19 +319,10 @@ metadata = dict(
         "pyparsing",
         "packaging",
     ],
-    extra_require={
-        "tests": [
-            "pytest",
-            "pytest-rerunfailures",
-            "pytest-xdist",
-            "scripttest",
-        ],
-        "optional": [
-            "tables",
-            "networkx",
-            "netCDF4",
-            "pandas",
-        ],
+    extras_require={
+        "tests" = EXTRAS_REQUIRE["tests"],
+        "optional" = EXTRAS_REQUIRE["optional"],
+        "all" = EXTRAS_REQUIRE["test"] + EXTRAS_REQUIRE["optional"],
     },
     package_data={"mdtraj.formats.pdb": ["data/*"]},
     zip_safe=False,
