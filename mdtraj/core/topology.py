@@ -624,31 +624,31 @@ class Topology:
                 previous_chainID = atom["chainID"]
 
                 c = out.add_chain()
-            assert c is not None, "Expected a Chain, but got None"
+
             if (
                 atom["resSeq"] != previous_resSeq
                 or atom["resName"] != previous_resName
-                or c.n_atoms == 0
+                or c.n_atoms == 0 #type: ignore
             ):
                 previous_resSeq = atom["resSeq"]
                 previous_resName = atom["resName"]
 
                 r = out.add_residue(
                     atom["resName"],
-                    c,
+                    c,  # type: ignore
                     atom["resSeq"],
                     atom["segmentID"],
                 )
-            assert r is not None, "Expected a Residue, but got None"
+
             a = Atom(
                 atom["name"],
                 elem.get_by_symbol(atom["element"]),
                 atom_index,
-                r,
+                r, # type: ignore
                 serial=atom["serial"],
             )
             out._atoms[atom_index] = a
-            r._atoms.append(a)
+            r._atoms.append(a) # type: ignore
 
         for bond in bonds:
             ai1 = int(bond[0])
