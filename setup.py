@@ -320,9 +320,9 @@ metadata = dict(
         "packaging",
     ],
     extras_require={
-        "tests" = EXTRAS_REQUIRE["tests"],
-        "optional" = EXTRAS_REQUIRE["optional"],
-        "all" = EXTRAS_REQUIRE["test"] + EXTRAS_REQUIRE["optional"],
+        "tests" : EXTRAS_REQUIRE["tests"],
+        "optional" : EXTRAS_REQUIRE["optional"],
+        "all" : EXTRAS_REQUIRE["test"] + EXTRAS_REQUIRE["optional"],
     },
     package_data={"mdtraj.formats.pdb": ["data/*"]},
     zip_safe=False,
