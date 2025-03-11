@@ -127,9 +127,10 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
 
     for bond in bondsiter:
         try:
+            atom1, atom2 =bond
             newTopology.add_bond(
-                old_atom_to_new_atom[bond.atom1],
-                old_atom_to_new_atom[bond.atom2],
+                old_atom_to_new_atom[atom1],
+                old_atom_to_new_atom[atom2],
                 type=bond.type,
                 order=bond.order,
             )
