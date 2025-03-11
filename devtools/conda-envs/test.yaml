@@ -17,5 +17,4 @@ dependencies:
   - pytest-xdist
   - python
   - scipy
-  - scripttest
   - zlib
