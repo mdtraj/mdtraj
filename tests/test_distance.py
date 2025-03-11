@@ -46,7 +46,6 @@ class Test_Distance():
         b = compute_distances(self.ptraj, self.pairs2)
         eq(a, b)
     
-    
     def test_0(self, gen_random_ptraj):
         a = compute_distances(self.ptraj, self.pairs, periodic=False, opt=True)
         b = compute_distances(self.ptraj, self.pairs, periodic=False, opt=False)
@@ -145,7 +144,6 @@ class Test_Distance():
         b = _displacement(self.xyz, self.pairs)
         eq(a, b, decimal=3)
     
-    
     def test_5(self, gen_random_ptraj):
         # simple wrap around along the z axis.
         xyz = np.array([[[0.0, 0.0, 0.0], [0.0, 0.0, 2.2]]])
@@ -236,12 +234,10 @@ class Test_Distance():
             pairs[nearest, 0] == contact[1] and pairs[nearest, 1] == contact[0]
         )
     
-    
     def test_distance_nan(self):
         xyz = np.array([[1, 1, 1], [2, 1, 1], [np.nan, np.nan, np.nan]]).reshape(1, 3, 3)
         dists = md.compute_distances(md.Trajectory(xyz=xyz, topology=None), [[0, 1]])
         assert np.isfinite(dists).all()
-    
     
     def test_closest_contact_nan_pos(self, gen_random_ptraj):
         box_size = np.array([3.0, 4.0, 5.0])
@@ -254,7 +250,6 @@ class Test_Distance():
         traj = md.Trajectory(xyz=xyz, topology=None)
         self._verify_closest_contact(gen_random_ptraj, traj)
     
-    
     def test_distance_t_inputs(self, gen_random_ptraj):
         incorrect_pairs = np.array((0, self.ptraj.n_atoms + 1))
         with pytest.raises(ValueError, match="atom_pairs"):
@@ -264,7 +259,6 @@ class Test_Distance():
         with pytest.raises(ValueError, match="time_pairs"):
             compute_distances_t(self.ptraj, self.pairs, incorrect_times)
     
-    
     def test_distances_t(self, get_fn):
         a = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=True, opt=True)
         b = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=True, opt=False)
@@ -272,7 +266,6 @@ class Test_Distance():
         c = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=False, opt=True)
         d = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=False, opt=False)
         eq(c, d)
-    
     
     def test_distances_t_at_0(self, get_fn):
         self.times = np.array([[0, 0]], dtype=np.int32)
@@ -282,7 +275,6 @@ class Test_Distance():
         d = compute_distances(self.ptraj[:1], self.pairs, periodic=True, opt=False)
         eq(a, c)
         eq(b, d)
-    
     
     def _run_amber_traj_t(self, traj, ext_ref):
         # Test triclinic case where simple approach in Tuckerman text does not
@@ -299,7 +291,6 @@ class Test_Distance():
             time_pairs=[[0, 2]],
             opt=False,
         )
-    
     
     def test_amber_t(self, get_fn):
         ext_ref = (
@@ -321,3 +312,4 @@ class Test_Distance():
         )
         traj = md.load(get_fn("test_good.nc"), top=get_fn("test.parm7"))
         self._run_amber_traj_t(traj, ext_ref)
+
