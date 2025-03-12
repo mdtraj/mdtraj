@@ -95,17 +95,6 @@ MESSAGES = {
 
     conda install -c conda-forge openmm
     """,
-    "scripttest": """
-    The code at {filename}:{line_number} requires the scripttest package,
-    which is a python package for testing command-line applications
-
-    scripttest can be downloaded from https://pypi.python.org/pypi/ScriptTest/,
-    or installed with the python "easy_install" or "pip" package managers using:
-
-    # easy_install scripttest
-    or
-    # pip install scripttest
-    """,
     "openmm.app": """
     The code at {filename}:{line_number} requires the openmm.app module, which is
     the python OpenMM application layer. OpenMM is a toolkit for molecular simulation
@@ -124,10 +113,6 @@ MESSAGES = {
     # easy_install pandas
     or
     # pip install pandas
-    """,
-    "scipy": """,
-
-    The code at {filename}:{line_number} requires the scipy package
     """,
 }
 
