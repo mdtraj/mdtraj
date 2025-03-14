@@ -784,7 +784,10 @@ def test_open_and_load(get_fn):
         else:
             md.open(get_fn(file))
 
-        md.load(get_fn(file), top=get_fn("native.pdb"))
+        if file.endswith('.arc'):
+            md.load(get_fn(file), top=get_fn("4waters.pdb"))
+        else:
+            md.load(get_fn(file), top=get_fn("frame0.pdb"))
 
 
 def test_length(get_fn):

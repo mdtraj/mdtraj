@@ -37,13 +37,17 @@ class _EOF(IOError):
 
 
 @FormatRegistry.register_loader(".arc")
-def load_arc(filename, stride=None, atom_indices=None, frame=None):
+def load_arc(filename, top=None, stride=None, atom_indices=None, frame=None):
     """Load a TINKER .arc file from disk.
 
     Parameters
     ----------
     filename : path-like
         Path of TINKER .arc file.
+    top : {str, Trajectory, Topology}
+        While the ARC format does does contain minimal topology information, it does
+        not include residue information. Pass in either the path to a pdb file, a 
+        trajectory, or a topology to supply this information.
     stride : int, default=None
         Only read every stride-th frame
     atom_indices : array_like, optional
@@ -69,9 +73,20 @@ def load_arc(filename, stride=None, atom_indices=None, frame=None):
             "filename must be of type path-like for load_arc. " "you supplied %s" % type(filename),
         )
 
+    # Process topology, if given.
+    if top is not None:
+        from mdtraj.core.trajectory import _parse_topology
+        topology = _parse_topology(top)
+    else:
+        topology = None
+
+
     atom_indices = cast_indices(atom_indices)
 
     with ArcTrajectoryFile(filename) as f:
+        # Set topology. If not given, it's None.
+        f.topology = topology
+
         if frame is not None:
             f.seek(frame)
             n_frames = 1
