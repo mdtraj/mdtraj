@@ -475,12 +475,7 @@ class PDBTrajectoryFile:
             file=self._file,
         )
 
-    def _write_footer(self):
-        if not self._mode == "w":
-            raise ValueError("file not opened for writing")
-
-        # Identify bonds that should be listed as CONECT records.
-        standardResidues = [
+    _standardResidues = [
             "ALA",
             "ASN",
             "CYS",
@@ -513,10 +508,17 @@ class PDBTrajectoryFile:
             "DI",
             "HOH",
         ]
+
+    def _write_footer(self):
+        if not self._mode == "w":
+            raise ValueError("file not opened for writing")
+
+        # Identify bonds that should be listed as CONECT records.
+
         conectBonds = []
         if self._last_topology is not None:
             for atom1, atom2 in self._last_topology.bonds:
-                if atom1.residue.name not in standardResidues or atom2.residue.name not in standardResidues:
+                if atom1.residue.name not in self._standardResidues or atom2.residue.name not in self._standardResidues:
                     conectBonds.append((atom1, atom2))
                 elif (
                     atom1.name == "SG"
