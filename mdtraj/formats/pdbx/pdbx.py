@@ -123,7 +123,7 @@ def load_pdbx(
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type string or path-like for load_pdb. " "you supplied %s" % type(filename),
+            "filename must be of type string or path-like for load_pdb. You supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)
