@@ -37,17 +37,13 @@ class _EOF(IOError):
 
 
 @FormatRegistry.register_loader(".arc")
-def load_arc(filename, top=None, stride=None, atom_indices=None, frame=None):
+def load_arc(filename, stride=None, atom_indices=None, frame=None, top=None):
     """Load a TINKER .arc file from disk.
 
     Parameters
     ----------
     filename : path-like
         Path of TINKER .arc file.
-    top : {str, Trajectory, Topology}
-        While the ARC format does does contain minimal topology information, it does
-        not include residue information. Pass in either the path to a pdb file, a 
-        trajectory, or a topology to supply this information.
     stride : int, default=None
         Only read every stride-th frame
     atom_indices : array_like, optional
@@ -57,6 +53,10 @@ def load_arc(filename, top=None, stride=None, atom_indices=None, frame=None):
         Use this option to load only a single frame from a trajectory on disk.
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
+    top : {str, Trajectory, Topology}, optional
+        While the ARC format does does contain minimal topology information, it does
+        not include residue information. Pass in either a file path 
+        (e.g. to pdb), a trajectory, or a topology object to supply this information.
 
     Returns
     -------
