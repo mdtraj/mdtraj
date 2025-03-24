@@ -517,6 +517,7 @@ class Topology:
                 atom.residue.name,
                 atom.residue.chain.index,
                 atom.segment_id,
+                atom.formal_charge
             )
             for atom in self.atoms
         ]
@@ -531,6 +532,7 @@ class Topology:
                 "resName",
                 "chainID",
                 "segmentID",
+                "formal_charge"
             ],
         )
 
@@ -561,8 +563,7 @@ class Topology:
             frame should have columns "serial" (atom index), "name" (atom name),
             "element" (atom's element), "resSeq" (index of the residue)
             "resName" (name of the residue), "chainID" (index of the chain),
-            and optionally "segmentID", following the same conventions
-            as wwPDB 3.0 format.
+            and optionally "segmentID" and "formal_charge", following the same conventions as wwPDB 3.0 format.
         bonds : np.ndarray, shape=(n_bonds, 4) or (n_bonds, 2), dtype=float, Optional
             The bonds in the topology, represented as a n_bonds x 4 or n_bonds x 2
             size array of the indices of the atoms involved, type, and order of each
@@ -591,6 +592,9 @@ class Topology:
         ]:
             if col not in atoms.columns:
                 raise ValueError("dataframe must have column %s" % col)
+
+        if "formal_charge" not in atoms.columns:
+            atoms["formal_charge"] = None
 
         if "segmentID" not in atoms.columns:
             atoms["segmentID"] = ""
@@ -648,6 +652,7 @@ class Topology:
                 atom_index,
                 r, # type: ignore
                 serial=atom["serial"],
+                formal_charge=atom["formal_charge"],
             )
             out._atoms[atom_index] = a
             r._atoms.append(a) # type: ignore
