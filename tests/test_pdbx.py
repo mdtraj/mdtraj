@@ -29,17 +29,6 @@ from mdtraj import load
 from mdtraj.formats import PDBxTrajectoryFile
 from mdtraj.testing import eq
 
-try:
-    import openmm  # noqa: F401
-
-    HAVE_OPENMM = True
-except ImportError:
-    HAVE_OPENMM = False
-
-# special pytest global to mark all tests in this module
-pytestmark = pytest.mark.skipif(not HAVE_OPENMM, reason="test_pdbx.py needs OpenMM.")
-
-
 def test_convert(get_fn):
     for filename in ["2EQQ.pdb", "4OH9.pdb"]:
         # Load a PDB file.

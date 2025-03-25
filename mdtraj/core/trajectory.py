@@ -89,6 +89,10 @@ _TOPOLOGY_EXTS = [
     ".arc",
     ".hdf5",
     ".gsd",
+    ".pdbx"
+    ".cif",
+    ".pdbx.gz",
+    ".cif.gz",
 ]
 
 
