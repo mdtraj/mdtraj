@@ -35,14 +35,11 @@ __version__ = "2.0"
 
 import sys
 import math
-#from openmm import Vec3
 import mdtraj._version
 from datetime import date
 from .PdbxReader import PdbxReader
-#from openmm.app.internal.unitcell import computePeriodicBoxVectors, computeLengthsAndAngles
 from mdtraj.core.topology import Topology
 from mdtraj.formats.pdb import PDBTrajectoryFile
-#from openmm.unit import nanometers, angstroms, is_quantity, Quantity
 from mdtraj.core import element as elem
 import numpy as np
 
