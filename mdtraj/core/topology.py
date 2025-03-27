@@ -645,14 +645,23 @@ class Topology:
                     atom["resSeq"],
                     atom["segmentID"],
                 )
-
+            fc = atom["formal_charge"]
+            if fc is not None:
+                try:
+                    if pd.notna(fc):
+                        fc = int(fc)
+                    else:
+                        fc = None
+                except Exception:
+                    fc = None
+                    
             a = Atom(
                 atom["name"],
                 elem.get_by_symbol(atom["element"]),
                 atom_index,
                 r, # type: ignore
                 serial=atom["serial"],
-                formal_charge=atom["formal_charge"],
+                formal_charge=fc,
             )
             out._atoms[atom_index] = a
             r._atoms.append(a) # type: ignore
