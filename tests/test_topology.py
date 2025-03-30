@@ -119,7 +119,12 @@ def test_topology_openmm_formal_charges(get_fn):
 
     # Check that the formal charges are the same
     eq(formal_charges, mdtraj_formal_charges)
- 
+
+import pandas as pd
+
+def normalize_charge(charge):
+    # Convert None to pandas NA, leave numbers intact
+    return pd.NA if charge is None else charge 
 def test_topology_dataframe_formal_charges(get_fn):
     """
     Test that formal charges are maintained when converting a topology
@@ -130,6 +135,7 @@ def test_topology_dataframe_formal_charges(get_fn):
 
     # Get the original formal charges from the MDTraj topology.
     original_formal_charges = [atom.formal_charge for atom in topology.atoms]
+    normalized_original = [normalize_charge(charge) for charge in original_formal_charges]
 
     # Convert topology to DataFrame and bonds array.
     atoms_df, bonds = topology.to_dataframe()
@@ -141,7 +147,7 @@ def test_topology_dataframe_formal_charges(get_fn):
     converted_formal_charges = [atom.formal_charge for atom in topology_from_df.atoms]
 
     # Check that formal charges are conserved.
-    eq(original_formal_charges, converted_formal_charges)   
+    eq(normalized_original, converted_formal_charges)   
 
 def test_topology_pandas(get_fn):
     topology = md.load(get_fn("native.pdb")).topology

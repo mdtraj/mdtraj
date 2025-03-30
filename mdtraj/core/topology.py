@@ -535,7 +535,11 @@ class Topology:
                 "formal_charge"
             ],
         )
-
+        
+        # Using Int64 makes the data type integer
+        # but allows for NA values in the column
+        atoms = atoms.astype({"formal_charge": "Int64"})
+                
         bonds: NDArray[np.float64] = np.zeros([len(self._bonds), 4], dtype=float)
         for index, bond in enumerate(self.bonds):
             if bond.order is None:
@@ -596,8 +600,15 @@ class Topology:
         if "formal_charge" not in atoms.columns:
             atoms["formal_charge"] = None
 
+
         if "segmentID" not in atoms.columns:
             atoms["segmentID"] = ""
+
+        # Ensure formal_charge is of type Int64 (nullable integer)
+        try:
+            atoms = atoms.astype({"formal_charge": "Int64"})
+        except ValueError as e:
+            raise ValueError(f"Error converting formal_charge to Int64: {e}")
 
         out = cls()
         if not isinstance(atoms, pd.DataFrame):
@@ -645,15 +656,6 @@ class Topology:
                     atom["resSeq"],
                     atom["segmentID"],
                 )
-            fc = atom["formal_charge"]
-            if fc is not None:
-                if pd.notna(fc):
-                    try:
-                        fc = int(fc)
-                    except ValueError:
-                        raise ValueError(f"Formal charge {fc} cannot be cast to an integer.")
-                else:
-                    fc = None
                     
             a = Atom(
                 atom["name"],
@@ -661,7 +663,7 @@ class Topology:
                 atom_index,
                 r, # type: ignore
                 serial=atom["serial"],
-                formal_charge=fc,
+                formal_charge=atom["formal_charge"],
             )
             out._atoms[atom_index] = a
             r._atoms.append(a) # type: ignore
