@@ -648,7 +648,10 @@ class Topology:
             fc = atom["formal_charge"]
             if fc is not None:
                 if pd.notna(fc):
-                    fc = float(fc)
+                    try:
+                        fc = int(fc)
+                    except ValueError:
+                        raise ValueError(f"Formal charge {fc} cannot be cast to an integer.")
                 else:
                     fc = None
                     
@@ -1792,7 +1795,7 @@ class Atom:
         index: int,
         residue: Residue,
         serial: int | None = None,
-        formal_charge: float | None = None,
+        formal_charge: int | None = None,
     ):
         """Construct a new Atom.  You should call add_atom() on the Topology instead of calling this directly."""
         # The name of the Atom
