@@ -647,12 +647,9 @@ class Topology:
                 )
             fc = atom["formal_charge"]
             if fc is not None:
-                try:
-                    if pd.notna(fc):
-                        fc = float(fc)
-                    else:
-                        fc = None
-                except Exception:
+                if pd.notna(fc):
+                    fc = float(fc)
+                else:
                     fc = None
                     
             a = Atom(
