@@ -649,7 +649,7 @@ class Topology:
             if fc is not None:
                 try:
                     if pd.notna(fc):
-                        fc = int(fc)
+                        fc = float(fc)
                     else:
                         fc = None
                 except Exception:
