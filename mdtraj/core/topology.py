@@ -608,7 +608,7 @@ class Topology:
         try:
             atoms = atoms.astype({"formal_charge": "Int64"})
         except ValueError as e:
-            raise ValueError(f"Error converting formal_charge to Int64: {e}")
+            raise ValueError(f"Formal charge conversion failed: all values in 'formal_charge' must be integers or None. Original error: {e}")
 
         out = cls()
         if not isinstance(atoms, pd.DataFrame):
