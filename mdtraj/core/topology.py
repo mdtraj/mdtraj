@@ -517,6 +517,7 @@ class Topology:
                 atom.residue.name,
                 atom.residue.chain.index,
                 atom.segment_id,
+                atom.formal_charge
             )
             for atom in self.atoms
         ]
@@ -531,9 +532,14 @@ class Topology:
                 "resName",
                 "chainID",
                 "segmentID",
+                "formal_charge"
             ],
         )
-
+        
+        # Using Int64 makes the data type integer
+        # but allows for NA values in the column
+        atoms = atoms.astype({"formal_charge": "Int64"})
+                
         bonds: NDArray[np.float64] = np.zeros([len(self._bonds), 4], dtype=float)
         for index, bond in enumerate(self.bonds):
             if bond.order is None:
@@ -561,8 +567,7 @@ class Topology:
             frame should have columns "serial" (atom index), "name" (atom name),
             "element" (atom's element), "resSeq" (index of the residue)
             "resName" (name of the residue), "chainID" (index of the chain),
-            and optionally "segmentID", following the same conventions
-            as wwPDB 3.0 format.
+            and optionally "segmentID" and "formal_charge", following the same conventions as wwPDB 3.0 format.
         bonds : np.ndarray, shape=(n_bonds, 4) or (n_bonds, 2), dtype=float, Optional
             The bonds in the topology, represented as a n_bonds x 4 or n_bonds x 2
             size array of the indices of the atoms involved, type, and order of each
@@ -592,8 +597,18 @@ class Topology:
             if col not in atoms.columns:
                 raise ValueError("dataframe must have column %s" % col)
 
+        if "formal_charge" not in atoms.columns:
+            atoms["formal_charge"] = None
+
+
         if "segmentID" not in atoms.columns:
             atoms["segmentID"] = ""
+
+        # Ensure formal_charge is of type Int64 (nullable integer)
+        try:
+            atoms = atoms.astype({"formal_charge": "Int64"})
+        except ValueError as e:
+            raise ValueError(f"Formal charge conversion failed: all values in 'formal_charge' must be integers or None. Original error: {e}")
 
         out = cls()
         if not isinstance(atoms, pd.DataFrame):
@@ -641,13 +656,14 @@ class Topology:
                     atom["resSeq"],
                     atom["segmentID"],
                 )
-
+                    
             a = Atom(
                 atom["name"],
                 elem.get_by_symbol(atom["element"]),
                 atom_index,
                 r, # type: ignore
                 serial=atom["serial"],
+                formal_charge=atom["formal_charge"],
             )
             out._atoms[atom_index] = a
             r._atoms.append(a) # type: ignore
@@ -1781,7 +1797,7 @@ class Atom:
         index: int,
         residue: Residue,
         serial: int | None = None,
-        formal_charge: float | None = None,
+        formal_charge: int | None = None,
     ):
         """Construct a new Atom.  You should call add_atom() on the Topology instead of calling this directly."""
         # The name of the Atom
