@@ -204,9 +204,7 @@ class RegexInfixOperand:
                     ctx=ast.Load(),
                 ),
                 args=[pattern, string],
-                keywords=[],
-                starargs=None,
-                kwargs=None,
+                keywords=[]
             ),
             ops=[ast.IsNot()],
             comparators=[ast.Name(id="None", ctx=ast.Load())],
