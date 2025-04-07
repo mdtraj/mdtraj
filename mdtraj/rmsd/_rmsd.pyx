@@ -61,8 +61,9 @@ cdef extern from "math.h":
 
 @cython.boundscheck(False)
 def rmsd(target, reference, int frame=0, atom_indices=None,
-         ref_atom_indices=None, bool parallel=True, bool precentered=False):
-    """rmsd(target, reference, frame=0, atom_indices=None, parallel=True, precentered=False)
+         ref_atom_indices=None, bool parallel=True, bool precentered=False, superpose=True):
+    """rmsd(target, reference, frame=0, atom_indices=None, ref_atom_indices=None,
+            parallel=True, precentered=False, superpose=True)
 
     Compute RMSD of all conformations in target to a reference conformation.
     Note, this will center the conformations in place.
@@ -97,6 +98,11 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
         be unsafe; if you use Trajectory.center_coordinates and then modify
         the trajectory's coordinates, the center and traces will be out of
         date and the RMSDs will be incorrect.
+    superpose : bool, default=True
+        Whether to use the Theobald QCP method to calculate RMSD. If True, the 
+        QCP method is used, which inherently superposes the structure based on 
+        the `atom_indices` selection. If False, RMSD is directly calculated with
+        no optimization and no superposition done.
 
     Examples
     --------
@@ -171,39 +177,50 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
     cdef float[:] target_g
     cdef int target_n_frames = target.xyz.shape[0]
     cdef int n_atoms = target.xyz.shape[1] if np.all(atom_indices == slice(None)) else len(atom_indices)
+    cdef float[:] distances = np.zeros(target_n_frames, dtype=np.float32)
 
     # make sure *every* frame in target_xyz is in proper c-major order
     target_xyz = np.asarray(target.xyz[:, atom_indices, :], order='C', dtype=np.float32)
     # only extract the `frame`-th conformation from ref_xyz
     ref_xyz_frame = np.asarray(reference.xyz[frame, ref_atom_indices, :], order='C', dtype=np.float32)
 
-    # t0 = time.time()
-    if precentered and (reference._rmsd_traces is not None) and (target._rmsd_traces is not None) and atom_indices_is_none:
-        target_g = np.asarray(target._rmsd_traces, order='C', dtype=np.float32)
-        ref_g = reference._rmsd_traces[frame]
+    if superpose:
+        # t0 = time.time()
+        if precentered and (reference._rmsd_traces is not None) and (target._rmsd_traces is not None) and atom_indices_is_none:
+            target_g = np.asarray(target._rmsd_traces, order='C', dtype=np.float32)
+            ref_g = reference._rmsd_traces[frame]
+        else:
+            if precentered:
+                warnings.warn(
+                    'in rmsd(), precentered is ignored when atom_indices != None',
+                    RuntimeWarning)
+            target_g = np.empty(target_n_frames, dtype=np.float32)
+            inplace_center_and_trace_atom_major(&target_xyz[0,0,0], &target_g[0], target_n_frames, n_atoms)
+            inplace_center_and_trace_atom_major(&ref_xyz_frame[0, 0], &ref_g, 1, n_atoms)
+    
+        # t1 = time.time()
+    
+        if parallel:
+            for i in prange(target_n_frames, nogil=True):
+                msd = msd_nosuperpose(n_atoms, n_atoms, &target_xyz[i, 0, 0], &ref_xyz_frame[0, 0], target_g[i], ref_g, 0, NULL)
+                distances[i] = sqrtf(msd)
+        else:
+            for i in range(target_n_frames):
+                msd = msd_atom_major(n_atoms, n_atoms, &target_xyz[i, 0, 0], &ref_xyz_frame[0, 0], target_g[i], ref_g, 0, NULL)
+                distances[i] = sqrtf(msd)
+    
+        # t2 = time.time()
+        # print 'rmsd: %s, centering: %s' % (t2-t1, t1-t0)
     else:
-        if precentered:
-            warnings.warn(
-                'in rmsd(), precentered is ignored when atom_indices != None',
-                RuntimeWarning)
-        target_g = np.empty(target_n_frames, dtype=np.float32)
-        inplace_center_and_trace_atom_major(&target_xyz[0,0,0], &target_g[0], target_n_frames, n_atoms)
-        inplace_center_and_trace_atom_major(&ref_xyz_frame[0, 0], &ref_g, 1, n_atoms)
-
-    # t1 = time.time()
-
-    cdef float[:] distances = np.zeros(target_n_frames, dtype=np.float32)
-    if parallel:
-        for i in prange(target_n_frames, nogil=True):
-            msd = msd_atom_major(n_atoms, n_atoms, &target_xyz[i, 0, 0], &ref_xyz_frame[0, 0], target_g[i], ref_g, 0, NULL)
-            distances[i] = sqrtf(msd)
-    else:
-        for i in range(target_n_frames):
-            msd = msd_atom_major(n_atoms, n_atoms, &target_xyz[i, 0, 0], &ref_xyz_frame[0, 0], target_g[i], ref_g, 0, NULL)
-            distances[i] = sqrtf(msd)
-
-    # t2 = time.time()
-    # print 'rmsd: %s, centering: %s' % (t2-t1, t1-t0)
+        if parallel:
+            for i in prange(target_n_frames, nogil=True):
+                msd = msd_nosuperpose(n_atoms, &target_xyz[i], &ref_xyz_frame)
+                distances[i] = sqrtf(msd)
+        else:
+            for i in range(target_n_frames):
+                msd = msd_nosuperpose(n_atoms, &target_xyz[i], &ref_xyz_frame)
+                distances[i] = sqrtf(msd)
+ 
     return np.array(distances, copy=False)
 
 
@@ -675,3 +692,43 @@ def getMultipleAlignDisplaceRMSDs_atom_major(float[:, :, ::1] xyz_align1 not Non
             distances[i] = sqrtf(msd)
 
     return np.array(distances, copy=False), np.array(rot, copy=False)
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def msd_nosuperpose(int n_atoms,
+                    float[:, ::1] xyz_current not None,
+                    float[:, ::1] xyz_ref not None):
+    """
+    Private function to directly calculate the MSD of one frame without alignment.
+
+    Parameters
+    ----------
+    n_atoms : int
+        The number of atoms in this frame.
+    xyz_current : np.ndarray(float), shape = (n_atoms, 3), dtype = np.float32
+        The xyz coordinates of the current frame.
+    xyz_ref : np.ndarray(float), shape = (n_atoms, 3), dtype = np.float32
+        The xyz coordinates of the reference frame.
+
+
+    Returns
+    -------
+    msd : float
+        The mean square deviation of xyz_current from xyz_ref.
+
+    """
+    cdef Py_ssize_t atom_count
+    cdef Py_ssize_t dims_count
+    cdef float msd_temp = 0
+
+    # Shortcut out if same xyz.
+    if xyz_current == xyz_ref:
+        return msd_temp
+
+    # Loop through each atom and each dimension to calculate difference from ref 
+    for atom_count in range(n_atoms):
+        for dims_count in range(3):
+            msd_temp += (xyz_current[atom_count][dims_count]- xyz_ref[atom_count][dims_count])**2
+    return msd_temp / n_atoms
+
