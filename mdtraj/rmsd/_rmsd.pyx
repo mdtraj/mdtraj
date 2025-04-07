@@ -104,7 +104,7 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
         Whether to use the Theobald QCP method to calculate RMSD. If True, the 
         QCP method is used, which inherently superposes the structure based on 
         the `atom_indices` selection. If False, RMSD is directly calculated with
-        no optimization and no superposition done.
+        no optimization and no superposition done. The `precentered` option is ignored.
 
     Examples
     --------
