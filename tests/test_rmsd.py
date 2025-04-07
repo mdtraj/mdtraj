@@ -172,7 +172,7 @@ def test_superpose_refinds():
     assert not np.allclose(normal.xyz, normal_xyz)
 
 
-def test_rmsd_atom_indices_nosuperpose(get_fn):
+def test_rmsd_atom_indices(get_fn):
     native = md.load(get_fn("native.pdb"))
     atom_indices = np.arange(10)
 
@@ -201,8 +201,7 @@ def test_rmsd_atom_indices_nosuperpose(get_fn):
     eq(dist1b, dist1c)  # Should be the same regardless of how you align
     eq(dist1b, dist2)   # Should be the same with coords from different file format
 
-
-@pytest.mark.parametrize('superpose', [True, False])
+@pytest.mark.parametrize('superpose', [True, False], ids=['superpose','qcp'])
 def test_rmsd_ref_ainds_superpose(get_fn, superpose):
     native = md.load(get_fn("native.pdb"))
     t1 = md.load(get_fn("traj.h5"))
