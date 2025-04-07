@@ -4,7 +4,7 @@
 # Copyright 2012-2013 Stanford University and the Authors
 #
 # Authors: Robert McGibbon, Kyle Beauchamp
-# Contributors:
+# Contributors: Jeremy M. G. Leung
 #
 # MDTraj is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -215,7 +215,6 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
         # print 'rmsd: %s, centering: %s' % (t2-t1, t1-t0)
     else:
         if parallel:
-            #pass
             for i in prange(target_n_frames, nogil=True):
                 msd = msd_nosuperpose(n_atoms, target_xyz[i], ref_xyz_frame)
                 distances[i] = sqrtf(msd)
@@ -723,10 +722,6 @@ cdef const float msd_nosuperpose(const Py_ssize_t n_atoms,
     """
     cdef Py_ssize_t atom_count, dims_count
     cdef float msd_temp = 0
-
-    # Shortcut out if same xyz.
-    if xyz_current == xyz_ref:
-        return msd_temp
 
     # Loop through each atom and each dimension to calculate difference from ref 
     for atom_count in range(n_atoms):
