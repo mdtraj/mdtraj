@@ -29,11 +29,12 @@ import warnings
 
 import cython
 import numpy as np
-cimport numpy as np
 from mdtraj.utils import ensure_type
 
+cimport numpy as np
 from cpython cimport bool
 from cython.parallel cimport prange
+
 
 ##############################################################################
 # External Declarations
@@ -171,14 +172,14 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
                          "only %d frames." % (frame, reference.xyz.shape[0]))
 
     # static declarations
-    cdef int i
+    cdef Py_ssize_t i
     cdef float msd, ref_g
     cdef float[:, :, :] target_xyz
     cdef float[:, :] ref_xyz_frame
     cdef float[:] target_g
     cdef int target_n_frames = target.xyz.shape[0]
     cdef int n_atoms = target.xyz.shape[1] if np.all(atom_indices == slice(None)) else len(atom_indices)
-    cdef float[:] distances = np.zeros(target_n_frames, dtype=np.float32)
+    cdef float[:] distances = np.zeros(target_n_frames, order='C', dtype=np.float32)
 
     # make sure *every* frame in target_xyz is in proper c-major order
     target_xyz = np.asarray(target.xyz[:, atom_indices, :], order='C', dtype=np.float32)
@@ -699,9 +700,9 @@ def getMultipleAlignDisplaceRMSDs_atom_major(float[:, :, ::1] xyz_align1 not Non
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef const float msd_nosuperpose(const int n_atoms,
+cdef const float msd_nosuperpose(const Py_ssize_t n_atoms,
                                  const float[:, :] xyz_current,
-                                 const float[:, :] xyz_ref) nogil:
+                                 const float[:, :] xyz_ref) noexcept nogil:
     """
     Private function to directly calculate the MSD of one frame without alignment.
 
@@ -720,8 +721,7 @@ cdef const float msd_nosuperpose(const int n_atoms,
         The mean square deviation of xyz_current from xyz_ref.
 
     """
-    cdef int atom_count
-    cdef int dims_count
+    cdef Py_ssize_t atom_count, dims_count
     cdef float msd_temp = 0
 
     # Shortcut out if same xyz.
