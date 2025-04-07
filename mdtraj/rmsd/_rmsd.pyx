@@ -119,6 +119,13 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
     >>> trajectory.center_coordinates()
     >>> rmsds = md.rmsd(trajectory, trajectory, 0, precentered=True)
 
+    The default option aligns the trajectory to the reference based on selection indicated by 
+    `atom_indices` and `ref_atom_indices`. If you want to manually align the trajectory to a 
+    different selection (or not at all), use `md.superpose()` and the `superpose=False` option.
+
+    >>> trajectory.superpose(trajectory, 0, atom_slice=trajectory.top.select('protein and not element H'))
+    >>> rmsds = md.rmsd(trajectory, trajectory, superpose=False)
+
     See Also
     --------
     Trajectory.center_coordinates
@@ -135,6 +142,7 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
         A 1-D numpy array of the optimal root-mean-square deviations from
         the `frame`-th conformation in reference to each of the conformations
         in target.
+
     """
     # import time
     cdef bool atom_indices_is_none = False
