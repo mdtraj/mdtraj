@@ -398,7 +398,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     # These topology formats do not support the 'top' keyword
     # This is to prevent the loader from reading the topology twice.
-    if _get_extension(top) not in ['.h5', '.hdf5', '.mol2']:
+    if isinstance(top, str) and _get_extension(top) not in ['.h5', '.hdf5', '.mol2']:
         kwargs["top"] = _parse_topology(top, **topkwargs)
 
     # get the right loader
