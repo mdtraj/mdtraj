@@ -395,7 +395,10 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     top = topkwargs.pop("top", None)
     if top is None:
         top = filename_or_filenames[0]
-    kwargs["top"] = _parse_topology(top, **topkwargs)
+
+    # This is to prevent the loader from reading the topology twice.
+    if extension not in ['.h5', '.hdf5']:
+        kwargs["top"] = _parse_topology(top, **topkwargs)
 
     # get the right loader
     try:
