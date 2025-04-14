@@ -80,7 +80,6 @@ def load_arc(filename, stride=None, atom_indices=None, frame=None, top=None):
     else:
         topology = None
 
-
     atom_indices = cast_indices(atom_indices)
 
     with ArcTrajectoryFile(filename) as f:
