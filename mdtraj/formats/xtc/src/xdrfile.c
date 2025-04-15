@@ -782,10 +782,10 @@ xdrfile_decompress_coord_float(float     *ptr,
 							   XDRFILE*   xfp)
 {
 	int minint[3], maxint[3], *lip;
-	int smallidx, minidx, maxidx;
+	int smallidx;
 	unsigned sizeint[3], sizesmall[3], bitsizeint[3], size3;
 	int k, *buf1, *buf2, lsize, flag;
-	int smallnum, smaller, larger, i, is_smaller, run;
+	int smallnum, smaller, i, is_smaller, run;
 	float *lfp, inv_precision;
 	int tmp, *thiscoord,  prevcoord[3];
 	unsigned int bitsize;
@@ -866,14 +866,11 @@ xdrfile_decompress_coord_float(float     *ptr,
 		return 0; /* not sure what has happened here or why we return... */
 	}
 	tmp=smallidx+8;
-	maxidx = (LASTIDX<tmp) ? LASTIDX : tmp;
-	minidx = maxidx - 8; /* often this equal smallidx */
 	tmp = smallidx-1;
 	tmp = (FIRSTIDX>tmp) ? FIRSTIDX : tmp;
 	smaller = magicints[tmp] / 2;
 	smallnum = magicints[smallidx] / 2;
 	sizesmall[0] = sizesmall[1] = sizesmall[2] = magicints[smallidx] ;
-	larger = magicints[maxidx];
 
 	/* buf2[0] holds the length in bytes */
 
@@ -1013,7 +1010,6 @@ xdrfile_compress_coord_float(float   *ptr,
 	float *lfp, lf;
 	int tmp, tmpsum, *thiscoord,  prevcoord[3];
 	unsigned int tmpcoord[30];
-	int errval=1;
 	unsigned int bitsize;
 
 	if(xfp==NULL)
@@ -1074,7 +1070,7 @@ xdrfile_compress_coord_float(float   *ptr,
         {
 			/* scaling would cause overflow */
 			fprintf(stderr, "(xdrfile error) Internal overflow compressing coordinates.\n");
-			errval=0;
+			return -1; /* return -1 for upstream error handling */
 		}
 		lint1 = lf;
 		if (lint1 < minint[0]) minint[0] = lint1;
@@ -1089,7 +1085,7 @@ xdrfile_compress_coord_float(float   *ptr,
         {
 			/* scaling would cause overflow */
 			fprintf(stderr, "(xdrfile error) Internal overflow compressing coordinates.\n");
-			errval=0;
+			return -1;  /* return -1 for upstream error handling */
 		}
 		lint2 = lf;
 		if (lint2 < minint[1]) minint[1] = lint2;
@@ -1102,7 +1098,7 @@ xdrfile_compress_coord_float(float   *ptr,
 			lf = *lfp * precision - 0.5;
 		if (fabs(lf) > INT_MAX-2)
         {
-			errval=0;
+			return -1;
 		}
 		lint3 = lf;
 		if (lint3 < minint[2]) minint[2] = lint3;
@@ -1126,7 +1122,7 @@ xdrfile_compress_coord_float(float   *ptr,
 		 * would cause overflow
 		 */
 		fprintf(stderr, "(xdrfile error) Internal overflow compressing coordinates.\n");
-		errval=0;
+		return -1;  /* return -1 for upstream error handling */
 	}
 	sizeint[0] = maxint[0] - minint[0]+1;
 	sizeint[1] = maxint[1] - minint[1]+1;
@@ -1299,10 +1295,10 @@ xdrfile_decompress_coord_double(double     *ptr,
 								XDRFILE*   xfp)
 {
 	int minint[3], maxint[3], *lip;
-	int smallidx, minidx, maxidx;
+	int smallidx;
 	unsigned sizeint[3], sizesmall[3], bitsizeint[3], size3;
 	int k, *buf1, *buf2, lsize, flag;
-	int smallnum, smaller, larger, i, is_smaller, run;
+	int smallnum, smaller, i, is_smaller, run;
 	double *lfp, inv_precision;
 	float float_prec, tmpdata[30];
 	int tmp, *thiscoord,  prevcoord[3];
@@ -1380,14 +1376,11 @@ xdrfile_decompress_coord_double(double     *ptr,
 	if (xdrfile_read_int(&smallidx,1,xfp) == 0)
 		return 0;
 	tmp=smallidx+8;
-	maxidx = (LASTIDX<tmp) ? LASTIDX : tmp;
-	minidx = maxidx - 8; /* often this equal smallidx */
 	tmp = smallidx-1;
 	tmp = (FIRSTIDX>tmp) ? FIRSTIDX : tmp;
 	smaller = magicints[tmp] / 2;
 	smallnum = magicints[smallidx] / 2;
-	sizesmall[0] = sizesmall[1] = sizesmall[2] = magicints[smallidx] ;
-	larger = magicints[maxidx];
+	sizesmall[0] = sizesmall[1] = sizesmall[2] = magicints[smallidx];
 
 	/* buf2[0] holds the length in bytes */
 
@@ -1506,7 +1499,6 @@ xdrfile_compress_coord_double(double   *ptr,
 	float float_prec, lf,tmpdata[30];
 	int tmp, tmpsum, *thiscoord,  prevcoord[3];
 	unsigned int tmpcoord[30];
-	int errval=1;
 	unsigned int bitsize;
 
     bitsizeint[0] = 0;
@@ -1563,7 +1555,7 @@ xdrfile_compress_coord_double(double   *ptr,
 		if (fabs(lf) > INT_MAX-2) {
 			/* scaling would cause overflow */
 			fprintf(stderr, "(xdrfile error) Internal overflow compressing coordinates.\n");
-			errval=0;
+			return -1; /* return -1 for upstream error handling */
 		}
 		lint1 = lf;
 		if (lint1 < minint[0]) minint[0] = lint1;
@@ -1577,7 +1569,7 @@ xdrfile_compress_coord_double(double   *ptr,
 		if (fabs(lf) > INT_MAX-2) {
 			/* scaling would cause overflow */
 			fprintf(stderr, "(xdrfile error) Internal overflow compressing coordinates.\n");
-			errval=0;
+			return -1;  /* return -1 for upstream error handling */
 		}
 		lint2 = lf;
 		if (lint2 < minint[1]) minint[1] = lint2;
@@ -1589,7 +1581,7 @@ xdrfile_compress_coord_double(double   *ptr,
 		else
 			lf = (float)*lfp * float_prec - 0.5;
 		if (fabs(lf) > INT_MAX-2) {
-			errval=0;
+			return -1;
 		}
 		lint3 = lf;
 		if (lint3 < minint[2]) minint[2] = lint3;
@@ -1613,7 +1605,7 @@ xdrfile_compress_coord_double(double   *ptr,
 		 * would cause overflow
 		 */
 		fprintf(stderr, "(xdrfile error) Internal overflow compressing coordinates.\n");
-		errval=0;
+		return -1;  /* return -1 for upstream error handling */
 	}
 	sizeint[0] = maxint[0] - minint[0]+1;
 	sizeint[1] = maxint[1] - minint[1]+1;
@@ -1940,99 +1932,6 @@ static int ctofstr(char *dest, int destlen, char *src)
         *dest++ = ' ';
     return 0;
 }
-
-
-void
-F77_FUNC(xdrrstring,XDRRSTRING)(int *fid, char *str, int *ret, int len)
-{
-	char *cstr;
-
-	if((cstr=(char*)malloc((len+1)*sizeof(char)))==NULL) {
-		*ret = 0;
-		return;
-	}
-	if (ftocstr(cstr, len+1, str, len)) {
-		*ret = 0;
-		free(cstr);
-		return;
-	}
-
-	*ret = xdrfile_read_string(cstr, len+1,f77xdr[*fid]);
-	ctofstr( str, len , cstr);
-	free(cstr);
-}
-
-void
-F77_FUNC(xdrwstring,XDRWSTRING)(int *fid, char *str, int *ret, int len)
-{
-	char *cstr;
-
-	if((cstr=(char*)malloc((len+1)*sizeof(char)))==NULL) {
-		*ret = 0;
-		return;
-	}
-	if (ftocstr(cstr, len+1, str, len)) {
-		*ret = 0;
-		free(cstr);
-		return;
-	}
-
-	*ret = xdrfile_write_string(cstr, f77xdr[*fid]);
-	ctofstr( str, len , cstr);
-	free(cstr);
-}
-
-void
-F77_FUNC(xdrropaque,XDRROPAQUE)(int *fid, char *data, int *ndata, int *ret)
-{
-	*ret = xdrfile_read_opaque(data,*ndata,f77xdr[*fid]);
-}
-
-void
-F77_FUNC(xdrwopaque,XDRWOPAQUE)(int *fid, char *data, int *ndata, int *ret)
-{
-	*ret = xdrfile_write_opaque(data,*ndata,f77xdr[*fid]);
-}
-
-
-/* Write single-precision compressed 3d coordinates */
-void
-F77_FUNC(xdrccs,XDRCCS)(int *fid, float *data, int *ncoord,
-						float *precision, int *ret)
-{
-    *ret = xdrfile_compress_coord_float(data,*ncoord,*precision,f77xdr[*fid]);
-}
-
-
-/* Read single-precision compressed 3d coordinates */
-void
-F77_FUNC(xdrdcs,XDRDCS)(int *fid, float *data, int *ncoord,
-						float *precision, int *ret)
-{
-	*ret = xdrfile_decompress_coord_float(data,ncoord,precision,f77xdr[*fid]);
-}
-
-
-/* Write compressed 3d coordinates from double precision data */
-void
-F77_FUNC(xdrccd,XDRCCD)(int *fid, double *data, int *ncoord,
-						double *precision, int *ret)
-{
-	*ret = xdrfile_compress_coord_double(data,*ncoord,*precision,f77xdr[*fid]);
-}
-
-/* Read compressed 3d coordinates into double precision data */
-void
-F77_FUNC(xddcd,XDRDCD)(int *fid, double *data, int *ncoord,
-					   double *precision, int *ret)
-{
-    *ret = xdrfile_decompress_coord_double(data,ncoord,precision,f77xdr[*fid]);
-}
-
-
-
-
-
 
 
 #endif /* DOXYGEN */
