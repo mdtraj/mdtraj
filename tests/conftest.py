@@ -41,10 +41,12 @@ def get_fn():
     return _get_fn
 
 
-@pytest.fixture
-def gen_random_ptraj(request, tmp_path):
+@pytest.fixture(scope="class")
+def gen_random_ptraj(request):
     """
-    Fixture for preparing a temp location
+    Fixture for preparing a test trajectories with random coordinates 
+    and unitcell
+
     """
     request.cls.N_FRAMES = N_FRAMES = 20
     request.cls.N_ATOMS = N_ATOMS = 20
