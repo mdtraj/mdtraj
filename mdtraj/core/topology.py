@@ -248,6 +248,7 @@ class Topology:
         out = Topology()
         for chain in self.chains:
             c = out.add_chain()
+            c.chain_id = chain.chain_id
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq, residue.segment_id)
                 for atom in residue.atoms:
