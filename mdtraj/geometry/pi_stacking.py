@@ -342,7 +342,7 @@ def pi_stacking(
     trajectory,
     ligand_aromatic_groups,
     receptor_aromatic_groups,
-    ligand_neighbor_cutoff=0.6,
+    ligand_neighbor_cutoff=None,
     max_face_to_face_centroid_distance=5.5,
     face_plane_angle_range=(0.0, 35.0),
     face_normal_to_centroid_angle_range=(0.0, 33.0),
@@ -363,10 +363,10 @@ def pi_stacking(
         The atom indices of the groups to be considered aromatic for the ligand.
     receptor_aromatic_groups : list of int
         The atom indices of the groups to be considered aromatic for the receptor.
-    ligand_neighbor_cutoff : float
+    ligand_neighbor_cutoff : float, default=None
         The distance cutoff for considering a receptor group for pi-stacking with a
-        ligand group. NOTE: The cutoff is based on the distances in the first frame of 
-        the trajectory.
+        ligand group. If None, then all pairwise aromatic groups are considered. 
+        NOTE: The cutoff is based on the distances in the first frame of the trajectory.
     max_face_to_face_centroid_distance : float
         The maximum distance between the centroids of the ligand and receptor groups for
         the interaction.
@@ -394,7 +394,8 @@ def pi_stacking(
     stacking_interactions: list, len=n_frames
         A list of lists of tuples, where each tuple is a pair of aromatic groups that
         are stacking in that frame. The order of the tuple goes
-        (ligand_group, protein_group)
+        (ligand_group, protein_group). Includes both face-to-face and edge-to-face
+        interactions.
     """
     face_plane_angle_range_rad = tuple(np.deg2rad(face_plane_angle_range))
     face_normal_to_centroid_angle_range_rad = tuple(
@@ -409,21 +410,27 @@ def pi_stacking(
     receptor_aromatic_groups = list(receptor_aromatic_groups)
     # ligand_neighbor_groups = {Ligand group idx: receptor group idxs}
     ligand_neighbor_groups = defaultdict(list)
-    receptor_nbr_atomatic_groups = set()
-    neighbors = md.compute_neighborlist(
-        trajectory,
-        ligand_neighbor_cutoff,
-    )
-    for lig_grp in ligand_aromatic_groups:
-        # Find all neighbors for each of the atoms in the ligand group, add to set
-        lig_neighbors = set()
-        for atm_idx in lig_grp:
-            lig_neighbors.update(neighbors[atm_idx])
-        # For each of the receptor groups, check if any of the atoms are a neighbor
+    if ligand_neighbor_cutoff is not None:
+        receptor_nbr_atomatic_groups: set[tuple[int, ...]] = set()
+        neighbors = md.compute_neighborlist(
+            trajectory,
+            ligand_neighbor_cutoff,
+        )
+        for lig_grp in ligand_aromatic_groups:
+            # Find all neighbors for each of the atoms in the ligand group, add to set
+            lig_neighbors: set[int] = set()
+            for atm_idx in lig_grp:
+                lig_neighbors.update(neighbors[atm_idx])
+            # For each of the receptor groups, check if any of the atoms are a neighbor
+            for rec_grp in receptor_aromatic_groups:
+                if any(atm in lig_neighbors for atm in rec_grp):
+                    ligand_neighbor_groups[lig_grp].append(rec_grp)
+                    receptor_nbr_atomatic_groups.add(rec_grp)
+    else:
+        receptor_nbr_atomatic_groups = set(receptor_aromatic_groups)
         for rec_grp in receptor_aromatic_groups:
-            if any([atm in lig_neighbors for atm in rec_grp]):
+            for lig_grp in ligand_aromatic_groups:
                 ligand_neighbor_groups[lig_grp].append(rec_grp)
-                receptor_nbr_atomatic_groups.add(rec_grp)
     stacking_interactions = [[] for _ in range(len(trajectory))]
     # If no receptor aromatic neighbors within any of the ligand groups, return
     if len(ligand_neighbor_groups) == 0:
