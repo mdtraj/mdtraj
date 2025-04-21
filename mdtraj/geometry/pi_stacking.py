@@ -354,6 +354,20 @@ def pi_stacking(
     """
     Calculate the pi-stacking interactions based on supplied atom groups.
 
+    This function calculates the pi-stacking interactions between the ligand and
+    receptor groups based on the supplied atom indices. The function uses the
+    centroid of the groups to determine the distance between them, and the normal
+    vector of the groups to determine the angle between them.
+
+    Two types of pi-stacking interactions are considered:
+    
+    1. Face-to-face interactions: The two groups are parallel and close to each other.
+    2. Edge-to-face interactions: The two groups are not parallel, but the edge of one
+       group is close to the face of the other group.
+    
+    Both are returned together in the same list.
+
+
     Parameters
     ----------
     trajectory : md.Trajectory

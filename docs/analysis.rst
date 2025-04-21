@@ -33,6 +33,12 @@ Hydrogen Bonding
     kabsch_sander
     wernet_nilsson
 
+Pi-Stacking
+-----------
+.. autosummary::
+    :toctree: api/generated/
+
+    pi_stacking
 
 Secondary Structure
 -------------------
