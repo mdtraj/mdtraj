@@ -365,7 +365,8 @@ def pi_stacking(
         The atom indices of the groups to be considered aromatic for the receptor.
     ligand_neighbor_cutoff : float
         The distance cutoff for considering a receptor group for pi-stacking with a
-        ligand group.
+        ligand group. NOTE: The cutoff is based on the distances in the first frame of 
+        the trajectory.
     max_face_to_face_centroid_distance : float
         The maximum distance between the centroids of the ligand and receptor groups for
         the interaction.
