@@ -29,6 +29,7 @@ the directory with the notebook files, start an IPython notebook server:
    centroids
    clustering
    hbonds
+   pi_stacking
    iterload
    native-contact
    openmm
