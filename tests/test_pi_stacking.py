@@ -132,7 +132,6 @@ def test_t_stacking_default_settings(get_fn):
                 )
             )
         )
-    # More permissive edge intersection radius for t-stack
     stacking_interactions = pi_stacking(t, lig_grps, protein_grps)
     stacking_interactions = stacking_interactions[0]
     assert len(stacking_interactions) == 1
