@@ -24,6 +24,7 @@
 import numpy as np
 import pytest
 
+from mdtraj.core.trajectory import _parse_topology
 from mdtraj.formats import DCDTrajectoryFile, DTRTrajectoryFile
 from mdtraj.testing import eq
 
@@ -166,6 +167,27 @@ def test_read_8(get_fn):
         xyz, times, box_lengths, box_angles = f.read(atom_indices=slice(None, None, 2))
 
     assert eq(xyz_ref[:, ::2, :], xyz)
+
+
+def test_read_as_traj_1(get_fn):
+    # Test the default read_as_traj and compare against reference trajectory in dcd format
+    fn_dtr = get_fn("frame0.dtr")
+    fn_dcd = get_fn("frame0.dcd")
+    fn_pdb = get_fn("frame0.pdb")
+    top = _parse_topology(fn_pdb)
+    xyz, _, _ = DCDTrajectoryFile(fn_dcd).read()
+    dtr_traj = DTRTrajectoryFile(fn_dtr).read_as_traj(top)
+    eq(xyz.shape[0], 501)
+    eq(dtr_traj.n_frames, xyz.shape[0])
+
+
+def test_read_as_traj_2(get_fn):
+    # Test the read_as_traj with a defined number of frames
+    fn_dtr = get_fn("frame0.dtr")
+    fn_pdb = get_fn("frame0.pdb")
+    top = _parse_topology(fn_pdb)
+    dtr_traj = DTRTrajectoryFile(fn_dtr).read_as_traj(top, n_frames=200)
+    eq(dtr_traj.n_frames, 200)
 
 
 def test_write_1(tmpdir, get_fn):
