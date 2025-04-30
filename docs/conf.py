@@ -15,9 +15,6 @@
 import os
 import sys
 
-import msmb_theme
-import sphinx_rtd_theme
-
 from mdtraj import __version__
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -141,11 +138,6 @@ html_context = {
     "versions_json_url": "http://mdtraj.org/versions.json",
 }
 
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [
-    msmb_theme.get_html_theme_path(),
-    sphinx_rtd_theme.get_html_theme_path(),
-]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".

@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 
 import mdtraj as md
+from conftest import flaky_pdb_dl
 
 
 def call_dssp(get_fn, ref_name, frame=0):
@@ -63,6 +64,7 @@ def test_2(get_fn, tmpdir, fn):
         assert_(call_dssp(get_fn, fn, i), md.compute_dssp(t[i], simplified=False)[0])
 
 
+@flaky_pdb_dl
 @pytest.mark.parametrize('pdbid', ["1GAI", "6gsv", "2AAC"])
 def test_3(get_fn, tmpdir, pdbid):
     """This test checks dssp assignments on pdb files downloaded from rcsb"""
