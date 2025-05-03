@@ -41,6 +41,7 @@ from .PdbxReader import PdbxReader
 from mdtraj.core.topology import Topology
 from mdtraj.formats.pdb import PDBTrajectoryFile
 from mdtraj.core import element as elem
+from mdtraj.utils import lengths_and_angles_to_box_vectors, box_vectors_to_lengths_and_angles, open_maybe_zipped
 import numpy as np
 
 from mdtraj.utils import lengths_and_angles_to_box_vectors, box_vectors_to_lengths_and_angles
@@ -75,7 +76,7 @@ class PDBxFile(object):
         inputFile = file
         ownHandle = False
         if isinstance(file, str):
-            inputFile = open(file)
+            inputFile = open_maybe_zipped(file,"r")
             ownHandle = True
         reader = PdbxReader(inputFile)
         data = []
