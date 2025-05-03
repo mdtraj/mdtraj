@@ -64,8 +64,10 @@ __all__ = ["load_pdbx", "PDBxTrajectoryFile"]
 ##############################################################################
 
 
-@FormatRegistry.register_loader(".pdbx")
 @FormatRegistry.register_loader(".cif")
+@FormatRegistry.register_loader(".cif.gz")
+@FormatRegistry.register_loader(".mmcif")
+@FormatRegistry.register_loader(".mmcif.gz")
 def load_pdbx(
     filename,
     stride=None,
@@ -192,8 +194,10 @@ def load_pdbx(
     return traj
 
 
-@FormatRegistry.register_fileobject(".pdbx")
 @FormatRegistry.register_fileobject(".cif")
+@FormatRegistry.register_fileobject(".cif.gz")
+@FormatRegistry.register_fileobject(".mmcif")
+@FormatRegistry.register_fileobject(".mmcif.gz")
 class PDBxTrajectoryFile:
     """Interface for reading and writing PDBx/mmCIF files
 
