@@ -28,6 +28,7 @@ from .distance import *
 from .drid import *
 from .dssp import *
 from .hbond import *
+from .pi_stacking import *
 from .neighborlist import *
 from .neighbors import *
 from .order import *
@@ -60,6 +61,7 @@ __all__ = [
     "compute_center_of_mass",
     "compute_center_of_geometry",
     "wernet_nilsson",
+    "pi_stacking",
     "compute_dssp",
     "compute_neighbors",
     "compute_neighborlist",
