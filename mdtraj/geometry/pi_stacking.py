@@ -360,11 +360,11 @@ def pi_stacking(
     vector of the groups to determine the angle between them.
 
     Two types of pi-stacking interactions are considered:
-    
+
     1. Face-to-face interactions: The two groups are parallel and close to each other.
     2. Edge-to-face interactions: The two groups are not parallel, but the edge of one
        group is close to the face of the other group.
-    
+
     Both are returned together in the same list.
 
 
@@ -379,8 +379,12 @@ def pi_stacking(
         The atom indices of the groups to be considered aromatic for the receptor.
     ligand_neighbor_cutoff : float, default=None
         The distance cutoff for considering a receptor group for pi-stacking with a
-        ligand group. If None, then all pairwise aromatic groups are considered. 
-        NOTE: The cutoff is based on the distances in the first frame of the trajectory.
+        ligand group. If None, then all pairwise aromatic groups are considered.
+        IMPORTANT: When provided, this filtering is only applied once, using the first
+        frame of the trajectory, which may miss interactions that form later due to
+        molecular movement. It is recommended that you use this parameter only if:
+        (1) your system has minimal conformational changes throughout the trajectory, or
+        (2) you're only interested in interactions present in the first frame.
     max_face_to_face_centroid_distance : float
         The maximum distance between the centroids of the ligand and receptor groups for
         the interaction.
