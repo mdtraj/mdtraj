@@ -53,8 +53,10 @@ __all__ = ["parse_selection"]
 # ############################################################################
 
 NUMS = ".0123456789"
-THIS_ATOM = ast.Name(id="atom", ctx=ast.Load(), SINGLETON=True)
-RE_MODULE = ast.Name(id="re", ctx=ast.Load(), SINGLETON=True)
+THIS_ATOM = ast.Name(id="atom", ctx=ast.Load())
+RE_MODULE = ast.Name(id="re", ctx=ast.Load())
+SINGLETON_NODE_IDS = {THIS_ATOM.id, RE_MODULE.id}
+
 SELECTION_GLOBALS = {"re": re}
 _ParsedSelection = namedtuple("_ParsedSelection", ["expr", "source", "astnode"])
 
@@ -62,10 +64,9 @@ _ParsedSelection = namedtuple("_ParsedSelection", ["expr", "source", "astnode"])
 # Utils
 # ############################################################################
 
-
 class _RewriteNames(ast.NodeTransformer):
     def visit_Name(self, node):
-        if hasattr(node, "SINGLETON"):
+        if node.id in SINGLETON_NODE_IDS:
             return node
 
         _safe_names = {"None": None, "True": True, "False": False}
@@ -203,9 +204,7 @@ class RegexInfixOperand:
                     ctx=ast.Load(),
                 ),
                 args=[pattern, string],
-                keywords=[],
-                starargs=None,
-                kwargs=None,
+                keywords=[]
             ),
             ops=[ast.IsNot()],
             comparators=[ast.Name(id="None", ctx=ast.Load())],
