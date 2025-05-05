@@ -264,7 +264,7 @@ class Test_Distance():
         b = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=True, opt=False)
         # There is a precision difference between cython and python code for ``compute_distances_t``
         # on linux-aarch64 for certain seeds (e.g. seed=3220). Pinning for a lower precision check.
-        eq(a, b, decimal=5)
+        eq(a, b, decimal=4)
 
         c = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=False, opt=True)
         d = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=False, opt=False)
