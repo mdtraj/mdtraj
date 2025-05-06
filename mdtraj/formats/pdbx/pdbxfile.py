@@ -6,7 +6,7 @@ Simbios, the NIH National Center for Physics-Based Simulation of
 Biological Structures at Stanford, funded under the NIH Roadmap for
 Medical Research, grant U54 GM072970. See https://simtk.org.
 
-Portions copyright (c) 2015-2023 Stanford University and the Authors.
+Portions copyright (c) 2015-2025 Stanford University and the Authors.
 Authors: Peter Eastman
 Contributors: Jason Swails
 
@@ -39,12 +39,12 @@ import mdtraj._version
 from datetime import date
 from .PdbxReader import PdbxReader
 from mdtraj.core.topology import Topology
+from mdtraj.core import topology
 from mdtraj.formats.pdb import PDBTrajectoryFile
 from mdtraj.core import element as elem
 from mdtraj.utils import lengths_and_angles_to_box_vectors, box_vectors_to_lengths_and_angles, open_maybe_zipped
 import numpy as np
-
-from mdtraj.utils import lengths_and_angles_to_box_vectors, box_vectors_to_lengths_and_angles
+from collections import defaultdict
 
 
 class PDBxFile(object):
@@ -95,9 +95,10 @@ class PDBxFile(object):
         resNameCol = atomData.getAttributeIndex('auth_comp_id')
         if resNameCol == -1:
             resNameCol = atomData.getAttributeIndex('label_comp_id')
+        resIdCol = atomData.getAttributeIndex('label_seq_id')
         resNumCol = atomData.getAttributeIndex('auth_seq_id')
         if resNumCol == -1:
-            resNumCol = atomData.getAttributeIndex('label_seq_id')
+            resNumCol = resIdCol
         resInsertionCol = atomData.getAttributeIndex('pdbx_PDB_ins_code')
         chainIdCol = atomData.getAttributeIndex('auth_asym_id')
         if chainIdCol == -1:
@@ -181,7 +182,6 @@ class PDBxFile(object):
                 atomsInResidue.add(atomName)
             else:
                 # This row defines coordinates for an existing atom in one of the later models.
-
                 try:
                     atom = atomTable[atomKey]
                 except KeyError:
@@ -204,7 +204,6 @@ class PDBxFile(object):
             self._unitcell_angles = [float(row[cell.getAttributeIndex(attribute)]) for attribute in ('angle_alpha', 'angle_beta', 'angle_gamma')] #degrees
 
         # Add bonds based on struct_conn records.
-
         connectData = block.getObj('struct_conn')
         if connectData is not None:
             res1Col = connectData.getAttributeIndex('ptnr1_label_seq_id')
@@ -230,8 +229,45 @@ class PDBxFile(object):
                         top.add_bond(bond[0], bond[1])
                         existingBonds.add(bond)
 
-    
-    
+        # Add bonds based on chem_comp_bond records.
+        bondData = block.getObj('chem_comp_bond')
+        if bondData is not None:
+            # Load the bond definitions for residues.
+
+            resNameCol = bondData.getAttributeIndex('comp_id')
+            atom1Col = bondData.getAttributeIndex('atom_id_1')
+            atom2Col = bondData.getAttributeIndex('atom_id_2')
+            bondOrderCol = bondData.getAttributeIndex('value_order')
+            resBonds = defaultdict(list)
+            for row in bondData.getRowList():
+                bondOrder = None if bondOrderCol == -1 else row[bondOrderCol]
+                resBonds[row[resNameCol]].append((row[atom1Col], row[atom2Col], bondOrder))
+
+            # Create the bonds.
+
+            bondTypes = defaultdict(lambda: None, {
+                'sing': topology.Single,
+                'doub': topology.Double,
+                'trip': topology.Triple,
+                'arom': topology.Aromatic
+            })
+            bondOrders = defaultdict(lambda: None, {
+                'sing': 1,
+                'doub': 2,
+                'trip': 3
+            })
+            for res in self.topology.residues:
+                if res.name in resBonds:
+                    atoms = {atom.name: atom for atom in res.atoms}
+                    for atom1, atom2, bondOrder in resBonds[res.name]:
+                        if atom1 in atoms and atom2 in atoms:
+                            self.topology.add_bond(atoms[atom1], atoms[atom2], bondTypes[bondOrder], bondOrders[bondOrder])
+
+        # Add bonds for standard residues.
+        self.topology.create_standard_bonds()
+                
+
+
     def getTopology(self):
         """Get the Topology of the model."""
         return self.topology
