@@ -201,7 +201,7 @@ class PDBxFile(object):
         if cell is not None and cell.getRowCount() > 0:
             row = cell.getRow(0)
             self._unitcell_lengths = [float(row[cell.getAttributeIndex(attribute)])/10 for attribute in ('length_a', 'length_b', 'length_c')] #nanometers
-            self._unitcell_angles = [float(row[cell.getAttributeIndex(attribute)])*np.pi/180 for attribute in ('angle_alpha', 'angle_beta', 'angle_gamma')] #radians
+            self._unitcell_angles = [float(row[cell.getAttributeIndex(attribute)]) for attribute in ('angle_alpha', 'angle_beta', 'angle_gamma')] #degrees
 
         # Add bonds based on struct_conn records.
 
@@ -302,7 +302,7 @@ class PDBxFile(object):
         box_lengths : list=None
             The lengths of the periodic box vectors in nanometers
         box_angles : list=None
-            The angles of the periodic box vectors in radians
+            The angles of the periodic box vectors in degrees
         file : file=stdout
             A file to write the file to
         entry : str=None
@@ -323,13 +323,12 @@ class PDBxFile(object):
         if box_lengths is not None and box_angles is not None:
             a, b, c = box_lengths
             alpha, beta, gamma = box_angles
-            RAD_TO_DEG = 180/math.pi
             print('_cell.length_a     %10.4f' % (a*10), file=file)
             print('_cell.length_b     %10.4f' % (b*10), file=file)
             print('_cell.length_c     %10.4f' % (c*10), file=file)
-            print('_cell.angle_alpha  %10.4f' % (alpha*RAD_TO_DEG), file=file)
-            print('_cell.angle_beta   %10.4f' % (beta*RAD_TO_DEG), file=file)
-            print('_cell.angle_gamma  %10.4f' % (gamma*RAD_TO_DEG), file=file)
+            print('_cell.angle_alpha  %10.4f' % (alpha), file=file)
+            print('_cell.angle_beta   %10.4f' % (beta), file=file)
+            print('_cell.angle_gamma  %10.4f' % (gamma), file=file)
             print('#', file=file)
 
         # Identify bonds that should be listed in the file.
