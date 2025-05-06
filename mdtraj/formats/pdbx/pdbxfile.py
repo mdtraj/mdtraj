@@ -45,6 +45,7 @@ from mdtraj.core import element as elem
 from mdtraj.utils import lengths_and_angles_to_box_vectors, box_vectors_to_lengths_and_angles, open_maybe_zipped
 import numpy as np
 from collections import defaultdict
+import warnings
 
 
 class PDBxFile(object):
@@ -195,12 +196,14 @@ class PDBxFile(object):
         self._numpyPositions = None
 
         # Record unit cell information, if present.
-
         cell = block.getObj('cell')
         if cell is not None and cell.getRowCount() > 0:
             row = cell.getRow(0)
             self._unitcell_lengths = [float(row[cell.getAttributeIndex(attribute)])/10 for attribute in ('length_a', 'length_b', 'length_c')] #nanometers
             self._unitcell_angles = [float(row[cell.getAttributeIndex(attribute)]) for attribute in ('angle_alpha', 'angle_beta', 'angle_gamma')] #degrees
+
+        # Add bonds for standard residues.
+        self.topology.create_standard_bonds()
 
         # Add bonds based on struct_conn records.
         connectData = block.getObj('struct_conn')
@@ -262,9 +265,34 @@ class PDBxFile(object):
                         if atom1 in atoms and atom2 in atoms:
                             self.topology.add_bond(atoms[atom1], atoms[atom2], bondTypes[bondOrder], bondOrders[bondOrder])
 
-        # Add bonds for standard residues.
-        self.topology.create_standard_bonds()
-                
+        #Remove any duplicate bonds
+        bonds = self.topology._bonds
+        
+        self.topology._bonds = []
+        unique_bonds = {}
+        for bond in bonds:
+            i=bond.atom1.index
+            j=bond.atom2.index
+            if j < i:
+                i,j = j,i
+            if (i,j) not in unique_bonds:
+                unique_bonds[(i,j)] = bond
+            else:
+                #If the bond already exists use the one containing the most information or the last one.
+                if unique_bonds[(i,j)].order is None:
+                    unique_bonds[(i,j)].order = bond.order
+                elif bond.order is not None and unique_bonds[(i,j)].order != bond.order:
+                    warnings.warn(f'Bond {bond.atom1}-{bond.atom2} order ({unique_bonds[(i,j)].order} will be replaced by {bond.order})')
+                    unique_bonds[(i,j)].order = bond.order
+                    
+                    
+                if unique_bonds[(i,j)].type is None:
+                    unique_bonds[(i,j)].type = bond.type
+                elif bond.type is not None and unique_bonds[(i,j)].type != bond.type:
+                    warnings.warn(f'Bond {bond.atom1}-{bond.atom2} type ({unique_bonds[(i,j)].type} will be replaced by {bond.type})')
+                    unique_bonds[(i,j)].type = bond.type
+
+        self.topology._bonds = list(unique_bonds.values())        
 
 
     def getTopology(self):
