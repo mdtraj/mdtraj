@@ -90,10 +90,12 @@ _TOPOLOGY_EXTS = [
     ".arc",
     ".hdf5",
     ".gsd",
-    ".pdbx"
-    ".cif",
+    ".pdbx",
     ".pdbx.gz",
+    ".cif",
     ".cif.gz",
+    ".mmcif",
+    ".mmcif.gz",
 ]
 
 
@@ -170,7 +172,7 @@ def _parse_topology(top, **kwargs):
         topology = top
     elif isinstance(top, Trajectory):
         topology = top.topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".pdb", ".pdb.gz", ".pdbx", ".cif", ".h5", ".lh5"]):
+    elif isinstance(top, (str, os.PathLike)) and (ext in [".pdb", ".pdb.gz", ".pdbx", ".pdbx.gz", ".cif", ".cif.gz", ".mmcif", ".mmcif.gz", ".h5", ".lh5"]):
         _traj = load_frame(top, 0, **kwargs)
         topology = _traj.topology
     elif isinstance(top, (str, os.PathLike)) and (ext in [".prmtop", ".parm7", ".prm7"]):
@@ -1433,6 +1435,7 @@ class Trajectory:
             ".trr": self.save_trr,
             ".pdb": self.save_pdb,
             ".pdb.gz": self.save_pdb,
+            #TODO: .pdb.gz is not supported yet
             ".dcd": self.save_dcd,
             ".h5": self.save_hdf5,
             ".nc": self.save_netcdf,
