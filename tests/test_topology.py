@@ -444,7 +444,7 @@ ATOM      5  CA  ALA     1       1.247   0.375   0.636  1.00  0.00      AAL
     n_bonds_original = top.n_bonds
     n_atoms_original = top.n_atoms
     atom_to_remove = top._atoms[index]
-    top.delete_atom(index)
+    top.delete_atom_by_index(index)
     assert top.n_atoms == n_atoms_original - 1
     assert top.n_bonds == n_bonds_original - 4
     assert all([atom_to_remove not in bond for bond in top.bonds])
