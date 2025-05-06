@@ -28,6 +28,7 @@ import pytest
 from mdtraj import load
 from mdtraj.formats import PDBxTrajectoryFile
 from mdtraj.testing import eq
+import numpy as np
 
 def test_convert(get_fn):
     for filename in ["2EQQ.pdb", "4OH9.pdb"]:
@@ -71,3 +72,42 @@ def test_convert(get_fn):
             atoms1 = list(traj1.topology.atoms)[10:20]
             for a1, a2 in zip(atoms1, traj3.topology.atoms):
                 assert eq(a1.name, a2.name)
+
+
+def test_load_pdbx_file(get_fn):
+    """Test loading a PDBx/mmCIF file and verifying topology details."""
+    traj = load(get_fn("8ddg.cif"))
+
+    # Verify the number of atoms, residues, chains, and bonds
+    assert len([a for a in traj.topology.atoms]) == 64, "Unexpected number of atoms"
+    assert len([r for r in traj.topology.residues]) == 3, "Unexpected number of residues"
+    assert len([c for c in traj.topology.chains]) == 1, "Unexpected number of chains"
+    assert len([b for b in traj.topology.bonds]) == 66, "Unexpected number of bonds"
+
+    # Verify atom names and residue names
+    atom_names = [a.name for a in traj.topology.atoms]
+    assert "CA" in atom_names, "Expected atom 'CA' not found"
+    assert "OXT" in atom_names, "Expected atom 'OXT' not found"
+    assert "HE2" in atom_names, "Expected atom 'HE2' not found"
+    assert "HXT" not in atom_names, "Unexpected atom 'HXT' found"
+
+    residue_names = [r.name for r in traj.topology.residues]
+    assert "TYR" in residue_names, "Expected residue 'TYR' not found"
+    assert "PHE" in residue_names, "Expected residue 'PHE' not found"
+    assert "ALA" not in residue_names, "Unexpected residue 'ALA' found"
+
+    # Verify chain IDs
+    chain_ids = [c.chain_id for c in traj.topology.chains]
+    assert "A" in chain_ids, "Expected chain ID 'A' not found"
+
+    # Verify unit cell lengths and angles
+    assert traj.unitcell_lengths is not None, "Unit cell lengths not found"
+    assert traj.unitcell_angles is not None, "Unit cell angles not found"
+
+    # Expected values for unit cell lengths (in nanometers) and angles (in degrees)
+    expected_lengths = [2.3140, 0.4840, 1.9790]  # Converted from Ångstroms to nanometers
+    expected_angles = [90.000, 107.048, 90.000]
+
+    # Use numpy's allclose for comparison with a tolerance
+    assert np.allclose(traj.unitcell_lengths[0], expected_lengths, atol=1e-3), "Unit cell lengths do not match"
+    assert np.allclose(traj.unitcell_angles[0], expected_angles, atol=1e-3), "Unit cell angles do not match"
