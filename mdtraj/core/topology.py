@@ -869,7 +869,10 @@ class Topology:
         return atom
 
     def delete_atom_by_index(self, index: int) -> None:
-        """Delete an Atom from the topology.
+        """Delete an Atom from the topology. 
+        Atom is removed and all subsequent atoms are reindexed.
+        All bonds involving this atom are likewise removed. This may result
+        in disconnected groups of atoms. 
 
         Parameters
         ----------
@@ -884,6 +887,9 @@ class Topology:
             )
         for i in range(index + 1, len(self._atoms)):
             self._atoms[i].index -= 1
+        
+        self._bonds = [bond for bond in self._bonds if a not in bond]
+        
         a.residue._atoms.remove(a)
         self._atoms.remove(a)
         self._numAtoms -= 1
