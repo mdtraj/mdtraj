@@ -192,7 +192,6 @@ class PDBxFile(object):
             self._positions[modelIndex].append(pos)
         ## The atom positions read from the PDBx/mmCIF file.  If the file contains multiple frames, these are the positions in the first frame.
         self.positions = self._positions[0]
-        self.topology.create_standard_bonds()
         self._numpyPositions = None
 
         # Record unit cell information, if present.
