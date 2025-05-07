@@ -64,8 +64,12 @@ __all__ = ["load_pdbx", "PDBxTrajectoryFile"]
 ##############################################################################
 
 
-@FormatRegistry.register_loader(".pdbx")
 @FormatRegistry.register_loader(".cif")
+@FormatRegistry.register_loader(".cif.gz")
+@FormatRegistry.register_loader(".mmcif")
+@FormatRegistry.register_loader(".mmcif.gz")
+@FormatRegistry.register_loader(".pdbx")
+@FormatRegistry.register_loader(".pdbx.gz")
 def load_pdbx(
     filename,
     stride=None,
@@ -192,8 +196,12 @@ def load_pdbx(
     return traj
 
 
-@FormatRegistry.register_fileobject(".pdbx")
 @FormatRegistry.register_fileobject(".cif")
+@FormatRegistry.register_fileobject(".cif.gz")
+@FormatRegistry.register_fileobject(".mmcif")
+@FormatRegistry.register_fileobject(".mmcif.gz")
+@FormatRegistry.register_fileobject(".pdbx")
+@FormatRegistry.register_fileobject(".pdbx.gz")
 class PDBxTrajectoryFile:
     """Interface for reading and writing PDBx/mmCIF files
 
@@ -225,26 +233,22 @@ class PDBxTrajectoryFile:
     def __init__(self, filename, mode="r", force_overwrite=True, top=None):
         self._open = False
         self._mode = mode
-        from openmm.app import PDBxFile
-        from openmm.unit import nanometers
+        from .pdbxfile import PDBxFile
 
         if mode == "r":
             self._open = True
             pdbx = PDBxFile(filename)
             if top is None:
-                self._topology = Topology.from_openmm(pdbx.topology)
+                self._topology = pdbx.topology
             else:
                 self._topology = top
             positions = [
-                pdbx.getPositions(asNumpy=True, frame=i).value_in_unit(nanometers) for i in range(pdbx.getNumFrames())
+                pdbx.getPositions(asNumpy=True, frame=i) for i in range(pdbx.getNumFrames())
             ]
             self._positions = np.array(positions)
-            vectors = pdbx.topology.getPeriodicBoxVectors()
-            if vectors is not None:
-                vectors = [np.array(v.value_in_unit(nanometers)) for v in vectors]
-                l1, l2, l3, alpha, beta, gamma = box_vectors_to_lengths_and_angles(
-                    *vectors,
-                )
+            if pdbx._unitcell_angles is not None and pdbx._unitcell_lengths is not None:
+                l1, l2, l3 = pdbx._unitcell_lengths
+                alpha, beta, gamma = pdbx._unitcell_angles
                 self._unitcell_lengths = (l1, l2, l3)
                 self._unitcell_angles = (alpha, beta, gamma)
             else:
@@ -263,7 +267,7 @@ class PDBxTrajectoryFile:
         Parameters
         ----------
         positions : array_like
-            The list of atomic positions to write.
+            The list of atomic positions to write in nanometers.
         topology : mdtraj.Topology
             The Topology defining the model to write.
         unitcell_lengths : {tuple, None}
@@ -273,26 +277,20 @@ class PDBxTrajectoryFile:
         """
         if not self._mode == "w":
             raise ValueError("file not opened for writing")
-        from openmm.app import PDBxFile
-        from openmm.unit import nanometers
+        from .pdbxfile import PDBxFile
 
         if self._next_model == 0:
-            self._openmm_topology = topology.to_openmm()
-            if unitcell_lengths is None:
-                self._openmm_topology.setPeriodicBoxVectors(None)
-            else:
-                vectors = lengths_and_angles_to_box_vectors(
-                    *unitcell_lengths[0],
-                    *unitcell_angles[0],
-                )
-                self._openmm_topology.setPeriodicBoxVectors(vectors * nanometers)
-            PDBxFile.writeHeader(self._openmm_topology, self._file)
+            if unitcell_lengths is not None:
+                unitcell_lengths = unitcell_lengths[0]
+            if unitcell_angles is not None:
+                unitcell_angles = unitcell_angles[0]
+            PDBxFile.writeHeader(topology, unitcell_lengths, unitcell_angles, self._file)
             self._next_model = 1
         if len(positions.shape) == 3:
             positions = positions[0]
         PDBxFile.writeModel(
-            self._openmm_topology,
-            positions * nanometers,
+            topology,
+            positions, # nanometers
             self._file,
             self._next_model,
         )
