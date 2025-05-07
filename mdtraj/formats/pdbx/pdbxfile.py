@@ -40,7 +40,6 @@ from datetime import date
 from .PdbxReader import PdbxReader
 from mdtraj.core.topology import Topology
 from mdtraj.core import topology
-from mdtraj.formats.pdb import PDBTrajectoryFile
 from mdtraj.core import element as elem
 from mdtraj.utils import lengths_and_angles_to_box_vectors, box_vectors_to_lengths_and_angles, open_maybe_zipped
 import numpy as np
@@ -70,7 +69,7 @@ class PDBxFile(object):
         self._unitcell_lengths = None
         self._unitcell_angles = None
 
-        PDBTrajectoryFile._loadNameReplacementTables()
+        self._loadNameReplacementTables()
 
         # Load the file.
 
@@ -160,11 +159,11 @@ class PDBxFile(object):
                     resId = (None if resNumCol == -1 else row[resNumCol])
                     resIC = insertionCode
                     resName = row[resNameCol]
-                    if resName in PDBTrajectoryFile._residueNameReplacements:
-                        resName = PDBTrajectoryFile._residueNameReplacements[resName]
+                    if resName in self._residueNameReplacements:
+                        resName = self._residueNameReplacements[resName]
                     res = top.add_residue(resName, chain, resId, resIC)
-                    if resName in PDBTrajectoryFile._atomNameReplacements:
-                        atomReplacements = PDBTrajectoryFile._atomNameReplacements[resName]
+                    if resName in self._atomNameReplacements:
+                        atomReplacements = self._atomNameReplacements[resName]
                     else:
                         atomReplacements = {}
                     lastResId = row[resNumCol]
@@ -398,7 +397,7 @@ class PDBxFile(object):
 
         bonds = []
         for atom1, atom2 in topology.bonds:
-            if atom1.residue.name not in PDBTrajectoryFile._standardResidues or atom2.residue.name not in PDBTrajectoryFile._standardResidues:
+            if atom1.residue.name not in PDBxFile._standardResidues or atom2.residue.name not in PDBxFile._standardResidues:
                 bonds.append((atom1, atom2))
             elif atom1.name == 'SG' and atom2.name == 'SG' and atom1.residue.name == 'CYS' and atom2.residue.name == 'CYS':
                 bonds.append((atom1, atom2))
@@ -496,7 +495,7 @@ class PDBxFile(object):
             raise ValueError('Particle position is NaN.  For more information, see https://github.com/openmm/openmm/wiki/Frequently-Asked-Questions#nan')
         if np.isinf(positions).any():
             raise ValueError('Particle position is infinite.  For more information, see https://github.com/openmm/openmm/wiki/Frequently-Asked-Questions#nan')
-        nonHeterogens = PDBTrajectoryFile._standardResidues[:]
+        nonHeterogens = PDBxFile._standardResidues[:]
         nonHeterogens.remove('HOH')
         atomIndex = 1
         posIndex = 0
@@ -528,3 +527,88 @@ class PDBxFile(object):
                                   resId, res.name, chainName, atom.name, modelIndex), file=file)
                     posIndex += 1
                     atomIndex += 1
+
+
+    ## TODO: Methods repeated in PDBTrajectoryFile. They should be moved to a common place.
+    _standardResidues = [
+        "ALA",
+        "ASN",
+        "CYS",
+        "GLU",
+        "HIS",
+        "LEU",
+        "MET",
+        "PRO",
+        "THR",
+        "TYR",
+        "ARG",
+        "ASP",
+        "GLN",
+        "GLY",
+        "ILE",
+        "LYS",
+        "PHE",
+        "SER",
+        "TRP",
+        "VAL",
+        "A",
+        "G",
+        "C",
+        "U",
+        "I",
+        "DA",
+        "DG",
+        "DC",
+        "DT",
+        "DI",
+        "HOH",
+    ]
+    _residueNameReplacements = {}
+    _atomNameReplacements = {}
+
+    @staticmethod
+    def _loadNameReplacementTables():
+        import os
+        import xml.etree.ElementTree as etree
+        from copy import copy
+        """Load the list of atom and residue name replacements."""
+        if len(PDBxFile._residueNameReplacements) == 0:
+            tree = etree.parse(
+                os.path.join(os.path.dirname(__file__),"..", "pdb", "data", "pdbNames.xml"),
+            )
+            allResidues = {}
+            proteinResidues = {}
+            nucleicAcidResidues = {}
+            for residue in tree.getroot().findall("Residue"):
+                name = residue.attrib["name"]
+                if name == "All":
+                    PDBxFile._parseResidueAtoms(residue, allResidues)
+                elif name == "Protein":
+                    PDBxFile._parseResidueAtoms(residue, proteinResidues)
+                elif name == "Nucleic":
+                    PDBxFile._parseResidueAtoms(residue, nucleicAcidResidues)
+            for atom in allResidues:
+                proteinResidues[atom] = allResidues[atom]
+                nucleicAcidResidues[atom] = allResidues[atom]
+            for residue in tree.getroot().findall("Residue"):
+                name = residue.attrib["name"]
+                for id in residue.attrib:
+                    if id == "name" or id.startswith("alt"):
+                        PDBxFile._residueNameReplacements[residue.attrib[id]] = name
+                if "type" not in residue.attrib:
+                    atoms = copy(allResidues)
+                elif residue.attrib["type"] == "Protein":
+                    atoms = copy(proteinResidues)
+                elif residue.attrib["type"] == "Nucleic":
+                    atoms = copy(nucleicAcidResidues)
+                else:
+                    atoms = copy(allResidues)
+                PDBxFile._parseResidueAtoms(residue, atoms)
+                PDBxFile._atomNameReplacements[name] = atoms
+
+    @staticmethod
+    def _parseResidueAtoms(residue, map):
+        for atom in residue.findall("Atom"):
+            name = atom.attrib["name"]
+            for id in atom.attrib:
+                map[atom.attrib[id]] = name
