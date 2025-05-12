@@ -101,10 +101,14 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
         the trajectory's coordinates, the center and traces will be out of
         date and the RMSDs will be incorrect.
     superpose : bool, default=True
-        Whether to use the Theobald QCP method to calculate RMSD. If True, the 
-        QCP method is used, which inherently superposes the structure based on 
-        the `atom_indices` selection. If False, RMSD is directly calculated with
-        no optimization and no superposition done. The `precentered` option is ignored.
+        Whether to use the Theobald QCP method to calculate RMSD. If True, the
+        QCP method is used, which inherently superposes the structure based on
+        the `atom_indices` selection. If False, the Theolbald QCP method is not used
+        and the RMSD is directly calculated pairwise with no optimization and additional
+        no superposition done.
+        The `precentered` option is ignored. Users are expected to manually superpose
+        and/or image their trajectories using `Trajectory.image_molecules()` and/or
+        `Trajectory.make_molecules_whole()` and/or `Trajectory.superpose()`.
 
     Examples
     --------
@@ -222,6 +226,11 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
         # t2 = time.time()
         # print 'rmsd: %s, centering: %s' % (t2-t1, t1-t0)
     else:
+        if precentered:
+            warnings.warn(
+                'in rmsd(), precentered is ignored when superpose=False',
+                RuntimeWarning)
+
         if parallel:
             for i in prange(target_n_frames, nogil=True):
                 msd = msd_nosuperpose(n_atoms, target_xyz[i], ref_xyz_frame)
