@@ -259,15 +259,18 @@ class Test_Distance():
         with pytest.raises(ValueError, match="time_pairs"):
             compute_distances_t(self.ptraj, self.pairs, incorrect_times)
     
-    def test_distances_t(self, get_fn):
+    def test_distances_t(self, gen_random_ptraj):
         a = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=True, opt=True)
         b = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=True, opt=False)
-        eq(a, b)
+        # There is a precision difference between cython and python code for ``compute_distances_t``
+        # on linux-aarch64 for certain seeds (e.g. seed=3220). Pinning for a lower precision check.
+        eq(a, b, decimal=4)
+
         c = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=False, opt=True)
         d = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=False, opt=False)
         eq(c, d)
     
-    def test_distances_t_at_0(self, get_fn):
+    def test_distances_t_at_0(self, gen_random_ptraj):
         self.times = np.array([[0, 0]], dtype=np.int32)
         a = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=True, opt=True)
         b = compute_distances_t(self.ptraj, self.pairs, self.times, periodic=True, opt=False)
