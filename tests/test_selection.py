@@ -264,11 +264,10 @@ def test_re():
     eq(sp.source, "re.match('C.*', atom.name) is not None and True")
 
 
-@pytest.mark.skip('failed to parse selection')
+@pytest.mark.skip("failed to parse selection")
 def test_within(self):
     sp = parse_selection("within 5 of (backbone or sidechain)")
-    eq(sp.source,
-        "atom.within == 5 of atom.residue.is_backbone or atom.residue.is_sidechain")
+    eq(sp.source, "atom.within == 5 of atom.residue.is_backbone or atom.residue.is_sidechain")
 
 
 def test_quotes():
@@ -305,7 +304,7 @@ def test_top_2(ala):
 
 def test_backbone(gbp):
     ref_backbone = gbp.topology.select(
-        "protein and (name C or name CA or " "name N or name O)",
+        "protein and (name C or name CA or name N or name O)",
     )
     backbone = gbp.topology.select("backbone")
     is_backbone = gbp.topology.select("is_backbone")
@@ -316,7 +315,7 @@ def test_backbone(gbp):
 
 def test_sidechain(gbp):
     ref_sidechain = gbp.topology.select(
-        "protein and not (name C or name CA " "or name N or name O or name H or name HA)",
+        "protein and not (name C or name CA or name N or name O or name H or name HA)",
     )
     sidechain = gbp.topology.select("sidechain")
     is_sidechain = gbp.topology.select("is_sidechain")

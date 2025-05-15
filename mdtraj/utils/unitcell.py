@@ -155,7 +155,7 @@ def box_vectors_to_lengths_and_angles(a, b, c):
         raise TypeError("The last dimension must be length 3")
     if a.ndim not in [1, 2]:
         raise ValueError(
-            "vectors must be 1d or 2d (for a vectorized " "operation on multiple frames)",
+            "vectors must be 1d or 2d (for a vectorized operation on multiple frames)",
         )
     last_dim = a.ndim - 1
 
@@ -165,9 +165,9 @@ def box_vectors_to_lengths_and_angles(a, b, c):
 
     # we allow 2d input, where the first dimension is the frame index
     # so we want to do the dot product only over the last dimension
-    alpha = np.arccos(np.einsum("...i, ...i", b, c) / (b_length * c_length), casting='safe')
-    beta = np.arccos(np.einsum("...i, ...i", c, a) / (c_length * a_length), casting='safe')
-    gamma = np.arccos(np.einsum("...i, ...i", a, b) / (a_length * b_length), casting='safe')
+    alpha = np.arccos(np.einsum("...i, ...i", b, c) / (b_length * c_length), casting="safe")
+    beta = np.arccos(np.einsum("...i, ...i", c, a) / (c_length * a_length), casting="safe")
+    gamma = np.arccos(np.einsum("...i, ...i", a, b) / (a_length * b_length), casting="safe")
 
     # convert to degrees
     alpha = alpha * 180.0 / np.pi

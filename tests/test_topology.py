@@ -25,6 +25,7 @@ import pickle
 import tempfile
 
 import numpy as np
+import pandas as pd
 import pytest
 
 import mdtraj as md
@@ -94,22 +95,22 @@ def test_topology_openmm_boxes(get_fn):
     mmtop = traj.topology.to_openmm(traj=traj)
     mmtop.getUnitCellDimensions() / u.nanometer
 
+
 @needs_openmm
 def test_topology_openmm_formal_charges(get_fn):
     """Test to make sure charges are conserved when converting to/from openmm from PDB"""
     app = import_("openmm.app")
 
     #  This is a edited 1ply PDB with formal charges added to sodium ions
-    pdb = app.PDBFile(get_fn("1ply_charge.pdb")) 
+    pdb = app.PDBFile(get_fn("1ply_charge.pdb"))
 
     # Get the formal charges from the OpenMM topology
     try:
         formal_charges = [atom.formalCharge for atom in pdb.topology.atoms()]
     except TypeError:
-        # OpenMM < 7.4 doesn't have formal charges, 
+        # OpenMM < 7.4 doesn't have formal charges,
         # so we just return (skip the test)
         return
-
 
     # Convert to MDTraj topology
     mdtraj_topology = md.Topology.from_openmm(pdb.topology)
@@ -120,11 +121,12 @@ def test_topology_openmm_formal_charges(get_fn):
     # Check that the formal charges are the same
     eq(formal_charges, mdtraj_formal_charges)
 
-import pandas as pd
 
 def normalize_charge(charge):
     # Convert None to pandas NA, leave numbers intact
-    return pd.NA if charge is None else charge 
+    return pd.NA if charge is None else charge
+
+
 def test_topology_dataframe_formal_charges(get_fn):
     """
     Test that formal charges are maintained when converting a topology
@@ -147,7 +149,8 @@ def test_topology_dataframe_formal_charges(get_fn):
     converted_formal_charges = [atom.formal_charge for atom in topology_from_df.atoms]
 
     # Check that formal charges are conserved.
-    eq(normalized_original, converted_formal_charges)   
+    eq(normalized_original, converted_formal_charges)
+
 
 def test_topology_pandas(get_fn):
     topology = md.load(get_fn("native.pdb")).topology

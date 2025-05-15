@@ -28,10 +28,10 @@ from .distance import *
 from .drid import *
 from .dssp import *
 from .hbond import *
-from .pi_stacking import *
 from .neighborlist import *
 from .neighbors import *
 from .order import *
+from .pi_stacking import *
 from .rdf import *
 from .rg import *
 from .sasa import *

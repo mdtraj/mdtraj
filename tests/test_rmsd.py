@@ -22,21 +22,20 @@
 
 
 import numpy as np
+import pytest
 
 import mdtraj as md
-import pytest
 from mdtraj.geometry.alignment import compute_average_structure, rmsd_qcp
 from mdtraj.testing import eq
-
 
 rng = np.random.default_rng(seed=52)
 
 
-@pytest.mark.parametrize('parallel', [True, False], ids=['parallel', 'serial'])
-@pytest.mark.parametrize('superpose', [True, False], ids=['superpose','qcp'])
+@pytest.mark.parametrize("parallel", [True, False], ids=["parallel", "serial"])
+@pytest.mark.parametrize("superpose", [True, False], ids=["superpose", "qcp"])
 def test_trajectory_rmsd(get_fn, parallel, superpose):
     t = md.load(get_fn("traj.h5"))
-    
+
     if superpose is False:
         t.superpose(t, 0)
     calculated = md.rmsd(t, t, 0, parallel=parallel, superpose=superpose)
@@ -104,7 +103,7 @@ def test_superpose_0(get_fn):
     displ_rmsd = np.zeros(t1.n_frames)
     for i in range(t1.n_frames):
         delta = t1.xyz[i] - t1.xyz[0]
-        displ_rmsd[i] = (delta**np.float64(2.0)).sum(1).mean() ** np.float64(0.5)
+        displ_rmsd[i] = (delta ** np.float64(2.0)).sum(1).mean() ** np.float64(0.5)
 
     eq(reference_rmsd, displ_rmsd, decimal=5)
 
@@ -184,11 +183,11 @@ def test_rmsd_atom_indices(get_fn):
     t1 = md.load(get_fn("traj.h5"))
     t1.superpose(native, atom_indices=atom_indices)
     dist1b = md.rmsd(t1, native, atom_indices=atom_indices, superpose=False)
-    
+
     # RMSD with alignment via Theobald QCP
     t1 = md.load(get_fn("traj.h5"))
     dist1c = md.rmsd(t1, native, atom_indices=atom_indices, superpose=True)
-   
+
     t2 = md.load(get_fn("traj.h5"))
     t2.restrict_atoms(atom_indices)
     native.restrict_atoms(atom_indices)
@@ -199,9 +198,10 @@ def test_rmsd_atom_indices(get_fn):
         eq(dist1a, dist1b)
 
     eq(dist1b, dist1c)  # Should be the same regardless of how you align
-    eq(dist1b, dist2)   # Should be the same with coords from different file format
+    eq(dist1b, dist2)  # Should be the same with coords from different file format
 
-@pytest.mark.parametrize('superpose', [True, False], ids=['superpose','qcp'])
+
+@pytest.mark.parametrize("superpose", [True, False], ids=["superpose", "qcp"])
 def test_rmsd_ref_ainds_superpose(get_fn, superpose):
     native = md.load(get_fn("native.pdb"))
     t1 = md.load(get_fn("traj.h5"))
@@ -292,4 +292,3 @@ def test_rmsd_atom_indices_vs_ref_indices():
     md.rmsd(trj_1, trj_2, atom_indices=[0], ref_atom_indices=[1])
     md.rmsd(trj_2, trj_1, atom_indices=[1], ref_atom_indices=[0])
     # if this don't fail then it's good no matter the result
-

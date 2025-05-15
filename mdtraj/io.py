@@ -163,7 +163,7 @@ def saveh(file, *args, **kwargs):
     else:
         if not isinstance(file, tables.File):
             raise TypeError(
-                "file must be either a string " "or an open tables.File: %s" % file,
+                "file must be either a string or an open tables.File: %s" % file,
             )
         handle = file
         own_fid = False
@@ -176,7 +176,7 @@ def saveh(file, *args, **kwargs):
             if own_fid:
                 handle.close()
             raise ValueError(
-                "Cannot use un-named variables " " and keyword %s" % key,
+                "Cannot use un-named variables  and keyword %s" % key,
             )
         namedict[key] = val
 
@@ -195,13 +195,13 @@ def saveh(file, *args, **kwargs):
         for key, val in namedict.items():
             if not isinstance(val, np.ndarray):
                 raise TypeError(
-                    "Only numpy arrays can " f"be saved: type({key}) is {type(val)}",
+                    f"Only numpy arrays can be saved: type({key}) is {type(val)}",
                 )
             try:
                 atom = tables.Atom.from_dtype(val.dtype)
             except ValueError:
                 raise TypeError(
-                    "Arrays of this dtype " "cannot be saved: %s" % val.dtype,
+                    "Arrays of this dtype cannot be saved: %s" % val.dtype,
                 )
 
             node = handle.create_carray(
@@ -265,7 +265,7 @@ def loadh(file, name=Ellipsis, deferred=True):
     else:
         if not isinstance(file, tables.File):
             raise TypeError(
-                "file must be either a string " "or an open tables.File: %s" % file,
+                "file must be either a string or an open tables.File: %s" % file,
             )
         handle = file
         own_fid = False
@@ -276,7 +276,7 @@ def loadh(file, name=Ellipsis, deferred=True):
             node = handle.get_node(where="/", name=name)
         except tables.NoSuchNodeError:
             raise KeyError(
-                f'Node "{name}" does not exist ' f"in file {file}",
+                f'Node "{name}" does not exist in file {file}',
             )
 
         return_value = np.array(node[:])

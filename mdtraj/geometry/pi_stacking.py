@@ -125,10 +125,7 @@ def compute_angles(vec_1, vec_2):
     angle : np.array, shape=vec_1.shape, dtype=float
         The angles between the two vectors, in radians.
     """
-    angle = np.arccos(
-        dot_pdt(vec_1, vec_2)
-        / (np.linalg.norm(vec_1, axis=1) * np.linalg.norm(vec_2, axis=1))
-    )
+    angle = np.arccos(dot_pdt(vec_1, vec_2) / (np.linalg.norm(vec_1, axis=1) * np.linalg.norm(vec_2, axis=1)))
     return angle
 
 
@@ -200,15 +197,12 @@ def calculate_intersection_point(
     # NOTE: np.linalg.solve changed in v2.0. This is how to do it in 2.0
     intersect_pt = np.linalg.solve(A, d[..., None])[..., 0]
     vec = plane_centroid - intersect_pt
-    intersect_direction = (
-        intersect_direction / np.linalg.norm(intersect_direction, axis=1)[:, np.newaxis]
-    )
+    intersect_direction = intersect_direction / np.linalg.norm(intersect_direction, axis=1)[:, np.newaxis]
     scalar_proj = dot_pdt(intersect_direction, vec)
     non_singular_matrices = ~singular_matrices
     points[non_singular_matrices] = (
         intersect_pt[non_singular_matrices]
-        + intersect_direction[non_singular_matrices]
-        * scalar_proj[non_singular_matrices, np.newaxis]
+        + intersect_direction[non_singular_matrices] * scalar_proj[non_singular_matrices, np.newaxis]
     )
     points[singular_matrices] = np.array([np.nan, np.nan, np.nan])
     return points
@@ -416,13 +410,9 @@ def pi_stacking(
         interactions.
     """
     face_plane_angle_range_rad = tuple(np.deg2rad(face_plane_angle_range))
-    face_normal_to_centroid_angle_range_rad = tuple(
-        np.deg2rad(face_normal_to_centroid_angle_range)
-    )
+    face_normal_to_centroid_angle_range_rad = tuple(np.deg2rad(face_normal_to_centroid_angle_range))
     edge_plane_angle_range_rad = tuple(np.deg2rad(edge_plane_angle_range))
-    edge_normal_to_centroid_angle_range_rad = tuple(
-        np.deg2rad(edge_normal_to_centroid_angle_range)
-    )
+    edge_normal_to_centroid_angle_range_rad = tuple(np.deg2rad(edge_normal_to_centroid_angle_range))
     # Ensure order of the groups by converting to list.
     ligand_aromatic_groups = list(ligand_aromatic_groups)
     receptor_aromatic_groups = list(receptor_aromatic_groups)
@@ -459,9 +449,7 @@ def pi_stacking(
     for rec_grp in receptor_nbr_atomatic_groups:
         rec_centroid = compute_centroid(trajectory, rec_grp)
         receptor_grp_centroids[rec_grp] = rec_centroid
-        receptor_grp_normals[rec_grp] = compute_ring_normal(
-            trajectory, rec_grp, rec_centroid
-        )
+        receptor_grp_normals[rec_grp] = compute_ring_normal(trajectory, rec_grp, rec_centroid)
     # For each ligand -- receptor pairs, calculate the centroid distance
     for lig_grp, receptor_grps in ligand_neighbor_groups.items():
         lig_centroid = compute_centroid(
@@ -488,7 +476,7 @@ def pi_stacking(
                 > max(
                     max_face_to_face_centroid_distance,
                     max_edge_to_face_centroid_distance,
-                )
+                ),
             ):
                 # centroid distance too far for all frames, skip
                 continue
@@ -498,13 +486,9 @@ def pi_stacking(
             plane_angles = cap_angle(compute_angles(lig_normal, res_normal))
             # Calcualte the normal vec - centroid vec angles
             res_to_lig_centroid = lig_centroid - receptor_centroid
-            res_to_lig_angle = cap_angle(
-                compute_angles(res_normal, res_to_lig_centroid)
-            )
+            res_to_lig_angle = cap_angle(compute_angles(res_normal, res_to_lig_centroid))
             lig_to_res_centroid = receptor_centroid - lig_centroid
-            lig_to_res_angle = cap_angle(
-                compute_angles(lig_normal, lig_to_res_centroid)
-            )
+            lig_to_res_angle = cap_angle(compute_angles(lig_normal, lig_to_res_centroid))
             lig_res_frames_msk = calculate_face_stack_threshold(
                 face_plane_angle_range_rad,
                 face_normal_to_centroid_angle_range_rad,

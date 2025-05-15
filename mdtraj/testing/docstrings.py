@@ -153,7 +153,7 @@ def docstring_verifiers(module, error_on_none=False):
 
             if args != param_names:
                 raise ValueError(
-                    f"In {format(f)}, arguments {list(args)} don't " f"match Parameters list {list(param_names)}",
+                    f"In {format(f)}, arguments {list(args)} don't match Parameters list {list(param_names)}",
                 )
 
     for f in functions:
