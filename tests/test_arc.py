@@ -30,7 +30,7 @@ from mdtraj.testing import eq
 
 
 def test_read_0(get_fn):
-    '''Check if .arc positions are read correctly'''
+    """Check if .arc positions are read correctly"""
     with ArcTrajectoryFile(get_fn("4waters.arc")) as f:
         xyz, leng, ang = f.read()
     with PDBTrajectoryFile(get_fn("4waters.pdb")) as f:
@@ -45,11 +45,11 @@ def test_read_arctraj(get_fn):
 
 
 def test_read_arctraj_top(get_fn):
-    '''Check if anything other than residues differ between loading 
-    a ``.arc`` file with two different topologies'''
+    """Check if anything other than residues differ between loading
+    a ``.arc`` file with two different topologies"""
     pdbtop = load_arc(get_fn("4waters.arc"), top=get_fn("4waters.pdb"))
     arctop = load_arc(get_fn("4waters.arc"))
- 
+
     eq(pdbtop.n_atoms, arctop.n_atoms)
     eq(pdbtop.xyz, arctop.xyz)
 
@@ -61,9 +61,9 @@ def test_read_arctraj_top(get_fn):
         # check if atoms are in the same order with same element identity
         eq(ipdb.name, iarc.name)
         eq(ipdb.element, iarc.element)
- 
+
     for ipdb, iarc in zip(pdbtop.top._bonds, arctop.top._bonds):
-        # Check if connectivity is the same, based on index, which is 
+        # Check if connectivity is the same, based on index, which is
         # implicitly checked in the for loop above
         eq(ipdb.atom1.index, iarc.atom1.index)
         eq(ipdb.atom2.index, iarc.atom2.index)
@@ -76,4 +76,3 @@ def test_read_pbc(get_fn):
     eq(xyz[0, -1], np.array([29.013880, 6.255754, 44.074519]), decimal=3)
     eq(leng, np.array([[45.119376, 45.119376, 45.119376]]), decimal=3)
     eq(ang, np.array([[90.0, 90.0, 90.0]]), decimal=3)
-

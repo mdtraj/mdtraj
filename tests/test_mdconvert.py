@@ -191,7 +191,7 @@ def test_pairwise(traj, extension, monkeypatch):
                 # these formats contain time information
                 if all(e in ["nc"] for e in [ext1, ext2]):
                     with monkeypatch.context() as m:
-                        m.setitem(sys.modules, 'netCDF4', None)
+                        m.setitem(sys.modules, "netCDF4", None)
                         eq(out1.time, traj.time)
                         eq(out2.time, traj.time)
                         eq(out3.time, traj.time[::3])
@@ -207,15 +207,15 @@ def test_pairwise(traj, extension, monkeypatch):
                 eq(out2.topology, traj.topology.subset(atom_indices))
                 eq(out3.topology, traj.topology)
 
-    if extension in ('nc'):
+    if extension in ("nc"):
         # If extension is nc, we need to test with both SciPy and NetCDF4.
         # First, we use pytest.monkeypatch to remove the netCDF4 import from the environment
         # Then, we make sure the extension for both SciPy and NetCDF4 tests are different (or
         # there will be SameFileError/FileExistsError failures)
         # All these changes will be reverted outside the context manager, and the netCDF4 test will run again
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
-            test_base(traj, '.scipy.nc', monkeypatch)
+            m.setitem(sys.modules, "netCDF4", None)
+            test_base(traj, ".scipy.nc", monkeypatch)
 
     # For testing most formats and with netCDF4 (if format is nc)
     test_base(traj, extension, monkeypatch)

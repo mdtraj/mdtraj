@@ -144,7 +144,7 @@ def load_pdb(
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type string or path-like for load_pdb. " "you supplied %s" % type(filename),
+            "filename must be of type string or path-like for load_pdb. you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)
@@ -427,7 +427,8 @@ class PDBTrajectoryFile:
                     atomIndex += 1
                 if resIndex == len(residues) - 1 and ter:
                     print(
-                        "TER   %5d      %3s %s%4d" % ((atomSerial + 1) % 100000, resName, chainName, res.resSeq % 10000),
+                        "TER   %5d      %3s %s%4d"
+                        % ((atomSerial + 1) % 100000, resName, chainName, res.resSeq % 10000),
                         file=self._file,
                     )
                     atomIndex += 1
@@ -458,7 +459,7 @@ class PDBTrajectoryFile:
                 raise ValueError("unitcell_angles must be length 3")
         else:
             raise ValueError(
-                "either unitcell_lengths and unitcell_angles" "should both be spefied, or neither",
+                "either unitcell_lengths and unitcell_anglesshould both be spefied, or neither",
             )
 
         box = list(unitcell_lengths) + list(unitcell_angles)
@@ -831,5 +832,5 @@ def _format_83(f):
     if -9999999 < f < 99999999:
         return ("%8.3f" % f)[:8]
     raise ValueError(
-        'coordinate "%s" could not be represnted ' "in a width-8 field" % f,
+        'coordinate "%s" could not be represnted in a width-8 field' % f,
     )

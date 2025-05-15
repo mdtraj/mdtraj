@@ -44,6 +44,6 @@ Various sub-portions of this library may be independently distributed under
 different licenses. See those files for their specific terms.
 
 ## Project Status
-MDTraj is actively maintained by community members and representatives from Folding@Home, The Molecular Sciences Software Institute, and Open Force Field Initiative. We welcome new users and contributors! 
+MDTraj is actively maintained by community members and representatives from Folding@Home, The Molecular Sciences Software Institute, and Open Force Field Initiative. We welcome new users and contributors!
 
 If you are interested in contributing, please check out the [repository issue tracker](https://github.com/mdtraj/mdtraj/issues). For feature ideas or general questions, please post in the [repository discussions](https://github.com/mdtraj/mdtraj/discussions).

@@ -16,6 +16,7 @@ tag_prefix = ""
 
 [tool.ruff]
 line-length=119
+extend-exclude = ["mdtraj/_version.py"]
 
 [tool.ruff.lint]
 select = [
@@ -30,7 +31,7 @@ select = [
 [tool.ruff.lint.per-file-ignores]
 # Would really, really like to get rid of F403, though F401 is okay
 "__init__.py" = ["F401", "F403"]
-"tests/test_*.py" = ["NPY002"]
+"*" = ["UP031", "NPY002"]
 "mdtraj/geometry/__init__.py" = ["F403", "F405"]
 "mdtraj/core/trajectory.py" = ["F401"]
 "mdtraj/utils/unit/**" = ["F403", "F405"]

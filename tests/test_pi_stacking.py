@@ -38,9 +38,9 @@ def test_pi_stacking(get_fn):
             tuple(
                 int(idx)
                 for idx in t.top.select(
-                    f"chainid 5 and resSeq 301 and (name {lig_grp[0]} or name {' or name '.join(lig_grp[1:])})"
+                    f"chainid 5 and resSeq 301 and (name {lig_grp[0]} or name {' or name '.join(lig_grp[1:])})",
                 )
-            )
+            ),
         )
     protein_grps = []
     # TYR186
@@ -50,9 +50,9 @@ def test_pi_stacking(get_fn):
             tuple(
                 int(idx)
                 for idx in t.top.select(
-                    f"chainid 0 and resSeq 186 and (name {protein_grp[0]} or name {' or name '.join(protein_grp[1:])})"
+                    f"chainid 0 and resSeq 186 and (name {protein_grp[0]} or name {' or name '.join(protein_grp[1:])})",  # noqa
                 )
-            )
+            ),
         )
     stacking_interactions = pi_stacking(t, lig_grps, protein_grps)
     # Since it returns per-frame, just get the 'first'
@@ -76,9 +76,9 @@ def test_t_stacking_more_relaxed_radius(get_fn):
             tuple(
                 int(idx)
                 for idx in t.top.select(
-                    f"chainid 5 and resSeq 302 and (name {lig_grp[0]} or name {' or name '.join(lig_grp[1:])})"
+                    f"chainid 5 and resSeq 302 and (name {lig_grp[0]} or name {' or name '.join(lig_grp[1:])})",
                 )
-            )
+            ),
         )
     protein_grps = []
     # TYR91
@@ -88,14 +88,12 @@ def test_t_stacking_more_relaxed_radius(get_fn):
             tuple(
                 int(idx)
                 for idx in t.top.select(
-                    f"chainid 0 and resSeq 91 and (name {protein_grp[0]} or name {' or name '.join(protein_grp[1:])})"
+                    f"chainid 0 and resSeq 91 and (name {protein_grp[0]} or name {' or name '.join(protein_grp[1:])})",
                 )
-            )
+            ),
         )
     # More permissive edge intersection radius for t-stack
-    stacking_interactions = pi_stacking(
-        t, lig_grps, protein_grps, edge_intersection_radius=0.21
-    )
+    stacking_interactions = pi_stacking(t, lig_grps, protein_grps, edge_intersection_radius=0.21)
     stacking_interactions = stacking_interactions[0]
     assert len(stacking_interactions) == 1
     assert (lig_grps[0], protein_grps[0]) in stacking_interactions
@@ -116,9 +114,9 @@ def test_t_stacking_default_settings(get_fn):
             tuple(
                 int(idx)
                 for idx in t.top.select(
-                    f"chainid 9 and resSeq 9000 and (name {lig_grp[0]} or name {' or name '.join(lig_grp[1:])})"
+                    f"chainid 9 and resSeq 9000 and (name {lig_grp[0]} or name {' or name '.join(lig_grp[1:])})",
                 )
-            )
+            ),
         )
     protein_grps = []
     # PHR118/378
@@ -128,9 +126,9 @@ def test_t_stacking_default_settings(get_fn):
             tuple(
                 int(idx)
                 for idx in t.top.select(
-                    f"chainid 2 and resSeq 378 and (name {protein_grp[0]} or name {' or name '.join(protein_grp[1:])})"
+                    f"chainid 2 and resSeq 378 and (name {protein_grp[0]} or name {' or name '.join(protein_grp[1:])})",  # noqa
                 )
-            )
+            ),
         )
     stacking_interactions = pi_stacking(t, lig_grps, protein_grps)
     stacking_interactions = stacking_interactions[0]

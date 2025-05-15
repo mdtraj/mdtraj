@@ -64,6 +64,7 @@ _ParsedSelection = namedtuple("_ParsedSelection", ["expr", "source", "astnode"])
 # Utils
 # ############################################################################
 
+
 class _RewriteNames(ast.NodeTransformer):
     def visit_Name(self, node):
         if node.id in SINGLETON_NODE_IDS:
@@ -204,7 +205,7 @@ class RegexInfixOperand:
                     ctx=ast.Load(),
                 ),
                 args=[pattern, string],
-                keywords=[]
+                keywords=[],
             ),
             ops=[ast.IsNot()],
             comparators=[ast.Name(id="None", ctx=ast.Load())],
@@ -410,7 +411,7 @@ class parse_selection:
 
         if isinstance(astnode, ast.Constant) and astnode.value not in {True, False, None}:
             raise ValueError(
-                "Cannot use a single literal as a boolean. " f"Choked on node with value {astnode.value}",
+                f"Cannot use a single literal as a boolean. Choked on node with value {astnode.value}",
             )
 
         args = [ast.arg(arg="atom", annotation=None)]

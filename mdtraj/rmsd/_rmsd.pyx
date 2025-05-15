@@ -123,8 +123,8 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
     >>> trajectory.center_coordinates()
     >>> rmsds = md.rmsd(trajectory, trajectory, 0, precentered=True)
 
-    The default option aligns the trajectory to the reference based on selection indicated by 
-    `atom_indices` and `ref_atom_indices`. If you want to manually align the trajectory to a 
+    The default option aligns the trajectory to the reference based on selection indicated by
+    `atom_indices` and `ref_atom_indices`. If you want to manually align the trajectory to a
     different selection (or not at all), use `md.superpose()` and the `superpose=False` option.
 
     >>> trajectory.superpose(trajectory, 0, atom_slice=trajectory.top.select('protein and not element H'))
@@ -211,9 +211,9 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
             target_g = np.empty(target_n_frames, dtype=np.float32)
             inplace_center_and_trace_atom_major(&target_xyz[0,0,0], &target_g[0], target_n_frames, n_atoms)
             inplace_center_and_trace_atom_major(&ref_xyz_frame[0, 0], &ref_g, 1, n_atoms)
-    
+
         # t1 = time.time()
-    
+
         if parallel:
             for i in prange(target_n_frames, nogil=True):
                 msd = msd_atom_major(n_atoms, n_atoms, &target_xyz[i, 0, 0], &ref_xyz_frame[0, 0], target_g[i], ref_g, 0, NULL)
@@ -222,7 +222,7 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
             for i in range(target_n_frames):
                 msd = msd_atom_major(n_atoms, n_atoms, &target_xyz[i, 0, 0], &ref_xyz_frame[0, 0], target_g[i], ref_g, 0, NULL)
                 distances[i] = sqrtf(msd)
-    
+
         # t2 = time.time()
         # print 'rmsd: %s, centering: %s' % (t2-t1, t1-t0)
     else:
@@ -239,7 +239,7 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
             for i in range(target_n_frames):
                 msd = msd_nosuperpose(n_atoms, target_xyz[i], ref_xyz_frame)
                 distances[i] = sqrtf(msd)
- 
+
     return np.array(distances, copy=False)
 
 
@@ -740,7 +740,7 @@ cdef const float msd_nosuperpose(const Py_ssize_t n_atoms,
     cdef Py_ssize_t atom_count, dims_count
     cdef float msd_temp = 0
 
-    # Loop through each atom and each dimension to calculate difference from ref 
+    # Loop through each atom and each dimension to calculate difference from ref
     for atom_count in range(n_atoms):
         for dims_count in range(3):
             msd_temp += (xyz_current[atom_count][dims_count] - xyz_ref[atom_count][dims_count])**2
