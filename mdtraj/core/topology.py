@@ -44,8 +44,8 @@
 
 from __future__ import annotations
 
-import os
 import itertools
+import os
 import warnings
 import xml.etree.ElementTree as etree
 from collections import namedtuple
