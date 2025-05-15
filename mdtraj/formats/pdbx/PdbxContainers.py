@@ -36,15 +36,18 @@ The DataCategory class provides base storage container for instance
 data and definition meta data.
 
 """
+
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
-import re, sys, traceback
+import re
+import sys
+import traceback
 
 
-class CifName(object):
+class CifName:
     """
     Utilities for handling CIF-style data names.
     """
@@ -101,7 +104,7 @@ class CifName(object):
             return name[i + 1 :]
 
 
-class ContainerBase(object):
+class ContainerBase:
     """
     Container base class for data and definition objects.
 
@@ -209,7 +212,7 @@ class ContainerBase(object):
 
     def printIt(self, fh=sys.stdout, type="brief"):
         fh.write(
-            f"+ {self.getType()} container: {self.getName():>30} contains {len(self.__objNameList):4d} categories\n"
+            f"+ {self.getType()} container: {self.getName():>30} contains {len(self.__objNameList):4d} categories\n",
         )
         for nm in self.__objNameList:
             fh.write("--------------------------------------------\n")
@@ -289,7 +292,7 @@ class DefinitionContainer(ContainerBase):
 
     def printIt(self, fh=sys.stdout, type="brief"):
         fh.write(
-            f"Definition container: {self.getName():>30} contains {len(self.getObjNameList()):4d} categories\n"
+            f"Definition container: {self.getName():>30} contains {len(self.getObjNameList()):4d} categories\n",
         )
         if self.isCategory():
             fh.write("Definition type: category\n")
@@ -333,7 +336,7 @@ class DataContainer(ContainerBase):
         return self.__globalFlag
 
 
-class DataCategoryBase(object):
+class DataCategoryBase:
     """
     Base object for a data category.
 
@@ -431,7 +434,7 @@ class DataCategory(DataCategoryBase):
         #
         self.__intRe = re.compile(r"^[0-9]+$")
         self.__floatRe = re.compile(
-            r"^-?(([0-9]+)[.]?|([0-9]*[.][0-9]+))([(][0-9]+[)])?([eE][+-]?[0-9]+)?$"
+            r"^-?(([0-9]+)[.]?|([0-9]*[.][0-9]+))([(][0-9]+[)])?([eE][+-]?[0-9]+)?$",
         )
         #
         self.__dataTypeList = [
@@ -659,13 +662,13 @@ class DataCategory(DataCategoryBase):
                 self._rowList[rowI][ind] = value
             except IndexError:
                 self.__lfh.write(
-                    f"DataCategory(setvalue) index error category {self._name} attribute {attribute} index {rowI} value {value!r}\n"
+                    f"DataCategory(setvalue) index error category {self._name} attribute {attribute} index {rowI} value {value!r}\n",
                 )
                 traceback.print_exc(file=self.__lfh)
                 # raise IndexError
             except ValueError:
                 self.__lfh.write(
-                    f"DataCategory(setvalue) value error category {self._name} attribute {attribute} index {rowI} value {value!r}\n"
+                    f"DataCategory(setvalue) value error category {self._name} attribute {attribute} index {rowI} value {value!r}\n",
                 )
                 traceback.print_exc(file=self.__lfh)
                 # raise ValueError
@@ -756,7 +759,7 @@ class DataCategory(DataCategoryBase):
     def printIt(self, fh=sys.stdout):
         fh.write("--------------------------------------------\n")
         fh.write(
-            f"  Category: {self._name} attribute list length: {len(self._attributeNameList)}\n"
+            f"  Category: {self._name} attribute list length: {len(self._attributeNameList)}\n",
         )
         for at in self._attributeNameList:
             fh.write(f"  Category: {self._name} attribute: {at}\n")
@@ -768,17 +771,17 @@ class DataCategory(DataCategoryBase):
             if len(row) == len(self._attributeNameList):
                 for ii, v in enumerate(row):
                     fh.write(
-                        f"        {self._attributeNameList[ii]:30s}: {str(v)[:30]} ...\n"
+                        f"        {self._attributeNameList[ii]:30s}: {str(v)[:30]} ...\n",
                     )
             else:
                 fh.write(
-                    f"+WARNING - {self._name} data length {len(row)} attribute name length {len(self._attributeNameList)} mismatched\n"
+                    f"+WARNING - {self._name} data length {len(row)} attribute name length {len(self._attributeNameList)} mismatched\n",
                 )
 
     def dumpIt(self, fh=sys.stdout):
         fh.write("--------------------------------------------\n")
         fh.write(
-            f"  Category: {self._name} attribute list length: {len(self._attributeNameList)}\n"
+            f"  Category: {self._name} attribute list length: {len(self._attributeNameList)}\n",
         )
         for at in self._attributeNameList:
             fh.write(f"  Category: {self._name} attribute: {at}\n")
@@ -835,14 +838,14 @@ class DataCategory(DataCategoryBase):
                     if self.__avoidEmbeddedQuoting:
                         # change priority to choose double quoting where possible.
                         if not self.__dqRe.search(inp) and not self.__sqWsRe.search(
-                            inp
+                            inp,
                         ):
                             return (
                                 self.__doubleQuotedList(inp),
                                 "DT_DOUBLE_QUOTED_STRING",
                             )
                         elif not self.__sqRe.search(inp) and not self.__dqWsRe.search(
-                            inp
+                            inp,
                         ):
                             return (
                                 self.__singleQuotedList(inp),
@@ -976,12 +979,12 @@ class DataCategory(DataCategoryBase):
         if isinstance(attribute, str) and isinstance(rowI, int):
             try:
                 list_, type_ = self.__formatPdbx(
-                    self._rowList[rowI][self._attributeNameList.index(attribute)]
+                    self._rowList[rowI][self._attributeNameList.index(attribute)],
                 )
                 return "".join(list_)
             except IndexError:
                 self.__lfh.write(
-                    f"attributeName {attributeName} rowI {rowI!r} rowdata {self._rowList[rowI]!r}\n"
+                    f"attributeName {attributeName} rowI {rowI!r} rowdata {self._rowList[rowI]!r}\n",
                 )
                 raise IndexError
         raise TypeError(attribute)
@@ -1003,9 +1006,7 @@ class DataCategory(DataCategoryBase):
 
     def getFormatTypeList(self, steps=1):
         try:
-            curDataTypeList = [
-                "DT_NULL_VALUE" for i in range(len(self._attributeNameList))
-            ]
+            curDataTypeList = ["DT_NULL_VALUE" for i in range(len(self._attributeNameList))]
             for row in self._rowList[::steps]:
                 for indx in range(len(self._attributeNameList)):
                     val = row[indx]
@@ -1022,7 +1023,7 @@ class DataCategory(DataCategoryBase):
                 curFormatTypeList.append(self.__formatTypeList[ii])
         except Exception:
             self.__lfh.write(
-                f"PdbxDataCategory(getFormatTypeList) ++Index error at index {indx} in row {row}\n"
+                f"PdbxDataCategory(getFormatTypeList) ++Index error at index {indx} in row {row}\n",
             )
 
         return curFormatTypeList, curDataTypeList

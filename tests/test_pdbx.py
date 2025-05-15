@@ -23,12 +23,11 @@
 import math
 import tempfile
 
-import pytest
+import numpy as np
 
 from mdtraj import load
 from mdtraj.formats import PDBxTrajectoryFile
 from mdtraj.testing import eq
-import numpy as np
 
 
 def test_convert(get_fn):
@@ -82,12 +81,8 @@ def test_load_pdbx_file(get_fn):
 
         # Verify the number of atoms, residues, chains, and bonds
         assert len([a for a in traj.topology.atoms]) == 64, "Unexpected number of atoms"
-        assert (
-            len([r for r in traj.topology.residues]) == 3
-        ), "Unexpected number of residues"
-        assert (
-            len([c for c in traj.topology.chains]) == 1
-        ), "Unexpected number of chains"
+        assert len([r for r in traj.topology.residues]) == 3, "Unexpected number of residues"
+        assert len([c for c in traj.topology.chains]) == 1, "Unexpected number of chains"
         assert len([b for b in traj.topology.bonds]) == 66, "Unexpected number of bonds"
 
         # Verify atom names and residue names
@@ -120,8 +115,12 @@ def test_load_pdbx_file(get_fn):
 
         # Use numpy's allclose for comparison with a tolerance
         assert np.allclose(
-            traj.unitcell_lengths[0], expected_lengths, atol=1e-3
+            traj.unitcell_lengths[0],
+            expected_lengths,
+            atol=1e-3,
         ), "Unit cell lengths do not match"
         assert np.allclose(
-            traj.unitcell_angles[0], expected_angles, atol=1e-3
+            traj.unitcell_angles[0],
+            expected_angles,
+            atol=1e-3,
         ), "Unit cell angles do not match"
