@@ -30,6 +30,7 @@ from mdtraj.formats import PDBxTrajectoryFile
 from mdtraj.testing import eq
 import numpy as np
 
+
 def test_convert(get_fn):
     for filename in ["2EQQ.pdb", "4OH9.pdb"]:
         # Load a PDB file.
@@ -81,8 +82,12 @@ def test_load_pdbx_file(get_fn):
 
         # Verify the number of atoms, residues, chains, and bonds
         assert len([a for a in traj.topology.atoms]) == 64, "Unexpected number of atoms"
-        assert len([r for r in traj.topology.residues]) == 3, "Unexpected number of residues"
-        assert len([c for c in traj.topology.chains]) == 1, "Unexpected number of chains"
+        assert (
+            len([r for r in traj.topology.residues]) == 3
+        ), "Unexpected number of residues"
+        assert (
+            len([c for c in traj.topology.chains]) == 1
+        ), "Unexpected number of chains"
         assert len([b for b in traj.topology.bonds]) == 66, "Unexpected number of bonds"
 
         # Verify atom names and residue names
@@ -106,9 +111,17 @@ def test_load_pdbx_file(get_fn):
         assert traj.unitcell_angles is not None, "Unit cell angles not found"
 
         # Expected values for unit cell lengths (in nanometers) and angles (in degrees)
-        expected_lengths = [2.3140, 0.4840, 1.9790]  # Converted from Ångstroms to nanometers
+        expected_lengths = [
+            2.3140,
+            0.4840,
+            1.9790,
+        ]  # Converted from Ångstroms to nanometers
         expected_angles = [90.000, 107.048, 90.000]
 
         # Use numpy's allclose for comparison with a tolerance
-        assert np.allclose(traj.unitcell_lengths[0], expected_lengths, atol=1e-3), "Unit cell lengths do not match"
-        assert np.allclose(traj.unitcell_angles[0], expected_angles, atol=1e-3), "Unit cell angles do not match"
+        assert np.allclose(
+            traj.unitcell_lengths[0], expected_lengths, atol=1e-3
+        ), "Unit cell lengths do not match"
+        assert np.allclose(
+            traj.unitcell_angles[0], expected_angles, atol=1e-3
+        ), "Unit cell angles do not match"

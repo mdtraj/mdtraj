@@ -243,7 +243,8 @@ class PDBxTrajectoryFile:
             else:
                 self._topology = top
             positions = [
-                pdbx.getPositions(asNumpy=True, frame=i) for i in range(pdbx.getNumFrames())
+                pdbx.getPositions(asNumpy=True, frame=i)
+                for i in range(pdbx.getNumFrames())
             ]
             self._positions = np.array(positions)
             if pdbx._unitcell_angles is not None and pdbx._unitcell_lengths is not None:
@@ -284,13 +285,15 @@ class PDBxTrajectoryFile:
                 unitcell_lengths = unitcell_lengths[0]
             if unitcell_angles is not None:
                 unitcell_angles = unitcell_angles[0]
-            PDBxFile.writeHeader(topology, unitcell_lengths, unitcell_angles, self._file)
+            PDBxFile.writeHeader(
+                topology, unitcell_lengths, unitcell_angles, self._file
+            )
             self._next_model = 1
         if len(positions.shape) == 3:
             positions = positions[0]
         PDBxFile.writeModel(
             topology,
-            positions, # nanometers
+            positions,  # nanometers
             self._file,
             self._next_model,
         )
