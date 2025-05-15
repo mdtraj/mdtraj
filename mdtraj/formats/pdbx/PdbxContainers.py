@@ -36,8 +36,6 @@ The DataCategory class provides base storage container for instance
 data and definition meta data.
 
 """
-from __future__ import absolute_import
-
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
@@ -211,12 +209,11 @@ class ContainerBase(object):
 
     def printIt(self, fh=sys.stdout, type="brief"):
         fh.write(
-            "+ %s container: %30s contains %4d categories\n"
-            % (self.getType(), self.getName(), len(self.__objNameList))
+            f"+ {self.getType()} container: {self.getName():>30} contains {len(self.__objNameList):4d} categories\n"
         )
         for nm in self.__objNameList:
             fh.write("--------------------------------------------\n")
-            fh.write("Data category: %s\n" % nm)
+            fh.write(f"Data category: {nm}\n")
             if type == "brief":
                 self.__objCatalog[nm].printIt(fh)
             else:
@@ -292,8 +289,7 @@ class DefinitionContainer(ContainerBase):
 
     def printIt(self, fh=sys.stdout, type="brief"):
         fh.write(
-            "Definition container: %30s contains %4d categories\n"
-            % (self.getName(), len(self.getObjNameList()))
+            f"Definition container: {self.getName():>30} contains {len(self.getObjNameList()):4d} categories\n"
         )
         if self.isCategory():
             fh.write("Definition type: category\n")
@@ -304,7 +300,7 @@ class DefinitionContainer(ContainerBase):
 
         for nm in self.getObjNameList():
             fh.write("--------------------------------------------\n")
-            fh.write("Definition category: %s\n" % nm)
+            fh.write(f"Definition category: {nm}\n")
             if type == "brief":
                 self.getObj(nm).printIt(fh)
             else:
@@ -609,7 +605,7 @@ class DataCategory(DataCategoryBase):
             i = self._attributeNameList.index(self._catalog[attributeNameLC])
             self._attributeNameList[i] = attributeName
             self._catalog[attributeNameLC] = attributeName
-            self.__lfh.write("Appending existing attribute %s\n" % attributeName)
+            self.__lfh.write(f"Appending existing attribute {attributeName}\n")
         else:
             self._attributeNameList.append(attributeName)
             self._catalog[attributeNameLC] = attributeName
@@ -663,15 +659,13 @@ class DataCategory(DataCategoryBase):
                 self._rowList[rowI][ind] = value
             except IndexError:
                 self.__lfh.write(
-                    "DataCategory(setvalue) index error category %s attribute %s index %d value %r\n"
-                    % (self._name, attribute, rowI, value)
+                    f"DataCategory(setvalue) index error category {self._name} attribute {attribute} index {rowI} value {value!r}\n"
                 )
                 traceback.print_exc(file=self.__lfh)
                 # raise IndexError
             except ValueError:
                 self.__lfh.write(
-                    "DataCategory(setvalue) value error category %s attribute %s index %d value %r\n"
-                    % (self._name, attribute, rowI, value)
+                    f"DataCategory(setvalue) value error category {self._name} attribute {attribute} index {rowI} value {value!r}\n"
                 )
                 traceback.print_exc(file=self.__lfh)
                 # raise ValueError
@@ -762,41 +756,37 @@ class DataCategory(DataCategoryBase):
     def printIt(self, fh=sys.stdout):
         fh.write("--------------------------------------------\n")
         fh.write(
-            "  Category: %s attribute list length: %d\n"
-            % (self._name, len(self._attributeNameList))
+            f"  Category: {self._name} attribute list length: {len(self._attributeNameList)}\n"
         )
         for at in self._attributeNameList:
-            fh.write("  Category: %s attribute: %s\n" % (self._name, at))
+            fh.write(f"  Category: {self._name} attribute: {at}\n")
 
-        fh.write("  Row value list length: %d\n" % len(self._rowList))
+        fh.write(f"  Row value list length: {len(self._rowList)}\n")
         #
         for row in self._rowList[:2]:
             #
             if len(row) == len(self._attributeNameList):
                 for ii, v in enumerate(row):
                     fh.write(
-                        "        %30s: %s ...\n"
-                        % (self._attributeNameList[ii], str(v)[:30])
+                        f"        {self._attributeNameList[ii]:30s}: {str(v)[:30]} ...\n"
                     )
             else:
                 fh.write(
-                    "+WARNING - %s data length %d attribute name length %s mismatched\n"
-                    % (self._name, len(row), len(self._attributeNameList))
+                    f"+WARNING - {self._name} data length {len(row)} attribute name length {len(self._attributeNameList)} mismatched\n"
                 )
 
     def dumpIt(self, fh=sys.stdout):
         fh.write("--------------------------------------------\n")
         fh.write(
-            "  Category: %s attribute list length: %d\n"
-            % (self._name, len(self._attributeNameList))
+            f"  Category: {self._name} attribute list length: {len(self._attributeNameList)}\n"
         )
         for at in self._attributeNameList:
-            fh.write("  Category: %s attribute: %s\n" % (self._name, at))
+            fh.write(f"  Category: {self._name} attribute: {at}\n")
 
-        fh.write("  Value list length: %d\n" % len(self._rowList))
+        fh.write(f"  Value list length: {len(self._rowList)}\n")
         for row in self._rowList:
             for ii, v in enumerate(row):
-                fh.write("        %30s: %s\n" % (self._attributeNameList[ii], v))
+                fh.write(f"        {self._attributeNameList[ii]:30s}: {v}\n")
 
     def __formatPdbx(self, inp):
         """
@@ -985,22 +975,21 @@ class DataCategory(DataCategoryBase):
 
         if isinstance(attribute, str) and isinstance(rowI, int):
             try:
-                list, type = self.__formatPdbx(
+                list_, type_ = self.__formatPdbx(
                     self._rowList[rowI][self._attributeNameList.index(attribute)]
                 )
-                return "".join(list)
+                return "".join(list_)
             except IndexError:
                 self.__lfh.write(
-                    "attributeName %s rowI %r rowdata %r\n"
-                    % (attributeName, rowI, self._rowList[rowI])
+                    f"attributeName {attributeName} rowI {rowI!r} rowdata {self._rowList[rowI]!r}\n"
                 )
                 raise IndexError
         raise TypeError(attribute)
 
     def getValueFormattedByIndex(self, attributeIndex, rowIndex):
         try:
-            list, type = self.__formatPdbx(self._rowList[rowIndex][attributeIndex])
-            return "".join(list)
+            list_, type_ = self.__formatPdbx(self._rowList[rowIndex][attributeIndex])
+            return "".join(list_)
         except IndexError:
             raise IndexError
 
@@ -1020,25 +1009,20 @@ class DataCategory(DataCategoryBase):
             for row in self._rowList[::steps]:
                 for indx in range(len(self._attributeNameList)):
                     val = row[indx]
-                    # print "index ",indx," val ",val
                     dType = self.__dataTypePdbx(val)
                     dIndx = self.__dataTypeList.index(dType)
-                    # print "d type", dType, " d type index ",dIndx
-
                     cType = curDataTypeList[indx]
                     cIndx = self.__dataTypeList.index(cType)
                     cIndx = max(cIndx, dIndx)
                     curDataTypeList[indx] = self.__dataTypeList[cIndx]
 
-            # Map the format types to the data types
             curFormatTypeList = []
             for dt in curDataTypeList:
                 ii = self.__dataTypeList.index(dt)
                 curFormatTypeList.append(self.__formatTypeList[ii])
-        except:
+        except Exception:
             self.__lfh.write(
-                "PdbxDataCategory(getFormatTypeList) ++Index error at index %d in row %r\n"
-                % (indx, row)
+                f"PdbxDataCategory(getFormatTypeList) ++Index error at index {indx} in row {row}\n"
             )
 
         return curFormatTypeList, curDataTypeList
@@ -1048,10 +1032,10 @@ class DataCategory(DataCategoryBase):
         for row in self._rowList:
             for indx in range(len(self._attributeNameList)):
                 val = row[indx]
-                # print "index ",indx," val ",val
+                # print("index ",indx," val ",val)
                 dType = self.__dataTypePdbx(val)
                 dIndx = self.__dataTypeList.index(dType)
-                # print "d type", dType, " d type index ",dIndx
+                # print("d type", dType, " d type index ",dIndx)
 
                 cType = curDataTypeList[indx]
                 cIndx = self.__dataTypeList.index(cType)

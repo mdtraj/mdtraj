@@ -29,8 +29,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from __future__ import division, absolute_import, print_function
-
 __author__ = "Peter Eastman"
 __version__ = "2.0"
 
@@ -202,13 +200,11 @@ class PDBxFile(object):
                     atom = atomTable[atomKey]
                 except KeyError:
                     raise ValueError(
-                        "Unknown atom %s in residue %s %s for model %s"
-                        % (row[atomNameCol], row[resNameCol], row[resNumCol], model)
+                        f"Unknown atom {row[atomNameCol]} in residue {row[resNameCol]} {row[resNumCol]} for model {model}"
                     )
                 if atom.index != len(self._positions[modelIndex]):
                     raise ValueError(
-                        "Atom %s for model %s does not match the order of atoms for model %s"
-                        % (row[atomIdCol], model, models[0])
+                        f"Atom {row[atomIdCol]} for model {model} does not match the order of atoms for model {models[0]}"
                     )
             pos = (
                 np.array([float(row[xCol]), float(row[yCol]), float(row[zCol])]) / 10
@@ -435,12 +431,11 @@ class PDBxFile(object):
             PDBx/mmCIF format.  Otherwise, the output file will be invalid.
         """
         if entry is not None:
-            print("data_%s" % entry, file=file)
+            print(f"data_{entry}", file=file)
         else:
             print("data_cell", file=file)
         print(
-            "# Created with mdtraj %s, %s"
-            % (mdtraj._version.get_versions()["version"], str(date.today())),
+            f"# Created with mdtraj {mdtraj._version.get_versions()['version']}, {str(date.today())}",
             file=file,
         )
         print("#", file=file)
@@ -448,12 +443,12 @@ class PDBxFile(object):
         if box_lengths is not None and box_angles is not None:
             a, b, c = box_lengths
             alpha, beta, gamma = box_angles
-            print("_cell.length_a     %10.4f" % (a * 10), file=file)
-            print("_cell.length_b     %10.4f" % (b * 10), file=file)
-            print("_cell.length_c     %10.4f" % (c * 10), file=file)
-            print("_cell.angle_alpha  %10.4f" % (alpha), file=file)
-            print("_cell.angle_beta   %10.4f" % (beta), file=file)
-            print("_cell.angle_gamma  %10.4f" % (gamma), file=file)
+            print(f"_cell.length_a     {a * 10:10.4f}", file=file)
+            print(f"_cell.length_b     {b * 10:10.4f}", file=file)
+            print(f"_cell.length_c     {c * 10:10.4f}", file=file)
+            print(f"_cell.angle_alpha  {alpha:10.4f}", file=file)
+            print(f"_cell.angle_beta   {beta:10.4f}", file=file)
+            print(f"_cell.angle_gamma  {gamma:10.4f}", file=file)
             print("#", file=file)
 
         # Identify bonds that should be listed in the file.

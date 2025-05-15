@@ -21,7 +21,6 @@ PyMMLib Development Group
 Authors: Ethan Merritt (merritt@u.washington.ed) & Jay Painter (jay.painter@gmail.com)
 See: http://pymmlib.sourceforge.net/
 """
-from __future__ import absolute_import
 
 import re
 from .PdbxContainers import *
@@ -48,12 +47,12 @@ class SyntaxError(Exception):
     """
 
     def __init__(self, lineNumber, text):
-        Exception.__init__(self)
+        super().__init__()
         self.lineNumber = lineNumber
         self.text = text
 
     def __str__(self):
-        return "%%ERROR - [at line: %d] %s" % (self.lineNumber, self.text)
+        return f"%ERROR - [at line: {self.lineNumber}] {self.text}"
 
 
 class PdbxReader(object):
@@ -245,7 +244,7 @@ class PdbxReader(object):
 
                 if tCat is not None or (curQuotedString is None and curWord is None):
                     self.__syntaxError(
-                        "Missing data for item _%s.%s" % (curCatName, curAttName)
+                        f"Missing data for item _{curCatName}.{curAttName}"
                     )
 
                 if curWord is not None:
@@ -255,7 +254,7 @@ class PdbxReader(object):
                     reservedWord, state = self.__getState(curWord)
                     if reservedWord is not None:
                         self.__syntaxError(
-                            "Unexpected reserved word: %s" % (reservedWord)
+                            f"Unexpected reserved word: {reservedWord}"
                         )
 
                     curRow.append(curWord)
@@ -320,8 +319,7 @@ class PdbxReader(object):
                             return
                         else:
                             self.__syntaxError(
-                                "Unexpected reserved word after loop declaration: %s"
-                                % (reservedWord)
+                                f"Unexpected reserved word after loop declaration: {reservedWord}"
                             )
 
                 # Read the table of data for this loop_ -
@@ -386,7 +384,7 @@ class PdbxReader(object):
                 curCatName, curAttName, curQuotedString, curWord = next(tokenizer)
 
             elif state == "ST_UNKNOWN":
-                self.__syntaxError("Unrecogized syntax element: " + str(curWord))
+                self.__syntaxError(f"Unrecogized syntax element: {str(curWord)}")
                 return
 
     def __tokenizer(self, ifh):
