@@ -56,9 +56,13 @@ import numpy as np
 from numpy.typing import NDArray
 
 from mdtraj.core import element as elem
-from mdtraj.core.residue_names import (_PROTEIN_RESIDUES, _WATER_RESIDUES,
-                                       _AMINO_ACID_CODES,
-                                       _NUCLEIC_ACID_CODES, _NUCLEIC_RESIDUES)
+from mdtraj.core.residue_names import (
+    _AMINO_ACID_CODES,
+    _NUCLEIC_ACID_CODES,
+    _NUCLEIC_RESIDUES,
+    _PROTEIN_RESIDUES,
+    _WATER_RESIDUES,
+)
 from mdtraj.core.selection import parse_selection
 from mdtraj.utils import ensure_type, ilen, import_
 from mdtraj.utils.singleton import Singleton
@@ -345,9 +349,12 @@ class Topology:
         fasta : String or list of Strings
            A FASTA string for each chain specified.
         """
-        fasta = lambda c: "".join([res.code for res in c.residues
-                                   if (res.is_protein or res.is_nucleic)
-                                   and res.code is not None])
+
+        def fasta(chain_obj):
+            return "".join(
+                res.code for res in chain_obj.residues if (res.is_protein or res.is_nucleic) and res.code is not None
+            )
+
         if chain is not None:
             if not isinstance(chain, int):
                 raise ValueError("chain must be an Integer.")
