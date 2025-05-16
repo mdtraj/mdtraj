@@ -17,7 +17,7 @@
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
+# License along with  If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
 import math
@@ -27,8 +27,12 @@ import pytest
 
 from mdtraj import load
 from mdtraj.formats import PDBxTrajectoryFile
+from mdtraj.core.topology import Topology
+from mdtraj import element
+from mdtraj.core.trajectory import Trajectory
 from mdtraj.testing import eq
 import numpy as np
+
 
 
 def test_convert(get_fn):
@@ -129,34 +133,30 @@ def test_load_pdbx_file(get_fn):
 
 def test_write_and_read_pdbx(tmp_path):
     """Test writing a PDBx file and reading it back, checking all fields including bonds, with two chains and a disulfide bond."""
-    import mdtraj as md
-    import numpy as np
-    from mdtraj import Trajectory
-    from mdtraj.formats import PDBxTrajectoryFile
 
     # Create topology: 2 chains, 3 residues each
-    topology = md.Topology()
+    topology = Topology()
     # Chain 1: backbone only (N, CA, C)
     chain1 = topology.add_chain("A")
     res1a = topology.add_residue("GLY", chain1, 1)
-    n1 = topology.add_atom("N", md.element.nitrogen, res1a) # 0
-    ca1 = topology.add_atom("CA", md.element.carbon, res1a) # 1
-    c1 = topology.add_atom("C", md.element.carbon, res1a) # 2
+    n1 = topology.add_atom("N", element.nitrogen, res1a) # 0
+    ca1 = topology.add_atom("CA", element.carbon, res1a) # 1
+    c1 = topology.add_atom("C", element.carbon, res1a) # 2
     topology.add_bond(n1, ca1)
     topology.add_bond(ca1, c1)
     res2a = topology.add_residue("ALA", chain1, 2)
-    n2 = topology.add_atom("N", md.element.nitrogen, res2a) # 3
-    ca2 = topology.add_atom("CA", md.element.carbon, res2a) # 4    
-    c2 = topology.add_atom("C", md.element.carbon, res2a) # 5
+    n2 = topology.add_atom("N", element.nitrogen, res2a) # 3
+    ca2 = topology.add_atom("CA", element.carbon, res2a) # 4    
+    c2 = topology.add_atom("C", element.carbon, res2a) # 5
     topology.add_bond(c1, n2) # peptide bond
     topology.add_bond(n2, ca2)
     topology.add_bond(ca2, c2)
     res3a = topology.add_residue("CYS", chain1, 3)
-    n3 = topology.add_atom("N", md.element.nitrogen, res3a) # 6
-    ca3 = topology.add_atom("CA", md.element.carbon, res3a) # 7
-    cb3 = topology.add_atom("CB", md.element.carbon, res3a) # 8
-    c3 = topology.add_atom("C", md.element.carbon, res3a) # 9
-    sg1 = topology.add_atom("SG", md.element.sulfur, res3a) # 10
+    n3 = topology.add_atom("N", element.nitrogen, res3a) # 6
+    ca3 = topology.add_atom("CA", element.carbon, res3a) # 7
+    cb3 = topology.add_atom("CB", element.carbon, res3a) # 8
+    c3 = topology.add_atom("C", element.carbon, res3a) # 9
+    sg1 = topology.add_atom("SG", element.sulfur, res3a) # 10
     topology.add_bond(c2, n3) # peptide bond
     topology.add_bond(n3, ca3)
     topology.add_bond(ca3, c3)
@@ -167,13 +167,13 @@ def test_write_and_read_pdbx(tmp_path):
     chain2 = topology.add_chain("B")
     # Residue 1: all heavy atoms (GLY)
     res1b = topology.add_residue("GLY", chain2, 1)
-    n4 = topology.add_atom("N", md.element.nitrogen, res1b) # 11
-    n4h1 = topology.add_atom("H", md.element.nitrogen, res1b) # 12
-    ca4 = topology.add_atom("CA", md.element.carbon, res1b) # 13
-    cah1 = topology.add_atom("HA2", md.element.hydrogen, res1b) # 14
-    cah2 = topology.add_atom("HA3", md.element.hydrogen, res1b) # 14
-    c4 = topology.add_atom("C", md.element.carbon, res1b) # 15
-    o4 = topology.add_atom("O", md.element.oxygen, res1b) # 16
+    n4 = topology.add_atom("N", element.nitrogen, res1b) # 11
+    n4h1 = topology.add_atom("H", element.nitrogen, res1b) # 12
+    ca4 = topology.add_atom("CA", element.carbon, res1b) # 13
+    cah1 = topology.add_atom("HA2", element.hydrogen, res1b) # 14
+    cah2 = topology.add_atom("HA3", element.hydrogen, res1b) # 14
+    c4 = topology.add_atom("C", element.carbon, res1b) # 15
+    o4 = topology.add_atom("O", element.oxygen, res1b) # 16
     topology.add_bond(n4, ca4)
     topology.add_bond(ca4, c4)
     topology.add_bond(ca4, cah1)
@@ -184,16 +184,16 @@ def test_write_and_read_pdbx(tmp_path):
     
     # Residue 2: all hydrogens (ALA)
     res2b = topology.add_residue("ALA", chain2, 2)
-    n5 = topology.add_atom("N", md.element.nitrogen, res2b) # 17
-    ca5 = topology.add_atom("CA", md.element.carbon, res2b) # 18
-    cb5 = topology.add_atom("CB", md.element.carbon, res2b) # 19
-    c5 = topology.add_atom("C", md.element.carbon, res2b) # 20
-    o5 = topology.add_atom("O", md.element.oxygen, res2b) # 21
-    h1 = topology.add_atom("H", md.element.hydrogen, res2b) # 22
-    h2 = topology.add_atom("HA", md.element.hydrogen, res2b) # 23
-    h3 = topology.add_atom("HB1", md.element.hydrogen, res2b) # 24
-    h4 = topology.add_atom("HB2", md.element.hydrogen, res2b) # 25
-    h5 = topology.add_atom("HB3", md.element.hydrogen, res2b) # 26
+    n5 = topology.add_atom("N", element.nitrogen, res2b) # 17
+    ca5 = topology.add_atom("CA", element.carbon, res2b) # 18
+    cb5 = topology.add_atom("CB", element.carbon, res2b) # 19
+    c5 = topology.add_atom("C", element.carbon, res2b) # 20
+    o5 = topology.add_atom("O", element.oxygen, res2b) # 21
+    h1 = topology.add_atom("H", element.hydrogen, res2b) # 22
+    h2 = topology.add_atom("HA", element.hydrogen, res2b) # 23
+    h3 = topology.add_atom("HB1", element.hydrogen, res2b) # 24
+    h4 = topology.add_atom("HB2", element.hydrogen, res2b) # 25
+    h5 = topology.add_atom("HB3", element.hydrogen, res2b) # 26
     topology.add_bond(c4, n5) # peptide bond
     topology.add_bond(n5, h1)
     topology.add_bond(ca5, h2)
@@ -208,14 +208,14 @@ def test_write_and_read_pdbx(tmp_path):
 
     # Residue 3: CYS with SG
     res3b = topology.add_residue("CYS", chain2, 3)
-    n6 = topology.add_atom("N", md.element.nitrogen, res3b) # 27
-    ca6 = topology.add_atom("CA", md.element.carbon, res3b) # 28
-    cb6 = topology.add_atom("CB", md.element.carbon, res3b) # 29
-    c6 = topology.add_atom("C", md.element.carbon, res3b) # 30
-    sg2 = topology.add_atom("SG", md.element.sulfur, res3b) # 31
-    o61 = topology.add_atom("O", md.element.oxygen, res3b) # 32
-    o62 = topology.add_atom("OXT", md.element.oxygen, res3b) # 33
-    oh6 = topology.add_atom("OH", md.element.hydrogen, res3b) # 34
+    n6 = topology.add_atom("N", element.nitrogen, res3b) # 27
+    ca6 = topology.add_atom("CA", element.carbon, res3b) # 28
+    cb6 = topology.add_atom("CB", element.carbon, res3b) # 29
+    c6 = topology.add_atom("C", element.carbon, res3b) # 30
+    sg2 = topology.add_atom("SG", element.sulfur, res3b) # 31
+    o61 = topology.add_atom("O", element.oxygen, res3b) # 32
+    o62 = topology.add_atom("OXT", element.oxygen, res3b) # 33
+    oh6 = topology.add_atom("OH", element.hydrogen, res3b) # 34
     topology.add_bond(c5, n6) # peptide bond
     topology.add_bond(n6, ca6)
     topology.add_bond(ca6, c6)
@@ -232,18 +232,18 @@ def test_write_and_read_pdbx(tmp_path):
     # Chain C: A new residue
     chain3 = topology.add_chain("C")
     res1c = topology.add_residue("2HA", chain3, 1)
-    cc1 = topology.add_atom("C1", md.element.carbon, res1c) # 32
-    cc2 = topology.add_atom("C2", md.element.carbon, res1c) # 33
-    cc3 = topology.add_atom("C3", md.element.carbon, res1c) # 34
-    ch11 = topology.add_atom("1H1C", md.element.hydrogen, res1c) # 35
-    ch12 = topology.add_atom("2H1C", md.element.hydrogen, res1c) # 36
-    ch31 = topology.add_atom("1H3C", md.element.hydrogen, res1c) # 37
-    ch32 = topology.add_atom("2H3C", md.element.hydrogen, res1c) # 38
-    ho1 = topology.add_atom("H1", md.element.hydrogen, res1c) # 39
-    ho3 = topology.add_atom("H3", md.element.hydrogen, res1c) # 40
-    co1 = topology.add_atom("O1", md.element.oxygen, res1c) # 41
-    co2 = topology.add_atom("O2", md.element.oxygen, res1c) # 42
-    co3 = topology.add_atom("O3", md.element.oxygen, res1c) # 43
+    cc1 = topology.add_atom("C1", element.carbon, res1c) # 32
+    cc2 = topology.add_atom("C2", element.carbon, res1c) # 33
+    cc3 = topology.add_atom("C3", element.carbon, res1c) # 34
+    ch11 = topology.add_atom("1H1C", element.hydrogen, res1c) # 35
+    ch12 = topology.add_atom("2H1C", element.hydrogen, res1c) # 36
+    ch31 = topology.add_atom("1H3C", element.hydrogen, res1c) # 37
+    ch32 = topology.add_atom("2H3C", element.hydrogen, res1c) # 38
+    ho1 = topology.add_atom("H1", element.hydrogen, res1c) # 39
+    ho3 = topology.add_atom("H3", element.hydrogen, res1c) # 40
+    co1 = topology.add_atom("O1", element.oxygen, res1c) # 41
+    co2 = topology.add_atom("O2", element.oxygen, res1c) # 42
+    co3 = topology.add_atom("O3", element.oxygen, res1c) # 43
     topology.add_bond(cc1, cc2)
     topology.add_bond(cc2, cc3)
     topology.add_bond(cc1, ch11)
@@ -266,8 +266,6 @@ def test_write_and_read_pdbx(tmp_path):
     traj = Trajectory(xyz=xyz, topology=topology, unitcell_lengths=unitcell_lengths, unitcell_angles=unitcell_angles)
 
     # Write to a temporary PDBx file
-    from pathlib import Path
-    tmp_path= Path('.')
     out_path = tmp_path / "test_write.pdbx"
     with PDBxTrajectoryFile(str(out_path), mode="w") as f:
         f.write(traj.xyz[0], traj.topology, traj.unitcell_lengths, traj.unitcell_angles)
@@ -276,7 +274,7 @@ def test_write_and_read_pdbx(tmp_path):
     # print(f"PDBx file written to: {out_path}")
 
     # Read it back
-    loaded = md.load(str(out_path))
+    loaded = load(str(out_path))
 
     # Check positions
     assert np.allclose(loaded.xyz, traj.xyz, atol=1e-5), "Positions do not match after write/read"
@@ -350,3 +348,38 @@ def test_write_and_read_pdbx(tmp_path):
     if not all_passed:
         debug_str = "\n".join(debug_msgs)
         raise AssertionError(f"Bond mismatch after write/read. Details:\n{debug_str}")
+
+
+def test_write_and_read_pdbx_4py5(tmp_path, get_fn):
+    """Test writing and reading 4py5.cif, checking all fields including bonds."""
+
+
+    # Load the original structure
+    cif_path = get_fn("4py5.cif")
+    traj = load(cif_path)
+
+    # Write to a temporary PDBx file
+    out_path = tmp_path / "test_write_4py5.pdbx"
+    with PDBxTrajectoryFile(str(out_path), mode="w") as f:
+        f.write(traj.xyz[0], traj.topology, traj.unitcell_lengths, traj.unitcell_angles)
+
+    # Read it back
+    loaded = load(str(out_path))
+
+    # Check positions
+    assert np.allclose(loaded.xyz, traj.xyz, atol=1e-5), "Positions do not match after write/read"
+    # Check topology: atoms, residues, chains
+    assert loaded.n_atoms == traj.n_atoms, "Number of atoms does not match"
+    assert loaded.n_residues == traj.n_residues, "Number of residues does not match"
+    assert loaded.n_chains == traj.n_chains, "Number of chains does not match"
+    # Check unit cell
+    assert np.allclose(loaded.unitcell_lengths, traj.unitcell_lengths, atol=1e-5), "Unit cell lengths do not match"
+    assert np.allclose(loaded.unitcell_angles, traj.unitcell_angles, atol=1e-5), "Unit cell angles do not match"
+
+    # Bond comparison (by atom indices)
+    def bond_set(top):
+        return set(tuple(sorted((a1.index, a2.index))) for a1, a2 in top.bonds)
+    bonds_written = bond_set(traj.topology)
+    bonds_read = bond_set(loaded.topology)
+    assert len(bonds_written) == 2928
+    assert bonds_written == bonds_read, f"Bonds do not match after write/read: {bonds_written} != {bonds_read}"
