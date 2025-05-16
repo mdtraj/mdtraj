@@ -1,9 +1,9 @@
 /***************************************************************************
- *cr                                                                       
- *cr            (C) Copyright 1995-2016 The Board of Trustees of the           
- *cr                        University of Illinois                       
- *cr                         All Rights Reserved                        
- *cr                                                                   
+ *cr
+ *cr            (C) Copyright 1995-2016 The Board of Trustees of the
+ *cr                        University of Illinois
+ *cr                         All Rights Reserved
+ *cr
  ***************************************************************************/
 
 /***************************************************************************
@@ -77,7 +77,7 @@ typedef struct {
   int *freeind;
   float *fixedcoords;
   int reverse;
-  int charmm;  
+  int charmm;
   int first;
   int with_unitcell;
 } dcdhandle;
@@ -465,7 +465,7 @@ static int read_charmm_extrablock(fio_fd fd, int charmm, int reverseEndian,
 
 
 static int read_fixed_atoms(fio_fd fd, int N, int num_free, const int *indexes,
-                            int reverseEndian, const float *fixedcoords, 
+                            int reverseEndian, const float *fixedcoords,
                             float *freeatoms, float *pos, int charmm) {
   int i, input_integer[2], rec_scale;
 
@@ -480,7 +480,7 @@ static int read_fixed_atoms(fio_fd fd, int N, int num_free, const int *indexes,
   if (fio_fread(input_integer, sizeof(int), rec_scale, fd) != rec_scale) return DCD_BADREAD;
   if (reverseEndian) swap4_aligned(input_integer, rec_scale);
   if ((input_integer[0]+input_integer[1]) != 4L*num_free) return DCD_BADFORMAT;
-  
+
   /* Read free atom coordinates */
   if (fio_fread(freeatoms, 4L*num_free, 1, fd) != 1) return DCD_BADREAD;
   if (reverseEndian)
@@ -538,7 +538,7 @@ static int read_charmm_4dim(fio_fd fd, int charmm, int reverseEndian) {
  */
 static int read_dcdstep(fio_fd fd, int N, float *X, float *Y, float *Z,
                         float *unitcell, int num_fixed,
-                        int first, int *indexes, float *fixedcoords, 
+                        int first, int *indexes, float *fixedcoords,
                         int reverseEndian, int charmm) {
   int ret_val;    /* Return value from read */
   ptrdiff_t rec_scale;
@@ -548,7 +548,7 @@ static int read_dcdstep(fio_fd fd, int N, float *X, float *Y, float *Z,
   /* Fortran record length checks disabled for huge files or user request */
   if (hugefile || (getenv("VMDDCDNOCHECKRECLEN") != NULL))
     check_reclen = 0;
- 
+
   if (charmm & DCD_HAS_64BIT_REC) {
     rec_scale=RECSCALE64BIT;
   } else {
@@ -558,7 +558,7 @@ static int read_dcdstep(fio_fd fd, int N, float *X, float *Y, float *Z,
   if ((num_fixed==0) || first) {
     /* temp storage for reading formatting info */
     /* note: has to be max size we'll ever use  */
-    int tmpbuf[6L*RECSCALEMAX]; 
+    int tmpbuf[6L*RECSCALEMAX];
 
     fio_iovec iov[7];   /* I/O vector for fio_readv() call          */
     int i;
@@ -732,8 +732,8 @@ static int skip_dcdstep(fio_fd fd, int natoms, int nfixed, int charmm) {
  * Output: 0 on success, negative error code on failure.
  * Side effects: coordinates are written to the dcd file.
  */
-static int write_dcdstep(fio_fd fd, int curframe, int curstep, int N, 
-                  const float *X, const float *Y, const float *Z, 
+static int write_dcdstep(fio_fd fd, int curframe, int curstep, int N,
+                  const float *X, const float *Y, const float *Z,
                   const double *unitcell, int charmm) {
   int out_integer;
 
@@ -878,7 +878,7 @@ int dcd_rewind(dcdhandle* dcd) {
     return 0;
 }
 
-dcdhandle* open_dcd_read(const char *path, const char *filetype, 
+dcdhandle* open_dcd_read(const char *path, const char *filetype,
     int *natoms, int* nsets) {
   dcdhandle *dcd;
   fio_fd fd;
@@ -905,8 +905,8 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype,
   memset(dcd, 0, sizeof(dcdhandle));
   dcd->fd = fd;
 
-  if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &dcd->nsets, &dcd->istart, 
-         &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind, 
+  if ((rc = read_dcdheader(dcd->fd, &dcd->natoms, &dcd->nsets, &dcd->istart,
+         &dcd->nsavc, &dcd->delta, &dcd->nfixed, &dcd->freeind,
          &dcd->fixedcoords, &dcd->reverse, &dcd->charmm))) {
     print_dcderror("read_dcdheader", rc);
     fio_fclose(dcd->fd);
@@ -960,7 +960,7 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype,
     if (dcd->nsets > 0 && newnsets != dcd->nsets) {
       printf("dcdplugin) Warning: DCD header claims %d frames, but \n"
              "dcdplugin) file size (%ld) indicates there are actually \n"
-             "%d frames of size (%ld)\n", 
+             "%d frames of size (%ld)\n",
              dcd->nsets, trjsize, newnsets, framesize);
     }
 
@@ -1082,7 +1082,7 @@ void close_file_read(void *v) {
 }
 
 
-dcdhandle* open_dcd_write(const char *path, const char *filetype, 
+dcdhandle* open_dcd_write(const char *path, const char *filetype,
     int natoms) {
   dcdhandle *dcd;
   fio_fd fd;
@@ -1112,12 +1112,12 @@ dcdhandle* open_dcd_write(const char *path, const char *filetype,
     printf("dcdplugin) WARNING: unit cell information will be lost!\n");
   } else {
     with_unitcell = 1;      /* contains unit cell infor (Charmm format) */
-    charmm = DCD_IS_CHARMM; /* charmm-formatted DCD file                */ 
-    if (with_unitcell) 
+    charmm = DCD_IS_CHARMM; /* charmm-formatted DCD file                */
+    if (with_unitcell)
       charmm |= DCD_HAS_EXTRA_BLOCK;
   }
- 
-  rc = write_dcdheader(dcd->fd, "Created by DCD plugin", natoms, 
+
+  rc = write_dcdheader(dcd->fd, "Created by DCD plugin", natoms,
                        istart, nsavc, delta, with_unitcell, charmm);
 
   if (rc < 0) {
@@ -1140,7 +1140,7 @@ dcdhandle* open_dcd_write(const char *path, const char *filetype,
 }
 
 
-int write_timestep(void *v, const molfile_timestep_t *ts) { 
+int write_timestep(void *v, const molfile_timestep_t *ts) {
   dcdhandle *dcd = (dcdhandle *)v;
   int i, rc, curstep;
   float *pos = ts->coords;
