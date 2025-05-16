@@ -22,13 +22,16 @@
 
 import ast
 
-import mdtraj
 import numpy as np
-from mdtraj.core.selection import parse_selection
-from mdtraj.testing import eq
 import pytest
 
-pnode = lambda s: ast.parse(s, mode='eval').body
+import mdtraj
+from mdtraj.core.selection import parse_selection
+from mdtraj.testing import eq
+
+
+def pnode(s):
+    return ast.parse(s, mode="eval").body
 
 
 @pytest.fixture()
@@ -62,42 +65,44 @@ tt = make_test_topology()
 
 
 def test_range():
-    eq(parse_selection('resSeq 1 to 10').astnode,
-       pnode('1 <= atom.residue.resSeq <= 10'))
+    eq(
+        parse_selection("resSeq 1 to 10").astnode,
+        pnode("1 <= atom.residue.resSeq <= 10"),
+    )
 
-    sp = parse_selection('resSeq 5 to 6')
+    sp = parse_selection("resSeq 5 to 6")
     for a in tt.atoms:
         assert sp.expr(a)
-    sp = parse_selection('resSeq 7 to 8')
+    sp = parse_selection("resSeq 7 to 8")
     for a in tt.atoms:
         assert not sp.expr(a)
 
 
 def test_unary_2():
-    sp = parse_selection('all')
+    sp = parse_selection("all")
     for a in tt.atoms:
         assert sp.expr(a)
 
-    sp = parse_selection('none')
+    sp = parse_selection("none")
     for a in tt.atoms:
         assert not sp.expr(a)
 
 
 def test_unary_3():
-    sp = parse_selection('protein or water')
+    sp = parse_selection("protein or water")
 
     for a in tt.atoms:
         assert sp.expr(a)
 
-    sp = parse_selection('protein and water')
+    sp = parse_selection("protein and water")
     for a in tt.atoms:
         assert not sp.expr(a)
 
-    sp = parse_selection('not (protein and water)')
+    sp = parse_selection("not (protein and water)")
     for a in tt.atoms:
         assert sp.expr(a)
 
-    sp = parse_selection('not not (protein and water)')
+    sp = parse_selection("not not (protein and water)")
     for a in tt.atoms:
         assert not sp.expr(a)
 
@@ -107,29 +112,29 @@ def test_binary_1():
     assert sp.expr(tt.atom(0))
     assert sp.expr(tt.atom(1))
 
-    sp = parse_selection('rescode A')
+    sp = parse_selection("rescode A")
     assert sp.expr(tt.atom(0))
     assert sp.expr(tt.atom(1))
 
-    sp = parse_selection('mass > 2')
+    sp = parse_selection("mass > 2")
     assert sp.expr(tt.atom(0))
     assert not sp.expr(tt.atom(1))
     assert sp.expr(tt.atom(2))
 
-    sp = parse_selection('name ne O')
+    sp = parse_selection("name ne O")
     assert sp.expr(tt.atom(0))
     assert not sp.expr(tt.atom(2))
 
 
 def test_binary_2():
-    sp = parse_selection('name O and mass > 2')
+    sp = parse_selection("name O and mass > 2")
     assert sp.expr(tt.atom(2))
     assert not sp.expr(tt.atom(3))
 
 
 def test_simple():
     sp = parse_selection("protein")
-    eq(sp.source, "atom.residue.is_protein\n")
+    eq(sp.source, "atom.residue.is_protein")
     assert sp.expr(tt.atom(0))
     assert sp.expr(tt.atom(1))
     assert not sp.expr(tt.atom(2))
@@ -137,130 +142,136 @@ def test_simple():
 
 def test_alias():
     sp = parse_selection("waters")
-    eq(sp.source, "atom.residue.is_water\n")
+    eq(sp.source, "atom.residue.is_water")
     assert sp.expr(tt.atom(3))
     assert sp.expr(tt.atom(4))
     assert not sp.expr(tt.atom(0))
 
 
 def test_unary_1():
-    eq(parse_selection('all').astnode, pnode('True'))
-    eq(parse_selection('everything').astnode, pnode('True'))
-    eq(parse_selection('none').astnode, pnode('False'))
-    eq(parse_selection('nothing').astnode, pnode('False'))
+    eq(parse_selection("all").astnode, pnode("True"))
+    eq(parse_selection("everything").astnode, pnode("True"))
+    eq(parse_selection("none").astnode, pnode("False"))
+    eq(parse_selection("nothing").astnode, pnode("False"))
     # eq(parse_selection('nucleic').astnode, pnode('atom.residue.is_nucleic'))
     # eq(parse_selection('is_nucleic').astnode, pnode('atom.residue.is_nucleic'))
-    eq(parse_selection('protein').astnode, pnode('atom.residue.is_protein'))
-    eq(parse_selection('is_protein').astnode, pnode('atom.residue.is_protein'))
-    eq(parse_selection('water').astnode, pnode('atom.residue.is_water'))
-    eq(parse_selection('is_water').astnode, pnode('atom.residue.is_water'))
-    eq(parse_selection('waters').astnode, pnode('atom.residue.is_water'))
+    eq(parse_selection("protein").astnode, pnode("atom.residue.is_protein"))
+    eq(parse_selection("is_protein").astnode, pnode("atom.residue.is_protein"))
+    eq(parse_selection("water").astnode, pnode("atom.residue.is_water"))
+    eq(parse_selection("is_water").astnode, pnode("atom.residue.is_water"))
+    eq(parse_selection("waters").astnode, pnode("atom.residue.is_water"))
 
 
 def test_binary_selection_operator():
-    eq(parse_selection('name < 1').astnode, pnode('atom.name < 1'))
-    eq(parse_selection('name lt 1').astnode, pnode('atom.name < 1'))
-    eq(parse_selection('name > 1').astnode, pnode('atom.name > 1'))
-    eq(parse_selection('name gt 1').astnode, pnode('atom.name > 1'))
-    eq(parse_selection('name == 1').astnode, pnode('atom.name == 1'))
-    eq(parse_selection('name eq 1').astnode, pnode('atom.name == 1'))
-    eq(parse_selection('name != 1').astnode, pnode('atom.name != 1'))
-    eq(parse_selection('name ne 1').astnode, pnode('atom.name != 1'))
-    eq(parse_selection('name >= 1').astnode, pnode('atom.name >= 1'))
-    eq(parse_selection('name ge 1').astnode, pnode('atom.name >= 1'))
-    eq(parse_selection('name <= 1').astnode, pnode('atom.name <= 1'))
-    eq(parse_selection('name le 1').astnode, pnode('atom.name <= 1'))
+    eq(parse_selection("name < 1").astnode, pnode("atom.name < 1"))
+    eq(parse_selection("name lt 1").astnode, pnode("atom.name < 1"))
+    eq(parse_selection("name > 1").astnode, pnode("atom.name > 1"))
+    eq(parse_selection("name gt 1").astnode, pnode("atom.name > 1"))
+    eq(parse_selection("name == 1").astnode, pnode("atom.name == 1"))
+    eq(parse_selection("name eq 1").astnode, pnode("atom.name == 1"))
+    eq(parse_selection("name != 1").astnode, pnode("atom.name != 1"))
+    eq(parse_selection("name ne 1").astnode, pnode("atom.name != 1"))
+    eq(parse_selection("name >= 1").astnode, pnode("atom.name >= 1"))
+    eq(parse_selection("name ge 1").astnode, pnode("atom.name >= 1"))
+    eq(parse_selection("name <= 1").astnode, pnode("atom.name <= 1"))
+    eq(parse_selection("name le 1").astnode, pnode("atom.name <= 1"))
 
-    eq(parse_selection('1 == name').astnode, pnode('1 == atom.name'))
-    eq(parse_selection('1 eq name').astnode, pnode('1 == atom.name'))
+    eq(parse_selection("1 == name").astnode, pnode("1 == atom.name"))
+    eq(parse_selection("1 eq name").astnode, pnode("1 == atom.name"))
 
 
 def test_raises():
-    pytest.raises(ValueError, lambda: parse_selection('or'))
-    pytest.raises(ValueError, lambda: parse_selection('a <'))
+    pytest.raises(ValueError, lambda: parse_selection("or"))
+    pytest.raises(ValueError, lambda: parse_selection("a <"))
 
 
 def test_raises2():
-    pytest.raises(ValueError, lambda: parse_selection('dog 5'))
-    pytest.raises(ValueError, lambda: parse_selection('dog == 5'))
-    pytest.raises(ValueError, lambda: parse_selection('dog frog'))
-    pytest.raises(ValueError, lambda: parse_selection('not dog'))
-    pytest.raises(ValueError, lambda: parse_selection('protein or dog'))
-    pytest.raises(ValueError, lambda: parse_selection('dog 1 to 5'))
-    pytest.raises(ValueError, lambda: parse_selection('dog'))
+    pytest.raises(ValueError, lambda: parse_selection("dog 5"))
+    pytest.raises(ValueError, lambda: parse_selection("dog == 5"))
+    pytest.raises(ValueError, lambda: parse_selection("dog frog"))
+    pytest.raises(ValueError, lambda: parse_selection("not dog"))
+    pytest.raises(ValueError, lambda: parse_selection("protein or dog"))
+    pytest.raises(ValueError, lambda: parse_selection("dog 1 to 5"))
+    pytest.raises(ValueError, lambda: parse_selection("dog"))
 
 
 def test_bool():
     sp = parse_selection("protein or water")
-    eq(sp.source, "(atom.residue.is_protein or atom.residue.is_water)\n")
+    eq(sp.source, "atom.residue.is_protein or atom.residue.is_water")
 
     sp = parse_selection("protein or water or all\n")
-    eq(sp.source,
-       "(atom.residue.is_protein or atom.residue.is_water or True)\n")
+    eq(
+        sp.source,
+        "atom.residue.is_protein or atom.residue.is_water or True",
+    )
 
 
 def test_nested_bool():
     sp = parse_selection("nothing and water or all")
-    eq(sp.source,
-       "((False and atom.residue.is_water) or True)\n")
+    eq(
+        sp.source,
+        "False and atom.residue.is_water or True",
+    )
 
     sp = parse_selection("nothing and (water or all)")
-    eq(sp.source,
-       "(False and (atom.residue.is_water or True))\n")
+    eq(
+        sp.source,
+        "False and (atom.residue.is_water or True)",
+    )
 
 
 def test_values():
     sp = parse_selection("resid 4")
-    eq(sp.source, "(atom.residue.index == 4)\n")
+    eq(sp.source, "atom.residue.index == 4")
 
     sp = parse_selection("chainid 4")
-    eq(sp.source, "(atom.residue.chain.index == 4)\n")
+    eq(sp.source, "atom.residue.chain.index == 4")
 
     sp = parse_selection("resid > 4")
-    eq(sp.source, "(atom.residue.index > 4)\n")
+    eq(sp.source, "atom.residue.index > 4")
 
     sp = parse_selection("resid gt 4")
-    eq(sp.source, "(atom.residue.index > 4)\n")
+    eq(sp.source, "atom.residue.index > 4")
 
     sp = parse_selection("resid 5 to 8")
-    eq(sp.source, "(5 <= atom.residue.index <= 8)\n")
+    eq(sp.source, "5 <= atom.residue.index <= 8")
 
 
 def test_element():
     sp = parse_selection("element 'O'")
-    eq(sp.source, "(atom.element.symbol == 'O')\n")
+    eq(sp.source, "atom.element.symbol == 'O'")
 
     sp = parse_selection("mass 5.5 to 12.3")
-    eq(sp.astnode, pnode("(5.5 <= atom.element.mass <= 12.3)"))
+    eq(sp.astnode, pnode("5.5 <= atom.element.mass <= 12.3"))
 
 
 def test_not():
     sp = parse_selection("not protein")
-    eq(sp.source, "(not atom.residue.is_protein)\n")
+    eq(sp.source, "not atom.residue.is_protein")
 
     sp = parse_selection("not not protein")
-    eq(sp.source, "(not (not atom.residue.is_protein))\n")
+    eq(sp.source, "not not atom.residue.is_protein")
 
-    sp = parse_selection('!protein')
-    eq(sp.source, "(not atom.residue.is_protein)\n")
+    sp = parse_selection("!protein")
+    eq(sp.source, "not atom.residue.is_protein")
 
 
 def test_re():
     sp = parse_selection("name =~ 'C.*'")
-    eq(sp.source, "(re.match('C.*', atom.name) is not None)\n")
+    eq(sp.source, "re.match('C.*', atom.name) is not None")
 
     sp = parse_selection("(name =~ 'C.*') and all")
-    eq(sp.source, "((re.match('C.*', atom.name) is not None) and True)\n")
+    eq(sp.source, "re.match('C.*', atom.name) is not None and True")
 
 
-# def test_within():
-#     sp = parse_selection("within 5 of (backbone or sidechain)")
-#     eq(sp.source,
-#        "(atom.within == 5 of (atom.residue.is_backbone or atom.residue.is_sidechain))")
+@pytest.mark.skip("failed to parse selection")
+def test_within(self):
+    sp = parse_selection("within 5 of (backbone or sidechain)")
+    eq(sp.source, "atom.within == 5 of atom.residue.is_backbone or atom.residue.is_sidechain")
 
 
 def test_quotes():
-    should_be = "((atom.name == 'CA') and (atom.residue.name == 'ALA'))\n"
+    should_be = "atom.name == 'CA' and atom.residue.name == 'ALA'"
 
     sp = parse_selection("name CA and resname ALA")
     eq(sp.source, should_be)
@@ -285,12 +296,16 @@ def test_top(ala):
 
 def test_top_2(ala):
     expr = ala.topology.select_expression("name O and water")
-    eq(expr, "[atom.index for atom in topology.atoms if ((atom.name == 'O') and atom.residue.is_water)\n]")
+    eq(
+        expr,
+        "[atom.index for atom in topology.atoms if atom.name == 'O' and atom.residue.is_water]",
+    )
 
 
 def test_backbone(gbp):
-    ref_backbone = gbp.topology.select("protein and (name C or name CA or "
-                                       "name N or name O)")
+    ref_backbone = gbp.topology.select(
+        "protein and (name C or name CA or name N or name O)",
+    )
     backbone = gbp.topology.select("backbone")
     is_backbone = gbp.topology.select("is_backbone")
 
@@ -299,8 +314,9 @@ def test_backbone(gbp):
 
 
 def test_sidechain(gbp):
-    ref_sidechain = gbp.topology.select("protein and not (name C or name CA "
-                                        "or name N or name O or name H or name HA)")
+    ref_sidechain = gbp.topology.select(
+        "protein and not (name C or name CA or name N or name O or name H or name HA)",
+    )
     sidechain = gbp.topology.select("sidechain")
     is_sidechain = gbp.topology.select("is_sidechain")
 
@@ -313,15 +329,15 @@ def test_literal(gbp):
     name_og1_1 = gbp.topology.select("name 'OG1'")
     name_og1_2 = gbp.topology.select("name OG1")
 
-    ref_og1 = np.asarray([a.index for a in gbp.topology.atoms
-                          if a.name == 'OG1'])
+    ref_og1 = np.asarray([a.index for a in gbp.topology.atoms if a.name == "OG1"])
     eq(name_og1_0, ref_og1)
     eq(name_og1_1, ref_og1)
     eq(name_og1_2, ref_og1)
 
+
 def test_in():
     sp = parse_selection("resname ALA ASP GLU")
-    eq(sp.source, "(atom.residue.name in ['ALA', 'ASP', 'GLU'])\n")
+    eq(sp.source, "atom.residue.name in ['ALA', 'ASP', 'GLU']")
 
     sp = parse_selection("resid 100 101 102")
-    eq(sp.source, "(atom.residue.index in [100, 101, 102])\n")
+    eq(sp.source, "atom.residue.index in [100, 101, 102]")

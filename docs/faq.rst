@@ -12,7 +12,7 @@ FAQs
    system compiler is gcc 4.1?
 
    You need a more recent version of gcc (>= 4.4). You can set the ``CC``
-   and ``CXX`` environment variables to point to a different compiler. 
+   and ``CXX`` environment variables to point to a different compiler.
 
    Unfortunately, installing from conda will not help you here. You must
    compile from source on CentOS 5 (or similar).

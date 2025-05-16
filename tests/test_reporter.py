@@ -28,46 +28,70 @@ import pytest
 
 import mdtraj as md
 from mdtraj.formats import HDF5TrajectoryFile, NetCDFTrajectoryFile
-from mdtraj.reporters import HDF5Reporter, NetCDFReporter, DCDReporter, XTCReporter
+from mdtraj.reporters import DCDReporter, HDF5Reporter, NetCDFReporter, XTCReporter
 from mdtraj.testing import eq
 
 try:
-    from openmm.unit import nanometers, kelvin, picoseconds, femtoseconds
     from openmm import LangevinIntegrator, Platform
-    from openmm.app import PDBFile, ForceField, Simulation, CutoffNonPeriodic, CutoffPeriodic, HBonds, CheckpointReporter
+    from openmm.app import (
+        CheckpointReporter,
+        CutoffNonPeriodic,
+        CutoffPeriodic,
+        ForceField,
+        HBonds,
+        PDBFile,
+        Simulation,
+    )
+    from openmm.unit import femtoseconds, kelvin, nanometers, picoseconds
 
     HAVE_OPENMM = True
 except ImportError:
     HAVE_OPENMM = False
 
 # special pytest global to mark all tests in this module
-pytestmark = pytest.mark.skipif(not HAVE_OPENMM, reason='test_reporter.py needs OpenMM.')
+pytestmark = pytest.mark.skipif(
+    not HAVE_OPENMM,
+    reason="test_reporter.py needs OpenMM.",
+)
 
 
 def test_reporter(tmpdir, get_fn):
-    pdb = PDBFile(get_fn('native.pdb'))
-    forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
+    pdb = PDBFile(get_fn("native.pdb"))
+    forcefield = ForceField("amber99sbildn.xml", "amber99_obc.xml")
     # NO PERIODIC BOUNDARY CONDITIONS
-    system = forcefield.createSystem(pdb.topology, nonbondedMethod=CutoffNonPeriodic,
-                                     nonbondedCutoff=1.0 * nanometers, constraints=HBonds, rigidWater=True)
+    system = forcefield.createSystem(
+        pdb.topology,
+        nonbondedMethod=CutoffNonPeriodic,
+        nonbondedCutoff=1.0 * nanometers,
+        constraints=HBonds,
+        rigidWater=True,
+    )
     integrator = LangevinIntegrator(300 * kelvin, 1.0 / picoseconds, 2.0 * femtoseconds)
     integrator.setConstraintTolerance(0.00001)
 
-    platform = Platform.getPlatformByName('Reference')
+    platform = Platform.getPlatformByName("Reference")
     simulation = Simulation(pdb.topology, system, integrator, platform)
     simulation.context.setPositions(pdb.positions)
 
     simulation.context.setVelocitiesToTemperature(300 * kelvin)
 
     tmpdir = str(tmpdir)
-    hdf5file = os.path.join(tmpdir, 'traj.h5')
-    ncfile = os.path.join(tmpdir, 'traj.nc')
-    dcdfile = os.path.join(tmpdir, 'traj.dcd')
-    xtcfile = os.path.join(tmpdir, 'traj.xtc')
+    hdf5file = os.path.join(tmpdir, "traj.h5")
+    ncfile = os.path.join(tmpdir, "traj.nc")
+    dcdfile = os.path.join(tmpdir, "traj.dcd")
+    xtcfile = os.path.join(tmpdir, "traj.xtc")
 
-    reporter = HDF5Reporter(hdf5file, 2, coordinates=True, time=True,
-                            cell=True, potentialEnergy=True, kineticEnergy=True, temperature=True,
-                            velocities=True)
+    reporter = HDF5Reporter(
+        hdf5file,
+        2,
+        coordinates=True,
+        time=True,
+        cell=True,
+        potentialEnergy=True,
+        kineticEnergy=True,
+        temperature=True,
+        velocities=True,
+    )
     reporter2 = NetCDFReporter(ncfile, 2, coordinates=True, time=True, cell=True)
     reporter3 = DCDReporter(dcdfile, 2)
     reporter4 = XTCReporter(xtcfile, 2)
@@ -93,7 +117,7 @@ def test_reporter(tmpdir, get_fn):
         eq(got.cell_lengths.shape, (50, 3))
         eq(got.cell_angles.shape, (50, 3))
         eq(got.time, 0.002 * 2 * (1 + np.arange(50)))
-        assert f.topology == md.load(get_fn('native.pdb')).top
+        assert f.topology == md.load(get_fn("native.pdb")).top
 
     with NetCDFTrajectoryFile(ncfile) as f:
         xyz, time, cell_lengths, cell_angles = f.read()
@@ -102,9 +126,9 @@ def test_reporter(tmpdir, get_fn):
         eq(time, 0.002 * 2 * (1 + np.arange(50)))
 
     hdf5_traj = md.load(hdf5file)
-    dcd_traj = md.load(dcdfile, top=get_fn('native.pdb'))
-    netcdf_traj = md.load(ncfile, top=get_fn('native.pdb'))
-    xtc_traj = md.load(xtcfile, top=get_fn('native.pdb'))
+    dcd_traj = md.load(dcdfile, top=get_fn("native.pdb"))
+    netcdf_traj = md.load(ncfile, top=get_fn("native.pdb"))
+    xtc_traj = md.load(xtcfile, top=get_fn("native.pdb"))
 
     # we don't have to convert units here, because md.load already
     # handles that
@@ -119,33 +143,53 @@ def test_reporter(tmpdir, get_fn):
 
 
 def test_reporter_subset(tmpdir, get_fn):
-    pdb = PDBFile(get_fn('native2.pdb'))
+    pdb = PDBFile(get_fn("native2.pdb"))
     pdb.topology.setUnitCellDimensions([2, 2, 2])
-    forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
-    system = forcefield.createSystem(pdb.topology, nonbondedMethod=CutoffPeriodic,
-                                     nonbondedCutoff=1 * nanometers, constraints=HBonds, rigidWater=True)
+    forcefield = ForceField("amber99sbildn.xml", "amber99_obc.xml")
+    system = forcefield.createSystem(
+        pdb.topology,
+        nonbondedMethod=CutoffPeriodic,
+        nonbondedCutoff=1 * nanometers,
+        constraints=HBonds,
+        rigidWater=True,
+    )
     integrator = LangevinIntegrator(300 * kelvin, 1.0 / picoseconds, 2.0 * femtoseconds)
     integrator.setConstraintTolerance(0.00001)
 
-    platform = Platform.getPlatformByName('Reference')
+    platform = Platform.getPlatformByName("Reference")
     simulation = Simulation(pdb.topology, system, integrator, platform)
     simulation.context.setPositions(pdb.positions)
 
     simulation.context.setVelocitiesToTemperature(300 * kelvin)
 
     tmpdir = str(tmpdir)
-    hdf5file = os.path.join(tmpdir, 'traj.h5')
-    ncfile = os.path.join(tmpdir, 'traj.nc')
-    dcdfile = os.path.join(tmpdir, 'traj.dcd')
-    xtcfile = os.path.join(tmpdir, 'traj.xtc')
+    hdf5file = os.path.join(tmpdir, "traj.h5")
+    ncfile = os.path.join(tmpdir, "traj.nc")
+    dcdfile = os.path.join(tmpdir, "traj.dcd")
+    xtcfile = os.path.join(tmpdir, "traj.xtc")
 
     atomSubset = [0, 1, 2, 4, 5]
 
-    reporter = HDF5Reporter(hdf5file, 2, coordinates=True, time=True,
-                            cell=True, potentialEnergy=True, kineticEnergy=True, temperature=True,
-                            velocities=True, atomSubset=atomSubset)
-    reporter2 = NetCDFReporter(ncfile, 2, coordinates=True, time=True,
-                               cell=True, atomSubset=atomSubset)
+    reporter = HDF5Reporter(
+        hdf5file,
+        2,
+        coordinates=True,
+        time=True,
+        cell=True,
+        potentialEnergy=True,
+        kineticEnergy=True,
+        temperature=True,
+        velocities=True,
+        atomSubset=atomSubset,
+    )
+    reporter2 = NetCDFReporter(
+        ncfile,
+        2,
+        coordinates=True,
+        time=True,
+        cell=True,
+        atomSubset=atomSubset,
+    )
     reporter3 = DCDReporter(dcdfile, 2, atomSubset=atomSubset)
     reporter4 = XTCReporter(xtcfile, 2, atomSubset=atomSubset)
 
@@ -160,7 +204,7 @@ def test_reporter_subset(tmpdir, get_fn):
     reporter3.close()
     reporter4.close()
 
-    t = md.load(get_fn('native.pdb'))
+    t = md.load(get_fn("native.pdb"))
     t.restrict_atoms(atomSubset)
 
     with HDF5TrajectoryFile(hdf5file) as f:
@@ -173,7 +217,7 @@ def test_reporter_subset(tmpdir, get_fn):
         eq(got.cell_lengths, 2 * np.ones((50, 3)))
         eq(got.cell_angles, 90 * np.ones((50, 3)))
         eq(got.time, 0.002 * 2 * (1 + np.arange(50)))
-        assert f.topology == md.load(get_fn('native.pdb'), atom_indices=atomSubset).topology
+        assert f.topology == md.load(get_fn("native.pdb"), atom_indices=atomSubset).topology
 
     with NetCDFTrajectoryFile(ncfile) as f:
         xyz, time, cell_lengths, cell_angles = f.read()
@@ -199,44 +243,54 @@ def test_reporter_subset(tmpdir, get_fn):
 
 
 def test_xtc_reporter_append(tmpdir, get_fn):
-    pdb = PDBFile(get_fn('native.pdb'))
-    forcefield = ForceField('amber99sbildn.xml', 'amber99_obc.xml')
+    pdb = PDBFile(get_fn("native.pdb"))
+    forcefield = ForceField("amber99sbildn.xml", "amber99_obc.xml")
     # NO PERIODIC BOUNDARY CONDITIONS
-    system = forcefield.createSystem(pdb.topology, nonbondedMethod=CutoffNonPeriodic,
-                                     nonbondedCutoff=1.0 * nanometers, constraints=HBonds, rigidWater=True)
+    system = forcefield.createSystem(
+        pdb.topology,
+        nonbondedMethod=CutoffNonPeriodic,
+        nonbondedCutoff=1.0 * nanometers,
+        constraints=HBonds,
+        rigidWater=True,
+    )
     integrator = LangevinIntegrator(300 * kelvin, 1.0 / picoseconds, 2.0 * femtoseconds)
     integrator.setConstraintTolerance(0.00001)
 
-    platform = Platform.getPlatformByName('Reference')
+    platform = Platform.getPlatformByName("Reference")
     simulation = Simulation(pdb.topology, system, integrator, platform)
     simulation.context.setPositions(pdb.positions)
 
     simulation.context.setVelocitiesToTemperature(300 * kelvin)
 
     tmpdir = str(tmpdir)
-    xtcfile = os.path.join(tmpdir, 'traj.xtc')
-    xtcfile_cp = os.path.join(tmpdir, 'traj_cp.xtc')
-    checkpoint = os.path.join(tmpdir, 'checkpoint.chk')
+    xtcfile = os.path.join(tmpdir, "traj.xtc")
+    xtcfile_cp = os.path.join(tmpdir, "traj_cp.xtc")
+    checkpoint = os.path.join(tmpdir, "checkpoint.chk")
     reporter = XTCReporter(xtcfile, 2)
     simulation.reporters.append(reporter)
     simulation.reporters.append(CheckpointReporter(checkpoint, 10))
     simulation.step(10)
     reporter.close()
     shutil.copyfile(xtcfile, xtcfile_cp)
-    system = forcefield.createSystem(pdb.topology, nonbondedMethod=CutoffNonPeriodic,
-                                     nonbondedCutoff=1.0 * nanometers, constraints=HBonds, rigidWater=True)
+    system = forcefield.createSystem(
+        pdb.topology,
+        nonbondedMethod=CutoffNonPeriodic,
+        nonbondedCutoff=1.0 * nanometers,
+        constraints=HBonds,
+        rigidWater=True,
+    )
     integrator = LangevinIntegrator(300 * kelvin, 1.0 / picoseconds, 2.0 * femtoseconds)
     integrator.setConstraintTolerance(0.00001)
 
-    platform = Platform.getPlatformByName('Reference')
+    platform = Platform.getPlatformByName("Reference")
     simulation = Simulation(pdb.topology, system, integrator, platform)
     simulation.loadCheckpoint(checkpoint)
     reporter = XTCReporter(xtcfile, 2, append=True)
     simulation.reporters.append(reporter)
     simulation.step(10)
     reporter.close()
-    xtc_traj = md.load(xtcfile, top=get_fn('native.pdb'))
-    xtc_traj_cp = md.load(xtcfile_cp, top=get_fn('native.pdb'))
+    xtc_traj = md.load(xtcfile, top=get_fn("native.pdb"))
+    xtc_traj_cp = md.load(xtcfile_cp, top=get_fn("native.pdb"))
     eq(xtc_traj.xyz[:5], xtc_traj_cp.xyz)
     eq(xtc_traj.n_frames, 10)
     eq(xtc_traj_cp.n_frames, 5)

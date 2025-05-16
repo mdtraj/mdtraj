@@ -43,17 +43,20 @@
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##############################################################################
 
-from __future__ import print_function, division
 import os
-import numpy as np
-from mdtraj.core.topology import Topology
-from mdtraj.utils import cast_indices, in_units_of, open_maybe_zipped
-from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils.unitcell import lengths_and_angles_to_box_vectors, box_vectors_to_lengths_and_angles
-from mdtraj.utils import six
 import warnings
 
-__all__ = ['load_pdbx', 'PDBxTrajectoryFile']
+import numpy as np
+
+from mdtraj.core.topology import Topology
+from mdtraj.formats.registry import FormatRegistry
+from mdtraj.utils import cast_indices, in_units_of, open_maybe_zipped
+from mdtraj.utils.unitcell import (
+    box_vectors_to_lengths_and_angles,
+    lengths_and_angles_to_box_vectors,
+)
+
+__all__ = ["load_pdbx", "PDBxTrajectoryFile"]
 
 
 ##############################################################################
@@ -61,9 +64,16 @@ __all__ = ['load_pdbx', 'PDBxTrajectoryFile']
 ##############################################################################
 
 
-@FormatRegistry.register_loader('.pdbx')
-@FormatRegistry.register_loader('.cif')
-def load_pdbx(filename, stride=None, atom_indices=None, frame=None, no_boxchk=False, top=None):
+@FormatRegistry.register_loader(".pdbx")
+@FormatRegistry.register_loader(".cif")
+def load_pdbx(
+    filename,
+    stride=None,
+    atom_indices=None,
+    frame=None,
+    no_boxchk=False,
+    top=None,
+):
     """Load a PDBx/mmCIF file from disk.
 
     Parameters
@@ -110,9 +120,11 @@ def load_pdbx(filename, stride=None, atom_indices=None, frame=None, no_boxchk=Fa
     mdtraj.PDBxTrajectoryFile : Low level interface to PDBx/mmCIF files
     """
     from mdtraj import Trajectory
-    if not isinstance(filename, (six.string_types, os.PathLike)):
-        raise TypeError('filename must be of type string or path-like for load_pdb. '
-                        'you supplied %s' % type(filename))
+
+    if not isinstance(filename, (str, os.PathLike)):
+        raise TypeError(
+            "filename must be of type string or path-like for load_pdb. you supplied %s" % type(filename),
+        )
 
     atom_indices = cast_indices(atom_indices)
 
@@ -122,7 +134,7 @@ def load_pdbx(filename, stride=None, atom_indices=None, frame=None, no_boxchk=Fa
             coords = f.positions[[frame], atom_slice, :]
         else:
             coords = f.positions[::stride, atom_slice, :]
-        assert coords.ndim == 3, 'internal shape error'
+        assert coords.ndim == 3, "internal shape error"
         n_frames = len(coords)
 
         topology = f.topology
@@ -139,7 +151,12 @@ def load_pdbx(filename, stride=None, atom_indices=None, frame=None, no_boxchk=Fa
             unitcell_angles = None
 
         in_units_of(coords, f.distance_unit, Trajectory._distance_unit, inplace=True)
-        in_units_of(unitcell_lengths, f.distance_unit, Trajectory._distance_unit, inplace=True)
+        in_units_of(
+            unitcell_lengths,
+            f.distance_unit,
+            Trajectory._distance_unit,
+            inplace=True,
+        )
 
     time = np.arange(len(coords))
     if frame is not None:
@@ -147,9 +164,13 @@ def load_pdbx(filename, stride=None, atom_indices=None, frame=None, no_boxchk=Fa
     elif stride is not None:
         time *= stride
 
-    traj = Trajectory(xyz=coords, time=time, topology=topology,
-                      unitcell_lengths=unitcell_lengths,
-                      unitcell_angles=unitcell_angles)
+    traj = Trajectory(
+        xyz=coords,
+        time=time,
+        topology=topology,
+        unitcell_lengths=unitcell_lengths,
+        unitcell_angles=unitcell_angles,
+    )
 
     if not no_boxchk and traj.unitcell_lengths is not None:
         # Some PDBx/mmCIF files do not *really* have a unit cell, but still
@@ -160,17 +181,20 @@ def load_pdbx(filename, stride=None, atom_indices=None, frame=None, no_boxchk=Fa
         # to say that no particle density should exceed 10x that.
         particle_density = traj.top.n_atoms / traj.unitcell_volumes[0]
         if particle_density > 1000:
-            warnings.warn('Unlikely unit cell vectors detected in PDB file likely '
-                          'resulting from a dummy CRYST1 record. Discarding unit '
-                          'cell vectors.', category=UserWarning)
+            warnings.warn(
+                "Unlikely unit cell vectors detected in PDB file likely "
+                "resulting from a dummy CRYST1 record. Discarding unit "
+                "cell vectors.",
+                category=UserWarning,
+            )
             traj._unitcell_lengths = traj._unitcell_angles = None
 
     return traj
 
 
-@FormatRegistry.register_fileobject('.pdbx')
-@FormatRegistry.register_fileobject('.cif')
-class PDBxTrajectoryFile(object):
+@FormatRegistry.register_fileobject(".pdbx")
+@FormatRegistry.register_fileobject(".cif")
+class PDBxTrajectoryFile:
     """Interface for reading and writing PDBx/mmCIF files
 
     Parameters
@@ -195,36 +219,41 @@ class PDBxTrajectoryFile(object):
     --------
     mdtraj.load_pdbx : High-level wrapper that returns a ``md.Trajectory``
     """
-    distance_unit = 'nanometers'
 
-    def __init__(self, filename, mode='r', force_overwrite=True, top=None):
+    distance_unit = "nanometers"
+
+    def __init__(self, filename, mode="r", force_overwrite=True, top=None):
         self._open = False
         self._mode = mode
         from openmm.app import PDBxFile
         from openmm.unit import nanometers
 
-        if mode == 'r':
+        if mode == "r":
             self._open = True
             pdbx = PDBxFile(filename)
             if top is None:
                 self._topology = Topology.from_openmm(pdbx.topology)
             else:
                 self._topology = top
-            positions = [pdbx.getPositions(asNumpy=True, frame=i).value_in_unit(nanometers) for i in range(pdbx.getNumFrames())]
+            positions = [
+                pdbx.getPositions(asNumpy=True, frame=i).value_in_unit(nanometers) for i in range(pdbx.getNumFrames())
+            ]
             self._positions = np.array(positions)
             vectors = pdbx.topology.getPeriodicBoxVectors()
             if vectors is not None:
                 vectors = [np.array(v.value_in_unit(nanometers)) for v in vectors]
-                l1, l2, l3, alpha, beta, gamma = box_vectors_to_lengths_and_angles(*vectors)
+                l1, l2, l3, alpha, beta, gamma = box_vectors_to_lengths_and_angles(
+                    *vectors,
+                )
                 self._unitcell_lengths = (l1, l2, l3)
                 self._unitcell_angles = (alpha, beta, gamma)
             else:
                 self._unitcell_lengths = None
                 self._unitcell_angles = None
-        elif mode == 'w':
+        elif mode == "w":
             self._open = True
             self._next_model = 0
-            self._file = open_maybe_zipped(filename, 'w', force_overwrite)
+            self._file = open_maybe_zipped(filename, "w", force_overwrite)
         else:
             raise ValueError("invalid mode: %s" % mode)
 
@@ -242,22 +271,31 @@ class PDBxTrajectoryFile(object):
         unitcell_angles : {tuple, None}
             Angles between the three unit cell vectors, or None for a non-periodic system
         """
-        if not self._mode == 'w':
-            raise ValueError('file not opened for writing')
+        if not self._mode == "w":
+            raise ValueError("file not opened for writing")
         from openmm.app import PDBxFile
         from openmm.unit import nanometers
+
         if self._next_model == 0:
             self._openmm_topology = topology.to_openmm()
             if unitcell_lengths is None:
                 self._openmm_topology.setPeriodicBoxVectors(None)
             else:
-                vectors = lengths_and_angles_to_box_vectors(*unitcell_lengths[0], *unitcell_angles[0])
-                self._openmm_topology.setPeriodicBoxVectors(vectors*nanometers)
+                vectors = lengths_and_angles_to_box_vectors(
+                    *unitcell_lengths[0],
+                    *unitcell_angles[0],
+                )
+                self._openmm_topology.setPeriodicBoxVectors(vectors * nanometers)
             PDBxFile.writeHeader(self._openmm_topology, self._file)
             self._next_model = 1
         if len(positions.shape) == 3:
             positions = positions[0]
-        PDBxFile.writeModel(self._openmm_topology, positions*nanometers, self._file, self._next_model)
+        PDBxFile.writeModel(
+            self._openmm_topology,
+            positions * nanometers,
+            self._file,
+            self._next_model,
+        )
         self._next_model += 1
 
     @property
@@ -287,7 +325,7 @@ class PDBxTrajectoryFile(object):
 
     def close(self):
         """Close the PDBx/mmCIF file"""
-        if self._mode == 'w' and self._open:
+        if self._mode == "w" and self._open:
             self._file.close()
         self._open = False
 
@@ -302,6 +340,6 @@ class PDBxTrajectoryFile(object):
 
     def __len__(self):
         "Number of frames in the file"
-        if str(self._mode) != 'r':
+        if str(self._mode) != "r":
             raise NotImplementedError('len() only available in mode="r" currently')
         return len(self._positions)

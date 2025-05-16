@@ -22,13 +22,13 @@
 
 import numpy as np
 
-from mdtraj.testing import eq
 from mdtraj import load
+from mdtraj.testing import eq
 
 
 def test_load(get_fn):
-    t = load(get_fn('test_hoomdxml.dcd'), top=get_fn('well-mixed.hoomdxml'))
-    top = load(get_fn('well-mixed.hoomdxml')).topology
+    t = load(get_fn("test_hoomdxml.dcd"), top=get_fn("well-mixed.hoomdxml"))
+    top = load(get_fn("well-mixed.hoomdxml")).topology
     eq(t.topology, top)
     eq(top.n_atoms, 6600)
     eq(top.n_bonds, 3200)
@@ -37,14 +37,15 @@ def test_load(get_fn):
 
 
 def test_load_no_chains(get_fn):
-    top = load(get_fn('no_chains.hoomdxml')).topology
+    top = load(get_fn("no_chains.hoomdxml")).topology
     eq(top.n_atoms, 3)
     eq(top.n_bonds, 0)
     eq(top.n_chains, top.n_atoms)
     eq(top.n_chains, top.n_residues)
 
+
 def test_load_no_ions(get_fn):
-    top = load(get_fn('no_ions.hoomdxml')).topology
+    top = load(get_fn("no_ions.hoomdxml")).topology
     eq(top.n_atoms, 1296)
     eq(top.n_bonds, 1152)
     eq(top.n_chains, 144)
@@ -52,8 +53,9 @@ def test_load_no_ions(get_fn):
     for bond in top.bonds:  # atoms bonded to adjacent atoms by index
         eq(bond[1].index - bond[0].index, 1)
 
+
 def test_correct_ordering(get_fn):
-    traj = load(get_fn('water-box.hoomdxml'))
+    traj = load(get_fn("water-box.hoomdxml"))
     sodium = traj.top.select("name 'Na'")
     sodium_slice = traj.atom_slice(sodium)
     assert np.isclose(sodium_slice.xyz, np.array([[[30, 30, 30]]])).all()

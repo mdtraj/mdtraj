@@ -3,7 +3,7 @@
 #define MATH_PATCH_H__
 #ifdef _MSC_VER
 #if _MSC_VER < 1900 // prior to vs2015
-//#pragma once 
+//#pragma once
 inline float roundf(float x) {
    return x >= 0.0f ? floorf(x + 0.5f) : ceilf(x - 0.5f);
 }

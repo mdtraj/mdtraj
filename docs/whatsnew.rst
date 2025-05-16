@@ -3,9 +3,149 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-Development
------------
+v1.10.3 (February 7, 2025)
+--------------------------
 
+- Pin numpy>=1.25 at run time, numpy>=2.0 at build time for numpy C-API #1960
+- Fix PDB overflow #1934
+- Allow `mdtraj.load` with `top=None` #1969
+- Preserve `chain_ids` for `to_openmm` and `from_openmm` #1951
+- Store and write formal charges from PDB/OpenMM #1967
+- Performance enhancement for `md.join` #1965
+- Sorting atom_indices in atom_slice #1938
+- Consolidate/update config files #1949
+- Mark a few distance tests as flaky #1972
+
+A total of 7 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Jeremy Leung
+- Matthew W. Thompson
+- Jessica A. Nash
+- Jan-Oliver Kapp-Joswig +
+- Ryan DiRisio +
+- Da Teng +
+- Pavel Buslaev +
+
+v1.10.2 (December 11, 2024)
+--------------------------
+
+- Add netCDF4 as a dependency in ``setup.py`` (#1944)
+- Support NumPy 2 (#1928)
+
+Authors
+~~~~~~~
+
+- Jeremy Leung
+- Jessica A. Nash
+
+v1.10.1 (October 17, 2024)
+--------------------------
+
+- Update RMSD module for Cython 3.0 (#1917)
+- Fix edge case with float rounding in angle computation (#1841)
+- Add atom selection via atom_indices to SASA computation (#1844)
+- ReadTheDocs migration (#1888)
+- Fix netCDF import (#1894)
+- Use standard library `ast.unparse` instead of third-party `astunparse` (#1898)
+- Allow appending to HDF5 files (#1899)
+- Remove deprecated `oldest-supported-numpy` (#1902)
+- Remove remaining uses of `six` (#1908)
+- Replace `xdrlib` with `mda_xdrlib` (#1911)
+- Add `mda-xdrlib` to `setup.py` (#1913)
+- Set up `versioneer` (#1909)
+- Remove `distutils` from tests (#1916)
+- Remove unused `xdrlib` import from Python layer (#1919)
+- Fix PDB "vmd convention" false-positive (#1904)
+
+A total of 11 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Charlie Laughton
+- Guillermo Pérez-Hernández
+- Sukrit Singh
+- Jeremy Leung
+- Sander Roet
+- Chris Jones+
+- David W.H. Swenson
+- Matthew W. Thompson
+- Robert Schütz+
+- Patrick Kunzmann
+- Augustin Zidek+
+
+v1.10.0 (May 30, 2024)
+----------------------
+
+- Remove TNG support (#1875)
+- Drop support for long-unsupported upstreams (#1838)
+- Drop `distutils` (#1834)
+- Lint codebase (#1874)
+- Allow `mdtraj.load()`` to read various non-standard PDB files (#1849)
+- Use netCDF4 as default in `NetCDFTrajectoryFile`, fallback to SciPy implementation (#1878)
+- Add dependabot for updating actions (#1865)
+
+A total of 4 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Jinzhe Zeng+
+- Matthew W. Thompson
+- Jeremy Leung
+- Jessica A. Nash+
+
+v1.9.9 (July 22, 2023)
+---------------------
+
+- Pin `Cython~=0.29` in `pyproject.toml` (#1801)
+- Remove "stale" bot (#1758)
+- Announce maintainer update (#1795)
+- Use `oldest-supported-numpy` in `pyproject.toml` (#1751)
+
+A total of 4 people contributed to this release, including three new contributors.
+People with a "+" by their names contributed a patch for the first time.
+
+In-Ho Yi+
+Sukrit Singh+
+Jeremy Leung+
+Matthew W. Thompson
+
+v1.9.8 (July 2, 2023)
+---------------------
+
+- Patch util_arm.h for M1 (#1694)
+- Avoid side effects in mdtraj.load (#1706)
+- Add PDB chainID support (#1715)
+- Remove imports from ``simtk`` namespace (#1698)
+- Implement reading and writing PDBx/mmCIF (#1718)
+- Fix `compute_inertia_tensor` docstring (#1721)
+- Fix typo in docs (#1725)
+- Adds lower-level `compute_distances_core` function (#1728)
+- Implement generic C code paths for non-accelerated architectures (#1727)
+- Add note about project maintinance status (#1738)
+- Force new residue when creating new chain (#1740)
+- Warn if ``atom_indices`` are not monotonically increasing (#1766)
+- Delete notes in issue-template by (#1778)
+- Fix hashing when unitcell data is not present (#1781)
+- Test on Python 3.11 (#1758)
+- Constrain GSD to version 2 (#1790)
+
+A total of 15 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Robert T. McGibbon
+- Sander Roet
+- Peter Eastman
+- Charlie Laughton
+- Christoph Klein
+- Luca Naef +
+- Jacob Lumpkins +
+- Ray A. Matsumoto
+- Matthew W. Thompson
+- Moritz Hoffmann +
+- German P. Barletta +
+- Masataka Yamauchi +
+- Samuel Lotz +
+- Toni G +
+- Bojun Liu +
 
 v1.9.7 (November 12, 2021)
 -----------------------

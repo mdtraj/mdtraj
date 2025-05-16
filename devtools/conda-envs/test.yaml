@@ -1,0 +1,20 @@
+name: mdtraj-test
+channels:
+  - conda-forge
+dependencies:
+  # Core
+  - cython =3
+  - gsd>=2.8
+  - netCDF4
+  - networkx
+  - numpy
+  - openmm
+  - pandas
+  - pyparsing
+  - pytables
+  - pytest
+  - pytest-rerunfailures
+  - pytest-xdist
+  - python
+  - scipy
+  - zlib

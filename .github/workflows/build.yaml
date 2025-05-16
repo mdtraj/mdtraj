@@ -1,0 +1,94 @@
+name: Build and upload to PyPI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 2" # every monday
+  release:
+    types:
+      - 'published'
+
+jobs:
+  build_wheels:
+    name: Build wheels for Python 3.${{ matrix.python }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["11", "12", "13"]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: setup windows, install zlib
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: bash
+        run:  vcpkg install zlib:x64-windows
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.23.3
+        env:
+          CIBW_SKIP: "pp* *-musllinux* *-muslinux* *-win32"
+          CIBW_BUILD_VERBOSITY: 1
+          CIBW_ARCHS_WINDOWS: auto
+          CIBW_ARCHS_MACOS: "universal2"
+          CIBW_ARCHS_LINUX: native
+          CIBW_BUILD: "cp3${{ matrix.python }}-*"
+          # delocate 0.11.0 has this issue:
+          # https://github.com/matthew-brett/delocate/issues/229
+          # https://github.com/matthew-brett/delocate/issues/227
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: "pip install 'delocate<0.11.0' && delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+          CIBW_TEST_COMMAND: >
+            python -c "import mdtraj; print(mdtraj.__version__)" &&
+            mdconvert -h &&
+            mdinspect -h
+        with:
+          package-dir: .
+          output-dir: wheelhouse
+          config-file: "{package}/pyproject.toml"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-wheels-${{ matrix.os }}-${{ matrix.python }}
+          path: ./wheelhouse/*.whl
+          overwrite: true
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.12'
+      - run: python -m pip install build
+      - name: Build sdist
+        run: python -m build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-sdist
+          path: dist/*.tar.gz
+          overwrite: true
+
+  upload_pypi:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/mdtraj
+    if: github.event_name == 'published'
+    permissions:
+        # IMPORTANT: this permission is mandatory for trusted publishing
+        id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          # unpacks default artifact into dist/
+          # if `name: artifact` is omitted, the action will create extra parent dir
+          name: artifact-*
+          path: dist
+          merge-multiple: true
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
