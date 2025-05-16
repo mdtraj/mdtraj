@@ -1149,5 +1149,6 @@ _AMBER_VARIANTS = {
 _PROTONATED_VARIANTS = {"DA": ["DAP"], "DC": ["DCP"]}
 
 _NUCLEIC_RESIDUES, _NUCLEIC_ACID_CODES = residues_and_codes(
-    variant_dicts=[_NUCLEIC_VARIANTS, _AMBER_VARIANTS, _PROTONATED_VARIANTS], create_codes=True
+    variant_dicts=[_NUCLEIC_VARIANTS, _AMBER_VARIANTS, _PROTONATED_VARIANTS],
+    create_codes=True,
 )
