@@ -48,13 +48,8 @@ import warnings
 
 import numpy as np
 
-from mdtraj.core.topology import Topology
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, in_units_of, open_maybe_zipped
-from mdtraj.utils.unitcell import (
-    box_vectors_to_lengths_and_angles,
-    lengths_and_angles_to_box_vectors,
-)
 
 __all__ = ["load_pdbx", "PDBxTrajectoryFile"]
 
@@ -242,10 +237,7 @@ class PDBxTrajectoryFile:
                 self._topology = pdbx.topology
             else:
                 self._topology = top
-            positions = [
-                pdbx.getPositions(asNumpy=True, frame=i)
-                for i in range(pdbx.getNumFrames())
-            ]
+            positions = [pdbx.getPositions(asNumpy=True, frame=i) for i in range(pdbx.getNumFrames())]
             self._positions = np.array(positions)
             if pdbx._unitcell_angles is not None and pdbx._unitcell_lengths is not None:
                 l1, l2, l3 = pdbx._unitcell_lengths
@@ -286,7 +278,10 @@ class PDBxTrajectoryFile:
             if unitcell_angles is not None:
                 unitcell_angles = unitcell_angles[0]
             PDBxFile.writeHeader(
-                topology, unitcell_lengths, unitcell_angles, self._file
+                topology,
+                unitcell_lengths,
+                unitcell_angles,
+                self._file,
             )
             self._next_model = 1
         if len(positions.shape) == 3:

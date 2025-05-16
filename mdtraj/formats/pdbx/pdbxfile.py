@@ -33,24 +33,24 @@ __author__ = "Peter Eastman"
 __version__ = "2.0"
 
 import sys
-import math
-import mdtraj._version
+import warnings
+from collections import defaultdict
 from datetime import date
-from .PdbxReader import PdbxReader
-from mdtraj.core.topology import Topology
-from mdtraj.core import topology
+
+import numpy as np
+
+import mdtraj._version
 from mdtraj.core import element as elem
+from mdtraj.core import topology
+from mdtraj.core.topology import Topology
 from mdtraj.utils import (
-    lengths_and_angles_to_box_vectors,
-    box_vectors_to_lengths_and_angles,
     open_maybe_zipped,
 )
-import numpy as np
-from collections import defaultdict
-import warnings
+
+from .PdbxReader import PdbxReader
 
 
-class PDBxFile(object):
+class PDBxFile:
     """PDBxFile parses a PDBx/mmCIF file and constructs a Topology and a set of atom positions from it."""
 
     def __init__(self, file):
@@ -154,9 +154,7 @@ class PDBxFile(object):
                     insertionCode = row[resInsertionCol]
                 if insertionCode in (".", "?"):
                     insertionCode = ""
-                if lastChainId != row[chainIdCol] or (
-                    altChainIdCol != -1 and lastAltChainId != row[altChainIdCol]
-                ):
+                if lastChainId != row[chainIdCol] or (altChainIdCol != -1 and lastAltChainId != row[altChainIdCol]):
                     # The start of a new chain.
                     chain = top.add_chain(row[chainIdCol])
                     lastChainId = row[chainIdCol]
@@ -200,17 +198,18 @@ class PDBxFile(object):
                     atom = atomTable[atomKey]
                 except KeyError:
                     raise ValueError(
-                        f"Unknown atom {row[atomNameCol]} in residue {row[resNameCol]} {row[resNumCol]} for model {model}"
+                        f"Unknown atom {row[atomNameCol]} in residue "
+                        f"{row[resNameCol]} {row[resNumCol]} for model {model}",
                     )
                 if atom.index != len(self._positions[modelIndex]):
                     raise ValueError(
-                        f"Atom {row[atomIdCol]} for model {model} does not match the order of atoms for model {models[0]}"
+                        f"Atom {row[atomIdCol]} for model {model} "
+                        f"does not match the order of atoms for model {models[0]}",
                     )
-            pos = (
-                np.array([float(row[xCol]), float(row[yCol]), float(row[zCol])]) / 10
-            )  # nanometers
+            pos = np.array([float(row[xCol]), float(row[yCol]), float(row[zCol])]) / 10  # nanometers
             self._positions[modelIndex].append(pos)
-        ## The atom positions read from the PDBx/mmCIF file.  If the file contains multiple frames, these are the positions in the first frame.
+        ## The atom positions read from the PDBx/mmCIF file.
+        ## If the file contains multiple frames, these are the positions in the first frame.
         self.positions = self._positions[0]
         self._numpyPositions = None
 
@@ -252,10 +251,7 @@ class PDBxFile(object):
                 # Only add bonds that don't already exist.
                 existingBonds = set(top.bonds)
                 for bond in connectBonds:
-                    if (
-                        bond not in existingBonds
-                        and (bond[1], bond[0]) not in existingBonds
-                    ):
+                    if bond not in existingBonds and (bond[1], bond[0]) not in existingBonds:
                         top.add_bond(bond[0], bond[1])
                         existingBonds.add(bond)
 
@@ -272,7 +268,7 @@ class PDBxFile(object):
             for row in bondData.getRowList():
                 bondOrder = None if bondOrderCol == -1 else row[bondOrderCol]
                 resBonds[row[resNameCol]].append(
-                    (row[atom1Col], row[atom2Col], bondOrder)
+                    (row[atom1Col], row[atom2Col], bondOrder),
                 )
 
             # Create the bonds.
@@ -315,11 +311,10 @@ class PDBxFile(object):
                 # If the bond already exists use the one containing the most information or the last one.
                 if unique_bonds[(i, j)].order is None:
                     unique_bonds[(i, j)].order = bond.order
-                elif (
-                    bond.order is not None and unique_bonds[(i, j)].order != bond.order
-                ):
+                elif bond.order is not None and unique_bonds[(i, j)].order != bond.order:
                     warnings.warn(
-                        f"Bond {bond.atom1}-{bond.atom2} order ({unique_bonds[(i,j)].order} will be replaced by {bond.order})"
+                        f"Bond {bond.atom1}-{bond.atom2} order ({unique_bonds[(i, j)].order} "
+                        f"will be replaced by {bond.order})",
                     )
                     unique_bonds[(i, j)].order = bond.order
 
@@ -327,7 +322,8 @@ class PDBxFile(object):
                     unique_bonds[(i, j)].type = bond.type
                 elif bond.type is not None and unique_bonds[(i, j)].type != bond.type:
                     warnings.warn(
-                        f"Bond {bond.atom1}-{bond.atom2} type ({unique_bonds[(i,j)].type} will be replaced by {bond.type})"
+                        f"Bond {bond.atom1}-{bond.atom2} type ({unique_bonds[(i, j)].type} "
+                        f"will be replaced by {bond.type})",
                     )
                     unique_bonds[(i, j)].type = bond.type
 
@@ -397,7 +393,12 @@ class PDBxFile(object):
                 PDBxFile.writeFile(topology, positions, output, keepIds, entry)
         else:
             PDBxFile.writeHeader(
-                topology, box_lengths, box_angles, file, entry, keepIds
+                topology,
+                box_lengths,
+                box_angles,
+                file,
+                entry,
+                keepIds,
             )
             PDBxFile.writeModel(topology, positions, file, keepIds=keepIds)
 
@@ -468,7 +469,6 @@ class PDBxFile(object):
             ):
                 bonds.append((atom1, atom2))
         if len(bonds) > 0:
-
             # Write the bond information.
 
             print("loop_", file=file)
@@ -568,16 +568,20 @@ class PDBxFile(object):
             make sure these are valid IDs that satisfy the requirements of the
             PDBx/mmCIF format.  Otherwise, the output file will be invalid.
         """
+        cif_line = (
+            "%s  %5d %-3s %-4s . %-4s %s ? %5s %s %10.4f %10.4f %10.4f  0.0  0.0  ?  ?  ?  ?  ?  .  %5s %4s %s %4s %5d"
+        )
+
         if len(list(topology.atoms)) != len(positions):
             raise ValueError("The number of positions must match the number of atoms")
         positions = np.asarray(positions) * 10  # convert to angstroms
         if np.isnan(positions).any():
             raise ValueError(
-                "Particle position is NaN.  For more information, see https://github.com/openmm/openmm/wiki/Frequently-Asked-Questions#nan"
+                "Particle position is NaN.  For more information, see https://github.com/openmm/openmm/wiki/Frequently-Asked-Questions#nan",
             )
         if np.isinf(positions).any():
             raise ValueError(
-                "Particle position is infinite.  For more information, see https://github.com/openmm/openmm/wiki/Frequently-Asked-Questions#nan"
+                "Particle position is infinite.  For more information, see https://github.com/openmm/openmm/wiki/Frequently-Asked-Questions#nan",
             )
         nonHeterogens = PDBxFile._standardResidues[:]
         nonHeterogens.remove("HOH")
@@ -606,9 +610,8 @@ class PDBxFile(object):
                         symbol = atom.element.symbol
                     else:
                         symbol = "?"
-                    line = "%s  %5d %-3s %-4s . %-4s %s ? %5s %s %10.4f %10.4f %10.4f  0.0  0.0  ?  ?  ?  ?  ?  .  %5s %4s %s %4s %5d"
                     print(
-                        line
+                        cif_line
                         % (
                             recordName,
                             atomIndex,
@@ -679,7 +682,11 @@ class PDBxFile(object):
         if len(PDBxFile._residueNameReplacements) == 0:
             tree = etree.parse(
                 os.path.join(
-                    os.path.dirname(__file__), "..", "pdb", "data", "pdbNames.xml"
+                    os.path.dirname(__file__),
+                    "..",
+                    "pdb",
+                    "data",
+                    "pdbNames.xml",
                 ),
             )
             allResidues = {}

@@ -23,7 +23,8 @@ See: http://pymmlib.sourceforge.net/
 """
 
 import re
-from .PdbxContainers import *
+
+from .PdbxContainers import DataCategory, DataContainer, DefinitionContainer
 
 
 class PdbxError(Exception):
@@ -55,7 +56,7 @@ class SyntaxError(Exception):
         return f"%ERROR - [at line: {self.lineNumber}] {self.text}"
 
 
-class PdbxReader(object):
+class PdbxReader:
     """
     PDBx reader for data files and dictionaries.
 
@@ -145,7 +146,7 @@ class PdbxReader(object):
         try:
             rWord = inWord[:i].lower()
             return rWord, self.__stateDict[rWord]
-        except:
+        except KeyError:
             return None, "ST_UNKNOWN"
 
     def __parser(self, tokenizer, containerList):
@@ -228,7 +229,7 @@ class PdbxReader(object):
                         curRow = curCategory[0]
                     except IndexError:
                         self.__syntaxError(
-                            "Internal index error accessing category data"
+                            "Internal index error accessing category data",
                         )
                         return
 
@@ -244,7 +245,7 @@ class PdbxReader(object):
 
                 if tCat is not None or (curQuotedString is None and curWord is None):
                     self.__syntaxError(
-                        f"Missing data for item _{curCatName}.{curAttName}"
+                        f"Missing data for item _{curCatName}.{curAttName}",
                     )
 
                 if curWord is not None:
@@ -254,7 +255,7 @@ class PdbxReader(object):
                     reservedWord, state = self.__getState(curWord)
                     if reservedWord is not None:
                         self.__syntaxError(
-                            f"Unexpected reserved word: {reservedWord}"
+                            f"Unexpected reserved word: {reservedWord}",
                         )
 
                     curRow.append(curWord)
@@ -272,7 +273,6 @@ class PdbxReader(object):
             # Process a loop_ declaration and associated data -
             #
             elif state == "ST_TABLE":
-
                 # The category name in the next curCatName,curAttName pair
                 #    defines the name of the category container.
                 curCatName, curAttName, curQuotedString, curWord = next(tokenizer)
@@ -292,7 +292,7 @@ class PdbxReader(object):
                     curContainer.append(curCategory)
                 except AttributeError:
                     self.__syntaxError(
-                        "loop_ declaration outside of data_ block or save_ frame"
+                        "loop_ declaration outside of data_ block or save_ frame",
                     )
                     return
 
@@ -319,7 +319,7 @@ class PdbxReader(object):
                             return
                         else:
                             self.__syntaxError(
-                                f"Unexpected reserved word after loop declaration: {reservedWord}"
+                                f"Unexpected reserved word after loop declaration: {reservedWord}",
                             )
 
                 # Read the table of data for this loop_ -
@@ -334,7 +334,7 @@ class PdbxReader(object):
                             curRow.append(curQuotedString)
 
                         curCatName, curAttName, curQuotedString, curWord = next(
-                            tokenizer
+                            tokenizer,
                         )
 
                     # loop_ data processing ends if -
@@ -423,7 +423,7 @@ class PdbxReader(object):
             r"(?:\s*#.*$)"
             "|"  # comments (dumped)
             r"(\S+)"  # unquoted words
-            r")"
+            r")",
         )
 
         fileIter = iter(ifh)
