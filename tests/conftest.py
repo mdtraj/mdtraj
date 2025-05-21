@@ -59,8 +59,8 @@ def gen_random_ptraj(request):
     request.cls.ptraj = md.Trajectory(xyz=xyz, topology=None)
 
     while True:
-        # RNG can give us unitcells with zero volume. This while loop
-        # guarantees we don't get that.
+        # RNG can give us unitcells with zero or imaginary volume.
+        # This `while` loop guarantees that we don't get that.
         request.cls.ptraj.unitcell_vectors = np.ascontiguousarray(
             rng.standard_normal((N_FRAMES, 3, 3)) + 2 * np.eye(3, 3),
             dtype=np.float32,
