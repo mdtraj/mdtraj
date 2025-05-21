@@ -23,6 +23,7 @@
 
 import os
 import warnings
+from collections import defaultdict, deque
 from collections.abc import Iterable
 from copy import deepcopy
 
@@ -377,11 +378,11 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     # Make the needed checks
     if len(set(extensions)) == 0:
         raise ValueError(
-            "No trajectories specified. " "filename_or_filenames was an empty list",
+            "No trajectories specified. filename_or_filenames was an empty list",
         )
     elif len(set(extensions)) > 1:
         raise TypeError(
-            "Each filename must have the same extension. " "Received: %s" % ", ".join(set(extensions)),
+            "Each filename must have the same extension. Received: %s" % ", ".join(set(extensions)),
         )
 
     # Pre-loads the topology from PDB for major performance boost
@@ -395,7 +396,11 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     top = topkwargs.pop("top", None)
     if top is None:
         top = filename_or_filenames[0]
-    kwargs["top"] = _parse_topology(top, **topkwargs)
+
+    # These topology formats do not support the 'top' keyword
+    # This is to prevent the loader from reading the topology twice.
+    if extension not in [".h5", ".hdf5", ".mol2"]:
+        kwargs["top"] = _parse_topology(top, **topkwargs)
 
     # get the right loader
     try:
@@ -615,10 +620,11 @@ def join(trajs, check_topology=True, discard_overlapping_frames=False):
         return list_trajs[0]
     else:
         joined_traj = list_trajs[0]
-        joined_traj = joined_traj.join(list_trajs[1:], 
-                                       check_topology=check_topology, 
-                                       discard_overlapping_frames=discard_overlapping_frames
-                                       )
+        joined_traj = joined_traj.join(
+            list_trajs[1:],
+            check_topology=check_topology,
+            discard_overlapping_frames=discard_overlapping_frames,
+        )
         return joined_traj
 
 
@@ -853,7 +859,7 @@ class Trajectory:
 
         if not len(vectors) == len(self):
             raise TypeError(
-                "unitcell_vectors must be the same length as " "the trajectory. you provided %s" % str(vectors),
+                "unitcell_vectors must be the same length as the trajectory. you provided %s" % str(vectors),
             )
 
         v1 = vectors[:, 0, :]
@@ -1147,7 +1153,7 @@ class Trajectory:
                 raise TypeError("You can only join Trajectory instances")
             if not all(self.n_atoms == o.n_atoms for o in other):
                 raise ValueError(
-                    "Number of atoms in self (%d) is not equal " "to number of atoms in other" % (self.n_atoms),
+                    "Number of atoms in self (%d) is not equal to number of atoms in other" % (self.n_atoms),
                 )
             if check_topology and not all(self.topology == o.topology for o in other):
                 raise ValueError("The topologies of the Trajectories are not the same")
@@ -1338,7 +1344,7 @@ class Trajectory:
 
         if (topology is not None) and (topology._numAtoms != self.n_atoms):
             raise ValueError(
-                f"Number of atoms in xyz ({self.n_atoms}) and " f"in topology ({topology._numAtoms}) don't match",
+                f"Number of atoms in xyz ({self.n_atoms}) and in topology ({topology._numAtoms}) don't match",
             )
 
     def openmm_positions(self, frame):
@@ -1746,7 +1752,7 @@ class Trajectory:
         if self._have_unitcell:
             if not np.all(self.unitcell_angles == 90):
                 raise ValueError(
-                    "Only rectilinear boxes can be saved to mdcrd files. " f"Your angles are {self.unitcell_angles}",
+                    f"Only rectilinear boxes can be saved to mdcrd files. Your angles are {self.unitcell_angles}",
                 )
 
         with MDCRDTrajectoryFile(
@@ -2200,6 +2206,53 @@ class Trajectory:
     def _have_unitcell(self):
         return self._unitcell_lengths is not None and self._unitcell_angles is not None
 
+    def _sort_bonds(self):
+        """Sort bonds for wrapping molecules correctly.
+
+        Each molecule is built in a continuous chain along the bonds, which
+        prevents atoms from being imaged to multiple distinct locations.
+        The returned list of bonds defines each molecule as a minimum spanning
+        tree of the molecular graph.
+
+        Returns
+        -------
+        sorted_bonds: np.ndarray, shape=(m,2)
+            Sorted array of bonds that define molecules as MSTs.
+        """
+        bonds = np.asarray(
+            [[b0.index, b1.index] for b0, b1 in self._topology.bonds],
+            dtype=np.int32,
+        )
+        # Build an adjacency list for the molecular graph
+        adj = defaultdict(list)
+        for bond in bonds:
+            atom1, atom2 = bond
+            adj[atom1].append(atom2)
+            adj[atom2].append(atom1)
+
+        sorted_bonds = []
+        visited = set()
+        queue = deque()
+
+        atoms = set(bonds.flatten())
+
+        # Iterate through all atoms to handle disconnected subgraphs (molecules)
+        for atom in atoms:
+            if atom not in visited:
+                # Start BFS traversal from this atom
+                visited.add(atom)
+                queue.append(atom)
+                while queue:
+                    current_atom = queue.popleft()
+                    for neighbor in adj[current_atom]:
+                        if neighbor not in visited:
+                            visited.add(neighbor)
+                            queue.append(neighbor)
+                            # Add the bond with the known atom at index 0
+                            sorted_bonds.append([current_atom, neighbor])
+
+        return np.array(sorted_bonds, dtype=np.int32)
+
     def make_molecules_whole(self, inplace=False, sorted_bonds=None):
         """Only make molecules whole
 
@@ -2229,11 +2282,7 @@ class Trajectory:
             result = self[:]
 
         if sorted_bonds is None:
-            sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray(
-                [[b0.index, b1.index] for b0, b1 in sorted_bonds],
-                dtype=np.int32,
-            )
+            sorted_bonds = self._sort_bonds()
 
         box = np.asarray(result.unitcell_vectors, order="c")
         _geometry.whole_molecules(result.xyz, box, sorted_bonds)
@@ -2308,11 +2357,7 @@ class Trajectory:
         else:
             result = self[:]
         if make_whole and sorted_bonds is None:
-            sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray(
-                [[b0.index, b1.index] for b0, b1 in sorted_bonds],
-                dtype=np.int32,
-            )
+            sorted_bonds = self._sort_bonds()
         elif not make_whole:
             sorted_bonds = None
 

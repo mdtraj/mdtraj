@@ -1,35 +1,5 @@
-## Note on current project status
 
-TLDR: MDTraj is currently undergoing a transition to new maintainers (the Folding@home consortium).
-Please bear with us as we slowly respond to issues and clean up.
-
-Hello!
-
-For anybody wondering, the MDTraj repo is currently undergoing a transition to new maintainers;
-The Folding@home consortium (@FoldingAtHome) will now be taking over support, maintainence
-and management of MDTraj with @xuhuihuang leading repo management, and @mattwthompson, @apayne97,
-and myself (@sukritsingh) helping to manage and maintain this repo more directly.
-
-Existing supporters, contributors, etc. are all welcome to contribute as much as they wish.
-The intention behind this transition is to ensure MDTraj receives continued support.
-
-As we are slowly transitioning to this new support, please bear with us as we slowly respond
-to issues, clean up any PRs, etc.
-
-I have opened a [Discussions page](https://github.com/mdtraj/mdtraj/discussions) on github
-for folks asking for help with code issues/not getting things working. Our hope is that the
-issues page will be for discrete bugs, feature requests, related discussions etc., but this
-is very flexible!
-
-Best,
-
-Sukrit Singh (@sukritsingh)
-
-July 6th, 2023
-
---------------------------------
-
-## MDTraj: an open-source library for analysis of molecular dynamics trajectories
+# MDTraj: an open-source library for analysis of molecular dynamics trajectories
 
 [![Build Status](https://github.com/mdtraj/mdtraj/actions/workflows/main.yaml/badge.svg)](https://github.com/mdtraj/mdtraj/actions)
 [![PyPI Version](https://badge.fury.io/py/mdtraj.svg)](https://pypi.python.org/pypi/mdtraj)
@@ -51,7 +21,7 @@ For details, see the [documentation](https://mdtraj.readthedocs.io/en/latest/). 
 take a look at the [GitHub issue tracker](https://github.com/mdtraj/mdtraj/issues)
 and/or the [Discussions](https://github.com/mdtraj/mdtraj/discussions) section.
 
-####  Citation
+##  Citation
 
 MDTraj is research software. If you make use of MDTraj in scientific publications, please cite it. The BibTeX reference is
 ```
@@ -67,8 +37,13 @@ MDTraj is research software. If you make use of MDTraj in scientific publication
 }
 ```
 
-#### License
+## License
 
 GNU LGPL version 2.1, or at your option a later version of the license.
 Various sub-portions of this library may be independently distributed under
 different licenses. See those files for their specific terms.
+
+## Project Status
+MDTraj is actively maintained by community members and representatives from Folding@Home, The Molecular Sciences Software Institute, and Open Force Field Initiative. We welcome new users and contributors!
+
+If you are interested in contributing, please check out the [repository issue tracker](https://github.com/mdtraj/mdtraj/issues). For feature ideas or general questions, please post in the [repository discussions](https://github.com/mdtraj/mdtraj/discussions).

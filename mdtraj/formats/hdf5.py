@@ -113,7 +113,7 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     """
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_lh5. " "you supplied %s" % type(filename),
+            "filename must be of type path-like for load_lh5. you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)
@@ -485,7 +485,7 @@ class HDF5TrajectoryFile:
         )
         if not value.dtype == dtype:
             raise ValueError(
-                "Constraints must be an array with dtype=%s. " "currently, I don't do any casting" % dtype,
+                "Constraints must be an array with dtype=%s. currently, I don't do any casting" % dtype,
             )
 
         if not hasattr(self._handle.root, "constraints"):
@@ -616,7 +616,7 @@ class HDF5TrajectoryFile:
                 )
             if not np.all(atom_slice >= 0):
                 raise ValueError(
-                    "The entries in atom_indices must be greater " "than or equal to zero",
+                    "The entries in atom_indices must be greater than or equal to zero",
                 )
 
         def get_field(name, slice, out_units, can_be_none=True):
@@ -1119,5 +1119,5 @@ class HDF5TrajectoryFile:
 def _check_mode(m, modes):
     if m not in modes:
         raise ValueError(
-            "This operation is only available when a file " 'is open in mode="%s".' % m,
+            'This operation is only available when a file is open in mode="%s".' % m,
         )

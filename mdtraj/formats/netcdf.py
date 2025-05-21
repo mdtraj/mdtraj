@@ -334,7 +334,7 @@ class NetCDFTrajectoryFile:
                 )
             if not np.all(atom_slice >= 0):
                 raise ValueError(
-                    "The entries in atom_indices must be greater " "than or equal to zero",
+                    "The entries in atom_indices must be greater than or equal to zero",
                 )
 
         if "coordinates" in self._handle.variables:
@@ -504,7 +504,7 @@ class NetCDFTrajectoryFile:
                 self._handle.variables["cell_angles"][frame_slice, :] = cell_angles
         except KeyError as e:
             raise ValueError(
-                "The file that you're trying to save to doesn't " "contain the field %s." % str(e),
+                "The file that you're trying to save to doesn't contain the field %s." % str(e),
             )
 
         # check for missing attributes

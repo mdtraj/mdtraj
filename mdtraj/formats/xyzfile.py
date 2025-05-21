@@ -89,7 +89,7 @@ def load_xyz(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_xyz. " "you supplied %s",
+            "filename must be of type path-like for load_xyz. you supplied %s",
         )
 
     topology = _parse_topology(top)
@@ -151,7 +151,7 @@ class XYZTrajectoryFile:
             self._is_open = True
         else:
             raise ValueError(
-                'mode must be one of "r" or "w". ' f'you supplied "{mode}"',
+                f'mode must be one of "r" or "w". you supplied "{mode}"',
             )
 
     def close(self):
@@ -230,7 +230,7 @@ class XYZTrajectoryFile:
         """
         if not self._mode == "r":
             raise ValueError(
-                "read() is only available when file is opened " 'in mode="r"',
+                'read() is only available when file is opened in mode="r"',
             )
 
         if n_frames is None:
@@ -310,7 +310,7 @@ class XYZTrajectoryFile:
 
         if not self._mode == "w":
             raise ValueError(
-                "write() is only available when file is opened " 'in mode="w"',
+                'write() is only available when file is opened in mode="w"',
             )
 
         if not types:

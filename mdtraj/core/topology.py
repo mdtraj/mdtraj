@@ -43,12 +43,15 @@
 ##############################################################################
 
 from __future__ import annotations
+
 import itertools
 import os
 import warnings
 import xml.etree.ElementTree as etree
 from collections import namedtuple
-from typing import TYPE_CHECKING, Callable, Iterable, Iterator, Literal, Sequence, cast
+from collections.abc import Iterable, Iterator, Sequence
+from typing import TYPE_CHECKING, Callable, cast
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -63,10 +66,11 @@ from mdtraj.utils import ensure_type, ilen, import_
 from mdtraj.utils.singleton import Singleton
 
 if TYPE_CHECKING:
-    import mdtraj as md
+    import networkx as nx
     import openmm  # type: ignore
     import pandas as pd
-    import networkx as nx
+
+    import mdtraj as md
 
 
 def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topology:
@@ -230,7 +234,7 @@ class Topology:
         return f"<{self._string_summary_basic()} at 0x{id(self):02x}>"
 
     def _string_summary_basic(self) -> str:
-        return "mdtraj.Topology with %d chains, %d residues, " "%d atoms, %d bonds" % (
+        return "mdtraj.Topology with %d chains, %d residues, %d atoms, %d bonds" % (
             self.n_chains,
             self.n_residues,
             self.n_atoms,
@@ -419,7 +423,7 @@ class Topology:
             if np.linalg.norm(angles - 90.0) > 1e-4:
                 raise (
                     ValueError(
-                        "Unitcell angles must be 90.0 to use " "in OpenMM topology.",
+                        "Unitcell angles must be 90.0 to use in OpenMM topology.",
                     )
                 )
 
@@ -451,7 +455,7 @@ class Topology:
 
         if not isinstance(value, app.Topology):
             raise TypeError(
-                "value must be an OpenMM Topology. " "You supplied a %s" % type(value),
+                "value must be an OpenMM Topology. You supplied a %s" % type(value),
             )
 
         out = cls()
@@ -516,7 +520,16 @@ class Topology:
 
         atoms = pd.DataFrame(
             data,
-            columns=["serial", "name", "element", "resSeq", "resName", "chainID", "segmentID", "formal_charge"],
+            columns=[
+                "serial",
+                "name",
+                "element",
+                "resSeq",
+                "resName",
+                "chainID",
+                "segmentID",
+                "formal_charge",
+            ],
         )
 
         # Using Int64 makes the data type integer
@@ -589,22 +602,23 @@ class Topology:
             atoms = atoms.astype({"formal_charge": "Int64"})
         except ValueError as e:
             raise ValueError(
-                f"Formal charge conversion failed: all values in 'formal_charge' must be integers or None. Original error: {e}"
+                "Formal charge conversion failed: all values in 'formal_charge' must be integers "
+                f"or None. Original error: {e}",
             )
 
         out = cls()
         if not isinstance(atoms, pd.DataFrame):
             raise TypeError(
-                "atoms must be an instance of pandas.DataFrame. " "You supplied a %s" % type(atoms),
+                "atoms must be an instance of pandas.DataFrame. You supplied a %s" % type(atoms),
             )
         if not isinstance(bonds, np.ndarray):
             raise TypeError(
-                "bonds must be an instance of numpy.ndarray. " "You supplied a %s" % type(bonds),
+                "bonds must be an instance of numpy.ndarray. You supplied a %s" % type(bonds),
             )
 
         if not np.all(np.arange(len(atoms)) == atoms.index):
             raise ValueError(
-                "atoms must be uniquely numbered " "starting from zero.",
+                "atoms must be uniquely numbered starting from zero.",
             )
 
         out._atoms = [None for i in range(len(atoms))]  # type: ignore
@@ -843,7 +857,10 @@ class Topology:
         return atom
 
     def delete_atom_by_index(self, index: int) -> None:
-        """Delete an Atom from the topology.
+        """Delete an Atom from the topology. 
+        Atom is removed and all subsequent atoms are reindexed.
+        All bonds involving this atom are likewise removed. This may result
+        in disconnected groups of atoms. 
 
         Parameters
         ----------
@@ -858,6 +875,9 @@ class Topology:
             )
         for i in range(index + 1, len(self._atoms)):
             self._atoms[i].index -= 1
+        
+        self._bonds = [bond for bond in self._bonds if a not in bond]
+        
         a.residue._atoms.remove(a)
         self._atoms.remove(a)
         self._numAtoms -= 1

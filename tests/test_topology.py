@@ -25,6 +25,7 @@ import pickle
 import tempfile
 
 import numpy as np
+import pandas as pd
 import pytest
 
 import mdtraj as md
@@ -94,22 +95,22 @@ def test_topology_openmm_boxes(get_fn):
     mmtop = traj.topology.to_openmm(traj=traj)
     mmtop.getUnitCellDimensions() / u.nanometer
 
+
 @needs_openmm
 def test_topology_openmm_formal_charges(get_fn):
     """Test to make sure charges are conserved when converting to/from openmm from PDB"""
     app = import_("openmm.app")
 
     #  This is a edited 1ply PDB with formal charges added to sodium ions
-    pdb = app.PDBFile(get_fn("1ply_charge.pdb")) 
+    pdb = app.PDBFile(get_fn("1ply_charge.pdb"))
 
     # Get the formal charges from the OpenMM topology
     try:
         formal_charges = [atom.formalCharge for atom in pdb.topology.atoms()]
     except TypeError:
-        # OpenMM < 7.4 doesn't have formal charges, 
+        # OpenMM < 7.4 doesn't have formal charges,
         # so we just return (skip the test)
         return
-
 
     # Convert to MDTraj topology
     mdtraj_topology = md.Topology.from_openmm(pdb.topology)
@@ -120,11 +121,12 @@ def test_topology_openmm_formal_charges(get_fn):
     # Check that the formal charges are the same
     eq(formal_charges, mdtraj_formal_charges)
 
-import pandas as pd
 
 def normalize_charge(charge):
     # Convert None to pandas NA, leave numbers intact
-    return pd.NA if charge is None else charge 
+    return pd.NA if charge is None else charge
+
+
 def test_topology_dataframe_formal_charges(get_fn):
     """
     Test that formal charges are maintained when converting a topology
@@ -147,7 +149,8 @@ def test_topology_dataframe_formal_charges(get_fn):
     converted_formal_charges = [atom.formal_charge for atom in topology_from_df.atoms]
 
     # Check that formal charges are conserved.
-    eq(normalized_original, converted_formal_charges)   
+    eq(normalized_original, converted_formal_charges)
+
 
 def test_topology_pandas(get_fn):
     topology = md.load(get_fn("native.pdb")).topology
@@ -427,3 +430,28 @@ def test_topology_join_keep_resSeq(get_fn):
 
     eq(out_resSeq_keepId_True, expected_resSeq_keepId_True)
     eq(out_resSeq_keepId_False, expected_resSeq_keepId_False)
+
+def test_delete_atom_by_index(get_fn):
+    """
+REMARK *                                                                              
+REMARK   DATE:     8/ 5/ 9     14:44:19      CREATED BY USER: mjw                     
+ATOM      1  N   ALA     1       0.024  -0.103  -0.101  1.00  0.00      AAL 
+ATOM      2  HT1 ALA     1       0.027  -1.132  -0.239  1.00  0.00      AAL 
+ATOM      3  HT2 ALA     1      -0.805   0.163   0.471  1.00  0.00      AAL 
+ATOM      4  HT3 ALA     1      -0.059   0.384  -1.019  1.00  0.00      AAL 
+ATOM      5  CA  ALA     1       1.247   0.375   0.636  1.00  0.00      AAL 
+...
+    """
+    index=0
+    top = md.load(get_fn("ala_ala_ala.pdb")).topology
+    n_bonds_original = top.n_bonds
+    n_atoms_original = top.n_atoms
+    atom_to_remove = top._atoms[index]
+    top.delete_atom_by_index(index)
+    assert top.n_atoms == n_atoms_original - 1
+    assert top.n_bonds == n_bonds_original - 4
+    assert all([atom_to_remove not in bond for bond in top.bonds])
+    assert eq(list(range(top.n_atoms)), [atom.index for atom in top.atoms]) 
+
+
+    

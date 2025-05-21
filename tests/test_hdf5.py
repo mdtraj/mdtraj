@@ -123,14 +123,13 @@ def test_write_units():
 
 def test_write_units2():
     from mdtraj.utils import unit
-    
 
     coordinates = unit.quantity.Quantity(
-        rng.standard_normal((4,10,3)),
+        rng.standard_normal((4, 10, 3)),
         unit.unit_definitions.angstroms,
     )
     velocities = unit.quantity.Quantity(
-        rng.standard_normal((4,10,3)),
+        rng.standard_normal((4, 10, 3)),
         unit.unit_definitions.angstroms / unit.unit_definitions.year,
     )
 
@@ -156,7 +155,7 @@ def test_write_units2():
 @needs_units
 def test_write_units_mismatch():
     velocities = units.Quantity(
-        rng.standard_normal((4,10,3)),
+        rng.standard_normal((4, 10, 3)),
         units.angstroms / units.picosecond,
     )
 
