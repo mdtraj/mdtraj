@@ -338,7 +338,7 @@ class HDF5TrajectoryFile:
                 chain_dict = {
                     "residues": [],
                     "index": int(chain.index),
-                    "chain_id": str(chain.chain_id) if chain.chain_id else None
+                    "chain_id": str(chain.chain_id) if chain.chain_id else None,
                 }
                 for residue in chain.residues:
                     residue_dict = {

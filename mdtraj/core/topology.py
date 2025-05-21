@@ -99,7 +99,7 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
         newChain = newTopology.add_chain()
         newChain.chain_id = chain.chain_id
         for residue in chain._residues:
-            resSeq = getattr(residue, 'resSeq', residue.index)
+            resSeq = getattr(residue, "resSeq", residue.index)
             newResidue = None
             for atom in residue._atoms:
                 if atom.index in atom_indices:
@@ -128,7 +128,7 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
 
     for bond in bondsiter:
         try:
-            atom1, atom2 =bond
+            atom1, atom2 = bond
             newTopology.add_bond(
                 old_atom_to_new_atom[atom1],
                 old_atom_to_new_atom[atom2],
@@ -347,13 +347,7 @@ class Topology:
         """
 
         def fasta(c):
-            return "".join(
-                [
-                    res.code
-                    for res in c.residues
-                    if res.is_protein and res.code is not None
-                ]
-            )
+            return "".join([res.code for res in c.residues if res.is_protein and res.code is not None])
 
         if chain is not None:
             if not isinstance(chain, int):
@@ -403,9 +397,7 @@ class Topology:
 
                     # If we are using a compatible version of OpenMM, add formal charge
                     try:
-                        a = out.addAtom(
-                            atom.name, element, r, formalCharge=atom.formal_charge
-                        )
+                        a = out.addAtom(atom.name, element, r, formalCharge=atom.formal_charge)
                     except (
                         TypeError
                     ):  # This will occur if the version of OpenMM does not support formal charge (version<=8.2)
@@ -479,9 +471,7 @@ class Topology:
                         element = elem.get_by_symbol(atom.element.symbol)
                     # If we are using a compatible version of OpenMM (>=8.2), add formal charge
                     if hasattr(atom, "formalCharge"):
-                        a = out.add_atom(
-                            atom.name, element, r, formal_charge=atom.formalCharge
-                        )
+                        a = out.add_atom(atom.name, element, r, formal_charge=atom.formalCharge)
                     else:
                         a = out.add_atom(atom.name, element, r)
                     atom_mapping[atom] = a
@@ -519,29 +509,20 @@ class Topology:
                 atom.residue.name,
                 atom.residue.chain.index,
                 atom.segment_id,
-                atom.formal_charge
+                atom.formal_charge,
             )
             for atom in self.atoms
         ]
 
         atoms = pd.DataFrame(
             data,
-            columns=[
-                "serial",
-                "name",
-                "element",
-                "resSeq",
-                "resName",
-                "chainID",
-                "segmentID",
-                "formal_charge"
-            ],
+            columns=["serial", "name", "element", "resSeq", "resName", "chainID", "segmentID", "formal_charge"],
         )
-        
+
         # Using Int64 makes the data type integer
         # but allows for NA values in the column
         atoms = atoms.astype({"formal_charge": "Int64"})
-                
+
         bonds: NDArray[np.float64] = np.zeros([len(self._bonds), 4], dtype=float)
         for index, bond in enumerate(self.bonds):
             if bond.order is None:
@@ -557,9 +538,7 @@ class Topology:
         return atoms, bonds
 
     @classmethod
-    def from_dataframe(
-        cls, atoms: pd.DataFrame, bonds: NDArray[np.float64] | None = None
-    ) -> Topology:
+    def from_dataframe(cls, atoms: pd.DataFrame, bonds: NDArray[np.float64] | None = None) -> Topology:
         """Create a mdtraj topology from a pandas data frame
 
         Parameters
@@ -602,7 +581,6 @@ class Topology:
         if "formal_charge" not in atoms.columns:
             atoms["formal_charge"] = None
 
-
         if "segmentID" not in atoms.columns:
             atoms["segmentID"] = ""
 
@@ -610,26 +588,26 @@ class Topology:
         try:
             atoms = atoms.astype({"formal_charge": "Int64"})
         except ValueError as e:
-            raise ValueError(f"Formal charge conversion failed: all values in 'formal_charge' must be integers or None. Original error: {e}")
+            raise ValueError(
+                f"Formal charge conversion failed: all values in 'formal_charge' must be integers or None. Original error: {e}"
+            )
 
         out = cls()
         if not isinstance(atoms, pd.DataFrame):
             raise TypeError(
-                "atoms must be an instance of pandas.DataFrame. "
-                "You supplied a %s" % type(atoms),
+                "atoms must be an instance of pandas.DataFrame. " "You supplied a %s" % type(atoms),
             )
         if not isinstance(bonds, np.ndarray):
             raise TypeError(
-                "bonds must be an instance of numpy.ndarray. "
-                "You supplied a %s" % type(bonds),
+                "bonds must be an instance of numpy.ndarray. " "You supplied a %s" % type(bonds),
             )
 
         if not np.all(np.arange(len(atoms)) == atoms.index):
             raise ValueError(
                 "atoms must be uniquely numbered " "starting from zero.",
             )
-    
-        out._atoms = [None for i in range(len(atoms))] # type: ignore
+
+        out._atoms = [None for i in range(len(atoms))]  # type: ignore
 
         c = None
         r = None
@@ -645,9 +623,7 @@ class Topology:
                 c = out.add_chain()
 
             if (
-                atom["resSeq"] != previous_resSeq
-                or atom["resName"] != previous_resName
-                or c.n_atoms == 0 #type: ignore
+                atom["resSeq"] != previous_resSeq or atom["resName"] != previous_resName or c.n_atoms == 0  # type: ignore
             ):
                 previous_resSeq = atom["resSeq"]
                 previous_resName = atom["resName"]
@@ -658,17 +634,17 @@ class Topology:
                     atom["resSeq"],
                     atom["segmentID"],
                 )
-                    
+
             a = Atom(
                 atom["name"],
                 elem.get_by_symbol(atom["element"]),
                 atom_index,
-                r, # type: ignore
+                r,  # type: ignore
                 serial=atom["serial"],
                 formal_charge=atom["formal_charge"],
             )
             out._atoms[atom_index] = a
-            r._atoms.append(a) # type: ignore
+            r._atoms.append(a)  # type: ignore
 
         for bond in bonds:
             ai1 = int(bond[0])
@@ -739,9 +715,7 @@ class Topology:
                 return False
 
             for r1, r2 in zip(c1.residues, c2.residues):
-                if (r1.index != r1.index) or (
-                    r1.name != r2.name
-                ):  # or (r1.resSeq != r2.resSeq):
+                if (r1.index != r1.index) or (r1.name != r2.name):  # or (r1.resSeq != r2.resSeq):
                     return False
                 if len(r1._atoms) != len(r2._atoms):
                     return False
@@ -785,9 +759,7 @@ class Topology:
         self._chains.append(chain)
         return chain
 
-    def add_residue(
-        self, name: str, chain: Chain, resSeq: int | None = None, segment_id: str = ""
-    ) -> Residue:
+    def add_residue(self, name: str, chain: Chain, resSeq: int | None = None, segment_id: str = "") -> Residue:
         """Create a new Residue and add it to the Topology.
 
         Parameters
@@ -1152,10 +1124,7 @@ class Topology:
                         else:
                             toResidue = i
                             toAtom = bond[1]
-                        if (
-                            fromAtom in atomMaps[fromResidue]
-                            and toAtom in atomMaps[toResidue]
-                        ):
+                        if fromAtom in atomMaps[fromResidue] and toAtom in atomMaps[toResidue]:
                             self.add_bond(
                                 atomMaps[fromResidue][fromAtom],
                                 atomMaps[toResidue][toAtom],
@@ -1287,38 +1256,22 @@ class Topology:
             atom_indices = np.arange(self.n_atoms)
         elif selection == "alpha":
             atom_indices = np.array(
-                [
-                    a.index
-                    for a in self.atoms
-                    if a.name == "CA" and a.residue.is_protein
-                ],
+                [a.index for a in self.atoms if a.name == "CA" and a.residue.is_protein],
                 dtype=np.integer,
             )
         elif selection == "minimal":
             atom_indices = np.array(
-                [
-                    a.index
-                    for a in self.atoms
-                    if a.name in ["CA", "CB", "C", "N", "O"] and a.residue.is_protein
-                ],
+                [a.index for a in self.atoms if a.name in ["CA", "CB", "C", "N", "O"] and a.residue.is_protein],
                 dtype=np.integer,
             )
         elif selection == "heavy":
             atom_indices = np.array(
-                [
-                    a.index
-                    for a in self.atoms
-                    if a.element != elem.hydrogen and a.residue.is_protein
-                ],
+                [a.index for a in self.atoms if a.element != elem.hydrogen and a.residue.is_protein],
                 dtype=np.integer,
             )
         elif selection == "water":
             atom_indices = np.array(
-                [
-                    a.index
-                    for a in self.atoms
-                    if a.name in ["O", "OW"] and a.residue.is_water
-                ],
+                [a.index for a in self.atoms if a.name in ["O", "OW"] and a.residue.is_water],
                 dtype=np.integer,
             )
         else:
@@ -1393,24 +1346,16 @@ class Topology:
         return pairs
 
     @classmethod
-    def _unique_pairs(
-        cls, a_indices: Iterator[int], b_indices: Iterator[int]
-    ) -> NDArray[np.integer]:
+    def _unique_pairs(cls, a_indices: Iterator[int], b_indices: Iterator[int]) -> NDArray[np.integer]:
         return np.array(
             list(
-                {
-                    (a, b) if a > b else (b, a)
-                    for a, b in itertools.product(a_indices, b_indices)
-                    if a != b
-                },
+                {(a, b) if a > b else (b, a) for a, b in itertools.product(a_indices, b_indices) if a != b},
             ),
             dtype=np.integer,
         )
 
     @classmethod
-    def _unique_pairs_mutually_exclusive(
-        cls, a_indices: list[int], b_indices: list[int]
-    ) -> NDArray[np.integer]:
+    def _unique_pairs_mutually_exclusive(cls, a_indices: list[int], b_indices: list[int]) -> NDArray[np.integer]:
         pairs = np.fromiter(
             itertools.chain.from_iterable(
                 itertools.product(a_indices, b_indices),
@@ -1477,8 +1422,7 @@ class Topology:
                     atom_molecule[atom_index] = molecule
                     while (
                         neighbor_stack[-1] < len(atom_bonds[atom_index])
-                        and atom_molecule[atom_bonds[atom_index][neighbor_stack[-1]]]
-                        != -1
+                        and atom_molecule[atom_bonds[atom_index][neighbor_stack[-1]]] != -1
                     ):
                         neighbor_stack[-1] += 1
                     if neighbor_stack[-1] < len(atom_bonds[atom_index]):
@@ -1544,9 +1488,7 @@ class Chain:
         Iterator over all Atoms in the Chain.
     """
 
-    def __init__(
-        self, index: int, topology: Topology, chain_id: str | None = None
-    ) -> None:
+    def __init__(self, index: int, topology: Topology, chain_id: str | None = None) -> None:
         """Construct a new Chain.  You should call add_chain() on the Topology instead of calling this directly."""
         # The index of the Chain within its Topology
         self.index: int = index
@@ -1661,9 +1603,7 @@ class Residue:
         A label for the segment to which this residue belongs
     """
 
-    def __init__(
-        self, name: str, index: int, chain: Chain, resSeq: int, segment_id: str = ""
-    ) -> None:
+    def __init__(self, name: str, index: int, chain: Chain, resSeq: int, segment_id: str = "") -> None:
         """Construct a new Residue.  You should call add_residue()
         on the Topology instead of calling this directly."""
         self.name: str = name
@@ -1829,10 +1769,7 @@ class Atom:
     @property
     def is_sidechain(self) -> bool:
         """Whether the atom is in the sidechain of a protein residue"""
-        return (
-            self.name not in {"C", "CA", "N", "O", "HA", "H"}
-            and self.residue.is_protein
-        )
+        return self.name not in {"C", "CA", "N", "O", "HA", "H"} and self.residue.is_protein
 
     @property
     def segment_id(self) -> str:
@@ -1944,9 +1881,7 @@ def float_to_bond_type(bond_float: float) -> Singleton | None:
     """
     all_bond_types = [Single, Double, Triple, Aromatic, Amide]
     for bond_type in all_bond_types:
-        if float(cast(Singleton, bond_type)) == float(
-            bond_float
-        ):  # explicitly cast to Singleton to avoid mypy error
+        if float(cast(Singleton, bond_type)) == float(bond_float):  # explicitly cast to Singleton to avoid mypy error
             return cast(Singleton, bond_type)
     return None
 
@@ -1980,12 +1915,8 @@ class Bond(namedtuple("Bond", ["atom1", "atom2"])):
         Must use __new__ constructor since this is an immutable class
         """
         bond = super().__new__(cls, atom1, atom2)
-        assert (
-            isinstance(type, Singleton) or type is None
-        ), "Type must be None or a Singleton"
-        assert (
-            order is None or 1 <= order <= 3
-        ), "Order must be int between 1 to 3 or None"
+        assert isinstance(type, Singleton) or type is None, "Type must be None or a Singleton"
+        assert order is None or 1 <= order <= 3, "Order must be int between 1 to 3 or None"
         bond.type = type
         bond.order = order
         return bond
