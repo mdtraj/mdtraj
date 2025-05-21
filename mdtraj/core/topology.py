@@ -101,6 +101,7 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
 
     for chain in topology._chains:
         newChain = newTopology.add_chain()
+        newChain.chain_id = chain.chain_id
         for residue in chain._residues:
             resSeq = getattr(residue, "resSeq", residue.index)
             newResidue = None
@@ -251,6 +252,7 @@ class Topology:
         out = Topology()
         for chain in self.chains:
             c = out.add_chain()
+            c.chain_id = chain.chain_id
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq, residue.segment_id)
                 for atom in residue.atoms:
@@ -855,10 +857,10 @@ class Topology:
         return atom
 
     def delete_atom_by_index(self, index: int) -> None:
-        """Delete an Atom from the topology. 
+        """Delete an Atom from the topology.
         Atom is removed and all subsequent atoms are reindexed.
         All bonds involving this atom are likewise removed. This may result
-        in disconnected groups of atoms. 
+        in disconnected groups of atoms.
 
         Parameters
         ----------
@@ -873,9 +875,9 @@ class Topology:
             )
         for i in range(index + 1, len(self._atoms)):
             self._atoms[i].index -= 1
-        
+
         self._bonds = [bond for bond in self._bonds if a not in bond]
-        
+
         a.residue._atoms.remove(a)
         self._atoms.remove(a)
         self._numAtoms -= 1
