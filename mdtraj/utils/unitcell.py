@@ -77,9 +77,14 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
     if np.all(alpha < 2 * np.pi) and np.all(beta < 2 * np.pi) and np.all(gamma < 2 * np.pi):
         warnings.warn("All your angles were less than 2*pi. Did you accidentally give me radians?")
 
+    all_angles = np.dstack((alpha, beta, gamma))[0]
+    if not np.all([check_valid_unitcell_angles(*row) for row in all_angles]):
+        warnings.warn('Not a valid box')
+
     alpha = alpha * np.pi / 180
     beta = beta * np.pi / 180
     gamma = gamma * np.pi / 180
+
 
     a = np.array([a_length, np.zeros_like(a_length), np.zeros_like(a_length)])
     b = np.array([b_length * np.cos(gamma), b_length * np.sin(gamma), np.zeros_like(b_length)])
@@ -224,3 +229,36 @@ def lengths_and_angles_to_tilt_factors(
     lz = np.sqrt(c_length**2 - xz**2 - yz**2)
 
     return np.array([lx, ly, lz, xy, xz, yz])
+
+
+def check_valid_unitcell_angles(alpha, beta, gamma):
+    """Functions to check to see if unitcell is a valid triclinic simulation box.
+    The unitcell angles are constrained to provide a positive volume,
+    as shown in eq(4) of 10.1107/S0108767310044296 or below
+
+    0 < alpha + beta + gamma < 360
+    2 * max(alpha, beta, gamma) < sum(alpha, beta, gamma)
+
+    Parameters
+    ----------
+    alpha : scalar or np.ndarray
+        angle between vectors **b** and **c**, in degrees.
+    beta : scalar or np.ndarray
+        angle between vectors **c** and **a**, in degrees.
+    gamma : scalar or np.ndarray
+        angle between vectors **a** and **b**, in degrees.
+
+    Returns
+    -------
+    bool
+        Valid unitcell angles
+    """
+    uca = [alpha, beta, gamma]
+    uca_max = np.max(uca)
+    uca_sum = np.sum(uca)
+
+    if (2*uca_max <= uca_sum) and not np.isclose(uca_max, uca_sum) and (0 < uca_sum < 360):
+        return True
+    else:
+        return False
+

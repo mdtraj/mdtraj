@@ -27,6 +27,7 @@ import numpy as np
 import pytest
 
 import mdtraj as md
+from mdtraj.utils.unitcell import check_valid_unitcell_angles
 
 flaky_pdb_dl = pytest.mark.flaky(rerun=3, reason="github-node flaky pdb dl")
 
@@ -41,12 +42,10 @@ def get_fn():
     return _get_fn
 
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def gen_random_ptraj(request):
-    """
-    Fixture for preparing a test trajectories with random coordinates
+    """Fixture for preparing a test trajectories with random coordinates
     and unitcell
-
     """
     request.cls.N_FRAMES = N_FRAMES = 20
     request.cls.N_ATOMS = N_ATOMS = 20
@@ -58,7 +57,14 @@ def gen_random_ptraj(request):
     request.cls.times = np.array([[i, 0] for i in range(N_FRAMES)[::2]], dtype=np.int32)
 
     request.cls.ptraj = md.Trajectory(xyz=xyz, topology=None)
-    request.cls.ptraj.unitcell_vectors = np.ascontiguousarray(
-        rng.standard_normal((N_FRAMES, 3, 3)) + 2 * np.eye(3, 3),
-        dtype=np.float32,
-    )
+
+    while True:
+        # RNG can give us unitcells with zero volume. This while loop
+        # guarantees we don't get that.
+        request.cls.ptraj.unitcell_vectors = np.ascontiguousarray(
+            rng.standard_normal((N_FRAMES, 3, 3)) + 2 * np.eye(3, 3),
+            dtype=np.float32,
+        )
+
+        if np.all([check_valid_unitcell_angles(*row) for row in request.cls.ptraj.unitcell_angles]):
+            break
