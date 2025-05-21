@@ -42,7 +42,7 @@ def get_fn():
     return _get_fn
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def gen_random_ptraj(request):
     """Fixture for preparing a test trajectories with random coordinates
     and unitcell
