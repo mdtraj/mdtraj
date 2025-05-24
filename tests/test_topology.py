@@ -453,3 +453,11 @@ def test_delete_atom_by_index(get_fn):
     assert top.n_bonds == n_bonds_original - 4
     assert all([atom_to_remove not in bond for bond in top.bonds])
     assert eq(list(range(top.n_atoms)), [atom.index for atom in top.atoms])
+
+
+def test_delete_atom_by_index_deprecated(get_fn):
+    top = md.load(get_fn("ala_ala_ala.pdb")).topology
+    with pytest.deprecated_call(): 
+        top.delete_atom_by_index(0)
+
+
