@@ -2059,7 +2059,7 @@ class Trajectory:
             # So we need to get the indices of all atoms not in atom_indices
             all_indices = np.arange(self.n_atoms)
             atom_indices = np.setdiff1d(all_indices, atom_indices)
-    
+
         xyz = np.array(self.xyz[:, sorted(atom_indices)], order="C")
         topology = None
         if self._topology is not None:
