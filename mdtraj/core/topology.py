@@ -861,11 +861,15 @@ class Topology:
         Atom is removed and all subsequent atoms are reindexed.
         All bonds involving this atom are likewise removed. This may result
         in disconnected groups of atoms.
-
+    
         Parameters
         ----------
         index : int
             The index of the atom to be removed.
+            
+        Deprecated
+        ----------
+        This method is deprecated. Please use `Trajectory.atom_slice` with `retain=False` instead.
         """
         a = self._atoms[index]
         assert a is not None, "Expected an Atom, but got None"
@@ -875,9 +879,9 @@ class Topology:
             )
         for i in range(index + 1, len(self._atoms)):
             self._atoms[i].index -= 1
-
+    
         self._bonds = [bond for bond in self._bonds if a not in bond]
-
+    
         a.residue._atoms.remove(a)
         self._atoms.remove(a)
         self._numAtoms -= 1
