@@ -58,6 +58,8 @@ from numpy.typing import NDArray
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import (
     _AMINO_ACID_CODES,
+    _NUCLEIC_ACID_CODES,
+    _NUCLEIC_RESIDUES,
     _PROTEIN_RESIDUES,
     _WATER_RESIDUES,
 )
@@ -350,8 +352,10 @@ class Topology:
            A FASTA string for each chain specified.
         """
 
-        def fasta(c):
-            return "".join([res.code for res in c.residues if res.is_protein and res.code is not None])
+        def fasta(chain_obj):
+            return "".join(
+                res.code for res in chain_obj.residues if (res.is_protein or res.is_nucleic) and res.code is not None
+            )
 
         if chain is not None:
             if not isinstance(chain, int):
@@ -1702,6 +1706,8 @@ class Residue:
         """Get the one letter code for this Residue"""
         if self.is_protein:
             return _AMINO_ACID_CODES[self.name]
+        elif self.is_nucleic:
+            return _NUCLEIC_ACID_CODES[self.name]
         else:
             return None
 
@@ -1720,7 +1726,7 @@ class Residue:
     @property
     def is_nucleic(self) -> bool:
         """Whether the residue is one found in nucleic acids."""
-        raise NotImplementedError
+        return self.name in _NUCLEIC_RESIDUES
 
     def __str__(self) -> str:
         return f"{self.name}{self.resSeq}"
