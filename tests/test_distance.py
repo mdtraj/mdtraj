@@ -112,7 +112,6 @@ class Test_Distance:
     def test_0p(self, gen_random_ptraj):
         a = compute_distances(self.ptraj, self.pairs, periodic=True, opt=True)
         b = compute_distances(self.ptraj, self.pairs, periodic=True, opt=False)
-        print(a, b)
         eq(a, b, decimal=3)
 
     def test_1p(self, gen_random_ptraj):
@@ -131,7 +130,6 @@ class Test_Distance:
     def test_3p(self, gen_random_ptraj):
         a = compute_distances(self.ptraj, self.pairs, periodic=True, opt=True)
         b = compute_displacements(self.ptraj, self.pairs, periodic=True, opt=True)
-        print(a, b)
         eq(a, np.sqrt(np.sum(np.square(b), axis=2)))
 
     def test_4(self, gen_random_ptraj):
