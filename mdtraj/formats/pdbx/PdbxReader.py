@@ -8,6 +8,9 @@
 #
 # 2012-09-02 - (jdw)  Revise tokenizer to better handle embedded quoting.
 #
+# 2025-05-15 - (cb) Changes docstrings to mdtraj format, exception handling. 
+#                   Replaces import directory from OpenMM.
+#                   Removes unused __tokenizerOrg
 ##
 """
 PDBx/mmCIF dictionary and data file parser.

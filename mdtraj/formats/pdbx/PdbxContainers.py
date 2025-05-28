@@ -14,6 +14,9 @@
 #                     confuse simple parsers.
 #   28-Jun-2013   jdw export remove method
 #   29-Jun-2013   jdw export remove row method
+#   30-Jun-2013   jdw export getRow method
+#   15-May-2025   cb changes xrange to range for Python 3 compatibility and uses f-strings.
+#                 Adds docstrings, exception handling
 ##
 """
 
