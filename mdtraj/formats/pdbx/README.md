@@ -10,3 +10,5 @@ OpenMM PDBx/mmCIF Reader adapted for MDTraj, with the following changes:
 - Replaced OpenMM's `Topology` class with MDTraj's native `Topology`, converting methods (e.g., `chains()`, `residues()`, `atoms()`) into properties (`chains`, `residues`, `atoms`) to align with MDTraj's API style.
 - Moved periodic box vectors and angles handling from `Topology` into `Trajectory`.
 - Adopted atom and residue name replacements consistent with MDTraj's existing PDB reader for uniform trajectory handling.
+- Adds bond deduplication to handle bonds explicitly defined in the file.
+- Adds custom tests
