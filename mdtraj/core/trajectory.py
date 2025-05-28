@@ -1437,7 +1437,7 @@ class Trajectory:
             ".trr": self.save_trr,
             ".pdb": self.save_pdb,
             ".pdb.gz": self.save_pdb,
-            # TODO: .pdb.gz is not supported yet
+            # TODO: .cif.gz is not supported yet
             ".dcd": self.save_dcd,
             ".h5": self.save_hdf5,
             ".nc": self.save_netcdf,
