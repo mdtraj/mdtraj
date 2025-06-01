@@ -168,7 +168,7 @@ class PDBxFile:
                     or (lastResId == "." and row[atomNameCol] in atomsInResidue)
                 ):
                     # The start of a new residue.
-                    resId = None if resNumCol == -1 else row[resNumCol]
+                    resId = None if resNumCol == -1 else int(row[resNumCol])
                     resIC = insertionCode
                     resName = row[resNameCol]
                     if resName in self._residueNameReplacements:
