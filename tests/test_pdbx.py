@@ -44,15 +44,7 @@ def test_convert(get_fn):
         ) as file:
             # Save it in PDBx/mmCIF format.
 
-            pdbx1 = PDBxTrajectoryFile(file.name, mode="w")
-            for i in range(traj1.n_frames):
-                pdbx1.write(
-                    traj1.xyz[i],
-                    traj1.topology,
-                    traj1.unitcell_lengths,
-                    traj1.unitcell_angles,
-                )
-            pdbx1.close()
+            traj1.save(file.name)
 
             # Load the PDBx/mmCIF file and make the result is identical.
 
@@ -270,8 +262,7 @@ def test_write_and_read_pdbx(tmp_path):
     unitcell_angles = np.array([[90.0, 90.0, 90.0]], dtype=np.float32)
     traj = Trajectory(xyz=xyz, topology=topology, unitcell_lengths=unitcell_lengths, unitcell_angles=unitcell_angles)
     out_path = tmp_path / "test_write.pdbx"
-    with PDBxTrajectoryFile(str(out_path), mode="w") as f:
-        f.write(traj.xyz[0], traj.topology, traj.unitcell_lengths, traj.unitcell_angles)
+    traj.save(str(out_path))
     loaded = load(str(out_path))
     assert_traj_fields_equal(traj, loaded)
     assert_bonds_equal(traj.topology, loaded.topology)
@@ -282,8 +273,7 @@ def test_write_and_read_pdbx_4py5(tmp_path, get_fn):
     cif_path = get_fn("4py5.cif")
     traj = load(cif_path)
     out_path = tmp_path / "test_write_4py5.pdbx"
-    with PDBxTrajectoryFile(str(out_path), mode="w") as f:
-        f.write(traj.xyz[0], traj.topology, traj.unitcell_lengths, traj.unitcell_angles)
+    traj.save(str(out_path))
     loaded = load(str(out_path))
     assert_traj_fields_equal(traj, loaded)
     assert len(bond_set(traj.topology)) == 2928

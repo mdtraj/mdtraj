@@ -365,6 +365,7 @@ class PDBxFile:
         file=sys.stdout,
         keepIds=False,
         entry=None,
+        bfactors=None,
     ):
         """Write a PDBx/mmCIF file containing a single model.
 
@@ -387,6 +388,9 @@ class PDBxFile:
             PDBx/mmCIF format.  Otherwise, the output file will be invalid.
         entry : str=None
             The entry ID to assign to the CIF file
+        bfactors : list=None
+            The list of B-factors to write for each atom. If None, all B-factors
+            will be set to 0.0. 
         """
         if isinstance(file, str):
             with open(file, "w") as output:
@@ -400,7 +404,7 @@ class PDBxFile:
                 entry,
                 keepIds,
             )
-            PDBxFile.writeModel(topology, positions, file, keepIds=keepIds)
+            PDBxFile.writeModel(topology, positions, file, keepIds=keepIds, bfactors=bfactors)
 
     @staticmethod
     def writeHeader(
@@ -549,7 +553,7 @@ class PDBxFile:
         print("_atom_site.pdbx_PDB_model_num", file=file)
 
     @staticmethod
-    def writeModel(topology, positions, file=sys.stdout, modelIndex=1, keepIds=False):
+    def writeModel(topology, positions, file=sys.stdout, modelIndex=1, keepIds=False, bfactors=None):
         """Write out a model to a PDBx/mmCIF file.
 
         Parameters
@@ -567,9 +571,12 @@ class PDBxFile:
             rather than generating new ones.  Warning: It is up to the caller to
             make sure these are valid IDs that satisfy the requirements of the
             PDBx/mmCIF format.  Otherwise, the output file will be invalid.
+        bfactors : list=None
+            The list of B-factors to write for each atom. If None, all B-factors
+            will be set to 0.0.
         """
         cif_line = (
-            "%s  %5d %-3s %-4s . %-4s %s ? %5s %s %10.4f %10.4f %10.4f  0.0  0.0  ?  ?  ?  ?  ?  .  %5s %4s %s %4s %5d"
+            "%s  %5d %-3s %-4s . %-4s %s ? %5s %s %10.4f %10.4f %10.4f 0.0 %5.2f  ?  ?  ?  ?  ?  .  %5s %4s %s %4s %5d"
         )
 
         if len(list(topology.atoms)) != len(positions):
@@ -587,6 +594,10 @@ class PDBxFile:
         nonHeterogens.remove("HOH")
         atomIndex = 1
         posIndex = 0
+        
+        if bfactors is None:
+            bfactors = [0.0] * len(positions)
+        
         for chainIndex, chain in enumerate(topology.chains):
             if keepIds:
                 chainName = chain.id
@@ -624,6 +635,7 @@ class PDBxFile:
                             coords[0],
                             coords[1],
                             coords[2],
+                            bfactors[posIndex],
                             resId,
                             res.name,
                             chainName,
@@ -634,6 +646,7 @@ class PDBxFile:
                     )
                     posIndex += 1
                     atomIndex += 1
+        print("#", file=file)
 
     ## TODO: Methods repeated in PDBTrajectoryFile. They should be moved to a common place.
     _standardResidues = [

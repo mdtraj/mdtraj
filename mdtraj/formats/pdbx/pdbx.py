@@ -254,7 +254,7 @@ class PDBxTrajectoryFile:
         else:
             raise ValueError("invalid mode: %s" % mode)
 
-    def write(self, positions, topology, unitcell_lengths=None, unitcell_angles=None):
+    def write(self, positions, topology, unitcell_lengths=None, unitcell_angles=None, bfactors=None):
         """Write one frame of a molecular dynamics trajectory to disk in PDBx/mmCIF format.
 
         Parameters
@@ -267,16 +267,14 @@ class PDBxTrajectoryFile:
             Lengths of the three unit cell vectors, or None for a non-periodic system
         unitcell_angles : {tuple, None}
             Angles between the three unit cell vectors, or None for a non-periodic system
+        bfactors : array_like, default=None, shape=(n_atoms,)
+            Save bfactors with cif file. Should contain a single number for each atom in the topology
         """
         if not self._mode == "w":
             raise ValueError("file not opened for writing")
         from .pdbxfile import PDBxFile
 
         if self._next_model == 0:
-            if unitcell_lengths is not None:
-                unitcell_lengths = unitcell_lengths[0]
-            if unitcell_angles is not None:
-                unitcell_angles = unitcell_angles[0]
             PDBxFile.writeHeader(
                 topology,
                 unitcell_lengths,
@@ -291,6 +289,7 @@ class PDBxTrajectoryFile:
             positions,  # nanometers
             self._file,
             self._next_model,
+            bfactors=bfactors,
         )
         self._next_model += 1
 
