@@ -390,7 +390,7 @@ class PDBxFile:
             The entry ID to assign to the CIF file
         bfactors : list=None
             The list of B-factors to write for each atom. If None, all B-factors
-            will be set to 0.0. 
+            will be set to 0.0.
         """
         if isinstance(file, str):
             with open(file, "w") as output:
@@ -594,10 +594,10 @@ class PDBxFile:
         nonHeterogens.remove("HOH")
         atomIndex = 1
         posIndex = 0
-        
+
         if bfactors is None:
             bfactors = [0.0] * len(positions)
-        
+
         for chainIndex, chain in enumerate(topology.chains):
             if keepIds:
                 chainName = chain.id

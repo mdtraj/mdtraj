@@ -28,7 +28,6 @@ import numpy as np
 from mdtraj import element, load
 from mdtraj.core.topology import Topology
 from mdtraj.core.trajectory import Trajectory
-from mdtraj.formats import PDBxTrajectoryFile
 from mdtraj.testing import eq
 
 
