@@ -8,63 +8,93 @@
 #
 # 2012-09-02 - (jdw)  Revise tokenizer to better handle embedded quoting.
 #
+# 2025-05-15 - (cb) Changes docstrings to mdtraj format, exception handling.
+#                   Replaces import directory from OpenMM.
+#                   Removes unused __tokenizerOrg
 ##
 """
 PDBx/mmCIF dictionary and data file parser.
 
-Acknowledgements:
+Acknowledgements
+---------------
+The tokenizer used in this module is modeled after the clever parser design
+used in the PyMMLIB package.
 
- The tokenizer used in this module is modeled after the clever parser design
- used in the PyMMLIB package.
- 
- PyMMLib Development Group
- Authors: Ethan Merritt: merritt@u.washington.ed  & Jay Painter: jay.painter@gmail.com
- See:  http://pymmlib.sourceforge.net/
-
+PyMMLib Development Group
+Authors: Ethan Merritt (merritt@u.washington.ed) & Jay Painter (jay.painter@gmail.com)
+See: http://pymmlib.sourceforge.net/
 """
-from __future__ import absolute_import
 
-import re,sys
-from openmm.app.internal.pdbx.reader.PdbxContainers import *
+import re
+
+from .PdbxContainers import DataCategory, DataContainer, DefinitionContainer
+
 
 class PdbxError(Exception):
-    """ Class for catch general errors 
     """
+    Class for catch general errors
+    """
+
     pass
 
+
 class SyntaxError(Exception):
-    """ Class for catching syntax errors 
     """
+    Exception raised for syntax errors in the mmCIF file.
+
+    Parameters
+    ----------
+    lineNumber : int
+        The line number where the error occurred.
+    text : str
+        Description of the syntax error.
+    """
+
     def __init__(self, lineNumber, text):
-        Exception.__init__(self)
+        super().__init__()
         self.lineNumber = lineNumber
         self.text = text
 
     def __str__(self):
-        return "%%ERROR - [at line: %d] %s" % (self.lineNumber, self.text)
+        return f"%ERROR - [at line: {self.lineNumber}] {self.text}"
 
 
-
-class PdbxReader(object):
-    """ PDBx reader for data files and dictionaries.
-    
+class PdbxReader:
     """
-    def __init__(self,ifh):
-        """  ifh - input file handle returned by open()
-        """
-        # 
-        self.__curLineNumber = 0        
-        self.__ifh=ifh
-        self.__stateDict={"data":   "ST_DATA_CONTAINER",
-                          "loop":   "ST_TABLE",
-                          "global": "ST_GLOBAL_CONTAINER",
-                          "save":   "ST_DEFINITION",
-                          "stop":   "ST_STOP"}
-        
+    PDBx reader for data files and dictionaries.
+
+    Parameters
+    ----------
+    ifh : file-like object
+        Input file handle returned by open().
+    """
+
+    def __init__(self, ifh):
+        """ifh - input file handle returned by open()"""
+        #
+        self.__curLineNumber = 0
+        self.__ifh = ifh
+        self.__stateDict = {
+            "data": "ST_DATA_CONTAINER",
+            "loop": "ST_TABLE",
+            "global": "ST_GLOBAL_CONTAINER",
+            "save": "ST_DEFINITION",
+            "stop": "ST_STOP",
+        }
+
     def read(self, containerList):
         """
-        Appends to the input list of definition and data containers.
-        
+        Parse the input file and append data and definition containers to containerList.
+
+        Parameters
+        ----------
+        containerList : list
+            List to which the parsed data and definition objects will be appended.
+
+        Raises
+        ------
+        PdbxError
+            If an unexpected error occurs during parsing.
         """
         self.__curLineNumber = 0
         try:
@@ -72,7 +102,7 @@ class PdbxReader(object):
         except StopIteration:
             pass
         except RuntimeError as err:
-            if 'StopIteration' not in str(err):
+            if "StopIteration" not in str(err):
                 raise
         else:
             raise PdbxError()
@@ -80,52 +110,78 @@ class PdbxReader(object):
     def __syntaxError(self, errText):
         raise SyntaxError(self.__curLineNumber, errText)
 
-    def __getContainerName(self,inWord):
-        """ Returns the name of the data_ or save_ container
+    def __getContainerName(self, inWord):
+        """
+        Returns the name of the data_ or save_ container
+
+        Parameters
+        ----------
+        inWord : str
+            A reserved word starting with 'data_' or 'save_'.
+
+        Returns
+        -------
+        str
+            The container name.
         """
         return str(inWord[5:]).strip()
-    
-    def __getState(self, inWord):
-        """Identifies reserved syntax elements and assigns an associated state.  
 
-           Returns: (reserved word, state)
-           where - 
-              reserved word -  is one of CIF syntax elements:
-                               data_, loop_, global_, save_, stop_
-              state - the parser state required to process this next section.
+    def __getState(self, inWord):
+        """
+        Identifies reserved syntax elements and assigns an associated state.
+
+        Parameters
+        ----------
+        inWord : str
+            Token representing a reserved syntax element.
+
+        Returns
+        -------
+        tuple
+            A tuple (reserved_word, state) where reserved_word is one of the CIF syntax elements
+            (e.g., data_, loop_, global_, save_, stop_) and state is the corresponding parser state
+            required to process the next section.
         """
         i = inWord.find("_")
         if i == -1:
-            return None,"ST_UNKNOWN"
+            return None, "ST_UNKNOWN"
 
         try:
-            rWord=inWord[:i].lower()            
+            rWord = inWord[:i].lower()
             return rWord, self.__stateDict[rWord]
-        except:
-            return None,"ST_UNKNOWN"
-        
+        except KeyError:
+            return None, "ST_UNKNOWN"
+
     def __parser(self, tokenizer, containerList):
-        """ Parser for PDBx data files and dictionaries.
+        """
+        Parse PDBx data files and dictionaries.
 
-            Input - tokenizer() reentrant method recognizing data item names (_category.attribute)
-                    quoted strings (single, double and multi-line semi-colon delimited), and unquoted
-                    strings.
+        This method iterates over the tokens from the tokenizer and populates the
+        containerList with data and definition objects.
 
-                    containerList -  list-type container for data and definition objects parsed from
-                                     from the input file.
+        Parameters
+        ----------
+        tokenizer : generator
+            A reentrant method recognizing data item names (_category.attribute)
+            quoted strings (single, double and multi-line semi-colon delimited),
+            and unquoted strings.
+        containerList : list
+            Container for data and definition objects parsed from the input file.
 
-            Return:
-                    containerList - is appended with data and definition objects - 
+        Raises
+        ------
+        SyntaxError
+            If any syntax error is encountered during parsing.
         """
         # Working container - data or definition
         curContainer = None
         #
-        # Working category container 
+        # Working category container
         categoryIndex = {}
         curCategory = None
         #
         curRow = None
-        state =  None
+        state = None
 
         # Find the first reserved word and begin capturing data.
         #
@@ -133,16 +189,16 @@ class PdbxReader(object):
             curCatName, curAttName, curQuotedString, curWord = next(tokenizer)
             if curWord is None:
                 continue
-            reservedWord, state  = self.__getState(curWord)
+            reservedWord, state = self.__getState(curWord)
             if reservedWord is not None:
                 break
-        
+
         while True:
             #
             #  Set the current state  -
             #
             #  At this point in the processing cycle we are expecting a token containing
-            #  either a '_category.attribute'  or a reserved word.  
+            #  either a '_category.attribute'  or a reserved word.
             #
             if curCatName is not None:
                 state = "ST_KEY_VALUE_PAIR"
@@ -150,16 +206,16 @@ class PdbxReader(object):
                 reservedWord, state = self.__getState(curWord)
             else:
                 self.__syntaxError("Miscellaneous syntax error")
-                return            
+                return
 
             #
-            # Process  _category.attribute  value assignments 
+            # Process  _category.attribute  value assignments
             #
             if state == "ST_KEY_VALUE_PAIR":
                 try:
                     curCategory = categoryIndex[curCatName]
                 except KeyError:
-                    # A new category is encountered - create a container and add a row 
+                    # A new category is encountered - create a container and add a row
                     curCategory = categoryIndex[curCatName] = DataCategory(curCatName)
 
                     try:
@@ -168,14 +224,16 @@ class PdbxReader(object):
                         self.__syntaxError("Category cannot be added to  data_ block")
                         return
 
-                    curRow = []                    
+                    curRow = []
                     curCategory.append(curRow)
                 else:
                     # Recover the existing row from the category
                     try:
-                        curRow = curCategory[0] 
+                        curRow = curCategory[0]
                     except IndexError:
-                        self.__syntaxError("Internal index error accessing category data")
+                        self.__syntaxError(
+                            "Internal index error accessing category data",
+                        )
                         return
 
                 # Check for duplicate attributes and add attribute to table.
@@ -185,20 +243,23 @@ class PdbxReader(object):
                 else:
                     curCategory.appendAttribute(curAttName)
 
-
                 # Get the data for this attribute from the next token
                 tCat, tAtt, curQuotedString, curWord = next(tokenizer)
 
                 if tCat is not None or (curQuotedString is None and curWord is None):
-                    self.__syntaxError("Missing data for item _%s.%s" % (curCatName,curAttName))
+                    self.__syntaxError(
+                        f"Missing data for item _{curCatName}.{curAttName}",
+                    )
 
                 if curWord is not None:
-                    # 
-                    # Validation check token for misplaced reserved words  -  
                     #
-                    reservedWord, state  = self.__getState(curWord)
+                    # Validation check token for misplaced reserved words  -
+                    #
+                    reservedWord, state = self.__getState(curWord)
                     if reservedWord is not None:
-                        self.__syntaxError("Unexpected reserved word: %s" % (reservedWord))
+                        self.__syntaxError(
+                            f"Unexpected reserved word: {reservedWord}",
+                        )
 
                     curRow.append(curWord)
 
@@ -215,10 +276,9 @@ class PdbxReader(object):
             # Process a loop_ declaration and associated data -
             #
             elif state == "ST_TABLE":
-
                 # The category name in the next curCatName,curAttName pair
                 #    defines the name of the category container.
-                curCatName,curAttName,curQuotedString,curWord = next(tokenizer)
+                curCatName, curAttName, curQuotedString, curWord = next(tokenizer)
 
                 if curCatName is None or curAttName is None:
                     self.__syntaxError("Unexpected token in loop_ declaration")
@@ -234,15 +294,17 @@ class PdbxReader(object):
                 try:
                     curContainer.append(curCategory)
                 except AttributeError:
-                    self.__syntaxError("loop_ declaration outside of data_ block or save_ frame")
+                    self.__syntaxError(
+                        "loop_ declaration outside of data_ block or save_ frame",
+                    )
                     return
 
                 curCategory.appendAttribute(curAttName)
 
-                # Read the rest of the loop_ declaration 
+                # Read the rest of the loop_ declaration
                 while True:
                     curCatName, curAttName, curQuotedString, curWord = next(tokenizer)
-                    
+
                     if curCatName is None:
                         break
 
@@ -252,19 +314,20 @@ class PdbxReader(object):
 
                     curCategory.appendAttribute(curAttName)
 
-
-                # If the next token is a 'word', check it for any reserved words - 
+                # If the next token is a 'word', check it for any reserved words -
                 if curWord is not None:
-                    reservedWord, state  = self.__getState(curWord)
+                    reservedWord, state = self.__getState(curWord)
                     if reservedWord is not None:
                         if reservedWord == "stop":
                             return
                         else:
-                            self.__syntaxError("Unexpected reserved word after loop declaration: %s" % (reservedWord))
-                    
-                # Read the table of data for this loop_ - 
+                            self.__syntaxError(
+                                f"Unexpected reserved word after loop declaration: {reservedWord}",
+                            )
+
+                # Read the table of data for this loop_ -
                 while True:
-                    curRow = []                    
+                    curRow = []
                     curCategory.append(curRow)
 
                     for tAtt in curCategory.getAttributeList():
@@ -273,9 +336,11 @@ class PdbxReader(object):
                         elif curQuotedString is not None:
                             curRow.append(curQuotedString)
 
-                        curCatName,curAttName,curQuotedString,curWord = next(tokenizer)
+                        curCatName, curAttName, curQuotedString, curWord = next(
+                            tokenizer,
+                        )
 
-                    # loop_ data processing ends if - 
+                    # loop_ data processing ends if -
 
                     # A new _category.attribute is encountered
                     if curCatName is not None:
@@ -286,31 +351,30 @@ class PdbxReader(object):
                         reservedWord, state = self.__getState(curWord)
                         if reservedWord is not None:
                             break
-                        
-                continue
 
+                continue
 
             elif state == "ST_DEFINITION":
                 # Ignore trailing unnamed saveframe delimiters e.g. 'save_'
-                sName=self.__getContainerName(curWord)
-                if (len(sName) > 0):
+                sName = self.__getContainerName(curWord)
+                if len(sName) > 0:
                     curContainer = DefinitionContainer(sName)
                     containerList.append(curContainer)
                     categoryIndex = {}
                     curCategory = None
 
-                curCatName,curAttName,curQuotedString,curWord = next(tokenizer)
+                curCatName, curAttName, curQuotedString, curWord = next(tokenizer)
 
             elif state == "ST_DATA_CONTAINER":
                 #
-                dName=self.__getContainerName(curWord)
+                dName = self.__getContainerName(curWord)
                 if len(dName) == 0:
-                    dName="unidentified"
+                    dName = "unidentified"
                 curContainer = DataContainer(dName)
                 containerList.append(curContainer)
                 categoryIndex = {}
                 curCategory = None
-                curCatName,curAttName,curQuotedString,curWord = next(tokenizer)
+                curCatName, curAttName, curQuotedString, curWord = next(tokenizer)
 
             elif state == "ST_STOP":
                 return
@@ -320,40 +384,50 @@ class PdbxReader(object):
                 containerList.append(curContainer)
                 categoryIndex = {}
                 curCategory = None
-                curCatName,curAttName,curQuotedString,curWord = next(tokenizer)
+                curCatName, curAttName, curQuotedString, curWord = next(tokenizer)
 
             elif state == "ST_UNKNOWN":
-                self.__syntaxError("Unrecogized syntax element: " + str(curWord))
+                self.__syntaxError(f"Unrecogized syntax element: {str(curWord)}")
                 return
-                
 
     def __tokenizer(self, ifh):
-        """ Tokenizer method for the mmCIF syntax file - 
+        """
+        Tokenize the mmCIF file.
 
-            Each return/yield from this method returns information about
-            the next token in the form of a tuple with the following structure.
+        This generator method yields tokens from the input file. Each yielded tuple
+        has the following structure:
+            (category name, attribute name, quoted string, unquoted word)
 
-            (category name, attribute name, quoted strings, words w/o quotes or white space)
+        Parameters
+        ----------
+        ifh : file-like object
+            The input file handle.
 
-            Differentiated the reqular expression to the better handle embedded quotes.
-
+        Yields
+        ------
+        tuple
+            A tuple containing:
+            - category name : str or None
+            - attribute name : str or None
+            - quoted string : str or None
+            - unquoted word : str or None
         """
         #
         # Regex definition for mmCIF syntax - semi-colon delimited strings are handled
         #                                     outside of this regex.
         mmcifRe = re.compile(
             r"(?:"
-
-             "(?:_(.+?)[.](\S+))"               "|"  # _category.attribute
-
-             "(?:['](.*?)(?:[']\s|[']$))"       "|"  # single quoted strings
-             "(?:[\"](.*?)(?:[\"]\s|[\"]$))"    "|"  # double quoted strings             
-
-             "(?:\s*#.*$)"                      "|"  # comments (dumped)
-
-             "(\S+)"                                 # unquoted words
-
-             ")")
+            r"(?:_(.+?)[.](\S+))"
+            "|"  # _category.attribute
+            r"(?:['](.*?)(?:[']\s|[']$))"
+            "|"  # single quoted strings
+            r"(?:[\"](.*?)(?:[\"]\s|[\"]$))"
+            "|"  # double quoted strings
+            r"(?:\s*#.*$)"
+            "|"  # comments (dumped)
+            r"(\S+)"  # unquoted words
+            r")",
+        )
 
         fileIter = iter(ifh)
 
@@ -365,7 +439,7 @@ class PdbxReader(object):
             # Dump comments
             if line.startswith("#"):
                 continue
-            
+
             # Gobble up the entire semi-colon/multi-line delimited string and
             #    and stuff this into the string slot in the return tuple
             #
@@ -385,7 +459,7 @@ class PdbxReader(object):
                 #
                 # Need to process the remainder of the current line -
                 line = line[1:]
-                #continue
+                # continue
 
             # Apply regex to the current line consolidate the single/double
             # quoted within the quoted string category
@@ -398,68 +472,5 @@ class PdbxReader(object):
                         qs = tgroups[3]
                     else:
                         qs = None
-                    groups = (tgroups[0],tgroups[1],qs,tgroups[4])
-                    yield groups
-
-    def __tokenizerOrg(self, ifh):
-        """ Tokenizer method for the mmCIF syntax file - 
-
-            Each return/yield from this method returns information about
-            the next token in the form of a tuple with the following structure.
-
-            (category name, attribute name, quoted strings, words w/o quotes or white space)
-
-        """
-        #
-        # Regex definition for mmCIF syntax - semi-colon delimited strings are handled
-        #                                     outside of this regex.
-        mmcifRe = re.compile(
-            r"(?:"
-
-             "(?:_(.+?)[.](\S+))"               "|"  # _category.attribute
-
-             "(?:['\"](.*?)(?:['\"]\s|['\"]$))" "|"  # quoted strings
-
-             "(?:\s*#.*$)"                      "|"  # comments (dumped)
-
-             "(\S+)"                                 # unquoted words
-
-             ")")
-
-        fileIter = iter(ifh)
-
-        ## Tokenizer loop begins here ---
-        while True:
-            line = next(fileIter)
-            self.__curLineNumber += 1
-
-            # Dump comments
-            if line.startswith("#"):
-                continue
-            
-            # Gobble up the entire semi-colon/multi-line delimited string and
-            #    and stuff this into the string slot in the return tuple
-            #
-            if line.startswith(";"):
-                mlString = [line[1:]]
-                while True:
-                    line = next(fileIter)
-                    self.__curLineNumber += 1
-                    if line.startswith(";"):
-                        break
-                    mlString.append(line)
-
-                # remove trailing new-line that is part of the \n; delimiter
-                mlString[-1] = mlString[-1].rstrip()
-                #
-                yield (None, None, "".join(mlString), None)
-                #
-                # Need to process the remainder of the current line -
-                line = line[1:]
-                #continue
-
-            ## Apply regex to the current line 
-            for it in mmcifRe.finditer(line):
-                groups = it.groups()
-                if groups != (None, None, None, None):
+                    groups = (tgroups[0], tgroups[1], qs, tgroups[4])
                     yield groups
