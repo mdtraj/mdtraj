@@ -13,4 +13,5 @@ OpenMM PDBx/mmCIF Reader adapted for MDTraj, with the following changes:
 - Modified unit cell handling to be consistent with mdtraj `Trajectory`.
 - Adds bond deduplication to handle bonds explicitly defined in the file.
 - Adds custom tests.
-- Adds bfactor support to pdbxfile
+- Fixes parsing cif as integer in `pdbxfile`
+- Adds bfactor support to `pdbxfile`
