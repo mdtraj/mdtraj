@@ -1805,6 +1805,8 @@ class Atom:
             return False
         if self.index != other.index:
             return False
+        if self.formal_charge != other.formal_charge:
+            return False
         if self.element.name != other.element.name:
             return False
         if self.residue.name != other.residue.name:
