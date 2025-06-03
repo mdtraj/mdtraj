@@ -81,9 +81,9 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
     if not np.all([check_valid_unitcell_angles(*row) for row in all_angles]):
         warnings.warn("Not a valid box")
 
-    alpha = alpha * np.pi / 180
-    beta = beta * np.pi / 180
-    gamma = gamma * np.pi / 180
+    alpha = np.radians(alpha)
+    beta = np.radians(beta)
+    gamma = np.radians(gamma)
 
     a = np.array([a_length, np.zeros_like(a_length), np.zeros_like(a_length)])
     b = np.array([b_length * np.cos(gamma), b_length * np.sin(gamma), np.zeros_like(b_length)])
@@ -174,9 +174,9 @@ def box_vectors_to_lengths_and_angles(a, b, c):
     gamma = np.arccos(np.einsum("...i, ...i", a, b) / (a_length * b_length), casting="safe")
 
     # convert to degrees
-    alpha = alpha * 180.0 / np.pi
-    beta = beta * 180.0 / np.pi
-    gamma = gamma * 180.0 / np.pi
+    alpha = np.degrees(alpha)
+    beta = np.degrees(beta)
+    gamma = np.degrees(gamma)
 
     return a_length, b_length, c_length, alpha, beta, gamma
 
@@ -252,11 +252,11 @@ def check_valid_unitcell_angles(alpha, beta, gamma):
     bool
         Valid unitcell angles
     """
-    uca = [alpha, beta, gamma]
+    uca = np.dstack((alpha, beta, gamma))[0]
     uca_max = np.max(uca)
     uca_sum = np.sum(uca)
 
-    if (2 * uca_max <= uca_sum) and not np.isclose(uca_max, uca_sum) and (0 < uca_sum < 360):
+    if (2 * uca_max <= uca_sum) and (not np.isclose(uca_max, uca_sum)) and (0 < uca_sum < 360):
         return True
     else:
         return False
