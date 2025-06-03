@@ -248,8 +248,8 @@ def check_valid_unitcell_angles(alpha, beta, gamma):
 
     Returns
     -------
-    results: bool or np.ndarray of bool
-        bool or an array of bool indicated whether input angles are valid
+    results: np.bool_ or np.ndarray of np.bool_
+        np.bool_ or an array of np.bool_ indicating whether input angles are valid
     """
     uca = np.dstack((alpha, beta, gamma))[0]
     uca_max = 2 * np.max(uca, axis=1)
