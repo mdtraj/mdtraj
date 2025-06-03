@@ -125,6 +125,7 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
                         atom.element,
                         newResidue,
                         serial=serial,
+                        formal_charge=atom.formal_charge,
                     )
                     old_atom_to_new_atom[atom] = newAtom
 
