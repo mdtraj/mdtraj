@@ -1,9 +1,9 @@
 ##############################################################################
 # MDTraj: A Python Library for Loading, Saving, and Manipulating
 #         Molecular Dynamics Trajectories.
-# Copyright 2012-2013 Stanford University and the Authors
+# Copyright 2012-2025 Stanford University and the Authors
 #
-# Authors: Robert McGibbon
+# Authors: Robert McGibbon, Jeremy MG Leung
 # Contributors:
 #
 # MDTraj is free software: you can redistribute it and/or modify
@@ -77,9 +77,8 @@ def lengths_and_angles_to_box_vectors(a_length, b_length, c_length, alpha, beta,
     if np.all(alpha < 2 * np.pi) and np.all(beta < 2 * np.pi) and np.all(gamma < 2 * np.pi):
         warnings.warn("All your angles were less than 2*pi. Did you accidentally give me radians?")
 
-    all_angles = np.dstack((alpha, beta, gamma))[0]
-    if not np.all([check_valid_unitcell_angles(*row) for row in all_angles]):
-        warnings.warn("Not a valid box")
+    if not np.all(check_valid_unitcell_angles(alpha, beta, gamma)):
+        warnings.warn("Certain frames have invalid unitcell box")
 
     alpha = np.radians(alpha)
     beta = np.radians(beta)
@@ -233,10 +232,10 @@ def lengths_and_angles_to_tilt_factors(
 def check_valid_unitcell_angles(alpha, beta, gamma):
     """Functions to check to see if unitcell is a valid triclinic simulation box.
     The unitcell angles are constrained to provide a positive volume,
-    as shown in eq(4) of 10.1107/S0108767310044296 or below
+    as shown in eq(4) of 10.1107/S0108767310044296 or below::
 
-    0 < alpha + beta + gamma < 360
-    2 * max(alpha, beta, gamma) < sum(alpha, beta, gamma)
+        0 < alpha + beta + gamma < 360
+        0 < sum(alpha, beta, gamma) - 2 * max(alpha, beta, gamma) < 360
 
     Parameters
     ----------
@@ -249,14 +248,34 @@ def check_valid_unitcell_angles(alpha, beta, gamma):
 
     Returns
     -------
-    bool
-        Valid unitcell angles
+    results: bool or np.ndarray of bool
+        bool or an array of bool indicated whether input angles are valid
     """
     uca = np.dstack((alpha, beta, gamma))[0]
-    uca_max = np.max(uca)
-    uca_sum = np.sum(uca)
+    uca_max = np.max(uca, axis=1)
+    uca_sum = np.sum(uca, axis=1)
 
-    if (2 * uca_max <= uca_sum) and (not np.isclose(uca_max, uca_sum)) and (0 < uca_sum < 360):
-        return True
+    results = np.ones(len(uca), dtype=bool)
+
+    # Checking it row-by-row
+    for row_idx, (row_max, row_sum) in enumerate(zip(uca_max, uca_sum)):
+        if np.all(uca[row_idx] == [90, 90, 90]):
+            # Quick fast-track for rectilinear unitcells
+            continue
+        elif (
+            not (0 < row_sum < 360)
+            or (np.isclose(0, row_sum))
+            or (np.isclose(360, row_sum))
+            or not (2 * row_max < row_sum)
+            or np.isclose(2 * row_max, row_sum)
+            or not (row_sum < 360 + 2 * row_max)
+            or np.isclose(row_sum, 2 * row_max + 360)
+        ):
+            # Already defaults to True, so only need to modify to False
+            results[row_idx] = False
+
+    # Output based on whether input is list/array-like or not
+    if isinstance(alpha, (list, np.ndarray)):
+        return results
     else:
-        return False
+        return results[0]
