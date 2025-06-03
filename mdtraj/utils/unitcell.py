@@ -232,7 +232,7 @@ def lengths_and_angles_to_tilt_factors(
 def check_valid_unitcell_angles(alpha, beta, gamma):
     """Functions to check to see if unitcell is a valid triclinic simulation box.
     The unitcell angles are constrained to provide a positive volume,
-    as shown in eq(4) of 10.1107/S0108767310044296 or below::
+    as shown in eq(4) of DOI:10.1107/S0108767310044296 or below::
 
         0 < alpha + beta + gamma < 360
         0 < sum(alpha, beta, gamma) - 2 * max(alpha, beta, gamma) < 360
