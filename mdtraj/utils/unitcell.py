@@ -252,7 +252,7 @@ def check_valid_unitcell_angles(alpha, beta, gamma):
         bool or an array of bool indicated whether input angles are valid
     """
     uca = np.dstack((alpha, beta, gamma))[0]
-    uca_max = np.max(uca, axis=1)
+    uca_max = 2 * np.max(uca, axis=1)
     uca_sum = np.sum(uca, axis=1)
 
     results = np.ones(len(uca), dtype=bool)
@@ -266,10 +266,10 @@ def check_valid_unitcell_angles(alpha, beta, gamma):
             not (0 < row_sum < 360)
             or (np.isclose(0, row_sum))
             or (np.isclose(360, row_sum))
-            or not (2 * row_max < row_sum)
-            or np.isclose(2 * row_max, row_sum)
-            or not (row_sum < 360 + 2 * row_max)
-            or np.isclose(row_sum, 2 * row_max + 360)
+            or not (row_max < row_sum)
+            or np.isclose(row_max, row_sum)
+            or not (row_sum < 360 + row_max)
+            or np.isclose(row_sum, row_max + 360)
         ):
             # Already defaults to True, so only need to modify to False
             results[row_idx] = False

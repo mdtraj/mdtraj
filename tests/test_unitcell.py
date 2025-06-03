@@ -32,7 +32,7 @@ class Test_Unitcell:
     def test_valid(self, alpha, beta, gamma):
         unitcell_angles = np.array([alpha, beta, gamma], dtype=np.float32)
 
-        assert check_valid_unitcell_angles(*unitcell_angles) is True
+        assert check_valid_unitcell_angles(*unitcell_angles)  # True
 
     @pytest.mark.parametrize(
         ["alpha", "beta", "gamma"],
@@ -43,7 +43,7 @@ class Test_Unitcell:
         """Test for invalid unitcell angles that˚"""
         unitcell_angles = np.array([alpha, beta, gamma], dtype=np.float32)
 
-        assert check_valid_unitcell_angles(*unitcell_angles) is False
+        assert not check_valid_unitcell_angles(*unitcell_angles)  # False
 
     def test_valid_array(self):
         unitcell_angles = np.array([[90.0, 90.0, 90], [70, 90, 30], [40, 20, 30]], dtype=np.float32)
