@@ -280,7 +280,7 @@ def test_write_and_read_pdbx_4py5(tmp_path, get_fn):
 
 
 def test_residue_selection_from_cif(get_fn):
-    """ Tests that residues are correctly parsed as integers in CIF files"""
+    """Tests that residues are correctly parsed as integers in CIF files"""
 
     # Load the trajectory from the test CIF file using the fixture
     cif_file = get_fn("8ddg.cif")
@@ -288,14 +288,13 @@ def test_residue_selection_from_cif(get_fn):
     top = traj.topology
 
     # Try selecting by residue number
-    residue_atoms = top.select('residue 67') # ResSeq based index  
-    resid_atoms = top.select('resid 0')      # 0-based index
+    residue_atoms = top.select("residue 67")  # ResSeq based index
+    resid_atoms = top.select("resid 0")  # 0-based index
 
     assert residue_atoms.size > 0, "Expected atoms in residue 67 from CIF"
-    assert len(residue_atoms) == len(resid_atoms), \
-        "Expected same number of atoms in residue 67 and resid 0"
-    assert np.array_equal(residue_atoms, resid_atoms), \
-        "Expected atoms in residue 67 and resid 0 to be the same"
+    assert len(residue_atoms) == len(resid_atoms), "Expected same number of atoms in residue 67 and resid 0"
+    assert np.array_equal(residue_atoms, resid_atoms), "Expected atoms in residue 67 and resid 0 to be the same"
     assert np.array_equal(
-        top.select('residue 68'), top.select('resid 1')
+        top.select("residue 68"),
+        top.select("resid 1"),
     ), "Expected atoms in residue 68 and resid 1 to be the same"
