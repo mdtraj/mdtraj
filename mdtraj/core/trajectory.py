@@ -1552,7 +1552,7 @@ class Trajectory:
                 types=[a.name for a in self.top.atoms],
             )
 
-    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True, header=True):
+    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True):
         """Save trajectory to RCSB PDB format
 
         Parameters
@@ -1568,10 +1568,6 @@ class Trajectory:
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.
-        header : bool, default=True
-            Include header in pdb. Useful if you want the extra output, but sometimes prevent
-            programs from running smoothly.
-
         """
         self._check_valid_unitcell()
 
@@ -1605,7 +1601,7 @@ class Trajectory:
                             f.distance_unit,
                         ),
                         self.topology,
-                        modelIndex=i,
+                        modelIndex=i if self.n_frames > 1 else None,
                         bfactors=bfactors[i],
                         unitcell_lengths=in_units_of(
                             self.unitcell_lengths[i],
@@ -1614,7 +1610,6 @@ class Trajectory:
                         ),
                         unitcell_angles=self.unitcell_angles[i],
                         ter=ter,
-                        header=header,
                     )
                 else:
                     f.write(
@@ -1624,10 +1619,9 @@ class Trajectory:
                             f.distance_unit,
                         ),
                         self.topology,
-                        modelIndex=i,
+                        modelIndex=i if self.n_frames > 1 else None,
                         bfactors=bfactors[i],
                         ter=ter,
-                        header=header,
                     )
 
     def save_xtc(self, filename, force_overwrite=True):
