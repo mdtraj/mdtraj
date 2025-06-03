@@ -258,7 +258,7 @@ class Topology:
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq, residue.segment_id)
                 for atom in residue.atoms:
-                    out.add_atom(atom.name, atom.element, r, serial=atom.serial)
+                    out.add_atom(atom.name, atom.element, r, serial=atom.serial, formal_charge=atom.formal_charge)
 
         for bond in self.bonds:
             a1, a2 = bond
@@ -318,12 +318,7 @@ class Topology:
                     out_resSeq += 1
                 r = out.add_residue(residue.name, c, out_resSeq, residue.segment_id)
                 for atom in residue.atoms:
-                    a = out.add_atom(
-                        atom.name,
-                        atom.element,
-                        r,
-                        serial=atom.serial,
-                    )
+                    a = out.add_atom(atom.name, atom.element, r, serial=atom.serial, formal_charge=atom.formal_charge)
                     atom_mapping[atom] = a
 
         for bond in other.bonds:
@@ -1779,7 +1774,7 @@ class Atom:
         # The not-necessarily-contiguous "serial" number from the PDB spec
         self.serial: int | None = serial
         # The formal charge of the atom
-        self.formal_charge: float | None = formal_charge
+        self.formal_charge: int | None = formal_charge
 
     @property
     def n_bonds(self) -> int:
