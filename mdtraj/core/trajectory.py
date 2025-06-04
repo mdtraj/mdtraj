@@ -43,6 +43,7 @@ from mdtraj.formats import (
     MDCRDTrajectoryFile,
     NetCDFTrajectoryFile,
     PDBTrajectoryFile,
+    PDBxTrajectoryFile,
     TRRTrajectoryFile,
     XTCTrajectoryFile,
     XYZTrajectoryFile,
@@ -90,6 +91,12 @@ _TOPOLOGY_EXTS = [
     ".arc",
     ".hdf5",
     ".gsd",
+    ".pdbx",
+    ".pdbx.gz",
+    ".cif",
+    ".cif.gz",
+    ".mmcif",
+    ".mmcif.gz",
 ]
 
 
@@ -166,7 +173,9 @@ def _parse_topology(top, **kwargs):
         topology = top
     elif isinstance(top, Trajectory):
         topology = top.topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".pdb", ".pdb.gz", ".pdbx", ".cif", ".h5", ".lh5"]):
+    elif isinstance(top, (str, os.PathLike)) and (
+        ext in [".pdb", ".pdb.gz", ".pdbx", ".pdbx.gz", ".cif", ".cif.gz", ".mmcif", ".mmcif.gz", ".h5", ".lh5"]
+    ):
         _traj = load_frame(top, 0, **kwargs)
         topology = _traj.topology
     elif isinstance(top, (str, os.PathLike)) and (ext in [".prmtop", ".parm7", ".prm7"]):
@@ -1429,6 +1438,10 @@ class Trajectory:
             ".trr": self.save_trr,
             ".pdb": self.save_pdb,
             ".pdb.gz": self.save_pdb,
+            ".cif": self.save_cif,
+            ".cif.gz": self.save_cif,
+            ".pdbx": self.save_cif,
+            ".pdbx.gz": self.save_cif,
             ".dcd": self.save_dcd,
             ".h5": self.save_hdf5,
             ".nc": self.save_netcdf,
@@ -1622,6 +1635,76 @@ class Trajectory:
                         modelIndex=i if self.n_frames > 1 else None,
                         bfactors=bfactors[i],
                         ter=ter,
+                    )
+
+    def save_cif(self, filename, force_overwrite=True, bfactors=None, ter=True, header=True):
+        """Save trajectory to PDBx/mmCIF format
+
+        Parameters
+        ----------
+        filename : path-like
+            Filesystem path in which to save the trajectory. Supports .cif and .cif.gz extensions.
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if it's already there.
+        bfactors : array_like, default=None, shape=(n_frames, n_atoms) or (n_atoms,)
+            Save bfactors with cif file. If the array is two dimensional it should
+            contain a bfactor for each atom in each frame of the trajectory.
+            Otherwise, the same bfactor will be saved in each frame.
+        ter : bool, default=True
+            Include TER lines in cif to indicate end of a chain of residues. This is useful
+            if you need to keep atom numbers consistent.
+        header : bool, default=True
+            Include header in cif. Useful if you want the extra output, but sometimes prevent
+            programs from running smoothly.
+        """
+        self._check_valid_unitcell()
+
+        if bfactors is not None:
+            if len(np.array(bfactors).shape) == 1:
+                if len(bfactors) != self.n_atoms:
+                    raise ValueError(
+                        "bfactors %s should be shaped as (n_frames, n_atoms) or (n_atoms,)"
+                        % str(np.array(bfactors).shape),
+                    )
+                bfactors = [bfactors] * self.n_frames
+
+            else:
+                if np.array(bfactors).shape != (self.n_frames, self.n_atoms):
+                    raise ValueError(
+                        "bfactors %s should be shaped as (n_frames, n_atoms) or (n_atoms,)"
+                        % str(np.array(bfactors).shape),
+                    )
+        else:
+            bfactors = [None] * self.n_frames
+
+        # Support for .cif and .cif.gz is handled by PDBxTrajectoryFile
+        with PDBxTrajectoryFile(filename, "w", force_overwrite=force_overwrite) as f:
+            for i in range(self.n_frames):
+                if self._have_unitcell:
+                    f.write(
+                        in_units_of(
+                            self._xyz[i],
+                            Trajectory._distance_unit,
+                            f.distance_unit,
+                        ),
+                        self.topology,
+                        unitcell_lengths=in_units_of(
+                            self.unitcell_lengths[i],
+                            Trajectory._distance_unit,
+                            f.distance_unit,
+                        ),
+                        unitcell_angles=self.unitcell_angles[i],
+                        bfactors=bfactors[i],
+                    )
+                else:
+                    f.write(
+                        in_units_of(
+                            self._xyz[i],
+                            Trajectory._distance_unit,
+                            f.distance_unit,
+                        ),
+                        self.topology,
+                        bfactors=bfactors[i],
                     )
 
     def save_xtc(self, filename, force_overwrite=True):
