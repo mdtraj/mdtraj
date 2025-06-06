@@ -1083,13 +1083,12 @@ void close_file_read(void *v) {
 
 
 dcdhandle* open_dcd_write(const char *path, const char *filetype,
-    int natoms) {
+    int natoms, const int with_unitcell) {
   dcdhandle *dcd;
   fio_fd fd;
   int rc;
   int istart, nsavc;
   double delta;
-  int with_unitcell;
   int charmm;
 
   if (fio_open(path, FIO_WRITE, &fd) < 0) {
@@ -1105,17 +1104,14 @@ dcdhandle* open_dcd_write(const char *path, const char *filetype,
   nsavc = 1;              /* number of timesteps between written DCD frames */
   delta = 1.0;            /* length of a timestep                           */
 
-  if (getenv("VMDDCDWRITEXPLORFORMAT") != NULL) {
-    with_unitcell = 0;      /* no unit cell info */
-    charmm = DCD_IS_XPLOR;  /* X-PLOR format */
-    printf("dcdplugin) WARNING: Writing DCD file in X-PLOR format, \n");
-    printf("dcdplugin) WARNING: unit cell information will be lost!\n");
-  } else {
-    with_unitcell = 1;      /* contains unit cell infor (Charmm format) */
-    charmm = DCD_IS_CHARMM; /* charmm-formatted DCD file                */
-    if (with_unitcell)
+  /* Always use CHARMM formatted DCD file.
+     Original VMD code uses an environment variable to determine format (and
+     also the with_unitcell parameter) but we will always use the CHARMM
+     format and allow the caller to specify with_unitcell
+  */
+  charmm = DCD_IS_CHARMM;
+  if (with_unitcell)
       charmm |= DCD_HAS_EXTRA_BLOCK;
-  }
 
   rc = write_dcdheader(dcd->fd, "Created by DCD plugin", natoms,
                        istart, nsavc, delta, with_unitcell, charmm);
