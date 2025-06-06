@@ -322,6 +322,11 @@ class HDF5TrajectoryFile:
         """
         _check_mode(self.mode, ("w", "a"))
 
+        # Exiting quietly if `topology = None`
+        # This prevents an ugly openmm import error/process
+        if topology_object is None:
+            return
+
         # we want to be able to handle the openmm Topology object
         # here too, so if it's not an mdtraj topology we'll just guess
         # that it's probably an openmm topology and convert
