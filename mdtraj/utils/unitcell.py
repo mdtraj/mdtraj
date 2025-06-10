@@ -259,23 +259,25 @@ def check_valid_unitcell_angles(alpha, beta, gamma):
 
     # Checking it row-by-row
     for row_idx, (row_max, row_sum) in enumerate(zip(uca_max, uca_sum)):
-        if np.all(uca[row_idx] == [90, 90, 90]):
+        if np.allclose(uca[row_idx], [90, 90, 90]):
             # Quick fast-track for rectilinear unitcells
             continue
         elif (
             not (0 < row_sum < 360)
-            or (np.isclose(0, row_sum))
-            or (np.isclose(360, row_sum))
             or not (row_max < row_sum)
-            or np.isclose(row_max, row_sum)
             or not (row_sum < 360 + row_max)
+            or np.isclose(0, row_sum)  # Check if angle sum's at the range edges
+            or np.isclose(360, row_sum)
+            or np.isclose(row_max, row_sum)
             or np.isclose(row_sum, row_max + 360)
         ):
             # Already defaults to True, so only need to modify to False
             results[row_idx] = False
 
-    # Output based on whether input is list/array-like or not
-    if isinstance(alpha, (list, np.ndarray)):
-        return results
-    else:
+    # Output based on whether input is float/int/scalar or list/array-like
+    if isinstance(alpha, (np.floating, float, np.integer, int)):
+        # Return just the True/False if input is scalar
         return results[0]
+    else:
+        # Return the whole array, assuming input is a list/array-like
+        return results
