@@ -308,7 +308,7 @@ metadata = dict(
     url="http://mdtraj.org",
     download_url="https://github.com/rmcgibbo/mdtraj/releases/latest",
     platforms=["Linux", "Mac OS-X", "Unix", "Windows"],
-    python_requires=">=3.10",
+    python_requires=">=3.11",
     classifiers=CLASSIFIERS.splitlines(),
     packages=find_packages(),
     cmdclass={**versioneer.get_cmdclass(), "build_ext": build_ext},
