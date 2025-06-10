@@ -58,6 +58,8 @@ from numpy.typing import NDArray
 from mdtraj.core import element as elem
 from mdtraj.core.residue_names import (
     _AMINO_ACID_CODES,
+    _NUCLEIC_ACID_CODES,
+    _NUCLEIC_RESIDUES,
     _PROTEIN_RESIDUES,
     _WATER_RESIDUES,
 )
@@ -123,6 +125,7 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
                         atom.element,
                         newResidue,
                         serial=serial,
+                        formal_charge=atom.formal_charge,
                     )
                     old_atom_to_new_atom[atom] = newAtom
 
@@ -256,7 +259,7 @@ class Topology:
             for residue in chain.residues:
                 r = out.add_residue(residue.name, c, residue.resSeq, residue.segment_id)
                 for atom in residue.atoms:
-                    out.add_atom(atom.name, atom.element, r, serial=atom.serial)
+                    out.add_atom(atom.name, atom.element, r, serial=atom.serial, formal_charge=atom.formal_charge)
 
         for bond in self.bonds:
             a1, a2 = bond
@@ -316,12 +319,7 @@ class Topology:
                     out_resSeq += 1
                 r = out.add_residue(residue.name, c, out_resSeq, residue.segment_id)
                 for atom in residue.atoms:
-                    a = out.add_atom(
-                        atom.name,
-                        atom.element,
-                        r,
-                        serial=atom.serial,
-                    )
+                    a = out.add_atom(atom.name, atom.element, r, serial=atom.serial, formal_charge=atom.formal_charge)
                     atom_mapping[atom] = a
 
         for bond in other.bonds:
@@ -350,8 +348,10 @@ class Topology:
            A FASTA string for each chain specified.
         """
 
-        def fasta(c):
-            return "".join([res.code for res in c.residues if res.is_protein and res.code is not None])
+        def fasta(chain_obj):
+            return "".join(
+                res.code for res in chain_obj.residues if (res.is_protein or res.is_nucleic) and res.code is not None
+            )
 
         if chain is not None:
             if not isinstance(chain, int):
@@ -1216,7 +1216,7 @@ class Topology:
         fmt_string = "[atom.index for atom in topology.atoms if {condition}]"
         return fmt_string.format(condition=condition)
 
-    def select(self, selection_string: str) -> NDArray[np.integer]:
+    def select(self, selection_string: str) -> NDArray[int]:
         """Execute a selection against the topology
 
         Parameters
@@ -1246,7 +1246,7 @@ class Topology:
     def select_atom_indices(
         self,
         selection: str = "minimal",
-    ) -> NDArray[np.integer]:
+    ) -> NDArray[int]:
         """Get the indices of biologically-relevant groups by name.
 
         Parameters
@@ -1277,22 +1277,22 @@ class Topology:
         elif selection == "alpha":
             atom_indices = np.array(
                 [a.index for a in self.atoms if a.name == "CA" and a.residue.is_protein],
-                dtype=np.integer,
+                dtype=int,
             )
         elif selection == "minimal":
             atom_indices = np.array(
                 [a.index for a in self.atoms if a.name in ["CA", "CB", "C", "N", "O"] and a.residue.is_protein],
-                dtype=np.integer,
+                dtype=int,
             )
         elif selection == "heavy":
             atom_indices = np.array(
                 [a.index for a in self.atoms if a.element != elem.hydrogen and a.residue.is_protein],
-                dtype=np.integer,
+                dtype=int,
             )
         elif selection == "water":
             atom_indices = np.array(
                 [a.index for a in self.atoms if a.name in ["O", "OW"] and a.residue.is_water],
-                dtype=np.integer,
+                dtype=int,
             )
         else:
             raise ValueError(
@@ -1307,9 +1307,9 @@ class Topology:
 
     def select_pairs(
         self,
-        selection1: str | NDArray[np.integer] | Sequence[int] | None = None,
-        selection2: str | NDArray[np.integer] | Sequence[int] | None = None,
-    ) -> NDArray[np.integer]:
+        selection1: str | NDArray[int] | Sequence[int] | None = None,
+        selection2: str | NDArray[int] | Sequence[int] | None = None,
+    ) -> NDArray[int]:
         """Generate unique pairs of atom indices.
 
         If a selection is a string, it will be resolved using the atom selection
@@ -1334,7 +1334,7 @@ class Topology:
         else:  # ...or use a provided array of indices.
             a_indices = ensure_type(
                 selection1,
-                dtype=np.integer,
+                dtype=int,
                 ndim=1,
                 name="a_indices",
                 warn_on_cast=False,
@@ -1344,7 +1344,7 @@ class Topology:
         else:
             b_indices = ensure_type(
                 selection2,
-                dtype=np.integer,
+                dtype=int,
                 ndim=1,
                 name="b_indices",
                 warn_on_cast=False,
@@ -1366,32 +1366,32 @@ class Topology:
         return pairs
 
     @classmethod
-    def _unique_pairs(cls, a_indices: Iterator[int], b_indices: Iterator[int]) -> NDArray[np.integer]:
+    def _unique_pairs(cls, a_indices: Iterator[int], b_indices: Iterator[int]) -> NDArray[int]:
         return np.array(
             list(
                 {(a, b) if a > b else (b, a) for a, b in itertools.product(a_indices, b_indices) if a != b},
             ),
-            dtype=np.integer,
+            dtype=int,
         )
 
     @classmethod
-    def _unique_pairs_mutually_exclusive(cls, a_indices: list[int], b_indices: list[int]) -> NDArray[np.integer]:
+    def _unique_pairs_mutually_exclusive(cls, a_indices: list[int], b_indices: list[int]) -> NDArray[int]:
         pairs = np.fromiter(
             itertools.chain.from_iterable(
                 itertools.product(a_indices, b_indices),
             ),
-            dtype=np.integer,
+            dtype=int,
             count=len(a_indices) * len(b_indices) * 2,
         )
         return np.vstack((pairs[::2], pairs[1::2])).T
 
     @classmethod
-    def _unique_pairs_equal(cls, a_indices: list[int]) -> NDArray[np.integer]:
+    def _unique_pairs_equal(cls, a_indices: list[int]) -> NDArray[int]:
         pairs = np.fromiter(
             itertools.chain.from_iterable(
                 itertools.combinations(a_indices, 2),
             ),
-            dtype=np.integer,
+            dtype=int,
             count=len(a_indices) * (len(a_indices) - 1),
         )
         return np.vstack((pairs[::2], pairs[1::2])).T
@@ -1702,6 +1702,8 @@ class Residue:
         """Get the one letter code for this Residue"""
         if self.is_protein:
             return _AMINO_ACID_CODES[self.name]
+        elif self.is_nucleic:
+            return _NUCLEIC_ACID_CODES[self.name]
         else:
             return None
 
@@ -1720,7 +1722,7 @@ class Residue:
     @property
     def is_nucleic(self) -> bool:
         """Whether the residue is one found in nucleic acids."""
-        raise NotImplementedError
+        return self.name in _NUCLEIC_RESIDUES
 
     def __str__(self) -> str:
         return f"{self.name}{self.resSeq}"
@@ -1773,7 +1775,7 @@ class Atom:
         # The not-necessarily-contiguous "serial" number from the PDB spec
         self.serial: int | None = serial
         # The formal charge of the atom
-        self.formal_charge: float | None = formal_charge
+        self.formal_charge: int | None = formal_charge
 
     @property
     def n_bonds(self) -> int:
@@ -1803,6 +1805,8 @@ class Atom:
         if self.name != other.name:
             return False
         if self.index != other.index:
+            return False
+        if self.formal_charge != other.formal_charge:
             return False
         if self.element.name != other.element.name:
             return False

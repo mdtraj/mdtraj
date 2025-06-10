@@ -388,6 +388,29 @@ def test_copy_and_hash(get_fn):
     assert hash(t1) == hash(t2)
 
 
+@pytest.mark.parametrize("filename", ["traj.h5", "1ply_charge.pdb"])
+def test_copy(get_fn, filename):
+    t = md.load(get_fn(filename))
+    t1 = t.topology
+    t2 = t.topology.copy()
+
+    assert t1 == t2
+
+    # hash for chains checks only index, but chains have
+    # index and chain number, so this isn't as much of a concern
+    assert hash(tuple(t1._chains)) == hash(tuple(t2._chains))
+
+    # bond hash checks atom IDs, type and order
+    assert hash(tuple(t1._bonds)) == hash(tuple(t2._bonds))
+
+    # Check that atoms are the same
+    # because hash isn't complete
+    # see issue #2039.
+    # hash should be sufficient after this is resolved
+    for x, y in zip(t1._atoms, t2._atoms):
+        assert x == y, f"Atoms {x} and {y} do not match."
+
+
 def test_topology_sliced_residue_indices(get_fn):
     # https://github.com/mdtraj/mdtraj/issues/1585
     full = md.load(get_fn("1bpi.pdb"))
@@ -430,6 +453,23 @@ def test_topology_join_keep_resSeq(get_fn):
 
     eq(out_resSeq_keepId_True, expected_resSeq_keepId_True)
     eq(out_resSeq_keepId_False, expected_resSeq_keepId_False)
+
+
+def test_topology_join_formal_charge():
+    top1 = md.Topology()
+    c1 = top1.add_chain()
+    r1 = top1.add_residue("LIG", c1, 0)
+    top1.add_atom("C1", md.element.Element.getBySymbol("C"), r1, formal_charge=1)
+
+    top2 = md.Topology()
+    c2 = top2.add_chain()
+    r2 = top2.add_residue("LIG", c2, 0)
+    top2.add_atom("C2", md.element.Element.getBySymbol("C"), r2, formal_charge=-1)
+
+    joined = top1.join(top2)
+
+    charges = [atom.formal_charge for atom in joined.atoms]
+    assert charges == [1, -1], f"Expected [1, -1] formal charges, got {charges}"
 
 
 def test_delete_atom_by_index(get_fn):
