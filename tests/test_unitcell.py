@@ -30,6 +30,7 @@ from mdtraj.utils.unitcell import check_valid_unitcell_angles
 class Test_Unitcell:
     @pytest.mark.parametrize(["alpha", "beta", "gamma"], [[90, 90, 90], [70, 90, 30]], ids=["orthogonal", "triclinic"])
     def test_valid(self, alpha, beta, gamma):
+        """Test for valid unitcell angles, single frame"""
         unitcell_angles = np.array([alpha, beta, gamma], dtype=np.float32)
 
         assert check_valid_unitcell_angles(*unitcell_angles)  # True
@@ -40,18 +41,19 @@ class Test_Unitcell:
         ids=["over360", "close"],
     )
     def test_invalid_over360(self, alpha, beta, gamma):
-        """Test for invalid unitcell angles that˚"""
+        """Test for invalid unitcell angles, single frame"""
         unitcell_angles = np.array([alpha, beta, gamma], dtype=np.float32)
 
         assert not check_valid_unitcell_angles(*unitcell_angles)  # False
 
     def test_valid_array(self):
+        """test for valid unitcell angles, input being an array"""
         unitcell_angles = np.array([[90.0, 90.0, 90], [70, 90, 30], [40, 20, 30]], dtype=np.float32)
 
         assert np.all(check_valid_unitcell_angles(*unitcell_angles.T) == [True, True, True])
 
     def test_invalid_over360_array(self):
-        """Test for invalid unitcell angles that sum up to over 360˚"""
+        """Test for invalid unitcell angles that sum up to over 360˚, input being an array"""
         unitcell_angles = np.array([[90, 90, 90], [126.96979, 54.83003, 178.20027], [70, 90, 30]], dtype=np.float32)
 
         assert np.all(check_valid_unitcell_angles(*unitcell_angles.T) == [True, False, True])
