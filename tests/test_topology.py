@@ -172,7 +172,8 @@ def test_topology_pandas_TIP4PEW(get_fn):
 
 
 def test_topology_pandas_2residues_same_resSeq(get_fn):
-    topology = md.load(get_fn("two_residues_same_resnum.gro")).topology
+    with pytest.warns(UserWarning, match="two consecutive residues with same number"):
+        topology = md.load(get_fn("two_residues_same_resnum.gro")).topology
     atoms, bonds = topology.to_dataframe()
 
     topology2 = md.Topology.from_dataframe(atoms, bonds)
