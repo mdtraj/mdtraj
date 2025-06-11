@@ -317,84 +317,88 @@ class HDF5TrajectoryFile:
 
         Parameters
         ----------
-        topology_object : mdtraj.Topology
-            A topology object
+        topology_object : mdtraj.Topology | openmm.app.Topology | None
+            A topology object from mdtraj, openmm, or None
         """
         _check_mode(self.mode, ("w", "a"))
 
-        # Exiting quietly if `topology = None`
-        # This prevents an ugly openmm import error/process
         if topology_object is None:
-            return
-
-        # we want to be able to handle the openmm Topology object
-        # here too, so if it's not an mdtraj topology we'll just guess
-        # that it's probably an openmm topology and convert
-        if not isinstance(topology_object, Topology):
-            topology_object = Topology.from_openmm(topology_object)
-
-        try:
-            topology_dict = {
-                "chains": [],
-                "bonds": [],
-            }
-
-            for chain in topology_object.chains:
-                chain_dict = {
-                    "residues": [],
-                    "index": int(chain.index),
-                    "chain_id": str(chain.chain_id) if chain.chain_id else None,
+            # Skip parsing if `topology = None`
+            # Will remove topology node from HDF5 File
+            pass
+        elif isinstance(topology_object, Topology):
+            try:
+                topology_dict = {
+                    "chains": [],
+                    "bonds": [],
                 }
-                for residue in chain.residues:
-                    residue_dict = {
-                        "index": int(residue.index),
-                        "name": str(residue.name),
-                        "atoms": [],
-                        "resSeq": int(residue.resSeq),
-                        "segmentID": str(residue.segment_id),
+
+                for chain in topology_object.chains:
+                    chain_dict = {
+                        "residues": [],
+                        "index": int(chain.index),
+                        "chain_id": str(chain.chain_id) if chain.chain_id else None,
                     }
+                    for residue in chain.residues:
+                        residue_dict = {
+                            "index": int(residue.index),
+                            "name": str(residue.name),
+                            "atoms": [],
+                            "resSeq": int(residue.resSeq),
+                            "segmentID": str(residue.segment_id),
+                        }
 
-                    for atom in residue.atoms:
-                        try:
-                            element_symbol_string = str(atom.element.symbol)
-                        except AttributeError:
-                            element_symbol_string = ""
+                        for atom in residue.atoms:
+                            try:
+                                element_symbol_string = str(atom.element.symbol)
+                            except AttributeError:
+                                element_symbol_string = ""
 
-                        residue_dict["atoms"].append(
-                            {
-                                "index": int(atom.index),
-                                "name": str(atom.name),
-                                "element": element_symbol_string,
-                            },
-                        )
-                    chain_dict["residues"].append(residue_dict)
-                topology_dict["chains"].append(chain_dict)
+                            residue_dict["atoms"].append(
+                                {
+                                    "index": int(atom.index),
+                                    "name": str(atom.name),
+                                    "element": element_symbol_string,
+                                },
+                            )
+                        chain_dict["residues"].append(residue_dict)
+                    topology_dict["chains"].append(chain_dict)
 
-            for atom1, atom2 in topology_object.bonds:
-                topology_dict["bonds"].append(
-                    [
-                        int(atom1.index),
-                        int(atom2.index),
-                    ],
+                for atom1, atom2 in topology_object.bonds:
+                    topology_dict["bonds"].append(
+                        [
+                            int(atom1.index),
+                            int(atom2.index),
+                        ],
+                    )
+
+            except AttributeError as e:
+                raise AttributeError(
+                    "topology_object fails to implement the"
+                    "chains() -> residue() -> atoms() and bond() protocol. "
+                    "Specifically, we encountered the following %s" % e,
                 )
 
-        except AttributeError as e:
-            raise AttributeError(
-                "topology_object fails to implement the"
-                "chains() -> residue() -> atoms() and bond() protocol. "
-                "Specifically, we encountered the following %s" % e,
-            )
+        else:
+            # we want to be able to handle the openmm Topology object
+            # here too, so if it's not an mdtraj topology or None
+            # we'll just guess that it's probably an openmm topology and convert
+            topology_object = Topology.from_openmm(topology_object)
 
-        # actually set the tables
+        # removing the topology node if it exists
         try:
             self._remove_node(where="/", name="topology")
         except self.tables.NoSuchNodeError:
             pass
 
+        # transforming the topology as json
         data = json.dumps(topology_dict)
-        if not isinstance(data, bytes):
+        if data == "null":
+            return
+        elif not isinstance(data, bytes):
             data = data.encode("ascii")
 
+        # actually set the tables
         self._handle.create_array(where="/", name="topology", obj=[data])
 
     #####################################################
