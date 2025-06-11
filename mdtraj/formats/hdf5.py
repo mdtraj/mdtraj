@@ -265,6 +265,74 @@ class HDF5TrajectoryFile:
     # topology global attribute (optional, recommended)
     #####################################################
 
+    @staticmethod
+    def convert_topology_to_dict(topology_object):
+        """Method for converting mdtraj.topology to a dictionary
+
+        Parameters
+        ----------
+        topology_object : mdtraj.core.topology.Topology
+            MDTraj Topology object
+
+        Returns
+        -------
+        topology_dict : dict
+            A dictionary summarizing the topology object.
+        """
+        try:
+            topology_dict = {
+                "chains": [],
+                "bonds": [],
+            }
+
+            for chain in topology_object.chains:
+                chain_dict = {
+                    "residues": [],
+                    "index": int(chain.index),
+                    "chain_id": str(chain.chain_id) if chain.chain_id else None,
+                }
+                for residue in chain.residues:
+                    residue_dict = {
+                        "index": int(residue.index),
+                        "name": str(residue.name),
+                        "atoms": [],
+                        "resSeq": int(residue.resSeq),
+                        "segmentID": str(residue.segment_id),
+                    }
+
+                    for atom in residue.atoms:
+                        try:
+                            element_symbol_string = str(atom.element.symbol)
+                        except AttributeError:
+                            element_symbol_string = ""
+
+                        residue_dict["atoms"].append(
+                            {
+                                "index": int(atom.index),
+                                "name": str(atom.name),
+                                "element": element_symbol_string,
+                            },
+                        )
+                    chain_dict["residues"].append(residue_dict)
+                topology_dict["chains"].append(chain_dict)
+
+            for atom1, atom2 in topology_object.bonds:
+                topology_dict["bonds"].append(
+                    [
+                        int(atom1.index),
+                        int(atom2.index),
+                    ],
+                )
+
+        except AttributeError as e:
+            raise AttributeError(
+                "topology_object fails to implement the"
+                "chains() -> residue() -> atoms() and bond() protocol. "
+                "Specifically, we encountered the following %s" % e,
+            )
+
+        return topology_dict
+
     @property
     def topology(self):
         """Get the topology out from the file
@@ -327,63 +395,14 @@ class HDF5TrajectoryFile:
             # Will remove topology node from HDF5 File
             topology_dict = None
         elif isinstance(topology_object, Topology):
-            try:
-                topology_dict = {
-                    "chains": [],
-                    "bonds": [],
-                }
-
-                for chain in topology_object.chains:
-                    chain_dict = {
-                        "residues": [],
-                        "index": int(chain.index),
-                        "chain_id": str(chain.chain_id) if chain.chain_id else None,
-                    }
-                    for residue in chain.residues:
-                        residue_dict = {
-                            "index": int(residue.index),
-                            "name": str(residue.name),
-                            "atoms": [],
-                            "resSeq": int(residue.resSeq),
-                            "segmentID": str(residue.segment_id),
-                        }
-
-                        for atom in residue.atoms:
-                            try:
-                                element_symbol_string = str(atom.element.symbol)
-                            except AttributeError:
-                                element_symbol_string = ""
-
-                            residue_dict["atoms"].append(
-                                {
-                                    "index": int(atom.index),
-                                    "name": str(atom.name),
-                                    "element": element_symbol_string,
-                                },
-                            )
-                        chain_dict["residues"].append(residue_dict)
-                    topology_dict["chains"].append(chain_dict)
-
-                for atom1, atom2 in topology_object.bonds:
-                    topology_dict["bonds"].append(
-                        [
-                            int(atom1.index),
-                            int(atom2.index),
-                        ],
-                    )
-
-            except AttributeError as e:
-                raise AttributeError(
-                    "topology_object fails to implement the"
-                    "chains() -> residue() -> atoms() and bond() protocol. "
-                    "Specifically, we encountered the following %s" % e,
-                )
-
+            # Convert topology to dictionary
+            topology_dict = self.convert_topology_to_dict(topology_object)
         else:
             # we want to be able to handle the openmm Topology object
             # here too, so if it's not an mdtraj topology or None
             # we'll just guess that it's probably an openmm topology and convert
             topology_object = Topology.from_openmm(topology_object)
+            topology_dict = self.convert_topology_to_dict(topology_object)
 
         # removing the topology node if it exists
         try:
