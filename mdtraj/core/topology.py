@@ -1216,7 +1216,7 @@ class Topology:
         fmt_string = "[atom.index for atom in topology.atoms if {condition}]"
         return fmt_string.format(condition=condition)
 
-    def select(self, selection_string: str) -> NDArray[np.integer]:
+    def select(self, selection_string: str) -> NDArray[int]:
         """Execute a selection against the topology
 
         Parameters
@@ -1246,7 +1246,7 @@ class Topology:
     def select_atom_indices(
         self,
         selection: str = "minimal",
-    ) -> NDArray[np.integer]:
+    ) -> NDArray[int]:
         """Get the indices of biologically-relevant groups by name.
 
         Parameters
@@ -1277,22 +1277,22 @@ class Topology:
         elif selection == "alpha":
             atom_indices = np.array(
                 [a.index for a in self.atoms if a.name == "CA" and a.residue.is_protein],
-                dtype=np.integer,
+                dtype=int,
             )
         elif selection == "minimal":
             atom_indices = np.array(
                 [a.index for a in self.atoms if a.name in ["CA", "CB", "C", "N", "O"] and a.residue.is_protein],
-                dtype=np.integer,
+                dtype=int,
             )
         elif selection == "heavy":
             atom_indices = np.array(
                 [a.index for a in self.atoms if a.element != elem.hydrogen and a.residue.is_protein],
-                dtype=np.integer,
+                dtype=int,
             )
         elif selection == "water":
             atom_indices = np.array(
                 [a.index for a in self.atoms if a.name in ["O", "OW"] and a.residue.is_water],
-                dtype=np.integer,
+                dtype=int,
             )
         else:
             raise ValueError(
@@ -1307,9 +1307,9 @@ class Topology:
 
     def select_pairs(
         self,
-        selection1: str | NDArray[np.integer] | Sequence[int] | None = None,
-        selection2: str | NDArray[np.integer] | Sequence[int] | None = None,
-    ) -> NDArray[np.integer]:
+        selection1: str | NDArray[int] | Sequence[int] | None = None,
+        selection2: str | NDArray[int] | Sequence[int] | None = None,
+    ) -> NDArray[int]:
         """Generate unique pairs of atom indices.
 
         If a selection is a string, it will be resolved using the atom selection
@@ -1334,7 +1334,7 @@ class Topology:
         else:  # ...or use a provided array of indices.
             a_indices = ensure_type(
                 selection1,
-                dtype=np.integer,
+                dtype=int,
                 ndim=1,
                 name="a_indices",
                 warn_on_cast=False,
@@ -1344,7 +1344,7 @@ class Topology:
         else:
             b_indices = ensure_type(
                 selection2,
-                dtype=np.integer,
+                dtype=int,
                 ndim=1,
                 name="b_indices",
                 warn_on_cast=False,
@@ -1366,32 +1366,32 @@ class Topology:
         return pairs
 
     @classmethod
-    def _unique_pairs(cls, a_indices: Iterator[int], b_indices: Iterator[int]) -> NDArray[np.integer]:
+    def _unique_pairs(cls, a_indices: Iterator[int], b_indices: Iterator[int]) -> NDArray[int]:
         return np.array(
             list(
                 {(a, b) if a > b else (b, a) for a, b in itertools.product(a_indices, b_indices) if a != b},
             ),
-            dtype=np.integer,
+            dtype=int,
         )
 
     @classmethod
-    def _unique_pairs_mutually_exclusive(cls, a_indices: list[int], b_indices: list[int]) -> NDArray[np.integer]:
+    def _unique_pairs_mutually_exclusive(cls, a_indices: list[int], b_indices: list[int]) -> NDArray[int]:
         pairs = np.fromiter(
             itertools.chain.from_iterable(
                 itertools.product(a_indices, b_indices),
             ),
-            dtype=np.integer,
+            dtype=int,
             count=len(a_indices) * len(b_indices) * 2,
         )
         return np.vstack((pairs[::2], pairs[1::2])).T
 
     @classmethod
-    def _unique_pairs_equal(cls, a_indices: list[int]) -> NDArray[np.integer]:
+    def _unique_pairs_equal(cls, a_indices: list[int]) -> NDArray[int]:
         pairs = np.fromiter(
             itertools.chain.from_iterable(
                 itertools.combinations(a_indices, 2),
             ),
-            dtype=np.integer,
+            dtype=int,
             count=len(a_indices) * (len(a_indices) - 1),
         )
         return np.vstack((pairs[::2], pairs[1::2])).T
