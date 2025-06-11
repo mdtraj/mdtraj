@@ -37,40 +37,10 @@ import numpy as np
 import pytest
 
 import mdtraj as md
-from mdtraj import element
 from mdtraj.testing import eq
 
 on_win = sys.platform == "win32"
 on_py3 = sys.version_info >= (3, 0)
-
-
-@pytest.fixture()
-def traj(tmpdir):
-    xyz = np.around(np.random.randn(10, 5, 3).astype(np.float32), 2)
-    topology = md.Topology()
-    chain = topology.add_chain()
-    residue = topology.add_residue("ALA", chain)
-    topology.add_atom("CA", element.carbon, residue)
-    topology.add_atom("HG1", element.hydrogen, residue)
-    topology.add_atom("SG", element.sulfur, residue)
-    topology.add_atom("OD1", element.oxygen, residue)
-    topology.add_atom("NE", element.nitrogen, residue)
-
-    time = np.arange(10) ** 2
-    unitcell_lengths = np.array([[1.1, 1.2, 1.3]] * 10)
-    unitcell_angles = np.array([[90, 90, 95]] * 10)
-
-    traj = md.Trajectory(
-        xyz,
-        topology=topology,
-        time=time,
-        unitcell_lengths=unitcell_lengths,
-        unitcell_angles=unitcell_angles,
-    )
-
-    fn = f"{tmpdir}/ref.h5"
-    traj.save(fn)
-    return traj, fn, str(tmpdir)
 
 
 def test_index(traj):

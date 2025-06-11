@@ -27,6 +27,7 @@ import numpy as np
 import pytest
 
 import mdtraj as md
+from mdtraj import element
 
 flaky_pdb_dl = pytest.mark.flaky(rerun=3, reason="github-node flaky pdb dl")
 
@@ -62,3 +63,32 @@ def gen_random_ptraj(request):
         rng.standard_normal((N_FRAMES, 3, 3)) + 2 * np.eye(3, 3),
         dtype=np.float32,
     )
+
+
+@pytest.fixture
+def traj(tmp_path):
+    xyz = np.around(np.random.randn(10, 5, 3).astype(np.float32), 2)
+    topology = md.Topology()
+    chain = topology.add_chain()
+    residue = topology.add_residue("ALA", chain)
+    topology.add_atom("CA", element.carbon, residue)
+    topology.add_atom("HG1", element.hydrogen, residue)
+    topology.add_atom("SG", element.sulfur, residue)
+    topology.add_atom("OD1", element.oxygen, residue)
+    topology.add_atom("NE", element.nitrogen, residue)
+
+    time = np.arange(10) ** 2
+    unitcell_lengths = np.array([[1.1, 1.2, 1.3]] * 10)
+    unitcell_angles = np.array([[90, 90, 95]] * 10)
+
+    traj = md.Trajectory(
+        xyz,
+        topology=topology,
+        time=time,
+        unitcell_lengths=unitcell_lengths,
+        unitcell_angles=unitcell_angles,
+    )
+
+    fn = f"{tmp_path}/ref.h5"
+    traj.save(fn)
+    return traj, fn, str(tmp_path)
