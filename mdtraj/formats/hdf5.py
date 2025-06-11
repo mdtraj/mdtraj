@@ -325,7 +325,7 @@ class HDF5TrajectoryFile:
         if topology_object is None:
             # Skip parsing if `topology = None`
             # Will remove topology node from HDF5 File
-            pass
+            topology_dict = None
         elif isinstance(topology_object, Topology):
             try:
                 topology_dict = {
