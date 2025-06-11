@@ -43,18 +43,18 @@ on_win = sys.platform == "win32"
 on_py3 = sys.version_info >= (3, 0)
 
 
-def test_index(traj):
+def test_index(h5traj):
     # Check that extracting a specific index works
-    traj, in_fn, tmpdir = traj
+    traj, in_fn, tmpdir = h5traj
     out_fn = f"{tmpdir}/frame4.pdb"
     subprocess.check_call(["mdconvert", in_fn, "-i", "4", "-o", out_fn])
     frame4 = md.load(out_fn)
     eq(frame4.xyz, traj[4].xyz)
 
 
-def test_slice(traj):
+def test_slice(h5traj):
     # Check that extracting a specific slice works
-    traj, in_fn, tmpdir = traj
+    traj, in_fn, tmpdir = h5traj
     out_fn = f"{tmpdir}/frame13.pdb"
     subprocess.check_call(["mdconvert", in_fn, "-i", "1:5:2", "-o", out_fn])
     frame13 = md.load(out_fn)
@@ -80,13 +80,13 @@ def extension(request):
     return request.param
 
 
-def test_pairwise(traj, extension, monkeypatch):
+def test_pairwise(h5traj, extension, monkeypatch):
     """ensure that the xyz coordinates are preserved by a trip
     from python -> save in format X -> mdconvert to format Y -> python
     """
 
-    def test_base(traj, extension, monkeypatch):
-        traj, _, tmpdir = traj
+    def test_base(h5traj, extension, monkeypatch):
+        traj, _, tmpdir = h5traj
         ext1 = extension
 
         # save one copy of traj for use as a topology file
@@ -185,7 +185,7 @@ def test_pairwise(traj, extension, monkeypatch):
         # All these changes will be reverted outside the context manager, and the netCDF4 test will run again
         with monkeypatch.context() as m:
             m.setitem(sys.modules, "netCDF4", None)
-            test_base(traj, ".scipy.nc", monkeypatch)
+            test_base(h5traj, ".scipy.nc", monkeypatch)
 
     # For testing most formats and with netCDF4 (if format is nc)
-    test_base(traj, extension, monkeypatch)
+    test_base(h5traj, extension, monkeypatch)

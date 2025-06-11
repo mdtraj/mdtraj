@@ -76,7 +76,7 @@ def gen_random_ptraj(request):
 
 
 @pytest.fixture(scope="function")
-def traj(tmp_path):
+def h5traj(tmp_path):
     xyz = np.around(np.random.randn(10, 5, 3).astype(np.float32), 2)
     topology = md.Topology()
     chain = topology.add_chain()
