@@ -62,7 +62,7 @@ def gen_random_ptraj(request):
         rng.standard_normal((N_FRAMES, 3, 3)) + 2 * np.eye(3, 3),
         dtype=np.float32,
     )
-    
+
     while True:
         # RNG can give us unitcells with zero or imaginary volume.
         # This `while` loop guarantees that we don't get that.
