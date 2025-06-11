@@ -27,6 +27,7 @@ import numpy as np
 import pytest
 
 import mdtraj as md
+from mdtraj.core.topology import Topology
 from mdtraj.formats import HDF5TrajectoryFile
 from mdtraj.testing import eq
 
@@ -345,3 +346,20 @@ def test_append():
 
     with HDF5TrajectoryFile(temp) as f:
         eq(f.root.coordinates[:], np.concatenate((x1, x2)))
+
+
+def test_topology_None(traj):
+    with HDF5TrajectoryFile(temp, "w") as f:
+        f.topology = None
+
+        assert f.topology is None, "The None argument did not pass through the topology setter properly"
+
+    # Borrowing the HDF5TrajectoryFile creation fixure from test_mdconvert
+    _, in_fn, _ = traj
+    with HDF5TrajectoryFile(in_fn, "a") as f:
+        # The file previously has a topology
+        assert isinstance(f.topology, Topology), "The test HDF5 File does not contain a topology"
+        f.topology = None
+
+        # The topology should now be overwritten as None now
+        assert f.topology is None, "The topology of the HDF5 file was not deleted"
