@@ -346,6 +346,7 @@ def test_center_aind(get_fn):
     eq(mu0, mu2)
 
 
+@pytest.mark.filterwarnings("ignore:atom_indices are not monotonically")
 def test_float_atom_indices_exception(ref_traj, get_fn, monkeypatch):
     def test_base(ref_traj, get_fn):
         # Is an informative error message given when you supply floats for atom_indices?
@@ -947,6 +948,7 @@ def test_load_with_atom_indices(get_fn):
     eq(t1.time, t2.time)
 
 
+@pytest.mark.filterwarnings("ignore:atom_indices are not monotonically")
 def test_atom_slicing(get_fn):
     t = md.load(get_fn("frame0.xtc"), top=get_fn("frame0.gro"))
     t1 = t.atom_slice([0, 1])

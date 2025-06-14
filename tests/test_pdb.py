@@ -467,7 +467,8 @@ def test_overflow_indexing(get_fn):
 
 
 def test_blank_indexing(get_fn):
-    traj = load_pdb(get_fn("blank_indexing.pdb"))  # this should just not fail
+    with pytest.warns(UserWarning):
+        traj = load_pdb(get_fn("blank_indexing.pdb"))  # this should just not fail
 
     assert traj.n_atoms == 8
     assert traj.n_residues == 6

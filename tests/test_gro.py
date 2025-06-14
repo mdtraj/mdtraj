@@ -24,6 +24,8 @@
 import os
 import tempfile
 
+import pytest
+
 import mdtraj as md
 from mdtraj.formats import GroTrajectoryFile
 from mdtraj.testing import eq
@@ -108,7 +110,8 @@ def test_load(get_fn):
         eq(t.unitcell_vectors, tref.unitcell_vectors)
 
     # if there are 2 residues with same renum but different resname
-    t = md.load(get_fn("two_residues_same_resnum.gro"))
+    with pytest.warns(UserWarning, match="two consecutive residues with same number"):
+        t = md.load(get_fn("two_residues_same_resnum.gro"))
     eq(t.n_residues, 2)
 
 

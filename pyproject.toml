@@ -48,7 +48,8 @@ filterwarnings = [
     "ignore:.*The 'netCDF4' Python package.*:UserWarning",
     "ignore:.*top= kwargs ignored since this file parser does not support it.*:UserWarning",
     "ignore:.*object name is a Python keyword.*:tables.NaturalNameWarning",
-    "ignore:.*Casting times.*:mdtraj.utils.validation.TypeCastPerformanceWarning",
+    "ignore:.*Casting *:mdtraj.utils.validation.TypeCastPerformanceWarning",
+    "ignore:.*Unlikely unit cell *:UserWarning",
 ]
 
 [tool.coverage.run]
