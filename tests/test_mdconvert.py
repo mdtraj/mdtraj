@@ -37,54 +37,24 @@ import numpy as np
 import pytest
 
 import mdtraj as md
-from mdtraj import element
 from mdtraj.testing import eq
 
 on_win = sys.platform == "win32"
 on_py3 = sys.version_info >= (3, 0)
 
 
-@pytest.fixture()
-def traj(tmpdir):
-    xyz = np.around(np.random.randn(10, 5, 3).astype(np.float32), 2)
-    topology = md.Topology()
-    chain = topology.add_chain()
-    residue = topology.add_residue("ALA", chain)
-    topology.add_atom("CA", element.carbon, residue)
-    topology.add_atom("HG1", element.hydrogen, residue)
-    topology.add_atom("SG", element.sulfur, residue)
-    topology.add_atom("OD1", element.oxygen, residue)
-    topology.add_atom("NE", element.nitrogen, residue)
-
-    time = np.arange(10) ** 2
-    unitcell_lengths = np.array([[1.1, 1.2, 1.3]] * 10)
-    unitcell_angles = np.array([[90, 90, 95]] * 10)
-
-    traj = md.Trajectory(
-        xyz,
-        topology=topology,
-        time=time,
-        unitcell_lengths=unitcell_lengths,
-        unitcell_angles=unitcell_angles,
-    )
-
-    fn = f"{tmpdir}/ref.h5"
-    traj.save(fn)
-    return traj, fn, str(tmpdir)
-
-
-def test_index(traj):
+def test_index(h5traj):
     # Check that extracting a specific index works
-    traj, in_fn, tmpdir = traj
+    traj, in_fn, tmpdir = h5traj
     out_fn = f"{tmpdir}/frame4.pdb"
     subprocess.check_call(["mdconvert", in_fn, "-i", "4", "-o", out_fn])
     frame4 = md.load(out_fn)
     eq(frame4.xyz, traj[4].xyz)
 
 
-def test_slice(traj):
+def test_slice(h5traj):
     # Check that extracting a specific slice works
-    traj, in_fn, tmpdir = traj
+    traj, in_fn, tmpdir = h5traj
     out_fn = f"{tmpdir}/frame13.pdb"
     subprocess.check_call(["mdconvert", in_fn, "-i", "1:5:2", "-o", out_fn])
     frame13 = md.load(out_fn)
@@ -110,13 +80,13 @@ def extension(request):
     return request.param
 
 
-def test_pairwise(traj, extension, monkeypatch):
+def test_pairwise(h5traj, extension, monkeypatch):
     """ensure that the xyz coordinates are preserved by a trip
     from python -> save in format X -> mdconvert to format Y -> python
     """
 
-    def test_base(traj, extension, monkeypatch):
-        traj, _, tmpdir = traj
+    def test_base(h5traj, extension, monkeypatch):
+        traj, _, tmpdir = h5traj
         ext1 = extension
 
         # save one copy of traj for use as a topology file
@@ -215,7 +185,7 @@ def test_pairwise(traj, extension, monkeypatch):
         # All these changes will be reverted outside the context manager, and the netCDF4 test will run again
         with monkeypatch.context() as m:
             m.setitem(sys.modules, "netCDF4", None)
-            test_base(traj, ".scipy.nc", monkeypatch)
+            test_base(h5traj, ".scipy.nc", monkeypatch)
 
     # For testing most formats and with netCDF4 (if format is nc)
-    test_base(traj, extension, monkeypatch)
+    test_base(h5traj, extension, monkeypatch)
