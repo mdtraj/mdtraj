@@ -12,7 +12,7 @@ cdef extern from "math_patch.h" nogil:
     float roundf(float x)
     float floorf(float x)
 
-cdef void make_whole(float[:,::1] frame_positions,
+cdef int make_whole(float[:,::1] frame_positions,
                 float[:,::1] frame_unitcell_vectors,
                 int32_t[:,:] sorted_bonds) nogil:
     # Fix each molecule to ensure the periodic boundary conditions are not
@@ -33,7 +33,7 @@ cdef void make_whole(float[:,::1] frame_positions,
             offset[k] += frame_unitcell_vectors[0, k]*roundf((delta[0]-offset[0])/frame_unitcell_vectors[0,0])
             frame_positions[atom2, k] = frame_positions[atom2, k] - offset[k]
 
-cdef void anchor_dists(float[:,::1] frame_positions,
+cdef int anchor_dists(float[:,::1] frame_positions,
                   float[:,::1] frame_unitcell_vectors,
                   int[:] anchor_molecule_indices,
                   int[:] anchor_molecule_offsets,
@@ -65,7 +65,7 @@ cdef void anchor_dists(float[:,::1] frame_positions,
             anchor_nearest_atoms[mol2, mol1, 0] = ca1
             anchor_nearest_atoms[mol2, mol1, 1] = ca2
 
-cdef void wrap_mols(float[:,::1] frame_positions,
+cdef int wrap_mols(float[:,::1] frame_positions,
                     float[:,::1] frame_unitcell_vectors,
                     float[:] center,
                     int[:] other_molecule_indices,
