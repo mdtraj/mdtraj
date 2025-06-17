@@ -59,7 +59,9 @@ def test_drid_2():
     got = compute_drid(t).reshape(n_frames, n_atoms, 3)
 
     for i in range(n_frames):
-        recip = 1 / squareform(pdist(t.xyz[i]))
+        with np.errstate(divide="ignore"):
+            # For catching division by zero errors
+            recip = 1 / squareform(pdist(t.xyz[i]))
         recip[np.diag_indices(n=recip.shape[0])] = np.nan
         recip[bonds[:, 0], bonds[:, 1]] = np.nan
         recip[bonds[:, 1], bonds[:, 0]] = np.nan
