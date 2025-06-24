@@ -3,6 +3,62 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.11.0 (June 24, 2025)
+--------------------------
+- Test on Python 3.13 by @jeremyleung521 in #1973
+- Set up `cibuildwheel` by @mattwthompson in #1980
+- Remove scipy import in `_lprmsd.pyx` to make mdtraj submodules importable without scipy by @rjdirisio in #1988
+- Run OpenMM tests on CI by @mikemhenry in #1986
+- Add flaky/rerun-failures to tests that require pulling off a PDB by @jeremyleung521 in #1987
+- Add logo in SVG by @janash in #1989
+- Add type annotation to Topology class by @jchen0506 in #1977
+- Remove netCDF4 dependency, set up PyPI build variants by @jeremyleung521 in #2000
+- Allow ArcTrajectoryFile to optionally take topology by @jeremyleung521 in #2002
+- Add formal charge to the `to_dataframe()` and `from_dataframe()` methods by @jchen0506 in #2007
+- Fix atom_slice resSeq assignment and add HSD/HSE residue names by @huhlim and @jeremyleung521 in #2013
+- Unpin sphinx by @janash in #2016
+- Move RNG/ptraj generation for distance tests into fixture by @jeremyleung521 in #1999
+- Refactor: remove arbitrary arguments from AST module classes by @RobertArbon in #2009
+- Update note on project status by @janash in #2019
+- Fix Topology double-loading for HDF5 and MOL2 (+ remove false-positive UserWarning) by @jeremyleung521 in #2012
+- Feature: calculate Pi-stacking+T-stacking interactions given aromatic groups by @rjdirisio in #1984
+- Sort bonds to avoid make_molecules_whole failures by @eruijsena in #1929
+- Test Linux aarch64 by @jeremyleung521 in #1974
+- Allow mdtraj.rmsd() to calculate without alignment by @jeremyleung521 in #2011
+- Update formatters by @mattwthompson in #2022
+- Bugfix: delete_atom_by_index updates bond list by @RobertArbon in #2021
+- Preserve chain_id when creating topologies by @k9cdt in #2015
+- Add `nucleic` and `is_nucleic` atom selection PR by @dwhswenson and @janash in #2023
+- Remove header option from PDB writer by @cabb99 in #2034
+- Port PDBx/mmCIF Reader/Writer from OpenMM to MDTraj by @cabb99 in #2004
+- Add formal charge in missing places on topology by @janash in #2038
+- Hotfix for numpy 2.3 by @jeremyleung521 in #2045
+- Update dcdplugin.c by @reedharrison and @bennybp in #1771
+- Update unitcell.py to check if unitcell is valid by @jeremyleung521 in #2029
+- Drop Python 3.10 support by @jeremyleung521 in #2046
+- Add py3dmol visualization to pi stacking by @janash in #2020
+- Allow HDF5TrajectoryFile().topology = None by @jeremyleung521 in #2042
+- Limit warnings in tests by @jeremyleung521 in #2047
+
+A total of 14 people contributed to this release.
+People with a "+" by their names contributed to MDTraj for the first time.
+
+- Jeremy Leung
+- Matt. W. Thompson
+- Ryan DiRisio
+- Mike M. Henry +
+- Jessica A. Nash
+- Jing Chen +
+- Lim Heo +
+- Lex O'brien +
+- Enrico Ruijsenaars +
+- Da Teng
+- David W.H. Swenson +
+- Carlos Bueno +
+- Reed Harrison +
+- Benjamin P. Pritchard +
+
+
 v1.10.3 (February 7, 2025)
 --------------------------
 
