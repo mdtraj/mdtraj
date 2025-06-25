@@ -78,7 +78,7 @@ jobs:
     environment:
       name: pypi
       url: https://pypi.org/p/mdtraj
-    if: github.event_name == 'published'
+    if: github.event_name == 'release'
     permissions:
         # IMPORTANT: this permission is mandatory for trusted publishing
         id-token: write
