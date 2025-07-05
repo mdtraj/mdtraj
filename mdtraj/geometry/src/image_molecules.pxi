@@ -12,9 +12,9 @@ cdef extern from "math_patch.h" nogil:
     float roundf(float x)
     float floorf(float x)
 
-cdef void make_whole(float[:,::1] frame_positions,
-                float[:,::1] frame_unitcell_vectors,
-                int32_t[:,:] sorted_bonds) noexcept nogil:
+cdef int make_whole(float[:,::1] frame_positions,
+                    float[:,::1] frame_unitcell_vectors,
+                    int32_t[:,:] sorted_bonds) except -1 nogil:
     # Fix each molecule to ensure the periodic boundary conditions are not
     # splitting it into pieces.
     cdef int atom1, atom2, j, k
@@ -33,13 +33,13 @@ cdef void make_whole(float[:,::1] frame_positions,
             offset[k] += frame_unitcell_vectors[0, k]*roundf((delta[0]-offset[0])/frame_unitcell_vectors[0,0])
             frame_positions[atom2, k] = frame_positions[atom2, k] - offset[k]
 
-cdef void anchor_dists(float[:,::1] frame_positions,
-                  float[:,::1] frame_unitcell_vectors,
-                  int[:] anchor_molecule_indices,
-                  int[:] anchor_molecule_offsets,
-                  float[:,:] anchor_dist,
-                  int[:,:,:] anchor_nearest_atoms,
-                  int num_anchors) noexcept nogil:
+cdef int anchor_dists(float[:,::1] frame_positions,
+                      float[:,::1] frame_unitcell_vectors,
+                      int[:] anchor_molecule_indices,
+                      int[:] anchor_molecule_offsets,
+                      float[:,:] anchor_dist,
+                      int[:,:,:] anchor_nearest_atoms,
+                      int num_anchors) except -1 nogil:
     cdef int ca1, ca2, mol1, mol2, i1, i2, j1, j2
     cdef float cdist
     cdef int[:] atoms1, atoms2
@@ -65,11 +65,11 @@ cdef void anchor_dists(float[:,::1] frame_positions,
             anchor_nearest_atoms[mol2, mol1, 0] = ca1
             anchor_nearest_atoms[mol2, mol1, 1] = ca2
 
-cdef void wrap_mols(float[:,::1] frame_positions,
-                    float[:,::1] frame_unitcell_vectors,
-                    float[:] center,
-                    int[:] other_molecule_indices,
-                    int[:] other_molecule_offsets) noexcept nogil:
+cdef int wrap_mols(float[:,::1] frame_positions,
+                   float[:,::1] frame_unitcell_vectors,
+                   float[:] center,
+                   int[:] other_molecule_indices,
+                   int[:] other_molecule_offsets) except -1 nogil:
     # Loop over all molecules, apply the correct offset (so that anchor
     # molecules will end up centered in the periodic box), and then wrap
     # the molecule into the box.
