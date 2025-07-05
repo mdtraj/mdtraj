@@ -910,7 +910,6 @@ def test_make_whole(get_fn):
     assert np.allclose(bond_lenghts1, bond_lenghts2)
 
 
-@pytest.mark.skip(reason="Broken, maybe only on Python 3.11")
 def test_image_molecules(get_fn):
     # Load trajectory with periodic box
     t = md.load(
@@ -926,7 +925,7 @@ def test_image_molecules(get_fn):
     # Image inplace with making molecules whole
     t.image_molecules(inplace=True, make_whole=True)
     # Test coordinates in t are not corrupted to NaNs (issue #1813)
-    assert np.any(np.isnan(t.xyz)) is False
+    assert not np.any(np.isnan(t.xyz))
     # Image with specified anchor molecules
     molecules = t.topology.find_molecules()
     anchor_molecules = molecules[0:3]
