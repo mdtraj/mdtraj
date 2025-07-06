@@ -33,6 +33,8 @@ cdef int make_whole(float[:,::1] frame_positions,
             offset[k] += frame_unitcell_vectors[0, k]*roundf((delta[0]-offset[0])/frame_unitcell_vectors[0,0])
             frame_positions[atom2, k] = frame_positions[atom2, k] - offset[k]
 
+    return 0
+
 cdef int anchor_dists(float[:,::1] frame_positions,
                       float[:,::1] frame_unitcell_vectors,
                       int[:] anchor_molecule_indices,
@@ -64,6 +66,8 @@ cdef int anchor_dists(float[:,::1] frame_positions,
             anchor_nearest_atoms[mol1, mol2, 1] = ca2
             anchor_nearest_atoms[mol2, mol1, 0] = ca1
             anchor_nearest_atoms[mol2, mol1, 1] = ca2
+
+    return 0
 
 cdef int wrap_mols(float[:,::1] frame_positions,
                    float[:,::1] frame_unitcell_vectors,
@@ -113,6 +117,7 @@ cdef int wrap_mols(float[:,::1] frame_positions,
             for k in range(3):
                 frame_positions[mol[j], k] += mol_offset[k]-mol_center[k]
 
+    return 0
 
 cdef void image_frame(frame_positions,
                  frame_unitcell_vectors,
