@@ -160,8 +160,11 @@ def load_prmtop(filename, **kwargs):
                         raw_data[flag].append(item.strip())
 
     # Add atoms to the topology
-
     pdb.PDBTrajectoryFile._loadNameReplacementTables()
+    if not kwargs.get("standard_names", True):
+        pdb.PDBTrajectoryFile._residueNameReplacements = {}
+        pdb.PDBTrajectoryFile._atomNameReplacements = {}
+    
     previous_residue = None
     c = top.add_chain()
 
