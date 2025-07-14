@@ -164,7 +164,7 @@ def load_prmtop(filename, **kwargs):
     if not kwargs.get("standard_names", True):
         pdb.PDBTrajectoryFile._residueNameReplacements = {}
         pdb.PDBTrajectoryFile._atomNameReplacements = {}
-    
+
     previous_residue = None
     c = top.add_chain()
 
