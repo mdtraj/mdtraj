@@ -25,10 +25,12 @@ import pickle
 import tempfile
 
 import numpy as np
+import pandas as pd
 import pytest
 
 import mdtraj as md
 from mdtraj.testing import eq
+from mdtraj.utils import import_
 
 try:
     import openmm.unit as u
@@ -112,6 +114,62 @@ def test_topology_openmm_boxes(get_fn):
     mmtop.getUnitCellDimensions() / u.nanometer
 
 
+@needs_openmm
+def test_topology_openmm_formal_charges(get_fn):
+    """Test to make sure charges are conserved when converting to/from openmm from PDB"""
+    app = import_("openmm.app")
+
+    #  This is a edited 1ply PDB with formal charges added to sodium ions
+    pdb = app.PDBFile(get_fn("1ply_charge.pdb"))
+
+    # Get the formal charges from the OpenMM topology
+    try:
+        formal_charges = [atom.formalCharge for atom in pdb.topology.atoms()]
+    except TypeError:
+        # OpenMM < 7.4 doesn't have formal charges,
+        # so we just return (skip the test)
+        return
+
+    # Convert to MDTraj topology
+    mdtraj_topology = md.Topology.from_openmm(pdb.topology)
+
+    # Get the formal charges from the MDTraj topology
+    mdtraj_formal_charges = [atom.formal_charge for atom in mdtraj_topology.atoms]
+
+    # Check that the formal charges are the same
+    eq(formal_charges, mdtraj_formal_charges)
+
+
+def normalize_charge(charge):
+    # Convert None to pandas NA, leave numbers intact
+    return pd.NA if charge is None else charge
+
+
+def test_topology_dataframe_formal_charges(get_fn):
+    """
+    Test that formal charges are maintained when converting a topology
+    to a DataFrame and back. Uses a PDB file with formal charges.
+    """
+    # Load the topology from a PDB file with formal charges.
+    topology = md.load(get_fn("1ply_charge.pdb")).topology
+
+    # Get the original formal charges from the MDTraj topology.
+    original_formal_charges = [atom.formal_charge for atom in topology.atoms]
+    normalized_original = [normalize_charge(charge) for charge in original_formal_charges]
+
+    # Convert topology to DataFrame and bonds array.
+    atoms_df, bonds = topology.to_dataframe()
+
+    # Convert topology back from the DataFrame.
+    topology_from_df = md.Topology.from_dataframe(atoms_df, bonds)
+
+    # Extract formal charges from the converted topology.
+    converted_formal_charges = [atom.formal_charge for atom in topology_from_df.atoms]
+
+    # Check that formal charges are conserved.
+    eq(normalized_original, converted_formal_charges)
+
+
 def test_topology_pandas(get_fn):
     topology = md.load(get_fn("native.pdb")).topology
     atoms, bonds = topology.to_dataframe()
@@ -132,7 +190,8 @@ def test_topology_pandas_TIP4PEW(get_fn):
 
 
 def test_topology_pandas_2residues_same_resSeq(get_fn):
-    topology = md.load(get_fn("two_residues_same_resnum.gro")).topology
+    with pytest.warns(UserWarning, match="two consecutive residues with same number"):
+        topology = md.load(get_fn("two_residues_same_resnum.gro")).topology
     atoms, bonds = topology.to_dataframe()
 
     topology2 = md.Topology.from_dataframe(atoms, bonds)
@@ -348,6 +407,29 @@ def test_copy_and_hash(get_fn):
     assert hash(t1) == hash(t2)
 
 
+@pytest.mark.parametrize("filename", ["traj.h5", "1ply_charge.pdb"])
+def test_copy(get_fn, filename):
+    t = md.load(get_fn(filename))
+    t1 = t.topology
+    t2 = t.topology.copy()
+
+    assert t1 == t2
+
+    # hash for chains checks only index, but chains have
+    # index and chain number, so this isn't as much of a concern
+    assert hash(tuple(t1._chains)) == hash(tuple(t2._chains))
+
+    # bond hash checks atom IDs, type and order
+    assert hash(tuple(t1._bonds)) == hash(tuple(t2._bonds))
+
+    # Check that atoms are the same
+    # because hash isn't complete
+    # see issue #2039.
+    # hash should be sufficient after this is resolved
+    for x, y in zip(t1._atoms, t2._atoms):
+        assert x == y, f"Atoms {x} and {y} do not match."
+
+
 def test_topology_sliced_residue_indices(get_fn):
     # https://github.com/mdtraj/mdtraj/issues/1585
     full = md.load(get_fn("1bpi.pdb"))
@@ -390,3 +472,43 @@ def test_topology_join_keep_resSeq(get_fn):
 
     eq(out_resSeq_keepId_True, expected_resSeq_keepId_True)
     eq(out_resSeq_keepId_False, expected_resSeq_keepId_False)
+
+
+def test_topology_join_formal_charge():
+    top1 = md.Topology()
+    c1 = top1.add_chain()
+    r1 = top1.add_residue("LIG", c1, 0)
+    top1.add_atom("C1", md.element.Element.getBySymbol("C"), r1, formal_charge=1)
+
+    top2 = md.Topology()
+    c2 = top2.add_chain()
+    r2 = top2.add_residue("LIG", c2, 0)
+    top2.add_atom("C2", md.element.Element.getBySymbol("C"), r2, formal_charge=-1)
+
+    joined = top1.join(top2)
+
+    charges = [atom.formal_charge for atom in joined.atoms]
+    assert charges == [1, -1], f"Expected [1, -1] formal charges, got {charges}"
+
+
+def test_delete_atom_by_index(get_fn):
+    """
+    REMARK *
+    REMARK   DATE:     8/ 5/ 9     14:44:19      CREATED BY USER: mjw
+    ATOM      1  N   ALA     1       0.024  -0.103  -0.101  1.00  0.00      AAL
+    ATOM      2  HT1 ALA     1       0.027  -1.132  -0.239  1.00  0.00      AAL
+    ATOM      3  HT2 ALA     1      -0.805   0.163   0.471  1.00  0.00      AAL
+    ATOM      4  HT3 ALA     1      -0.059   0.384  -1.019  1.00  0.00      AAL
+    ATOM      5  CA  ALA     1       1.247   0.375   0.636  1.00  0.00      AAL
+    ...
+    """
+    index = 0
+    top = md.load(get_fn("ala_ala_ala.pdb")).topology
+    n_bonds_original = top.n_bonds
+    n_atoms_original = top.n_atoms
+    atom_to_remove = top._atoms[index]
+    top.delete_atom_by_index(index)
+    assert top.n_atoms == n_atoms_original - 1
+    assert top.n_bonds == n_bonds_original - 4
+    assert all([atom_to_remove not in bond for bond in top.bonds])
+    assert eq(list(range(top.n_atoms)), [atom.index for atom in top.atoms])

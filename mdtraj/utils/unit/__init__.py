@@ -73,7 +73,7 @@ class _UnitContext(ast.NodeTransformer):
     def visit(self, node):
         if not any(isinstance(node, a) for a in self.allowed_ops):
             raise ValueError(
-                "Invalid unit expression. Contains dissallowed " "operation %s" % node.__class__.__name__,
+                "Invalid unit expression. Contains dissallowed operation %s" % node.__class__.__name__,
             )
         return super().visit(node)
 

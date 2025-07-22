@@ -38,6 +38,7 @@ Keyword          Synonyms                   Type           Description
 ``backbone``     ``is_backbone``            ``bool``       Whether atom is in the backbone of a protein residue
 ``sidechain``    ``is_sidechain``           ``bool``       Whether atom is in the sidechain of a protein residue
 ``protein``      ``is_protein``             ``bool``       Whether atom is part of a protein residue
+``nucleic``      ``is_nucleic``             ``bool``       Whether atom is part of a nucleic residue
 ``water``        ``is_water``, ``waters``   ``bool``       Whether atom is part of a water residue
 ``name``                                    ``str``        Atom name
 ``index``                                   ``int``        Atom index (0-based)

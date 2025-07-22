@@ -144,11 +144,10 @@ def load_pdb(
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type string or path-like for load_pdb. " "you supplied %s" % type(filename),
+            "filename must be of type string or path-like for load_pdb. you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)
-
     with PDBTrajectoryFile(filename, standard_names=standard_names, top=top) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
         if frame is not None:
@@ -308,7 +307,6 @@ class PDBTrajectoryFile:
         unitcell_angles=None,
         bfactors=None,
         ter=True,
-        header=True,
     ):
         """Write a PDB file to disk
 
@@ -331,9 +329,6 @@ class PDBTrajectoryFile:
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.
-        header : bool, default=True
-            Include header in pdb. Useful if you want the extra output, but sometimes prevent
-            programs from running smoothly.
         """
         if not self._mode == "w":
             raise ValueError("file not opened for writing")
@@ -365,7 +360,7 @@ class PDBTrajectoryFile:
 
         atomIndex = 1
         posIndex = 0
-        if header and modelIndex is not None:
+        if modelIndex is not None:
             print("MODEL     %4d" % modelIndex, file=self._file)
         for chainIndex, chain in enumerate(topology.chains):
             if not chain.chain_id:
@@ -400,8 +395,13 @@ class PDBTrajectoryFile:
                         atomSerial = atom.serial
                     else:
                         atomSerial = atomIndex
+                    if atom.formal_charge:
+                        # Charge string in PDB should have charge first, followed by the sign.
+                        charge_string = f"{abs(atom.formal_charge)}{'-' if atom.formal_charge < 0 else '+'}"
+                    else:
+                        charge_string = "  "
                     line = (
-                        "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s  "
+                        "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s%2s"
                         % (  # Right-justify atom symbol
                             atomSerial % 100000,
                             atomName,
@@ -414,20 +414,22 @@ class PDBTrajectoryFile:
                             bfactors[posIndex],
                             atom.segment_id[:4],
                             symbol[-2:],
+                            charge_string,
                         )
                     )
-                    assert len(line) == 80, "Fixed width overflow detected"
+                    assert len(line) == 80, f"Fixed width overflow detected, {len(line)}"
                     print(line, file=self._file)
                     posIndex += 1
                     atomIndex += 1
                 if resIndex == len(residues) - 1 and ter:
                     print(
-                        "TER   %5d      %3s %s%4d" % ((atomSerial + 1) % 100000, resName, chainName, res.resSeq % 10000),
+                        "TER   %5d      %3s %s%4d"
+                        % ((atomSerial + 1) % 100000, resName, chainName, res.resSeq % 10000),
                         file=self._file,
                     )
                     atomIndex += 1
 
-        if header and modelIndex is not None:
+        if modelIndex is not None:
             print("ENDMDL", file=self._file)
 
     def _write_header(self, unitcell_lengths, unitcell_angles, write_metadata=True):
@@ -453,7 +455,7 @@ class PDBTrajectoryFile:
                 raise ValueError("unitcell_angles must be length 3")
         else:
             raise ValueError(
-                "either unitcell_lengths and unitcell_angles" "should both be spefied, or neither",
+                "either unitcell_lengths and unitcell_anglesshould both be spefied, or neither",
             )
 
         box = list(unitcell_lengths) + list(unitcell_angles)
@@ -469,48 +471,53 @@ class PDBTrajectoryFile:
             file=self._file,
         )
 
+    _standardResidues = [
+        "ALA",
+        "ASN",
+        "CYS",
+        "GLU",
+        "HIS",
+        "LEU",
+        "MET",
+        "PRO",
+        "THR",
+        "TYR",
+        "ARG",
+        "ASP",
+        "GLN",
+        "GLY",
+        "ILE",
+        "LYS",
+        "PHE",
+        "SER",
+        "TRP",
+        "VAL",
+        "A",
+        "G",
+        "C",
+        "U",
+        "I",
+        "DA",
+        "DG",
+        "DC",
+        "DT",
+        "DI",
+        "HOH",
+    ]
+
     def _write_footer(self):
         if not self._mode == "w":
             raise ValueError("file not opened for writing")
 
         # Identify bonds that should be listed as CONECT records.
-        standardResidues = [
-            "ALA",
-            "ASN",
-            "CYS",
-            "GLU",
-            "HIS",
-            "LEU",
-            "MET",
-            "PRO",
-            "THR",
-            "TYR",
-            "ARG",
-            "ASP",
-            "GLN",
-            "GLY",
-            "ILE",
-            "LYS",
-            "PHE",
-            "SER",
-            "TRP",
-            "VAL",
-            "A",
-            "G",
-            "C",
-            "U",
-            "I",
-            "DA",
-            "DG",
-            "DC",
-            "DT",
-            "DI",
-            "HOH",
-        ]
+
         conectBonds = []
         if self._last_topology is not None:
             for atom1, atom2 in self._last_topology.bonds:
-                if atom1.residue.name not in standardResidues or atom2.residue.name not in standardResidues:
+                if (
+                    atom1.residue.name not in self._standardResidues
+                    or atom2.residue.name not in self._standardResidues
+                ):
                     conectBonds.append((atom1, atom2))
                 elif (
                     atom1.name == "SG"
@@ -683,6 +690,7 @@ class PDBTrajectoryFile:
                             element,
                             r,
                             serial=atom.serial_number,
+                            formal_charge=atom.formal_charge,
                         )
                         atomByNumber[atom.serial_number] = newAtom
 
@@ -825,5 +833,5 @@ def _format_83(f):
     if -9999999 < f < 99999999:
         return ("%8.3f" % f)[:8]
     raise ValueError(
-        'coordinate "%s" could not be represnted ' "in a width-8 field" % f,
+        'coordinate "%s" could not be represnted in a width-8 field' % f,
     )

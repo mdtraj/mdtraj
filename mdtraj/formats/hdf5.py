@@ -113,7 +113,7 @@ def load_hdf5(filename, stride=None, atom_indices=None, frame=None):
     """
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_lh5. " "you supplied %s" % type(filename),
+            "filename must be of type path-like for load_lh5. you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)
@@ -265,68 +265,20 @@ class HDF5TrajectoryFile:
     # topology global attribute (optional, recommended)
     #####################################################
 
-    @property
-    def topology(self):
-        """Get the topology out from the file
-
-        Returns
-        -------
-        topology : mdtraj.Topology
-            A topology object
-        """
-        try:
-            raw = self._get_node("/", name="topology")[0]
-            if not isinstance(raw, str):
-                raw = raw.decode()
-            topology_dict = json.loads(raw)
-        except self.tables.NoSuchNodeError:
-            return None
-
-        topology = Topology()
-
-        for chain_dict in sorted(topology_dict["chains"], key=operator.itemgetter("index")):
-            chain = topology.add_chain()
-            for residue_dict in sorted(chain_dict["residues"], key=operator.itemgetter("index")):
-                try:
-                    resSeq = residue_dict["resSeq"]
-                except KeyError:
-                    resSeq = None
-                    warnings.warn("No resSeq information found in HDF file, defaulting to zero-based indices")
-                try:
-                    segment_id = residue_dict["segmentID"]
-                except KeyError:
-                    segment_id = ""
-                residue = topology.add_residue(residue_dict["name"], chain, resSeq=resSeq, segment_id=segment_id)
-                for atom_dict in sorted(residue_dict["atoms"], key=operator.itemgetter("index")):
-                    try:
-                        element = elem.get_by_symbol(atom_dict["element"])
-                    except KeyError:
-                        element = elem.virtual
-                    topology.add_atom(atom_dict["name"], element, residue)
-
-        atoms = list(topology.atoms)
-        for index1, index2 in topology_dict["bonds"]:
-            topology.add_bond(atoms[index1], atoms[index2])
-
-        return topology
-
-    @topology.setter
-    def topology(self, topology_object):
-        """Set the topology in the file
+    @staticmethod
+    def convert_topology_to_dict(topology_object):
+        """Method for converting mdtraj.topology to a dictionary
 
         Parameters
         ----------
-        topology_object : mdtraj.Topology
-            A topology object
+        topology_object : mdtraj.core.topology.Topology
+            MDTraj Topology object
+
+        Returns
+        -------
+        topology_dict : dict
+            A dictionary summarizing the topology object.
         """
-        _check_mode(self.mode, ("w", "a"))
-
-        # we want to be able to handle the openmm Topology object
-        # here too, so if it's not an mdtraj topology we'll just guess
-        # that it's probably an openmm topology and convert
-        if not isinstance(topology_object, Topology):
-            topology_object = Topology.from_openmm(topology_object)
-
         try:
             topology_dict = {
                 "chains": [],
@@ -337,6 +289,7 @@ class HDF5TrajectoryFile:
                 chain_dict = {
                     "residues": [],
                     "index": int(chain.index),
+                    "chain_id": str(chain.chain_id) if chain.chain_id else None,
                 }
                 for residue in chain.residues:
                     residue_dict = {
@@ -378,16 +331,93 @@ class HDF5TrajectoryFile:
                 "Specifically, we encountered the following %s" % e,
             )
 
-        # actually set the tables
+        return topology_dict
+
+    @property
+    def topology(self):
+        """Get the topology out from the file
+
+        Returns
+        -------
+        topology : mdtraj.Topology
+            A topology object
+        """
+        try:
+            raw = self._get_node("/", name="topology")[0]
+            if not isinstance(raw, str):
+                raw = raw.decode()
+            topology_dict = json.loads(raw)
+        except self.tables.NoSuchNodeError:
+            return None
+
+        topology = Topology()
+
+        for chain_dict in sorted(topology_dict["chains"], key=operator.itemgetter("index")):
+            chain = topology.add_chain()
+            chain.chain_id = chain_dict.get("chain_id", None)
+            for residue_dict in sorted(chain_dict["residues"], key=operator.itemgetter("index")):
+                try:
+                    resSeq = residue_dict["resSeq"]
+                except KeyError:
+                    resSeq = None
+                    warnings.warn("No resSeq information found in HDF file, defaulting to zero-based indices")
+                try:
+                    segment_id = residue_dict["segmentID"]
+                except KeyError:
+                    segment_id = ""
+                residue = topology.add_residue(residue_dict["name"], chain, resSeq=resSeq, segment_id=segment_id)
+                for atom_dict in sorted(residue_dict["atoms"], key=operator.itemgetter("index")):
+                    try:
+                        element = elem.get_by_symbol(atom_dict["element"])
+                    except KeyError:
+                        element = elem.virtual
+                    topology.add_atom(atom_dict["name"], element, residue)
+
+        atoms = list(topology.atoms)
+        for index1, index2 in topology_dict["bonds"]:
+            topology.add_bond(atoms[index1], atoms[index2])
+
+        return topology
+
+    @topology.setter
+    def topology(self, topology_object):
+        """Set the topology in the file
+
+        Parameters
+        ----------
+        topology_object : mdtraj.Topology | openmm.app.Topology | None
+            A topology object from mdtraj, openmm, or None
+        """
+        _check_mode(self.mode, ("w", "a"))
+
+        if topology_object is None:
+            # Skip parsing if `topology = None`
+            # Will remove topology node from HDF5 File
+            topology_dict = None
+        elif isinstance(topology_object, Topology):
+            # Convert topology to dictionary
+            topology_dict = self.convert_topology_to_dict(topology_object)
+        else:
+            # we want to be able to handle the openmm Topology object
+            # here too, so if it's not an mdtraj topology or None
+            # we'll just guess that it's probably an openmm topology and convert
+            topology_object = Topology.from_openmm(topology_object)
+            topology_dict = self.convert_topology_to_dict(topology_object)
+
+        # removing the topology node if it exists
         try:
             self._remove_node(where="/", name="topology")
         except self.tables.NoSuchNodeError:
             pass
 
+        # transforming the topology as json
         data = json.dumps(topology_dict)
-        if not isinstance(data, bytes):
+        if data == "null":
+            return
+        elif not isinstance(data, bytes):
             data = data.encode("ascii")
 
+        # actually set the tables
         self._handle.create_array(where="/", name="topology", obj=[data])
 
     #####################################################
@@ -483,7 +513,7 @@ class HDF5TrajectoryFile:
         )
         if not value.dtype == dtype:
             raise ValueError(
-                "Constraints must be an array with dtype=%s. " "currently, I don't do any casting" % dtype,
+                "Constraints must be an array with dtype=%s. currently, I don't do any casting" % dtype,
             )
 
         if not hasattr(self._handle.root, "constraints"):
@@ -614,7 +644,7 @@ class HDF5TrajectoryFile:
                 )
             if not np.all(atom_slice >= 0):
                 raise ValueError(
-                    "The entries in atom_indices must be greater " "than or equal to zero",
+                    "The entries in atom_indices must be greater than or equal to zero",
                 )
 
         def get_field(name, slice, out_units, can_be_none=True):
@@ -1117,5 +1147,5 @@ class HDF5TrajectoryFile:
 def _check_mode(m, modes):
     if m not in modes:
         raise ValueError(
-            "This operation is only available when a file " 'is open in mode="%s".' % m,
+            'This operation is only available when a file is open in mode="%s".' % m,
         )

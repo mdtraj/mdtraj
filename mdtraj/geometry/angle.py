@@ -80,7 +80,7 @@ def compute_angles(traj, angle_indices, periodic=True, opt=True):
             traj.unitcell_vectors,
             dtype=np.float32,
             ndim=3,
-            name='unitcell_vectors',
+            name="unitcell_vectors",
             shape=(len(xyz), 3, 3),
             warn_on_cast=False,
         )

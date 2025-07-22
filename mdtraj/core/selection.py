@@ -53,8 +53,10 @@ __all__ = ["parse_selection"]
 # ############################################################################
 
 NUMS = ".0123456789"
-THIS_ATOM = ast.Name(id="atom", ctx=ast.Load(), SINGLETON=True)
-RE_MODULE = ast.Name(id="re", ctx=ast.Load(), SINGLETON=True)
+THIS_ATOM = ast.Name(id="atom", ctx=ast.Load())
+RE_MODULE = ast.Name(id="re", ctx=ast.Load())
+SINGLETON_NODE_IDS = {THIS_ATOM.id, RE_MODULE.id}
+
 SELECTION_GLOBALS = {"re": re}
 _ParsedSelection = namedtuple("_ParsedSelection", ["expr", "source", "astnode"])
 
@@ -65,7 +67,7 @@ _ParsedSelection = namedtuple("_ParsedSelection", ["expr", "source", "astnode"])
 
 class _RewriteNames(ast.NodeTransformer):
     def visit_Name(self, node):
-        if hasattr(node, "SINGLETON"):
+        if node.id in SINGLETON_NODE_IDS:
             return node
 
         _safe_names = {"None": None, "True": True, "False": False}
@@ -119,7 +121,7 @@ class SelectionKeyword:
         # Atom.residue.<attribute>
         (("protein", "is_protein"), _chain("residue", "is_protein")),
         (("code", "rescode", "resc"), _chain("residue", "code")),
-        # (('nucleic', 'is_nucleic'), _chain('residue', 'is_nucleic')),
+        (("nucleic", "is_nucleic"), _chain("residue", "is_nucleic")),
         (("water", "waters", "is_water"), _chain("residue", "is_water")),
         (("name",), _chain("name")),
         (("index",), _chain("index")),
@@ -204,8 +206,6 @@ class RegexInfixOperand:
                 ),
                 args=[pattern, string],
                 keywords=[],
-                starargs=None,
-                kwargs=None,
             ),
             ops=[ast.IsNot()],
             comparators=[ast.Name(id="None", ctx=ast.Load())],
@@ -411,7 +411,7 @@ class parse_selection:
 
         if isinstance(astnode, ast.Constant) and astnode.value not in {True, False, None}:
             raise ValueError(
-                "Cannot use a single literal as a boolean. " f"Choked on node with value {astnode.value}",
+                f"Cannot use a single literal as a boolean. Choked on node with value {astnode.value}",
             )
 
         args = [ast.arg(arg="atom", annotation=None)]

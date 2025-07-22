@@ -21,9 +21,9 @@
 ##############################################################################
 
 
-import functools
 import os
 import warnings
+from collections import defaultdict, deque
 from collections.abc import Iterable
 from copy import deepcopy
 
@@ -43,6 +43,7 @@ from mdtraj.formats import (
     MDCRDTrajectoryFile,
     NetCDFTrajectoryFile,
     PDBTrajectoryFile,
+    PDBxTrajectoryFile,
     TRRTrajectoryFile,
     XTCTrajectoryFile,
     XYZTrajectoryFile,
@@ -90,6 +91,12 @@ _TOPOLOGY_EXTS = [
     ".arc",
     ".hdf5",
     ".gsd",
+    ".pdbx",
+    ".pdbx.gz",
+    ".cif",
+    ".cif.gz",
+    ".mmcif",
+    ".mmcif.gz",
 ]
 
 
@@ -166,7 +173,9 @@ def _parse_topology(top, **kwargs):
         topology = top
     elif isinstance(top, Trajectory):
         topology = top.topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".pdb", ".pdb.gz", ".pdbx", ".cif", ".h5", ".lh5"]):
+    elif isinstance(top, (str, os.PathLike)) and (
+        ext in [".pdb", ".pdb.gz", ".pdbx", ".pdbx.gz", ".cif", ".cif.gz", ".mmcif", ".mmcif.gz", ".h5", ".lh5"]
+    ):
         _traj = load_frame(top, 0, **kwargs)
         topology = _traj.topology
     elif isinstance(top, (str, os.PathLike)) and (ext in [".prmtop", ".parm7", ".prm7"]):
@@ -378,11 +387,11 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     # Make the needed checks
     if len(set(extensions)) == 0:
         raise ValueError(
-            "No trajectories specified. " "filename_or_filenames was an empty list",
+            "No trajectories specified. filename_or_filenames was an empty list",
         )
     elif len(set(extensions)) > 1:
         raise TypeError(
-            "Each filename must have the same extension. " "Received: %s" % ", ".join(set(extensions)),
+            "Each filename must have the same extension. Received: %s" % ", ".join(set(extensions)),
         )
 
     # Pre-loads the topology from PDB for major performance boost
@@ -396,7 +405,11 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     top = topkwargs.pop("top", None)
     if top is None:
         top = filename_or_filenames[0]
-    kwargs["top"] = _parse_topology(top, **topkwargs)
+
+    # These topology formats do not support the 'top' keyword
+    # This is to prevent the loader from reading the topology twice.
+    if extension not in [".h5", ".hdf5", ".mol2"]:
+        kwargs["top"] = _parse_topology(top, **topkwargs)
 
     # get the right loader
     try:
@@ -611,14 +624,17 @@ def join(trajs, check_topology=True, discard_overlapping_frames=False):
     discard_overlapping_frames : bool
         Check for overlapping frames and discard
     """
-    return functools.reduce(
-        lambda x, y: x.join(
-            y,
+    list_trajs = list(trajs)
+    if len(list_trajs) == 1:
+        return list_trajs[0]
+    else:
+        joined_traj = list_trajs[0]
+        joined_traj = joined_traj.join(
+            list_trajs[1:],
             check_topology=check_topology,
             discard_overlapping_frames=discard_overlapping_frames,
-        ),
-        trajs,
-    )
+        )
+        return joined_traj
 
 
 class Trajectory:
@@ -852,7 +868,7 @@ class Trajectory:
 
         if not len(vectors) == len(self):
             raise TypeError(
-                "unitcell_vectors must be the same length as " "the trajectory. you provided %s" % str(vectors),
+                "unitcell_vectors must be the same length as the trajectory. you provided %s" % str(vectors),
             )
 
         v1 = vectors[:, 0, :]
@@ -1146,7 +1162,7 @@ class Trajectory:
                 raise TypeError("You can only join Trajectory instances")
             if not all(self.n_atoms == o.n_atoms for o in other):
                 raise ValueError(
-                    "Number of atoms in self (%d) is not equal " "to number of atoms in other" % (self.n_atoms),
+                    "Number of atoms in self (%d) is not equal to number of atoms in other" % (self.n_atoms),
                 )
             if check_topology and not all(self.topology == o.topology for o in other):
                 raise ValueError("The topologies of the Trajectories are not the same")
@@ -1337,7 +1353,7 @@ class Trajectory:
 
         if (topology is not None) and (topology._numAtoms != self.n_atoms):
             raise ValueError(
-                f"Number of atoms in xyz ({self.n_atoms}) and " f"in topology ({topology._numAtoms}) don't match",
+                f"Number of atoms in xyz ({self.n_atoms}) and in topology ({topology._numAtoms}) don't match",
             )
 
     def openmm_positions(self, frame):
@@ -1422,6 +1438,10 @@ class Trajectory:
             ".trr": self.save_trr,
             ".pdb": self.save_pdb,
             ".pdb.gz": self.save_pdb,
+            ".cif": self.save_cif,
+            ".cif.gz": self.save_cif,
+            ".pdbx": self.save_cif,
+            ".pdbx.gz": self.save_cif,
             ".dcd": self.save_dcd,
             ".h5": self.save_hdf5,
             ".nc": self.save_netcdf,
@@ -1545,7 +1565,7 @@ class Trajectory:
                 types=[a.name for a in self.top.atoms],
             )
 
-    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True, header=True):
+    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True):
         """Save trajectory to RCSB PDB format
 
         Parameters
@@ -1561,10 +1581,6 @@ class Trajectory:
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.
-        header : bool, default=True
-            Include header in pdb. Useful if you want the extra output, but sometimes prevent
-            programs from running smoothly.
-
         """
         self._check_valid_unitcell()
 
@@ -1598,7 +1614,7 @@ class Trajectory:
                             f.distance_unit,
                         ),
                         self.topology,
-                        modelIndex=i,
+                        modelIndex=i if self.n_frames > 1 else None,
                         bfactors=bfactors[i],
                         unitcell_lengths=in_units_of(
                             self.unitcell_lengths[i],
@@ -1607,7 +1623,6 @@ class Trajectory:
                         ),
                         unitcell_angles=self.unitcell_angles[i],
                         ter=ter,
-                        header=header,
                     )
                 else:
                     f.write(
@@ -1617,10 +1632,79 @@ class Trajectory:
                             f.distance_unit,
                         ),
                         self.topology,
-                        modelIndex=i,
+                        modelIndex=i if self.n_frames > 1 else None,
                         bfactors=bfactors[i],
                         ter=ter,
-                        header=header,
+                    )
+
+    def save_cif(self, filename, force_overwrite=True, bfactors=None, ter=True, header=True):
+        """Save trajectory to PDBx/mmCIF format
+
+        Parameters
+        ----------
+        filename : path-like
+            Filesystem path in which to save the trajectory. Supports .cif and .cif.gz extensions.
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if it's already there.
+        bfactors : array_like, default=None, shape=(n_frames, n_atoms) or (n_atoms,)
+            Save bfactors with cif file. If the array is two dimensional it should
+            contain a bfactor for each atom in each frame of the trajectory.
+            Otherwise, the same bfactor will be saved in each frame.
+        ter : bool, default=True
+            Include TER lines in cif to indicate end of a chain of residues. This is useful
+            if you need to keep atom numbers consistent.
+        header : bool, default=True
+            Include header in cif. Useful if you want the extra output, but sometimes prevent
+            programs from running smoothly.
+        """
+        self._check_valid_unitcell()
+
+        if bfactors is not None:
+            if len(np.array(bfactors).shape) == 1:
+                if len(bfactors) != self.n_atoms:
+                    raise ValueError(
+                        "bfactors %s should be shaped as (n_frames, n_atoms) or (n_atoms,)"
+                        % str(np.array(bfactors).shape),
+                    )
+                bfactors = [bfactors] * self.n_frames
+
+            else:
+                if np.array(bfactors).shape != (self.n_frames, self.n_atoms):
+                    raise ValueError(
+                        "bfactors %s should be shaped as (n_frames, n_atoms) or (n_atoms,)"
+                        % str(np.array(bfactors).shape),
+                    )
+        else:
+            bfactors = [None] * self.n_frames
+
+        # Support for .cif and .cif.gz is handled by PDBxTrajectoryFile
+        with PDBxTrajectoryFile(filename, "w", force_overwrite=force_overwrite) as f:
+            for i in range(self.n_frames):
+                if self._have_unitcell:
+                    f.write(
+                        in_units_of(
+                            self._xyz[i],
+                            Trajectory._distance_unit,
+                            f.distance_unit,
+                        ),
+                        self.topology,
+                        unitcell_lengths=in_units_of(
+                            self.unitcell_lengths[i],
+                            Trajectory._distance_unit,
+                            f.distance_unit,
+                        ),
+                        unitcell_angles=self.unitcell_angles[i],
+                        bfactors=bfactors[i],
+                    )
+                else:
+                    f.write(
+                        in_units_of(
+                            self._xyz[i],
+                            Trajectory._distance_unit,
+                            f.distance_unit,
+                        ),
+                        self.topology,
+                        bfactors=bfactors[i],
                     )
 
     def save_xtc(self, filename, force_overwrite=True):
@@ -1745,7 +1829,7 @@ class Trajectory:
         if self._have_unitcell:
             if not np.all(self.unitcell_angles == 90):
                 raise ValueError(
-                    "Only rectilinear boxes can be saved to mdcrd files. " f"Your angles are {self.unitcell_angles}",
+                    f"Only rectilinear boxes can be saved to mdcrd files. Your angles are {self.unitcell_angles}",
                 )
 
         with MDCRDTrajectoryFile(
@@ -2043,7 +2127,7 @@ class Trajectory:
         --------
         stack : stack multiple trajectories along the atom axis
         """
-        xyz = np.array(self.xyz[:, atom_indices], order="C")
+        xyz = np.array(self.xyz[:, sorted(atom_indices)], order="C")
         topology = None
         if self._topology is not None:
             topology = self._topology.subset(atom_indices)
@@ -2199,6 +2283,53 @@ class Trajectory:
     def _have_unitcell(self):
         return self._unitcell_lengths is not None and self._unitcell_angles is not None
 
+    def _sort_bonds(self):
+        """Sort bonds for wrapping molecules correctly.
+
+        Each molecule is built in a continuous chain along the bonds, which
+        prevents atoms from being imaged to multiple distinct locations.
+        The returned list of bonds defines each molecule as a minimum spanning
+        tree of the molecular graph.
+
+        Returns
+        -------
+        sorted_bonds: np.ndarray, shape=(m,2)
+            Sorted array of bonds that define molecules as MSTs.
+        """
+        bonds = np.asarray(
+            [[b0.index, b1.index] for b0, b1 in self._topology.bonds],
+            dtype=np.int32,
+        )
+        # Build an adjacency list for the molecular graph
+        adj = defaultdict(list)
+        for bond in bonds:
+            atom1, atom2 = bond
+            adj[atom1].append(atom2)
+            adj[atom2].append(atom1)
+
+        sorted_bonds = []
+        visited = set()
+        queue = deque()
+
+        atoms = set(bonds.flatten())
+
+        # Iterate through all atoms to handle disconnected subgraphs (molecules)
+        for atom in atoms:
+            if atom not in visited:
+                # Start BFS traversal from this atom
+                visited.add(atom)
+                queue.append(atom)
+                while queue:
+                    current_atom = queue.popleft()
+                    for neighbor in adj[current_atom]:
+                        if neighbor not in visited:
+                            visited.add(neighbor)
+                            queue.append(neighbor)
+                            # Add the bond with the known atom at index 0
+                            sorted_bonds.append([current_atom, neighbor])
+
+        return np.array(sorted_bonds, dtype=np.int32)
+
     def make_molecules_whole(self, inplace=False, sorted_bonds=None):
         """Only make molecules whole
 
@@ -2228,11 +2359,7 @@ class Trajectory:
             result = self[:]
 
         if sorted_bonds is None:
-            sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray(
-                [[b0.index, b1.index] for b0, b1 in sorted_bonds],
-                dtype=np.int32,
-            )
+            sorted_bonds = self._sort_bonds()
 
         box = np.asarray(result.unitcell_vectors, order="c")
         _geometry.whole_molecules(result.xyz, box, sorted_bonds)
@@ -2307,11 +2434,7 @@ class Trajectory:
         else:
             result = self[:]
         if make_whole and sorted_bonds is None:
-            sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray(
-                [[b0.index, b1.index] for b0, b1 in sorted_bonds],
-                dtype=np.int32,
-            )
+            sorted_bonds = self._sort_bonds()
         elif not make_whole:
             sorted_bonds = None
 
