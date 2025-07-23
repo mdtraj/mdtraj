@@ -48,9 +48,7 @@ spatial = import_("scipy.spatial")
 class NoTopologyError(Exception):
     def __init__(self):
         super().__init__(
-            "One more more of the "
-            "trajectory files should contain topology information (i.e. "
-            "either HDF5 or PDB)",
+            "One more more of the trajectory files should contain topology information (i.e. either HDF5 or PDB)",
         )
 
 

@@ -29,6 +29,7 @@ the directory with the notebook files, start an IPython notebook server:
    centroids
    clustering
    hbonds
+   pi_stacking
    iterload
    native-contact
    openmm
@@ -38,7 +39,7 @@ the directory with the notebook files, start an IPython notebook server:
    rmsd-drift
    solvent-accessible-surface-area
    two-pass-clustering
-   
+
 
 Let us know if you would like to contribute other example notebooks, or
 have any suggestions for how these can be improved.

@@ -112,7 +112,7 @@ def wernet_nilsson(traj, exclude_water=True, periodic=True, sidechain_only=False
 
     if traj.topology is None:
         raise ValueError(
-            "wernet_nilsson requires that traj contain topology " "information",
+            "wernet_nilsson requires that traj contain topology information",
         )
 
     # Get the possible donor-hydrogen...acceptor triplets
@@ -239,7 +239,7 @@ def baker_hubbard(
 
     if traj.topology is None:
         raise ValueError(
-            "baker_hubbard requires that traj contain topology " "information",
+            "baker_hubbard requires that traj contain topology information",
         )
 
     # Get the possible donor-hydrogen...acceptor triplets

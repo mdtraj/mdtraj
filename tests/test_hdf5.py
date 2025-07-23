@@ -27,6 +27,7 @@ import numpy as np
 import pytest
 
 import mdtraj as md
+from mdtraj.core.topology import Topology
 from mdtraj.formats import HDF5TrajectoryFile
 from mdtraj.testing import eq
 
@@ -123,14 +124,13 @@ def test_write_units():
 
 def test_write_units2():
     from mdtraj.utils import unit
-    
 
     coordinates = unit.quantity.Quantity(
-        rng.standard_normal((4,10,3)),
+        rng.standard_normal((4, 10, 3)),
         unit.unit_definitions.angstroms,
     )
     velocities = unit.quantity.Quantity(
-        rng.standard_normal((4,10,3)),
+        rng.standard_normal((4, 10, 3)),
         unit.unit_definitions.angstroms / unit.unit_definitions.year,
     )
 
@@ -156,7 +156,7 @@ def test_write_units2():
 @needs_units
 def test_write_units_mismatch():
     velocities = units.Quantity(
-        rng.standard_normal((4,10,3)),
+        rng.standard_normal((4, 10, 3)),
         units.angstroms / units.picosecond,
     )
 
@@ -346,3 +346,19 @@ def test_append():
 
     with HDF5TrajectoryFile(temp) as f:
         eq(f.root.coordinates[:], np.concatenate((x1, x2)))
+
+
+def test_topology_None(h5traj):
+    with HDF5TrajectoryFile(temp, "w") as f:
+        f.topology = None
+
+        assert f.topology is None, "The None argument did not pass through the topology setter properly"
+
+    _, in_fn, _ = h5traj
+    with HDF5TrajectoryFile(in_fn, "a") as f:
+        # The file previously has a topology
+        assert isinstance(f.topology, Topology), "The test HDF5 File does not contain a topology"
+        f.topology = None
+
+        # The topology should now be overwritten as None now
+        assert f.topology is None, "The topology of the HDF5 file was not deleted"

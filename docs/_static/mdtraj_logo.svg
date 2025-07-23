@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="125mm"
+   height="75mm"
+   viewBox="0 0 125 75"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
+   sodipodi:docname="mdtraj_logo.svg"
+   inkscape:export-filename="C:\Users\janas\Pictures\mdtraj_logo_new.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.4142136"
+     inkscape:cx="331.27952"
+     inkscape:cy="255.97265"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g28335" />
+  <defs
+     id="defs2">
+    <pattern
+       id="EMFhbasepattern"
+       patternUnits="userSpaceOnUse"
+       width="6"
+       height="6"
+       x="0"
+       y="0" />
+    <pattern
+       id="EMFhbasepattern-9"
+       patternUnits="userSpaceOnUse"
+       width="6"
+       height="6"
+       x="0"
+       y="0" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g28335"
+       transform="translate(-89.802561,-121.60763)">
+      <path
+         style="fill:#19368e;fill-opacity:1;stroke-width:0.352849"
+         d="m 187.07574,166.4233 c -2.50532,-0.60749 -7.52882,-3.06828 -10.29894,-5.045 -1.26308,-0.90131 -3.97555,-3.26091 -6.02769,-5.24355 -3.7312,-3.60481 -3.7312,-3.60481 -5.13413,-1.66893 -2.49486,3.44259 -7.16223,7.62508 -10.16536,9.10931 -6.50907,3.21695 -12.0273,1.5564 -16.57734,-4.98849 -0.99287,-1.42816 -1.92287,-2.47802 -2.06668,-2.33303 -0.1438,0.145 -0.98789,1.69266 -1.87574,3.43927 -1.61427,3.17564 -1.61427,3.17564 -1.38668,1.4114 0.12517,-0.97033 0.59285,-3.19328 1.03929,-4.93988 0.8117,-3.17564 0.8117,-3.17564 -0.74428,-5.49375 -2.15706,-3.2136 -6.00701,-6.8374 -8.50982,-8.00996 -2.9393,-1.37706 -6.54645,-1.35548 -9.2599,0.0554 -4.76799,2.47916 -8.87335,8.02935 -12.41558,16.78509 -1.22581,3.03 -1.36291,3.23329 -1.36849,2.02927 -0.0102,-2.19846 1.02472,-6.58432 2.29224,-9.71436 1.67377,-4.13326 4.00769,-7.71048 7.29965,-11.1882 6.74354,-7.12409 13.446,-10.40334 21.2444,-10.39405 4.91603,0.006 7.81899,1.12532 11.28221,4.35077 1.72354,1.60521 1.72354,1.60521 3.68536,0.007 2.36251,-1.92449 5.03633,-3.31404 8.33522,-4.33173 7.26136,-2.24008 15.33359,-0.59251 23.36362,4.76861 3.41757,2.28169 11.43616,9.96603 13.79045,13.21561 2.82672,3.90166 4.68506,8.59456 4.6677,11.78742 -0.0178,3.27611 -2.28047,5.90507 -5.62884,6.54008 -2.31228,0.43851 -3.22044,0.41417 -5.54067,-0.14843 z m -24.23933,-15.69906 c 0.80085,-0.36368 1.55811,-0.8263 1.68281,-1.02808 0.31429,-0.50853 -4.71318,-4.66642 -7.10949,-5.87977 -1.46348,-0.74104 -2.64969,-1.04104 -4.61488,-1.16716 -2.64507,-0.16975 -2.64507,-0.16975 -1.4404,1.53213 1.89848,2.68203 4.64808,5.26189 6.69549,6.28216 2.22076,1.10665 2.84831,1.14083 4.78647,0.26072 z"
+         id="path12428" />
+      <g
+         aria-label="MDTraj"
+         id="text18107"
+         style="font-size:26.4583px;line-height:1.25;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.264583">
+        <path
+           d="m 118.21087,186.3403 h -2.93688 v -8.49311 q 0,-0.44979 0.10584,-1.40229 -0.23813,0.50271 -0.79375,1.42875 l -5.13291,6.82624 h -0.635 l -5.13291,-6.8527 q -0.55563,-0.74084 -0.82021,-1.40229 0.0794,0.8202 0.0794,1.34937 v 8.54603 h -2.56646 v -13.65248 h 2.56646 l 6.42936,8.25499 6.29708,-8.25499 h 2.54 z"
+           style="font-weight:bold;font-family:BankGothic;-inkscape-font-specification:'BankGothic Bold'"
+           id="path16" />
+        <path
+           d="m 141.49418,179.43469 q 0,3.96874 -3.01624,5.84728 -1.71979,1.05833 -5.60916,1.05833 h -7.96395 v -13.65248 h 8.78416 q 3.54541,0 5.55624,1.5875 2.24895,1.74624 2.24895,5.15937 z m -3.28083,-0.0529 q 0,-4.25979 -4.49791,-4.25979 h -5.63561 v 8.65187 h 4.10103 q 2.91042,0 4.23333,-0.74084 1.79916,-1.00541 1.79916,-3.65124 z"
+           style="font-weight:bold;font-family:BankGothic;-inkscape-font-specification:'BankGothic Bold'"
+           id="path18" />
+        <path
+           d="M 159.96208,175.12198 H 153.665 v 11.21832 h -3.17499 v -11.21832 h -6.27062 v -2.43416 h 15.74269 z"
+           style="font-weight:bold;font-family:BankGothic;-inkscape-font-specification:'BankGothic Bold'"
+           id="path20" />
+        <path
+           d="m 176.10162,186.3403 h -3.91583 l -4.68312,-4.23333 h -2.56645 v 4.23333 h -2.69875 v -11.19186 h 10.08062 q 2.61937,0 2.61937,2.16958 v 2.64583 q 0,1.64042 -1.40229,2.01083 -0.47625,0.13229 -2.75167,0.13229 z m -3.70416,-7.06436 v -1.29646 q 0,-0.89958 -1.24354,-0.89958 h -6.2177 v 3.09562 h 6.2177 q 1.24354,0 1.24354,-0.89958 z"
+           style="font-weight:bold;font-family:BankGothic;-inkscape-font-specification:'BankGothic Bold'"
+           id="path22" />
+        <path
+           d="m 192.77032,186.3403 h -3.06916 l -1.40229,-2.46062 h -7.40833 l -1.40229,2.46062 h -2.7252 l 6.64103,-11.19186 h 2.61937 z m -5.5827,-4.49791 -2.61937,-4.65666 -2.51354,4.65666 z"
+           style="font-weight:bold;font-family:BankGothic;-inkscape-font-specification:'BankGothic Bold'"
+           id="path24" />
+        <path
+           d="m 205.36447,183.69447 q 0,1.5875 -0.66145,2.11667 -0.635,0.52916 -2.27542,0.52916 h -4.97416 q -1.64041,0 -2.24895,-0.50271 -0.68792,-0.55562 -0.68792,-2.14312 v -2.32833 l 2.75166,-0.50271 v 3.38667 h 5.34458 v -9.10166 h 2.75166 z"
+           style="font-weight:bold;font-family:BankGothic;-inkscape-font-specification:'BankGothic Bold'"
+           id="path26" />
+      </g>
+    </g>
+  </g>
+</svg>

@@ -1,6 +1,6 @@
 name: docs
 channels:
-=  - conda-forge
+  - conda-forge
 dependencies:
   # Base depends
   - pip
