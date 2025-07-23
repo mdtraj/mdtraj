@@ -90,7 +90,7 @@ def asphericity(traj):
 
     .. math::
 
-        b = \frac{1}{2}(\\lambda_1^2 + \\lambda_2^2)
+        b = \\frac{1}{2}(\\lambda_1^2 + \\lambda_2^2)
 
 
     Parameters
