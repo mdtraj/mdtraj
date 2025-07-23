@@ -142,11 +142,7 @@ def relative_shape_anisotropy(traj):
 
     .. math::
 
-        \\kappa^2 = \\frac{3}{2} \\frac{
-            \\lambda_1^4 + \\lambda_2^4 + \\lambda_3^4
-        }{
-            (\\lambda_1^2 + \\lambda_2^2 + \\lambda_3^2)^2
-        } - \\frac{1}{2}
+        \\kappa^2 = \\frac{3}{2} \\frac{\\lambda_1^4 + \\lambda_2^4 + \\lambda_3^4}{(\\lambda_1^2 + \\lambda_2^2 + \\lambda_3^2)^2} - \\frac{1}{2}
 
 
     Parameters
