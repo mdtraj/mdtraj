@@ -164,10 +164,7 @@ def load_prmtop(filename, standard_names=True, **kwargs):
 
     # Add atoms to the topology
     pdb.PDBTrajectoryFile._loadNameReplacementTables()
-    if not standard_names:
-        pdb.PDBTrajectoryFile._residueNameReplacements = {}
-        pdb.PDBTrajectoryFile._atomNameReplacements = {}
-
+    
     previous_residue = None
     c = top.add_chain()
 
@@ -192,11 +189,11 @@ def load_prmtop(filename, standard_names=True, **kwargs):
 
             # check
             res_name = raw_data["RESIDUE_LABEL"][residue_pointer_dict[index]].strip()
-            if res_name in pdb.PDBTrajectoryFile._residueNameReplacements:
+            if res_name in pdb.PDBTrajectoryFile._residueNameReplacements and standard_names:
                 res_name = pdb.PDBTrajectoryFile._residueNameReplacements[res_name]
             r = top.add_residue(res_name, c)
 
-            if res_name in pdb.PDBTrajectoryFile._atomNameReplacements:
+            if res_name in pdb.PDBTrajectoryFile._atomNameReplacements and standard_names:
                 atom_replacements = pdb.PDBTrajectoryFile._atomNameReplacements[res_name]
             else:
                 atom_replacements = {}
