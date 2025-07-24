@@ -51,14 +51,14 @@ def test_topology_amber_nonstandard_names(get_fn):
         top=get_fn("issue_2056.prmtop"),
     ).topology
     assert topology.atom(1).name == "H"
-    assert topology.residue(30).name == "HIS"
+    assert topology.residue(1).name == "HIS"
     topology = md.load(
         get_fn("issue_2056.inpcrd"),
         top=get_fn("issue_2056.prmtop"),
         standard_names=False,
     ).topology
     assert topology.atom(1).name == "H1"
-    assert topology.residue(30).name == "HID"
+    assert topology.residue(1).name == "HID"
 
 
 @needs_openmm
