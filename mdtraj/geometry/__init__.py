@@ -22,6 +22,7 @@
 
 
 from .angle import *
+from .cluster import *
 from .contact import *
 from .dihedral import *
 from .distance import *
@@ -40,6 +41,7 @@ from .thermodynamic_properties import *
 
 __all__ = [
     "baker_hubbard",
+    "cluster",
     "shrake_rupley",
     "kabsch_sander",
     "compute_distances",
