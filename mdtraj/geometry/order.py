@@ -130,7 +130,7 @@ def compute_directors(traj, indices="chains"):
     Since there is no preferred orientation of the director, the director
     :math:`n` has the same meaning as :math:`-n`.
     Therefore, care should be taken to ensure the director is pointing in
-    the direction you think it is, e.g., by contraining it to a hemisphere that
+    the direction you think it is, e.g., by constraining it to a hemisphere that
     makes physical sense.
 
 
