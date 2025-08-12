@@ -34,7 +34,7 @@ jobs:
           - "3.13"
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Set up conda environment
       uses: mamba-org/setup-micromamba@v2
