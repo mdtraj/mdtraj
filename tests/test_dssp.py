@@ -20,7 +20,7 @@ def call_dssp(get_fn, ref_name, frame=0):
     with open(out) as f:
         # exaust the first entries
         max(itertools.takewhile(lambda line: not line.startswith(KEY_LINE), f))
-        return np.array([line[16] for line in f if line[13] != "!"], dtype='<U1')
+        return np.array([line[16] for line in f if line[13] != "!"], dtype="<U1")
 
 
 def assert_(a, b):
@@ -36,7 +36,7 @@ def assert_(a, b):
         for i, (aa, bb) in enumerate(zip(a, b)):
             if aa == bb:
                 print("%3d: '%s' '%s'" % (i, aa, bb))
-            elif aa == 'P' and bb == ' ':
+            elif aa == "P" and bb == " ":
                 # Bypassing cases where mkdssp outputs PPII ("P") and mdtraj doesn't.
                 print("%3d: '%s' '%s'" % (i, aa, bb))
             else:
@@ -47,7 +47,7 @@ def assert_(a, b):
             raise
 
 
-@pytest.mark.parametrize('fn', ["1bpi.pdb", "1vii.pdb", "4ZUO.pdb", "1am7_protein.pdb"])
+@pytest.mark.parametrize("fn", ["1bpi.pdb", "1vii.pdb", "4ZUO.pdb", "1am7_protein.pdb"])
 def test_1(get_fn, tmpdir, fn):
     """This test checks dssp assignments for pdb files in tests/data"""
     t = md.load_pdb(get_fn(fn))
@@ -55,7 +55,7 @@ def test_1(get_fn, tmpdir, fn):
     assert_(call_dssp(get_fn, fn), md.compute_dssp(t, simplified=False)[0])
 
 
-@pytest.mark.parametrize('fn', ["2EQQ.pdb"])
+@pytest.mark.parametrize("fn", ["2EQQ.pdb"])
 def test_2(get_fn, tmpdir, fn):
     """This test checks dssp assignments on different chains for pdb files in tests/data"""
     t = md.load(get_fn(fn))
@@ -63,7 +63,7 @@ def test_2(get_fn, tmpdir, fn):
         assert_(call_dssp(get_fn, fn, i), md.compute_dssp(t[i], simplified=False)[0])
 
 
-@pytest.mark.parametrize('pdbid', ["1GAI", "6gsv", "2AAC"])
+@pytest.mark.parametrize("pdbid", ["1GAI", "6gsv", "2AAC"])
 def test_3(get_fn, tmpdir, pdbid):
     """This test checks dssp assignments on pdb files downloaded from rcsb"""
     # 1COY gives a small error, due to a broken chain.

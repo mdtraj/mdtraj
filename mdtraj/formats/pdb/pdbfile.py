@@ -422,7 +422,8 @@ class PDBTrajectoryFile:
                     atomIndex += 1
                 if resIndex == len(residues) - 1 and ter:
                     print(
-                        "TER   %5d      %3s %s%4d" % ((atomSerial + 1) % 100000, resName, chainName, res.resSeq % 10000),
+                        "TER   %5d      %3s %s%4d"
+                        % ((atomSerial + 1) % 100000, resName, chainName, res.resSeq % 10000),
                         file=self._file,
                     )
                     atomIndex += 1

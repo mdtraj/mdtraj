@@ -207,11 +207,10 @@ def precision2(fext1, fext2):
 
 
 def test_read_path(ref_traj, get_fn, monkeypatch):
-
-    if ref_traj.fext in ('nc'):
+    if ref_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             md.load(Path(get_fn(ref_traj.fn)), top=get_fn("native.pdb"))
 
     md.load(Path(get_fn(ref_traj.fn)), top=get_fn("native.pdb"))
@@ -230,10 +229,10 @@ def test_write_path(write_traj, get_fn, monkeypatch):
                 pytest.skip(f"{write_traj.fext} needs to write unitcells")
         t.save(Path(write_traj.fn))
 
-    if write_traj.fext in ('nc'):
+    if write_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(write_traj, get_fn)
 
     test_base(write_traj, get_fn)
@@ -259,13 +258,14 @@ def test_read_write(ref_traj, write_traj, get_fn, monkeypatch):
         if has_time_info(write_traj.fext):
             eq(t.time, t2.time, decimal=3)
 
-    if write_traj.fext in ('nc') or ref_traj.fext in ('nc'):
+    if write_traj.fext in ("nc") or ref_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(ref_traj, write_traj, get_fn)
 
     test_base(ref_traj, write_traj, get_fn)
+
 
 def test_load(ref_traj, get_fn, monkeypatch):
     def test_base(ref_traj, get_fn):
@@ -291,10 +291,10 @@ def test_load(ref_traj, get_fn, monkeypatch):
         assert eq(t0.n_frames * num_block, t2.n_frames)
         assert eq(t3.n_frames, t2.n_frames)
 
-    if ref_traj.fext in ('nc'):
+    if ref_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(ref_traj, get_fn)
 
     test_base(ref_traj, get_fn)
@@ -356,10 +356,10 @@ def test_float_atom_indices_exception(ref_traj, get_fn, monkeypatch):
         except ValueError as e:
             assert e.args[0] == "indices must be of an integer type. float64 is not an integer type"
 
-    if ref_traj.fext in ('nc'):
+    if ref_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(ref_traj, get_fn)
 
     test_base(ref_traj, get_fn)
@@ -465,10 +465,10 @@ def test_load_combination(ref_traj, get_fn, monkeypatch):
             assert eq(t1.unitcell_vectors, t2.unitcell_vectors)
         assert eq(t1.topology.subset(ainds), t2.topology)
 
-    if ref_traj.fext in ('nc'):
+    if ref_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(ref_traj, get_fn)
 
     test_base(ref_traj, get_fn)
@@ -586,10 +586,10 @@ def test_seek_read_mode(ref_traj, get_fn, monkeypatch):
 
                 eq(f.tell(), point)
 
-    if ref_traj.fext in ('nc'):
+    if ref_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(ref_traj, get_fn)
 
     test_base(ref_traj, get_fn)
@@ -611,10 +611,10 @@ def test_load_frame(ref_traj, get_fn, monkeypatch):
         if has_time_info(ref_traj.fext):
             eq(trajectory[rand].time, frame.time)
 
-    if ref_traj.fext in ('nc'):
+    if ref_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(ref_traj, get_fn)
 
     test_base(ref_traj, get_fn)
@@ -650,10 +650,10 @@ def test_iterload(write_traj, get_fn, monkeypatch):
             eq(loaded.unitcell_angles, iterloaded.unitcell_angles)
             eq(loaded.unitcell_lengths, iterloaded.unitcell_lengths)
 
-    if write_traj.fext in ('nc'):
+    if write_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(write_traj, get_fn)
 
     test_base(write_traj, get_fn)
@@ -681,10 +681,10 @@ def test_iterload_skip(ref_traj, get_fn, monkeypatch):
                 eq(t_ref.time[skip:], t.time)
                 eq(t_ref.topology, t.topology)
 
-    if ref_traj.fext in ('nc'):
+    if ref_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(ref_traj, get_fn)
 
     test_base(ref_traj, get_fn)
@@ -731,10 +731,10 @@ def test_save_load(write_traj, get_fn, monkeypatch):
             eq(t.unitcell_angles, t_ref.unitcell_angles)
             eq(t.unitcell_lengths, t_ref.unitcell_lengths)
 
-    if write_traj.fext in ('nc'):
+    if write_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(write_traj, get_fn)
 
     test_base(write_traj, get_fn)
@@ -749,10 +749,10 @@ def test_force_overwrite(write_traj, get_fn, monkeypatch):
         open(write_traj.fn, "w").close()
         t_ref.save(write_traj.fn, force_overwrite=True)
 
-    if write_traj.fext in ('nc'):
+    if write_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(write_traj, get_fn)
 
     test_base(write_traj, get_fn)
@@ -765,10 +765,10 @@ def test_force_noverwrite(write_traj, get_fn, monkeypatch):
         with pytest.raises(IOError):
             t_ref.save(write_traj.fn, force_overwrite=False)
 
-    if write_traj.fext in ('nc'):
+    if write_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(write_traj, get_fn)
 
     test_base(write_traj, get_fn)
@@ -818,17 +818,16 @@ def test_unitcell(write_traj, get_fn, monkeypatch):
     if write_traj.fext in ["rst7", "ncrst", "lammpstrj", "dtr"]:
         pytest.xfail(f"{write_traj.fext} seems to need unit vectors")
 
-
     def test_base(write_traj, get_fn):
         top = md.load(get_fn("native.pdb")).restrict_atoms(range(5)).topology
         t = md.Trajectory(xyz=np.random.randn(100, 5, 3), topology=top)
         t.save(write_traj.fn)
         assert eq(md.load(write_traj.fn, top=top).unitcell_vectors, None)
 
-    if write_traj.fext in ('nc'):
+    if write_traj.fext in ("nc"):
         # Running with scipy
         with monkeypatch.context() as m:
-            m.setitem(sys.modules, 'netCDF4', None)
+            m.setitem(sys.modules, "netCDF4", None)
             test_base(write_traj, get_fn)
 
     test_base(write_traj, get_fn)

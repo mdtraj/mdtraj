@@ -40,7 +40,7 @@ def test_hbonds(get_fn):
 
 def test_hbonds_against_dssp(get_fn, tmpdir):
     t = md.load(get_fn("2EQQ.pdb"))[0]
-    dssp = get_fn('dssp/2EQQ.pdb_0.dssp')  # Reference file made with mkdssp v2.2.1
+    dssp = get_fn("dssp/2EQQ.pdb_0.dssp")  # Reference file made with mkdssp v2.2.1
     energy = scipy.sparse.lil_matrix((t.n_residues, t.n_residues))
 
     # read the dssp N-H-->O column from the output file

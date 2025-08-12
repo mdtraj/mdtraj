@@ -264,11 +264,13 @@ def test_re():
     eq(sp.source, "re.match('C.*', atom.name) is not None and True")
 
 
-@pytest.mark.skip('failed to parse selection')
+@pytest.mark.skip("failed to parse selection")
 def test_within(self):
     sp = parse_selection("within 5 of (backbone or sidechain)")
-    eq(sp.source,
-        "atom.within == 5 of atom.residue.is_backbone or atom.residue.is_sidechain")
+    eq(
+        sp.source,
+        "atom.within == 5 of atom.residue.is_backbone or atom.residue.is_sidechain",
+    )
 
 
 def test_quotes():

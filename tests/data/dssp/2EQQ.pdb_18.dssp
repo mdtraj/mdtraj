@@ -25,7 +25,7 @@ AUTHOR                                                                          
   0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0    PARALLEL BRIDGES PER LADDER      .
   0  0  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0    ANTIPARALLEL BRIDGES PER LADDER  .
   1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0    LADDERS PER SHEET                .
-  #  RESIDUE AA STRUCTURE BP1 BP2  ACC     N-H-->O    O-->H-N    N-H-->O    O-->H-N    TCO  KAPPA ALPHA  PHI   PSI    X-CA   Y-CA   Z-CA 
+  #  RESIDUE AA STRUCTURE BP1 BP2  ACC     N-H-->O    O-->H-N    N-H-->O    O-->H-N    TCO  KAPPA ALPHA  PHI   PSI    X-CA   Y-CA   Z-CA
     1    1 A E              0   0  236      0, 0.0     2,-1.1     0, 0.0     4,-0.0   0.000 360.0 360.0 360.0 -27.1  -15.8    2.5    3.6
     2    2 A N        +     0   0  102      1,-0.2     5,-0.1     3,-0.1     0, 0.0  -0.734 360.0 168.6 -83.5 100.6  -12.6    1.0    4.9
     3    3 A F  S    S+     0   0  207     -2,-1.1    -1,-0.2     1,-0.2     4,-0.1   0.884  76.3  39.6 -83.6 -41.3  -13.9   -2.4    6.2

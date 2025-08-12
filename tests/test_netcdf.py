@@ -42,11 +42,13 @@ needs_cpptraj = pytest.mark.skipif(
 fd, temp = tempfile.mkstemp(suffix=".nc")
 fd2, temp2 = tempfile.mkstemp(suffix=".nc")
 
+
 class TestNetCDFNetCDF4:
     """
     This class contains all the tests that we would also want to run with scipy.
     Now a class so we can subclass it for later.
     """
+
     def teardown_module(self, module):
         """remove the temporary file created by tests in this file
         this gets automatically called by pytest"""
@@ -69,7 +71,7 @@ class TestNetCDFNetCDF4:
 
     def test_shape(self, get_fn):
         """Default test using netCDF4"""
-        with  NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as netcdf_file:
+        with NetCDFTrajectoryFile(get_fn("mdcrd.nc")) as netcdf_file:
             xyz, time, boxlength, boxangles = netcdf_file.read()
 
         assert eq(xyz.shape, (101, 223, 3))
@@ -257,15 +259,16 @@ class TestNetCDFNetCDF4:
 
 class TestNetCDFScipy(TestNetCDFNetCDF4):
     """This inherits the TestNetCDFNetCDF4 class and run all tests with SciPy"""
+
     def setup_method(self, method):
         """Patching out netCDF4. This is the way to do it inside a class"""
         monkeypatch = MonkeyPatch()
-        monkeypatch.setitem(sys.modules, 'netCDF4', None)
+        monkeypatch.setitem(sys.modules, "netCDF4", None)
 
     def teardown_method(self, method):
         """Undoing most changes, just in case."""
         monkeypatch = MonkeyPatch()
-        monkeypatch.delitem(sys.modules, 'netCDF4', None)
+        monkeypatch.delitem(sys.modules, "netCDF4", None)
 
 
 @needs_cpptraj
@@ -303,4 +306,3 @@ def test_cpptraj(get_fn):
     np.testing.assert_array_almost_equal(trj0.time, trj1.time)
     np.testing.assert_array_almost_equal(trj0.time, trj2.time)
     np.testing.assert_array_almost_equal(trj1.time, trj2.time)
-

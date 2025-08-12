@@ -183,7 +183,7 @@ def shrake_rupley(
     mode="atom",
     change_radii=None,
     get_mapping=False,
-    atom_indices=None
+    atom_indices=None,
 ):
     """Compute the solvent accessible surface area of each atom or residue in each simulation frame.
 
@@ -282,16 +282,19 @@ def shrake_rupley(
                 "residues must have contiguous integer indices " "starting from zero",
             )
     else:
-        raise ValueError('mode must be one of "residue", "atom". "%s" supplied' %
-                         mode)
+        raise ValueError(
+            'mode must be one of "residue", "atom". "%s" supplied' % mode,
+        )
 
     if atom_indices is None:
         atom_selection_mask = np.ones(traj.n_atoms, dtype=np.int32)
         out = np.zeros((xyz.shape[0], dim1), dtype=np.float32)
     else:
-        atom_selection_mask = np.array([[1 if ii in atom_indices else 0][0] for ii in range(traj.n_atoms)], dtype=np.int32)
+        atom_selection_mask = np.array(
+            [[1 if ii in atom_indices else 0][0] for ii in range(traj.n_atoms)], dtype=np.int32
+        )
         out = np.full((xyz.shape[0], dim1), -1, dtype=np.float32)
-        out[:,atom_mapping[atom_indices]]=0
+        out[:, atom_mapping[atom_indices]] = 0
 
     modified_radii = {}
     if change_radii is not None:

@@ -52,7 +52,7 @@ from mdtraj.core import element
 
 def _overflow_residue_check(num_str, pdbstructure, curr_atom):
     """
-    Function to check and guess what the current residue is because it's overflowed. Lifted 
+    Function to check and guess what the current residue is because it's overflowed. Lifted
     from a previous commit (c724024).
 
     Parameters
@@ -91,7 +91,7 @@ def _overflow_residue_check(num_str, pdbstructure, curr_atom):
 _atom_num_initial_nondecimal_functions = {
     "186a0": (lambda s, y=None: int(s, base=16)),  # "hex"
     "A0000": (lambda s, y=None: (int(s[0], base=36) * 10**4 + int(s[1:], base=36))),  # "chimera"
-    "*****": (lambda s, y: y._next_atom_number)  # "overflow", y is the PdbStructure
+    "*****": (lambda s, y: y._next_atom_number),  # "overflow", y is the PdbStructure
 }
 
 _residue_num_initial_nondecimal_functions = {
@@ -101,15 +101,15 @@ _residue_num_initial_nondecimal_functions = {
 }
 
 
-def _check_overflow_eligibility(num_str, str_type='atom'):
+def _check_overflow_eligibility(num_str, str_type="atom"):
     """
     Return True if it's an overflow type, else False.
 
     An overflow type is defined as any dictionary keys above or
-    something that looks the chimera format ({A..Z}000). The 
-    latter check exists because if residue numbers or atom numbers skip 
-    around and doesn't contain the start key, it might actually 
-    not recognize the overflow. This only exists for chimera-type values 
+    something that looks the chimera format ({A..Z}000). The
+    latter check exists because if residue numbers or atom numbers skip
+    around and doesn't contain the start key, it might actually
+    not recognize the overflow. This only exists for chimera-type values
     because it has no chance of false negatives.
 
     Parameters
@@ -126,13 +126,13 @@ def _check_overflow_eligibility(num_str, str_type='atom'):
         True if overflow type, False if not.
     """
     # Check a different dictionary depending on the type.
-    if str_type == 'atom':
+    if str_type == "atom":
         if num_str in _atom_num_initial_nondecimal_functions:
             return True
-    elif str_type == 'residue':
+    elif str_type == "residue":
         if num_str in _residue_num_initial_nondecimal_functions:
             return True
-    
+
     # This is mostly to 'guess' if the number is a chimera-type overflow, in case we skipped
     if 65 <= ord(num_str[0]) <= 90:
         # ord({A..Z}) should be in [65..90]
@@ -143,9 +143,9 @@ def _check_overflow_eligibility(num_str, str_type='atom'):
 
 def _read_atom_number(num_str, pdbstructure=None):
     """
-    This function determines whether we need to swap to overflow mode. Otherwise, we'll just 
+    This function determines whether we need to swap to overflow mode. Otherwise, we'll just
     turn ``num_str`` into an integer.
-    
+
     If it's in any of the non-decimal modes, we will attempt to set the _atom_num_nondec_mode to the
     correct key. With this set, all subsequent atom numbers will be deciphered using a corresponding
     function.
@@ -164,13 +164,13 @@ def _read_atom_number(num_str, pdbstructure=None):
     """
     try:
         if pdbstructure._atom_num_nondec_mode is not None:
-            # If it already has an overflow function, then it will use the corresponding 
+            # If it already has an overflow function, then it will use the corresponding
             # _atom_num_function as dictated by pdbstructure._atom_num_nondec_mode to decipher the num_str.
             return pdbstructure._atom_num_nondec_mode(num_str, pdbstructure)
-        elif pdbstructure._next_atom_number > 99999 and _check_overflow_eligibility(num_str, 'atom'):
+        elif pdbstructure._next_atom_number > 99999 and _check_overflow_eligibility(num_str, "atom"):
             # If the next atom number is > 99999 and our current atom number is one of the overflow keys,
             # raise an OverflowError, which will switch to the correct mode to read num_str.
-           raise OverflowError("Need to parse atom number using non-decimal residue modes.")
+            raise OverflowError("Need to parse atom number using non-decimal residue modes.")
         else:
             return int(num_str)
     except (AttributeError, ValueError, OverflowError, KeyError):
@@ -193,23 +193,25 @@ def _read_atom_number(num_str, pdbstructure=None):
                 except KeyError:
                     if 65 <= ord(num_str[0]) <= 90:
                         # Could be a chimera-type overflow? Attempting to guess with that assumption.
-                        pdbstructure._atom_num_nondec_mode = _atom_num_initial_nondecimal_functions['A0000']
+                        pdbstructure._atom_num_nondec_mode = _atom_num_initial_nondecimal_functions["A0000"]
             try:
                 # The _atom_num_nondec_mode has been set.
                 # Try and run the corresponding _atom_num_functions on num_str
                 return pdbstructure._atom_num_nondec_mode(num_str, pdbstructure)
             except (ValueError, KeyError, TypeError):
                 # Didn't work, we need to change to overflow mode and guess with _next_atom_number.
-                pdbstructure._atom_num_nondec_mode = _atom_num_initial_nondecimal_functions['*****']
-                warnings.warn(f'Need to guess atom number {num_str} starting from atom {pdbstructure._next_atom_number}.')
+                pdbstructure._atom_num_nondec_mode = _atom_num_initial_nondecimal_functions["*****"]
+                warnings.warn(
+                    f"Need to guess atom number {num_str} starting from atom {pdbstructure._next_atom_number}."
+                )
                 return pdbstructure._atom_num_nondec_mode(num_str, pdbstructure)
 
 
 def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
     """
-    This function determines whether we need to swap to overflow mode. Otherwise, we'll just 
+    This function determines whether we need to swap to overflow mode. Otherwise, we'll just
     turn ``num_str`` into an integer.
-    
+
     If it's in any of the non-decimal modes, we will attempt to set the _residue_num_nondec_mode to the
     correct key. With this set, all subsequent residue numbers will be deciphered using a corresponding
     function. If it's in "overflow" mode, will try to guess the residue number.
@@ -233,9 +235,9 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
             # If it already has an overflow function, then it will use the corresponding _residue_num_function
             # as dictated by pdbstructure._residue_num_nondec_mode to decipher the num_str.
             return pdbstructure._residue_num_nondec_mode(num_str, pdbstructure, curr_atom)
-        elif pdbstructure._next_residue_number > 9999 and _check_overflow_eligibility(num_str, 'residue'):
+        elif pdbstructure._next_residue_number > 9999 and _check_overflow_eligibility(num_str, "residue"):
             # If the next residue number is > 9999 and our current residue number is one of the nondecimal keys,
-            # Raise an OverflowError, which will switch to the correct mode to read num_str. 
+            # Raise an OverflowError, which will switch to the correct mode to read num_str.
             raise OverflowError("Need to parse residue number using non-decimal residue modes.")
         else:
             return int(num_str)
@@ -250,7 +252,7 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
             try:
                 return int(num_str)
             except ValueError:
-                # num_str is not decimal, no pdbstructure to say what it is or 
+                # num_str is not decimal, no pdbstructure to say what it is or
                 # to provide current number of atoms. No way to figure out
                 return 0
         else:
@@ -261,14 +263,16 @@ def _read_residue_number(num_str, pdbstructure=None, curr_atom=None):
                 except KeyError:
                     if 65 <= ord(num_str[0]) <= 90:
                         # Could be a chimera-type overflow? Attempting to guess with that assumption.
-                        pdbstructure._residue_num_nondec_mode = _residue_num_initial_nondecimal_functions['A000']
+                        pdbstructure._residue_num_nondec_mode = _residue_num_initial_nondecimal_functions["A000"]
             try:
                 # Try and run the _residue_num_functions
                 return pdbstructure._residue_num_nondec_mode(num_str, pdbstructure, curr_atom)
             except (ValueError, KeyError, TypeError):
                 # Didn't work, we need to change to overflow mode and guess with _next_residue_number
-                pdbstructure._residue_num_nondec_mode = _residue_num_initial_nondecimal_functions['****']
-                warnings.warn(f'Need to guess residue number string {num_str} starting from residue{pdbstructure._next_residue_number}, atom {pdbstructure._next_atom_number}.')
+                pdbstructure._residue_num_nondec_mode = _residue_num_initial_nondecimal_functions["****"]
+                warnings.warn(
+                    f"Need to guess residue number string {num_str} starting from residue{pdbstructure._next_residue_number}, atom {pdbstructure._next_atom_number}."
+                )
                 return pdbstructure._residue_num_nondec_mode(num_str, pdbstructure, curr_atom)
 
 
