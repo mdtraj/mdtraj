@@ -16,3 +16,5 @@ repos:
     - id: ruff
       args: [--fix]
     - id: ruff-format
+ci:
+  autoupdate_schedule: 'monthly'
