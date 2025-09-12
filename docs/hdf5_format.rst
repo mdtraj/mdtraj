@@ -16,18 +16,12 @@ Design Goals
 ~~~~~~~~~~~~
 
 In storing MD trajectory data for the for purposes including very large
-scale analysis, there are a few design goals. (1) The trajectories should
-be small and space efficient on disk. (2) The trajectories should be fast to
-write and fast to read. (3) The data format should support flexible read
-options. For instance, random access to different frames in the
-trajectory should be possible. It should be possible to easily query the
-dimensions of the trajectory (``n_frames``, ``n_atoms``, etc) without
-loading the file into memory. It should be possible to load only every
-n-th frame, or to directly only a subset of the atoms with limited
-memory overhead. (5) The trajectory format should be easily extensible
-in a backward compatible manner. For instance, it should be possible to
-add new arrays/fields like the potential energy or the topology without
-breaking backwards compatibility.
+scale analysis, there are a few design goals.
+
+1. The trajectories should be small and space efficient on disk.
+2. The trajectories should be fast to write and fast to read.
+3. The data format should support flexible read options. For instance, random access to different frames in the trajectory should be possible. It should be possible to easily query the dimensions of the trajectory (``n_frames``, ``n_atoms``, etc) without loading the file into memory. It should be possible to load only every n-th frame, or to directly only a subset of the atoms with limited memory overhead.
+4. The trajectory format should be easily extensible in a backward compatible manner. For instance, it should be possible to add new arrays/fields like the potential energy or the topology without breaking backwards compatibility.
 
 Other Formats
 ~~~~~~~~~~~~~
@@ -45,7 +39,7 @@ What's lacking?
 ~~~~~~~~~~~~~~~
 
 Of the formats we currently have, AMBER NetCDF is the best, in that it
-it satisfies all of the design goals except for the first. But the
+it satisfies all of the design goals except for the first, but the
 trajectories are twice as big on disk as XTC, which is really quite
 unfortunate. For dealing with large data sets, size matters. So let's
 define a HDF5 standard that has the benefits of AMBER NetCDF and the
@@ -69,7 +63,7 @@ Encoding
    format for storing and managing
    data <http://www.hdfgroup.org/HDF5/>`__ produced at NCSA.
 -  Arrays may be encoded with zlib compression.
--  Libraries implementing this standard may, at their desecration, round
+-  Libraries implementing this standard may, at their discretion, round
    the data to an appropriate number of significant digits, which can
    significantly enhance zlib compression ratios.
 
@@ -133,7 +127,7 @@ Arrays
 
 -  **coordinates (required) shape=(n\_frames, n\_atoms, 3),
    type=Float32, units="nanometers"**. This variable shall contain the
-   Cartesian coordinates of the specified particle for the specified.
+   Cartesian coordinates of the specified particle for the specified frame.
 -  **time (optional), shape=(n\_frames), dtype=Float32,
    units="picoseconds"** When coordinates on the frame dimension have a
    temporal sequence (e.g. they form a molecular dynamics trajectory),
@@ -146,7 +140,7 @@ Arrays
 -  **cell\_lengths (optional), shape=(n\_frames, 3, 3), dtype=Float32,
    units="nanometers"** When the data in the coordinates variable come
    from a simulation with periodic boundaries, creators shall include
-   this variable. his variable shall represent the lengths (a,b,c) of
+   this variable. This variable shall represent the lengths (a,b,c) of
    the unit cell for each frame. The edge with length a lies along the x
    axis; the edge with length b lies in the x-y plane. The origin (point
    of invariance under scaling) of the unit cell is defined as (0,0,0).
@@ -233,9 +227,9 @@ Rational
 
 It is our experience that not having the topology stored in the same
 file as the the trajectory's coordinate data is a pain -- it's just really
-inconvenient. And generally, the trajectories are long enough that it
-doesn't take up much incremental storage space to store the topology in
-there too. The topology is not that complicated.
+inconvenient. Furthermore, the topology takes up a miniscule quantity of
+storage space relative to the trajectory. The benefits of having them
+significantly outweight the drawbacks.
 
 Format
 ~~~~~~
