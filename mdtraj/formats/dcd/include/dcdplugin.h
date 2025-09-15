@@ -17,7 +17,7 @@ typedef struct {
   int *freeind;
   float *fixedcoords;
   int reverse;
-  int charmm;  
+  int charmm;
   int first;
   int with_unitcell;
 } dcdhandle;
@@ -73,5 +73,5 @@ int write_timestep(dcdhandle *v, const molfile_timestep_t *ts);
 void close_file_write(dcdhandle *v);
 int dcd_nsets(dcdhandle* v);
 int dcd_rewind(dcdhandle* dcd);
-  
+
 #endif

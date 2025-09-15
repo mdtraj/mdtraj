@@ -27,13 +27,13 @@
 import cython
 import numpy as np
 from mdtraj.utils import ensure_type
-import scipy.spatial.distance
 
 cimport numpy as np
-from libcpp.vector cimport vector
-from libc.stdio cimport printf
 from cpython cimport bool
 from cython.parallel cimport prange
+from libc.stdio cimport printf
+from libcpp.vector cimport vector
+
 np.import_array()
 assert sizeof(np.int32_t) == sizeof(int)
 
@@ -41,15 +41,19 @@ assert sizeof(np.int32_t) == sizeof(int)
 ##############################################################################
 # External c/cpp function declarations
 ##############################################################################
+
 cdef extern from "include/fancy_index.hpp":
     cdef extern void fancy_index2d(const float* A, int nx, int ny,
         const int* indx, int nindx, const int* indy, int nindy, float* out) nogil
-cdef extern float msd_atom_major(int nrealatoms, int npaddedatoms,  float* a,
-    float* b, float G_a, float G_b, int computeRot, float rot[9]) nogil
-cdef extern float rot_atom_major(const int n_atoms, float* a, const float rot[9]) nogil
-cdef extern void sgemm33(const float A[9], const float B[9], float out[9]) nogil
-cdef extern void inplace_center_and_trace_atom_major(float* coords, float* traces,
-    const int n_frames, const int n_atoms) nogil
+cdef extern from "include/theobald_rmsd.h":
+    cdef extern float msd_atom_major(int nrealatoms, int npaddedatoms,  float* a,
+        float* b, float G_a, float G_b, int computeRot, float rot[9]) nogil
+cdef extern from "include/rotation.h":
+    cdef extern float rot_atom_major(const int n_atoms, float* a, const float rot[9]) nogil
+    cdef extern void sgemm33(const float A[9], const float B[9], float out[9]) nogil
+cdef extern from "include/center.h":
+    cdef extern void inplace_center_and_trace_atom_major(float* coords, float* traces,
+        const int n_frames, const int n_atoms) nogil
 cdef extern from "include/Munkres.h":
     cdef cppclass Munkres:
         Munkres()

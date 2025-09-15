@@ -51,7 +51,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 namespace desres { namespace molfile {
-  
+
   const char * dtr_serialized_version();
 
   struct key_record_t {
@@ -81,8 +81,8 @@ namespace desres { namespace molfile {
       std::vector<key_record_t> keys;
 
     public:
-      Timekeys() 
-      : m_first(0), m_interval(0), m_framesize(0), 
+      Timekeys()
+      : m_first(0), m_interval(0), m_framesize(0),
         m_size(0), m_fullsize(0), m_fpf(0) {}
 
       bool init( const std::string& path );
@@ -134,7 +134,7 @@ namespace desres { namespace molfile {
 
     // read the next frame.  If ts is NULL, skip it.  If there are no more
     // frames to read, return MOLFILE_EOF.  Otherwise, fill in coordinates
-    // in ts->coords, velocities in ts->velocities if ts->velocities is 
+    // in ts->coords, velocities in ts->velocities if ts->velocities is
     // non-NULL, and return MOLFILE_SUCCESS if all goes well.
     virtual int next(molfile_timestep_t *ts) = 0;
 
@@ -145,7 +145,7 @@ namespace desres { namespace molfile {
     // number of framesets
     virtual size_t nframesets() const = 0;
 
-    // nth frameset 
+    // nth frameset
     virtual const DtrReader * frameset(size_t n) const = 0;
 
     // read a specified frame.
@@ -174,7 +174,7 @@ namespace desres { namespace molfile {
     bool eof() const { return m_curframe >= (size_t)keys.size(); }
 
   public:
-    DtrReader() 
+    DtrReader()
     : m_ndir1(-1), m_ndir2(-1), m_curframe(0),
       meta(NULL), owns_meta(false) {}
 
@@ -188,16 +188,16 @@ namespace desres { namespace molfile {
     int ndir1() const;
     int ndir2() const;
 
-    /* meta and owns_meta are initially set to NULL and false.  In init(), 
-     * if meta is NULL and owns_meta is false, we try to read the meta 
-     * from the metadata frame (an expensive operation), in which case 
+    /* meta and owns_meta are initially set to NULL and false.  In init(),
+     * if meta is NULL and owns_meta is false, we try to read the meta
+     * from the metadata frame (an expensive operation), in which case
      * owns_meta becomes true, whether or not meta was actually read.
-     * Otherwise, we leave those values alone.  In the destructor, we delete 
-     * meta if we own it.  The StkReader class can share the meta between 
+     * Otherwise, we leave those values alone.  In the destructor, we delete
+     * meta if we own it.  The StkReader class can share the meta between
      * DtrReader instances in the following way: if the meta it has to share
      * is NULL, it should set owns_meta to true in the DtrReader instances,
      * so that the DtrReaders don't keep searching for their own meta.  If
-     * the meta it has to share is non-NULL, it should set owns_meta to 
+     * the meta it has to share is non-NULL, it should set owns_meta to
      * false so that the meta pointer doesn't get double-freed.
      */
     metadata_t * get_meta() const { return meta; }
@@ -257,7 +257,7 @@ namespace desres { namespace molfile {
     double last_time;
     FILE * timekeys_file;
 
-    explicit DtrWriter(uint32_t natoms_) 
+    explicit DtrWriter(uint32_t natoms_)
     : natoms(natoms_), frame_fd(0), frames_per_file(256), framefile_offset(0),
       nwritten(0), last_time(HUGE_VAL), timekeys_file(NULL)
     {}

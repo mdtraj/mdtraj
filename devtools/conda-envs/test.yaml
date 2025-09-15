@@ -1,19 +1,20 @@
 name: mdtraj-test
 channels:
-  - jaimergp/label/unsupported-cudatoolkit-shim
   - conda-forge
 dependencies:
   # Core
-  - python
-  - cython =0.29.36
-  - numpy
-  - zlib
-  - pyparsing
-  - astunparse
-  - scipy
-  - networkx
-  - pandas
-  - pytables
+  - cython =3
   - gsd>=2.8
+  - netCDF4
+  - networkx
+  - numpy
+  - openmm
+  - pandas
+  - pyparsing
+  - pytables
   - pytest
+  - pytest-rerunfailures
   - pytest-xdist
+  - python
+  - scipy
+  - zlib

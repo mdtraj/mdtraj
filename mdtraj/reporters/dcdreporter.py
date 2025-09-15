@@ -24,8 +24,6 @@
 through time in the AMBER NetCDF format
 """
 
-
-from __future__ import print_function, division
 from ..formats.dcd import DCDTrajectoryFile
 from .basereporter import _BaseReporter
 
@@ -54,12 +52,21 @@ class DCDReporter(_BaseReporter):
 
     >>> traj = mdtraj.trajectory.load('traj.dcd')
     """
+
     @property
     def backend(self):
         return DCDTrajectoryFile
 
     def __init__(self, file, reportInterval, atomSubset=None):
-        super(DCDReporter, self).__init__(file, reportInterval,
-            coordinates=True, time=False, cell=True, potentialEnergy=False,
-            kineticEnergy=False, temperature=False, velocities=False,
-            atomSubset=atomSubset)
+        super().__init__(
+            file,
+            reportInterval,
+            coordinates=True,
+            time=False,
+            cell=True,
+            potentialEnergy=False,
+            kineticEnergy=False,
+            temperature=False,
+            velocities=False,
+            atomSubset=atomSubset,
+        )

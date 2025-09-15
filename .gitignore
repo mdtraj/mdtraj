@@ -50,8 +50,11 @@ nosetests.xml
 # vim
 *.swp
 
-# PyCharm
-.idea
+# Mac file caches
+.DS_Store
+
+# PyCharm project settings
+.idea/
 
 .cache
 build.log

@@ -21,32 +21,23 @@
 ##############################################################################
 
 
-##############################################################################
-# Imports
-##############################################################################
-
-from __future__ import print_function, division
-import os
 import itertools
+import os
+
 import numpy as np
-from mdtraj.utils import cast_indices, in_units_of
+
 from mdtraj.formats.registry import FormatRegistry
-from mdtraj.utils.six import string_types
-from mdtraj.utils.six.moves import xrange
+from mdtraj.utils import cast_indices, in_units_of
 
-__all__ = ['ArcTrajectoryFile', 'load_arc']
+__all__ = ["ArcTrajectoryFile", "load_arc"]
 
-
-##############################################################################
-# Classes
-##############################################################################
 
 class _EOF(IOError):
     pass
 
 
-@FormatRegistry.register_loader('.arc')
-def load_arc(filename, stride=None, atom_indices=None, frame=None):
+@FormatRegistry.register_loader(".arc")
+def load_arc(filename, stride=None, atom_indices=None, frame=None, top=None):
     """Load a TINKER .arc file from disk.
 
     Parameters
@@ -62,6 +53,10 @@ def load_arc(filename, stride=None, atom_indices=None, frame=None):
         Use this option to load only a single frame from a trajectory on disk.
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
+    top : {str, Trajectory, Topology}, optional
+        While the ARC format does does contain minimal topology information, it does
+        not include residue information. Pass in either a file path
+        (e.g. to pdb), a trajectory, or a topology object to supply this information.
 
     Returns
     -------
@@ -72,26 +67,40 @@ def load_arc(filename, stride=None, atom_indices=None, frame=None):
     --------
     mdtraj.ArcTrajectoryFile :  Low level interface to TINKER .arc files
     """
-    from mdtraj.core.trajectory import _parse_topology
 
-    if not isinstance(filename, (string_types, os.PathLike)):
-        raise TypeError('filename must be of type path-like for load_arc. '
-            'you supplied %s' % type(filename))
+    if not isinstance(filename, (str, os.PathLike)):
+        raise TypeError(
+            "filename must be of type path-like for load_arc. you supplied %s" % type(filename),
+        )
+
+    # Process topology, if given.
+    if top is not None:
+        from mdtraj.core.trajectory import _parse_topology
+
+        topology = _parse_topology(top)
+    else:
+        topology = None
 
     atom_indices = cast_indices(atom_indices)
 
     with ArcTrajectoryFile(filename) as f:
+        # Set topology. If not given, it's None.
+        f.topology = topology
+
         if frame is not None:
             f.seek(frame)
             n_frames = 1
         else:
             n_frames = None
-        return f.read_as_traj(n_frames=n_frames, stride=stride,
-                              atom_indices=atom_indices)
+        return f.read_as_traj(
+            n_frames=n_frames,
+            stride=stride,
+            atom_indices=atom_indices,
+        )
 
 
-@FormatRegistry.register_fileobject('.arc')
-class ArcTrajectoryFile(object):
+@FormatRegistry.register_fileobject(".arc")
+class ArcTrajectoryFile:
     """Interface for reading and writing to an TINKER archive files.
     (Note that the TINKER .xyz format is identical to this.)  This is
     a file-like object, that both reading or writing depending on the
@@ -119,35 +128,35 @@ class ArcTrajectoryFile(object):
         exists on disk, should we overwrite it?
     """
 
-    distance_unit = 'angstroms'
+    distance_unit = "angstroms"
 
-    def __init__(self, filename, mode='r', force_overwrite=True):
-        """Open an TINKER.arc file for reading/writing.
-        """
+    def __init__(self, filename, mode="r", force_overwrite=True):
+        """Open an TINKER.arc file for reading/writing."""
         self._is_open = False
         self._filename = filename
         self._frame_index = 0
         self._mode = mode
         self.topology = None
 
-        if mode == 'w':
-            raise ValueError('Writing TINKER .arc files is not supported at this time')
+        if mode == "w":
+            raise ValueError("Writing TINKER .arc files is not supported at this time")
 
         # track which line we're on. this is not essential, but its useful
         # when reporting errors to the user to say what line it occured on.
         self._line_counter = 0
 
-        if mode == 'r':
+        if mode == "r":
             # if n_atoms is None:
             #     raise ValueError('To open a mdcrd file in mode="r", you must '
             #                      'supply the number of atoms, "n_atoms"')
             if not os.path.exists(filename):
-                raise IOError("The file '%s' doesn't exist" % filename)
-            self._fh = open(filename, 'r')
+                raise OSError("The file '%s' doesn't exist" % filename)
+            self._fh = open(filename)
             self._is_open = True
         else:
-            raise ValueError('mode must be "r". '
-                             'you supplied "%s"' % mode)
+            raise ValueError(
+                'mode must be "r". you supplied "%s"' % mode,
+            )
 
     def seek(self, offset, whence=0):
         """Move to a new file position
@@ -215,11 +224,16 @@ class ArcTrajectoryFile(object):
         read : Returns the raw data from the file
         """
         from mdtraj.core.trajectory import Trajectory
+
         if atom_indices is not None:
             topology = self.topology.subset(atom_indices)
 
         initial = int(self._frame_index)
-        xyz, abc, ang = self.read(n_frames=n_frames, stride=stride, atom_indices=atom_indices)
+        xyz, abc, ang = self.read(
+            n_frames=n_frames,
+            stride=stride,
+            atom_indices=atom_indices,
+        )
         if len(xyz) == 0:
             return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
 
@@ -228,11 +242,15 @@ class ArcTrajectoryFile(object):
 
         if stride is None:
             stride = 1
-        time = (stride*np.arange(len(xyz))) + initial
+        time = (stride * np.arange(len(xyz))) + initial
 
-        return Trajectory(xyz=xyz, topology=self.topology, time=time,
-                          unitcell_lengths=abc,
-                          unitcell_angles=ang)
+        return Trajectory(
+            xyz=xyz,
+            topology=self.topology,
+            time=time,
+            unitcell_lengths=abc,
+            unitcell_angles=ang,
+        )
 
     def read(self, n_frames=None, stride=None, atom_indices=None):
         """Read data from a TINKER .arc file.
@@ -258,14 +276,15 @@ class ArcTrajectoryFile(object):
         xyz : np.ndarray, shape=(n_frames, n_atoms, 3), dtype=np.float32
             The cartesian coordinates, in angstroms
         """
-        if not self._mode == 'r':
-            raise ValueError('read() is only available when file is opened '
-                             'in mode="r"')
+        if not self._mode == "r":
+            raise ValueError(
+                'read() is only available when file is opened in mode="r"',
+            )
 
         if n_frames is None:
             frame_counter = itertools.count()
         else:
-            frame_counter = xrange(n_frames)
+            frame_counter = range(n_frames)
 
         if stride is None:
             stride = 1
@@ -290,7 +309,7 @@ class ArcTrajectoryFile(object):
                 self._read()
 
         coords = np.array(coords)
-        if any(l is None for l in lengths):
+        if any(length is None for length in lengths):
             lengths = angles = None
         else:
             lengths = np.array(lengths)
@@ -300,19 +319,20 @@ class ArcTrajectoryFile(object):
 
     def _read(self):
         "Read a single frame"
-        from mdtraj.core.topology import Topology
         from mdtraj.core.element import Element, virtual
+        from mdtraj.core.topology import Topology
+
         # Read in the number of atoms.
         line = self._fh.readline()
-        if line == '':
+        if line == "":
             raise _EOF()
 
         self._n_atoms = int(line.split()[0])
         self._line_counter += 1
 
         coords = np.empty((self._n_atoms, 3), dtype=np.float32)
-        bond_partners = [[] for i in xrange(self._n_atoms)]
-        atom_names = ['' for i in xrange(self._n_atoms)]
+        bond_partners = [[] for i in range(self._n_atoms)]
+        atom_names = ["" for i in range(self._n_atoms)]
         line = self._fh.readline()
         s = line.split()
         self._line_counter += 1
@@ -321,10 +341,10 @@ class ArcTrajectoryFile(object):
         if len(s) == 6:
             try:
                 cell_lengths = np.asarray(
-                                [float(s[0]), float(s[1]), float(s[2])]
+                    [float(s[0]), float(s[1]), float(s[2])],
                 )
                 cell_angles = np.asarray(
-                                [float(s[3]), float(s[4]), float(s[5])]
+                    [float(s[3]), float(s[4]), float(s[5])],
                 )
                 line = self._fh.readline()
                 s = line.split()
@@ -335,7 +355,7 @@ class ArcTrajectoryFile(object):
         while i < self._n_atoms - 1:
             atom_names[i] = s[1]
             bond_partners[i] = [int(x) for x in s[6:]]
-            coords[i,:] = [float(s[pos]) for pos in [2, 3, 4]]
+            coords[i, :] = [float(s[pos]) for pos in [2, 3, 4]]
             i += 1
             line = self._fh.readline()
             s = line.split()
@@ -343,16 +363,16 @@ class ArcTrajectoryFile(object):
         # Now do the last atom
         atom_names[i] = s[1]
         bond_partners[i] = [int(x) for x in s[6:]]
-        coords[i,:] = [float(s[pos]) for pos in [2, 3, 4]]
+        coords[i, :] = [float(s[pos]) for pos in [2, 3, 4]]
         # Now see if we have to build a topology
         if self.topology is None:
             self.topology = top = Topology()
-            chain = top.add_chain()                # only 1 chain
-            res = top.add_residue('RES', chain, 1) # only 1 residue
+            chain = top.add_chain()  # only 1 chain
+            res = top.add_residue("RES", chain, 1)  # only 1 residue
             for at in atom_names:
                 # First get the element. Try for common 2-letter elements, then
                 # use the first letter only (default to None if I can't find it)
-                if at[:2].upper() in ('NA', 'CL', 'MG'):
+                if at[:2].upper() in ("NA", "CL", "MG"):
                     elem = Element.getBySymbol(at[:2])
                 else:
                     try:
@@ -366,7 +386,8 @@ class ArcTrajectoryFile(object):
                 me = atoms[i]
                 for b in bonds:
                     b -= 1
-                    if b < i: continue
+                    if b < i:
+                        continue
                     it = atoms[b]
                     top.add_bond(me, it)
 
@@ -374,7 +395,7 @@ class ArcTrajectoryFile(object):
         return coords, cell_lengths, cell_angles
 
     def write(self, xyz):
-        """ The ArcTrajectoryFile does not have a write method,
+        """The ArcTrajectoryFile does not have a write method,
         because TINKER .arc files have special numerical atom types
         which are not shared by any other trajectory file format.
 
@@ -385,5 +406,4 @@ class ArcTrajectoryFile(object):
 
         """
 
-        raise RuntimeError('write() is not available for .arc files')
-
+        raise RuntimeError("write() is not available for .arc files")

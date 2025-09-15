@@ -3,8 +3,150 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-Current Development
--------------------
+v1.11.0 (June 24, 2025)
+--------------------------
+- Test on Python 3.13 by @jeremyleung521 in #1973
+- Set up `cibuildwheel` by @mattwthompson in #1980
+- Remove scipy import in `_lprmsd.pyx` to make mdtraj submodules importable without scipy by @rjdirisio in #1988
+- Run OpenMM tests on CI by @mikemhenry in #1986
+- Add flaky/rerun-failures to tests that require pulling off a PDB by @jeremyleung521 in #1987
+- Add logo in SVG by @janash in #1989
+- Add type annotation to Topology class by @jchen0506 in #1977
+- Remove netCDF4 dependency, set up PyPI build variants by @jeremyleung521 in #2000
+- Allow ArcTrajectoryFile to optionally take topology by @jeremyleung521 in #2002
+- Add formal charge to the `to_dataframe()` and `from_dataframe()` methods by @jchen0506 in #2007
+- Fix atom_slice resSeq assignment and add HSD/HSE residue names by @huhlim and @jeremyleung521 in #2013
+- Unpin sphinx by @janash in #2016
+- Move RNG/ptraj generation for distance tests into fixture by @jeremyleung521 in #1999
+- Refactor: remove arbitrary arguments from AST module classes by @RobertArbon in #2009
+- Update note on project status by @janash in #2019
+- Fix Topology double-loading for HDF5 and MOL2 (+ remove false-positive UserWarning) by @jeremyleung521 in #2012
+- Feature: calculate Pi-stacking+T-stacking interactions given aromatic groups by @rjdirisio in #1984
+- Sort bonds to avoid make_molecules_whole failures by @eruijsena in #1929
+- Test Linux aarch64 by @jeremyleung521 in #1974
+- Allow mdtraj.rmsd() to calculate without alignment by @jeremyleung521 in #2011
+- Update formatters by @mattwthompson in #2022
+- Bugfix: delete_atom_by_index updates bond list by @RobertArbon in #2021
+- Preserve chain_id when creating topologies by @k9cdt in #2015
+- Add `nucleic` and `is_nucleic` atom selection PR by @dwhswenson and @janash in #2023
+- Remove header option from PDB writer by @cabb99 in #2034
+- Port PDBx/mmCIF Reader/Writer from OpenMM to MDTraj by @cabb99 in #2004
+- Add formal charge in missing places on topology by @janash in #2038
+- Hotfix for numpy 2.3 by @jeremyleung521 in #2045
+- Update dcdplugin.c by @reedharrison and @bennybp in #1771
+- Update unitcell.py to check if unitcell is valid by @jeremyleung521 in #2029
+- Drop Python 3.10 support by @jeremyleung521 in #2046
+- Add py3dmol visualization to pi stacking by @janash in #2020
+- Allow HDF5TrajectoryFile().topology = None by @jeremyleung521 in #2042
+- Limit warnings in tests by @jeremyleung521 in #2047
+
+A total of 14 people contributed to this release.
+People with a "+" by their names contributed to MDTraj for the first time.
+
+- Jeremy Leung
+- Matt. W. Thompson
+- Ryan DiRisio
+- Mike M. Henry +
+- Jessica A. Nash
+- Jing Chen +
+- Lim Heo +
+- Lex O'brien +
+- Enrico Ruijsenaars +
+- Da Teng
+- David W.H. Swenson +
+- Carlos Bueno +
+- Reed Harrison +
+- Benjamin P. Pritchard +
+
+
+v1.10.3 (February 7, 2025)
+--------------------------
+
+- Pin numpy>=1.25 at run time, numpy>=2.0 at build time for numpy C-API #1960
+- Fix PDB overflow #1934
+- Allow `mdtraj.load` with `top=None` #1969
+- Preserve `chain_ids` for `to_openmm` and `from_openmm` #1951
+- Store and write formal charges from PDB/OpenMM #1967
+- Performance enhancement for `md.join` #1965
+- Sorting atom_indices in atom_slice #1938
+- Consolidate/update config files #1949
+- Mark a few distance tests as flaky #1972
+
+A total of 7 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Jeremy Leung
+- Matthew W. Thompson
+- Jessica A. Nash
+- Jan-Oliver Kapp-Joswig +
+- Ryan DiRisio +
+- Da Teng +
+- Pavel Buslaev +
+
+v1.10.2 (December 11, 2024)
+--------------------------
+
+- Add netCDF4 as a dependency in ``setup.py`` (#1944)
+- Support NumPy 2 (#1928)
+
+Authors
+~~~~~~~
+
+- Jeremy Leung
+- Jessica A. Nash
+
+v1.10.1 (October 17, 2024)
+--------------------------
+
+- Update RMSD module for Cython 3.0 (#1917)
+- Fix edge case with float rounding in angle computation (#1841)
+- Add atom selection via atom_indices to SASA computation (#1844)
+- ReadTheDocs migration (#1888)
+- Fix netCDF import (#1894)
+- Use standard library `ast.unparse` instead of third-party `astunparse` (#1898)
+- Allow appending to HDF5 files (#1899)
+- Remove deprecated `oldest-supported-numpy` (#1902)
+- Remove remaining uses of `six` (#1908)
+- Replace `xdrlib` with `mda_xdrlib` (#1911)
+- Add `mda-xdrlib` to `setup.py` (#1913)
+- Set up `versioneer` (#1909)
+- Remove `distutils` from tests (#1916)
+- Remove unused `xdrlib` import from Python layer (#1919)
+- Fix PDB "vmd convention" false-positive (#1904)
+
+A total of 11 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Charlie Laughton
+- Guillermo Pérez-Hernández
+- Sukrit Singh
+- Jeremy Leung
+- Sander Roet
+- Chris Jones+
+- David W.H. Swenson
+- Matthew W. Thompson
+- Robert Schütz+
+- Patrick Kunzmann
+- Augustin Zidek+
+
+v1.10.0 (May 30, 2024)
+----------------------
+
+- Remove TNG support (#1875)
+- Drop support for long-unsupported upstreams (#1838)
+- Drop `distutils` (#1834)
+- Lint codebase (#1874)
+- Allow `mdtraj.load()`` to read various non-standard PDB files (#1849)
+- Use netCDF4 as default in `NetCDFTrajectoryFile`, fallback to SciPy implementation (#1878)
+- Add dependabot for updating actions (#1865)
+
+A total of 4 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Jinzhe Zeng+
+- Matthew W. Thompson
+- Jeremy Leung
+- Jessica A. Nash+
 
 v1.9.9 (July 22, 2023)
 ---------------------

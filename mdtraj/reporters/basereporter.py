@@ -20,27 +20,18 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-
-##############################################################################
-# Imports
-##############################################################################
-
-from __future__ import print_function, division
-# stdlib
 import math
-# ours
-from mdtraj.core.topology import _topology_from_subset, Topology
-from mdtraj.utils import unitcell
-from mdtraj.utils.six import PY3
-if PY3:
-    basestring = str
 
 import numpy as np
 
+from mdtraj.core.topology import Topology, _topology_from_subset
+from mdtraj.utils import unitcell
+
 try:
     # openmm
-    import openmm.unit as units
     import openmm as mm
+    import openmm.unit as units
+
     OPENMM_IMPORTED = True
 except ImportError:
     # if someone tries to import all of mdtraj but doesn't
@@ -48,22 +39,30 @@ except ImportError:
     # only choke if they actually try to USE the reporter
     OPENMM_IMPORTED = False
 
-##############################################################################
-# Classes
-##############################################################################
 
-class _BaseReporter(object):
+class _BaseReporter:
     """
     Baseclass for reporters.
     """
+
     @property
     def backend(self):
-        raise NotImplementedError('Must be implemented by the subclass')
+        raise NotImplementedError("Must be implemented by the subclass")
 
-    def __init__(self, file, reportInterval, coordinates=True, time=True,
-                 cell=True, potentialEnergy=True, kineticEnergy=True,
-                 temperature=True, velocities=False, atomSubset=None,
-                 enforcePeriodicBox=None):
+    def __init__(
+        self,
+        file,
+        reportInterval,
+        coordinates=True,
+        time=True,
+        cell=True,
+        potentialEnergy=True,
+        kineticEnergy=True,
+        temperature=True,
+        velocities=False,
+        atomSubset=None,
+        enforcePeriodicBox=None,
+    ):
         """Create an OpenMM reporter
 
         Parameters
@@ -99,11 +98,11 @@ class _BaseReporter(object):
         system, and are not "subsetted" to only include the energy of your
         subsystem.
         """
-        if isinstance(file, basestring):
-            self._traj_file = self.backend(file, 'w')
+        if isinstance(file, str):
+            self._traj_file = self.backend(file, "w")
         elif isinstance(file, self.backend):
             self._traj_file = file
-            if not file.mode in ['w', 'a']:
+            if file.mode not in ["w", "a"]:
                 raise ValueError('file must be open in "w" or "a" mode')
         else:
             raise TypeError("I don't know how to handle %s" % file)
@@ -111,7 +110,6 @@ class _BaseReporter(object):
         self._reportInterval = int(reportInterval)
         self._is_intialized = False
         self._n_particles = None
-
 
         self._coordinates = bool(coordinates)
         self._time = bool(time)
@@ -126,8 +124,7 @@ class _BaseReporter(object):
         self._enforcePeriodicBox = enforcePeriodicBox
 
         if not OPENMM_IMPORTED:
-            raise ImportError('OpenMM not found.')
-
+            raise ImportError("OpenMM not found.")
 
     def _initialize(self, simulation):
         """Deferred initialization of the reporter, which happens before
@@ -144,34 +141,38 @@ class _BaseReporter(object):
         """
         if self._atomSubset is not None:
             if not min(self._atomSubset) >= 0:
-                raise ValueError('atomSubset must be zero indexed. '
-                                 'the smallest allowable value is zero')
+                raise ValueError(
+                    "atomSubset must be zero indexed. the smallest allowable value is zero",
+                )
             if not max(self._atomSubset) < simulation.system.getNumParticles():
-                raise ValueError('atomSubset must be zero indexed. '
-                                 'the largest value must be less than the number '
-                                 'of particles in the system')
-            if not all(a==int(a) for a in self._atomSubset):
-                raise ValueError('all of the indices in atomSubset must be integers')
+                raise ValueError(
+                    "atomSubset must be zero indexed. "
+                    "the largest value must be less than the number "
+                    "of particles in the system",
+                )
+            if not all(a == int(a) for a in self._atomSubset):
+                raise ValueError("all of the indices in atomSubset must be integers")
 
             self._atomSlice = self._atomSubset
-            if hasattr(self._traj_file, 'topology'):
+            if hasattr(self._traj_file, "topology"):
                 self._traj_file.topology = _topology_from_subset(
-                    Topology.from_openmm(simulation.topology), self._atomSubset)
+                    Topology.from_openmm(simulation.topology),
+                    self._atomSubset,
+                )
         else:
             self._atomSlice = slice(None)
-            if hasattr(self._traj_file, 'topology'):
+            if hasattr(self._traj_file, "topology"):
                 self._traj_file.topology = Topology.from_openmm(simulation.topology)
-
 
         system = simulation.system
         if self._temperature:
             # Compute the number of degrees of freedom.
             dof = 0
             for i in range(system.getNumParticles()):
-                if system.getParticleMass(i) > 0*units.dalton:
+                if system.getParticleMass(i) > 0 * units.dalton:
                     dof += 3
             dof -= system.getNumConstraints()
-            if any(type(system.getForce(i)) == mm.CMMotionRemover for i in range(system.getNumForces())):
+            if any(type(system.getForce(i)) is mm.CMMotionRemover for i in range(system.getNumForces())):
                 dof -= 3
             self._dof = dof
 
@@ -192,7 +193,14 @@ class _BaseReporter(object):
             energies respectively.
         """
         steps = self._reportInterval - simulation.currentStep % self._reportInterval
-        return (steps, self._coordinates, self._velocities, False, self._needEnergy, self._enforcePeriodicBox)
+        return (
+            steps,
+            self._coordinates,
+            self._velocities,
+            False,
+            self._needEnergy,
+            self._enforcePeriodicBox,
+        )
 
     def report(self, simulation, state):
         """Generate a report.
@@ -214,25 +222,31 @@ class _BaseReporter(object):
         kwargs = {}
         if self._coordinates:
             coordinates = state.getPositions(asNumpy=True)[self._atomSlice]
-            coordinates = coordinates.value_in_unit(getattr(units, self._traj_file.distance_unit))
+            coordinates = coordinates.value_in_unit(
+                getattr(units, self._traj_file.distance_unit),
+            )
             args = (coordinates,)
 
         if self._time:
-            kwargs['time'] = state.getTime()
+            kwargs["time"] = state.getTime()
         if self._cell:
             vectors = state.getPeriodicBoxVectors(asNumpy=True)
-            vectors = vectors.value_in_unit(getattr(units, self._traj_file.distance_unit))
-            a, b, c, alpha, beta, gamma = unitcell.box_vectors_to_lengths_and_angles(*vectors)
-            kwargs['cell_lengths'] = np.array([a, b, c])
-            kwargs['cell_angles'] = np.array([alpha, beta, gamma])
+            vectors = vectors.value_in_unit(
+                getattr(units, self._traj_file.distance_unit),
+            )
+            a, b, c, alpha, beta, gamma = unitcell.box_vectors_to_lengths_and_angles(
+                *vectors,
+            )
+            kwargs["cell_lengths"] = np.array([a, b, c])
+            kwargs["cell_angles"] = np.array([alpha, beta, gamma])
         if self._potentialEnergy:
-            kwargs['potentialEnergy'] = state.getPotentialEnergy()
+            kwargs["potentialEnergy"] = state.getPotentialEnergy()
         if self._kineticEnergy:
-            kwargs['kineticEnergy'] = state.getKineticEnergy()
+            kwargs["kineticEnergy"] = state.getKineticEnergy()
         if self._temperature:
-            kwargs['temperature'] = 2*state.getKineticEnergy()/(self._dof*units.MOLAR_GAS_CONSTANT_R)
+            kwargs["temperature"] = 2 * state.getKineticEnergy() / (self._dof * units.MOLAR_GAS_CONSTANT_R)
         if self._velocities:
-            kwargs['velocities'] = state.getVelocities(asNumpy=True)[self._atomSlice, :]
+            kwargs["velocities"] = state.getVelocities(asNumpy=True)[self._atomSlice, :]
 
         self._traj_file.write(*args, **kwargs)
         # flush the file to disk. it might not be necessary to do this every
@@ -240,7 +254,7 @@ class _BaseReporter(object):
         # accumulate a lot of data in memory only to find out, at the very
         # end of the run, that there wasn't enough space on disk to hold the
         # data.
-        if hasattr(self._traj_file, 'flush'):
+        if hasattr(self._traj_file, "flush"):
             self._traj_file.flush()
 
     def _checkForErrors(self, simulation, state):
@@ -251,11 +265,11 @@ class _BaseReporter(object):
          - state (State) The current state of the simulation
         """
         if self._needEnergy:
-            energy = (state.getKineticEnergy()+state.getPotentialEnergy()).value_in_unit(units.kilojoules_per_mole)
+            energy = (state.getKineticEnergy() + state.getPotentialEnergy()).value_in_unit(units.kilojoules_per_mole)
             if math.isnan(energy):
-                raise ValueError('Energy is NaN')
+                raise ValueError("Energy is NaN")
             if math.isinf(energy):
-                raise ValueError('Energy is infinite')
+                raise ValueError("Energy is infinite")
 
     def __del__(self):
         self.close()

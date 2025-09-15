@@ -2,16 +2,19 @@
 # This file is lovingly included from _geometry.pyx
 
 import numpy as np
+
 cimport numpy as np
 from libc.stdint cimport int32_t, int64_t
+from libcpp.vector cimport vector
+
 
 cdef extern from "math_patch.h" nogil:
     float roundf(float x)
     float floorf(float x)
 
-cdef void make_whole(float[:,::1] frame_positions,
-                float[:,::1] frame_unitcell_vectors,
-                int32_t[:,:] sorted_bonds) nogil:
+cdef int make_whole(float[:,::1] frame_positions,
+                    float[:,::1] frame_unitcell_vectors,
+                    int32_t[:,:] sorted_bonds) except -1 nogil:
     # Fix each molecule to ensure the periodic boundary conditions are not
     # splitting it into pieces.
     cdef int atom1, atom2, j, k
@@ -30,13 +33,15 @@ cdef void make_whole(float[:,::1] frame_positions,
             offset[k] += frame_unitcell_vectors[0, k]*roundf((delta[0]-offset[0])/frame_unitcell_vectors[0,0])
             frame_positions[atom2, k] = frame_positions[atom2, k] - offset[k]
 
-cdef void anchor_dists(float[:,::1] frame_positions,
-                  float[:,::1] frame_unitcell_vectors,
-                  int[:] anchor_molecule_indices,
-                  int[:] anchor_molecule_offsets,
-                  float[:,:] anchor_dist,
-                  int[:,:,:] anchor_nearest_atoms,
-                  int num_anchors) nogil:
+    return 0
+
+cdef int anchor_dists(float[:,::1] frame_positions,
+                      float[:,::1] frame_unitcell_vectors,
+                      int[:] anchor_molecule_indices,
+                      int[:] anchor_molecule_offsets,
+                      float[:,:] anchor_dist,
+                      int[:,:,:] anchor_nearest_atoms,
+                      int num_anchors) except -1 nogil:
     cdef int ca1, ca2, mol1, mol2, i1, i2, j1, j2
     cdef float cdist
     cdef int[:] atoms1, atoms2
@@ -62,11 +67,13 @@ cdef void anchor_dists(float[:,::1] frame_positions,
             anchor_nearest_atoms[mol2, mol1, 0] = ca1
             anchor_nearest_atoms[mol2, mol1, 1] = ca2
 
-cdef void wrap_mols(float[:,::1] frame_positions,
-                    float[:,::1] frame_unitcell_vectors,
-                    float[:] center,
-                    int[:] other_molecule_indices,
-                    int[:] other_molecule_offsets) nogil:
+    return 0
+
+cdef int wrap_mols(float[:,::1] frame_positions,
+                   float[:,::1] frame_unitcell_vectors,
+                   float[:] center,
+                   int[:] other_molecule_indices,
+                   int[:] other_molecule_offsets) except -1 nogil:
     # Loop over all molecules, apply the correct offset (so that anchor
     # molecules will end up centered in the periodic box), and then wrap
     # the molecule into the box.
@@ -110,6 +117,7 @@ cdef void wrap_mols(float[:,::1] frame_positions,
             for k in range(3):
                 frame_positions[mol[j], k] += mol_offset[k]-mol_center[k]
 
+    return 0
 
 cdef void image_frame(frame_positions,
                  frame_unitcell_vectors,
@@ -207,10 +215,10 @@ def image_molecules(xyz, box, anchor_molecules, other_molecules, sorted_bonds):
     for i, om in enumerate(other_molecules):
         other_molecule_indices[offset:other_molecule_offsets[i]] = om
         offset = other_molecule_offsets[i]
-    
+
     for i in range(xyz.shape[0]):
-        image_frame(xyz[i], box[i], anchor_molecule_indices, 
-                    anchor_molecule_offsets, other_molecule_indices, 
+        image_frame(xyz[i], box[i], anchor_molecule_indices,
+                    anchor_molecule_offsets, other_molecule_indices,
                     other_molecule_offsets, sorted_bonds)
 
 def whole_molecules(xyz, box, sorted_bonds):

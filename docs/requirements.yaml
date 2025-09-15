@@ -1,0 +1,10 @@
+name: docs
+channels:
+  - conda-forge
+dependencies:
+  # Base depends
+  - pip
+  - python=3.11
+
+  # other libraries
+  - pandoc

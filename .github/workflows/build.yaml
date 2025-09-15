@@ -1,0 +1,90 @@
+name: Build and upload to PyPI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 2" # every monday
+  release:
+    types:
+      - 'published'
+
+jobs:
+  build_wheels:
+    name: Build wheels for Python 3.${{ matrix.python }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["11", "12", "13"]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - name: setup windows, install zlib
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: bash
+        run:  vcpkg install zlib:x64-windows
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v3.1.4
+        env:
+          CIBW_SKIP: "pp* *-musllinux* *-muslinux* *-win32 cp31?t-*"
+          CIBW_BUILD_VERBOSITY: 1
+          CIBW_ARCHS_WINDOWS: auto
+          CIBW_ARCHS_MACOS: "universal2"
+          CIBW_ARCHS_LINUX: native
+          CIBW_BUILD: "cp3${{ matrix.python }}-*"
+          CIBW_TEST_COMMAND: >
+            python -c "import mdtraj; print(mdtraj.__version__)" &&
+            mdconvert -h &&
+            mdinspect -h
+        with:
+          package-dir: .
+          output-dir: wheelhouse
+          config-file: "{package}/pyproject.toml"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-wheels-${{ matrix.os }}-${{ matrix.python }}
+          path: ./wheelhouse/*.whl
+          overwrite: true
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        name: Install Python
+        with:
+          python-version: '3.12'
+      - run: python -m pip install build
+      - name: Build sdist
+        run: python -m build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-sdist
+          path: dist/*.tar.gz
+          overwrite: true
+
+  upload_pypi:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/mdtraj
+    if: github.event_name == 'release'
+    permissions:
+        # IMPORTANT: this permission is mandatory for trusted publishing
+        id-token: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          # unpacks default artifact into dist/
+          # if `name: artifact` is omitted, the action will create extra parent dir
+          name: artifact-*
+          path: dist
+          merge-multiple: true
+
+      - uses: pypa/gh-action-pypi-publish@release/v1

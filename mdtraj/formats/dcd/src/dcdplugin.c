@@ -1,9 +1,9 @@
 /***************************************************************************
- *cr                                                                       
- *cr            (C) Copyright 1995-2009 The Board of Trustees of the           
- *cr                        University of Illinois                       
- *cr                         All Rights Reserved                        
- *cr                                                                   
+ *cr
+ *cr            (C) Copyright 1995-2016 The Board of Trustees of the
+ *cr                        University of Illinois
+ *cr                         All Rights Reserved
+ *cr
  ***************************************************************************/
 
 /***************************************************************************
@@ -11,11 +11,11 @@
  *
  *      $RCSfile: dcdplugin.c,v $
  *      $Author: johns $       $Locker:  $             $State: Exp $
- *      $Revision: 1.76 $       $Date: 2011/05/18 17:29:19 $
+ *      $Revision: 1.88 $       $Date: 2020/12/17 17:14:07 $
  *
  ***************************************************************************
  * DESCRIPTION:
- *   Code for reading and writing CHARMM, NAMD, and X-PLOR format 
+ *   Code for reading and writing CHARMM, NAMD, and X-PLOR format
  *   molecular dynamic trajectory files.
  *
  * TODO:
@@ -27,7 +27,7 @@
  *
  *  Try various alternative I/O API options:
  *   - use mmap(), with read-once flags
- *   - use O_DIRECT open mode on new revs of Linux kernel 
+ *   - use O_DIRECT open mode on new revs of Linux kernel
  *   - use directio() call on a file descriptor to enable on Solaris
  *   - use aio_open()/read()/write()
  *   - use readv/writev() etc.
@@ -49,12 +49,14 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
 #include "endianswap.h"
 #include "molfile_plugin.h"
 #include "dcdplugin.h"
+
 
 /* print DCD error in a human readable way */
 static void print_dcderror(const char *func, int errcode) {
@@ -70,12 +72,12 @@ static void print_dcderror(const char *func, int errcode) {
     case DCD_FILEEXISTS:  errstr = "output file already exists"; break;
     case DCD_BADMALLOC:   errstr = "memory allocation failed"; break;
     case DCD_BADWRITE:    errstr = "error during write"; break;
-    case DCD_SUCCESS:     
+    case DCD_SUCCESS:
     default:
       errstr = "no error";
       break;
-  } 
-  printf("dcdplugin) %s: %s\n", func, errstr); 
+  }
+  printf("dcdplugin) %s: %s\n", func, errstr);
 }
 
 
@@ -88,14 +90,14 @@ static void print_dcderror(const char *func, int errcode) {
  *               *istart set to starting timestep of dcd file
  *               *nsavc set to timesteps between dcd saves
  *               *delta set to value of trajectory timestep
- *               *nfixed set to number of fixed atoms 
+ *               *nfixed set to number of fixed atoms
  *               *freeind may be set to heap-allocated space
  *               *reverse set to one if reverse-endian, zero if not.
  *               *charmm set to internal code for handling charmm data.
  */
-static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART, 
-                   int *NSAVC, double *DELTA, int *NAMNF, 
-                   int **FREEINDEXES, float **fixedcoords, int *reverseEndian, 
+static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
+                   int *NSAVC, double *DELTA, int *NAMNF,
+                   int **FREEINDEXES, float **fixedcoords, int *reverseEndian,
                    int *charmm)
 {
   unsigned int input_integer[2];  /* buffer space */
@@ -103,6 +105,7 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
   char hdrbuf[84];    /* char buffer used to store header */
   int NTITLE;
   int dcdcordmagic;
+  int hugefile = 0;
   char *corp = (char *) &dcdcordmagic;
 
   /* coordinate dcd file magic string 'CORD' */
@@ -113,7 +116,7 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
 
   /* First thing in the file should be an 84.
    * some 64-bit compiles have a 64-bit record length indicator,
-   * so we have to read two ints and check in a more complicated 
+   * so we have to read two ints and check in a more complicated
    * way. :-( */
   ret_val = READ(fd, input_integer, 2*sizeof(unsigned int));
   CHECK_FREAD(ret_val, "reading first int from dcd file");
@@ -123,30 +126,24 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
   if ((input_integer[0]+input_integer[1]) == 84) {
     *reverseEndian=0;
     rec_scale=RECSCALE64BIT;
-    #ifdef DEBUG
     printf("dcdplugin) detected CHARMM -i8 64-bit DCD file of native endianness\n");
-    #endif
   } else if (input_integer[0] == 84 && input_integer[1] == dcdcordmagic) {
     *reverseEndian=0;
     rec_scale=RECSCALE32BIT;
-    #ifdef DEBUG
     printf("dcdplugin) detected standard 32-bit DCD file of native endianness\n");
-    #endif
   } else {
     /* now try reverse endian */
     swap4_aligned(input_integer, 2); /* will have to unswap magic if 32-bit */
     if ((input_integer[0]+input_integer[1]) == 84) {
       *reverseEndian=1;
       rec_scale=RECSCALE64BIT;
-      #ifdef DEBUG
       printf("dcdplugin) detected CHARMM -i8 64-bit DCD file of opposite endianness\n");
-      #endif
     } else {
       swap4_aligned(&input_integer[1], 1); /* unswap magic (see above) */
       if (input_integer[0] == 84 && input_integer[1] == dcdcordmagic) {
         *reverseEndian=1;
         rec_scale=RECSCALE32BIT;
-        /* printf("dcdplugin) detected standard 32-bit DCD file of opposite endianness\n"); */
+        printf("dcdplugin) detected standard 32-bit DCD file of opposite endianness\n");
       } else {
         /* not simply reversed endianism or -i8, something rather more evil */
         printf("dcdplugin) unrecognized DCD header:\n");
@@ -159,10 +156,10 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
   }
 
   /* check for magic string, in case of long record markers */
-  if (rec_scale == RECSCALE64BIT) { 
+  if (rec_scale == RECSCALE64BIT) {
     ret_val = READ(fd, input_integer, sizeof(unsigned int));
     if (input_integer[0] != dcdcordmagic) {
-        /* printf("dcdplugin) failed to find CORD magic in CHARMM -i8 64-bit DCD file\n"); */
+      printf("dcdplugin) failed to find CORD magic in CHARMM -i8 64-bit DCD file\n");
       return DCD_BADFORMAT;
     }
   }
@@ -186,17 +183,17 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
 
     if (rec_scale == RECSCALE64BIT)
       (*charmm) |= DCD_HAS_64BIT_REC;
-  
+
   } else {
     (*charmm) = DCD_IS_XPLOR; /* must be an X-PLOR format DCD file */
   }
 
   if (*charmm & DCD_IS_CHARMM) {
     /* CHARMM and NAMD versions 2.1b1 and later */
-    /* printf("dcdplugin) CHARMM format DCD file (also NAMD 2.1 and later)\n"); */
+    printf("dcdplugin) CHARMM format DCD file (also NAMD 2.1 and later)\n");
   } else {
     /* CHARMM and NAMD versions prior to 2.1b1  */
-    /* printf("dcdplugin) X-PLOR format DCD file (also NAMD 2.0 and earlier)\n"); */
+    printf("dcdplugin) X-PLOR format DCD file (also NAMD 2.0 and earlier)\n");
   }
 
   /* Store the number of sets of coordinates (NSET) */
@@ -244,7 +241,7 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
       return DCD_BADFORMAT;
     }
   }
-  
+
   /* Read in the size of the next block */
   input_integer[1] = 0;
   ret_val = READ(fd, input_integer, rec_scale*sizeof(int));
@@ -260,13 +257,13 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
     if (*reverseEndian) swap4_aligned(&NTITLE, 1);
 
     if (NTITLE < 0) {
-      printf("dcdplugin) WARNING: Bogus NTITLE value: %d (hex: %08x)\n", 
+      printf("dcdplugin) WARNING: Bogus NTITLE value: %d (hex: %08x)\n",
              NTITLE, NTITLE);
       return DCD_BADFORMAT;
     }
 
     if (NTITLE > 1000) {
-      printf("dcdplugin) WARNING: Bogus NTITLE value: %d (hex: %08x)\n", 
+      printf("dcdplugin) WARNING: Bogus NTITLE value: %d (hex: %08x)\n",
              NTITLE, NTITLE);
       if (NTITLE == 1095062083) {
         printf("dcdplugin) WARNING: Broken Vega ZZ 2.4.0 DCD file detected\n");
@@ -294,7 +291,7 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
   /* Read in an integer '4' */
   input_integer[1] = 0;
   ret_val = READ(fd, input_integer, rec_scale*sizeof(int));
-  
+
   CHECK_FREAD(ret_val, "reading a '4'");
   CHECK_FEOF(ret_val, "reading a '4'");
   if (*reverseEndian) swap4_aligned(input_integer, rec_scale);
@@ -308,6 +305,14 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
   CHECK_FREAD(ret_val, "reading number of atoms");
   CHECK_FEOF(ret_val, "reading number of atoms");
   if (*reverseEndian) swap4_aligned(N, 1);
+
+  if (*N > (1L<<30)) {
+    hugefile=1;
+    printf("dcdplugin) ***\n");
+    printf("dcdplugin) *** Trajectory contains over 2^30 atoms.\n");
+    printf("dcdplugin) *** Huge file integer wraparound handling enabled.\n");
+    printf("dcdplugin) ***\n");
+  }
 
   /* Read in an integer '4' */
   input_integer[1] = 0;
@@ -323,11 +328,11 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
   *FREEINDEXES = NULL;
   *fixedcoords = NULL;
   if (*NAMNF != 0) {
-    (*FREEINDEXES) = (int *) calloc(((*N)-(*NAMNF)), sizeof(int));
+    (*FREEINDEXES) = (int *) calloc((((ptrdiff_t)(*N))-(*NAMNF)), sizeof(int));
     if (*FREEINDEXES == NULL)
       return DCD_BADMALLOC;
 
-    *fixedcoords = (float *) calloc((*N)*4 - (*NAMNF), sizeof(float));
+    *fixedcoords = (float *) calloc(((ptrdiff_t)(*N))*4L - (*NAMNF), sizeof(float));
     if (*fixedcoords == NULL)
       return DCD_BADMALLOC;
 
@@ -338,11 +343,13 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
     CHECK_FEOF(ret_val, "reading size of index array");
     if (*reverseEndian) swap4_aligned(input_integer, rec_scale);
 
-    if ((input_integer[0]+input_integer[1]) != ((*N)-(*NAMNF))*4) {
+    /* when we have more then 2^30 atoms, tests like this one */
+    /* are no longer meaningful and have to be bypassed...    */
+    if (!hugefile && ((input_integer[0]+input_integer[1]) != ((*N)-(*NAMNF))*4L)) {
       return DCD_BADFORMAT;
     }
 
-    ret_val = READ(fd, (*FREEINDEXES), ((*N)-(*NAMNF))*sizeof(int));
+    ret_val = READ(fd, (*FREEINDEXES), ((ptrdiff_t) ((*N)-(*NAMNF)))*sizeof(int));
     CHECK_FREAD(ret_val, "reading size of index array");
     CHECK_FEOF(ret_val, "reading size of index array");
 
@@ -355,7 +362,9 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
     CHECK_FEOF(ret_val, "reading size of index array");
     if (*reverseEndian) swap4_aligned(input_integer, rec_scale);
 
-    if ((input_integer[0]+input_integer[1]) != ((*N)-(*NAMNF))*4) {
+    /* when we have more then 2^30 atoms, tests like this one */
+    /* are no longer meaningful and have to be bypassed...    */
+    if (!hugefile && ((input_integer[0]+input_integer[1]) != ((*N)-(*NAMNF))*4L)) {
       return DCD_BADFORMAT;
     }
   }
@@ -363,7 +372,9 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
   return DCD_SUCCESS;
 }
 
-static int read_charmm_extrablock(fio_fd fd, int charmm, int reverseEndian, float *unitcell) {
+
+static int read_charmm_extrablock(fio_fd fd, int charmm, int reverseEndian,
+                                  float *unitcell) {
   int i, input_integer[2], rec_scale;
 
   if (charmm & DCD_HAS_64BIT_REC) {
@@ -376,117 +387,122 @@ static int read_charmm_extrablock(fio_fd fd, int charmm, int reverseEndian, floa
     /* Leading integer must be 48 */
     input_integer[1] = 0;
     if (fio_fread(input_integer, sizeof(int), rec_scale, fd) != rec_scale)
-      return DCD_BADREAD; 
+      return DCD_BADREAD;
     if (reverseEndian) swap4_aligned(input_integer, rec_scale);
     if ((input_integer[0]+input_integer[1]) == 48) {
       double tmp[6];
       if (fio_fread(tmp, 48, 1, fd) != 1) return DCD_BADREAD;
-      if (reverseEndian) 
+      if (reverseEndian)
         swap8_aligned(tmp, 6);
       for (i=0; i<6; i++) unitcell[i] = (float)tmp[i];
     } else {
       /* unrecognized block, just skip it */
       if (fio_fseek(fd, (input_integer[0]+input_integer[1]), FIO_SEEK_CUR)) return DCD_BADREAD;
     }
-    if (fio_fread(input_integer, sizeof(int), rec_scale, fd) != rec_scale) return DCD_BADREAD; 
-  } 
+    if (fio_fread(input_integer, sizeof(int), rec_scale, fd) != rec_scale) return DCD_BADREAD;
+  }
 
   return DCD_SUCCESS;
 }
 
+
 static int read_fixed_atoms(fio_fd fd, int N, int num_free, const int *indexes,
-                            int reverseEndian, const float *fixedcoords, 
-                            float *freeatoms, float *pos, int charmm)
-{
+                            int reverseEndian, const float *fixedcoords,
+                            float *freeatoms, float *pos, int charmm) {
   int i, input_integer[2], rec_scale;
-  
+
   if(charmm & DCD_HAS_64BIT_REC) {
     rec_scale=RECSCALE64BIT;
   } else {
     rec_scale=RECSCALE32BIT;
   }
-  
+
   /* Read leading integer */
   input_integer[1]=0;
   if (fio_fread(input_integer, sizeof(int), rec_scale, fd) != rec_scale) return DCD_BADREAD;
   if (reverseEndian) swap4_aligned(input_integer, rec_scale);
-  if ((input_integer[0]+input_integer[1]) != 4*num_free) return DCD_BADFORMAT;
-  
+  if ((input_integer[0]+input_integer[1]) != 4L*num_free) return DCD_BADFORMAT;
+
   /* Read free atom coordinates */
-  if (fio_fread(freeatoms, 4*num_free, 1, fd) != 1) return DCD_BADREAD;
+  if (fio_fread(freeatoms, 4L*num_free, 1, fd) != 1) return DCD_BADREAD;
   if (reverseEndian)
     swap4_aligned(freeatoms, num_free);
 
   /* Copy fixed and free atom coordinates into position buffer */
-  memcpy(pos, fixedcoords, 4*N);
+  memcpy(pos, fixedcoords, 4L*N);
   for (i=0; i<num_free; i++)
     pos[indexes[i]-1] = freeatoms[i];
 
-  /* Read trailing integer */ 
+  /* Read trailing integer */
   input_integer[1]=0;
   if (fio_fread(input_integer, sizeof(int), rec_scale, fd) != rec_scale) return DCD_BADREAD;
   if (reverseEndian) swap4_aligned(input_integer, rec_scale);
-  if ((input_integer[0]+input_integer[1]) != 4*num_free) return DCD_BADFORMAT;
+  if ((input_integer[0]+input_integer[1]) != 4L*num_free) return DCD_BADFORMAT;
 
   return DCD_SUCCESS;
 }
-  
+
 static int read_charmm_4dim(fio_fd fd, int charmm, int reverseEndian) {
-  int input_integer[2],rec_scale;
+  int input_integer[2], rec_scale;
 
   if (charmm & DCD_HAS_64BIT_REC) {
     rec_scale=RECSCALE64BIT;
   } else {
     rec_scale=RECSCALE32BIT;
   }
-    
+
   /* If this is a CHARMm file and contains a 4th dimension block, */
   /* we must skip past it to avoid problems                       */
   if ((charmm & DCD_IS_CHARMM) && (charmm & DCD_HAS_4DIMS)) {
     input_integer[1]=0;
-    if (fio_fread(input_integer, sizeof(int), rec_scale, fd) != rec_scale) return DCD_BADREAD;  
+    if (fio_fread(input_integer, sizeof(int), rec_scale, fd) != rec_scale) return DCD_BADREAD;
     if (reverseEndian) swap4_aligned(input_integer, rec_scale);
     if (fio_fseek(fd, (input_integer[0]+input_integer[1]), FIO_SEEK_CUR)) return DCD_BADREAD;
-    if (fio_fread(input_integer, sizeof(int), rec_scale, fd) != rec_scale) return DCD_BADREAD;  
+    if (fio_fread(input_integer, sizeof(int), rec_scale, fd) != rec_scale) return DCD_BADREAD;
   }
 
   return DCD_SUCCESS;
 }
 
-/* 
+/*
  * Read a dcd timestep from a dcd file
- * Input: fd - a file struct opened for binary reading, from which the 
+ * Input: fd - a file struct opened for binary reading, from which the
  *             header information has already been read.
- *        natoms, nfixed, first, *freeind, reverse, charmm - the corresponding 
+ *        natoms, nfixed, first, *freeind, reverse, charmm - the corresponding
  *             items as set by read_dcdheader
  *        first - true if this is the first frame we are reading.
  *        x, y, z: space for natoms each of floats.
- *        unitcell - space for six floats to hold the unit cell data.  
+ *        unitcell - space for six floats to hold the unit cell data.
  *                   Not set if no unit cell data is present.
  * Output: 0 on success, negative error code on failure.
  * Side effects: x, y, z contain the coordinates for the timestep read.
  *               unitcell holds unit cell data if present.
  */
-static int read_dcdstep(fio_fd fd, int N, float *X, float *Y, float *Z, 
+static int read_dcdstep(fio_fd fd, int N, float *X, float *Y, float *Z,
                         float *unitcell, int num_fixed,
-                        int first, int *indexes, float *fixedcoords, 
-                        int reverseEndian, int charmm)
-{
-  int ret_val, rec_scale;   /* Return value from read */
-  
+                        int first, int *indexes, float *fixedcoords,
+                        int reverseEndian, int charmm) {
+  int ret_val;    /* Return value from read */
+  ptrdiff_t rec_scale;
+  int hugefile = (N > (1L<<30)) ? 1 : 0;
+  int check_reclen = 1; /* Enable Fortran record length value safety checks */
+
+  /* Fortran record length checks disabled for huge files or user request */
+  if (hugefile || (getenv("VMDDCDNOCHECKRECLEN") != NULL))
+    check_reclen = 0;
+
   if (charmm & DCD_HAS_64BIT_REC) {
     rec_scale=RECSCALE64BIT;
   } else {
     rec_scale=RECSCALE32BIT;
   }
-  
+
   if ((num_fixed==0) || first) {
     /* temp storage for reading formatting info */
     /* note: has to be max size we'll ever use  */
-    int tmpbuf[6*RECSCALEMAX]; 
+    int tmpbuf[6L*RECSCALEMAX];
 
     fio_iovec iov[7];   /* I/O vector for fio_readv() call          */
-    fio_size_t readlen; /* number of bytes actually read            */
     int i;
 
     /* if there are no fixed atoms or this is the first timestep read */
@@ -507,41 +523,68 @@ static int read_dcdstep(fio_fd fd, int N, float *X, float *Y, float *Z,
     iov[1].iov_len  = sizeof(float)*N;
 
     iov[2].iov_base = (fio_caddr_t) &tmpbuf[1*rec_scale]; /* read 2 format integers */
-    iov[2].iov_len  = rec_scale*sizeof(int) * 2;
+    iov[2].iov_len  = rec_scale*sizeof(int) * 2L;
 
     iov[3].iov_base = (fio_caddr_t) Y;          /* read Y coordinates     */
     iov[3].iov_len  = sizeof(float)*N;
 
-    iov[4].iov_base = (fio_caddr_t) &tmpbuf[3*rec_scale]; /* read 2 format integers */
-    iov[4].iov_len  = rec_scale*sizeof(int) * 2;
+    iov[4].iov_base = (fio_caddr_t) &tmpbuf[3L*rec_scale]; /* read 2 format integers */
+    iov[4].iov_len  = rec_scale*sizeof(int) * 2L;
 
     iov[5].iov_base = (fio_caddr_t) Z;          /* read Y coordinates     */
     iov[5].iov_len  = sizeof(float)*N;
 
-    iov[6].iov_base = (fio_caddr_t) &tmpbuf[5*rec_scale]; /* read format integer    */
+    iov[6].iov_base = (fio_caddr_t) &tmpbuf[5L*rec_scale]; /* read format integer    */
     iov[6].iov_len  = rec_scale*sizeof(int);
 
-    readlen = fio_readv(fd, &iov[0], 7);
+#if 1
+    /* Use fall-back code instead of readv():                            */
+    /*  Some platforms implement readv() as user level code in libc,     */
+    /*  and due to POSIX atomicity requirements for readv()/writev(),    */
+    /*  they may copy data to internal temp buffers, which can kill      */
+    /*  performance, and in cases when doing single I/O ops on large,    */
+    /*  buffers, e.g. > 2GB, can fail with shorts reads or writes...     */
+    /*  On such platforms it is best to avoid using readv()/writev()...  */
+    {
+      int readcnt = 0;
+      readcnt =  fio_fread(iov[0].iov_base, iov[0].iov_len, 1, fd);
+      readcnt += fio_fread(iov[1].iov_base, iov[1].iov_len, 1, fd);
+      readcnt += fio_fread(iov[2].iov_base, iov[2].iov_len, 1, fd);
+      readcnt += fio_fread(iov[3].iov_base, iov[3].iov_len, 1, fd);
+      readcnt += fio_fread(iov[4].iov_base, iov[4].iov_len, 1, fd);
+      readcnt += fio_fread(iov[5].iov_base, iov[5].iov_len, 1, fd);
+      readcnt += fio_fread(iov[6].iov_base, iov[6].iov_len, 1, fd);
 
-    if (readlen != (rec_scale*6*sizeof(int) + 3*N*sizeof(float)))
+      /* if all records read correctly, then the reads are okay */
+      if (readcnt != 7)
+        return DCD_BADREAD;
+    }
+#else
+    /* check number of bytes actually read            */
+    if (fio_readv(fd, &iov[0], 7) != ((fio_size_t) (rec_scale*6L*sizeof(int) + 3L*N*sizeof(float))))
       return DCD_BADREAD;
+#endif
 
     /* convert endianism if necessary */
     if (reverseEndian) {
-      swap4_aligned(&tmpbuf[0], rec_scale*6);
+      swap4_aligned(&tmpbuf[0], rec_scale*6L);
       swap4_aligned(X, N);
       swap4_aligned(Y, N);
       swap4_aligned(Z, N);
     }
 
-    /* double-check the fortran format size values for safety */
-    if(rec_scale == 1) {
-      for (i=0; i<6; i++) {
-        if (tmpbuf[i] != sizeof(float)*N) return DCD_BADFORMAT;
-      }
-    } else {
-      for (i=0; i<6; i++) {
-          if ((tmpbuf[2*i]+tmpbuf[2*i+1]) != sizeof(float)*N) return DCD_BADFORMAT;
+    /* when we have more then 2^30 atoms, tests like this one */
+    /* are no longer meaningful and have to be bypassed...    */
+    if (check_reclen) {
+      /* double-check the fortran format size values for safety */
+      if (rec_scale == 1) {
+        for (i=0; i<6; i++) {
+          if (tmpbuf[i] != sizeof(float)*N) return DCD_BADFORMAT;
+        }
+      } else {
+        for (i=0; i<6; i++) {
+          if ((tmpbuf[2L*i]+tmpbuf[2L*i+1L]) != sizeof(float)*N) return DCD_BADFORMAT;
+        }
       }
     }
 
@@ -550,7 +593,7 @@ static int read_dcdstep(fio_fd fd, int N, float *X, float *Y, float *Z,
     if (num_fixed && first) {
       memcpy(fixedcoords, X, N*sizeof(float));
       memcpy(fixedcoords+N, Y, N*sizeof(float));
-      memcpy(fixedcoords+2*N, Z, N*sizeof(float));
+      memcpy(fixedcoords+2L*N, Z, N*sizeof(float));
     }
 
     /* read in the optional charmm 4th array */
@@ -565,13 +608,13 @@ static int read_dcdstep(fio_fd fd, int N, float *X, float *Y, float *Z,
     ret_val = read_charmm_extrablock(fd, charmm, reverseEndian, unitcell);
     if (ret_val) return ret_val;
     ret_val = read_fixed_atoms(fd, N, N-num_fixed, indexes, reverseEndian,
-                               fixedcoords, fixedcoords+3*N, X, charmm);
+                               fixedcoords, fixedcoords+3L*N, X, charmm);
     if (ret_val) return ret_val;
     ret_val = read_fixed_atoms(fd, N, N-num_fixed, indexes, reverseEndian,
-                               fixedcoords+N, fixedcoords+3*N, Y, charmm);
+                               fixedcoords+N, fixedcoords+3L*N, Y, charmm);
     if (ret_val) return ret_val;
     ret_val = read_fixed_atoms(fd, N, N-num_fixed, indexes, reverseEndian,
-                               fixedcoords+2*N, fixedcoords+3*N, Z, charmm);
+                               fixedcoords+2*N, fixedcoords+3L*N, Z, charmm);
     if (ret_val) return ret_val;
     ret_val = read_charmm_4dim(fd, charmm, reverseEndian);
     if (ret_val) return ret_val;
@@ -581,9 +624,9 @@ static int read_dcdstep(fio_fd fd, int N, float *X, float *Y, float *Z,
 }
 
 
-/* 
+/*
  * Skip past a timestep.  If there are fixed atoms, this cannot be used with
- * the first timestep.  
+ * the first timestep.
  * Input: fd - a file struct from which the header has already been read
  *        natoms - number of atoms per timestep
  *        nfixed - number of fixed atoms
@@ -593,9 +636,8 @@ static int read_dcdstep(fio_fd fd, int N, float *X, float *Y, float *Z,
  *               next timestep.
  */
 static int skip_dcdstep(fio_fd fd, int natoms, int nfixed, int charmm) {
-  
-  int seekoffset = 0;
-  int rec_scale;
+  ptrdiff_t seekoffset = 0;
+  ptrdiff_t rec_scale;
 
   if (charmm & DCD_HAS_64BIT_REC) {
     rec_scale=RECSCALE64BIT;
@@ -605,37 +647,36 @@ static int skip_dcdstep(fio_fd fd, int natoms, int nfixed, int charmm) {
 
   /* Skip charmm extra block */
   if ((charmm & DCD_IS_CHARMM) && (charmm & DCD_HAS_EXTRA_BLOCK)) {
-    seekoffset += 4*rec_scale + 48 + 4*rec_scale;
+    seekoffset += 4L*rec_scale + 48L + 4L*rec_scale;
   }
 
   /* For each atom set, seek past an int, the free atoms, and another int. */
-  seekoffset += 3 * (2*rec_scale + natoms - nfixed) * 4;
+  seekoffset += 3L * (2L*rec_scale + natoms - nfixed) * 4L;
 
   /* Assume that charmm 4th dim is the same size as the other three. */
   if ((charmm & DCD_IS_CHARMM) && (charmm & DCD_HAS_4DIMS)) {
-    seekoffset += (2*rec_scale + natoms - nfixed) * 4;
+    seekoffset += (2L*rec_scale + natoms - nfixed) * 4L;
   }
- 
+
   if (fio_fseek(fd, seekoffset, FIO_SEEK_CUR)) return DCD_BADEOF;
 
   return DCD_SUCCESS;
 }
 
 
-/* 
+/*
  * Write a timestep to a dcd file
  * Input: fd - a file struct for which a dcd header has already been written
  *       curframe: Count of frames written to this file, starting with 1.
- *       curstep: Count of timesteps elapsed = istart + curframe * nsavc.
- *        natoms - number of elements in x, y, z arrays
+ *        curstep: Count of timesteps elapsed = istart + curframe * nsavc.
+ *         natoms: number of elements in x, y, z arrays
  *        x, y, z: pointers to atom coordinates
  * Output: 0 on success, negative error code on failure.
  * Side effects: coordinates are written to the dcd file.
  */
-static int write_dcdstep(fio_fd fd, int curframe, int curstep, int N, 
-                  const float *X, const float *Y, const float *Z, 
-                  const double *unitcell, int charmm)
-{
+static int write_dcdstep(fio_fd fd, int curframe, int curstep, int N,
+                  const float *X, const float *Y, const float *Z,
+                  const double *unitcell, int charmm) {
   int out_integer;
 
   if (charmm) {
@@ -670,19 +711,19 @@ static int write_dcdstep(fio_fd fd, int curframe, int curstep, int N,
   return DCD_SUCCESS;
 }
 
+
 /*
  * Write a header for a new dcd file
  * Input: fd - file struct opened for binary writing
- *        remarks - string to be put in the remarks section of the header.  
+ *        remarks - string to be put in the remarks section of the header.
  *                  The string will be truncated to 70 characters.
  *        natoms, istart, nsavc, delta - see comments in read_dcdheader
  * Output: 0 on success, negative error code on failure.
  * Side effects: Header information is written to the dcd file.
  */
-static int write_dcdheader(fio_fd fd, const char *remarks, int N, 
+static int write_dcdheader(fio_fd fd, const char *remarks, int N,
                     int ISTART, int NSAVC, double DELTA, int with_unitcell,
-                    int charmm)
-{
+                    int charmm) {
   int out_integer;
   float out_float;
   char title_string[200];
@@ -737,12 +778,7 @@ static int write_dcdheader(fio_fd fd, const char *remarks, int N,
 
   cur_time=time(NULL);
   tmbuf=localtime(&cur_time);
-  /* This line segfaults under MSVC 2008. I don't know why. Replacinge */
-  /* it with a sprintf and asctime seems to acomplish the same goal */
-  /* and solve the problem. The final length of time_str will not buffer */
-  /* overflow in sprintf -- I checked the asctime docs make sure. RTM10/13/13 */
-  /*strftime(time_str, 80, "REMARKS Created %d %B, %Y at %R", tmbuf); */
-  sprintf(time_str, "REMARKS Created %s", asctime(tmbuf));
+  strftime(time_str, 80, "REMARKS Created %d %B, %Y at %R", tmbuf);
   WRITE(fd, time_str, 80);
 
   fio_write_int32(fd, 164);
@@ -784,7 +820,8 @@ int dcd_rewind(dcdhandle* dcd) {
     return 0;
 }
 
-dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, int* nsets) {
+dcdhandle* open_dcd_read(const char *path, const char *filetype,
+    int *natoms, int* nsets) {
   dcdhandle *dcd;
   fio_fd fd;
   int rc;
@@ -792,12 +829,14 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, in
 
   if (!path) return NULL;
 
+#if !(defined(_MSC_VER) && defined(FASTIO_NATIVEWIN32))
   /* See if the file exists, and get its size */
   memset(&stbuf, 0, sizeof(struct stat));
   if (stat(path, &stbuf)) {
     printf("dcdplugin) Could not access file '%s'.\n", path);
     return NULL;
   }
+#endif
 
   if (fio_open(path, FIO_READ, &fd) < 0) {
     printf("dcdplugin) Could not open file '%s' for reading.\n", path);
@@ -816,7 +855,7 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, in
     free(dcd);
     return NULL;
   }
-  
+
   /*
    * Check that the file is big enough to really hold the number of sets
    * it claims to have.  Then we'll use nsets to keep track of where EOF
@@ -830,11 +869,11 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, in
     extrablocksize = dcd->charmm & DCD_HAS_EXTRA_BLOCK ? 48 + 8 : 0;
     ndims = dcd->charmm & DCD_HAS_4DIMS ? 4 : 3;
     firstframesize = (dcd->natoms+2) * ndims * sizeof(float) + extrablocksize;
-    framesize = (dcd->natoms-dcd->nfixed+2) * ndims * sizeof(float) 
+    framesize = (dcd->natoms-dcd->nfixed+2) * ndims * sizeof(float)
       + extrablocksize;
 
-    /* 
-     * It's safe to use ftell, even though ftell returns a long, because the 
+    /*
+     * It's safe to use ftell, even though ftell returns a long, because the
      * header size is < 4GB.
      */
 
@@ -861,10 +900,13 @@ dcdhandle* open_dcd_read(const char *path, const char *filetype, int *natoms, in
     newnsets = trjsize / framesize + 1;
 
     if (dcd->nsets > 0 && newnsets != dcd->nsets) {
-      printf("dcdplugin) Warning: DCD header claims %d frames, file size indicates there are actually %d frames\n", dcd->nsets, newnsets);
+      printf("dcdplugin) Warning: DCD header claims %d frames, but \n"
+             "dcdplugin) file size (%ld) indicates there are actually \n"
+             "%d frames of size (%ld)\n",
+             dcd->nsets, trjsize, newnsets, framesize);
     }
 
-    dcd->nsets = newnsets; 
+    dcd->nsets = newnsets;
     dcd->setsread = 0;
   }
 
@@ -904,8 +946,8 @@ int read_next_timestep(dcdhandle *v, int natoms, molfile_timestep_t *ts) {
   if (!ts) {
     if (dcd->first && dcd->nfixed) {
       /* We can't just skip it because we need the fixed atom coordinates */
-      rc = read_dcdstep(dcd->fd, dcd->natoms, dcd->x, dcd->y, dcd->z, 
-          unitcell, dcd->nfixed, dcd->first, dcd->freeind, dcd->fixedcoords, 
+      rc = read_dcdstep(dcd->fd, dcd->natoms, dcd->x, dcd->y, dcd->z,
+          unitcell, dcd->nfixed, dcd->first, dcd->freeind, dcd->fixedcoords,
              dcd->reverse, dcd->charmm);
       dcd->first = 0;
       return rc; /* XXX this needs to be updated */
@@ -915,20 +957,20 @@ int read_next_timestep(dcdhandle *v, int natoms, molfile_timestep_t *ts) {
     return skip_dcdstep(dcd->fd, dcd->natoms, dcd->nfixed, dcd->charmm);
   }
   rc = read_dcdstep(dcd->fd, dcd->natoms, dcd->x, dcd->y, dcd->z, unitcell,
-             dcd->nfixed, dcd->first, dcd->freeind, dcd->fixedcoords, 
+             dcd->nfixed, dcd->first, dcd->freeind, dcd->fixedcoords,
              dcd->reverse, dcd->charmm);
   dcd->first = 0;
-  if (rc < 0) {  
+  if (rc < 0) {
     print_dcderror("read_dcdstep", rc);
     return MOLFILE_ERROR;
   }
 
   /* copy timestep data from plugin-local buffers to VMD's buffer */
-  /* XXX 
+  /* XXX
    *   This code is still the root of all evil.  Just doing this extra copy
    *   cuts the I/O rate of the DCD reader from 728 MB/sec down to
-   *   394 MB/sec when reading from a ram filesystem.  
-   *   For a physical disk filesystem, the I/O rate goes from 
+   *   394 MB/sec when reading from a ram filesystem.
+   *   For a physical disk filesystem, the I/O rate goes from
    *   187 MB/sec down to 122 MB/sec.  Clearly this extra copy has to go.
    */
   {
@@ -953,7 +995,7 @@ int read_next_timestep(dcdhandle *v, int natoms, molfile_timestep_t *ts) {
       unitcell[3] >= -1.0 && unitcell[3] <= 1.0 &&
       unitcell[4] >= -1.0 && unitcell[4] <= 1.0) {
     /* This file was generated by CHARMM, or by NAMD > 2.5, with the angle */
-    /* cosines of the periodic cell angles written to the DCD file.        */ 
+    /* cosines of the periodic cell angles written to the DCD file.        */
     /* This formulation improves rounding behavior for orthogonal cells    */
     /* so that the angles end up at precisely 90 degrees, unlike acos().   */
     ts->alpha = 90.0 - asin(unitcell[4]) * 90.0 / M_PI_2; /* cosBC */
@@ -966,10 +1008,10 @@ int read_next_timestep(dcdhandle *v, int natoms, molfile_timestep_t *ts) {
     ts->beta  = unitcell[3]; /* angle between A and C */
     ts->gamma = unitcell[1]; /* angle between A and B */
   }
- 
+
   return MOLFILE_SUCCESS;
 }
- 
+
 
 void close_file_read(dcdhandle *v) {
   dcdhandle *dcd = (dcdhandle *)v;
@@ -978,13 +1020,12 @@ void close_file_read(dcdhandle *v) {
   free(dcd->x);
   free(dcd->y);
   free(dcd->z);
-  free(dcd); 
+  free(dcd);
 }
 
 
-dcdhandle* open_dcd_write(const char *path, const char *filetype, const int natoms,
-                          const int with_unitcell)
-    {
+dcdhandle* open_dcd_write(const char *path, const char *filetype,
+    const int natoms, const int with_unitcell) {
   dcdhandle *dcd;
   fio_fd fd;
   int rc;
@@ -1005,11 +1046,16 @@ dcdhandle* open_dcd_write(const char *path, const char *filetype, const int nato
   nsavc = 1;              /* number of timesteps between written DCD frames */
   delta = 1.0;            /* length of a timestep                           */
 
-  charmm = DCD_IS_CHARMM; /* charmm-formatted DCD file                */ 
-  if (with_unitcell) 
+  /* Always use CHARMM formatted DCD file.
+     Original VMD code uses an environment variable to determine format (and
+     also the with_unitcell parameter) but we will always use the CHARMM
+     format and allow the caller to specify with_unitcell
+  */
+  charmm = DCD_IS_CHARMM;
+  if (with_unitcell)
       charmm |= DCD_HAS_EXTRA_BLOCK;
 
-  rc = write_dcdheader(dcd->fd, "Created by DCD plugin", natoms, 
+  rc = write_dcdheader(dcd->fd, "Created by DCD plugin", natoms,
                        istart, nsavc, delta, with_unitcell, charmm);
 
   if (rc < 0) {
@@ -1032,7 +1078,7 @@ dcdhandle* open_dcd_write(const char *path, const char *filetype, const int nato
 }
 
 
-int write_timestep(dcdhandle *v, const molfile_timestep_t *ts) { 
+int write_timestep(dcdhandle *v, const molfile_timestep_t *ts) {
   dcdhandle *dcd = (dcdhandle *)v;
   int i, rc, curstep;
   float *pos = ts->coords;
@@ -1042,9 +1088,9 @@ int write_timestep(dcdhandle *v, const molfile_timestep_t *ts) {
 
   /* copy atom coords into separate X/Y/Z arrays for writing */
   for (i=0; i<dcd->natoms; i++) {
-    dcd->x[i] = *(pos++); 
-    dcd->y[i] = *(pos++); 
-    dcd->z[i] = *(pos++); 
+    dcd->x[i] = *(pos++);
+    dcd->y[i] = *(pos++);
+    dcd->z[i] = *(pos++);
   }
   dcd->nsets++;
   curstep = dcd->istart + dcd->nsets * dcd->nsavc;
@@ -1056,7 +1102,7 @@ int write_timestep(dcdhandle *v, const molfile_timestep_t *ts) {
   unitcell[3] = sin((M_PI_2 / 90.0) * (90.0 - ts->beta));  /* cosAC */
   unitcell[4] = sin((M_PI_2 / 90.0) * (90.0 - ts->alpha)); /* cosBC */
 
-  rc = write_dcdstep(dcd->fd, dcd->nsets, curstep, dcd->natoms, 
+  rc = write_dcdstep(dcd->fd, dcd->nsets, curstep, dcd->natoms,
                      dcd->x, dcd->y, dcd->z,
                      dcd->with_unitcell ? unitcell : NULL,
                      dcd->charmm);
@@ -1077,7 +1123,7 @@ void close_file_write(dcdhandle *v) {
   free(dcd);
 }
 
-  
+
 #ifdef TEST_DCDPLUGIN
 
 #include <sys/time.h>
@@ -1109,7 +1155,7 @@ int main(int argc, char *argv[]) {
   double starttime, endtime, totaltime = 0.0;
 
   while (--argc) {
-    ++argv; 
+    ++argv;
     natoms = 0;
     v = open_dcd_read(*argv, "dcd", &natoms);
     if (!v) {
@@ -1118,7 +1164,7 @@ int main(int argc, char *argv[]) {
     }
     dcd = (dcdhandle *)v;
     sizeMB = ((natoms * 3.0) * dcd->nsets * 4.0) / (1024.0 * 1024.0);
-    totalMB += sizeMB; 
+    totalMB += sizeMB;
     printf("main) file: %s\n", *argv);
     printf("  %d atoms, %d frames, size: %6.1fMB\n", natoms, dcd->nsets, sizeMB);
 
@@ -1142,6 +1188,5 @@ int main(int argc, char *argv[]) {
   printf("Overall Speed: %5.1f MB/sec\n", totalMB / totaltime);
   return 0;
 }
-      
-#endif
 
+#endif

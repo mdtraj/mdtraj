@@ -20,19 +20,15 @@
 # License along with MDTraj. If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-from __future__ import print_function, division
-
 import numpy as np
 
-from mdtraj.geometry.distance import compute_center_of_mass, compute_center_of_geometry
+from mdtraj.geometry.distance import compute_center_of_mass
 from mdtraj.utils import ensure_type
-from mdtraj.utils.six import string_types
+
+__all__ = ["compute_nematic_order", "compute_inertia_tensor", "compute_directors"]
 
 
-__all__ = ['compute_nematic_order', 'compute_inertia_tensor', 'compute_directors']
-
-
-def compute_nematic_order(traj, indices='chains'):
+def compute_nematic_order(traj, indices="chains"):
     """Compute the nematic order parameter of a group in every frame.
 
     The nematic order parameter describes the orientational order of a system
@@ -100,7 +96,7 @@ def compute_nematic_order(traj, indices='chains'):
     return S2
 
 
-def compute_directors(traj, indices='chains'):
+def compute_directors(traj, indices="chains"):
     """Compute the characteristic vector describing the orientation of each group
 
     In this definition, the long molecular axis is found from the inertia
@@ -134,7 +130,7 @@ def compute_directors(traj, indices='chains'):
     Since there is no preferred orientation of the director, the director
     :math:`n` has the same meaning as :math:`-n`.
     Therefore, care should be taken to ensure the director is pointing in
-    the direction you think it is, e.g., by contraining it to a hemisphere that
+    the direction you think it is, e.g., by constraining it to a hemisphere that
     makes physical sense.
 
 
@@ -144,8 +140,10 @@ def compute_directors(traj, indices='chains'):
 
     """
     indices = _get_indices(traj, indices)
-    all_directors = np.empty(shape=(traj.n_frames, len(indices), 3),
-                             dtype=np.float64)
+    all_directors = np.empty(
+        shape=(traj.n_frames, len(indices), 3),
+        dtype=np.float64,
+    )
     for i, ids in enumerate(indices):
         sub_traj = traj.atom_slice(ids)
         director = _compute_director(sub_traj)
@@ -179,19 +177,19 @@ def compute_inertia_tensor(traj):
 
     eyes = np.empty(shape=(traj.n_frames, 3, 3), dtype=np.float64)
     eyes[:] = np.eye(3)
-    A = np.einsum("i, kij->k", masses, xyz ** 2).reshape(traj.n_frames, 1, 1)
+    A = np.einsum("i, kij->k", masses, xyz**2).reshape(traj.n_frames, 1, 1)
     B = np.einsum("ij..., ...jk->...ki", masses[:, np.newaxis] * xyz.T, xyz)
     return A * eyes - B
 
 
 def _get_indices(traj, indices):
-    if isinstance(indices, string_types):
-        if indices.lower() == 'chains':
+    if isinstance(indices, str):
+        if indices.lower() == "chains":
             group = list(traj.top.chains)
-        elif indices.lower() == 'residues':
+        elif indices.lower() == "residues":
             group = list(traj.top.residues)
         else:
-            raise ValueError('Invalid selection: {0}'.format(indices))
+            raise ValueError(f"Invalid selection: {indices}")
         indices = [[at.index for at in compound.atoms] for compound in group]
     else:
         # TODO: Clean way to ensure that indices is a list of lists of ints?
@@ -201,12 +199,14 @@ def _get_indices(traj, indices):
         if isinstance(indices, (list, tuple)):
             for sublist in indices:
                 if not isinstance(sublist, (list, tuple)):
-                    raise ValueError('Invalid selection: {0}'.format(indices))
+                    raise ValueError(f"Invalid selection: {indices}")
                 for index in sublist:
                     if not isinstance(index, int):
-                        raise ValueError('Indices must be integers: {0}'.format(indices))
+                        raise ValueError(
+                            f"Indices must be integers: {indices}",
+                        )
         else:
-            raise ValueError('Invalid selection: {0}'.format(indices))
+            raise ValueError(f"Invalid selection: {indices}")
     return indices
 
 
@@ -237,8 +237,13 @@ def _compute_Q_tensor(all_directors):
 
     """
 
-    all_directors = ensure_type(all_directors, dtype=np.float64, ndim=3,
-                                name='directors', shape=(None, None, 3))
+    all_directors = ensure_type(
+        all_directors,
+        dtype=np.float64,
+        ndim=3,
+        name="directors",
+        shape=(None, None, 3),
+    )
 
     normed = all_directors / np.linalg.norm(all_directors, axis=2)[..., np.newaxis]
 
@@ -256,7 +261,7 @@ def _compute_Q_tensor(all_directors):
             Q_ab[n, 2, 1] += 3.0 * vector[2] * vector[1]
             Q_ab[n, 2, 2] += 3.0 * vector[2] * vector[2] - 1
 
-    Q_ab /= (2.0 * all_directors.shape[1])
+    Q_ab /= 2.0 * all_directors.shape[1]
 
     return Q_ab
 
@@ -301,13 +306,9 @@ def _compute_director(traj):
     return directors
 
 
-#####################################################
 # Pure python reference implementations for testing #
-#####################################################
-
-
 def _compute_inertia_tensor_slow(traj):
-    """Compute the inertia tensor of a trajectory. """
+    """Compute the inertia tensor of a trajectory."""
     center_of_mass = np.expand_dims(compute_center_of_mass(traj), axis=1)
     centered_xyz = traj.xyz - center_of_mass
     masses = np.array([atom.element.mass for atom in traj.top.atoms])
