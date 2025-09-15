@@ -346,15 +346,13 @@ class PDBTrajectoryFile:
         if np.any(np.isinf(positions)):
             raise ValueError("Particle position is infinite")
 
-        # Saving this for whether to duplicate CONECT to represent higher bond orders
-        self.bond_orders = bond_orders
-
         # Saving this for writing footer
         self.ter = ter
 
         # Hack to save the topology of the last frame written, allows us to
         # output CONECT entries in write_footer()
         self._last_topology = topology
+        self.bond_orders = bond_orders
 
         if bfactors is None:
             bfactors = [f"{0.0:5.2f}"] * len(positions)
@@ -519,7 +517,8 @@ class PDBTrajectoryFile:
 
         conectBonds = []
         if self._last_topology is not None:
-            for atom1, atom2 in self._last_topology.bonds:
+            for bond in self._last_topology.bonds:
+                atom1, atom2 = bond[0], bond[1]
                 if (
                     atom1.residue.name not in self._standardResidues
                     or atom2.residue.name not in self._standardResidues
@@ -717,7 +716,7 @@ class PDBTrajectoryFile:
                         connectBonds.append((atomByNumber[i], atomByNumber[j]))
             if len(connectBonds) > 0:
                 # Only add bonds that don't already exist.
-                existingBonds = {(bond.atom1, bond.atom2) for bond in self._topology.bonds}
+                existingBonds = set(self._topology.bonds)
                 nonStdBonds = set()
 
                 for bond in connectBonds:

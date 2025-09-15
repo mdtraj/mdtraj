@@ -1578,7 +1578,6 @@ class Trajectory:
             Save bfactors with pdb file. If the array is two dimensional it should
             contain a bfactor for each atom in each frame of the trajectory.
             Otherwise, the same bfactor will be saved in each frame.
-
         bond_orders : bool, default=False
             Specify bond orders by writing repeated bonds in CONECT records
         ter : bool, default=True
@@ -1698,7 +1697,6 @@ class Trajectory:
                         ),
                         unitcell_angles=self.unitcell_angles[i],
                         bfactors=bfactors[i],
-                        bond_orders=bond_orders,
                     )
                 else:
                     f.write(
@@ -1709,7 +1707,6 @@ class Trajectory:
                         ),
                         self.topology,
                         bfactors=bfactors[i],
-                        bond_orders=bond_orders,
                     )
 
     def save_xtc(self, filename, force_overwrite=True):
