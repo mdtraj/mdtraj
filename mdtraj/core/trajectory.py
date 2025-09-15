@@ -1580,7 +1580,7 @@ class Trajectory:
             Otherwise, the same bfactor will be saved in each frame.
 
         bond_orders : bool, default=False
-            Specify bond orders by writing repeated bonds in CONECT records 
+            Specify bond orders by writing repeated bonds in CONECT records
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.

@@ -57,7 +57,7 @@ import numpy as np
 
 import mdtraj
 from mdtraj.core import element as elem
-from mdtraj.core.topology import Topology, Bond
+from mdtraj.core.topology import Bond, Topology
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ilen, in_units_of, open_maybe_zipped
@@ -309,7 +309,6 @@ class PDBTrajectoryFile:
         bond_orders=False,
         ter=True,
     ):
-
         """Write a PDB file to disk
 
         Parameters
@@ -736,7 +735,7 @@ class PDBTrajectoryFile:
                                     bid = self._topology._bonds.index(Bond(bond[0], bond[1]))
                                 except ValueError:
                                     bid = self._topology._bonds.index(Bond(bond[0], bond[1], order=2))
-                                order = self._topology._bonds[bid].order 
+                                order = self._topology._bonds[bid].order
                                 if order == 3:
                                     raise ValueError("CONECT records give bond order greater than 3")
                                 else:
