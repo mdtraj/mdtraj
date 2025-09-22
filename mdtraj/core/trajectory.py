@@ -1624,6 +1624,7 @@ class Trajectory:
                             f.distance_unit,
                         ),
                         unitcell_angles=self.unitcell_angles[i],
+                        bond_orders=bond_orders,
                         ter=ter,
                     )
                 else:
@@ -1636,6 +1637,7 @@ class Trajectory:
                         self.topology,
                         modelIndex=i if self.n_frames > 1 else None,
                         bfactors=bfactors[i],
+                        bond_orders=bond_orders,
                         ter=ter,
                     )
 
