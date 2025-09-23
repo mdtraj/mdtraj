@@ -36,7 +36,7 @@ from mdtraj.testing import eq
 
 def test_load_mol2(get_fn):
     trj = md.load(get_fn("imatinib.mol2"))
-    ref_trj = md.load(get_fn("imatinib.pdb"), bond_order=True)
+    ref_trj = md.load(get_fn("imatinib.pdb"), bond_orders=True)
     eq(trj.xyz, ref_trj.xyz)
 
     ref_top, ref_bonds = ref_trj.top.to_dataframe()
