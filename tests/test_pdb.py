@@ -583,5 +583,4 @@ def test_bnz_bond_order_conect_write(get_fn, bond_orders, ref_orders):
     traj2 = load_pdb(temp, bond_orders=True)
 
     bo = [bond.order for bond in traj2.top._bonds]
-    print(bo)
     eq(bo, ref_orders, err_msg="Inconsistent number of bonds written to pdb")
