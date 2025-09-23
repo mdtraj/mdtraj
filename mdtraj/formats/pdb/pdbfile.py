@@ -90,7 +90,7 @@ def load_pdb(
     no_boxchk=False,
     standard_names=True,
     top=None,
-    bond_order=False,
+    bond_orders=False,
 ):
     """Load a RCSB Protein Data Bank file from disk.
 
@@ -125,6 +125,10 @@ def load_pdb(
     top : mdtraj.core.Topology, default=None
         if you give a topology as input the topology won't be parsed from the pdb file
         it saves time if you have to parse a big number of files
+    bond_orders : bool, default=False
+        If True, respect and infer bond order/type based on the CONECT section, where
+        duplicate bonds are treated as having higher bond order. As default (False), i
+        the parser ignores any duplicate bonds.
 
     Returns
     -------
@@ -150,7 +154,7 @@ def load_pdb(
         )
 
     atom_indices = cast_indices(atom_indices)
-    with PDBTrajectoryFile(filename, standard_names=standard_names, top=top, bond_order=bond_order) as f:
+    with PDBTrajectoryFile(filename, standard_names=standard_names, top=top, bond_orders=bond_orders) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
         if frame is not None:
             coords = f.positions[[frame], atom_slice, :]
@@ -238,7 +242,7 @@ class PDBTrajectoryFile:
     top : mdtraj.core.Topology, default=None
         if you give a topology as input the topology won't be parsed from the pdb file
         it saves time if you have to parse a big number of files
-    bond_order : bool, default=False
+    bond_orders : bool, default=False
         If True, respect and infer bond order/type based on the CONECT section, where
         duplicate bonds are treated as having higher bond order. As default (False), i
         the parser ignores any duplicate bonds.
@@ -274,7 +278,7 @@ class PDBTrajectoryFile:
         force_overwrite=True,
         standard_names=True,
         top=None,
-        bond_order=False,
+        bond_orders=False,
     ):
         self._open = False
         self._file = None
@@ -283,7 +287,7 @@ class PDBTrajectoryFile:
         self._mode = mode
         self._last_topology = None
         self._standard_names = standard_names
-        self._bond_order = bond_order
+        self._bond_orders = bond_orders
 
         if mode == "r":
             PDBTrajectoryFile._loadNameReplacementTables()
@@ -733,7 +737,7 @@ class PDBTrajectoryFile:
                         # If bond already exists, in either order,
                         # update bond type/order only if bond_order is activated
                         # else do nothing.
-                        if self._bond_order:
+                        if self._bond_orders:
                             try:
                                 bid = self._topology._bonds.index((btup[0], btup[1]))
                             except ValueError:
@@ -742,7 +746,7 @@ class PDBTrajectoryFile:
                             bond.order, bond.type = bo, bt
                     else:
                         # Add bond if it doesn't exist
-                        if self._bond_order:
+                        if self._bond_orders:
                             self._topology.add_bond(btup[0], btup[1], type=bt, order=bo)
                         else:
                             self._topology.add_bond(btup[0], btup[1], type=None, order=None)
