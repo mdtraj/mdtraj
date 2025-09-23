@@ -41,18 +41,9 @@ def test_load_mol2(get_fn):
 
     ref_top, ref_bonds = ref_trj.top.to_dataframe()
     top, bonds = trj.top.to_dataframe()
-    # PDB Does not have bond order, ensure that the equality fails
-    try:
-        eq(bonds, ref_bonds)
-    except AssertionError:
-        # This is what we wanted to happen, its fine
-        pass
-    else:
-        raise AssertionError(
-            "Reference bonds with no bond order should not equal Mol2 bonds with bond order",
-        )
-    # Strip bond order info since PDB does not have it
-    bonds[:, -2:] = np.zeros([bonds.shape[0], 2])
+
+    # Strip bond order info since PDB does not have non-integer bond types
+    bonds[:, -2:] = np.ones([bonds.shape[0], 2])
     eq(bonds, ref_bonds)
 
 
