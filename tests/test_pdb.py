@@ -30,6 +30,7 @@ import pytest
 from conftest import flaky_pdb_dl
 
 from mdtraj import Topology, load, load_pdb
+from mdtraj.core.topology import float_to_bond_type
 from mdtraj.formats.pdb import pdbstructure
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
 from mdtraj.testing import eq
@@ -529,3 +530,34 @@ def test_pdb_charge_write(get_fn):
 
     # all of the charges should be 1
     assert set(charges) == {1.0}
+
+
+@pytest.mark.parametrize(
+    "bond_order, ref_order",
+    [
+        (False, [None] * 32),
+        (True, [None, 2] + [None] * 11 + [2] + [None] * 17 + [1]),
+    ],
+    ids=[
+        "bond_order=False",
+        "bond_order=True",
+    ],
+)
+def test_ala3_bond_order_read(get_fn, bond_order, ref_order):
+    """Test that bond orders/types are read properly from CONECT section of PDB file"""
+
+    traj = load_pdb(get_fn("ala_ala_ala.pdb"), bond_order=bond_order)
+
+    # Checking bond orders
+    bo = [bond.order for bond in traj.top._bonds]
+    eq(bo, ref_order)
+
+    # Checking bond types
+    bt = [bond.type for bond in traj.top._bonds]
+    bt_from_bo = [float_to_bond_type(order) for order in bo]
+    ref_bt = [float_to_bond_type(order) for order in ref_order]
+
+    # Make sure bond order and bond type match
+    eq(bt_from_bo, bt)
+    # Make sure bond type match reference
+    eq(bt, ref_bt)

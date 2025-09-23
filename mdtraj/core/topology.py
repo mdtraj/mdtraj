@@ -1887,7 +1887,7 @@ class Amide(Singleton):
 Amide: Singleton = Amide()  # type: ignore[no-redef]
 
 
-def float_to_bond_type(bond_float: float) -> Singleton | None:
+def float_to_bond_type(bond_float: float | None) -> Singleton | None:
     """
     Convert a float to known bond type class, or None if no matched class if found
 
@@ -1905,8 +1905,13 @@ def float_to_bond_type(bond_float: float) -> Singleton | None:
     """
     all_bond_types = [Single, Double, Triple, Aromatic, Amide]
     for bond_type in all_bond_types:
-        if float(cast(Singleton, bond_type)) == float(bond_float):  # explicitly cast to Singleton to avoid mypy error
-            return cast(Singleton, bond_type)
+        try:
+            if float(cast(Singleton, bond_type)) == float(bond_float):
+                # explicitly cast to Singleton to avoid mypy error
+                return cast(Singleton, bond_type)
+        except TypeError:
+            # Skip cases where you cannot cast to float (e.g. float(None))
+            return None
     return None
 
 

@@ -33,5 +33,8 @@ ATOM     30  HB3 ALA     3       7.923   2.030   1.332  1.00  0.00      AAL
 ATOM     31  C   ALA     3       8.018   5.323   0.136  1.00  0.00      AAL 
 ATOM     32  OT1 ALA     3       7.032   6.119   0.127  1.00  0.00      AAL 
 ATOM     33  OT2 ALA     3       9.219   5.692   0.188  1.00  0.00      AAL 
-TER      34      ALA      3
-END
+TER      33      ALA     3
+CONECT   11   12   12
+CONECT   21   22   22
+CONECT   23   24
+ND
