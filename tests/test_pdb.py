@@ -533,31 +533,55 @@ def test_pdb_charge_write(get_fn):
 
 
 @pytest.mark.parametrize(
-    "bond_order, ref_order",
+    "bond_orders, ref_orders",
     [
         (False, [None] * 32),
         (True, [None, 2] + [None] * 11 + [2] + [None] * 17 + [1]),
     ],
     ids=[
-        "bond_order=False",
-        "bond_order=True",
+        "bond_orders=False",
+        "bond_orders=True",
     ],
 )
-def test_ala3_bond_order_read(get_fn, bond_order, ref_order):
+def test_ala3_bond_order_read(get_fn, bond_orders, ref_orders):
     """Test that bond orders/types are read properly from CONECT section of PDB file"""
 
-    traj = load_pdb(get_fn("ala_ala_ala.pdb"), bond_order=bond_order)
+    traj = load_pdb(get_fn("ala_ala_ala.pdb"), bond_orders=bond_orders)
 
     # Checking bond orders
     bo = [bond.order for bond in traj.top._bonds]
-    eq(bo, ref_order)
+    eq(bo, ref_orders, err_msg="bond orders do not match reference")
 
     # Checking bond types
     bt = [bond.type for bond in traj.top._bonds]
     bt_from_bo = [float_to_bond_type(order) for order in bo]
-    ref_bt = [float_to_bond_type(order) for order in ref_order]
+    ref_bt = [float_to_bond_type(order) for order in ref_orders]
 
     # Make sure bond order and bond type match
-    eq(bt_from_bo, bt)
+    eq(bt_from_bo, bt, err_msg="bond types and bond orders don't match")
     # Make sure bond type match reference
-    eq(bt, ref_bt)
+    eq(bt, ref_bt, err_msg="bond types do not match reference")
+
+
+@pytest.mark.parametrize(
+    "bond_orders, ref_orders",
+    [
+        (False, [1] * 12),
+        (True, [2, 2, 1, 2, 1, 2, 1, 2, 1, 1, 1, 1]),
+    ],
+    ids=["omit_write_bond_order", "write_bond_order"],
+)
+def test_bnz_bond_order_conect_write(get_fn, bond_orders, ref_orders):
+    """Test that formal charges are written to PDB file"""
+
+    traj = load_pdb(get_fn("bnz.pdb"), bond_orders=True)
+
+    # write the trajectory to a new file
+    traj.save_pdb(temp, bond_orders=bond_orders)
+
+    # read the new file, always with bond order info
+    traj2 = load_pdb(temp, bond_orders=True)
+
+    bo = [bond.order for bond in traj2.top._bonds]
+    print(bo)
+    eq(bo, ref_orders, err_msg="Inconsistent number of bonds written to pdb")
