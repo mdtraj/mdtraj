@@ -50,6 +50,7 @@ import xml.etree.ElementTree as etree
 from copy import copy
 from datetime import date
 from io import StringIO
+from itertools import groupby
 from urllib.parse import urlparse, uses_netloc, uses_params, uses_relative
 from urllib.request import urlopen
 
@@ -57,7 +58,7 @@ import numpy as np
 
 import mdtraj
 from mdtraj.core import element as elem
-from mdtraj.core.topology import Bond, Topology
+from mdtraj.core.topology import Topology, float_to_bond_type
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ilen, in_units_of, open_maybe_zipped
@@ -714,34 +715,27 @@ class PDBTrajectoryFile:
                 for j in connect[1:]:
                     if i in atomByNumber and j in atomByNumber:
                         connectBonds.append((atomByNumber[i], atomByNumber[j]))
-            if len(connectBonds) > 0:
-                # Only add bonds that don't already exist.
-                existingBonds = {(bond.atom1, bond.atom2) for bond in self._topology.bonds}
-                nonStdBonds = set()
 
-                for bond in connectBonds:
-                    if (bond[1], bond[0]) not in existingBonds:
-                        if bond not in existingBonds:
-                            self._topology.add_bond(bond[0], bond[1])
-                            existingBonds.add(bond)
-                            if bond not in nonStdBonds:
-                                nonStdBonds.add(bond)
-                        else:
-                            # Increase bond order of nonstandard bonds (i.e. between hetatoms)
-                            # if bond repeats in CONECT record.
-                            if bond in nonStdBonds:
-                                try:
-                                    bid = self._topology._bonds.index(Bond(bond[0], bond[1]))
-                                except ValueError:
-                                    bid = self._topology._bonds.index(Bond(bond[0], bond[1], order=2))
-                                order = self._topology._bonds[bid].order
-                                if order == 3:
-                                    raise ValueError("CONECT records give bond order greater than 3")
-                                else:
-                                    if order is None:
-                                        order = 1
-                                    order += 1
-                                    self._topology._bonds[bid].order = order
+            if len(connectBonds) > 0:
+                existingBonds = [(bond.atom1, bond.atom2) for bond in self._topology.bonds]
+                existingBonds_set = set(existingBonds)
+                for btup, g in groupby(connectBonds):
+                    bo = len(list(g)) or None
+                    bt = float_to_bond_type(bo) if bo else None
+
+                    if (btup[0], btup[1]) in existingBonds_set or (btup[1], btup[0]) in existingBonds_set:
+                        # If bond already exists, in either order, update bond type/order.
+                        try:
+                            bid = self._topology._bonds.index((btup[0], btup[1]))
+                        except ValueError:
+                            bid = self._topology._bonds.index((btup[1], btup[0]))
+                        bond = self._topology._bonds[bid]
+                        bond.order, bond.type = bo, bt
+                    else:
+                        # Add bond if it doesn't exist
+                        self._topology.add_bond(btup[0], btup[1], type=bt, order=bo)
+                        existingBonds_set.add((btup[0], btup[1]))
+                        existingBonds.append((btup[0], btup[1]))
 
     @staticmethod
     def _loadNameReplacementTables():
