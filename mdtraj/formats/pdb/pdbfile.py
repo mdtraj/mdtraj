@@ -548,7 +548,7 @@ class PDBTrajectoryFile:
                     and atom2.residue.name == "CYS"
                 ):
                     conectBonds.append((atom1, atom2))
-        print(conectBonds)
+
         if len(conectBonds) > 0:
             # Work out the index used in the PDB file for each atom.
 
