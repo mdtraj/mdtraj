@@ -539,8 +539,8 @@ class PDBTrajectoryFile:
                         # Add bond repeats for hetatom bonds when bond order > 1
                         for bo in range(bond.order):
                             conectBonds.append((atom1, atom2))
-                        else:
-                            conectBonds.append((atom1, atom2))
+                    else:
+                        conectBonds.append((atom1, atom2))
                 elif (
                     atom1.name == "SG"
                     and atom2.name == "SG"
@@ -548,6 +548,7 @@ class PDBTrajectoryFile:
                     and atom2.residue.name == "CYS"
                 ):
                     conectBonds.append((atom1, atom2))
+        print(conectBonds)
         if len(conectBonds) > 0:
             # Work out the index used in the PDB file for each atom.
 
