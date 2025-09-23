@@ -90,6 +90,7 @@ def load_pdb(
     no_boxchk=False,
     standard_names=True,
     top=None,
+    bond_order=False,
 ):
     """Load a RCSB Protein Data Bank file from disk.
 
@@ -149,7 +150,7 @@ def load_pdb(
         )
 
     atom_indices = cast_indices(atom_indices)
-    with PDBTrajectoryFile(filename, standard_names=standard_names, top=top) as f:
+    with PDBTrajectoryFile(filename, standard_names=standard_names, top=top, bond_order=bond_order) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
         if frame is not None:
             coords = f.positions[[frame], atom_slice, :]
@@ -237,6 +238,10 @@ class PDBTrajectoryFile:
     top : mdtraj.core.Topology, default=None
         if you give a topology as input the topology won't be parsed from the pdb file
         it saves time if you have to parse a big number of files
+    bond_order : bool, default=False
+        If True, respect and infer bond order/type based on the CONECT section, where
+        duplicate bonds are treated as having higher bond order. As default (False), i
+        the parser ignores any duplicate bonds.
 
     Attributes
     ----------
@@ -269,6 +274,7 @@ class PDBTrajectoryFile:
         force_overwrite=True,
         standard_names=True,
         top=None,
+        bond_order=False,
     ):
         self._open = False
         self._file = None
@@ -277,6 +283,7 @@ class PDBTrajectoryFile:
         self._mode = mode
         self._last_topology = None
         self._standard_names = standard_names
+        self._bond_order = bond_order
 
         if mode == "r":
             PDBTrajectoryFile._loadNameReplacementTables()
@@ -353,7 +360,7 @@ class PDBTrajectoryFile:
         # Hack to save the topology of the last frame written, allows us to
         # output CONECT entries in write_footer()
         self._last_topology = topology
-        self.bond_orders = bond_orders
+        self._bond_orders = bond_orders
 
         if bfactors is None:
             bfactors = [f"{0.0:5.2f}"] * len(positions)
@@ -524,7 +531,7 @@ class PDBTrajectoryFile:
                     atom1.residue.name not in self._standardResidues
                     or atom2.residue.name not in self._standardResidues
                 ):
-                    if self.bond_orders and bond.order is not None:
+                    if self._bond_orders and bond.order is not None:
                         # Add bond repeats for hetatom bonds when bond order > 1
                         for bo in range(bond.order):
                             conectBonds.append((atom1, atom2))
@@ -722,18 +729,23 @@ class PDBTrajectoryFile:
                 for btup, g in groupby(connectBonds):
                     bo = len(list(g)) or None
                     bt = float_to_bond_type(bo) if bo else None
-
                     if (btup[0], btup[1]) in existingBonds_set or (btup[1], btup[0]) in existingBonds_set:
-                        # If bond already exists, in either order, update bond type/order.
-                        try:
-                            bid = self._topology._bonds.index((btup[0], btup[1]))
-                        except ValueError:
-                            bid = self._topology._bonds.index((btup[1], btup[0]))
-                        bond = self._topology._bonds[bid]
-                        bond.order, bond.type = bo, bt
+                        # If bond already exists, in either order,
+                        # update bond type/order only if bond_order is activated
+                        # else do nothing.
+                        if self._bond_order:
+                            try:
+                                bid = self._topology._bonds.index((btup[0], btup[1]))
+                            except ValueError:
+                                bid = self._topology._bonds.index((btup[1], btup[0]))
+                            bond = self._topology._bonds[bid]
+                            bond.order, bond.type = bo, bt
                     else:
                         # Add bond if it doesn't exist
-                        self._topology.add_bond(btup[0], btup[1], type=bt, order=bo)
+                        if self._bond_order:
+                            self._topology.add_bond(btup[0], btup[1], type=bt, order=bo)
+                        else:
+                            self._topology.add_bond(btup[0], btup[1], type=None, order=None)
                         existingBonds_set.add((btup[0], btup[1]))
                         existingBonds.append((btup[0], btup[1]))
 
