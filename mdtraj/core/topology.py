@@ -100,6 +100,7 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
 
     newTopology = Topology()
     old_atom_to_new_atom: dict[Atom, Atom] = {}
+    index_set = set(atom_indices)
 
     for chain in topology._chains:
         newChain = newTopology.add_chain()
@@ -108,7 +109,7 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
             resSeq = getattr(residue, "resSeq", residue.index)
             newResidue = None
             for atom in residue._atoms:
-                if atom.index in atom_indices:
+                if atom.index in index_set:
                     try:  # OpenMM Topology objects don't have serial attributes, so we have to check first.
                         serial = atom.serial
                     except AttributeError:
