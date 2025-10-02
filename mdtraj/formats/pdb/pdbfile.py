@@ -584,7 +584,7 @@ class PDBTrajectoryFile:
                 bonded = atomBonds[index1]
                 while len(bonded) > 4:
                     print(
-                        "CONECT%5d%5d%5d%5d" % (index1, bonded[0], bonded[1], bonded[2]),
+                        "CONECT%5d%5d%5d%5d%5d" % (index1, bonded[0], bonded[1], bonded[2], bonded[3]),
                         file=self._file,
                     )
                     del bonded[:4]

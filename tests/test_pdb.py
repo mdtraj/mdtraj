@@ -567,7 +567,7 @@ def test_ala3_bond_order_read(get_fn, bond_orders, ref_orders):
     "bond_orders, ref_orders",
     [
         (False, [1] * 12),
-        (True, [2, 2, 1, 2, 1, 2, 1, 2, 1, 1, 1, 1]),
+        (True, [2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1]),
     ],
     ids=["omit_write_bond_order", "write_bond_order"],
 )
