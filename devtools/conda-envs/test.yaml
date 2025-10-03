@@ -8,7 +8,6 @@ dependencies:
   - netCDF4
   - networkx
   - numpy
-  - openmm
   - pandas
   - pyparsing
   - pytables
