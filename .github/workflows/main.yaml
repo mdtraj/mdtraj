@@ -32,13 +32,13 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
-          - "3.14.0rc3"
+          - "3.14"
 
     steps:
     - uses: actions/checkout@v5
 
     - name: Set up conda environment
-      if: ${{ matrix.python-version != '3.14.0rc3' }}
+      if: ${{ matrix.python-version != '3.14' }}
       uses: mamba-org/setup-micromamba@v2
       with:
         environment-file: devtools/conda-envs/test.yaml
@@ -47,13 +47,12 @@ jobs:
           openmm
 
     - name: Set up conda environment (py3.14)
-      if: ${{ matrix.python-version == '3.14.0rc3' }}
+      if: ${{ matrix.python-version == '3.14' }}
       uses: mamba-org/setup-micromamba@v2
       with:
         environment-file: devtools/conda-envs/test.yaml
         create-args: >-
           python=${{ matrix.python-version }}
-          conda-forge/label/python_rc::_python_rc
 
     - name: Install package
       run: |
