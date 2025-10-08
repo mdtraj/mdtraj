@@ -56,6 +56,19 @@ def test_load_mol2(get_fn):
     eq(bonds, ref_bonds)
 
 
+def test_write_from_mol2(get_fn, tmpdir):
+    trj = md.load(get_fn("imatinib.mol2"))
+    ref_trj = md.load(get_fn("imatinib.pdb"))
+
+    # Write out the mol2 as pdb
+    tmp_file = f"{tmpdir}/imatinib.pdb"
+    trj.save(tmp_file)
+    temp_trj = md.load(tmp_file)
+
+    # Check if xyz are the same as ref
+    eq(ref_trj.xyz, temp_trj.xyz)
+
+
 @pytest.mark.skipif(shutil.which("obabel") is None, reason="Requires obabel")
 @pytest.mark.skipif(os.environ.get("TRAVIS", None) == "true", reason="Skip on Travis.")
 def test_load_freesolv_gaffmol2_vs_sybylmol2_vs_obabelpdb(get_fn, tmpdir):

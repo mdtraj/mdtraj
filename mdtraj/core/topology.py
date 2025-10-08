@@ -656,7 +656,7 @@ class Topology:
                 atom_index,
                 r,  # type: ignore
                 serial=atom["serial"],
-                formal_charge=atom["formal_charge"],
+                formal_charge=atom["formal_charge"] if pd.notna(atom["formal_charge"]) else None,  # Fix PD sentinel
             )
             out._atoms[atom_index] = a
             r._atoms.append(a)  # type: ignore
