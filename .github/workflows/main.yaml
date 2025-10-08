@@ -38,16 +38,6 @@ jobs:
     - uses: actions/checkout@v5
 
     - name: Set up conda environment
-      if: ${{ matrix.python-version != '3.14' }}
-      uses: mamba-org/setup-micromamba@v2
-      with:
-        environment-file: devtools/conda-envs/test.yaml
-        create-args: >-
-          python=${{ matrix.python-version }}
-          openmm
-
-    - name: Set up conda environment (py3.14)
-      if: ${{ matrix.python-version == '3.14' }}
       uses: mamba-org/setup-micromamba@v2
       with:
         environment-file: devtools/conda-envs/test.yaml
