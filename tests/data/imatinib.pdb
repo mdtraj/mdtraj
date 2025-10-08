@@ -68,7 +68,7 @@ ATOM     65 H27  LIG A   1      -2.652   1.255   1.789  1.00  0.00          Xx
 ATOM     66 H28  LIG A   1      -4.528   4.245  -0.703  1.00  0.00          Xx  
 ATOM     67 H29  LIG A   1      -0.944   2.939   2.365  1.00  0.00          Xx  
 ATOM     68 H30  LIG A   1      -1.136   5.226   1.373  1.00  0.00          Xx  
-CONECT    1   21                                                      
+CONECT    1   21   21 
 CONECT    2    9   10   13                                            
 CONECT    3   11   12   14                                            
 CONECT    4   21   22   55                                            
