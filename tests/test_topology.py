@@ -155,7 +155,9 @@ def test_topology_dataframe_formal_charges(get_fn):
 
     # Get the original formal charges from the MDTraj topology.
     original_formal_charges = [atom.formal_charge for atom in topology.atoms]
-    normalized_original = [normalize_charge(charge) for charge in original_formal_charges]
+    normalized_original = [
+        normalize_charge(charge) if pd.notna(charge) else None for charge in original_formal_charges
+    ]
 
     # Convert topology to DataFrame and bonds array.
     atoms_df, bonds = topology.to_dataframe()
