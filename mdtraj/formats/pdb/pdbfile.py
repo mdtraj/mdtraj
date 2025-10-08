@@ -57,7 +57,7 @@ import numpy as np
 
 import mdtraj
 from mdtraj.core import element as elem
-from mdtraj.core.topology import Topology
+from mdtraj.core.topology import Bond, Topology
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ilen, in_units_of, open_maybe_zipped
@@ -306,6 +306,7 @@ class PDBTrajectoryFile:
         unitcell_lengths=None,
         unitcell_angles=None,
         bfactors=None,
+        bond_orders=False,
         ter=True,
     ):
         """Write a PDB file to disk
@@ -326,6 +327,8 @@ class PDBTrajectoryFile:
         bfactors : array_like, default=None, shape=(n_atoms,)
             Save bfactors with pdb file. Should contain a single number for
             each atom in the topology
+        bond_orders : bool, default=False
+            Specify bond orders by writing repeated bonds in CONECT records
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.
@@ -342,6 +345,9 @@ class PDBTrajectoryFile:
             raise ValueError("Particle position is NaN")
         if np.any(np.isinf(positions)):
             raise ValueError("Particle position is infinite")
+
+        # Saving this for whether to duplicate CONECT to represent higher bond orders
+        self.bond_orders = bond_orders
 
         # Saving this for writing footer
         self.ter = ter
@@ -518,7 +524,12 @@ class PDBTrajectoryFile:
                     atom1.residue.name not in self._standardResidues
                     or atom2.residue.name not in self._standardResidues
                 ):
-                    conectBonds.append((atom1, atom2))
+                    if self.bond_orders and bond.order is not None:
+                        # Add bond repeats for hetatom bonds when bond order > 1
+                        for bo in range(bond.order):
+                            conectBonds.append((atom1, atom2))
+                        else:
+                            conectBonds.append((atom1, atom2))
                 elif (
                     atom1.name == "SG"
                     and atom2.name == "SG"
@@ -707,10 +718,31 @@ class PDBTrajectoryFile:
             if len(connectBonds) > 0:
                 # Only add bonds that don't already exist.
                 existingBonds = {(bond.atom1, bond.atom2) for bond in self._topology.bonds}
+                nonStdBonds = set()
+
                 for bond in connectBonds:
-                    if bond not in existingBonds and (bond[1], bond[0]) not in existingBonds:
-                        self._topology.add_bond(bond[0], bond[1])
-                        existingBonds.add(bond)
+                    if (bond[1], bond[0]) not in existingBonds:
+                        if bond not in existingBonds:
+                            self._topology.add_bond(bond[0], bond[1])
+                            existingBonds.add(bond)
+                            if bond not in nonStdBonds:
+                                nonStdBonds.add(bond)
+                        else:
+                            # Increase bond order of nonstandard bonds (i.e. between hetatoms)
+                            # if bond repeats in CONECT record.
+                            if bond in nonStdBonds:
+                                try:
+                                    bid = self._topology._bonds.index(Bond(bond[0], bond[1]))
+                                except ValueError:
+                                    bid = self._topology._bonds.index(Bond(bond[0], bond[1], order=2))
+                                order = self._topology._bonds[bid].order
+                                if order == 3:
+                                    raise ValueError("CONECT records give bond order greater than 3")
+                                else:
+                                    if order is None:
+                                        order = 1
+                                    order += 1
+                                    self._topology._bonds[bid].order = order
 
     @staticmethod
     def _loadNameReplacementTables():
