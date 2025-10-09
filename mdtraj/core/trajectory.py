@@ -163,47 +163,47 @@ def _parse_topology(top, **kwargs):
     -------
     topology : md.Topology
     """
+    ext = _get_extension(top) if isinstance(top, (str, os.PathLike)) else None
 
-    if isinstance(top, (str, os.PathLike)):
-        ext = _get_extension(top)
-    else:
-        ext = None  # might not be a string
-
-    if isinstance(top, Topology):
-        topology = top
-    elif isinstance(top, Trajectory):
-        topology = top.topology
-    elif isinstance(top, (str, os.PathLike)) and (
-        ext in [".pdb", ".pdb.gz", ".pdbx", ".pdbx.gz", ".cif", ".cif.gz", ".mmcif", ".mmcif.gz", ".h5", ".lh5"]
-    ):
-        _traj = load_frame(top, 0, **kwargs)
-        topology = _traj.topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".prmtop", ".parm7", ".prm7"]):
-        topology = load_prmtop(top, **kwargs)
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".psf"]):
-        topology = load_psf(top, **kwargs)
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".mol2"]):
-        topology = load_mol2(top, **kwargs).topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".gro"]):
-        topology = load_gro(top, **kwargs).topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".arc"]):
-        topology = load_arc(top, **kwargs).topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".hoomdxml"]):
-        topology = load_hoomdxml(top, **kwargs).topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".gsd"]):
-        topology = load_gsd_topology(top, **kwargs)
-    elif isinstance(top, (str, os.PathLike)):
-        raise OSError(
-            "The topology is loaded by filename extension, and the "
-            'detected "{}" format is not supported. Supported topology '
-            'formats include {} and "{}".'.format(
-                ext,
-                ", ".join(['"%s"' % e for e in _TOPOLOGY_EXTS[:-1]]),
-                _TOPOLOGY_EXTS[-1],
-            ),
-        )
-    else:
-        raise TypeError("A topology is required. You supplied top=%s" % str(top))
+    match top:
+        case Topology():
+            topology = top
+        case Trajectory():
+            topology = top.topology
+        case str() | os.PathLike():
+            match ext:
+                case ".pdb" | ".pdb.gz" | ".pdbx" | ".pdbx.gz" | ".cif" | ".cif.gz" | ".mmcif" | ".mmcif.gz":
+                    _traj = load_frame(top, 0, **kwargs)
+                    topology = _traj.topology
+                case ".h5" | ".lh5":
+                    _traj = load_frame(top, 0, **kwargs)
+                    topology = _traj.topology
+                case ".prmtop" | ".parm7" | ".prm7":
+                    topology = load_prmtop(top, **kwargs)
+                case ".psf":
+                    topology = load_psf(top, **kwargs)
+                case ".mol2":
+                    topology = load_mol2(top, **kwargs).topology
+                case ".gro":
+                    topology = load_gro(top, **kwargs).topology
+                case ".arc":
+                    topology = load_arc(top, **kwargs).topology
+                case ".hoomdxml":
+                    topology = load_hoomdxml(top, **kwargs).topology
+                case ".gsd":
+                    topology = load_gsd_topology(top, **kwargs)
+                case _:
+                    raise OSError(
+                        "The topology is loaded by filename extension, and the "
+                        'detected "{}" format is not supported. Supported topology '
+                        'formats include {} and "{}".'.format(
+                            ext,
+                            ", ".join(['"%s"' % e for e in _TOPOLOGY_EXTS[:-1]]),
+                            _TOPOLOGY_EXTS[-1],
+                        ),
+                    )
+        case _:
+            raise TypeError("A topology is required. You supplied top=%s" % str(top))
 
     return topology
 
