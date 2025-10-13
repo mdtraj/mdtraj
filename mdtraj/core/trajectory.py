@@ -190,7 +190,7 @@ def _parse_topology(top, **kwargs):
                     topology = load_hoomdxml(top, **kwargs).topology
                 case ".gsd":
                     topology = load_gsd_topology(top, **kwargs)
-                case ext:
+                case ext:  # raise error when we hit any other cases
                     raise OSError(
                         "The topology is loaded by filename extension, and the "
                         'detected "{}" format is not supported. Supported topology '
