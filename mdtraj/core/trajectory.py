@@ -163,15 +163,13 @@ def _parse_topology(top, **kwargs):
     -------
     topology : md.Topology
     """
-    ext = _get_extension(top) if isinstance(top, (str, os.PathLike)) else None
-
     match top:
         case Topology():
             topology = top
         case Trajectory():
             topology = top.topology
         case str() | os.PathLike():
-            match ext:
+            match _get_extension(top):
                 case ".pdb" | ".pdb.gz" | ".pdbx" | ".pdbx.gz" | ".cif" | ".cif.gz" | ".mmcif" | ".mmcif.gz":
                     _traj = load_frame(top, 0, **kwargs)
                     topology = _traj.topology
@@ -197,7 +195,7 @@ def _parse_topology(top, **kwargs):
                         "The topology is loaded by filename extension, and the "
                         'detected "{}" format is not supported. Supported topology '
                         'formats include {} and "{}".'.format(
-                            ext,
+                            _get_extension(top),
                             ", ".join(['"%s"' % e for e in _TOPOLOGY_EXTS[:-1]]),
                             _TOPOLOGY_EXTS[-1],
                         ),
