@@ -318,8 +318,8 @@ class PDBTrajectoryFile:
         unitcell_lengths=None,
         unitcell_angles=None,
         bfactors=None,
-        bond_orders=False,
         ter=True,
+        bond_orders=False,
     ):
         """Write a PDB file to disk
 
@@ -339,11 +339,11 @@ class PDBTrajectoryFile:
         bfactors : array_like, default=None, shape=(n_atoms,)
             Save bfactors with pdb file. Should contain a single number for
             each atom in the topology
-        bond_orders : bool, default=False
-            Specify bond orders by writing repeated bonds in CONECT records
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.
+        bond_orders : bool, default=False
+            Specify bond orders by writing repeated bonds in CONECT records
         """
         if not self._mode == "w":
             raise ValueError("file not opened for writing")
@@ -729,12 +729,11 @@ class PDBTrajectoryFile:
                         connectBonds.append((atomByNumber[i], atomByNumber[j]))
 
             if len(connectBonds) > 0:
-                existingBonds = [(bond.atom1, bond.atom2) for bond in self._topology.bonds]
-                existingBonds_set = set(existingBonds)
+                existingBonds = {(bond.atom1, bond.atom2) for bond in self._topology.bonds}
                 for btup, g in groupby(connectBonds):
                     bo = len(list(g)) or None
                     bt = float_to_bond_type(bo) if bo else None
-                    if (btup[0], btup[1]) in existingBonds_set or (btup[1], btup[0]) in existingBonds_set:
+                    if (btup[0], btup[1]) in existingBonds or (btup[1], btup[0]) in existingBonds:
                         # If bond already exists, in either order,
                         # update bond type/order only if bond_order is activated
                         # else do nothing.
@@ -751,8 +750,7 @@ class PDBTrajectoryFile:
                             self._topology.add_bond(btup[0], btup[1], type=bt, order=bo)
                         else:
                             self._topology.add_bond(btup[0], btup[1], type=None, order=None)
-                        existingBonds_set.add((btup[0], btup[1]))
-                        existingBonds.append((btup[0], btup[1]))
+                        existingBonds.add((btup[0], btup[1]))
 
     @staticmethod
     def _loadNameReplacementTables():

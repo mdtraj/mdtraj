@@ -1893,7 +1893,7 @@ def float_to_bond_type(bond_float: float | None) -> Singleton | None:
 
     Parameters
     ----------
-    bond_float : float
+    bond_float : float or None
         Representation of built in bond types as a float,
         Maps this float to specific bond class, if the float has no map, None is returned instead
 
@@ -1903,16 +1903,20 @@ def float_to_bond_type(bond_float: float | None) -> Singleton | None:
         Bond type matched to the float if known
         If no match is found, returns None (which is also a valid type for the Bond class)
     """
-    all_bond_types = [Single, Double, Triple, Aromatic, Amide]
-    for bond_type in all_bond_types:
-        try:
-            if float(cast(Singleton, bond_type)) == float(bond_float):
-                # explicitly cast to Singleton to avoid mypy error
-                return cast(Singleton, bond_type)
-        except TypeError:
-            # Skip cases where you cannot cast to float (e.g. float(None))
-            return None
-    return None
+    # Explicitly cast to Singleton to avoid mypy error
+    bond_mapping: dict[float, Singleton] = {
+        1.0: cast(Singleton, Single),
+        2.0: cast(Singleton, Double),
+        3.0: cast(Singleton, Triple),
+        1.5: cast(Singleton, Aromatic),
+        1.25: cast(Singleton, Amide),
+    }
+
+    try:
+        return bond_mapping.get(float(bond_float), None)
+    except (TypeError, ValueError):
+        # Skip cases where you cannot cast to float (e.g. float(None))
+        return None
 
 
 class Bond(namedtuple("Bond", ["atom1", "atom2"])):

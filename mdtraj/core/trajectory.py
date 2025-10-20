@@ -1565,7 +1565,7 @@ class Trajectory:
                 types=[a.name for a in self.top.atoms],
             )
 
-    def save_pdb(self, filename, force_overwrite=True, bfactors=None, bond_orders=False, ter=True):
+    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True, bond_orders=False):
         """Save trajectory to RCSB PDB format
 
         Parameters
@@ -1578,11 +1578,11 @@ class Trajectory:
             Save bfactors with pdb file. If the array is two dimensional it should
             contain a bfactor for each atom in each frame of the trajectory.
             Otherwise, the same bfactor will be saved in each frame.
-        bond_orders : bool, default=False
-            Specify bond orders by writing repeated bonds in CONECT records
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.
+        bond_orders : bool, default=False
+            Specify bond orders by writing repeated bonds in CONECT records
         """
         self._check_valid_unitcell()
 
