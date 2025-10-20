@@ -42,8 +42,10 @@ def test_load_mol2(get_fn):
     ref_top, ref_bonds = ref_trj.top.to_dataframe()
     top, bonds = trj.top.to_dataframe()
 
-    # Strip bond order info since PDB does not have non-integer bond types
-    bonds[:, -2:] = np.ones([bonds.shape[0], 2])
+    # Strip bond orders from mol2 because reader does not read bond orders
+    ref_bonds[:, -1:] = np.zeros([ref_bonds.shape[0], 1])
+    # Floor bond type info since PDB does not have non-integer bond types
+    bonds[:, -2] = np.floor(bonds[:, -2])
     eq(bonds, ref_bonds)
 
 

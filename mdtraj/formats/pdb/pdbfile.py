@@ -743,7 +743,8 @@ class PDBTrajectoryFile:
                             except ValueError:
                                 bid = self._topology._bonds.index((btup[1], btup[0]))
                             bond = self._topology._bonds[bid]
-                            bond.order, bond.type = bo, bt
+                            if bond.order is None or bo > bond.order:
+                                bond.order, bond.type = bo, bt
                     else:
                         # Add bond if it doesn't exist
                         if self._bond_orders:
