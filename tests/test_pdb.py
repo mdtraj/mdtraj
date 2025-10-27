@@ -584,3 +584,21 @@ def test_bnz_bond_order_conect_write(get_fn, bond_orders, ref_orders):
 
     bo = [bond.order for bond in traj2.top._bonds]
     eq(bo, ref_orders, err_msg="Inconsistent number of bonds written to pdb")
+
+
+@pytest.mark.parametrize(
+    "bond_orders, ref_orders",
+    [
+        (False, ["None", None]),
+        (True, ["Triple", 3]),
+    ],
+    ids=["ignore repeated bonds", "read repeated bonds"],
+)
+def test_bond_order_conect_priority(get_fn, bond_orders, ref_orders):
+    """Test that when reading bond orders from pdb, if the bond is listed
+    differently in opposite orders, the highest bond order prevails"""
+
+    traj = load_pdb(get_fn("pdb_repeatbond.pdb"), bond_orders=bond_orders)
+
+    bond = [str(traj.top._bonds[0].type), traj.top._bonds[0].order]
+    eq(bond, ref_orders, err_msg="Inconsistent bond type, bond order read")

@@ -243,9 +243,11 @@ class PDBTrajectoryFile:
         if you give a topology as input the topology won't be parsed from the pdb file
         it saves time if you have to parse a big number of files
     bond_orders : bool, default=False
-        If True, respect and infer bond order/type based on the CONECT section, where
-        duplicate bonds are treated as having higher bond order. As default (False), i
-        the parser ignores any duplicate bonds.
+        If False (default), the parser ignores any duplicate bonds in the CONECT section.
+        If True, the reader will respect and infer bond order/type based on the CONECT
+        section, where consecutive listing of bonds are treated as having a higher
+        bond order. If the bond is listed multiple times in the CONECT section, the
+        highest listed bond order prevails.
 
     Attributes
     ----------
