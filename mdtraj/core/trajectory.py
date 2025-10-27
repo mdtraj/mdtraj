@@ -1624,8 +1624,8 @@ class Trajectory:
                             f.distance_unit,
                         ),
                         unitcell_angles=self.unitcell_angles[i],
-                        bond_orders=bond_orders,
                         ter=ter,
+                        bond_orders=bond_orders,
                     )
                 else:
                     f.write(
@@ -1637,8 +1637,8 @@ class Trajectory:
                         self.topology,
                         modelIndex=i if self.n_frames > 1 else None,
                         bfactors=bfactors[i],
-                        bond_orders=bond_orders,
                         ter=ter,
+                        bond_orders=bond_orders,
                     )
 
     def save_cif(self, filename, force_overwrite=True, bfactors=None, ter=True, header=True):
