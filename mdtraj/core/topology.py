@@ -1919,6 +1919,36 @@ def float_to_bond_type(bond_float: float | None) -> Singleton | None:
         # Skip cases where you cannot cast to float (e.g. float(None))
         return None
 
+def bond_name_to_type(name: str) -> Singleton | None:
+    """
+    Convert a bond name to known bond type class, or None if no matched class if found
+
+    Parameters
+    ----------
+    name : str
+        Name of the bond type, e.g. 'single', 'double', 'aromatic', etc.
+
+    Returns
+    -------
+    bond_type : mdtraj.topology.Singleton subclass or None
+        Bond type matched to the name if known
+        If no match is found, returns None (which is also a valid type for the Bond class)
+    """
+    
+    # Explicitly cast to Singleton to avoid mypy error
+    bond_mapping: dict[str, Singleton] = {
+        "single": cast(Singleton, Single),
+        "double": cast(Singleton, Double),
+        "triple": cast(Singleton, Triple),
+        "aromatic": cast(Singleton, Aromatic),
+        "amide": cast(Singleton, Amide),
+    }
+
+    # normalize name if not None
+    if name:
+        name = name.lower()
+
+    return bond_mapping.get(name)
 
 class Bond(namedtuple("Bond", ["atom1", "atom2"])):
     # Add type annotations for the extra attributes.

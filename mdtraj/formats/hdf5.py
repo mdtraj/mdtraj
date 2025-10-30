@@ -45,7 +45,7 @@ import numpy as np
 # ours
 import mdtraj
 import mdtraj.core.element as elem
-from mdtraj.core.topology import Topology
+from mdtraj.core.topology import Topology, bond_name_to_type
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ensure_type, import_, in_units_of
 
@@ -156,6 +156,8 @@ class HDF5TrajectoryFile:
     compression : {'zlib', None}
         Apply compression to the file? This will save space, and does not
         cost too many cpu cycles, so it's recommended.
+    bond_metadata : bool, optional
+        If True, include bond metadata (order and type) when writing the topology.
 
     Attributes
     ----------
@@ -175,9 +177,17 @@ class HDF5TrajectoryFile:
 
     distance_unit = "nanometers"
 
-    def __init__(self, filename, mode="r", force_overwrite=True, compression="zlib"):
+    def __init__(
+        self,
+        filename,
+        mode="r",
+        force_overwrite=True,
+        compression="zlib",
+        bond_metadata=True,
+    ):
         self._open = False  # is the file handle currently open?
         self.mode = mode  # the mode in which the file was opened?
+        self._bond_metadata = bond_metadata  # flag to include bond metadata in topology
 
         if mode not in ["r", "w", "a"]:
             raise ValueError("mode must be one of ['r', 'w', 'a']")
@@ -266,14 +276,15 @@ class HDF5TrajectoryFile:
     #####################################################
 
     @staticmethod
-    def convert_topology_to_dict(topology_object):
+    def convert_topology_to_dict(topology_object, bond_metadata=True):
         """Method for converting mdtraj.topology to a dictionary
 
         Parameters
         ----------
         topology_object : mdtraj.core.topology.Topology
             MDTraj Topology object
-
+        bond_metadata : bool
+            Flag to include bond metadata (type and order) in the serialized topology.
         Returns
         -------
         topology_dict : dict
@@ -284,6 +295,9 @@ class HDF5TrajectoryFile:
                 "chains": [],
                 "bonds": [],
             }
+
+            if bond_metadata:
+                topology_dict["bond_metadata"] = []
 
             for chain in topology_object.chains:
                 chain_dict = {
@@ -316,13 +330,18 @@ class HDF5TrajectoryFile:
                     chain_dict["residues"].append(residue_dict)
                 topology_dict["chains"].append(chain_dict)
 
-            for atom1, atom2 in topology_object.bonds:
+            for bond in topology_object.bonds:
                 topology_dict["bonds"].append(
                     [
-                        int(atom1.index),
-                        int(atom2.index),
+                        int(bond.atom1.index),
+                        int(bond.atom2.index),
                     ],
                 )
+
+                if bond_metadata:
+                    bond_type = None if bond.type is None else str(bond.type)
+                    bond_order = None if bond.order is None else float(bond.order)
+                    topology_dict["bond_metadata"].append({"order": bond_order, "type": bond_type})
 
         except AttributeError as e:
             raise AttributeError(
@@ -330,7 +349,7 @@ class HDF5TrajectoryFile:
                 "chains() -> residue() -> atoms() and bond() protocol. "
                 "Specifically, we encountered the following %s" % e,
             )
-
+        #breakpoint()
         return topology_dict
 
     @property
@@ -374,8 +393,16 @@ class HDF5TrajectoryFile:
                     topology.add_atom(atom_dict["name"], element, residue)
 
         atoms = list(topology.atoms)
-        for index1, index2 in topology_dict["bonds"]:
-            topology.add_bond(atoms[index1], atoms[index2])
+        num_bonds = len(topology_dict["bonds"])
+        bond_metadata = topology_dict.get("bond_metadata")
+        for i in range(num_bonds):
+            index1, index2 = topology_dict["bonds"][i]
+            if bond_metadata:
+                topology.add_bond(atoms[index1], atoms[index2], 
+                                         order=bond_metadata[i]["order"],
+                                         type=bond_name_to_type(bond_metadata[i]["type"]))
+            else:
+                topology.add_bond(atoms[index1], atoms[index2])
 
         return topology
 
@@ -396,13 +423,13 @@ class HDF5TrajectoryFile:
             topology_dict = None
         elif isinstance(topology_object, Topology):
             # Convert topology to dictionary
-            topology_dict = self.convert_topology_to_dict(topology_object)
+            topology_dict = self.convert_topology_to_dict(topology_object, bond_metadata=self._bond_metadata)
         else:
             # we want to be able to handle the openmm Topology object
             # here too, so if it's not an mdtraj topology or None
             # we'll just guess that it's probably an openmm topology and convert
             topology_object = Topology.from_openmm(topology_object)
-            topology_dict = self.convert_topology_to_dict(topology_object)
+            topology_dict = self.convert_topology_to_dict(topology_object, bond_metadata=self._bond_metadata)
 
         # removing the topology node if it exists
         try:
