@@ -30,6 +30,7 @@ import pytest
 from conftest import flaky_pdb_dl
 
 from mdtraj import Topology, load, load_pdb
+from mdtraj.core.topology import float_to_bond_type
 from mdtraj.formats.pdb import pdbstructure
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
 from mdtraj.testing import eq
@@ -529,3 +530,75 @@ def test_pdb_charge_write(get_fn):
 
     # all of the charges should be 1
     assert set(charges) == {1.0}
+
+
+@pytest.mark.parametrize(
+    "bond_orders, ref_orders",
+    [
+        (False, [None] * 32),
+        (True, [None, 2] + [None] * 11 + [2] + [None] * 17 + [1]),
+    ],
+    ids=[
+        "bond_orders=False",
+        "bond_orders=True",
+    ],
+)
+def test_ala3_bond_order_read(get_fn, bond_orders, ref_orders):
+    """Test that bond orders/types are read properly from CONECT section of PDB file"""
+
+    traj = load_pdb(get_fn("ala_ala_ala.pdb"), bond_orders=bond_orders)
+
+    # Checking bond orders
+    bo = [bond.order for bond in traj.top._bonds]
+    eq(bo, ref_orders, err_msg="bond orders do not match reference")
+
+    # Checking bond types
+    bt = [bond.type for bond in traj.top._bonds]
+    bt_from_bo = [float_to_bond_type(order) for order in bo]
+    ref_bt = [float_to_bond_type(order) for order in ref_orders]
+
+    # Make sure bond order and bond type match
+    eq(bt_from_bo, bt, err_msg="bond types and bond orders don't match")
+    # Make sure bond type match reference
+    eq(bt, ref_bt, err_msg="bond types do not match reference")
+
+
+@pytest.mark.parametrize(
+    "bond_orders, ref_orders",
+    [
+        (False, [1] * 12),
+        (True, [2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1]),
+    ],
+    ids=["omit_write_bond_order", "write_bond_order"],
+)
+def test_bnz_bond_order_conect_write(get_fn, bond_orders, ref_orders):
+    """Test that formal charges are written to PDB file"""
+
+    traj = load_pdb(get_fn("bnz.pdb"), bond_orders=True)
+
+    # write the trajectory to a new file
+    traj.save_pdb(temp, bond_orders=bond_orders)
+
+    # read the new file, always with bond order info
+    traj2 = load_pdb(temp, bond_orders=True)
+
+    bo = [bond.order for bond in traj2.top._bonds]
+    eq(bo, ref_orders, err_msg="Inconsistent number of bonds written to pdb")
+
+
+@pytest.mark.parametrize(
+    "bond_orders, ref_orders",
+    [
+        (False, ["None", None]),
+        (True, ["Triple", 3]),
+    ],
+    ids=["ignore repeated bonds", "read repeated bonds"],
+)
+def test_bond_order_conect_priority(get_fn, bond_orders, ref_orders):
+    """Test that when reading bond orders from pdb, if the bond is listed
+    differently in opposite orders, the highest bond order prevails"""
+
+    traj = load_pdb(get_fn("pdb_repeatbond.pdb"), bond_orders=bond_orders)
+
+    bond = [str(traj.top._bonds[0].type), traj.top._bonds[0].order]
+    eq(bond, ref_orders, err_msg="Inconsistent bond type, bond order read")

@@ -36,23 +36,16 @@ from mdtraj.testing import eq
 
 def test_load_mol2(get_fn):
     trj = md.load(get_fn("imatinib.mol2"))
-    ref_trj = md.load(get_fn("imatinib.pdb"))
+    ref_trj = md.load(get_fn("imatinib.pdb"), bond_orders=True)
     eq(trj.xyz, ref_trj.xyz)
 
     ref_top, ref_bonds = ref_trj.top.to_dataframe()
     top, bonds = trj.top.to_dataframe()
-    # PDB Does not have bond order, ensure that the equality fails
-    try:
-        eq(bonds, ref_bonds)
-    except AssertionError:
-        # This is what we wanted to happen, its fine
-        pass
-    else:
-        raise AssertionError(
-            "Reference bonds with no bond order should not equal Mol2 bonds with bond order",
-        )
-    # Strip bond order info since PDB does not have it
-    bonds[:, -2:] = np.zeros([bonds.shape[0], 2])
+
+    # Strip bond orders from mol2 because reader does not read bond orders
+    ref_bonds[:, -1:] = np.zeros([ref_bonds.shape[0], 1])
+    # Floor bond type info since PDB does not have non-integer bond types
+    bonds[:, -2] = np.floor(bonds[:, -2])
     eq(bonds, ref_bonds)
 
 
