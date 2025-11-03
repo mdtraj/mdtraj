@@ -49,8 +49,8 @@ import os
 import warnings
 import xml.etree.ElementTree as etree
 from collections import namedtuple
-from collections.abc import Iterable, Iterator, Sequence
-from typing import TYPE_CHECKING, Callable, cast
+from collections.abc import Callable, Iterable, Iterator, Sequence
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 from numpy.typing import NDArray
