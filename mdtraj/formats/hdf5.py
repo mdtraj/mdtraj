@@ -401,7 +401,10 @@ class HDF5TrajectoryFile:
                     except KeyError:
                         element = elem.virtual
                     topology.add_atom(
-                        atom_dict["name"], element, residue, formal_charge=atom_dict.get("formal_charge", None)
+                        atom_dict["name"],
+                        element,
+                        residue,
+                        formal_charge=atom_dict.get("formal_charge", None),
                     )
 
         atoms = list(topology.atoms)
