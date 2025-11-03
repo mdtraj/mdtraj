@@ -183,7 +183,7 @@ class HDF5TrajectoryFile:
         mode="r",
         force_overwrite=True,
         compression="zlib",
-        bond_metadata=True,
+        bond_metadata=False,
     ):
         self._open = False  # is the file handle currently open?
         self.mode = mode  # the mode in which the file was opened?
