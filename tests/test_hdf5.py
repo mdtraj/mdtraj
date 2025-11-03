@@ -22,7 +22,6 @@
 
 import os
 import tempfile
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -377,3 +376,17 @@ def test_hdf5_bond_metadata(get_fn):
         top = f.topology
         for bond1, bond2 in zip(traj.topology.bonds, top.bonds):
             assert bond1 == bond2
+
+
+def test_hdf5_formal_charge(get_fn):
+    traj = md.load(get_fn("1ply_charge.pdb"))
+
+    with HDF5TrajectoryFile(temp, "w") as f:
+        f.write(traj.xyz)
+        f.topology = traj.topology
+
+    # Check that formal charges were saved correctly
+    with HDF5TrajectoryFile(temp) as f:
+        top = f.topology
+        for atom1, atom2 in zip(traj.topology.atoms, top.atoms):
+            assert atom1.formal_charge == atom2.formal_charge
