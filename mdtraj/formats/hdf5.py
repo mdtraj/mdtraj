@@ -299,6 +299,8 @@ class HDF5TrajectoryFile:
             if bond_metadata:
                 topology_dict["bond_metadata"] = []
 
+            has_formal_charges = any(getattr(a, "formal_charge", None) is not None for a in topology_object.atoms)
+
             for chain in topology_object.chains:
                 chain_dict = {
                     "residues": [],
@@ -327,6 +329,14 @@ class HDF5TrajectoryFile:
                                 "element": element_symbol_string,
                             },
                         )
+
+                        # only include formal charges in HDF5 if present on topology
+                        # if none are present, don't write.
+                        if has_formal_charges:
+                            residue_dict["atoms"][-1]["formal_charge"] = (
+                                float(atom.formal_charge) if atom.formal_charge is not None else None
+                            )
+
                     chain_dict["residues"].append(residue_dict)
                 topology_dict["chains"].append(chain_dict)
 
@@ -349,7 +359,7 @@ class HDF5TrajectoryFile:
                 "chains() -> residue() -> atoms() and bond() protocol. "
                 "Specifically, we encountered the following %s" % e,
             )
-        #breakpoint()
+
         return topology_dict
 
     @property
@@ -390,7 +400,9 @@ class HDF5TrajectoryFile:
                         element = elem.get_by_symbol(atom_dict["element"])
                     except KeyError:
                         element = elem.virtual
-                    topology.add_atom(atom_dict["name"], element, residue)
+                    topology.add_atom(
+                        atom_dict["name"], element, residue, formal_charge=atom_dict.get("formal_charge", None)
+                    )
 
         atoms = list(topology.atoms)
         num_bonds = len(topology_dict["bonds"])
@@ -398,9 +410,12 @@ class HDF5TrajectoryFile:
         for i in range(num_bonds):
             index1, index2 = topology_dict["bonds"][i]
             if bond_metadata:
-                topology.add_bond(atoms[index1], atoms[index2], 
-                                         order=bond_metadata[i]["order"],
-                                         type=bond_name_to_type(bond_metadata[i]["type"]))
+                topology.add_bond(
+                    atoms[index1],
+                    atoms[index2],
+                    order=bond_metadata[i]["order"],
+                    type=bond_name_to_type(bond_metadata[i]["type"]),
+                )
             else:
                 topology.add_bond(atoms[index1], atoms[index2])
 
