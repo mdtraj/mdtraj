@@ -7,11 +7,11 @@ repos:
     exclude: '\.(pdb|gro|top|sdf|dssp)$'
   - id: debug-statements
 - repo: https://github.com/asottile/add-trailing-comma
-  rev: v3.2.0
+  rev: v4.0.0
   hooks:
   - id: add-trailing-comma
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.13.3
+  rev: v0.14.3
   hooks:
     - id: ruff
       args: [--fix]
