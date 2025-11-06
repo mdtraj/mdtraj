@@ -255,7 +255,7 @@ class PDBxTrajectoryFile:
             raise ValueError("invalid mode: %s" % mode)
 
     def write(self, positions, topology, unitcell_lengths=None, unitcell_angles=None, 
-              bfactors=None, header=True, keepIds=False):
+              bfactors=None, keepIds=False):
         """Write one frame of a molecular dynamics trajectory to disk in PDBx/mmCIF format.
 
         Parameters
@@ -297,6 +297,7 @@ class PDBxTrajectoryFile:
             self._file,
             self._next_model,
             bfactors=bfactors,
+            keepIds=keepIds,
         )
         self._next_model += 1
 
