@@ -608,7 +608,7 @@ class PDBxFile:
             for resIndex, res in enumerate(residues):
                 if keepIds:
                     resId = res.resSeq
-                    resIC = res.insertionCode.strip() if hasattr(res, 'insertionCode') else "."
+                    resIC = res.insertionCode.strip() if hasattr(res, "insertionCode") else "."
                 else:
                     resId = resIndex + 1
                     resIC = "."
