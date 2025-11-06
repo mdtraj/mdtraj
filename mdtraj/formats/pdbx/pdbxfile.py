@@ -601,14 +601,14 @@ class PDBxFile:
 
         for chainIndex, chain in enumerate(topology.chains):
             if keepIds:
-                chainName = chain.id
+                chainName = chain.chain_id
             else:
                 chainName = chr(ord("A") + chainIndex % 26)
             residues = list(chain.residues)
             for resIndex, res in enumerate(residues):
                 if keepIds:
-                    resId = res.id
-                    resIC = res.insertionCode if res.insertionCode.strip() else "."
+                    resId = res.resSeq
+                    resIC = res.insertionCode.strip() if hasattr(res, 'insertionCode') else "."
                 else:
                     resId = resIndex + 1
                     resIC = "."
