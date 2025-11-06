@@ -1639,7 +1639,7 @@ class Trajectory:
                         bond_orders=bond_orders,
                     )
 
-    def save_cif(self, filename, force_overwrite=True, bfactors=None, ter=True, header=True):
+    def save_cif(self, filename, force_overwrite=True, bfactors=None, keepIds=False, header=True):
         """Save trajectory to PDBx/mmCIF format
 
         Parameters
@@ -1652,9 +1652,11 @@ class Trajectory:
             Save bfactors with cif file. If the array is two dimensional it should
             contain a bfactor for each atom in each frame of the trajectory.
             Otherwise, the same bfactor will be saved in each frame.
-        ter : bool, default=True
-            Include TER lines in cif to indicate end of a chain of residues. This is useful
-            if you need to keep atom numbers consistent.
+        keepIds : bool=False
+            If True, keep the residue and chain IDs specified in the Topology
+            rather than generating new ones.  Warning: It is up to the caller to
+            make sure these are valid IDs that satisfy the requirements of the
+            PDBx/mmCIF format.  Otherwise, the output file will be invalid.
         header : bool, default=True
             Include header in cif. Useful if you want the extra output, but sometimes prevent
             programs from running smoothly.
@@ -1697,6 +1699,7 @@ class Trajectory:
                         ),
                         unitcell_angles=self.unitcell_angles[i],
                         bfactors=bfactors[i],
+                        keepIds=keepIds,
                     )
                 else:
                     f.write(
@@ -1707,6 +1710,7 @@ class Trajectory:
                         ),
                         self.topology,
                         bfactors=bfactors[i],
+                        keepIds=keepIds,
                     )
 
     def save_xtc(self, filename, force_overwrite=True):
