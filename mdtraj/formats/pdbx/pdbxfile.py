@@ -490,9 +490,10 @@ class PDBxFile:
             resIds = {}
             if keepIds:
                 for chain in topology.chains:
-                    chainIds[chain] = chain.id
+                    chainIds[chain] = chain.chain_id
                 for res in topology.residues:
-                    resIds[res] = res.id
+                    # or alt could set to res.index + 1
+                    resIds[res] = res.resSeq
             else:
                 for chainIndex, chain in enumerate(topology.chains):
                     chainIds[chain] = chr(ord("A") + chainIndex % 26)
