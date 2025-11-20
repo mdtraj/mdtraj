@@ -362,3 +362,31 @@ def test_topology_None(h5traj):
 
         # The topology should now be overwritten as None now
         assert f.topology is None, "The topology of the HDF5 file was not deleted"
+
+
+def test_hdf5_bond_metadata(get_fn):
+    traj = md.load(get_fn("imatinib.pdb"), bond_orders=True)
+
+    with HDF5TrajectoryFile(temp, "w", bond_metadata=True) as f:
+        f.write(traj.xyz)
+        f.topology = traj.topology
+
+    # Check that bond metadata was saved correctly
+    with HDF5TrajectoryFile(temp) as f:
+        top = f.topology
+        for bond1, bond2 in zip(traj.topology.bonds, top.bonds):
+            assert bond1 == bond2
+
+
+def test_hdf5_formal_charge(get_fn):
+    traj = md.load(get_fn("1ply_charge.pdb"))
+
+    with HDF5TrajectoryFile(temp, "w") as f:
+        f.write(traj.xyz)
+        f.topology = traj.topology
+
+    # Check that formal charges were saved correctly
+    with HDF5TrajectoryFile(temp) as f:
+        top = f.topology
+        for atom1, atom2 in zip(traj.topology.atoms, top.atoms):
+            assert atom1.formal_charge == atom2.formal_charge
