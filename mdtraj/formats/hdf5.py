@@ -334,7 +334,7 @@ class HDF5TrajectoryFile:
                         # if none are present, don't write.
                         if has_formal_charges:
                             residue_dict["atoms"][-1]["formal_charge"] = (
-                                float(atom.formal_charge) if atom.formal_charge is not None else None
+                                int(atom.formal_charge) if atom.formal_charge is not None else None
                             )
 
                     chain_dict["residues"].append(residue_dict)
