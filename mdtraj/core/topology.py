@@ -1945,11 +1945,13 @@ def bond_name_to_type(name: str) -> Singleton | None:
         "amide": cast(Singleton, Amide),
     }
 
-    # normalize name if not None
-    if name:
+    try:
+        # normalize name
         name = name.lower().strip()
-
-    return bond_mapping.get(name)
+        return bond_mapping.get(name)
+    except (TypeError, AttributeError):
+        # skip cases where you cannot normalize (e.g. None)
+        return None
 
 
 class Bond(namedtuple("Bond", ["atom1", "atom2"])):
