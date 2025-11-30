@@ -399,6 +399,9 @@ def test_hdf5_formal_charge(get_fn):
 
 
 def test_hdf5_roundtrip(h5traj_full_metadata):
+    # test that formal_charge and bond order/type is preserved
+    # on topology when saving to and reading from HDF5.
+
     traj, _, tmp_dir = h5traj_full_metadata
     out_fn = os.path.join(tmp_dir, "roundtrip.h5")
 
