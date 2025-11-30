@@ -365,6 +365,9 @@ def test_topology_None(h5traj):
 
 
 def test_hdf5_bond_metadata(get_fn):
+    # test that bond metadata is preserved when writing
+    # and reading HDF5. Added in PR 2101
+
     traj = md.load(get_fn("imatinib.pdb"), bond_orders=True)
 
     with HDF5TrajectoryFile(temp, "w", bond_metadata=True) as f:
@@ -379,6 +382,9 @@ def test_hdf5_bond_metadata(get_fn):
 
 
 def test_hdf5_formal_charge(get_fn):
+    # test that atom formal charge is preserved when writing
+    # and reading HDF5. Added in PR 2101
+
     traj = md.load(get_fn("1ply_charge.pdb"))
 
     with HDF5TrajectoryFile(temp, "w") as f:
@@ -390,3 +396,22 @@ def test_hdf5_formal_charge(get_fn):
         top = f.topology
         for atom1, atom2 in zip(traj.topology.atoms, top.atoms):
             assert atom1.formal_charge == atom2.formal_charge
+
+
+def test_hdf5_roundtrip(h5traj_full_metadata):
+    traj, _, tmp_dir = h5traj_full_metadata
+    out_fn = os.path.join(tmp_dir, "roundtrip.h5")
+
+    traj.save(out_fn)
+    traj2 = md.load(out_fn)
+
+    assert eq(traj.xyz, traj2.xyz)
+    assert traj.topology == traj2.topology
+    assert eq(traj.time, traj2.time)
+    assert eq(traj.unitcell_lengths, traj2.unitcell_lengths)
+    assert eq(traj.unitcell_angles, traj2.unitcell_angles)
+    for atom1, atom2 in zip(traj.topology.atoms, traj2.topology.atoms):
+        assert atom1.formal_charge == atom2.formal_charge
+    for bond1, bond2 in zip(traj.topology.bonds, traj2.topology.bonds):
+        assert bond1.order == bond2.order
+        assert bond1.type == bond2.type

@@ -102,3 +102,43 @@ def h5traj(tmp_path):
     fn = f"{tmp_path}/ref.h5"
     traj.save(fn)
     return traj, fn, str(tmp_path)
+
+
+@pytest.fixture(scope="function")
+def h5traj_full_metadata(tmp_path):
+    # h5 trajectory with full bond metadata and formal charge
+    # for use testing roundtrip of topologies
+    # added because fixture above  (h5traj) is used
+    # in many tests where full data is not roundtripped.
+    # PR2101
+
+    from mdtraj.core.topology import Double, Single
+
+    xyz = np.around(np.random.randn(10, 5, 3).astype(np.float32), 2)
+    topology = md.Topology()
+    chain = topology.add_chain()
+    residue = topology.add_residue("ALA", chain)
+    ca = topology.add_atom("CA", element.carbon, residue, formal_charge=0)
+    hg1 = topology.add_atom("HG1", element.hydrogen, residue, formal_charge=1)
+    sg = topology.add_atom("SG", element.sulfur, residue, formal_charge=-1)
+    od1 = topology.add_atom("OD1", element.oxygen, residue, formal_charge=-1)
+    ne = topology.add_atom("NE", element.nitrogen, residue, formal_charge=1)
+    topology.add_bond(ca, hg1, order=1, type=Single)
+    topology.add_bond(ca, sg, order=2, type=Double)
+    topology.add_bond(od1, ne, order=1, type=Single)
+
+    time = np.arange(10) ** 2
+    unitcell_lengths = np.array([[1.1, 1.2, 1.3]] * 10)
+    unitcell_angles = np.array([[90, 90, 95]] * 10)
+
+    traj = md.Trajectory(
+        xyz,
+        topology=topology,
+        time=time,
+        unitcell_lengths=unitcell_lengths,
+        unitcell_angles=unitcell_angles,
+    )
+
+    fn = f"{tmp_path}/ref.h5"
+    traj.save(fn)
+    return traj, fn, str(tmp_path)
