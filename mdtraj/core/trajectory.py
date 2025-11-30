@@ -1507,7 +1507,7 @@ class Trajectory:
         mode : str, default='w'
             The mode in which to save the file. 'w' will overwrite any existing
             file, 'a' will append to an existing file.
-        bond_metadata: bool, default=True
+        bond_metadata : bool, default=True
             Flag to save bond order and type in the HDF5.
         """
         # check if savemode is valid (only "w" or "a" are allowed)
