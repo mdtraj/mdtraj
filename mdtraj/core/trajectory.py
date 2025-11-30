@@ -349,6 +349,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+    bond_orders : bool, optional
+        This option is used for the PDB format. If set to True, bond orders from
+        PDB files are set using repeating CONECT records.
 
     See Also
     --------
