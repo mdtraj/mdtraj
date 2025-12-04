@@ -490,15 +490,15 @@ class PDBxFile:
             resIds = {}
             if keepIds:
                 for chain in topology.chains:
-                    chainIds[chain] = chain.chain_id
+                    chainIds[chain.index] = chain.chain_id
                 for res in topology.residues:
                     # or alt could set to res.index + 1
-                    resIds[res] = res.resSeq
+                    resIds[res.index] = res.resSeq
             else:
                 for chainIndex, chain in enumerate(topology.chains):
-                    chainIds[chain] = chr(ord("A") + chainIndex % 26)
+                    chainIds[chain.index] = chr(ord("A") + chainIndex % 26)
                     for resIndex, res in enumerate(chain.residues):
-                        resIds[res] = resIndex + 1
+                        resIds[res.index] = resIndex + 1
             for i, (atom1, atom2) in enumerate(bonds):
                 if atom1.residue.name == "CYS" and atom2.residue.name == "CYS":
                     bondType = "disulf"
@@ -510,13 +510,13 @@ class PDBxFile:
                     % (
                         i + 1,
                         bondType,
-                        atom1.residue.chain.chain_id,
+                        chainIds[atom1.residue.chain.index],
                         atom1.residue.name,
-                        atom1.residue.resSeq,
+                        resIds[atom1.residue.index],
                         atom1.name,
-                        atom2.residue.chain.chain_id,
+                        chainIds[atom2.residue.chain.index],
                         atom2.residue.name,
-                        atom2.residue.resSeq,
+                        resIds[atom2.residue.index],
                         atom2.name,
                     ),
                     file=file,
