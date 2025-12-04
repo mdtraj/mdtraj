@@ -66,7 +66,7 @@ def test_2(get_fn, tmpdir, fn):
 def test_3(get_fn, tmpdir, pdbid):
     """This test checks dssp assignments on pdb files downloaded from rcsb"""
     # 1COY gives a small error, due to a broken chain.
-    t = md.load_pdb("http://www.rcsb.org/pdb/files/%s.pdb" % pdbid)
+    t = md.load_pdb("https://www.rcsb.org/pdb/files/%s.pdb" % pdbid)
     t = t.atom_slice(t.top.select_atom_indices("minimal"))
     assert_(call_dssp(get_fn, pdbid), md.compute_dssp(t, simplified=False)[0])
 

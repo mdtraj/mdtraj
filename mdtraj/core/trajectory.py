@@ -349,6 +349,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+    bond_orders : bool, optional
+        This option is used for the PDB format. If set to True, bond orders from
+        PDB files are set using repeating CONECT records.
 
     See Also
     --------
@@ -1492,7 +1495,7 @@ class Trajectory:
         # run the saver, and return whatever output it gives
         return saver(filename, **kwargs)
 
-    def save_hdf5(self, filename, mode="w", force_overwrite=True):
+    def save_hdf5(self, filename, mode="w", force_overwrite=True, bond_metadata=True):
         """Save trajectory to MDTraj HDF5 format
 
         Parameters
@@ -1504,12 +1507,19 @@ class Trajectory:
         mode : str, default='w'
             The mode in which to save the file. 'w' will overwrite any existing
             file, 'a' will append to an existing file.
+        bond_metadata : bool, default=True
+            Flag to save bond order and type in the HDF5.
         """
         # check if savemode is valid (only "w" or "a" are allowed)
         if mode not in ["w", "a"]:
             raise ValueError("savemode must be either 'w' or 'a'")
 
-        with HDF5TrajectoryFile(filename, mode, force_overwrite=force_overwrite) as f:
+        with HDF5TrajectoryFile(
+            filename,
+            mode,
+            force_overwrite=force_overwrite,
+            bond_metadata=bond_metadata,
+        ) as f:
             f.write(
                 coordinates=in_units_of(
                     self.xyz,

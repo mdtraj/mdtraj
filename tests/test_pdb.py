@@ -212,8 +212,8 @@ def test_pdbstructure_3():
 @flaky_pdb_dl
 def test_pdb_from_url():
     # load pdb from URL
-    t1 = load_pdb("http://www.rcsb.org/pdb/files/4ZUO.pdb.gz")
-    t2 = load_pdb("http://www.rcsb.org/pdb/files/4ZUO.pdb")
+    t1 = load_pdb("https://www.rcsb.org/pdb/files/4ZUO.pdb.gz")
+    t2 = load_pdb("https://www.rcsb.org/pdb/files/4ZUO.pdb")
     eq(t1.n_frames, 1)
     eq(t2.n_frames, 1)
     eq(t1.n_atoms, 6200)
@@ -259,8 +259,8 @@ def test_1ncw(get_fn):
 
 
 def test_1vii_url_and_gz(get_fn):
-    t1 = load_pdb("http://www.rcsb.org/pdb/files/1vii.pdb.gz")
-    t2 = load_pdb("http://www.rcsb.org/pdb/files/1vii.pdb")
+    t1 = load_pdb("https://www.rcsb.org/pdb/files/1vii.pdb.gz")
+    t2 = load_pdb("https://www.rcsb.org/pdb/files/1vii.pdb")
     t3 = load_pdb(get_fn("1vii.pdb.gz"))
     t4 = load_pdb(get_fn("1vii.pdb"))
     eq(t1.n_frames, 1)
