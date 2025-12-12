@@ -290,8 +290,8 @@ def test_write_and_read_pdbx_from_dcd_with_bonds_and_keepids(tmp_path, get_fn):
     The fix uses .index properties (unique integers) as dictionary keys instead of objects.
     """
     # Load DCD with PDB topology that has bonds
-    dcd_path = get_fn("cif_bond_system.dcd")
-    pdb_path = get_fn("cif_bond_system.pdb")
+    dcd_path = get_fn("ala_dipeptide.dcd")
+    pdb_path = get_fn("ala_dipeptide.pdb")
     traj = load(dcd_path, top=pdb_path)
 
     # Verify we have bonds in the original topology
