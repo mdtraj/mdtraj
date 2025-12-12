@@ -490,14 +490,15 @@ class PDBxFile:
             resIds = {}
             if keepIds:
                 for chain in topology.chains:
-                    chainIds[chain] = chain.id
+                    chainIds[chain.index] = chain.chain_id
                 for res in topology.residues:
-                    resIds[res] = res.id
+                    # or alt could set to res.index + 1
+                    resIds[res.index] = res.resSeq
             else:
                 for chainIndex, chain in enumerate(topology.chains):
-                    chainIds[chain] = chr(ord("A") + chainIndex % 26)
+                    chainIds[chain.index] = chr(ord("A") + chainIndex % 26)
                     for resIndex, res in enumerate(chain.residues):
-                        resIds[res] = resIndex + 1
+                        resIds[res.index] = resIndex + 1
             for i, (atom1, atom2) in enumerate(bonds):
                 if atom1.residue.name == "CYS" and atom2.residue.name == "CYS":
                     bondType = "disulf"
@@ -509,13 +510,13 @@ class PDBxFile:
                     % (
                         i + 1,
                         bondType,
-                        chainIds[atom1.residue.chain],
+                        chainIds[atom1.residue.chain.index],
                         atom1.residue.name,
-                        resIds[atom1.residue],
+                        resIds[atom1.residue.index],
                         atom1.name,
-                        chainIds[atom2.residue.chain],
+                        chainIds[atom2.residue.chain.index],
                         atom2.residue.name,
-                        resIds[atom2.residue],
+                        resIds[atom2.residue.index],
                         atom2.name,
                     ),
                     file=file,
@@ -600,14 +601,14 @@ class PDBxFile:
 
         for chainIndex, chain in enumerate(topology.chains):
             if keepIds:
-                chainName = chain.id
+                chainName = chain.chain_id
             else:
                 chainName = chr(ord("A") + chainIndex % 26)
             residues = list(chain.residues)
             for resIndex, res in enumerate(residues):
                 if keepIds:
-                    resId = res.id
-                    resIC = res.insertionCode if res.insertionCode.strip() else "."
+                    resId = res.resSeq
+                    resIC = res.insertionCode.strip() if hasattr(res, "insertionCode") else "."
                 else:
                     resId = resIndex + 1
                     resIC = "."

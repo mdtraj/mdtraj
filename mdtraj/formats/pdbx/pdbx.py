@@ -254,7 +254,15 @@ class PDBxTrajectoryFile:
         else:
             raise ValueError("invalid mode: %s" % mode)
 
-    def write(self, positions, topology, unitcell_lengths=None, unitcell_angles=None, bfactors=None):
+    def write(
+        self,
+        positions,
+        topology,
+        unitcell_lengths=None,
+        unitcell_angles=None,
+        bfactors=None,
+        keepIds=False,
+    ):
         """Write one frame of a molecular dynamics trajectory to disk in PDBx/mmCIF format.
 
         Parameters
@@ -269,6 +277,11 @@ class PDBxTrajectoryFile:
             Angles between the three unit cell vectors, or None for a non-periodic system
         bfactors : array_like, default=None, shape=(n_atoms,)
             Save bfactors with cif file. Should contain a single number for each atom in the topology
+        keepIds : bool=False
+            If True, keep the residue and chain IDs specified in the Topology
+            rather than generating new ones.  Warning: It is up to the caller to
+            make sure these are valid IDs that satisfy the requirements of the
+            PDBx/mmCIF format.  Otherwise, the output file will be invalid.
         """
         if not self._mode == "w":
             raise ValueError("file not opened for writing")
@@ -280,6 +293,7 @@ class PDBxTrajectoryFile:
                 unitcell_lengths,
                 unitcell_angles,
                 self._file,
+                keepIds=keepIds,
             )
             self._next_model = 1
         if len(positions.shape) == 3:
@@ -290,6 +304,7 @@ class PDBxTrajectoryFile:
             self._file,
             self._next_model,
             bfactors=bfactors,
+            keepIds=keepIds,
         )
         self._next_model += 1
 
