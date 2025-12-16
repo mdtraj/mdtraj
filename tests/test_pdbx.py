@@ -279,6 +279,48 @@ def test_write_and_read_pdbx_4py5(tmp_path, get_fn):
     assert_bonds_equal(traj.topology, loaded.topology)
 
 
+def test_write_and_read_pdbx_from_dcd_with_bonds_and_keepids(tmp_path, get_fn):
+    """Test writing CIF from DCD+PDB topology with bonds, ensuring bonds are preserved.
+
+    This test addresses the issue where bonds were lost when converting DCD trajectories
+    with PDB topologies to CIF format. The problem occurred because:
+    1. Chain and residue objects in bonds were different instances than those in topology.chains/residues
+    2. Using objects as dictionary keys failed due to Python's object identity hashing
+
+    The fix uses .index properties (unique integers) as dictionary keys instead of objects.
+    """
+    # Load DCD with PDB topology that has bonds
+    dcd_path = get_fn("ala_dipeptide.dcd")
+    pdb_path = get_fn("ala_dipeptide.pdb")
+    traj = load(dcd_path, top=pdb_path)
+
+    # Verify we have bonds in the original topology
+    orig_bonds = len(list(traj.topology.bonds))
+    assert orig_bonds > 0, "Original topology has no bonds to test preservation"
+
+    # Save first frame to CIF with keepIds=False (default - auto-generate chain IDs)
+    cif_path_no_keepids = tmp_path / "test_dcd_to_cif_no_keepids.cif"
+    traj[0].save_cif(str(cif_path_no_keepids), keepIds=False)
+
+    # Load back and verify bonds are preserved
+    loaded_no_keepids = load(str(cif_path_no_keepids))
+    loaded_bonds_no_keepids = len(list(loaded_no_keepids.topology.bonds))
+    assert loaded_bonds_no_keepids == orig_bonds, (
+        f"Bonds lost with keepIds=False: {orig_bonds} -> {loaded_bonds_no_keepids}"
+    )
+    assert_bonds_equal(traj[0].topology, loaded_no_keepids.topology)
+
+    # Save with keepIds=True (preserve original chain IDs from PDB)
+    cif_path_keepids = tmp_path / "test_dcd_to_cif_keepids.cif"
+    traj[0].save_cif(str(cif_path_keepids), keepIds=True)
+
+    # Load back and verify bonds are preserved
+    loaded_keepids = load(str(cif_path_keepids))
+    loaded_bonds_keepids = len(list(loaded_keepids.topology.bonds))
+    assert loaded_bonds_keepids == orig_bonds, f"Bonds lost with keepIds=True: {orig_bonds} -> {loaded_bonds_keepids}"
+    assert_bonds_equal(traj[0].topology, loaded_keepids.topology)
+
+
 def test_residue_selection_from_cif(get_fn):
     """Tests that residues are correctly parsed as integers in CIF files"""
 
