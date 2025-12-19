@@ -145,7 +145,7 @@ def _are_urls(names):
         List where each element is True if the corresponding element in names
         is a valid URL (per urllib), else False
     """
-    if isinstance(names, str) or not isinstance(names, Iterable):
+    if isinstance(names, (str, os.PathLike)) or not isinstance(names, Iterable):
         names = [names]
 
     return [_is_url(fn) for fn in names]
