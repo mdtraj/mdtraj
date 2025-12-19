@@ -53,6 +53,7 @@ from mdtraj.formats.gro import load_gro
 from mdtraj.formats.gsd import load_gsd_topology, write_gsd
 from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.formats.mol2 import load_mol2
+from mdtraj.formats.pdb.pdbfile import _is_url
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.registry import FormatRegistry
@@ -130,7 +131,7 @@ def _assert_files_or_dirs_exist(names):
             raise OSError("No such file: %s" % fn)
 
 
-def _is_url(names):
+def _are_urls(names):
     """Return bool depending whether names is a url
 
     Parameters
@@ -141,23 +142,13 @@ def _is_url(names):
     Returns
     -------
     List(bool)
-        True if filename starts with http/ftp, else False
+        List where each element is True if the corresponding element in names
+        is a valid URL (per urllib), else False
     """
-    if not isinstance(names, (list, set, tuple)):
+    if isinstance(names, str) or not isinstance(names, Iterable):
         names = [names]
 
-    return_list = []
-    for fn in names:
-        try:
-            match fn.split("://")[0]:
-                case "http" | "https" | "ftp":
-                    return_list.append(True)
-                case _:
-                    return_list.append(False)
-        except AttributeError:
-            return_list.append(False)
-
-    return return_list
+    return [_is_url(fn) for fn in names]
 
 
 def _hash_numpy_array(x):
@@ -342,10 +333,10 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
     if extension not in _TOPOLOGY_EXTS:
         kwargs["top"] = top
 
-    url_check = _is_url(filename)
+    url_check = _are_urls(filename)
     if not all(url_check):
         check_filename = (
-            filename if len(url_check) == 1 else [name for name, status in zip(filename, url_check) if not status]
+            [filename] if len(url_check) == 1 else [name for name, status in zip(filename, url_check) if not status]
         )
 
         if loader.__name__ not in ["load_dtr"]:
