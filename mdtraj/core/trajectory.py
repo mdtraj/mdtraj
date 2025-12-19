@@ -143,7 +143,7 @@ def _is_url(names):
     List(bool)
         True if filename starts with http/ftp, else False
     """
-    if isinstance(names, (str, os.PathLike)):
+    if not isinstance(names, (list, set, tuple)):
         names = [names]
 
     return_list = []
@@ -344,7 +344,10 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
 
     url_check = _is_url(filename)
     if not all(url_check):
-        check_filename = [name for name, status in zip(filename, url_check) if status]
+        check_filename = (
+            filename if len(url_check) == 1 else [name for name, status in zip(filename, url_check) if not status]
+        )
+
         if loader.__name__ not in ["load_dtr"]:
             _assert_files_exist(check_filename)
         else:
@@ -455,7 +458,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             f"with extensions in {FormatRegistry.loaders.keys()}",
         )
 
-    if not all(_is_url(top)):
+    if not _is_url(top):
         if loader.__name__ not in ["load_dtr"]:
             _assert_files_exist(filename_or_filenames)
         else:
