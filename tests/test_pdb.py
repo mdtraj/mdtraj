@@ -210,10 +210,21 @@ def test_pdbstructure_3():
 
 
 @flaky_pdb_dl
-def test_pdb_from_url():
+def test_load_pdb_from_url():
     # load pdb from URL
     t1 = load_pdb("https://www.rcsb.org/pdb/files/4ZUO.pdb.gz")
     t2 = load_pdb("https://www.rcsb.org/pdb/files/4ZUO.pdb")
+    eq(t1.n_frames, 1)
+    eq(t2.n_frames, 1)
+    eq(t1.n_atoms, 6200)
+    eq(t2.n_atoms, 6200)
+
+
+@flaky_pdb_dl
+def test_load_from_url():
+    # load pdb from URL
+    t1 = load("https://www.rcsb.org/pdb/files/4ZUO.pdb.gz")
+    t2 = load("https://www.rcsb.org/pdb/files/4ZUO.pdb")
     eq(t1.n_frames, 1)
     eq(t2.n_frames, 1)
     eq(t1.n_atoms, 6200)

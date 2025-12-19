@@ -130,6 +130,29 @@ def _assert_files_or_dirs_exist(names):
             raise OSError("No such file: %s" % fn)
 
 
+def _is_url(filename):
+    """Return bool if filename is a url
+
+    Parameters
+    ----------
+    filename : str
+        A string.
+
+    Returns
+    -------
+    bool
+        True if filename starts with http/ftp, else False
+    """
+    try:
+        match filename.split("://")[0]:
+            case "http" | "https" | "ftp":
+                return True
+            case _:
+                return False
+    except AttributeError:
+        return False
+
+
 def _hash_numpy_array(x):
     hash_value = hash(x.shape)
     hash_value ^= hash(x.strides)
@@ -312,10 +335,11 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
     if extension not in _TOPOLOGY_EXTS:
         kwargs["top"] = top
 
-    if loader.__name__ not in ["load_dtr"]:
-        _assert_files_exist(filename)
-    else:
-        _assert_files_or_dirs_exist(filename)
+    if not _is_url(filename):
+        if loader.__name__ not in ["load_dtr"]:
+            _assert_files_exist(filename)
+        else:
+            _assert_files_or_dirs_exist(filename)
 
     return loader(filename, frame=index, **kwargs)
 
@@ -395,6 +419,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             "Each filename must have the same extension. Received: %s" % ", ".join(set(extensions)),
         )
 
+    # if filename_or_filenames[0][:4] == 'http' and extension in ['.pdb.gz', '.pdb']:
+
     # Pre-loads the topology from PDB for major performance boost
     topkwargs = kwargs.copy()
     topkwargs.pop("atom_indices", None)
@@ -407,11 +433,6 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     if top is None:
         top = filename_or_filenames[0]
 
-    # These topology formats do not support the 'top' keyword
-    # This is to prevent the loader from reading the topology twice.
-    if extension not in [".h5", ".hdf5", ".mol2"]:
-        kwargs["top"] = _parse_topology(top, **topkwargs)
-
     # get the right loader
     try:
         # loader = _LoaderRegistry[extension][0]
@@ -423,10 +444,16 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             f"with extensions in {FormatRegistry.loaders.keys()}",
         )
 
-    if loader.__name__ not in ["load_dtr"]:
-        _assert_files_exist(filename_or_filenames)
-    else:
-        _assert_files_or_dirs_exist(filename_or_filenames)
+    # These topology formats do not support the 'top' keyword
+    # This is to prevent the loader from reading the topology twice.
+    if extension not in [".h5", ".hdf5", ".mol2"]:
+        kwargs["top"] = _parse_topology(top, **topkwargs)
+
+    if not _is_url(top):
+        if loader.__name__ not in ["load_dtr"]:
+            _assert_files_exist(filename_or_filenames)
+        else:
+            _assert_files_or_dirs_exist(filename_or_filenames)
 
     if extension not in _TOPOLOGY_EXTS:
         # standard_names is a valid keyword argument only for files containing topologies
