@@ -130,27 +130,34 @@ def _assert_files_or_dirs_exist(names):
             raise OSError("No such file: %s" % fn)
 
 
-def _is_url(filename):
-    """Return bool if filename is a url
+def _is_url(names):
+    """Return bool depending whether names is a url
 
     Parameters
     ----------
-    filename : str
-        A string.
+    names : str or [str]
+        A string or list of strings.
 
     Returns
     -------
-    bool
+    List(bool)
         True if filename starts with http/ftp, else False
     """
-    try:
-        match filename.split("://")[0]:
-            case "http" | "https" | "ftp":
-                return True
-            case _:
-                return False
-    except AttributeError:
-        return False
+    if isinstance(names, (str, os.PathLike)):
+        names = [names]
+
+    return_list = []
+    for fn in names:
+        try:
+            match fn.split("://")[0]:
+                case "http" | "https" | "ftp":
+                    return_list.append(True)
+                case _:
+                    return_list.append(False)
+        except AttributeError:
+            return_list.append(False)
+
+    return return_list
 
 
 def _hash_numpy_array(x):
@@ -335,11 +342,13 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
     if extension not in _TOPOLOGY_EXTS:
         kwargs["top"] = top
 
-    if not _is_url(filename):
+    url_check = _is_url(filename)
+    if not all(url_check):
+        check_filename = [name for name, status in zip(filename, url_check) if status]
         if loader.__name__ not in ["load_dtr"]:
-            _assert_files_exist(filename)
+            _assert_files_exist(check_filename)
         else:
-            _assert_files_or_dirs_exist(filename)
+            _assert_files_or_dirs_exist(check_filename)
 
     return loader(filename, frame=index, **kwargs)
 
@@ -446,7 +455,7 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             f"with extensions in {FormatRegistry.loaders.keys()}",
         )
 
-    if not _is_url(top):
+    if not all(_is_url(top)):
         if loader.__name__ not in ["load_dtr"]:
             _assert_files_exist(filename_or_filenames)
         else:
