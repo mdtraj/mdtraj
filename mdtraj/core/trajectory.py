@@ -333,17 +333,11 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
     if extension not in _TOPOLOGY_EXTS:
         kwargs["top"] = top
 
-    # Check to see if files exists for elements that are not considered URLs
-    url_check = _are_urls(filename)
-    if not all(url_check):
-        check_filename = (
-            filename if len(url_check) == 1 else [name for name, status in zip(filename, url_check) if not status]
-        )
-
+    if not _is_url(filename):
         if loader.__name__ not in ["load_dtr"]:
-            _assert_files_exist(check_filename)
+            _assert_files_exist(filename)
         else:
-            _assert_files_or_dirs_exist(check_filename)
+            _assert_files_or_dirs_exist(filename)
 
     return loader(filename, frame=index, **kwargs)
 
@@ -450,11 +444,19 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             f"with extensions in {FormatRegistry.loaders.keys()}",
         )
 
-    if not _is_url(top):
+    # Check to see if files exists for elements that are not considered URLs
+    url_check = _are_urls(filename_or_filenames)
+    if not all(url_check):
+        check_filenames = (
+            filename_or_filenames
+            if len(url_check) == 1
+            else [name for name, status in zip(filename_or_filenames, url_check) if not status]
+        )
+
         if loader.__name__ not in ["load_dtr"]:
-            _assert_files_exist(filename_or_filenames)
+            _assert_files_exist(check_filenames)
         else:
-            _assert_files_or_dirs_exist(filename_or_filenames)
+            _assert_files_or_dirs_exist(check_filenames)
 
     if extension not in _TOPOLOGY_EXTS:
         # standard_names is a valid keyword argument only for files containing topologies
