@@ -419,8 +419,6 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             "Each filename must have the same extension. Received: %s" % ", ".join(set(extensions)),
         )
 
-    # if filename_or_filenames[0][:4] == 'http' and extension in ['.pdb.gz', '.pdb']:
-
     # Pre-loads the topology from PDB for major performance boost
     topkwargs = kwargs.copy()
     topkwargs.pop("atom_indices", None)
@@ -433,9 +431,13 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     if top is None:
         top = filename_or_filenames[0]
 
+    # These topology formats do not support the 'top' keyword
+    # This is to prevent the loader from reading the topology twice.
+    if extension not in [".h5", ".hdf5", ".mol2"]:
+        kwargs["top"] = _parse_topology(top, **topkwargs)
+
     # get the right loader
     try:
-        # loader = _LoaderRegistry[extension][0]
         loader = FormatRegistry.loaders[extension]
     except KeyError:
         raise OSError(
@@ -443,11 +445,6 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             "was found. I can only load files "
             f"with extensions in {FormatRegistry.loaders.keys()}",
         )
-
-    # These topology formats do not support the 'top' keyword
-    # This is to prevent the loader from reading the topology twice.
-    if extension not in [".h5", ".hdf5", ".mol2"]:
-        kwargs["top"] = _parse_topology(top, **topkwargs)
 
     if not _is_url(top):
         if loader.__name__ not in ["load_dtr"]:
