@@ -269,6 +269,7 @@ def test_1ncw(get_fn):
     load_pdb(get_fn("1ncw.pdb.gz"))
 
 
+@flaky_pdb_dl
 def test_1vii_url_and_gz(get_fn):
     t1 = load_pdb("https://www.rcsb.org/pdb/files/1vii.pdb.gz")
     t2 = load_pdb("https://www.rcsb.org/pdb/files/1vii.pdb")
@@ -282,6 +283,18 @@ def test_1vii_url_and_gz(get_fn):
     eq(t1.n_atoms, t2.n_atoms)
     eq(t1.n_atoms, t3.n_atoms)
     eq(t1.n_atoms, t4.n_atoms)
+
+
+@flaky_pdb_dl
+def test_load_mixture_from_url(get_fn):
+    # load pdb from URL and locally
+    t1 = load(["https://www.rcsb.org/pdb/files/1vii.pdb.gz", get_fn("1vii.pdb.gz")])
+    t2 = load_pdb(get_fn("1vii.pdb"))
+
+    eq(t1.n_frames, 2)
+    eq(t2.n_frames, 1)
+
+    eq(t1.n_atoms, t2.n_atoms)
 
 
 def test_segment_id(get_fn):
