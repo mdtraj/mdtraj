@@ -333,10 +333,11 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
     if extension not in _TOPOLOGY_EXTS:
         kwargs["top"] = top
 
+    # Check to see if files exists for elements that are not considered URLs
     url_check = _are_urls(filename)
     if not all(url_check):
         check_filename = (
-            [filename] if len(url_check) == 1 else [name for name, status in zip(filename, url_check) if not status]
+            filename if len(url_check) == 1 else [name for name, status in zip(filename, url_check) if not status]
         )
 
         if loader.__name__ not in ["load_dtr"]:
