@@ -33,13 +33,13 @@ from pyparsing import (
     Keyword,
     MatchFirst,
     OneOrMore,
+    OpAssoc,
     ParseException,
     ParserElement,
     Word,
     alphanums,
     alphas,
     infix_notation,
-    OpAssoc,
     quoted_string,
 )
 
