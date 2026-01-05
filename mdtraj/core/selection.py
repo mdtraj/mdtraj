@@ -39,7 +39,7 @@ from pyparsing import (
     alphanums,
     alphas,
     infix_notation,
-    opAssoc,
+    OpAssoc,
     quoted_string,
 )
 
@@ -351,7 +351,7 @@ class parse_selection:
 
         def infix(klass):
             kws = sorted(klass.keyword_aliases.keys())
-            return [(kw, klass.n_terms, getattr(opAssoc, klass.assoc), klass) for kw in kws]
+            return [(kw, klass.n_terms, getattr(OpAssoc, klass.assoc), klass) for kw in kws]
 
         # literals include words made of alphanumerics, numbers,
         # or quoted strings but we exclude any of the logical
