@@ -53,6 +53,7 @@ from mdtraj.formats.gro import load_gro
 from mdtraj.formats.gsd import load_gsd_topology, write_gsd
 from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.formats.mol2 import load_mol2
+from mdtraj.formats.pdb.pdbfile import _is_url
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.registry import FormatRegistry
@@ -128,6 +129,26 @@ def _assert_files_or_dirs_exist(names):
     for fn in names:
         if not (os.path.exists(fn) and (os.path.isfile(fn) or os.path.isdir(fn))):
             raise OSError("No such file: %s" % fn)
+
+
+def _are_urls(names):
+    """Return bool depending whether names is a url
+
+    Parameters
+    ----------
+    names : str or [str]
+        A string or list of strings.
+
+    Returns
+    -------
+    List(bool)
+        List where each element is True if the corresponding element in names
+        is a valid URL (per urllib), else False
+    """
+    if isinstance(names, (str, os.PathLike)) or not isinstance(names, Iterable):
+        names = [names]
+
+    return [_is_url(fn) for fn in names]
 
 
 def _hash_numpy_array(x):
@@ -312,10 +333,11 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
     if extension not in _TOPOLOGY_EXTS:
         kwargs["top"] = top
 
-    if loader.__name__ not in ["load_dtr"]:
-        _assert_files_exist(filename)
-    else:
-        _assert_files_or_dirs_exist(filename)
+    if not _is_url(filename):
+        if loader.__name__ not in ["load_dtr"]:
+            _assert_files_exist(filename)
+        else:
+            _assert_files_or_dirs_exist(filename)
 
     return loader(filename, frame=index, **kwargs)
 
@@ -414,7 +436,6 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     # get the right loader
     try:
-        # loader = _LoaderRegistry[extension][0]
         loader = FormatRegistry.loaders[extension]
     except KeyError:
         raise OSError(
@@ -423,10 +444,19 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             f"with extensions in {FormatRegistry.loaders.keys()}",
         )
 
-    if loader.__name__ not in ["load_dtr"]:
-        _assert_files_exist(filename_or_filenames)
-    else:
-        _assert_files_or_dirs_exist(filename_or_filenames)
+    # Check to see if files exists for elements that are not considered URLs
+    url_check = _are_urls(filename_or_filenames)
+    if not all(url_check):
+        check_filenames = (
+            filename_or_filenames
+            if len(url_check) == 1
+            else [name for name, status in zip(filename_or_filenames, url_check) if not status]
+        )
+
+        if loader.__name__ not in ["load_dtr"]:
+            _assert_files_exist(check_filenames)
+        else:
+            _assert_files_or_dirs_exist(check_filenames)
 
     if extension not in _TOPOLOGY_EXTS:
         # standard_names is a valid keyword argument only for files containing topologies
