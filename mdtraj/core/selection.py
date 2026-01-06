@@ -33,18 +33,18 @@ from pyparsing import (
     Keyword,
     MatchFirst,
     OneOrMore,
+    OpAssoc,
     ParseException,
     ParserElement,
     Word,
     alphanums,
     alphas,
     infix_notation,
-    opAssoc,
     quoted_string,
 )
 
 # this number arises from the current selection language, if the cache size is exceeded, it hurts performance a bit.
-ParserElement.enablePackrat(cache_size_limit=304)
+ParserElement.enable_packrat(cache_size_limit=304)
 
 __all__ = ["parse_selection"]
 
@@ -351,7 +351,7 @@ class parse_selection:
 
         def infix(klass):
             kws = sorted(klass.keyword_aliases.keys())
-            return [(kw, klass.n_terms, getattr(opAssoc, klass.assoc), klass) for kw in kws]
+            return [(kw, klass.n_terms, getattr(OpAssoc, klass.assoc), klass) for kw in kws]
 
         # literals include words made of alphanumerics, numbers,
         # or quoted strings but we exclude any of the logical
