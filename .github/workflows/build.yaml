@@ -18,18 +18,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["11", "12", "13"]
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["11", "12", "13", "14"]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: setup windows, install zlib
         if: ${{ matrix.os == 'windows-latest' }}
         shell: bash
         run:  vcpkg install zlib:x64-windows
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.1.1
+        uses: pypa/cibuildwheel@v3.3.1
         env:
-          CIBW_SKIP: "pp* *-musllinux* *-muslinux* *-win32"
+          CIBW_SKIP: "pp* *-musllinux* *-muslinux* *-win32 cp31?t-*"
           CIBW_BUILD_VERBOSITY: 1
           CIBW_ARCHS_WINDOWS: auto
           CIBW_ARCHS_MACOS: "universal2"
@@ -43,7 +43,7 @@ jobs:
           package-dir: .
           output-dir: wheelhouse
           config-file: "{package}/pyproject.toml"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: artifact-wheels-${{ matrix.os }}-${{ matrix.python }}
           path: ./wheelhouse/*.whl
@@ -53,8 +53,8 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         name: Install Python
         with:
           python-version: '3.12'
@@ -62,7 +62,7 @@ jobs:
       - name: Build sdist
         run: python -m build --sdist
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: artifact-sdist
           path: dist/*.tar.gz
@@ -79,7 +79,7 @@ jobs:
         # IMPORTANT: this permission is mandatory for trusted publishing
         id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           # unpacks default artifact into dist/
           # if `name: artifact` is omitted, the action will create extra parent dir

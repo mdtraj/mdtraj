@@ -25,7 +25,6 @@ import pickle
 import tempfile
 
 import numpy as np
-import pandas as pd
 import pytest
 
 import mdtraj as md
@@ -41,6 +40,24 @@ except ImportError:
     HAVE_OPENMM = False
 
 needs_openmm = pytest.mark.skipif(not HAVE_OPENMM, reason="needs OpenMM")
+
+
+def test_topology_amber_nonstandard_names(get_fn):
+    # Test that nonstandard protein atom and residue names
+    # in AMBER prmtop files can be preserved if desired
+    topology = md.load(
+        get_fn("issue_2056.inpcrd"),
+        top=get_fn("issue_2056.prmtop"),
+    ).topology
+    assert topology.atom(1).name == "H"
+    assert topology.residue(1).name == "HIS"
+    topology = md.load(
+        get_fn("issue_2056.inpcrd"),
+        top=get_fn("issue_2056.prmtop"),
+        standard_names=False,
+    ).topology
+    assert topology.atom(1).name == "H1"
+    assert topology.residue(1).name == "HID"
 
 
 @needs_openmm
@@ -122,11 +139,6 @@ def test_topology_openmm_formal_charges(get_fn):
     eq(formal_charges, mdtraj_formal_charges)
 
 
-def normalize_charge(charge):
-    # Convert None to pandas NA, leave numbers intact
-    return pd.NA if charge is None else charge
-
-
 def test_topology_dataframe_formal_charges(get_fn):
     """
     Test that formal charges are maintained when converting a topology
@@ -137,7 +149,6 @@ def test_topology_dataframe_formal_charges(get_fn):
 
     # Get the original formal charges from the MDTraj topology.
     original_formal_charges = [atom.formal_charge for atom in topology.atoms]
-    normalized_original = [normalize_charge(charge) for charge in original_formal_charges]
 
     # Convert topology to DataFrame and bonds array.
     atoms_df, bonds = topology.to_dataframe()
@@ -149,7 +160,7 @@ def test_topology_dataframe_formal_charges(get_fn):
     converted_formal_charges = [atom.formal_charge for atom in topology_from_df.atoms]
 
     # Check that formal charges are conserved.
-    eq(normalized_original, converted_formal_charges)
+    eq(original_formal_charges, converted_formal_charges)
 
 
 def test_topology_pandas(get_fn):

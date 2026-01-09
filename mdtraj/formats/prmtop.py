@@ -82,13 +82,16 @@ def _get_pointer_value(pointer_label, raw_data):
     return float(raw_data["POINTERS"][index])
 
 
-def load_prmtop(filename, **kwargs):
+def load_prmtop(filename, standard_names=True, **kwargs):
     """Load an AMBER prmtop topology file from disk.
 
     Parameters
     ----------
     filename : path-like
         Path to the prmtop file on disk.
+    standard_names : bool, default=True
+        If True, non-standard atomnames and residuenames are standardized to conform
+        with the current PDB format version. If set to false, this step is skipped.
 
     Returns
     -------
@@ -160,8 +163,8 @@ def load_prmtop(filename, **kwargs):
                         raw_data[flag].append(item.strip())
 
     # Add atoms to the topology
-
     pdb.PDBTrajectoryFile._loadNameReplacementTables()
+
     previous_residue = None
     c = top.add_chain()
 
@@ -186,11 +189,11 @@ def load_prmtop(filename, **kwargs):
 
             # check
             res_name = raw_data["RESIDUE_LABEL"][residue_pointer_dict[index]].strip()
-            if res_name in pdb.PDBTrajectoryFile._residueNameReplacements:
+            if standard_names and res_name in pdb.PDBTrajectoryFile._residueNameReplacements:
                 res_name = pdb.PDBTrajectoryFile._residueNameReplacements[res_name]
             r = top.add_residue(res_name, c)
 
-            if res_name in pdb.PDBTrajectoryFile._atomNameReplacements:
+            if standard_names and res_name in pdb.PDBTrajectoryFile._atomNameReplacements:
                 atom_replacements = pdb.PDBTrajectoryFile._atomNameReplacements[res_name]
             else:
                 atom_replacements = {}

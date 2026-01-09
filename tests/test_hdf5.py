@@ -362,3 +362,59 @@ def test_topology_None(h5traj):
 
         # The topology should now be overwritten as None now
         assert f.topology is None, "The topology of the HDF5 file was not deleted"
+
+
+def test_hdf5_bond_metadata(get_fn):
+    # test that bond metadata is preserved when writing
+    # and reading HDF5. Added in PR 2101
+
+    traj = md.load(get_fn("imatinib.pdb"), bond_orders=True)
+
+    with HDF5TrajectoryFile(temp, "w", bond_metadata=True) as f:
+        f.write(traj.xyz)
+        f.topology = traj.topology
+
+    # Check that bond metadata was saved correctly
+    with HDF5TrajectoryFile(temp) as f:
+        top = f.topology
+        for bond1, bond2 in zip(traj.topology.bonds, top.bonds):
+            assert bond1 == bond2
+
+
+def test_hdf5_formal_charge(get_fn):
+    # test that atom formal charge is preserved when writing
+    # and reading HDF5. Added in PR 2101
+
+    traj = md.load(get_fn("1ply_charge.pdb"))
+
+    with HDF5TrajectoryFile(temp, "w") as f:
+        f.write(traj.xyz)
+        f.topology = traj.topology
+
+    # Check that formal charges were saved correctly
+    with HDF5TrajectoryFile(temp) as f:
+        top = f.topology
+        for atom1, atom2 in zip(traj.topology.atoms, top.atoms):
+            assert atom1.formal_charge == atom2.formal_charge
+
+
+def test_hdf5_roundtrip(h5traj_full_metadata):
+    # test that formal_charge and bond order/type is preserved
+    # on topology when saving to and reading from HDF5.
+
+    traj, _, tmp_dir = h5traj_full_metadata
+    out_fn = os.path.join(tmp_dir, "roundtrip.h5")
+
+    traj.save(out_fn)
+    traj2 = md.load(out_fn)
+
+    assert eq(traj.xyz, traj2.xyz)
+    assert traj.topology == traj2.topology
+    assert eq(traj.time, traj2.time)
+    assert eq(traj.unitcell_lengths, traj2.unitcell_lengths)
+    assert eq(traj.unitcell_angles, traj2.unitcell_angles)
+    for atom1, atom2 in zip(traj.topology.atoms, traj2.topology.atoms):
+        assert atom1.formal_charge == atom2.formal_charge
+    for bond1, bond2 in zip(traj.topology.bonds, traj2.topology.bonds):
+        assert bond1.order == bond2.order
+        assert bond1.type == bond2.type

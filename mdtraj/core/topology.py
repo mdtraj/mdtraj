@@ -49,8 +49,8 @@ import os
 import warnings
 import xml.etree.ElementTree as etree
 from collections import namedtuple
-from collections.abc import Iterable, Iterator, Sequence
-from typing import TYPE_CHECKING, Callable, cast
+from collections.abc import Callable, Iterable, Iterator, Sequence
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -100,6 +100,7 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
 
     newTopology = Topology()
     old_atom_to_new_atom: dict[Atom, Atom] = {}
+    index_set = set(atom_indices)
 
     for chain in topology._chains:
         newChain = newTopology.add_chain()
@@ -108,7 +109,7 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
             resSeq = getattr(residue, "resSeq", residue.index)
             newResidue = None
             for atom in residue._atoms:
-                if atom.index in atom_indices:
+                if atom.index in index_set:
                     try:  # OpenMM Topology objects don't have serial attributes, so we have to check first.
                         serial = atom.serial
                     except AttributeError:
@@ -655,7 +656,7 @@ class Topology:
                 atom_index,
                 r,  # type: ignore
                 serial=atom["serial"],
-                formal_charge=atom["formal_charge"],
+                formal_charge=atom["formal_charge"] if pd.notna(atom["formal_charge"]) else None,  # Fix PD sentinel
             )
             out._atoms[atom_index] = a
             r._atoms.append(a)  # type: ignore
@@ -1887,13 +1888,13 @@ class Amide(Singleton):
 Amide: Singleton = Amide()  # type: ignore[no-redef]
 
 
-def float_to_bond_type(bond_float: float) -> Singleton | None:
+def float_to_bond_type(bond_float: float | None) -> Singleton | None:
     """
     Convert a float to known bond type class, or None if no matched class if found
 
     Parameters
     ----------
-    bond_float : float
+    bond_float : float or None
         Representation of built in bond types as a float,
         Maps this float to specific bond class, if the float has no map, None is returned instead
 
@@ -1903,11 +1904,54 @@ def float_to_bond_type(bond_float: float) -> Singleton | None:
         Bond type matched to the float if known
         If no match is found, returns None (which is also a valid type for the Bond class)
     """
-    all_bond_types = [Single, Double, Triple, Aromatic, Amide]
-    for bond_type in all_bond_types:
-        if float(cast(Singleton, bond_type)) == float(bond_float):  # explicitly cast to Singleton to avoid mypy error
-            return cast(Singleton, bond_type)
-    return None
+    # Explicitly cast to Singleton to avoid mypy error
+    bond_mapping: dict[float, Singleton] = {
+        1.0: cast(Singleton, Single),
+        2.0: cast(Singleton, Double),
+        3.0: cast(Singleton, Triple),
+        1.5: cast(Singleton, Aromatic),
+        1.25: cast(Singleton, Amide),
+    }
+
+    try:
+        return bond_mapping.get(float(bond_float), None)
+    except (TypeError, ValueError):
+        # Skip cases where you cannot cast to float (e.g. float(None))
+        return None
+
+
+def bond_name_to_type(name: str) -> Singleton | None:
+    """
+    Convert a bond name to known bond type class, or None if no matched class if found
+
+    Parameters
+    ----------
+    name : str
+        Name of the bond type, e.g. 'single', 'double', 'aromatic', etc.
+
+    Returns
+    -------
+    bond_type : mdtraj.topology.Singleton subclass or None
+        Bond type matched to the name if known
+        If no match is found, returns None (which is also a valid type for the Bond class)
+    """
+
+    # Explicitly cast to Singleton to avoid mypy error
+    bond_mapping: dict[str, Singleton] = {
+        "single": cast(Singleton, Single),
+        "double": cast(Singleton, Double),
+        "triple": cast(Singleton, Triple),
+        "aromatic": cast(Singleton, Aromatic),
+        "amide": cast(Singleton, Amide),
+    }
+
+    try:
+        # normalize name
+        name = name.lower().strip()
+        return bond_mapping.get(name)
+    except (TypeError, AttributeError):
+        # skip cases where you cannot normalize (e.g. None)
+        return None
 
 
 class Bond(namedtuple("Bond", ["atom1", "atom2"])):

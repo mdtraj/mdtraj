@@ -53,6 +53,7 @@ from mdtraj.formats.gro import load_gro
 from mdtraj.formats.gsd import load_gsd_topology, write_gsd
 from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.formats.mol2 import load_mol2
+from mdtraj.formats.pdb.pdbfile import _is_url
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.registry import FormatRegistry
@@ -130,6 +131,26 @@ def _assert_files_or_dirs_exist(names):
             raise OSError("No such file: %s" % fn)
 
 
+def _are_urls(names):
+    """Return bool depending whether names is a url
+
+    Parameters
+    ----------
+    names : str or [str]
+        A string or list of strings.
+
+    Returns
+    -------
+    List(bool)
+        List where each element is True if the corresponding element in names
+        is a valid URL (per urllib), else False
+    """
+    if isinstance(names, (str, os.PathLike)) or not isinstance(names, Iterable):
+        names = [names]
+
+    return [_is_url(fn) for fn in names]
+
+
 def _hash_numpy_array(x):
     hash_value = hash(x.shape)
     hash_value ^= hash(x.strides)
@@ -163,47 +184,45 @@ def _parse_topology(top, **kwargs):
     -------
     topology : md.Topology
     """
-
-    if isinstance(top, (str, os.PathLike)):
-        ext = _get_extension(top)
-    else:
-        ext = None  # might not be a string
-
-    if isinstance(top, Topology):
-        topology = top
-    elif isinstance(top, Trajectory):
-        topology = top.topology
-    elif isinstance(top, (str, os.PathLike)) and (
-        ext in [".pdb", ".pdb.gz", ".pdbx", ".pdbx.gz", ".cif", ".cif.gz", ".mmcif", ".mmcif.gz", ".h5", ".lh5"]
-    ):
-        _traj = load_frame(top, 0, **kwargs)
-        topology = _traj.topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".prmtop", ".parm7", ".prm7"]):
-        topology = load_prmtop(top, **kwargs)
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".psf"]):
-        topology = load_psf(top, **kwargs)
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".mol2"]):
-        topology = load_mol2(top, **kwargs).topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".gro"]):
-        topology = load_gro(top, **kwargs).topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".arc"]):
-        topology = load_arc(top, **kwargs).topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".hoomdxml"]):
-        topology = load_hoomdxml(top, **kwargs).topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".gsd"]):
-        topology = load_gsd_topology(top, **kwargs)
-    elif isinstance(top, (str, os.PathLike)):
-        raise OSError(
-            "The topology is loaded by filename extension, and the "
-            'detected "{}" format is not supported. Supported topology '
-            'formats include {} and "{}".'.format(
-                ext,
-                ", ".join(['"%s"' % e for e in _TOPOLOGY_EXTS[:-1]]),
-                _TOPOLOGY_EXTS[-1],
-            ),
-        )
-    else:
-        raise TypeError("A topology is required. You supplied top=%s" % str(top))
+    match top:
+        case Topology():
+            topology = top
+        case Trajectory():
+            topology = top.topology
+        case str() | os.PathLike():
+            match _get_extension(top):
+                case ".pdb" | ".pdb.gz" | ".pdbx" | ".pdbx.gz" | ".cif" | ".cif.gz" | ".mmcif" | ".mmcif.gz":
+                    _traj = load_frame(top, 0, **kwargs)
+                    topology = _traj.topology
+                case ".h5" | ".lh5":
+                    _traj = load_frame(top, 0, **kwargs)
+                    topology = _traj.topology
+                case ".prmtop" | ".parm7" | ".prm7":
+                    topology = load_prmtop(top, **kwargs)
+                case ".psf":
+                    topology = load_psf(top, **kwargs)
+                case ".mol2":
+                    topology = load_mol2(top, **kwargs).topology
+                case ".gro":
+                    topology = load_gro(top, **kwargs).topology
+                case ".arc":
+                    topology = load_arc(top, **kwargs).topology
+                case ".hoomdxml":
+                    topology = load_hoomdxml(top, **kwargs).topology
+                case ".gsd":
+                    topology = load_gsd_topology(top, **kwargs)
+                case ext:  # raise error when we hit any other cases
+                    raise OSError(
+                        "The topology is loaded by filename extension, and the "
+                        'detected "{}" format is not supported. Supported topology '
+                        'formats include {} and "{}".'.format(
+                            ext,
+                            ", ".join(['"%s"' % e for e in _TOPOLOGY_EXTS[:-1]]),
+                            _TOPOLOGY_EXTS[-1],
+                        ),
+                    )
+        case _:
+            raise TypeError("A topology is required. You supplied top=%s" % str(top))
 
     return topology
 
@@ -314,10 +333,11 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
     if extension not in _TOPOLOGY_EXTS:
         kwargs["top"] = top
 
-    if loader.__name__ not in ["load_dtr"]:
-        _assert_files_exist(filename)
-    else:
-        _assert_files_or_dirs_exist(filename)
+    if not _is_url(filename):
+        if loader.__name__ not in ["load_dtr"]:
+            _assert_files_exist(filename)
+        else:
+            _assert_files_or_dirs_exist(filename)
 
     return loader(filename, frame=index, **kwargs)
 
@@ -351,6 +371,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+    bond_orders : bool, optional
+        This option is used for the PDB format. If set to True, bond orders from
+        PDB files are set using repeating CONECT records.
 
     See Also
     --------
@@ -413,7 +436,6 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
 
     # get the right loader
     try:
-        # loader = _LoaderRegistry[extension][0]
         loader = FormatRegistry.loaders[extension]
     except KeyError:
         raise OSError(
@@ -422,10 +444,19 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             f"with extensions in {FormatRegistry.loaders.keys()}",
         )
 
-    if loader.__name__ not in ["load_dtr"]:
-        _assert_files_exist(filename_or_filenames)
-    else:
-        _assert_files_or_dirs_exist(filename_or_filenames)
+    # Check to see if files exists for elements that are not considered URLs
+    url_check = _are_urls(filename_or_filenames)
+    if not all(url_check):
+        check_filenames = (
+            filename_or_filenames
+            if len(url_check) == 1
+            else [name for name, status in zip(filename_or_filenames, url_check) if not status]
+        )
+
+        if loader.__name__ not in ["load_dtr"]:
+            _assert_files_exist(check_filenames)
+        else:
+            _assert_files_or_dirs_exist(check_filenames)
 
     if extension not in _TOPOLOGY_EXTS:
         # standard_names is a valid keyword argument only for files containing topologies
@@ -1494,7 +1525,7 @@ class Trajectory:
         # run the saver, and return whatever output it gives
         return saver(filename, **kwargs)
 
-    def save_hdf5(self, filename, mode="w", force_overwrite=True):
+    def save_hdf5(self, filename, mode="w", force_overwrite=True, bond_metadata=True):
         """Save trajectory to MDTraj HDF5 format
 
         Parameters
@@ -1506,12 +1537,19 @@ class Trajectory:
         mode : str, default='w'
             The mode in which to save the file. 'w' will overwrite any existing
             file, 'a' will append to an existing file.
+        bond_metadata : bool, default=True
+            Flag to save bond order and type in the HDF5.
         """
         # check if savemode is valid (only "w" or "a" are allowed)
         if mode not in ["w", "a"]:
             raise ValueError("savemode must be either 'w' or 'a'")
 
-        with HDF5TrajectoryFile(filename, mode, force_overwrite=force_overwrite) as f:
+        with HDF5TrajectoryFile(
+            filename,
+            mode,
+            force_overwrite=force_overwrite,
+            bond_metadata=bond_metadata,
+        ) as f:
             f.write(
                 coordinates=in_units_of(
                     self.xyz,
@@ -1565,7 +1603,7 @@ class Trajectory:
                 types=[a.name for a in self.top.atoms],
             )
 
-    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True):
+    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True, bond_orders=False):
         """Save trajectory to RCSB PDB format
 
         Parameters
@@ -1581,6 +1619,8 @@ class Trajectory:
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.
+        bond_orders : bool, default=False
+            Specify bond orders by writing repeated bonds in CONECT records
         """
         self._check_valid_unitcell()
 
@@ -1623,6 +1663,7 @@ class Trajectory:
                         ),
                         unitcell_angles=self.unitcell_angles[i],
                         ter=ter,
+                        bond_orders=bond_orders,
                     )
                 else:
                     f.write(
@@ -1635,9 +1676,10 @@ class Trajectory:
                         modelIndex=i if self.n_frames > 1 else None,
                         bfactors=bfactors[i],
                         ter=ter,
+                        bond_orders=bond_orders,
                     )
 
-    def save_cif(self, filename, force_overwrite=True, bfactors=None, ter=True, header=True):
+    def save_cif(self, filename, force_overwrite=True, bfactors=None, keepIds=False):
         """Save trajectory to PDBx/mmCIF format
 
         Parameters
@@ -1650,12 +1692,11 @@ class Trajectory:
             Save bfactors with cif file. If the array is two dimensional it should
             contain a bfactor for each atom in each frame of the trajectory.
             Otherwise, the same bfactor will be saved in each frame.
-        ter : bool, default=True
-            Include TER lines in cif to indicate end of a chain of residues. This is useful
-            if you need to keep atom numbers consistent.
-        header : bool, default=True
-            Include header in cif. Useful if you want the extra output, but sometimes prevent
-            programs from running smoothly.
+        keepIds : bool=False
+            If True, keep the residue and chain IDs specified in the Topology
+            rather than generating new ones.  Warning: It is up to the caller to
+            make sure these are valid IDs that satisfy the requirements of the
+            PDBx/mmCIF format.  Otherwise, the output file will be invalid.
         """
         self._check_valid_unitcell()
 
@@ -1695,6 +1736,7 @@ class Trajectory:
                         ),
                         unitcell_angles=self.unitcell_angles[i],
                         bfactors=bfactors[i],
+                        keepIds=keepIds,
                     )
                 else:
                     f.write(
@@ -1705,6 +1747,7 @@ class Trajectory:
                         ),
                         self.topology,
                         bfactors=bfactors[i],
+                        keepIds=keepIds,
                     )
 
     def save_xtc(self, filename, force_overwrite=True):

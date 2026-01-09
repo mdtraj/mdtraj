@@ -33,18 +33,18 @@ from pyparsing import (
     Keyword,
     MatchFirst,
     OneOrMore,
+    OpAssoc,
     ParseException,
     ParserElement,
     Word,
     alphanums,
     alphas,
-    infixNotation,
-    opAssoc,
-    quotedString,
+    infix_notation,
+    quoted_string,
 )
 
 # this number arises from the current selection language, if the cache size is exceeded, it hurts performance a bit.
-ParserElement.enablePackrat(cache_size_limit=304)
+ParserElement.enable_packrat(cache_size_limit=304)
 
 __all__ = ["parse_selection"]
 
@@ -351,35 +351,35 @@ class parse_selection:
 
         def infix(klass):
             kws = sorted(klass.keyword_aliases.keys())
-            return [(kw, klass.n_terms, getattr(opAssoc, klass.assoc), klass) for kw in kws]
+            return [(kw, klass.n_terms, getattr(OpAssoc, klass.assoc), klass) for kw in kws]
 
         # literals include words made of alphanumerics, numbers,
         # or quoted strings but we exclude any of the logical
         # operands (e.g. 'or') from being parsed literals
         literal = ~(keywords(BinaryInfixOperand) | keywords(UnaryInfixOperand)) + (
-            Word(NUMS) | quotedString | Word(alphas, alphanums)
+            Word(NUMS) | quoted_string | Word(alphas, alphanums)
         )
-        literal.setParseAction(Literal)
+        literal.set_parse_action(Literal)
 
         # These are the other 'root' expressions,
         # the selection keywords (resname, resid, mass, etc)
         selection_keyword = keywords(SelectionKeyword)
-        selection_keyword.setParseAction(SelectionKeyword)
+        selection_keyword.set_parse_action(SelectionKeyword)
         base_expression = MatchFirst([selection_keyword, literal])
 
         # range condition matches expressions such as 'mass 1 to 20'
         range_condition = Group(
             selection_keyword + literal + Keyword("to") + literal,
         )
-        range_condition.setParseAction(RangeCondition)
+        range_condition.set_parse_action(RangeCondition)
 
         # matches expression such as `resname GLU ASP ARG` and also
         # handles implicit equality `resname ALA`
         in_list_condition = Group(selection_keyword + OneOrMore(literal))
-        in_list_condition.setParseAction(InListCondition)
+        in_list_condition.set_parse_action(InListCondition)
 
         expression = range_condition | in_list_condition | base_expression
-        logical_expr = infixNotation(
+        logical_expr = infix_notation(
             expression,
             infix(UnaryInfixOperand) + infix(BinaryInfixOperand) + infix(RegexInfixOperand),
         )
@@ -394,7 +394,7 @@ class parse_selection:
             self._initialize()
 
         try:
-            parse_result = self.expression.parseString(selection, parseAll=True)
+            parse_result = self.expression.parse_string(selection, parse_all=True)
         except ParseException as e:
             msg = str(e)
             lines = [

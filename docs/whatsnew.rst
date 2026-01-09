@@ -84,7 +84,7 @@ People with a "+" by their names contributed a patch for the first time.
 - Pavel Buslaev +
 
 v1.10.2 (December 11, 2024)
---------------------------
+---------------------------
 
 - Add netCDF4 as a dependency in ``setup.py`` (#1944)
 - Support NumPy 2 (#1928)
@@ -149,7 +149,7 @@ People with a "+" by their names contributed a patch for the first time.
 - Jessica A. Nash+
 
 v1.9.9 (July 22, 2023)
----------------------
+----------------------
 
 - Pin `Cython~=0.29` in `pyproject.toml` (#1801)
 - Remove "stale" bot (#1758)
@@ -204,7 +204,7 @@ People with a "+" by their names contributed a patch for the first time.
 - Bojun Liu +
 
 v1.9.7 (November 12, 2021)
------------------------
+--------------------------
 
  - Replace discourse link with gitter link (904338b799842c103dcb9e306e6878a739a4d39f)
  - Faster load function and more homogeneus file parser interface (#1648)
