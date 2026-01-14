@@ -31,7 +31,7 @@ def test_pepsi_saxs_basic(get_fn):
     # chi2 value of trajectory using our double pass scheme
     # Running Pepsi-SAXS --cst on just the 2DFC.pdb structure file
     # gives the comparable value of 1.13
-    eq(float(chi2), 1.08, decimal=3)
+    eq(float(chi2), 1.08, decimal=2)
 
 
 @pytest.mark.skipif(

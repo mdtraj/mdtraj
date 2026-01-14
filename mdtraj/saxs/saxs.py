@@ -59,11 +59,11 @@ def _weighted_scale_and_offset(x, y, sigma):
     return float(c), float(b)
 
 
-def _weighted_chi2(x, y, sigma, c, b, p=2):
-    """Weighted reduced chi^2 for y vs c*x + b. p=2 for scale and background"""
+def _weighted_chi2(x, y, sigma, c, b):
+    """Weighted reduced chi^2 for y vs c*x + b."""
     r = (y - (c * x + b)) / sigma
     n = r.size
-    return float(np.sum(r * r) / max(1, n - p))
+    return float(np.sum(r * r) / max(1, n - 1))
 
 
 def compute_saxs_pepsi(trj, saxs_data, pepsi_path=None, num_frames=100, output_path=None, bulk_e_density=0.334):
