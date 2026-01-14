@@ -22,6 +22,12 @@
 
 import numpy as np
 
+try:
+    import networkx as nx
+    HAVE_NETWORKX = True
+except ImportError:
+    HAVE_NETWORKX = False
+
 __all__ = ["compute_aggregates", "compute_aggregate_metrics"]
 
 def _to_name_set(names):
@@ -245,8 +251,6 @@ def _find_molecular_edges_multi(traj, frame_idx, residue_indices, criteria, peri
 
 def _build_graph(n_molecules, edges):
     """Build NetworkX graph from molecule count and edge list."""
-    import networkx as nx
-
     G = nx.Graph()
     G.add_nodes_from(range(n_molecules))
     G.add_edges_from(edges)
@@ -255,8 +259,6 @@ def _build_graph(n_molecules, edges):
 
 def _compute_frame_metrics(graph, approx=False):
     """Compute aggregate sizes and diameters for a single frame."""
-    import networkx as nx
-
     if approx:
         from networkx.algorithms.approximation import diameter as approx_diameter
 
@@ -300,9 +302,7 @@ def compute_aggregate_metrics(edges, n_molecules, approx=False, return_graphs=Fa
     graphs : list of networkx.Graph, optional
         Only returned if return_graphs=True.
     """
-    try:
-        import networkx as nx
-    except ImportError:
+    if not HAVE_NETWORKX:
         raise ImportError(
             "NetworkX is required for compute_aggregate_metrics. "
             "Install it with: pip install networkx"
