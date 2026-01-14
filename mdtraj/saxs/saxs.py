@@ -10,12 +10,14 @@ from mdtraj.utils import enter_temp_directory, import_
 # Possible names for the external command -- expected to be found in PATH if not provided
 PEPSI_SAXS = ["Pepsi-SAXS", "pepsi_saxs", "pepsi-saxs"]
 
+__all__ = [
+    "compute_saxs_pepsi",
+]
+
 
 def find_executable(names):
-    """Return the first executable found on PATH from a list of names, or None."""
-    which = shutil.which
     for possible in names:
-        result = which(possible)
+        result = shutil.which(possible)
         if result is not None:
             return result
     return None
@@ -66,7 +68,7 @@ def _weighted_chi2(x, y, sigma, c, b):
     return float(np.sum(r * r) / max(1, n - 1))
 
 
-def compute_saxs_pepsi(trj, saxs_data, pepsi_path=None, num_frames=100, output_path=None, bulk_e_density=0.334):
+def compute_saxs_pepsi(trj, saxs_data, pepsi_path=None, num_frames=100, output_path=None):
     """Compute SAXS predictions for a trajectory using Pepsi-SAXS (two-pass ensemble fit).
 
     This routine performs two passes based on [2] in order to avoid overfitting of solvation
@@ -213,8 +215,9 @@ def compute_saxs_pepsi(trj, saxs_data, pepsi_path=None, num_frames=100, output_p
             raise OSError("No valid Pepsi-SAXS JSON results found to compute ensemble parameters.")
 
         # Ensemble parameters: average r0 factor and d_rho
+        BULK_E_DENSITY = 0.334
         r0_factor = float(np.mean(r0_factors))
-        d_rho_percent = 100.0 * float(np.mean(d_rho_vals)) / bulk_e_density
+        d_rho_percent = 100.0 * float(np.mean(d_rho_vals)) / BULK_E_DENSITY
 
         # Second pass: refit all frames using ensemble parameters and scaleFactor=1
         for i in range(n_use):

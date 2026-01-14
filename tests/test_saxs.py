@@ -4,7 +4,8 @@ import pytest
 import mdtraj as md
 
 # Import the SAXS API and executable discovery
-from mdtraj.saxs import PEPSI_SAXS, compute_saxs_pepsi, find_executable
+from mdtraj.saxs import compute_saxs_pepsi
+from mdtraj.saxs.saxs import PEPSI_SAXS, find_executable
 from mdtraj.testing import eq
 
 example_trajectory = "2DFC_traj.pdb"  # 10 frames of MD simulation of 2DFC

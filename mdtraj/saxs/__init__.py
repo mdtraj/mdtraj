@@ -1,7 +1,3 @@
-from .saxs import PEPSI_SAXS, compute_saxs_pepsi, find_executable
+from .saxs import compute_saxs_pepsi
 
-__all__ = (
-    "compute_saxs_pepsi",
-    "find_executable",
-    "PEPSI_SAXS",
-)
+__all__ = ("compute_saxs_pepsi",)
