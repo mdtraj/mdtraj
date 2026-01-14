@@ -22,84 +22,68 @@
 
 import numpy as np
 
-__all__ = ["compute_cluster_sizes", "compute_cluster_diameters"]
-
-def compute_cluster_sizes(cluster_ids):
-    """Compute size (number of molecules) of each unique cluster.
-
-    Parameters
-    ----------
-    cluster_ids : list of np.ndarray, shape=(n_frames, n_molecules)
-        The integer cluster `ID` assigned to each molecule for each frame. 
-
-    Returns
-    -------
-    sizes : list of np.ndarray, length=n_frames
-        Cluster sizes for each frame. Each element has shape=(n_clusters,)
-        and contains molecule count per cluster, sourted by cluster ID. 
-    """
-    sizes = []
-    for frame_clusters in cluster_ids:
-        _, counts = np.unique(frame_clusters, return_counts=True)
-        sizes.append(counts)
-    return sizes
+__all__ = ["compute_clusters", "compute_cluster_metrics"]
 
 
-def _build_graph(n_nodes, edges):
-    """Build NetworkX graph from node count and edge list.
+def compute_clusters(traj, residue, criteria, periodic=True):
+    """Find molecular clusters based on distance/angle criteria.
 
     Parameters
     ----------
-    n_nodes : int
-        Number of nodes (molecules).
-    edges : list of tuple
-        List of (i, j) tuples indicating connected nodes.
+    traj : md.Trajectory
+        Trajectory to analyze.
+    residue : str
+        Residue name to cluster (e.g., 'HOH').
+    criteria : dict or str
+        Criteria for connecting molecules.
+    periodic : bool, optional, default=True
+        Whether to use periodic boundary conditions.
 
     Returns
     -------
-    G : networkx.Graph
-        Graph with nodes 0 to n_nodes-1 and edges added.
+    edges : list of list of tuple
+        Per-frame edge lists. Each edge (i, j) uses indices into
+        residue_indices (not actual residue indices).
+    residue_indices : list of int
+        Actual residue indices from topology for the filtered molecules.
+        Use residue_indices[i] to get the topology residue index for
+        molecule i in the edge list.
     """
+    raise NotImplementedError("compute_clusters not yet implemented")
+
+
+def _build_graph(n_molecules, edges):
+    """Build NetworkX graph from molecule count and edge list."""
     import networkx as nx
 
     G = nx.Graph()
-    G.add_nodes_from(range(n_nodes))
+    G.add_nodes_from(range(n_molecules))
     G.add_edges_from(edges)
     return G
 
 
-def _compute_frame_diameters(graph):
-    """Compute cluster diameters for a graph.
-
-    Parameters
-    ----------
-    graph : networkx.Graph
-        Graph with nodes and edges.
-
-    Returns
-    -------
-    diameters : list
-        List of graph diameters, one per connected component.
-    """
+def _compute_frame_metrics(graph):
+    """Compute cluster sizes and diameters for a single frame."""
     import networkx as nx
 
+    sizes = []
     diameters = []
     for cluster in nx.connected_components(graph):
+        sizes.append(len(cluster))
         diameters.append(nx.diameter(graph.subgraph(cluster)))
-    return diameters
+    return np.array(sizes), np.array(diameters)
 
 
-def compute_cluster_diameters(cluster_ids, edges, return_graphs=False, graph_every=1):
-    """Compute the graph diameter of each cluster.
-
-    The graph diameter is the longest shortest path between any two (molecular) nodes.
+def compute_cluster_metrics(edges, n_molecules, return_graphs=False, graph_every=1):
+    """Compute cluster sizes and diameters from edge lists.
 
     Parameters
     ----------
-    cluster_ids : list of np.ndarray, shape=(n_frames, n_molecules)
-        The integer cluster `ID` assigned to each molecule for each frame.
-    edges : list of list of tuple, shape=(n_frames, n_edges, 2)
-        Edge lists, one list of (i, j) tuples per frame.
+    edges : list of list of tuple
+        Edge lists, one list of (i, j) tuples per frame, where i, j 
+        are internal indices spanning range(n_molecules). 
+    n_molecules : int
+        Number of molecules with residues matching the specified criteria.
     return_graphs : bool, optional, default=False
         If True, also return the NetworkX graph objects.
     graph_every : int, optional, default=1
@@ -107,8 +91,11 @@ def compute_cluster_diameters(cluster_ids, edges, return_graphs=False, graph_eve
 
     Returns
     -------
+    sizes : list of np.ndarray, length=n_frames
+        Cluster sizes for each frame. Each element has shape=(n_clusters,)
+        and contains a list of molecule counts per cluster.
     diameters : list of np.ndarray
-        Graph diameters per connected component, per frame.
+        Graph diameters per cluster, per frame.
     graphs : list of networkx.Graph, optional
         Only returned if return_graphs=True.
     """
@@ -116,24 +103,26 @@ def compute_cluster_diameters(cluster_ids, edges, return_graphs=False, graph_eve
         import networkx as nx
     except ImportError:
         raise ImportError(
-            "NetworkX is required for compute_cluster_diameters. "
+            "NetworkX is required for compute_cluster_metrics. "
             "Install it with: pip install networkx"
         )
 
+    all_sizes = []
     all_diameters = []
     all_graphs = [] if return_graphs else None
 
-    for frame_idx in range(len(edges)):
-        G = _build_graph(len(cluster_ids[frame_idx]), edges[frame_idx])
-        diameters = _compute_frame_diameters(G)
-        all_diameters.append(np.array(diameters))
+    for frame_idx, frame_edges in enumerate(edges):
+        G = _build_graph(n_molecules, frame_edges)
+        sizes, diameters = _compute_frame_metrics(G)
+        all_sizes.append(sizes)
+        all_diameters.append(diameters)
 
         if return_graphs and frame_idx % graph_every == 0:
             all_graphs.append(G)
 
     if return_graphs:
-        return all_diameters, all_graphs
-    return all_diameters
+        return all_sizes, all_diameters, all_graphs
+    return all_sizes, all_diameters
 
 
 
