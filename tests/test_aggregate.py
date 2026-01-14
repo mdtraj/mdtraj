@@ -38,6 +38,22 @@ if HAVE_NETWORKX:
 needs_networkx = pytest.mark.skipif(not HAVE_NETWORKX, reason="needs networkx")
 
 
+def _hbond_criteria(distance, angle=None):
+    """Build H-bond criteria dict for water molecules."""
+    criteria = {'atom_pair': (['H1', 'H2'], 'O'), 'distance': distance}
+    if angle is not None:
+        criteria['atom_triplet'] = ('O', ['H1', 'H2'], 'O')
+        criteria['angle'] = angle
+    return criteria
+
+
+def _get_aggregates(traj, criteria, periodic=False):
+    """Compute aggregates and return (n_aggregates, sizes, n_edges)."""
+    edges, residue_indices = compute_aggregates(traj, residue='HOH', criteria=criteria, periodic=periodic)
+    sizes, _ = compute_aggregate_metrics(edges, len(residue_indices))
+    return len(sizes[0]), tuple(sizes[0]), len(edges[0])
+
+
 @needs_networkx
 def test_aggregate_metrics():
     """Test aggregate sizes and diameters on synthetic graph data."""
@@ -52,29 +68,21 @@ def test_aggregate_metrics():
     eq(diameters[0], np.array([3]))
 
 
+@needs_networkx
 def test_compute_aggregates_ice(get_fn):
     """Test compute_aggregates with ice structure."""
     t = md.load(get_fn("ice_1c_1x1x1.pdb"))
 
-    def _hbond_criteria(distance, angle=None):
-        criteria = {'atom_pair': (['H1','H2'], 'O'), 'distance': distance}
-        if angle is not None:
-            criteria['atom_triplet'] = ('O', ['H1', 'H2'], 'O')
-            criteria['angle'] = angle
-        return criteria
+    # Distance-only
+    eq((1, (8,), 7), _get_aggregates(t, _hbond_criteria(0.19)))
+    eq((8, (1, 1, 1, 1, 1, 1, 1, 1), 0), _get_aggregates(t, _hbond_criteria(0.17)))
 
-    def _get_aggregates(criteria, periodic=False):
-        edges, residue_indices = compute_aggregates(t, residue='HOH', criteria=criteria, periodic=periodic)
-        sizes, _ = compute_aggregate_metrics(edges, len(residue_indices))
-        return len(sizes[0]), tuple(sizes[0]), len(edges[0])
+    # With angle criterion
+    eq((1, (8,), 7), _get_aggregates(t, _hbond_criteria(0.19, 150.0)))
+    eq((8, (1, 1, 1, 1, 1, 1, 1, 1), 0), _get_aggregates(t, _hbond_criteria(0.19, 179.0)))
 
-    eq((1, (8,), 7), _get_aggregates(_hbond_criteria(0.19)))
-    eq((8, (1, 1, 1, 1, 1, 1, 1, 1), 0), _get_aggregates(_hbond_criteria(0.17)))
-
-    eq((1, (8,), 7), _get_aggregates(_hbond_criteria(0.19, 150.0)))
-    eq((8, (1, 1, 1, 1, 1, 1, 1, 1), 0), _get_aggregates(_hbond_criteria(0.19, 179.0)))
-
-    eq((1, (8,), 15), _get_aggregates(_hbond_criteria(0.19), periodic=True))
+    # PBC: same aggregate sizes, more edges
+    eq((1, (8,), 15), _get_aggregates(t, _hbond_criteria(0.19), periodic=True))
 
 
 @needs_networkx
@@ -83,15 +91,12 @@ def test_compute_aggregates_multi_criteria(get_fn):
     t = md.load(get_fn("ice_1c_1x1x1.pdb"))
 
     def _multi_criteria(ho_distance, oo_distance):
-        criteria = [
+        return [
             {'atom_pair': (['H1', 'H2'], 'O'), 'distance': ho_distance},
             {'atom_pair': ('O', 'O'), 'distance': oo_distance},
         ]
-        edges, residue_indices = compute_aggregates(t, residue='HOH', criteria=criteria, periodic=False)
-        sizes, _ = compute_aggregate_metrics(edges, len(residue_indices))
-        return len(sizes[0]), tuple(sizes[0])
 
-    eq((8, (1, 1, 1, 1, 1, 1, 1, 1)), _multi_criteria(0.17, 0.28))
-    eq((8, (1, 1, 1, 1, 1, 1, 1, 1)), _multi_criteria(0.19, 0.26))
-    eq((1, (8,)), _multi_criteria(0.19, 0.28))
+    eq((8, (1, 1, 1, 1, 1, 1, 1, 1), 0), _get_aggregates(t, _multi_criteria(0.17, 0.28)))
+    eq((8, (1, 1, 1, 1, 1, 1, 1, 1), 0), _get_aggregates(t, _multi_criteria(0.19, 0.26)))
+    eq((1, (8,), 7), _get_aggregates(t, _multi_criteria(0.19, 0.28)))
 
