@@ -24,11 +24,13 @@ import numpy as np
 
 try:
     import networkx as nx
+
     HAVE_NETWORKX = True
 except ImportError:
     HAVE_NETWORKX = False
 
 __all__ = ["compute_aggregates", "compute_aggregate_metrics"]
+
 
 def _to_name_set(names):
     """Convert atom name(s) to a set, validating input type."""
@@ -45,11 +47,12 @@ def _validate_atom_names(expected, atom_indices, topology, source):
     if missing := expected - found:
         raise ValueError(f"Atom names not found in topology: {missing} (from {source})")
 
+
 def compute_aggregates(
-        traj, 
-        residue, 
-        criteria, 
-        periodic=True
+    traj,
+    residue,
+    criteria,
+    periodic=True,
 ):
     """Find molecular aggregates based on distance/angle criteria.
 
@@ -73,7 +76,7 @@ def compute_aggregates(
             the O-H-O angle with H as the vertex). Must have associated `angle.`
         - 'angle' : float, optional
             Minimum angle threshold in degrees. Angles greater than given value
-            pass (e.g., 120 means angles > 120° pass). Must have associated 
+            pass (e.g., 120 means angles > 120° pass). Must have associated
             `atom_triplet.`
 
         Example with multiple criteria::
@@ -84,7 +87,7 @@ def compute_aggregates(
             ]
     periodic : bool, optional, default=True
         If `periodic` is True and the trajectory contains unitcell
-        information, distances will be computed based on minimum 
+        information, distances will be computed based on minimum
         image convention.
 
     Returns
@@ -109,9 +112,11 @@ def compute_aggregates(
         edges.append(frame_edges)
     return edges, residue_indices
 
+
 def _get_residue_indices(topology, residue_name):
     """Get indices of residues matching the given name."""
     return [r.index for r in topology.residues if r.name == residue_name]
+
 
 def _find_molecular_edges(
     traj,
@@ -126,8 +131,8 @@ def _find_molecular_edges(
     """Find all edges (connected molecule pairs) for a single criterion."""
     from mdtraj import compute_angles, compute_neighborlist
 
-    distance_cutoff = criterion['distance']
-    atom1_names, atom2_names = map(_to_name_set, criterion['atom_pair'])
+    distance_cutoff = criterion["distance"]
+    atom1_names, atom2_names = map(_to_name_set, criterion["atom_pair"])
 
     # create atom type sets for convenient criteria lookup
     atoms_type1 = set()
@@ -146,8 +151,8 @@ def _find_molecular_edges(
     neighbors = compute_neighborlist(traj, cutoff=distance_cutoff, frame=frame_idx, periodic=periodic)
 
     edges = set()
-    # criteria with only distances specified 
-    if 'atom_triplet' not in criterion or criterion.get('angle') is None:
+    # criteria with only distances specified
+    if "atom_triplet" not in criterion or criterion.get("angle") is None:
         for atom_i in atoms_type1:
             res_i = atom_to_res[atom_i]
             mol_i = res_idx_to_mol_idx[res_i]
@@ -160,8 +165,8 @@ def _find_molecular_edges(
                         edges.add(edge)
         return edges
 
-    triplet_names = criterion['atom_triplet']
-    angle_cutoff = criterion['angle']
+    triplet_names = criterion["atom_triplet"]
+    angle_cutoff = criterion["angle"]
     triplet_first, triplet_vertex, triplet_third = map(_to_name_set, triplet_names)
 
     # create atom type sets for each atom in triplet
@@ -198,7 +203,7 @@ def _find_molecular_edges(
     if not passing_atom_pairs:
         return edges
 
-    # create list of atom triplets and molecular pairs (that are within distance cutoff)  
+    # create list of atom triplets and molecular pairs (that are within distance cutoff)
     angle_triplets = []
     triplet_mol_pairs = []
     for atom_vertex, atom_acceptor, res_vertex, mol_i, mol_j in passing_atom_pairs:
@@ -231,15 +236,20 @@ def _find_molecular_edges_multi(traj, frame_idx, residue_indices, criteria, peri
 
     # Map residue idx to molecule idx, and atom idx to residue idx
     res_idx_to_mol_idx = {res_idx: i for i, res_idx in enumerate(residue_indices)}
-    atom_to_res = {a.index: res_idx for res_idx in residue_indices
-        for a in topology.residue(res_idx).atoms}
+    atom_to_res = {a.index: res_idx for res_idx in residue_indices for a in topology.residue(res_idx).atoms}
 
     # Find intersection of all criteria
     all_edges = None
     for criterion in criteria_list:
         edges = _find_molecular_edges(
-            traj, frame_idx, criterion, periodic,
-            topology, residue_indices, res_idx_to_mol_idx, atom_to_res,
+            traj,
+            frame_idx,
+            criterion,
+            periodic,
+            topology,
+            residue_indices,
+            res_idx_to_mol_idx,
+            atom_to_res,
         )
         if all_edges is None:
             all_edges = edges
@@ -304,8 +314,7 @@ def compute_aggregate_metrics(edges, n_molecules, approx=False, return_graphs=Fa
     """
     if not HAVE_NETWORKX:
         raise ImportError(
-            "NetworkX is required for compute_aggregate_metrics. "
-            "Install it with: pip install networkx"
+            "NetworkX is required for compute_aggregate_metrics. Install it with: pip install networkx",
         )
 
     all_sizes = []
@@ -324,9 +333,3 @@ def compute_aggregate_metrics(edges, n_molecules, approx=False, return_graphs=Fa
     if return_graphs:
         return all_sizes, all_diameters, all_graphs
     return all_sizes, all_diameters
-
-
-
-
-
-
