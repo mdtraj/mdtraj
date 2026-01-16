@@ -3,6 +3,44 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.11.1 (January 15, 2026)
+--------------------------
+* Update pypi upload trigger by @janash in #2054
+* Speedup some cython functions by enforcing nogil for exceptions (add return code) by @jeremyleung521 in #2049
+* Minor bug fix for documentation equations  by @shehan807 in #2060
+* Drop numpy1 from testing/support, not building freethreading wheels, build linux-arm64 wheels by @jeremyleung521 in #2066
+* Add support for "standard_names" keyword argument to Amber prmtop reader by @CharlieLaughton in #2057
+* Fix docstring typo in compute_directors by @ctk3b in #2073
+* Update dependabot weekly and pre-commit monthly by @jeremyleung521 in #2081
+* Fixed typos and did minor reorganization in hdf5 docs by @MrMultiMediator in #2082
+* Avoid linear search in topology subsetting by @jgullingsrud in #2085
+* Updating macos-13 runner to macos-15-intel by @jeremyleung521 in #2088
+* Python3.14 testing and building by @jeremyleung521 in #2089
+* Official release of python 3.14 by @jeremyleung521 in #2090
+* Fix pyparsing Deprecations by @jeremyleung521 in #2097
+* Formal Charge <NA> from Mol2 Files by @jeremyleung521 in #2093
+* Rewrite trajectory.py topology parsing with match/case by @jeremyleung521 in #2094
+* Use repeated bonds in PDB CONECT records to increase bond orders (REMAKE of #1848) by @jeremyleung521 in #2083
+* Simplify testing on python 3.14 (with openmm) by @jeremyleung521 in #2091
+* Move all rcsb url downloads to https by @jeremyleung521 in #2106
+* Add bond metadata (order and type) and formal charge to HDF5 by @janash in #2101
+* Addressing some issues with `save_cif` by @darianyang in #2103
+* Fix to allow mdtraj.load() to load urls ending with pdb file extensions by @jeremyleung521 in #2115
+* Update PyParsing deprecations by @mattwthompson in #2117
+
+A total of 9 people contributed to this release.
+People with a "+" by their names contributed to MDTraj for the first time.
+
+- Jeremy Leung
+- Jessica A. Nash
+- Shehan Parmar +
+- Charlie Laughton
+- Christoph Klein
+- MrMultiMediator +
+- Justin Gullingsrud +
+- Darian Yang +
+- Matt. W. Thompson
+
 v1.11.0 (June 24, 2025)
 --------------------------
 - Test on Python 3.13 by @jeremyleung521 in #1973
