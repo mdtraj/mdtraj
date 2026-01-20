@@ -208,6 +208,7 @@ def test_pdbstructure_3():
         eq(expected[i], c)
 
 
+@pytest.mark.default_cassette("4ZUO.yaml")
 @pytest.mark.vcr
 def test_load_pdb_from_url():
     # load pdb from URL
@@ -219,6 +220,7 @@ def test_load_pdb_from_url():
     eq(t2.n_atoms, 6200)
 
 
+@pytest.mark.default_cassette("4ZUO.yaml")
 @pytest.mark.vcr
 def test_load_from_url():
     # load pdb from URL
@@ -268,6 +270,7 @@ def test_1ncw(get_fn):
     load_pdb(get_fn("1ncw.pdb.gz"))
 
 
+@pytest.mark.default_cassette("1VII.yaml")
 @pytest.mark.vcr
 def test_1vii_url_and_gz(get_fn):
     t1 = load_pdb("https://files.rcsb.org/download/1vii.pdb.gz")
@@ -284,6 +287,7 @@ def test_1vii_url_and_gz(get_fn):
     eq(t1.n_atoms, t4.n_atoms)
 
 
+@pytest.mark.default_cassette("1VII.yaml")
 @pytest.mark.vcr
 def test_1vii_load_from_mixture(get_fn):
     # load pdb from URL and locally

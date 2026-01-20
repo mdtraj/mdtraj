@@ -11,7 +11,7 @@ interactions:
     method: GET
     uri: https://files.rcsb.org/download/4ZUO.pdb.gz
   response:
-    body:
+    body: &A
       string: !!binary |
         H4sICDKVDWUC/3BkYjR6dW8uZW50AOy9W29jx7Im+L5/BV8aXd6nSOf9Up7dACnRJW5LpDYp2ZYH
         AwODPjM4L91A98z/n4zLWiuTjFSJFO0qD9qAXapy6VMwMiMy7nG3Xt6u97Pyz93L7X53vzysvx+/
@@ -4411,7 +4411,7 @@ interactions:
         /89fP/lf//b/AQzCmF9rIRAA
     headers:
       Age:
-      - '786'
+      - '2302'
       Connection:
       - close
       Content-Disposition:
@@ -4425,9 +4425,9 @@ interactions:
       Vary:
       - Origin
       Via:
-      - 1.1 fb9b6eb5c6b5a0132525f0c834eb3180.cloudfront.net (CloudFront)
+      - 1.1 fd24baa8ef28b0365696ab4b52922460.cloudfront.net (CloudFront)
       X-Amz-Cf-Id:
-      - xCnfPATW1zpVJDxh2ZrTkfcIeRrrYzibfIAP3-U2xkFB5EId-MwupQ==
+      - pJ0q9z5NcqKiXNdrh-5Y980X3oAiMvP_FkGzZVXvG3Ob7gvnKB-6Ew==
       X-Amz-Cf-Pop:
       - IAD61-P13
       X-Cache:
@@ -4449,7 +4449,7 @@ interactions:
     method: GET
     uri: https://files.rcsb.org/download/4ZUO.pdb
   response:
-    body:
+    body: &B
       string: "HEADER    HYDROLASE/HYDROLASE INHIBITOR           17-MAY-15   4ZUO
         \             \nTITLE     CRYSTAL STRUCTURE OF ACETYLPOLYAMINE AMIDOHYDROLASE
         FROM MYCOPLANA    \nTITLE    2 RAMOSA IN COMPLEX WITH A HYDROXAMATE INHIBITOR
@@ -18284,7 +18284,7 @@ interactions:
         \                                                                            \n"
     headers:
       Age:
-      - '786'
+      - '2302'
       Connection:
       - close
       Content-Disposition:
@@ -18299,9 +18299,175 @@ interactions:
       - accept-encoding
       - Origin
       Via:
-      - 1.1 e3b74c5ea6f5a7e36b663b57ddd24d84.cloudfront.net (CloudFront)
+      - 1.1 d7756c0a60531bbefc36600bd71fbcb0.cloudfront.net (CloudFront)
       X-Amz-Cf-Id:
-      - uq49tmjUyuEy5vvikswH27r4vWdCQSgF4EAy5pnD-AbIxKkFYGGTJg==
+      - ldvBCT4KOFmr90r3xPE_dOFWM25YSrJR6yn9aAU-CWph5opBrLp2OA==
+      X-Amz-Cf-Pop:
+      - IAD61-P13
+      X-Cache:
+      - Hit from cloudfront
+      strict-transport-security:
+      - max-age=16000000; includeSubDomains; preload;
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Connection:
+      - close
+      Host:
+      - files.rcsb.org
+      User-Agent:
+      - Python-urllib/3.13
+    method: GET
+    uri: https://files.rcsb.org/download/4ZUO.pdb.gz
+  response:
+    body: *A
+    headers:
+      Age:
+      - '2360'
+      Connection:
+      - close
+      Content-Disposition:
+      - attachment;filename=4ZUO.pdb.gz
+      Content-Type:
+      - application/gzip
+      Date:
+      - Tue, 20 Jan 2026 20:44:21 GMT
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      Via:
+      - 1.1 04d8137eba39d404a430316a46dde298.cloudfront.net (CloudFront)
+      X-Amz-Cf-Id:
+      - JfmrwfdeUmdyzDa4XuyQn5M3hgZNy_HseZWcq-zSYtGmUK0Pd917jw==
+      X-Amz-Cf-Pop:
+      - IAD61-P13
+      X-Cache:
+      - Hit from cloudfront
+      strict-transport-security:
+      - max-age=16000000; includeSubDomains; preload;
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Connection:
+      - close
+      Host:
+      - files.rcsb.org
+      User-Agent:
+      - Python-urllib/3.13
+    method: GET
+    uri: https://files.rcsb.org/download/4ZUO.pdb
+  response:
+    body: *B
+    headers:
+      Age:
+      - '2361'
+      Connection:
+      - close
+      Content-Disposition:
+      - attachment;filename=4ZUO.pdb
+      Content-Type:
+      - text/plain
+      Date:
+      - Tue, 20 Jan 2026 20:44:21 GMT
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - accept-encoding
+      - Origin
+      Via:
+      - 1.1 db129cda1d3ba1b67c3281d54906cdcc.cloudfront.net (CloudFront)
+      X-Amz-Cf-Id:
+      - CH71hpw8Be7XOjpnjvxdHnMUNDNaPlCP13f-74_ZAUY4mIwqTBEoUw==
+      X-Amz-Cf-Pop:
+      - IAD61-P13
+      X-Cache:
+      - Hit from cloudfront
+      strict-transport-security:
+      - max-age=16000000; includeSubDomains; preload;
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Connection:
+      - close
+      Host:
+      - files.rcsb.org
+      User-Agent:
+      - Python-urllib/3.13
+    method: GET
+    uri: https://files.rcsb.org/download/4ZUO.pdb.gz
+  response:
+    body: *A
+    headers:
+      Age:
+      - '2361'
+      Connection:
+      - close
+      Content-Disposition:
+      - attachment;filename=4ZUO.pdb.gz
+      Content-Type:
+      - application/gzip
+      Date:
+      - Tue, 20 Jan 2026 20:44:21 GMT
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      Via:
+      - 1.1 db129cda1d3ba1b67c3281d54906cdcc.cloudfront.net (CloudFront)
+      X-Amz-Cf-Id:
+      - IzQFYfFBTuWbZtOxOjduNnyASGpJuH41WeijRcClzkYMO0_xL5j_og==
+      X-Amz-Cf-Pop:
+      - IAD61-P13
+      X-Cache:
+      - Hit from cloudfront
+      strict-transport-security:
+      - max-age=16000000; includeSubDomains; preload;
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Connection:
+      - close
+      Host:
+      - files.rcsb.org
+      User-Agent:
+      - Python-urllib/3.13
+    method: GET
+    uri: https://files.rcsb.org/download/4ZUO.pdb
+  response:
+    body: *B
+    headers:
+      Age:
+      - '2361'
+      Connection:
+      - close
+      Content-Disposition:
+      - attachment;filename=4ZUO.pdb
+      Content-Type:
+      - text/plain
+      Date:
+      - Tue, 20 Jan 2026 20:44:21 GMT
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - accept-encoding
+      - Origin
+      Via:
+      - 1.1 94a5bf8cdcb72ea896ba89b3e1f9b644.cloudfront.net (CloudFront)
+      X-Amz-Cf-Id:
+      - mQwjNZczRjWtwvTdJSj6pxgz6Y7NDZxWgUYw9QLv9x9WKSCpM2IjjA==
       X-Amz-Cf-Pop:
       - IAD61-P13
       X-Cache:
