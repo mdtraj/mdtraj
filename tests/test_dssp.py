@@ -62,7 +62,7 @@ def test_2(get_fn, tmpdir, fn):
 
 @pytest.mark.parametrize("pdbid", ["1GAI", "6gsv", "2AAC"])
 @pytest.mark.default_cassette("dssp.yaml")
-@pytest.mark.vcr
+@pytest.mark.vcr(allow_playback_repeats=True)
 def test_3(get_fn, tmpdir, pdbid):
     """This test checks dssp assignments on pdb files downloaded from rcsb"""
     t = md.load_pdb("https://files.rcsb.org/download/%s.pdb" % pdbid)

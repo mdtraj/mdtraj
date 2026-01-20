@@ -209,7 +209,7 @@ def test_pdbstructure_3():
 
 
 @pytest.mark.default_cassette("4ZUO.yaml")
-@pytest.mark.vcr
+@pytest.mark.vcr(allow_playback_repeats=True)
 def test_load_pdb_from_url():
     # load pdb from URL
     t1 = load_pdb("https://files.rcsb.org/download/4ZUO.pdb.gz")
@@ -221,7 +221,7 @@ def test_load_pdb_from_url():
 
 
 @pytest.mark.default_cassette("4ZUO.yaml")
-@pytest.mark.vcr
+@pytest.mark.vcr(allow_playback_repeats=True)
 def test_load_from_url():
     # load pdb from URL
     t1 = load("https://files.rcsb.org/download/4ZUO.pdb.gz")
@@ -271,7 +271,7 @@ def test_1ncw(get_fn):
 
 
 @pytest.mark.default_cassette("1VII.yaml")
-@pytest.mark.vcr
+@pytest.mark.vcr(allow_playback_repeats=True)
 def test_1vii_url_and_gz(get_fn):
     t1 = load_pdb("https://files.rcsb.org/download/1vii.pdb.gz")
     t2 = load_pdb("https://files.rcsb.org/download/1vii.pdb")
@@ -288,7 +288,7 @@ def test_1vii_url_and_gz(get_fn):
 
 
 @pytest.mark.default_cassette("1VII.yaml")
-@pytest.mark.vcr
+@pytest.mark.vcr(allow_playback_repeats=True)
 def test_1vii_load_from_mixture(get_fn):
     # load pdb from URL and locally
     t1 = load(["https://files.rcsb.org/download/1vii.pdb.gz", get_fn("1vii.pdb.gz")])

@@ -7,7 +7,7 @@ interactions:
       Host:
       - files.rcsb.org
       User-Agent:
-      - Python-urllib/3.13
+      - Python-urllib/3.11
     method: GET
     uri: https://files.rcsb.org/download/1GAI.pdb
   response:
@@ -8238,6 +8238,8 @@ interactions:
         \     353    0   27   18    2    0    4    6 4444    1  741   37          \nEND
         \                                                                            \n"
     headers:
+      Age:
+      - '1613'
       Connection:
       - close
       Content-Disposition:
@@ -8245,7 +8247,7 @@ interactions:
       Content-Type:
       - text/plain
       Date:
-      - Tue, 20 Jan 2026 21:37:50 GMT
+      - Tue, 20 Jan 2026 22:39:28 GMT
       Transfer-Encoding:
       - chunked
       Vary:
@@ -8254,11 +8256,11 @@ interactions:
       Via:
       - 1.1 361e5a88d32674742a79fe8e145762a0.cloudfront.net (CloudFront)
       X-Amz-Cf-Id:
-      - XZL4Qik8kcA6FQ__KiXLp_ez9cOKLlIbjOLQQBPgDzIWYfsoPEYdxw==
+      - sKXKxe8O485DEXGbLGVzlI4ubbm29-CjhUCuQDfG7T9NePgwNnOP0Q==
       X-Amz-Cf-Pop:
       - IAD61-P13
       X-Cache:
-      - Miss from cloudfront
+      - Hit from cloudfront
       strict-transport-security:
       - max-age=16000000; includeSubDomains; preload;
     status:
@@ -8272,7 +8274,7 @@ interactions:
       Host:
       - files.rcsb.org
       User-Agent:
-      - Python-urllib/3.13
+      - Python-urllib/3.11
     method: GET
     uri: https://files.rcsb.org/download/6gsv.pdb
   response:
@@ -13133,6 +13135,8 @@ interactions:
         \     432    0    5   16    8    0   17    9 4191    2   85   34          \nEND
         \                                                                            \n"
     headers:
+      Age:
+      - '1672'
       Connection:
       - close
       Content-Disposition:
@@ -13140,20 +13144,20 @@ interactions:
       Content-Type:
       - text/plain
       Date:
-      - Tue, 20 Jan 2026 21:37:51 GMT
+      - Tue, 20 Jan 2026 22:39:29 GMT
       Transfer-Encoding:
       - chunked
       Vary:
       - accept-encoding
       - Origin
       Via:
-      - 1.1 654b595ade3baf3aec0634ebf65dd838.cloudfront.net (CloudFront)
+      - 1.1 d7756c0a60531bbefc36600bd71fbcb0.cloudfront.net (CloudFront)
       X-Amz-Cf-Id:
-      - 0FJw3Czr3zy8ThBHDOpMZjJ2fI3C2vrDlkH9EyE_KNtbdj82yfdtkA==
+      - YD4bNQjZENLAD0Mx02OuLZfrW7YMdjZ77xHCeOLio2D5vnZNhr5qmg==
       X-Amz-Cf-Pop:
       - IAD61-P13
       X-Cache:
-      - Miss from cloudfront
+      - Hit from cloudfront
       strict-transport-security:
       - max-age=16000000; includeSubDomains; preload;
     status:
@@ -13167,7 +13171,7 @@ interactions:
       Host:
       - files.rcsb.org
       User-Agent:
-      - Python-urllib/3.13
+      - Python-urllib/3.11
     method: GET
     uri: https://files.rcsb.org/download/2AAC.pdb
   response:
@@ -16654,6 +16658,8 @@ interactions:
         \     289    0    4    6   18    0    0    9 3052    2   30   28          \nEND
         \                                                                            \n"
     headers:
+      Age:
+      - '1671'
       Connection:
       - close
       Content-Disposition:
@@ -16661,20 +16667,20 @@ interactions:
       Content-Type:
       - text/plain
       Date:
-      - Tue, 20 Jan 2026 21:37:51 GMT
+      - Tue, 20 Jan 2026 22:39:30 GMT
       Transfer-Encoding:
       - chunked
       Vary:
       - accept-encoding
       - Origin
       Via:
-      - 1.1 94a5bf8cdcb72ea896ba89b3e1f9b644.cloudfront.net (CloudFront)
+      - 1.1 0819e703158679947bab2d0bebe6285e.cloudfront.net (CloudFront)
       X-Amz-Cf-Id:
-      - TJJKllZ9_am7jopao102t13GmjL1atC6mnhgHDwvh9FY5COLowlW-A==
+      - rPeeKWM3bOMAXVThaRsJUj_lUwMsX7mqZlbTEhE9uhvwT02QrKJTNg==
       X-Amz-Cf-Pop:
       - IAD61-P13
       X-Cache:
-      - Miss from cloudfront
+      - Hit from cloudfront
       strict-transport-security:
       - max-age=16000000; includeSubDomains; preload;
     status:

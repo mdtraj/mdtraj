@@ -7,11 +7,11 @@ interactions:
       Host:
       - files.rcsb.org
       User-Agent:
-      - Python-urllib/3.13
+      - Python-urllib/3.11
     method: GET
     uri: https://files.rcsb.org/download/1vii.pdb.gz
   response:
-    body: &A
+    body:
       string: !!binary |
         H4sICHRYR2YC/3BkYjF2aWkuZW50ANV923IbR9LmvZ8CdzsTIWLqfJBiNgIEIQI2CHAAULZ84/d/
         i608dHdWdxfZlPiP91eETVIiP2ZVZeU5s/a7zcPusip/Ntvb4bS6P5weDqfHVfuP9ne/bk53OcLn
@@ -271,7 +271,7 @@ interactions:
         5dvr72PA3elh9ZF/fvl/MkLvEeb0AAA=
     headers:
       Age:
-      - '144'
+      - '1533'
       Connection:
       - close
       Content-Disposition:
@@ -279,15 +279,15 @@ interactions:
       Content-Type:
       - application/gzip
       Date:
-      - Tue, 20 Jan 2026 21:20:21 GMT
+      - Tue, 20 Jan 2026 22:39:38 GMT
       Transfer-Encoding:
       - chunked
       Vary:
       - Origin
       Via:
-      - 1.1 ddba5cc22287785323b6bcc96e4c3062.cloudfront.net (CloudFront)
+      - 1.1 e3b74c5ea6f5a7e36b663b57ddd24d84.cloudfront.net (CloudFront)
       X-Amz-Cf-Id:
-      - ops9jo7VDIUTmqUQ7t6vQTD6VlKvOvfwOE-l5zf4VEimuyF_HVr_UA==
+      - OdqfQr_0GajsJtoj-ukjUCoYuWvTkTFp7f-CJ9jMoFmPrBbFilh1Pg==
       X-Amz-Cf-Pop:
       - IAD61-P13
       X-Cache:
@@ -305,11 +305,11 @@ interactions:
       Host:
       - files.rcsb.org
       User-Agent:
-      - Python-urllib/3.13
+      - Python-urllib/3.11
     method: GET
     uri: https://files.rcsb.org/download/1vii.pdb
   response:
-    body: &B
+    body:
       string: "HEADER    ACTIN BINDING                           15-JAN-97   1VII
         \             \nTITLE     THERMOSTABLE SUBDOMAIN FROM CHICKEN VILLIN HEADPIECE,
         NMR, MINIMIZED  \nTITLE    2 AVERAGE STRUCTURE                                                    \nCOMPND
@@ -1086,7 +1086,7 @@ interactions:
         \                                                                            \n"
     headers:
       Age:
-      - '2301'
+      - '1533'
       Connection:
       - close
       Content-Disposition:
@@ -1094,182 +1094,16 @@ interactions:
       Content-Type:
       - text/plain
       Date:
-      - Tue, 20 Jan 2026 20:44:24 GMT
+      - Tue, 20 Jan 2026 22:39:38 GMT
       Transfer-Encoding:
       - chunked
       Vary:
       - accept-encoding
       - Origin
       Via:
-      - 1.1 fd24baa8ef28b0365696ab4b52922460.cloudfront.net (CloudFront)
+      - 1.1 00f06a69591175d4912909a93b231ea8.cloudfront.net (CloudFront)
       X-Amz-Cf-Id:
-      - lGI2G5ysIFOM60VPfALJLUWVzHLzCTmZs_963qKyu5iMFyuyHaKMVw==
-      X-Amz-Cf-Pop:
-      - IAD61-P13
-      X-Cache:
-      - Hit from cloudfront
-      strict-transport-security:
-      - max-age=16000000; includeSubDomains; preload;
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Connection:
-      - close
-      Host:
-      - files.rcsb.org
-      User-Agent:
-      - Python-urllib/3.13
-    method: GET
-    uri: https://files.rcsb.org/download/1vii.pdb.gz
-  response:
-    body: *A
-    headers:
-      Age:
-      - '203'
-      Connection:
-      - close
-      Content-Disposition:
-      - attachment;filename=1vii.pdb.gz
-      Content-Type:
-      - application/gzip
-      Date:
-      - Tue, 20 Jan 2026 21:20:21 GMT
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Origin
-      Via:
-      - 1.1 d7756c0a60531bbefc36600bd71fbcb0.cloudfront.net (CloudFront)
-      X-Amz-Cf-Id:
-      - ST8R78IL-R2c7BpkhDvM3-St7hae0fWdtrx1HEMYhBP1nmrYyitpAg==
-      X-Amz-Cf-Pop:
-      - IAD61-P13
-      X-Cache:
-      - Hit from cloudfront
-      strict-transport-security:
-      - max-age=16000000; includeSubDomains; preload;
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Connection:
-      - close
-      Host:
-      - files.rcsb.org
-      User-Agent:
-      - Python-urllib/3.13
-    method: GET
-    uri: https://files.rcsb.org/download/1vii.pdb
-  response:
-    body: *B
-    headers:
-      Age:
-      - '2360'
-      Connection:
-      - close
-      Content-Disposition:
-      - attachment;filename=1vii.pdb
-      Content-Type:
-      - text/plain
-      Date:
-      - Tue, 20 Jan 2026 20:44:24 GMT
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - accept-encoding
-      - Origin
-      Via:
-      - 1.1 70bb7fd797792ff677b4ec2e2a0ad742.cloudfront.net (CloudFront)
-      X-Amz-Cf-Id:
-      - ThIcfJqx2ZCdaOntx5-EAv8hOXxPXQDzBljBczP21z149r6lnCWv0Q==
-      X-Amz-Cf-Pop:
-      - IAD61-P13
-      X-Cache:
-      - Hit from cloudfront
-      strict-transport-security:
-      - max-age=16000000; includeSubDomains; preload;
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Connection:
-      - close
-      Host:
-      - files.rcsb.org
-      User-Agent:
-      - Python-urllib/3.13
-    method: GET
-    uri: https://files.rcsb.org/download/1vii.pdb.gz
-  response:
-    body: *A
-    headers:
-      Age:
-      - '203'
-      Connection:
-      - close
-      Content-Disposition:
-      - attachment;filename=1vii.pdb.gz
-      Content-Type:
-      - application/gzip
-      Date:
-      - Tue, 20 Jan 2026 21:20:21 GMT
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Origin
-      Via:
-      - 1.1 d7756c0a60531bbefc36600bd71fbcb0.cloudfront.net (CloudFront)
-      X-Amz-Cf-Id:
-      - -CaU9XKcXnH09lGYFRwRVGtA9jhip_HDXGWNaqT8egNpgNk05OaiYw==
-      X-Amz-Cf-Pop:
-      - IAD61-P13
-      X-Cache:
-      - Hit from cloudfront
-      strict-transport-security:
-      - max-age=16000000; includeSubDomains; preload;
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Connection:
-      - close
-      Host:
-      - files.rcsb.org
-      User-Agent:
-      - Python-urllib/3.13
-    method: GET
-    uri: https://files.rcsb.org/download/1vii.pdb
-  response:
-    body: *B
-    headers:
-      Age:
-      - '2360'
-      Connection:
-      - close
-      Content-Disposition:
-      - attachment;filename=1vii.pdb
-      Content-Type:
-      - text/plain
-      Date:
-      - Tue, 20 Jan 2026 20:44:24 GMT
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - accept-encoding
-      - Origin
-      Via:
-      - 1.1 70bb7fd797792ff677b4ec2e2a0ad742.cloudfront.net (CloudFront)
-      X-Amz-Cf-Id:
-      - duAEzehJG9ZUGPnWz79oHi4toSussJRrjHEAG8_VLv_lfHBBHKHjUg==
+      - h3HSrWMTlY8b9KFCf80GLc-GEGPtEPtppuvJBnHvQ6ysD4uykC1bBg==
       X-Amz-Cf-Pop:
       - IAD61-P13
       X-Cache:
