@@ -1,0 +1,1414 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Connection:
+      - close
+      Host:
+      - files.rcsb.org
+      User-Agent:
+      - Python-urllib/3.13
+    method: GET
+    uri: https://files.rcsb.org/download/1vii.pdb.gz
+  response:
+    body:
+      string: !!binary |
+        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
+        5dvr72PA3elh9ZF/fvl/MkLvEeb0AAA=
+    headers:
+      Age:
+      - '3369'
+      Connection:
+      - close
+      Content-Disposition:
+      - attachment;filename=1vii.pdb.gz
+      Content-Type:
+      - application/gzip
+      Date:
+      - Tue, 20 Jan 2026 20:01:21 GMT
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      Via:
+      - 1.1 654b595ade3baf3aec0634ebf65dd838.cloudfront.net (CloudFront)
+      X-Amz-Cf-Id:
+      - 33omPHxMOEOwdLrp-AJlLXwtOWqQy5GOtzsaEe7uRfcAUKlBn4W-ag==
+      X-Amz-Cf-Pop:
+      - IAD61-P13
+      X-Cache:
+      - Hit from cloudfront
+      strict-transport-security:
+      - max-age=16000000; includeSubDomains; preload;
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Connection:
+      - close
+      Host:
+      - files.rcsb.org
+      User-Agent:
+      - Python-urllib/3.13
+    method: GET
+    uri: https://files.rcsb.org/download/1vii.pdb.gz
+  response:
+    body:
+      string: !!binary |
+        H4sICHRYR2YC/3BkYjF2aWkuZW50ANV923IbR9LmvZ8CdzsTIWLqfJBiNgIEIQI2CHAAULZ84/d/
+        i608dHdWdxfZlPiP91eETVIiP2ZVZeU5s/a7zcPusip/Ntvb4bS6P5weDqfHVfuP9ne/bk53OcLn
+        3w6H+l9/uR1uxx1+etvvLk/n621zX/7i+nL/cH7alN/w9XJ+Wm33h+1vu9Pq2+F4LH+3L1Q8H3bb
+        3afV6enyafV0OB2eDn/uHiSgWW2+7S6bxwJ2u7xsby+X3eoH/vyyPT89nx7g06fz8a/Dw+eV/rL6
+        iT8DoAHE3fbluPvMK/vyc4C2bFTZs8+rzQdR6Mr2bx6fdqfb58b5fHkfoF9dv5/Op+9Pn1f75zsb
+        Pq0uztzF8OVHKQyr3enxcNrtLrtyMt931x9c8vX8ctnuPvCUe0CzOl8eN6fD9emv6/ZQtvLw9bD9
+        vHrcHI8vV/7w5T2AdgAs2/B0LufN9+PLj1HoBsDb5g9Ye1b2/csfAD0Bfl4dTrfdtciJ3Zef28Ow
+        uh2u15dyT3bPh8KIx8PL05efAYyr7e54HOA2x5+kMCHgy3Fz+et43m5uBziWp8P2csab/eXdgHm1
+        ++P5srteC9Jf1+/X267cmd11W27hoRz3ZrU9Hw+r+6N5/aB6QK2mgN1xe61Dtl/eR6HWM4BF1KIA
+        epOuOUAzAzizq9vvt/PzcXNtccAAaGcAv+22t/Plr9v358JNCHN4+LKUQjcDyBgF7Nv+GYXZ/ZtL
+        /m33/feH60SNfip3G7jxjyKEipj41NKJU8BC1sNtA59ez8cX2CfQjD8hvjYvt/0ZAbbrX9dP299O
+        h8f97ScAL7tvD5sbCociE83d0+b7nXG9SaD5+y67p83lt3cBuvKfAsDLnTEfAWiBQnf3dXd/p/IE
+        sBgV19P7lmyAQn23eb7cKTsB/PVyOr5zD+FHtbnbvDyCYdUBqncfivzVcOKj4/70vL6tnza368vD
+        5nDZlC+v698OTwsBwRIrH4APBwvs/BWYemX9XblGh4eX3cSmG/h8PQK87L7Ch9PmtibA9f3hfFzX
+        JHxbM0vopFY6o93ZorAAzp1kUTWnIi+juUs2pPfs4XMRBCC7dXDO+x+8KRLw4UysotZa2fSv0/Ve
+        2RzvYG3vuXp8BfTqQ/5IwLKFxfQ6lWPTHwM4y4cPhfEezkXzFRm5hCcrQObDTS1NBQcOgvX3Yg0c
+        pm7GCJD5sNBXuG+GBTs+NEHhPQ3Ah+EVCl/jQ6WKsDSFERfvofnoUzaFwE6trFen8221eX4+Hraw
+        j+sfAbQfTaGFLSxmJngq648BLJf5cn68bIizPq/+uHs+ni8/BUg69cqA95eX0+Pu8jOAH7yHqzPc
+        ELGVrDyv6Px1O/CPS/in/lcofLBbPZ9v4NBsjqvfN9cZwJdr8cm/lh8q3/x/rsUd+HY+foN4QfEB
+        74r1dNmdr8+7LXhExQ/6vtoUy+rxVH7maXfbfz9+mgDS3+9OxfPfFP9vcyn39nbYwlndzqcrcOdq
+        cytGaDGrvgn6rqvfd53/P6Ww3PXy+4sjXrAKcbDYXmMVTPj62+a0gsjH7xsA277czl+/zu5hv2Sx
+        ZZfd8+64+vpy2qJlBnul1tGXJTyW33N+Kr9j8/U28EIF+HAoEgsE7OPuXJZ/+Y4rv+wewSw+/IlG
+        8afVbrPdCzXbH8cMYBF3vxYjuJB5O6/Op93qcn4piEUzXw9PsAflXzan025zhM3A+ItRSv0G367h
+        44RtikmE31II2D3jhh3KYV9xC7ogTIE3WWyrDNpM9xB+8/lUOKJs3cvxWp/l+n2M7T76prDVCjGI
+        46GsBLQGHHlhRRD7dm3Vp+J83P36crzT+k3AsqcfSyEA4hGU/Srssi+8cL/bneCSbIvvUnb8/vvq
+        /nRcvw9wVy7A8/l6QB4udk75BQ9/lX9SOkbl/PodFBr9wUs25N4WCwHkVpFHD7vb5nC8/hSgQFyB
+        vzj+3s9LfKwKsPiLBXEzikX+47cdSMV/FkCr7LsAn/evfm8BXMd3AZazLeK0XNPd6fG2nwE8vRyP
+        76IQ3OV27PX9gNdNuXa7cvtOIA+uPw/40XyIXDGwzhVIfXhBgdtReN5dv39ZbY+7zel23sLnD//5
+        uj3DJz9E4f76n+2X1Y4Q9k//2f76xh4WpQuKZwdK5+thd3yojvzzypcb/7T/c/mhSMCn88PuODqU
+        zdMf/g059wrg5vTydYN647IazKff3rCe/mdPeVC2D0BkUWcbMpB/FHB1PX+9/b4pgGhDTBl7gQla
+        A4K1dH6YhwPAqWkxWAA/tIeD2fD3HEq5aaCHd5frpyIGnu4Lg3SGHS7p8xJl+wZgMZ+eDjfeos9L
+        3N4W4HV33JFFuL0cCgsdNiQc0LT+VvxKZKjr6v8Wa9H9+B72VuYntI5Pj0eBXsDfDegLxz/+jQL2
+        fncF1wQ0Cyh7tPT7fQVjno2f6+4JPP15jfA/SiF9ukgVLQH0H02h56jcy8P3jwIE+3B7Pl8eQA7u
+        ruIYQK6g9/VY/LYL3kR0KvpIdZvCh81ts0ZP/LYrgPDl6n5z+g2O+xt4A3A9Lrv/vBwK/G2/ub1G
+        4fby/XrT6D1di1Qofk9RmJcHMI4Ltdvjy8Pu4dPq/uXGDt/xpSzjfHp1ydcBBQT3U1HoB7hg1+v6
+        nXtoP9oLAMD7w3lIMesPALzudl1E3XrV+7mcLXiGbNcDuo8P/6Kv+whKA3DgieL7w339Xs6CfClg
+        je4XDMp2Nv0hAAemI8ed/+lpU/zm4/Xc0Vj9lvEh13v4cjkU8ooNW0yQHRzzZv3je+g/+pS9qq4d
+        bNiGXNNilayKNr8dnjCow+KyC3D8djr/fmoAQkzz/MgxGYjIYICmeEHn4+GxWApd2KEcS/mlXUz/
+        FQo7Jiza+ATXbTj14olCMPE7kAXcWi7fZXO69mdznQd8LDIfkI7n38th3J+L3QohJbzihWpgu+d9
+        cWQ2p4eFezj+yTM6akgB3Gz8heu/85Q/9i4XQL60nfUKh9Gf++rldLh9Lud2wuPeLgOEg0RW+Hou
+        O/k7stqZalKuxQX4gZuCLKEpSq7XCv+sijk0/Yz+8NdvABoCHH5Y/ySgHQPOQb8J6D9aBXgUsCJq
+        SCHX7X73VCz/y/cfAiz27+38DCUs2+P5So548c2uP0zhhy+55sDNrZi+eIchzCtJXv9tFBainjDv
+        c12Vq1UU338gzVf+0kz+ss8Edr5ag8Iz/NXx+5WuWSSiR385ii2Ztf7v8eGHmsT/227K7XyBkhFy
+        vv5/uik1XeeX2xVsI7hAEMDCmFUx4DZFhJ8eil6GtAOoxM8twH88/ZuiP+QsfwFu/neXZz1tnnZf
+        Vtt/o0JYlV+EtXDwXa/sYbkG/y7/vWCOuUM9/LtolN2FfOfy+/65/vv2EK7lw+bysMK88uefByTb
+        5/M/tPrj08F+0n982tD/9aeDg/+7Pz59jWvzydLHf/7Xl9zzBjlJn1ePv65+O+6+/757vOHtKW7a
+        r+dT4ah/QOa7nE4xqf71fD3cNQC3ezA8vn8eM9u3w/VQfs9a2P8OUivZr+5W2v0X1ejqiQRzJZbL
+        irrP9of33+XN9RkEs+PYzl3064Cf31m7dukHAI8bBMz8zzavqW7gLpbPfgCwnC8AdubsXUzrDMbT
+        Xdn7dYzvB3wGZ7EA6g7QrKmUBSgM/v2ARWIjIKm2O230OtCSs1oH837Ax+MJAEPoKIxrjeB3Ia1T
+        +nFA3q07G9ZB02dxHfOPsA0Bpo7CwiyZKIw/dChsIMTulJNaWz4UvV4UHvvfYzmkj6YQAEFIfTjg
+        X4OCLL7T/eWnAHcQ8yga9C/Qlp+Ldzd2/3+IwofddXs5PFNZLmv56+rwhMVBNyqsqApcR2r6l4d7
+        rKXCdDqYqA4vbCx37+X0jPJCmeDgxL4djoe/sMwdfzKiGFolU5dF/VKk8wUNLI14IP1AQhx3L6ti
+        L6DEfTy+4EcQRcj5RWiCnIOvH4v/Ct8/A2h6wNu+AF0eCbD8MMo0kLzlXsIver6c8ePt8oy/AATA
+        DKDtAVFC8A/DD9APvfDH7wS6b3DYL1QwvOKi0E6poFbpLH/QJUsiBr4GNLTsslQAgXpGFt8rvxDQ
+        1YAW/4PlAEiwKzoMOE+zCJCE0S/9fdN0MWK3UtAgQpp1n+r+F8VZjTAAmhEguExMbxzWH98sxuNY
+        84r9/7lPMkQCRh+eq00Qn/9yvhwe/+C/+MFASE0hAprqm98bCJkBtGPAdwVCRocCQfqPXDICfuSS
+        EfAjlwyxiv7sT4N54zpWKPq4aPg7XZCsBxOiqH5Lvwj8eSXThKcKsKx7u5kCqrUBUXpXbBubEdCC
+        CUGAel0VMW8rQIt/MQa8U8VyTQiYNQAXooIdAI1pAjqKV4wBy08iZXmdbcSvo8oDoJWA5wqw0L69
+        n6MwRIcURti7O7f2IDc6wJyaFJZrv32cA1RZg7VU7EOgtJjxPg6HYmITsPzL9WEOUINBCxS6iMDG
+        9xTa+pSvFWChHUJEU8AciUJn6bT1wDZ2HdtLLuvZ6zm2SYX/gA9jcnjKyYdhyVby+F4CggTfm1nG
+        LiY3ANqk8VBc9AIwNgHLd+/tFNCstSO2iZFuijHiULxtAhbq9rM3JcOPlj3MLvBNCQPbhDaF5Vft
+        783MoSTtiMKscMlZ7qHzTUAHgHbmpgRDbAMOMgAaMKj6PUxNwPLd+8c5CgM4pHehsE9Cxo5aUBjb
+        pxwA0M7toXW4hwFcwALotKDQt5dcdndflMEMhTojhY4ZPHnVAbr66tWACQDnlhxhzwqQd3Q4xtkB
+        ULXZBm7KbnooRf7BxsPVyyQXVQXYXLJRpALY/HCmp9DjKZel4l0uItDqgQ8r9VKpAKNJBYwBi1B2
+        vHfGkTgzqYMCJm0JB5Dl2xkKC2eAWYtL9QiIv6AHVE1ASypgDFi0XCA5qC1R6EGCd4DZtlQArAdU
+        wHTJqmebjHwZglq0ZE8qYHooytFNCRHt8IKRBYVtQNApD3oMCIoNxVYoh+LxaxOVUKNNnQL/sn0w
+        MxRqFenKgfUO19cJNWqaih54YT/LhyqQPFTINkX6WDMAatNk7EwCdgqYPCmngFXT5ZSz4MPcvMug
+        bUDATgEDXC8QW5EZu1qyawJqErBTtsmg2MuhaGXIKrVxyZJhY/azbGNB9oK0wZhQEdJB6JTKu60B
+        7Wr/oGfZJikGjLiHLgkKY3sPHQCaGcCIZpwvtg0dSorilFN7Dz0ATvYQjFQUDnCXI30dBIWuDRgK
+        oNFzbAP7VLQdGku4h+KUYxswAuAc2ziwsJBt4AAsibMesKkCipwvgNMlFwoD6eOcHV29gbFhg5uA
+        mVQARhoKoO3loUFTBJQTCVhlhYDNTRUAoRRQAWNAx/o4r72mm6Kz2MNK61XCAeT6dobCImXASIe7
+        HIkPk5Hy0DUBDamAKYXId2Db4K0orOfFHlZRykoFAAKogClgNuRJ5UwqQLlFAhY49Pw4dyipSOg7
+        DU6TpSVrcVPaSgqOcD+z5GIPgcwDxycQoPHCk1JNaQPm6X72lBEI2AZNkrJtOSwRX3CvQMBOTzkF
+        WrLWjiR2FJ6Ub0obCEiBgJ2hsLAG7iGoAPBb5B627zLI9f3j3JJVglMu5jTGyzn20pvETevLs/U1
+        ztEUBQ9sAnwI2wxLHsSXquVhdfU8W1+TpE8xgcmc85oo9DYvMZY8W19TCnNKbAqTtMnDoYyyNjUg
+        W19TQJPIJNZKozwMWlhfIbcY27P1NQZMRUKRCkjoyhalJfewapWtKWTrawyYi02j2U8xdFOUE3zY
+        lDbgb50f9AyF0bH1hcoK3Fw9sI1uLzkCoBkBgpTx7Em55JFCO9iHpra+akC2vqZsozzZ2MHSTTHR
+        NlRAzdhsfU0BjWEKI9k21olDaV+9wNbX9FAUHkpiPixCwktF3xQOga2vmVO2nWuGoWm5ZCC3CWjo
+        LnMMuHOs4eoZCgRlVOqQdA3i6qXWXQYpCnd5CqhQ0UPaFf6uKK0UG4dS8SHwxnaGQs+nWyjERK4v
+        klstEQ7w68+zgE7TkjXyHFiyqXHKFR+CWQp3ebpkHSkQlJCxPTlCvZJqRpbgxsNdHgOmovUyqgCL
+        PnQx66xQ9L4ZPwT5vn2YAhY+LECgAizyYTHrsggEqabjA4LtvNMzFBobEDCgfRjqcJ9rCgdw4M47
+        MwKEvdORACmtVSgcHHBT24c1oCbhMD0UtGnAnGNfL3u9xJOKHPuaAkZHwQtk6EKhH7yAkXtbA3Ls
+        awxYpEwOdMqYaXflowhihKb4ihz7mgJmo8kUQWMplIMVfOiaRnvk2NeUbUwgxsZ4NvChE7GvdiAo
+        cuxryjYQqgIKE5jG4FYEAaib4gs0tjRFwmC046EUuYhmhyMdMxvEqMQXxPKkKRIGtwK1XS7mnGXx
+        JeRhVatQ3RT4l+1qDhDtQpDYme5yToIPQ/Mug2A7zwDCZfCs/RLyYc7CtgnNmwK/VpoiA6BVtIeU
+        ZoZYuIx9NYUDWETSFAl9iCAVADhlFelQtBZary1tkq1NEbHkQIBZER+aIORhai/Z1aZIGKIi3dXT
+        pKSMto2YQw3oa1Nk4MMuF6CxaKk4QpVJ3Aw7p1CbIsOSMRAO4guFqScrbAFgrE2RATAZPmVcXvm6
+        Ckg273JKtSkynLKz5IArzSECI/gwNT2pxB49J5JdHCKcICrB4ESes5Rk6ACrwHh1lzN79DOAiiLs
+        Ft3b4ggpYR+6po2d2aOfAmY0lsoddqQCrBemiGsydmaPfgpoAmV68COaIhIwtfgws0c/BnR8lws/
+        Gktazwg+dE3xBdEIuMszS/Yi01MAQxaumW8GdUEmQVB3DFgogrtbADH8jAE54d6aNoWBgrrTJQeU
+        h5DcoavnZEDSNOM2YAJsd3MUBkdJ1oDZnWJwyfihbZpzGTOPcxQazIlqsgsLhcarRgy2BgSd8ufc
+        oVhFMa+QONwnTzm2+BCZaz/Lh6iPi06xhvZQO2HbNE0RdIb3M1cPDoMi7RggR3noGnxYAxoSX9M9
+        1InSbzaRR6+MuMveNQEtia8xYAGyFDJNWfGh+EWAYH3NMrbzVD0QIzG2kWEW1V4y6JQZxi4UYsax
+        8GMgU0Q74S+r0AQMlCgcA4JetpQtYwc8JZF5NKYJGClROD2UmDm5heK+nLJRC+xD9Lf2s4yN/jKE
+        BlCYFpMw+QVaTyvWKVyy1AnOsofo4+Fpa5TYwQo+rDwpqVO0Zp0yBYyYhgMVkFFiZ9Oyvqqrp1mn
+        jAHLHhrbx2KLdixbIFSAz01A1ilTQIc6pRxGJsBQ3eWWsYT2LiYKR4BFHwcq6UBVsIprE5ekMtHu
+        xUThCLAsEXRJAcQbsopkmsxWs9SAntzbMWCmgh2IxWIZR6QCij7s3N7DQLUiNSCGqgyVI6RAFDoj
+        KjFym0LwU/6cAkKCWpE8RKO9HMrg69l1sE0+7DKPEz4MuluyIbciSmOpeVN0l3mcnLKB+woKP1BU
+        JFWM3ZSHpss8jgAjxbrQzU0IiGm53gtoykPTZR4nFHrF+WVHe6ik0a50E9CQezvDh4b2UKNrxjHZ
+        3q3wTUBL7u0MYFCsrByxjaz7ik2JbRypgCljm0AxWMPSxg5J/1fKY1Do7R/sDGAADVsAI+ZOoDxB
+        qoAm25hAKmB6U1BugLRBycLxxI6xbRswUq3I9KZoz5VAeM3Kqfs8AJr2HqJO0TMUoj6GG4MsUoTF
+        UGIEQrIJCDflTzNDoY+kArS1CKiCWHJuLhlz9H9OlwzBdLJtPArTVPYwL6i30ZYrJEc9L0iZwlNW
+        nk7Z+tS4y5W0sVwhOQYs9qCiWhGFxhIkG9QSg9NyheQYULMa9VR3CFfPmgVhFqx9Oc8Alp8xvGS8
+        t3BzhFthm1rPcoXkGLBIeUsVQR6j6rlI/bSgmkWDVbmfPRTL8jDhfhWtJwt4mrVzWCKwnz0U57iA
+        DMtVIf3RSnLVgOjR6xlAChEUoZBpD6OM2zQLGjUk6zDmMNlDlSnJlRPdFKeFCrDNu+wUxxwmgENl
+        msYlo5B4M5+iHd+UcTNX4cNEd9ljeBRyArahRqub4vimjAEVVw8UOZDJFPEy/RGaN8XxTZkBTFRD
+        jPVfAOikXrZNQL4pU0CsAIKlZ1qyU25B+kM7vilTQJMpiOE9SWydxB7G5k1xWEusx4BYzUblqilR
+        hFOoANWu1NUO8ylmbsmceVSBshXVTUmxCcjW1xiwuGTsPCKrwl0OtiG+aj5k62u6ZJx6iPEbMkWM
+        WXSXPd6UOcbWbIpYbzhbIQGbvl7xv/aPenooYGBpiiMGin1lmV+2bUADgGYGMGkKVTlUo16Wrb4m
+        bbwFQDuzh8mxBYtuRQFOdkEhmS6+fjEP9QzbYEQTE9ZkzimdGzqlBvQAOMeHBvgPLFlD3qjVadGS
+        AwDOLTkHSvobn9hYkvnlpiniYxWD9UP5NKU/itOE5UQFMJiGN1rJQ5+qGKwAJMdHkV24gr0Udzk0
+        77LPVQzWD7XEjisjVWdwyrxebMrDoKoYrABE/YV2ERlLLoklp1YuQAddxWDFkrFWDijUdMoquSXy
+        MJgqButFgTfGDxXHbYpJGPMSFYA5+iFU5YcSdJtpD9E/wbiNbvBhDeiqGKygEAM/dxAqpdC9ja2b
+        UgP6Kgbrh1YI66iaCoNPkK2QnpRtSmzM0e/MzJLRhQHGRokNbOQbwqEGjFUMVlCIU/MgqJs5VOXD
+        EsYOqYrBCrYJwbOipyqCJE+5WUimQ65isOJQLNcdUqS9+HzOLVFSUVUxWHFTAiZoFJdPc5JhAaCu
+        YrBiyQmXpdlo96SfZ7O3NaCpYrDilLEVDKP0mVPqYUkMFnP0M4xdDsXToRhLCWsvQ6a6qVMwRz/D
+        2OVnuNo+BuLDEOKSGCzm6GcZW5lOL3NRaDRLosSYo59l7K7HzHK5oFO+4evVgLErMfqOgEPnQuAK
+        XWQEUKO5dVMqndLl6MeArpiAXAyKdgx0I/klAckuRz8GDJQYxBQe2dhK5kbb3miXox8DAkCkJRsO
+        mUoHPLXqYHXqq1nGe9j1pQRLpR1Gar3QvCkJq1nMzB7mrLlVkWIOQR5Ks6YdTfv9xs4AokvWyUVQ
+        o1X3R5Ox4VeJNk8vC2tJOBhPloPSoWESV2wDokS0efaA5VAUtZE4zOuBXl5SSKbBBNjOUAixfyq1
+        dJYT1t40bOwaMFZtnhJQk6KPniqCRIviKKVes02q2jwrCikNjFUsUB4jM+CpqaRAeoo2TwGYLNW/
+        UtYM2jxDI6hbAcJ3izZPcSjYBwCmMGs9kYbTdX75WgHqqs1TUBgUW65cppVkhFM1DwU4dD/Lh2TG
+        aQ6Zgp+yyDXLtmqiFEvONrGNQ6Ud2Osza3DWgK5qohRLVi5wlTMfTlQLylY1GC6iiVJQmDQBKc6N
+        IqPPttfVgKFqohSAxmjOzeepn2KbehkyWKKJUhwKsY3Dllk8FJkLaNa0Y6BVNFEKQM9ZCiwBrhnb
+        vAaYqyZKcSjRk7bDVkVgcCPKp5v5FEyJiSZKCWjNYMZBgibnBZ2tRnHsC2d2UEV6f5cTtzORkIjG
+        LdDLRnHsawqIZarYC07Vzj6bRoRzWwFy7GsM6ElcgaJnbyCGtMDxwcr38wwgZ8lW3C+Kt03elJav
+        ZxTHvsaAENn0wtcrGGpJ36gBu+z8qCeAiU616xIG7ZdaLTk1hRz7mgIGzy2yaHCCEy/iNkY1KWQ/
+        ZYZtDNU3JEuOTxWQbNqHRrGfMgUk+1CztNF1s0ZoyUO0M/azhxKV4iqCzH0BsseneVOwj37mUHIx
+        OMmjD0kNsbC+Ujc3AQ1FlqaHYrhmSfEpWy376JvCQVuKLM1QqCioS4VkECUVDrhvL9lRZGlKoVd0
+        KBHZBxoC1YLcKK4Lc1I0MscPVffKkvMYfOYwdGycciVtMEe/mQJabpVVFCq44w7DNyPtBnIa2xkK
+        oQiP/OVoaelJeqOxeVOAoc6rOQo9t5FEDBWU05Z6udk0ZMAIxJzUBJCGGhQO0ZbDLS1FX1EItxwr
+        dUeA0MxLQYxs6aOWHTRtiY199A9zgOjCQN8eL9nK+GGzrcmAfXHaTQGLv4w5ervGbYaPaUmnvwGl
+        C3GbKWDGahYoSiYKU9U32tQpoBtPez0DiOoT0x9cNqhabZ41hXBT9maOsSNVmQZFpZfBiqunYxOw
+        yzxOrh5VpkFbHV1BbZeU/uKwkP3s1VOsS3BKAghYaxd4owZz9Pdm5uphEznEvvjqmewWeKMGc/SQ
+        KJxQ6DzdEOx5xIRNXmBjY2sRWLBTxnaB4ocUbgGiltjYBvvoH+3s1fNcbUqA1U15hUJDoaoxYJcB
+        H6RNlkrKtCm0VCsyBcRsLST/uWww5yXpYGMx9jV7lz0JhxwpN2VMbtg2NaBf7fdazwJ2QHw4ciyS
+        alMYAHDu6nlDlRiG54pU7XXN7mADffR7o2cAMxeSWay7KUJCiq+m4wPNyQVw7qZ4TdUsVFNsKfn6
+        ZpLLjProfRiEg+G+5ay4jDU1oiKVtBn10QvArCgGGwxJbDHf5pWYgxn10QtAVPTg3vKcpaiWdAeb
+        UR+9ANRdUXIiCrUsPklNG3vUR98DxmKCcL+ozhytkyogNyms++gFIF49nBXG/OhCowe8prDuo5eH
+        kqiJF4NPEM+WQYy2OTfqoxeAWJmGxqrjGnfbUKM1YN1HL5YcutLfpNnWyQtqRcyoj14A5i4xoyK3
+        l4g9dE0lNeqj7wFTcRopIKm5fNVl15g7VwH2ffRUzdJlciANzOk3snHgxqhGorC6en0f/RTQUo+Z
+        06SXqxRS24Lt++hHgMVo5zBLCJ0XkBdUO5u+j34E6MhyXfFckdqtGMUcKsbu++hHgFBiST1m3SwC
+        WxWSNc0576syLQGIFf4YUdGkAmQJenPel/GhKtMSh4IBSIhsGs1WmFmQNTM+VmVagsLMfXpdfs8G
+        t0TR+1SVaUkKM9UQu0zRESOHvdg2YK7KtHrARMZ6WTKWbOPUDkGhbi45qLosQdS0c48ZVT2D4WkW
+        lPGjMyzLEtJgwSpuWmN/2TlZ99W8KcHUZQmpN0Uw6LTqvABFmfA3+6RMsHVZQhKVGLSHhpdsZKjK
+        N1VAcHVZwkChzdwsFPWg8Gfb62oKfV2WkHr7MCsSsC5wSlP2jb4CGOqyhAHQJjoUzVGRrEQuQDWd
+        xxDrsoQBEMdmQrwicQZSNuabpimCffS7CYX9/FpL8RuQ+qk1gacGzHVZQhJ1DqRGM8celOz0t80l
+        gxySZQkDIEZBIMJsLU+c8AtSmabro59evWR5YJMJHLdZ0nhluj76KR9mbtU23F5npa/XHEppuj76
+        KWDqT5kT1tI1C03bpuujnwIGtmBjdlzgmBst2zWgr8sShrusvOXqAT4c4xZMJMOw5X6WsXGJWAmj
+        2fGJjYaXGjDWZQkD2ziea4NjF3Bagog5tJVUTHVZQhpGnGnaQ68D1zDJ6TFN6yvmuixhAMzWcgMq
+        K6kcF+SXMXwura8sRkuxsZRpD5NMfzRLfzH+JK2voaY9OZbYOKzXUDfS28G0NLK+BgqpAgMGKmYO
+        XeklEc40sr4EoKGclFVktCvVcs0qnZJG1pco8HZkH2KXOjriqRG3qSkcWV9DCToOrsPebw6Qy6hI
+        OzCeRtaX6AvIXV5ZcyDINwzOGnBkfQ0U4ow0yDxyL7iR/cttjz6NrK+BbTD2ChRGKucXna2vZSvS
+        yPoaAGmoAdg2RKF1ski+6Unlft4XPa4xVDsnLovBYDwwehUlbjXmY2SChmzUgJaGXUHRiaYhbCkv
+        KQrFMd3bWQqp9ztzdES/0r9cA/bzvsaAFLRQrPU05QbeLJLHsCUN2agBeXQKLDmZodD27URh7ud9
+        1YDgQVkqfkqJy1ilA97ew37e1wRQU2lRzJqFRWr0VtRLhrovHLJRAwYKSGJpEYmvkIVOadYSm9zP
+        +5rwYaIpCViJgf30esHECdTe+1k+dNz1kT1FlrJ0K5r9evhOLQ3ZmJwylsAkagDEzGMrmFYD9vO+
+        xoeiMOmfeegL5EjzgoZoiDbipNCZQwnUzhQCHYq3omW76TxCewJOCh0DRjbaEzVc4UiLJYM9UQOJ
+        2c5hKLlEiwFbwiwHxv0CvYwjEcRs56BFS06mPexCBNJPaQoHq0I12zkMJZcYxIDeR05/+Kr3NjQB
+        YzXbWQI6PhTOWgQ50se3JuPhrA8x21kAUl4ZHiDggYp+iSliVa5mO4tDoQrdxCN9oIzVLQizWOyj
+        H2Y7i0PBOe1g2+DhFNaT3mibQuyjH2Y7CwpxhiTqFBqy4SUfujaFpprtLPlQkdajCSgw5CA1onMV
+        Y2tbzXYWS8aSS901Gig5/Eq1qwisdtVsZ3HKOGAbr143ccIukIdoHojZzgLQYQIhU4crhAq0XZCG
+        szTrfm4PcwjcVkdGu5fTp3VsAsZqtrOgEHkeq/toWHSyfkEXEvTZyNnOgkKKhgRyawFQuwVJLgj0
+        y9nO4pRpnDr009OhoHCfHUdTARZdKWc7S/GVqG8ZC6+wGE/OdvZNQF3Ndg5DGb/h9k7DZateFp/k
+        NoWmmu0sb0omtwIfcQDP3tnGdMEa0HK473JGwGHgtsdGfEXlWuOEdXNagsVZ95spoKEZkrqbWaVo
+        CNHs1auEA866n6HQ0pAN6Lk1ZHA6s6QrEwc3n2cBfde37DVnc3VDp1QqAGfd389SiJOSDc2ogriN
+        bKJMbQoTh/ume4gS2nA3nK4zPqmp9WCDoFZkesoOdQgIBS70rnoeW84jNpTtZ08Z5SCMiUtcwFPl
+        U5qMTbPuzQTQcSM+dMNRHFtXqcymPMQcPUSWpqeMda/FATKGTZOwIIhhMUf/aGYAcYoRjhAInOwy
+        C0bgWszRP9qZPbRMoefx/q6isGkS226K0fQuY40SaLvMkc6wRI1iH/3DlEK4DMSHaAp34/7ftrFt
+        rA1O258ylnToro8Zwn9uQRrO2lQbnAMgFcnnNfZM4/SEuMRYsrk2OLtv9P1sIBzbCr5esyWnAnSq
+        Njg7wMATTyJP8obQVas7uJI2TtcG50AhNa1lDve5ekBEM+mPkQlpcApAQxas5fcrbPILZupaZ2uD
+        U+xh4u4jflwpyBL00N5DVxuctr96+CAQmMSWnkpIyjaKQmtAXxucAlCRklJc2qGr4uSmsdTl6Kd8
+        iG0XYB8mrqGzccHECdvl6KeAWZNeRvmBs9PkGzRNRd/l6Kd8iLHXwjZYvg/BtCxH+jQFbJejnwIq
+        Zhs03qExupqp2/SXvaoNzgGQXLO4dqqbcyP69XRTp0AfvTQ4Bz7ELlqwYPmmGCsn8DTlIfTRS4Nz
+        oNAbGmpAc788zXh+s+fRelsbnAMfWu7gwubJOiBp6iRXDehqg3MApF7HciiRutWjfPGq2VthoY9e
+        GpwDIKXUA9uHXppzry45cCvEBWeZ9uHkwGNoMr+SAzO2W7NMKxUAIgRbIUaAkd1bGJRDmcf6RYOm
+        e4t99LMUYkKm7CG996poOOXbKgCMvvNqjkKvEscPNWciW4CVCoCjxFaIEWDiFwwUtZGg0d56qqOi
+        EHP0j3MUWmxJhGHRVG1q5EMYSjcBDamAmT3ElJHhRw+7OM5b+WVLffRmBpAq0QzVHWJwPTbqD2tA
+        iH3t5igk883SmC4cciDb61qlv5b66KcUFqWEAtVSdzq2Ri0ZxWypj97OLRltakgykAMeZOyrWepm
+        qY9+jkKcE4hL5sZ84xek1DE1tv3TzgBmS0Z75FHMceGSwfraz1LINjbuJY7rM0sojDxtdbqHaOnB
+        Tel6LExrHE0lviJPW525ehwyxQhn99Tl215A5GmrU8CciELPjk80scGHNSBPW50DtGTbcEtOrgJB
+        Tccn8rTVGeGARruhwWH48pprHEoN6CkDPj1lnLKqHfdY8ESeHrCplzFHP3NTIrtmimIOUEBRvfDS
+        3sNIc+fGgJCozkih49iXlVM7dFONYo5+/qZgbYjmyJKjOSMLThmsr/0chR6jcZbqsYFi+apsM5Vp
+        uxy9eMKaKcRWHIiKaMNdcboRt6nkYZejnwJSp3/qw86qahpqKqkuRz8GLHtmaJqb5skTQU6PaQ7c
+        tl2OfgqI42dASBiKwXoZxGim4WyXox8DgvzjmX2uYxvbaLyqKfTV+FYBSF1wmVPrVjo+r6kA7KN/
+        mAIWHcLJBRw0C2wkG6KbrzXhiGkxvlVQ6ByP2HOOm8tbgfEaMFXjW8Wh0MCmRAwOelrGYINq8mGu
+        xrcKPkRHBxyfvobTLomKZFWNbxWAwWRmbDrlaiZGO7mQdTW+VbJNpgw4xg/x0b+4xBvNphrfKk4Z
+        i5HhlCOV81eFZO1ka7bV+FZ59QLxIV45DDtLj77pmmVXjW8VSybjCPIqkR1yu+BBFlQYYnyrWDLV
+        ioAXQF3qOFHuzWYNtHvF+FYJyB699VyuVXW2NlVAjtX4VgEYeYoWalp8Mqb1UnkNmKrxrWIP6fGG
+        SO+Bw5MxZkm1Mxb7i/Gt4pQtj231LnHoKjbmOUhArCsX41vlXU6ac1KJA0JugXuLBXJifKu4es5q
+        nnhChd7BLSl1c6p/k4tS6kGoAJIymROFTsYPXSsDjhEKGpgzBtQsB33sajh9Q6dsK8D+Ta4a0JMF
+        i1cws2sWGzWcNWD/JtcEMHByi8sGtXwvoFnt7FT/JlcNaPtiPGpr0myavFWc7FT/JlcNCF1HHLfx
+        bLRXD2GYJmD/JtcYUHM1i+UosZEDc0Kbwv5NrhpQ0yQ8MEUChftiFXNoefTYanTCN7nGFFJkyVNe
+        BRtTTaMVouJD3U8xGvMh1nutuqfPVT3FqFlL7HT/Jtf4lLFeFHsrKCri5LRV1wbs3+QaUxh5yZmn
+        XaoYG3m9GrB/k2tMoedn8NC9xZFnfsHLGk73b3KNTxljsDgKPHJlRljwsobT/ZtcYwqxxBICQoEo
+        DKnF2DVgBJWiZwDxsQNcsucqq7SgVRZ6lgrgHB9Sb4XnPimY/7VkkB0OoJICNg4OePeuHs8iCDLJ
+        1ZyP7YyqBWwcgmk+sPhKPO1yScbHGV0L2AGQyvgtD+nVcsb4K+UxzphawMbeAcf6GhBjPHLPS0+q
+        mfFxxtYCdgBEexBfXOOHdOUppzaFrhawAyCN5XIcJS5egXcLChoxXCQFbAeY6WUNfI7RcEehHI7a
+        lNiYoxcClgHRLiS3NsfIBd5S0TcFLPCCFLADhYEZ2xszdPz3lRi6yYepFrADY2N5J6hTrmm3VYlR
+        y2h33Xv0Uz60/MIQ9pxBR2HlBTSvXvce/fSUqZYYZt3z1A6lFzSiuu49+pk9ZD7Eji6MLIXGs901
+        oKkFrLgpXD7d8WGu+kab8tDaWsAOexh4BPPQFyBnVbUpdLWAFVdPdy9Qek7QyJxU85Shj14K2IGx
+        XTfajNuNVV7yzISzoa4YT8OSuS8gcRdSVYnRLODBl7tkxfgAmG0nsSmoa5JaUG/jbKorxtOQC3Dc
+        AJhZcsvhqG370Oa6Ynyg0HL8OmTiR6uXPLuDjTyyYnwAxDpscHiY0qz0gpoljPLIivHU3xTNgxQT
+        zzKtsrdtiY199KJiPPVsgzM/0SXjhyNly3bzhWgsupYV4wOF3exIfKMAH9OQ7m2TbeDo9rOHYni6
+        ID2hpeXLGq+0k2D4aD/Dh4ln90GUuHtsTi8IszjM0d+bGQoV+3rR0KFUT7k1h185ytHbGUCqae/e
+        /nA0U/LN8Vxgo1UV48OSbTchNNAVVEGU8beFg8t1xfjANirRoG3P+ZSczIL+Zdf10Xfp4DxEifmt
+        VpxoCBTK1jDf9FO6PvoxoGMBa6nkF99fjgu6g13XRz8FzDzPIbGNo7Ne0B3suj76KSCNK1Sck3K1
+        XvbNq9f10Y8BLYsvyNVbHiGgl7i33Xv0Y0Ce2A17x1fQubhEYvtQF/DkoZCMfb3uqd8c04JyQRzp
+        Kwt4BgqDphui2bOv371tLznVBTwDH1LY2ZNLhvJQL/Gkuvfop6dMjyrxkBfQz6rVaFABdu/RT0+5
+        Y2gc7wfiS2YemzPGXfce/cweGg43Gx4hYPMiQFMX8AwUBp6W4C3bODJB0wyMwyD7qoAn9+WCmaPD
+        kT86vSSvB2MlqgKegQ8VW1+JJ4UmOS3BtQ/F1wU8AyBaXZjxYd1SxWCb9mFRDlUBz3AoWUX27ClU
+        UL/j0+TDEOsCnuFQNAdzMZjWhQrejBLD7K2qgEfc5e5Jy8Ava8gyfteMioT6ncc+BAXlgjxqL/C7
+        t1V0runRx/qdRwGIQyn7lghD4ZZZy6ESDrF+57EHDFy7CVWmFOmsIkvNVyFcrN95FICoPtHxdhx7
+        MAtmmeIjyyJRKABpPraiwU34yJVZMD0Gq7hForD/xiK+FHUf0QRvHj70ZubRxfqdR3EomkeP4rfc
+        jXrAm0VQOPhHJAoFIBaT4+sQBJjlU7+qfSj1O49iyZHH++M8aXw2WdyUYJp8WL/zKPnQU6IavVH4
+        KJOtbRUQ63ceJYVcI4JRYnTv7JIQQarfeRRskzyfcqKlJxm3aZvEqX7nUQAarhGhbnV4pcQseBUC
+        8+YiUdgDWqpzQLuIkq1m0VtI+HyQSBSKPcRXIFb8cB/Kg5b1VQPW7zwKQGprgkIyqj+MUS9ItmKe
+        SCQK5V02PKDEU3TOyva6ZueCS/U7jwLQdgPEsA7W0OjHvpm3DVi/8yiFQzcYgqf/OjnlsjnO2qX6
+        nUdxyjQmTpGvB1fPy+hcm8L6ncdKp1BSAd/zgVl+UT4m0jyUXL/zKJYcIsW8YqTBilFS+AqgrrWe
+        7l0zxWUxqpvR4lodNJW0yabWenoIEbjEQ3o924d6wTwHfHVlO0shjdiDU+bQafVkTBvQ1VpvoBAz
+        xXdcaonyMTUCkpXWy77WenqIfQVSTopT6lotCjvje/SPc4AY0cRRe2SSVOWCbTWK79E/zAFiZzUS
+        wz6fEoPfXVNJ0Xv0U0B+k2vVDUeFOE4ST6y2Kcy11hOArPU89y/XT6y2Zjv77j36KdtonlEV2b1Q
+        VXlMyyT23Xv0M4ydSQ6GmNj68o0hvTWgqbXecChYt4wehBpctDf7Rn33Hv10D003zppnBUU5BqQp
+        D/FNZKn1BkDM1nZJVpzEYxYUyePcb6n1xJItZ3oUD6fMouq+Ob4Vezml1hN3OSmuZecxcbKMvzm4
+        CVs7pNYbKOxeeEFbu7MTO8DYPpRUa71hD1XqRpxZ7tcTz3b7NtvkWut1gIbrvjS9TQh1X8OLqLb9
+        YB9O05ZaT7ANv7ngeIK3Gsr4XbudBNchtd6wh1RIBoaWGSv6V143RuaSWm9YMg5SwJgPD3sZYg6u
+        PV3Qa9tlb9F57M20xNO0FD+K7eVr769MkseHWSl7WwNG6lhYdYI20MizN/0UrI3ezlAYqPICkluJ
+        nn+q3jVrlnZgR9B5HjBQsh/7R3EMQ16g9byOXfZ2vGTFr4X5RBUZRmZvmxN4vE5d9nZyKJlM4shV
+        VUalBa0QOJqDsrdjQN09JZipONTLXEBsHgqoL8reTig03QCxzEMOhHBwLX8ZKz/PmL0dAzpOB3t+
+        SDcYAdh8chpzvfvV3KFQUbLiOTeOivPeHGSHD8zsN3N7GNiDwhfXIDcgy7SaJZfeuC57O+ZD8uTh
+        7VZ+ZKmqCGpKG+O77O0YEEebgTzkUzbeLGiFwMIkyt7WgJlH0xuqvoc8n7S+mqEqb2KXvZ0Ih2S4
+        45+Eg6uetmyqUbgG0mgfGgDpvQDNw1EDWRBviy/so99MAR2xC8x1MHQoRoqv9k0BhbFdzQFi7TeO
+        picGTz4uePocK0rOs4BYOwe6xLuhOK+/y63n8HBQrjTahwbAwHuIr5Pgy7xxQcU4vn8gjXYByPUN
+        OEIbOwv9oj10tdFuh9q5LtaA4YAoZ/eNOltrQF8b7QOFhqcXOW6JsFY3nvqtAUNttFtRf0haLySa
+        ZmTlQ2m65TxiXH4/z9hc0uG5xMOquEQ44Hv0mzlAnHuAI/ciq9XUiM7VgLk22oclU3snrC5y26dd
+        4gV079FPD4WCaTAHlvWypFC3AXVttNtRhaSid+hRL/tGb0UNaGqjXTTz8tNFlHSFNni14JkJ72xt
+        tFtRjOd52JAflNabT057zNE/TCnUlCAEC5a7hJXs5IrtPfS10S4OJfOT04F6LMSg41cKvL0LtdEu
+        GvMNLzkSoJVlWq/sYayN9mHJpvPkE81bEgLWtGOwWAEvjfbhUFTkmEOgpo1shSfVVlLYR/+nnQF0
+        rtPLlgFFD3gzlem7HD0/D9qfHlRTOXrMJqgh/DfblVlJmy5HPwVUXDOnjeIpRmnBk9O+y9GPAR31
+        K0N1aWcnyua1ZkWQ73L0UwrpHR/fz3gO8pR1a9qq9656BFYAWh356SLNOSrXGKhYH4qvHoHtAQ3P
+        7IM8M7fKyoaX5ihmT7Pu7Qyg7yZNcItirh5xaDK2r2ezxKG3AntU4dkT7g9Qbknjlff1bJYeMPBb
+        SJ7eosEnl0XGpzmoxPt6NosARLkBr9h5CuF7bRsDIirAUM9m6QEjVQ/gGyBka0cj7rJvuhWhns0i
+        ALFcGmayBE4h2SXxQx/q2Sw9YKLwHpYJcqhKznbO7SXXs1l6QG5NvAscWbI0bKOLObStr1DPZhEU
+        Yg84DjjmPpUs4zZtwHo2i+BDzPgAIPNhCotUQKhnswi2wZeh8HVZihLrKpjWVFKhns0ilux42q/n
+        8VxRCW80NYVDqGezCLahR+Ysv0VTjCctKGzr5VDPZhGAFB32PNygejLGvBJZivVsFsE2ietfk+lS
+        mSL21Vb0sZ7N0gFCpJ2nxuB8JSxPSAKwecqxns0i+RCzFZGtL6jucwOgai+5ns0ilowTQrBZiKue
+        k7wpbcB6NougEAdDgF5WXDmuvQj3tZdcz2YRFNKkWqgE4t5bLShszgjCzjTx9kccWsPwHR98mIUq
+        JEWzhmmXduAIS/H2Rw8Y+CXKRAEgNO8Ehc2+AB9T9fZHFG1N8E93meZvdrZOf8q5CZirtz9iEO6t
+        IQqdGgbodIBtFZBU9faHWDJO67hL9KIBpDaHQ3HtERbYKSne/ugBIwXC7zI1C3Vtdj2FTTWaTPX2
+        hwCEjvg7iLhHLhccxhW6eoRFDWirtz96QJiFkZFC3XV0DaFIX9/lGtBVb38IQMguAYVYhw3W16BG
+        fbslB+c6irc/esBMPT6FwswPOqthxJmvJXYNGKq3PwRgLMx7p7vXjbv5DggYXuFDfI/+j9ssY8OS
+        Fc0GwodZtDjl2OTDVD0mIu4yvRMQONznSAv2d7lpH6ZcPSYiGBtzoWUPFRdBWSuyFb6pArKqHhMR
+        gGi+wRPoznJQw4h8StPxybp6TEQsGbvfQDh4z4DipjTfysSns/czNyXgZDw4Zc91iMYIwHbINNvq
+        MRHB2JjuuEtUK4ICNw182OxPwXek97M3BRqH72A2S+T2piEnFdr9KT776jGRDhBS6ujrZR7JDJWS
+        YQBs+ynYRz+9KZDkUrSHmYO6ejA4w3SG5G13ocPspraMl/zOP788ba4d5koTU6n+f7b+Ev818FMA
+        5dvr72PA3elh9ZF/fvl/MkLvEeb0AAA=
+    headers:
+      Age:
+      - '3369'
+      Connection:
+      - close
+      Content-Disposition:
+      - attachment;filename=1vii.pdb.gz
+      Content-Type:
+      - application/gzip
+      Date:
+      - Tue, 20 Jan 2026 20:01:21 GMT
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      Via:
+      - 1.1 e3b74c5ea6f5a7e36b663b57ddd24d84.cloudfront.net (CloudFront)
+      X-Amz-Cf-Id:
+      - Y_-TvVPRQKI7VGMNYMWPCwjH40gnQbUosbtnKskAft6rM1xgXBYysg==
+      X-Amz-Cf-Pop:
+      - IAD61-P13
+      X-Cache:
+      - Hit from cloudfront
+      strict-transport-security:
+      - max-age=16000000; includeSubDomains; preload;
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Connection:
+      - close
+      Host:
+      - files.rcsb.org
+      User-Agent:
+      - Python-urllib/3.13
+    method: GET
+    uri: https://files.rcsb.org/download/1vii.pdb
+  response:
+    body:
+      string: "HEADER    ACTIN BINDING                           15-JAN-97   1VII
+        \             \nTITLE     THERMOSTABLE SUBDOMAIN FROM CHICKEN VILLIN HEADPIECE,
+        NMR, MINIMIZED  \nTITLE    2 AVERAGE STRUCTURE                                                    \nCOMPND
+        \   MOL_ID: 1;                                                            \nCOMPND
+        \  2 MOLECULE: VILLIN;                                                    \nCOMPND
+        \  3 CHAIN: A;                                                            \nCOMPND
+        \  4 FRAGMENT: THERMOSTABLE SUBDOMAIN;                                    \nCOMPND
+        \  5 SYNONYM: HP-36, R42-76;                                              \nCOMPND
+        \  6 ENGINEERED: YES                                                      \nSOURCE
+        \   MOL_ID: 1;                                                            \nSOURCE
+        \  2 ORGANISM_SCIENTIFIC: GALLUS GALLUS;                                  \nSOURCE
+        \  3 ORGANISM_COMMON: CHICKEN;                                            \nSOURCE
+        \  4 ORGANISM_TAXID: 9031;                                                \nSOURCE
+        \  5 ORGAN: INTESTINE;                                                    \nSOURCE
+        \  6 TISSUE: EPITHELIUM;                                                  \nSOURCE
+        \  7 CELL: EPITHELIAL;                                                    \nSOURCE
+        \  8 CELLULAR_LOCATION: MICROVILLI;                                       \nSOURCE
+        \  9 EXPRESSION_SYSTEM: ESCHERICHIA COLI BL21;                            \nSOURCE
+        \ 10 EXPRESSION_SYSTEM_TAXID: 511693;                                     \nSOURCE
+        \ 11 EXPRESSION_SYSTEM_STRAIN: BL21;                                      \nSOURCE
+        \ 12 EXPRESSION_SYSTEM_CELLULAR_LOCATION: CYTOPLASM;                      \nSOURCE
+        \ 13 EXPRESSION_SYSTEM_VECTOR_TYPE: PLASMID;                              \nSOURCE
+        \ 14 EXPRESSION_SYSTEM_PLASMID: PVHP42-76B                                \nKEYWDS
+        \   ACTIN BINDING, 3 HELIX MOTIF, THERMOSTABLE SUBDOMAIN                  \nEXPDTA
+        \   SOLUTION NMR                                                          \nAUTHOR
+        \   C.J.MCKNIGHT                                                          \nREVDAT
+        \  5   22-MAY-24 1VII    1       REMARK                                   \nREVDAT
+        \  4   02-MAR-22 1VII    1       REMARK                                   \nREVDAT
+        \  3   24-FEB-09 1VII    1       VERSN                                    \nREVDAT
+        \  2   01-APR-03 1VII    1       JRNL                                     \nREVDAT
+        \  1   12-AUG-97 1VII    0                                                \nJRNL
+        \       AUTH   C.J.MCKNIGHT,P.T.MATSUDAIRA,P.S.KIM                          \nJRNL
+        \       TITL   NMR STRUCTURE OF THE 35-RESIDUE VILLIN HEADPIECE SUBDOMAIN.
+        \ \nJRNL        REF    NAT.STRUCT.BIOL.              V.   4   180 1997              \nJRNL
+        \       REFN                   ISSN 1072-8368                               \nJRNL
+        \       PMID   9164455                                                      \nJRNL
+        \       DOI    10.1038/NSB0397-180                                          \nREMARK
+        \  1                                                                      \nREMARK
+        \  1 REFERENCE 1                                                          \nREMARK
+        \  1  AUTH   C.J.MCKNIGHT,D.S.DOERING,P.T.MATSUDAIRA,P.S.KIM              \nREMARK
+        \  1  TITL   A THERMOSTABLE 35-RESIDUE SUBDOMAIN WITHIN VILLIN HEADPIECE  \nREMARK
+        \  1  REF    J.MOL.BIOL.                   V. 260   126 1996              \nREMARK
+        \  1  REFN                   ISSN 0022-2836                               \nREMARK
+        \  2                                                                      \nREMARK
+        \  2 RESOLUTION. NOT APPLICABLE.                                          \nREMARK
+        \  3                                                                      \nREMARK
+        \  3 REFINEMENT.                                                          \nREMARK
+        \  3   PROGRAM     : X-PLOR                                               \nREMARK
+        \  3   AUTHORS     : BRUNGER                                              \nREMARK
+        \  3                                                                      \nREMARK
+        \  3  OTHER REFINEMENT REMARKS: THE X-PLOR (R6)1/6 NOE POTENTIAL WAS      \nREMARK
+        \  3  USED FOR NOE'S INVOLVING NON-STEREOSPECIFICALLY ASSIGNED METHYL,    \nREMARK
+        \  3  METHYLENE, AND AROMATIC PROTONS. NO ATTRACTIVE POTENTIALS WERE      \nREMARK
+        \  3  USED IN CALCULATING THE STRUCTURES. THE VAN DER WAALS CUTOFF        \nREMARK
+        \  3  USED FOR THE X-PLOR REPEL FUNCTION WAS 0.75 ANGSTROMS. AFTER        \nREMARK
+        \  3  DISTANCE GEOMETRY AND REGULARIZATION, EACH STRUCTURE WAS            \nREMARK
+        \  3  SUBJECTED TO ONE ROUND OF SIMULATED ANNEALING FROM 2000K TO 100K    \nREMARK
+        \  3  OVER 2000 STEPS. THIS IS THE AVERAGE OF 29 STRUCTURES MINIMIZED     \nREMARK
+        \  3  USING ONLY REPULSIVE POTENTIALS.                                    \nREMARK
+        \  4                                                                      \nREMARK
+        \  4 1VII COMPLIES WITH FORMAT V. 3.30, 13-JUL-11                         \nREMARK
+        100                                                                      \nREMARK
+        100 THIS ENTRY HAS BEEN PROCESSED BY BNL.                                \nREMARK
+        100 THE DEPOSITION ID IS D_1000177045.                                   \nREMARK
+        210                                                                      \nREMARK
+        210 EXPERIMENTAL DETAILS                                                 \nREMARK
+        210  EXPERIMENT TYPE                : NMR                                \nREMARK
+        210  TEMPERATURE           (KELVIN) : 303                                \nREMARK
+        210  PH                             : 3.7                                \nREMARK
+        210  IONIC STRENGTH                 : NULL                               \nREMARK
+        210  PRESSURE                       : NULL                               \nREMARK
+        210  SAMPLE CONTENTS                : NULL                               \nREMARK
+        210                                                                      \nREMARK
+        210  NMR EXPERIMENTS CONDUCTED      : NOESY; CLEANTOCSY; DQFCOSY;        \nREMARK
+        210                                   HSQC; ECOSY; HMQCJ                 \nREMARK
+        210  SPECTROMETER FIELD STRENGTH    : 500 MHZ                            \nREMARK
+        210  SPECTROMETER MODEL             : AMX500                             \nREMARK
+        210  SPECTROMETER MANUFACTURER      : BRUKER                             \nREMARK
+        210                                                                      \nREMARK
+        210  STRUCTURE DETERMINATION.                                            \nREMARK
+        210   SOFTWARE USED                 : X-PLOR                             \nREMARK
+        210   METHOD USED                   : DISTANCE GEOMETRY SIMULATED        \nREMARK
+        210                                   ANNEALING                          \nREMARK
+        210                                                                      \nREMARK
+        210 CONFORMERS, NUMBER CALCULATED   : 100                                \nREMARK
+        210 CONFORMERS, NUMBER SUBMITTED    : 1                                  \nREMARK
+        210 CONFORMERS, SELECTION CRITERIA  : NO NOE VIOLATIONS > 0.4            \nREMARK
+        210                                   ANGSTROMS, NO ANGLE VIOLATION >    \nREMARK
+        210                                   5 DEG                              \nREMARK
+        210                                                                      \nREMARK
+        210 BEST REPRESENTATIVE CONFORMER IN THIS ENSEMBLE : NULL                \nREMARK
+        210                                                                      \nREMARK
+        210 REMARK: NULL                                                         \nREMARK
+        215                                                                      \nREMARK
+        215 NMR STUDY                                                            \nREMARK
+        215 THE COORDINATES IN THIS ENTRY WERE GENERATED FROM SOLUTION           \nREMARK
+        215 NMR DATA.  PROTEIN DATA BANK CONVENTIONS REQUIRE THAT                \nREMARK
+        215 CRYST1 AND SCALE RECORDS BE INCLUDED, BUT THE VALUES ON              \nREMARK
+        215 THESE RECORDS ARE MEANINGLESS.                                       \nREMARK
+        300                                                                      \nREMARK
+        300 BIOMOLECULE: 1                                                       \nREMARK
+        300 SEE REMARK 350 FOR THE AUTHOR PROVIDED AND/OR PROGRAM                \nREMARK
+        300 GENERATED ASSEMBLY INFORMATION FOR THE STRUCTURE IN                  \nREMARK
+        300 THIS ENTRY. THE REMARK MAY ALSO PROVIDE INFORMATION ON               \nREMARK
+        300 BURIED SURFACE AREA.                                                 \nREMARK
+        350                                                                      \nREMARK
+        350 COORDINATES FOR A COMPLETE MULTIMER REPRESENTING THE KNOWN           \nREMARK
+        350 BIOLOGICALLY SIGNIFICANT OLIGOMERIZATION STATE OF THE                \nREMARK
+        350 MOLECULE CAN BE GENERATED BY APPLYING BIOMT TRANSFORMATIONS          \nREMARK
+        350 GIVEN BELOW.  BOTH NON-CRYSTALLOGRAPHIC AND                          \nREMARK
+        350 CRYSTALLOGRAPHIC OPERATIONS ARE GIVEN.                               \nREMARK
+        350                                                                      \nREMARK
+        350 BIOMOLECULE: 1                                                       \nREMARK
+        350 AUTHOR DETERMINED BIOLOGICAL UNIT: MONOMERIC                         \nREMARK
+        350 APPLY THE FOLLOWING TO CHAINS: A                                     \nREMARK
+        350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000            \nREMARK
+        350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000            \nREMARK
+        350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000            \nREMARK
+        500                                                                      \nREMARK
+        500 GEOMETRY AND STEREOCHEMISTRY                                         \nREMARK
+        500 SUBTOPIC: CLOSE CONTACTS                                             \nREMARK
+        500                                                                      \nREMARK
+        500 THE FOLLOWING ATOMS ARE IN CLOSE CONTACT.                            \nREMARK
+        500                                                                      \nREMARK
+        500  ATM1  RES C  SSEQI   ATM2  RES C  SSEQI           DISTANCE          \nREMARK
+        500   O    LYS A    70     O    LYS A    73              2.10            \nREMARK
+        500                                                                      \nREMARK
+        500 REMARK: NULL                                                         \nREMARK
+        500                                                                      \nREMARK
+        500 GEOMETRY AND STEREOCHEMISTRY                                         \nREMARK
+        500 SUBTOPIC: TORSION ANGLES                                             \nREMARK
+        500                                                                      \nREMARK
+        500 TORSION ANGLES OUTSIDE THE EXPECTED RAMACHANDRAN REGIONS:            \nREMARK
+        500 (M=MODEL NUMBER; RES=RESIDUE NAME; C=CHAIN IDENTIFIER;               \nREMARK
+        500 SSEQ=SEQUENCE NUMBER; I=INSERTION CODE).                             \nREMARK
+        500                                                                      \nREMARK
+        500 STANDARD TABLE:                                                      \nREMARK
+        500 FORMAT:(10X,I3,1X,A3,1X,A1,I4,A1,4X,F7.2,3X,F7.2)                    \nREMARK
+        500                                                                      \nREMARK
+        500 EXPECTED VALUES: GJ KLEYWEGT AND TA JONES (1996). PHI/PSI-           \nREMARK
+        500 CHOLOGY: RAMACHANDRAN REVISITED. STRUCTURE 4, 1395 - 1400            \nREMARK
+        500                                                                      \nREMARK
+        500  M RES CSSEQI        PSI       PHI                                   \nREMARK
+        500    ASP A  44      -75.64    -33.48                                   \nREMARK
+        500    ALA A  49       39.36    -79.38                                   \nREMARK
+        500    VAL A  50      -78.92   -140.77                                   \nREMARK
+        500    PHE A  51      -72.80    -79.65                                   \nREMARK
+        500    MET A  53     -121.66    -90.62                                   \nREMARK
+        500    GLN A  66      -77.13    -68.88                                   \nREMARK
+        500    GLN A  67      -36.61    -37.79                                   \nREMARK
+        500    ASN A  68      -73.49    -67.77                                   \nREMARK
+        500    LYS A  70      -80.30    -71.10                                   \nREMARK
+        500                                                                      \nREMARK
+        500 REMARK: NULL                                                         \nREMARK
+        800                                                                      \nREMARK
+        800 SITE                                                                 \nREMARK
+        800 SITE_IDENTIFIER: ABR                                                 \nREMARK
+        800 EVIDENCE_CODE: UNKNOWN                                               \nREMARK
+        800 SITE_DESCRIPTION: RESIDUES IMPLICATED IN ACTIN BINDING.              \nDBREF
+        \ 1VII A   42    76  UNP    P02640   VILI_CHICK     792    826             \nSEQRES
+        \  1 A   36  MET LEU SER ASP GLU ASP PHE LYS ALA VAL PHE GLY MET          \nSEQRES
+        \  2 A   36  THR ARG SER ALA PHE ALA ASN LEU PRO LEU TRP LYS GLN          \nSEQRES
+        \  3 A   36  GLN ASN LEU LYS LYS GLU LYS GLY LEU PHE                      \nHELIX
+        \   1   1 ASP A   44  LYS A   48  1                                   5    \nHELIX
+        \   2   2 ARG A   55  PHE A   58  1                                   4    \nHELIX
+        \   3   3 LEU A   63  GLU A   72  1                                  10    \nSITE
+        \    1 ABR  7 LYS A  65  LYS A  70  LYS A  71  GLU A  72                    \nSITE
+        \    2 ABR  7 LYS A  73  LEU A  75  PHE A  76                               \nCRYST1
+        \   1.000    1.000    1.000  90.00  90.00  90.00 P 1           1          \nORIGX1
+        \     1.000000  0.000000  0.000000        0.00000                         \nORIGX2
+        \     0.000000  1.000000  0.000000        0.00000                         \nORIGX3
+        \     0.000000  0.000000  1.000000        0.00000                         \nSCALE1
+        \     1.000000  0.000000  0.000000        0.00000                         \nSCALE2
+        \     0.000000  1.000000  0.000000        0.00000                         \nSCALE3
+        \     0.000000  0.000000  1.000000        0.00000                         \nATOM
+        \     1  N   MET A  41       1.177 -10.035  -3.493  1.00  2.04           N
+        \ \nATOM      2  CA  MET A  41       0.292  -8.839  -3.377  1.00  1.55           C
+        \ \nATOM      3  C   MET A  41      -0.488  -8.912  -2.063  1.00  1.22           C
+        \ \nATOM      4  O   MET A  41      -1.039  -9.937  -1.709  1.00  1.32           O
+        \ \nATOM      5  CB  MET A  41      -0.674  -8.793  -4.565  1.00  1.98           C
+        \ \nATOM      6  CG  MET A  41      -0.091  -7.889  -5.657  1.00  2.27           C
+        \ \nATOM      7  SD  MET A  41      -0.153  -8.747  -7.255  1.00  3.04           S
+        \ \nATOM      8  CE  MET A  41      -0.971  -7.432  -8.193  1.00  3.78           C
+        \ \nATOM      9  H1  MET A  41       0.835 -10.784  -2.856  1.00  2.30           H
+        \ \nATOM     10  H2  MET A  41       1.166 -10.381  -4.475  1.00  2.37           H
+        \ \nATOM     11  H3  MET A  41       2.149  -9.775  -3.227  1.00  2.53           H
+        \ \nATOM     12  HA  MET A  41       0.900  -7.946  -3.376  1.00  1.67           H
+        \ \nATOM     13  HB2 MET A  41      -0.814  -9.790  -4.956  1.00  2.45           H
+        \ \nATOM     14  HB3 MET A  41      -1.623  -8.395  -4.242  1.00  2.38           H
+        \ \nATOM     15  HG2 MET A  41      -0.664  -6.978  -5.716  1.00  2.70           H
+        \ \nATOM     16  HG3 MET A  41       0.934  -7.651  -5.412  1.00  2.55           H
+        \ \nATOM     17  HE1 MET A  41      -0.619  -6.471  -7.850  1.00  4.27           H
+        \ \nATOM     18  HE2 MET A  41      -0.742  -7.544  -9.243  1.00  4.03           H
+        \ \nATOM     19  HE3 MET A  41      -2.038  -7.498  -8.043  1.00  4.05           H
+        \ \nATOM     20  N   LEU A  42      -0.523  -7.832  -1.331  1.00  1.00           N
+        \ \nATOM     21  CA  LEU A  42      -1.241  -7.824  -0.028  1.00  0.81           C
+        \ \nATOM     22  C   LEU A  42      -2.736  -8.045  -0.241  1.00  0.80           C
+        \ \nATOM     23  O   LEU A  42      -3.467  -7.134  -0.574  1.00  0.93           O
+        \ \nATOM     24  CB  LEU A  42      -1.019  -6.479   0.660  1.00  0.81           C
+        \ \nATOM     25  CG  LEU A  42      -0.044  -6.671   1.819  1.00  0.91           C
+        \ \nATOM     26  CD1 LEU A  42       1.375  -6.825   1.270  1.00  1.27           C
+        \ \nATOM     27  CD2 LEU A  42      -0.107  -5.458   2.749  1.00  1.25           C
+        \ \nATOM     28  H   LEU A  42      -0.060  -7.024  -1.632  1.00  1.12           H
+        \ \nATOM     29  HA  LEU A  42      -0.852  -8.611   0.598  1.00  0.97           H
+        \ \nATOM     30  HB2 LEU A  42      -0.605  -5.774  -0.049  1.00  1.24           H
+        \ \nATOM     31  HB3 LEU A  42      -1.957  -6.102   1.037  1.00  1.12           H
+        \ \nATOM     32  HG  LEU A  42      -0.315  -7.561   2.366  1.00  1.26           H
+        \ \nATOM     33 HD11 LEU A  42       1.380  -7.567   0.487  1.00  1.77           H
+        \ \nATOM     34 HD12 LEU A  42       1.712  -5.881   0.872  1.00  1.84           H
+        \ \nATOM     35 HD13 LEU A  42       2.036  -7.137   2.067  1.00  1.44           H
+        \ \nATOM     36 HD21 LEU A  42      -0.826  -4.747   2.369  1.00  1.74           H
+        \ \nATOM     37 HD22 LEU A  42      -0.404  -5.776   3.736  1.00  1.73           H
+        \ \nATOM     38 HD23 LEU A  42       0.865  -4.994   2.798  1.00  1.71           H
+        \ \nATOM     39  N   SER A  43      -3.200  -9.245  -0.031  1.00  0.90           N
+        \ \nATOM     40  CA  SER A  43      -4.651  -9.514  -0.199  1.00  1.03           C
+        \ \nATOM     41  C   SER A  43      -5.409  -8.677   0.829  1.00  0.94           C
+        \ \nATOM     42  O   SER A  43      -4.872  -8.326   1.858  1.00  1.10           O
+        \ \nATOM     43  CB  SER A  43      -4.927 -10.999   0.040  1.00  1.27           C
+        \ \nATOM     44  OG  SER A  43      -3.870 -11.553   0.812  1.00  1.93           O
+        \ \nATOM     45  H   SER A  43      -2.597  -9.963   0.253  1.00  1.02           H
+        \ \nATOM     46  HA  SER A  43      -4.963  -9.238  -1.196  1.00  1.12           H
+        \ \nATOM     47  HB2 SER A  43      -5.860 -11.114   0.575  1.00  1.57           H
+        \ \nATOM     48  HB3 SER A  43      -4.994 -11.511  -0.912  1.00  1.74           H
+        \ \nATOM     49  HG  SER A  43      -4.087 -12.468   1.000  1.00  2.35           H
+        \ \nATOM     50  N   ASP A  44      -6.640  -8.346   0.567  1.00  0.84           N
+        \ \nATOM     51  CA  ASP A  44      -7.413  -7.518   1.539  1.00  0.80           C
+        \ \nATOM     52  C   ASP A  44      -6.988  -7.854   2.975  1.00  0.77           C
+        \ \nATOM     53  O   ASP A  44      -6.282  -7.101   3.614  1.00  0.69           O
+        \ \nATOM     54  CB  ASP A  44      -8.906  -7.804   1.367  1.00  0.96           C
+        \ \nATOM     55  CG  ASP A  44      -9.451  -6.972   0.204  1.00  1.54           C
+        \ \nATOM     56  OD1 ASP A  44      -8.745  -6.836  -0.781  1.00  2.19           O
+        \ \nATOM     57  OD2 ASP A  44     -10.564  -6.485   0.319  1.00  2.25           O
+        \ \nATOM     58  H   ASP A  44      -7.056  -8.631  -0.273  1.00  0.90           H
+        \ \nATOM     59  HA  ASP A  44      -7.224  -6.472   1.347  1.00  0.74           H
+        \ \nATOM     60  HB2 ASP A  44      -9.051  -8.854   1.157  1.00  1.47           H
+        \ \nATOM     61  HB3 ASP A  44      -9.432  -7.542   2.273  1.00  1.34           H
+        \ \nATOM     62  N   GLU A  45      -7.424  -8.973   3.486  1.00  0.88           N
+        \ \nATOM     63  CA  GLU A  45      -7.065  -9.365   4.887  1.00  0.90           C
+        \ \nATOM     64  C   GLU A  45      -5.631  -8.936   5.230  1.00  0.80           C
+        \ \nATOM     65  O   GLU A  45      -5.414  -8.125   6.108  1.00  0.74           O
+        \ \nATOM     66  CB  GLU A  45      -7.175 -10.885   5.044  1.00  1.08           C
+        \ \nATOM     67  CG  GLU A  45      -8.599 -11.341   4.738  1.00  1.52           C
+        \ \nATOM     68  CD  GLU A  45      -9.041 -12.354   5.797  1.00  2.05           C
+        \ \nATOM     69  OE1 GLU A  45      -8.236 -12.676   6.657  1.00  2.49           O
+        \ \nATOM     70  OE2 GLU A  45     -10.176 -12.792   5.728  1.00  2.71           O
+        \ \nATOM     71  H   GLU A  45      -7.999  -9.558   2.951  1.00  0.97           H
+        \ \nATOM     72  HA  GLU A  45      -7.748  -8.887   5.572  1.00  0.91           H
+        \ \nATOM     73  HB2 GLU A  45      -6.496 -11.366   4.361  1.00  1.60           H
+        \ \nATOM     74  HB3 GLU A  45      -6.921 -11.163   6.054  1.00  1.43           H
+        \ \nATOM     75  HG2 GLU A  45      -9.265 -10.488   4.746  1.00  2.03           H
+        \ \nATOM     76  HG3 GLU A  45      -8.619 -11.809   3.766  1.00  2.14           H
+        \ \nATOM     77  N   ASP A  46      -4.648  -9.484   4.564  1.00  0.81           N
+        \ \nATOM     78  CA  ASP A  46      -3.236  -9.113   4.886  1.00  0.79           C
+        \ \nATOM     79  C   ASP A  46      -3.114  -7.591   4.981  1.00  0.62           C
+        \ \nATOM     80  O   ASP A  46      -2.715  -7.058   5.995  1.00  0.61           O
+        \ \nATOM     81  CB  ASP A  46      -2.308  -9.640   3.788  1.00  0.85           C
+        \ \nATOM     82  CG  ASP A  46      -1.888 -11.074   4.117  1.00  1.05           C
+        \ \nATOM     83  OD1 ASP A  46      -2.768 -11.908   4.268  1.00  1.81           O
+        \ \nATOM     84  OD2 ASP A  46      -0.696 -11.315   4.213  1.00  1.26           O
+        \ \nATOM     85  H   ASP A  46      -4.835 -10.148   3.867  1.00  0.88           H
+        \ \nATOM     86  HA  ASP A  46      -2.956  -9.549   5.836  1.00  0.88           H
+        \ \nATOM     87  HB2 ASP A  46      -2.828  -9.626   2.841  1.00  0.83           H
+        \ \nATOM     88  HB3 ASP A  46      -1.430  -9.016   3.725  1.00  0.82           H
+        \ \nATOM     89  N   PHE A  47      -3.473  -6.885   3.946  1.00  0.55           N
+        \ \nATOM     90  CA  PHE A  47      -3.401  -5.399   4.003  1.00  0.46           C
+        \ \nATOM     91  C   PHE A  47      -3.924  -4.947   5.350  1.00  0.45           C
+        \ \nATOM     92  O   PHE A  47      -3.261  -4.261   6.100  1.00  0.48           O
+        \ \nATOM     93  CB  PHE A  47      -4.308  -4.823   2.927  1.00  0.49           C
+        \ \nATOM     94  CG  PHE A  47      -3.956  -3.376   2.699  1.00  0.51           C
+        \ \nATOM     95  CD1 PHE A  47      -2.968  -3.019   1.772  1.00  1.29           C
+        \ \nATOM     96  CD2 PHE A  47      -4.615  -2.388   3.437  1.00  1.23           C
+        \ \nATOM     97  CE1 PHE A  47      -2.647  -1.670   1.587  1.00  1.38           C
+        \ \nATOM     98  CE2 PHE A  47      -4.289  -1.044   3.250  1.00  1.24           C
+        \ \nATOM     99  CZ  PHE A  47      -3.305  -0.687   2.327  1.00  0.75           C
+        \ \nATOM    100  H   PHE A  47      -3.809  -7.328   3.142  1.00  0.60           H
+        \ \nATOM    101  HA  PHE A  47      -2.387  -5.060   3.864  1.00  0.49           H
+        \ \nATOM    102  HB2 PHE A  47      -4.188  -5.384   2.023  1.00  0.54           H
+        \ \nATOM    103  HB3 PHE A  47      -5.336  -4.890   3.255  1.00  0.54           H
+        \ \nATOM    104  HD1 PHE A  47      -2.459  -3.779   1.200  1.00  2.09           H
+        \ \nATOM    105  HD2 PHE A  47      -5.378  -2.663   4.149  1.00  2.06           H
+        \ \nATOM    106  HE1 PHE A  47      -1.883  -1.385   0.882  1.00  2.22           H
+        \ \nATOM    107  HE2 PHE A  47      -4.795  -0.282   3.820  1.00  2.03           H
+        \ \nATOM    108  HZ  PHE A  47      -3.051   0.345   2.185  1.00  0.88           H
+        \ \nATOM    109  N   LYS A  48      -5.125  -5.331   5.634  1.00  0.52           N
+        \ \nATOM    110  CA  LYS A  48      -5.767  -4.949   6.925  1.00  0.61           C
+        \ \nATOM    111  C   LYS A  48      -4.723  -4.927   8.050  1.00  0.59           C
+        \ \nATOM    112  O   LYS A  48      -4.461  -3.897   8.642  1.00  0.61           O
+        \ \nATOM    113  CB  LYS A  48      -6.869  -5.956   7.271  1.00  0.80           C
+        \ \nATOM    114  CG  LYS A  48      -8.076  -5.200   7.828  1.00  1.32           C
+        \ \nATOM    115  CD  LYS A  48      -9.377  -5.878   7.381  1.00  1.99           C
+        \ \nATOM    116  CE  LYS A  48     -10.520  -4.860   7.425  1.00  2.92           C
+        \ \nATOM    117  NZ  LYS A  48     -11.330  -5.058   8.661  1.00  3.63           N
+        \ \nATOM    118  H   LYS A  48      -5.617  -5.872   4.976  1.00  0.58           H
+        \ \nATOM    119  HA  LYS A  48      -6.203  -3.965   6.825  1.00  0.64           H
+        \ \nATOM    120  HB2 LYS A  48      -7.157  -6.498   6.380  1.00  1.09           H
+        \ \nATOM    121  HB3 LYS A  48      -6.504  -6.648   8.013  1.00  1.01           H
+        \ \nATOM    122  HG2 LYS A  48      -8.027  -5.191   8.906  1.00  1.85           H
+        \ \nATOM    123  HG3 LYS A  48      -8.060  -4.184   7.463  1.00  1.76           H
+        \ \nATOM    124  HD2 LYS A  48      -9.265  -6.249   6.374  1.00  2.45           H
+        \ \nATOM    125  HD3 LYS A  48      -9.602  -6.702   8.042  1.00  2.28           H
+        \ \nATOM    126  HE2 LYS A  48     -10.113  -3.861   7.424  1.00  3.38           H
+        \ \nATOM    127  HE3 LYS A  48     -11.150  -4.992   6.559  1.00  3.26           H
+        \ \nATOM    128  HZ1 LYS A  48     -10.779  -5.601   9.356  1.00  3.89           H
+        \ \nATOM    129  HZ2 LYS A  48     -11.577  -4.133   9.064  1.00  3.98           H
+        \ \nATOM    130  HZ3 LYS A  48     -12.198  -5.580   8.429  1.00  4.03           H
+        \ \nATOM    131  N   ALA A  49      -4.130  -6.052   8.358  1.00  0.64           N
+        \ \nATOM    132  CA  ALA A  49      -3.109  -6.090   9.450  1.00  0.75           C
+        \ \nATOM    133  C   ALA A  49      -1.767  -5.565   8.932  1.00  0.79           C
+        \ \nATOM    134  O   ALA A  49      -0.720  -6.085   9.262  1.00  1.31           O
+        \ \nATOM    135  CB  ALA A  49      -2.931  -7.534   9.928  1.00  0.91           C
+        \ \nATOM    136  H   ALA A  49      -4.357  -6.875   7.874  1.00  0.67           H
+        \ \nATOM    137  HA  ALA A  49      -3.441  -5.477  10.275  1.00  0.77           H
+        \ \nATOM    138  HB1 ALA A  49      -3.828  -8.095   9.717  1.00  1.30           H
+        \ \nATOM    139  HB2 ALA A  49      -2.096  -7.983   9.410  1.00  1.36           H
+        \ \nATOM    140  HB3 ALA A  49      -2.742  -7.541  10.992  1.00  1.47           H
+        \ \nATOM    141  N   VAL A  50      -1.787  -4.543   8.123  1.00  0.58           N
+        \ \nATOM    142  CA  VAL A  50      -0.514  -3.998   7.587  1.00  0.65           C
+        \ \nATOM    143  C   VAL A  50      -0.582  -2.467   7.545  1.00  0.63           C
+        \ \nATOM    144  O   VAL A  50      -0.049  -1.793   8.404  1.00  0.74           O
+        \ \nATOM    145  CB  VAL A  50      -0.291  -4.552   6.183  1.00  0.71           C
+        \ \nATOM    146  CG1 VAL A  50       0.935  -3.888   5.559  1.00  0.78           C
+        \ \nATOM    147  CG2 VAL A  50      -0.064  -6.066   6.275  1.00  0.87           C
+        \ \nATOM    148  H   VAL A  50      -2.636  -4.140   7.863  1.00  0.79           H
+        \ \nATOM    149  HA  VAL A  50       0.303  -4.301   8.225  1.00  0.77           H
+        \ \nATOM    150  HB  VAL A  50      -1.160  -4.352   5.575  1.00  0.72           H
+        \ \nATOM    151 HG11 VAL A  50       1.011  -2.867   5.904  1.00  1.32           H
+        \ \nATOM    152 HG12 VAL A  50       1.818  -4.433   5.850  1.00  1.30           H
+        \ \nATOM    153 HG13 VAL A  50       0.843  -3.900   4.483  1.00  1.26           H
+        \ \nATOM    154 HG21 VAL A  50      -0.725  -6.484   7.019  1.00  1.31           H
+        \ \nATOM    155 HG22 VAL A  50      -0.266  -6.521   5.318  1.00  1.30           H
+        \ \nATOM    156 HG23 VAL A  50       0.961  -6.258   6.557  1.00  1.48           H
+        \ \nATOM    157  N   PHE A  51      -1.236  -1.910   6.562  1.00  0.59           N
+        \ \nATOM    158  CA  PHE A  51      -1.330  -0.424   6.489  1.00  0.68           C
+        \ \nATOM    159  C   PHE A  51      -2.411   0.061   7.451  1.00  0.73           C
+        \ \nATOM    160  O   PHE A  51      -2.139   0.642   8.482  1.00  0.86           O
+        \ \nATOM    161  CB  PHE A  51      -1.736   0.011   5.084  1.00  0.71           C
+        \ \nATOM    162  CG  PHE A  51      -0.689  -0.385   4.079  1.00  0.63           C
+        \ \nATOM    163  CD1 PHE A  51       0.391   0.463   3.821  1.00  1.30           C
+        \ \nATOM    164  CD2 PHE A  51      -0.820  -1.585   3.379  1.00  1.31           C
+        \ \nATOM    165  CE1 PHE A  51       1.344   0.107   2.863  1.00  1.37           C
+        \ \nATOM    166  CE2 PHE A  51       0.126  -1.940   2.415  1.00  1.26           C
+        \ \nATOM    167  CZ  PHE A  51       1.210  -1.095   2.156  1.00  0.68           C
+        \ \nATOM    168  H   PHE A  51      -1.665  -2.465   5.879  1.00  0.57           H
+        \ \nATOM    169  HA  PHE A  51      -0.377   0.019   6.744  1.00  0.79           H
+        \ \nATOM    170  HB2 PHE A  51      -2.673  -0.458   4.823  1.00  0.79           H
+        \ \nATOM    171  HB3 PHE A  51      -1.857   1.085   5.066  1.00  0.81           H
+        \ \nATOM    172  HD1 PHE A  51       0.493   1.389   4.366  1.00  2.09           H
+        \ \nATOM    173  HD2 PHE A  51      -1.655  -2.239   3.582  1.00  2.16           H
+        \ \nATOM    174  HE1 PHE A  51       2.179   0.760   2.667  1.00  2.22           H
+        \ \nATOM    175  HE2 PHE A  51       0.021  -2.866   1.872  1.00  2.06           H
+        \ \nATOM    176  HZ  PHE A  51       1.937  -1.368   1.405  1.00  0.75           H
+        \ \nATOM    177  N   GLY A  52      -3.645  -0.171   7.096  1.00  0.68           N
+        \ \nATOM    178  CA  GLY A  52      -4.783   0.272   7.945  1.00  0.80           C
+        \ \nATOM    179  C   GLY A  52      -6.003   0.457   7.041  1.00  0.79           C
+        \ \nATOM    180  O   GLY A  52      -7.047  -0.126   7.258  1.00  0.83           O
+        \ \nATOM    181  H   GLY A  52      -3.824  -0.633   6.251  1.00  0.61           H
+        \ \nATOM    182  HA2 GLY A  52      -4.991  -0.480   8.696  1.00  0.84           H
+        \ \nATOM    183  HA3 GLY A  52      -4.541   1.210   8.419  1.00  0.92           H
+        \ \nATOM    184  N   MET A  53      -5.867   1.254   6.016  1.00  0.77           N
+        \ \nATOM    185  CA  MET A  53      -7.005   1.470   5.080  1.00  0.80           C
+        \ \nATOM    186  C   MET A  53      -6.922   0.435   3.952  1.00  0.72           C
+        \ \nATOM    187  O   MET A  53      -6.919  -0.756   4.193  1.00  0.82           O
+        \ \nATOM    188  CB  MET A  53      -6.923   2.886   4.503  1.00  0.88           C
+        \ \nATOM    189  CG  MET A  53      -6.831   3.890   5.656  1.00  1.09           C
+        \ \nATOM    190  SD  MET A  53      -7.798   5.365   5.255  1.00  1.51           S
+        \ \nATOM    191  CE  MET A  53      -6.600   6.587   5.842  1.00  2.02           C
+        \ \nATOM    192  H   MET A  53      -5.011   1.702   5.855  1.00  0.77           H
+        \ \nATOM    193  HA  MET A  53      -7.938   1.349   5.611  1.00  0.86           H
+        \ \nATOM    194  HB2 MET A  53      -6.046   2.971   3.870  1.00  0.74           H
+        \ \nATOM    195  HB3 MET A  53      -7.811   3.090   3.922  1.00  1.00           H
+        \ \nATOM    196  HG2 MET A  53      -7.221   3.439   6.557  1.00  1.39           H
+        \ \nATOM    197  HG3 MET A  53      -5.798   4.166   5.813  1.00  1.35           H
+        \ \nATOM    198  HE1 MET A  53      -5.598   6.224   5.656  1.00  2.35           H
+        \ \nATOM    199  HE2 MET A  53      -6.751   7.523   5.321  1.00  2.64           H
+        \ \nATOM    200  HE3 MET A  53      -6.732   6.744   6.899  1.00  2.38           H
+        \ \nATOM    201  N   THR A  54      -6.838   0.873   2.724  1.00  0.68           N
+        \ \nATOM    202  CA  THR A  54      -6.738  -0.094   1.592  1.00  0.67           C
+        \ \nATOM    203  C   THR A  54      -5.503   0.244   0.768  1.00  0.63           C
+        \ \nATOM    204  O   THR A  54      -4.976   1.331   0.860  1.00  0.76           O
+        \ \nATOM    205  CB  THR A  54      -7.985   0.011   0.708  1.00  0.81           C
+        \ \nATOM    206  OG1 THR A  54      -8.899   0.934   1.280  1.00  1.27           O
+        \ \nATOM    207  CG2 THR A  54      -8.652  -1.360   0.594  1.00  1.20           C
+        \ \nATOM    208  H   THR A  54      -6.829   1.835   2.545  1.00  0.75           H
+        \ \nATOM    209  HA  THR A  54      -6.645  -1.090   1.975  1.00  0.66           H
+        \ \nATOM    210  HB  THR A  54      -7.700   0.349  -0.276  1.00  1.18           H
+        \ \nATOM    211  HG1 THR A  54      -9.786   0.680   1.011  1.00  1.69           H
+        \ \nATOM    212 HG21 THR A  54      -8.215  -2.034   1.316  1.00  1.64           H
+        \ \nATOM    213 HG22 THR A  54      -9.709  -1.261   0.789  1.00  1.58           H
+        \ \nATOM    214 HG23 THR A  54      -8.505  -1.752  -0.400  1.00  1.85           H
+        \ \nATOM    215  N   ARG A  55      -5.033  -0.659  -0.047  1.00  0.66           N
+        \ \nATOM    216  CA  ARG A  55      -3.852  -0.344  -0.865  1.00  0.65           C
+        \ \nATOM    217  C   ARG A  55      -4.267   0.735  -1.866  1.00  0.70           C
+        \ \nATOM    218  O   ARG A  55      -3.572   1.710  -2.070  1.00  0.69           O
+        \ \nATOM    219  CB  ARG A  55      -3.395  -1.613  -1.580  1.00  0.74           C
+        \ \nATOM    220  CG  ARG A  55      -1.950  -1.930  -1.173  1.00  0.67           C
+        \ \nATOM    221  CD  ARG A  55      -1.181  -2.510  -2.362  1.00  0.96           C
+        \ \nATOM    222  NE  ARG A  55      -2.127  -3.218  -3.281  1.00  1.00           N
+        \ \nATOM    223  CZ  ARG A  55      -2.969  -4.110  -2.831  1.00  0.93           C
+        \ \nATOM    224  NH1 ARG A  55      -2.873  -4.557  -1.609  1.00  0.94           N
+        \ \nATOM    225  NH2 ARG A  55      -3.874  -4.606  -3.630  1.00  1.17           N
+        \ \nATOM    226  H   ARG A  55      -5.459  -1.533  -0.131  1.00  0.83           H
+        \ \nATOM    227  HA  ARG A  55      -3.060   0.028  -0.233  1.00  0.61           H
+        \ \nATOM    228  HB2 ARG A  55      -4.037  -2.435  -1.294  1.00  0.84           H
+        \ \nATOM    229  HB3 ARG A  55      -3.453  -1.468  -2.639  1.00  0.86           H
+        \ \nATOM    230  HG2 ARG A  55      -1.466  -1.021  -0.840  1.00  0.74           H
+        \ \nATOM    231  HG3 ARG A  55      -1.955  -2.641  -0.362  1.00  0.86           H
+        \ \nATOM    232  HD2 ARG A  55      -0.720  -1.710  -2.911  1.00  1.24           H
+        \ \nATOM    233  HD3 ARG A  55      -0.410  -3.183  -1.997  1.00  1.30           H
+        \ \nATOM    234  HE  ARG A  55      -2.151  -2.970  -4.229  1.00  1.27           H
+        \ \nATOM    235 HH11 ARG A  55      -2.150  -4.226  -1.009  1.00  1.00           H
+        \ \nATOM    236 HH12 ARG A  55      -3.528  -5.232  -1.273  1.00  1.12           H
+        \ \nATOM    237 HH21 ARG A  55      -3.920  -4.302  -4.581  1.00  1.39           H
+        \ \nATOM    238 HH22 ARG A  55      -4.519  -5.289  -3.291  1.00  1.26           H
+        \ \nATOM    239  N   SER A  56      -5.424   0.590  -2.458  1.00  0.80           N
+        \ \nATOM    240  CA  SER A  56      -5.903   1.628  -3.412  1.00  0.88           C
+        \ \nATOM    241  C   SER A  56      -5.852   2.984  -2.709  1.00  0.80           C
+        \ \nATOM    242  O   SER A  56      -5.160   3.888  -3.132  1.00  0.87           O
+        \ \nATOM    243  CB  SER A  56      -7.342   1.319  -3.829  1.00  0.99           C
+        \ \nATOM    244  OG  SER A  56      -7.410   1.228  -5.246  1.00  1.74           O
+        \ \nATOM    245  H   SER A  56      -5.986  -0.187  -2.255  1.00  0.85           H
+        \ \nATOM    246  HA  SER A  56      -5.265   1.644  -4.283  1.00  0.93           H
+        \ \nATOM    247  HB2 SER A  56      -7.651   0.381  -3.399  1.00  1.36           H
+        \ \nATOM    248  HB3 SER A  56      -7.995   2.107  -3.476  1.00  1.41           H
+        \ \nATOM    249  HG  SER A  56      -8.337   1.176  -5.494  1.00  2.04           H
+        \ \nATOM    250  N   ALA A  57      -6.563   3.127  -1.620  1.00  0.71           N
+        \ \nATOM    251  CA  ALA A  57      -6.531   4.418  -0.879  1.00  0.70           C
+        \ \nATOM    252  C   ALA A  57      -5.098   4.662  -0.409  1.00  0.61           C
+        \ \nATOM    253  O   ALA A  57      -4.613   5.776  -0.400  1.00  0.68           O
+        \ \nATOM    254  CB  ALA A  57      -7.464   4.346   0.332  1.00  0.73           C
+        \ \nATOM    255  H   ALA A  57      -7.104   2.381  -1.285  1.00  0.70           H
+        \ \nATOM    256  HA  ALA A  57      -6.842   5.221  -1.532  1.00  0.79           H
+        \ \nATOM    257  HB1 ALA A  57      -7.940   3.377   0.364  1.00  1.24           H
+        \ \nATOM    258  HB2 ALA A  57      -6.892   4.496   1.236  1.00  1.34           H
+        \ \nATOM    259  HB3 ALA A  57      -8.218   5.115   0.254  1.00  1.19           H
+        \ \nATOM    260  N   PHE A  58      -4.416   3.617  -0.022  1.00  0.52           N
+        \ \nATOM    261  CA  PHE A  58      -3.006   3.761   0.443  1.00  0.50           C
+        \ \nATOM    262  C   PHE A  58      -2.204   4.557  -0.585  1.00  0.51           C
+        \ \nATOM    263  O   PHE A  58      -1.238   5.217  -0.260  1.00  0.54           O
+        \ \nATOM    264  CB  PHE A  58      -2.397   2.371   0.590  1.00  0.55           C
+        \ \nATOM    265  CG  PHE A  58      -0.905   2.469   0.788  1.00  0.55           C
+        \ \nATOM    266  CD1 PHE A  58      -0.386   3.134   1.905  1.00  1.06           C
+        \ \nATOM    267  CD2 PHE A  58      -0.039   1.885  -0.144  1.00  1.28           C
+        \ \nATOM    268  CE1 PHE A  58       1.000   3.215   2.088  1.00  1.10           C
+        \ \nATOM    269  CE2 PHE A  58       1.345   1.967   0.038  1.00  1.36           C
+        \ \nATOM    270  CZ  PHE A  58       1.865   2.633   1.155  1.00  0.79           C
+        \ \nATOM    271  H   PHE A  58      -4.834   2.726  -0.043  1.00  0.54           H
+        \ \nATOM    272  HA  PHE A  58      -2.984   4.270   1.394  1.00  0.53           H
+        \ \nATOM    273  HB2 PHE A  58      -2.839   1.888   1.440  1.00  0.65           H
+        \ \nATOM    274  HB3 PHE A  58      -2.603   1.794  -0.299  1.00  0.62           H
+        \ \nATOM    275  HD1 PHE A  58      -1.053   3.585   2.624  1.00  1.77           H
+        \ \nATOM    276  HD2 PHE A  58      -0.440   1.371  -1.007  1.00  1.99           H
+        \ \nATOM    277  HE1 PHE A  58       1.401   3.728   2.950  1.00  1.79           H
+        \ \nATOM    278  HE2 PHE A  58       2.013   1.516  -0.681  1.00  2.11           H
+        \ \nATOM    279  HZ  PHE A  58       2.933   2.696   1.297  1.00  0.92           H
+        \ \nATOM    280  N   ALA A  59      -2.591   4.491  -1.824  1.00  0.58           N
+        \ \nATOM    281  CA  ALA A  59      -1.848   5.239  -2.878  1.00  0.67           C
+        \ \nATOM    282  C   ALA A  59      -2.368   6.679  -2.961  1.00  0.65           C
+        \ \nATOM    283  O   ALA A  59      -2.321   7.304  -4.002  1.00  0.88           O
+        \ \nATOM    284  CB  ALA A  59      -2.048   4.549  -4.228  1.00  0.84           C
+        \ \nATOM    285  H   ALA A  59      -3.369   3.945  -2.062  1.00  0.64           H
+        \ \nATOM    286  HA  ALA A  59      -0.795   5.251  -2.635  1.00  0.68           H
+        \ \nATOM    287  HB1 ALA A  59      -3.040   4.124  -4.272  1.00  1.39           H
+        \ \nATOM    288  HB2 ALA A  59      -1.930   5.271  -5.023  1.00  1.18           H
+        \ \nATOM    289  HB3 ALA A  59      -1.315   3.764  -4.342  1.00  1.46           H
+        \ \nATOM    290  N   ASN A  60      -2.857   7.216  -1.873  1.00  0.65           N
+        \ \nATOM    291  CA  ASN A  60      -3.367   8.618  -1.899  1.00  0.68           C
+        \ \nATOM    292  C   ASN A  60      -2.388   9.519  -1.142  1.00  0.60           C
+        \ \nATOM    293  O   ASN A  60      -2.412  10.726  -1.267  1.00  0.74           O
+        \ \nATOM    294  CB  ASN A  60      -4.746   8.682  -1.236  1.00  0.81           C
+        \ \nATOM    295  CG  ASN A  60      -5.773   7.988  -2.133  1.00  0.98           C
+        \ \nATOM    296  OD1 ASN A  60      -5.713   6.791  -2.328  1.00  1.47           O
+        \ \nATOM    297  ND2 ASN A  60      -6.720   8.699  -2.690  1.00  1.59           N
+        \ \nATOM    298  H   ASN A  60      -2.881   6.702  -1.041  1.00  0.82           H
+        \ \nATOM    299  HA  ASN A  60      -3.443   8.954  -2.922  1.00  0.76           H
+        \ \nATOM    300  HB2 ASN A  60      -4.709   8.184  -0.278  1.00  0.80           H
+        \ \nATOM    301  HB3 ASN A  60      -5.032   9.715  -1.099  1.00  0.88           H
+        \ \nATOM    302 HD21 ASN A  60      -6.764   9.669  -2.530  1.00  2.24           H
+        \ \nATOM    303 HD22 ASN A  60      -7.386   8.262  -3.268  1.00  1.71           H
+        \ \nATOM    304  N   LEU A  61      -1.516   8.933  -0.365  1.00  0.58           N
+        \ \nATOM    305  CA  LEU A  61      -0.519   9.746   0.388  1.00  0.60           C
+        \ \nATOM    306  C   LEU A  61       0.613  10.128  -0.576  1.00  0.56           C
+        \ \nATOM    307  O   LEU A  61       0.644   9.653  -1.695  1.00  0.55           O
+        \ \nATOM    308  CB  LEU A  61       0.034   8.918   1.558  1.00  0.67           C
+        \ \nATOM    309  CG  LEU A  61      -1.085   8.074   2.174  1.00  0.73           C
+        \ \nATOM    310  CD1 LEU A  61      -0.623   6.619   2.290  1.00  0.67           C
+        \ \nATOM    311  CD2 LEU A  61      -1.413   8.614   3.568  1.00  1.43           C
+        \ \nATOM    312  H   LEU A  61      -1.507   7.956  -0.288  1.00  0.71           H
+        \ \nATOM    313  HA  LEU A  61      -0.991  10.642   0.766  1.00  0.69           H
+        \ \nATOM    314  HB2 LEU A  61       0.819   8.269   1.203  1.00  0.82           H
+        \ \nATOM    315  HB3 LEU A  61       0.426   9.577   2.313  1.00  0.84           H
+        \ \nATOM    316  HG  LEU A  61      -1.966   8.126   1.549  1.00  1.17           H
+        \ \nATOM    317 HD11 LEU A  61       0.308   6.581   2.835  1.00  1.32           H
+        \ \nATOM    318 HD12 LEU A  61      -1.371   6.043   2.814  1.00  1.30           H
+        \ \nATOM    319 HD13 LEU A  61      -0.479   6.209   1.301  1.00  1.23           H
+        \ \nATOM    320 HD21 LEU A  61      -0.581   9.202   3.929  1.00  1.75           H
+        \ \nATOM    321 HD22 LEU A  61      -2.295   9.235   3.516  1.00  1.93           H
+        \ \nATOM    322 HD23 LEU A  61      -1.591   7.790   4.243  1.00  2.05           H
+        \ \nATOM    323  N   PRO A  62       1.506  10.976  -0.131  1.00  0.63           N
+        \ \nATOM    324  CA  PRO A  62       2.631  11.430  -0.968  1.00  0.69           C
+        \ \nATOM    325  C   PRO A  62       3.461  10.229  -1.425  1.00  0.63           C
+        \ \nATOM    326  O   PRO A  62       3.585   9.251  -0.721  1.00  0.56           O
+        \ \nATOM    327  CB  PRO A  62       3.453  12.350  -0.059  1.00  0.83           C
+        \ \nATOM    328  CG  PRO A  62       2.690  12.484   1.283  1.00  0.86           C
+        \ \nATOM    329  CD  PRO A  62       1.474  11.547   1.225  1.00  0.74           C
+        \ \nATOM    330  HA  PRO A  62       2.269  11.985  -1.820  1.00  0.73           H
+        \ \nATOM    331  HB2 PRO A  62       4.429  11.915   0.112  1.00  0.84           H
+        \ \nATOM    332  HB3 PRO A  62       3.557  13.322  -0.516  1.00  0.92           H
+        \ \nATOM    333  HG2 PRO A  62       3.336  12.196   2.102  1.00  0.90           H
+        \ \nATOM    334  HG3 PRO A  62       2.357  13.502   1.416  1.00  0.96           H
+        \ \nATOM    335  HD2 PRO A  62       1.580  10.769   1.966  1.00  0.71           H
+        \ \nATOM    336  HD3 PRO A  62       0.560  12.099   1.380  1.00  0.80           H
+        \ \nATOM    337  N   LEU A  63       4.021  10.291  -2.604  1.00  0.71           N
+        \ \nATOM    338  CA  LEU A  63       4.831   9.145  -3.107  1.00  0.73           C
+        \ \nATOM    339  C   LEU A  63       5.927   8.797  -2.105  1.00  0.75           C
+        \ \nATOM    340  O   LEU A  63       6.191   7.640  -1.845  1.00  0.72           O
+        \ \nATOM    341  CB  LEU A  63       5.465   9.516  -4.450  1.00  0.88           C
+        \ \nATOM    342  CG  LEU A  63       5.424   8.305  -5.385  1.00  1.08           C
+        \ \nATOM    343  CD1 LEU A  63       5.981   7.081  -4.657  1.00  1.65           C
+        \ \nATOM    344  CD2 LEU A  63       3.978   8.034  -5.803  1.00  1.69           C
+        \ \nATOM    345  H   LEU A  63       3.901  11.089  -3.160  1.00  0.77           H
+        \ \nATOM    346  HA  LEU A  63       4.190   8.287  -3.237  1.00  0.67           H
+        \ \nATOM    347  HB2 LEU A  63       4.916  10.334  -4.894  1.00  0.95           H
+        \ \nATOM    348  HB3 LEU A  63       6.491   9.813  -4.293  1.00  1.04           H
+        \ \nATOM    349  HG  LEU A  63       6.024   8.507  -6.261  1.00  1.68           H
+        \ \nATOM    350 HD11 LEU A  63       6.644   7.403  -3.867  1.00  2.13           H
+        \ \nATOM    351 HD12 LEU A  63       5.164   6.516  -4.232  1.00  2.21           H
+        \ \nATOM    352 HD13 LEU A  63       6.526   6.461  -5.354  1.00  2.09           H
+        \ \nATOM    353 HD21 LEU A  63       3.310   8.366  -5.023  1.00  2.10           H
+        \ \nATOM    354 HD22 LEU A  63       3.760   8.571  -6.712  1.00  2.35           H
+        \ \nATOM    355 HD23 LEU A  63       3.842   6.976  -5.968  1.00  2.09           H
+        \ \nATOM    356  N   TRP A  64       6.565   9.774  -1.525  1.00  0.82           N
+        \ \nATOM    357  CA  TRP A  64       7.623   9.455  -0.539  1.00  0.87           C
+        \ \nATOM    358  C   TRP A  64       6.950   8.826   0.670  1.00  0.75           C
+        \ \nATOM    359  O   TRP A  64       7.508   7.981   1.340  1.00  0.75           O
+        \ \nATOM    360  CB  TRP A  64       8.367  10.724  -0.133  1.00  1.02           C
+        \ \nATOM    361  CG  TRP A  64       7.396  11.800   0.212  1.00  1.01           C
+        \ \nATOM    362  CD1 TRP A  64       6.997  12.793  -0.613  1.00  1.06           C
+        \ \nATOM    363  CD2 TRP A  64       6.709  12.009   1.467  1.00  1.00           C
+        \ \nATOM    364  NE1 TRP A  64       6.102  13.602   0.066  1.00  1.07           N
+        \ \nATOM    365  CE2 TRP A  64       5.893  13.156   1.357  1.00  1.05           C
+        \ \nATOM    366  CE3 TRP A  64       6.720  11.311   2.676  1.00  0.99           C
+        \ \nATOM    367  CZ2 TRP A  64       5.114  13.600   2.425  1.00  1.10           C
+        \ \nATOM    368  CZ3 TRP A  64       5.939  11.748   3.757  1.00  1.05           C
+        \ \nATOM    369  CH2 TRP A  64       5.136  12.893   3.632  1.00  1.10           C
+        \ \nATOM    370  H   TRP A  64       6.339  10.705  -1.725  1.00  0.87           H
+        \ \nATOM    371  HA  TRP A  64       8.316   8.746  -0.971  1.00  0.90           H
+        \ \nATOM    372  HB2 TRP A  64       8.989  10.515   0.727  1.00  1.07           H
+        \ \nATOM    373  HB3 TRP A  64       8.983  11.049  -0.949  1.00  1.12           H
+        \ \nATOM    374  HD1 TRP A  64       7.321  12.932  -1.634  1.00  1.10           H
+        \ \nATOM    375  HE1 TRP A  64       5.663  14.395  -0.303  1.00  1.11           H
+        \ \nATOM    376  HE3 TRP A  64       7.336  10.430   2.767  1.00  0.97           H
+        \ \nATOM    377  HZ2 TRP A  64       4.499  14.481   2.321  1.00  1.15           H
+        \ \nATOM    378  HZ3 TRP A  64       5.955  11.202   4.689  1.00  1.07           H
+        \ \nATOM    379  HH2 TRP A  64       4.535  13.226   4.465  1.00  1.18           H
+        \ \nATOM    380  N   LYS A  65       5.735   9.212   0.931  1.00  0.69           N
+        \ \nATOM    381  CA  LYS A  65       5.003   8.619   2.065  1.00  0.62           C
+        \ \nATOM    382  C   LYS A  65       4.625   7.193   1.682  1.00  0.49           C
+        \ \nATOM    383  O   LYS A  65       4.482   6.327   2.520  1.00  0.47           O
+        \ \nATOM    384  CB  LYS A  65       3.750   9.441   2.323  1.00  0.66           C
+        \ \nATOM    385  CG  LYS A  65       3.680   9.795   3.803  1.00  0.99           C
+        \ \nATOM    386  CD  LYS A  65       2.685   8.869   4.511  1.00  0.77           C
+        \ \nATOM    387  CE  LYS A  65       3.445   7.844   5.363  1.00  0.82           C
+        \ \nATOM    388  NZ  LYS A  65       4.521   8.535   6.129  1.00  1.60           N
+        \ \nATOM    389  H   LYS A  65       5.293   9.877   0.363  1.00  0.71           H
+        \ \nATOM    390  HA  LYS A  65       5.629   8.611   2.945  1.00  0.69           H
+        \ \nATOM    391  HB2 LYS A  65       3.792  10.350   1.737  1.00  0.77           H
+        \ \nATOM    392  HB3 LYS A  65       2.879   8.872   2.043  1.00  0.76           H
+        \ \nATOM    393  HG2 LYS A  65       4.660   9.682   4.247  1.00  1.63           H
+        \ \nATOM    394  HG3 LYS A  65       3.357  10.817   3.903  1.00  1.60           H
+        \ \nATOM    395  HD2 LYS A  65       2.040   9.456   5.148  1.00  1.26           H
+        \ \nATOM    396  HD3 LYS A  65       2.090   8.351   3.776  1.00  1.15           H
+        \ \nATOM    397  HE2 LYS A  65       2.761   7.374   6.053  1.00  1.22           H
+        \ \nATOM    398  HE3 LYS A  65       3.885   7.091   4.722  1.00  0.79           H
+        \ \nATOM    399  HZ1 LYS A  65       4.301   9.548   6.197  1.00  2.02           H
+        \ \nATOM    400  HZ2 LYS A  65       4.581   8.128   7.084  1.00  2.10           H
+        \ \nATOM    401  HZ3 LYS A  65       5.431   8.412   5.641  1.00  2.11           H
+        \ \nATOM    402  N   GLN A  66       4.485   6.942   0.407  1.00  0.48           N
+        \ \nATOM    403  CA  GLN A  66       4.144   5.576  -0.045  1.00  0.47           C
+        \ \nATOM    404  C   GLN A  66       5.339   4.669   0.217  1.00  0.53           C
+        \ \nATOM    405  O   GLN A  66       5.362   3.913   1.164  1.00  0.54           O
+        \ \nATOM    406  CB  GLN A  66       3.848   5.590  -1.535  1.00  0.55           C
+        \ \nATOM    407  CG  GLN A  66       2.704   6.555  -1.799  1.00  0.52           C
+        \ \nATOM    408  CD  GLN A  66       2.181   6.345  -3.219  1.00  0.65           C
+        \ \nATOM    409  OE1 GLN A  66       1.451   7.167  -3.739  1.00  0.85           O
+        \ \nATOM    410  NE2 GLN A  66       2.526   5.269  -3.872  1.00  0.70           N
+        \ \nATOM    411  H   GLN A  66       4.618   7.651  -0.251  1.00  0.54           H
+        \ \nATOM    412  HA  GLN A  66       3.279   5.226   0.487  1.00  0.44           H
+        \ \nATOM    413  HB2 GLN A  66       4.726   5.911  -2.077  1.00  0.63           H
+        \ \nATOM    414  HB3 GLN A  66       3.565   4.600  -1.855  1.00  0.60           H
+        \ \nATOM    415  HG2 GLN A  66       1.916   6.377  -1.086  1.00  0.49           H
+        \ \nATOM    416  HG3 GLN A  66       3.062   7.560  -1.689  1.00  0.52           H
+        \ \nATOM    417 HE21 GLN A  66       3.111   4.605  -3.448  1.00  0.74           H
+        \ \nATOM    418 HE22 GLN A  66       2.204   5.127  -4.784  1.00  0.79           H
+        \ \nATOM    419  N   GLN A  67       6.341   4.759  -0.616  1.00  0.64           N
+        \ \nATOM    420  CA  GLN A  67       7.556   3.918  -0.427  1.00  0.73           C
+        \ \nATOM    421  C   GLN A  67       7.865   3.793   1.064  1.00  0.67           C
+        \ \nATOM    422  O   GLN A  67       8.290   2.757   1.531  1.00  0.72           O
+        \ \nATOM    423  CB  GLN A  67       8.737   4.568  -1.148  1.00  0.87           C
+        \ \nATOM    424  CG  GLN A  67       8.470   4.571  -2.654  1.00  0.98           C
+        \ \nATOM    425  CD  GLN A  67       9.723   5.042  -3.397  1.00  1.42           C
+        \ \nATOM    426  OE1 GLN A  67      10.816   4.977  -2.871  1.00  2.15           O
+        \ \nATOM    427  NE2 GLN A  67       9.604   5.522  -4.606  1.00  1.91           N
+        \ \nATOM    428  H   GLN A  67       6.296   5.391  -1.366  1.00  0.67           H
+        \ \nATOM    429  HA  GLN A  67       7.387   2.940  -0.837  1.00  0.79           H
+        \ \nATOM    430  HB2 GLN A  67       8.857   5.584  -0.801  1.00  0.85           H
+        \ \nATOM    431  HB3 GLN A  67       9.637   4.006  -0.946  1.00  1.03           H
+        \ \nATOM    432  HG2 GLN A  67       8.215   3.571  -2.976  1.00  1.42           H
+        \ \nATOM    433  HG3 GLN A  67       7.652   5.239  -2.873  1.00  1.33           H
+        \ \nATOM    434 HE21 GLN A  67       8.717   5.575  -5.027  1.00  2.17           H
+        \ \nATOM    435 HE22 GLN A  67      10.402   5.828  -5.094  1.00  2.45           H
+        \ \nATOM    436  N   ASN A  68       7.648   4.833   1.820  1.00  0.63           N
+        \ \nATOM    437  CA  ASN A  68       7.931   4.758   3.280  1.00  0.63           C
+        \ \nATOM    438  C   ASN A  68       6.946   3.796   3.944  1.00  0.55           C
+        \ \nATOM    439  O   ASN A  68       7.300   2.697   4.312  1.00  0.61           O
+        \ \nATOM    440  CB  ASN A  68       7.791   6.146   3.901  1.00  0.69           C
+        \ \nATOM    441  CG  ASN A  68       9.154   6.839   3.894  1.00  0.87           C
+        \ \nATOM    442  OD1 ASN A  68      10.177   6.190   3.799  1.00  1.19           O
+        \ \nATOM    443  ND2 ASN A  68       9.210   8.138   3.986  1.00  1.13           N
+        \ \nATOM    444  H   ASN A  68       7.298   5.663   1.429  1.00  0.64           H
+        \ \nATOM    445  HA  ASN A  68       8.938   4.398   3.431  1.00  0.69           H
+        \ \nATOM    446  HB2 ASN A  68       7.085   6.729   3.327  1.00  0.66           H
+        \ \nATOM    447  HB3 ASN A  68       7.443   6.052   4.919  1.00  0.75           H
+        \ \nATOM    448 HD21 ASN A  68       8.380   8.661   4.060  1.00  1.45           H
+        \ \nATOM    449 HD22 ASN A  68      10.082   8.593   3.982  1.00  1.24           H
+        \ \nATOM    450  N   LEU A  69       5.713   4.195   4.097  1.00  0.50           N
+        \ \nATOM    451  CA  LEU A  69       4.717   3.288   4.737  1.00  0.50           C
+        \ \nATOM    452  C   LEU A  69       4.910   1.870   4.191  1.00  0.51           C
+        \ \nATOM    453  O   LEU A  69       4.598   0.893   4.837  1.00  0.59           O
+        \ \nATOM    454  CB  LEU A  69       3.300   3.763   4.411  1.00  0.52           C
+        \ \nATOM    455  CG  LEU A  69       2.863   4.798   5.447  1.00  0.63           C
+        \ \nATOM    456  CD1 LEU A  69       1.579   5.484   4.978  1.00  0.74           C
+        \ \nATOM    457  CD2 LEU A  69       2.612   4.104   6.788  1.00  0.82           C
+        \ \nATOM    458  H   LEU A  69       5.445   5.086   3.791  1.00  0.52           H
+        \ \nATOM    459  HA  LEU A  69       4.861   3.291   5.806  1.00  0.56           H
+        \ \nATOM    460  HB2 LEU A  69       3.288   4.208   3.425  1.00  0.57           H
+        \ \nATOM    461  HB3 LEU A  69       2.621   2.922   4.439  1.00  0.57           H
+        \ \nATOM    462  HG  LEU A  69       3.642   5.537   5.565  1.00  0.71           H
+        \ \nATOM    463 HD11 LEU A  69       0.982   4.782   4.413  1.00  1.11           H
+        \ \nATOM    464 HD12 LEU A  69       1.017   5.824   5.836  1.00  1.46           H
+        \ \nATOM    465 HD13 LEU A  69       1.828   6.328   4.353  1.00  1.23           H
+        \ \nATOM    466 HD21 LEU A  69       2.907   3.066   6.717  1.00  1.32           H
+        \ \nATOM    467 HD22 LEU A  69       3.191   4.590   7.560  1.00  1.22           H
+        \ \nATOM    468 HD23 LEU A  69       1.563   4.164   7.035  1.00  1.40           H
+        \ \nATOM    469  N   LYS A  70       5.422   1.763   2.999  1.00  0.54           N
+        \ \nATOM    470  CA  LYS A  70       5.645   0.426   2.377  1.00  0.64           C
+        \ \nATOM    471  C   LYS A  70       6.797  -0.292   3.077  1.00  0.71           C
+        \ \nATOM    472  O   LYS A  70       6.593  -1.144   3.912  1.00  0.76           O
+        \ \nATOM    473  CB  LYS A  70       6.005   0.628   0.912  1.00  0.70           C
+        \ \nATOM    474  CG  LYS A  70       4.808   1.254   0.187  1.00  0.66           C
+        \ \nATOM    475  CD  LYS A  70       5.129   1.475  -1.297  1.00  0.75           C
+        \ \nATOM    476  CE  LYS A  70       5.330   0.125  -1.987  1.00  1.01           C
+        \ \nATOM    477  NZ  LYS A  70       4.779   0.192  -3.370  1.00  1.62           N
+        \ \nATOM    478  H   LYS A  70       5.659   2.571   2.503  1.00  0.56           H
+        \ \nATOM    479  HA  LYS A  70       4.746  -0.167   2.453  1.00  0.67           H
+        \ \nATOM    480  HB2 LYS A  70       6.858   1.289   0.854  1.00  0.69           H
+        \ \nATOM    481  HB3 LYS A  70       6.249  -0.321   0.462  1.00  0.81           H
+        \ \nATOM    482  HG2 LYS A  70       3.955   0.597   0.275  1.00  0.72           H
+        \ \nATOM    483  HG3 LYS A  70       4.582   2.198   0.647  1.00  0.59           H
+        \ \nATOM    484  HD2 LYS A  70       4.308   2.004  -1.771  1.00  0.77           H
+        \ \nATOM    485  HD3 LYS A  70       6.025   2.058  -1.390  1.00  0.84           H
+        \ \nATOM    486  HE2 LYS A  70       6.386  -0.103  -2.028  1.00  1.54           H
+        \ \nATOM    487  HE3 LYS A  70       4.816  -0.645  -1.430  1.00  1.38           H
+        \ \nATOM    488  HZ1 LYS A  70       3.852   0.663  -3.351  1.00  2.14           H
+        \ \nATOM    489  HZ2 LYS A  70       5.426   0.736  -3.976  1.00  2.07           H
+        \ \nATOM    490  HZ3 LYS A  70       4.674  -0.770  -3.751  1.00  2.07           H
+        \ \nATOM    491  N   LYS A  71       8.012   0.034   2.745  1.00  0.74           N
+        \ \nATOM    492  CA  LYS A  71       9.148  -0.655   3.421  1.00  0.84           C
+        \ \nATOM    493  C   LYS A  71       8.888  -0.646   4.923  1.00  0.74           C
+        \ \nATOM    494  O   LYS A  71       9.399  -1.467   5.658  1.00  0.79           O
+        \ \nATOM    495  CB  LYS A  71      10.464   0.051   3.104  1.00  0.98           C
+        \ \nATOM    496  CG  LYS A  71      10.801  -0.182   1.632  1.00  1.70           C
+        \ \nATOM    497  CD  LYS A  71      10.262   0.988   0.809  1.00  2.41           C
+        \ \nATOM    498  CE  LYS A  71      11.330   1.468  -0.178  1.00  3.20           C
+        \ \nATOM    499  NZ  LYS A  71      11.379   0.553  -1.356  1.00  3.86           N
+        \ \nATOM    500  H   LYS A  71       8.171   0.721   2.063  1.00  0.73           H
+        \ \nATOM    501  HA  LYS A  71       9.198  -1.678   3.075  1.00  0.94           H
+        \ \nATOM    502  HB2 LYS A  71      10.361   1.110   3.291  1.00  1.30           H
+        \ \nATOM    503  HB3 LYS A  71      11.252  -0.353   3.723  1.00  1.38           H
+        \ \nATOM    504  HG2 LYS A  71      11.872  -0.251   1.512  1.00  2.09           H
+        \ \nATOM    505  HG3 LYS A  71      10.338  -1.100   1.298  1.00  2.27           H
+        \ \nATOM    506  HD2 LYS A  71       9.380   0.675   0.268  1.00  2.65           H
+        \ \nATOM    507  HD3 LYS A  71      10.005   1.797   1.475  1.00  2.70           H
+        \ \nATOM    508  HE2 LYS A  71      11.085   2.463  -0.511  1.00  3.54           H
+        \ \nATOM    509  HE3 LYS A  71      12.293   1.483   0.310  1.00  3.48           H
+        \ \nATOM    510  HZ1 LYS A  71      11.238  -0.430  -1.040  1.00  4.21           H
+        \ \nATOM    511  HZ2 LYS A  71      10.629   0.812  -2.028  1.00  3.98           H
+        \ \nATOM    512  HZ3 LYS A  71      12.306   0.638  -1.825  1.00  4.34           H
+        \ \nATOM    513  N   GLU A  72       8.053   0.249   5.381  1.00  0.66           N
+        \ \nATOM    514  CA  GLU A  72       7.724   0.262   6.834  1.00  0.66           C
+        \ \nATOM    515  C   GLU A  72       6.739  -0.886   7.066  1.00  0.65           C
+        \ \nATOM    516  O   GLU A  72       6.767  -1.557   8.079  1.00  0.79           O
+        \ \nATOM    517  CB  GLU A  72       7.066   1.588   7.248  1.00  0.68           C
+        \ \nATOM    518  CG  GLU A  72       8.092   2.728   7.208  1.00  1.00           C
+        \ \nATOM    519  CD  GLU A  72       8.185   3.395   8.586  1.00  1.76           C
+        \ \nATOM    520  OE1 GLU A  72       8.023   2.699   9.575  1.00  2.46           O
+        \ \nATOM    521  OE2 GLU A  72       8.416   4.593   8.625  1.00  2.31           O
+        \ \nATOM    522  H   GLU A  72       7.619   0.881   4.761  1.00  0.65           H
+        \ \nATOM    523  HA  GLU A  72       8.621   0.096   7.417  1.00  0.76           H
+        \ \nATOM    524  HB2 GLU A  72       6.254   1.810   6.572  1.00  0.71           H
+        \ \nATOM    525  HB3 GLU A  72       6.679   1.495   8.252  1.00  0.87           H
+        \ \nATOM    526  HG2 GLU A  72       9.060   2.336   6.932  1.00  1.22           H
+        \ \nATOM    527  HG3 GLU A  72       7.782   3.462   6.479  1.00  1.39           H
+        \ \nATOM    528  N   LYS A  73       5.873  -1.115   6.110  1.00  0.66           N
+        \ \nATOM    529  CA  LYS A  73       4.881  -2.220   6.234  1.00  0.76           C
+        \ \nATOM    530  C   LYS A  73       4.385  -2.646   4.857  1.00  0.91           C
+        \ \nATOM    531  O   LYS A  73       4.704  -2.054   3.848  1.00  1.73           O
+        \ \nATOM    532  CB  LYS A  73       3.673  -1.752   7.017  1.00  0.77           C
+        \ \nATOM    533  CG  LYS A  73       3.640  -0.245   6.975  1.00  0.76           C
+        \ \nATOM    534  CD  LYS A  73       2.597   0.259   7.961  1.00  1.04           C
+        \ \nATOM    535  CE  LYS A  73       3.246   0.435   9.331  1.00  1.48           C
+        \ \nATOM    536  NZ  LYS A  73       2.184   0.683  10.342  1.00  2.14           N
+        \ \nATOM    537  H   LYS A  73       5.884  -0.557   5.307  1.00  0.71           H
+        \ \nATOM    538  HA  LYS A  73       5.333  -3.047   6.738  1.00  1.01           H
+        \ \nATOM    539  HB2 LYS A  73       2.774  -2.147   6.563  1.00  0.94           H
+        \ \nATOM    540  HB3 LYS A  73       3.746  -2.087   8.038  1.00  1.14           H
+        \ \nATOM    541  HG2 LYS A  73       4.618   0.123   7.245  1.00  0.99           H
+        \ \nATOM    542  HG3 LYS A  73       3.386   0.082   5.980  1.00  0.86           H
+        \ \nATOM    543  HD2 LYS A  73       2.205   1.205   7.619  1.00  1.48           H
+        \ \nATOM    544  HD3 LYS A  73       1.798  -0.460   8.034  1.00  1.74           H
+        \ \nATOM    545  HE2 LYS A  73       3.790  -0.463   9.590  1.00  2.10           H
+        \ \nATOM    546  HE3 LYS A  73       3.925   1.273   9.306  1.00  1.86           H
+        \ \nATOM    547  HZ1 LYS A  73       1.288   0.886   9.857  1.00  2.67           H
+        \ \nATOM    548  HZ2 LYS A  73       2.071  -0.162  10.938  1.00  2.39           H
+        \ \nATOM    549  HZ3 LYS A  73       2.449   1.493  10.933  1.00  2.52           H
+        \ \nATOM    550  N   GLY A  74       3.574  -3.660   4.816  1.00  1.05           N
+        \ \nATOM    551  CA  GLY A  74       3.022  -4.120   3.518  1.00  1.31           C
+        \ \nATOM    552  C   GLY A  74       4.133  -4.723   2.665  1.00  1.55           C
+        \ \nATOM    553  O   GLY A  74       3.874  -5.345   1.657  1.00  2.18           O
+        \ \nATOM    554  H   GLY A  74       3.317  -4.111   5.644  1.00  1.59           H
+        \ \nATOM    555  HA2 GLY A  74       2.262  -4.868   3.703  1.00  1.53           H
+        \ \nATOM    556  HA3 GLY A  74       2.587  -3.281   2.999  1.00  1.37           H
+        \ \nATOM    557  N   LEU A  75       5.372  -4.562   3.049  1.00  1.60           N
+        \ \nATOM    558  CA  LEU A  75       6.459  -5.151   2.227  1.00  1.88           C
+        \ \nATOM    559  C   LEU A  75       6.546  -6.658   2.513  1.00  2.13           C
+        \ \nATOM    560  O   LEU A  75       7.086  -7.414   1.728  1.00  2.51           O
+        \ \nATOM    561  CB  LEU A  75       7.784  -4.461   2.539  1.00  2.41           C
+        \ \nATOM    562  CG  LEU A  75       8.356  -5.093   3.781  1.00  2.93           C
+        \ \nATOM    563  CD1 LEU A  75       9.441  -6.100   3.403  1.00  3.76           C
+        \ \nATOM    564  CD2 LEU A  75       8.939  -4.009   4.691  1.00  3.56           C
+        \ \nATOM    565  H   LEU A  75       5.582  -4.062   3.866  1.00  1.86           H
+        \ \nATOM    566  HA  LEU A  75       6.231  -5.012   1.198  1.00  2.20           H
+        \ \nATOM    567  HB2 LEU A  75       8.464  -4.584   1.705  1.00  2.89           H
+        \ \nATOM    568  HB3 LEU A  75       7.613  -3.410   2.718  1.00  2.74           H
+        \ \nATOM    569  HG  LEU A  75       7.553  -5.602   4.283  1.00  2.98           H
+        \ \nATOM    570 HD11 LEU A  75       9.875  -5.827   2.450  1.00  4.10           H
+        \ \nATOM    571 HD12 LEU A  75      10.207  -6.105   4.168  1.00  4.16           H
+        \ \nATOM    572 HD13 LEU A  75       8.999  -7.082   3.324  1.00  4.08           H
+        \ \nATOM    573 HD21 LEU A  75       9.358  -3.217   4.083  1.00  3.78           H
+        \ \nATOM    574 HD22 LEU A  75       8.156  -3.606   5.315  1.00  3.96           H
+        \ \nATOM    575 HD23 LEU A  75       9.715  -4.434   5.313  1.00  3.95           H
+        \ \nATOM    576  N   PHE A  76       5.995  -7.109   3.616  1.00  2.54           N
+        \ \nATOM    577  CA  PHE A  76       6.033  -8.575   3.923  1.00  3.42           C
+        \ \nATOM    578  C   PHE A  76       4.678  -9.203   3.574  1.00  4.09           C
+        \ \nATOM    579  O   PHE A  76       3.672  -8.540   3.760  1.00  4.51           O
+        \ \nATOM    580  CB  PHE A  76       6.311  -8.794   5.413  1.00  4.10           C
+        \ \nATOM    581  CG  PHE A  76       7.511  -9.689   5.590  1.00  4.58           C
+        \ \nATOM    582  CD1 PHE A  76       7.383 -11.078   5.459  1.00  4.90           C
+        \ \nATOM    583  CD2 PHE A  76       8.749  -9.126   5.900  1.00  5.16           C
+        \ \nATOM    584  CE1 PHE A  76       8.501 -11.901   5.639  1.00  5.67           C
+        \ \nATOM    585  CE2 PHE A  76       9.865  -9.944   6.085  1.00  5.89           C
+        \ \nATOM    586  CZ  PHE A  76       9.742 -11.331   5.955  1.00  6.09           C
+        \ \nATOM    587  OXT PHE A  76       4.671 -10.340   3.131  1.00  4.57           O
+        \ \nATOM    588  H   PHE A  76       5.549  -6.495   4.231  1.00  2.57           H
+        \ \nATOM    589  HA  PHE A  76       6.809  -9.044   3.338  1.00  3.50           H
+        \ \nATOM    590  HB2 PHE A  76       6.513  -7.843   5.882  1.00  4.22           H
+        \ \nATOM    591  HB3 PHE A  76       5.448  -9.255   5.880  1.00  4.61           H
+        \ \nATOM    592  HD1 PHE A  76       6.424 -11.517   5.220  1.00  4.87           H
+        \ \nATOM    593  HD2 PHE A  76       8.834  -8.058   5.998  1.00  5.33           H
+        \ \nATOM    594  HE1 PHE A  76       8.404 -12.974   5.540  1.00  6.17           H
+        \ \nATOM    595  HE2 PHE A  76      10.822  -9.507   6.326  1.00  6.53           H
+        \ \nATOM    596  HZ  PHE A  76      10.604 -11.962   6.103  1.00  6.80           H
+        \ \nTER     597      PHE A  76                                                      \nMASTER
+        \     122    0    0    3    0    0    2    6  295    1    0    3          \nEND
+        \                                                                            \n"
+    headers:
+      Age:
+      - '786'
+      Connection:
+      - close
+      Content-Disposition:
+      - attachment;filename=1vii.pdb
+      Content-Type:
+      - text/plain
+      Date:
+      - Tue, 20 Jan 2026 20:44:24 GMT
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - accept-encoding
+      - Origin
+      Via:
+      - 1.1 bbedf3606cd5248b62d6074accc85882.cloudfront.net (CloudFront)
+      X-Amz-Cf-Id:
+      - _tNRiinhk74QfDMJBUniXZNSbKC4AlR3sTKEQkWwnfTzxpsoEJ8hdA==
+      X-Amz-Cf-Pop:
+      - IAD61-P13
+      X-Cache:
+      - Hit from cloudfront
+      strict-transport-security:
+      - max-age=16000000; includeSubDomains; preload;
+    status:
+      code: 200
+      message: OK
+version: 1

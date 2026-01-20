@@ -27,7 +27,6 @@ import tempfile
 
 import numpy as np
 import pytest
-from conftest import flaky_pdb_dl
 
 from mdtraj import Topology, load, load_pdb
 from mdtraj.core.topology import float_to_bond_type
@@ -209,7 +208,7 @@ def test_pdbstructure_3():
         eq(expected[i], c)
 
 
-@flaky_pdb_dl
+@pytest.mark.vcr
 def test_load_pdb_from_url():
     # load pdb from URL
     t1 = load_pdb("https://files.rcsb.org/download/4ZUO.pdb.gz")
@@ -220,7 +219,7 @@ def test_load_pdb_from_url():
     eq(t2.n_atoms, 6200)
 
 
-@flaky_pdb_dl
+@pytest.mark.vcr
 def test_load_from_url():
     # load pdb from URL
     t1 = load("https://files.rcsb.org/download/4ZUO.pdb.gz")
@@ -269,7 +268,7 @@ def test_1ncw(get_fn):
     load_pdb(get_fn("1ncw.pdb.gz"))
 
 
-@flaky_pdb_dl
+@pytest.mark.vcr
 def test_1vii_url_and_gz(get_fn):
     t1 = load_pdb("https://files.rcsb.org/download/1vii.pdb.gz")
     t2 = load_pdb("https://files.rcsb.org/download/1vii.pdb")
@@ -285,7 +284,7 @@ def test_1vii_url_and_gz(get_fn):
     eq(t1.n_atoms, t4.n_atoms)
 
 
-@flaky_pdb_dl
+@pytest.mark.vcr
 def test_1vii_load_from_mixture(get_fn):
     # load pdb from URL and locally
     t1 = load(["https://files.rcsb.org/download/1vii.pdb.gz", get_fn("1vii.pdb.gz")])

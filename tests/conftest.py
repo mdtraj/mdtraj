@@ -30,8 +30,6 @@ import mdtraj as md
 from mdtraj import element
 from mdtraj.utils.unitcell import check_valid_unitcell_angles
 
-flaky_pdb_dl = pytest.mark.flaky(rerun=3, reason="github-node flaky pdb dl")
-
 
 @pytest.fixture(scope="session")
 def get_fn():
