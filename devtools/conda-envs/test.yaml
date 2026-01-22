@@ -15,6 +15,7 @@ dependencies:
   - pytest
   - pytest-rerunfailures
   - pytest-xdist
+  - pytest-recording
   - python
   - scipy
   - zlib
