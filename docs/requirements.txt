@@ -14,7 +14,7 @@ tables
 scikit-learn
 pytest
 setuptools
-pandas
+pandas<3
 numpydoc
 wheel
 tables
