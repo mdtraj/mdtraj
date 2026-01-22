@@ -22,6 +22,9 @@
 
 import itertools
 import os
+import shutil
+import tarfile
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -140,3 +143,17 @@ def h5traj_full_metadata(tmp_path):
     fn = f"{tmp_path}/ref.h5"
     traj.save(fn)
     return traj, fn, str(tmp_path)
+
+
+@pytest.fixture(scope="session")
+def vcr_config(request):
+    test_path = Path(__file__).parent
+    with tarfile.open(f"{test_path}/cassettes.tar.gz") as tar:
+        tar.extractall(path=f"{test_path}", filter="fully_trusted")
+
+    def remove_tar():
+        if os.path.exists(f"{test_path}/cassettes"):
+            shutil.rmtree(f"{test_path}/cassettes")
+
+    request.addfinalizer(remove_tar)
+    return {}
