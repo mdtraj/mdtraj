@@ -2148,17 +2148,21 @@ class Trajectory:
         """
         return self.atom_slice(atom_indices, inplace=inplace)
 
-    def atom_slice(self, atom_indices, inplace=False):
+    def atom_slice(self, atom_indices, inplace=False, retain=True):
         """Create a new trajectory from a subset of atoms
 
         Parameters
         ----------
         atom_indices : array-like, dtype=int, shape=(n_atoms)
-            List of indices of atoms to retain in the new trajectory.
+            List of indices of atoms to retain or remove from the trajectory.
         inplace : bool, default=False
             If ``True``, the operation is done inplace, modifying ``self``.
             Otherwise, a copy is returned with the sliced atoms, and
             ``self`` is not modified.
+        retain : bool, default=True
+            If ``True``, keep the atoms specified by atom_indices.
+            If ``False``, remove the atoms specified by atom_indices and keep all others.
+            This allows the function to either select atoms to keep or atoms to delete.
 
         Returns
         -------
@@ -2170,6 +2174,12 @@ class Trajectory:
         --------
         stack : stack multiple trajectories along the atom axis
         """
+        if not retain:
+            # If retain is False, we want to remove the specified atoms
+            # So we need to get the indices of all atoms not in atom_indices
+            all_indices = np.arange(self.n_atoms)
+            atom_indices = np.setdiff1d(all_indices, atom_indices)
+
         xyz = np.array(self.xyz[:, sorted(atom_indices)], order="C")
         topology = None
         if self._topology is not None:
