@@ -60,7 +60,7 @@ issues = "https://githubcom/mdtraj/mdtraj/issues"
 where = ["."]
 
 [tool.setuptools.package-data]
-mdtraj = ["data/*"]
+"mdtraj.formats.pdb" = ["data/*"]
 
 [tool.versioneer]
 VCS = "git"
