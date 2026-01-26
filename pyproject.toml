@@ -6,13 +6,69 @@ requires = [
     "numpy~=2.0",
     "Cython>=3.0.0",
 ]
+build-backend = "setuptools.build_meta:__legacy__"
+
+[project]
+name = "mdtraj"
+authors = [
+    {name = "Robert McGibbon", email = "rmcgibbo@gmail.com"}
+]
+description = "MDTraj: A modern, open library for the analysis of molecular dynamics trajectories"
+readme = {file = "README.md", content-type = "text/markdown"}
+keywords = []
+license = "LGPL-2.1-or-later"
+license-files = ["LICEN[CS]E*"]
+dynamic = ["version"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Programming Language :: C",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+]
+requires-python = ">=3.11"
+dependencies = [
+    "numpy~=2.0",
+    "scipy",
+    "pyparsing",
+    "packaging",
+]
+
+[project.optional-dependencies]
+tests = ["pytest", "pytest-rerunfailures", "pytest-xdist"]
+optional = ["tables", "networkx", "netCDF4", "pandas<3"]
+all = ["mdtraj[tests]", "mdtraj[optional]"]
+
+[project.scripts]
+mdconvert = "mdtraj.scripts.mdconvert:entry_point"
+mdinspect = "mdtraj.scripts.mdinspect:entry_point"
+
+[project.urls]
+homepage = "https://mdtraj.org"
+download = "https://github.com/mdtraj/mdtraj/releases/latest"
+source = "https://github.com/mdtraj/mdtraj"
+issues = "https://githubcom/mdtraj/mdtraj/issues"
+
+[tool.setuptools.packages.find]
+where = ["mdtraj"]
+
+[tool.setuptools.package-data]
+mdtraj = ["data/*"]
 
 [tool.versioneer]
 VCS = "git"
 style = "pep440"
 versionfile_source = "mdtraj/_version.py"
-versionfile_build = "mdtraj/_version.py"
+versionfile_build = "_version.py"
 tag_prefix = ""
+parentdir_prefix = "mdtraj-"
 
 [tool.ruff]
 line-length=119
