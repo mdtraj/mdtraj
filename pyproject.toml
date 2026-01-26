@@ -57,7 +57,7 @@ source = "https://github.com/mdtraj/mdtraj"
 issues = "https://githubcom/mdtraj/mdtraj/issues"
 
 [tool.setuptools.packages.find]
-where = ["mdtraj"]
+where = ["."]
 
 [tool.setuptools.package-data]
 mdtraj = ["data/*"]
@@ -66,7 +66,7 @@ mdtraj = ["data/*"]
 VCS = "git"
 style = "pep440"
 versionfile_source = "mdtraj/_version.py"
-versionfile_build = "_version.py"
+versionfile_build = "mdtraj/_version.py"
 tag_prefix = ""
 parentdir_prefix = "mdtraj-"
 
