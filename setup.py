@@ -11,7 +11,7 @@ AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5.
 import sys
 
 import versioneer
-from setuptools import Extension, find_packages, setup
+from setuptools import Extension, setup
 
 from basesetup import (
     CompilerDetection,
@@ -20,33 +20,12 @@ from basesetup import (
     parse_setuppy_commands,
 )
 
-DOCLINES = __doc__.split("\n")
-
-sys.path.insert(0, ".")
-
 try:
     # add an optional --disable-openmp to disable OpenMP support
     sys.argv.remove("--disable-openmp")
     disable_openmp = True
 except ValueError:
     disable_openmp = False
-
-
-CLASSIFIERS = """\
-Development Status :: 5 - Production/Stable
-Intended Audience :: Science/Research
-Intended Audience :: Developers
-License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)
-Programming Language :: C
-Programming Language :: Python
-Programming Language :: Python :: 3
-Topic :: Scientific/Engineering :: Bio-Informatics
-Topic :: Scientific/Engineering :: Chemistry
-Operating System :: Microsoft :: Windows
-Operating System :: POSIX
-Operating System :: Unix
-Operating System :: MacOS
-"""
 
 # Global info about compiler
 compiler = CompilerDetection(disable_openmp)
@@ -282,55 +261,10 @@ def geometry_extensions():
     ]
 
 
-EXTRAS_REQUIRE = {
-    "tests": [
-        "pytest",
-        "pytest-rerunfailures",
-        "pytest-xdist",
-    ],
-    "optional": [
-        "tables",
-        "networkx",
-        "netCDF4",
-        "pandas<3",
-    ],
-}
-
-
 metadata = dict(
-    name="mdtraj",
-    author="Robert McGibbon",
-    author_email="rmcgibbo@gmail.com",
-    description=DOCLINES[0],
-    long_description="\n".join(DOCLINES[2:]),
     version=versioneer.get_version(),
-    license="LGPLv2.1+",
-    url="http://mdtraj.org",
-    download_url="https://github.com/rmcgibbo/mdtraj/releases/latest",
-    platforms=["Linux", "Mac OS-X", "Unix", "Windows"],
-    python_requires=">=3.11",
-    classifiers=CLASSIFIERS.splitlines(),
-    packages=find_packages(),
     cmdclass={**versioneer.get_cmdclass(), "build_ext": build_ext},
-    install_requires=[
-        "numpy~=2.0",
-        "scipy",
-        "pyparsing",
-        "packaging",
-    ],
-    extras_require={
-        "tests": EXTRAS_REQUIRE["tests"],
-        "optional": EXTRAS_REQUIRE["optional"],
-        "all": EXTRAS_REQUIRE["tests"] + EXTRAS_REQUIRE["optional"],
-    },
-    package_data={"mdtraj.formats.pdb": ["data/*"]},
     zip_safe=False,
-    entry_points={
-        "console_scripts": [
-            "mdconvert = mdtraj.scripts.mdconvert:entry_point",
-            "mdinspect = mdtraj.scripts.mdinspect:entry_point",
-        ],
-    },
 )
 
 

@@ -11,9 +11,18 @@
 [![DOI for Citing MDTraj](https://img.shields.io/badge/DOI-10.1016%2Fj.bpj.2015.08.015-blue.svg)](http://doi.org/10.1016/j.bpj.2015.08.015)
 [![Documentation Status](https://readthedocs.org/projects/mdtraj/badge/?version=latest)](https://mdtraj.readthedocs.io/en/latest/?badge=latest)
 
+MDTraj is a python library that allows users to manipulate molecular dynamics
+(MD) trajectories and perform a variety of analyses, including fast RMSD,
+solvent accessible surface area, hydrogen bonding, etc. A highlight of MDTraj
+is the wide variety of molecular dynamics trajectory file formats which are
+supported, including RCSB pdb, GROMACS xtc, and trr, CHARMM / NAMD dcd, AMBER
+AMBER NetCDF, AMBER mdcrd, TINKER arc and MDTraj HDF5."
+
 Read, write and analyze MD trajectories with only a few lines of Python code.
 
-With MDTraj, you can
+##  Features
+
+With MDTraj, you can:
 
 - Read and write from **every MD format imaginable** (`pdb`, `xtc`, `trr`, `dcd`, `netcdf`, `mdcrd`, `prmtop`, `gsd`, ...)
 - Run **blazingly** fast RMSD calculations (4x the speed of the original Theobald QCP).
