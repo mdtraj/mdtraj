@@ -138,14 +138,14 @@ def load_mol2(filename):
         "ar": Aromatic,
     }
     if bonds is not None:
-        bonds_mdtraj = bonds[["id0", "id1"]].values
+        bonds_mdtraj = bonds[["id0", "id1"]].to_numpy()
         offset = bonds_mdtraj.min()  # Should this just be 1???
         bonds_mdtraj -= offset
         # Create the bond augment information
         n_bonds = bonds_mdtraj.shape[0]
         bond_augment = np.zeros([n_bonds, 2], dtype=float)
         # Add bond type information
-        bond_augment[:, 0] = [float(bond_type_map[str(bond_value)]) for bond_value in bonds["bond_type"].values]
+        bond_augment[:, 0] = [float(bond_type_map[str(bond_value)]) for bond_value in bonds["bond_type"].to_numpy()]
         # Add Bond "order" information, this is not known from Mol2 files
         bond_augment[:, 1] = [0.0 for _ in range(n_bonds)]
         # Augment array, dtype is cast to minimal representation of float
@@ -155,7 +155,7 @@ def load_mol2(filename):
 
     top = Topology.from_dataframe(atoms_mdtraj, bonds_mdtraj)
 
-    xyzlist = np.array([atoms[["x", "y", "z"]].values])
+    xyzlist = np.array([atoms[["x", "y", "z"]].to_numpy()])
     xyzlist /= 10.0  # Convert from angstrom to nanometer
 
     traj = Trajectory(xyzlist, top)

@@ -343,7 +343,7 @@ def chemical_shifts_spartaplus(trj, rename_HN=True):
     results = pd.concat(results)
 
     if rename_HN:
-        results.name[results.name == "HN"] = "H"
+        results.loc[results["name"] == "HN", "name"] = "H"
 
     return results.pivot_table(
         index=["resSeq", "name"],
@@ -383,7 +383,7 @@ def reindex_dataframe_by_atoms(trj, frame):
 
     new_frame = frame.copy()
 
-    new_frame["serial"] = top.ix[new_frame.index].serial
+    new_frame["serial"] = top.reindex(new_frame.index)["serial"]
     new_frame = new_frame.dropna().reset_index().set_index("serial").drop(["resSeq", "name"], axis=1)
 
     return new_frame

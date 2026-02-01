@@ -3,6 +3,14 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.11.2 (Unreleased)
+--------------------
+* Update pandas-related code paths for pandas 3 compatibility (avoid deprecated ``.ix`` and ``.values`` usage).
+* Enable pandas future string inference in tests to surface pandas 3 string dtype issues early.
+* Add ``pyarrow`` to optional/test/docs dependencies for Arrow-backed string coverage.
+* Fix LH5 topology writes to avoid read-only array assignments when using pyarrow-backed data.
+* Add pandas upgrade status/ambiguities documentation.
+
 v1.11.1 (January 15, 2026)
 --------------------------
 * Update pypi upload trigger by @janash in #2054
