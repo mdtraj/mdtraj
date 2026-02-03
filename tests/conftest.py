@@ -34,6 +34,14 @@ from mdtraj import element
 from mdtraj.utils.unitcell import check_valid_unitcell_angles
 
 
+def pytest_configure(config):
+    """This runs before all the tests. Untars the reference files"""
+    test_path = Path(__file__).parent
+    if not os.path.exists(f"{test_path}/data"):
+        with tarfile.open(f"{test_path}/data.tar.gz") as tar:
+            tar.extractall(path=f"{test_path}", filter="fully_trusted")
+
+
 @pytest.fixture(scope="session")
 def get_fn():
     test_dir = os.path.dirname(os.path.abspath(__file__))
@@ -147,6 +155,7 @@ def h5traj_full_metadata(tmp_path):
 
 @pytest.fixture(scope="session")
 def vcr_config(request):
+    """This runs during pytest-recording setup. Untars the cassettes."""
     test_path = Path(__file__).parent
     with tarfile.open(f"{test_path}/cassettes.tar.gz") as tar:
         tar.extractall(path=f"{test_path}", filter="fully_trusted")

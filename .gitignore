@@ -64,3 +64,8 @@ mdtraj/rmsd/_rmsd.cpp
 
 result/
 result
+
+# Test reference files etc.
+tests/._casettes
+tests/casettes
+tests/data
