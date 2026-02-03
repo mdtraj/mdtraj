@@ -292,7 +292,7 @@ EXTRAS_REQUIRE = {
         "tables",
         "networkx",
         "netCDF4",
-        "pandas",
+        "pandas<3",
     ],
 }
 
