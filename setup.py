@@ -287,6 +287,7 @@ EXTRAS_REQUIRE = {
         "pytest",
         "pytest-rerunfailures",
         "pytest-xdist",
+        "pytest-recording",
     ],
     "optional": [
         "tables",
