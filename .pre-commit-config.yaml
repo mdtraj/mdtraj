@@ -16,5 +16,9 @@ repos:
     - id: ruff
       args: [--fix]
     - id: ruff-format
+- repo: https://github.com/tox-dev/pyproject-fmt
+  rev: "v2.12.1"
+  hooks:
+    - id: pyproject-fmt
 ci:
   autoupdate_schedule: 'monthly'

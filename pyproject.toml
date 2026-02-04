@@ -1,66 +1,113 @@
 [build-system]
-requires = [
-    "setuptools",
-    "versioneer[toml]",
-    "wheel",
-    "numpy~=2.0",
-    "Cython>=3.0.0",
-]
 build-backend = "setuptools.build_meta:__legacy__"
+requires = [
+  "cython>=3",
+  "numpy~=2.0",
+  "setuptools",
+  "versioneer[toml]",
+  "wheel",
+]
 
 [project]
 name = "mdtraj"
-authors = [
-    {name = "Robert McGibbon", email = "rmcgibbo@gmail.com"}
-]
 description = "MDTraj: A modern, open library for the analysis of molecular dynamics trajectories"
-readme = {file = "README.md", content-type = "text/markdown"}
-keywords = []
-license = "LGPL-2.1-or-later"
-license-files = ["LICEN[CS]E*"]
-dynamic = ["version"]
-classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Science/Research",
-    "Intended Audience :: Developers",
-    "Programming Language :: C",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Topic :: Scientific/Engineering :: Bio-Informatics",
-    "Topic :: Scientific/Engineering :: Chemistry",
-    "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX",
-    "Operating System :: Unix",
-    "Operating System :: MacOS",
+readme = { file = "README.md", content-type = "text/markdown" }
+keywords = [  ]
+license = "LGPL-2.1-OR-later"
+license-files = [ "LICEN[CS]E*" ]
+authors = [
+  { name = "Robert McGibbon", email = "rmcgibbo@gmail.com" },
 ]
 requires-python = ">=3.11"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX",
+  "Operating System :: Unix",
+  "Programming Language :: C",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+  "Topic :: Scientific/Engineering :: Chemistry",
+]
+dynamic = [ "version" ]
 dependencies = [
-    "numpy~=2.0",
-    "scipy",
-    "pyparsing",
-    "packaging",
+  "numpy~=2.0",
+  "packaging",
+  "pyparsing",
+  "scipy",
 ]
 
-[project.optional-dependencies]
-tests = ["pytest", "pytest-rerunfailures", "pytest-xdist", "pytest-recording"]
-optional = ["tables", "networkx", "netCDF4", "pandas<3"]
-all = ["mdtraj[tests]", "mdtraj[optional]"]
-
-[project.scripts]
-mdconvert = "mdtraj.scripts.mdconvert:entry_point"
-mdinspect = "mdtraj.scripts.mdinspect:entry_point"
-
-[project.urls]
-homepage = "https://mdtraj.org"
-download = "https://github.com/mdtraj/mdtraj/releases/latest"
-source = "https://github.com/mdtraj/mdtraj"
-issues = "https://githubcom/mdtraj/mdtraj/issues"
-
-[tool.setuptools.packages.find]
-where = ["."]
+optional-dependencies.all = [ "mdtraj[optional]", "mdtraj[tests]" ]
+optional-dependencies.optional = [ "netcdf4", "networkx", "pandas<3", "tables" ]
+optional-dependencies.tests = [ "pytest", "pytest-recording", "pytest-rerunfailures", "pytest-xdist" ]
+urls.download = "https://github.com/mdtraj/mdtraj/releases/latest"
+urls.homepage = "https://mdtraj.org"
+urls.issues = "https://githubcom/mdtraj/mdtraj/issues"
+urls.source = "https://github.com/mdtraj/mdtraj"
+scripts.mdconvert = "mdtraj.scripts.mdconvert:entry_point"
+scripts.mdinspect = "mdtraj.scripts.mdinspect:entry_point"
 
 [tool.setuptools.package-data]
-"mdtraj.formats.pdb" = ["data/*"]
+"mdtraj.formats.pdb" = [ "data/*" ]
+
+[tool.setuptools.packages.find]
+where = [ "." ]
+
+[tool.ruff]
+line-length = 119
+extend-exclude = [ "mdtraj/_version.py" ]
+
+lint.select = [
+  "E",
+  "F",
+  "I",
+  "NPY",
+  "UP",
+  "W",
+]
+lint.per-file-ignores."*" = [ "NPY002", "UP031" ]
+# Would really, really like to get rid of F403, though F401 is okay
+lint.per-file-ignores."__init__.py" = [ "F401", "F403" ]
+lint.per-file-ignores."mdtraj/core/trajectory.py" = [ "F401" ]
+lint.per-file-ignores."mdtraj/geometry/__init__.py" = [ "F403", "F405" ]
+lint.per-file-ignores."mdtraj/utils/unit/**" = [ "F403", "F405" ]
+
+[tool.pytest.ini_options]
+testpaths = [
+  "tests",
+  "examples",
+]
+addopts = "-v -ra"
+filterwarnings = [
+  "ignore:.*Function restrict_atoms is deprecated;.*:DeprecationWarning",
+  "ignore:.*Using or importing the ABCs from 'collections' instead of.*:DeprecationWarning",
+  "ignore:.*The 'netCDF4' Python package.*:UserWarning",
+  "ignore:.*top= kwargs ignored since this file parser does not support it.*:UserWarning",
+  "ignore:.*object name is a Python keyword.*:tables.NaturalNameWarning",
+  "ignore:.*Casting *:mdtraj.utils.validation.TypeCastPerformanceWarning",
+  "ignore:.*Unlikely unit cell *:UserWarning",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+  "@overload",
+]
+[tool.coverage.run]
+omit = [
+  "*test_*.py",
+  "*testing/*.py",
+]
 
 [tool.versioneer]
 VCS = "git"
@@ -69,55 +116,3 @@ versionfile_source = "mdtraj/_version.py"
 versionfile_build = "mdtraj/_version.py"
 tag_prefix = ""
 parentdir_prefix = "mdtraj-"
-
-[tool.ruff]
-line-length=119
-extend-exclude = ["mdtraj/_version.py"]
-
-[tool.ruff.lint]
-select = [
-    "F",
-    "I",
-    "E",
-    "W",
-    "UP",
-    "NPY",
-]
-
-[tool.ruff.lint.per-file-ignores]
-# Would really, really like to get rid of F403, though F401 is okay
-"__init__.py" = ["F401", "F403"]
-"*" = ["UP031", "NPY002"]
-"mdtraj/geometry/__init__.py" = ["F403", "F405"]
-"mdtraj/core/trajectory.py" = ["F401"]
-"mdtraj/utils/unit/**" = ["F403", "F405"]
-
-[tool.pytest.ini_options]
-testpaths = [
-    "tests",
-    "examples",
-]
-addopts = "-v -ra"
-filterwarnings = [
-    "ignore:.*Function restrict_atoms is deprecated;.*:DeprecationWarning",
-    "ignore:.*Using or importing the ABCs from 'collections' instead of.*:DeprecationWarning",
-    "ignore:.*The 'netCDF4' Python package.*:UserWarning",
-    "ignore:.*top= kwargs ignored since this file parser does not support it.*:UserWarning",
-    "ignore:.*object name is a Python keyword.*:tables.NaturalNameWarning",
-    "ignore:.*Casting *:mdtraj.utils.validation.TypeCastPerformanceWarning",
-    "ignore:.*Unlikely unit cell *:UserWarning",
-]
-
-[tool.coverage.run]
-omit = [
-    "*test_*.py",
-    "*testing/*.py",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "raise NotImplementedError",
-    "@overload",
-]
