@@ -42,7 +42,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-tests = ["pytest", "pytest-rerunfailures", "pytest-xdist"]
+tests = ["pytest", "pytest-rerunfailures", "pytest-xdist", "pytest-recording"]
 optional = ["tables", "networkx", "netCDF4", "pandas<3"]
 all = ["mdtraj[tests]", "mdtraj[optional]"]
 

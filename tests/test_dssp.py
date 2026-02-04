@@ -2,7 +2,6 @@ import itertools
 
 import numpy as np
 import pytest
-from conftest import flaky_pdb_dl
 
 import mdtraj as md
 
@@ -61,12 +60,12 @@ def test_2(get_fn, tmpdir, fn):
         assert_(call_dssp(get_fn, fn, i), md.compute_dssp(t[i], simplified=False)[0])
 
 
-@flaky_pdb_dl
 @pytest.mark.parametrize("pdbid", ["1GAI", "6gsv", "2AAC"])
+@pytest.mark.default_cassette("dssp.yaml")
+@pytest.mark.vcr(allow_playback_repeats=True)
 def test_3(get_fn, tmpdir, pdbid):
     """This test checks dssp assignments on pdb files downloaded from rcsb"""
-    # 1COY gives a small error, due to a broken chain.
-    t = md.load_pdb("https://www.rcsb.org/pdb/files/%s.pdb" % pdbid)
+    t = md.load_pdb("https://files.rcsb.org/download/%s.pdb" % pdbid)
     t = t.atom_slice(t.top.select_atom_indices("minimal"))
     assert_(call_dssp(get_fn, pdbid), md.compute_dssp(t, simplified=False)[0])
 
