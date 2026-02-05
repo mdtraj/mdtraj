@@ -448,7 +448,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
         residue_indices = sorted(set([target.topology.atom(i).residue.index for i in atom_indices]))
         n_residues = len(residue_indices)
         residue_fluctuations = np.zeros(n_residues, dtype=np.float32)
-        
+
         for i in range(n_residues):
             r_indx = residue_indices[i]
             residue_mass = 0.0
