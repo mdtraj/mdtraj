@@ -266,6 +266,22 @@ def test_trajectory_rmsf_aligned(get_fn):
         eq(calculated, reference, decimal=3)
 
 
+def test_trajectory_rmsf_by_residue(get_fn):
+    t = md.load(get_fn("traj.h5"))
+    for parallel in [True, False]:
+        calculated = md.rmsf(t, t, 0, parallel=parallel, by_residue=True)
+        t.superpose(t, 0)
+        avg_xyz = np.average(t.xyz, axis=0)
+        reference = np.zeros(t.topology.n_residues)
+        masses = np.array([a.element.mass for a in t.topology.atoms])
+        for i in range(t.topology.n_residues):
+            indices = t.topology.select(f"resid {i}")
+            msf = 3 * np.mean((t.xyz[:, indices] - avg_xyz[indices]) ** 2, axis=(0, 2))
+            reference[i] = np.sqrt(np.sum(msf * masses[indices]) / np.sum(masses[indices]))
+        assert np.sum(np.abs(calculated)) > 0  # check trivial error
+        eq(calculated, reference, decimal=3)
+
+
 def test_rmsd_atom_indices_vs_ref_indices():
     n_frames = 1
     n_atoms_1 = 1
