@@ -1,4 +1,4 @@
-name: codex-mdtraj
+name: mdtraj-test
 channels:
   - conda-forge
 dependencies:
