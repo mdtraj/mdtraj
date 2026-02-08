@@ -42,20 +42,6 @@ def pytest_configure(config):
             tar.extractall(path=f"{test_path}", filter="fully_trusted")
 
 
-def pytest_configure(config):
-    try:
-        import pandas as pd
-    except ImportError:
-        return
-
-    # Enable pandas 3 string inference early to catch issues on pandas 2.3.
-    try:
-        pd.options.future.infer_string = True
-    except (AttributeError, KeyError, ValueError):
-        # Option may not exist or be configurable in some pandas versions.
-        return
-
-
 @pytest.fixture(scope="session")
 def get_fn():
     test_dir = os.path.dirname(os.path.abspath(__file__))
