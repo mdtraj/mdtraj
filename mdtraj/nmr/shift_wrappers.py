@@ -383,7 +383,7 @@ def reindex_dataframe_by_atoms(trj, frame):
 
     new_frame = frame.copy()
 
-    new_frame["serial"] = top.reindex(new_frame.index)["serial"]
+    new_frame["serial"] = top.loc[new_frame.index, "serial"]
     new_frame = new_frame.dropna().reset_index().set_index("serial").drop(["resSeq", "name"], axis=1)
 
     return new_frame
