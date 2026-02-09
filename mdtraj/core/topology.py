@@ -264,7 +264,7 @@ class Topology:
 
         for bond in self.bonds:
             a1, a2 = bond
-            out.add_bond(a1, a2, type=bond.type, order=bond.order)
+            out.add_bond(out.atom(a1.index), out.atom(a2.index), type=bond.type, order=bond.order)
 
         return out
 
