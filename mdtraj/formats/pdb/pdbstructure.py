@@ -428,16 +428,20 @@ class PdbStructure:
                 self._reset_residue_numbers()
 
             elif pdb_line.find("CRYST1") == 0:
-                self._unit_cell_lengths = (
-                    float(pdb_line[6:15]),
-                    float(pdb_line[15:24]),
-                    float(pdb_line[24:33]),
-                )
-                self._unit_cell_angles = (
-                    float(pdb_line[33:40]),
-                    float(pdb_line[40:47]),
-                    float(pdb_line[47:54]),
-                )
+                try:
+                    self._unit_cell_lengths = (
+                        float(pdb_line[6:15]),
+                        float(pdb_line[15:24]),
+                        float(pdb_line[24:33]),
+                    )
+                    self._unit_cell_angles = (
+                        float(pdb_line[33:40]),
+                        float(pdb_line[40:47]),
+                        float(pdb_line[47:54]),
+                    )
+                except ValueError:
+                    # "CRYST1" key exists, but possibly empty fields
+                    pass
 
             elif pdb_line.find("CONECT") == 0:
                 atoms = []
