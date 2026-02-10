@@ -435,6 +435,10 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
                                     (target_displaced_xyz[i, j, 1] - avg_xyz_frame[j, 1])**2 +
                                     (target_displaced_xyz[i, j, 2] - avg_xyz_frame[j, 2])**2) / target_n_frames
 
+    cdef float[:] residue_fluctuations
+    cdef int[:] residue_indices
+    cdef int n_residues
+
     if not by_residue:
         for j in range(n_atoms):
             fluctuations[j] = sqrtf(fluctuations[j])
@@ -445,7 +449,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
     else:
         if atom_indices_is_none:
             atom_indices = np.arange(n_atoms)
-        residue_indices = sorted(set([target.topology.atom(i).residue.index for i in atom_indices]))
+        residue_indices = np.array(sorted(set([target.topology.atom(i).residue.index for i in atom_indices])), dtype=np.int32)
         n_residues = len(residue_indices)
         residue_fluctuations = np.zeros(n_residues, dtype=np.float32)
 
@@ -457,7 +461,9 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
                 residue_fluctuations[i] += fluctuations[j] * target.topology.atom(j).element.mass
                 residue_mass += target.topology.atom(j).element.mass
             residue_fluctuations[i] /= residue_mass
-        return np.sqrt(residue_fluctuations)
+
+            residue_fluctuations[i] = sqrtf(residue_fluctuations[i])
+        return np.array(residue_fluctuations, copy=False)
 
 
 def _center_inplace_atom_major(float[:, :, ::1] xyz not None):
