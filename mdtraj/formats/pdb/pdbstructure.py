@@ -389,8 +389,8 @@ class PdbStructure:
 
         # Read one line at a time
         for pdb_line in input_stream:
-            match pdb_line[:6]:
-                case "ATOM  " | "HETATM":
+            match pdb_line[:6].strip():
+                case "ATOM" | "HETATM":
                     # Look for atoms
                     if state == "NEW_MODEL":
                         new_number = self._current_model.number + 1
@@ -398,7 +398,7 @@ class PdbStructure:
                         state = None
                     self._add_atom(Atom(pdb_line, self))
 
-                case "MODEL ":
+                case "MODEL":
                     # Notice MODEL punctuation, for the next level of detail
                     # in the structure->model->chain->residue->atom->position hierarchy
                     # model_number = int(pdb_line[10:14])
@@ -418,14 +418,14 @@ class PdbStructure:
                     else:
                         break
 
-                case "END   " | "END\n" | "END":
+                case "END":
                     self._current_model._finalize()
                     if self.load_all_models:
                         state = "NEW_MODEL"
                     else:
                         break
 
-                case "TER   " | "TER":
+                case "TER":
                     self._current_model._current_chain._add_ter_record()
                     self._reset_residue_numbers()
 
