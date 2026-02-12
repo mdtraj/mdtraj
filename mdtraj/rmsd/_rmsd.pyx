@@ -245,8 +245,9 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
 
 @cython.boundscheck(False)
 def rmsf(target, reference, int frame=0, atom_indices=None,
-         ref_atom_indices=None, bool parallel=True, bool precentered=False):
-    """rmsf(target, reference, frame=0, atom_indices=None, parallel=True, precentered=False)
+         ref_atom_indices=None, bool parallel=True, bool precentered=False,
+         bool by_residue=False):
+    """rmsf(target, reference, frame=0, atom_indices=None, parallel=True, precentered=False, by_residue=False)
 
     Compute RMSF of atom positions in target trajectory. This will center target conformations in place.
 
@@ -280,6 +281,10 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
         be unsafe; if you use Trajectory.center_coordinates and then modify
         the trajectory's coordinates, the center and traces will be out of
         date and the RMSFs will be incorrect.
+    by_residue : bool, default=False
+        Return the RMSF of each residue, rather than each atom. The values honor
+        any atom index filtering applied, and are mass-weighted to match the
+        corresponding GROMACS algorithm.
 
     Examples
     --------
@@ -310,11 +315,13 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
 
     Returns
     -------
-    rmsf : np.ndarray, shape=(atom_indices,)
+    rmsf : np.ndarray, shape=(atom_indices,) or np.ndarray, shape=(n_residues,)
         A 1-D numpy array of the optimal root-mean-square fluctuations of the
-       selected atoms.
+        selected atoms, (if by_residue is False), or of all residues (if by_residue
+        is True), in which case any residue not containing any of the selected
+        atoms is flagged with an rmsf value of -1.0.
     """
-    # import time
+    #import time
     cdef bool atom_indices_is_none = False
     cdef bool trajectory_prealigned = False
 
@@ -373,7 +380,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
     ref_xyz_frame = np.asarray(reference.xyz[frame, ref_atom_indices, :], order='C', dtype=np.float32)
     avg_xyz_frame = np.zeros_like(reference.xyz[frame, ref_atom_indices, :], order='C', dtype=np.float32)
 
-    # t0 = time.time()
+    #t0 = time.time()
     if precentered and (reference._rmsd_traces is not None) and (target._rmsd_traces is not None) and atom_indices_is_none:
         target_g = np.asarray(target._rmsd_traces, order='C', dtype=np.float32)
         ref_g = reference._rmsd_traces[frame]
@@ -386,7 +393,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
         inplace_center_and_trace_atom_major(&target_xyz[0,0,0], &target_g[0], target_n_frames, n_atoms)
         inplace_center_and_trace_atom_major(&ref_xyz_frame[0, 0], &ref_g, 1, n_atoms)
 
-    # t1 = time.time()
+    #t1 = time.time()
 
     cdef float[:] fluctuations = np.zeros(n_atoms, dtype=np.float32)
     # we could get away with using less memory here: we only need 1 rotation
@@ -394,7 +401,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
     cdef float[:, :, ::1] rot = np.zeros((target_n_frames, 3, 3), dtype=np.float32)
     target_displaced_xyz = np.array(target.xyz[:, atom_indices, :], copy=True)
 
-    if trajectory_prealigned == False:
+    if trajectory_prealigned is False:
         if parallel:
             for i in prange(target_n_frames, nogil=True):
                 msd_atom_major(n_atoms, n_atoms, &target_xyz[i, 0, 0], &ref_xyz_frame[0, 0], ref_g, target_g[i], 1, &rot[i, 0, 0])
@@ -430,12 +437,45 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
                                     (target_displaced_xyz[i, j, 1] - avg_xyz_frame[j, 1])**2 +
                                     (target_displaced_xyz[i, j, 2] - avg_xyz_frame[j, 2])**2) / target_n_frames
 
-    for j in range(n_atoms):
-        fluctuations[j] = sqrtf(fluctuations[j])
+    #t3 = time.time()
 
-    # t2 = time.time()
-    # print 'rmsd: %s, centering: %s' % (t2-t1, t1-t0)
-    return np.array(fluctuations, copy=False)
+    # Declaring variables for "by_residue", might not be needed
+    cdef int[:] residue_indices
+    cdef int n_residues
+    cdef float[:] residue_fluctuations
+    cdef float[:] residue_masses
+    cdef float[:] residue_total_mass
+
+    if not by_residue:
+        for j in range(n_atoms):
+            fluctuations[j] = sqrtf(fluctuations[j])
+        # t2 = time.time()
+        # print 'rmsd: %s, centering: %s' % (t2-t1, t1-t0)
+        return np.array(fluctuations, copy=False)
+
+    else:
+        if atom_indices_is_none:
+            atom_indices = np.arange(n_atoms)
+
+        # Actually intializing variables now that we know we need it
+        residue_indices = np.array([target.topology.atom(i).residue.index for i in atom_indices], dtype=np.int32)
+        n_residues = target.topology.n_residues
+        residue_fluctuations = np.zeros((n_residues, ), dtype=np.float32)
+        residue_masses = np.array([float(target.topology.atom(j).element.mass) for j in atom_indices], dtype=np.float32)
+        residue_total_mass = np.zeros((n_residues,), dtype=np.float32)
+
+        for i in range(n_atoms):
+            residue_fluctuations[residue_indices[i]] += fluctuations[i] * residue_masses[i]
+            residue_total_mass[residue_indices[i]] += residue_masses[i]
+
+        for i in range(n_residues):
+            if residue_total_mass[i] > 0: # at least one atom in this residue was selected
+                residue_fluctuations[i] = sqrtf(residue_fluctuations[i] / residue_total_mass[i])
+            else:
+                residue_fluctuations[i] = -1.0 # Flag value for residues not selected
+
+        #print(time.time() - t3)
+        return np.array(residue_fluctuations, copy=False)
 
 
 def _center_inplace_atom_major(float[:, :, ::1] xyz not None):
