@@ -32,6 +32,7 @@ rng = np.random.default_rng(seed=52)
 
 import time
 
+
 @pytest.mark.parametrize("parallel", [True, False], ids=["parallel", "serial"])
 @pytest.mark.parametrize("superpose", [True, False], ids=["superpose", "qcp"])
 def test_trajectory_rmsd(get_fn, parallel, superpose):
@@ -267,7 +268,7 @@ def test_trajectory_rmsf_aligned(get_fn):
         eq(calculated, reference, decimal=3)
 
 
-@pytest.mark.parametrize("parallel", [True, False], ids=['parallel', 'serial'])
+@pytest.mark.parametrize("parallel", [True, False], ids=["parallel", "serial"])
 def test_trajectory_rmsf_by_residue(get_fn, parallel):
     t = md.load(get_fn("traj.h5"))
     # t0 = time.time()
