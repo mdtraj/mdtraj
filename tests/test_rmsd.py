@@ -30,8 +30,6 @@ from mdtraj.testing import eq
 
 rng = np.random.default_rng(seed=52)
 
-import time
-
 
 @pytest.mark.parametrize("parallel", [True, False], ids=["parallel", "serial"])
 @pytest.mark.parametrize("superpose", [True, False], ids=["superpose", "qcp"])
@@ -284,7 +282,7 @@ def test_trajectory_rmsf_by_residue(get_fn, parallel):
         indices = t.topology.select(f"resid {i}")
         msf = 3 * np.mean((t.xyz[:, indices] - avg_xyz[indices]) ** 2, axis=(0, 2))
         reference[i] = np.sqrt(np.sum(msf * masses[indices]) / np.sum(masses[indices]))
-    
+
     assert np.sum(np.abs(calculated)) > 0  # check trivial error
     eq(calculated, reference, decimal=3)
 
