@@ -315,9 +315,11 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
 
     Returns
     -------
-    rmsf : np.ndarray, shape=(atom_indices,) or np.ndarry, shape=(residue_indices,)
+    rmsf : np.ndarray, shape=(atom_indices,) or np.ndarray, shape=(n_residues,)
         A 1-D numpy array of the optimal root-mean-square fluctuations of the
-       selected atoms/residues.
+        selected atoms, (if by_residue is False), or of all residues (if by_residue
+        is True), in which case any residue not containing any of the selected
+        atoms is flagged with an rmsf value of -1.0.
     """
     #import time
     cdef bool atom_indices_is_none = False
@@ -457,7 +459,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
 
         # Actually intializing variables now that we know we need it
         residue_indices = np.array([target.topology.atom(i).residue.index for i in atom_indices], dtype=np.int32)
-        n_residues = len(set(residue_indices))
+        n_residues = target.topology.n_residues
         residue_fluctuations = np.zeros((n_residues, ), dtype=np.float32)
         residue_masses = np.array([float(target.topology.atom(j).element.mass) for j in atom_indices], dtype=np.float32)
         residue_total_mass = np.zeros((n_residues,), dtype=np.float32)
@@ -467,9 +469,10 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
             residue_total_mass[residue_indices[i]] += residue_masses[i]
 
         for i in range(n_residues):
-            residue_fluctuations[i] /= residue_total_mass[i]
-
-            residue_fluctuations[i] = sqrtf(residue_fluctuations[i])
+            if residue_total_mass[i] > 0: # at least one atom in this residue was selected
+                residue_fluctuations[i] = sqrtf(residue_fluctuations[i] / residue_total_mass[i])
+            else:
+                residue_fluctuations[i] = -1.0 # Flag value for residues not selected
 
         #print(time.time() - t3)
         return np.array(residue_fluctuations, copy=False)
