@@ -202,7 +202,7 @@ def test_topology_unique_elements_bpti(get_fn):
     traj = md.load(get_fn("bpti.pdb"))
     top, bonds = traj.top.to_dataframe()
     atoms = np.unique(["C", "O", "N", "H", "S"])
-    eq(atoms, np.unique(top.element.values))
+    eq(atoms, np.unique(top.element.to_numpy()))
 
 
 def test_chain(get_fn):

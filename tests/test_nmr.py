@@ -18,7 +18,7 @@ def test_spartaplus(get_fn):
 
     print(result)
     eq(result.shape[1], 20)  # 2EQQ is NMR structure with 20 frames
-    eq(float(result.ix[(1, "HA")][0]), 4.378, decimal=4)
+    eq(float(result.loc[(1, "HA"), 0]), 4.378, decimal=4)
     # 4.378 taken from first entry in pred.tab, which looks like the following:
     #  1    E   HA     0.000     4.378     4.350     0.047     0.000     0.291
 
@@ -34,7 +34,7 @@ def test_ppm(get_fn):
     print(result)
 
     eq(result.shape[1], 20)  # 2EQQ is NMR structure with 20 frames
-    eq(float(result.ix[(2, "CA")][0]), 53.004, decimal=4)
+    eq(float(result.loc[(2, "CA"), 0]), 53.004, decimal=4)
     # taken from first entry in bb_details.dat, which looks like the following:
     #       2     ASN   CA    999.000  53.004  51.168  51.802  53.081  54.098  52.820  52.379  51.856  53.034  52.754  54.134  54.222  51.210  52.207  50.824  54.459  53.605  54.211  53.688  52.344  53.004  51.168  51.802  53.081  54.098  52.820  52.379  51.856  53.034  52.754  54.134  54.222  51.210  52.207  50.824  54.459  53.605  54.211  53.688  52.344  # noqa
 
@@ -50,7 +50,7 @@ def test_shiftx2(get_fn):
     print(result)
 
     eq(result.shape[1], 20)  # 2EQQ is NMR structure with 20 frames
-    eq(float(result.ix[(1, "C")][0]), 175.2570, decimal=4)
+    eq(float(result.loc[(1, "C"), 0]), 175.2570, decimal=4)
     # taken from first entry in trj.pdb.cs, which looks like the following:
     #  NUM,RES,ATOMNAME,SHIFT
     #  1,E,C,175.2570
