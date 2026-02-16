@@ -645,6 +645,18 @@ def test_ala3_CRYST1_read(get_fn, tmp_path):
             new_file.write(line)
 
     traj = load(new_file_path)
+    ref_traj = load(get_fn("ala_ala_ala.pdb"))
 
     assert traj.unitcell_lengths is None
     assert traj.unitcell_angles is None
+
+    eq(
+        traj._xyz,
+        ref_traj.xyz,
+        err_msg="Coordinates mismatch between file with empty CRYST1 line and file without that line at all",
+    )
+    eq(
+        traj.top,
+        ref_traj.top,
+        err_msg="Topology mismatch between file with empty CRYST1 line and file without that line at all",
+    )
