@@ -632,3 +632,19 @@ def test_bond_order_conect_priority(get_fn, bond_orders, ref_orders):
 
     bond = [str(traj.top._bonds[0].type), traj.top._bonds[0].order]
     eq(bond, ref_orders, err_msg="Inconsistent bond type, bond order read")
+
+
+def test_ala3_CRYST1_read(get_fn, tmp_path):
+    """Test that a pdb reads properly when CRYST1 key exists but none of the angles or lengths are specified"""
+
+    new_file_path = tmp_path / "ala3_patched.pdb"
+
+    with open(get_fn("ala_ala_ala.pdb")) as ref_file, open(new_file_path, "w") as new_file:
+        new_file.write("CRYST1                                                               1          \n")
+        for line in ref_file.readlines()[2:]:
+            new_file.write(line)
+
+    traj = load(new_file_path)
+
+    assert traj.unitcell_lengths is None
+    assert traj.unitcell_angles is None
