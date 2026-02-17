@@ -337,7 +337,7 @@ def pi_stacking(
     ligand_aromatic_groups,
     receptor_aromatic_groups,
     ligand_neighbor_cutoff=None,
-    max_face_to_face_centroid_distance=5.5,
+    max_face_to_face_centroid_distance=0.55,
     face_plane_angle_range=(0.0, 35.0),
     face_normal_to_centroid_angle_range=(0.0, 33.0),
     max_edge_to_face_centroid_distance=0.65,

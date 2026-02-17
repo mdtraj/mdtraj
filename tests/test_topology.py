@@ -423,6 +423,32 @@ def test_copy(get_fn, filename):
         assert x == y, f"Atoms {x} and {y} do not match."
 
 
+def test_copy_bonds_reference_new_atoms():
+    """Test that Topology.copy() remaps bonds to atoms in the new topology.
+
+    Regression test for https://github.com/mdtraj/mdtraj/issues/2114.
+    Previously, copy() added bonds referencing atoms from the original topology,
+    which could cause KeyError in save_cif when using chain objects as dict keys.
+    """
+    top = md.Topology()
+    chain = top.add_chain()
+    res = top.add_residue("ALA", chain, 1)
+    a1 = top.add_atom("CA", md.element.carbon, res)
+    a2 = top.add_atom("N", md.element.nitrogen, res)
+    top.add_bond(a1, a2)
+
+    copied = top.copy()
+
+    orig_atoms = set(id(a) for a in top.atoms)
+    new_atoms = set(id(a) for a in copied.atoms)
+
+    for bond in copied.bonds:
+        assert id(bond[0]) in new_atoms, "Bond atom1 references original topology"
+        assert id(bond[1]) in new_atoms, "Bond atom2 references original topology"
+        assert id(bond[0]) not in orig_atoms, "Bond atom1 should not be from original"
+        assert id(bond[1]) not in orig_atoms, "Bond atom2 should not be from original"
+
+
 def test_topology_sliced_residue_indices(get_fn):
     # https://github.com/mdtraj/mdtraj/issues/1585
     full = md.load(get_fn("1bpi.pdb"))

@@ -32,6 +32,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 __author__ = "Peter Eastman"
 __version__ = "2.0"
 
+import os
 import sys
 import warnings
 from collections import defaultdict
@@ -78,8 +79,8 @@ class PDBxFile:
 
         inputFile = file
         ownHandle = False
-        if isinstance(file, str):
-            inputFile = open_maybe_zipped(file, "r")
+        if isinstance(file, (str, os.PathLike)):
+            inputFile = open_maybe_zipped(str(file), "r")
             ownHandle = True
         reader = PdbxReader(inputFile)
         data = []
@@ -392,7 +393,7 @@ class PDBxFile:
             The list of B-factors to write for each atom. If None, all B-factors
             will be set to 0.0.
         """
-        if isinstance(file, str):
+        if isinstance(file, (str, os.PathLike)):
             with open(file, "w") as output:
                 PDBxFile.writeFile(topology, positions, output, keepIds, entry)
         else:

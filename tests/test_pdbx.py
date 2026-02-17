@@ -340,3 +340,29 @@ def test_residue_selection_from_cif(get_fn):
         top.select("residue 68"),
         top.select("resid 1"),
     ), "Expected atoms in residue 68 and resid 1 to be the same"
+
+
+def test_load_cif_with_pathlib(tmp_path):
+    """Test that CIF files can be loaded using pathlib.Path objects.
+
+    Regression test for https://github.com/mdtraj/mdtraj/issues/1663.
+    PDBxFile.__init__ previously only accepted str, not os.PathLike.
+    """
+    from pathlib import Path
+
+    top = Topology()
+    chain = top.add_chain()
+    res = top.add_residue("ALA", chain, 1)
+    top.add_atom("CA", element.carbon, res)
+    top.add_atom("N", element.nitrogen, res)
+
+    xyz = np.array([[[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]])
+    traj = Trajectory(xyz=xyz, topology=top)
+
+    cif_path = Path(tmp_path) / "test.cif"
+    traj.save_cif(str(cif_path))
+
+    # Load with pathlib.Path (this was previously failing with TypeError)
+    loaded = load(cif_path)
+    assert loaded.n_atoms == 2
+    assert loaded.n_frames == 1
