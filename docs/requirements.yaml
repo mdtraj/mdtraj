@@ -4,7 +4,7 @@ channels:
 dependencies:
   # Base depends
   - pip
-  - python
+  - python=3.13
 
   # other libraries
   - pandoc
