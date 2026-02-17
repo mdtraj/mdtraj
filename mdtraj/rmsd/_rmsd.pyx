@@ -286,7 +286,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
         In mode == 'residue', this is consolidated down to the per-residue
         RMSFs as the mass-weighted means over the constituent atoms, honoring
         any atom index filtering applied.
-    
+
 
     Examples
     --------
@@ -319,7 +319,7 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
     -------
     rmsf : np.ndarray, shape=(atom_indices,) or np.ndarray, shape=(n_residues,)
         A 1-D numpy array of the optimal root-mean-square fluctuations of the
-        selected atoms, (if mode == 'atom'), or of all residues (if mode == 
+        selected atoms, (if mode == 'atom'), or of all residues (if mode ==
         'residue'), in which case any residue not containing any of the selected
         atoms is flagged with an RMSF value of -1.0.
     """

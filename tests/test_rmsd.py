@@ -270,7 +270,7 @@ def test_trajectory_rmsf_aligned(get_fn):
 def test_trajectory_rmsf_by_residue(get_fn, parallel):
     t = md.load(get_fn("traj.h5"))
     # t0 = time.time()
-    calculated = md.rmsf(t, t, 0, parallel=parallel, mode='residue')
+    calculated = md.rmsf(t, t, 0, parallel=parallel, mode="residue")
     # print(time.time() - t0)
     # raise ValueError
     t.superpose(t, 0)
