@@ -246,8 +246,8 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
 @cython.boundscheck(False)
 def rmsf(target, reference, int frame=0, atom_indices=None,
          ref_atom_indices=None, bool parallel=True, bool precentered=False,
-         bool by_residue=False):
-    """rmsf(target, reference, frame=0, atom_indices=None, parallel=True, precentered=False, by_residue=False)
+         mode='atom'):
+    """rmsf(target, reference, frame=0, atom_indices=None, parallel=True, precentered=False, mode='atom')
 
     Compute RMSF of atom positions in target trajectory. This will center target conformations in place.
 
@@ -281,10 +281,12 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
         be unsafe; if you use Trajectory.center_coordinates and then modify
         the trajectory's coordinates, the center and traces will be out of
         date and the RMSFs will be incorrect.
-    by_residue : bool, default=False
-        Return the RMSF of each residue, rather than each atom. The values honor
-        any atom index filtering applied, and are mass-weighted to match the
-        corresponding GROMACS algorithm.
+    mode : {'atom', 'residue'}, default='atom'
+        In mode == 'atom', RMSFs are reported per-atom
+        In mode == 'residue', this is consolidated down to the per-residue
+        RMSFs as the mass-weighted means over the constituent atoms, honoring
+        any atom index filtering applied.
+    
 
     Examples
     --------
@@ -317,9 +319,9 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
     -------
     rmsf : np.ndarray, shape=(atom_indices,) or np.ndarray, shape=(n_residues,)
         A 1-D numpy array of the optimal root-mean-square fluctuations of the
-        selected atoms, (if by_residue is False), or of all residues (if by_residue
-        is True), in which case any residue not containing any of the selected
-        atoms is flagged with an rmsf value of -1.0.
+        selected atoms, (if mode == 'atom'), or of all residues (if mode == 
+        'residue'), in which case any residue not containing any of the selected
+        atoms is flagged with an RMSF value of -1.0.
     """
     #import time
     cdef bool atom_indices_is_none = False
@@ -352,6 +354,10 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
                               (ref_atom_indices < target.xyz.shape[1]) *
                               (ref_atom_indices < reference.xyz.shape[1])):
             raise ValueError("ref_atom_indices must be valid positive indices")
+
+    if not mode in {'atom', 'residue'}:
+        raise ValueError('Mode must be one of "atom" or "residue". '
+                          '"%s" supplied.' % mode)
 
     # Error checks
     assert (target.xyz.ndim == 3) and (reference.xyz.ndim == 3) and (target.xyz.shape[2]) == 3 and (reference.xyz.shape[2] == 3)
@@ -439,25 +445,25 @@ def rmsf(target, reference, int frame=0, atom_indices=None,
 
     #t3 = time.time()
 
-    # Declaring variables for "by_residue", might not be needed
+    # Declaring variables for mode "residue", might not be needed
     cdef int[:] residue_indices
     cdef int n_residues
     cdef float[:] residue_fluctuations
     cdef float[:] residue_masses
     cdef float[:] residue_total_mass
 
-    if not by_residue:
+    if mode == 'atom':
         for j in range(n_atoms):
             fluctuations[j] = sqrtf(fluctuations[j])
         # t2 = time.time()
         # print 'rmsd: %s, centering: %s' % (t2-t1, t1-t0)
         return np.array(fluctuations, copy=False)
 
-    else:
+    else: # checks above mean mode must be "residue"
         if atom_indices_is_none:
             atom_indices = np.arange(n_atoms)
 
-        # Actually intializing variables now that we know we need it
+        # Actually intializing variables now that we know we need them
         residue_indices = np.array([target.topology.atom(i).residue.index for i in atom_indices], dtype=np.int32)
         n_residues = target.topology.n_residues
         residue_fluctuations = np.zeros((n_residues, ), dtype=np.float32)

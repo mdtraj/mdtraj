@@ -270,7 +270,7 @@ def test_trajectory_rmsf_aligned(get_fn):
 def test_trajectory_rmsf_by_residue(get_fn, parallel):
     t = md.load(get_fn("traj.h5"))
     # t0 = time.time()
-    calculated = md.rmsf(t, t, 0, parallel=parallel, by_residue=True)
+    calculated = md.rmsf(t, t, 0, parallel=parallel, mode='residue')
     # print(time.time() - t0)
     # raise ValueError
     t.superpose(t, 0)
@@ -282,7 +282,6 @@ def test_trajectory_rmsf_by_residue(get_fn, parallel):
         indices = t.topology.select(f"resid {i}")
         msf = 3 * np.mean((t.xyz[:, indices] - avg_xyz[indices]) ** 2, axis=(0, 2))
         reference[i] = np.sqrt(np.sum(msf * masses[indices]) / np.sum(masses[indices]))
-
     assert np.sum(np.abs(calculated)) > 0  # check trivial error
     eq(calculated, reference, decimal=3)
 
