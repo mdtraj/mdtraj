@@ -9,7 +9,8 @@ dependencies:
   - networkx
   - numpy
   - openmm
-  - pandas<3
+  - pandas
+  - pyarrow
   - pyparsing
   - pytables
   - pytest

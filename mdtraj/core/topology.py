@@ -206,7 +206,7 @@ class Topology:
     3       3   H3       H       1     CYS        0
     4       4    C       C       1     CYS        0
     >>> # rename residue "CYS" to "CYSS"
-    >>> table[table['residue'] == 'CYS']['residue'] = 'CYSS'
+    >>> table.loc[table["resName"] == "CYS", "resName"] = "CYSS"
     >>> print(table.head())
        serial name element  resSeq resName   chainID
     0       0   H1       H       1     CYSS        0

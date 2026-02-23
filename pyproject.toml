@@ -46,7 +46,7 @@ dependencies = [
 ]
 
 optional-dependencies.all = [ "mdtraj[optional]", "mdtraj[tests]" ]
-optional-dependencies.optional = [ "netcdf4", "networkx", "pandas<3", "tables" ]
+optional-dependencies.optional = [ "netcdf4", "networkx", "pandas", "pyarrow", "tables" ]
 optional-dependencies.tests = [ "pytest", "pytest-recording", "pytest-rerunfailures", "pytest-xdist" ]
 urls.download = "https://github.com/mdtraj/mdtraj/releases/latest"
 urls.homepage = "https://mdtraj.org"
