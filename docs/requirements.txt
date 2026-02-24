@@ -20,4 +20,3 @@ numpydoc
 wheel
 tables
 py3Dmol
-# python==3.11

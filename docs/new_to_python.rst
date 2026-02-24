@@ -32,7 +32,7 @@ blocks you need for numerical and scientific computing, and with a great
 package manager, ``conda``, for installing additional packages.
 
 .. tip:: `Download <http://continuum.io/downloads>`_ Anaconda scientific
-         python. We test against python 3.11, 3.12, and 3.13
+         python. We test against the latest three python versions per SPEC0.
 
 
 Installing MDTraj
@@ -51,7 +51,7 @@ of python you have installed. For example, the command: ::
 
 prints out ::
 
-  Python 3.5.1 :: Continuum Analytics, Inc.
+  Python 3.12.8
 
 If everything looks good, go ahead and install ``mdtraj`` using the ``conda``
 package manager. ::
