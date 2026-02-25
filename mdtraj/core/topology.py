@@ -312,7 +312,7 @@ class Topology:
 
         atom_mapping: dict[Atom, Atom] = {}
         for chain in other.chains:
-            c = out.add_chain()
+            c = out.add_chain(chain_id=chain.chain_id)
             for residue in chain.residues:
                 if keep_resSeq:
                     out_resSeq = residue.resSeq
