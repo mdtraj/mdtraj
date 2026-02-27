@@ -472,6 +472,8 @@ def test_topology_join(get_fn):
     eq(top_2.atom(-1).residue.name, out_topology.atom(-1).residue.name)
     eq(top_1.atom(0).element, out_topology.atom(0).element)
     eq(top_2.atom(-1).element, out_topology.atom(-1).element)
+    eq(top_1.atom(0).residue.chain.chain_id, out_topology.atom(0).residue.chain.chain_id)
+    eq(top_2.atom(-1).residue.chain.chain_id, out_topology.atom(-1).residue.chain.chain_id)
 
 
 def test_topology_join_keep_resSeq(get_fn):
