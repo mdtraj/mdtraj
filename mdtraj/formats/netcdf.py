@@ -305,11 +305,15 @@ class NetCDFTrajectoryFile:
             n_frames *= stride
 
         total_n_frames = self.n_frames
+        stop_frame_index = self._frame_index + min(n_frames, total_n_frames)
+
+        # New guard to prevent us counting past total number of frames.
         frame_slice = slice(
             self._frame_index,
-            self._frame_index + min(n_frames, total_n_frames),
+            stop_frame_index if stop_frame_index <= (total_n_frames + stride) else total_n_frames,
             stride,
         )
+
         if self._frame_index >= total_n_frames:
             # just return something that'll look like len(xyz) == 0
             # this is basically just an alternative to throwing an indexerror
