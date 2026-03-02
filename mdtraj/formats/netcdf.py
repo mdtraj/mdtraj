@@ -306,11 +306,12 @@ class NetCDFTrajectoryFile:
 
         total_n_frames = self.n_frames
         stop_frame_index = self._frame_index + min(n_frames, total_n_frames)
+        stop_stride = 1 if stride is None else stride
 
         # New guard to prevent us counting past total number of frames.
         frame_slice = slice(
             self._frame_index,
-            stop_frame_index if stop_frame_index <= (total_n_frames + stride) else total_n_frames,
+            stop_frame_index if stop_frame_index <= (total_n_frames + stop_stride) else total_n_frames,
             stride,
         )
 
