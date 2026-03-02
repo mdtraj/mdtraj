@@ -615,7 +615,7 @@ def iterload(filename, chunk=100, **kwargs):
             i += chunk
             yield traj
     else:
-        with (lambda x: (open(x, n_atoms=topology.n_atoms) if extension in (".crd", ".mdcrd") else open(filename)))(
+        with (lambda x: open(x, n_atoms=topology.n_atoms) if extension in (".crd", ".mdcrd") else open(filename))(
             filename,
         ) as f:
             if skip > 0:

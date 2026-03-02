@@ -12,7 +12,7 @@ requires = [
 name = "mdtraj"
 description = "MDTraj: A modern, open library for the analysis of molecular dynamics trajectories"
 readme = { file = "README.md", content-type = "text/markdown" }
-keywords = [  ]
+keywords = []
 license = "LGPL-2.1-OR-later"
 license-files = [ "LICEN[CS]E*" ]
 authors = [
@@ -43,7 +43,6 @@ dependencies = [
   "pyparsing",
   "scipy",
 ]
-
 optional-dependencies.all = [ "mdtraj[optional]", "mdtraj[tests]" ]
 optional-dependencies.optional = [ "netcdf4", "networkx", "pandas", "pyarrow", "tables" ]
 optional-dependencies.tests = [ "pytest", "pytest-recording", "pytest-rerunfailures", "pytest-xdist" ]
@@ -54,16 +53,13 @@ urls.source = "https://github.com/mdtraj/mdtraj"
 scripts.mdconvert = "mdtraj.scripts.mdconvert:entry_point"
 scripts.mdinspect = "mdtraj.scripts.mdinspect:entry_point"
 
-[tool.setuptools.package-data]
-"mdtraj.formats.pdb" = [ "data/*" ]
-
-[tool.setuptools.packages.find]
-where = [ "." ]
+[tool.setuptools]
+package-data."mdtraj.formats.pdb" = [ "data/*" ]
+packages.find.where = [ "." ]
 
 [tool.ruff]
 line-length = 119
 extend-exclude = [ "mdtraj/_version.py" ]
-
 lint.select = [
   "E",
   "F",
@@ -79,13 +75,13 @@ lint.per-file-ignores."mdtraj/core/trajectory.py" = [ "F401" ]
 lint.per-file-ignores."mdtraj/geometry/__init__.py" = [ "F403", "F405" ]
 lint.per-file-ignores."mdtraj/utils/unit/**" = [ "F403", "F405" ]
 
-[tool.pytest.ini_options]
-testpaths = [
+[tool.pytest]
+ini_options.testpaths = [
   "tests",
   "examples",
 ]
-addopts = "-v -ra"
-filterwarnings = [
+ini_options.addopts = "-v -ra"
+ini_options.filterwarnings = [
   "ignore:.*Function restrict_atoms is deprecated;.*:DeprecationWarning",
   "ignore:.*Using or importing the ABCs from 'collections' instead of.*:DeprecationWarning",
   "ignore:.*The 'netCDF4' Python package.*:UserWarning",
@@ -95,17 +91,16 @@ filterwarnings = [
   "ignore:.*Unlikely unit cell *:UserWarning",
 ]
 
-[tool.coverage.report]
-exclude_lines = [
-  "pragma: no cover",
-  "if TYPE_CHECKING:",
-  "raise NotImplementedError",
-  "@overload",
-]
-[tool.coverage.run]
-omit = [
+[tool.coverage]
+run.omit = [
   "*test_*.py",
   "*testing/*.py",
+]
+report.exclude_lines = [
+  "@overload",
+  "if TYPE_CHECKING:",
+  "pragma: no cover",
+  "raise NotImplementedError",
 ]
 
 [tool.versioneer]
