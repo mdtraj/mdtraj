@@ -1157,7 +1157,8 @@ class Trajectory:
             parallel=parallel,
         )
 
-        if not np.any(self_displace_xyz):
+        # Checking to see if we got all 0s in the whole frame.
+        if not np.any(self_displace_xyz[0]):
             raise OverflowError(
                 "Encounted a potential overflow/underflow error during superpose() due to the magnitude of your `_xyz`"
                 "coordinates. To circumvent this, (1) reload your trajectory and (2) divide and/or multiply your"
