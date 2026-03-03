@@ -1157,6 +1157,15 @@ class Trajectory:
             parallel=parallel,
         )
 
+        # Checking to see if we got 0s in all of the first frame.
+        if not np.any(self_displace_xyz[0]):
+            raise OverflowError(
+                "Encounted a potential overflow/underflow error during superpose() due to the magnitude of your `_xyz`"
+                "coordinates. To circumvent this, (1) reload your trajectory and (2) divide and/or multiply your"
+                "`_xyz` dataset by multiples of 10 before running superpose again. Then, (3) revert that "
+                "multiplication/division after the calculations.",
+            )
+
         self_displace_xyz += ref_offset
         self.xyz = self_displace_xyz
         return self
