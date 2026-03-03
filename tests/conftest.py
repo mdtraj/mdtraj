@@ -155,7 +155,21 @@ def h5traj_full_metadata(tmp_path):
 
 @pytest.fixture(scope="session")
 def vcr_config(request):
-    """This runs during pytest-recording setup. Untars the cassettes."""
+    """This runs during pytest-recording setup. Untars the cassettes.
+
+    To remake the cassettes, comment out this function. Then run
+    ```
+    pytest --record-mode=all test_dssp.py test_pdb.py
+    ```
+
+    Delete the old tar and tar up the new folder
+    ```
+    rm -rf cassettes.tar.gz
+    tar czf cassettes.tar.gz cassettes
+    ```
+
+    Then, un-comment out this function again.
+    """
     test_path = Path(__file__).parent
     with tarfile.open(f"{test_path}/cassettes.tar.gz") as tar:
         tar.extractall(path=f"{test_path}", filter="fully_trusted")
