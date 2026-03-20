@@ -33,6 +33,7 @@ from .neighbors import *
 from .order import *
 from .pi_stacking import *
 from .rdf import *
+from .sdf import *
 from .rg import *
 from .sasa import *
 from .shape import *
@@ -67,6 +68,7 @@ __all__ = [
     "compute_neighborlist",
     "compute_rdf",
     "compute_rdf_t",
+    "compute_sdf",
     "compute_nematic_order",
     "compute_inertia_tensor",
     "compute_gyration_tensor",
