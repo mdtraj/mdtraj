@@ -33,9 +33,9 @@ from .neighbors import *
 from .order import *
 from .pi_stacking import *
 from .rdf import *
-from .sdf import *
 from .rg import *
 from .sasa import *
+from .sdf import *
 from .shape import *
 from .thermodynamic_properties import *
 

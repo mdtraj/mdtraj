@@ -21,9 +21,10 @@
 ##############################################################################
 
 import numpy as np
+import pytest
+
 import mdtraj as md
 from mdtraj.geometry import compute_sdf
-import pytest
 
 
 @pytest.fixture
@@ -33,16 +34,18 @@ def test_traj():
     eps = 1e-6
 
     # 8 corners + 1 center
-    corner_positions = np.array([
-        [0, 0, 0],
-        [4 - eps, 0, 0],
-        [0, 4 - eps, 0],
-        [0, 0, 4 - eps],
-        [4 - eps, 4 - eps, 0],
-        [4 - eps, 0, 4 - eps],
-        [0, 4 - eps, 4 - eps],
-        [4 - eps, 4 - eps, 4 - eps],
-    ])
+    corner_positions = np.array(
+        [
+            [0, 0, 0],
+            [4 - eps, 0, 0],
+            [0, 4 - eps, 0],
+            [0, 0, 4 - eps],
+            [4 - eps, 4 - eps, 0],
+            [4 - eps, 0, 4 - eps],
+            [0, 4 - eps, 4 - eps],
+            [4 - eps, 4 - eps, 4 - eps],
+        ]
+    )
     center_position = np.array([[2, 2, 2]])
 
     n_frames = 9
@@ -80,7 +83,7 @@ def test_sdf_center_and_corners(test_traj):
     )
 
     # --- Analytical expectations ---
-    V = 4.0 ** 3
+    V = 4.0**3
     N = 9
     rho = N / V
     voxel_volume = grid["dx"] * grid["dy"] * grid["dz"]
@@ -94,13 +97,19 @@ def test_sdf_center_and_corners(test_traj):
         sdf[2, 2, 2],
         expected_center,
         rtol=1e-6,
-        err_msg="Center voxel does not match analytical value"
+        err_msg="Center voxel does not match analytical value",
     )
 
     # Corner voxels
     corner_indices = [
-        (0, 0, 0), (3, 0, 0), (0, 3, 0), (0, 0, 3),
-        (3, 3, 0), (3, 0, 3), (0, 3, 3), (3, 3, 3),
+        (0, 0, 0),
+        (3, 0, 0),
+        (0, 3, 0),
+        (0, 0, 3),
+        (3, 3, 0),
+        (3, 0, 3),
+        (0, 3, 3),
+        (3, 3, 3),
     ]
     expected_counts = np.arange(1, 9)
     for idx, count in zip(corner_indices, expected_counts):
@@ -109,7 +118,7 @@ def test_sdf_center_and_corners(test_traj):
             sdf[idx],
             expected_value,
             rtol=1e-6,
-            err_msg=f"Voxel {idx} incorrect"
+            err_msg=f"Voxel {idx} incorrect",
         )
 
 

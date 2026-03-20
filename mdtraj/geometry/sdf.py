@@ -28,13 +28,13 @@ __all__ = ["compute_sdf"]
 
 
 def compute_sdf(
-        traj,
-        solute_indices,
-        solvent_indices,
-        grid_spacing=0.1,
-        pre_centered=False,
-        filename=None,
-        return_reference=False,
+    traj,
+    solute_indices,
+    solvent_indices,
+    grid_spacing=0.1,
+    pre_centered=False,
+    filename=None,
+    return_reference=False,
 ):
     """
     Compute the spatial distribution function (SDF) of solvent around a solute.
@@ -162,27 +162,34 @@ def _sdf(traj, grid_spacing, solvent_indices):
         indices = np.floor(solvent_coords / np.array([dx, dy, dz])).astype(int)
         indices = np.minimum(indices, np.array(grid_shape) - 1)
         valid = (
-                (indices[:, 0] >= 0) & (indices[:, 0] < grid_shape[0]) &
-                (indices[:, 1] >= 0) & (indices[:, 1] < grid_shape[1]) &
-                (indices[:, 2] >= 0) & (indices[:, 2] < grid_shape[2])
+            (indices[:, 0] >= 0)
+            & (indices[:, 0] < grid_shape[0])
+            & (indices[:, 1] >= 0)
+            & (indices[:, 1] < grid_shape[1])
+            & (indices[:, 2] >= 0)
+            & (indices[:, 2] < grid_shape[2])
         )
         np.add.at(
             sdf_grid,
             (indices[valid, 0], indices[valid, 1], indices[valid, 2]),
-            1
+            1,
         )
 
     # Normalize SDF grid by the ideal gas density and number of frames
     volumes = np.prod(box_lengths_all, axis=1)
     mean_volume = volumes.mean()
     number_density = len(solvent_indices) / mean_volume
-    voxel_volume = grid_spacing ** 3
-    sdf_grid /= (number_density * voxel_volume * len(traj))
+    voxel_volume = grid_spacing**3
+    sdf_grid /= number_density * voxel_volume * len(traj)
 
     # Return both SDF and grid info
     grid = {
-        "nx": nx, "ny": ny, "nz": nz,
-        "dx": dx, "dy": dy, "dz": dz,
+        "nx": nx,
+        "ny": ny,
+        "nz": nz,
+        "dx": dx,
+        "dy": dy,
+        "dz": dz,
         "box_lengths": box_lengths,
     }
     return sdf_grid, grid
@@ -231,14 +238,14 @@ def _write_cube_file(filename, traj, sdf, grid, solute_indices, solvent_indices)
 
     # Write the SDF grid to a cube file
     with open(filename, "w") as cube_file:
-
         # Write cube header
         cube_file.write("Generated with MDTraj\n")
         cube_file.write("OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z\n")
 
         # Number of atoms + origin
         cube_file.write(
-            f"{len(solute_indices):5} {origin_bohr[0]:12.6f} {origin_bohr[1]:12.6f} {origin_bohr[2]:12.6f}\n")
+            f"{len(solute_indices):5} {origin_bohr[0]:12.6f} {origin_bohr[1]:12.6f} {origin_bohr[2]:12.6f}\n",
+        )
 
         # Grid dimensions and spacing vectors
         cube_file.write(f"{nx:5} {dx_bohr:12.6f} 0.0 0.0\n")
@@ -282,8 +289,7 @@ def _centering_solute(traj, solute_indices):
     """
 
     anchor_molecules = [
-        set(res.atoms) for res in traj.topology.residues
-        if any(atom.index in solute_indices for atom in res.atoms)
+        set(res.atoms) for res in traj.topology.residues if any(atom.index in solute_indices for atom in res.atoms)
     ]
     traj_centered = traj.image_molecules(anchor_molecules=anchor_molecules)
     return traj_centered
