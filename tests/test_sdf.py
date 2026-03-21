@@ -44,7 +44,7 @@ def test_traj():
             [4 - eps, 0, 4 - eps],
             [0, 4 - eps, 4 - eps],
             [4 - eps, 4 - eps, 4 - eps],
-        ]
+        ],
     )
     center_position = np.array([[2, 2, 2]])
 
