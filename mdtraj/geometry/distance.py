@@ -108,7 +108,7 @@ def compute_distances_core(
             warn_on_cast=False,
         )
 
-        # convert to angles (vectorized across all frames at once)
+        # convert to angles
         _, _, _, alpha, beta, gamma = box_vectors_to_lengths_and_angles(
             unitcell_vectors[:, 0, :],
             unitcell_vectors[:, 1, :],
