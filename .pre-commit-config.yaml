@@ -12,13 +12,13 @@ repos:
   hooks:
   - id: add-trailing-comma
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.15.4
+  rev: v0.15.9
   hooks:
     - id: ruff
       args: [--fix]
     - id: ruff-format
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: "v2.16.2"
+  rev: "v2.21.0"
   hooks:
     - id: pyproject-fmt
 ci:
