@@ -389,65 +389,71 @@ class PdbStructure:
 
         # Read one line at a time
         for pdb_line in input_stream:
-            # Look for atoms
-            if (pdb_line.find("ATOM  ") == 0) or (pdb_line.find("HETATM") == 0):
-                if state == "NEW_MODEL":
-                    new_number = self._current_model.number + 1
+            match pdb_line[:6].strip():
+                case "ATOM" | "HETATM":
+                    # Look for atoms
+                    if state == "NEW_MODEL":
+                        new_number = self._current_model.number + 1
+                        self._add_model(Model(new_number))
+                        state = None
+                    self._add_atom(Atom(pdb_line, self))
+
+                case "MODEL":
+                    # Notice MODEL punctuation, for the next level of detail
+                    # in the structure->model->chain->residue->atom->position hierarchy
+                    # model_number = int(pdb_line[10:14])
+                    if self._current_model is None:
+                        new_number = 0
+                    else:
+                        new_number = self._current_model.number + 1
                     self._add_model(Model(new_number))
+                    self._reset_atom_numbers()
+                    self._reset_residue_numbers()
                     state = None
-                self._add_atom(Atom(pdb_line, self))
-            # Notice MODEL punctuation, for the next level of detail
-            # in the structure->model->chain->residue->atom->position hierarchy
-            elif pdb_line.find("MODEL") == 0:
-                # model_number = int(pdb_line[10:14])
-                if self._current_model is None:
-                    new_number = 0
-                else:
-                    new_number = self._current_model.number + 1
-                self._add_model(Model(new_number))
-                self._reset_atom_numbers()
-                self._reset_residue_numbers()
-                state = None
 
-            elif pdb_line.find("ENDMDL") == 0:
-                self._current_model._finalize()
-                if self.load_all_models:
-                    state = "NEW_MODEL"
-                else:
-                    break
+                case "ENDMDL":
+                    self._current_model._finalize()
+                    if self.load_all_models:
+                        state = "NEW_MODEL"
+                    else:
+                        break
 
-            elif pdb_line.find("END") == 0:
-                self._current_model._finalize()
-                if self.load_all_models:
-                    state = "NEW_MODEL"
-                else:
-                    break
+                case "END":
+                    self._current_model._finalize()
+                    if self.load_all_models:
+                        state = "NEW_MODEL"
+                    else:
+                        break
 
-            elif pdb_line.find("TER") == 0 and pdb_line.split()[0] == "TER":
-                self._current_model._current_chain._add_ter_record()
-                self._reset_residue_numbers()
+                case "TER":
+                    self._current_model._current_chain._add_ter_record()
+                    self._reset_residue_numbers()
 
-            elif pdb_line.find("CRYST1") == 0:
-                self._unit_cell_lengths = (
-                    float(pdb_line[6:15]),
-                    float(pdb_line[15:24]),
-                    float(pdb_line[24:33]),
-                )
-                self._unit_cell_angles = (
-                    float(pdb_line[33:40]),
-                    float(pdb_line[40:47]),
-                    float(pdb_line[47:54]),
-                )
+                case "CRYST1":
+                    try:
+                        self._unit_cell_lengths = (
+                            float(pdb_line[6:15]),
+                            float(pdb_line[15:24]),
+                            float(pdb_line[24:33]),
+                        )
+                        self._unit_cell_angles = (
+                            float(pdb_line[33:40]),
+                            float(pdb_line[40:47]),
+                            float(pdb_line[47:54]),
+                        )
+                    except ValueError:
+                        # "CRYST1" key exists, but possibly empty fields
+                        pass
 
-            elif pdb_line.find("CONECT") == 0:
-                atoms = []
-                # :-1 to remove '\n' in the end so rstrip can work, -5 to leave space for +5 in the 'pos : pos+5'
-                ll = len(pdb_line[:-1].rstrip(" ")) - 5
+                case "CONECT":
+                    atoms = []
+                    # :-1 to remove '\n' in the end so rstrip can work, -5 to leave space for +5 in the 'pos : pos+5'
+                    ll = len(pdb_line[:-1].rstrip(" ")) - 5
 
-                for pos in [p for p in [6, 11, 16, 21, 26] if (p <= ll)]:
-                    atoms.append(_read_atom_number(pdb_line[pos : pos + 5], pdbstructure=self))
+                    for pos in [p for p in [6, 11, 16, 21, 26] if (p <= ll)]:
+                        atoms.append(_read_atom_number(pdb_line[pos : pos + 5], pdbstructure=self))
 
-                self._current_model.connects.append(atoms)
+                    self._current_model.connects.append(atoms)
 
         self._finalize()
 
