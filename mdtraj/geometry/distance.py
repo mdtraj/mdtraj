@@ -109,16 +109,12 @@ def compute_distances_core(
         )
 
         # convert to angles
-        unitcell_angles = []
-        for fr_unitcell_vectors in unitcell_vectors:
-            _, _, _, alpha, beta, gamma = box_vectors_to_lengths_and_angles(
-                fr_unitcell_vectors[0],
-                fr_unitcell_vectors[1],
-                fr_unitcell_vectors[2],
-            )
-            unitcell_angles.append(np.array([alpha, beta, gamma]))
-
-        orthogonal = np.allclose(np.array(unitcell_angles), 90)
+        _, _, _, alpha, beta, gamma = box_vectors_to_lengths_and_angles(
+            unitcell_vectors[:, 0, :],
+            unitcell_vectors[:, 1, :],
+            unitcell_vectors[:, 2, :],
+        )
+        orthogonal = np.allclose(alpha, 90) and np.allclose(beta, 90) and np.allclose(gamma, 90)
 
         if opt:
             out = np.empty((xyz.shape[0], pairs.shape[0]), dtype=np.float32)
