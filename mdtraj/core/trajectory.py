@@ -1114,6 +1114,8 @@ class Trajectory:
 
         if atom_indices is None:
             atom_indices = slice(None)
+        elif len(atom_indices) == 0:
+            raise ValueError("Number of atom indices must be greater than 0")
 
         if ref_atom_indices is None:
             ref_atom_indices = atom_indices
