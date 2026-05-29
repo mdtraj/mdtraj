@@ -314,3 +314,21 @@ def test_rmsd_atom_indices_vs_ref_indices():
     md.rmsd(trj_1, trj_2, atom_indices=[0], ref_atom_indices=[1])
     md.rmsd(trj_2, trj_1, atom_indices=[1], ref_atom_indices=[0])
     # if this don't fail then it's good no matter the result
+
+
+def test_superpose_with_empty_atom_raises_exception():
+    # Test that superpose with an empty atom_indices list produces NaN coordinates
+    n_frames = 5
+    n_atoms = 20
+
+    xyz = rng.standard_normal((n_frames, n_atoms, 3), dtype=np.float32)
+    traj = md.Trajectory(xyz=xyz, topology=None)
+
+    with pytest.raises(ValueError, match="Number of atom indices must be greater than 0"):
+        traj.superpose(traj, frame=0, atom_indices=[])
+
+    # Super posing with valid indices should behave as expected afterwards
+    traj.superpose(traj, frame=0, atom_indices=[0])
+
+    # Coordinates should be finite after superposing
+    assert np.all(np.isfinite(traj.xyz))
