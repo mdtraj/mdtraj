@@ -54,8 +54,8 @@ scripts.mdconvert = "mdtraj.scripts.mdconvert:entry_point"
 scripts.mdinspect = "mdtraj.scripts.mdinspect:entry_point"
 
 [tool.setuptools]
-package-data."mdtraj.formats.pdb" = [ "data/*" ]
 packages.find.where = [ "." ]
+package-data."mdtraj.formats.pdb" = [ "data/*" ]
 
 [tool.ruff]
 line-length = 119
@@ -77,18 +77,18 @@ lint.per-file-ignores."mdtraj/utils/unit/**" = [ "F403", "F405" ]
 
 [tool.pytest]
 ini_options.testpaths = [
-  "tests",
   "examples",
+  "tests",
 ]
 ini_options.addopts = "-v -ra"
 ini_options.filterwarnings = [
+  "ignore:.*Casting *:mdtraj.utils.validation.TypeCastPerformanceWarning",
   "ignore:.*Function restrict_atoms is deprecated;.*:DeprecationWarning",
-  "ignore:.*Using or importing the ABCs from 'collections' instead of.*:DeprecationWarning",
+  "ignore:.*object name is a Python keyword.*:tables.NaturalNameWarning",
   "ignore:.*The 'netCDF4' Python package.*:UserWarning",
   "ignore:.*top= kwargs ignored since this file parser does not support it.*:UserWarning",
-  "ignore:.*object name is a Python keyword.*:tables.NaturalNameWarning",
-  "ignore:.*Casting *:mdtraj.utils.validation.TypeCastPerformanceWarning",
   "ignore:.*Unlikely unit cell *:UserWarning",
+  "ignore:.*Using or importing the ABCs from 'collections' instead of.*:DeprecationWarning",
 ]
 
 [tool.coverage]
