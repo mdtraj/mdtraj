@@ -21,6 +21,7 @@
 ##############################################################################
 
 
+from .aggregate import *
 from .angle import *
 from .contact import *
 from .dihedral import *
@@ -40,6 +41,8 @@ from .thermodynamic_properties import *
 
 __all__ = [
     "baker_hubbard",
+    "compute_aggregates",
+    "compute_aggregate_metrics",
     "shrake_rupley",
     "kabsch_sander",
     "compute_distances",
