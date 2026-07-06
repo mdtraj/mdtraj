@@ -7,7 +7,7 @@ dependencies:
   - gsd>=2.8
   - netCDF4
   - networkx
-  - numpy
+  - numpy<2.5
   - openmm
   - pandas
   - pyarrow
