@@ -1,12 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta:__legacy__"
-requires = [
-  "cython>=3",
-  "numpy~=2.0",
-  "setuptools",
-  "versioneer[toml]",
-  "wheel",
-]
+requires = [ "cython>=3", "numpy~=2.0", "setuptools", "versioneer[toml]" ]
 
 [project]
 name = "mdtraj"
