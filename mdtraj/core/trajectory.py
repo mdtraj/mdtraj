@@ -2337,13 +2337,19 @@ class Trajectory:
     def _have_unitcell(self):
         return self._unitcell_lengths is not None and self._unitcell_angles is not None
 
-    def _sort_bonds(self):
+    def _sort_bonds(self, extra_bonds=None):
         """Sort bonds for wrapping molecules correctly.
 
         Each molecule is built in a continuous chain along the bonds, which
         prevents atoms from being imaged to multiple distinct locations.
         The returned list of bonds defines each molecule as a minimum spanning
         tree of the molecular graph.
+
+        Parameters
+        ----------
+        extra_bonds : array_like of shape (k, 2), optional
+            Additional atom-index pairs to add to the graph before building the
+            spanning tree, to stitch separate molecules into one component.
 
         Returns
         -------
@@ -2354,6 +2360,10 @@ class Trajectory:
             [[b0.index, b1.index] for b0, b1 in self._topology.bonds],
             dtype=np.int32,
         )
+        if extra_bonds is not None and len(extra_bonds) > 0:
+            bonds = np.concatenate(
+                [bonds, np.asarray(extra_bonds, dtype=np.int32).reshape(-1, 2)],
+            )
         # Build an adjacency list for the molecular graph
         adj = defaultdict(list)
         for bond in bonds:
@@ -2383,6 +2393,56 @@ class Trajectory:
                             sorted_bonds.append([current_atom, neighbor])
 
         return np.array(sorted_bonds, dtype=np.int32)
+
+    def _anchor_bridge_bonds(self, anchor_molecules, frame=0):
+        """Bonds connecting anchor molecules at their closest real-space contacts.
+
+        Returns one bond per edge of a spanning tree over the anchor molecules,
+        so that ``make_whole`` reassembles them as a single connected complex.
+        Contacts are measured in real space (``periodic=False``) on a made-whole
+        copy of ``frame``, since the minimum-image closest contact can be a pair
+        that is adjacent only through the periodic boundary.
+
+        Parameters
+        ----------
+        anchor_molecules : list of atom sets
+            The anchor molecules to bridge together.
+        frame : int, default=0
+            The frame used to measure interface contacts.
+
+        Returns
+        -------
+        bridges : list of (int, int)
+            Atom-index pairs, one per edge of the spanning tree.
+        """
+        groups = [np.fromiter((a.index for a in mol), dtype=np.int32) for mol in anchor_molecules]
+        bridges = []
+        if len(groups) < 2:
+            return bridges
+
+        whole_ref = self[frame].make_molecules_whole(inplace=False)
+
+        # Join the next molecule through its closest contact to the connected set.
+        connected = {0}
+        while len(connected) < len(groups):
+            best = None
+            for i in range(len(groups)):
+                if i in connected:
+                    continue
+                for j in connected:
+                    a1, a2, dist = distance.find_closest_contact(
+                        whole_ref,
+                        groups[i],
+                        groups[j],
+                        frame=0,
+                        periodic=False,
+                    )
+                    if best is None or dist < best[0]:
+                        best = (dist, i, int(a1), int(a2))
+            _, new_group, a1, a2 = best
+            bridges.append((a1, a2))
+            connected.add(new_group)
+        return bridges
 
     def make_molecules_whole(self, inplace=False, sorted_bonds=None):
         """Only make molecules whole
@@ -2428,6 +2488,7 @@ class Trajectory:
         other_molecules=None,
         sorted_bonds=None,
         make_whole=True,
+        bridge_anchors=False,
     ):
         """Recenter and apply periodic boundary conditions to the molecules in each frame of the trajectory.
 
@@ -2454,6 +2515,14 @@ class Trajectory:
             topology. Only relevant if ``make_whole`` is True.
         make_whole : bool
             Whether to make molecules whole.
+        bridge_anchors : bool, default=False
+            If True, treat all anchor molecules as a single connected complex,
+            stitched together at their real-space interface contacts, instead of
+            keeping them together with the per-pair minimum-image heuristic. Use
+            this for elongated multi-chain complexes (e.g. protein dimers) that
+            span more than half the box, which the default heuristic splits
+            across the periodic boundary. Requires ``make_whole=True`` and is
+            incompatible with a user-supplied ``sorted_bonds``.
 
         Returns
         -------
@@ -2472,6 +2541,23 @@ class Trajectory:
         if anchor_molecules is None:
             anchor_molecules = self.topology.guess_anchor_molecules()
 
+        anchor_bridge_bonds = None
+        if bridge_anchors:
+            if not make_whole:
+                raise ValueError("bridge_anchors=True requires make_whole=True")
+            if sorted_bonds is not None:
+                raise ValueError(
+                    "bridge_anchors=True is incompatible with a user-supplied sorted_bonds",
+                )
+            # Merge the anchors into one connected complex to bypass the per-pair
+            # minimum-image heuristic, which splits complexes longer than half the box.
+            anchor_bridge_bonds = self._anchor_bridge_bonds(anchor_molecules)
+            merged_anchor = set().union(*anchor_molecules)
+            if other_molecules is None:
+                molecules = self._topology.find_molecules()
+                other_molecules = [mol for mol in molecules if not (mol & merged_anchor)]
+            anchor_molecules = [merged_anchor]
+
         if other_molecules is None:
             # Determine other molecules by which molecules are not anchor molecules
             molecules = self._topology.find_molecules()
@@ -2488,7 +2574,7 @@ class Trajectory:
         else:
             result = self[:]
         if make_whole and sorted_bonds is None:
-            sorted_bonds = self._sort_bonds()
+            sorted_bonds = self._sort_bonds(extra_bonds=anchor_bridge_bonds)
         elif not make_whole:
             sorted_bonds = None
 
