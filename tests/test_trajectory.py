@@ -932,6 +932,94 @@ def test_image_molecules(get_fn):
     t.image_molecules(inplace=True, anchor_molecules=anchor_molecules)
 
 
+@pytest.fixture
+def elongated_dimer_traj():
+    """A two-chain complex that spans more than half the periodic box.
+
+    Chain A spans x=0.0..1.8 and chain B spans x=2.0..3.9 in a 4.0 nm box, so
+    the genuine interface is A1--B0 (0.2 nm) but the minimum-image closest
+    contact is the wrap-around pair A0--B1 (0.1 nm), which image_molecules'
+    default heuristic uses to image chain B to the wrong periodic copy.
+    """
+    top = md.Topology()
+    cA = top.add_chain()
+    rA = top.add_residue("ALA", cA)
+    a0 = top.add_atom("A0", element.carbon, rA)
+    a1 = top.add_atom("A1", element.carbon, rA)
+    top.add_bond(a0, a1)
+    cB = top.add_chain()
+    rB = top.add_residue("ALA", cB)
+    b0 = top.add_atom("B0", element.carbon, rB)
+    b1 = top.add_atom("B1", element.carbon, rB)
+    top.add_bond(b0, b1)
+
+    xyz = np.array(
+        [[[0.0, 0, 0], [1.8, 0, 0], [2.0, 0, 0], [3.9, 0, 0]]],
+        dtype=np.float32,
+    )
+    traj = md.Trajectory(xyz, top)
+    traj.unitcell_vectors = (np.eye(3, dtype=np.float32) * 4.0)[None]
+    return traj
+
+
+def test_image_molecules_bridge_anchors(elongated_dimer_traj):
+    traj = elongated_dimer_traj
+    anchors = traj.topology.find_molecules()
+    assert len(anchors) == 2
+
+    # The interface distance (last atom of chain A, first atom of chain B) in
+    # the intact, made-whole complex.
+    intact = traj.make_molecules_whole(inplace=False)
+    intact_interface = np.linalg.norm(intact.xyz[0, 1] - intact.xyz[0, 2])
+    np.testing.assert_allclose(intact_interface, 0.2, atol=1e-5)
+
+    # The default heuristic splits the complex across the periodic boundary.
+    default = traj.image_molecules(inplace=False, anchor_molecules=anchors)
+    default_interface = np.linalg.norm(default.xyz[0, 1] - default.xyz[0, 2])
+    assert default_interface > 1.0
+
+    # bridge_anchors=True reassembles the whole complex deterministically, so
+    # every pairwise distance among the anchor atoms matches the intact complex.
+    bridged = traj.image_molecules(
+        inplace=False,
+        anchor_molecules=anchors,
+        bridge_anchors=True,
+    )
+    bridged_interface = np.linalg.norm(bridged.xyz[0, 1] - bridged.xyz[0, 2])
+    np.testing.assert_allclose(bridged_interface, intact_interface, atol=1e-5)
+
+    def pairwise(xyz):
+        diff = xyz[:, None, :] - xyz[None, :, :]
+        return np.linalg.norm(diff, axis=-1)
+
+    np.testing.assert_allclose(
+        pairwise(bridged.xyz[0]),
+        pairwise(intact.xyz[0]),
+        atol=1e-5,
+    )
+
+
+def test_image_molecules_bridge_anchors_validation(elongated_dimer_traj):
+    traj = elongated_dimer_traj
+    anchors = traj.topology.find_molecules()
+
+    with pytest.raises(ValueError, match="requires make_whole"):
+        traj.image_molecules(
+            inplace=False,
+            anchor_molecules=anchors,
+            bridge_anchors=True,
+            make_whole=False,
+        )
+
+    with pytest.raises(ValueError, match="sorted_bonds"):
+        traj.image_molecules(
+            inplace=False,
+            anchor_molecules=anchors,
+            bridge_anchors=True,
+            sorted_bonds=traj._sort_bonds(),
+        )
+
+
 def test_load_pdb_no_standard_names(get_fn):
     # Minimal test. Standard_names=False will force load_pdb.py
     # to NOT replace any non-standard atom or residue names in the topology
