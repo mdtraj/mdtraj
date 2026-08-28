@@ -78,7 +78,7 @@ class CompilerDetection:
             self.disable_intrinsics = True
             print("Env var MDTRAJ_BUILD_DISABLE_INTRINSICS set")
         else:
-            self.disable_intrinsics = False
+            self.disable_intrinsics = not (self.sse2_enabled or self.neon_enabled)
 
         if self.openmp_enabled:
             self.compiler_libraries_openmp = []
