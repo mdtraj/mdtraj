@@ -103,6 +103,7 @@ class HDF5Reporter(_BaseReporter):
         velocities=False,
         atomSubset=None,
         enforcePeriodicBox=None,
+        forces=False
     ):
         """Create a HDF5Reporter."""
         super().__init__(
@@ -117,4 +118,5 @@ class HDF5Reporter(_BaseReporter):
             velocities,
             atomSubset,
             enforcePeriodicBox,
+            forces
         )

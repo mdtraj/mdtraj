@@ -62,6 +62,7 @@ class _BaseReporter:
         velocities=False,
         atomSubset=None,
         enforcePeriodicBox=None,
+        forces=False
     ):
         """Create an OpenMM reporter
 
@@ -89,6 +90,8 @@ class _BaseReporter:
         atomSubset : array_like, default=None
             Only write a subset of the atoms, with these (zero based) indices
             to the file. If None, *all* of the atoms will be written.
+        forces : bool, default=False
+            Whether to write the forces to the file.
 
         Notes
         -----
@@ -112,6 +115,7 @@ class _BaseReporter:
         self._n_particles = None
 
         self._coordinates = bool(coordinates)
+        self._forces = bool(forces)
         self._time = bool(time)
         self._cell = bool(cell)
         self._potentialEnergy = bool(potentialEnergy)
@@ -197,7 +201,7 @@ class _BaseReporter:
             steps,
             self._coordinates,
             self._velocities,
-            False,
+            self._forces,
             self._needEnergy,
             self._enforcePeriodicBox,
         )
@@ -247,6 +251,8 @@ class _BaseReporter:
             kwargs["temperature"] = 2 * state.getKineticEnergy() / (self._dof * units.MOLAR_GAS_CONSTANT_R)
         if self._velocities:
             kwargs["velocities"] = state.getVelocities(asNumpy=True)[self._atomSlice, :]
+        if self._forces:
+            kwargs["forces"] = state.getForces(asNumpy=True)[self._atomSlice, :]
 
         self._traj_file.write(*args, **kwargs)
         # flush the file to disk. it might not be necessary to do this every
