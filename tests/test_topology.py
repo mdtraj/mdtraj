@@ -367,6 +367,11 @@ def test_to_fasta(get_fn):
     assert t.topology.to_fasta(0) == "ENFSGGCVAGYMRTPDGRCKPTFYQLIT"
 
 
+def test_to_fasta_nonstandard(get_fn):
+    t = md.load_pdb(get_fn("hse.pdb"), standard_names=False)
+    assert t.topology.to_fasta(0) == "HXL"
+
+
 def test_subset(get_fn):
     t1 = md.load(get_fn("2EQQ.pdb")).top
     t2 = t1.subset([1, 2, 3])
