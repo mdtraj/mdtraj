@@ -103,12 +103,12 @@ def rmsd(target, reference, int frame=0, atom_indices=None,
     superpose : bool, default=True
         Whether to use the Theobald QCP method to calculate RMSD. If True, the
         QCP method is used, which inherently superposes the structure based on
-        the `atom_indices` selection. If False, the Theolbald QCP method is not used
-        and the RMSD is directly calculated pairwise with no optimization and additional
-        no superposition done.
-        The `precentered` option is ignored. Users are expected to manually superpose
-        and/or image their trajectories using `Trajectory.image_molecules()` and/or
-        `Trajectory.make_molecules_whole()` and/or `Trajectory.superpose()`.
+        the `atom_indices` selection. If False, the Theobald QCP method is not used
+        and the RMSD is directly calculated pairwise with no optimization and no additional
+        superposition. The `precentered` option is ignored when `False`. Users are
+        expected to manually superpose and/or image their trajectories using
+        `Trajectory.image_molecules()` and/or `Trajectory.make_molecules_whole()`
+        and/or `Trajectory.superpose()`.
 
     Examples
     --------
