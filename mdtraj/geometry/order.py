@@ -90,7 +90,12 @@ def compute_nematic_order(traj, indices="chains"):
     # From the directors, compute the Q-tensor and nematic order parameter, S2.
     Q_ab = _compute_Q_tensor(all_directors)
 
-    w = np.linalg.eigvals(Q_ab)
+    w = np.linalg.eigvalsh(Q_ab)
+
+    # https://numpy.org/devdocs/release/2.5.0-notes.html#linalg-eig-and-linalg-eigvals-now-always-return-complex-arrays
+    if np.any(w.imag == 0):
+        w = w.real
+
     S2 = w.max(axis=1)
 
     return S2
@@ -300,7 +305,7 @@ def _compute_director(traj):
     # Only works with numpy >= 1.8.
     # TODO: Is there a cleaner way to do this broadcasting? Closer to this which
     # does not work:    v[:, :, np.argmin(w, axis=1)]
-    w, v = np.linalg.eig(inertia_tensor)
+    w, v = np.linalg.eigh(inertia_tensor)
     directors = np.array([v[:, :, x][i] for i, x in enumerate(np.argmin(w, axis=1))])
 
     return directors
