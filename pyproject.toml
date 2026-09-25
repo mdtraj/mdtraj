@@ -34,7 +34,7 @@ dynamic = [ "version" ]
 dependencies = [
   "numpy~=2.0,<2.5",
   "packaging",
-  "pyparsing",
+  "pyparsing!=3.3.3",
   "scipy",
 ]
 optional-dependencies.all = [ "mdtraj[optional]", "mdtraj[tests]" ]

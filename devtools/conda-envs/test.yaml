@@ -11,7 +11,7 @@ dependencies:
   - openmm
   - pandas
   - pyarrow
-  - pyparsing
+  - pyparsing !=3.3.3
   - pytables
   - pytest
   - pytest-rerunfailures
