@@ -3,11 +3,43 @@ What's New?
 
 These are new features and improvements of note in each release.
 
+v1.11.2 (October 5, 2026)
+-------------------------
+
+* Fix PyPI upload GitHub Action Process by @jeremyleung521 in #2124
+* Cache some tests with `pytest-recording` by @jeremyleung521 in #2127
+* Move most project config from setup.py to pyproject.toml by @jeremyleung521 in #2130
+* Fix `max_face_to_face_centroid_distance` value by @bagheeera in #2131
+* Fix `Topology.copy` bond remapping and `PDBxFile` `pathlib` support by @YuuuXie in #2135
+* Implement RMSF for residues by @CharlieLaughton in #2133
+* Support Pandas 3 by @janash in #2134
+* Drop :ython 3.11 testing and support by @jeremyleung521 in #2139
+* Ensure `topology.join` retains chain ID information by @CharlieLaughton in #2141
+* Fix for libnetcdf4 >= 4.10.0 by @jeremyleung521 in #2143
+* Throw error in `superpose` if overflow/underflow error by @jeremyleung521 in #2147
+* Take care when PDB files mix unit cell information by @jeremyleung521 in #2137
+* Optimize call to `box_vector_length_angle` in `compute_distances_core` by @rjdirisio in #2153
+* Guard against empty atom indices producing NaNs in `superpose` by @badisa in #2159
+* Add `bridge_anchors` option to `image_molecules` by @jgullingsrud in #2172
+* Numpy 2.5 compatibility fix with eigen-calcs by @jeremyleung521 in #2189
+
+A total of 7 people contributed to this release.
+People with a "+" by their names contributed to MDTraj for the first time.
+
+- Jeremy Leung
+- Jessica A. Nash
+- Charlie Laughton
+- bagheeera +
+- Yu Xie +
+- badisa +
+- Justin Gullingsrud
+
+
 v1.11.1 (January 15, 2026)
 --------------------------
 * Update pypi upload trigger by @janash in #2054
 * Speedup some cython functions by enforcing nogil for exceptions (add return code) by @jeremyleung521 in #2049
-* Minor bug fix for documentation equations  by @shehan807 in #2060
+* Minor bug fix for documentation equations by @shehan807 in #2060
 * Drop numpy1 from testing/support, not building freethreading wheels, build linux-arm64 wheels by @jeremyleung521 in #2066
 * Add support for "standard_names" keyword argument to Amber prmtop reader by @CharlieLaughton in #2057
 * Fix docstring typo in compute_directors by @ctk3b in #2073
