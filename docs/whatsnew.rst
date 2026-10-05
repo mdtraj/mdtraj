@@ -23,12 +23,13 @@ v1.11.2 (October 5, 2026)
 * Add `bridge_anchors` option to `image_molecules` by @jgullingsrud in #2172
 * Numpy 2.5 compatibility fix with eigen-calcs by @jeremyleung521 in #2189
 
-A total of 7 people contributed to this release.
+A total of 8 people contributed to this release.
 People with a "+" by their names contributed to MDTraj for the first time.
 
 - Jeremy Leung
 - Jessica A. Nash
 - Charlie Laughton
+- Ryan DiRisio
 - bagheeera +
 - Yu Xie +
 - badisa +
