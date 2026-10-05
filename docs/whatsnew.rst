@@ -13,7 +13,7 @@ v1.11.2 (October 5, 2026)
 * Fix `Topology.copy` bond remapping and `PDBxFile` `pathlib` support by @YuuuXie in #2135
 * Implement RMSF for residues by @CharlieLaughton in #2133
 * Support Pandas 3 by @janash in #2134
-* Drop :ython 3.11 testing and support by @jeremyleung521 in #2139
+* Drop Python 3.11 testing and support by @jeremyleung521 in #2139
 * Ensure `topology.join` retains chain ID information by @CharlieLaughton in #2141
 * Fix for libnetcdf4 >= 4.10.0 by @jeremyleung521 in #2143
 * Throw error in `superpose` if overflow/underflow error by @jeremyleung521 in #2147
