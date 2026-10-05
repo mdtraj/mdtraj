@@ -27,6 +27,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Topic :: Scientific/Engineering :: Bio-Informatics",
   "Topic :: Scientific/Engineering :: Chemistry",
 ]
@@ -68,6 +69,9 @@ lint.per-file-ignores."__init__.py" = [ "F401", "F403" ]
 lint.per-file-ignores."mdtraj/core/trajectory.py" = [ "F401" ]
 lint.per-file-ignores."mdtraj/geometry/__init__.py" = [ "F403", "F405" ]
 lint.per-file-ignores."mdtraj/utils/unit/**" = [ "F403", "F405" ]
+
+[tool.pyproject-fmt]
+max_supported_python = "3.15"
 
 [tool.pytest]
 ini_options.testpaths = [
