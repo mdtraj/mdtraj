@@ -234,3 +234,39 @@ def test_sasa_7(get_fn):
     # Nothing changes if you do "residue" mode bc only one atom is contributing
     SASA_resid1_HB3_per_residue = md.geometry.shrake_rupley(t, atom_indices=atoms_resid1_HB3, mode="residue")
     np.testing.assert_equal(SASA_resid1_HB3_per_atom[:, atoms_resid1_HB3[0]], SASA_resid1_HB3_per_residue[:, 1])
+
+
+def test_sasa_8(get_fn):
+    # Regression test for #2195: every frame must be computed independently
+    # of the frames before it. Use many more frames than there are likely to
+    # be OpenMP threads, since the first frame handled by each thread was
+    # always correct.
+    t = md.load(get_fn("frame0.h5"))
+    n_frames = 200
+    traj = md.Trajectory(xyz=np.repeat(t.xyz[:1], n_frames, axis=0), topology=t.top)
+
+    for mode in ["atom", "residue"]:
+        for n_sphere_points in [64, 960]:
+            ref = md.shrake_rupley(t[0], mode=mode, n_sphere_points=n_sphere_points)
+            sasa = md.shrake_rupley(traj, mode=mode, n_sphere_points=n_sphere_points)
+
+            # Identical frames give identical SASA, equal to the single-frame result
+            assert sasa.shape == (n_frames, ref.shape[1])
+            np.testing.assert_allclose(sasa, np.repeat(ref, n_frames, axis=0), rtol=1e-6)
+
+
+def test_sasa_9(get_fn):
+    # Regression test for #2195: a single call on a multi-frame trajectory
+    # must agree with calling shrake_rupley on each frame separately
+    t = md.load(get_fn("frame0.h5"))
+    assert t.n_frames > 1
+    atoms_resid1 = t.top.select("resid 1").astype(int)
+
+    for mode in ["atom", "residue"]:
+        for atom_indices in [None, atoms_resid1]:
+            sasa = md.shrake_rupley(t, mode=mode, atom_indices=atom_indices)
+            sasa_per_frame = np.concatenate(
+                [md.shrake_rupley(frame, mode=mode, atom_indices=atom_indices) for frame in t],
+            )
+
+            np.testing.assert_allclose(sasa, sasa_per_frame, rtol=1e-6)
