@@ -23,7 +23,9 @@
 import numpy as np
 
 from mdtraj.geometry import _geometry, compute_distances
+from mdtraj.geometry.distance import compute_distances_core
 from mdtraj.utils import ensure_type
+from mdtraj.utils.reduction import block_reduce
 
 __all__ = ["wernet_nilsson", "baker_hubbard", "kabsch_sander"]
 
@@ -152,6 +154,7 @@ def baker_hubbard(
     sidechain_only=False,
     distance_cutoff=0.25,
     angle_cutoff=120,
+    block_size_bytes=512 * 1024 * 1024,
 ):
     """Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor
     distance and angle.
@@ -184,6 +187,10 @@ def baker_hubbard(
         Angle cutoff of the angle theta in degrees.
         The criterion employed is any contact with an angle theta greater than the
         angle_cutoff is accepted.
+    block_size_bytes : int, default=536870912
+        Target per-block memory budget (in bytes) used by the internal
+        blockwise reduction. Lower values reduce peak RAM usage at the
+        cost of more block iterations.
 
     Returns
     -------
@@ -249,21 +256,85 @@ def baker_hubbard(
         sidechain_only=sidechain_only,
     )
 
-    mask, distances, angles = _compute_bounded_geometry(
-        traj,
-        bond_triplets,
-        distance_cutoff,
-        [1, 2],
-        [0, 1, 2],
-        freq=freq,
-        periodic=periodic,
+    n_frames = traj.n_frames
+    threshold_count = freq * n_frames
+    unitcell_vectors = traj.unitcell_vectors if periodic else None
+
+    if bond_triplets.size == 0 or n_frames == 0:
+        return np.zeros((0, 3), dtype=int)
+
+    # Pass 1: prefilter candidates by H-A distance prevalence.
+    pairs_ha = bond_triplets[:, [1, 2]]
+
+    def map_ha_distance_presence_block(
+        xyz_block: np.ndarray,
+        unitcell_vectors: np.ndarray | None = None,
+    ) -> np.ndarray:
+        ha_nm = compute_distances_core(
+            xyz_block,
+            pairs_ha,
+            unitcell_vectors=unitcell_vectors,
+            periodic=periodic,
+            opt=True,
+        )
+        return ha_nm < distance_cutoff
+
+    count_dist_ok = block_reduce(
+        traj.xyz,
+        block_size_bytes=block_size_bytes,
+        block_func=map_ha_distance_presence_block,
+        dtype=np.uint32,
+        out_shape=(bond_triplets.shape[0],),
+        sliced_kwargs={"unitcell_vectors": unitcell_vectors} if unitcell_vectors is not None else None,
     )
 
-    # Find triplets that meet the criteria
-    presence = np.logical_and(distances < distance_cutoff, angles > angle_cutoff)
-    mask[mask] = np.mean(presence, axis=0) > freq
+    mask_dist = count_dist_ok > threshold_count
+    triplets2 = bond_triplets[mask_dist]
+    if triplets2.size == 0:
+        return np.zeros((0, 3), dtype=int)
 
-    return bond_triplets.compress(mask, axis=0)
+    # Pass 2: evaluate the full Baker-Hubbard criterion on filtered candidates.
+    n_triplets2 = triplets2.shape[0]
+    pair_ha = triplets2[:, [1, 2]]
+    pair_dh = triplets2[:, [0, 1]]
+    pair_da = triplets2[:, [0, 2]]
+    pair_all = np.vstack((pair_ha, pair_dh, pair_da))
+
+    def map_full_bh_presence_block(
+        xyz_block: np.ndarray,
+        unitcell_vectors: np.ndarray | None = None,
+    ) -> np.ndarray:
+        d_all = compute_distances_core(
+            xyz_block,
+            pair_all,
+            unitcell_vectors=unitcell_vectors,
+            periodic=periodic,
+            opt=True,
+        )
+        ha_nm = d_all[:, :n_triplets2]
+        dh_nm = d_all[:, n_triplets2 : 2 * n_triplets2]
+        da_nm = d_all[:, 2 * n_triplets2 :]
+
+        denom = 2.0 * dh_nm * ha_nm
+        cosines = np.ones_like(denom, dtype=np.float32)
+        valid = denom > 0
+        if np.any(valid):
+            cosines[valid] = (dh_nm[valid] ** 2 + ha_nm[valid] ** 2 - da_nm[valid] ** 2) / denom[valid]
+        np.clip(cosines, -1.0, 1.0, out=cosines)
+        angles = np.arccos(cosines)
+        return np.logical_and(ha_nm < distance_cutoff, angles > angle_cutoff)
+
+    count_present = block_reduce(
+        traj.xyz,
+        block_size_bytes=block_size_bytes,
+        block_func=map_full_bh_presence_block,
+        dtype=np.uint32,
+        out_shape=(n_triplets2,),
+        sliced_kwargs={"unitcell_vectors": unitcell_vectors} if unitcell_vectors is not None else None,
+    )
+
+    mask_final = count_present > threshold_count
+    return np.asarray(triplets2[mask_final], dtype=int)
 
 
 def kabsch_sander(traj):
