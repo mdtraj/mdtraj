@@ -2,11 +2,9 @@ name: CI
 on:
   push:
     branches:
-      - master
       - main
   pull_request:
     branches:
-      - master
       - main
   schedule:
     - cron: "0 0 * * *"
@@ -29,18 +27,27 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
         python-version:
-          - "3.12"
-          - "3.13"
-          - "3.14"
-          - "3.15"
+          - '3.12'
+          - '3.13'
+          - '3.14'
+          - '3.15'
 
     steps:
     - uses: actions/checkout@v7
 
-    - name: Set up conda environment
+    - name: Set up conda environment (Python <=3.14)
+      if: matrix.python-version != '3.15'
       uses: mamba-org/setup-micromamba@v3
       with:
         environment-file: devtools/conda-envs/test.yaml
+        create-args: >-
+          python=${{ matrix.python-version }}
+
+    - name: Set up conda environment (Python 3.15)
+      if: matrix.python-version == '3.15'
+      uses: mamba-org/setup-micromamba@v3
+      with:
+        environment-file: devtools/conda-envs/test_py315.yaml
         create-args: >-
           python=${{ matrix.python-version }}
 
