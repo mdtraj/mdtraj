@@ -40,6 +40,39 @@ def test_rg(get_fn):
     eq(Rg, Rg0)
 
 
+def test_rg_masses():
+    # Two point masses a distance d apart have Rg = sqrt(mu * d**2 / M) about
+    # their center of mass, with mu the reduced mass and M the total mass.
+    d = 1.0
+    masses = np.array([1.0, 100.0])
+    xyz = np.array([[[0.0, 0.0, 0.0], [d, 0.0, 0.0]]], dtype=np.float32)
+    total = masses.sum()
+    reduced = masses[0] * masses[1] / total
+    eq(
+        mdtraj.geometry.rg._compute_rg_xyz(xyz, masses=masses),
+        np.array([np.sqrt(reduced * d**2 / total)]),
+        decimal=6,
+    )
+
+    # Equal masses put the center of mass on the centroid, so this one is
+    # unchanged.
+    eq(
+        mdtraj.geometry.rg._compute_rg_xyz(xyz, masses=np.ones(2)),
+        np.array([d / 2]),
+        decimal=6,
+    )
+
+
+def test_rg_masses_against_explicit_sum(get_fn):
+    t0 = md.load(get_fn("traj.h5"))
+    masses = np.array([a.element.mass for a in t0.topology.atoms])
+    com = (t0.xyz * masses[np.newaxis, :, np.newaxis]).sum(1) / masses.sum()
+    expected = np.sqrt(
+        (((t0.xyz - com[:, np.newaxis, :]) ** 2).sum(2) * masses).sum(1) / masses.sum(),
+    )
+    eq(mdtraj.geometry.rg.compute_rg(t0, masses=masses), expected, decimal=5)
+
+
 def test_distances(get_fn):
     t0 = md.load(get_fn("traj.h5"))
     atom_pairs = np.loadtxt(get_fn("atom_pairs.dat"), "int")
