@@ -22,9 +22,12 @@
 
 
 import os
+import shutil
+import tempfile
 import warnings
 from collections import defaultdict, deque
 from collections.abc import Iterable
+from contextlib import contextmanager
 from copy import deepcopy
 
 import numpy as np
@@ -53,7 +56,7 @@ from mdtraj.formats.gro import load_gro
 from mdtraj.formats.gsd import load_gsd_topology, write_gsd
 from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.formats.mol2 import load_mol2
-from mdtraj.formats.pdb.pdbfile import _is_url
+from mdtraj.formats.pdb.pdbfile import _is_url, load_pdb
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.registry import FormatRegistry
@@ -151,6 +154,56 @@ def _are_urls(names):
     return [_is_url(fn) for fn in names]
 
 
+@contextmanager
+def _local_copies_of_urls(filenames, loader):
+    """Materialize URLs as temporary local files for loaders that only read paths.
+
+    Only the PDB reader can open a URL itself (it streams from `urlopen`).
+    Every other loader takes a filename, so a URL is downloaded to a temporary
+    file that keeps the URL's extension (which is what selects the loader and
+    any gzip handling) and the local path is substituted for the duration of
+    the ``with`` block. Nothing is downloaded for local paths or for the PDB
+    loader.
+
+    Parameters
+    ----------
+    filenames : list of str
+        The paths and/or URLs about to be passed to `loader`.
+    loader : callable
+        The loader selected for these filenames.
+
+    Yields
+    ------
+    list of str
+        `filenames` with every URL replaced by a local path.
+    """
+    if loader is load_pdb:
+        yield list(filenames)
+        return
+
+    from urllib.request import urlopen
+
+    local = []
+    downloaded = []
+    try:
+        for fn in filenames:
+            if not _is_url(fn):
+                local.append(fn)
+                continue
+            fd, path = tempfile.mkstemp(suffix=_get_extension(fn))
+            downloaded.append(path)
+            with os.fdopen(fd, "wb") as fh, urlopen(fn) as response:
+                shutil.copyfileobj(response, fh)
+            local.append(path)
+        yield local
+    finally:
+        for path in downloaded:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+
+
 def _hash_numpy_array(x):
     hash_value = hash(x.shape)
     hash_value ^= hash(x.strides)
@@ -198,19 +251,26 @@ def _parse_topology(top, **kwargs):
                     _traj = load_frame(top, 0, **kwargs)
                     topology = _traj.topology
                 case ".prmtop" | ".parm7" | ".prm7":
-                    topology = load_prmtop(top, **kwargs)
+                    with _local_copies_of_urls([top], load_prmtop) as (top,):
+                        topology = load_prmtop(top, **kwargs)
                 case ".psf":
-                    topology = load_psf(top, **kwargs)
+                    with _local_copies_of_urls([top], load_psf) as (top,):
+                        topology = load_psf(top, **kwargs)
                 case ".mol2":
-                    topology = load_mol2(top, **kwargs).topology
+                    with _local_copies_of_urls([top], load_mol2) as (top,):
+                        topology = load_mol2(top, **kwargs).topology
                 case ".gro":
-                    topology = load_gro(top, **kwargs).topology
+                    with _local_copies_of_urls([top], load_gro) as (top,):
+                        topology = load_gro(top, **kwargs).topology
                 case ".arc":
-                    topology = load_arc(top, **kwargs).topology
+                    with _local_copies_of_urls([top], load_arc) as (top,):
+                        topology = load_arc(top, **kwargs).topology
                 case ".hoomdxml":
-                    topology = load_hoomdxml(top, **kwargs).topology
+                    with _local_copies_of_urls([top], load_hoomdxml) as (top,):
+                        topology = load_hoomdxml(top, **kwargs).topology
                 case ".gsd":
-                    topology = load_gsd_topology(top, **kwargs)
+                    with _local_copies_of_urls([top], load_gsd_topology) as (top,):
+                        topology = load_gsd_topology(top, **kwargs)
                 case ext:  # raise error when we hit any other cases
                     raise OSError(
                         "The topology is loaded by filename extension, and the "
@@ -339,7 +399,8 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
         else:
             _assert_files_or_dirs_exist(filename)
 
-    return loader(filename, frame=index, **kwargs)
+    with _local_copies_of_urls([filename], loader) as (local_filename,):
+        return loader(local_filename, frame=index, **kwargs)
 
 
 def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
@@ -354,6 +415,8 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     ----------
     filename_or_filenames : {path-like, list of path-like objects}
         Filename or list of filenames containing trajectory files of a single format.
+        Each may also be an ``http``/``https`` URL, in which case the file is
+        downloaded to a temporary location for the duration of the load.
     discard_overlapping_frames : bool, default=False
         Look for overlapping frames between the last frame of one filename and
         the first frame of a subsequent filename and discard them
@@ -362,9 +425,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     ----------------
     top : {path-like, Trajectory, Topology}
         Most trajectory formats do not contain topology information. Pass in
-        either the path to a RCSB PDB file, a trajectory, or a topology to
-        supply this information. This option is not required for the .h5, .lh5,
-        and .pdb formats, which already contain topology information.
+        either the path (or URL) to a RCSB PDB file, a trajectory, or a topology
+        to supply this information. This option is not required for the .h5,
+        .lh5, and .pdb formats, which already contain topology information.
     stride : int, default=None
         Only read every stride-th frame
     atom_indices : array_like, optional
@@ -462,76 +525,79 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         # standard_names is a valid keyword argument only for files containing topologies
         kwargs.pop("standard_names", None)
 
-    trajectories = []
-    tmp_file = filename_or_filenames[0]
-    filename_or_filenames = filename_or_filenames[1:]  # ignore first file
-    try:
-        # this is a little hack that makes calling load() more predictable. since
-        # most of the loaders take a kwargs "top" except for load_hdf5, (since
-        # it saves the topology inside the file), we often end up calling
-        # load_hdf5 via this function with the top kwarg specified. but then
-        # there would be a signature binding error. it's easier just to ignore
-        # it.
-        # TODO make all the loaders accept a pre parsed topology (top) in order to avoid
-        # this part and have a more consistent interface and a faster load function
-        t = loader(tmp_file, **kwargs)
+    # Loaders other than the PDB reader only take paths, so any URL is fetched
+    # to a temporary file for the duration of the load.
+    with _local_copies_of_urls(filename_or_filenames, loader) as filename_or_filenames:
+        trajectories = []
+        tmp_file = filename_or_filenames[0]
+        filename_or_filenames = filename_or_filenames[1:]  # ignore first file
+        try:
+            # this is a little hack that makes calling load() more predictable. since
+            # most of the loaders take a kwargs "top" except for load_hdf5, (since
+            # it saves the topology inside the file), we often end up calling
+            # load_hdf5 via this function with the top kwarg specified. but then
+            # there would be a signature binding error. it's easier just to ignore
+            # it.
+            # TODO make all the loaders accept a pre parsed topology (top) in order to avoid
+            # this part and have a more consistent interface and a faster load function
+            t = loader(tmp_file, **kwargs)
 
-    except TypeError as e:
-        # Don't want to intercept legit
-        # TypeErrors
-        if "got an unexpected keyword argument 'top'" not in str(e):
+        except TypeError as e:
+            # Don't want to intercept legit
+            # TypeErrors
+            if "got an unexpected keyword argument 'top'" not in str(e):
+                raise
+
+            warnings.warn("top= kwargs ignored since this file parser does not support it")
+
+            kwargs.pop("top", None)
+
+            t = loader(tmp_file, **kwargs)
+
+        except ValueError as e:
+            if "xyz must be shape" in str(e):
+                raise ValueError(
+                    "The topology and the trajectory files might not contain the same atoms\n"
+                    "The input topology must contain all atoms even if "
+                    "you want to select a subset of them with atom_indices",
+                ) from e
+
             raise
 
-        warnings.warn("top= kwargs ignored since this file parser does not support it")
-
-        kwargs.pop("top", None)
-
-        t = loader(tmp_file, **kwargs)
-
-    except ValueError as e:
-        if "xyz must be shape" in str(e):
-            raise ValueError(
-                "The topology and the trajectory files might not contain the same atoms\n"
-                "The input topology must contain all atoms even if "
-                "you want to select a subset of them with atom_indices",
-            ) from e
-
-        raise
-
-    trajectories.append(t)
-
-    # Only do this monkey patching if needed in order not to
-    # modify the output topology
-    if ("top" in kwargs) and (kwargs.get("atom_indices", None) is not None) and (len(filename_or_filenames) > 0):
-        # In case only a part of the atoms were selected
-        # I get the right topology that
-        # kwargs['top'].subset shall return
-        subset_topology = trajectories[0].topology
-
-        # Little monkey-patch to prevent further subsetting Topologies
-        # this modified version of the topology will never exit this function
-        kwargs["top"].subset = lambda atom_indices: subset_topology
-
-    # We know the topology is equal because we send the same topology
-    # kwarg in. Therefore, we explictly throw away the topology on all
-    # but the first trajectory by making them all point to None
-    #  and use check_topology=False on the join.
-    # Throwing the topology away explictly allows a large number of pdb
-    # files to be read in without using ridiculous amounts of memory.
-    for f in filename_or_filenames:
-        t = loader(f, **kwargs)
-
-        t.topology = None
         trajectories.append(t)
 
-    if len(trajectories) == 1:  # if only one file was given there is nothing to join
-        return trajectories[0]
+        # Only do this monkey patching if needed in order not to
+        # modify the output topology
+        if ("top" in kwargs) and (kwargs.get("atom_indices", None) is not None) and (len(filename_or_filenames) > 0):
+            # In case only a part of the atoms were selected
+            # I get the right topology that
+            # kwargs['top'].subset shall return
+            subset_topology = trajectories[0].topology
 
-    return join(
-        trajectories,
-        check_topology=False,
-        discard_overlapping_frames=discard_overlapping_frames,
-    )
+            # Little monkey-patch to prevent further subsetting Topologies
+            # this modified version of the topology will never exit this function
+            kwargs["top"].subset = lambda atom_indices: subset_topology
+
+        # We know the topology is equal because we send the same topology
+        # kwarg in. Therefore, we explictly throw away the topology on all
+        # but the first trajectory by making them all point to None
+        #  and use check_topology=False on the join.
+        # Throwing the topology away explictly allows a large number of pdb
+        # files to be read in without using ridiculous amounts of memory.
+        for f in filename_or_filenames:
+            t = loader(f, **kwargs)
+
+            t.topology = None
+            trajectories.append(t)
+
+        if len(trajectories) == 1:  # if only one file was given there is nothing to join
+            return trajectories[0]
+
+        return join(
+            trajectories,
+            check_topology=False,
+            discard_overlapping_frames=discard_overlapping_frames,
+        )
 
 
 def iterload(filename, chunk=100, **kwargs):
