@@ -289,6 +289,24 @@ def test_read_slice_3():
         assert eq(got.alchemicalLambda, np.arange(4)[::2])
 
 
+@pytest.mark.parametrize("chunk", [1, 3, 4])
+@pytest.mark.parametrize("stride", [2, 4])
+@pytest.mark.parametrize("skip", [0, 1])
+def test_iterload_stride(h5traj, chunk, stride, skip):
+    """Keep the stride and chunk size consistent across HDF5 reads."""
+    traj, filename, _ = h5traj
+    chunks = list(md.iterload(filename, chunk=chunk, stride=stride, skip=skip))
+    loaded = md.join(chunks)
+    expected = traj[skip::stride]
+
+    eq(loaded.xyz, expected.xyz)
+    eq(loaded.time, expected.time)
+    eq(loaded.unitcell_lengths, expected.unitcell_lengths)
+    eq(loaded.unitcell_angles, expected.unitcell_angles)
+    assert all(len(part) == chunk for part in chunks[:-1])
+    assert len(chunks[-1]) <= chunk
+
+
 def test_do_overwrite():
     with open(temp, "w") as f:
         f.write("a")
