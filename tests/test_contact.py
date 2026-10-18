@@ -149,6 +149,24 @@ def test_contact_soft_min_close_atoms(scheme, beta):
     assert distances.dtype == np.float32
 
 
+def test_contact_soft_min_single_pair():
+    top = md.Topology()
+    chain = top.add_chain()
+    for _ in range(2):
+        residue = top.add_residue("ALA", chain)
+        top.add_atom("CB", md.element.carbon, residue)
+    traj = md.Trajectory([[[0, 0, 0], [8, 0, 0]]], top)
+    distances, _ = md.compute_contacts(
+        traj,
+        [[0, 1]],
+        scheme="closest",
+        soft_min=True,
+        soft_min_beta=0.1,
+    )
+    # A single atom pair must return its input distance, also for small beta.
+    np.testing.assert_array_equal(distances, [[8.0]])
+
+
 def test_contact_4(get_fn):
     pdb = md.load(
         get_fn("1am7_protein.pdb"),
