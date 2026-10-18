@@ -114,7 +114,7 @@ def test_contact_3(get_fn):
             itertools.product(
                 [a.index for a in pdb.top.residue(r0).atoms if a.element != md.element.hydrogen],
                 [a.index for a in pdb.top.residue(r1).atoms if a.element != md.element.hydrogen],
-            )
+            ),
         )
         # Compute the defining expression independently in double precision.
         atom_distances = md.compute_distances(pdb, atom_pairs).astype(np.float64)
