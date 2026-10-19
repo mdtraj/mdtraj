@@ -25,6 +25,14 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * NOTE: The self-contained XDR layer at the bottom of this file (guarded by
+ * #ifndef HAVE_RPC_XDR_H) is derived from the Sun RPC XDR code that Oracle
+ * America, Inc. relicensed under the 3-clause BSD license. That portion of
+ * the file is licensed under the BSD-3-Clause license reproduced there; the
+ * rest of the file (the XTC/TRR higher-level routines and the compressed
+ * coordinate code) is licensed under the BSD 2-clause license above.
+ * See the README in this directory for provenance and references.
  */
 
 /* Get HAVE_RPC_XDR_H, F77_FUNC from config.h if available */
@@ -82,6 +90,14 @@ char *exdr_message[exdrNR] = {
  *
  * We don't want the low-level XDR implementation as part of the Gromacs
  * documentation, so skip it for doxygen too...
+ *
+ * The XDR interface types below (enum xdr_op, struct XDR / struct xdr_ops
+ * and the accessor macros) are adapted from the BSD-3-Clause licensed
+ * <rpc/xdr.h> shipped in FreeBSD libc (include/rpc/xdr.h); see the
+ * license notice further down in this file and the README. The
+ * function-pointer types here use int32_t/uint32_t so that the 4-byte
+ * XDR unit is unambiguous even where sizeof(int) or sizeof(long) is not
+ * exactly 4 bytes.
  */
 #if (!defined HAVE_RPC_XDR_H && !defined DOXYGEN)
 
@@ -2061,43 +2077,73 @@ F77_FUNC(xddcd,XDRDCD)(int *fid, double *data, int *ncoord,
 
 
 /*************************************************************
- * The rest of this file contains our own implementation     *
- * of the XDR calls in case you are compiling without them.  *
- * You do NOT want to change things here since it would make *
- * things incompatible with the standard RPC/XDR routines.   *
+ * The rest of this file is a self-contained implementation  *
+ * of the XDR layer, used when the system does not provide   *
+ * <rpc/xdr.h> (e.g. on Windows).                            *
+ *                                                           *
+ * These routines are derived from the Sun RPC XDR code      *
+ * that Oracle America, Inc. relicensed under the 3-clause   *
+ * BSD license. The canonical BSD-licensed copies we track   *
+ * are the ones shipped in FreeBSD libc:                     *
+ *                                                           *
+ *   - lib/libc/xdr/xdr.c                                    *
+ *   - lib/libc/xdr/xdr_stdio.c                              *
+ *   - lib/libc/xdr/xdr_float.c                              *
+ *   - include/rpc/xdr.h                                     *
+ *                                                           *
+ * (https://cgit.freebsd.org/src/tree/lib/libc/xdr)          *
+ *                                                           *
+ * The same BSD-licensed code is also available in libtirpc: *
+ *   https://gitlab.com/libtirpc/libtirpc (- src/xdr.c,      *
+ *   src/xdr_stdio.c)                                        *
+ *                                                           *
+ * The BSD-3-Clause license for this portion is reproduced   *
+ * below; see also the README in this directory. The code is *
+ * adapted to be self-contained (no dependency on <rpc/xdr.h>*
+ * or <arpa/inet.h>), keeps all symbols static, and uses     *
+ * int32_t/uint32_t for the 4-byte XDR unit so it is correct *
+ * even where sizeof(int) or sizeof(long) differs from 4     *
+ * (e.g. LP64 platforms). The floating-point word-order      *
+ * detection in xdr_double() is retained from the GROMACS-   *
+ * derived (BSD 2-clause) code that predates this change.    *
  *************************************************************/
 #ifndef HAVE_RPC_XDR_H
 
 /*
- * What follows is a modified version of the Sun XDR code. For reference
- * we include their copyright and license:
+ * BSD-3-Clause license for the XDR layer below, as used by
+ * the FreeBSD libc copies of the Oracle-relicensed Sun RPC code:
  *
- * Sun RPC is a product of Sun Microsystems, Inc. and is provided for
- * unrestricted use provided that this legend is included on all tape
- * media and as a part of the software program in whole or part.  Users
- * may copy or modify Sun RPC without charge, but are not authorized
- * to license or distribute it to anyone else except as part of a product or
- * program developed by the user.
+ * SPDX-License-Identifier: BSD-3-Clause
  *
- * SUN RPC IS PROVIDED AS IS WITH NO WARRANTIES OF ANY KIND INCLUDING THE
- * WARRANTIES OF DESIGN, MERCHANTIBILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE, OR ARISING FROM A COURSE OF DEALING, USAGE OR TRADE PRACTICE.
+ * Copyright (c) 2010, Oracle America, Inc.
  *
- * Sun RPC is provided with no support and without any obligation on the
- * part of Sun Microsystems, Inc. to assist in its use, correction,
- * modification or enhancement.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
  *
- * SUN MICROSYSTEMS, INC. SHALL HAVE NO LIABILITY WITH RESPECT TO THE
- * INFRINGEMENT OF COPYRIGHTS, TRADE SECRETS OR ANY PATENTS BY SUN RPC
- * OR ANY PART THEREOF.
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above
+ *       copyright notice, this list of conditions and the following
+ *       disclaimer in the documentation and/or other materials
+ *       provided with the distribution.
+ *     * Neither the name of the "Oracle America, Inc." nor the names of
+ *       its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written
+ *       permission.
  *
- * In no event will Sun Microsystems, Inc. be liable for any lost revenue
- * or profits or other special, indirect and consequential damages, even if
- * Sun has been advised of the possibility of such damages.
- *
- * Sun Microsystems, Inc.
- * 2550 Garcia Avenue
- * Mountain View, California  94043
+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *   FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *   COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *   INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ *   DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ *   GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *   WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ *   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /* INT_MAX is defined in limits.h according to ANSI C */
@@ -2181,6 +2227,8 @@ xdr_int (XDR *xdrs, int *ip)
 					return 0;
 				}
 			*ip = (int) i32;
+			return 1;
+
 		case XDR_FREE:
 			return 1;
 		}
@@ -2204,6 +2252,8 @@ xdr_u_int (XDR *xdrs, unsigned int *up)
 					return 0;
 				}
 			*up = (uint32_t) ui32;
+			return 1;
+
 		case XDR_FREE:
 			return 1;
 		}
@@ -2263,14 +2313,14 @@ xdr_u_short (XDR *xdrs, unsigned short *sp)
 static int
 xdr_char (XDR *xdrs, char *cp)
 {
-	int i;
+	unsigned int i;
 
-	i = (*cp);
-	if (!xdr_int (xdrs, &i))
+	i = *((unsigned char *)cp);
+	if (!xdr_u_int (xdrs, &i))
 		{
 			return 0;
 		}
-	*cp = i;
+	*((unsigned char *)cp) = i;
 	return 1;
 }
 
@@ -2297,7 +2347,7 @@ static int
 xdr_opaque (XDR *xdrs, char *cp, unsigned int cnt)
 {
 	unsigned int rndup;
-	static char crud[BYTES_PER_XDR_UNIT];
+	static int crud[BYTES_PER_XDR_UNIT];
 
 	/*
 	 * if no data we are done
@@ -2312,9 +2362,8 @@ xdr_opaque (XDR *xdrs, char *cp, unsigned int cnt)
 	if (rndup > 0)
 		rndup = BYTES_PER_XDR_UNIT - rndup;
 
-	switch (xdrs->x_op)
+	if (xdrs->x_op == XDR_DECODE)
 		{
-		case XDR_DECODE:
 			if (!xdr_getbytes (xdrs, cp, cnt))
 				{
 					return 0;
@@ -2322,8 +2371,10 @@ xdr_opaque (XDR *xdrs, char *cp, unsigned int cnt)
 			if (rndup == 0)
 				return 1;
 			return xdr_getbytes (xdrs, (char *)crud, rndup);
+		}
 
-		case XDR_ENCODE:
+	if (xdrs->x_op == XDR_ENCODE)
+		{
 			if (!xdr_putbytes (xdrs, cp, cnt))
 				{
 					return 0;
@@ -2331,11 +2382,11 @@ xdr_opaque (XDR *xdrs, char *cp, unsigned int cnt)
 			if (rndup == 0)
 				return 1;
 			return xdr_putbytes (xdrs, xdr_zero, rndup);
-
-		case XDR_FREE:
-			return 1;
 		}
-#undef BYTES_PER_XDR_UNIT
+
+	if (xdrs->x_op == XDR_FREE)
+		return 1;
+
 	return 0;
 }
 
@@ -2349,6 +2400,7 @@ xdr_string (XDR *xdrs, char **cpp, unsigned int maxsize)
 	char *sp = *cpp;	/* sp is the actual string pointer */
 	unsigned int size;
 	unsigned int nodesize;
+	int ret, allocated = 0;
 
 	/*
 	 * first deal with the length since xdr strings are counted-strings
@@ -2360,10 +2412,11 @@ xdr_string (XDR *xdrs, char **cpp, unsigned int maxsize)
 				{
 					return 1;		/* already free */
 				}
+			/* xxx: ignore maxsize during free (it may be
+			 * invalid when called via xdr_free()) */
+			maxsize = ~0U;
 			/* fall through... */
 		case XDR_ENCODE:
-			if (sp == NULL)
-				return 0;
 			size = strlen (sp);
 			break;
 		case XDR_DECODE:
@@ -2390,7 +2443,10 @@ xdr_string (XDR *xdrs, char **cpp, unsigned int maxsize)
 					return 1;
 				}
 			if (sp == NULL)
-				*cpp = sp = (char *) malloc (nodesize);
+				{
+					*cpp = sp = (char *) malloc (nodesize);
+					allocated = 1;
+				}
 			if (sp == NULL)
 				{
 					(void) fputs ("xdr_string: out of memory\n", stderr);
@@ -2400,7 +2456,16 @@ xdr_string (XDR *xdrs, char **cpp, unsigned int maxsize)
 			/* fall into ... */
 
 		case XDR_ENCODE:
-			return xdr_opaque (xdrs, sp, size);
+			ret = xdr_opaque (xdrs, sp, size);
+			if (xdrs->x_op == XDR_DECODE && ret == 0)
+				{
+					if (allocated)
+						{
+							free (sp);
+							*cpp = NULL;
+						}
+				}
+			return ret;
 
 		case XDR_FREE:
 			free (sp);
@@ -2417,28 +2482,19 @@ xdr_string (XDR *xdrs, char **cpp, unsigned int maxsize)
 static int
 xdr_float(XDR *xdrs, float *fp)
 {
+	/*
+	 * All supported platforms use IEEE 754 single precision and a
+	 * 32-bit int32_t; the float bits map 1:1 onto one XDR unit.
+	 * (This is the IEEEFP path of xdr_float() in FreeBSD libc's
+	 * lib/libc/xdr/xdr_float.c.)
+	 */
 	switch (xdrs->x_op) {
 
 	case XDR_ENCODE:
-		if (sizeof(float) == sizeof(int32_t))
-			return (xdr_putlong(xdrs, (int32_t *)fp));
-		else if (sizeof(float) == sizeof(int)) {
-			int32_t tmp = *(int *)fp;
-			return (xdr_putlong(xdrs, &tmp));
-		}
-		break;
+		return (xdr_putlong(xdrs, (int32_t *)fp));
 
 	case XDR_DECODE:
-		if (sizeof(float) == sizeof(int32_t))
-			return (xdr_getlong(xdrs, (int32_t *)fp));
-		else if (sizeof(float) == sizeof(int)) {
-			int32_t tmp;
-			if (xdr_getlong(xdrs, &tmp)) {
-				*(int *)fp = tmp;
-				return (1);
-			}
-		}
-		break;
+		return (xdr_getlong(xdrs, (int32_t *)fp));
 
 	case XDR_FREE:
 		return (1);
@@ -2450,19 +2506,12 @@ xdr_float(XDR *xdrs, float *fp)
 static int
 xdr_double(XDR *xdrs, double *dp)
 {
-    /* Gromacs detects floating-point stuff at compile time, which is faster */
-#ifdef GROMACS
-#  ifndef FLOAT_FORMAT_IEEE754
-#    error non-IEEE floating point system, or you defined GROMACS yourself...
-#  endif
-    int LSW;
-#  ifdef IEEE754_BIG_ENDIAN_WORD_ORDER
-    int LSW=1;
-#  else
-    int LSW=0;
-#  endif /* Big endian word order */
-#else
-    /* Outside Gromacs we rely on dynamic detection of FP order. */
+    /* The 32-bit word transfer below follows FreeBSD libc's
+     * xdr_double() (lib/libc/xdr/xdr_float.c, IEEEFP path).  Because
+     * we cannot rely on <machine/endian.h> or BYTE_ORDER on every
+     * supported platform, we keep the dynamic detection of the
+     * floating-point word order that was carried in the previous,
+     * Gromacs-derived version of this file (BSD 2-clause). */
     int LSW; /* Least significant fp word */
 
     double x=0.987654321; /* Just a number */
@@ -2487,7 +2536,6 @@ xdr_double(XDR *xdrs, double *dp)
 				"Use system XDR libraries or fix xdr_double().\n");
 		abort();
     }
-#endif /* end of dynamic detection of fp word order */
 
 	switch (xdrs->x_op) {
 
