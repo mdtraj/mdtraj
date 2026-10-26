@@ -9,6 +9,7 @@ dependencies:
   - networkx
   - numpy~=2.0
   - pandas
+  - pyarrow
   - pyparsing !=3.3.3
   - pytables
   - pytest
