@@ -108,16 +108,63 @@ def test_contact_2(get_fn):
 def test_contact_3(get_fn):
     pdb = md.load(get_fn("bpti.pdb"))
     beta = 20
-    with np.errstate(divide="ignore", over="ignore"):
-        dists, pairs = md.compute_contacts(pdb, soft_min=True, soft_min_beta=beta)
-        maps = md.geometry.squareform(dists, pairs)
+    dists, pairs = md.compute_contacts(pdb, soft_min=True, soft_min_beta=beta)
+    for i, (r0, r1) in enumerate(pairs):
+        atom_pairs = list(
+            itertools.product(
+                [a.index for a in pdb.top.residue(r0).atoms if a.element != md.element.hydrogen],
+                [a.index for a in pdb.top.residue(r1).atoms if a.element != md.element.hydrogen],
+            ),
+        )
+        # Compute the defining expression independently in double precision.
+        atom_distances = md.compute_distances(pdb, atom_pairs).astype(np.float64)
+        expected = beta / np.log(np.exp(beta / atom_distances).sum(axis=1))
+        np.testing.assert_allclose(dists[:, i], expected, rtol=1e-6)
 
-        for i, (r0, r1) in enumerate(pairs):
-            for t in range(pdb.n_frames):
-                assert np.allclose(
-                    beta / np.log(np.sum(np.exp(beta / maps[t, r0, r1]))),
-                    dists[t, i],
-                )
+
+@pytest.mark.parametrize("scheme", ["closest", "closest-heavy", "sidechain", "sidechain-heavy"])
+@pytest.mark.parametrize("beta", [0.1, 20.0, 1000.0])
+def test_contact_soft_min_close_atoms(scheme, beta):
+    top = md.Topology()
+    chain = top.add_chain()
+    left = top.add_residue("ALA", chain)
+    right = top.add_residue("ALA", chain)
+    top.add_atom("CB", md.element.carbon, left)
+    top.add_atom("CG", md.element.carbon, left)
+    top.add_atom("CB", md.element.carbon, right)
+    traj = md.Trajectory([[[0, 0, 0], [0.25, 0, 0], [0.125, 0, 0]]], top)
+
+    with np.errstate(over="raise", divide="raise", invalid="raise"):
+        distances, pairs = md.compute_contacts(
+            traj,
+            [[0, 1]],
+            scheme=scheme,
+            soft_min=True,
+            soft_min_beta=beta,
+        )
+    # Both cross-residue distances are exactly 1/8 nm, so the sum is analytic.
+    expected = beta / (beta / 0.125 + np.log(2))
+    np.testing.assert_allclose(distances, [[expected]], rtol=1e-6)
+    np.testing.assert_array_equal(pairs, [[0, 1]])
+    assert distances.dtype == np.float32
+
+
+def test_contact_soft_min_single_pair():
+    top = md.Topology()
+    chain = top.add_chain()
+    for _ in range(2):
+        residue = top.add_residue("ALA", chain)
+        top.add_atom("CB", md.element.carbon, residue)
+    traj = md.Trajectory([[[0, 0, 0], [8, 0, 0]]], top)
+    distances, _ = md.compute_contacts(
+        traj,
+        [[0, 1]],
+        scheme="closest",
+        soft_min=True,
+        soft_min_beta=0.1,
+    )
+    # A single atom pair must return its input distance, also for small beta.
+    np.testing.assert_array_equal(distances, [[8.0]])
 
 
 def test_contact_4(get_fn):
