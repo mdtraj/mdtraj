@@ -84,6 +84,7 @@ Distances
     compute_center_of_mass
     geometry.squareform
     compute_rdf
+    compute_sdf
 
 
 Bond Angles and Dihedrals
