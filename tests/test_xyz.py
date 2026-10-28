@@ -118,3 +118,13 @@ def test_len(get_fn):
         assert len(fh) == 501
         assert fh._frame_index == 0
         assert len(fh.read()) == 501
+
+
+def test_read_non_positive_n_frames_reads_all(get_fn):
+    # read_as_traj documents that a non-positive n_frames reads every frame
+    with XYZTrajectoryFile(get_fn("frame0.xyz")) as f:
+        expected = f.read()[0]
+    assert len(expected) > 0
+    for n_frames in (0, -1):
+        with XYZTrajectoryFile(get_fn("frame0.xyz")) as f:
+            eq(f.read(n_frames=n_frames)[0], expected)
