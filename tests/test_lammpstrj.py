@@ -116,3 +116,13 @@ def test_custom(get_fn):
 
     t1 = md.load(temp, top=get_fn("custom.pdb"))
     eq(t0.xyz, t1.xyz)
+
+
+def test_read_non_positive_n_frames_reads_all(get_fn):
+    # read_as_traj documents that a non-positive n_frames reads every frame
+    with LAMMPSTrajectoryFile(get_fn("frame0.lammpstrj")) as f:
+        expected = f.read()[0]
+    assert len(expected) > 0
+    for n_frames in (0, -1):
+        with LAMMPSTrajectoryFile(get_fn("frame0.lammpstrj")) as f:
+            eq(f.read(n_frames=n_frames)[0], expected)

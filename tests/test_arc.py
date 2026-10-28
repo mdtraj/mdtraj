@@ -76,3 +76,13 @@ def test_read_pbc(get_fn):
     eq(xyz[0, -1], np.array([29.013880, 6.255754, 44.074519]), decimal=3)
     eq(leng, np.array([[45.119376, 45.119376, 45.119376]]), decimal=3)
     eq(ang, np.array([[90.0, 90.0, 90.0]]), decimal=3)
+
+
+def test_read_non_positive_n_frames_reads_all(get_fn):
+    # read_as_traj documents that a non-positive n_frames reads every frame
+    with ArcTrajectoryFile(get_fn("4waters.arc")) as f:
+        expected = f.read()[0]
+    assert len(expected) > 0
+    for n_frames in (0, -1):
+        with ArcTrajectoryFile(get_fn("4waters.arc")) as f:
+            eq(f.read(n_frames=n_frames)[0], expected)

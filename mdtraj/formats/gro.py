@@ -276,8 +276,8 @@ class GroTrajectoryFile:
         Parameters
         ----------
         n_frames : int, optional
-            If n_frames is not None, the next n_frames of data from the file
-            will be read. Otherwise, all of the frames in the file will be read.
+            If positive, the next n_frames of data from the file will be read.
+            Otherwise (None or non-positive), all of the remaining frames will be read.
         stride : int, optional
             If stride is not None, read only every stride-th frame from disk.
         atom_indices : np.ndarray, dtype=int, optional
@@ -307,7 +307,7 @@ class GroTrajectoryFile:
         atom_indices = cast_indices(atom_indices)
         atom_slice = slice(None) if atom_indices is None else atom_indices
 
-        if n_frames is None:
+        if n_frames is None or n_frames <= 0:
             frameiter = itertools.count()
         else:
             frameiter = range(n_frames)
