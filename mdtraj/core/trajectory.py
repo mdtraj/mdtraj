@@ -972,6 +972,9 @@ class Trajectory:
             warn_on_cast=False,
             add_newaxis_on_deficient_ndim=True,
         )
+        if self._unitcell_lengths is not None:
+            if not np.isfinite(self._unitcell_lengths).all() or (self._unitcell_lengths <= 0).any():
+                raise ValueError("unitcell_lengths must be finite and strictly positive")
 
     @unitcell_angles.setter
     def unitcell_angles(self, value):
@@ -994,6 +997,9 @@ class Trajectory:
             warn_on_cast=False,
             add_newaxis_on_deficient_ndim=True,
         )
+        if self._unitcell_angles is not None:
+            if not np.isfinite(self._unitcell_angles).all() or not ((self._unitcell_angles > 0) & (self._unitcell_angles < 180)).all():
+                raise ValueError("unitcell_angles must be finite and strictly between 0 and 180 degrees")
 
     @property
     def xyz(self):

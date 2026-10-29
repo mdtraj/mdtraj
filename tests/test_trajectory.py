@@ -1075,3 +1075,17 @@ def test_add_remove_atoms(get_fn):
     roundtrip_atoms = list(top.atoms)[:]
     # Ensure the atoms are the same after a round trip of adding / deleting
     assert old_atoms == roundtrip_atoms
+
+
+def test_unitcell_setters_reject_nonphysical_values():
+    topology = md.Topology()
+    chain = topology.add_chain()
+    residue = topology.add_residue("MOL", chain)
+    topology.add_atom("C", element=md.element.carbon, residue=residue)
+    traj = md.Trajectory(np.zeros((1, 1, 3), dtype=np.float32), topology)
+    for value in ([[-1.0, 1.0, 1.0]], [[np.nan, 1.0, 1.0]], [[np.inf, 1.0, 1.0]]):
+        with pytest.raises(ValueError, match="unitcell_lengths"):
+            traj.unitcell_lengths = value
+    for value in ([[0.0, 90.0, 90.0]], [[180.0, 90.0, 90.0]], [[np.nan, 90.0, 90.0]]):
+        with pytest.raises(ValueError, match="unitcell_angles"):
+            traj.unitcell_angles = value
