@@ -24,6 +24,7 @@
 import itertools
 
 import numpy as np
+import pytest
 
 import mdtraj as md
 from mdtraj.testing import eq
@@ -41,11 +42,12 @@ def test_contact_0(get_fn):
         scheme="closest-heavy",
     )
     sidechain, sidechain_pairs = md.compute_contacts(pdb, contacts, scheme="sidechain")
-    sidechain_heavy, sidechain_heavy_pairs = md.compute_contacts(
-        pdb,
-        contacts,
-        scheme="sidechain-heavy",
-    )
+    with pytest.warns(UserWarning, match="selected topology includes at least one glycine"):
+        sidechain_heavy, sidechain_heavy_pairs = md.compute_contacts(
+            pdb,
+            contacts,
+            scheme="sidechain-heavy",
+        )
 
     ref_ca = np.loadtxt(get_fn("cc_ca.dat"))
     ref_closest = np.loadtxt(get_fn("cc_closest.dat"))
@@ -106,15 +108,16 @@ def test_contact_2(get_fn):
 def test_contact_3(get_fn):
     pdb = md.load(get_fn("bpti.pdb"))
     beta = 20
-    dists, pairs = md.compute_contacts(pdb, soft_min=True, soft_min_beta=beta)
+    with np.errstate(divide="ignore", over="ignore"):
+        dists, pairs = md.compute_contacts(pdb, soft_min=True, soft_min_beta=beta)
+        maps = md.geometry.squareform(dists, pairs)
 
-    maps = md.geometry.squareform(dists, pairs)
-    for i, (r0, r1) in enumerate(pairs):
-        for t in range(pdb.n_frames):
-            assert np.allclose(
-                beta / np.log(np.sum(np.exp(beta / maps[t, r0, r1]))),
-                dists[t, i],
-            )
+        for i, (r0, r1) in enumerate(pairs):
+            for t in range(pdb.n_frames):
+                assert np.allclose(
+                    beta / np.log(np.sum(np.exp(beta / maps[t, r0, r1]))),
+                    dists[t, i],
+                )
 
 
 def test_contact_4(get_fn):
@@ -122,8 +125,9 @@ def test_contact_4(get_fn):
         get_fn("1am7_protein.pdb"),
     )  # protonated and including at least one glycine residue (which has no heavy atoms in its sidechain)
 
-    md.compute_contacts(
-        pdb,
-        contacts="all",
-        scheme="sidechain-heavy",
-    )  # test passes if this doesn't raise an exception
+    with pytest.warns(UserWarning, match="selected topology includes at least one glycine"):
+        md.compute_contacts(
+            pdb,
+            contacts="all",
+            scheme="sidechain-heavy",
+        )  # test passes if this doesn't raise an exception

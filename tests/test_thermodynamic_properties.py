@@ -169,7 +169,7 @@ def test_alpha(get_fn):
         names=["timestep", "energy"],
         sep=r"\s*",
     )
-    energy = data.energy.values
+    energy = data.energy.to_numpy()
     alpha = md.geometry.thermal_expansion_alpha_P(traj, temperature, energy)
 
     reference = 0.000895685  # From gromacs, see notes above.md

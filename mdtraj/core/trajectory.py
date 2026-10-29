@@ -21,9 +21,9 @@
 ##############################################################################
 
 
-import functools
 import os
 import warnings
+from collections import defaultdict, deque
 from collections.abc import Iterable
 from copy import deepcopy
 
@@ -43,6 +43,7 @@ from mdtraj.formats import (
     MDCRDTrajectoryFile,
     NetCDFTrajectoryFile,
     PDBTrajectoryFile,
+    PDBxTrajectoryFile,
     TRRTrajectoryFile,
     XTCTrajectoryFile,
     XYZTrajectoryFile,
@@ -52,6 +53,7 @@ from mdtraj.formats.gro import load_gro
 from mdtraj.formats.gsd import load_gsd_topology, write_gsd
 from mdtraj.formats.hoomdxml import load_hoomdxml
 from mdtraj.formats.mol2 import load_mol2
+from mdtraj.formats.pdb.pdbfile import _is_url
 from mdtraj.formats.prmtop import load_prmtop
 from mdtraj.formats.psf import load_psf
 from mdtraj.formats.registry import FormatRegistry
@@ -90,6 +92,12 @@ _TOPOLOGY_EXTS = [
     ".arc",
     ".hdf5",
     ".gsd",
+    ".pdbx",
+    ".pdbx.gz",
+    ".cif",
+    ".cif.gz",
+    ".mmcif",
+    ".mmcif.gz",
 ]
 
 
@@ -121,6 +129,26 @@ def _assert_files_or_dirs_exist(names):
     for fn in names:
         if not (os.path.exists(fn) and (os.path.isfile(fn) or os.path.isdir(fn))):
             raise OSError("No such file: %s" % fn)
+
+
+def _are_urls(names):
+    """Return bool depending whether names is a url
+
+    Parameters
+    ----------
+    names : str or [str]
+        A string or list of strings.
+
+    Returns
+    -------
+    List(bool)
+        List where each element is True if the corresponding element in names
+        is a valid URL (per urllib), else False
+    """
+    if isinstance(names, (str, os.PathLike)) or not isinstance(names, Iterable):
+        names = [names]
+
+    return [_is_url(fn) for fn in names]
 
 
 def _hash_numpy_array(x):
@@ -156,45 +184,45 @@ def _parse_topology(top, **kwargs):
     -------
     topology : md.Topology
     """
-
-    if isinstance(top, (str, os.PathLike)):
-        ext = _get_extension(top)
-    else:
-        ext = None  # might not be a string
-
-    if isinstance(top, Topology):
-        topology = top
-    elif isinstance(top, Trajectory):
-        topology = top.topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".pdb", ".pdb.gz", ".pdbx", ".cif", ".h5", ".lh5"]):
-        _traj = load_frame(top, 0, **kwargs)
-        topology = _traj.topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".prmtop", ".parm7", ".prm7"]):
-        topology = load_prmtop(top, **kwargs)
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".psf"]):
-        topology = load_psf(top, **kwargs)
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".mol2"]):
-        topology = load_mol2(top, **kwargs).topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".gro"]):
-        topology = load_gro(top, **kwargs).topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".arc"]):
-        topology = load_arc(top, **kwargs).topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".hoomdxml"]):
-        topology = load_hoomdxml(top, **kwargs).topology
-    elif isinstance(top, (str, os.PathLike)) and (ext in [".gsd"]):
-        topology = load_gsd_topology(top, **kwargs)
-    elif isinstance(top, (str, os.PathLike)):
-        raise OSError(
-            "The topology is loaded by filename extension, and the "
-            'detected "{}" format is not supported. Supported topology '
-            'formats include {} and "{}".'.format(
-                ext,
-                ", ".join(['"%s"' % e for e in _TOPOLOGY_EXTS[:-1]]),
-                _TOPOLOGY_EXTS[-1],
-            ),
-        )
-    else:
-        raise TypeError("A topology is required. You supplied top=%s" % str(top))
+    match top:
+        case Topology():
+            topology = top
+        case Trajectory():
+            topology = top.topology
+        case str() | os.PathLike():
+            match _get_extension(top):
+                case ".pdb" | ".pdb.gz" | ".pdbx" | ".pdbx.gz" | ".cif" | ".cif.gz" | ".mmcif" | ".mmcif.gz":
+                    _traj = load_frame(top, 0, **kwargs)
+                    topology = _traj.topology
+                case ".h5" | ".lh5":
+                    _traj = load_frame(top, 0, **kwargs)
+                    topology = _traj.topology
+                case ".prmtop" | ".parm7" | ".prm7":
+                    topology = load_prmtop(top, **kwargs)
+                case ".psf":
+                    topology = load_psf(top, **kwargs)
+                case ".mol2":
+                    topology = load_mol2(top, **kwargs).topology
+                case ".gro":
+                    topology = load_gro(top, **kwargs).topology
+                case ".arc":
+                    topology = load_arc(top, **kwargs).topology
+                case ".hoomdxml":
+                    topology = load_hoomdxml(top, **kwargs).topology
+                case ".gsd":
+                    topology = load_gsd_topology(top, **kwargs)
+                case ext:  # raise error when we hit any other cases
+                    raise OSError(
+                        "The topology is loaded by filename extension, and the "
+                        'detected "{}" format is not supported. Supported topology '
+                        'formats include {} and "{}".'.format(
+                            ext,
+                            ", ".join(['"%s"' % e for e in _TOPOLOGY_EXTS[:-1]]),
+                            _TOPOLOGY_EXTS[-1],
+                        ),
+                    )
+        case _:
+            raise TypeError("A topology is required. You supplied top=%s" % str(top))
 
     return topology
 
@@ -305,10 +333,11 @@ def load_frame(filename, index, top=None, atom_indices=None, **kwargs):
     if extension not in _TOPOLOGY_EXTS:
         kwargs["top"] = top
 
-    if loader.__name__ not in ["load_dtr"]:
-        _assert_files_exist(filename)
-    else:
-        _assert_files_or_dirs_exist(filename)
+    if not _is_url(filename):
+        if loader.__name__ not in ["load_dtr"]:
+            _assert_files_exist(filename)
+        else:
+            _assert_files_or_dirs_exist(filename)
 
     return loader(filename, frame=index, **kwargs)
 
@@ -342,6 +371,9 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
         If not none, then read only a subset of the atoms coordinates from the
         file. This may be slightly slower than the standard read because it
         requires an extra copy, but will save memory.
+    bond_orders : bool, optional
+        This option is used for the PDB format. If set to True, bond orders from
+        PDB files are set using repeating CONECT records.
 
     See Also
     --------
@@ -378,11 +410,11 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     # Make the needed checks
     if len(set(extensions)) == 0:
         raise ValueError(
-            "No trajectories specified. " "filename_or_filenames was an empty list",
+            "No trajectories specified. filename_or_filenames was an empty list",
         )
     elif len(set(extensions)) > 1:
         raise TypeError(
-            "Each filename must have the same extension. " "Received: %s" % ", ".join(set(extensions)),
+            "Each filename must have the same extension. Received: %s" % ", ".join(set(extensions)),
         )
 
     # Pre-loads the topology from PDB for major performance boost
@@ -396,11 +428,14 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
     top = topkwargs.pop("top", None)
     if top is None:
         top = filename_or_filenames[0]
-    kwargs["top"] = _parse_topology(top, **topkwargs)
+
+    # These topology formats do not support the 'top' keyword
+    # This is to prevent the loader from reading the topology twice.
+    if extension not in [".h5", ".hdf5", ".mol2"]:
+        kwargs["top"] = _parse_topology(top, **topkwargs)
 
     # get the right loader
     try:
-        # loader = _LoaderRegistry[extension][0]
         loader = FormatRegistry.loaders[extension]
     except KeyError:
         raise OSError(
@@ -409,10 +444,19 @@ def load(filename_or_filenames, discard_overlapping_frames=False, **kwargs):
             f"with extensions in {FormatRegistry.loaders.keys()}",
         )
 
-    if loader.__name__ not in ["load_dtr"]:
-        _assert_files_exist(filename_or_filenames)
-    else:
-        _assert_files_or_dirs_exist(filename_or_filenames)
+    # Check to see if files exists for elements that are not considered URLs
+    url_check = _are_urls(filename_or_filenames)
+    if not all(url_check):
+        check_filenames = (
+            filename_or_filenames
+            if len(url_check) == 1
+            else [name for name, status in zip(filename_or_filenames, url_check) if not status]
+        )
+
+        if loader.__name__ not in ["load_dtr"]:
+            _assert_files_exist(check_filenames)
+        else:
+            _assert_files_or_dirs_exist(check_filenames)
 
     if extension not in _TOPOLOGY_EXTS:
         # standard_names is a valid keyword argument only for files containing topologies
@@ -571,7 +615,7 @@ def iterload(filename, chunk=100, **kwargs):
             i += chunk
             yield traj
     else:
-        with (lambda x: (open(x, n_atoms=topology.n_atoms) if extension in (".crd", ".mdcrd") else open(filename)))(
+        with (lambda x: open(x, n_atoms=topology.n_atoms) if extension in (".crd", ".mdcrd") else open(filename))(
             filename,
         ) as f:
             if skip > 0:
@@ -611,14 +655,17 @@ def join(trajs, check_topology=True, discard_overlapping_frames=False):
     discard_overlapping_frames : bool
         Check for overlapping frames and discard
     """
-    return functools.reduce(
-        lambda x, y: x.join(
-            y,
+    list_trajs = list(trajs)
+    if len(list_trajs) == 1:
+        return list_trajs[0]
+    else:
+        joined_traj = list_trajs[0]
+        joined_traj = joined_traj.join(
+            list_trajs[1:],
             check_topology=check_topology,
             discard_overlapping_frames=discard_overlapping_frames,
-        ),
-        trajs,
-    )
+        )
+        return joined_traj
 
 
 class Trajectory:
@@ -852,7 +899,7 @@ class Trajectory:
 
         if not len(vectors) == len(self):
             raise TypeError(
-                "unitcell_vectors must be the same length as " "the trajectory. you provided %s" % str(vectors),
+                "unitcell_vectors must be the same length as the trajectory. you provided %s" % str(vectors),
             )
 
         v1 = vectors[:, 0, :]
@@ -1067,6 +1114,8 @@ class Trajectory:
 
         if atom_indices is None:
             atom_indices = slice(None)
+        elif len(atom_indices) == 0:
+            raise ValueError("Number of atom indices must be greater than 0")
 
         if ref_atom_indices is None:
             ref_atom_indices = atom_indices
@@ -1110,6 +1159,15 @@ class Trajectory:
             parallel=parallel,
         )
 
+        # Checking to see if we got 0s in all of the first frame.
+        if not np.any(self_displace_xyz[0]):
+            raise OverflowError(
+                "Encounted a potential overflow/underflow error during superpose() due to the magnitude of your `_xyz`"
+                "coordinates. To circumvent this, (1) reload your trajectory and (2) divide and/or multiply your"
+                "`_xyz` dataset by multiples of 10 before running superpose again. Then, (3) revert that "
+                "multiplication/division after the calculations.",
+            )
+
         self_displace_xyz += ref_offset
         self.xyz = self_displace_xyz
         return self
@@ -1146,7 +1204,7 @@ class Trajectory:
                 raise TypeError("You can only join Trajectory instances")
             if not all(self.n_atoms == o.n_atoms for o in other):
                 raise ValueError(
-                    "Number of atoms in self (%d) is not equal " "to number of atoms in other" % (self.n_atoms),
+                    "Number of atoms in self (%d) is not equal to number of atoms in other" % (self.n_atoms),
                 )
             if check_topology and not all(self.topology == o.topology for o in other):
                 raise ValueError("The topologies of the Trajectories are not the same")
@@ -1239,9 +1297,12 @@ class Trajectory:
         return self.__class__(
             xyz=xyz,
             topology=topology,
-            unitcell_angles=self.unitcell_angles,
-            unitcell_lengths=self.unitcell_lengths,
-            time=self.time,
+            # The constructor preserves already-valid NumPy arrays.  Copy
+            # metadata here so mutating the stacked trajectory cannot mutate
+            # the left operand through shared time or unit-cell buffers.
+            unitcell_angles=None if self.unitcell_angles is None else self.unitcell_angles.copy(),
+            unitcell_lengths=None if self.unitcell_lengths is None else self.unitcell_lengths.copy(),
+            time=self.time.copy(),
         )
 
     def __getitem__(self, key):
@@ -1337,7 +1398,7 @@ class Trajectory:
 
         if (topology is not None) and (topology._numAtoms != self.n_atoms):
             raise ValueError(
-                f"Number of atoms in xyz ({self.n_atoms}) and " f"in topology ({topology._numAtoms}) don't match",
+                f"Number of atoms in xyz ({self.n_atoms}) and in topology ({topology._numAtoms}) don't match",
             )
 
     def openmm_positions(self, frame):
@@ -1422,6 +1483,10 @@ class Trajectory:
             ".trr": self.save_trr,
             ".pdb": self.save_pdb,
             ".pdb.gz": self.save_pdb,
+            ".cif": self.save_cif,
+            ".cif.gz": self.save_cif,
+            ".pdbx": self.save_cif,
+            ".pdbx.gz": self.save_cif,
             ".dcd": self.save_dcd,
             ".h5": self.save_hdf5,
             ".nc": self.save_netcdf,
@@ -1474,7 +1539,7 @@ class Trajectory:
         # run the saver, and return whatever output it gives
         return saver(filename, **kwargs)
 
-    def save_hdf5(self, filename, mode="w", force_overwrite=True):
+    def save_hdf5(self, filename, mode="w", force_overwrite=True, bond_metadata=True):
         """Save trajectory to MDTraj HDF5 format
 
         Parameters
@@ -1486,12 +1551,19 @@ class Trajectory:
         mode : str, default='w'
             The mode in which to save the file. 'w' will overwrite any existing
             file, 'a' will append to an existing file.
+        bond_metadata : bool, default=True
+            Flag to save bond order and type in the HDF5.
         """
         # check if savemode is valid (only "w" or "a" are allowed)
         if mode not in ["w", "a"]:
             raise ValueError("savemode must be either 'w' or 'a'")
 
-        with HDF5TrajectoryFile(filename, mode, force_overwrite=force_overwrite) as f:
+        with HDF5TrajectoryFile(
+            filename,
+            mode,
+            force_overwrite=force_overwrite,
+            bond_metadata=bond_metadata,
+        ) as f:
             f.write(
                 coordinates=in_units_of(
                     self.xyz,
@@ -1545,7 +1617,7 @@ class Trajectory:
                 types=[a.name for a in self.top.atoms],
             )
 
-    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True, header=True):
+    def save_pdb(self, filename, force_overwrite=True, bfactors=None, ter=True, bond_orders=False):
         """Save trajectory to RCSB PDB format
 
         Parameters
@@ -1561,10 +1633,8 @@ class Trajectory:
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.
-        header : bool, default=True
-            Include header in pdb. Useful if you want the extra output, but sometimes prevent
-            programs from running smoothly.
-
+        bond_orders : bool, default=False
+            Specify bond orders by writing repeated bonds in CONECT records
         """
         self._check_valid_unitcell()
 
@@ -1598,7 +1668,7 @@ class Trajectory:
                             f.distance_unit,
                         ),
                         self.topology,
-                        modelIndex=i,
+                        modelIndex=i if self.n_frames > 1 else None,
                         bfactors=bfactors[i],
                         unitcell_lengths=in_units_of(
                             self.unitcell_lengths[i],
@@ -1607,7 +1677,7 @@ class Trajectory:
                         ),
                         unitcell_angles=self.unitcell_angles[i],
                         ter=ter,
-                        header=header,
+                        bond_orders=bond_orders,
                     )
                 else:
                     f.write(
@@ -1617,10 +1687,81 @@ class Trajectory:
                             f.distance_unit,
                         ),
                         self.topology,
-                        modelIndex=i,
+                        modelIndex=i if self.n_frames > 1 else None,
                         bfactors=bfactors[i],
                         ter=ter,
-                        header=header,
+                        bond_orders=bond_orders,
+                    )
+
+    def save_cif(self, filename, force_overwrite=True, bfactors=None, keepIds=False):
+        """Save trajectory to PDBx/mmCIF format
+
+        Parameters
+        ----------
+        filename : path-like
+            Filesystem path in which to save the trajectory. Supports .cif and .cif.gz extensions.
+        force_overwrite : bool, default=True
+            Overwrite anything that exists at filename, if it's already there.
+        bfactors : array_like, default=None, shape=(n_frames, n_atoms) or (n_atoms,)
+            Save bfactors with cif file. If the array is two dimensional it should
+            contain a bfactor for each atom in each frame of the trajectory.
+            Otherwise, the same bfactor will be saved in each frame.
+        keepIds : bool=False
+            If True, keep the residue and chain IDs specified in the Topology
+            rather than generating new ones.  Warning: It is up to the caller to
+            make sure these are valid IDs that satisfy the requirements of the
+            PDBx/mmCIF format.  Otherwise, the output file will be invalid.
+        """
+        self._check_valid_unitcell()
+
+        if bfactors is not None:
+            if len(np.array(bfactors).shape) == 1:
+                if len(bfactors) != self.n_atoms:
+                    raise ValueError(
+                        "bfactors %s should be shaped as (n_frames, n_atoms) or (n_atoms,)"
+                        % str(np.array(bfactors).shape),
+                    )
+                bfactors = [bfactors] * self.n_frames
+
+            else:
+                if np.array(bfactors).shape != (self.n_frames, self.n_atoms):
+                    raise ValueError(
+                        "bfactors %s should be shaped as (n_frames, n_atoms) or (n_atoms,)"
+                        % str(np.array(bfactors).shape),
+                    )
+        else:
+            bfactors = [None] * self.n_frames
+
+        # Support for .cif and .cif.gz is handled by PDBxTrajectoryFile
+        with PDBxTrajectoryFile(filename, "w", force_overwrite=force_overwrite) as f:
+            for i in range(self.n_frames):
+                if self._have_unitcell:
+                    f.write(
+                        in_units_of(
+                            self._xyz[i],
+                            Trajectory._distance_unit,
+                            f.distance_unit,
+                        ),
+                        self.topology,
+                        unitcell_lengths=in_units_of(
+                            self.unitcell_lengths[i],
+                            Trajectory._distance_unit,
+                            f.distance_unit,
+                        ),
+                        unitcell_angles=self.unitcell_angles[i],
+                        bfactors=bfactors[i],
+                        keepIds=keepIds,
+                    )
+                else:
+                    f.write(
+                        in_units_of(
+                            self._xyz[i],
+                            Trajectory._distance_unit,
+                            f.distance_unit,
+                        ),
+                        self.topology,
+                        bfactors=bfactors[i],
+                        keepIds=keepIds,
                     )
 
     def save_xtc(self, filename, force_overwrite=True):
@@ -1745,7 +1886,7 @@ class Trajectory:
         if self._have_unitcell:
             if not np.all(self.unitcell_angles == 90):
                 raise ValueError(
-                    "Only rectilinear boxes can be saved to mdcrd files. " f"Your angles are {self.unitcell_angles}",
+                    f"Only rectilinear boxes can be saved to mdcrd files. Your angles are {self.unitcell_angles}",
                 )
 
         with MDCRDTrajectoryFile(
@@ -2043,7 +2184,7 @@ class Trajectory:
         --------
         stack : stack multiple trajectories along the atom axis
         """
-        xyz = np.array(self.xyz[:, atom_indices], order="C")
+        xyz = np.array(self.xyz[:, sorted(atom_indices)], order="C")
         topology = None
         if self._topology is not None:
             topology = self._topology.subset(atom_indices)
@@ -2199,6 +2340,113 @@ class Trajectory:
     def _have_unitcell(self):
         return self._unitcell_lengths is not None and self._unitcell_angles is not None
 
+    def _sort_bonds(self, extra_bonds=None):
+        """Sort bonds for wrapping molecules correctly.
+
+        Each molecule is built in a continuous chain along the bonds, which
+        prevents atoms from being imaged to multiple distinct locations.
+        The returned list of bonds defines each molecule as a minimum spanning
+        tree of the molecular graph.
+
+        Parameters
+        ----------
+        extra_bonds : array_like of shape (k, 2), optional
+            Additional atom-index pairs to add to the graph before building the
+            spanning tree, to stitch separate molecules into one component.
+
+        Returns
+        -------
+        sorted_bonds: np.ndarray, shape=(m,2)
+            Sorted array of bonds that define molecules as MSTs.
+        """
+        bonds = np.asarray(
+            [[b0.index, b1.index] for b0, b1 in self._topology.bonds],
+            dtype=np.int32,
+        )
+        if extra_bonds is not None and len(extra_bonds) > 0:
+            bonds = np.concatenate(
+                [bonds, np.asarray(extra_bonds, dtype=np.int32).reshape(-1, 2)],
+            )
+        # Build an adjacency list for the molecular graph
+        adj = defaultdict(list)
+        for bond in bonds:
+            atom1, atom2 = bond
+            adj[atom1].append(atom2)
+            adj[atom2].append(atom1)
+
+        sorted_bonds = []
+        visited = set()
+        queue = deque()
+
+        atoms = set(bonds.flatten())
+
+        # Iterate through all atoms to handle disconnected subgraphs (molecules)
+        for atom in atoms:
+            if atom not in visited:
+                # Start BFS traversal from this atom
+                visited.add(atom)
+                queue.append(atom)
+                while queue:
+                    current_atom = queue.popleft()
+                    for neighbor in adj[current_atom]:
+                        if neighbor not in visited:
+                            visited.add(neighbor)
+                            queue.append(neighbor)
+                            # Add the bond with the known atom at index 0
+                            sorted_bonds.append([current_atom, neighbor])
+
+        return np.array(sorted_bonds, dtype=np.int32)
+
+    def _anchor_bridge_bonds(self, anchor_molecules, frame=0):
+        """Bonds connecting anchor molecules at their closest real-space contacts.
+
+        Returns one bond per edge of a spanning tree over the anchor molecules,
+        so that ``make_whole`` reassembles them as a single connected complex.
+        Contacts are measured in real space (``periodic=False``) on a made-whole
+        copy of ``frame``, since the minimum-image closest contact can be a pair
+        that is adjacent only through the periodic boundary.
+
+        Parameters
+        ----------
+        anchor_molecules : list of atom sets
+            The anchor molecules to bridge together.
+        frame : int, default=0
+            The frame used to measure interface contacts.
+
+        Returns
+        -------
+        bridges : list of (int, int)
+            Atom-index pairs, one per edge of the spanning tree.
+        """
+        groups = [np.fromiter((a.index for a in mol), dtype=np.int32) for mol in anchor_molecules]
+        bridges = []
+        if len(groups) < 2:
+            return bridges
+
+        whole_ref = self[frame].make_molecules_whole(inplace=False)
+
+        # Join the next molecule through its closest contact to the connected set.
+        connected = {0}
+        while len(connected) < len(groups):
+            best = None
+            for i in range(len(groups)):
+                if i in connected:
+                    continue
+                for j in connected:
+                    a1, a2, dist = distance.find_closest_contact(
+                        whole_ref,
+                        groups[i],
+                        groups[j],
+                        frame=0,
+                        periodic=False,
+                    )
+                    if best is None or dist < best[0]:
+                        best = (dist, i, int(a1), int(a2))
+            _, new_group, a1, a2 = best
+            bridges.append((a1, a2))
+            connected.add(new_group)
+        return bridges
+
     def make_molecules_whole(self, inplace=False, sorted_bonds=None):
         """Only make molecules whole
 
@@ -2228,11 +2476,7 @@ class Trajectory:
             result = self[:]
 
         if sorted_bonds is None:
-            sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray(
-                [[b0.index, b1.index] for b0, b1 in sorted_bonds],
-                dtype=np.int32,
-            )
+            sorted_bonds = self._sort_bonds()
 
         box = np.asarray(result.unitcell_vectors, order="c")
         _geometry.whole_molecules(result.xyz, box, sorted_bonds)
@@ -2247,6 +2491,7 @@ class Trajectory:
         other_molecules=None,
         sorted_bonds=None,
         make_whole=True,
+        bridge_anchors=False,
     ):
         """Recenter and apply periodic boundary conditions to the molecules in each frame of the trajectory.
 
@@ -2273,6 +2518,14 @@ class Trajectory:
             topology. Only relevant if ``make_whole`` is True.
         make_whole : bool
             Whether to make molecules whole.
+        bridge_anchors : bool, default=False
+            If True, treat all anchor molecules as a single connected complex,
+            stitched together at their real-space interface contacts, instead of
+            keeping them together with the per-pair minimum-image heuristic. Use
+            this for elongated multi-chain complexes (e.g. protein dimers) that
+            span more than half the box, which the default heuristic splits
+            across the periodic boundary. Requires ``make_whole=True`` and is
+            incompatible with a user-supplied ``sorted_bonds``.
 
         Returns
         -------
@@ -2291,6 +2544,23 @@ class Trajectory:
         if anchor_molecules is None:
             anchor_molecules = self.topology.guess_anchor_molecules()
 
+        anchor_bridge_bonds = None
+        if bridge_anchors:
+            if not make_whole:
+                raise ValueError("bridge_anchors=True requires make_whole=True")
+            if sorted_bonds is not None:
+                raise ValueError(
+                    "bridge_anchors=True is incompatible with a user-supplied sorted_bonds",
+                )
+            # Merge the anchors into one connected complex to bypass the per-pair
+            # minimum-image heuristic, which splits complexes longer than half the box.
+            anchor_bridge_bonds = self._anchor_bridge_bonds(anchor_molecules)
+            merged_anchor = set().union(*anchor_molecules)
+            if other_molecules is None:
+                molecules = self._topology.find_molecules()
+                other_molecules = [mol for mol in molecules if not (mol & merged_anchor)]
+            anchor_molecules = [merged_anchor]
+
         if other_molecules is None:
             # Determine other molecules by which molecules are not anchor molecules
             molecules = self._topology.find_molecules()
@@ -2307,11 +2577,7 @@ class Trajectory:
         else:
             result = self[:]
         if make_whole and sorted_bonds is None:
-            sorted_bonds = sorted(self._topology.bonds, key=lambda bond: bond[0].index)
-            sorted_bonds = np.asarray(
-                [[b0.index, b1.index] for b0, b1 in sorted_bonds],
-                dtype=np.int32,
-            )
+            sorted_bonds = self._sort_bonds(extra_bonds=anchor_bridge_bonds)
         elif not make_whole:
             sorted_bonds = None
 

@@ -142,7 +142,7 @@ def ensure_type(
         # dimension 1
         sentenel = object()
         error = ValueError(
-            "{} must be shape {}. You supplied  " "{}".format(name, str(shape).replace("None", "Any"), val.shape),
+            "{} must be shape {}. You supplied  {}".format(name, str(shape).replace("None", "Any"), val.shape),
         )
         for a, b in zip_longest(val.shape, shape, fillvalue=sentenel):
             if a is sentenel or b is sentenel:
@@ -214,5 +214,5 @@ def check_random_state(seed):
     if isinstance(seed, np.random.RandomState):
         return seed
     raise ValueError(
-        "%r cannot be used to seed a numpy.random.RandomState" " instance" % seed,
+        "%r cannot be used to seed a numpy.random.RandomState instance" % seed,
     )

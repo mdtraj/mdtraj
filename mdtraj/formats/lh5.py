@@ -261,15 +261,15 @@ class LH5TrajectoryFile:
         top, bonds = top.to_dataframe()
 
         data = {
-            "AtomID": top.index.values + 1,
-            "AtomNames": top.name.values,
-            "ResidueNames": top.resName.values,
-            "ChainID": top.chainID.values,
-            "ResidueID": top.resSeq.values + 1,
+            "AtomID": top.index.to_numpy() + 1,
+            "AtomNames": top.name.to_numpy(),
+            "ResidueNames": top.resName.to_numpy(),
+            "ChainID": top.chainID.to_numpy(),
+            "ResidueID": top.resSeq.to_numpy() + 1,
         }
         for key, val in data.items():
-            node = self._get_node(where="/", name=key)[:] = val[:]
-            node[:] = val[:]
+            node = self._get_node(where="/", name=key)
+            node[:] = np.asarray(val)
 
     def read_as_traj(self, n_frames=None, stride=None, atom_indices=None):
         """Read a trajectory from the LH5 file
