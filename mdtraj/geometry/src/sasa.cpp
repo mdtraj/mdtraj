@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
+#include <cstring>
 //#include <pmmintrin.h>
 
 #include "sasa.h"
@@ -238,6 +239,10 @@ void sasa(const int n_frames, const int n_atoms, const float* xyzlist,
   #pragma omp for
 #endif
   for (i = 0; i < n_frames; i++) {
+    // asa_frame accumulates accessible point counts in this reusable buffer.
+    // Clear it before every frame so previous-frame areas do not leak into
+    // the current result.
+    memset(outframebuffer, 0, n_atoms * sizeof(float));
     asa_frame(xyzlist + i*n_atoms*3, n_atoms, atom_radii, sphere_points,
 	      n_sphere_points, wb1, wb2, atom_selection_mask, outframebuffer);
     outframe = out + (n_groups * i);
