@@ -71,6 +71,9 @@ static void asa_frame(const float* frame, const int n_atoms, const float* atom_r
     float constant = 4.0 * M_PI / n_sphere_points;
 
     for (int i = 0; i < n_atoms; i++) {
+        // The caller reuses `areas` across frames, so reset it here
+        areas[i] = 0;
+
         // Skip atom if not in selection
         int in_selection = atom_selection_mask[i];
         if (in_selection == 0)
