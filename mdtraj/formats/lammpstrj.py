@@ -146,6 +146,9 @@ class LAMMPSTrajectoryFile:
         self._filename = filename
         self._mode = mode
         self._frame_index = 0
+        # Map LAMMPS global atom IDs to the trajectory order established by
+        # the first frame.  Dense IDs retain the historical id - 1 ordering.
+        self._atom_id_to_index = None
         # track which line we're on. this is not essential, but its useful
         # when reporting errors to the user to say what line it occured on.
         self._line_counter = 0
@@ -434,6 +437,7 @@ class LAMMPSTrajectoryFile:
         types = np.empty(shape=self._n_atoms, dtype="int")
 
         # --- begin body ---
+        records = []
         for _ in range(self._n_atoms):
             line = self._fh.readline()
             if line == "":
@@ -441,8 +445,9 @@ class LAMMPSTrajectoryFile:
             split_line = line.split()
             try:
                 atom_index = int(split_line[self._atom_index_column])
-                types[atom_index - 1] = int(split_line[self._atom_type_column])
-                xyz[atom_index - 1] = [float(split_line[column]) for column in self._xyz_columns]
+                atom_type = int(split_line[self._atom_type_column])
+                coordinates = [float(split_line[column]) for column in self._xyz_columns]
+                records.append((atom_index, atom_type, coordinates))
             except Exception:
                 raise OSError(
                     f'lammpstrj parse error on line {self._line_counter:d} of "{self._filename:s}". '
@@ -450,6 +455,24 @@ class LAMMPSTrajectoryFile:
                     "lammpstrj file.",
                 )
             self._line_counter += 1
+        if self._atom_id_to_index is None:
+            atom_ids = [record[0] for record in records]
+            if sorted(atom_ids) == list(range(1, self._n_atoms + 1)):
+                self._atom_id_to_index = {atom_id: atom_id - 1 for atom_id in atom_ids}
+            else:
+                # LAMMPS IDs are global identifiers and may contain gaps.  In
+                # that case the first-frame row order defines trajectory order.
+                self._atom_id_to_index = {
+                    atom_id: row_index for row_index, atom_id in enumerate(atom_ids)
+                }
+        if set(record[0] for record in records) != set(self._atom_id_to_index):
+            raise OSError(
+                f'lammpstrj atom IDs changed on line {self._line_counter:d} of "{self._filename:s}".'
+            )
+        for atom_id, atom_type, coordinates in records:
+            row_index = self._atom_id_to_index[atom_id]
+            types[row_index] = atom_type
+            xyz[row_index] = coordinates
         # --- end body ---
 
         self._frame_index += 1
