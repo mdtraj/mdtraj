@@ -998,7 +998,10 @@ class Trajectory:
             add_newaxis_on_deficient_ndim=True,
         )
         if self._unitcell_angles is not None:
-            if not np.isfinite(self._unitcell_angles).all() or not ((self._unitcell_angles > 0) & (self._unitcell_angles < 180)).all():
+            if (
+                not np.isfinite(self._unitcell_angles).all()
+                or not ((self._unitcell_angles > 0) & (self._unitcell_angles < 180)).all()
+            ):
                 raise ValueError("unitcell_angles must be finite and strictly between 0 and 180 degrees")
 
     @property
