@@ -305,11 +305,16 @@ class NetCDFTrajectoryFile:
             n_frames *= stride
 
         total_n_frames = self.n_frames
+        stop_frame_index = self._frame_index + min(n_frames, total_n_frames)
+        stop_stride = 1 if stride is None else stride
+
+        # New guard to prevent us counting past total number of frames.
         frame_slice = slice(
             self._frame_index,
-            self._frame_index + min(n_frames, total_n_frames),
+            stop_frame_index if stop_frame_index <= (total_n_frames + stop_stride) else total_n_frames,
             stride,
         )
+
         if self._frame_index >= total_n_frames:
             # just return something that'll look like len(xyz) == 0
             # this is basically just an alternative to throwing an indexerror
@@ -334,7 +339,7 @@ class NetCDFTrajectoryFile:
                 )
             if not np.all(atom_slice >= 0):
                 raise ValueError(
-                    "The entries in atom_indices must be greater " "than or equal to zero",
+                    "The entries in atom_indices must be greater than or equal to zero",
                 )
 
         if "coordinates" in self._handle.variables:
@@ -504,7 +509,7 @@ class NetCDFTrajectoryFile:
                 self._handle.variables["cell_angles"][frame_slice, :] = cell_angles
         except KeyError as e:
             raise ValueError(
-                "The file that you're trying to save to doesn't " "contain the field %s." % str(e),
+                "The file that you're trying to save to doesn't contain the field %s." % str(e),
             )
 
         # check for missing attributes

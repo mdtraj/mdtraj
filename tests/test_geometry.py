@@ -140,10 +140,10 @@ def test_dihedral_indices(get_fn):
     phi0_ind = np.array([3, 12, 13, 14]) - 1  # Taken from PDB, so subtract 1
     psi0_ind = np.array([1, 2, 3, 12]) - 1  # Taken from PDB, so subtract 1
 
-    ind = mdtraj.geometry.dihedral.indices_phi(traj)
+    ind = mdtraj.geometry.dihedral.indices_phi(traj.topology)
     eq(ind[0], phi0_ind)
 
-    ind = mdtraj.geometry.dihedral.indices_psi(traj)
+    ind = mdtraj.geometry.dihedral.indices_psi(traj.topology)
     eq(ind[0], psi0_ind)
 
 

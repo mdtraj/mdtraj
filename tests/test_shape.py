@@ -91,6 +91,21 @@ def test_principal_moments(traj4):
     assert eq(rg_actual, rg_computed)
 
 
+def test_mass_weighted_radius_of_gyration():
+    """A nonuniform mass distribution must use its mass-weighted centre."""
+    top = md.Topology()
+    chain = top.add_chain()
+    residue = top.add_residue("X", chain)
+    top.add_atom("A", md.element.carbon, residue)
+    top.add_atom("B", md.element.hydrogen, residue)
+    traj = md.Trajectory(np.array([[[0.0, 0.0, 0.0], [2.0, 0.0, 0.0]]], dtype=np.float32), top)
+
+    masses = np.array([12.0, 1.0])
+    expected_center = 2.0 / 13.0
+    expected = np.sqrt((12.0 * expected_center**2 + 1.0 * (2.0 - expected_center) ** 2) / 13.0)
+    assert np.allclose(md.compute_rg(traj, masses=masses), [expected])
+
+
 def test_asphericity(traj4):
     b_computed = shape.asphericity(traj4)
 

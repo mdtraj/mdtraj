@@ -688,7 +688,8 @@ _AMINO_ACID_CODES = {
     "HRP": "W",
     "HS8": "H",
     "HS9": "H",
-    "HSE": "S",
+    "HSE": "H",
+    "HSD": "H",
     "HSL": "S",
     "HSO": "H",
     "HTI": "C",
@@ -1087,3 +1088,67 @@ _AMINO_ACID_CODES = {
 }
 
 _PROTEIN_RESIDUES = frozenset(_AMINO_ACID_CODES.keys())
+
+
+def residues_and_codes(variant_dicts, create_codes=True, code_dict=None):
+    """
+    Create set of nucleic residues and dict of 1-letter codes.
+
+    Parameters
+    ----------
+    variant_dicts : list of dict
+        Variant dictionaries (mapping canonical residue code to list of
+        variants) to use
+    create_codes : (list of) bool
+        Which variants dicts (based on order) to use for creating one-letter
+        codes; if not a list, the single value is used for all (default
+        True)
+    code_dict : dict
+        Mapping of alias to 1-letter code to override algorithmic
+        generation.
+    """
+    # create_codes should be a list of bool
+    try:
+        _ = iter(create_codes)
+    except TypeError:
+        create_codes = [create_codes] * len(variant_dicts)
+
+    # inner sum over the values in one dict, outer sum over dicts
+    residues = frozenset(sum([sum(list(dct.values()), []) for dct in variant_dicts], []))
+
+    #  one_letter_dict
+    all_std_names = sum([list(dct.keys()) for dct in variant_dicts], [])
+    one_letter_dict = {name: name[-1] for name in all_std_names}
+
+    # pick the variant dicts where we want the codes; get codes
+    do_one_letter = [dct for (dct, one_letter) in zip(variant_dicts, create_codes) if one_letter]
+    codes = {
+        alias: one_letter_dict[parent] for dct in do_one_letter for parent, aliases in dct.items() for alias in aliases
+    }
+
+    if code_dict is not None:
+        codes.update(code_dict)
+
+    return residues, codes
+
+
+_NUCLEIC_VARIANTS = {key: [key] for key in ["DG", "DA", "DT", "DC", "DI", "G", "A", "U", "C", "I"]}
+
+_AMBER_VARIANTS = {
+    "DA": ["DAN", "DA5", "DA3"],
+    "DT": ["DTN", "DT5", "DT3"],
+    "DC": ["DCN", "DC5", "DC3"],
+    "DG": ["DGN", "DG5", "DG3"],
+    "A": ["AN", "A5", "A3", "RAN", "RA5", "RA3"],
+    "U": ["UN", "U5", "U3", "RUN", "RU5", "RU3"],
+    "C": ["CN", "C5", "C3", "RCN", "RC5", "RC3"],
+    "G": ["GN", "G5", "G3", "RGN", "RG5", "RG3"],
+}
+
+# protonated forms originally listed in ParmEd
+_PROTONATED_VARIANTS = {"DA": ["DAP"], "DC": ["DCP"]}
+
+_NUCLEIC_RESIDUES, _NUCLEIC_ACID_CODES = residues_and_codes(
+    variant_dicts=[_NUCLEIC_VARIANTS, _AMBER_VARIANTS, _PROTONATED_VARIANTS],
+    create_codes=True,
+)

@@ -65,7 +65,10 @@ def _compute_rg_xyz(xyz, masses=None):
 
     weights = masses / masses.sum()
 
-    mu = xyz.mean(1)
+    if masses is None:
+        mu = xyz.mean(1)
+    else:
+        mu = (xyz * weights[None, :, None]).sum(1)
     centered = (xyz.transpose((1, 0, 2)) - mu).transpose((1, 0, 2))
     squared_dists = (centered**2).sum(2)
     Rg = (squared_dists * weights).sum(1) ** 0.5

@@ -213,7 +213,7 @@ class AmberRestartFile:
             hasbox = _ = True
         else:
             raise TypeError(
-                "Badly formatted restart file. Has %d lines for " "%d atoms" % (len(lines), natom),
+                "Badly formatted restart file. Has %d lines for %d atoms" % (len(lines), natom),
             )
 
         coordinates = np.zeros((1, natom, 3))
@@ -311,7 +311,7 @@ class AmberRestartFile:
         """
         if self._mode != "r":
             raise OSError(
-                "The file was opened in mode=%s. Reading is not " "allowed." % self._mode,
+                "The file was opened in mode=%s. Reading is not allowed." % self._mode,
             )
 
         with open(self._filename) as f:
@@ -364,7 +364,7 @@ class AmberRestartFile:
         if not self._needs_initialization:
             # Must have already been written -- can only write once
             raise RuntimeError(
-                "restart file has already been written -- can " "only write one frame to restart files.",
+                "restart file has already been written -- can only write one frame to restart files.",
             )
         # These are no-ops.
         # coordinates = in_units_of(coordinates, None, 'angstroms')
@@ -428,7 +428,7 @@ class AmberRestartFile:
             )
 
         self._handle.write(
-            "Amber restart file (without velocities) written by " "MDTraj\n",
+            "Amber restart file (without velocities) written by MDTraj\n",
         )
         self._handle.write("%5d%15.7e\n" % (self._n_atoms, time))
         fmt = "%12.7f%12.7f%12.7f"
@@ -539,8 +539,7 @@ class AmberNetCDFRestartFile:
         self._mode = mode
         if Version(import_("scipy.version").short_version) < Version("0.12.0"):
             raise ImportError(
-                "MDTraj NetCDF support requires scipy>=0.12.0. "
-                "You have %s" % import_("scipy.version").short_version,
+                "MDTraj NetCDF support requires scipy>=0.12.0. You have %s" % import_("scipy.version").short_version,
             )
         netcdf = import_("scipy.io").netcdf_file
 
@@ -653,7 +652,7 @@ class AmberNetCDFRestartFile:
         """
         if self._mode != "r":
             raise OSError(
-                "The file was opened in mode=%s. Reading is not " "allowed." % self._mode,
+                "The file was opened in mode=%s. Reading is not allowed." % self._mode,
             )
 
         if self._closed:
@@ -677,7 +676,7 @@ class AmberNetCDFRestartFile:
             raise TypeError("NetCDF file does not have correct Conventions")
         if convention_version != "1.0":
             raise ValueError(
-                "NetCDF restart has ConventionVersion %s. Only " "Version 1.0 is supported." % convention_version,
+                "NetCDF restart has ConventionVersion %s. Only Version 1.0 is supported." % convention_version,
             )
         if atom_indices is not None:
             atom_slice = ensure_type(
@@ -774,7 +773,7 @@ class AmberNetCDFRestartFile:
         if not self._needs_initialization:
             # Must have already been written -- can only write once
             raise RuntimeError(
-                "NetCDF restart file has already been written " "-- can only write one frame to restart files.",
+                "NetCDF restart file has already been written -- can only write one frame to restart files.",
             )
         # these are no-ops
         # coordinates = in_units_of(coordinates, None, 'angstroms')

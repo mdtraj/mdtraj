@@ -3,8 +3,159 @@ What's New?
 
 These are new features and improvements of note in each release.
 
-v1.10.2 (December 11, 2024)
+v1.11.2 (October 5, 2026)
+-------------------------
+
+* Fix PyPI upload GitHub Action Process by @jeremyleung521 in #2124
+* Cache some tests with `pytest-recording` by @jeremyleung521 in #2127
+* Move most project config from setup.py to pyproject.toml by @jeremyleung521 in #2130
+* Fix `max_face_to_face_centroid_distance` value by @bagheeera in #2131
+* Fix `Topology.copy` bond remapping and `PDBxFile` `pathlib` support by @YuuuXie in #2135
+* Implement RMSF for residues by @CharlieLaughton in #2133
+* Support Pandas 3 by @janash in #2134
+* Drop Python 3.11 testing and support by @jeremyleung521 in #2139
+* Ensure `topology.join` retains chain ID information by @CharlieLaughton in #2141
+* Fix for libnetcdf4 >= 4.10.0 by @jeremyleung521 in #2143
+* Throw error in `superpose` if overflow/underflow error by @jeremyleung521 in #2147
+* Take care when PDB files mix unit cell information by @jeremyleung521 in #2137
+* Optimize call to `box_vector_length_angle` in `compute_distances_core` by @rjdirisio in #2153
+* Guard against empty atom indices producing NaNs in `superpose` by @badisa in #2159
+* Add `bridge_anchors` option to `image_molecules` by @jgullingsrud in #2172
+* Numpy 2.5 compatibility fix with eigen-calcs by @jeremyleung521 in #2189
+
+A total of 8 people contributed to this release.
+People with a "+" by their names contributed to MDTraj for the first time.
+
+- Jeremy Leung
+- Jessica A. Nash
+- Charlie Laughton
+- Ryan DiRisio
+- bagheeera +
+- Yu Xie +
+- badisa +
+- Justin Gullingsrud
+
+
+v1.11.1 (January 15, 2026)
 --------------------------
+* Update pypi upload trigger by @janash in #2054
+* Speedup some cython functions by enforcing nogil for exceptions (add return code) by @jeremyleung521 in #2049
+* Minor bug fix for documentation equations by @shehan807 in #2060
+* Drop numpy1 from testing/support, not building freethreading wheels, build linux-arm64 wheels by @jeremyleung521 in #2066
+* Add support for "standard_names" keyword argument to Amber prmtop reader by @CharlieLaughton in #2057
+* Fix docstring typo in compute_directors by @ctk3b in #2073
+* Update dependabot weekly and pre-commit monthly by @jeremyleung521 in #2081
+* Fixed typos and did minor reorganization in hdf5 docs by @MrMultiMediator in #2082
+* Avoid linear search in topology subsetting by @jgullingsrud in #2085
+* Updating macos-13 runner to macos-15-intel by @jeremyleung521 in #2088
+* Python3.14 testing and building by @jeremyleung521 in #2089
+* Official release of python 3.14 by @jeremyleung521 in #2090
+* Fix pyparsing Deprecations by @jeremyleung521 in #2097
+* Formal Charge <NA> from Mol2 Files by @jeremyleung521 in #2093
+* Rewrite trajectory.py topology parsing with match/case by @jeremyleung521 in #2094
+* Use repeated bonds in PDB CONECT records to increase bond orders (REMAKE of #1848) by @jeremyleung521 in #2083
+* Simplify testing on python 3.14 (with openmm) by @jeremyleung521 in #2091
+* Move all rcsb url downloads to https by @jeremyleung521 in #2106
+* Add bond metadata (order and type) and formal charge to HDF5 by @janash in #2101
+* Addressing some issues with `save_cif` by @darianyang in #2103
+* Fix to allow mdtraj.load() to load urls ending with pdb file extensions by @jeremyleung521 in #2115
+* Update PyParsing deprecations by @mattwthompson in #2117
+
+A total of 9 people contributed to this release.
+People with a "+" by their names contributed to MDTraj for the first time.
+
+- Jeremy Leung
+- Jessica A. Nash
+- Shehan Parmar +
+- Charlie Laughton
+- Christoph Klein
+- MrMultiMediator +
+- Justin Gullingsrud +
+- Darian Yang +
+- Matt. W. Thompson
+
+v1.11.0 (June 24, 2025)
+--------------------------
+- Test on Python 3.13 by @jeremyleung521 in #1973
+- Set up `cibuildwheel` by @mattwthompson in #1980
+- Remove scipy import in `_lprmsd.pyx` to make mdtraj submodules importable without scipy by @rjdirisio in #1988
+- Run OpenMM tests on CI by @mikemhenry in #1986
+- Add flaky/rerun-failures to tests that require pulling off a PDB by @jeremyleung521 in #1987
+- Add logo in SVG by @janash in #1989
+- Add type annotation to Topology class by @jchen0506 in #1977
+- Remove netCDF4 dependency, set up PyPI build variants by @jeremyleung521 in #2000
+- Allow ArcTrajectoryFile to optionally take topology by @jeremyleung521 in #2002
+- Add formal charge to the `to_dataframe()` and `from_dataframe()` methods by @jchen0506 in #2007
+- Fix atom_slice resSeq assignment and add HSD/HSE residue names by @huhlim and @jeremyleung521 in #2013
+- Unpin sphinx by @janash in #2016
+- Move RNG/ptraj generation for distance tests into fixture by @jeremyleung521 in #1999
+- Refactor: remove arbitrary arguments from AST module classes by @RobertArbon in #2009
+- Update note on project status by @janash in #2019
+- Fix Topology double-loading for HDF5 and MOL2 (+ remove false-positive UserWarning) by @jeremyleung521 in #2012
+- Feature: calculate Pi-stacking+T-stacking interactions given aromatic groups by @rjdirisio in #1984
+- Sort bonds to avoid make_molecules_whole failures by @eruijsena in #1929
+- Test Linux aarch64 by @jeremyleung521 in #1974
+- Allow mdtraj.rmsd() to calculate without alignment by @jeremyleung521 in #2011
+- Update formatters by @mattwthompson in #2022
+- Bugfix: delete_atom_by_index updates bond list by @RobertArbon in #2021
+- Preserve chain_id when creating topologies by @k9cdt in #2015
+- Add `nucleic` and `is_nucleic` atom selection PR by @dwhswenson and @janash in #2023
+- Remove header option from PDB writer by @cabb99 in #2034
+- Port PDBx/mmCIF Reader/Writer from OpenMM to MDTraj by @cabb99 in #2004
+- Add formal charge in missing places on topology by @janash in #2038
+- Hotfix for numpy 2.3 by @jeremyleung521 in #2045
+- Update dcdplugin.c by @reedharrison and @bennybp in #1771
+- Update unitcell.py to check if unitcell is valid by @jeremyleung521 in #2029
+- Drop Python 3.10 support by @jeremyleung521 in #2046
+- Add py3dmol visualization to pi stacking by @janash in #2020
+- Allow HDF5TrajectoryFile().topology = None by @jeremyleung521 in #2042
+- Limit warnings in tests by @jeremyleung521 in #2047
+
+A total of 14 people contributed to this release.
+People with a "+" by their names contributed to MDTraj for the first time.
+
+- Jeremy Leung
+- Matt. W. Thompson
+- Ryan DiRisio
+- Mike M. Henry +
+- Jessica A. Nash
+- Jing Chen +
+- Lim Heo +
+- Lex O'brien +
+- Enrico Ruijsenaars +
+- Da Teng
+- David W.H. Swenson +
+- Carlos Bueno +
+- Reed Harrison +
+- Benjamin P. Pritchard +
+
+
+v1.10.3 (February 7, 2025)
+--------------------------
+
+- Pin numpy>=1.25 at run time, numpy>=2.0 at build time for numpy C-API #1960
+- Fix PDB overflow #1934
+- Allow `mdtraj.load` with `top=None` #1969
+- Preserve `chain_ids` for `to_openmm` and `from_openmm` #1951
+- Store and write formal charges from PDB/OpenMM #1967
+- Performance enhancement for `md.join` #1965
+- Sorting atom_indices in atom_slice #1938
+- Consolidate/update config files #1949
+- Mark a few distance tests as flaky #1972
+
+A total of 7 people contributed to this release.
+People with a "+" by their names contributed a patch for the first time.
+
+- Jeremy Leung
+- Matthew W. Thompson
+- Jessica A. Nash
+- Jan-Oliver Kapp-Joswig +
+- Ryan DiRisio +
+- Da Teng +
+- Pavel Buslaev +
+
+v1.10.2 (December 11, 2024)
+---------------------------
 
 - Add netCDF4 as a dependency in ``setup.py`` (#1944)
 - Support NumPy 2 (#1928)
@@ -69,7 +220,7 @@ People with a "+" by their names contributed a patch for the first time.
 - Jessica A. Nash+
 
 v1.9.9 (July 22, 2023)
----------------------
+----------------------
 
 - Pin `Cython~=0.29` in `pyproject.toml` (#1801)
 - Remove "stale" bot (#1758)
@@ -124,7 +275,7 @@ People with a "+" by their names contributed a patch for the first time.
 - Bojun Liu +
 
 v1.9.7 (November 12, 2021)
------------------------
+--------------------------
 
  - Replace discourse link with gitter link (904338b799842c103dcb9e306e6878a739a4d39f)
  - Faster load function and more homogeneus file parser interface (#1648)
