@@ -373,6 +373,13 @@ def test_subset(get_fn):
     assert t2.n_residues == 1
 
 
+def test_subset_rejects_out_of_range_indices(get_fn):
+    topology = md.load(get_fn("2EQQ.pdb")).topology
+    for indices in ([topology.n_atoms], [-1]):
+        with pytest.raises(IndexError, match="out of range"):
+            topology.subset(indices)
+
+
 def test_subset_re_index_residues(get_fn):
     t1 = md.load(get_fn("2EQQ.pdb")).top
     t2 = t1.subset(t1.select("resid 0 2"))

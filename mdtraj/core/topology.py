@@ -92,6 +92,11 @@ def _topology_from_subset(topology: Topology, atom_indices: list[int]) -> Topolo
         The indices of the atoms to keep
     """
     np_indices = np.array(atom_indices)
+    invalid_indices = np_indices[(np_indices < 0) | (np_indices >= topology.n_atoms)]
+    if invalid_indices.size:
+        raise IndexError(
+            f"Atom index {invalid_indices[0]} is out of range for a topology with {topology.n_atoms} atoms"
+        )
     if len(np_indices) > 1:
         if (np_indices[1:] - np_indices[:-1]).min() < 1:
             warnings.warn("atom_indices are not monotonically increasing")
