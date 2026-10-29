@@ -132,7 +132,7 @@ def test_nonconsecutive_atom_ids(tmp_path):
         "0 10\n"
         "ITEM: ATOMS id type x y z\n"
         "2 1 1.0 2.0 3.0\n"
-        "4 1 4.0 5.0 6.0\n"
+        "4 1 4.0 5.0 6.0\n",
     )
 
     with LAMMPSTrajectoryFile(str(path)) as file:

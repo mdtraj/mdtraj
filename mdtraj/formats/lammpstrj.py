@@ -462,12 +462,10 @@ class LAMMPSTrajectoryFile:
             else:
                 # LAMMPS IDs are global identifiers and may contain gaps.  In
                 # that case the first-frame row order defines trajectory order.
-                self._atom_id_to_index = {
-                    atom_id: row_index for row_index, atom_id in enumerate(atom_ids)
-                }
+                self._atom_id_to_index = {atom_id: row_index for row_index, atom_id in enumerate(atom_ids)}
         if set(record[0] for record in records) != set(self._atom_id_to_index):
             raise OSError(
-                f'lammpstrj atom IDs changed on line {self._line_counter:d} of "{self._filename:s}".'
+                f'lammpstrj atom IDs changed on line {self._line_counter:d} of "{self._filename:s}".',
             )
         for atom_id, atom_type, coordinates in records:
             row_index = self._atom_id_to_index[atom_id]
