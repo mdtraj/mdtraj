@@ -5,11 +5,11 @@ import subprocess
 import sys
 import tempfile
 import warnings
+
 from distutils.ccompiler import new_compiler
 from distutils.dep_util import newer_group
 from distutils.errors import DistutilsExecError, DistutilsSetupError
 from distutils.sysconfig import customize_compiler, get_config_vars
-
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext as _build_ext
 

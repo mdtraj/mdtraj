@@ -93,7 +93,7 @@ def load_lammpstrj(
         raise ValueError('"top" argument is required for load_lammpstrj')
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_lammpstrj. " "you supplied %s",
+            "filename must be of type path-like for load_lammpstrj. you supplied %s",
         )
 
     topology = _parse_topology(top)
@@ -162,7 +162,7 @@ class LAMMPSTrajectoryFile:
             self._is_open = True
         else:
             raise ValueError(
-                'mode must be one of "r" or "w". ' f'you supplied "{mode}"',
+                f'mode must be one of "r" or "w". you supplied "{mode}"',
             )
 
     def close(self):
@@ -278,7 +278,7 @@ class LAMMPSTrajectoryFile:
         """
         if not self._mode == "r":
             raise ValueError(
-                "read() is only available when file is opened " 'in mode="r"',
+                'read() is only available when file is opened in mode="r"',
             )
 
         if n_frames is None:
@@ -412,8 +412,7 @@ class LAMMPSTrajectoryFile:
                     break
             else:
                 raise OSError(
-                    "Invalid .lammpstrj file. Must contain x, y, and "
-                    "z coordinates that all adhere to the same style.",
+                    "Invalid .lammpstrj file. Must contain x, y, and z coordinates that all adhere to the same style.",
                 )
 
             try:
@@ -426,7 +425,7 @@ class LAMMPSTrajectoryFile:
                 ]
             except KeyError:
                 raise OSError(
-                    "Invalid .lammpstrj file. Must contain 'id', " "'type', 'x*', 'y*' and 'z*' entries.",
+                    "Invalid .lammpstrj file. Must contain 'id', 'type', 'x*', 'y*' and 'z*' entries.",
                 )
         self._line_counter += 4
         # --- end header ---
@@ -526,7 +525,7 @@ class LAMMPSTrajectoryFile:
         """
         if not self._mode == "w":
             raise ValueError(
-                "write() is only available when file is opened " 'in mode="w"',
+                'write() is only available when file is opened in mode="w"',
             )
 
         xyz = ensure_type(

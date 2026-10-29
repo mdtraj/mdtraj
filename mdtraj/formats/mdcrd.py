@@ -80,7 +80,7 @@ def load_mdcrd(filename, top=None, stride=None, atom_indices=None, frame=None):
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_mdcrd. " "you supplied %s" % type(filename),
+            "filename must be of type path-like for load_mdcrd. you supplied %s" % type(filename),
         )
 
     topology = _parse_topology(top)
@@ -160,7 +160,7 @@ class MDCRDTrajectoryFile:
         if mode == "r":
             if n_atoms is None:
                 raise ValueError(
-                    'To open a mdcrd file in mode="r", you must ' 'supply the number of atoms, "n_atoms"',
+                    'To open a mdcrd file in mode="r", you must supply the number of atoms, "n_atoms"',
                 )
             if not os.path.exists(filename):
                 raise OSError("The file '%s' doesn't exist" % filename)
@@ -175,7 +175,7 @@ class MDCRDTrajectoryFile:
             self._is_open = True
         else:
             raise ValueError(
-                'mode must be one of "r" or "w". ' 'you supplied "%s"' % mode,
+                'mode must be one of "r" or "w". you supplied "%s"' % mode,
             )
 
     def close(self):
@@ -279,7 +279,7 @@ class MDCRDTrajectoryFile:
         """
         if not self._mode == "r":
             raise ValueError(
-                "read() is only available when file is opened " 'in mode="r"',
+                'read() is only available when file is opened in mode="r"',
             )
 
         if n_frames is None:
@@ -318,7 +318,7 @@ class MDCRDTrajectoryFile:
             # but if some of them had box information and others didn't
             # that probably means there was a bug in the parsing.
             raise OSError(
-                "Inconsistent box information. Try manually " "setting has_box? Your mdcrd file might be " "corrupt.",
+                "Inconsistent box information. Try manually setting has_box? Your mdcrd file might be corrupt.",
             )
 
         return coords, np.array(boxes, dtype=np.float32)
@@ -394,7 +394,7 @@ class MDCRDTrajectoryFile:
         """
         if not self._mode == "w":
             raise ValueError(
-                "write() is only available when file is opened " 'in mode="w"',
+                'write() is only available when file is opened in mode="w"',
             )
 
         xyz = ensure_type(
@@ -432,12 +432,12 @@ class MDCRDTrajectoryFile:
         elif self._w_has_box is True:
             if cell_lengths is None:
                 raise ValueError(
-                    "This mdcrd file must contain unitcell " "information",
+                    "This mdcrd file must contain unitcell information",
                 )
         elif self._w_has_box is False:
             if cell_lengths is not None:
                 raise ValueError(
-                    "This mdcrd file must not contain unitcell " "information",
+                    "This mdcrd file must not contain unitcell information",
                 )
         else:
             raise RuntimeError()

@@ -50,6 +50,7 @@ import xml.etree.ElementTree as etree
 from copy import copy
 from datetime import date
 from io import StringIO
+from itertools import groupby
 from urllib.parse import urlparse, uses_netloc, uses_params, uses_relative
 from urllib.request import urlopen
 
@@ -57,7 +58,7 @@ import numpy as np
 
 import mdtraj
 from mdtraj.core import element as elem
-from mdtraj.core.topology import Topology
+from mdtraj.core.topology import Topology, float_to_bond_type
 from mdtraj.formats.pdb.pdbstructure import PdbStructure
 from mdtraj.formats.registry import FormatRegistry
 from mdtraj.utils import cast_indices, ilen, in_units_of, open_maybe_zipped
@@ -89,6 +90,7 @@ def load_pdb(
     no_boxchk=False,
     standard_names=True,
     top=None,
+    bond_orders=False,
 ):
     """Load a RCSB Protein Data Bank file from disk.
 
@@ -123,6 +125,10 @@ def load_pdb(
     top : mdtraj.core.Topology, default=None
         if you give a topology as input the topology won't be parsed from the pdb file
         it saves time if you have to parse a big number of files
+    bond_orders : bool, default=False
+        If True, respect and infer bond order/type based on the CONECT section, where
+        duplicate bonds are treated as having higher bond order. As default (False), i
+        the parser ignores any duplicate bonds.
 
     Returns
     -------
@@ -144,12 +150,11 @@ def load_pdb(
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type string or path-like for load_pdb. " "you supplied %s" % type(filename),
+            "filename must be of type string or path-like for load_pdb. you supplied %s" % type(filename),
         )
 
     atom_indices = cast_indices(atom_indices)
-
-    with PDBTrajectoryFile(filename, standard_names=standard_names, top=top) as f:
+    with PDBTrajectoryFile(filename, standard_names=standard_names, top=top, bond_orders=bond_orders) as f:
         atom_slice = slice(None) if atom_indices is None else atom_indices
         if frame is not None:
             coords = f.positions[[frame], atom_slice, :]
@@ -237,6 +242,12 @@ class PDBTrajectoryFile:
     top : mdtraj.core.Topology, default=None
         if you give a topology as input the topology won't be parsed from the pdb file
         it saves time if you have to parse a big number of files
+    bond_orders : bool, default=False
+        If False (default), the parser ignores any additional duplicate bonds in the
+        CONECT section. If True, the reader will respect and infer bond order/type
+        based on the CONECT section, where consecutive listing of bonds are treated
+        as having a higher bond order. If the bond is listed multiple times in
+        the CONECT section, the highest listed bond order prevails.
 
     Attributes
     ----------
@@ -269,6 +280,7 @@ class PDBTrajectoryFile:
         force_overwrite=True,
         standard_names=True,
         top=None,
+        bond_orders=False,
     ):
         self._open = False
         self._file = None
@@ -277,6 +289,7 @@ class PDBTrajectoryFile:
         self._mode = mode
         self._last_topology = None
         self._standard_names = standard_names
+        self._bond_orders = bond_orders
 
         if mode == "r":
             PDBTrajectoryFile._loadNameReplacementTables()
@@ -308,7 +321,7 @@ class PDBTrajectoryFile:
         unitcell_angles=None,
         bfactors=None,
         ter=True,
-        header=True,
+        bond_orders=False,
     ):
         """Write a PDB file to disk
 
@@ -331,9 +344,8 @@ class PDBTrajectoryFile:
         ter : bool, default=True
             Include TER lines in pdb to indicate end of a chain of residues. This is useful
             if you need to keep atom numbers consistent.
-        header : bool, default=True
-            Include header in pdb. Useful if you want the extra output, but sometimes prevent
-            programs from running smoothly.
+        bond_orders : bool, default=False
+            Specify bond orders by writing repeated bonds in CONECT records
         """
         if not self._mode == "w":
             raise ValueError("file not opened for writing")
@@ -354,6 +366,7 @@ class PDBTrajectoryFile:
         # Hack to save the topology of the last frame written, allows us to
         # output CONECT entries in write_footer()
         self._last_topology = topology
+        self._bond_orders = bond_orders
 
         if bfactors is None:
             bfactors = [f"{0.0:5.2f}"] * len(positions)
@@ -365,7 +378,7 @@ class PDBTrajectoryFile:
 
         atomIndex = 1
         posIndex = 0
-        if header and modelIndex is not None:
+        if modelIndex is not None:
             print("MODEL     %4d" % modelIndex, file=self._file)
         for chainIndex, chain in enumerate(topology.chains):
             if not chain.chain_id:
@@ -400,8 +413,13 @@ class PDBTrajectoryFile:
                         atomSerial = atom.serial
                     else:
                         atomSerial = atomIndex
+                    if atom.formal_charge:
+                        # Charge string in PDB should have charge first, followed by the sign.
+                        charge_string = f"{abs(atom.formal_charge)}{'-' if atom.formal_charge < 0 else '+'}"
+                    else:
+                        charge_string = "  "
                     line = (
-                        "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s  "
+                        "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s%2s"
                         % (  # Right-justify atom symbol
                             atomSerial % 100000,
                             atomName,
@@ -414,20 +432,22 @@ class PDBTrajectoryFile:
                             bfactors[posIndex],
                             atom.segment_id[:4],
                             symbol[-2:],
+                            charge_string,
                         )
                     )
-                    assert len(line) == 80, "Fixed width overflow detected"
+                    assert len(line) == 80, f"Fixed width overflow detected, {len(line)}"
                     print(line, file=self._file)
                     posIndex += 1
                     atomIndex += 1
                 if resIndex == len(residues) - 1 and ter:
                     print(
-                        "TER   %5d      %3s %s%4d" % ((atomSerial + 1) % 100000, resName, chainName, res.resSeq % 10000),
+                        "TER   %5d      %3s %s%4d"
+                        % ((atomSerial + 1) % 100000, resName, chainName, res.resSeq % 10000),
                         file=self._file,
                     )
                     atomIndex += 1
 
-        if header and modelIndex is not None:
+        if modelIndex is not None:
             print("ENDMDL", file=self._file)
 
     def _write_header(self, unitcell_lengths, unitcell_angles, write_metadata=True):
@@ -453,7 +473,7 @@ class PDBTrajectoryFile:
                 raise ValueError("unitcell_angles must be length 3")
         else:
             raise ValueError(
-                "either unitcell_lengths and unitcell_angles" "should both be spefied, or neither",
+                "either unitcell_lengths and unitcell_anglesshould both be spefied, or neither",
             )
 
         box = list(unitcell_lengths) + list(unitcell_angles)
@@ -469,49 +489,60 @@ class PDBTrajectoryFile:
             file=self._file,
         )
 
+    _standardResidues = [
+        "ALA",
+        "ASN",
+        "CYS",
+        "GLU",
+        "HIS",
+        "LEU",
+        "MET",
+        "PRO",
+        "THR",
+        "TYR",
+        "ARG",
+        "ASP",
+        "GLN",
+        "GLY",
+        "ILE",
+        "LYS",
+        "PHE",
+        "SER",
+        "TRP",
+        "VAL",
+        "A",
+        "G",
+        "C",
+        "U",
+        "I",
+        "DA",
+        "DG",
+        "DC",
+        "DT",
+        "DI",
+        "HOH",
+    ]
+
     def _write_footer(self):
         if not self._mode == "w":
             raise ValueError("file not opened for writing")
 
         # Identify bonds that should be listed as CONECT records.
-        standardResidues = [
-            "ALA",
-            "ASN",
-            "CYS",
-            "GLU",
-            "HIS",
-            "LEU",
-            "MET",
-            "PRO",
-            "THR",
-            "TYR",
-            "ARG",
-            "ASP",
-            "GLN",
-            "GLY",
-            "ILE",
-            "LYS",
-            "PHE",
-            "SER",
-            "TRP",
-            "VAL",
-            "A",
-            "G",
-            "C",
-            "U",
-            "I",
-            "DA",
-            "DG",
-            "DC",
-            "DT",
-            "DI",
-            "HOH",
-        ]
+
         conectBonds = []
         if self._last_topology is not None:
-            for atom1, atom2 in self._last_topology.bonds:
-                if atom1.residue.name not in standardResidues or atom2.residue.name not in standardResidues:
-                    conectBonds.append((atom1, atom2))
+            for bond in self._last_topology.bonds:
+                atom1, atom2 = bond[0], bond[1]
+                if (
+                    atom1.residue.name not in self._standardResidues
+                    or atom2.residue.name not in self._standardResidues
+                ):
+                    if self._bond_orders and bond.order is not None:
+                        # Add bond repeats for hetatom bonds when bond order > 1
+                        for bo in range(bond.order):
+                            conectBonds.append((atom1, atom2))
+                    else:
+                        conectBonds.append((atom1, atom2))
                 elif (
                     atom1.name == "SG"
                     and atom2.name == "SG"
@@ -519,6 +550,7 @@ class PDBTrajectoryFile:
                     and atom2.residue.name == "CYS"
                 ):
                     conectBonds.append((atom1, atom2))
+
         if len(conectBonds) > 0:
             # Work out the index used in the PDB file for each atom.
 
@@ -554,7 +586,7 @@ class PDBTrajectoryFile:
                 bonded = atomBonds[index1]
                 while len(bonded) > 4:
                     print(
-                        "CONECT%5d%5d%5d%5d" % (index1, bonded[0], bonded[1], bonded[2]),
+                        "CONECT%5d%5d%5d%5d%5d" % (index1, bonded[0], bonded[1], bonded[2], bonded[3]),
                         file=self._file,
                     )
                     del bonded[:4]
@@ -683,6 +715,7 @@ class PDBTrajectoryFile:
                             element,
                             r,
                             serial=atom.serial_number,
+                            formal_charge=atom.formal_charge,
                         )
                         atomByNumber[atom.serial_number] = newAtom
 
@@ -696,13 +729,31 @@ class PDBTrajectoryFile:
                 for j in connect[1:]:
                     if i in atomByNumber and j in atomByNumber:
                         connectBonds.append((atomByNumber[i], atomByNumber[j]))
+
             if len(connectBonds) > 0:
-                # Only add bonds that don't already exist.
                 existingBonds = {(bond.atom1, bond.atom2) for bond in self._topology.bonds}
-                for bond in connectBonds:
-                    if bond not in existingBonds and (bond[1], bond[0]) not in existingBonds:
-                        self._topology.add_bond(bond[0], bond[1])
-                        existingBonds.add(bond)
+                for btup, g in groupby(connectBonds):
+                    bo = len(list(g)) or None
+                    bt = float_to_bond_type(bo) if bo else None
+                    if (btup[0], btup[1]) in existingBonds or (btup[1], btup[0]) in existingBonds:
+                        # If bond already exists, in either order,
+                        # update bond type/order only if bond_order is activated
+                        # else do nothing.
+                        if self._bond_orders:
+                            try:
+                                bid = self._topology._bonds.index((btup[0], btup[1]))
+                            except ValueError:
+                                bid = self._topology._bonds.index((btup[1], btup[0]))
+                            bond = self._topology._bonds[bid]
+                            if bond.order is None or bo > bond.order:
+                                bond.order, bond.type = bo, bt
+                    else:
+                        # Add bond if it doesn't exist
+                        if self._bond_orders:
+                            self._topology.add_bond(btup[0], btup[1], type=bt, order=bo)
+                        else:
+                            self._topology.add_bond(btup[0], btup[1], type=None, order=None)
+                        existingBonds.add((btup[0], btup[1]))
 
     @staticmethod
     def _loadNameReplacementTables():
@@ -825,5 +876,5 @@ def _format_83(f):
     if -9999999 < f < 99999999:
         return ("%8.3f" % f)[:8]
     raise ValueError(
-        'coordinate "%s" could not be represnted ' "in a width-8 field" % f,
+        'coordinate "%s" could not be represnted in a width-8 field' % f,
     )
