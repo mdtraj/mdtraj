@@ -173,7 +173,7 @@ def compute_rdf_t(
         shape=(2,),
         warn_on_cast=False,
     )
- 
+
     if n_bins is not None:
         n_bins = int(n_bins)
         if n_bins <= 0:

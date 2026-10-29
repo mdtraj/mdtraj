@@ -74,6 +74,7 @@ __version__ = "0.5"
 
 import copy
 import math
+
 import numpy as np
 
 from .standard_dimensions import *
@@ -585,7 +586,7 @@ class Quantity:
             return Quantity(self._value.reshape(shape, order=order), self.unit)
         except AttributeError:
             raise AttributeError(
-                "Only numpy array Quantity objects can be " "reshaped",
+                "Only numpy array Quantity objects can be reshaped",
             )
 
     def __abs__(self):

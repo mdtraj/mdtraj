@@ -116,3 +116,26 @@ def test_custom(get_fn):
 
     t1 = md.load(temp, top=get_fn("custom.pdb"))
     eq(t0.xyz, t1.xyz)
+
+
+def test_nonconsecutive_atom_ids(tmp_path):
+    """LAMMPS global IDs may contain gaps and need not index the output array."""
+    path = tmp_path / "gapped.lammpstrj"
+    path.write_text(
+        "ITEM: TIMESTEP\n"
+        "0\n"
+        "ITEM: NUMBER OF ATOMS\n"
+        "2\n"
+        "ITEM: BOX BOUNDS pp pp pp\n"
+        "0 10\n"
+        "0 10\n"
+        "0 10\n"
+        "ITEM: ATOMS id type x y z\n"
+        "2 1 1.0 2.0 3.0\n"
+        "4 1 4.0 5.0 6.0\n",
+    )
+
+    with LAMMPSTrajectoryFile(str(path)) as file:
+        xyz, _, _ = file.read()
+
+    eq(xyz[0], np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]))

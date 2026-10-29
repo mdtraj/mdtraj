@@ -37,7 +37,7 @@ class _EOF(IOError):
 
 
 @FormatRegistry.register_loader(".arc")
-def load_arc(filename, stride=None, atom_indices=None, frame=None):
+def load_arc(filename, stride=None, atom_indices=None, frame=None, top=None):
     """Load a TINKER .arc file from disk.
 
     Parameters
@@ -53,6 +53,10 @@ def load_arc(filename, stride=None, atom_indices=None, frame=None):
         Use this option to load only a single frame from a trajectory on disk.
         If frame is None, the default, the entire trajectory will be loaded.
         If supplied, ``stride`` will be ignored.
+    top : {str, Trajectory, Topology}, optional
+        While the ARC format does does contain minimal topology information, it does
+        not include residue information. Pass in either a file path
+        (e.g. to pdb), a trajectory, or a topology object to supply this information.
 
     Returns
     -------
@@ -66,12 +70,23 @@ def load_arc(filename, stride=None, atom_indices=None, frame=None):
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_arc. " "you supplied %s" % type(filename),
+            "filename must be of type path-like for load_arc. you supplied %s" % type(filename),
         )
+
+    # Process topology, if given.
+    if top is not None:
+        from mdtraj.core.trajectory import _parse_topology
+
+        topology = _parse_topology(top)
+    else:
+        topology = None
 
     atom_indices = cast_indices(atom_indices)
 
     with ArcTrajectoryFile(filename) as f:
+        # Set topology. If not given, it's None.
+        f.topology = topology
+
         if frame is not None:
             f.seek(frame)
             n_frames = 1
@@ -140,7 +155,7 @@ class ArcTrajectoryFile:
             self._is_open = True
         else:
             raise ValueError(
-                'mode must be "r". ' 'you supplied "%s"' % mode,
+                'mode must be "r". you supplied "%s"' % mode,
             )
 
     def seek(self, offset, whence=0):
@@ -263,7 +278,7 @@ class ArcTrajectoryFile:
         """
         if not self._mode == "r":
             raise ValueError(
-                "read() is only available when file is opened " 'in mode="r"',
+                'read() is only available when file is opened in mode="r"',
             )
 
         if n_frames is None:
