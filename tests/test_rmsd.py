@@ -341,10 +341,13 @@ def test_precentered_rmsd_after_trajectory_slice():
     residue = top.add_residue("R", chain)
     for _ in range(3):
         top.add_atom("C", md.element.carbon, residue)
-    xyz = np.array([
-        [[0, 0, 0], [1, 0, 0], [0, 1, 0]],
-        [[10, 10, 10], [11, 10, 10], [10, 12, 10]],
-    ], dtype=np.float32)
+    xyz = np.array(
+        [
+            [[0, 0, 0], [1, 0, 0], [0, 1, 0]],
+            [[10, 10, 10], [11, 10, 10], [10, 12, 10]],
+        ],
+        dtype=np.float32,
+    )
     target = md.Trajectory(xyz, top)
     reference = md.Trajectory(xyz[:1], top)
     target.center_coordinates()
