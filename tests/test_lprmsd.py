@@ -1,8 +1,8 @@
 import numpy as np
+from mdtraj._lprmsd import _munkres
 
 import mdtraj as md
 from mdtraj import Trajectory, lprmsd
-from mdtraj._lprmsd import _munkres
 from mdtraj.testing import eq
 from mdtraj.utils import rotation_matrix_from_quaternion, uniform_quaternion
 

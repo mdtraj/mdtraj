@@ -1,23 +1,22 @@
 pip
 setuptools
-sphinx
+sphinx~=8.0
 sphinx_rtd_theme
 nbsphinx
 nbsphinx_link
-msmb_theme
 jupyter
 ipython
 matplotlib
 pandoc
 jinja2
-runipy
 openmm
 tables
 scikit-learn
 pytest
 setuptools
 pandas
+pyarrow
 numpydoc
 wheel
 tables
-# python==3.11
+py3Dmol
