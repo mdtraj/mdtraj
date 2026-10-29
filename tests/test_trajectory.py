@@ -500,6 +500,7 @@ def test_join_discard_overlapping_frames_with_empty_trajectory():
     joined = empty.join(nonempty, discard_overlapping_frames=True)
     eq(joined.xyz, nonempty.xyz)
 
+
 def test_md_join(get_fn):
     fn = get_fn("traj.h5")
     t_ref = md.load(get_fn("frame0.h5"))[:20]
