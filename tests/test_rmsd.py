@@ -332,3 +332,28 @@ def test_superpose_with_empty_atom_raises_exception():
 
     # Coordinates should be finite after superposing
     assert np.all(np.isfinite(traj.xyz))
+
+
+def test_precentered_rmsd_after_trajectory_slice():
+    """Slicing a centered trajectory must slice its RMSD cache as well."""
+    top = md.Topology()
+    chain = top.add_chain()
+    residue = top.add_residue("R", chain)
+    for _ in range(3):
+        top.add_atom("C", md.element.carbon, residue)
+    xyz = np.array(
+        [
+            [[0, 0, 0], [1, 0, 0], [0, 1, 0]],
+            [[10, 10, 10], [11, 10, 10], [10, 12, 10]],
+        ],
+        dtype=np.float32,
+    )
+    target = md.Trajectory(xyz, top)
+    reference = md.Trajectory(xyz[:1], top)
+    target.center_coordinates()
+    reference.center_coordinates()
+    sliced = target.slice(1)
+    np.testing.assert_allclose(
+        md.rmsd(reference, sliced, precentered=True),
+        md.rmsd(reference, sliced, precentered=False),
+    )
