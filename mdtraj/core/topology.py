@@ -308,7 +308,10 @@ class Topology:
         # new residues to continue from the one of the
         # las residue of this topology
         if not keep_resSeq:
-            out_resSeq = out.atom(-1).residue.resSeq
+            # An empty left topology has no last atom to provide a starting
+            # residue number.  Use zero so the first appended residue becomes 1,
+            # matching the numbering used for a non-empty topology.
+            out_resSeq = 0 if out.n_residues == 0 else out.atom(-1).residue.resSeq
 
         atom_mapping: dict[Atom, Atom] = {}
         for chain in other.chains:

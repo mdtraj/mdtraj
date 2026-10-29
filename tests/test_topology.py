@@ -495,6 +495,17 @@ def test_topology_join_keep_resSeq(get_fn):
     eq(out_resSeq_keepId_False, expected_resSeq_keepId_False)
 
 
+def test_topology_join_empty_keep_resSeq_false():
+    top = md.Topology()
+    chain = top.add_chain()
+    residue = top.add_residue("LIG", chain, 42)
+    top.add_atom("C", md.element.carbon, residue)
+
+    joined = md.Topology().join(top, keep_resSeq=False)
+
+    assert [res.resSeq for res in joined.residues] == [1]
+
+
 def test_topology_join_formal_charge():
     top1 = md.Topology()
     c1 = top1.add_chain()
