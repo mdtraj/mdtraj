@@ -87,7 +87,7 @@ def test_read_two_letter_elements(tmp_path):
         "  2 ZN 1.0 0.0 0.0 1\n"
         "  3 BR 2.0 0.0 0.0 1\n"
         "  4 SI 3.0 0.0 0.0 1\n"
-        "  5 CA 4.0 0.0 0.0 1\n"
+        "  5 CA 4.0 0.0 0.0 1\n",
     )
 
     with ArcTrajectoryFile(str(path)) as file:
