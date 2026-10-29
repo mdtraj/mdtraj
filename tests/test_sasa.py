@@ -103,6 +103,16 @@ def test_sasa_2(get_fn):
     np.testing.assert_approx_equal(true_frame_0_sasa, val2)
 
 
+def test_identical_frames_have_identical_sasa(get_fn):
+    traj = md.load(get_fn("frame0.h5"))
+    repeated = md.Trajectory(
+        np.repeat(traj.xyz[:1], 3, axis=0), traj.topology
+    )
+    sasa = md.geometry.shrake_rupley(repeated, n_sphere_points=64)
+    np.testing.assert_array_equal(sasa[0], sasa[1])
+    np.testing.assert_array_equal(sasa[1], sasa[2])
+
+
 def test_sasa_3(get_fn):
     traj_ref = np.loadtxt(get_fn("gmx_sasa.dat"))
     traj = md.load(get_fn("frame0.h5"))
