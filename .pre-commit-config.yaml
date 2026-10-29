@@ -1,32 +1,25 @@
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.5.0
+  rev: v6.0.0
   hooks:
   - id: check-yaml
-  - id: end-of-file-fixer
   - id: trailing-whitespace
-    exclude: '\.(pdb|gro|top|sdf)$'
+    exclude: '\.(pdb|gro|top|sdf|dssp)$'
   - id: debug-statements
+  - id: mixed-line-ending
 - repo: https://github.com/asottile/add-trailing-comma
-  rev: v3.1.0
+  rev: v4.0.0
   hooks:
   - id: add-trailing-comma
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.3.4
+  rev: v0.16.10
   hooks:
     - id: ruff
+      args: [--fix]
     - id: ruff-format
-- repo: https://github.com/nbQA-dev/nbQA
-  rev: 1.8.5
+- repo: https://github.com/tox-dev/pyproject-fmt
+  rev: "v2.30.1"
   hooks:
-    - id: nbqa-pyupgrade
-      files: ^examples
-      args:
-        - --py39-plus
-    - id: nbqa-isort
-      files: ^examples
-- repo: https://github.com/kynan/nbstripout
-  rev: 0.7.1
-  hooks:
-    - id: nbstripout
-      files: ^examples
+    - id: pyproject-fmt
+ci:
+  autoupdate_schedule: 'monthly'

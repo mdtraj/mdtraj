@@ -171,7 +171,7 @@ def compute_contacts(
             import warnings
 
             warnings.warn(
-                "The soft_min=True option with scheme=ca gives" "the same results as soft_min=False",
+                "The soft_min=True option with scheme=ca givesthe same results as soft_min=False",
             )
         filtered_residue_pairs = []
         atom_pairs = []
@@ -270,7 +270,7 @@ def compute_contacts(
                     np.sum(
                         np.exp(
                             soft_min_beta / atom_distances[:, index : index + n],
-                            casting='safe',
+                            casting="safe",
                         ),
                         axis=1,
                     ),
@@ -321,7 +321,7 @@ def squareform(distances, residue_pairs):
 
     if not np.all(residue_pairs >= 0):
         raise ValueError(
-            "residue_pairs references a residue that is not in " "the permitted range",
+            "residue_pairs references a residue that is not in the permitted range",
         )
     if distances.shape[1] != residue_pairs.shape[0]:
         raise ValueError(

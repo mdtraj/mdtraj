@@ -235,7 +235,7 @@ def _atom_sequence(top, atom_names, residue_offsets=None):
 
     if hasattr(top, "topology"):
         warnings.warn(
-            "Passing a Trajectory object to _atom_sequence is" "deprecated. Please pass a Topology object",
+            "Passing a Trajectory object to _atom_sequence isdeprecated. Please pass a Topology object",
             DeprecationWarning,
         )
         top = top.topology

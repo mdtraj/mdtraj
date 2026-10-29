@@ -77,7 +77,7 @@ def load_gsd(
 
     if not isinstance(filename, (str, os.PathLike)):
         raise TypeError(
-            "filename must be of type path-like for load_gsd. " "you supplied %s",
+            "filename must be of type path-like for load_gsd. you supplied %s",
         )
 
     if top is not None:
