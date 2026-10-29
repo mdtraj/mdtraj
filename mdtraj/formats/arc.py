@@ -370,11 +370,18 @@ class ArcTrajectoryFile:
             chain = top.add_chain()  # only 1 chain
             res = top.add_residue("RES", chain, 1)  # only 1 residue
             for at in atom_names:
-                # First get the element. Try for common 2-letter elements, then
-                # use the first letter only (default to None if I can't find it)
-                if at[:2].upper() in ("NA", "CL", "MG"):
-                    elem = Element.getBySymbol(at[:2])
+                # First get the element.  Tinker atom types may start with a
+                # two-letter element symbol.  ``CA`` is kept as carbon for
+                # compatibility with the common protein alpha-carbon name.
+                two_letter = at[:2].upper()
+                if two_letter != "CA":
+                    try:
+                        elem = Element.getBySymbol(two_letter)
+                    except KeyError:
+                        elem = None
                 else:
+                    elem = None
+                if elem is None:
                     try:
                         elem = Element.getBySymbol(at[0])
                     except KeyError:

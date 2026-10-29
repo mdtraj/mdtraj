@@ -76,3 +76,27 @@ def test_read_pbc(get_fn):
     eq(xyz[0, -1], np.array([29.013880, 6.255754, 44.074519]), decimal=3)
     eq(leng, np.array([[45.119376, 45.119376, 45.119376]]), decimal=3)
     eq(ang, np.array([[90.0, 90.0, 90.0]]), decimal=3)
+
+
+def test_read_two_letter_elements(tmp_path):
+    """Valid two-letter Tinker element names must keep their element identity."""
+    path = tmp_path / "elements.arc"
+    path.write_text(
+        "5\n"
+        "  1 FE 0.0 0.0 0.0 1\n"
+        "  2 ZN 1.0 0.0 0.0 1\n"
+        "  3 BR 2.0 0.0 0.0 1\n"
+        "  4 SI 3.0 0.0 0.0 1\n"
+        "  5 CA 4.0 0.0 0.0 1\n"
+    )
+
+    with ArcTrajectoryFile(str(path)) as file:
+        file.read()
+
+    assert [atom.element.symbol for atom in file.topology.atoms] == [
+        "Fe",
+        "Zn",
+        "Br",
+        "Si",
+        "C",
+    ]
