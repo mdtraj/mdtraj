@@ -1297,9 +1297,12 @@ class Trajectory:
         return self.__class__(
             xyz=xyz,
             topology=topology,
-            unitcell_angles=self.unitcell_angles,
-            unitcell_lengths=self.unitcell_lengths,
-            time=self.time,
+            # The constructor preserves already-valid NumPy arrays.  Copy
+            # metadata here so mutating the stacked trajectory cannot mutate
+            # the left operand through shared time or unit-cell buffers.
+            unitcell_angles=None if self.unitcell_angles is None else self.unitcell_angles.copy(),
+            unitcell_lengths=None if self.unitcell_lengths is None else self.unitcell_lengths.copy(),
+            time=self.time.copy(),
         )
 
     def __getitem__(self, key):

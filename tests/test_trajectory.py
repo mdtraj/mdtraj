@@ -523,6 +523,37 @@ def test_stack_2():
     eq(t3.n_atoms, 11)
 
 
+def test_stack_copies_time_and_unitcell_metadata():
+    """Stacked metadata must not alias the left-hand trajectory."""
+    topology = md.Topology()
+    chain = topology.add_chain()
+    residue = topology.add_residue("X", chain)
+    topology.add_atom("C", element.carbon, residue)
+    t1 = md.Trajectory(
+        np.zeros((2, 1, 3), dtype=np.float32),
+        topology,
+        time=np.array([1.0, 2.0], dtype=np.float32),
+        unitcell_lengths=np.ones((2, 3), dtype=np.float32),
+        unitcell_angles=np.full((2, 3), 90.0, dtype=np.float32),
+    )
+    t2 = md.Trajectory(
+        np.ones((2, 1, 3), dtype=np.float32),
+        topology,
+        time=np.array([3.0, 4.0], dtype=np.float32),
+        unitcell_lengths=np.full((2, 3), 2.0, dtype=np.float32),
+        unitcell_angles=np.full((2, 3), 90.0, dtype=np.float32),
+    )
+
+    stacked = t1.stack(t2)
+    stacked.time[0] = 99.0
+    stacked.unitcell_lengths[0, 0] = 88.0
+    stacked.unitcell_angles[0, 0] = 77.0
+
+    eq(t1.time, np.array([1.0, 2.0], dtype=np.float32))
+    eq(t1.unitcell_lengths, np.ones((2, 3), dtype=np.float32))
+    eq(t1.unitcell_angles, np.full((2, 3), 90.0, dtype=np.float32))
+
+
 def test_seek_read_mode(ref_traj, get_fn, monkeypatch):
     # Test the seek/tell capacity of the different TrajectoryFile objects in
     # read mode. Basically, we just seek around the files and read different
