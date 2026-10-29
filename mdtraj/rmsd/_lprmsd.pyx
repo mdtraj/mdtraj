@@ -26,7 +26,6 @@
 ##############################################################################
 import cython
 import numpy as np
-import scipy.spatial.distance
 from mdtraj.utils import ensure_type
 
 cimport numpy as np

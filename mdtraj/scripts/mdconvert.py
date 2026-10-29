@@ -582,7 +582,7 @@ def convert(data, in_units, out_units, out_fields):
     formated_fields = ", ".join("'%s'" % o for o in out_fields)
     if len(ignored_keys) > 0:
         warn(
-            "{} data from input file(s) will be discarded. " "output format only supports fields: {}".format(
+            "{} data from input file(s) will be discarded. output format only supports fields: {}".format(
                 ", ".join(ignored_keys),
                 formated_fields,
             ),
