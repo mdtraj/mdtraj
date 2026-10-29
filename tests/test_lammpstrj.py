@@ -86,6 +86,17 @@ def test_multiread(get_fn):
     eq(reference.xyz[1], xyz1[0] / 10)
 
 
+def test_read_as_traj_nonpositive_n_frames(get_fn):
+    """Documented non-positive n_frames values read all remaining frames."""
+    topology = md.load_topology(get_fn("native.pdb"))
+    with LAMMPSTrajectoryFile(get_fn("frame0.lammpstrj")) as file:
+        all_frames = file.read_as_traj(topology, n_frames=None)
+    for value in (0, -1):
+        with LAMMPSTrajectoryFile(get_fn("frame0.lammpstrj")) as file:
+            trajectory = file.read_as_traj(topology, n_frames=value)
+        eq(trajectory.xyz, all_frames.xyz)
+
+
 def test_seek(get_fn):
     reference = md.load(get_fn("frame0.lammpstrj"), top=get_fn("native.pdb"))
 

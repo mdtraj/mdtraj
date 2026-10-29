@@ -281,7 +281,10 @@ class LAMMPSTrajectoryFile:
                 'read() is only available when file is opened in mode="r"',
             )
 
-        if n_frames is None:
+        # The public API documents non-positive values as "all remaining
+        # frames".  Treat them like None instead of passing them to range(),
+        # which would silently produce an empty trajectory.
+        if n_frames is None or n_frames <= 0:
             frame_counter = itertools.count()
         else:
             frame_counter = range(n_frames)
