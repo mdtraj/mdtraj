@@ -266,15 +266,13 @@ def compute_contacts(
             if not soft_min:
                 distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
             else:
-                distances[:, i] = soft_min_beta / np.log(
-                    np.sum(
-                        np.exp(
-                            soft_min_beta / atom_distances[:, index : index + n],
-                            casting="safe",
-                        ),
-                        axis=1,
-                    ),
+                # Accumulate in log space to avoid overflow for short distances.
+                scaled = np.divide(
+                    soft_min_beta,
+                    atom_distances[:, index : index + n],
+                    dtype=np.float64,
                 )
+                distances[:, i] = soft_min_beta / np.logaddexp.reduce(scaled, axis=1)
 
     else:
         raise ValueError("This is not supposed to happen!")
