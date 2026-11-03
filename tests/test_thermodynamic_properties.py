@@ -104,6 +104,35 @@ def test_density(get_fn):
     assert abs((rho - reference) / reference) < 1e-3, "Density tolerance not met!"
 
 
+@pytest.mark.parametrize("periodic", [False, True])
+@pytest.mark.parametrize("separate_residues", [False, True])
+@pytest.mark.parametrize("translation", [0.0, 1.8])
+def test_dipole_moments_direction(periodic, separate_residues, translation):
+    top = md.Topology()
+    chain = top.add_chain()
+    residue = top.add_residue("ION", chain)
+    top.add_atom("H1", md.element.hydrogen, residue)
+    if separate_residues:
+        residue = top.add_residue("ION", chain)
+    top.add_atom("H2", md.element.hydrogen, residue)
+
+    expected = np.array([[0.25, 0.5, 0.75], [-0.75, 0.25, 0.5]])
+    xyz = np.zeros((2, 2, 3))
+    xyz[:, 1] = expected
+    xyz += translation
+    if periodic:
+        xyz %= 2.0
+    traj = md.Trajectory(xyz, top)
+    if periodic:
+        traj.unitcell_lengths = np.full((2, 3), 2.0)
+        traj.unitcell_angles = np.full((2, 3), 90.0)
+
+    moments = md.dipole_moments(traj, np.array([-1.0, 1.0]))
+
+    # For opposite unit charges, the dipole points from negative to positive.
+    np.testing.assert_allclose(moments, expected, atol=2e-7)
+
+
 def test_dipole_moments(get_fn):
     traj = md.load(get_fn("tip3p_300K_1ATM.xtc"), top=get_fn("tip3p_300K_1ATM.pdb"))
 

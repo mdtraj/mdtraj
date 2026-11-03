@@ -58,7 +58,8 @@ def dipole_moments(traj, charges):
         periodic=True,
     )
 
-    xyz = local_displacements + molecule_displacements
+    # These displacements point from each atom toward the reference atoms.
+    xyz = -(local_displacements + molecule_displacements)
 
     moments = xyz.transpose(0, 2, 1).dot(charges)
 
