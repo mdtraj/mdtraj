@@ -217,7 +217,7 @@ class XYZTrajectoryFile:
         ----------
         n_frames : int, None
             The number of frames you would like to read from the file.
-            If None, all of the remaining frames will be loaded.
+            If None or non-positive, all of the remaining frames will be loaded.
         stride : np.ndarray, optional
             Read only every stride-th frame.
         atom_indices : array_like, optional
@@ -233,7 +233,7 @@ class XYZTrajectoryFile:
                 'read() is only available when file is opened in mode="r"',
             )
 
-        if n_frames is None:
+        if n_frames is None or n_frames <= 0:
             frame_counter = itertools.count()
         else:
             frame_counter = range(n_frames)
