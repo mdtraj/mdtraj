@@ -135,3 +135,11 @@ Order Parameters
 
     compute_nematic_order
     compute_directors
+
+Molecular Aggregates
+--------------------
+.. autosummary::
+    :toctree: api/generated/
+
+    compute_aggregates
+    compute_aggregate_metrics
