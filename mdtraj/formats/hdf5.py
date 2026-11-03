@@ -664,6 +664,7 @@ class HDF5TrajectoryFile:
             n_frames = np.inf
         if stride is not None:
             stride = int(stride)
+            n_frames *= stride
 
         total_n_frames = len(self._handle.root.coordinates)
         frame_slice = slice(self._frame_index, min(self._frame_index + n_frames, total_n_frames), stride)
