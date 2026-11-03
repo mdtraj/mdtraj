@@ -7,7 +7,7 @@ ftp://ftp.gromacs.org/pub/contrib/xdrfile-1.1.4.tar.gz
 These files are licensed under a BSD 2-clause license, and copyright
 Erik Lindahl, David van der Spoel, Robert T. McGibbon.
 
-Changes from upsteam's xdrfile-1.1.4 include:
+Changes from upstream's xdrfile-1.1.4 include:
  - More descriptive error strings printed inside xdrfile.c
  - Fix for a segfault on malformed xtc files inside xdrfile_decompress_coord_float (https://github.com/mdtraj/mdtraj/pull/607, https://mailman-1.sys.kth.se/pipermail/gromacs.org_gmx-developers/2014-September/007942.html)
  - Addition of read_xtc_nframes function in xdrfile_xtc.c
@@ -15,3 +15,45 @@ Changes from upsteam's xdrfile-1.1.4 include:
  - Bugfix in do_trnheader to return the appropriate error code when reading magic, and properly check the value of the magic in xdrfile_trr.c
  - Bugfix of float exception (divide by zero) in xdrfile.c, see https://github.com/SimTk/mdtraj/issues/616
  - Implemented efficient seeking pattern inspired by xdrlib2 (part of MDAnalysis)
+
+License note (XDR layer in xdrfile.c)
+--------------------------------------
+
+The self-contained XDR implementation at the bottom of xdrfile.c (the block
+guarded by `#ifndef HAVE_RPC_XDR_H`, and the `enum xdr_op` / `struct XDR` /
+`struct xdr_ops` interface types declared near the top of the file) is
+derived from the Sun RPC XDR code that Oracle America, Inc. relicensed under
+the 3-clause BSD license. It is therefore licensed under BSD-3-Clause
+(`Copyright (c) 2010, Oracle America, Inc.`), reproduced inside xdrfile.c.
+The rest of xdrfile.c -- the higher-level XTC/TRR routines and the
+compressed-coordinate code, which is GROMACS-derived -- remains under the
+BSD 2-clause license listed above.
+
+The canonical BSD-relicensed copies that this code tracks, and that should
+be consulted whenever this code is updated, are:
+
+ - FreeBSD libc:
+   - lib/libc/xdr/xdr.c
+   - lib/libc/xdr/xdr_stdio.c
+   - lib/libc/xdr/xdr_float.c
+   - include/rpc/xdr.h
+   https://cgit.freebsd.org/src/tree/lib/libc/xdr
+ - libtirpc (same relicensed Sun RPC code):
+   - src/xdr.c
+   - src/xdr_stdio.c
+   https://gitlab.com/libtirpc/libtirpc
+
+The relicensing of the Sun RPC code is described at
+https://spot.livejournal.com/315383.html and was tracked by distributions
+in, e.g., Debian bug #181493.
+
+Local adaptations of the BSD-3-Clause XDR code for this file are:
+ - All symbols are kept `static` (no public API is added).
+ - No dependency on <rpc/xdr.h> or <arpa/inet.h>; the code is
+   self-contained so that it builds on Windows and other platforms without
+   system XDR support.
+ - The 4-byte XDR unit is handled through int32_t/uint32_t so that it is
+   unambiguous even where sizeof(int) or sizeof(long) differs from 4 bytes
+   (LP64 platforms).
+ - The floating-point word-order detection inside xdr_double() is retained
+   from the previous, GROMACS-derived (BSD 2-clause) version of this file.
