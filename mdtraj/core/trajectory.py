@@ -1331,7 +1331,8 @@ class Trajectory:
         if self.unitcell_lengths is not None:
             unitcell_lengths = self.unitcell_lengths[key]
         if self._rmsd_traces is not None:
-            rmsd_traces = self._rmsd_traces
+            # Keep the cached center-of-mass trace aligned with the selected frames.
+            rmsd_traces = np.atleast_1d(self._rmsd_traces[key])
 
         if copy:
             xyz = xyz.copy()
