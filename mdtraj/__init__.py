@@ -112,6 +112,9 @@ from mdtraj.nmr import (
     compute_J3_HN_HA,
     reindex_dataframe_by_atoms,
 )
+from mdtraj.saxs import (
+    compute_saxs_pepsi,
+)
 
 from . import reporters
 from ._lprmsd import lprmsd
@@ -211,6 +214,7 @@ __all__ = (
     "chemical_shifts_spartaplus",
     "compute_chemical_shifts",
     "reindex_dataframe_by_atoms",
+    "compute_saxs_pepsi",
 )
 
 
