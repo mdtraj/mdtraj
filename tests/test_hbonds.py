@@ -22,10 +22,12 @@
 
 
 import numpy as np
+import pytest
 import scipy.sparse
 
 import mdtraj as md
 from mdtraj.testing import eq
+from mdtraj.utils.reduction import block_reduce
 
 
 def test_hbonds(get_fn):
@@ -124,6 +126,84 @@ def test_baker_hubbard_3(get_fn):
         md.baker_hubbard(t, exclude_water=False, angle_cutoff=180),
     )
     eq(np.array([[0, 1, 3]]), md.baker_hubbard(t, exclude_water=False))
+
+
+def test_baker_hubbard_entry_points_equivalent(get_fn):
+    t = md.load(get_fn("2EQQ.pdb"))
+    eq(md.baker_hubbard(t), md.geometry.hbond.baker_hubbard(t))
+
+
+def test_baker_hubbard_triplet_semantics(get_fn):
+    t = md.load(get_fn("2EQQ.pdb"))
+    hbonds = md.baker_hubbard(t)
+
+    assert hbonds.ndim == 2
+    assert hbonds.shape[1] == 3
+    for d_i, h_i, a_i in hbonds:
+        assert t.topology.atom(d_i).element.symbol in ["O", "N"]
+        assert t.topology.atom(h_i).element.symbol == "H"
+        assert t.topology.atom(a_i).element.symbol in ["O", "N"]
+
+
+def test_baker_hubbard_freq_strict_boundary(get_fn):
+    t = md.load(get_fn("2waters_baker_hubbard.pdb"))
+    traj = md.join([t] * 10, check_topology=True)
+
+    # Disable the known bond in half of frames.
+    traj.xyz[5:, 3, :] += np.array([1.0, 1.0, 1.0], dtype=traj.xyz.dtype)
+
+    eq(
+        np.zeros((0, 3), dtype=int),
+        md.baker_hubbard(traj, exclude_water=False, periodic=False, freq=0.5),
+    )
+    eq(
+        np.array([[0, 1, 3]]),
+        md.baker_hubbard(traj, exclude_water=False, periodic=False, freq=0.49),
+    )
+
+
+@pytest.mark.parametrize("fn, periodic", [("2EQQ.pdb", False), ("4ZUO.pdb", True)])
+def test_baker_hubbard_block_size_invariance(get_fn, fn, periodic):
+    t = md.load(get_fn(fn))
+    baseline = md.baker_hubbard(t, periodic=periodic)
+    small_block = md.baker_hubbard(t, periodic=periodic, block_size_bytes=1024)
+    eq(baseline, small_block)
+
+
+def test_block_reduce_matches_direct_sum_with_static_and_sliced_kwargs():
+    X = np.arange(24, dtype=np.float32).reshape(6, 4)
+    weights = np.arange(6, dtype=np.float32).reshape(6, 1)
+    bias = 2.5
+
+    def map_block(block: np.ndarray, weights: np.ndarray, bias: float) -> np.ndarray:
+        return block + weights + bias
+
+    out = block_reduce(
+        X,
+        block_size_bytes=16,
+        block_func=map_block,
+        dtype=np.float64,
+        out_shape=(4,),
+        static_kwargs={"bias": bias},
+        sliced_kwargs={"weights": weights},
+    )
+
+    expected = (X + weights + bias).sum(axis=0, dtype=np.float64)
+    np.testing.assert_allclose(out, expected)
+
+
+def test_block_reduce_raises_on_incompatible_sliced_kwargs():
+    X = np.arange(12, dtype=np.float32).reshape(3, 4)
+    bad = np.arange(8, dtype=np.float32).reshape(2, 4)
+
+    with pytest.raises(ValueError, match="first dimension must be"):
+        block_reduce(
+            X,
+            block_size_bytes=1024,
+            block_func=lambda block, bad: block + bad[: block.shape[0]],
+            out_shape=(4,),
+            sliced_kwargs={"bad": bad},
+        )
 
 
 def test_wernet_nilsson_0(get_fn):
