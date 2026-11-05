@@ -40,6 +40,19 @@ def test_rg(get_fn):
     eq(Rg, Rg0)
 
 
+def test_rg_masses():
+    xyz = np.array([[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]]], dtype=np.float32)
+    top = md.Topology()
+    res = top.add_residue("RES", top.add_chain())
+    top.add_atom("A", md.element.hydrogen, res)
+    top.add_atom("B", md.element.hydrogen, res)
+    t = md.Trajectory(xyz, top)
+    masses = np.array([1.0, 100.0])
+    expected = np.sqrt(masses.prod() / masses.sum() ** 2)
+    np.testing.assert_allclose(md.compute_rg(t, masses=masses), [expected], rtol=1e-5)
+    np.testing.assert_allclose(md.compute_rg(t), [0.5], rtol=1e-5)
+
+
 def test_distances(get_fn):
     t0 = md.load(get_fn("traj.h5"))
     atom_pairs = np.loadtxt(get_fn("atom_pairs.dat"), "int")
