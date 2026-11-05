@@ -493,6 +493,14 @@ def test_join():
     eq(t4.xyz, np.vstack((xyz[:5], xyz[4:])))
 
 
+def test_join_discard_overlapping_frames_with_empty_trajectory():
+    empty = md.Trajectory(np.empty((0, 1, 3), dtype=np.float32), topology=None)
+    nonempty = md.Trajectory(np.zeros((2, 1, 3), dtype=np.float32), topology=None)
+
+    joined = empty.join(nonempty, discard_overlapping_frames=True)
+    eq(joined.xyz, nonempty.xyz)
+
+
 def test_md_join(get_fn):
     fn = get_fn("traj.h5")
     t_ref = md.load(get_fn("frame0.h5"))[:20]

@@ -1219,6 +1219,9 @@ class Trajectory:
         trajectories = [self] + other
         if discard_overlapping_frames:
             for i in range(len(trajectories) - 1):
+                # Empty trajectories have no edge frames to compare.
+                if trajectories[i].n_frames == 0 or trajectories[i + 1].n_frames == 0:
+                    continue
                 # last frame of trajectory i
                 x0 = trajectories[i].xyz[-1]
                 # first frame of trajectory i+1
