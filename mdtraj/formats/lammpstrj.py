@@ -516,8 +516,8 @@ class LAMMPSTrajectoryFile:
         cell_angles : np.ndarray, dtype=np.double, shape=(n_frames, 3)
             The angles (\alpha, \beta, \\gamma) defining the unit cell for
             each frame. (Units of degrees).
-        types : np.ndarray, shape(3, ), dtype=int
-            The numeric type of each particle.
+        types : np.ndarray, shape=(n_atoms, ), dtype=int, optional
+            The numeric type of each particle. If None, all particles have type 1.
         unit_set : str, optional
             The LAMMPS unit set that the simulation was performed in. See
             http://lammps.sandia.gov/doc/units.html for options. Currently supported
@@ -561,7 +561,7 @@ class LAMMPSTrajectoryFile:
             warn_on_cast=False,
             add_newaxis_on_deficient_ndim=True,
         )
-        if not types:
+        if types is None:
             # Make all particles the same type.
             types = np.ones(shape=(xyz.shape[1]))
         types = ensure_type(

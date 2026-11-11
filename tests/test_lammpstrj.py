@@ -25,6 +25,7 @@ import os
 import tempfile
 
 import numpy as np
+import pytest
 
 import mdtraj as md
 from mdtraj.formats import LAMMPSTrajectoryFile
@@ -69,6 +70,29 @@ def test_read_write_0():
     eq(lengths, new_lengths)
     eq(angles, new_angles)
     eq(xyz, xyz2, decimal=3)
+
+
+@pytest.mark.parametrize(
+    "types, expected_types",
+    [
+        (np.array([2, 3]), [2, 3]),
+        (np.array([2, 3], dtype=np.int32), [2, 3]),
+        ([2, 3], [2, 3]),
+        (None, [1, 1]),
+    ],
+)
+def test_write_types(tmp_path, types, expected_types):
+    """Write supplied particle types and retain the default when omitted."""
+    filename = tmp_path / "types.lammpstrj"
+    xyz = np.array([[[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]]])
+    with LAMMPSTrajectoryFile(filename, mode="w") as f:
+        f.write(xyz, [[10.0, 10.0, 10.0]], types=types)
+
+    lines = filename.read_text().splitlines()
+    atom_lines = lines[lines.index("ITEM: ATOMS id type xu yu zu") + 1 :]
+    assert [int(line.split()[1]) for line in atom_lines] == expected_types
+    with LAMMPSTrajectoryFile(filename) as f:
+        eq(f.read()[0], xyz)
 
 
 def test_mdwrite(get_fn):
