@@ -660,3 +660,22 @@ def test_ala3_CRYST1_read(get_fn, tmp_path):
         ref_traj.top,
         err_msg="Topology mismatch between file with empty CRYST1 line and file without that line at all",
     )
+
+
+@pytest.mark.parametrize("ter", [False, True])
+def test_ligand_slice_conect_uses_atom_serials(get_fn, tmp_path, ter):
+    """Preserve ligand bonds when original atom serials are retained."""
+    traj = load_pdb(get_fn("1vii_sustiva_water.pdb"))[0]
+    ligand = traj.atom_slice(traj.top.select("resname LIG"))
+    path = tmp_path / "ligand.pdb"
+    ligand.save_pdb(path, ter=ter)
+
+    serials = {a.serial for a in ligand.top.atoms}
+    lines = path.read_text().splitlines()
+    assert {int(line[6:11]) for line in lines if line.startswith("ATOM  ")} == serials
+    conect = [line for line in lines if line.startswith("CONECT")]
+    assert conect
+    assert all(int(line[i : i + 5]) in serials for line in conect for i in range(6, len(line), 5))
+    bonds = {(a.index, b.index) for a, b in ligand.top.bonds}
+    assert len(bonds) == 32
+    assert {(a.index, b.index) for a, b in load_pdb(path).top.bonds} == bonds

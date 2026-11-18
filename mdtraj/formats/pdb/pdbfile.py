@@ -222,6 +222,12 @@ def load_pdb(
     return traj
 
 
+def _pdb_atom_serial(atom, fallback, keep_serials):
+    """Return the five-column serial used in ATOM and CONECT records."""
+    serial = atom.serial if keep_serials and atom.serial is not None else fallback
+    return serial % 100000
+
+
 @FormatRegistry.register_fileobject(".pdb")
 @FormatRegistry.register_fileobject(".pdb.gz")
 class PDBTrajectoryFile:
@@ -378,6 +384,8 @@ class PDBTrajectoryFile:
 
         atomIndex = 1
         posIndex = 0
+        # Renumber multiple chains to avoid repeated input serials (issue #1611).
+        keep_serials = topology.n_chains == 1
         if modelIndex is not None:
             print("MODEL     %4d" % modelIndex, file=self._file)
         for chainIndex, chain in enumerate(topology.chains):
@@ -407,12 +415,7 @@ class PDBTrajectoryFile:
                         symbol = atom.element.symbol
                     else:
                         symbol = " "
-                    if atom.serial is not None and len(topology._chains) < 2:
-                        # We can't do this for more than 1 chain
-                        # to prevent issue 1611
-                        atomSerial = atom.serial
-                    else:
-                        atomSerial = atomIndex
+                    atomSerial = _pdb_atom_serial(atom, atomIndex, keep_serials)
                     if atom.formal_charge:
                         # Charge string in PDB should have charge first, followed by the sign.
                         charge_string = f"{abs(atom.formal_charge)}{'-' if atom.formal_charge < 0 else '+'}"
@@ -421,7 +424,7 @@ class PDBTrajectoryFile:
                     line = (
                         "ATOM  %5d %-4s %3s %1s%4d    %s%s%s  1.00 %5s      %-4s%2s%2s"
                         % (  # Right-justify atom symbol
-                            atomSerial % 100000,
+                            atomSerial,
                             atomName,
                             resName,
                             chainName,
@@ -554,17 +557,14 @@ class PDBTrajectoryFile:
         if len(conectBonds) > 0:
             # Work out the index used in the PDB file for each atom.
 
-            # Regular case
             atomIndex = {}
-            nextAtomIndex = 0
-            prevChain = None
+            nextAtomIndex = 1
+            keep_serials = self._last_topology.n_chains == 1
             for chain in self._last_topology.chains:
                 for atom in chain.atoms:
-                    if atom.residue.chain != prevChain and self.ter:
-                        # We have a TER line, so adding an extra number to the AtomIndex
-                        nextAtomIndex += 1
-                        prevChain = atom.residue.chain
-                    atomIndex[atom] = nextAtomIndex
+                    atomIndex[atom] = _pdb_atom_serial(atom, nextAtomIndex, keep_serials)
+                    nextAtomIndex += 1
+                if self.ter and chain.n_residues:
                     nextAtomIndex += 1
 
             # Record which other atoms each atom is bonded to.
