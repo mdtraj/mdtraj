@@ -275,7 +275,7 @@ def test_write_and_read_pdbx_4py5(tmp_path, get_fn):
     traj.save(str(out_path))
     loaded = load(str(out_path))
     assert_traj_fields_equal(traj, loaded)
-    assert len(bond_set(traj.topology)) == 2928
+    assert len(bond_set(traj.topology)) == 2929  # Includes the deposited Cys100–Cys131 disulfide.
     assert_bonds_equal(traj.topology, loaded.topology)
 
 
@@ -366,3 +366,20 @@ def test_load_cif_with_pathlib(tmp_path):
     loaded = load(cif_path)
     assert loaded.n_atoms == 2
     assert loaded.n_frames == 1
+
+
+def test_load_cif_struct_conn_uses_label_sequence_ids(get_fn):
+    """Restore the disulfide recorded under label sequence IDs in 4PY5."""
+    traj = load(get_fn("4py5.cif"))
+    sulfur_atoms = [
+        atom
+        for atom in traj.top.atoms
+        if atom.name == "SG" and atom.residue.resSeq in (100, 131) and atom.residue.chain.chain_id == "A"
+    ]
+    assert len(sulfur_atoms) == 2
+    assert tuple(sulfur_atoms) in traj.top.bonds
+    np.testing.assert_allclose(
+        np.linalg.norm(traj.xyz[0, sulfur_atoms[0].index] - traj.xyz[0, sulfur_atoms[1].index]),
+        0.2027,
+        atol=0.0001,
+    )

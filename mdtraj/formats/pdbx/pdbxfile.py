@@ -128,6 +128,12 @@ class PDBxFile:
         lastResId = None
         lastInsertionCode = ""
         atomTable = {}
+        connectData = block.getObj("struct_conn")
+        labelColumns = tuple(
+            atomData.getAttributeIndex(name) for name in ("label_seq_id", "label_asym_id", "label_atom_id")
+        )
+        labelAtoms = defaultdict(list)
+        haveConnectionLabels = connectData is not None and -1 not in labelColumns
         atomsInResidue = set()
         models = []
 
@@ -192,6 +198,9 @@ class PDBxFile:
                     atomName = atomReplacements[atomName]
                 atom = top.add_atom(atomName, element, res, row[atomIdCol])
                 atomTable[atomKey] = atom
+                if haveConnectionLabels:
+                    labelKey = tuple(row[column] for column in labelColumns)
+                    labelAtoms[labelKey].append((row[resNumCol], atom))
                 atomsInResidue.add(atomName)
             else:
                 # This row defines coordinates for an existing atom in one of the later models.
@@ -230,24 +239,34 @@ class PDBxFile:
         # Add bonds for standard residues.
         self.topology.create_standard_bonds()
 
-        # Add bonds based on struct_conn records.
-        connectData = block.getObj("struct_conn")
-        if connectData is not None:
-            res1Col = connectData.getAttributeIndex("ptnr1_label_seq_id")
-            res2Col = connectData.getAttributeIndex("ptnr2_label_seq_id")
-            atom1Col = connectData.getAttributeIndex("ptnr1_label_atom_id")
-            atom2Col = connectData.getAttributeIndex("ptnr2_label_atom_id")
-            asym1Col = connectData.getAttributeIndex("ptnr1_label_asym_id")
-            asym2Col = connectData.getAttributeIndex("ptnr2_label_asym_id")
+        # The model lookup can use author IDs, but struct_conn names its
+        # partners using the atom_site label IDs.
+        if haveConnectionLabels:
+            partnerColumns = [
+                tuple(
+                    connectData.getAttributeIndex(f"ptnr{partner}_{name}")
+                    for name in ("label_seq_id", "label_asym_id", "label_atom_id", "auth_seq_id")
+                )
+                for partner in (1, 2)
+            ]
             typeCol = connectData.getAttributeIndex("conn_type_id")
             connectBonds = []
             for row in connectData.getRowList():
-                type = row[typeCol][:6]
-                if type in ("covale", "disulf", "modres"):
-                    key1 = (row[res1Col], row[asym1Col], row[atom1Col])
-                    key2 = (row[res2Col], row[asym2Col], row[atom2Col])
-                    if key1 in atomTable and key2 in atomTable:
-                        connectBonds.append((atomTable[key1], atomTable[key2]))
+                if row[typeCol][:6] not in ("covale", "disulf", "modres"):
+                    continue
+                partners = []
+                for seqCol, asymCol, atomCol, authSeqCol in partnerColumns:
+                    if -1 in (seqCol, asymCol, atomCol):
+                        break
+                    candidates = labelAtoms.get((row[seqCol], row[asymCol], row[atomCol]), ())
+                    if len(candidates) > 1 and authSeqCol != -1:
+                        # Non-polymers may share a missing label sequence ID.
+                        candidates = [candidate for candidate in candidates if candidate[0] == row[authSeqCol]]
+                    if len(candidates) != 1:
+                        break
+                    partners.append(candidates[0][1])
+                if len(partners) == 2:
+                    connectBonds.append(tuple(partners))
             if len(connectBonds) > 0:
                 # Only add bonds that don't already exist.
                 existingBonds = set(top.bonds)
