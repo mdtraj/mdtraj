@@ -189,3 +189,26 @@ def test_pairwise(h5traj, extension, monkeypatch):
 
     # For testing most formats and with netCDF4 (if format is nc)
     test_base(h5traj, extension, monkeypatch)
+
+
+@pytest.mark.parametrize("extension", ["xtc", "trr"])
+def test_dcd_conversion_numbers_frames_across_chunks(get_fn, tmp_path, extension):
+    """Give omitted XDR step and time fields the same defaults across chunks."""
+    source = get_fn("ala_dipeptide.dcd")
+    chunked = tmp_path / f"chunked.{extension}"
+    unchunked = tmp_path / f"unchunked.{extension}"
+    for chunk, path in [(2, chunked), (3, unchunked)]:
+        subprocess.run(
+            [sys.executable, "-m", "mdtraj.scripts.mdconvert", source, "-o", str(path), "-c", str(chunk)],
+            check=True,
+        )
+
+    with md.open(str(chunked)) as f:
+        xyz, time, step = f.read()[:3]
+    with md.open(str(unchunked)) as f:
+        expected_xyz, expected_time, expected_step = f.read()[:3]
+    np.testing.assert_array_equal(xyz, expected_xyz)
+    np.testing.assert_array_equal(expected_time, np.arange(3))
+    np.testing.assert_array_equal(expected_step, np.arange(3))
+    np.testing.assert_array_equal(time, expected_time)
+    np.testing.assert_array_equal(step, expected_step)

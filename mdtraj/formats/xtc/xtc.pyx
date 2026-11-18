@@ -527,10 +527,10 @@ cdef class XTCTrajectoryFile(object):
             The cartesian coordinates of the atoms, in nanometers
         time : np.ndarray, dtype=float32, shape=(n_frames), optional
             The simulation time corresponding to each frame, in picoseconds.
-            If not supplied, the numbers 0..n_frames will be written.
+            If not supplied, use zero-based frame numbers in the file.
         step :  np.ndarray, dtype=int32, shape=(n_frames), optional
             The simulation timestep corresponding to each frame, in steps.
-            If not supplied, the numbers 0..n_frames will be written
+            If not supplied, use zero-based frame numbers in the file.
         box : np.ndarray, dtype=float32, shape=(n_frames, 3, 3), optional
             The periodic box vectors of the simulation in each frame, in nanometers.
             If not supplied, the vectors (1,0,0), (0,1,0) and (0,0,1) will
@@ -567,10 +567,12 @@ cdef class XTCTrajectoryFile(object):
                 raise ValueError("The file that you're saving to was created without "
                     "unitcell information.")
 
-        if time is None:
-            time = np.arange(0, n_frames, dtype=np.float32)
-        if step is None:
-            step = np.arange(0, n_frames, dtype=np.int32)
+        if time is None or step is None:
+            frame_numbers = np.arange(self.frame_counter, self.frame_counter + n_frames, dtype=np.int64)
+            if time is None:
+                time = frame_numbers.astype(np.float32)
+            if step is None:
+                step = frame_numbers.astype(np.int32)
         if box is None:
             # make each box[i] be the all zeros, which indicates the lack of
             # a unitcell
