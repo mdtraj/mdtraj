@@ -225,17 +225,19 @@ class ArcTrajectoryFile:
         """
         from mdtraj.core.trajectory import Trajectory
 
-        if atom_indices is not None:
-            topology = self.topology.subset(atom_indices)
-
         initial = int(self._frame_index)
         xyz, abc, ang = self.read(
             n_frames=n_frames,
             stride=stride,
             atom_indices=atom_indices,
         )
+        # Reading the first frame initializes the embedded topology.
+        topology = self.topology
+        if atom_indices is not None and topology is not None:
+            topology = topology.subset(atom_indices)
         if len(xyz) == 0:
-            return Trajectory(xyz=np.zeros((0, topology.n_atoms, 3)), topology=topology)
+            n_atoms = topology.n_atoms if topology is not None else 0
+            return Trajectory(xyz=np.zeros((0, n_atoms, 3)), topology=topology)
 
         in_units_of(xyz, self.distance_unit, Trajectory._distance_unit, inplace=True)
         in_units_of(abc, self.distance_unit, Trajectory._distance_unit, inplace=True)
@@ -246,7 +248,7 @@ class ArcTrajectoryFile:
 
         return Trajectory(
             xyz=xyz,
-            topology=self.topology,
+            topology=topology,
             time=time,
             unitcell_lengths=abc,
             unitcell_angles=ang,
