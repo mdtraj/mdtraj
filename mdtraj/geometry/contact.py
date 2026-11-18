@@ -128,19 +128,20 @@ def compute_contacts(
                 "(%s) is not a valid contacts specifier" % contacts.lower(),
             )
 
-        residue_pairs = []
-        for i in range(traj.n_residues):
-            residue_i = traj.topology.residue(i)
-            if ignore_nonprotein and not any(a for a in residue_i.atoms if a.name.lower() == "ca"):
+        residues_by_chain = {}
+        for residue in traj.topology.residues:
+            if ignore_nonprotein and not any(atom.name.lower() == "ca" for atom in residue.atoms):
                 continue
-            for j in range(i + 3, traj.n_residues):
-                residue_j = traj.topology.residue(j)
-                if ignore_nonprotein and not any(a for a in residue_j.atoms if a.name.lower() == "ca"):
-                    continue
-                if residue_i.chain == residue_j.chain:
-                    residue_pairs.append((i, j))
+            residues_by_chain.setdefault(residue.chain.index, []).append(residue.index)
 
-        residue_pairs = np.array(residue_pairs)
+        residue_pairs = np.array(
+            sorted(
+                (i, j)
+                for indices in residues_by_chain.values()
+                for i, j in itertools.combinations(indices, 2)
+                if j - i >= 3
+            ),
+        )
         if len(residue_pairs) == 0:
             raise ValueError("No acceptable residue pairs found")
 
@@ -236,40 +237,24 @@ def compute_contacts(
                 for residue in traj.topology.residues
             ]
 
-        residue_lens = [len(ainds) for ainds in residue_membership]
-
-        atom_pairs = []
-        n_atom_pairs_per_residue_pair = []
-        for pair in residue_pairs:
-            atom_pairs.extend(
-                list(
-                    itertools.product(
-                        residue_membership[pair[0]],
-                        residue_membership[pair[1]],
-                    ),
-                ),
-            )
-            n_atom_pairs_per_residue_pair.append(
-                residue_lens[pair[0]] * residue_lens[pair[1]],
-            )
-
+        atom_pairs, offsets = _contact_atom_pairs(residue_membership, residue_pairs)
         atom_distances = md.compute_distances(traj, atom_pairs, periodic=periodic)
 
-        # now squash the results based on residue membership
-        n_residue_pairs = len(residue_pairs)
-        distances = np.zeros((len(traj), n_residue_pairs), dtype=np.float32)
-        n_atom_pairs_per_residue_pair = np.asarray(n_atom_pairs_per_residue_pair)
+        # reduceat needs nonempty groups. Keep the per-group reduction for
+        # empty selections and for the soft minimum.
+        if not soft_min and np.all(offsets[1:] > offsets[:-1]):
+            return np.minimum.reduceat(atom_distances, offsets[:-1], axis=1), residue_pairs
 
-        for i in range(n_residue_pairs):
-            index = int(np.sum(n_atom_pairs_per_residue_pair[:i]))
-            n = n_atom_pairs_per_residue_pair[i]
+        distances = np.zeros((len(traj), len(residue_pairs)), dtype=np.float32)
+        for i, (start, stop) in enumerate(itertools.pairwise(offsets)):
+            group = atom_distances[:, start:stop]
             if not soft_min:
-                distances[:, i] = atom_distances[:, index : index + n].min(axis=1)
+                distances[:, i] = group.min(axis=1)
             else:
                 distances[:, i] = soft_min_beta / np.log(
                     np.sum(
                         np.exp(
-                            soft_min_beta / atom_distances[:, index : index + n],
+                            soft_min_beta / group,
                             casting="safe",
                         ),
                         axis=1,
@@ -280,6 +265,31 @@ def compute_contacts(
         raise ValueError("This is not supposed to happen!")
 
     return distances, residue_pairs
+
+
+def _contact_atom_pairs(residue_membership, residue_pairs):
+    """Return ordered atom pairs and the offsets for each residue pair."""
+    residue_sizes = np.array([len(atoms) for atoms in residue_membership], dtype=np.intp)
+    n_residue_pairs = len(residue_pairs)
+    pair_sizes = residue_sizes[residue_pairs].prod(axis=1)
+    offsets = np.zeros(n_residue_pairs + 1, dtype=np.intp)
+    np.cumsum(pair_sizes, out=offsets[1:])
+    n_atom_pairs = int(offsets[-1])
+    if n_atom_pairs == 0:
+        return [], offsets
+
+    member_offsets = np.zeros(len(residue_sizes) + 1, dtype=np.intp)
+    np.cumsum(residue_sizes, out=member_offsets[1:])
+    members = np.fromiter(itertools.chain.from_iterable(residue_membership), dtype=np.int32)
+
+    # A pair's local index advances through all right atoms for each left atom.
+    group = np.repeat(np.arange(n_residue_pairs), pair_sizes)
+    local_index = np.arange(n_atom_pairs) - offsets[group]
+    left_residue, right_residue = residue_pairs.T
+    left, right = np.divmod(local_index, residue_sizes[right_residue][group])
+    left += member_offsets[left_residue][group]
+    right += member_offsets[right_residue][group]
+    return np.column_stack((members[left], members[right])), offsets
 
 
 def squareform(distances, residue_pairs):

@@ -131,3 +131,22 @@ def test_contact_4(get_fn):
             contacts="all",
             scheme="sidechain-heavy",
         )  # test passes if this doesn't raise an exception
+
+
+def test_closest_heavy_contact_groups_preserve_pair_order(get_fn):
+    """Match separately reduced atom distances for irregular and repeated groups."""
+    traj = md.load(get_fn("1vii_sustiva_water.pdb"))[:2]
+    requested = [(12, 4), (0, 10), (4, 12), (0, 10)]
+    observed, pairs = md.compute_contacts(traj, requested, scheme="closest-heavy")
+    np.testing.assert_array_equal(pairs, requested)
+
+    reference = []
+    for i, j in requested:
+        atom_pairs = [
+            (a.index, b.index)
+            for a in traj.top.residue(i).atoms
+            for b in traj.top.residue(j).atoms
+            if a.element != md.element.hydrogen and b.element != md.element.hydrogen
+        ]
+        reference.append(md.compute_distances(traj, atom_pairs).min(axis=1))
+    np.testing.assert_array_equal(observed, np.column_stack(reference))
