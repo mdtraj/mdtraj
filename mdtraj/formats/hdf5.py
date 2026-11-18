@@ -413,11 +413,16 @@ class HDF5TrajectoryFile:
         for i in range(num_bonds):
             index1, index2 = topology_dict["bonds"][i]
             if bond_metadata:
+                metadata = bond_metadata[i]
+                order = metadata["order"]
+                # Existing files store integer bond orders as JSON floats.
+                if order in (1, 2, 3):
+                    order = int(order)
                 topology.add_bond(
                     atoms[index1],
                     atoms[index2],
-                    order=bond_metadata[i]["order"],
-                    type=bond_name_to_type(bond_metadata[i]["type"]),
+                    order=order,
+                    type=bond_name_to_type(metadata["type"]),
                 )
             else:
                 topology.add_bond(atoms[index1], atoms[index2])

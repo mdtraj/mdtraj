@@ -418,3 +418,19 @@ def test_hdf5_roundtrip(h5traj_full_metadata):
     for bond1, bond2 in zip(traj.topology.bonds, traj2.topology.bonds):
         assert bond1.order == bond2.order
         assert bond1.type == bond2.type
+
+
+def test_hdf5_bond_orders_can_be_written_to_pdb(get_fn, tmp_path):
+    """Read integral HDF5 bond orders as integers for PDB CONECT records."""
+    traj = md.load_pdb(get_fn("bnz.pdb"), bond_orders=True)
+    expected = {(bond.atom1.index, bond.atom2.index): bond.order for bond in traj.top.bonds}
+    assert 2 in expected.values()
+    for metadata in (True, False):
+        h5_path = tmp_path / f"benzene-{metadata}.h5"
+        pdb_path = tmp_path / f"benzene-{metadata}.pdb"
+        traj.save_hdf5(h5_path, bond_metadata=metadata)
+        loaded = md.load_hdf5(h5_path)
+        loaded.save_pdb(pdb_path, bond_orders=True)
+        roundtrip = md.load_pdb(pdb_path, bond_orders=True)
+        observed = {(bond.atom1.index, bond.atom2.index): bond.order for bond in roundtrip.top.bonds}
+        assert observed == (expected if metadata else dict.fromkeys(expected, 1))
