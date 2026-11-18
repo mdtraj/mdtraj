@@ -76,3 +76,21 @@ def test_read_pbc(get_fn):
     eq(xyz[0, -1], np.array([29.013880, 6.255754, 44.074519]), decimal=3)
     eq(leng, np.array([[45.119376, 45.119376, 45.119376]]), decimal=3)
     eq(ang, np.array([[90.0, 90.0, 90.0]]), decimal=3)
+
+
+def test_load_arc_atom_indices(get_fn):
+    """Load one water molecule from an ARC file with embedded bonds."""
+    filename = get_fn("4waters.arc")
+    full = load_arc(filename)
+    selected = load_arc(filename, atom_indices=[3, 4, 5])
+    assert selected.n_atoms == selected.top.n_atoms == 3
+    eq(selected.xyz, full.xyz[:, 3:6])
+    assert [atom.name for atom in selected.top.atoms] == ["O", "H", "H"]
+    assert {(a.index, b.index) for a, b in selected.top.bonds} == {(0, 1), (0, 2)}
+
+    with ArcTrajectoryFile(filename) as f:
+        whole_frame = f.read_as_traj(n_frames=1)
+        exhausted = f.read_as_traj(n_frames=1, atom_indices=[3, 4, 5])
+    assert whole_frame.n_atoms == 12
+    assert exhausted.xyz.shape == (0, 3, 3)
+    assert exhausted.top.n_atoms == 3
