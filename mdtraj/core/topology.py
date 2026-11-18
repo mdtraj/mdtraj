@@ -64,7 +64,7 @@ from mdtraj.core.residue_names import (
     _WATER_RESIDUES,
 )
 from mdtraj.core.selection import parse_selection
-from mdtraj.utils import ensure_type, ilen, import_
+from mdtraj.utils import deprecated, ensure_type, ilen, import_
 from mdtraj.utils.singleton import Singleton
 
 if TYPE_CHECKING:
@@ -857,6 +857,7 @@ class Topology:
             residue._atoms.insert(rindex, atom)
         return atom
 
+    @deprecated("delete_atom_by_index was replaced Trajectory.atom_slice with retain=False.")
     def delete_atom_by_index(self, index: int) -> None:
         """Delete an Atom from the topology.
         Atom is removed and all subsequent atoms are reindexed.
@@ -867,6 +868,10 @@ class Topology:
         ----------
         index : int
             The index of the atom to be removed.
+
+        Deprecated
+        ----------
+        This method is deprecated. Please use `Trajectory.atom_slice` with `retain=False` instead.
         """
         a = self._atoms[index]
         assert a is not None, "Expected an Atom, but got None"
