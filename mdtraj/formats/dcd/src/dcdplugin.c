@@ -126,24 +126,20 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
   if ((input_integer[0]+input_integer[1]) == 84) {
     *reverseEndian=0;
     rec_scale=RECSCALE64BIT;
-    printf("dcdplugin) detected CHARMM -i8 64-bit DCD file of native endianness\n");
   } else if (input_integer[0] == 84 && input_integer[1] == dcdcordmagic) {
     *reverseEndian=0;
     rec_scale=RECSCALE32BIT;
-    printf("dcdplugin) detected standard 32-bit DCD file of native endianness\n");
   } else {
     /* now try reverse endian */
     swap4_aligned(input_integer, 2); /* will have to unswap magic if 32-bit */
     if ((input_integer[0]+input_integer[1]) == 84) {
       *reverseEndian=1;
       rec_scale=RECSCALE64BIT;
-      printf("dcdplugin) detected CHARMM -i8 64-bit DCD file of opposite endianness\n");
     } else {
       swap4_aligned(&input_integer[1], 1); /* unswap magic (see above) */
       if (input_integer[0] == 84 && input_integer[1] == dcdcordmagic) {
         *reverseEndian=1;
         rec_scale=RECSCALE32BIT;
-        printf("dcdplugin) detected standard 32-bit DCD file of opposite endianness\n");
       } else {
         /* not simply reversed endianism or -i8, something rather more evil */
         printf("dcdplugin) unrecognized DCD header:\n");
@@ -186,14 +182,6 @@ static int read_dcdheader(fio_fd fd, int *N, int *NSET, int *ISTART,
 
   } else {
     (*charmm) = DCD_IS_XPLOR; /* must be an X-PLOR format DCD file */
-  }
-
-  if (*charmm & DCD_IS_CHARMM) {
-    /* CHARMM and NAMD versions 2.1b1 and later */
-    printf("dcdplugin) CHARMM format DCD file (also NAMD 2.1 and later)\n");
-  } else {
-    /* CHARMM and NAMD versions prior to 2.1b1  */
-    printf("dcdplugin) X-PLOR format DCD file (also NAMD 2.0 and earlier)\n");
   }
 
   /* Store the number of sets of coordinates (NSET) */

@@ -21,6 +21,9 @@
 ##############################################################################
 
 
+import subprocess
+import sys
+
 import numpy as np
 import pytest
 
@@ -35,6 +38,22 @@ def test_read(get_fn):
     xyz2 = io.loadh(get_fn("frame0.dcd.h5"), "xyz")
 
     eq(xyz, xyz2)
+
+
+def test_read_does_not_print_format(get_fn):
+    """Capture process stdout, including buffered C plugin messages."""
+    script = (
+        "import sys\n"
+        "from mdtraj.formats import DCDTrajectoryFile\n"
+        "with DCDTrajectoryFile(sys.argv[1]) as reader:\n"
+        "    reader.read(n_frames=1)\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script, get_fn("frame0.dcd")],
+        capture_output=True,
+        check=True,
+    )
+    assert result.stdout == b""
 
 
 def test_read_2(get_fn):
